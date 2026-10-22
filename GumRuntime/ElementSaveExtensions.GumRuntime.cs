@@ -1296,9 +1296,11 @@ namespace GumRuntime
 
             object? valueBefore = null;
             string? effectiveLeft = null;
-            // A null result is a value only for a nullable variable (MinWidth = Other.MinWidth where Other has none),
-            // and only when the caller asks (live re-evaluation); otherwise null means nothing was evaluated.
-            bool assignsNull = value == null && propagateNull && leftSideType != null && leftSideType.EndsWith("?");
+            // A null result is a value only for a nullable variable, only when the caller asks (live re-evaluation),
+            // and only when the right side is a plain reference to a variable that exists and holds null
+            // (MinWidth = Other.MinWidth). Any other null is a failed evaluation, which leaves the variable alone.
+            bool assignsNull = value == null && propagateNull && leftSideType != null && leftSideType.EndsWith("?")
+                && IsExistingVariable(stateSave, right);
             if (value != null || assignsNull)
             {
                 if (instanceLeft == null)
@@ -1320,6 +1322,24 @@ namespace GumRuntime
                 VariableName = effectiveLeft,
                 AssignsNull = assignsNull
             };
+        }
+
+        // True when the text is a plain dotted variable name (no operators, no cross-element path) that exists.
+        private static bool IsExistingVariable(StateSave stateSave, string right)
+        {
+            string name = DecodeOwnerName(right).Trim();
+            if (name.Length == 0)
+            {
+                return false;
+            }
+            foreach (char c in name)
+            {
+                if (!char.IsLetterOrDigit(c) && c != '_' && c != '.')
+                {
+                    return false;
+                }
+            }
+            return new RecursiveVariableFinder(stateSave).GetVariable(name) != null;
         }
 #nullable restore
 
