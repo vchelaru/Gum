@@ -440,6 +440,18 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         _errors.Count.ShouldBe(1);
     }
 
+    // A value the int can hold is never reported as not fitting, fraction or not.
+    [Theory]
+    [InlineData(3.7f, 3)]
+    [InlineData(-2147483648f, int.MinValue)]
+    public void Create_FractionalOrBoundaryFloatWithGumExpressions_AppliesWithoutReporting(float sourceValue, int expected)
+    {
+        GraphicalUiElement target = CreatePair("OutlineThickness = Source.Z", out _, useExpressions: true, ("OutlineThickness", 7), ("Z", sourceValue));
+
+        Read(target, "OutlineThickness").ShouldBe(expected);
+        _errors.ShouldBeEmpty();
+    }
+
     [Fact]
     public void Create_FloatTheIntCanHoldWithGumExpressions_Applies()
     {

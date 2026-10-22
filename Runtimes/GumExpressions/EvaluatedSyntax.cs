@@ -1203,7 +1203,7 @@ public class EvaluatedSyntax
                 // which is not the value the reference read: refuse it so the variable keeps its value (#6456).
                 if (this.EvaluatedType == "float" && this.Value is float floatToInt)
                 {
-                    if (!GraphicalUiElementPropertyReadExtensions.IsInIntRange(floatToInt))
+                    if (!GumRuntime.ElementSaveExtensions.IsInIntRange(floatToInt))
                     {
                         return false;
                     }
@@ -1213,7 +1213,7 @@ public class EvaluatedSyntax
                 }
                 else if (this.EvaluatedType == "double" && this.Value is double doubleToInt)
                 {
-                    if (!GraphicalUiElementPropertyReadExtensions.IsInIntRange(doubleToInt))
+                    if (!GumRuntime.ElementSaveExtensions.IsInIntRange(doubleToInt))
                     {
                         return false;
                     }

@@ -278,6 +278,7 @@ public class EvaluatedSyntaxTests : BaseTestClass
     [InlineData(-1e10)]
     [InlineData(2147483648.0)]
     [InlineData(-2147483649.0)]
+    [InlineData(-2147483650.0)]
     public void CastTo_DoubleOutsideTheIntRangeToInt_Fails(double value)
     {
         EvaluatedSyntax result = Evaluate("Instance.Width", BuildState(("Instance.Width", value, "double")));
@@ -310,6 +311,8 @@ public class EvaluatedSyntaxTests : BaseTestClass
     [InlineData(2147483647.0, int.MaxValue)]
     [InlineData(2147483647.9, int.MaxValue)]
     [InlineData(-2147483648.0, int.MinValue)]
+    [InlineData(-2147483648.5, int.MinValue)]
+    [InlineData(-2147483648.99, int.MinValue)]
     public void CastTo_DoubleInsideTheIntRangeToInt_Converts(double value, int expected)
     {
         EvaluatedSyntax result = Evaluate("Instance.Width", BuildState(("Instance.Width", value, "double")));

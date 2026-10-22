@@ -1408,7 +1408,7 @@ namespace GumRuntime
             string targetType, StateSave stateSave, GraphicalUiElement? liveRoot)
         {
             object? plainValue = ReadPlainReference(stateSave, right, findSourceType: false, out _);
-            if (!(plainValue is float || plainValue is double))
+            if (!(plainValue is float || plainValue is double) || !CannotBeHeldBy(Convert.ToDouble(plainValue), targetType))
             {
                 return false;
             }
@@ -1423,6 +1423,22 @@ namespace GumRuntime
                     $"the {targetType} {leftVariableName}. {leftVariableName} keeps its current value.");
             }
             return true;
+        }
+
+        // True when truncating the value gives an int without overflowing; shared with Gum.Expressions' CastTo (#6456). Both
+        // bounds are exclusive (2^31 and -2^31 - 1) so a fraction such as -2147483648.5 still truncates to int.MinValue. NaN
+        // fails both comparisons. A float widens to a double exactly, so one overload serves both.
+        internal static bool IsInIntRange(double value) => value > -2147483649.0 && value < 2147483648.0;
+
+        // The value Gum.Expressions refuses for the target: beyond the int's range (NaN and infinity included), or a finite
+        // value beyond the float's.
+        private static bool CannotBeHeldBy(double value, string targetType)
+        {
+            if (targetType == "int")
+            {
+                return !IsInIntRange(value);
+            }
+            return targetType == "float" && double.IsFinite(value) && float.IsInfinity((float)value);
         }
 
         private static bool IsNegation(string right)
