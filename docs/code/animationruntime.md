@@ -22,6 +22,10 @@ Animations defined in the Gum tool can be loaded at runtime. To load and play an
 The `PlayAnimation(string)` and `PlayAnimation(int)` overloads are extension methods in the `Gum.Wireframe` namespace. If a call such as `PlayAnimation("SlideOnAndOff")` will not compile (for example "no overload for method `PlayAnimation` takes 1 argument"), add `using Gum.Wireframe;` at the top of your file.
 {% endhint %}
 
+{% hint style="warning" %}
+Call `LoadAnimations` before creating any screen or component that uses animations. Gum assigns animations to each element as it is created, so an element created earlier has no animations. This includes the generated animation fields (such as `ShowAnim`) and `CustomInitialize`, which both run during creation. Calling `PlayAnimation` with an animation that was not found throws an `ArgumentNullException` that mentions this.
+{% endhint %}
+
 Animations can be played on an entire screen, entire component, or an individual instance within a screen or component.
 
 For this example, the project has a screen called AnimatedScreen which contains an animation named SlideOnAndOff.

@@ -727,6 +727,43 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     [Fact]
+    public void PlayAnimation_NullAnimationWithNoAnimationsLoaded_ShouldMentionLoadAnimations()
+    {
+        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable());
+        gue.Animations = null;
+
+        ArgumentNullException exception = Should.Throw<ArgumentNullException>(
+            () => gue.PlayAnimation(animation: null!));
+
+        exception.Message.ShouldContain("LoadAnimations");
+    }
+
+    [Fact]
+    public void PlayAnimation_NullAnimationWithAnimationsLoaded_ShouldNotMentionLoadAnimations()
+    {
+        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable());
+        gue.Animations = new List<AnimationRuntime> { new AnimationRuntime { Name = "Fade" } };
+
+        ArgumentNullException exception = Should.Throw<ArgumentNullException>(
+            () => gue.PlayAnimation(animation: null!));
+
+        exception.Message.ShouldNotContain("LoadAnimations");
+        exception.Message.ShouldContain("GetAnimation");
+    }
+
+    [Fact]
+    public void PlayAnimationAsync_NullAnimationWithNoAnimationsLoaded_ShouldMentionLoadAnimations()
+    {
+        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable());
+        gue.Animations = null;
+
+        ArgumentNullException exception = Should.Throw<ArgumentNullException>(
+            () => gue.PlayAnimationAsync(animation: null!));
+
+        exception.Message.ShouldContain("LoadAnimations");
+    }
+
+    [Fact]
     public void AnimationController_ShouldNotBeNull()
     {
         var gue = new GraphicalUiElement(new InvisibleRenderable());
