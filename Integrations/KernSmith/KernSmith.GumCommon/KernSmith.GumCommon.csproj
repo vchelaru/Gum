@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- Mobile targets are opt-in (-p:IncludeIOS=true / -p:IncludeAndroid=true), exactly as in
+         MonoGameGum.csproj (read its comment for why it is opt-in and why it needs a .NET 9+ SDK).
+         The mobile builds reference the managed StbTrueType rasterizer instead of FreeType, whose
+         native library does not link on iOS (#6435). -->
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IncludeIOS)' == 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-ios</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IncludeAndroid)' == 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-android</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>true</IsPackable>
@@ -21,13 +27,24 @@
     <PackageTags>kernsmith;gum;bitmap-font;font-generation;game-dev</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.Contains('ios'))">
+    <DefineConstants>$(DefineConstants);IOS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+    <DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
+    <!-- Matches MonoGameGum.csproj. -->
+    <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="KernSmith" Version="0.24.0" />
-    <PackageReference Include="KernSmith.Rasterizers.FreeType" Version="0.24.0" />
+    <PackageReference Include="KernSmith.Rasterizers.FreeType" Version="0.24.0" Condition="!$(TargetFramework.Contains('ios')) AND !$(TargetFramework.Contains('android'))" />
+    <PackageReference Include="KernSmith.Rasterizers.StbTrueType" Version="0.24.0" Condition="$(TargetFramework.Contains('ios')) OR $(TargetFramework.Contains('android'))" />
   </ItemGroup>
 
   <ItemGroup>

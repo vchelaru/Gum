@@ -28,8 +28,9 @@ public static class GumFontGenerator
     /// </summary>
     /// <param name="bmfcSave">The Gum font descriptor to generate from.</param>
     /// <param name="backend">
-    /// Optional rasterizer backend override. When null, uses the default (FreeType).
-    /// Use <see cref="RasterizerBackend.StbTrueType"/> on platforms where native
+    /// Optional rasterizer backend override. When null, uses the default: FreeType on desktop builds,
+    /// StbTrueType in the iOS and Android builds of this package, which do not carry FreeType.
+    /// Use <see cref="RasterizerBackend.StbTrueType"/> on other platforms where native
     /// libraries are unavailable (e.g., Blazor WASM).
     /// </param>
     /// <exception cref="PlatformNotSupportedException">
@@ -118,9 +119,30 @@ public static class GumFontGenerator
     private static FontGeneratorOptions BuildOptionsWithBackend(BmfcSave bmfcSave, RasterizerBackend? backend)
     {
         FontGeneratorOptions options = BuildOptions(bmfcSave);
+        backend ??= GetPlatformDefaultBackend();
         if (backend.HasValue)
             options.Backend = backend.Value;
         return options;
+    }
+
+    /// <summary>
+    /// The backend used when the caller passes none. KernSmith always starts with FreeType and does
+    /// not pick by platform, and the iOS and Android builds of this package do not carry FreeType
+    /// (its native library does not link on iOS, #6435), so they default to the managed StbTrueType
+    /// backend. Desktop builds return null, which keeps KernSmith's FreeType default.
+    /// </summary>
+    private static RasterizerBackend? GetPlatformDefaultBackend()
+    {
+#if IOS || ANDROID
+        // KernSmith's reflection-based backend discovery is trimmed away in an AOT/trimmed publish,
+        // which is every iOS release build, so force the backend to register itself. Same call the
+        // browser-wasm convention uses (see ThemePlatform.SelectBackend).
+        System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(
+            typeof(KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer).TypeHandle);
+        return RasterizerBackend.StbTrueType;
+#else
+        return null;
+#endif
     }
 
     /// <summary>
