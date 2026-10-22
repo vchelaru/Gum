@@ -25,6 +25,9 @@ public static class TypedSetterSweep
         "CurrentChainName",
     };
 
+    /// <summary>The value index of a case that sets a nullable variable to a value, then back to null.</summary>
+    public const int SetBackToNull = -1;
+
     /// <summary>Rows of (standard, variable, value index, useExpressions).</summary>
     /// <param name="isExcluded">Optional (standard, variable) filter for a variable a backend cannot take part in.</param>
     public static IEnumerable<object[]> Cases(Dictionary<string, Func<GraphicalUiElement>> factories, bool includeExpressions,
@@ -44,7 +47,9 @@ public static class TypedSetterSweep
                 }
                 IReadOnlyList<object> values = ValuesFor(property.PropertyType);
                 object? initial = property.GetValue(fresh);
-                bool isNullable = Nullable.GetUnderlyingType(property.PropertyType) != null;
+                // Only a variable whose type is nullable (float?, int?) can hold null. Blend is a nullable property
+                // of a non-nullable variable, where null means no named blend and a reference keeps its value.
+                bool isNullable = variable.Type?.EndsWith("?") == true && Nullable.GetUnderlyingType(property.PropertyType) != null;
                 for (int i = 0; i < values.Count; i++)
                 {
                     if (AreEqual(values[i], initial) || !IsRepresentable(variable.Name, values[i]))
@@ -52,10 +57,18 @@ public static class TypedSetterSweep
                         continue;
                     }
                     yield return new object[] { pair.Key, variable.Name, i, false };
-                    // Under Gum.Expressions a nullable variable is evaluated to null (#6400).
-                    if (includeExpressions && !isNullable)
+                    if (includeExpressions)
                     {
                         yield return new object[] { pair.Key, variable.Name, i, true };
+                    }
+                }
+                // A nullable variable is also set to a value and then back to null (#6400).
+                if (isNullable)
+                {
+                    yield return new object[] { pair.Key, variable.Name, SetBackToNull, false };
+                    if (includeExpressions)
+                    {
+                        yield return new object[] { pair.Key, variable.Name, SetBackToNull, true };
                     }
                 }
             }
@@ -145,7 +158,16 @@ public static class TypedSetterSweep
         GraphicalUiElement label = root.GetGraphicalUiElementByName("Label1")!;
         GraphicalUiElement shadow = label.GetGraphicalUiElementByName("Shadow")!;
         PropertyInfo property = GetTypedProperty(label.GetType(), variable)!;
-        object newValue = ValuesFor(property.PropertyType)[valueIndex];
+        object? newValue;
+        if (valueIndex == SetBackToNull)
+        {
+            property.SetValue(label, ValuesFor(property.PropertyType)[0]);
+            newValue = null;
+        }
+        else
+        {
+            newValue = ValuesFor(property.PropertyType)[valueIndex];
+        }
 
         property.SetValue(label, newValue);
 

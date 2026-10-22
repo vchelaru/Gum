@@ -509,9 +509,9 @@ public sealed class VariableReferenceGraph
                 ReferenceRow row = rows[i];
                 ElementSaveExtensions.VariableReferenceAssignmentResult result =
                     ElementSaveExtensions.ApplyVariableReferencesOnSpecificOwner(
-                        row.Instance, row.Line, evaluationState, liveRoot);
+                        row.Instance, row.Line, evaluationState, liveRoot, propagateNull: true);
 
-                if (liveRoot == null || result.NewValue == null || result.VariableName == null)
+                if (liveRoot == null || (result.NewValue == null && !result.AssignsNull) || result.VariableName == null)
                 {
                     continue;
                 }

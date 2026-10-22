@@ -111,6 +111,102 @@ public class ReactiveVariableReferenceTests : BaseTestClass
     }
 
     [Fact]
+    public void NotifyVariablesChanged_NullableRowWhoseExpressionFails_KeepsItsValue()
+    {
+        ComponentSave element = CreateElement("MaxWidth = Other + Missing");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        gue.MaxWidth = 50;
+
+        gue.SetProperty("Other", 3f);
+
+        // Missing resolves to nothing, so the row evaluates to nothing; that is not a null to copy.
+        gue.MaxWidth.ShouldBe(50f);
+    }
+
+    [Fact]
+    public void NotifyVariablesChanged_NullableRowReadingAVariableSetToNull_ClearsIt()
+    {
+        ComponentSave element = CreateElement("MaxWidth = MinWidth");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        gue.MinWidth = 5;
+        gue.MaxWidth.ShouldBe(5f);
+
+        gue.MinWidth = null;
+
+        gue.MaxWidth.ShouldBeNull();
+    }
+
+    [Fact]
+    public void NotifyVariablesChanged_NullableRowReadingAMismatchedTypeFromAnInstance_KeepsItsValue()
+    {
+        ComponentSave element = CreateElement("MaxWidth = Source.Visible", "MaxHeight = Label.Text");
+        AddInstance(element, "Source", "Container");
+        AddInstance(element, "Label", "Text");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        gue.MaxWidth = 100;
+        gue.MaxHeight = 100;
+
+        gue.GetGraphicalUiElementByName("Source")!.Visible = false;
+        gue.SetProperty("Label.Text", "hello");
+
+        // A bool and a string cannot be a float?, so nothing is copied; that is not a null to copy.
+        gue.MaxWidth.ShouldBe(100f);
+        gue.MaxHeight.ShouldBe(100f);
+    }
+
+    [Fact]
+    public void NotifyVariablesChanged_NullableRowReadingANullableFloatFromAnInstance_FollowsAndClears()
+    {
+        ComponentSave element = CreateElement("MaxWidth = Source.MaxWidth", "MinWidth = Source.MinWidth");
+        AddInstance(element, "Source", "Container");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        GraphicalUiElement source = gue.GetGraphicalUiElementByName("Source")!;
+
+        source.MaxWidth = 30;
+        source.MinWidth = 40;
+        gue.MaxWidth.ShouldBe(30f);
+        gue.MinWidth.ShouldBe(40f);
+
+        source.MaxWidth = null;
+        source.MinWidth = null;
+
+        gue.MaxWidth.ShouldBeNull();
+        gue.MinWidth.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RefreshReferences_NullableVariableNowNull_ClearsTheRowReadingIt()
+    {
+        ComponentSave element = CreateElement("MaxWidth = MinWidth");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        // Set without reporting, as code that changes a variable some other way would.
+        VariableReferenceGraph.BeginSuppression();
+        try
+        {
+            gue.MinWidth = 5;
+        }
+        finally
+        {
+            VariableReferenceGraph.EndSuppression();
+        }
+        gue.RefreshReferences("MinWidth");
+        gue.MaxWidth.ShouldBe(5f);
+
+        VariableReferenceGraph.BeginSuppression();
+        try
+        {
+            gue.MinWidth = null;
+        }
+        finally
+        {
+            VariableReferenceGraph.EndSuppression();
+        }
+        gue.RefreshReferences("MinWidth");
+
+        gue.MaxWidth.ShouldBeNull();
+    }
+
+    [Fact]
     public void RefreshReferences_NoRowReadsTheVariable_ChangesNothing()
     {
         ComponentSave element = CreateElement("Y = Offset * 2");
@@ -281,6 +377,19 @@ public class ReactiveVariableReferenceTests : BaseTestClass
 
         ball.Width = 70;
         bar.Height.ShouldBe(70f);
+    }
+
+    private static void AddInstance(ComponentSave element, string name, string baseType)
+    {
+        element.Instances.Add(new InstanceSave { Name = name, BaseType = baseType, ParentContainer = element });
+        GumProjectSave project = ObjectFinder.Self.GumProjectSave!;
+        if (project.StandardElements.All(item => item.Name != baseType))
+        {
+            StandardElementSave standard = new StandardElementSave { Name = baseType };
+            standard.States.Add(StandardElementsManager.Self.GetDefaultStateFor(baseType));
+            standard.DefaultState!.ParentContainer = standard;
+            project.StandardElements.Add(standard);
+        }
     }
 
     private static void AddInstanceRows(ComponentSave element, string instance, params string[] rows)

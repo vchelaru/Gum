@@ -1176,6 +1176,12 @@ public class EvaluatedSyntax
 
     public bool CastTo(string? desiredType)
     {
+        // A nullable target (float?, int?) casts to its underlying type.
+        if (desiredType != null && desiredType.Length > 1 && desiredType.EndsWith("?") && this.Value != null)
+        {
+            desiredType = desiredType.Substring(0, desiredType.Length - 1);
+        }
+
         if(desiredType == this.EvaluatedType)
         {
             return true;
