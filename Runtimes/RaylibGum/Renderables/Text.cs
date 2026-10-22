@@ -1668,9 +1668,11 @@ public class Text : IVisible, IRenderableIpso,
     /// <see cref="mPreRenderWidth"/>/<see cref="mPreRenderHeight"/> are stored in BASE units (the
     /// caller multiplies by <see cref="FontScale"/> downstream), while an inline [FontScale=N] is an
     /// ABSOLUTE per-run scale (matching how <see cref="DrawStyledLine"/> draws it). So each run's
-    /// contribution is divided by <see cref="FontScale"/> to land back in base units. A line with no
-    /// runs, or only non-scale runs (e.g. Color), keeps a factor of 1. FontScale (the base Text
-    /// scale) is the floor, so an inline run smaller than the base does not shrink the line.
+    /// contribution is divided by <see cref="FontScale"/> to land back in base units. Each line's height
+    /// is <see cref="StyledLineHeight"/>: the larger of the multiplied base and the tallest size run
+    /// ([FontScale] or [FontSize]), so the multiplier applies to the base but not to a run, and a line
+    /// with no size run (plain, or only Color runs) is the multiplied base. This matches the drawn
+    /// advance (<see cref="GetLineAdvance"/>); the caller does not multiply the result again.
     /// Line-wrapping is intentionally still base-scale-only (deferred per #3471); this only affects
     /// size reporting.
     /// </remarks>

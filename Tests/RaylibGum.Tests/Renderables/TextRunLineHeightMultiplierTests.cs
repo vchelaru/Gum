@@ -153,6 +153,25 @@ public class TextRunLineHeightMultiplierTests : BaseTestClass
     }
 
     [Fact]
+    public void FontSizeRun_LargerThanMultipliedBase_IsNotMultiplied()
+    {
+        float h = PlainLineHeight();
+        TextRuntime runtime = new();
+        runtime.LineHeightMultiplier = 1.5f;
+        runtime.Text = "x";
+        Text text = (Text)runtime.RenderableComponent!;
+        // No font creator is wired in these tests, so [FontSize] scales the base atlas to the given pixel size.
+        int doubleBaseSize = text.Font.BaseSize * 2;
+        runtime.Text = $"a\n[FontSize={doubleBaseSize}]b[/FontSize]\nc";
+
+        IReadOnlyList<float> offsets = text.GetLineTopOffsets();
+
+        offsets[1].ShouldBe(1.5f * h, 0.01);
+        (offsets[2] - offsets[1]).ShouldBe(2 * h, 0.01, "because a size-2 run beats the multiplied base (1.5) and is not itself multiplied");
+        ShouldReportTheDrawnHeight(text, 1.5f * h);
+    }
+
+    [Fact]
     public void RunLine_AfterMultiplierChange_UsesTheNewMultiplier()
     {
         float h = PlainLineHeight();
