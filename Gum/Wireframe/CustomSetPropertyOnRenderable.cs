@@ -1218,7 +1218,12 @@ public partial class CustomSetPropertyOnRenderable
         {
             if (textRuntime != null)
             {
+#if FRB
+                textRuntime.FontSize = (int)value;
+#else
+                // A fractional FontSize carried by a reference arrives as a float.
                 textRuntime.FontSize = Convert.ToSingle(value);
+#endif
             }
             ReactToFontValueChange();
         }
