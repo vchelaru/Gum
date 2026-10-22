@@ -108,15 +108,28 @@ public static class IWrappedTextExtensions
         previousLinesBuffer.Clear();
         previousLinesBuffer.AddRange(lines);
         lines.Clear();
-        textInstance.UpdateLines(lines, previousLinesBuffer);
-        previousLinesBuffer.Clear();
+        try
+        {
+            textInstance.UpdateLines(lines, previousLinesBuffer);
+        }
+        finally
+        {
+            // Even when wrapping throws, so the scratch never keeps strings alive or leaks into a later wrap.
+            previousLinesBuffer.Clear();
+        }
+    }
+
+    // Kept with exactly this signature: it is already compiled into consumers (for example FRB game DLLs).
+    public static void UpdateLines(this IWrappedText textInstance, List<string> lines)
+    {
+        textInstance.UpdateLines(lines, previousLines: null);
     }
 
     /// <param name="textInstance">The text to wrap.</param>
     /// <param name="lines">Receives the wrapped lines.</param>
-    /// <param name="previousLines">Optional lines from the last wrap. A new line equal to the line at the
+    /// <param name="previousLines">Lines from the last wrap, or null. A new line equal to the line at the
     /// same index is replaced by that string, so it is not allocated again.</param>
-    public static void UpdateLines(this IWrappedText textInstance, List<string> lines, List<string>? previousLines = null)
+    public static void UpdateLines(this IWrappedText textInstance, List<string> lines, List<string>? previousLines)
     {
         var effectiveMaxNumberOfLines = textInstance.MaxNumberOfLines;
 

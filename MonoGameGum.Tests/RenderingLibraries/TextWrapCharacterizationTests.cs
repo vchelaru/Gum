@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
+using Moq;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
@@ -136,6 +137,20 @@ public class TextWrapCharacterizationTests : IDisposable
             reused.WrappedTextWidth.ShouldBe(fresh.WrappedTextWidth, $"step {step}");
             reused.WrappedTextHeight.ShouldBe(fresh.WrappedTextHeight, $"step {step}");
         }
+    }
+
+    [Fact]
+    public void RebuildLines_WhenWrappingThrows_ClearsThePreviousLinesScratch()
+    {
+        Mock<IWrappedText> wrappedText = new();
+        wrappedText.Setup(t => t.RawText).Returns("one two");
+        wrappedText.Setup(t => t.MeasureString(It.IsAny<string>(), It.IsAny<int>())).Throws<InvalidOperationException>();
+        List<string> lines = new() { "old line" };
+        List<string> previousLinesBuffer = new();
+
+        Should.Throw<InvalidOperationException>(() => wrappedText.Object.RebuildLines(lines, previousLinesBuffer));
+
+        previousLinesBuffer.ShouldBeEmpty();
     }
 
     protected Text Build(Case testCase)

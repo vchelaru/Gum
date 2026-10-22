@@ -55,4 +55,23 @@ public class TextCloneSplitterCacheTests
 
         result.TotalBytes.ShouldBe(0, $"measured {result.BytesPerIteration:N0} bytes/frame");
     }
+
+    // #6420: the scratch list that holds the last wrap's lines belongs to one Text; a clone sharing it
+    // would let one Text's re-wrap hand its lines to the other.
+    [Fact]
+    public void Clone_GetsItsOwnPreviousWrappedTextScratch()
+    {
+        Text original = new Text();
+
+        Text clone = original.Clone();
+
+        object? originalScratch = typeof(Text)
+            .GetField("mPreviousWrappedText", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(original);
+        object? cloneScratch = typeof(Text)
+            .GetField("mPreviousWrappedText", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(clone);
+        originalScratch.ShouldNotBeNull();
+        cloneScratch.ShouldNotBeSameAs(originalScratch);
+    }
 }
