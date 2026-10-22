@@ -1616,7 +1616,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     // For the lines of WrappedText, which are drawn and measured every frame: the runs are cached until the
     // line or the inline variables change. Read-only to callers.
-    private List<StyledSubstring> GetCachedStyledSubstrings(int lineIndex, int startOfLineIndex, string lineOfText) =>
+    internal List<StyledSubstring> GetCachedStyledSubstrings(int lineIndex, int startOfLineIndex, string lineOfText) =>
         styledSubstringSplitter.GetStyledSubstrings(lineIndex, startOfLineIndex, lineOfText, InlineVariables);
 
     private void RenderUsingBitmapFont(SpriteRenderer spriteRenderer, SystemManagers managers)
@@ -2020,6 +2020,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         // would otherwise rewrite the other's lines and inline-styling runs.
         newInstance.mWrappedText = new List<string>(mWrappedText);
         newInstance.InlineVariables = new List<InlineVariable>(InlineVariables);
+        // The splitter caches runs for this instance's lines and variables; shared, two Texts would clear
+        // each other's cache every frame.
+        newInstance.styledSubstringSplitter = new StyledSubstringSplitter();
         // The render target belongs to this instance: the clone would redraw its own text into it
         // or dispose it. The clone renders its own on the next refresh, and measures itself until
         // then, since the source may have measured from that render target.

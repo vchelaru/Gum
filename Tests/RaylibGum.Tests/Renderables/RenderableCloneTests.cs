@@ -155,6 +155,39 @@ public class RenderableCloneTests : BaseTestClass
         clone.WrappedText.ShouldBe(new[] { "Changed" });
     }
 
+    // Issue #6419: the styled-run cache belongs to one Text; shared, an original and its clone drawing with
+    // different inline variables would rebuild each other's runs (and allocate) every frame.
+    [Fact]
+    public void Text_Clone_DoesNotShareTheStyledRunCache()
+    {
+        Text original = new(SystemManagers.Default) { Width = null };
+        original.InlineVariables.Add(new RenderingLibrary.Graphics.InlineVariable
+        {
+            VariableName = "Color", Value = "Red", StartIndex = 2, CharacterCount = 4
+        });
+        Text clone = (Text)((ICloneable)original).Clone();
+        clone.InlineVariables.Add(new RenderingLibrary.Graphics.InlineVariable
+        {
+            VariableName = "Color", Value = "Blue", StartIndex = 7, CharacterCount = 2
+        });
+        const string line = "abcdefghij";
+
+        for (int i = 0; i < 10; i++)
+        {
+            original.GetCachedStyledSubstrings(0, 0, line);
+            clone.GetCachedStyledSubstrings(0, 0, line);
+        }
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < 20; i++)
+        {
+            original.GetCachedStyledSubstrings(0, 0, line);
+            clone.GetCachedStyledSubstrings(0, 0, line);
+        }
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        allocated.ShouldBe(0);
+    }
+
     [Fact]
     public void Text_Clone_ResetsParent()
     {

@@ -153,6 +153,9 @@ public class Text : IVisible, IRenderableIpso,
         // re-parsing markup on one instance doesn't rewrite the other's lines or runs.
         newInstance.mWrappedText = new List<string>(mWrappedText);
         newInstance.InlineVariables = new List<InlineVariable>(InlineVariables);
+        // The splitter caches runs for this instance's lines and variables; shared, two Texts would clear
+        // each other's cache every frame.
+        newInstance._styledSubstringSplitter = new StyledSubstringSplitter();
         // These call back into the source's runtime; the clone's runtime wires its own.
         newInstance.OnPreRender = null;
         newInstance.OnGlyphGrowthCheck = null;
@@ -256,7 +259,7 @@ public class Text : IVisible, IRenderableIpso,
     public static TextPositionRoundingMode TextPositionRoundingMode = TextPositionRoundingMode.RoundToInt;
 
     List<string> mWrappedText = new List<string>();
-    readonly StyledSubstringSplitter _styledSubstringSplitter = new StyledSubstringSplitter();
+    StyledSubstringSplitter _styledSubstringSplitter = new StyledSubstringSplitter();
     float? mWidth = 200;
     float mHeight = 200;
 
@@ -1042,7 +1045,7 @@ public class Text : IVisible, IRenderableIpso,
 
     // For the lines of WrappedText, which are drawn and measured every frame: the runs are cached until the
     // line or the inline variables change. Read-only to callers.
-    private List<StyledSubstring> GetCachedStyledSubstrings(int lineIndex, int startOfLineIndex, string lineOfText) =>
+    internal List<StyledSubstring> GetCachedStyledSubstrings(int lineIndex, int startOfLineIndex, string lineOfText) =>
         _styledSubstringSplitter.GetStyledSubstrings(lineIndex, startOfLineIndex, lineOfText, InlineVariables);
 
     /// <summary>
