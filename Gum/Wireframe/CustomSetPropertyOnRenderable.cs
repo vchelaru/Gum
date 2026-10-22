@@ -984,14 +984,14 @@ public partial class CustomSetPropertyOnRenderable
 
         if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren)
         {
-            if (graphicalUiElement.MaxWidth == null)
+            if (graphicalUiElement.EffectiveMaxWidth == null)
             {
                 // make it have no line wrap width before assignign the text:
                 textRenderable.Width = null;
             }
             else
             {
-                textRenderable.Width = graphicalUiElement.MaxWidth;
+                textRenderable.Width = graphicalUiElement.EffectiveMaxWidth;
             }
         }
 

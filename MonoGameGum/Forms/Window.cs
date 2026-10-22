@@ -460,7 +460,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
     /// </summary>
     private void ClampMinWidth(float widthUnitBefore, float absoluteWidthBefore)
     {
-        if (Visual.MinWidth == null)
+        if (Visual.EffectiveMinWidth == null)
         {
             return;
         }
@@ -470,9 +470,9 @@ public class Window : Gum.Forms.Controls.FrameworkElement
         // changing the unit value shifts absolute by the same amount.
         var unitToAbsoluteOffset = absoluteWidthBefore - widthUnitBefore;
         var projectedAbsoluteWidth = unitToAbsoluteOffset + Visual.Width;
-        if (projectedAbsoluteWidth < Visual.MinWidth.Value)
+        if (projectedAbsoluteWidth < Visual.EffectiveMinWidth.Value)
         {
-            Visual.Width += Visual.MinWidth.Value - projectedAbsoluteWidth;
+            Visual.Width += Visual.EffectiveMinWidth.Value - projectedAbsoluteWidth;
         }
     }
 
@@ -481,16 +481,16 @@ public class Window : Gum.Forms.Controls.FrameworkElement
     /// </summary>
     private void ClampMinHeight(float heightUnitBefore, float absoluteHeightBefore)
     {
-        if (Visual.MinHeight == null)
+        if (Visual.EffectiveMinHeight == null)
         {
             return;
         }
 
         var unitToAbsoluteOffset = absoluteHeightBefore - heightUnitBefore;
         var projectedAbsoluteHeight = unitToAbsoluteOffset + Visual.Height;
-        if (projectedAbsoluteHeight < Visual.MinHeight.Value)
+        if (projectedAbsoluteHeight < Visual.EffectiveMinHeight.Value)
         {
-            Visual.Height += Visual.MinHeight.Value - projectedAbsoluteHeight;
+            Visual.Height += Visual.EffectiveMinHeight.Value - projectedAbsoluteHeight;
         }
     }
 

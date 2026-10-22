@@ -214,6 +214,30 @@ public class SplitterTests : BaseTestClass
         _secondPanel.Height.ShouldBe(20);
     }
 
+    // A NaN or infinite minimum is no minimum (#6473): the panels resize as they do with none.
+    [Theory]
+    [InlineData(float.PositiveInfinity)]
+    [InlineData(float.NegativeInfinity)]
+    [InlineData(float.NaN)]
+    public void ApplyResizeChangeInPixels_NonFiniteMinHeight_ResizesAsWithNoMinimum(float min)
+    {
+        SetupVerticalStack();
+        _firstPanel!.Height = 10;
+        _firstPanel.Visual.MinHeight = min;
+        _secondPanel!.Height = 10;
+        _secondPanel.Visual.MinHeight = min;
+
+        _splitter!.ApplyResizeChangeInPixels(20);
+
+        _firstPanel.Height.ShouldBe(20);
+        _secondPanel.Height.ShouldBe(0);
+
+        _splitter.ApplyResizeChangeInPixels(-30);
+
+        _firstPanel.Height.ShouldBe(0);
+        _secondPanel.Height.ShouldBe(20);
+    }
+
     [Fact]
     public void ApplyResizeChangeInPixels_ShouldNotResize_PastMinHeight()
     {

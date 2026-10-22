@@ -522,6 +522,17 @@ public partial class GraphicalUiElement
 
         }
     }
+    // The bounds layout reads (#6473). A NaN or infinite bound is no limit: a maximum of +infinity or a minimum of
+    // -infinity already was, and a minimum of +infinity or a maximum of -infinity cannot be met. Every read of a
+    // bound by layout, text wrapping or a control goes through these, so none compares against the raw value.
+    internal float? EffectiveMinWidth => FiniteBoundOrNull(_minWidth);
+    internal float? EffectiveMaxWidth => FiniteBoundOrNull(_maxWidth);
+    internal float? EffectiveMinHeight => FiniteBoundOrNull(_minHeight);
+    internal float? EffectiveMaxHeight => FiniteBoundOrNull(_maxHeight);
+
+    static float? FiniteBoundOrNull(float? bound) =>
+        bound.HasValue && !float.IsNaN(bound.Value) && !float.IsInfinity(bound.Value) ? bound : null;
+
     float? _minHeight;
     public float? MinHeight
     {

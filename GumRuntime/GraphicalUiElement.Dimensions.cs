@@ -161,9 +161,9 @@ public partial class GraphicalUiElement
                             var oldWidth = mContainedObjectAsIpso.Width;
                             if (WidthUnits == DimensionUnitType.RelativeToChildren)
                             {
-                                if (MaxWidth != null)
+                                if (EffectiveMaxWidth != null)
                                 {
-                                    mContainedObjectAsIpso.Width = MaxWidth.Value;
+                                    mContainedObjectAsIpso.Width = EffectiveMaxWidth.Value;
                                 }
                                 else
                                 {
@@ -574,23 +574,22 @@ public partial class GraphicalUiElement
     // such as a NaN canvas size, which FULL_DIAGNOSTICS reports.
     static float ToFiniteSize(float size) => float.IsInfinity(size) ? 0 : size;
 
-    // Min wins over max when they conflict. A bound that is not a finite number is no limit (#6473): a maximum of
-    // +infinity or a minimum of -infinity already was, and a minimum of +infinity or a maximum of -infinity cannot be
-    // met, so it would otherwise hand an infinite size to the renderable (which throws under FULL_DIAGNOSTICS).
+    // Min wins over max when they conflict. A bound that is not a finite number is no limit (#6473, see
+    // EffectiveMinWidth); it would otherwise hand an infinite size to the renderable, which throws under FULL_DIAGNOSTICS.
     static float ClampToMinMax(float value, float? min, float? max)
     {
-        if (max.HasValue && IsFiniteBound(max.Value) && value > max.Value)
+        min = FiniteBoundOrNull(min);
+        max = FiniteBoundOrNull(max);
+        if (value > max)
         {
             value = max.Value;
         }
-        if (min.HasValue && IsFiniteBound(min.Value) && value < min.Value)
+        if (value < min)
         {
             value = min.Value;
         }
         return value;
     }
-
-    static bool IsFiniteBound(float bound) => !float.IsNaN(bound) && !float.IsInfinity(bound);
 
     // A zero, negative or non-finite aspect ratio (such as from an empty texture) cannot size the
     // other axis, so MaintainFileAspectRatio falls back as if the renderable had no aspect ratio.
@@ -637,7 +636,7 @@ public partial class GraphicalUiElement
                     // its longest line (#5806). Lines break against the max, not the current size, so the
                     // measured size does not change where they break. A non-wrapping stack keeps the
                     // child in this line and the caller clamps the full size to the max.
-                    if (WrapsChildren && hasCountedVisibleChild && lineWithElement > this.MaxHeight)
+                    if (WrapsChildren && hasCountedVisibleChild && lineWithElement > this.EffectiveMaxHeight)
                     {
                         lineWithElement = elementHeight;
                     }
@@ -942,7 +941,7 @@ public partial class GraphicalUiElement
                     // its longest line (#5806). Lines break against the max, not the current size, so the
                     // measured size does not change where they break. A non-wrapping stack keeps the
                     // child in this line and the caller clamps the full size to the max.
-                    if (WrapsChildren && hasCountedVisibleChild && lineWithElement > this.MaxWidth)
+                    if (WrapsChildren && hasCountedVisibleChild && lineWithElement > this.EffectiveMaxWidth)
                     {
                         lineWithElement = elementWidth;
                     }
