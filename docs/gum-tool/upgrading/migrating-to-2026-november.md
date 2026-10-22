@@ -551,3 +551,7 @@ Typed characters are not affected. They still repeat as the operating system rep
 This affects you only if you rely on the operating system's key repeat speed for arrow keys or other navigation keys on raylib or Sokol. To migrate, set `RepeatDelay` and `RepeatRate` on the keyboard to the values you want.
 
 On Windows and macOS, `Initialize` also starts `RepeatDelay` and `RepeatRate` from the system keyboard settings instead of 500 ms and 70 ms. On Windows the delay runs from 250 ms to 1 second and the speed from about 2.5 to 30 repeats per second. On macOS the settings are only present after the user has changed them in System Settings; otherwise the defaults apply. The system settings are read once, so a change made while the game runs is not picked up. Linux and other platforms keep 500 ms and 70 ms. To keep fixed values on every machine, set `RepeatDelay` and `RepeatRate` after `Initialize`.
+
+### Styled Text Reports Its Drawn Height
+
+Styled text that combines a [FontScale] or [FontSize] run with a LineHeightMultiplier other than 1 now reports its drawn height, because a size run is no longer multiplied: MonoGame, KNI and FNA texts like this get shorter with a multiplier above 1 and taller with one below 1, so anything laid out around them shifts. In Skia, lines with a size run now use the same spacing at any multiplier, and a trailing newline adds its empty last line to the height.
