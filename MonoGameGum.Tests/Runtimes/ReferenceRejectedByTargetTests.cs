@@ -52,14 +52,14 @@ public class ReferenceRejectedByTargetTests : BaseTestClass
     public static IEnumerable<float> NonFiniteValues => new[] { float.PositiveInfinity, float.NegativeInfinity, float.NaN };
 
     // Every float target whose setter checks the value (X, Y, Width, Height, Rotation of any element, FontScale of a
-    // Text), each with the value it has before the reference, and the source variable a Container hands it: StackSpacing
+    // Text) and Z, which no standard element defines and whose type comes from the element's own declaration, each with the value it has before the reference, and the source variable a Container hands it: StackSpacing
     // accepts any float, so the source itself never throws.
     public static TheoryData<bool, string, float, float> NonFiniteIntoCheckedTarget()
     {
         TheoryData<bool, string, float, float> data = new();
         foreach (bool useExpressions in new[] { false, true })
         {
-            foreach (string target in new[] { "X", "Y", "Width", "Height", "Rotation", "FontScale" })
+            foreach (string target in new[] { "X", "Y", "Width", "Height", "Rotation", "FontScale", "Z" })
             {
                 foreach (float value in NonFiniteValues)
                 {
@@ -90,6 +90,7 @@ public class ReferenceRejectedByTargetTests : BaseTestClass
         "Width" => target.Width,
         "Height" => target.Height,
         "Rotation" => target.Rotation,
+        "Z" => target.Z,
         "FontScale" => ((TextRuntime)target).FontScale,
         _ => throw new ArgumentException(name)
     };
@@ -127,6 +128,64 @@ public class ReferenceRejectedByTargetTests : BaseTestClass
         source.SetProperty("StackSpacing", 9f);
         Read(element, target).ShouldBe(9f);
         _errors.Count.ShouldBe(1);
+    }
+
+    // A nullable float takes infinity, on the live path too, where the state does not carry the declared type.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LiveUpdate_InfinityIntoNullableFloatDeclaredOnTheElement_Applies(bool useExpressions)
+    {
+        ComponentSave pair = ReferencePairBuilder.Build("Z = Source.StackSpacing", useExpressions,
+            new (string, object?)[] { ("Z", 77f), ("StackSpacing", 5f) }, targetType: "float?",
+            targetBaseType: "Container", sourceBaseType: "Container");
+        GraphicalUiElement root = pair.ToGraphicalUiElement();
+        GraphicalUiElement source = root.GetGraphicalUiElementByName("Source")!;
+        GraphicalUiElement target = root.GetGraphicalUiElementByName("Target")!;
+
+        source.SetProperty("StackSpacing", float.PositiveInfinity);
+
+        target.Z.ShouldBe(float.PositiveInfinity);
+        _errors.ShouldBeEmpty();
+    }
+
+    // A custom float variable of a component (a property of its generated class) is typed by the component, not by a
+    // standard element, and rejects a NaN or infinity live like any float.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LiveUpdate_InfinityIntoCustomFloatVariable_KeepsThePreviousValueAndReportsOnce(bool useExpressions)
+    {
+        ComponentSave pair = ReferencePairBuilder.Build("Progress = Source.StackSpacing", useExpressions,
+            new (string, object?)[] { ("Progress", 77f), ("StackSpacing", 5f) },
+            targetBaseType: "Slider", sourceBaseType: "Container");
+        ComponentSave slider = new ComponentSave { Name = "Slider", BaseType = "Container" };
+        StateSave sliderState = new StateSave { Name = "Default", ParentContainer = slider };
+        sliderState.Variables.Add(new VariableSave { Name = "Progress", Type = "float", Value = 0f, IsCustomVariable = true });
+        slider.States.Add(sliderState);
+        ObjectFinder.Self.GumProjectSave!.Components.Add(slider);
+        ElementSaveExtensions.RegisterGueInstantiationType("Slider", typeof(SliderRuntime));
+        GraphicalUiElement root = pair.ToGraphicalUiElement();
+        GraphicalUiElement source = root.GetGraphicalUiElementByName("Source")!;
+        SliderRuntime target = (SliderRuntime)root.GetGraphicalUiElementByName("Target")!;
+        target.Progress.ShouldBe(5f);
+
+        for (int frame = 0; frame < 300; frame++)
+        {
+            source.SetProperty("StackSpacing", frame % 2 == 0 ? float.PositiveInfinity : float.NaN);
+        }
+
+        target.Progress.ShouldBe(5f);
+        _errors.Count.ShouldBe(1, string.Join(Environment.NewLine, _errors));
+        source.SetProperty("StackSpacing", 9f);
+        target.Progress.ShouldBe(9f);
+    }
+
+    private class SliderRuntime : GraphicalUiElement
+    {
+        public SliderRuntime() : base(new InvisibleRenderable(), null) { }
+
+        public float Progress { get; set; }
     }
 
     [Fact]
@@ -215,7 +274,7 @@ public class ReferenceRejectedByTargetTests : BaseTestClass
     public void CreateAndLiveUpdate_RandomFiniteValuesIntoEveryCheckedTarget_ApplyWithoutReporting()
     {
         Random random = new Random(6457);
-        string[] targets = { "X", "Y", "Width", "Height", "Rotation", "FontScale" };
+        string[] targets = { "X", "Y", "Width", "Height", "Rotation", "FontScale", "Z" };
         for (int i = 0; i < 300; i++)
         {
             string target = targets[i % targets.Length];
