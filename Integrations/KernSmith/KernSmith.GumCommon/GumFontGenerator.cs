@@ -26,17 +26,17 @@ public static class GumFontGenerator
     /// Test seam: finds the StbTrueType rasterizer type. Resolved by name so desktop builds, which do
     /// not reference <c>KernSmith.Rasterizers.StbTrueType</c>, do not need the package; the iOS and
     /// Android builds reference it and resolve the type directly, which also keeps a trimmer from
-    /// removing it. Public for the same reason as <see cref="IsBrowserPlatform"/>.
+    /// removing it.
     /// </summary>
-    public static Func<Type?> ResolveStbTrueTypeRasterizerType =
+    internal static Func<Type?> ResolveStbTrueTypeRasterizerType =
 #if IOS || ANDROID
         () => typeof(KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer);
 #else
         () => Type.GetType("KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer, KernSmith.Rasterizers.StbTrueType");
 #endif
 
-    /// <summary>Test seam: runs a type's static constructor. Public for the same reason as <see cref="IsBrowserPlatform"/>.</summary>
-    public static Action<Type> ForceStaticConstructor =
+    /// <summary>Test seam: runs a type's static constructor.</summary>
+    internal static Action<Type> ForceStaticConstructor =
         type => System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
 
     /// <summary>

@@ -48,6 +48,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="RaylibGum.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
   </ItemGroup>
 
