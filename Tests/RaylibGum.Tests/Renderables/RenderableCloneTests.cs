@@ -203,6 +203,26 @@ public class RenderableCloneTests : BaseTestClass
         field.GetValue(clone).ShouldNotBeSameAs(field.GetValue(original));
     }
 
+    // #6426: the per-run scratch a styled line draws through belongs to one Text; a clone sharing it would
+    // have two Texts overwrite each other's runs mid-draw.
+    [Fact]
+    public void Text_Clone_GetsItsOwnStyledRunScratch()
+    {
+        Gum.GueDeriving.TextRuntime textRuntime = new();
+        textRuntime.Text = "ab[Color=Red]cd[/Color]ef";
+        Text original = (Text)textRuntime.RenderableComponent!;
+        Raylib_cs.Raylib.BeginDrawing();
+        original.Render(SystemManagers.Default);
+        Raylib_cs.Raylib.EndDrawing();
+        System.Reflection.FieldInfo field = typeof(Text).GetField(
+            "_styledRunScratch", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        ((Array)field.GetValue(original)!).Length.ShouldBeGreaterThan(0, "because drawing a styled line fills the scratch");
+
+        Text clone = (Text)((ICloneable)original).Clone();
+
+        field.GetValue(clone).ShouldNotBeSameAs(field.GetValue(original));
+    }
+
     [Fact]
     public void Text_Clone_ResetsParent()
     {
