@@ -61,11 +61,14 @@ public class TextMarkupTests : BaseTestClass
         Text internalText = (Text)textRuntime.RenderableComponent;
 
         internalText.RawText.ShouldBe("inner");
-        internalText.InlineVariables.Count.ShouldBe(1);
+        // The second (empty) run is the closing [/FontSize]: size 0 means back to the base font (#6468).
+        internalText.InlineVariables.Count.ShouldBe(2);
         internalText.InlineVariables[0].VariableName.ShouldBe("BitmapFont");
         internalText.InlineVariables[0].Value.ShouldBe(20f);
         internalText.InlineVariables[0].StartIndex.ShouldBe(0);
         internalText.InlineVariables[0].CharacterCount.ShouldBe(5);
+        internalText.InlineVariables[1].Value.ShouldBe(0f);
+        internalText.InlineVariables[1].CharacterCount.ShouldBe(0);
     }
 
     // #3624 (the feature): with a font creator wired, nested [IsBold][FontSize=20] resolves the inner run to a
@@ -145,11 +148,36 @@ public class TextMarkupTests : BaseTestClass
         Text internalText = (Text)textRuntime.RenderableComponent;
 
         internalText.RawText.ShouldBe("Big text");
-        internalText.InlineVariables.Count.ShouldBe(1);
+        // The second (empty) run is the closing [/FontSize]: size 0 means back to the base font (#6468).
+        internalText.InlineVariables.Count.ShouldBe(2);
         internalText.InlineVariables[0].VariableName.ShouldBe("BitmapFont");
         internalText.InlineVariables[0].Value.ShouldBe(40f);
         internalText.InlineVariables[0].StartIndex.ShouldBe(4);
         internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
+        internalText.InlineVariables[1].Value.ShouldBe(0f);
+        internalText.InlineVariables[1].CharacterCount.ShouldBe(0);
+    }
+
+    // #6468: with no font creator wired the closing tag must still end the run, or the run stretches to the end
+    // of the text and everything after [/FontSize] is drawn and measured at the enlarged size.
+    [Fact]
+    public void Text_WithFontSizeMarkup_NoFontCreator_RunEndsAtClosingTag()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "a";
+        int baseSize = ((Text)textRuntime.RenderableComponent!).Font.BaseSize;
+        float WidthOf(string text)
+        {
+            TextRuntime plain = new();
+            plain.Text = text;
+            return ((Text)plain.RenderableComponent!).WrappedTextWidth;
+        }
+        float expected = WidthOf("a") + 2 * WidthOf("b") + WidthOf("c");
+
+        textRuntime.Text = $"a[FontSize={baseSize * 2}]b[/FontSize]c";
+
+        // A run left open to the end would measure "bc" at twice the size, about one extra "c" wider.
+        ((Text)textRuntime.RenderableComponent!).WrappedTextWidth.ShouldBe(expected, 2.01);
     }
 
     // With a font creator wired, [FontSize=N] re-rasterizes a crisp Raylib_cs.Font AT size N (BaseSize == N)

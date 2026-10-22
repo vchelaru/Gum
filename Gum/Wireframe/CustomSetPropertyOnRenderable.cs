@@ -2046,6 +2046,12 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         fontSizeStack.Pop();
                         castedValue = GetAndCreateFontIfNecessary();
+#if RAYLIB
+                        // With no font creator the open tag stored a raw size (above), so the close tag must end
+                        // that run too (#6468): 0 means "back to the base font", which Text does not treat as a
+                        // size run. Without it the open run would stretch to the end of the text.
+                        castedValue ??= 0f;
+#endif
                     }
                     break;
                 case "OutlineThickness":
