@@ -536,6 +536,13 @@ public partial class CustomSetPropertyOnRenderable
                     handled = true;
                     break;
             }
+            // Same rationale as the Circle/RoundedRectangle branches (#2956): Dropshadow*, UseGradient and
+            // the other runtime-held values must land on the runtime, not the renderable that PreRender
+            // overwrites from the runtime each frame.
+            if (!handled)
+            {
+                handled = TrySetPropertyOnRuntime(graphicalUiElement, propertyName, value);
+            }
             if (!handled)
             {
                 handled = TrySetPropertiesOnRenderableBase(asArc, graphicalUiElement, propertyName, value);
@@ -815,6 +822,11 @@ public partial class CustomSetPropertyOnRenderable
                     }
                     handled = true;
                     break;
+            }
+            // See the Arc branch: runtime-held values must not be written straight to the renderable.
+            if (!handled)
+            {
+                handled = TrySetPropertyOnRuntime(graphicalUiElement, propertyName, value);
             }
             if (!handled)
             {
@@ -1879,74 +1891,84 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (propertyName == nameof(TextOverflowVerticalMode))
         {
-            var textOverflowMode = (TextOverflowVerticalMode)value;
-#if SKIA
-            // Skia honors vertical overflow directly on the renderable: TruncateLine caps the
-            // RichTextKit TextBlock to the Text's Height (see Text.GetTextBlock), SpillOver renders
-            // unbounded. The XNALIKE copy (Gum/Wireframe/CustomSetPropertyOnRenderable.cs) instead
-            // routes through GraphicalUiElement.RefreshTextOverflowVerticalMode. (issue #3677)
-            text.TextOverflowVerticalMode = textOverflowMode;
-            handled = true;
-#endif
-
-        }
-        // Standalone drop shadow (issue #3674). Set directly on the renderable rather than through
-        // ReactToFontValueChange, since these aren't font-cascade inputs. Mirrors the shape
-        // drop-shadow arms in TrySetPropertiesOnRenderableBase.
-        else if (propertyName == nameof(text.HasDropshadow))
-        {
-            text.HasDropshadow = (bool)value;
+            // Through the GraphicalUiElement property so its backing field (read by layout coordination and
+            // DialogBox pagination) follows, then Refresh applies the RelativeToChildren-forces-SpillOver
+            // rule. Identical to the core dispatcher (#6403).
+            gue.TextOverflowVerticalMode = (TextOverflowVerticalMode)value;
+            gue.RefreshTextOverflowVerticalMode();
             handled = true;
         }
-        else if (propertyName == nameof(text.DropshadowOffsetX))
+        // Standalone drop shadow (issue #3674, #6403). Set on the TextRuntime, whose setters keep the runtime
+        // property current and push every dropshadow field to the renderable through
+        // SystemManagers.UpdateFonts, exactly like the core dispatcher. Writing only the renderable left
+        // TextRuntime.HasDropshadow etc. stale. A GraphicalUiElement that holds a Text but is not a TextRuntime
+        // has no runtime property to keep, so the renderable is written directly.
+        else if (propertyName == nameof(TextRuntime.HasDropshadow))
         {
-            text.DropshadowOffsetX = (float)value;
+            if (gueAsTextRuntime != null) gueAsTextRuntime.HasDropshadow = (bool)value;
+            else text.HasDropshadow = (bool)value;
             handled = true;
         }
-        else if (propertyName == nameof(text.DropshadowOffsetY))
+        else if (propertyName == nameof(TextRuntime.DropshadowOffsetX))
         {
-            text.DropshadowOffsetY = (float)value;
+            if (gueAsTextRuntime != null) gueAsTextRuntime.DropshadowOffsetX = (float)value;
+            else text.DropshadowOffsetX = (float)value;
             handled = true;
         }
-        else if (propertyName == nameof(gueAsTextRuntime.DropshadowBlur))
+        else if (propertyName == nameof(TextRuntime.DropshadowOffsetY))
         {
-            // There's no scalar DropshadowBlur property on the renderable -- only the Skia-only
-            // per-axis DropshadowBlurX/DropshadowBlurY below, which the renderable's own Render
-            // method reads directly. Seed both axes equally on the RENDERABLE (matching how
-            // Gum.GueDeriving.TextRuntime.DropshadowBlur seeds its own X/Y fields under #if SKIA),
-            // not on gueAsTextRuntime -- that type's fields are separate and unread by rendering.
-            text.DropshadowBlurX = (float)value;
-            text.DropshadowBlurY = (float)value;
+            if (gueAsTextRuntime != null) gueAsTextRuntime.DropshadowOffsetY = (float)value;
+            else text.DropshadowOffsetY = (float)value;
             handled = true;
         }
-        else if (propertyName == nameof(text.DropshadowBlurX))
+        else if (propertyName == nameof(TextRuntime.DropshadowBlur))
         {
-            text.DropshadowBlurX = (float)value;
+            // The scalar seeds both Skia per-axis blurs on the runtime, which pushes them to the renderable.
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.DropshadowBlur = (float)value;
+            }
+            else
+            {
+                text.DropshadowBlurX = (float)value;
+                text.DropshadowBlurY = (float)value;
+            }
             handled = true;
         }
-        else if (propertyName == nameof(text.DropshadowBlurY))
+        else if (propertyName == nameof(TextRuntime.DropshadowBlurX))
         {
-            text.DropshadowBlurY = (float)value;
+            if (gueAsTextRuntime != null) gueAsTextRuntime.DropshadowBlurX = (float)value;
+            else text.DropshadowBlurX = (float)value;
             handled = true;
         }
-        else if (propertyName == nameof(text.DropshadowRed))
+        else if (propertyName == nameof(TextRuntime.DropshadowBlurY))
         {
-            text.DropshadowRed = (int)value;
+            if (gueAsTextRuntime != null) gueAsTextRuntime.DropshadowBlurY = (float)value;
+            else text.DropshadowBlurY = (float)value;
             handled = true;
         }
-        else if (propertyName == nameof(text.DropshadowGreen))
+        else if (propertyName == nameof(TextRuntime.DropshadowRed))
         {
-            text.DropshadowGreen = (int)value;
+            if (gueAsTextRuntime != null) gueAsTextRuntime.DropshadowRed = (int)value;
+            else text.DropshadowRed = (int)value;
             handled = true;
         }
-        else if (propertyName == nameof(text.DropshadowBlue))
+        else if (propertyName == nameof(TextRuntime.DropshadowGreen))
         {
-            text.DropshadowBlue = (int)value;
+            if (gueAsTextRuntime != null) gueAsTextRuntime.DropshadowGreen = (int)value;
+            else text.DropshadowGreen = (int)value;
             handled = true;
         }
-        else if (propertyName == nameof(text.DropshadowAlpha))
+        else if (propertyName == nameof(TextRuntime.DropshadowBlue))
         {
-            text.DropshadowAlpha = (int)value;
+            if (gueAsTextRuntime != null) gueAsTextRuntime.DropshadowBlue = (int)value;
+            else text.DropshadowBlue = (int)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(TextRuntime.DropshadowAlpha))
+        {
+            if (gueAsTextRuntime != null) gueAsTextRuntime.DropshadowAlpha = (int)value;
+            else text.DropshadowAlpha = (int)value;
             handled = true;
         }
 

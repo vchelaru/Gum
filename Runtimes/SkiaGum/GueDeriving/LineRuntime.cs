@@ -59,7 +59,11 @@ public class LineRuntime
     public bool IsRounded
     {
         get => ContainedLine.IsRounded;
-        set => ContainedLine.IsRounded = value;
+        set
+        {
+            ContainedLine.IsRounded = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public LineRuntime(bool fullInstantiation = true)
