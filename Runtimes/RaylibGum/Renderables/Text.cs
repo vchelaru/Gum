@@ -152,6 +152,7 @@ public class Text : IVisible, IRenderableIpso,
         // MemberwiseClone shares these lists; give the clone its own copies so re-wrapping or
         // re-parsing markup on one instance doesn't rewrite the other's lines or runs.
         newInstance.mWrappedText = new List<string>(mWrappedText);
+        newInstance.mPreviousWrappedText = new List<string>();
         newInstance.InlineVariables = new List<InlineVariable>(InlineVariables);
         // The splitter caches runs for this instance's lines and variables; shared, two Texts would clear
         // each other's cache every frame.
@@ -259,6 +260,9 @@ public class Text : IVisible, IRenderableIpso,
     public static TextPositionRoundingMode TextPositionRoundingMode = TextPositionRoundingMode.RoundToInt;
 
     List<string> mWrappedText = new List<string>();
+
+    // Scratch for the lines of the last wrap, so re-wrapping keeps the strings of lines that did not change.
+    List<string> mPreviousWrappedText = new List<string>();
     StyledSubstringSplitter _styledSubstringSplitter = new StyledSubstringSplitter();
     float? mWidth = 200;
     float mHeight = 200;
@@ -1003,8 +1007,7 @@ public class Text : IVisible, IRenderableIpso,
     {
         OnGlyphGrowthCheck?.Invoke();
 
-        mWrappedText.Clear();
-        this.UpdateLines(mWrappedText);
+        this.RebuildLines(mWrappedText, mPreviousWrappedText);
     }
 
     /// <summary>

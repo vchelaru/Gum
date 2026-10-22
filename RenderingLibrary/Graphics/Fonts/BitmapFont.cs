@@ -1407,7 +1407,12 @@ public class BitmapFont : IDisposable
     /// TrimRight trims the advance and uses the PixelRight-PixelLeft value to determine the last letter's width.
     /// Full uses the letter's XAdvance to determine the last letter's width.</param>
     /// <returns>The number of pixels needed to render this text horizontally.</returns>
-    public int MeasureString(string line, HorizontalMeasurementStyle horizontalMeasurementStyle = HorizontalMeasurementStyle.TrimRight)
+    public int MeasureString(string line, HorizontalMeasurementStyle horizontalMeasurementStyle = HorizontalMeasurementStyle.TrimRight) =>
+        MeasureString(line.AsSpan(), horizontalMeasurementStyle);
+
+    /// <inheritdoc cref="MeasureString(string, HorizontalMeasurementStyle)"/>
+    /// <remarks>Measures the characters in place, so a word inside a longer string needs no string of its own (#6420).</remarks>
+    public int MeasureString(ReadOnlySpan<char> line, HorizontalMeasurementStyle horizontalMeasurementStyle = HorizontalMeasurementStyle.TrimRight)
     {
         int toReturn = 0;
         for (int i = 0; i < line.Length; i++)

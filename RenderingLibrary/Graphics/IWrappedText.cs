@@ -51,6 +51,20 @@ public interface IWrappedText : IText
     /// </summary>
     float MeasureStringFullAdvance(string text) => -1;
 
+    /// <summary>
+    /// Span form of <see cref="MeasureString(string)"/>, so the wrapping loop can measure a word or a line
+    /// that lives inside the raw text without cutting a string out for it. The default makes the string;
+    /// a backend that measures glyph by glyph overrides it to measure the span in place.
+    /// </summary>
+    float MeasureString(ReadOnlySpan<char> text) => MeasureString(text.ToString());
+
+    /// <summary>Span form of <see cref="MeasureString(string, int)"/>; the default makes the string.</summary>
+    float MeasureString(ReadOnlySpan<char> text, int absoluteStartIndexInStrippedText) =>
+        MeasureString(text.ToString(), absoluteStartIndexInStrippedText);
+
+    /// <summary>Span form of <see cref="MeasureStringFullAdvance(string)"/>. Default: -1 (opt out).</summary>
+    float MeasureStringFullAdvance(ReadOnlySpan<char> text) => -1;
+
     bool IsMidWordLineBreakEnabled { get; }
 
     /// <summary>
@@ -70,13 +84,39 @@ public static class IWrappedTextExtensions
 {
     const string ellipsis = "...";
 
-    // Reused word buffer for the wrapping path, avoiding a fresh List + Split array each layout frame.
+    // A word of the raw text as a range into it, so tokenizing makes no strings.
+    private struct WordRange
+    {
+        public int Start;
+        public int Length;
+    }
+
+    // Reused word buffer for the wrapping path, avoiding a fresh List each layout frame.
     // Thread-static so parallel layout doesn't share it; null means "rented", so a reentrant call on the
     // same thread falls back to a fresh list rather than corrupting the shared one.
     [ThreadStatic]
-    static List<string>? _pooledWordList;
+    static List<WordRange>? _pooledWordList;
 
-    public static void UpdateLines(this IWrappedText textInstance, List<string> lines)
+    /// <summary>
+    /// Rebuilds <paramref name="lines"/> for the current text. The previous contents are kept in
+    /// <paramref name="previousLinesBuffer"/> (a list the caller owns and reuses) while wrapping, so a
+    /// line whose text did not change keeps its string and a text that changes every frame only makes
+    /// strings for the lines that did change (#6420).
+    /// </summary>
+    public static void RebuildLines(this IWrappedText textInstance, List<string> lines, List<string> previousLinesBuffer)
+    {
+        previousLinesBuffer.Clear();
+        previousLinesBuffer.AddRange(lines);
+        lines.Clear();
+        textInstance.UpdateLines(lines, previousLinesBuffer);
+        previousLinesBuffer.Clear();
+    }
+
+    /// <param name="textInstance">The text to wrap.</param>
+    /// <param name="lines">Receives the wrapped lines.</param>
+    /// <param name="previousLines">Optional lines from the last wrap. A new line equal to the line at the
+    /// same index is replaced by that string, so it is not allocated again.</param>
+    public static void UpdateLines(this IWrappedText textInstance, List<string> lines, List<string>? previousLines = null)
     {
         var effectiveMaxNumberOfLines = textInstance.MaxNumberOfLines;
 
@@ -136,10 +176,16 @@ public static class IWrappedTextExtensions
             return;
         }
 
-        // This allocates like crazy but we're
-        // on the PC and prob won't be calling this
-        // very frequently so let's
-        String currentLine = String.Empty;
+        // Every line is a run of characters in stringToUse (the words and the single spaces between them
+        // stay in order), so the loop tracks the current line and the current word as ranges into it and
+        // measures them as spans. Only a committed line becomes a string (AddLine), and a line equal to the
+        // previous wrap's line at the same index reuses that string (#6420).
+        //
+        // The current line is [currentLineStart, currentLineStart + currentLineLength). When it is not
+        // empty it ends right where the current word starts, because every word that joins a line brings
+        // the space after it along.
+        int currentLineStart = 0;
+        int currentLineLength = 0;
 
         // The absolute character index (in the stripped text) where the current line begins. It equals the
         // total length of the lines already committed, so it stays in sync with the inline-variable indexing
@@ -149,66 +195,65 @@ public static class IWrappedTextExtensions
         // measured at the run's real size while wrapping.
         int absoluteLineStartIndex = 0;
 
-        // Tokenize into a pooled list rather than String.Split (throwaway array) + a new List each frame;
-        // returned to the pool at the single exit point after the loop.
-        List<string> remainingWordsToProcess = RentWordList();
-        SplitOnSpaces(remainingWordsToProcess, stringToUse);
-
+        // The words left to process are words[firstWord..]. Pooled, returned at the single exit point.
+        List<WordRange> words = RentWordList();
+        SplitOnSpaces(words, stringToUse);
+        int firstWord = 0;
 
         bool isLastLine = false;
-        while (remainingWordsToProcess.Count != 0)
+        while (firstWord < words.Count)
         {
             isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
 
-            // The current word, separated by newlines if one exists. The remainingWordsToProcess
-            // continues to hold the unmodified word
-            string currentWord = remainingWordsToProcess[0];
-            var wordBeforeNewlineRemoval = currentWord;
-            var isLastWord = remainingWordsToProcess.Count == 1;
+            // The current word, cut after a newline if one exists. words[firstWord] continues to hold the
+            // unmodified word.
+            WordRange wholeWord = words[firstWord];
+            int wordStart = wholeWord.Start;
+            int wordLength = wholeWord.Length;
+            var isLastWord = firstWord == words.Count - 1;
 
             bool containsNewline = false;
-            bool startsWithNewline = false;
 
-            if (ToolsUtilities.StringFunctions.ContainsNoAlloc(currentWord, '\n'))
+            int newlineIndex = stringToUse.IndexOf('\n', wordStart, wholeWord.Length);
+            if (newlineIndex >= 0)
             {
-                startsWithNewline = currentWord.StartsWith("\n");
-
                 // Newline is an explicit character that the user might
                 // enter in a textbox. We don't want to lose this character
                 // becuse it can be deleted.
-                //word = word.Substring(0, word.IndexOf('\n'));
-                currentWord = currentWord.Substring(0, currentWord.IndexOf('\n') + 1);
+                wordLength = newlineIndex - wordStart + 1;
                 containsNewline = true;
+            }
+
+            if (currentLineLength == 0)
+            {
+                currentLineStart = wordStart;
             }
 
             // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
             // to include part of the word:
 
-            // Measure the candidate line to decide whether the word fits, building the concat lazily so the
-            // overflow branch (measures then discards) never allocates it: empty line => the word is the
-            // candidate; else if the backend reports a full-advance width (no inline run), measure
-            // incrementally and only concat when the word is actually appended; otherwise concat exactly.
-            string? linePlusWord;
+            // Measure the candidate line (the current line plus the word, which is one range of stringToUse)
+            // to decide whether the word fits: an empty line => the word is the candidate; else if the
+            // backend reports a full-advance width (no inline run), measure incrementally; otherwise measure
+            // the whole candidate.
+            int candidateLength = currentLineLength + wordLength;
             float linePlusWordWidth;
-            if (currentLine.Length == 0)
+            if (currentLineLength == 0)
             {
-                linePlusWord = currentWord;
-                linePlusWordWidth = textInstance.MeasureString(currentWord, absoluteLineStartIndex);
+                linePlusWordWidth = textInstance.MeasureString(stringToUse.AsSpan(wordStart, wordLength), absoluteLineStartIndex);
             }
             else
             {
-                float lineFullAdvance = textInstance.MeasureStringFullAdvance(currentLine);
+                float lineFullAdvance = textInstance.MeasureStringFullAdvance(stringToUse.AsSpan(currentLineStart, currentLineLength));
                 if (lineFullAdvance >= 0)
                 {
                     // No inline run active: the candidate width is the committed line's full advance (its
                     // last glyph isn't trimmed because the word follows it) plus the word's own width.
-                    linePlusWord = null;
-                    linePlusWordWidth = lineFullAdvance + textInstance.MeasureString(currentWord);
+                    linePlusWordWidth = lineFullAdvance + textInstance.MeasureString(stringToUse.AsSpan(wordStart, wordLength));
                 }
                 else
                 {
-                    linePlusWord = currentLine + currentWord;
-                    linePlusWordWidth = textInstance.MeasureString(linePlusWord, absoluteLineStartIndex);
+                    linePlusWordWidth = textInstance.MeasureString(stringToUse.AsSpan(currentLineStart, candidateLength), absoluteLineStartIndex);
                 }
             }
 
@@ -222,23 +267,23 @@ public static class IWrappedTextExtensions
             if (shouldAddEllipsis)
             {
                 var addedEllipsis = false;
-                for (int i = 1; i < currentWord.Length; i++)
+                for (int i = 1; i < wordLength; i++)
                 {
-                    var substringEnd = currentWord.SubstringEnd(i);
+                    int lengthWithoutEnd = currentLineLength + wordLength - i;
 
-                    float linePlusWordSub = textInstance.MeasureString(currentLine + substringEnd, absoluteLineStartIndex);
+                    float linePlusWordSub = textInstance.MeasureString(stringToUse.AsSpan(currentLineStart, lengthWithoutEnd), absoluteLineStartIndex);
 
                     if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
                     {
-                        lines.Add(currentLine + substringEnd + ellipsis);
+                        lines.Add(stringToUse.Substring(currentLineStart, lengthWithoutEnd) + ellipsis);
                         addedEllipsis = true;
                         break;
                     }
                 }
 
-                if (!addedEllipsis && currentLine.EndsWith(" "))
+                if (!addedEllipsis && currentLineLength > 0 && stringToUse[currentLineStart + currentLineLength - 1] == ' ')
                 {
-                    lines.Add(currentLine.SubstringEnd(1) + ellipsis);
+                    lines.Add(stringToUse.Substring(currentLineStart, currentLineLength - 1) + ellipsis);
 
                 }
                 break;
@@ -248,19 +293,19 @@ public static class IWrappedTextExtensions
 
             if (linePlusWordWidth > wrappingWidth)
             {
-                if (!string.IsNullOrEmpty(currentLine))
+                if (currentLineLength > 0)
                 {
                     handledByLineTooLong = true;
                     // We already have a line started, so let's add it
                     // and start the next line
-                    lines.Add(currentLine);
-                    absoluteLineStartIndex += currentLine.Length;
+                    AddLine(lines, previousLines, stringToUse, currentLineStart, currentLineLength);
+                    absoluteLineStartIndex += currentLineLength;
                     if (lines.Count == effectiveMaxNumberOfLines)
                     {
                         break;
                     }
 
-                    currentLine = String.Empty;
+                    currentLineLength = 0;
                 }
                 // we don't have a line started, but we have a word that is too
                 // long. if we're not using ellipses, then we should measure the
@@ -268,97 +313,83 @@ public static class IWrappedTextExtensions
                 else if (textInstance.IsMidWordLineBreakEnabled)
                 {
                     handledByLineTooLong = true;
-                    if (currentWord.Length == 1)
+                    if (wordLength == 1)
                     {
-                        lines.Add(currentWord);
-                        absoluteLineStartIndex += currentWord.Length;
-                        remainingWordsToProcess.RemoveAt(0);
+                        AddLine(lines, previousLines, stringToUse, wordStart, 1);
+                        absoluteLineStartIndex += 1;
+                        firstWord++;
                     }
                     else
                     {
                         // Track zero-width space positions as preferred break points for mid-word wrapping.
-                        // When a line needs to wrap mid-word, we prefer breaking at zero-width space (\u200B)
+                        // When a line needs to wrap mid-word, we prefer breaking at zero-width space (​)
                         // positions if they exist, as they indicate logical break points in the text.
                         int? preferredBreakIndex = null;
-                        float? preferredBreakWidth = null;
 
-                        for (int i = 1; i < currentWord.Length; i++)
+                        for (int i = 1; i < wordLength; i++)
                         {
-                            var substring = currentWord.Substring(0, i + 1);
                             // currentLine is empty in this mid-word-break branch, so the substring begins at
                             // the current line's absolute start.
-                            float substringLength = textInstance.MeasureString(substring, absoluteLineStartIndex);
+                            float substringLength = textInstance.MeasureString(stringToUse.AsSpan(wordStart, i + 1), absoluteLineStartIndex);
 
                             // Check if there's a zero-width space at this position that could be a preferred break point
-                            if (i < currentWord.Length && currentWord[i] == '\u200B' && substringLength < wrappingWidth)
+                            if (stringToUse[wordStart + i] == '​' && substringLength < wrappingWidth)
                             {
                                 preferredBreakIndex = i;
-                                preferredBreakWidth = substringLength;
                             }
 
                             if (substringLength >= wrappingWidth)
                             {
-                                string stringToAdd = string.Empty;
+                                // The first part of the word goes on its own line; the rest stays in
+                                // words[firstWord] (which still holds everything before it was broken up
+                                // by newlines) for the next line.
+                                int lengthToAdd;
+                                int lengthToSkip;
 
                                 // If we have a preferred break point (zero-width space) before this position, use it
                                 if (preferredBreakIndex.HasValue)
                                 {
-                                    // Break at the zero-width space position
-                                    stringToAdd = currentWord.Substring(0, preferredBreakIndex.Value);
-                                    lines.Add(stringToAdd);
-                                    // The zero-width space at preferredBreakIndex is skipped (the next line
-                                    // starts one past it), so advance past it too to stay in sync.
-                                    absoluteLineStartIndex += stringToAdd.Length + 1;
-
-                                    // Skip the zero-width space character when continuing
-                                    currentWord = remainingWordsToProcess[0].Substring(preferredBreakIndex.Value + 1);
-                                    remainingWordsToProcess[0] = currentWord;
-                                    break;
+                                    // Break at the zero-width space position; the zero-width space itself
+                                    // is skipped (the next line starts one past it), so advance past it too.
+                                    lengthToAdd = preferredBreakIndex.Value;
+                                    lengthToSkip = lengthToAdd + 1;
                                 }
-                                // word fits perfectly in the line, so add
-                                // the substring
+                                // word fits perfectly in the line, so add the substring
                                 else if (substringLength == wrappingWidth)
                                 {
-                                    // add this word to the lines, and subtract what was added
-                                    // from the current word:
-                                    stringToAdd = currentWord.Substring(0, i + 1);
-                                    lines.Add(stringToAdd);
-                                    absoluteLineStartIndex += stringToAdd.Length;
-
-                                    // Be sure to use remainingWordsToProcess[0] so we get everything
-                                    // before it was broken up by newlines
-                                    currentWord = remainingWordsToProcess[0].Substring(i + 1);
-                                    remainingWordsToProcess[0] = currentWord;
-                                    break;
+                                    lengthToAdd = i + 1;
+                                    lengthToSkip = lengthToAdd;
                                 }
-                                else if (substringLength > wrappingWidth)
+                                else
                                 {
-                                    stringToAdd = currentWord.Substring(0, i);
-                                    lines.Add(stringToAdd);
-                                    absoluteLineStartIndex += stringToAdd.Length;
-
-                                    // Be sure to use remainingWordsToProcess[0] so we get everything
-                                    // before it was broken up by newlines
-                                    currentWord = remainingWordsToProcess[0].Substring(i);
-                                    remainingWordsToProcess[0] = currentWord;
-                                    break;
+                                    lengthToAdd = i;
+                                    lengthToSkip = lengthToAdd;
                                 }
+
+                                AddLine(lines, previousLines, stringToUse, wordStart, lengthToAdd);
+                                absoluteLineStartIndex += lengthToSkip;
+                                words[firstWord] = new WordRange
+                                {
+                                    Start = wordStart + lengthToSkip,
+                                    Length = wholeWord.Length - lengthToSkip
+                                };
+                                break;
                             }
 
                         }
                     }
 
-                    currentLine = String.Empty;
+                    currentLineLength = 0;
                 }
             }
             if (!handledByLineTooLong)
             {
                 // If it's the first word and it's empty, don't add anything
-                // update - but this prevents the word from starting with a space, which it should be able to 
+                // update - but this prevents the word from starting with a space, which it should be able to
                 //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                 {
 
-                    if (remainingWordsToProcess.Count > 1 &&
+                    if (words.Count - firstWord > 1 &&
                         // Update Feb 19, 2023
                         // don't insert space after if it's a newline. That messes up indexes.
                         !containsNewline)
@@ -367,31 +398,37 @@ public static class IWrappedTextExtensions
                         // hit this branch via `currentWord == ""`, appending a phantom extra
                         // space. That made WrappedText longer than RawText and pushed TextBox
                         // caretIndex past Text.Length on click — see issue #2617.
-                        // linePlusWord is null only on the incremental path; build the concat now (committed output).
-                        currentLine = (linePlusWord ?? currentLine + currentWord) + ' ';
+                        // The extra character is the space that separated this word from the next.
+                        currentLineLength = candidateLength + 1;
                     }
                     else
                     {
-                        currentLine = linePlusWord ?? currentLine + currentWord;
+                        currentLineLength = candidateLength;
                     }
                 }
 
-                remainingWordsToProcess.RemoveAt(0);
+                firstWord++;
 
                 if (containsNewline)
                 {
-                    lines.Add(currentLine);
-                    absoluteLineStartIndex += currentLine.Length;
+                    AddLine(lines, previousLines, stringToUse, currentLineStart, currentLineLength);
+                    absoluteLineStartIndex += currentLineLength;
 
 
                     if (lines.Count == effectiveMaxNumberOfLines)
                     {
                         break;
                     }
-                    currentLine = string.Empty;
+                    currentLineLength = 0;
 
-                    int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
-                    remainingWordsToProcess.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
+                    // What follows the newline in the word is processed next, as its own word.
+                    int afterNewline = newlineIndex + 1;
+                    firstWord--;
+                    words[firstWord] = new WordRange
+                    {
+                        Start = afterNewline,
+                        Length = wholeWord.Start + wholeWord.Length - afterNewline
+                    };
                 }
 
             }
@@ -400,14 +437,40 @@ public static class IWrappedTextExtensions
 
         if (effectiveMaxNumberOfLines == null || lines.Count < effectiveMaxNumberOfLines)
         {
-            lines.Add(currentLine);
+            AddLine(lines, previousLines, stringToUse, currentLineStart, currentLineLength);
         }
 
         // Single exit point (no early return threads past this), so returning the buffer once is enough.
-        ReturnWordList(remainingWordsToProcess);
+        ReturnWordList(words);
 
         // This is up to the implementer to set:
         //mNeedsBitmapFontRefresh = true;
+    }
+
+    /// <summary>
+    /// Adds <c>source[start..start + length]</c> as a line, using the string already at this line's index in
+    /// <paramref name="previousLines"/> when it holds the same text.
+    /// </summary>
+    static void AddLine(List<string> lines, List<string>? previousLines, string source, int start, int length)
+    {
+        if (length == 0)
+        {
+            lines.Add(string.Empty);
+            return;
+        }
+
+        int index = lines.Count;
+        if (previousLines != null && index < previousLines.Count)
+        {
+            string previous = previousLines[index];
+            if (previous.Length == length && string.CompareOrdinal(previous, 0, source, start, length) == 0)
+            {
+                lines.Add(previous);
+                return;
+            }
+        }
+
+        lines.Add(source.Substring(start, length));
     }
 
     /// <summary>
@@ -415,27 +478,27 @@ public static class IWrappedTextExtensions
     /// string.Split(' ') does — the wrapping algorithm depends on them (a trailing space matters for
     /// TextBox caret indexing, #2617).
     /// </summary>
-    static void SplitOnSpaces(List<string> destination, string value)
+    static void SplitOnSpaces(List<WordRange> destination, string value)
     {
         int start = 0;
         for (int i = 0; i < value.Length; i++)
         {
             if (value[i] == ' ')
             {
-                destination.Add(value.Substring(start, i - start));
+                destination.Add(new WordRange { Start = start, Length = i - start });
                 start = i + 1;
             }
         }
-        destination.Add(value.Substring(start, value.Length - start));
+        destination.Add(new WordRange { Start = start, Length = value.Length - start });
     }
 
     /// <summary>Rents the per-thread word buffer (cleared for reuse); a reentrant call gets a fresh list.</summary>
-    static List<string> RentWordList()
+    static List<WordRange> RentWordList()
     {
-        List<string>? rented = _pooledWordList;
+        List<WordRange>? rented = _pooledWordList;
         if (rented == null)
         {
-            return new List<string>();
+            return new List<WordRange>();
         }
 
         _pooledWordList = null;
@@ -444,22 +507,10 @@ public static class IWrappedTextExtensions
     }
 
     /// <summary>Returns a rented list to the per-thread pool; a reentrant-fallback list is simply dropped.</summary>
-    static void ReturnWordList(List<string> list)
+    static void ReturnWordList(List<WordRange> list)
     {
         list.Clear();
         _pooledWordList ??= list;
-    }
-
-    static string SubstringEnd(this string value, int lettersToRemove)
-    {
-        if (value.Length <= lettersToRemove)
-        {
-            return string.Empty;
-        }
-        else
-        {
-            return value.Substring(0, value.Length - lettersToRemove);
-        }
     }
 
 }

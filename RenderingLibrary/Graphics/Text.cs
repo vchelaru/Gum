@@ -160,6 +160,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     public float DropshadowOffsetY;
 
     List<string> mWrappedText = new List<string>();
+
+    // Scratch for the lines of the last wrap, so re-wrapping keeps the strings of lines that did not change.
+    List<string> mPreviousWrappedText = new List<string>();
     float? mWidth = 200;
     float mHeight = 200;
     LinePrimitive? mBounds;
@@ -951,9 +954,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             return;
         }
 
-        mWrappedText.Clear();
-        UpdateLines(mWrappedText);
-
+        ((IWrappedText)this).RebuildLines(mWrappedText, mPreviousWrappedText);
+        mNeedsBitmapFontRefresh = true;
     }
 
     const string ellipsis = "...";
@@ -989,6 +991,21 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             return DefaultFont?.MeasureString(whatToMeasure).X ?? 0;
 #endif
         }
+    }
+
+    /// <summary>
+    /// Span form of <see cref="MeasureString(string)"/>: measures the characters in place with the bitmap
+    /// font when there is one, so line wrapping needs no string per word (#6420).
+    /// </summary>
+    public float MeasureString(ReadOnlySpan<char> whatToMeasure)
+    {
+        BitmapFont? bitmapFontToUse = EffectiveMeasurementFont ?? DefaultBitmapFont;
+        if (bitmapFontToUse != null)
+        {
+            return bitmapFontToUse.MeasureString(whatToMeasure);
+        }
+
+        return MeasureString(whatToMeasure.ToString());
     }
 
     /// <summary>
@@ -1966,8 +1983,25 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return MeasureStyledLineInBaseUnits(substrings, out _);
     }
 
+    /// <summary>
+    /// Span form of <see cref="MeasureString(string, int)"/>. Without inline runs it measures in place;
+    /// with them the styled measurement needs a string, so one is made.
+    /// </summary>
+    public float MeasureString(ReadOnlySpan<char> whatToMeasure, int absoluteStartIndexInStrippedText)
+    {
+        if (InlineVariables.Count == 0)
+        {
+            return MeasureString(whatToMeasure);
+        }
+
+        return MeasureString(whatToMeasure.ToString(), absoluteStartIndexInStrippedText);
+    }
+
     /// <inheritdoc/>
-    public float MeasureStringFullAdvance(string whatToMeasure)
+    public float MeasureStringFullAdvance(string whatToMeasure) => MeasureStringFullAdvance(whatToMeasure.AsSpan());
+
+    /// <inheritdoc cref="MeasureStringFullAdvance(string)"/>
+    public float MeasureStringFullAdvance(ReadOnlySpan<char> whatToMeasure)
     {
         // Opt in only when incremental measurement equals measuring the full concatenation: a BitmapFont
         // must exist (for the no-trim Full style) and no inline BBCode run may be active (those size across
@@ -2019,6 +2053,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         // MemberwiseClone shares these lists; re-wrapping or re-parsing markup on one instance
         // would otherwise rewrite the other's lines and inline-styling runs.
         newInstance.mWrappedText = new List<string>(mWrappedText);
+        newInstance.mPreviousWrappedText = new List<string>();
         newInstance.InlineVariables = new List<InlineVariable>(InlineVariables);
         // The splitter caches runs for this instance's lines and variables; shared, two Texts would clear
         // each other's cache every frame.
