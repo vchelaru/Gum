@@ -769,8 +769,8 @@ public class LayoutCoverageGapTests : BaseTestClass
         GraphicalUiElement.CanvasHeight = float.NaN;
 
         Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
-        exception.Message.ShouldContain("AdjustOffsetsByOrigin");
-        exception.Message.ShouldContain("unitOffsetY");
+        // The container's renderable rejects the NaN height before the offset check is reached (#6477).
+        exception.Message.ShouldContain("Invalid Height");
     }
 
     [Fact]
@@ -783,8 +783,8 @@ public class LayoutCoverageGapTests : BaseTestClass
         GraphicalUiElement.CanvasHeight = float.NaN;
 
         Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
-        exception.Message.ShouldContain("AdjustOffsetsByOrigin");
-        exception.Message.ShouldContain("unitOffsetX");
+        // The container's renderable rejects the NaN height before the offset check is reached (#6477).
+        exception.Message.ShouldContain("Invalid Height");
     }
 
     #endregion

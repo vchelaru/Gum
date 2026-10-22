@@ -103,8 +103,9 @@ public class RenderableSizeNonFiniteTests
             IPositionedSizedObject target = Create(renderable);
             foreach (string variable in Variables)
             {
-                // A circle's Width and Height are the same radius, and a line grid derives its size from its cells.
-                if (renderable == "LineCircle" && variable == "Height" || renderable == "LineGrid" && (variable == "Width" || variable == "Height"))
+                // A circle's Width and Height are the same radius, and a line grid and a polygon derive their size.
+                bool derivedSize = variable == "Width" || variable == "Height";
+                if (renderable == "LineCircle" && variable == "Height" || (renderable == "LineGrid" || renderable == "LinePolygon") && derivedSize)
                 {
                     continue;
                 }
