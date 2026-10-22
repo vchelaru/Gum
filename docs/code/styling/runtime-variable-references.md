@@ -269,6 +269,8 @@ A fractional `FontSize` is the one value that does not carry over unchanged. `Fo
 
 For nullable variables, see the nullable paragraph in [Live Updates Within a Component](#live-updates-within-a-component).
 
+When a reference produces `NaN` or infinity for a `float` or `double` variable, Gum reports an error that names the reference and the variable keeps its current value, with or without `Gum.Expressions`.
+
 ### Working With Types
 
 * Use whole numbers for variables saved as `int`.
