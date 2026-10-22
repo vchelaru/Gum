@@ -138,7 +138,7 @@ public class NonFiniteSizeBoundLayoutTests : BaseTestClass
             text.MaxWidth = maxWidth;
         }
         text.UpdateLayout();
-        Text inner = (Text)text.RenderableComponent;
+        Text inner = (Text)text.RenderableComponent!;
         return (text.AbsoluteWidth, text.AbsoluteHeight, inner.WrappedText.Count);
     }
 
