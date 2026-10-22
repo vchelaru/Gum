@@ -11,7 +11,7 @@ public class ScratchDbg
     public void Dbg()
     {
         var sb = new StringBuilder();
-        Text t = new() { FontName = "Arial", FontSize = 20, Width = 1000, LineHeightMultiplier = 1.5f, RawText = "a[FontScale=2]b[/FontScale]c\nabc[FontScale=0.5]d[/FontScale]\n[FontScale=3]e[/FontScale]f" };
+        global::SkiaGum.Text.DebugLog.Clear(); Text t = new() { FontName = "Arial", FontSize = 20, Width = 1000, LineHeightMultiplier = 1.5f, RawText = "a[FontScale=2]b[/FontScale]c\nabc[FontScale=0.5]d[/FontScale]\n[FontScale=3]e[/FontScale]f" };
         var runs = t.GetStyledRuns();
         foreach (var r in runs) sb.AppendLine($"run '{r.Text.Replace("\n","\n")}' size={r.Style.FontSize} lh={r.Style.LineHeight}");
         var b = t.GetTextBlock();

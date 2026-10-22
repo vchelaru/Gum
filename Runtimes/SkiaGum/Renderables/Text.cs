@@ -7,6 +7,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Globalization;
 using Topten.RichTextKit;
 using Vector2 = System.Numerics.Vector2;
@@ -1535,6 +1536,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <paramref name="runs"/>' styles in place. Lines are found with a layout of the unconstrained text, only when
     /// the runs differ in size and some have a line height other than 1.
     /// </summary>
+    internal static System.Text.StringBuilder DebugLog = new();
     private void FitSmallerRunsInsideTallestRunOfEachLine(List<StyledTextRun> runs, float? forcedWidth)
     {
         if (runs.Count < 2)
@@ -1574,10 +1576,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             onLine.Clear();
             foreach (FontRun fontRun in line.Runs)
             {
-                if (styles.TryGetValue(fontRun.Style, out Style? style) && !onLine.Contains(style))
+                if (styles.TryGetValue(fontRun.Style, out Style? style) && !onLine.Any(o => ReferenceEquals(o, style)))
                 {
                     onLine.Add(style);
                 }
+                DebugLog.AppendLine($"line fontrun start={fontRun.Start} mapped={styles.ContainsKey(fontRun.Style)} lh={fontRun.Style.LineHeight} id={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(fontRun.Style)}");
             }
 
             if (onLine.Count < 2)
@@ -1594,7 +1597,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 float bottom = metrics.BottomFor(style.LineHeight);
                 maxTop = System.Math.Max(maxTop, top);
                 maxBottom = System.Math.Max(maxBottom, bottom);
-                if (style == onLine[0] || top + bottom > tallestTop + tallestBottom
+                if (ReferenceEquals(style, onLine[0]) || top + bottom > tallestTop + tallestBottom
                     || (top + bottom == tallestTop + tallestBottom && metrics.TextHeight > GetFontLineMetrics(tallest).TextHeight))
                 {
                     tallest = style;
@@ -1608,10 +1611,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 continue;
             }
 
+            DebugLog.AppendLine($"line fix: onLine={onLine.Count} tallestId={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(tallest)}");
             tallestSomewhere.Add(tallest);
             foreach (Style style in onLine)
             {
-                if (style == tallest)
+                if (ReferenceEquals(style, tallest))
                 {
                     continue;
                 }
