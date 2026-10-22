@@ -44,13 +44,14 @@ In the following examples, `wave` is a `GraphicalUiElement` created from a compo
 
 * `SetProperty` sets the variable, such as a custom variable
 * A state is applied, including each frame of an animation
-* A property is set in code on the component or on one of its instances, such as `wave.StackSpacing = 4`. This covers:
+* A property is set in code on the component or on one of its instances, such as `wave.StackSpacing = 4`. This covers any property of a Container, Text, Sprite, NineSlice, rectangle, circle, or polygon which is also a Gum variable, including:
   * Position and size: `X`, `Y`, `Width`, `Height`, `Rotation`, minimum and maximum sizes, their units and origins, and `IgnoredByParentSize`
   * Layout: `ChildrenLayout`, `StackSpacing`, `WrapsChildren`, AutoGrid cells, and `ClipsChildren`
-  * Other container and input settings: `Visible`, `HasEvents`, and `ExposeChildrenEvents`
-  * Text: `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, alignment, font, drop shadow, and `LocalizeText`
+  * Container and input: `Visible`, `HasEvents`, and `ExposeChildrenEvents`
+  * Text: `Text`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, alignment, font, and `LocalizeText`
+  * Color: `Red`, `Green`, `Blue`, and `Alpha`
   * Images: the `Texture` variables, `Wrap`, and `FlipHorizontal`
-  * Shapes: the fill, stroke, and drop shadow of rectangles and circles, and every public property of the Skia shapes
+  * Shapes: fill, stroke, gradient, and drop shadow properties
 
 ```csharp
 // Update
@@ -58,25 +59,19 @@ In the following examples, `wave` is a `GraphicalUiElement` created from a compo
 wave.SetProperty("Progress", 3f);
 ```
 
-If a reference does not follow a change, call `RefreshReferences` with the names of the variables that changed, relative to the component:
+A reference reads the variable that changed at its new value. It reads every other variable at the value the component authors, not at a value you set earlier in code. References which form a circle are skipped.
+
+If a reference does not follow a change, such as a change made through a property you added to your own class, call `RefreshReferences` with the names of the variables that changed, relative to the component. A name can include an instance, such as `Background.Red`:
 
 ```csharp
 // Update
-// The component has the row: Blue = Background.Red
-var background = (ColoredRectangleRuntime)wave.GetGraphicalUiElementByName("Background")!;
-background.Red = 200;
-wave.RefreshReferences("Background.Red");
+// The component has the row: Y = Progress
+wave.RefreshReferences("Progress");
 ```
 
-A reference reads the variable that changed at its new value, and every other variable as it was when the component was created rather than as changed later in code. References which form a circle are skipped.
+Nullable variables such as `MaxWidth`, `MinHeight`, and `MaxNumberOfLines` follow your changes too. Setting one back to `null` clears a row which is a plain reference to a variable of a matching type. A row whose expression fails, or which combines values such as `MaxWidth + 10`, keeps its old value.
 
-Nullable variables such as `MaxWidth`, `MinHeight`, and `MaxNumberOfLines` follow your changes too. Setting one back to `null` clears a row which is a plain reference to a compatible variable. A row whose expression fails, or which combines values such as `MaxWidth + 10`, keeps its old value.
-
-Three cases do not update on their own:
-
-* `CurrentChainName`. Call `RefreshReferences`.
-* A reference which copies a size unit into a position unit, such as `XUnits = WidthUnits`, cannot carry `PercentageOfFile`, `PercentageOfOtherDimension`, or `MaintainFileAspectRatio`, because a position has no matching unit.
-* References to other components, such as a shared `Styles` component. Use `ApplyAllVariableReferences` and `RefreshStyles` for those, as described below.
+References to another component, such as a shared `Styles` component, do not update on their own. After changing the other component, call `ApplyAllVariableReferences` and `RefreshStyles`, as described below.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
