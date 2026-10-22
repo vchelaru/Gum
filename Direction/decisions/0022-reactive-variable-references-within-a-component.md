@@ -74,10 +74,14 @@ Steps 4 and 5 change who calls `NotifyVariableChanged`, not the graph, the cache
   The variables a row reads come from a lexical scan in `GumCommon` (`VariableReferenceGraph`), not
   from the tree, so the graph works without Roslyn. The scan may list a path that is not a variable,
   which costs one unneeded evaluation and never misses a read.
-- Evaluation is against a small throwaway state holding only the changed values, owned by the element so
-  every other name resolves from authored values. Each result is written into that state so a chain
-  reads it, then onto the live visual. Live re-evaluation therefore reads unchanged variables as
-  authored, not as the live object currently holds them.
+- Evaluation is against a small throwaway state, owned by the element, holding the changed values and the
+  live value of every other input the affected rows read. Each result is written into that state so a
+  chain reads it, then onto the live visual. Every input is live: whatever was set last (code, a state,
+  an animation, a parent at creation, a hot reload) is what a row reads. Typed values come from the
+  visual (`TryGetProperty`); a custom variable has no property to ask, so the element keeps the last value
+  reported for it and each row result. An input that cannot be read, or is null, falls back to the authored
+  value. Affected rows are selected once per change in dependency order, so a diamond or a chain evaluates
+  each row once.
 - `ApplyState` collects the changes of every `SetProperty` inside it and re-evaluates once at the end.
   Animations need no call of their own.
 - Element load applies its rows as before, then evaluates the rows again in dependency order when any row
@@ -85,6 +89,14 @@ Steps 4 and 5 change who calls `NotifyVariableChanged`, not the graph, the cache
 - Step 5 covers `X`, `Y`, `Width`, `Height`, `Rotation` and `Visible`. Other typed properties still need
   `RefreshReferences`, or a setter that reports itself the same way.
 - A row in a cycle is skipped by live re-evaluation and listed in `VariableReferenceGraph.CyclicRows`.
+
+### 2026-10-21: inputs are live (#6411)
+
+Earlier, unchanged inputs were read as authored, so `Y = Progress + Offset` ignored an `Offset` set in code
+before `Progress`. The maintainer decided every input of a same-component reference is live, like a
+spreadsheet cell. Authored values were chosen for cost, determinism and re-entrancy; measured, the live
+reads add no evaluations (same count per change and at creation) and a few percent per set. Load still
+applies rows against authored values, which equal the live ones at that point.
 
 ## Consequences
 
