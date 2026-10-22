@@ -114,26 +114,24 @@ public class TextStyledLineHeightTests
         ShouldMatch(text, h, Run(2, 1.5f, 3), Run(2, 1.5f, 1.5f), Plain(2, 1.5f));
     }
 
-    // A line mixing a multiplied base with size runs is the larger of the multiplied base and its tallest run, as on
-    // MonoGame and Raylib (#6467): RichTextKit takes the line's ascent and descent from the tallest run on each side,
-    // so runs of different sizes must not push the two sides past that.
+    // A size run that wraps over several lines must not get worse than main (#6475 tracks making mixed-size
+    // lines exact): the lines hold the base text and the run, each should advance max(base * multiplier, run).
+    // Worst top error on main is 0.13h and 0.29h; these pin it from growing (the second is 0.30h with the compensation).
     [Theory]
-    [InlineData("a[FontScale=2]b[/FontScale]c", 1f, 1.5f, 2f)]
-    [InlineData("abc[FontScale=0.5]d[/FontScale]", 1f, 1.5f, 1.5f)]
-    [InlineData("abc[FontScale=0.5]d[/FontScale]", 1f, 3f, 3f)]
-    [InlineData("a[FontSize=10]b[/FontSize][FontSize=30]c[/FontSize]", 1f, 1.5f, 1.5f)]
-    [InlineData("a[FontScale=2]b[/FontScale][FontScale=0.5]c[/FontScale]", 1f, 3f, 3f)]
-    [InlineData("ab[FontScale=1]c[/FontScale]", 2f, 1.5f, 3f)]
-    [InlineData("ab[FontScale=3]c[/FontScale]d[FontScale=1]e[/FontScale]", 2f, 1.5f, 3f)]
-    [InlineData("a[FontScale=2]b[/FontScale]c", 1f, 0.5f, 2f)]
-    [InlineData("a[FontScale=0.5]b[/FontScale]c", 1f, 0.5f, 0.5f)]
-    [InlineData("a[FontScale=0.5]b[/FontScale]c", 2f, 1f, 2f)]
-    public void MixedSizeLine_HeightIsTheLargerOfMultipliedBaseAndTallestRun(string markup, float baseScale, float multiplier, float expectedLines)
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 1f, 120, 0.14f)]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 200, 0.31f)]
+    public void WrappedSizeRun_LineTopsAreNoFurtherFromExpectedThanBeforeTheLeadingCompensation(string markup, float baseScale, float width, float maxErrorInH)
     {
         float h = PlainLineHeight();
-        Text text = Build(markup, baseScale, multiplier);
+        Text text = Build(markup, baseScale, 1);
+        text.Width = width;
 
-        ShouldMatch(text, h, expectedLines);
+        TextBlock block = text.GetTextBlock();
+        block.Lines.Count.ShouldBeGreaterThan(1);
+        for (int i = 0; i < block.Lines.Count; i++)
+        {
+            block.Lines[i].YCoord.ShouldBe(i * baseScale * h, maxErrorInH * h, $"top of line {i}");
+        }
     }
 
     [Fact]
@@ -231,5 +229,58 @@ public class TextStyledLineHeightTests
         bottom.Height = boxHeight;
         bottom.VerticalAlignment = VerticalAlignment.Bottom;
         bottom.GetVerticalAlignmentOffset(bottom.GetTextBlock()).ShouldBe(boxHeight - drawn, tolerance);
+    }
+
+    [Fact]
+    public void FontRegisteredAgainUnderTheSameFamily_DoesNotReuseTheOldFontsMetrics()
+    {
+        const string family = "LeadingCompensationReRegisteredFamily";
+        FontMapper previousMapper = FontMapper.Default;
+        FontMapper.Default = new SkiaGum.Content.Fonts.GumFontMapper();
+        try
+        {
+            byte[] orbitron = System.IO.File.ReadAllBytes(System.IO.Path.Combine(System.AppContext.BaseDirectory, "Assets", "Fonts", "TestFont.ttf"));
+            using SkiaSharp.SKTypeface arial = SkiaSharp.SKTypeface.FromFamilyName("Arial");
+            using SkiaSharp.SKData arialData = SkiaSharp.SKData.Create(arial.OpenStream());
+            byte[] arialBytes = arialData.ToArray();
+
+            SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(family, orbitron);
+            AssertMultipliedLineIsExact(family);
+
+            SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(family, arialBytes);
+            AssertMultipliedLineIsExact(family);
+        }
+        finally
+        {
+            FontMapper.Default = previousMapper;
+        }
+
+        static void AssertMultipliedLineIsExact(string fontName)
+        {
+            Text plain = Build("a\nb", 1, 1);
+            plain.FontName = fontName;
+            TextBlock control = plain.GetTextBlock();
+            float h = control.Lines[1].YCoord - control.Lines[0].YCoord;
+
+            Text multiplied = Build("a\nb", 1, 1.5f);
+            multiplied.FontName = fontName;
+            multiplied.GetTextBlock().Lines[1].YCoord.ShouldBe(1.5f * h, ExactTolerance * h);
+        }
+    }
+
+    [Fact]
+    public void RebuildingTheSameTextWithAMultiplier_ProbesTheFontOnce()
+    {
+        Text text = Build("[Color=Red]a[/Color] [Color=Blue]b[/Color]", 1, 1.5f);
+        text.GetTextBlock();
+
+        int probesBefore = Text.FontLineMetricsProbeCount;
+        for (int i = 0; i < 10; i++)
+        {
+            text.RawText = "[Color=Red]a" + i + "[/Color] [Color=Blue]b[/Color]";
+            text.GetTextBlock();
+        }
+
+        Text.FontLineMetricsProbeCount.ShouldBe(probesBefore);
     }
 }
