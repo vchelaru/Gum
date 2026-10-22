@@ -73,6 +73,68 @@ namespace Gum.Mvvm
             }
         }
 
+        /// <summary>
+        /// Assigns <paramref name="value"/> to a backing field and raises <see cref="PropertyChanged"/> when it
+        /// changed. The value lives in the caller's field, so reading it is a plain field read.
+        /// </summary>
+        /// <remarks>
+        /// <c>float _score; public float Score { get => _score; set => Set(ref _score, value); }</c>
+        /// Unlike <see cref="Set{T}(T, string)"/>, the field's current value is the starting point, so a field
+        /// initializer counts as already set and assigning that same value raises nothing.
+        /// A collection value is watched like it is for <see cref="Set{T}(T, string)"/>.
+        /// </remarks>
+        /// <returns>True when the value changed.</returns>
+        protected bool Set<T>(ref T field, T value, [CallerMemberName]string? propertyName = null)
+        {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
+            return SetField(ref field, value, propertyName!, notify: true, trackCollections: true);
+        }
+
+        /// <summary>
+        /// Assigns a backing field like <see cref="Set{T}(ref T, T, string)"/> but raises no events. A collection
+        /// value is still watched.
+        /// </summary>
+        /// <returns>True when the value changed.</returns>
+        protected bool SetWithoutNotifying<T>(ref T field, T value, [CallerMemberName]string? propertyName = null)
+        {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
+            return SetField(ref field, value, propertyName!, notify: false, trackCollections: true);
+        }
+
+        private bool SetField<T>(ref T field, T value, string propertyName, bool notify, bool trackCollections)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+            {
+                // Like the by-name style, a collection that is already stored still gets its subscription.
+                if (trackCollections && CanBeCollection<T>.Value && field is INotifyCollectionChanged stored)
+                {
+                    SubscribeToCollectionCore(stored, propertyName);
+                }
+
+                return false;
+            }
+
+            // The old value is still in the field here, so its subscription can be removed before assignment.
+            if (trackCollections && collectionSubscriptions != null && !typeof(T).IsValueType)
+            {
+                UnsubscribeFromCollection(field, propertyName);
+            }
+
+            field = value;
+
+            if (trackCollections && CanBeCollection<T>.Value && value is INotifyCollectionChanged collection)
+            {
+                SubscribeToCollectionCore(collection, propertyName);
+            }
+
+            if (notify)
+            {
+                NotifyPropertyChanged(propertyName);
+            }
+
+            return true;
+        }
+
         protected T Get<T>([CallerMemberName]string? propertyName = null)
         {
             T toReturn = default(T)!;
@@ -143,6 +205,11 @@ namespace Gum.Mvvm
                 return;
             }
 
+            SubscribeToCollectionCore(collection, propertyName);
+        }
+
+        private void SubscribeToCollectionCore(INotifyCollectionChanged collection, string propertyName)
+        {
             collectionSubscriptions ??= new Dictionary<string, CollectionSubscription>();
             if (collectionSubscriptions.TryGetValue(propertyName, out CollectionSubscription? subscription) == false)
             {
@@ -302,11 +369,8 @@ namespace Gum.Mvvm
         protected void ChangeAndNotify<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
-            if (EqualityComparer<T>.Default.Equals(property, value) == false)
-            {
-                property = value;
-                NotifyPropertyChanged(propertyName);
-            }
+            // The same as Set(ref ...) except that a collection's contents are not watched.
+            SetField(ref property, value, propertyName!, notify: true, trackCollections: false);
         }
 
         // PropertyChangedEventArgs is immutable, so one instance per property name is reused across
