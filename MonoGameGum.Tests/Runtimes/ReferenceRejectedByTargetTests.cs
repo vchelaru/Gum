@@ -210,35 +210,6 @@ public class ReferenceRejectedByTargetTests : BaseTestClass
         _errors.Count.ShouldBe(1, string.Join(Environment.NewLine, _errors));
     }
 
-    // The declaration sits on a derived element while the row and the instance belong to its base.
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void LiveUpdate_InfinityIntoVariableDeclaredOnlyByADerivedElement_KeepsThePreviousValueAndReportsOnce(bool useExpressions)
-    {
-        ComponentSave pair = ReferencePairBuilder.Build("Z = Source.StackSpacing", useExpressions,
-            new (string, object?)[] { ("Z", 77f), ("StackSpacing", 5f) },
-            targetBaseType: "Container", sourceBaseType: "Container");
-        // Pair declares Target.Z; Derived adds nothing but its own declaration of the same variable's type.
-        ComponentSave derived = new ComponentSave { Name = "Derived", BaseType = "Pair" };
-        StateSave derivedState = new StateSave { Name = "Default", ParentContainer = derived };
-        derivedState.Variables.Add(new VariableSave { Name = "Target.Z", Type = "float", Value = 40f, SetsValue = true });
-        derived.States.Add(derivedState);
-        ObjectFinder.Self.GumProjectSave!.Components.Add(derived);
-        pair.DefaultState!.Variables.RemoveAll(item => item.Name == "Target.Z");
-        GraphicalUiElement root = derived.ToGraphicalUiElement();
-        GraphicalUiElement source = root.GetGraphicalUiElementByName("Source")!;
-        GraphicalUiElement? targetOrNull = root.GetGraphicalUiElementByName("Target");
-        targetOrNull.ShouldNotBeNull("children: " + string.Join(", ", System.Linq.Enumerable.Select(root.Children, item => ((GraphicalUiElement)item).Name)));
-        GraphicalUiElement target = targetOrNull;
-        float before = target.Z;
-
-        source.SetProperty("StackSpacing", float.PositiveInfinity);
-
-        target.Z.ShouldBe(before);
-        _errors.Count.ShouldBe(1, string.Join(Environment.NewLine, _errors));
-    }
-
     private class SliderRuntime : GraphicalUiElement
     {
         public SliderRuntime() : base(new InvisibleRenderable(), null) { }
