@@ -94,6 +94,29 @@ public class LiveInputReferenceTests : BaseTestClass
         gue.Y.ShouldBe(42f);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TwoInputs_NullableSetBackToNull_RowDoesNotReadTheStaleValue(bool throughSetProperty)
+    {
+        GraphicalUiElement gue = Create("Y = Progress + MinWidth").ToGraphicalUiElement();
+        gue.MinWidth = 40;
+        gue.SetProperty("Progress", 2f);
+        gue.Y.ShouldBe(42f);
+
+        if (throughSetProperty)
+        {
+            gue.SetProperty("MinWidth", null);
+        }
+        else
+        {
+            gue.MinWidth = null;
+        }
+        gue.SetProperty("Progress", 3f);
+
+        gue.Y.ShouldNotBe(43f);
+    }
+
     [Fact]
     public void TwoInputs_RowWritesANullable_RowReadsTheOther()
     {

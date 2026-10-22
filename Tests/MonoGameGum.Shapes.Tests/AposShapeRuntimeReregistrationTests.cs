@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.GueDeriving;
 using GumRuntime;
 using Shouldly;

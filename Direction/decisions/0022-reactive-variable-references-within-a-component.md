@@ -90,7 +90,7 @@ Steps 4 and 5 change who calls `NotifyVariableChanged`, not the graph, the cache
   `RefreshReferences`, or a setter that reports itself the same way.
 - A row in a cycle is skipped by live re-evaluation and listed in `VariableReferenceGraph.CyclicRows`.
 
-### 2026-10-21: inputs are live (#6411)
+### 2026-10-22: inputs are live (#6411)
 
 Earlier, unchanged inputs were read as authored, so `Y = Progress + Offset` ignored an `Offset` set in code
 before `Progress`. The maintainer decided every input of a same-component reference is live, like a
