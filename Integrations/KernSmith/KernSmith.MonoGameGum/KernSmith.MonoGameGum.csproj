@@ -31,7 +31,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+    <!-- Compile-time types only. PrivateAssets=All keeps this out of the nuspec so an app uses the
+         MonoGame platform package it already references (iOS, Android, DesktopGL), exactly as
+         MonoGameGum.csproj does. Same pin as MonoGameGum: the lowest version that compiles, because
+         the built dll bakes it in and a consumer on a lower MonoGame then fails to load it (#4818). -->
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.3" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
