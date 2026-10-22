@@ -104,6 +104,7 @@ namespace RenderingLibrary
                 StandardElementsManager.Self.CustomGetDefaultState = HandleCustomGetDefaultState;
                 ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
                 GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+                ElementSaveExtensions.ReportPropertyAssignmentError = CustomSetPropertyOnRenderable.RaisePropertyAssignmentError;
                 GraphicalUiElement.UpdateFontFromProperties = UpdateFonts;
                 GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
                 GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;

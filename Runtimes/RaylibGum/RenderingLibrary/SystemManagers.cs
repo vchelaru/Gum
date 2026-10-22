@@ -140,6 +140,7 @@ public partial class SystemManagers : ISystemManagers
             LoaderManager.Self.ContentLoader = new ContentLoader();
 
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            ElementSaveExtensions.ReportPropertyAssignmentError = CustomSetPropertyOnRenderable.RaisePropertyAssignmentError;
             GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
             GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;
             CustomSetPropertyOnRenderable.LocalizationService ??= new LocalizationService();

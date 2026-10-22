@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using System.Runtime.CompilerServices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -554,6 +555,11 @@ namespace GumRuntime
         /// </summary>
         public static void ApplyAllVariableReferences(this GumProjectSave project)
         {
+            lock (ReportedWithoutOwner)
+            {
+                ReportedWithoutOwner.Clear();
+            }
+
             List<ElementSave> allElements = new List<ElementSave>();
             allElements.AddRange(project.StandardElements);
             allElements.AddRange(project.Components);
@@ -1026,43 +1032,11 @@ namespace GumRuntime
         /// happens to own the reference.</param>
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave, GraphicalUiElement? liveRootForRightSide = null)
         {
-            //////////////////////////////Early Out/////////////////////////////////
-            if(referenceString.StartsWith("//"))
+            if (!TryReadReference(referenceOwner.Tag as InstanceSave, referenceString, stateSave, liveRootForRightSide ?? referenceOwner,
+                out string left, out _, out _, out object? value, out _))
             {
                 return;
             }
-            ////////////////////////////End Early Out///////////////////////////////
-            
-            // splits the left and right side, so that we get two items. the first is the left side like "X" and the second is the right side like "SomeItem.X"
-            var split = referenceString
-                .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
-                .Select(item => item.Trim()).ToArray();
-
-            if (split.Length != 2)
-            {
-                return;
-            }
-
-            var left = split[0];
-
-            var instanceLeft = referenceOwner.Tag as InstanceSave;
-
-            var leftVariableName = instanceLeft == null
-                ? left
-                : instanceLeft.Name + "." + left;
-
-            string? leftSideType = null;
-            var leftVariableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
-            leftSideType = leftVariableOnState?.Type;
-            if (leftSideType == null)
-            {
-                leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
-            }
-
-
-            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
-            var value = GetRightSideValue(stateSave, right, leftSideType, liveRootForRightSide ?? referenceOwner);
-
 
             if (value != null)
             {
@@ -1220,10 +1194,17 @@ namespace GumRuntime
 
         private static string? GetRootVariableType(string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave)
         {
+            return GetRootVariable(leftVariableName, instanceLeft, stateSave)?.Type;
+        }
+
+#nullable enable
+        private static VariableSave? GetRootVariable(string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave)
+        {
             // Variable references need a state owned by an element (RecursiveVariableFinder requires it).
             var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer!;
-            return ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance)?.Type;
+            return ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance);
         }
+#nullable restore
 
         public struct VariableReferenceAssignmentResult
         {
@@ -1261,45 +1242,18 @@ namespace GumRuntime
         internal static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot, bool propagateNull)
         {
 
-            //////////////////////////////Early Out/////////////////////////////////
-            if (referenceString.StartsWith("//"))
+            if (!TryReadReference(instanceLeft, referenceString, stateSave, liveRoot,
+                out string left, out string right, out string? leftSideType, out object? value, out bool mismatchReported))
             {
                 return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
             }
-            ////////////////////////////End Early Out///////////////////////////////
-
-            var split = referenceString
-                .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
-                .Select(item => item.Trim()).ToArray();
-
-            if (split.Length != 2)
-            {
-                return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
-            }
-
-            var left = split[0];
-
-            var leftVariableName = instanceLeft == null
-                ? left
-                : instanceLeft.Name + "." + left;
-
-            string? leftSideType = null;
-            var variableOnState = stateSave.Variables.FirstOrDefault(item =>  item.Name == leftVariableName);
-            leftSideType = variableOnState?.Type;
-            if(leftSideType == null)
-            {
-                leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
-            }
-
-            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
-            object? value =GetRightSideValue(stateSave, right, leftSideType, liveRoot);
 
             object? valueBefore = null;
             string? effectiveLeft = null;
             // A null result is a value only for a nullable variable, only when the caller asks (live re-evaluation),
             // and only when the right side is a plain reference to a variable that exists and holds null
             // (MinWidth = Other.MinWidth). Any other null is a failed evaluation, which leaves the variable alone.
-            bool assignsNull = value == null && propagateNull && leftSideType != null && leftSideType.EndsWith("?")
+            bool assignsNull = value == null && !mismatchReported && propagateNull && leftSideType != null && leftSideType.EndsWith("?")
                 && IsVariableOfCompatibleType(stateSave, right, leftSideType!);
             if (value != null || assignsNull)
             {
@@ -1357,6 +1311,214 @@ namespace GumRuntime
         }
 
         private static bool IsNumericTypeName(string type) => type == "int" || type == "float" || type == "double";
+
+        // The part of applying a reference line that both overloads of ApplyVariableReferencesOnSpecificOwner share:
+        // split the line, find the left side's type and read the right side. Returns false for a comment or a line
+        // that is not "left = right". A value that does not fit the left variable (see ReportedMismatch) comes back
+        // null with mismatchReported set, so a caller does not treat that null as a value.
+        private static bool TryReadReference(InstanceSave? instanceLeft, string referenceString, StateSave stateSave,
+            GraphicalUiElement? liveRoot, out string left, out string right, out string? leftSideType, out object? value,
+            out bool mismatchReported)
+        {
+            left = string.Empty;
+            right = string.Empty;
+            leftSideType = null;
+            value = null;
+            mismatchReported = false;
+
+            if (referenceString.StartsWith("//"))
+            {
+                return false;
+            }
+
+            // splits the left and right side, so that we get two items. the first is the left side like "X" and the second is the right side like "SomeItem.X"
+            string[] split = referenceString
+                .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
+                .Select(item => item.Trim()).ToArray();
+
+            if (split.Length != 2)
+            {
+                return false;
+            }
+
+            left = split[0];
+
+            string leftVariableName = instanceLeft == null
+                ? left
+                : instanceLeft.Name + "." + left;
+
+            VariableSave? leftVariableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
+            leftSideType = leftVariableOnState?.Type;
+            if (leftSideType == null)
+            {
+                leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
+            }
+
+            right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
+
+            // Without Gum.Expressions the plain lookup also says what type the source variable is; a negation yields a bool.
+            string? sourceType = null;
+            if (CustomEvaluateExpression == null && !IsNegation(right))
+            {
+                value = ReadPlainReference(stateSave, right, findSourceType: true, out sourceType);
+            }
+            else
+            {
+                value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
+                sourceType = CustomEvaluateExpression == null ? "bool" : null;
+            }
+
+            if (ReportedMismatch(referenceString, right, left, leftVariableName, leftSideType, sourceType, value, leftVariableOnState, instanceLeft, stateSave, liveRoot))
+            {
+                value = null;
+                mismatchReported = true;
+            }
+            return true;
+        }
+
+        private static bool IsNegation(string right)
+        {
+            int index = 0;
+            while (index < right.Length && char.IsWhiteSpace(right[index]))
+            {
+                index++;
+            }
+            return index < right.Length && right[index] == '!';
+        }
+
+        // Without Gum.Expressions nothing converts the right side's value, so a value of another type reaches the
+        // variable's setter as is and throws (or, into a string, silently blanks it). Compares the declared types, because
+        // a live read can hand a float to an int variable (FontSize) that creation would reject. A mismatch keeps the
+        // variable's value and is reported once per broken row (see IsFirstReport). What the setters already take stays:
+        // a FontSize takes an int or a float, and an enum takes an int.
+        private static bool ReportedMismatch(string referenceString, string right, string left, string leftVariableName,
+            string? leftSideType, string? sourceType, object? value, VariableSave? leftVariableOnState, InstanceSave? instanceLeft,
+            StateSave stateSave, GraphicalUiElement? liveRoot)
+        {
+            if (value == null || leftSideType == null || CustomEvaluateExpression != null)
+            {
+                return false;
+            }
+
+            // The common case, a valid row, must not allocate: compare in place and only build strings for an error.
+            string? valueType = sourceType;
+            if (string.IsNullOrEmpty(valueType))
+            {
+                valueType = value is int ? "int"
+                    : value is float ? "float"
+                    : value is double ? "double"
+                    : value is string ? "string"
+                    : value is bool ? "bool"
+                    : value.GetType().Name;
+            }
+            if (SameBaseType(valueType, leftSideType))
+            {
+                return false;
+            }
+
+            string targetType = StripNullable(leftSideType);
+            valueType = StripNullable(valueType);
+
+            bool targetIsEnum = false;
+            if (IsPrimitiveTypeName(targetType))
+            {
+                if (left == "FontSize" && (valueType == "int" || valueType == "float"))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // A state name or a type this does not know is left to the setter. Only an enum is judged.
+                VariableSave? rootVariable = leftVariableOnState ?? GetRootVariable(leftVariableName, instanceLeft, stateSave);
+                targetIsEnum = (leftVariableOnState?.Value ?? rootVariable?.Value) is Enum;
+                if (!targetIsEnum || valueType == "int")
+                {
+                    return false;
+                }
+            }
+
+            if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
+            {
+                bool expressionsConverts = (IsNumericTypeName(valueType) && IsNumericTypeName(targetType))
+                    || targetType == "string"
+                    || (targetIsEnum && valueType == "string");
+                string reason = expressionsConverts
+                    ? ". Add the Gum.Expressions package and call GumExpressionService.Initialize() to convert between them."
+                    : ", which cannot be converted.";
+                object? owner = liveRoot?.Tag ?? stateSave.ParentContainer;
+                string where = owner == null ? string.Empty : $" in {owner}";
+                RaiseReferenceError(
+                    $"Variable reference '{referenceString}' was not applied{where}: {DecodeOwnerName(right)} is {Article(valueType)} {valueType} " +
+                    $"and {leftVariableName} is {Article(targetType)} {targetType}{reason} {leftVariableName} keeps its current value.");
+            }
+            return true;
+        }
+
+        private static bool SameBaseType(string first, string second)
+        {
+            int firstLength = first.Length > 0 && first[first.Length - 1] == '?' ? first.Length - 1 : first.Length;
+            int secondLength = second.Length > 0 && second[second.Length - 1] == '?' ? second.Length - 1 : second.Length;
+            return firstLength == secondLength && string.CompareOrdinal(first, 0, second, 0, firstLength) == 0;
+        }
+
+        private static string StripNullable(string type) => type.TrimEnd('?');
+
+        private static bool IsPrimitiveTypeName(string type) =>
+            type == "int" || type == "float" || type == "double" || type == "string" || type == "bool";
+
+        private static string Article(string typeName) => "AEIOUaeiou".IndexOf(typeName[0]) >= 0 ? "an" : "a";
+
+        // A broken row is evaluated again every time a variable it reads changes, which can be every frame. Each owner
+        // (the live element, or with none the element the state belongs to) reports a given row once: a new owner reports
+        // again, and ApplyAllVariableReferences starts over. The check sits here, in front of the shared error channel,
+        // so other users of PropertyAssignmentError are unaffected.
+        private static readonly ConditionalWeakTable<GraphicalUiElement, HashSet<(string Line, string Variable)>> ReportedByOwner =
+            new ConditionalWeakTable<GraphicalUiElement, HashSet<(string Line, string Variable)>>();
+
+        private static readonly HashSet<(string Owner, string Line, string Variable)> ReportedWithoutOwner =
+            new HashSet<(string Owner, string Line, string Variable)>();
+
+        // Set by each platform's SystemManagers to CustomSetPropertyOnRenderable.RaisePropertyAssignmentError, which
+        // writes the [Gum] line to Console.Error and raises PropertyAssignmentError. GumRuntime sits below that class.
+        internal static Action<string>? ReportPropertyAssignmentError;
+
+        private static bool IsFirstReport(GraphicalUiElement? liveRoot, StateSave stateSave, string referenceString, string variableName)
+        {
+            if (liveRoot != null)
+            {
+                HashSet<(string Line, string Variable)> reported = ReportedByOwner.GetOrCreateValue(liveRoot);
+                lock (reported)
+                {
+                    return reported.Add((referenceString, variableName));
+                }
+            }
+
+            lock (ReportedWithoutOwner)
+            {
+                return ReportedWithoutOwner.Add((stateSave.ParentContainer?.Name ?? string.Empty, referenceString, variableName));
+            }
+        }
+
+        private static void RaiseReferenceError(string message)
+        {
+            try
+            {
+                if (ReportPropertyAssignmentError != null)
+                {
+                    ReportPropertyAssignmentError(message);
+                }
+                else
+                {
+                    Console.Error.WriteLine($"[Gum] {message}");
+                }
+            }
+            catch (Exception exception)
+            {
+                // A subscriber that throws must not break the screen being created.
+                Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting a variable reference: {exception}");
+            }
+        }
 #nullable restore
 
         private static object? GetRightSideValue(StateSave stateSave, string right, string? leftSideType, GraphicalUiElement? liveRoot = null)
@@ -1376,26 +1538,81 @@ namespace GumRuntime
             else
             {
                 // fallback (temporarily?)
-                // assume the owner of the right-side is the StateSave that was passed in...
-                var ownerOfRightSideVariable = stateSave;
-                right = DecodeOwnerName(right);
-                // ...but call this to change that in case the right-side is a variable belonging to some other component
-                GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
-
-                // A read of the element's own variables through its qualified name still reads the state
-                // being evaluated, which may hold values newer than the saved ones (live re-evaluation).
-                if (ownerOfRightSideVariable != stateSave
-                    && ownerOfRightSideVariable.ParentContainer == stateSave.ParentContainer)
-                {
-                    ownerOfRightSideVariable = stateSave;
-                }
-
-                var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
-
-                var value = recursiveVariableFinder.GetValue(right);
-                return value;
+                return ReadPlainReference(stateSave, right, findSourceType: false, out _);
             }
         }
+
+        // The lookup used without Gum.Expressions: the right side is a dotted variable name. sourceType, when asked
+        // for, is that variable's declared type (null when it cannot be found).
+#nullable enable
+        private static object? ReadPlainReference(StateSave stateSave, string right, bool findSourceType, out string? sourceType)
+        {
+            sourceType = null;
+
+            // assume the owner of the right-side is the StateSave that was passed in...
+            var ownerOfRightSideVariable = stateSave;
+            right = DecodeOwnerName(right);
+            // ...but call this to change that in case the right-side is a variable belonging to some other component
+            GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
+
+            // A read of the element's own variables through its qualified name still reads the state
+            // being evaluated, which may hold values newer than the saved ones (live re-evaluation).
+            if (ownerOfRightSideVariable != stateSave
+                && ownerOfRightSideVariable.ParentContainer == stateSave.ParentContainer)
+            {
+                ownerOfRightSideVariable = stateSave;
+            }
+
+            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+
+            var value = recursiveVariableFinder.GetValue(right);
+            if (findSourceType && value != null)
+            {
+                sourceType = FindSourceType(ownerOfRightSideVariable, right, recursiveVariableFinder);
+            }
+            return value;
+        }
+
+        // The declared type of the variable a reference reads. Live re-evaluation seeds its state with untyped
+        // values, so the type comes from the element's own definition. That lookup allocates, and a live update runs
+        // it for every row every time a variable changes, so each element remembers what it found.
+        private static readonly ConditionalWeakTable<ElementSave, Dictionary<string, string?>> SourceTypesByElement =
+            new ConditionalWeakTable<ElementSave, Dictionary<string, string?>>();
+
+        private static string? FindSourceType(StateSave owner, string variableName, RecursiveVariableFinder finder)
+        {
+            ElementSave? element = owner.ParentContainer;
+            if (element == null)
+            {
+                string? authoredType = finder.GetVariable(variableName)?.Type;
+                return string.IsNullOrEmpty(authoredType) ? null : authoredType;
+            }
+
+            Dictionary<string, string?> cache = SourceTypesByElement.GetOrCreateValue(element);
+            lock (cache)
+            {
+                if (cache.TryGetValue(variableName, out string? cached))
+                {
+                    return cached;
+                }
+            }
+
+            string? type = ObjectFinder.Self.GetRootVariable(variableName, element)?.Type;
+            if (string.IsNullOrEmpty(type))
+            {
+                type = finder.GetVariable(variableName)?.Type;
+            }
+            if (string.IsNullOrEmpty(type))
+            {
+                type = null;
+            }
+            lock (cache)
+            {
+                cache[variableName] = type;
+            }
+            return type;
+        }
+#nullable restore
 
         /// <summary>
         /// Read-only counterpart to <see cref="GetRightSideValue"/>: enumerates every value the
