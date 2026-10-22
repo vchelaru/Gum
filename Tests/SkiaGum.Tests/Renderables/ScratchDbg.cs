@@ -41,6 +41,10 @@ public class ScratchDbg
             sw.Stop();
             sb.AppendLine($"typewriter mult={mult}: {(GC.GetAllocatedBytesForCurrentThread() - a0) / 500.0:F0} bytes/frame, {sw.Elapsed.TotalMilliseconds * 1000 / 500:F1} us/frame");
         }
-        throw new Exception("\nDBG\n" + sb.ToString());
+        throw new Exception("
+DBG
+" + sb.ToString() + "
+LOG
+" + global::SkiaGum.Text.DebugLog.ToString());
     }
 }
