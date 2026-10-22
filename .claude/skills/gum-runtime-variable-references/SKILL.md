@@ -30,7 +30,7 @@ Located in `Runtimes/GumExpressions/`. Provides Roslyn-based expression evaluati
 
 ### Nullable variables
 
-A typed set reports null too (`label.MinWidth = null` reaches `Shadow.MinWidth = MinWidth`). Live re-evaluation (`VariableReferenceGraph.Evaluate`) writes a null result only to a variable whose type ends in `?` and only when the right side is a plain reference to an existing variable (`MinWidth = Other.MinWidth`); any other null (unresolved name, failed expression, arithmetic on null) means "nothing evaluated" and keeps the value. `EvaluatedSyntax.CastTo` accepts `float?`/`int?` targets. `TypedSetterSweep` (shared by the MonoGame and Skia tests) covers nullable variables with and without Gum.Expressions, including set back to null.
+A typed set reports null too (`label.MinWidth = null` reaches `Shadow.MinWidth = MinWidth`). Live re-evaluation (`VariableReferenceGraph.Evaluate`) writes a null result only to a variable whose type ends in `?` and only when the right side is a plain reference to an existing variable of a compatible type (`MinWidth = Other.MinWidth`; a bool or string read into a `float?` is a failed cast); any other null (unresolved name, failed expression, arithmetic on null) means "nothing evaluated" and keeps the value. `EvaluatedSyntax.CastTo` accepts `float?`/`int?` targets. `TypedSetterSweep` (shared by the MonoGame and Skia tests) covers nullable variables with and without Gum.Expressions, including set back to null.
 
 ## Architecture
 

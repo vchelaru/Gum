@@ -1300,7 +1300,7 @@ namespace GumRuntime
             // and only when the right side is a plain reference to a variable that exists and holds null
             // (MinWidth = Other.MinWidth). Any other null is a failed evaluation, which leaves the variable alone.
             bool assignsNull = value == null && propagateNull && leftSideType != null && leftSideType.EndsWith("?")
-                && IsExistingVariable(stateSave, right);
+                && IsVariableOfCompatibleType(stateSave, right, leftSideType!);
             if (value != null || assignsNull)
             {
                 if (instanceLeft == null)
@@ -1324,8 +1324,10 @@ namespace GumRuntime
             };
         }
 
-        // True when the text is a plain dotted variable name (no operators, no cross-element path) that exists.
-        private static bool IsExistingVariable(StateSave stateSave, string right)
+        // True when the text is a plain dotted variable name (no operators, no cross-element path) that exists and
+        // whose type can be the target's: the same type, or int/float/double, ignoring nullability. A variable of a
+        // mismatched type (a bool read into a float?) fails the cast, which is not a null to copy.
+        private static bool IsVariableOfCompatibleType(StateSave stateSave, string right, string targetType)
         {
             string name = DecodeOwnerName(right).Trim();
             if (name.Length == 0)
@@ -1339,8 +1341,22 @@ namespace GumRuntime
                     return false;
                 }
             }
-            return new RecursiveVariableFinder(stateSave).GetVariable(name) != null;
+            VariableSave? variable = new RecursiveVariableFinder(stateSave).GetVariable(name);
+            if (variable == null)
+            {
+                return false;
+            }
+            string? sourceType = GetRootVariableType(name, null, stateSave) ?? variable.Type;
+            if (sourceType == null)
+            {
+                return false;
+            }
+            sourceType = sourceType.TrimEnd('?');
+            targetType = targetType.TrimEnd('?');
+            return sourceType == targetType || (IsNumericTypeName(sourceType) && IsNumericTypeName(targetType));
         }
+
+        private static bool IsNumericTypeName(string type) => type == "int" || type == "float" || type == "double";
 #nullable restore
 
         private static object? GetRightSideValue(StateSave stateSave, string right, string? leftSideType, GraphicalUiElement? liveRoot = null)
