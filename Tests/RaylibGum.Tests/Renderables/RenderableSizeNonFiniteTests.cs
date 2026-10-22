@@ -1,61 +1,106 @@
 using Gum.Renderables;
-using RenderingLibrary.Graphics;
+using RenderingLibrary;
 using Shouldly;
 
 namespace RaylibGum.Tests.Renderables;
 
 /// <summary>
-/// A Raylib renderable's Width and Height treat +infinity the same (#6477). RaylibGum always defines
-/// FULL_DIAGNOSTICS in Debug and Release, so both axes reject it. Before, the shared base rejected a Height of
-/// +infinity but silently accepted it as a Width.
+/// Every Raylib renderable rejects NaN and infinity on X, Y, Width, Height and Rotation with an ArgumentException,
+/// as the MonoGame and Skia renderables do (#6477). RaylibGum defines FULL_DIAGNOSTICS in Debug and Release.
 /// </summary>
 public class RenderableSizeNonFiniteTests
 {
-    public static TheoryData<string> RenderableNames() => new()
+    private static readonly string[] Variables = { "X", "Y", "Width", "Height", "Rotation" };
+    private static readonly float[] NonFinite = { float.PositiveInfinity, float.NegativeInfinity, float.NaN };
+
+    private static readonly string[] Renderables =
     {
-        nameof(SolidRectangle),
-        nameof(Sprite),
-        nameof(NineSlice),
-        nameof(LineRectangle),
-        nameof(LineCircle),
-        nameof(LinePolygon),
-        nameof(LineArc),
+        "SolidRectangle", "Sprite", "NineSlice", "LineRectangle", "LineCircle", "LinePolygon", "LineArc", "Text",
     };
 
-    private static RenderableBase Create(string name) => name switch
+    public static TheoryData<string, string, float> Cases()
     {
-        nameof(SolidRectangle) => new SolidRectangle(),
-        nameof(Sprite) => new Sprite(),
-        nameof(NineSlice) => new NineSlice(),
-        nameof(LineRectangle) => new LineRectangle(),
-        nameof(LineCircle) => new LineCircle(),
-        nameof(LinePolygon) => new LinePolygon(),
-        nameof(LineArc) => new LineArc(),
+        TheoryData<string, string, float> data = new();
+        foreach (string renderable in Renderables)
+        {
+            foreach (string variable in Variables)
+            {
+                foreach (float value in NonFinite)
+                {
+                    data.Add(renderable, variable, value);
+                }
+            }
+        }
+        return data;
+    }
+
+    private static IPositionedSizedObject Create(string name) => name switch
+    {
+        "SolidRectangle" => new SolidRectangle(),
+        "Sprite" => new Sprite(),
+        "NineSlice" => new NineSlice(),
+        "LineRectangle" => new LineRectangle(),
+        "LineCircle" => new LineCircle(),
+        "LinePolygon" => new LinePolygon(),
+        "LineArc" => new LineArc(),
+        "Text" => new Text(),
         _ => throw new ArgumentException(name),
     };
 
-    [Theory]
-    [MemberData(nameof(RenderableNames))]
-    public void PositiveInfinity_IsRejectedOnBothAxes(string name)
+    private static void Assign(IPositionedSizedObject target, string variable, float value)
     {
-        RenderableBase renderable = Create(name);
-
-        Should.Throw<ArgumentException>(() => renderable.Height = float.PositiveInfinity);
-        Should.Throw<ArgumentException>(() => renderable.Width = float.PositiveInfinity);
-        renderable.Width.ShouldBe(0f, "because a rejected value is not stored");
-        renderable.Height.ShouldBe(0f, "because a rejected value is not stored");
+        switch (variable)
+        {
+            case "X": target.X = value; break;
+            case "Y": target.Y = value; break;
+            case "Width": target.Width = value; break;
+            case "Height": target.Height = value; break;
+            case "Rotation": target.Rotation = value; break;
+        }
     }
 
-    [Theory]
-    [MemberData(nameof(RenderableNames))]
-    public void FiniteSizes_AreStoredUnchangedOnBothAxes(string name)
+    private static float Read(IPositionedSizedObject target, string variable) => variable switch
     {
-        RenderableBase renderable = Create(name);
+        "X" => target.X,
+        "Y" => target.Y,
+        "Width" => target.Width,
+        "Height" => target.Height,
+        _ => target.Rotation,
+    };
 
-        renderable.Width = 123.5f;
-        renderable.Height = -45.25f;
+    [Theory]
+    [MemberData(nameof(Cases))]
+    public void NonFiniteValue_IsRejected(string renderable, string variable, float value)
+    {
+        IPositionedSizedObject target = Create(renderable);
+        float before = Read(target, variable);
 
-        renderable.Width.ShouldBe(123.5f);
-        renderable.Height.ShouldBe(-45.25f);
+        Should.Throw<ArgumentException>(() => Assign(target, variable, value));
+        BitConverter.SingleToInt32Bits(Read(target, variable)).ShouldBe(BitConverter.SingleToInt32Bits(before),
+            "because a rejected value is not stored");
+    }
+
+    [Fact]
+    public void FiniteValues_AreStoredUnchanged()
+    {
+        Random random = new Random(6477);
+        foreach (string renderable in Renderables)
+        {
+            IPositionedSizedObject target = Create(renderable);
+            foreach (string variable in Variables)
+            {
+                if (renderable == "LineCircle" && variable == "Height")
+                {
+                    continue; // a circle's Width and Height are the same radius
+                }
+
+                for (int i = 0; i < 6; i++)
+                {
+                    float value = (float)(random.NextDouble() * 400 - 200);
+                    Assign(target, variable, value);
+                    Read(target, variable).ShouldBe(value, $"{renderable}.{variable}");
+                }
+            }
+        }
     }
 }

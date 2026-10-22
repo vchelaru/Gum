@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework.Graphics;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Math.Geometry;
 using Shouldly;
 using System;
 using Xunit;
@@ -7,143 +9,113 @@ using Xunit;
 namespace MonoGameGum.Tests.RenderingLibraries;
 
 /// <summary>
-/// A renderable's Width and Height treat NaN and infinity the same (#6477). Under FULL_DIAGNOSTICS each class rejects
-/// the same values on both axes; without it neither axis rejects anything. Before, InvisibleRenderable (the base of
-/// the Raylib renderables) rejected a Height of +infinity but accepted it as a Width, and Sprite rejected a NaN
-/// Height but accepted it as a Width.
+/// Every renderable treats NaN and infinity the same on X, Y, Width, Height and Rotation (#6477): with
+/// FULL_DIAGNOSTICS each one rejects all three values with an ArgumentException and does not store them, and
+/// without it none of them throws. Before, InvisibleRenderable rejected only a +infinity Height, Sprite only a NaN
+/// Height, NineSlice only a NaN X/Y, and most of the others rejected nothing.
 /// </summary>
 public class RenderableSizeNonFiniteTests
 {
-    public static TheoryData<float> NonFiniteValues() => new()
+    private static readonly string[] Variables = { "X", "Y", "Width", "Height", "Rotation" };
+    private static readonly float[] NonFinite = { float.PositiveInfinity, float.NegativeInfinity, float.NaN };
+
+    private static readonly string[] Renderables =
     {
-        float.PositiveInfinity,
-        float.NegativeInfinity,
-        float.NaN,
+        "InvisibleRenderable", "Sprite", "NineSlice", "SolidRectangle", "LineRectangle", "Line", "LineCircle",
+        "FilledStrokedRectangle", "Text", "LinePolygon", "LineGrid",
     };
 
-    private static bool Throws(Action assign)
+    public static TheoryData<string, string, float> Cases()
     {
-        try
+        TheoryData<string, string, float> data = new();
+        foreach (string renderable in Renderables)
         {
-            assign();
-            return false;
+            foreach (string variable in Variables)
+            {
+                foreach (float value in NonFinite)
+                {
+                    data.Add(renderable, variable, value);
+                }
+            }
         }
-        catch (Exception)
+        return data;
+    }
+
+    private static IPositionedSizedObject Create(string name) => name switch
+    {
+        "InvisibleRenderable" => new InvisibleRenderable(),
+        "Sprite" => new Sprite((Texture2D?)null),
+        "NineSlice" => new NineSlice(),
+        "SolidRectangle" => new SolidRectangle(),
+        "LineRectangle" => new LineRectangle(null),
+        "Line" => new Line(null),
+        "LineCircle" => new LineCircle(null),
+        "FilledStrokedRectangle" => new FilledStrokedRectangle(null),
+        "Text" => new Text(null, "hi"),
+        "LinePolygon" => new LinePolygon(null),
+        "LineGrid" => new LineGrid(null),
+        _ => throw new ArgumentException(name),
+    };
+
+    private static void Assign(IPositionedSizedObject target, string variable, float value)
+    {
+        switch (variable)
         {
-            return true;
+            case "X": target.X = value; break;
+            case "Y": target.Y = value; break;
+            case "Width": target.Width = value; break;
+            case "Height": target.Height = value; break;
+            case "Rotation": target.Rotation = value; break;
         }
     }
+
+    private static float Read(IPositionedSizedObject target, string variable) => variable switch
+    {
+        "X" => target.X,
+        "Y" => target.Y,
+        "Width" => target.Width,
+        "Height" => target.Height,
+        _ => target.Rotation,
+    };
 
     [Theory]
-    [MemberData(nameof(NonFiniteValues))]
-    public void InvisibleRenderable_WidthAndHeight_AcceptOrRejectTheSameValues(float value)
+    [MemberData(nameof(Cases))]
+    public void NonFiniteValue_IsRejectedOnlyWithDiagnostics(string renderable, string variable, float value)
     {
-        InvisibleRenderable renderable = new InvisibleRenderable();
-
-        bool widthThrows = Throws(() => renderable.Width = value);
-        bool heightThrows = Throws(() => renderable.Height = value);
-
-        widthThrows.ShouldBe(heightThrows,
-            $"because Width and Height are siblings and must treat {value} alike");
-    }
-
-    [Theory]
-    [MemberData(nameof(NonFiniteValues))]
-    public void Sprite_WidthAndHeight_AcceptOrRejectTheSameValues(float value)
-    {
-        Sprite sprite = new Sprite((Texture2D?)null);
-
-        bool widthThrows = Throws(() => sprite.Width = value);
-        bool heightThrows = Throws(() => sprite.Height = value);
-
-        widthThrows.ShouldBe(heightThrows,
-            $"because Width and Height are siblings and must treat {value} alike");
-    }
-
-    [Fact]
-    public void InvisibleRenderable_PositiveInfinity_IsRejectedOnBothAxesOnlyWithDiagnostics()
-    {
-        InvisibleRenderable renderable = new InvisibleRenderable();
+        IPositionedSizedObject target = Create(renderable);
+        float before = Read(target, variable);
 
 #if FULL_DIAGNOSTICS
-        Should.Throw<ArgumentException>(() => renderable.Width = float.PositiveInfinity);
-        Should.Throw<ArgumentException>(() => renderable.Height = float.PositiveInfinity);
-        renderable.Width.ShouldBe(0f, "because a rejected value is not stored");
-        renderable.Height.ShouldBe(0f, "because a rejected value is not stored");
+        Should.Throw<ArgumentException>(() => Assign(target, variable, value));
+        BitConverter.SingleToInt32Bits(Read(target, variable)).ShouldBe(BitConverter.SingleToInt32Bits(before),
+            "because a rejected value is not stored");
 #else
-        renderable.Width = float.PositiveInfinity;
-        renderable.Height = float.PositiveInfinity;
-        renderable.Width.ShouldBe(float.PositiveInfinity);
-        renderable.Height.ShouldBe(float.PositiveInfinity);
+        Should.NotThrow(() => Assign(target, variable, value));
 #endif
     }
 
     [Fact]
-    public void InvisibleRenderable_NaNAndNegativeInfinity_AreAcceptedOnBothAxes()
-    {
-        InvisibleRenderable renderable = new InvisibleRenderable();
-
-        renderable.Width = float.NaN;
-        renderable.Height = float.NaN;
-        float.IsNaN(renderable.Width).ShouldBeTrue();
-        float.IsNaN(renderable.Height).ShouldBeTrue();
-
-        renderable.Width = float.NegativeInfinity;
-        renderable.Height = float.NegativeInfinity;
-        renderable.Width.ShouldBe(float.NegativeInfinity);
-        renderable.Height.ShouldBe(float.NegativeInfinity);
-    }
-
-    [Fact]
-    public void Sprite_NaN_IsRejectedOnBothAxesOnlyWithDiagnostics()
-    {
-        Sprite sprite = new Sprite((Texture2D?)null);
-
-#if FULL_DIAGNOSTICS
-        Should.Throw<InvalidOperationException>(() => sprite.Width = float.NaN);
-        Should.Throw<InvalidOperationException>(() => sprite.Height = float.NaN);
-        sprite.Width.ShouldBe(0f, "because a rejected value is not stored");
-        sprite.Height.ShouldBe(0f, "because a rejected value is not stored");
-#else
-        sprite.Width = float.NaN;
-        sprite.Height = float.NaN;
-        float.IsNaN(sprite.Width).ShouldBeTrue();
-        float.IsNaN(sprite.Height).ShouldBeTrue();
-#endif
-    }
-
-    [Fact]
-    public void Sprite_Infinity_IsAcceptedOnBothAxes()
-    {
-        Sprite sprite = new Sprite((Texture2D?)null);
-
-        sprite.Width = float.PositiveInfinity;
-        sprite.Height = float.PositiveInfinity;
-        sprite.Width.ShouldBe(float.PositiveInfinity);
-        sprite.Height.ShouldBe(float.PositiveInfinity);
-    }
-
-    [Fact]
-    public void FiniteSizes_AreStoredUnchangedOnBothAxes()
+    public void FiniteValues_AreStoredUnchanged()
     {
         Random random = new Random(6477);
-        InvisibleRenderable renderable = new InvisibleRenderable();
-        Sprite sprite = new Sprite((Texture2D?)null);
-
-        for (int i = 0; i < 300; i++)
+        foreach (string renderable in Renderables)
         {
-            float width = (float)(random.NextDouble() * 4000 - 2000);
-            float height = (float)(random.NextDouble() * 4000 - 2000);
+            IPositionedSizedObject target = Create(renderable);
+            foreach (string variable in Variables)
+            {
+                // A circle's Width and Height are the same radius, and a line grid derives its size from its cells.
+                if (renderable == "LineCircle" && variable == "Height" || renderable == "LineGrid" && (variable == "Width" || variable == "Height"))
+                {
+                    continue;
+                }
 
-            renderable.Width = width;
-            renderable.Height = height;
-            sprite.Width = width;
-            sprite.Height = height;
-
-            renderable.Width.ShouldBe(width);
-            renderable.Height.ShouldBe(height);
-            sprite.Width.ShouldBe(width);
-            sprite.Height.ShouldBe(height);
+                for (int i = 0; i < 6; i++)
+                {
+                    float value = (float)(random.NextDouble() * 400 - 200);
+                    Assign(target, variable, value);
+                    Read(target, variable).ShouldBe(value, $"{renderable}.{variable}");
+                }
+            }
         }
     }
 }
