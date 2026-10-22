@@ -152,7 +152,11 @@ public class Text : IVisible, IRenderableIpso,
         // MemberwiseClone shares these lists; give the clone its own copies so re-wrapping or
         // re-parsing markup on one instance doesn't rewrite the other's lines or runs.
         newInstance.mWrappedText = new List<string>(mWrappedText);
+        newInstance.mPreviousWrappedText = new List<string>();
         newInstance.InlineVariables = new List<InlineVariable>(InlineVariables);
+        // The splitter caches runs for this instance's lines and variables; shared, two Texts would clear
+        // each other's cache every frame.
+        newInstance._styledSubstringSplitter = new StyledSubstringSplitter();
         // These call back into the source's runtime; the clone's runtime wires its own.
         newInstance.OnPreRender = null;
         newInstance.OnGlyphGrowthCheck = null;
@@ -256,7 +260,10 @@ public class Text : IVisible, IRenderableIpso,
     public static TextPositionRoundingMode TextPositionRoundingMode = TextPositionRoundingMode.RoundToInt;
 
     List<string> mWrappedText = new List<string>();
-    readonly StyledSubstringSplitter _styledSubstringSplitter = new StyledSubstringSplitter();
+
+    // Scratch for the lines of the last wrap, so re-wrapping keeps the strings of lines that did not change.
+    List<string> mPreviousWrappedText = new List<string>();
+    StyledSubstringSplitter _styledSubstringSplitter = new StyledSubstringSplitter();
     float? mWidth = 200;
     float mHeight = 200;
 
@@ -1000,8 +1007,7 @@ public class Text : IVisible, IRenderableIpso,
     {
         OnGlyphGrowthCheck?.Invoke();
 
-        mWrappedText.Clear();
-        this.UpdateLines(mWrappedText);
+        this.RebuildLines(mWrappedText, mPreviousWrappedText);
     }
 
     /// <summary>
@@ -1039,6 +1045,11 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText) =>
         _styledSubstringSplitter.GetStyledSubstrings(startOfLineIndex, lineOfText, InlineVariables);
+
+    // For the lines of WrappedText, which are drawn and measured every frame: the runs are cached until the
+    // line or the inline variables change. Read-only to callers.
+    internal List<StyledSubstring> GetCachedStyledSubstrings(int lineIndex, int startOfLineIndex, string lineOfText) =>
+        _styledSubstringSplitter.GetStyledSubstrings(lineIndex, startOfLineIndex, lineOfText, InlineVariables);
 
     /// <summary>
     /// Rounds a position/origin to whole pixels using the configured <see cref="TextPositionRoundingMode"/>
@@ -1132,7 +1143,7 @@ public class Text : IVisible, IRenderableIpso,
                 : i * EffectiveLineHeightInPixels * LineHeightMultiplier;
 
             var substrings = InlineVariables.Count > 0
-                ? GetStyledSubstrings(startOfLineIndex, line)
+                ? GetCachedStyledSubstrings(i, startOfLineIndex, line)
                 : null;
 
             if (substrings == null || substrings.Count == 0)
@@ -1170,7 +1181,7 @@ public class Text : IVisible, IRenderableIpso,
         {
             offsets[i] = runningY;
             var line = WrappedText[i];
-            float lineScale = GetLineLayoutScale(startOfLineIndex, line);
+            float lineScale = GetLineLayoutScale(i, startOfLineIndex, line);
             // Issue #4365: divide by EffectiveFontScale, not FontScale -- ResolveRunFont's LayoutScale
             // (what lineScale is maxed against, see GetLineLayoutScale) now composes
             // OversampleCompensationScale, so the divisor must too or an active oversample ratio skews
@@ -1193,14 +1204,14 @@ public class Text : IVisible, IRenderableIpso,
     /// [FontSize]/[FontScale] run's scale for a styled line (the same per-run resolution
     /// <see cref="DrawStyledLine"/> lays out with, so drawn and vertically-advanced sizes cannot drift).
     /// </summary>
-    private float GetLineLayoutScale(int startOfLineIndex, string line)
+    private float GetLineLayoutScale(int lineIndex, int startOfLineIndex, string line)
     {
         if (InlineVariables.Count == 0)
         {
             return EffectiveFontScale;
         }
 
-        var substrings = GetStyledSubstrings(startOfLineIndex, line);
+        var substrings = GetCachedStyledSubstrings(lineIndex, startOfLineIndex, line);
         float maxScale = EffectiveFontScale;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
@@ -1585,7 +1596,7 @@ public class Text : IVisible, IRenderableIpso,
         for (int lineIndex = 0; lineIndex < WrappedText.Count; lineIndex++)
         {
             var line = WrappedText[lineIndex];
-            var substrings = GetStyledSubstrings(startOfLineIndex, line);
+            var substrings = GetCachedStyledSubstrings(lineIndex, startOfLineIndex, line);
 
             float lineHeightFactor;
             float lineWidthInBaseUnits;

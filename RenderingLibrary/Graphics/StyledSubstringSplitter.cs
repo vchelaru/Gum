@@ -72,9 +72,117 @@ public class StyledSubstring
 /// </summary>
 public class StyledSubstringSplitter
 {
+    // What the cached runs were built from: each inline variable and the fields the split reads. A
+    // variable's Value is not part of it, because the runs only point at the variable and the draw loop
+    // reads Value when it draws.
+    private struct VariableSnapshot
+    {
+        public InlineVariable Variable;
+        public string VariableName;
+        public int StartIndex;
+        public int CharacterCount;
+    }
+
+    private class CachedLine
+    {
+        public int StartOfLineIndex;
+        public string Line = string.Empty;
+        public List<StyledSubstring> Substrings = null!;
+    }
+
+    private VariableSnapshot[] _snapshot = new VariableSnapshot[0];
+    private int _snapshotCount;
+    private readonly Dictionary<int, CachedLine> _cachedLines = new();
+
+    /// <summary>
+    /// Returns the runs of line <paramref name="lineIndex"/> from a cache, so a Text that draws the same
+    /// lines every frame splits them once instead of allocating the runs every frame. The cache drops a line
+    /// when its text or start index differs from the one it was built for, and drops every line when any of
+    /// <paramref name="inlineVariables"/> was added, removed, replaced or changed its name, start or length,
+    /// so no explicit invalidation is needed when the text, a colour tag, the font or the wrap width changes.
+    /// Call it for the lines of the wrapped text only (not for measuring arbitrary fragments, which is
+    /// <see cref="GetStyledSubstrings(int, string, List{InlineVariable})"/>), and treat the returned list and
+    /// its runs as read-only: they are shared until the line or the variables change.
+    /// </summary>
+    /// <param name="lineIndex">The index of the line in the wrapped text.</param>
+    /// <param name="startOfLineIndex">See <see cref="GetStyledSubstrings(int, string, List{InlineVariable})"/>.</param>
+    /// <param name="lineOfText">The already-wrapped, BBCode-stripped line.</param>
+    /// <param name="inlineVariables">The full set of inline variables for the text.</param>
+    public List<StyledSubstring> GetStyledSubstrings(int lineIndex, int startOfLineIndex, string lineOfText, List<InlineVariable> inlineVariables)
+    {
+        if (!SnapshotMatches(inlineVariables))
+        {
+            TakeSnapshot(inlineVariables);
+            _cachedLines.Clear();
+        }
+
+        if (_cachedLines.TryGetValue(lineIndex, out CachedLine? cached))
+        {
+            if (cached.StartOfLineIndex == startOfLineIndex && string.Equals(cached.Line, lineOfText))
+            {
+                return cached.Substrings;
+            }
+        }
+        else
+        {
+            cached = new CachedLine();
+            _cachedLines[lineIndex] = cached;
+        }
+
+        cached.StartOfLineIndex = startOfLineIndex;
+        cached.Line = lineOfText;
+        cached.Substrings = GetStyledSubstrings(startOfLineIndex, lineOfText, inlineVariables);
+        return cached.Substrings;
+    }
+
+    private bool SnapshotMatches(List<InlineVariable> inlineVariables)
+    {
+        if (inlineVariables.Count != _snapshotCount)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < _snapshotCount; i++)
+        {
+            InlineVariable variable = inlineVariables[i];
+            ref VariableSnapshot entry = ref _snapshot[i];
+            if (!ReferenceEquals(variable, entry.Variable) ||
+                variable.StartIndex != entry.StartIndex ||
+                variable.CharacterCount != entry.CharacterCount ||
+                !string.Equals(variable.VariableName, entry.VariableName))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void TakeSnapshot(List<InlineVariable> inlineVariables)
+    {
+        if (_snapshot.Length < inlineVariables.Count)
+        {
+            _snapshot = new VariableSnapshot[inlineVariables.Count];
+        }
+
+        for (int i = 0; i < inlineVariables.Count; i++)
+        {
+            InlineVariable variable = inlineVariables[i];
+            _snapshot[i] = new VariableSnapshot
+            {
+                Variable = variable,
+                VariableName = variable.VariableName,
+                StartIndex = variable.StartIndex,
+                CharacterCount = variable.CharacterCount,
+            };
+        }
+        _snapshotCount = inlineVariables.Count;
+    }
+
     /// <summary>
     /// Splits <paramref name="lineOfText"/> into runs according to which <paramref name="inlineVariables"/>
-    /// are active over each character.
+    /// are active over each character. Builds a new list every call; per-frame drawing uses the cached
+    /// <see cref="GetStyledSubstrings(int, int, string, List{InlineVariable})"/> instead.
     /// </summary>
     /// <param name="startOfLineIndex">The index of the line's first character within the full (stripped) text, used to look up which inline variables are active.</param>
     /// <param name="lineOfText">The already-wrapped, BBCode-stripped line to split.</param>

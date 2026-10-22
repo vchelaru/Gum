@@ -64,4 +64,48 @@ public class ReferenceReevaluationAllocationTests : BaseTestClass
 
         result.TotalBytes.ShouldBe(0);
     }
+
+    // Bytes per frame the two valid rows below allocate on a live update, measured before the type check existed.
+    // The check must add nothing: a game runs this every time a read variable changes.
+    private const long ValidRowBytesPerFrame = 8480;
+
+    [Fact]
+    public void SetProperty_VariableAValidPlainReferenceReads_AllocatesNoMoreThanTheRowsDid()
+    {
+        ElementSaveExtensions.CustomEvaluateExpression = null;
+        ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
+        ComponentSave element = new ComponentSave { Name = "Pair", BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = element };
+        element.States.Add(state);
+        element.Instances.Add(new InstanceSave { Name = "Source", BaseType = "Container", ParentContainer = element });
+        element.Instances.Add(new InstanceSave { Name = "Target", BaseType = "Container", ParentContainer = element });
+        VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = "Target.VariableReferences" };
+        list.Value.Add("Width = Source.Width");
+        list.Value.Add("MinWidth = Source.Width");
+        state.VariableLists.Add(list);
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(element);
+        StandardElementSave container = new StandardElementSave { Name = "Container" };
+        container.States.Add(StandardElementsManager.Self.GetDefaultStateFor("Container")!);
+        container.DefaultState!.ParentContainer = container;
+        project.StandardElements.Add(container);
+        ObjectFinder.Self.GumProjectSave = project;
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        GraphicalUiElement source = gue.GetGraphicalUiElementByName("Source")!;
+        GraphicalUiElement target = gue.GetGraphicalUiElementByName("Target")!;
+        bool toggle = false;
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () =>
+            {
+                source.Width = toggle ? 10 : 20;
+                toggle = !toggle;
+            },
+            attempts: 3,
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        target.Width.ShouldBe(toggle ? 20f : 10f);
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(ValidRowBytesPerFrame, $"measured {result.BytesPerIteration} bytes per frame");
+    }
 }

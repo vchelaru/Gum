@@ -102,9 +102,17 @@ public partial class CustomSetPropertyOnRenderable
     /// is not <see cref="MissingFileBehavior.ThrowException"/>. Mirrors the MonoGame/raylib dispatcher's
     /// event of the same name (<c>Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError</c>).
     /// </summary>
-#pragma warning disable CS0067 // raised only in the SkiaGum build
     public static event Action<string>? PropertyAssignmentError;
-#pragma warning restore CS0067
+
+    /// <summary>
+    /// Raises <see cref="PropertyAssignmentError"/>, after writing the message to <see cref="Console.Error"/> so a project
+    /// that never subscribes still sees it. Same choke point as the MonoGame/raylib dispatcher.
+    /// </summary>
+    internal static void RaisePropertyAssignmentError(string message)
+    {
+        Console.Error.WriteLine($"[Gum] {message}");
+        PropertyAssignmentError?.Invoke(message);
+    }
 
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
@@ -1104,6 +1112,15 @@ public partial class CustomSetPropertyOnRenderable
         {
             // VectorSprite is not a RenderableShapeBase, so it stays on its dedicated handler
             // plus the reflection fallback. No shared shape-base properties (Blend, etc.) apply.
+            // A SvgRuntime takes SourceFile through its own setter, which a variable reference
+            // reads back; writing the renderable directly would leave it stale (#6422). A project
+            // instance is a plain GraphicalUiElement (Skia registers no SvgRuntime for "Svg"), so
+            // the handler below still serves it. A missing file throws on both paths.
+            if(!handled && propertyName == "SourceFile" && graphicalUiElement is SvgRuntime svgRuntime)
+            {
+                svgRuntime.SourceFile = value as string;
+                handled = true;
+            }
             if(!handled)
             {
                 handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);

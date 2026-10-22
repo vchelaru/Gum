@@ -244,6 +244,17 @@ public partial class CustomSetPropertyOnRenderable
         PropertyAssignmentError?.Invoke(message);
     }
 
+    // GumRuntime reports a variable reference it cannot apply through this class, but sits below it, so it holds only a hook.
+    // SystemManagers sets it again when it wires the dispatcher; this covers a host that never gets that far (unit tests, hosts
+    // that build elements before initializing).
+#pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
+    [System.Runtime.CompilerServices.ModuleInitializer]
+#pragma warning restore CA2255
+    internal static void WireReferenceErrorReporting()
+    {
+        GumRuntime.ElementSaveExtensions.ReportPropertyAssignmentError = RaisePropertyAssignmentError;
+    }
+
     /// <summary>
     /// Optional resolver that turns a render-target shader file reference (e.g. an <c>.fx</c> path on
     /// the XNA-family backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib, assigned via

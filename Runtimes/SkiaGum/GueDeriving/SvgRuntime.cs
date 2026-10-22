@@ -71,19 +71,12 @@ public class SvgRuntime : InteractiveGue
             {
                 sourceFile = value;
 #if SKIA
-                if (string.IsNullOrEmpty(value))
-                {
-                    Texture = null;
-                }
-                else
-                {
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    SvgDocument? document = loaderManager.LoadContent<SvgDocument>(value);
-                    Texture = document;
-                }
+                Texture = global::SkiaGum.Content.SourceFileLoading.LoadOrNull<SvgDocument>(value);
 #else
                 Texture = ShapeSvgLoader.Load(value!);
 #endif
+                // The getter returns the path, which TryGetProperty cannot recover from the document.
+                ReportTypedPropertyChanged(nameof(SourceFile), value);
             }
         }
     }

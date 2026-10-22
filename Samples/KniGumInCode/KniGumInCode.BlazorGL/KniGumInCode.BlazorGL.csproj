@@ -16,6 +16,14 @@
 		<BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
 	</PropertyGroup>
 
+	<!-- Opt-in test bridge (see README.md). Off unless you pass -p:GumAutomation=true. Never ship it. -->
+	<PropertyGroup Condition="'$(GumAutomation)' == 'true'">
+		<DefineConstants>$(DefineConstants);GUM_AUTOMATION</DefineConstants>
+	</PropertyGroup>
+	<Target Name="WarnGumAutomation" BeforeTargets="CoreCompile" Condition="'$(GumAutomation)' == 'true'">
+		<Message Importance="high" Text="GUM_AUTOMATION is defined: this build exposes window.gumAutomation. Test builds only, never ship it." />
+	</Target>
+
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	</PropertyGroup>
 
@@ -23,6 +31,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="Automation\GumAutomationBridge.cs" />
 		<Compile Include="Pages\Index.razor.cs" />
 		<Compile Include="Program.cs" />
 	</ItemGroup>
