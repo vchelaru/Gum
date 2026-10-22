@@ -22,6 +22,8 @@ public string Name
 }
 ```
 
+A backing field with `Set(ref _field, value)` is the faster alternative for hot properties (no dictionary lookup; a field initializer counts as already set, so assigning the initial value raises nothing). Tool view models keep `Get<T>()`/`Set(value)` by default.
+
 **Derived properties** must use `[DependsOn]` so changes to the source property automatically raise `PropertyChanged` for the derived property. Without this, the UI will not update.
 
 ```csharp
