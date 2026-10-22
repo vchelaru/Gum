@@ -648,6 +648,19 @@ public partial class GraphicalUiElement
 #endif
     }
 
+    /// <summary>
+    /// Reports a typed property that was just assigned, with the value the caller already has, to the variable
+    /// references that read it. For a property whose value cannot be read back by name (a file path whose runtime
+    /// holds only the loaded document).
+    /// </summary>
+    protected void ReportTypedPropertyChanged(string propertyName, string? value)
+    {
+        if (GetReferenceAudience(propertyName) != ReferenceAudience.None)
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
     private void ReportTypedPropertyChanged(string propertyName, float value)
     {
         if (GetReferenceAudience(propertyName) != ReferenceAudience.None)

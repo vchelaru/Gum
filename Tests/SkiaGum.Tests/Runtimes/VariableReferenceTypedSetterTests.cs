@@ -5,6 +5,9 @@ using Gum.Wireframe;
 using GumRuntime;
 using Shouldly;
 using RenderingLibrary;
+using RenderingLibrary.Content;
+using SkiaSharp.Skottie;
+using Svg.Skia;
 
 namespace SkiaGum.Tests.Runtimes;
 
@@ -33,6 +36,7 @@ public class VariableReferenceTypedSetterTests : IDisposable
     };
 
     private readonly SystemManagers _systemManagers = new SystemManagers();
+    private readonly IContentLoader? _originalContentLoader = LoaderManager.Self.ContentLoader;
 
     public VariableReferenceTypedSetterTests()
     {
@@ -41,20 +45,39 @@ public class VariableReferenceTypedSetterTests : IDisposable
         StandardElementsManager.Self.Initialize();
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
+        // The sweep assigns made-up file names; a missing Svg or Lottie file throws, so those load as nothing.
+        LoaderManager.Self.ContentLoader = new MissingDocumentContentLoader(_originalContentLoader);
     }
 
     public void Dispose()
     {
         // No ElementSaveExtensions.Reset(): it would drop the renderable factory the first Initialize installed.
         ObjectFinder.Self.GumProjectSave = null;
+        LoaderManager.Self.ContentLoader = _originalContentLoader;
     }
+
+    private sealed class MissingDocumentContentLoader(IContentLoader? inner) : IContentLoader
+    {
+        // Only a path that is not a file is treated as missing, so a file that exists and fails to load still throws.
+        private static bool IsMissingDocument<T>(string contentName) =>
+            (typeof(T) == typeof(Animation) || typeof(T) == typeof(SKSvg)) && !File.Exists(contentName);
+
+        public T? LoadContent<T>(string contentName) =>
+            IsMissingDocument<T>(contentName) || inner == null ? default : inner.LoadContent<T>(contentName);
+
+        public T? TryLoadContent<T>(string contentName) =>
+            IsMissingDocument<T>(contentName) || inner == null ? default : inner.TryLoadContent<T>(contentName);
+    }
+
+    // SpriteRuntime.SourceFile always reads null (it loads a texture or animation chains), so there is no value to follow.
+    private static bool IsExcluded(string standard, string variable) => standard == "Sprite" && variable == "SourceFile";
 
     public static IEnumerable<object[]> Variables()
     {
         // Test discovery runs before any instance: Initialize wires the Skia-only shape default states (Arc,
         // ColoredCircle, RoundedRectangle, Line) that the case list asks the StandardElementsManager for.
         new SystemManagers().Initialize();
-        return TypedSetterSweep.Cases(Factories, includeExpressions: false);
+        return TypedSetterSweep.Cases(Factories, includeExpressions: false, IsExcluded);
     }
 
     [Theory]

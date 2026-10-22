@@ -1104,6 +1104,15 @@ public partial class CustomSetPropertyOnRenderable
         {
             // VectorSprite is not a RenderableShapeBase, so it stays on its dedicated handler
             // plus the reflection fallback. No shared shape-base properties (Blend, etc.) apply.
+            // A SvgRuntime takes SourceFile through its own setter, which a variable reference
+            // reads back; writing the renderable directly would leave it stale (#6422). A project
+            // instance is a plain GraphicalUiElement (Skia registers no SvgRuntime for "Svg"), so
+            // the handler below still serves it. A missing file throws on both paths.
+            if(!handled && propertyName == "SourceFile" && graphicalUiElement is SvgRuntime svgRuntime)
+            {
+                svgRuntime.SourceFile = value as string;
+                handled = true;
+            }
             if(!handled)
             {
                 handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);

@@ -21,11 +21,12 @@ namespace Gum.Tests.Shared;
 /// </summary>
 public static class TypedSetterSweep
 {
-    // Variables with no simple typed property to assign (files, textures, state names, the parent), and
-    // CurrentChainName, which keeps only the name of a chain the element actually has.
+    // Variables with no simple typed property to assign (the shader file, a texture source, state names, the
+    // parent), and CurrentChainName, which keeps only the name of a chain the element actually has. A string
+    // SourceFile (Svg, Lottie) is swept; Sprite's does not hold a value to follow, so a test excludes it.
     private static readonly HashSet<string> NotTypedVariables = new()
     {
-        "Parent", "State", "ContainedType", "SourceShaderFile", "SourceFile", "RenderTargetTextureSource",
+        "Parent", "State", "ContainedType", "SourceShaderFile", "RenderTargetTextureSource",
         "CurrentChainName",
     };
 
