@@ -162,8 +162,9 @@ public sealed class PlainModel
     public UnequatableStruct UnequatableValue { get; set; } = Values.UnequatableA;
 }
 
+#pragma warning disable CS0618 // Benchmarks the obsolete ChangeAndNotify on purpose, as the baseline for Set(ref).
 /// <summary>
-/// A second baseline for notifying sets: the existing <c>ChangeAndNotify</c> API over a backing field,
+/// A second baseline for notifying sets: the obsolete <c>ChangeAndNotify</c> API over a backing field,
 /// which raises PropertyChanged without the property dictionary.
 /// </summary>
 public sealed class FieldBackedViewModel : ViewModel
@@ -183,3 +184,4 @@ public sealed class FieldBackedViewModel : ViewModel
         set => ChangeAndNotify(ref _textValue, value);
     }
 }
+#pragma warning restore CS0618

@@ -242,7 +242,7 @@ string BuildReport(Dictionary<(string Type, string Case), Result> results)
     if (results.ContainsKey(("float", "field.setNew")))
     {
         sb.AppendLine();
-        sb.AppendLine("Baseline for notifying sets without the dictionary: ChangeAndNotify(ref field, value), the existing API, set new value.");
+        sb.AppendLine("Baseline for notifying sets without the dictionary: ChangeAndNotify(ref field, value), the obsolete API, set new value.");
         sb.AppendLine();
         sb.AppendLine("| Type | No subscriber ns (B) | 1 subscriber ns (B) | VM no subscriber ns (B) | VM 1 subscriber ns (B) |");
         sb.AppendLine("|---|---|---|---|---|");

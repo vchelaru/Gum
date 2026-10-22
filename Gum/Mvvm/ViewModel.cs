@@ -379,6 +379,8 @@ namespace Gum.Mvvm
             }
 
         }
+        // Obsoleted on 2026-10-22, keep until at least 2027-10-22 (public API; same behavior as before).
+        [Obsolete("Obsolete as of October 2026. Use Set(ref field, value) instead; it also watches the contents of a collection.")]
         protected void ChangeAndNotify<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");

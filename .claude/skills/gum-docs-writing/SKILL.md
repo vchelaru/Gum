@@ -194,6 +194,7 @@ Three habits that cost words without buying understanding:
 - After writing, re-read a passage and ask whether someone with no technical background could follow it; simplify if not, without dropping needed Gum keywords.
 - **Gum docs never mention FlatRedBall 1 (FRB1).** It has its own docs, differs from Gum use far enough that a note here does not help, and is in maintenance mode while FRB2 replaces it. Do not add new "FRB works differently" text or sections. Leave existing mentions alone.
 - **Describe how to use a feature, not where it is missing.** Do not add lists of platforms or elements that lack a feature, or paragraphs about how one platform differs (Raylib included). Document the behavior users get by following the instructions.
+- **Do not document behavior owned by a third party that can change without Gum changing**, such as .NET runtime or JIT quirks, SDK or compiler settings, and bugs in MonoGame, SkiaSharp or other dependencies, and their workarounds. It goes stale when the third party ships a fix, and nothing in this repo flags it. Put it on the issue instead. A dated hint block does not fix this.
 
 ## Code Sample Placement Comments
 

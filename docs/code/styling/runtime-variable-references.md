@@ -12,7 +12,7 @@ For information on setting up variable references in the Gum tool, see the [Vari
 
 ## Propagating Variable References
 
-Variable references operate at the project level, modifying values on `ElementSave` and `StateSave` objects rather than on live `GraphicalUiElement` visuals. This means you should apply variable references before creating your UI. Any controls created after applying references will use the updated values.
+`ApplyAllVariableReferences` operates at the project level, modifying values on `ElementSave` and `StateSave` objects rather than on live `GraphicalUiElement` visuals, so call it before creating your UI. Any controls created after applying references will use the updated values. To update visuals which are already on screen, see [Live Updates Within a Component](#live-updates-within-a-component) and [Refreshing Live Visuals After Style Changes](#refreshing-live-visuals-after-style-changes).
 
 After loading a Gum project, you can modify style variables and call `ApplyAllVariableReferences` to propagate changes across all elements in dependency order. Elements that are referenced by others are applied first, so downstream references always pick up the latest values.
 
@@ -35,6 +35,42 @@ project.Screens.First().ToGraphicalUiElement().AddToRoot();
 ```
 
 The `ApplyAllVariableReferences` method iterates all elements (standards, components, and screens) and applies variable references on every state, including category states. It automatically handles dependency ordering so that if element B references element A, element A's references are applied first.
+
+## Live Updates Within a Component
+
+A variable reference which reads a variable on its own component or screen updates the live visual when that variable changes. For example, a component with the row `Y = Progress` updates its `Y` each time `Progress` changes. References which read each other run in dependency order, so the order they are written in does not matter. A reference which reads a value applied when the component was created, whether by the screen or by a parent, follows that value. A component which derives from another component also re-evaluates the rows it inherits.
+
+In the following examples, `wave` is a `GraphicalUiElement` created from a component which has the row shown in the first comment. Dependent references update automatically when:
+
+* `SetProperty` sets the variable, such as a custom variable
+* A state is applied, including each frame of an animation
+* A property of a runtime object is set in code, on the component or on one of its instances, and the property is also a Gum variable
+
+```csharp
+// Update
+// The component has the row: Y = Progress
+wave.SetProperty("Progress", 3f);
+```
+
+References between variables in the same screen or component are live. When a variable changes, every row that reads it is updated using the current values on the runtime objects, like a spreadsheet.
+
+References which form a circle are skipped.
+
+If a reference does not follow a change, such as a change made through a property you added to your own class, call `RefreshReferences` with the names of the variables that changed, relative to the component. A name can include an instance, such as `Background.Red`:
+
+```csharp
+// Update
+// The component has the row: Y = Progress
+wave.RefreshReferences("Progress");
+```
+
+Nullable variables follow your changes too. Setting a nullable variable back to `null` clears a row which is a plain reference to a variable of a matching type. A row whose expression fails, or which combines values with an operator, keeps its old value.
+
+References to another component, such as a shared `Styles` component, do not update on their own. After changing the other component, call `ApplyAllVariableReferences` and `RefreshStyles`, as described below.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Refreshing Live Visuals After Style Changes
 
@@ -140,7 +176,7 @@ this.RegisterRuntimeProperty(
     v => ContentPanel.Width = v);
 ```
 
-Registrations persist for the lifetime of the control. Call `RegisterRuntimeProperty` once during initialization — it does not need to be called again after each refresh.
+Registrations persist for the lifetime of the control. Call `RegisterRuntimeProperty` once during initialization. It does not need to be called again after each refresh.
 
 ## Recomputing Values After a Style Refresh
 
@@ -186,7 +222,9 @@ GumExpressionService.Initialize();
 The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, which adds approximately 10 MB to your build output. If your variable references only use simple assignments (no arithmetic), you do not need this package.
 {% endhint %}
 
-The same `Gum.Expressions` package also enables runtime evaluation of arithmetic (including modulo `%`), conditional (ternary), comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), and logical (`&&`, `||`, `!`) operators, plus math functions such as `Sin`, `Max`, and `Clamp`, in variable references. See the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page for the full list of supported syntax.
+The same `Gum.Expressions` package also enables runtime evaluation of arithmetic (including modulo `%`), conditional (ternary), comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), and logical (`&&`, `||`, `!`) operators, plus math functions such as `Sin`, `Max`, and `Clamp`, in variable references. Position among siblings (`Index`) and the `Absolute` variables (such as `AbsoluteWidth`) also need the package. See the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page for the full list of supported syntax.
+
+Live updates within a component work without the package for plain references such as `Y = Progress`. Rows with expressions need `GumExpressionService.Initialize()` to update live.
 
 A reference which reads `global::Localization.CurrentLanguage` re-evaluates on live visuals when `CurrentLanguage` changes, so a row such as `Width = global::Localization.CurrentLanguage == 2 ? 220 : 160` follows a language switch without extra code. See [Localization](../localization.md) for switching languages.
 
