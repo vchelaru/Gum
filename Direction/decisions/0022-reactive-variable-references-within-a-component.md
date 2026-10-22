@@ -88,26 +88,30 @@ Steps 4 and 5 change who calls `NotifyVariableChanged`, not the graph, the cache
   Animations need no call of their own.
 - Element load applies its rows as before, then evaluates the rows again in dependency order when any row
   reads another's result. Before this, a chain read stale values at load.
-- Every typed property that is also a Gum variable reports its change, directly through
-  `ReportTypedPropertyChanged` or through `NotifyPropertyChanged`, and nothing is read or boxed unless a row
-  reads that property. A property that changes other variables reports them too (assigning `Color` reports
-  `Red`, `Green`, `Blue` and `Alpha`), and setting a nullable variable back to null reports. The list of
-  properties lives in the standard elements' default states, not here: `TypedSetterSweep`
-  (`Tests/Shared`) sets every one on the MonoGame, Skia and Apos shape runtimes and goes red for a setter
-  that does not report. The sweep skips variables with no typed property to assign (files, state names,
-  `Parent`; its `NotTypedVariables` list). Those, and a property a game adds on its own subclass, report
-  only through `SetProperty` or `RefreshReferences`.
+- A typed property that is also a Gum variable reports its change to same-component references, directly
+  through `ReportTypedPropertyChanged` or through `NotifyPropertyChanged`, on the runtimes the sweep covers
+  (MonoGame, KNI and FNA, Skia, and the Apos shapes). Nothing is read or boxed unless a row reads that
+  property. A property that changes other variables reports them too (assigning `Color` reports `Red`,
+  `Green`, `Blue` and `Alpha`), and setting a nullable variable back to null reports. `TypedSetterSweep`
+  (`Tests/Shared`) is the list of what is covered: it sets each variable's typed property and goes red for a
+  setter that does not report. Its `NotTypedVariables` set lists the variables it skips and why. A change
+  that does not report reaches references only through `SetProperty` or `RefreshReferences`.
 - A row in a cycle is skipped by live re-evaluation and listed in `VariableReferenceGraph.CyclicRows`.
 
 ### 2026-10-22: inputs are live (#6411)
 
-Live re-evaluation first read unchanged inputs as authored values, so `Y = Progress + Offset` ignored an
-`Offset` set in code before `Progress`. That was a detail of the first implementation, not a decision. The
-maintainer decided every input of a same-component reference is live, like a spreadsheet cell. Measured, the
-live reads add no evaluations (same count per change and at creation) and a few percent per set. Load still
+Earlier, unchanged inputs were read as authored, so `Y = Progress + Offset` ignored an `Offset` set in code
+before `Progress`. The maintainer decided every input of a same-component reference is live, like a
+spreadsheet cell. Authored values were chosen for cost, determinism and re-entrancy; measured, the live
+reads add no evaluations (same count per change and at creation) and a few percent per set. Load still
 applies rows against authored values, which equal the live ones at that point.
 
-### 2026-10-22: every typed setter reports (#6393, #6400, #6403, #6406, #6410)
+Clarification, same day: reading authored values was a detail of the first implementation, never a debated
+decision. The measurement behind the cost claim is in the body of #6413: about 10% more time and 2% more
+bytes per set, and about 50% more time at creation, for 100 instances of a 4-row chain, from one noisy run
+each.
+
+### 2026-10-22: typed setters report (#6393, #6400, #6403, #6406, #6410)
 
 Rollout step 5 was built as a sweep rather than one property at a time: typed setters across the standard
 elements and the Skia and Apos shape runtimes report to same-component references, including aliases such
@@ -119,12 +123,13 @@ decision is unchanged.
 
 - Animated variables drive dependent variables, including chains, in the tool preview and at runtime.
 - Code that sets a typed property (`element.X = 5`) updates same-component dependents with no further
-  call. `RefreshReferences` is needed only after a change that does not report: a variable the sweep
-  skips or a property on a game's own subclass.
+  call. `RefreshReferences` is needed only after a change that does not report, such as a property
+  `TypedSetterSweep` does not cover or one on a game's own subclass.
 - Cross-component and styling references stay explicit. A cross-component push model is a separate
   decision, if it is ever wanted.
 - Per-frame cost is bounded by the rows the animation touches, not by the component's total
-  reference count. This is unmeasured; step 1 includes a measurement before step 3 depends on it.
+  reference count. `ReferenceReevaluationAllocationTests` guards that a change no row reads allocates
+  nothing. No timing guard exists in the repo.
 - The graph and cache are new state to keep correct as rows are edited. Tests should pin rebuild on
   edit, cycle handling, and chain ordering.
 - Expression evaluation still needs `Gum.Expressions` (Roslyn). Without it only simple dot-path
