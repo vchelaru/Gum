@@ -250,6 +250,109 @@ public class EvaluatedSyntaxTests : BaseTestClass
         result.Value.ShouldBe(3);
     }
 
+    // Only the values the int can hold convert: infinity, NaN and anything beyond the int range would otherwise become a
+    // platform-defined int (#6456). 2147483648f is 2^31, the first float above the int range, and -2147483904f is the
+    // first float below it.
+    [Theory]
+    [InlineData(float.PositiveInfinity)]
+    [InlineData(float.NegativeInfinity)]
+    [InlineData(float.NaN)]
+    [InlineData(1e10f)]
+    [InlineData(-1e10f)]
+    [InlineData(2147483648f)]
+    [InlineData(-2147483904f)]
+    public void CastTo_FloatOutsideTheIntRangeToInt_Fails(float value)
+    {
+        EvaluatedSyntax result = Evaluate("Instance.Width", BuildState(("Instance.Width", value, "float")));
+
+        result.CastTo("int").ShouldBeFalse();
+        result.Value.ShouldBe(value);
+        result.EvaluatedType.ShouldBe("float");
+    }
+
+    [Theory]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    [InlineData(double.NaN)]
+    [InlineData(1e10)]
+    [InlineData(-1e10)]
+    [InlineData(2147483648.0)]
+    [InlineData(-2147483649.0)]
+    [InlineData(-2147483650.0)]
+    public void CastTo_DoubleOutsideTheIntRangeToInt_Fails(double value)
+    {
+        EvaluatedSyntax result = Evaluate("Instance.Width", BuildState(("Instance.Width", value, "double")));
+
+        result.CastTo("int").ShouldBeFalse();
+        result.Value.ShouldBe(value);
+        result.EvaluatedType.ShouldBe("double");
+    }
+
+    [Theory]
+    [InlineData(0f, 0)]
+    [InlineData(42f, 42)]
+    [InlineData(-42f, -42)]
+    [InlineData(3.7f, 3)]
+    [InlineData(-3.7f, -3)]
+    [InlineData(2147483520f, 2147483520)]
+    [InlineData(-2147483648f, int.MinValue)]
+    public void CastTo_FloatInsideTheIntRangeToInt_Converts(float value, int expected)
+    {
+        EvaluatedSyntax result = Evaluate("Instance.Width", BuildState(("Instance.Width", value, "float")));
+
+        result.CastTo("int").ShouldBeTrue();
+        result.Value.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(0.0, 0)]
+    [InlineData(42.0, 42)]
+    [InlineData(-3.7, -3)]
+    [InlineData(2147483647.0, int.MaxValue)]
+    [InlineData(2147483647.9, int.MaxValue)]
+    [InlineData(-2147483648.0, int.MinValue)]
+    [InlineData(-2147483648.5, int.MinValue)]
+    [InlineData(-2147483648.99, int.MinValue)]
+    public void CastTo_DoubleInsideTheIntRangeToInt_Converts(double value, int expected)
+    {
+        EvaluatedSyntax result = Evaluate("Instance.Width", BuildState(("Instance.Width", value, "double")));
+
+        result.CastTo("int").ShouldBeTrue();
+        result.Value.ShouldBe(expected);
+    }
+
+    // A finite double beyond the float range would round to infinity. Infinity and NaN themselves are the same value
+    // as a float, so they convert.
+    [Theory]
+    [InlineData(1e300)]
+    [InlineData(-1e300)]
+    [InlineData(3.5e38)]
+    [InlineData(-3.5e38)]
+    public void CastTo_FiniteDoubleBeyondTheFloatRangeToFloat_Fails(double value)
+    {
+        EvaluatedSyntax result = Evaluate("Instance.Width", BuildState(("Instance.Width", value, "double")));
+
+        result.CastTo("float").ShouldBeFalse();
+        result.Value.ShouldBe(value);
+        result.EvaluatedType.ShouldBe("double");
+    }
+
+    [Theory]
+    [InlineData(0.0, 0f)]
+    [InlineData(3.14, 3.14f)]
+    [InlineData(3.4e38, 3.4e38f)]
+    [InlineData(-3.4e38, -3.4e38f)]
+    [InlineData(double.PositiveInfinity, float.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity, float.NegativeInfinity)]
+    [InlineData(double.NaN, float.NaN)]
+    public void CastTo_DoubleInsideTheFloatRangeToFloat_Converts(double value, float expected)
+    {
+        EvaluatedSyntax result = Evaluate("Instance.Width", BuildState(("Instance.Width", value, "double")));
+
+        result.CastTo("float").ShouldBeTrue();
+        result.Value.ShouldBe(expected);
+    }
+
     [Fact]
     public void CastTo_IntToFloat_CastsCorrectly()
     {
@@ -1151,7 +1254,7 @@ public class EvaluatedSyntaxTests : BaseTestClass
         string csharp = EvaluatedSyntax.ConvertToCSharpSyntax("IsEnabled ? \"Enabled\" : \"Disabled\"");
         Microsoft.CodeAnalysis.SyntaxNode syntax = SyntaxFactory.ParseExpression(csharp);
 
-        EvaluatedSyntax result = EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly(syntax, fallback);
+        EvaluatedSyntax? result = EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly(syntax, fallback);
 
         result.ShouldNotBeNull();
         result.Value.ShouldBe("Enabled");

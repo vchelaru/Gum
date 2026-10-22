@@ -383,6 +383,128 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         _errors.Count.ShouldBe(1);
     }
 
+    // A float the int cannot hold (infinity, NaN, beyond the int range) is refused with Gum.Expressions too, rather than
+    // becoming a platform-defined int (#6456). The variable keeps its value and the row is reported once.
+    [Theory]
+    [InlineData(float.PositiveInfinity, "Infinity")]
+    [InlineData(float.NegativeInfinity, "-Infinity")]
+    [InlineData(float.NaN, "NaN")]
+    [InlineData(1e10f, "1E+10")]
+    [InlineData(2147483648f, "2.1474836E+09")]
+    public void Create_FloatTheIntCannotHoldWithGumExpressions_KeepsTheOldValueAndReports(float sourceValue, string shown)
+    {
+        GraphicalUiElement target = CreatePair("OutlineThickness = Source.Z", out _, useExpressions: true, ("OutlineThickness", 7), ("Z", sourceValue));
+
+        Read(target, "OutlineThickness").ShouldBe(7);
+        _errors.ShouldBe(new[]
+        {
+            $"Variable reference 'OutlineThickness = Source.Z' was not applied in Pair (Container): Source.Z is {shown}, " +
+            "which does not fit the int Target.OutlineThickness. Target.OutlineThickness keeps its current value."
+        });
+    }
+
+    [Fact]
+    public void LiveUpdate_FloatTheIntCannotHoldWithGumExpressions_KeepsTheOldValueAndReportsOnce()
+    {
+        GraphicalUiElement target = CreatePair("OutlineThickness = Source.Z", out GraphicalUiElement source, useExpressions: true, ("OutlineThickness", 7), ("Z", 5f));
+        Read(target, "OutlineThickness").ShouldBe(5);
+
+        source.SetProperty("Z", float.PositiveInfinity);
+        source.SetProperty("Z", 1e10f);
+
+        Read(target, "OutlineThickness").ShouldBe(5);
+        _errors.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void LiveUpdate_FloatTheIntCannotHoldIntoNullableIntWithGumExpressions_KeepsTheOldValue()
+    {
+        GraphicalUiElement target = CreatePair("MaxNumberOfLines = Source.Z", out GraphicalUiElement source, useExpressions: true,
+            ("MaxNumberOfLines", 3), ("Z", 5f));
+
+        source.SetProperty("Z", float.PositiveInfinity);
+
+        Read(target, "MaxNumberOfLines").ShouldBe(5);
+        _errors.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_FloatTheIntCannotHoldWithGumExpressions_KeepsTheOldValueAndReports()
+    {
+        BuildPair("OutlineThickness = Source.Z", useExpressions: true, ("OutlineThickness", 7), ("Z", float.PositiveInfinity));
+        ComponentSave pair = ObjectFinder.Self.GumProjectSave!.Components[0];
+
+        ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
+
+        pair.DefaultState!.GetValue("Target.OutlineThickness").ShouldBe(7);
+        _errors.Count.ShouldBe(1);
+    }
+
+    // The same for a finite double beyond the float range, which would round to infinity. The double comes from a variable
+    // authored as a double on the source instance.
+    [Theory]
+    [InlineData(1e300, "1E+300")]
+    [InlineData(-1e300, "-1E+300")]
+    [InlineData(3.4028235677973366e38, "3.4028235677973366E+38")]
+    public void Create_DoubleBeyondTheFloatRangeWithGumExpressions_KeepsTheOldValueAndReports(double sourceValue, string shown)
+    {
+        GraphicalUiElement target = CreatePair("Z = Source.Big", out _, useExpressions: true, ("Z", 7f), ("Big", sourceValue));
+
+        Read(target, "Z").ShouldBe(7f);
+        _errors.ShouldBe(new[]
+        {
+            $"Variable reference 'Z = Source.Big' was not applied in Pair (Container): Source.Big is {shown}, " +
+            "which does not fit the float Target.Z. Target.Z keeps its current value."
+        });
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_DoubleBeyondTheFloatRangeWithGumExpressions_KeepsTheOldValueAndReports()
+    {
+        BuildPair("Z = Source.Big", useExpressions: true, ("Z", 7f), ("Big", 1e300));
+        ComponentSave pair = ObjectFinder.Self.GumProjectSave!.Components[0];
+
+        ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
+
+        pair.DefaultState!.GetValue("Target.Z").ShouldBe(7f);
+        _errors.Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    [InlineData(0.1)]
+    [InlineData(3.4e38)]
+    public void Create_DoubleTheFloatCanHoldWithGumExpressions_AppliesWithoutReporting(double sourceValue)
+    {
+        GraphicalUiElement target = CreatePair("Z = Source.Big", out _, useExpressions: true, ("Z", 7f), ("Big", sourceValue));
+
+        Read(target, "Z").ShouldBe((float)sourceValue);
+        _errors.ShouldBeEmpty();
+    }
+
+    // A value the int can hold is never reported as not fitting, fraction or not.
+    [Theory]
+    [InlineData(3.7f, 3)]
+    [InlineData(-2147483648f, int.MinValue)]
+    public void Create_FractionalOrBoundaryFloatWithGumExpressions_AppliesWithoutReporting(float sourceValue, int expected)
+    {
+        GraphicalUiElement target = CreatePair("OutlineThickness = Source.Z", out _, useExpressions: true, ("OutlineThickness", 7), ("Z", sourceValue));
+
+        Read(target, "OutlineThickness").ShouldBe(expected);
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Create_FloatTheIntCanHoldWithGumExpressions_Applies()
+    {
+        GraphicalUiElement target = CreatePair("MaxNumberOfLines = Source.Z", out _, useExpressions: true,
+            ("MaxNumberOfLines", 3), ("Z", 2147483520f));
+
+        Read(target, "MaxNumberOfLines").ShouldBe(2147483520);
+        _errors.ShouldBeEmpty();
+    }
+
     [Fact]
     public void Create_SameEnumTypeWithGumExpressions_Applies()
     {
@@ -635,6 +757,7 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         {
             int => "int",
             float => "float",
+            double => "double",
             bool => "bool",
             string => "string",
             _ => variable.Value.GetType().Name

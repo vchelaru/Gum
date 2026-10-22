@@ -250,7 +250,7 @@ public static class GraphicalUiElementPropertyReadExtensions
                 // at creation, so it can select an enum value or be cast like any int (#6446). One the int cannot
                 // hold (infinity, NaN, beyond the int range) stays a float (#6452).
                 if (value is float fontSize && propertyName == "FontSize" &&
-                    (!exact || (fontSize == Math.Floor(fontSize) && IsInIntRange(fontSize))))
+                    (!exact || (fontSize == Math.Floor(fontSize) && GumRuntime.ElementSaveExtensions.IsInIntRange(fontSize))))
                 {
                     value = (int)Math.Round(fontSize);
                 }
@@ -264,9 +264,6 @@ public static class GraphicalUiElementPropertyReadExtensions
 
         return false;
     }
-
-    // int.MaxValue rounds up to 2^31 as a float, so the upper bound is exclusive. NaN fails both comparisons.
-    private static bool IsInIntRange(float value) => value >= int.MinValue && value < -(float)int.MinValue;
 
     // The saved variable is a PositionUnitType, which has no value for the dimension-only units or, on X, the
     // obsolete inverted center. An exact read keeps those as the GeneralUnitType rather than reading them as pixels.
