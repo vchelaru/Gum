@@ -440,6 +440,49 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         _errors.Count.ShouldBe(1);
     }
 
+    // The same for a finite double beyond the float range, which would round to infinity. The double comes from a variable
+    // authored as a double on the source instance.
+    [Theory]
+    [InlineData(1e300, "1E+300")]
+    [InlineData(-1e300, "-1E+300")]
+    [InlineData(3.4028235677973366e38, "3.4028235677973366E+38")]
+    public void Create_DoubleBeyondTheFloatRangeWithGumExpressions_KeepsTheOldValueAndReports(double sourceValue, string shown)
+    {
+        GraphicalUiElement target = CreatePair("Z = Source.Big", out _, useExpressions: true, ("Z", 7f), ("Big", sourceValue));
+
+        Read(target, "Z").ShouldBe(7f);
+        _errors.ShouldBe(new[]
+        {
+            $"Variable reference 'Z = Source.Big' was not applied in Pair (Container): Source.Big is {shown}, " +
+            "which does not fit the float Target.Z. Target.Z keeps its current value."
+        });
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_DoubleBeyondTheFloatRangeWithGumExpressions_KeepsTheOldValueAndReports()
+    {
+        BuildPair("Z = Source.Big", useExpressions: true, ("Z", 7f), ("Big", 1e300));
+        ComponentSave pair = ObjectFinder.Self.GumProjectSave!.Components[0];
+
+        ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
+
+        pair.DefaultState!.GetValue("Target.Z").ShouldBe(7f);
+        _errors.Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    [InlineData(0.1)]
+    [InlineData(3.4e38)]
+    public void Create_DoubleTheFloatCanHoldWithGumExpressions_AppliesWithoutReporting(double sourceValue)
+    {
+        GraphicalUiElement target = CreatePair("Z = Source.Big", out _, useExpressions: true, ("Z", 7f), ("Big", sourceValue));
+
+        Read(target, "Z").ShouldBe((float)sourceValue);
+        _errors.ShouldBeEmpty();
+    }
+
     // A value the int can hold is never reported as not fitting, fraction or not.
     [Theory]
     [InlineData(3.7f, 3)]
@@ -714,6 +757,7 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         {
             int => "int",
             float => "float",
+            double => "double",
             bool => "bool",
             string => "string",
             _ => variable.Value.GetType().Name
