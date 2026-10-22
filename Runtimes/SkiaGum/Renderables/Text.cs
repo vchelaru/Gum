@@ -838,8 +838,29 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get
         {
             var textBlock = GetCachedTextBlock();
-            return textBlock.MeasuredHeight;
+            return GetMeasuredHeight(textBlock);
         }
+    }
+
+    /// <summary>
+    /// <paramref name="textBlock"/>'s measured height plus the empty line after a trailing newline, which
+    /// RichTextKit drops but MonoGame and Raylib count (#6459). That line is one plain line at the base size and
+    /// <see cref="LineHeightMultiplier"/>.
+    /// </summary>
+    private float GetMeasuredHeight(TextBlock textBlock)
+    {
+        var height = textBlock.MeasuredHeight;
+        if (_layoutText != null && _layoutText.Length > 0 && _layoutText[_layoutText.Length - 1] == '\n')
+        {
+            var emptyLine = new TextBlock();
+            emptyLine.AddText("x", GetStyle());
+            if (emptyLine.Lines.Count > 0)
+            {
+                height += emptyLine.Lines[0].Height;
+            }
+        }
+
+        return height;
     }
 
     public float WrappedTextWidth
@@ -979,16 +1000,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <see cref="Render"/> (positioning the painted block) and <see cref="GetCharacterIndexAtPosition(float, float)"/>
     /// (converting a screen click into the same block-local coordinate space), so the two never drift apart.
     /// </summary>
-    private float GetVerticalAlignmentOffset(TextBlock textBlock)
+    internal float GetVerticalAlignmentOffset(TextBlock textBlock)
     {
         if (VerticalAlignment == VerticalAlignment.Center)
         {
-            return (Height - textBlock.MeasuredHeight) / 2.0f;
+            return (Height - GetMeasuredHeight(textBlock)) / 2.0f;
         }
 
         if (VerticalAlignment == VerticalAlignment.Bottom)
         {
-            return Height - textBlock.MeasuredHeight;
+            return Height - GetMeasuredHeight(textBlock);
         }
 
         return 0;
@@ -1303,7 +1324,39 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             runs.Add(new StyledTextRun(text, style, xOffset, yOffset));
         }
 
+        AttachLineBreaksToPrecedingRun(runs);
         return runs;
+    }
+
+    /// <summary>
+    /// RichTextKit sizes a line from every run on it, including the run holding its line-break character. The
+    /// splitter puts the break after a line's last run at the start of the NEXT run, so a size-run line would
+    /// be measured with the following (plain) run's metrics too and come out taller than on MonoGame and
+    /// Raylib (#6459). This moves a run's leading line break onto the preceding run so each line is sized by its
+    /// own runs. A run carrying a glyph offset is left alone, since offsets are keyed by run start.
+    /// </summary>
+    private static void AttachLineBreaksToPrecedingRun(List<StyledTextRun> runs)
+    {
+        for (int i = runs.Count - 1; i > 0; i--)
+        {
+            StyledTextRun run = runs[i];
+            StyledTextRun previous = runs[i - 1];
+            if (run.Text.Length == 0 || run.Text[0] != '\n'
+                || run.XOffset != 0 || run.YOffset != 0 || previous.XOffset != 0 || previous.YOffset != 0)
+            {
+                continue;
+            }
+
+            runs[i - 1] = new StyledTextRun(previous.Text + "\n", previous.Style);
+            if (run.Text.Length == 1)
+            {
+                runs.RemoveAt(i);
+            }
+            else
+            {
+                runs[i] = new StyledTextRun(run.Text.Substring(1), run.Style);
+            }
+        }
     }
 
     /// <summary>
@@ -1362,6 +1415,24 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>
+    /// RichTextKit multiplies a run's own height by <see cref="Style.LineHeight"/>, but a size run
+    /// ([FontScale]/[FontSize]) is an absolute size that <see cref="LineHeightMultiplier"/> must not multiply
+    /// (#6459). The multiplier that makes the run's line <see cref="TextLineHeight.Compute"/> - the larger of
+    /// the multiplied base and the run - which is 1 for a run at least as tall as the multiplied base and
+    /// grows the line to the multiplied base for a smaller one, as on MonoGame and Raylib.
+    /// </summary>
+    /// <param name="runScale">The run's size in base-line units: its pixel size over <see cref="FontSize"/>.</param>
+    private float GetSizeRunLineHeightMultiplier(float runScale)
+    {
+        if (runScale <= 0 || float.IsNaN(runScale) || float.IsInfinity(runScale))
+        {
+            return LineHeightMultiplier;
+        }
+
+        return TextLineHeight.Compute(1, FontScale, LineHeightMultiplier, runScale) / runScale;
+    }
+
+    /// <summary>
     /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
     /// this Text's properties, overridden by the run's inline BBCode <paramref name="variables"/>
     /// (Font, Color / Red / Green / Blue, FontSize, FontScale, IsBold, IsItalic). A <c>[Custom]</c> variable
@@ -1383,6 +1454,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         float xOffset = 0;
         float yOffset = 0;
         string text = runText;
+        bool isSizeRun = false;
 
         if (variables != null)
         {
@@ -1410,9 +1482,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         break;
                     case "FontSize":
                         fontSizePixels = (float)variable.Value;
+                        isSizeRun = true;
                         break;
                     case "FontScale":
                         fontScale = (float)variable.Value;
+                        isSizeRun = true;
                         break;
                     case "IsBold":
                         weight = (bool)variable.Value ? 700 : (int)(400 * BoldWeight);
@@ -1479,7 +1553,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             TextColor = color,
             FontItalic = italic,
             FontWeight = weight,
-            LineHeight = LineHeightMultiplier,
+            LineHeight = isSizeRun ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize) : LineHeightMultiplier,
             // HaloWidth is a stroke centered on the glyph edge, so at width N the fill covers the
             // inner half and only ~N/2 shows -- doubled here so the requested thickness shows in
             // full outward. That doubling used to hit RichTextKit's hardcoded miter join and spike
