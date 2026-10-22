@@ -228,7 +228,9 @@ public class ReferenceRejectedByTargetTests : BaseTestClass
         pair.DefaultState!.Variables.RemoveAll(item => item.Name == "Target.Z");
         GraphicalUiElement root = derived.ToGraphicalUiElement();
         GraphicalUiElement source = root.GetGraphicalUiElementByName("Source")!;
-        GraphicalUiElement target = root.GetGraphicalUiElementByName("Target")!;
+        GraphicalUiElement? targetOrNull = root.GetGraphicalUiElementByName("Target");
+        targetOrNull.ShouldNotBeNull("children: " + string.Join(", ", System.Linq.Enumerable.Select(root.Children, item => ((GraphicalUiElement)item).Name)));
+        GraphicalUiElement target = targetOrNull;
         float before = target.Z;
 
         source.SetProperty("StackSpacing", float.PositiveInfinity);
