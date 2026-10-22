@@ -64,13 +64,24 @@ public class RoundedRectangleRuntime
     public float CornerRadius
     {
 #if SKIA
-        get;
-        set;
+        get => _cornerRadius;
+        set
+        {
+            _cornerRadius = value;
+            NotifyPropertyChanged();
+        }
 #else
         get => ContainedRoundedRectangle.CornerRadius;
-        set => ContainedRoundedRectangle.CornerRadius = value;
+        set
+        {
+            ContainedRoundedRectangle.CornerRadius = value;
+            NotifyPropertyChanged();
+        }
 #endif
     }
+#if SKIA
+    float _cornerRadius;
+#endif
 
     // Per-corner overrides. Available on both backends as of Apos.Shapes 0.6.9 (PR #32, which
     // added the CornerRadii overload to DrawRectangle). The Skia side stores them as auto-props

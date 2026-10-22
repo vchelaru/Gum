@@ -690,7 +690,12 @@ public class ArcRuntime
     public float Thickness
     {
         get => base.StrokeWidth;
-        set => base.StrokeWidth = value;
+        set
+        {
+            base.StrokeWidth = value;
+            // Thickness is its own variable; the base StrokeWidth setter only reports StrokeWidth.
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -715,7 +720,11 @@ public class ArcRuntime
     public float StartAngle
     {
         get => ContainedArc.StartAngle;
-        set => ContainedArc.StartAngle = value;
+        set
+        {
+            ContainedArc.StartAngle = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -725,7 +734,11 @@ public class ArcRuntime
     public float SweepAngle
     {
         get => ContainedArc.SweepAngle;
-        set => ContainedArc.SweepAngle = value;
+        set
+        {
+            ContainedArc.SweepAngle = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -737,7 +750,11 @@ public class ArcRuntime
     public bool IsEndRounded
     {
         get => ContainedArc.IsEndRounded;
-        set => ContainedArc.IsEndRounded = value;
+        set
+        {
+            ContainedArc.IsEndRounded = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -754,6 +771,8 @@ public class ArcRuntime
         {
             base.DropshadowBlurX = value;
             base.DropshadowBlurY = value;
+            // DropshadowBlur is its own variable; the base per-axis setters report DropshadowBlurX/Y.
+            NotifyPropertyChanged();
         }
     }
 
@@ -805,19 +824,51 @@ public class ArcRuntime
 
     /// <inheritdoc cref="Color1"/>
     [Obsolete("Arc's gradient start is now its primary Color — set Color (or Red) instead. Red1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
-    public new int Red1 { get => Red; set => Red = value; }
+    public new int Red1
+    {
+        get => Red;
+        set
+        {
+            Red = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <inheritdoc cref="Color1"/>
     [Obsolete("Arc's gradient start is now its primary Color — set Color (or Green) instead. Green1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
-    public new int Green1 { get => Green; set => Green = value; }
+    public new int Green1
+    {
+        get => Green;
+        set
+        {
+            Green = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <inheritdoc cref="Color1"/>
     [Obsolete("Arc's gradient start is now its primary Color — set Color (or Blue) instead. Blue1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
-    public new int Blue1 { get => Blue; set => Blue = value; }
+    public new int Blue1
+    {
+        get => Blue;
+        set
+        {
+            Blue = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <inheritdoc cref="Color1"/>
     [Obsolete("Arc's gradient start is now its primary Color — set Color (or Alpha) instead. Alpha1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
-    public new int Alpha1 { get => Alpha; set => Alpha = value; }
+    public new int Alpha1
+    {
+        get => Alpha;
+        set
+        {
+            Alpha = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <inheritdoc/>
     public override void PreRender()

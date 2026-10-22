@@ -536,6 +536,13 @@ public partial class CustomSetPropertyOnRenderable
                     handled = true;
                     break;
             }
+            // Same rationale as the Circle/RoundedRectangle branches (#2956): Dropshadow*, UseGradient and
+            // the other runtime-held values must land on the runtime, not the renderable that PreRender
+            // overwrites from the runtime each frame.
+            if (!handled)
+            {
+                handled = TrySetPropertyOnRuntime(graphicalUiElement, propertyName, value);
+            }
             if (!handled)
             {
                 handled = TrySetPropertiesOnRenderableBase(asArc, graphicalUiElement, propertyName, value);
@@ -815,6 +822,11 @@ public partial class CustomSetPropertyOnRenderable
                     }
                     handled = true;
                     break;
+            }
+            // See the Arc branch: runtime-held values must not be written straight to the renderable.
+            if (!handled)
+            {
+                handled = TrySetPropertyOnRuntime(graphicalUiElement, propertyName, value);
             }
             if (!handled)
             {
