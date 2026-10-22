@@ -1130,6 +1130,13 @@ public class Renderer : IRenderer
         return false;
     }
 
+    private bool _hasReportedDiscardingRestoreTarget;
+
+    internal bool TryReportDiscardingRestoreTarget(RenderTargetUsage restoreTargetUsage)
+    {
+        return false;
+    }
+
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
 
