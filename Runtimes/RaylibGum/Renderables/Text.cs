@@ -1234,14 +1234,21 @@ public class Text : IVisible, IRenderableIpso,
     {
         for (int variableIndex = 0; variableIndex < variables.Count; variableIndex++)
         {
-            string name = variables[variableIndex].VariableName;
-            if (name == nameof(FontScale) || name == "BitmapFont")
+            InlineVariable variable = variables[variableIndex];
+            string name = variable.VariableName;
+            if (name == nameof(FontScale) || (name == "BitmapFont" && !IsBaseFontMarker(variable.Value)))
             {
                 return true;
             }
         }
         return false;
     }
+
+    /// <summary>
+    /// True for the run a closing [/FontSize] adds when no font creator is wired: a size of 0 means "back to
+    /// the base font" (#6468), so it ends the open size run without being a size run itself.
+    /// </summary>
+    private static bool IsBaseFontMarker(object? value) => value is float size && size <= 0;
 
     /// <summary>
     /// The layout scale of the tallest size run ([FontScale] or a [FontSize] font swap) on the wrapped line
@@ -1408,7 +1415,8 @@ public class Text : IVisible, IRenderableIpso,
                     }
                     else if (variable.Value is float pixelSize)
                     {
-                        absolutePixelSize = pixelSize;
+                        // A size of 0 is the closing-tag marker: back to the base font (see IsBaseFontMarker).
+                        absolutePixelSize = pixelSize > 0 ? pixelSize : null;
                     }
                     break;
             }

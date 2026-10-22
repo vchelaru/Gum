@@ -61,11 +61,14 @@ public class TextMarkupTests : BaseTestClass
         Text internalText = (Text)textRuntime.RenderableComponent;
 
         internalText.RawText.ShouldBe("inner");
-        internalText.InlineVariables.Count.ShouldBe(1);
+        // The second (empty) run is the closing [/FontSize]: size 0 means back to the base font (#6468).
+        internalText.InlineVariables.Count.ShouldBe(2);
         internalText.InlineVariables[0].VariableName.ShouldBe("BitmapFont");
         internalText.InlineVariables[0].Value.ShouldBe(20f);
         internalText.InlineVariables[0].StartIndex.ShouldBe(0);
         internalText.InlineVariables[0].CharacterCount.ShouldBe(5);
+        internalText.InlineVariables[1].Value.ShouldBe(0f);
+        internalText.InlineVariables[1].CharacterCount.ShouldBe(0);
     }
 
     // #3624 (the feature): with a font creator wired, nested [IsBold][FontSize=20] resolves the inner run to a
@@ -145,11 +148,92 @@ public class TextMarkupTests : BaseTestClass
         Text internalText = (Text)textRuntime.RenderableComponent;
 
         internalText.RawText.ShouldBe("Big text");
-        internalText.InlineVariables.Count.ShouldBe(1);
+        // The second (empty) run is the closing [/FontSize]: size 0 means back to the base font (#6468).
+        internalText.InlineVariables.Count.ShouldBe(2);
         internalText.InlineVariables[0].VariableName.ShouldBe("BitmapFont");
         internalText.InlineVariables[0].Value.ShouldBe(40f);
         internalText.InlineVariables[0].StartIndex.ShouldBe(4);
         internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
+        internalText.InlineVariables[1].Value.ShouldBe(0f);
+        internalText.InlineVariables[1].CharacterCount.ShouldBe(0);
+    }
+
+    // #6468: with no font creator wired the closing tag must still end the run, or the run stretches to the end
+    // of the text and everything after [/FontSize] is drawn and measured at the enlarged size.
+    [Fact]
+    public void Text_WithFontSizeMarkup_NoFontCreator_RunEndsAtClosingTag()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "a";
+        int baseSize = ((Text)textRuntime.RenderableComponent!).Font.BaseSize;
+        float WidthOf(string text)
+        {
+            TextRuntime plain = new();
+            plain.Text = text;
+            return ((Text)plain.RenderableComponent!).WrappedTextWidth;
+        }
+        float expected = WidthOf("a") + 2 * WidthOf("b") + WidthOf("c");
+
+        textRuntime.Text = $"a[FontSize={baseSize * 2}]b[/FontSize]c";
+
+        // A run left open to the end would measure "bc" at twice the size, about one extra "c" wider.
+        ((Text)textRuntime.RenderableComponent!).WrappedTextWidth.ShouldBe(expected, 2.01);
+    }
+
+    private static int BaseFontSize()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "a";
+        return ((Text)textRuntime.RenderableComponent!).Font.BaseSize;
+    }
+
+    private static float MarkupWidth(string markup)
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = markup;
+        return ((Text)textRuntime.RenderableComponent!).WrappedTextWidth;
+    }
+
+    // #6468: closing an inner [FontSize] with no font creator must restore the enclosing [FontSize], not the
+    // base size, as the creator-wired path does. The flat form closes and reopens the outer size explicitly.
+    [Fact]
+    public void Text_WithNestedFontSizeMarkup_NoFontCreator_ClosingInnerRestoresOuterSize()
+    {
+        int outer = BaseFontSize() * 2;
+        int inner = BaseFontSize() * 3 / 2;
+
+        float nested = MarkupWidth($"[FontSize={outer}]a[FontSize={inner}]b[/FontSize]c[/FontSize]d");
+        float flat = MarkupWidth($"[FontSize={outer}]a[/FontSize][FontSize={inner}]b[/FontSize][FontSize={outer}]c[/FontSize]d");
+
+        nested.ShouldBe(flat, 1.01);
+    }
+
+    [Fact]
+    public void Text_WithThreeLevelFontSizeMarkup_NoFontCreator_EachCloseRestoresItsEnclosingSize()
+    {
+        int one = BaseFontSize() * 2;
+        int two = BaseFontSize() * 3 / 2;
+        int three = BaseFontSize() * 3;
+
+        float nested = MarkupWidth($"[FontSize={one}]a[FontSize={two}]b[FontSize={three}]c[/FontSize]d[/FontSize]e[/FontSize]f");
+        float flat = MarkupWidth(
+            $"[FontSize={one}]a[/FontSize][FontSize={two}]b[/FontSize][FontSize={three}]c[/FontSize]" +
+            $"[FontSize={two}]d[/FontSize][FontSize={one}]e[/FontSize]f");
+
+        nested.ShouldBe(flat, 1.01);
+    }
+
+    // A [FontScale] tag has its own run and does not pop the [FontSize] stack, so the size run continues
+    // after it closes. (Under an absolute [FontSize] the base atlas is drawn at that size whatever the scale.)
+    [Fact]
+    public void Text_WithFontScaleInsideFontSize_NoFontCreator_FontSizeRunContinuesAfterFontScaleCloses()
+    {
+        int outer = BaseFontSize() * 2;
+
+        float mixed = MarkupWidth($"[FontSize={outer}]a[FontScale=2]b[/FontScale]c[/FontSize]d");
+        float plainRun = MarkupWidth($"[FontSize={outer}]abc[/FontSize]d");
+
+        mixed.ShouldBe(plainRun, 1.01);
     }
 
     // With a font creator wired, [FontSize=N] re-rasterizes a crisp Raylib_cs.Font AT size N (BaseSize == N)
