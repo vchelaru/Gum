@@ -554,4 +554,18 @@ On Windows and macOS, `Initialize` also starts `RepeatDelay` and `RepeatRate` fr
 
 ### Styled Text Reports Its Drawn Height
 
-Styled text that combines a [FontScale] or [FontSize] run with a LineHeightMultiplier other than 1 now reports its drawn height, because a size run is no longer multiplied: MonoGame, KNI and FNA texts like this get shorter with a multiplier above 1 and taller with one below 1, so anything laid out around them shifts. In Skia, lines with a size run now use the same spacing at any multiplier, and a trailing newline adds its empty last line to the height.
+Styled text that combines a [FontScale] or [FontSize] run with a LineHeightMultiplier other than 1 now reports its drawn height, because a size run is no longer multiplied: MonoGame, KNI, FNA and Raylib texts like this get shorter with a multiplier above 1 and taller with one below 1, so anything laid out around them shifts. In Skia, lines with a size run now use the same spacing at any multiplier, and a trailing newline adds its empty last line to the height. In Skia, text without a size or font run now measures exactly `LineHeightMultiplier` times its line height, where it was slightly off before, so anything laid out around it can shift by a pixel or two.
+
+### KernSmith.MonoGameGum No Longer References Desktop MonoGame
+
+`KernSmith.MonoGameGum` no longer brings in `MonoGame.Framework.DesktopGL`. If your app got MonoGame only through this package, add the MonoGame package for your platform.
+
+The `KernSmith.GumCommon` and `KernSmith.MonoGameGum` packages also add iOS and Android builds. These use the `StbTrueType` rasterizer by default instead of FreeType, and you can pass a backend to `GumFontGenerator` to choose another. When you build these projects from source, pass `-p:IncludeIOS=true` or `-p:IncludeAndroid=true` to include the mobile builds.
+
+### References That Cannot Be Applied Are Reported
+
+A reference whose result does not fit the variable on the left is now reported, and the variable keeps its current value. This includes `NaN` or infinity into a `float` or `double` variable (before, some builds threw and others wrote the value), and with `Gum.Expressions` a `bool` or text into a number or a number outside the range of an `int` (before, silently dropped).
+
+`MinWidth`, `MaxWidth`, `MinHeight` and `MaxHeight` are the exception: `NaN` or infinity now means no limit, where `MinWidth` or `MinHeight` set to positive infinity gave an infinite size or threw.
+
+See [Casting and Type Considerations](../../code/styling/runtime-variable-references.md#casting-and-type-considerations).

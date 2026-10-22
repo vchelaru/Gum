@@ -244,7 +244,7 @@ BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
 
 `GumFontGenerator.Generate` also takes a `RasterizerBackend?` argument as a shortcut for the same effect when you're not customizing other options.
 
-KernSmith always starts with FreeType. It does not look at the platform and pick for you, so a browser gets FreeType just like a desktop build does. Adding a backend's NuGet package makes that backend available, but it does not change the one KernSmith asks for, so a web build still has to name `StbTrueType` itself.
+KernSmith always starts with FreeType. It does not look at the platform and pick for you, so a browser gets FreeType just like a desktop build does. Adding a backend's NuGet package makes that backend available, but it does not change the one KernSmith asks for, so a web build still has to name `StbTrueType` itself. The iOS and Android builds of the KernSmith packages are the exception: they use `StbTrueType` when you name no backend.
 
 {% hint style="warning" %}
 If the backend cannot run, the font is never built, and Gum uses its built in 18 pixel font instead without any error. Text in the wrong font, or text that ignores `FontSize`, usually means no backend was set. Listen to `CustomSetPropertyOnRenderable.PropertyAssignmentError` to see what went wrong.
