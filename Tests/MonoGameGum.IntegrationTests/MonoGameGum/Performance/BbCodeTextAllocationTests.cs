@@ -75,7 +75,7 @@ public class BbCodeTextAllocationTests : BaseTestClass
 
             global::Gum.GumService.Default.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1.0 / 60.0)));
 
-            Text renderable = (Text)text.RenderableComponent;
+            Text renderable = (Text)text.RenderableComponent!;
             wrappedLineCount = renderable.WrappedText.Count;
 
             long spritesBefore = game.GraphicsDevice.Metrics.SpriteCount;
