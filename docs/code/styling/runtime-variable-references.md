@@ -251,7 +251,7 @@ The error tells you to add `Gum.Expressions` when it converts that pair: `int`, 
 
 ### With Gum.Expressions
 
-After you call `GumExpressionService.Initialize()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`. A result that cannot be converted reports an error the same way it does without the package.
+After you call `GumExpressionService.Initialize()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`.
 
 | Right side result | Left side variable | What happens |
 | --- | --- | --- |
