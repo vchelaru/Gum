@@ -52,7 +52,9 @@ In the following examples, `wave` is a `GraphicalUiElement` created from a compo
 wave.SetProperty("Progress", 3f);
 ```
 
-A reference reads the variable that changed at its new value. It reads every other variable at the value the component authors, not at a value you set earlier in code. References which form a circle are skipped.
+References between variables in the same screen or component are live. When a variable changes, every row that reads it is updated using the current values on the runtime objects, like a spreadsheet.
+
+References which form a circle are skipped.
 
 If a reference does not follow a change, such as a change made through a property you added to your own class, call `RefreshReferences` with the names of the variables that changed, relative to the component. A name can include an instance, such as `Background.Red`:
 
