@@ -13,8 +13,10 @@ namespace SkiaGum.Tests.Renderables;
 /// is the multiplied base), and the Height is the sum of those advances, last line included. MonoGame pins the
 /// same numbers in TextRuntimeStyledLineHeightTests and Raylib in TextRunLineHeightMultiplierTests. h is one
 /// plain line at scale 1 and multiplier 1, read from a control text so no font metric is hard-coded.
-/// RichTextKit multiplies a line's ascent and descent but not its leading, so a multiplied line lands within a
-/// couple of percent of base * multiplier * h rather than exactly on it; expectations use that relative tolerance.
+/// Text without a size run is exact (#6467): RichTextKit multiplies a line's ascent and descent but not its
+/// leading, and the Skia text compensates for that. Text with a size run keeps the uncompensated line heights, so a
+/// multiplied line there lands within a couple of percent of base * multiplier * h; tracked in #6475, and pinned
+/// exactly by SizeRunText_LineTopsAreUnchanged so that it cannot get worse.
 /// </summary>
 public class TextStyledLineHeightTests
 {
@@ -45,10 +47,10 @@ public class TextStyledLineHeightTests
     private const float ExactTolerance = 0.01f;
 
     /// <summary>
-    /// The known Skia residual, tracked in #6467: RichTextKit multiplies a line's ascent and descent but not its
-    /// leading, so a line whose height comes from the multiplied base (plain text at a multiplier other than 1, or
-    /// a size run smaller than the multiplied base) lands up to this fraction away from <c>base * mult * h</c>.
-    /// Measured at 2%; applies only to such lines, so a wrong size-run formula still fails.
+    /// The known Skia residual of text that has a size run, tracked in #6475: RichTextKit multiplies a line's
+    /// ascent and descent but not its leading, so a line whose height comes from the multiplied base lands up to
+    /// this fraction away from <c>base * mult * h</c>. Applies only to such lines, so a wrong size-run formula
+    /// still fails. Text without a size run is exact and does not use it.
     /// </summary>
     private const float LeadingResidualFraction = 0.025f;
 
@@ -90,6 +92,20 @@ public class TextStyledLineHeightTests
         }
 
         text.WrappedTextHeight.ShouldBe(expectedTop * h, topTolerance * h, "the reported height is the drawn extent");
+    }
+
+    /// <summary>Text without a size run: every line advances exactly <c>base * multiplier * h</c>, 0.005h at most
+    /// off at each top and at the reported height.</summary>
+    private static void ShouldMatchExactly(Text text, float h, float advance, int lineCount, bool endsWithEmptyLine = false)
+    {
+        TextBlock block = text.GetTextBlock();
+        block.Lines.Count.ShouldBe(lineCount - (endsWithEmptyLine ? 1 : 0));
+        for (int i = 0; i < block.Lines.Count; i++)
+        {
+            block.Lines[i].YCoord.ShouldBe(i * advance * h, 0.005f * h, $"top of line {i}");
+        }
+
+        text.WrappedTextHeight.ShouldBe(lineCount * advance * h, 0.005f * h, "the reported height is the drawn extent");
     }
 
     public static IEnumerable<object[]> BaseRunMultiplier()
@@ -135,6 +151,86 @@ public class TextStyledLineHeightTests
         ShouldMatch(text, h, Run(2, 1.5f, 3), Run(2, 1.5f, 1.5f), Plain(2, 1.5f));
     }
 
+    // Text with a size run keeps the uncompensated line heights (#6475), so its line tops are whatever they were
+    // before the leading compensation; pinned in units of h (read from the code before the change) so any change
+    // to a size-run text, better or worse, is visible and has to be made on purpose.
+    [Theory]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 100f, "0.000,2.972,5.908,8.844,11.780,14.716,18.046,21.018")]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 200f, "0.000,3.331,6.267,9.597")]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 3f, 100f, "0.000,5.886,11.737,17.587,23.438,29.289,35.534,41.420")]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 3f, 200f, "0.000,6.245,12.096,18.341")]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 1f, 1f, 120f, "0.000,1.072,2.065,3.058,4.129")]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1.5f, 100f, "0.000,2.943,5.886,9.145,12.117")]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1.5f, 200f, "0.000,3.259,6.230")]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 3f, 100f, "0.000,5.858,11.716,17.889,23.775")]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 3f, 200f, "0.000,6.173,12.060")]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1f, 200f, "0.000,2.287,4.287")]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 1.5f, 100f, "0.000,2.972")]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 1.5f, 200f, "0.000,2.972")]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 3f, 100f, "0.000,5.886")]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 3f, 200f, "0.000,5.886")]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 1.5f, 100f, "0.000,3.402")]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 1.5f, 200f, "0.000,3.402")]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 3f, 100f, "0.000,6.317")]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 3f, 200f, "0.000,6.317")]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 1.5f, 100f, "0.000,2.972,5.943,8.915,11.886,14.858,17.829,20.801,23.772,26.744,29.716,32.687,35.659,38.630")]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 1.5f, 200f, "0.000,2.972,5.943,8.915,11.886,14.858,17.829")]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 3f, 100f, "0.000,5.886,11.772,17.659,23.545,29.431,35.317,41.203,47.090,52.976,58.862,64.748,70.634,76.521")]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 3f, 200f, "0.000,5.886,11.772,17.659,23.545,29.431,35.317")]
+    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 1.5f, 100f, "0.000,3.000,6.287,9.259,12.230,15.202,18.173,21.145,24.117,27.088,30.060,33.031,36.003,38.974,41.946")]
+    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 1.5f, 200f, "0.000,3.287,6.259,9.230,12.202,15.173,18.145")]
+    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 3f, 100f, "0.000,5.915,12.117,18.003,23.889,29.775,35.661,41.548,47.434,53.320,59.206,65.092,70.979,76.865,82.751")]
+    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 3f, 200f, "0.000,6.202,12.088,17.974,23.861,29.747,35.633")]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 1.5f, 100f, "0.000,2.972,5.900,8.829,12.232,15.203")]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 1.5f, 200f, "0.000,3.402,6.805")]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 3f, 100f, "0.000,5.886,11.730,17.573,23.890,29.777")]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 3f, 200f, "0.000,6.317,12.634")]
+    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 1.5f, 100f, "0.000,2.972,5.943,8.915,11.886,14.858,17.829,20.801,23.772,26.744")]
+    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 1.5f, 200f, "0.000,2.972,5.943,8.915,11.886,14.858,17.829")]
+    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 3f, 100f, "0.000,5.886,11.772,17.659,23.545,29.431,35.317,41.203,47.090,52.976")]
+    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 3f, 200f, "0.000,5.886,11.772,17.659,23.545,29.431,35.317")]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 1.5f, 100f, "0.000,3.000,6.287,9.259,12.518,15.489,18.461,21.432,24.404,27.375,30.347,33.318")]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 1.5f, 200f, "0.000,3.287,6.546,9.518,12.489,15.461,18.432")]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 3f, 100f, "0.000,5.915,12.117,18.003,24.176,30.062,35.949,41.835,47.721,53.607,59.493,65.380")]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 3f, 200f, "0.000,6.202,12.375,18.262,24.148,30.034,35.920")]
+    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 1.5f, 100f, "0.000,2.972,5.929,8.886,12.001,14.973,17.944,20.916,23.888,26.859,29.831,32.802")]
+    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 1.5f, 200f, "0.000,3.115,6.230,9.202,12.173,15.145")]
+    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 3f, 100f, "0.000,5.886,11.758,17.630,23.660,29.546,35.432,41.319,47.205,53.091,58.977,64.863")]
+    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 3f, 200f, "0.000,6.030,12.060,17.946,23.832,29.718")]
+    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 1.5f, 100f, "0.000,3.259,6.230,9.202,12.173,15.145,18.117,21.088,24.060,27.031,30.003,32.974,35.946")]
+    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 1.5f, 200f, "0.000,3.259,6.230,9.202,12.173,15.145")]
+    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 3f, 100f, "0.000,6.173,12.060,17.946,23.832,29.718,35.604,41.491,47.377,53.263,59.149,65.035,70.922")]
+    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 3f, 200f, "0.000,6.173,12.060,17.946,23.832,29.718")]
+    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 1.5f, 100f, "0.000,3.331,6.302,9.274,12.245,15.217,18.188,21.160,24.131,27.103,30.075")]
+    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 1.5f, 200f, "0.000,3.331,6.302,9.274,12.245,15.217,18.188")]
+    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 3f, 100f, "0.000,6.245,12.131,18.018,23.904,29.790,35.676,41.562,47.449,53.335,59.221")]
+    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 3f, 200f, "0.000,6.245,12.131,18.018,23.904,29.790,35.676")]
+    public void SizeRunText_LineTopsAreUnchanged(string markup, float baseScale, float multiplier, float width, string expectedTopsAndHeightInH)
+    {
+        float h = PlainLineHeight();
+        Text text = Build(markup, baseScale, multiplier);
+        text.Width = width;
+
+        float[] expected = expectedTopsAndHeightInH.Split(',').Select(value => float.Parse(value, CultureInfo.InvariantCulture)).ToArray();
+        TextBlock block = text.GetTextBlock();
+        block.Lines.Count.ShouldBe(expected.Length - 1);
+        for (int i = 0; i < block.Lines.Count; i++)
+        {
+            block.Lines[i].YCoord.ShouldBe(expected[i] * h, 0.002f * h, $"top of line {i}");
+        }
+
+        text.WrappedTextHeight.ShouldBe(expected[expected.Length - 1] * h, 0.002f * h, "the reported height");
+    }
+
+    [Fact]
+    public void TrailingNewline_OnMultipliedPlainText_AddsOneEmptyLineAtTheMultipliedBase()
+    {
+        float h = PlainLineHeight();
+        Text text = Build("a\nb\n", 2, 1.5f);
+
+        ShouldMatchExactly(text, h, 3, lineCount: 3, endsWithEmptyLine: true);
+    }
+
     [Fact]
     public void SizeRunLargerThanMultipliedBase_IsNotMultiplied()
     {
@@ -149,13 +245,21 @@ public class TextStyledLineHeightTests
     [InlineData(0.5f, 1f)]
     [InlineData(1f, 1.5f)]
     [InlineData(2f, 0.8f)]
+    [InlineData(1f, 0.1f)]
+    [InlineData(1f, 0.25f)]
+    [InlineData(1f, 0.5f)]
+    [InlineData(1f, 2f)]
+    [InlineData(1f, 3f)]
+    [InlineData(0.5f, 0.5f)]
+    [InlineData(0.5f, 2f)]
+    [InlineData(2f, 0.5f)]
+    [InlineData(2f, 2f)]
     public void PlainText_HeightIsLinesTimesScaledBaseTimesMultiplier(float baseScale, float multiplier)
     {
         float h = PlainLineHeight();
         Text text = Build("a\nb\nc", baseScale, multiplier);
 
-        Line plain = Plain(baseScale, multiplier);
-        ShouldMatch(text, h, plain, plain, plain);
+        ShouldMatchExactly(text, h, baseScale * multiplier, lineCount: 3);
     }
 
     [Theory]
@@ -167,8 +271,7 @@ public class TextStyledLineHeightTests
         float h = PlainLineHeight();
         Text text = Build("[Color=Red]a[/Color]\nb\n[Color=Blue]c[/Color]", baseScale, multiplier);
 
-        Line plain = Plain(baseScale, multiplier);
-        ShouldMatch(text, h, plain, plain, plain);
+        ShouldMatchExactly(text, h, baseScale * multiplier, lineCount: 3);
     }
 
     [Fact]
@@ -187,7 +290,7 @@ public class TextStyledLineHeightTests
         float h = PlainLineHeight();
         Text text = Build("a\n", 1, 1);
 
-        ShouldMatch(text, h, true, new[] { Plain(1, 1), Plain(1, 1) });
+        ShouldMatchExactly(text, h, 1, lineCount: 2, endsWithEmptyLine: true);
     }
 
     [Fact]
@@ -210,7 +313,7 @@ public class TextStyledLineHeightTests
         const float boxHeight = 400;
         // MonoGame and Raylib place the block using every counted line, the empty last line included.
         float drawn = lineCount * multiplier * h;
-        float tolerance = drawn * LeadingResidualFraction + ExactTolerance * h * lineCount;
+        float tolerance = 0.005f * h;
 
         Text center = Build(markup, 1, multiplier);
         center.Height = boxHeight;
@@ -221,5 +324,57 @@ public class TextStyledLineHeightTests
         bottom.Height = boxHeight;
         bottom.VerticalAlignment = VerticalAlignment.Bottom;
         bottom.GetVerticalAlignmentOffset(bottom.GetTextBlock()).ShouldBe(boxHeight - drawn, tolerance);
+    }
+    [Fact]
+    public void FontRegisteredAgainUnderTheSameFamily_DoesNotReuseTheOldFontsMetrics()
+    {
+        const string family = "LeadingCompensationReRegisteredFamily";
+        FontMapper previousMapper = FontMapper.Default;
+        FontMapper.Default = new SkiaGum.Content.Fonts.GumFontMapper();
+        try
+        {
+            byte[] orbitron = System.IO.File.ReadAllBytes(System.IO.Path.Combine(System.AppContext.BaseDirectory, "Assets", "Fonts", "TestFont.ttf"));
+            using SkiaSharp.SKTypeface arial = SkiaSharp.SKTypeface.FromFamilyName("Arial");
+            using SkiaSharp.SKData arialData = SkiaSharp.SKData.Create(arial.OpenStream());
+            byte[] arialBytes = arialData.ToArray();
+
+            SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(family, orbitron);
+            AssertMultipliedLineIsExact(family);
+
+            SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(family, arialBytes);
+            AssertMultipliedLineIsExact(family);
+        }
+        finally
+        {
+            FontMapper.Default = previousMapper;
+        }
+
+        static void AssertMultipliedLineIsExact(string fontName)
+        {
+            Text plain = Build("a\nb", 1, 1);
+            plain.FontName = fontName;
+            TextBlock control = plain.GetTextBlock();
+            float h = control.Lines[1].YCoord - control.Lines[0].YCoord;
+
+            Text multiplied = Build("a\nb", 1, 1.5f);
+            multiplied.FontName = fontName;
+            multiplied.GetTextBlock().Lines[1].YCoord.ShouldBe(1.5f * h, ExactTolerance * h);
+        }
+    }
+
+    [Fact]
+    public void RebuildingTheSameTextWithAMultiplier_ProbesTheFontOnce()
+    {
+        Text text = Build("[Color=Red]a[/Color] [Color=Blue]b[/Color]", 1, 1.5f);
+        text.GetTextBlock();
+
+        int probesBefore = Text.FontLineMetricsProbeCount;
+        for (int i = 0; i < 10; i++)
+        {
+            text.RawText = "[Color=Red]a" + i + "[/Color] [Color=Blue]b[/Color]";
+            text.GetTextBlock();
+        }
+
+        Text.FontLineMetricsProbeCount.ShouldBe(probesBefore);
     }
 }

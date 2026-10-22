@@ -1056,6 +1056,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // _inlineVariables are the per-character styling directives fed to the shared splitter. For
     // plain text _hasMarkup is false and _layoutText == mRawText, keeping the render path unchanged.
     private bool _hasMarkup;
+    // True when a [FontSize]/[FontScale] run is present, set by ParseMarkup.
+    private bool _hasSizeRun;
     private string? _layoutText;
     private List<InlineVariable> _inlineVariables = new();
     private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
@@ -1432,6 +1434,129 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return TextLineHeight.Compute(1, FontScale, LineHeightMultiplier, runScale) / runScale;
     }
 
+    /// <summary>The unmultiplied vertical metrics RichTextKit lays a run out with: ascent as a positive distance
+    /// above the baseline, descent below it, and the font's leading.</summary>
+    private readonly record struct FontLineMetrics(float Ascent, float Descent, float Leading)
+    {
+        public float TextHeight => Ascent + Descent;
+
+        public bool IsValid => TextHeight > 0;
+
+        /// <summary>The extra space RichTextKit adds above and below the glyphs for <paramref name="lineHeight"/>.</summary>
+        public float HalfLeadingFor(float lineHeight) => (lineHeight - 1) * TextHeight / 2 + Leading / 2;
+
+        /// <summary>The distance from the line top to the baseline.</summary>
+        public float TopFor(float lineHeight) => Ascent + HalfLeadingFor(lineHeight);
+
+        /// <summary>The distance from the baseline to the line bottom, which RichTextKit never lets go above the baseline.</summary>
+        public float BottomFor(float lineHeight) => System.Math.Max(0, Descent + HalfLeadingFor(lineHeight));
+
+        /// <summary>The <see cref="Style.LineHeight"/> that puts the run's top at <paramref name="top"/>.</summary>
+        public float LineHeightForTop(float top) => 1 + (2 * (top - Ascent) - Leading) / TextHeight;
+    }
+
+    private readonly record struct FontLineMetricsKey(string? Family, float Size, int Weight, bool Italic);
+
+    /// <summary>The metrics probed so far for one font mapper. Guarded by its own lock.</summary>
+    private sealed class FontLineMetricsCache
+    {
+        public readonly Dictionary<FontLineMetricsKey, FontLineMetrics> Entries = new();
+        public int RegistrationVersion;
+    }
+
+    // The metrics depend only on the font a style resolves to, so one probe per distinct font serves every
+    // rebuild and every typewriter frame. The cache belongs to the font mapper (weakly, so a replaced mapper and
+    // its entries go away) and is dropped when a font is registered again, since the same family name may then
+    // resolve to a different font. The key is the style's own values, so a lookup resolves no typeface and
+    // allocates nothing.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<FontMapper, FontLineMetricsCache> _fontLineMetricsCaches = new();
+    private const int MaxCachedFontLineMetrics = 256;
+    private static int _fontLineMetricsProbeCount;
+
+    /// <summary>How many one-glyph probes have been laid out, so tests can assert a font is probed once.</summary>
+    internal static int FontLineMetricsProbeCount => System.Threading.Volatile.Read(ref _fontLineMetricsProbeCount);
+
+    private static FontLineMetrics GetFontLineMetrics(Style style)
+    {
+        FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
+        var key = new FontLineMetricsKey(style.FontFamily, style.FontSize, style.FontWeight, style.FontItalic);
+        lock (cache)
+        {
+            int version = Content.Fonts.GumFontMapper.RegistrationVersion;
+            if (cache.RegistrationVersion != version)
+            {
+                cache.Entries.Clear();
+                cache.RegistrationVersion = version;
+            }
+
+            if (cache.Entries.TryGetValue(key, out FontLineMetrics cached))
+            {
+                return cached;
+            }
+
+            FontLineMetrics metrics = ProbeFontLineMetrics(style);
+            if (cache.Entries.Count >= MaxCachedFontLineMetrics)
+            {
+                cache.Entries.Clear();
+            }
+            cache.Entries[key] = metrics;
+            return metrics;
+        }
+    }
+
+    private static FontLineMetrics ProbeFontLineMetrics(Style style)
+    {
+        System.Threading.Interlocked.Increment(ref _fontLineMetricsProbeCount);
+
+        // Measured at the default line height of 1, whatever the style's own is.
+        var probe = new TextBlock();
+        probe.AddText("x", new Style()
+        {
+            FontFamily = style.FontFamily,
+            FontSize = style.FontSize,
+            FontWeight = style.FontWeight,
+            FontItalic = style.FontItalic,
+        });
+        return probe.FontRuns.Count == 0
+            ? default
+            : new FontLineMetrics(-probe.FontRuns[0].Ascent, probe.FontRuns[0].Descent, probe.FontRuns[0].Leading);
+    }
+
+    /// <summary>
+    /// RichTextKit gives a line the height <c>(ascent + descent) * LineHeight + leading</c> (the leading is not
+    /// multiplied), and never lets the descent side go negative, so setting <see cref="Style.LineHeight"/> to
+    /// <paramref name="lineHeightFactor"/> lands a little off <c>factor * plainLineHeight</c> (1.486 instead of
+    /// 1.5 plain lines at 1.5) (#6467). This returns the <see cref="Style.LineHeight"/> that makes the line exactly
+    /// <paramref name="lineHeightFactor"/> times the plain line height of <paramref name="style"/>, matching the
+    /// other runtimes. A factor of 1 is already exact and is returned untouched.
+    /// </summary>
+    /// <param name="style">The run's style; its own <see cref="Style.LineHeight"/> must still be the default 1.</param>
+    /// <param name="lineHeightFactor">The wanted line height in plain lines of <paramref name="style"/>.</param>
+    private static float GetLeadingCompensatedLineHeight(Style style, float lineHeightFactor)
+    {
+        if (lineHeightFactor == 1 || float.IsNaN(lineHeightFactor) || float.IsInfinity(lineHeightFactor))
+        {
+            return lineHeightFactor;
+        }
+
+        FontLineMetrics metrics = GetFontLineMetrics(style);
+        if (!metrics.IsValid)
+        {
+            return lineHeightFactor;
+        }
+
+        float wantedHeight = lineHeightFactor * (metrics.TextHeight + metrics.Leading);
+
+        // Shrinking a line far enough pushes its bottom (descent plus half the extra leading) above the
+        // baseline, where RichTextKit stops at the baseline and only the top keeps shrinking.
+        if (wantedHeight >= metrics.Ascent - metrics.Descent)
+        {
+            return (wantedHeight - metrics.Leading) / metrics.TextHeight;
+        }
+
+        return metrics.LineHeightForTop(wantedHeight);
+    }
+
     /// <summary>
     /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
     /// this Text's properties, overridden by the run's inline BBCode <paramref name="variables"/>
@@ -1553,7 +1678,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             TextColor = color,
             FontItalic = italic,
             FontWeight = weight,
-            LineHeight = isSizeRun ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize) : LineHeightMultiplier,
             // HaloWidth is a stroke centered on the glyph edge, so at width N the fill covers the
             // inner half and only ~N/2 shows -- doubled here so the requested thickness shows in
             // full outward. That doubling used to hit RichTextKit's hardcoded miter join and spike
@@ -1570,6 +1694,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             HaloColor = outlineThickness > 0 ? OutlineColor : SKColor.Empty,
         };
 
+        // Style.LineHeight multiplies a run's ascent and descent but not its leading, so the factor is
+        // adjusted until the line is exactly the multiplier times a plain line of this run (#6467).
+        // Only for text without a size run: a line that mixes sizes takes its top and bottom from different runs, and
+        // compensating each run alone overshoots there (#6475), so such text keeps the uncompensated factors.
+        style.LineHeight = _hasSizeRun
+            ? (isSizeRun ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize) : LineHeightMultiplier)
+            : GetLeadingCompensatedLineHeight(style, LineHeightMultiplier);
+
         return (style, text, xOffset, yOffset);
     }
 
@@ -1582,6 +1714,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private void ParseMarkup()
     {
         _inlineVariables.Clear();
+        _hasSizeRun = false;
 
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
@@ -1605,6 +1738,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         _hasMarkup = true;
         _layoutText = BbCodeParser.RemoveTags(normalized, tags);
         BuildInlineVariables(tags);
+        foreach (InlineVariable variable in _inlineVariables)
+        {
+            _hasSizeRun |= variable.VariableName == "FontSize" || variable.VariableName == "FontScale";
+        }
     }
 
     /// <summary>
