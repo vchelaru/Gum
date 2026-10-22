@@ -377,12 +377,47 @@ namespace Gum.Mvvm
         // all notifications and all ViewModel instances instead of allocating one per notification.
         private static readonly ConcurrentDictionary<string, PropertyChangedEventArgs> _eventArgsCache = new();
 
+        // The same cache keyed on the string instance, so a hit hashes no characters. Property names normally
+        // come from [CallerMemberName] or nameof, which are interned literals, so one instance per name hits
+        // every time. Only interned instances are added, which bounds the table by the number of literals in
+        // the program; a name built at run time takes the by-value cache above.
+        private static readonly ConcurrentDictionary<string, PropertyChangedEventArgs> _eventArgsByReference =
+            new(ReferenceStringComparer.Instance);
+
+        private sealed class ReferenceStringComparer : IEqualityComparer<string>
+        {
+            public static readonly ReferenceStringComparer Instance = new();
+
+            public bool Equals(string? x, string? y) => ReferenceEquals(x, y);
+
+            public int GetHashCode(string value) => RuntimeHelpers.GetHashCode(value);
+        }
+
+        private static PropertyChangedEventArgs GetEventArgs(string propertyName)
+        {
+            return _eventArgsByReference.TryGetValue(propertyName, out PropertyChangedEventArgs? args)
+                ? args
+                : GetEventArgsByValue(propertyName);
+        }
+
+        private static PropertyChangedEventArgs GetEventArgsByValue(string propertyName)
+        {
+            PropertyChangedEventArgs args =
+                _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name));
+            if (ReferenceEquals(string.IsInterned(propertyName), propertyName))
+            {
+                _eventArgsByReference.TryAdd(propertyName, args);
+            }
+
+            return args;
+        }
+
         protected virtual void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             if (PropertyChanged != null)
             {
-                PropertyChanged(this, _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name)));
+                PropertyChanged(this, GetEventArgs(propertyName));
             }
 
             // Most view models declare no [DependsOn]; an empty dictionary skips the lookup call. The

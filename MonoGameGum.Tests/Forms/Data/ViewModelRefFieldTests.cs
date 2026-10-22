@@ -3,6 +3,8 @@ using MonoGameGum.TestsCommon;
 using Shouldly;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms.Data;
@@ -242,6 +244,25 @@ public class ViewModelRefFieldTests : BaseTestClass
         vm.SetNamed(2, "IntValue");
 
         raised.ShouldBe(new string?[] { "IntValue", "Doubled", "IntValue", "Doubled" });
+    }
+
+    [Fact]
+    public void Set_EventArgs_AreSharedAcrossInstances_AndKeepTheirNameWhenANameIsBuiltAtRunTime()
+    {
+        RefViewModel first = new RefViewModel();
+        RefViewModel second = new RefViewModel();
+        List<PropertyChangedEventArgs> firstArgs = new();
+        List<PropertyChangedEventArgs> secondArgs = new();
+        first.PropertyChanged += (_, args) => firstArgs.Add(args);
+        second.PropertyChanged += (_, args) => secondArgs.Add(args);
+
+        first.IntValue = 1;
+        second.IntValue = 1;
+        // Populated through the literal name above; a different instance of the same name must still resolve.
+        second.SetNamed(2, new string("IntValue".ToCharArray()));
+
+        ReferenceEquals(firstArgs[0], secondArgs[0]).ShouldBeTrue();
+        secondArgs.Select(a => a.PropertyName).ShouldBe(new string?[] { "IntValue", "Doubled", "IntValue", "Doubled" });
     }
 
     [Fact]
