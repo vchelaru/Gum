@@ -5,7 +5,10 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
+using RenderingLibrary.Graphics;
 using Shouldly;
+using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -92,12 +95,26 @@ public class FontSizeOutOfIntRangeReferenceTests : BaseTestClass
     [Theory]
     [InlineData(float.PositiveInfinity)]
     [InlineData(float.NegativeInfinity)]
-    public void SourceFontSizeChanged_InfinityIntoRotation_ReportsTheInvalidRotationWithExpressions(float fontSize)
+    public void SourceFontSizeChanged_InfinityIntoRotation_ReportsTheReferenceAndKeepsTheRotationWithExpressions(float fontSize)
     {
         GumExpressionService.Initialize();
-        (TextRuntime source, TextRuntime target) = Create("Rotation = Source.FontSize");
+        List<string> errors = new List<string>();
+        void Record(string message) { if (message.StartsWith("Variable reference")) errors.Add(message); }
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Record;
+        try
+        {
+            (TextRuntime source, TextRuntime target) = Create("Rotation = Source.FontSize");
 
-        Should.Throw<Exception>(() => source.FontSize = fontSize).Message.ShouldContain("Invalid Rotation value");
+            source.FontSize = fontSize;
+
+            target.Rotation.ShouldBe(0f);
+            errors.Count.ShouldBe(1, string.Join(Environment.NewLine, errors));
+            errors[0].ShouldContain("does not fit the float Target.Rotation");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= Record;
+        }
     }
 
     private static object? ReadExact(float fontSize)

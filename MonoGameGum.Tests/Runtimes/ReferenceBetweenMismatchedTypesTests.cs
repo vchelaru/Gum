@@ -471,8 +471,6 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
     }
 
     [Theory]
-    [InlineData(double.PositiveInfinity)]
-    [InlineData(double.NegativeInfinity)]
     [InlineData(0.1)]
     [InlineData(3.4e38)]
     public void Create_DoubleTheFloatCanHoldWithGumExpressions_AppliesWithoutReporting(double sourceValue)
