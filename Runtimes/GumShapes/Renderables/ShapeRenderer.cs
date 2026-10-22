@@ -331,6 +331,15 @@ public class ShapeRenderer
     public void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager) =>
         InitializeInternal(graphicsDevice);
 
+    // Issue #6434 — Apos.Shapes chooses which of its embedded shaders to load (OpenGL, DX11, ...) by
+    // reading MonoGame's internal Shader.Profile through reflection. Nothing in code names that
+    // property, so a trimmed build (Release iOS) removes it, Apos falls back to the DirectX shader and
+    // the device refuses it. Keeping it here, on the method that creates the ShapeBatch, means every
+    // app that reaches shapes keeps it without a manual linker descriptor. The KNI package has no
+    // MonoGame.Framework assembly to name, so it does not declare this.
+#if APOS_MONOGAME
+    [System.Diagnostics.CodeAnalysis.DynamicDependency("Profile", "Microsoft.Xna.Framework.Graphics.Shader", "MonoGame.Framework")]
+#endif
     private void InitializeInternal(GraphicsDevice graphicsDevice)
     {
         if(IsInitialized)
