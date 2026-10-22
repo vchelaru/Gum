@@ -1290,6 +1290,13 @@ public class EvaluatedSyntax
                     return false;
                 }
 
+                // True is not the enum's value 1 (#6463): Enum.ToObject would take it as one, so refuse it like any other
+                // reinterpretation.
+                if (this.Value is bool)
+                {
+                    return false;
+                }
+
                 try
                 {
                     this.Value = this.Value is string enumName

@@ -19,6 +19,7 @@ public static class GumExpressionService
     public static void Initialize()
     {
         ElementSaveExtensions.CustomEvaluateExpression = EvaluateExpression;
+        ElementSaveExtensions.CustomFindRejectedCast = FindRejectedCast;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = EvaluateExpressionAllBranches;
     }
 
@@ -38,6 +39,18 @@ public static class GumExpressionService
             }
         }
         return null;
+    }
+
+    // The value the expression evaluates to when EvaluateExpression refused it because it cannot be cast to desiredType, so
+    // the caller can report why the reference was not applied. Null when there is no value or the cast succeeds.
+    private static object? FindRejectedCast(StateSave stateSave, string expression, string? desiredType, GraphicalUiElement? liveRoot)
+    {
+        var syntax = _parsedExpressions.GetOrParse(expression);
+        var evaluatedSyntax = syntax == null ? null : EvaluatedSyntax.FromSyntaxNode(syntax, stateSave, liveRoot: liveRoot);
+        object? uncast = evaluatedSyntax?.Value;
+
+        // CastTo converts Value in place when it succeeds.
+        return uncast != null && !evaluatedSyntax!.CastTo(desiredType) ? uncast : null;
     }
 
     /// <summary>

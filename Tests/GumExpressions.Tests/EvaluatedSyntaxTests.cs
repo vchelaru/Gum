@@ -397,6 +397,16 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
+    public void CastTo_BoolIntoEnum_Fails()
+    {
+        StateSave state = BuildState(("Instance.IsBold", true, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsBold", state);
+
+        result.CastTo("HorizontalAlignment").ShouldBeFalse();
+    }
+
+    [Fact]
     public void CastTo_EnumOfTheSameEnumType_Succeeds()
     {
         StateSave state = BuildState(("Instance.XOrigin", RenderingLibrary.Graphics.HorizontalAlignment.Right, "HorizontalAlignment"));

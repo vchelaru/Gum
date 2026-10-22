@@ -688,10 +688,10 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         return value;
     }
 
-    private GraphicalUiElement CreatePair(string row, out GraphicalUiElement source, params (string Name, object Value)[] authored)
+    private GraphicalUiElement CreatePair(string row, out GraphicalUiElement source, params (string Name, object? Value)[] authored)
         => CreatePair(row, out source, useExpressions: false, authored);
 
-    private GraphicalUiElement CreatePair(string row, out GraphicalUiElement source, bool useExpressions, params (string Name, object Value)[] authored)
+    private GraphicalUiElement CreatePair(string row, out GraphicalUiElement source, bool useExpressions, params (string Name, object? Value)[] authored)
     {
         ComponentSave pair = BuildPair(row, useExpressions, authored);
         GraphicalUiElement root = pair.ToGraphicalUiElement();
@@ -701,10 +701,10 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
 
     // Creates the pair like CreatePair but leaves a throw to the caller's assertion on _errors (the throw itself is
     // pinned by the Create_MismatchedTypes_DoesNotThrow tests).
-    private void TryCreate(string row, params (string Name, object Value)[] authored)
+    private void TryCreate(string row, params (string Name, object? Value)[] authored)
         => TryCreate(row, useExpressions: false, authored);
 
-    private void TryCreate(string row, bool useExpressions, params (string Name, object Value)[] authored)
+    private void TryCreate(string row, bool useExpressions, params (string Name, object? Value)[] authored)
     {
         ComponentSave pair = BuildPair(row, useExpressions, authored);
         try
@@ -716,56 +716,6 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         }
     }
 
-    // A component "Pair" holding Text instances Source and Target, with the row on Target. The first authored value is
-    // Target's, the second Source's.
-    private ComponentSave BuildPair(string row, bool useExpressions, params (string Name, object Value)[] authored)
-    {
-        if (useExpressions)
-        {
-            GumExpressionService.Initialize();
-        }
-
-        GumProjectSave project = new GumProjectSave();
-        foreach (string name in new[] { "Container", "Text" })
-        {
-            StandardElementSave element = new StandardElementSave { Name = name };
-            element.States.Add(StandardElementsManager.Self.GetDefaultStateFor(name)!);
-            element.DefaultState!.ParentContainer = element;
-            project.StandardElements.Add(element);
-        }
-        ElementSaveExtensions.RegisterGueInstantiation("Container", () => new ContainerRuntime());
-        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new TextRuntime());
-        ObjectFinder.Self.GumProjectSave = project;
-
-        ComponentSave pair = new ComponentSave { Name = "Pair", BaseType = "Container" };
-        StateSave state = new StateSave { Name = "Default", ParentContainer = pair };
-        pair.States.Add(state);
-        pair.Instances.Add(new InstanceSave { Name = "Source", BaseType = "Text", ParentContainer = pair });
-        pair.Instances.Add(new InstanceSave { Name = "Target", BaseType = "Text", ParentContainer = pair });
-        AddAuthored(state, "Target", authored[0]);
-        AddAuthored(state, "Source", authored[1]);
-        VariableListSave<string> rows = new VariableListSave<string> { Type = "string", Name = "Target.VariableReferences" };
-        rows.Value.Add(row);
-        state.VariableLists.Add(rows);
-        project.Components.Add(pair);
-        return pair;
-    }
-
-    private static void AddAuthored(StateSave state, string instance, (string Name, object Value) variable)
-    {
-        string type = variable.Value switch
-        {
-            int => "int",
-            float => "float",
-            double => "double",
-            bool => "bool",
-            string => "string",
-            _ => variable.Value.GetType().Name
-        };
-        if (variable.Name == "MinWidth" || variable.Name == "MaxWidth" || variable.Name == "MinHeight" || variable.Name == "MaxHeight" || variable.Name == "MaxNumberOfLines")
-        {
-            type += "?";
-        }
-        state.Variables.Add(new VariableSave { Name = $"{instance}.{variable.Name}", Type = type, Value = variable.Value, SetsValue = true });
-    }
+    private static ComponentSave BuildPair(string row, bool useExpressions, params (string Name, object? Value)[] authored)
+        => ReferencePairBuilder.Build(row, useExpressions, authored);
 }
