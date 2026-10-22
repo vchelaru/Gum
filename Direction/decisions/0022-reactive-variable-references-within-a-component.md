@@ -90,11 +90,12 @@ Steps 4 and 5 change who calls `NotifyVariableChanged`, not the graph, the cache
   reads another's result. Before this, a chain read stale values at load.
 - A typed property that is also a Gum variable reports its change to same-component references, directly
   through `ReportTypedPropertyChanged` or through `NotifyPropertyChanged`, on the runtimes the sweep covers
-  (MonoGame, KNI and FNA, Skia, and the Apos shapes). Nothing is read or boxed unless a row reads that
+  (MonoGame, Skia and the Apos shapes). Nothing is read or boxed unless a row reads that
   property. A property that changes other variables reports them too (assigning `Color` reports `Red`,
   `Green`, `Blue` and `Alpha`), and setting a nullable variable back to null reports. `TypedSetterSweep`
   (`Tests/Shared`) is the list of what is covered: it sets each variable's typed property and goes red for a
-  setter that does not report. Its `NotTypedVariables` set lists the variables it skips and why. A change
+  setter that does not report. The variables it skips, and the conditions that skip them, live in
+  `TypedSetterSweep`. A change
   that does not report reaches references only through `SetProperty` or `RefreshReferences`.
 - A row in a cycle is skipped by live re-evaluation and listed in `VariableReferenceGraph.CyclicRows`.
 
@@ -106,10 +107,10 @@ spreadsheet cell. Authored values were chosen for cost, determinism and re-entra
 reads add no evaluations (same count per change and at creation) and a few percent per set. Load still
 applies rows against authored values, which equal the live ones at that point.
 
-Clarification, same day: reading authored values was a detail of the first implementation, never a debated
-decision. The measurement behind the cost claim is in the body of #6413: about 10% more time and 2% more
-bytes per set, and about 50% more time at creation, for 100 instances of a 4-row chain, from one noisy run
-each.
+Clarification, same day: the original As built text read unchanged inputs as authored values, and this
+decision changed that to live reads. The measurement is in the body of #6413: about 10% more time and 2% more
+bytes per set, and about 50% more time at creation (14.4 to 21.9 ms), for 100 instances of a 4-row chain, from
+one noisy run each.
 
 ### 2026-10-22: typed setters report (#6393, #6400, #6403, #6406, #6410)
 
