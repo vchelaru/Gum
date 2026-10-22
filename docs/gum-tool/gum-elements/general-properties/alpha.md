@@ -25,3 +25,5 @@ The rectangles on the left each have an `Alpha` value of `255`. These rectangles
 The rectangles on the right each have an `Alpha` of `128`, so the red rectangle is visible behind the blue rectangle.
 
 <figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Container Alpha on the left, individual Alpha on the right</p></figcaption></figure>
+
+If your game draws its world before Gum and the world disappears when a container with `Alpha` set uses `Is Render Target`, see [The Scene Drawn Before Gum Disappears](../../../code/rendering/render-targets.md#the-scene-drawn-before-gum-disappears-monogame-kni-fna).

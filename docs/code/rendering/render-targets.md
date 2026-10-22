@@ -12,6 +12,22 @@ The fix in every backend is the same idea: use blend factors that add to the tar
 This page covers **manually managed** render targets, where you create the render target yourself and control the drawing and compositing (MonoGame `RenderTarget2D` via `GumBatch`/`SpriteBatch`, or raylib `RenderTexture2D` via raw raylib calls). If you want Gum to manage the render target for you, see [Is Render Target](../../gum-tool/gum-elements/container/is-render-target.md) and [RenderTargetTextureSource](../standard-visuals/spriteruntime/rendertargettexturesource.md), which bake a container's contents to a texture without you having to set blend factors yourself.
 {% endhint %}
 
+### The Scene Drawn Before Gum Disappears (MonoGame, KNI, FNA)
+
+If your game draws its world and then draws Gum on top, a visible container with `IsRenderTarget` set to `true` can make everything drawn before `GumUI.Draw()` disappear, leaving only the Gum UI on a cleared background.
+
+To draw the container, Gum switches to the container's render target and then back to the target that was bound before. If that target uses `RenderTargetUsage.DiscardContents`, which is the default for the back buffer and for render targets created with default settings, switching back clears it. Gum logs a one-time `[Gum]` message when this is about to happen.
+
+To keep the scene, set `RenderTargetUsage.PreserveContents` on the back buffer:
+
+```csharp
+// Initialize
+graphics.PreparingDeviceSettings += (_, args) =>
+    args.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
+```
+
+If you draw Gum into your own render target, create that render target with `RenderTargetUsage.PreserveContents` as well.
+
 ### MonoGame
 
 `GumBatch` can draw Gum objects onto a `RenderTarget2D` the same way a regular `SpriteBatch` can:
