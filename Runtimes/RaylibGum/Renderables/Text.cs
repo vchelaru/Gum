@@ -1203,37 +1203,68 @@ public class Text : IVisible, IRenderableIpso,
     }
 
     /// <summary>
-    /// How far below its own top the next wrapped line sits: the base line height times the line's tallest
-    /// run relative to the base scale, times <see cref="LineHeightMultiplier"/>. The one formula behind both
-    /// <see cref="Render"/> and <see cref="GetLineTopOffsets"/>.
+    /// How far below its own top the next wrapped line sits: the one <see cref="StyledLineHeight"/> formula
+    /// with the line's tallest size run, shared by <see cref="Render"/> and <see cref="GetLineTopOffsets"/>
+    /// (and, in base units, by the size pass).
     /// </summary>
     private float GetLineAdvance(int lineIndex, int startOfLineIndex, string line)
     {
-        // lineScale is the line's absolute layout scale (FontScale, or the tallest run's scale, each already
-        // composed with OversampleCompensationScale, which shrinks the oversampled font's larger
-        // LineHeightInPixels back to the size it is drawn at). Matches MonoGame: lineHeight * scale * LineHeightMultiplier.
-        float lineScale = GetLineLayoutScale(lineIndex, startOfLineIndex, line);
-        return LineHeightInPixels * lineScale * LineHeightMultiplier;
+        return StyledLineHeight(EffectiveFontScale, GetTallestSizeRunScale(lineIndex, startOfLineIndex, line));
     }
 
     /// <summary>
-    /// The layout scale of the wrapped line beginning at <paramref name="startOfLineIndex"/> in the
-    /// stripped text: <see cref="FontScale"/> for a plain line, or the tallest inline
-    /// [FontSize]/[FontScale] run's scale for a styled line (the same per-run resolution
-    /// <see cref="DrawStyledLine"/> lays out with, so drawn and vertically-advanced sizes cannot drift).
+    /// The height of a line: the base line height times the larger of the base scale times
+    /// <see cref="LineHeightMultiplier"/> and the tallest size run's scale. A run's scale is absolute and is
+    /// not multiplied, so <c>[FontScale=3]</c> stays 3 lines tall at any multiplier, and a line with no size
+    /// run (<paramref name="tallestSizeRunScale"/> 0) is the multiplied base. Matches MonoGame's
+    /// <c>Text.ComputeStyledLineHeight</c>, <c>max(base * multiplier, run * 1)</c> (#6450). The size pass
+    /// calls it in base units: a base scale of 1 and the run as a factor of the base scale.
     /// </summary>
-    private float GetLineLayoutScale(int lineIndex, int startOfLineIndex, string line)
+    private float StyledLineHeight(float baseScale, float tallestSizeRunScale)
+    {
+        return LineHeightInPixels * System.Math.Max(baseScale * LineHeightMultiplier, tallestSizeRunScale);
+    }
+
+    /// <summary>
+    /// True when a run changes the size it is drawn at: a [FontScale] or a font-family ("BitmapFont" marker,
+    /// see <see cref="ResolveRunFont"/>) tag. Colour and other runs leave their line at the multiplied base
+    /// height, as in MonoGame.
+    /// </summary>
+    private static bool IsSizeRun(List<InlineVariable> variables)
+    {
+        for (int variableIndex = 0; variableIndex < variables.Count; variableIndex++)
+        {
+            string name = variables[variableIndex].VariableName;
+            if (name == nameof(FontScale) || name == "BitmapFont")
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// The layout scale of the tallest size run ([FontScale] or a [FontSize] font swap) on the wrapped line
+    /// beginning at <paramref name="startOfLineIndex"/> in the stripped text, or 0 when the line has none.
+    /// Resolved the way <see cref="DrawStyledLine"/> lays each run out, so drawn and vertically-advanced
+    /// sizes cannot drift.
+    /// </summary>
+    private float GetTallestSizeRunScale(int lineIndex, int startOfLineIndex, string line)
     {
         if (InlineVariables.Count == 0)
         {
-            return EffectiveFontScale;
+            return 0;
         }
 
         var substrings = GetCachedStyledSubstrings(lineIndex, startOfLineIndex, line);
-        float maxScale = EffectiveFontScale;
+        float maxScale = 0;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
-            maxScale = System.Math.Max(maxScale, ResolveRunFont(substrings[substringIndex].Variables, _font, _oversampleCompensationScale).LayoutScale);
+            var variables = substrings[substringIndex].Variables;
+            if (IsSizeRun(variables))
+            {
+                maxScale = System.Math.Max(maxScale, ResolveRunFont(variables, _font, _oversampleCompensationScale).LayoutScale);
+            }
         }
         return maxScale;
     }
@@ -1333,7 +1364,7 @@ public class Text : IVisible, IRenderableIpso,
     /// composed with <paramref name="oversampleCompensationScale"/>. No tag, or a [FontScale=v] run,
     /// keeps <paramref name="baseFont"/> at v (or the Text's own <see cref="FontScale"/>) times its base
     /// size. Callers pick which font/compensation pair to resolve against depending on intent (issue
-    /// #4365): draw call sites (<see cref="DrawStyledLine"/>, <see cref="GetLineLayoutScale"/>) pass the
+    /// #4365): draw call sites (<see cref="DrawStyledLine"/>, <see cref="GetTallestSizeRunScale"/>) pass the
     /// LIVE <see cref="Font"/> and the current <see cref="OversampleCompensationScale"/>, so the run's
     /// DRAWN size tracks the oversample ratio the same way plain text does; the measurement call site
     /// (<see cref="MeasureStyledLineInBaseUnits"/>, used for both wrap and pre-render size) passes
@@ -1429,7 +1460,7 @@ public class Text : IVisible, IRenderableIpso,
         StyledRunDraw[] runs = _styledRunScratch;
         float totalWidth = 0;
         // Issue #4365: EffectiveFontScale, not FontScale -- must match ResolveRunFont's now-compensated
-        // LayoutScale (see GetLineLayoutScale) so the baseline math below isn't skewed under an active
+        // LayoutScale (see GetTallestSizeRunScale) so the baseline math below isn't skewed under an active
         // oversample ratio.
         float maxScale = EffectiveFontScale;
 
@@ -1601,6 +1632,7 @@ public class Text : IVisible, IRenderableIpso,
     {
         int requiredWidth = 0;
         int requiredHeight = 0;
+        bool usedStyledSizePass = false;
 
         if (this.mRawText != null)
         {
@@ -1613,6 +1645,7 @@ public class Text : IVisible, IRenderableIpso,
             if (InlineVariables.Count > 0 && FontScale > 0)
             {
                 GetInlineVariableAwareWidthAndHeight(out requiredWidth, out requiredHeight);
+                usedStyledSizePass = true;
             }
             else
             {
@@ -1621,7 +1654,10 @@ public class Text : IVisible, IRenderableIpso,
         }
 
         mPreRenderWidth = (int)(requiredWidth + .5f);
-        mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
+        // The styled size pass already applies the multiplier per line (a size run is not multiplied, #6450).
+        mPreRenderHeight = usedStyledSizePass
+            ? requiredHeight
+            : (int)(requiredHeight * LineHeightMultiplier + .5f);
     }
 
     /// <summary>
@@ -1654,7 +1690,7 @@ public class Text : IVisible, IRenderableIpso,
 
             if (substrings.Count == 0)
             {
-                lineHeightFactor = 1;
+                lineHeightFactor = 0;
                 lineWidthInBaseUnits = MeasureString(line);
             }
             else
@@ -1663,7 +1699,7 @@ public class Text : IVisible, IRenderableIpso,
             }
 
             maxWidth = System.Math.Max(maxWidth, lineWidthInBaseUnits);
-            totalHeight += LineHeightInPixels * lineHeightFactor;
+            totalHeight += StyledLineHeight(1, lineHeightFactor);
 
             startOfLineIndex += line.Length;
         }
@@ -1685,20 +1721,20 @@ public class Text : IVisible, IRenderableIpso,
     /// Sums the base-unit width of a single line already split into styled runs, measuring each run with
     /// the same per-run font/size <see cref="DrawStyledLine"/> draws it with (a [FontSize] crisp-swap or
     /// scaled-atlas run, or a [FontScale] multiplier run), and reports the tallest run's height factor
-    /// relative to the base line height.
+    /// relative to the base scale (0 when the line has no size run).
     /// </summary>
     /// <remarks>
     /// Shared by the size pass (<see cref="GetInlineVariableAwareWidthAndHeight"/>, #3481/#3524) and the
     /// font-aware wrap seam (<see cref="MeasureString(string, int)"/>, #3532) so the measured, drawn, and
     /// wrapped size of a run cannot drift. Widths are returned in BASE units (<see cref="FontScale"/>
-    /// factored out), matching <see cref="MeasureString(string)"/>; <see cref="FontScale"/> is the floor,
-    /// so an inline run smaller than the base does not shrink the line. Guards <see cref="FontScale"/> == 0
+    /// factored out), matching <see cref="MeasureString(string)"/>; the multiplied base is the floor
+    /// (<see cref="StyledLineHeight"/>), so an inline run smaller than it does not shrink the line. Guards <see cref="FontScale"/> == 0
     /// because the wrap seam calls this regardless of scale (the size pass is already gated on scale &gt; 0).
     /// </remarks>
     private float MeasureStyledLineInBaseUnits(List<StyledSubstring> substrings, out float lineHeightFactor)
     {
         float baseScale = FontScale;
-        float maxRunScale = baseScale;
+        float maxRunScale = 0;
         float lineWidthAtScale = 0;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
@@ -1711,9 +1747,12 @@ public class Text : IVisible, IRenderableIpso,
             // same on-screen size EffectiveMeasurementFont already represents in native units.
             var resolvedFont = ResolveRunFont(substring.Variables, EffectiveMeasurementFont, oversampleCompensationScale: 1f);
             lineWidthAtScale += MeasureTextEx(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
-            maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);
+            if (IsSizeRun(substring.Variables))
+            {
+                maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);
+            }
         }
-        lineHeightFactor = baseScale > 0 ? maxRunScale / baseScale : 1;
+        lineHeightFactor = baseScale > 0 ? maxRunScale / baseScale : 0;
         return baseScale > 0 ? lineWidthAtScale / baseScale : 0;
     }
 
