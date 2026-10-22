@@ -124,7 +124,7 @@ public class MaxLettersToShowDrawTests : BaseTestClass
         {
             InkCount(actual).ShouldBeGreaterThan(0, "because the control draws something");
         }
-        actual.SequenceEqual(control).ShouldBeTrue($"MaxLettersToShow={count} should draw like '{visibleMarkup}'");
+        AssertSamePixels(actual, control, $"MaxLettersToShow={count} should draw like '{visibleMarkup}'");
     }
 
     /// <summary>
@@ -173,7 +173,7 @@ public class MaxLettersToShowDrawTests : BaseTestClass
         {
             InkCount(actual).ShouldBeGreaterThan(0);
         }
-        actual.SequenceEqual(expected).ShouldBeTrue($"MaxLettersToShow={count} should draw like the first {count} letters");
+        AssertSamePixels(actual, expected, $"MaxLettersToShow={count} should draw like the first {count} letters");
     }
 
     /// <summary>
@@ -269,6 +269,40 @@ public class MaxLettersToShowDrawTests : BaseTestClass
         UnloadImage(image);
         Gum.GumService.Default.Root.Children.Remove(container);
         return result;
+    }
+
+    /// <summary>
+    /// Fails with where the two images differ (count, bounding box, first few pixels), because a
+    /// bare "SequenceEqual was false" gave nothing to go on when this failed on CI only (#6453).
+    /// </summary>
+    private static void AssertSamePixels(Color[] actual, Color[] expected, string because)
+    {
+        int differing = 0;
+        int minX = int.MaxValue, minY = int.MaxValue, maxX = -1, maxY = -1;
+        System.Text.StringBuilder first = new();
+        for (int i = 0; i < actual.Length; i++)
+        {
+            if (actual[i].R == expected[i].R && actual[i].G == expected[i].G &&
+                actual[i].B == expected[i].B && actual[i].A == expected[i].A)
+            {
+                continue;
+            }
+
+            int x = i % CanvasWidth;
+            int y = i / CanvasWidth;
+            differing++;
+            minX = Math.Min(minX, x);
+            minY = Math.Min(minY, y);
+            maxX = Math.Max(maxX, x);
+            maxY = Math.Max(maxY, y);
+            if (differing <= 5)
+            {
+                first.Append($" ({x},{y}) actual=({actual[i].R},{actual[i].G},{actual[i].B},{actual[i].A}) expected=({expected[i].R},{expected[i].G},{expected[i].B},{expected[i].A})");
+            }
+        }
+
+        differing.ShouldBe(0,
+            $"{because}; inkActual={InkCount(actual)} inkExpected={InkCount(expected)} bounds=({minX},{minY})-({maxX},{maxY}) first:{first}");
     }
 
     private static int InkCount(Color[] pixels) => pixels.Count(p => p.A > 0);
