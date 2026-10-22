@@ -75,8 +75,8 @@ public class StyledTextAllocationTests : BaseTestClass
         text.X = 10;
         text.Y = 10;
         text.Text = markup;
-        GumService.Default.Root.Children.Add(text);
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.Children.Add(text);
+        Gum.GumService.Default.Root.UpdateLayout();
 
         long best = long.MaxValue;
         for (int attempt = 0; attempt < 3; attempt++)
@@ -99,7 +99,7 @@ public class StyledTextAllocationTests : BaseTestClass
     private static void DrawFrame()
     {
         BeginDrawing();
-        GumService.Default.Draw();
+        Gum.GumService.Default.Draw();
         EndDrawing();
     }
 }
