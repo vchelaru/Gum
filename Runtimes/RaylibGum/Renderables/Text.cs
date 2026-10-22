@@ -157,6 +157,7 @@ public class Text : IVisible, IRenderableIpso,
         // The splitter caches runs for this instance's lines and variables; shared, two Texts would clear
         // each other's cache every frame.
         newInstance._styledSubstringSplitter = new StyledSubstringSplitter();
+        newInstance._styledRunScratch = Array.Empty<StyledRunDraw>();
         // These call back into the source's runtime; the clone's runtime wires its own.
         newInstance.OnPreRender = null;
         newInstance.OnGlyphGrowthCheck = null;
@@ -264,6 +265,23 @@ public class Text : IVisible, IRenderableIpso,
     // Scratch for the lines of the last wrap, so re-wrapping keeps the strings of lines that did not change.
     List<string> mPreviousWrappedText = new List<string>();
     StyledSubstringSplitter _styledSubstringSplitter = new StyledSubstringSplitter();
+
+    // What DrawStyledLine resolves for each run of the line it is drawing: colour, font, sizes, width and
+    // [Custom] offsets. Kept on the Text so a styled line is drawn without allocating (#6426).
+    private struct StyledRunDraw
+    {
+        public Color Color;
+        public Font Font;
+        public float DrawSize;
+        public float Scale;
+        public float Width;
+        public string Text;
+        public float XOffset;
+        public float YOffset;
+        public float Rotation;
+    }
+
+    StyledRunDraw[] _styledRunScratch = Array.Empty<StyledRunDraw>();
     float? mWidth = 200;
     float mHeight = 200;
 
@@ -998,7 +1016,7 @@ public class Text : IVisible, IRenderableIpso,
     }
 
     /// <summary>
-    /// Re-runs the shared wrap loop (<see cref="IWrappedTextExtensions.UpdateLines"/>) to rebuild
+    /// Re-runs the shared wrap loop (<see cref="IWrappedTextExtensions.RebuildLines"/>) to rebuild
     /// <see cref="WrappedText"/>. Public so the BBCode dispatch (CustomSetPropertyOnRenderable) can
     /// re-wrap once <see cref="InlineVariables"/> populate — the first wrap runs when RawText is set,
     /// before the runs exist, so it is blind to any enlarged [FontSize]/[FontScale] run (#3532).
@@ -1114,10 +1132,12 @@ public class Text : IVisible, IRenderableIpso,
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
         }
 
-        // Per-line vertical offsets. Plain text (no inline runs) keeps the allocation-free uniform
-        // advance; when inline [FontSize]/[FontScale] runs can enlarge a line, each line advances by its
-        // own height so a line after an enlarged run is not drawn on top of it (#3532).
-        IReadOnlyList<float>? lineTopOffsets = InlineVariables.Count > 0 ? GetLineTopOffsets() : null;
+        // Per-line vertical offsets. Plain text (no inline runs) advances every line by the same height;
+        // when inline [FontSize]/[FontScale] runs can enlarge a line, each line advances by its own height
+        // so a line after an enlarged run is not drawn on top of it (#3532). The styled offset is summed as
+        // the lines are drawn (the same GetLineAdvance GetLineTopOffsets sums), so nothing is allocated.
+        bool isStyled = InlineVariables.Count > 0;
+        float styledLineTop = 0;
 
         for(int i = 0; i < WrappedText.Count; i++)
         {
@@ -1138,8 +1158,8 @@ public class Text : IVisible, IRenderableIpso,
             }
 
             var linePosition = position;
-            linePosition.Y += lineTopOffsets != null
-                ? lineTopOffsets[i]
+            linePosition.Y += isStyled
+                ? styledLineTop
                 : i * EffectiveLineHeightInPixels * LineHeightMultiplier;
 
             var substrings = InlineVariables.Count > 0
@@ -1153,6 +1173,11 @@ public class Text : IVisible, IRenderableIpso,
             else
             {
                 DrawStyledLine(fontValue, substrings, linePosition, absoluteLeft, origin.Y);
+            }
+
+            if (isStyled)
+            {
+                styledLineTop += GetLineAdvance(i, startOfLineIndex, WrappedText[i]);
             }
 
             startOfLineIndex += WrappedText[i].Length;
@@ -1181,21 +1206,31 @@ public class Text : IVisible, IRenderableIpso,
         {
             offsets[i] = runningY;
             var line = WrappedText[i];
-            float lineScale = GetLineLayoutScale(i, startOfLineIndex, line);
-            // Issue #4365: divide by EffectiveFontScale, not FontScale -- ResolveRunFont's LayoutScale
-            // (what lineScale is maxed against, see GetLineLayoutScale) now composes
-            // OversampleCompensationScale, so the divisor must too or an active oversample ratio skews
-            // every run's height factor away from its intended (ratio-to-base) value.
-            float effectiveFontScale = EffectiveFontScale;
-            float lineHeightFactor = effectiveFontScale > 0 ? lineScale / effectiveFontScale : 1;
-            // Issue #4365 (manual-test finding): lineHeightFactor above is a pure ratio (1 for a plain
-            // line, 2 for a [FontScale=2] line, etc.) normalized against EffectiveFontScale, so it no
-            // longer carries any oversample-ratio cancellation -- EffectiveLineHeightInPixels supplies
-            // that separately, or line spacing balloons with the oversample ratio (see its doc comment).
-            runningY += EffectiveLineHeightInPixels * lineHeightFactor * LineHeightMultiplier;
+            runningY += GetLineAdvance(i, startOfLineIndex, line);
             startOfLineIndex += line.Length;
         }
         return offsets;
+    }
+
+    /// <summary>
+    /// How far below its own top the next wrapped line sits: the base line height times the line's tallest
+    /// run relative to the base scale, times <see cref="LineHeightMultiplier"/>. The one formula behind both
+    /// <see cref="Render"/> and <see cref="GetLineTopOffsets"/>.
+    /// </summary>
+    private float GetLineAdvance(int lineIndex, int startOfLineIndex, string line)
+    {
+        float lineScale = GetLineLayoutScale(lineIndex, startOfLineIndex, line);
+        // Issue #4365: divide by EffectiveFontScale, not FontScale -- ResolveRunFont's LayoutScale
+        // (what lineScale is maxed against, see GetLineLayoutScale) now composes
+        // OversampleCompensationScale, so the divisor must too or an active oversample ratio skews
+        // every run's height factor away from its intended (ratio-to-base) value.
+        float effectiveFontScale = EffectiveFontScale;
+        float lineHeightFactor = effectiveFontScale > 0 ? lineScale / effectiveFontScale : 1;
+        // Issue #4365 (manual-test finding): lineHeightFactor above is a pure ratio (1 for a plain
+        // line, 2 for a [FontScale=2] line, etc.) normalized against EffectiveFontScale, so it no
+        // longer carries any oversample-ratio cancellation -- EffectiveLineHeightInPixels supplies
+        // that separately, or line spacing balloons with the oversample ratio (see its doc comment).
+        return EffectiveLineHeightInPixels * lineHeightFactor * LineHeightMultiplier;
     }
 
     /// <summary>
@@ -1376,15 +1411,13 @@ public class Text : IVisible, IRenderableIpso,
         // width, plus the line totals needed for horizontal alignment (total width) and baseline alignment
         // (tallest run's baseline). The font, draw size and layout scale come from the shared resolver, so
         // draw and measure use the same per-run font and cannot diverge (issue #3524).
-        var runColors = new Color[substrings.Count];
-        var runFonts = new Font[substrings.Count];
-        var runDrawSizes = new float[substrings.Count];
-        var runScales = new float[substrings.Count];
-        var runWidths = new float[substrings.Count];
-        var runTexts = new string[substrings.Count];
-        var runXOffsets = new float[substrings.Count];
-        var runYOffsets = new float[substrings.Count];
-        var runRotations = new float[substrings.Count];
+        // The per-run results live in a scratch array kept on this Text, so drawing an unchanged line
+        // allocates nothing (#6426).
+        if (_styledRunScratch.Length < substrings.Count)
+        {
+            _styledRunScratch = new StyledRunDraw[substrings.Count];
+        }
+        StyledRunDraw[] runs = _styledRunScratch;
         float totalWidth = 0;
         // Issue #4365: EffectiveFontScale, not FontScale -- must match ResolveRunFont's now-compensated
         // LayoutScale (see GetLineLayoutScale) so the baseline math below isn't skewed under an active
@@ -1486,17 +1519,18 @@ public class Text : IVisible, IRenderableIpso,
                 }
             }
 
-            runColors[s] = runColor;
-            runFonts[s] = resolvedFont.Font;
-            runDrawSizes[s] = resolvedFont.DrawSize * customScale;
-            runScales[s] = resolvedFont.LayoutScale * customScale;
-            runTexts[s] = runText;
-            runXOffsets[s] = xOffset;
-            runYOffsets[s] = yOffset;
-            runRotations[s] = rotationDegrees;
-            runWidths[s] = MeasureTextEx(resolvedFont.Font, runText, runDrawSizes[s], 0).X;
-            totalWidth += runWidths[s];
-            maxScale = System.Math.Max(maxScale, runScales[s]);
+            ref StyledRunDraw drawRun = ref runs[s];
+            drawRun.Color = runColor;
+            drawRun.Font = resolvedFont.Font;
+            drawRun.DrawSize = resolvedFont.DrawSize * customScale;
+            drawRun.Scale = resolvedFont.LayoutScale * customScale;
+            drawRun.Text = runText;
+            drawRun.XOffset = xOffset;
+            drawRun.YOffset = yOffset;
+            drawRun.Rotation = rotationDegrees;
+            drawRun.Width = MeasureTextEx(resolvedFont.Font, runText, drawRun.DrawSize, 0).X;
+            totalWidth += drawRun.Width;
+            maxScale = System.Math.Max(maxScale, drawRun.Scale);
         }
 
         float maxBaseline = (LineHeightInPixels - _descenderHeight) * maxScale;
@@ -1516,11 +1550,12 @@ public class Text : IVisible, IRenderableIpso,
         float advance = 0;
         for (int s = 0; s < substrings.Count; s++)
         {
-            var runScale = runScales[s];
+            ref StyledRunDraw drawRun = ref runs[s];
+            var runScale = drawRun.Scale;
             // Push shorter runs down so every run shares the tallest run's baseline.
             float baselineDelta = maxBaseline - (LineHeightInPixels - _descenderHeight) * runScale;
 
-            var runPosition = new Vector2(lineStartX + advance + runXOffsets[s], linePosition.Y + baselineDelta + runYOffsets[s]);
+            var runPosition = new Vector2(lineStartX + advance + drawRun.XOffset, linePosition.Y + baselineDelta + drawRun.YOffset);
             var runOrigin = new Vector2(0, originY);
 
             runPosition = SnapToPixelIfNeeded(runPosition);
@@ -1529,16 +1564,16 @@ public class Text : IVisible, IRenderableIpso,
             // Issue #4057: each run looks up its OWN font's shadow companion (a run may draw with a
             // swapped [FontSize]/[IsBold]/etc. font), so a run whose font has no shadow companion
             // simply draws no shadow - the same graceful degradation as the base-font path.
-            if (HasDropshadow && RaylibFontShadowRegistry.TryGet(runFonts[s].Texture.Id, out Font runShadowFont))
+            if (HasDropshadow && RaylibFontShadowRegistry.TryGet(drawRun.Font.Texture.Id, out Font runShadowFont))
             {
                 var shadowRunPosition = SnapToPixelIfNeeded(
-                    runPosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * runScales[s]);
-                DrawTextPro(runShadowFont, runTexts[s], shadowRunPosition, runOrigin, runRotations[s], runDrawSizes[s], 0, DropshadowColor);
+                    runPosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale);
+                DrawTextPro(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, drawRun.Rotation, drawRun.DrawSize, 0, DropshadowColor);
             }
 
-            DrawTextPro(runFonts[s], runTexts[s], runPosition, runOrigin, runRotations[s], runDrawSizes[s], 0, runColors[s]);
+            DrawTextPro(drawRun.Font, drawRun.Text, runPosition, runOrigin, drawRun.Rotation, drawRun.DrawSize, 0, drawRun.Color);
 
-            advance += runWidths[s];
+            advance += drawRun.Width;
         }
     }
 
