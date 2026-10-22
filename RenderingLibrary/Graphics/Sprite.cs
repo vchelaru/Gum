@@ -167,10 +167,21 @@ public class Sprite : SpriteBatchRenderableBase,
         set;
     }
 
+    float _width;
     public float Width
     {
-        get;
-        set;
+        get => _width;
+        set
+        {
+#if FULL_DIAGNOSTICS
+            // Width and Height reject the same values (#6477).
+            if (float.IsNaN(value))
+            {
+                throw new InvalidOperationException("Cannot assign a Sprite's Width to NaN");
+            }
+#endif
+            _width = value;
+        }
     }
 
     float _height;

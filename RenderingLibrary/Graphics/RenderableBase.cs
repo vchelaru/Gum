@@ -77,7 +77,22 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 
     public bool Visible { get; set; } = true;
 
-    public float Width { get; set; }
+    float width;
+    public float Width
+    {
+        get { return width; }
+        set
+        {
+#if FULL_DIAGNOSTICS
+            // Width and Height reject the same values (#6477).
+            if (float.IsPositiveInfinity(value))
+            {
+                throw new ArgumentException();
+            }
+#endif
+            width = value;
+        }
+    }
 
     public bool Wrap => false;
 
