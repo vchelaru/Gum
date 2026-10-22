@@ -760,6 +760,25 @@ public static class GraphicalUiElementExtensions
         graphicalUiElement.PlayAnimation(animation);
     }
 
+    /// <summary>
+    /// Builds the message for a null animation passed to <c>PlayAnimation</c>, which usually comes from a
+    /// <c>GetAnimation</c> lookup (including generated animation fields) that found nothing.
+    /// </summary>
+    internal static string BuildNullAnimationMessage(GraphicalUiElement graphicalUiElement)
+    {
+        var elementName = (graphicalUiElement.Tag as ElementSave)?.Name;
+        var elementSuffix = elementName != null ? $" for element '{elementName}'" : "";
+
+        if (graphicalUiElement.Animations == null)
+        {
+            return $"The animation to play is null. No animations have been loaded{elementSuffix}. " +
+                   "Was GumService.LoadAnimations() called before this element was created, " +
+                   $"and is the animation file (e.g. '{elementName ?? "<elementName>"}Animations.ganx') present?";
+        }
+
+        return $"The animation to play is null. GetAnimation did not find it{elementSuffix}; check the animation name.";
+    }
+
     private static string BuildMissingAnimationMessage(GraphicalUiElement graphicalUiElement, object searchKey)
     {
         var elementName = (graphicalUiElement.Tag as ElementSave)?.Name;

@@ -1031,6 +1031,12 @@ public partial class GraphicalUiElement
     /// <exception cref="ArgumentNullException">Thrown when animation is null.</exception>
     public void PlayAnimation(AnimationRuntime animation)
     {
+        // Generated animation fields are non-nullable but hold null when the lookup failed.
+        if (animation == null)
+        {
+            throw new ArgumentNullException(nameof(animation), GraphicalUiElementExtensions.BuildNullAnimationMessage(this));
+        }
+
         AnimationController.Play(animation);
     }
 
@@ -1051,6 +1057,11 @@ public partial class GraphicalUiElement
     /// <exception cref="ArgumentNullException">Thrown when animation is null.</exception>
     public System.Threading.Tasks.Task PlayAnimationAsync(AnimationRuntime animation, System.Threading.CancellationToken cancellationToken = default)
     {
+        if (animation == null)
+        {
+            throw new ArgumentNullException(nameof(animation), GraphicalUiElementExtensions.BuildNullAnimationMessage(this));
+        }
+
         return AnimationController.PlayAnimationAsync(animation, cancellationToken);
     }
 
