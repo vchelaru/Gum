@@ -155,7 +155,7 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
 
         Should.NotThrow(() => ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences());
 
-        pair.DefaultState.GetValue("Target.Width").ShouldBe(77f);
+        pair.DefaultState!.GetValue("Target.Width").ShouldBe(77f);
         _errors.ShouldNotBeEmpty();
     }
 

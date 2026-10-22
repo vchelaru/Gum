@@ -553,7 +553,9 @@ namespace GumRuntime
         /// names the reference, both types and, when <c>Gum.Expressions</c> would make it work, says to add it.
         /// Also written to <see cref="Console.Error"/>, since this event has no default subscriber.
         /// </summary>
+#nullable enable
         public static event Action<string>? VariableReferenceError;
+#nullable restore
 
         /// <summary>
         /// Applies variable references on all elements in the project in dependency order.
@@ -1200,12 +1202,14 @@ namespace GumRuntime
             return GetRootVariable(leftVariableName, instanceLeft, stateSave)?.Type;
         }
 
+#nullable enable
         private static VariableSave? GetRootVariable(string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave)
         {
             // Variable references need a state owned by an element (RecursiveVariableFinder requires it).
             var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer!;
             return ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance);
         }
+#nullable restore
 
         public struct VariableReferenceAssignmentResult
         {
@@ -1464,6 +1468,7 @@ namespace GumRuntime
 
         // The lookup used without Gum.Expressions: the right side is a dotted variable name. sourceType, when asked
         // for, is that variable's declared type (null when it cannot be found).
+#nullable enable
         private static object? ReadPlainReference(StateSave stateSave, string right, bool findSourceType, out string? sourceType)
         {
             sourceType = null;
@@ -1493,6 +1498,7 @@ namespace GumRuntime
             }
             return value;
         }
+#nullable restore
 
         /// <summary>
         /// Read-only counterpart to <see cref="GetRightSideValue"/>: enumerates every value the
