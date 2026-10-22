@@ -16,7 +16,7 @@ namespace MonoGameGum.Tests.Runtimes;
 
 /// <summary>
 /// Without Gum.Expressions a reference between variables of different types keeps the target's old value and
-/// reports an error through <see cref="ElementSaveExtensions.VariableReferenceError"/> instead of throwing at
+/// reports an error through <see cref="CustomSetPropertyOnRenderable.PropertyAssignmentError"/> instead of throwing at
 /// creation (#6428). Variables of the same type, and the conversions the setters already make, are unchanged.
 /// </summary>
 public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
@@ -29,12 +29,21 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         StandardElementsManager.Self.Initialize();
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
-        ElementSaveExtensions.VariableReferenceError += _errors.Add;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Record;
+    }
+
+    // PropertyAssignmentError also carries font and file failures; only the reference messages are under test.
+    private void Record(string message)
+    {
+        if (message.StartsWith("Variable reference"))
+        {
+            _errors.Add(message);
+        }
     }
 
     public override void Dispose()
     {
-        ElementSaveExtensions.VariableReferenceError -= _errors.Add;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError -= Record;
         _registrations.Dispose();
         ObjectFinder.Self.GumProjectSave = null;
         base.Dispose();
@@ -82,7 +91,7 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
 
         _errors.ShouldNotBeEmpty();
         _errors[0].ShouldBe(
-            "Variable reference 'Width = Source.FontSize' was not applied: Source.FontSize is an int and Target.Width is a float. " +
+            "Variable reference 'Width = Source.FontSize' was not applied in Pair (Container): Source.FontSize is an int and Target.Width is a float. " +
             "Add the Gum.Expressions package and call GumExpressionService.Initialize() to convert between them. " +
             "Target.Width keeps its current value.");
     }
@@ -94,7 +103,7 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
 
         _errors.ShouldNotBeEmpty();
         _errors[0].ShouldBe(
-            "Variable reference 'Width = Source.IsBold' was not applied: Source.IsBold is a bool and Target.Width is a float, " +
+            "Variable reference 'Width = Source.IsBold' was not applied in Pair (Container): Source.IsBold is a bool and Target.Width is a float, " +
             "which cannot be converted. Target.Width keeps its current value.");
     }
 
@@ -129,7 +138,6 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         GraphicalUiElement target = null!;
         GraphicalUiElement source = null!;
         Should.NotThrow(() => target = CreatePair("Width = Source.FontSize", out source, ("Width", 77f), ("FontSize", 24)));
-        _errors.Clear();
 
         Should.NotThrow(() => ((TextRuntime)source).FontSize = 30);
 
@@ -157,6 +165,119 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
 
         pair.DefaultState!.GetValue("Target.Width").ShouldBe(77f);
         _errors.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void LiveUpdate_BrokenRowChangingEveryFrame_ReportsOnce()
+    {
+        GraphicalUiElement target = CreatePair("Width = Source.FontSize", out GraphicalUiElement source, ("Width", 77f), ("FontSize", 24));
+
+        for (int frame = 0; frame < 300; frame++)
+        {
+            ((TextRuntime)source).FontSize = 25 + frame;
+        }
+
+        _errors.Count.ShouldBe(1);
+        Read(target, "Width").ShouldBe(77f);
+    }
+
+    [Fact]
+    public void LiveUpdate_BrokenRowChangedThroughSetProperty_ReportsOnce()
+    {
+        CreatePair("Width = Source.FontSize", out GraphicalUiElement source, ("Width", 77f), ("FontSize", 24));
+
+        for (int frame = 0; frame < 300; frame++)
+        {
+            source.SetProperty("FontSize", 25 + frame);
+        }
+
+        _errors.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Create_TheSameBrokenComponentTwice_EachNewInstanceReportsOnceForItself()
+    {
+        ComponentSave pair = BuildPair("Width = Source.FontSize", useExpressions: false, ("Width", 77f), ("FontSize", 24));
+
+        GraphicalUiElement first = pair.ToGraphicalUiElement();
+        _errors.Count.ShouldBe(1);
+        GraphicalUiElement second = pair.ToGraphicalUiElement();
+        _errors.Count.ShouldBe(2);
+
+        ((TextRuntime)first.GetGraphicalUiElementByName("Source")!).FontSize = 30;
+        ((TextRuntime)second.GetGraphicalUiElementByName("Source")!).FontSize = 31;
+        _errors.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_BrokenRow_ReportsOncePerCall()
+    {
+        BuildPair("Width = Source.FontSize", useExpressions: false, ("Width", 77f), ("FontSize", 24));
+        GumProjectSave project = ObjectFinder.Self.GumProjectSave!;
+
+        project.ApplyAllVariableReferences();
+        _errors.Count.ShouldBe(1);
+        project.ApplyAllVariableReferences();
+
+        _errors.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Create_ASubscriberThrows_CreationStillCompletesAndTheFailureIsWrittenToConsoleError()
+    {
+        Action<string> throwing = _ => throw new InvalidOperationException("the subscriber failed");
+        System.IO.TextWriter originalError = Console.Error;
+        System.IO.StringWriter captured = new System.IO.StringWriter();
+        Console.SetError(captured);
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += throwing;
+        GraphicalUiElement target = null!;
+        try
+        {
+            Should.NotThrow(() => target = CreatePair("Width = Source.FontSize", out _, ("Width", 77f), ("FontSize", 24)));
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= throwing;
+            Console.SetError(originalError);
+        }
+
+        Read(target, "Width").ShouldBe(77f);
+        captured.ToString().ShouldContain("the subscriber failed");
+    }
+
+    [Fact]
+    public void Create_MismatchedTypes_WritesTheMessageToConsoleError()
+    {
+        System.IO.TextWriter originalError = Console.Error;
+        System.IO.StringWriter captured = new System.IO.StringWriter();
+        Console.SetError(captured);
+        try
+        {
+            TryCreate("Width = Source.FontSize", ("Width", 77f), ("FontSize", 24));
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        captured.ToString().ShouldContain("[Gum] Variable reference 'Width = Source.FontSize' was not applied in Pair");
+    }
+
+    [Theory]
+    [InlineData("MinWidth", 50f, "FontSize", 24)]
+    [InlineData("MaxWidth", 50f, "FontSize", 24)]
+    [InlineData("MinHeight", 50f, "Red", 9)]
+    [InlineData("MaxHeight", 50f, "Alpha", 9)]
+    [InlineData("MaxNumberOfLines", 3, "Width", 150f)]
+    public void LiveUpdate_MismatchedTypesIntoANullableVariable_KeepsTheOldValue(string target, object authored, string source, object sourceValue)
+    {
+        GraphicalUiElement targetGue = null!;
+        GraphicalUiElement sourceGue = null!;
+        Should.NotThrow(() => targetGue = CreatePair($"{target} = Source.{source}", out sourceGue, (target, authored), (source, sourceValue)));
+
+        sourceGue.SetProperty(source, sourceValue is int sourceInt ? sourceInt + 1 : (object)((float)sourceValue + 1));
+
+        Read(targetGue, target).ShouldBe(authored);
     }
 
     [Fact]
@@ -348,6 +469,10 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
             string => "string",
             _ => variable.Value.GetType().Name
         };
+        if (variable.Name == "MinWidth" || variable.Name == "MaxWidth" || variable.Name == "MinHeight" || variable.Name == "MaxHeight" || variable.Name == "MaxNumberOfLines")
+        {
+            type += "?";
+        }
         state.Variables.Add(new VariableSave { Name = $"{instance}.{variable.Name}", Type = type, Value = variable.Value, SetsValue = true });
     }
 }
