@@ -1433,6 +1433,52 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>
+    /// RichTextKit gives a line the height <c>(ascent + descent) * LineHeight + leading</c> (the leading is not
+    /// multiplied), and never lets the descent side go negative, so setting <see cref="Style.LineHeight"/> to
+    /// <paramref name="lineHeightFactor"/> lands a little off <c>factor * plainLineHeight</c> (1.486 instead of
+    /// 1.5 plain lines at 1.5) (#6467). This returns the <see cref="Style.LineHeight"/> that makes the line exactly
+    /// <paramref name="lineHeightFactor"/> times the plain line height of <paramref name="style"/>, matching the
+    /// other runtimes. A factor of 1 is already exact and is returned untouched.
+    /// </summary>
+    /// <param name="style">The run's style; its own <see cref="Style.LineHeight"/> must still be the default 1.</param>
+    /// <param name="lineHeightFactor">The wanted line height in plain lines of <paramref name="style"/>.</param>
+    private static float GetLeadingCompensatedLineHeight(Style style, float lineHeightFactor)
+    {
+        if (lineHeightFactor == 1 || float.IsNaN(lineHeightFactor) || float.IsInfinity(lineHeightFactor))
+        {
+            return lineHeightFactor;
+        }
+
+        var probe = new TextBlock();
+        probe.AddText("x", style);
+        if (probe.FontRuns.Count == 0)
+        {
+            return lineHeightFactor;
+        }
+
+        FontRun fontRun = probe.FontRuns[0];
+        float ascent = -fontRun.Ascent;
+        float descent = fontRun.Descent;
+        float leading = fontRun.Leading;
+        float textHeight = ascent + descent;
+        if (textHeight <= 0)
+        {
+            return lineHeightFactor;
+        }
+
+        float wantedHeight = lineHeightFactor * (textHeight + leading);
+
+        // Shrinking a line far enough pushes its bottom (descent plus half the extra leading) above the
+        // baseline, where RichTextKit stops at the baseline and only the top keeps shrinking.
+        if (wantedHeight >= ascent - descent)
+        {
+            return (wantedHeight - leading) / textHeight;
+        }
+
+        return 1 + (2 * (wantedHeight - ascent) - leading) / textHeight;
+    }
+
+    /// <summary>
     /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
     /// this Text's properties, overridden by the run's inline BBCode <paramref name="variables"/>
     /// (Font, Color / Red / Green / Blue, FontSize, FontScale, IsBold, IsItalic). A <c>[Custom]</c> variable
@@ -1553,7 +1599,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             TextColor = color,
             FontItalic = italic,
             FontWeight = weight,
-            LineHeight = isSizeRun ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize) : LineHeightMultiplier,
             // HaloWidth is a stroke centered on the glyph edge, so at width N the fill covers the
             // inner half and only ~N/2 shows -- doubled here so the requested thickness shows in
             // full outward. That doubling used to hit RichTextKit's hardcoded miter join and spike
@@ -1569,6 +1614,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // Suppress to Empty whenever there's no actual outline thickness.
             HaloColor = outlineThickness > 0 ? OutlineColor : SKColor.Empty,
         };
+
+        // Style.LineHeight multiplies a run's ascent and descent but not its leading, so the factor is
+        // adjusted until the line is exactly lineHeightFactor times a plain line of this run (#6467).
+        float lineHeightFactor = isSizeRun ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize) : LineHeightMultiplier;
+        style.LineHeight = GetLeadingCompensatedLineHeight(style, lineHeightFactor);
 
         return (style, text, xOffset, yOffset);
     }
