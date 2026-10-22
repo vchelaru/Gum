@@ -20,7 +20,7 @@ namespace MonoGameGum.Shapes.Tests;
 // This class deliberately does NOT mark the ShapeRenderer initialized (mirroring the user's
 // scenario), so it must run with IsInitialized == false. It resets the flag defensively in case
 // another test in the run left a real/forced ShapeRenderer initialized.
-public class ShapeRendererGateTests
+public class ShapeRendererGateTests : RegistrationIsolatedTest
 {
     public ShapeRendererGateTests()
     {

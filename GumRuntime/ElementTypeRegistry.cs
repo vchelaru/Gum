@@ -57,6 +57,30 @@ internal sealed class ElementTypeRegistry
         _template = null;
     }
 
+    /// <summary>Copies this layer's registrations, for a test that changes them to put them back with <see cref="Restore"/>.</summary>
+    internal ElementTypeRegistry Snapshot()
+    {
+        ElementTypeRegistry copy = new ElementTypeRegistry();
+        copy.Restore(this);
+        return copy;
+    }
+
+    /// <summary>Replaces this layer's registrations with those of <paramref name="snapshot"/>.</summary>
+    internal void Restore(ElementTypeRegistry snapshot)
+    {
+        _types.Clear();
+        foreach (KeyValuePair<string, Type> pair in snapshot._types)
+        {
+            _types[pair.Key] = pair.Value;
+        }
+        _funcs.Clear();
+        foreach (KeyValuePair<string, Func<GraphicalUiElement>> pair in snapshot._funcs)
+        {
+            _funcs[pair.Key] = pair.Value;
+        }
+        _template = snapshot._template;
+    }
+
     /// <summary>Finds a factory registered under <paramref name="elementName"/>: the service's layer, then the base.</summary>
     internal static bool TryGetFunc(ElementTypeRegistry? layer, string elementName, [NotNullWhen(true)] out Func<GraphicalUiElement>? func)
     {

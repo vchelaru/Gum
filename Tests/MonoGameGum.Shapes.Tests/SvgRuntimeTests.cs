@@ -14,7 +14,7 @@ namespace MonoGameGum.Shapes.Tests;
 // Issue #4506 — Apos.Shapes-backed SVG runtime for the XNA-like backends. These tests run
 // headlessly: ShapeSvg parsing is pure geometry with no GraphicsDevice, so everything except the
 // actual DrawSvg call is exercisable here. The draw itself is covered by the manual sample pass.
-public class SvgRuntimeTests
+public class SvgRuntimeTests : RegistrationIsolatedTest
 {
     // 2:1 viewBox so an aspect-ratio assertion can't accidentally pass on a square default.
     private const string TwoByOneSvg =

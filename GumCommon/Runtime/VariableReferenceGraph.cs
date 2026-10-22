@@ -525,6 +525,7 @@ public sealed class VariableReferenceGraph
                 }
 
                 owner.SetProperty(row.Left, result.NewValue);
+                owner.RecordReferenceInput(row.Left, result.NewValue);
 
                 // The write above reports to nobody (see BeginSuppression). A child component's own
                 // rows that read what this row just wrote still need it; the child's rows cannot lead

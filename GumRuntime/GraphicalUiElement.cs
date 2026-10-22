@@ -600,6 +600,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone._pendingCustomVariables = _pendingCustomVariables == null
             ? null
             : new Dictionary<string, object?>(_pendingCustomVariables);
+        newClone._referenceInputs = _referenceInputs == null
+            ? null
+            : new Dictionary<string, object?>(_referenceInputs);
         newClone.mExposedVariables = new Dictionary<string, string>(mExposedVariables);
         newClone.mStates = new Dictionary<string, StateSave>(mStates);
         newClone.mCategories = new Dictionary<string, StateSaveCategory>(mCategories);

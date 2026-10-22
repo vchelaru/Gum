@@ -17,7 +17,7 @@ namespace MonoGameGum.Shapes.Tests;
 // first dereference throws NullReferenceException. The loader must instantiate the most-derived
 // shim so BOTH the old shim-namespace cast (exact type) AND any newer Gum.GueDeriving cast (the
 // shim is-a base) succeed.
-public class LoaderShimRegistrationTests
+public class LoaderShimRegistrationTests : RegistrationIsolatedTest
 {
     public LoaderShimRegistrationTests()
     {

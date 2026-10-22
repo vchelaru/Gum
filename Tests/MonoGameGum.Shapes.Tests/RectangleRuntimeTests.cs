@@ -12,7 +12,7 @@ namespace MonoGameGum.Shapes.Tests;
 // slots resolve to Apos RoundedRectangle — fill with IsFilled=true, stroke with IsFilled=false.
 // CornerRadius is honored visually on both draws (unlike core's SolidRectangle/LineRectangle
 // defaults, which store but don't render it).
-public class RectangleRuntimeTests
+public class RectangleRuntimeTests : RegistrationIsolatedTest
 {
     public RectangleRuntimeTests()
     {

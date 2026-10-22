@@ -17,7 +17,7 @@ namespace MonoGameGum.Shapes.Tests;
 // CircleRuntime lives in core MonoGameGum, so newing one does not load the MonoGameGumShapes
 // assembly or fire its [ModuleInitializer]. The constructor below touches AposShapeRuntime
 // explicitly so the registry is populated. The call is idempotent.
-public class CircleRuntimeTests
+public class CircleRuntimeTests : RegistrationIsolatedTest
 {
     public CircleRuntimeTests()
     {

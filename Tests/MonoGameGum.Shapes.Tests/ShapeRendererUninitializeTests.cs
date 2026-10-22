@@ -8,7 +8,7 @@ namespace MonoGameGum.Shapes.Tests;
 // These tests exercise ShapeRenderer.Uninitialize() headlessly via the test-only IsInitialized
 // seam; the real GraphicsDevice-backed round trip is covered by
 // MonoGameGum.IntegrationTests.MonoGameGum.UninitializeTests.
-public class ShapeRendererUninitializeTests
+public class ShapeRendererUninitializeTests : RegistrationIsolatedTest
 {
     [Fact]
     public void Uninitialize_WhenInitialized_ResetsIsInitializedToFalse()
