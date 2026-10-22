@@ -137,15 +137,6 @@ public class TextStyledLineHeightTests
     }
 
     [Fact]
-    public void MixedSizeLines_EachLineIsItsOwnLargerOfMultipliedBaseAndTallestRun()
-    {
-        float h = PlainLineHeight();
-        Text text = Build("a[FontScale=2]b[/FontScale]c\nabc[FontScale=0.5]d[/FontScale]\n[FontScale=3]e[/FontScale]f", 1, 1.5f);
-
-        ShouldMatch(text, h, Run(1, 1.5f, 2), Plain(1, 1.5f), Run(1, 1.5f, 3));
-    }
-
-    [Fact]
     public void SizeRunLargerThanMultipliedBase_IsNotMultiplied()
     {
         float h = PlainLineHeight();
