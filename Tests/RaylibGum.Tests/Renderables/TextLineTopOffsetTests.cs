@@ -14,6 +14,8 @@ namespace RaylibGum.Tests.Renderables;
 /// </summary>
 public class TextLineTopOffsetTests : BaseTestClass
 {
+    private const string ThreeLines = "a\n[FontScale=3]b[/FontScale]\nc";
+
     private static float PlainLineAdvance()
     {
         TextRuntime plain = new();
@@ -129,10 +131,60 @@ public class TextLineTopOffsetTests : BaseTestClass
 
         runtime.FontScale = 2;
 
-        // The run's height is relative to the new base scale 2, so the run line advances 3/2 of a plain line.
-        // (The absolute advance is deliberately not asserted: it does not follow the base FontScale today.)
+        // Base scale 2: the plain line advances 2h; the [FontScale=3] run is an absolute scale, so its line advances 3h.
         IReadOnlyList<float> offsets = text.GetLineTopOffsets();
-        (offsets[2] - offsets[1]).ShouldBe(1.5f * offsets[1], 0.01);
+        offsets[1].ShouldBe(2 * h, 0.01);
+        offsets[2].ShouldBe(5 * h, 0.01);
+    }
+
+    [Theory]
+    [InlineData(0.5f, 1f)]
+    [InlineData(1f, 1f)]
+    [InlineData(2f, 1f)]
+    [InlineData(0.5f, 1.5f)]
+    [InlineData(1f, 1.5f)]
+    [InlineData(2f, 1.5f)]
+    public void GetLineTopOffsets_PlainText_AdvanceScalesWithFontScaleAndMultiplier(float fontScale, float multiplier)
+    {
+        float h = PlainLineAdvance();
+        TextRuntime runtime = new();
+        runtime.Text = "a" + (char)10 + "b";
+        runtime.FontScale = fontScale;
+        runtime.LineHeightMultiplier = multiplier;
+
+        IReadOnlyList<float> offsets = ((Text)runtime.RenderableComponent!).GetLineTopOffsets();
+
+        offsets[0].ShouldBe(0);
+        offsets[1].ShouldBe(h * fontScale * multiplier, 0.01);
+    }
+
+    [Theory]
+    [InlineData(1f)]
+    [InlineData(1.5f)]
+    public void GetLineTopOffsets_StyledText_AtFontScaleOne_AdvanceIsUnchanged(float multiplier)
+    {
+        float h = PlainLineAdvance();
+        Text text = Styled(ThreeLines, out TextRuntime runtime);
+        runtime.LineHeightMultiplier = multiplier;
+
+        IReadOnlyList<float> offsets = text.GetLineTopOffsets();
+
+        offsets[1].ShouldBe(h * multiplier, 0.01);
+        offsets[2].ShouldBe(4 * h * multiplier, 0.01);
+    }
+
+    [Fact]
+    public void GetLineTopOffsets_StyledText_BaseFontScaleTwo_RunScaleIsAbsolute()
+    {
+        float h = PlainLineAdvance();
+        Text text = Styled(ThreeLines, out TextRuntime runtime);
+
+        runtime.FontScale = 2;
+
+        IReadOnlyList<float> offsets = text.GetLineTopOffsets();
+        offsets[0].ShouldBe(0);
+        offsets[1].ShouldBe(2 * h, 0.01);
+        offsets[2].ShouldBe(5 * h, 0.01);
     }
 
     [Fact]
