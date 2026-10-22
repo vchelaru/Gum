@@ -127,11 +127,14 @@ public class KniGumInCodeGame : Game
         for(int i = 0; i < 2; i++)
         {
             var textBox = new TextBox();
+            // Names let browser automation find these (see KniGumInCode.BlazorGL/README.md).
+            textBox.Name = "TextBox" + (i + 1);
             stackPanel.AddChild(textBox);
             textBox.Width = 250;
         }
 
         var comboBox = new ComboBox();
+        comboBox.Name = "OptionsComboBox";
         stackPanel.AddChild(comboBox);
         for(int i = 0; i < 5; i++)
         {
@@ -166,9 +169,10 @@ public class KniGumInCodeGame : Game
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         container.AddToRoot();
 
-        AddText(container, "This is a colored rectangle:");
+        AddText(container, "This is a colored rectangle:").Name = "TitleText";
 
         var coloredRectangleInstance = new ColoredRectangleRuntime();
+        coloredRectangleInstance.Name = "ColoredRectangle";
         coloredRectangleInstance.X = 10;
         coloredRectangleInstance.Y = 10;
         coloredRectangleInstance.Width = 120;
@@ -235,7 +239,7 @@ public class KniGumInCodeGame : Game
         container.Children.Add(polygon);
     }
 
-    private static void AddText(ContainerRuntime container, string text)
+    private static TextRuntime AddText(ContainerRuntime container, string text)
     {
         var textInstance = new TextRuntime();
 
@@ -252,6 +256,7 @@ public class KniGumInCodeGame : Game
 
         textInstance.Text = text;
         container.Children.Add(textInstance);
+        return textInstance;
     }
 
     protected override void LoadContent()
