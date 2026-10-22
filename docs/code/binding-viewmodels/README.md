@@ -96,3 +96,30 @@ Any class which implements `INotifyPropertyChanged` can be used for binding, so 
 For convenience Gum provides a ViewModel class which can be used as a base for view models. Binding documentation uses this class as a base for view models, but most of the concepts apply regardless of view model implementation details.
 
 If you store a struct in a ViewModel property, implement `IEquatable<T>` on it. Without it, every set compares the old and new values slowly and allocates, even when the value is unchanged.
+
+### Backing Fields
+
+`ViewModel` offers a second way to write a property: keep the value in your own field and pass the field to `Set`. Reading is a plain field read, and a set that changes the value skips the property-name dictionary that `Get` and `Set(value)` use.
+
+```csharp
+class PlayerViewModel : ViewModel
+{
+    private float _health = 100;
+
+    public float Health
+    {
+        get => _health;
+        set => Set(ref _health, value);
+    }
+}
+```
+
+`Set(ref field, value)` returns `true` when the value changed. `SetWithoutNotifying(ref field, value)` stores the value without raising `PropertyChanged`. `[DependsOn]`, collection change tracking (`Set` watches a collection for changes, `SetWithoutNotifying` does not), and `Clone` work the same as with `Get` and `Set(value)`.
+
+Use `Get` and `Set(value)` when you want the shortest code. Use a backing field for properties that are read or set every frame, or on many view models. The two styles can be mixed in the same class, and `Get` and `Set(value)` are unchanged. If your view model already defines its own `protected bool Set<T>(ref T, T, string)`, it now hides the base method and the compiler reports warning CS0108: add `new` or rename it.
+
+The styles differ on the first set. `Set(value)` raises `PropertyChanged` the first time a property is set to anything other than its type's default. With a backing field, the field's current value is the starting point, so assigning the value the field already holds raises nothing. In the example above, `Health = 100` raises nothing, while `Health = 50` does.
+
+{% hint style="info" %}
+`ChangeAndNotify(ref field, value)` is the older form of `Set(ref field, value)`. It does not watch the contents of a collection, so prefer `Set` for collection properties.
+{% endhint %}

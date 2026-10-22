@@ -73,6 +73,81 @@ namespace Gum.Mvvm
             }
         }
 
+        /// <summary>
+        /// Assigns <paramref name="value"/> to a backing field and raises <see cref="PropertyChanged"/> when it
+        /// changed. The value lives in the caller's field, so reading it is a plain field read.
+        /// </summary>
+        /// <remarks>
+        /// <c>float _score; public float Score { get => _score; set => Set(ref _score, value); }</c>
+        /// Unlike <see cref="Set{T}(T, string)"/>, the field's current value is the starting point, so a field
+        /// initializer counts as already set and assigning that same value raises nothing.
+        /// A collection value is watched like it is for <see cref="Set{T}(T, string)"/>.
+        /// </remarks>
+        /// <returns>True when the value changed.</returns>
+        protected bool Set<T>(ref T field, T value, [CallerMemberName]string? propertyName = null)
+        {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
+            return SetField(ref field, value, propertyName!, notify: true, CollectionTracking.Full);
+        }
+
+        /// <summary>
+        /// Assigns a backing field like <see cref="Set{T}(ref T, T, string)"/> but raises no events. Like the
+        /// by-name <c>SetWithoutNotifying</c>, a new collection is not watched (a later <c>Set</c> of it starts
+        /// watching), and the collection it replaces stops being watched.
+        /// </summary>
+        /// <returns>True when the value changed.</returns>
+        protected bool SetWithoutNotifying<T>(ref T field, T value, [CallerMemberName]string? propertyName = null)
+        {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
+            return SetField(ref field, value, propertyName!, notify: false, CollectionTracking.UnsubscribeOnly);
+        }
+
+        private enum CollectionTracking
+        {
+            /// <summary>Collections are neither subscribed nor unsubscribed (ChangeAndNotify).</summary>
+            None,
+
+            /// <summary>The replaced collection is unsubscribed, the new one is not subscribed (SetWithoutNotifying).</summary>
+            UnsubscribeOnly,
+
+            /// <summary>The new collection is subscribed and the replaced one unsubscribed (Set).</summary>
+            Full,
+        }
+
+        private bool SetField<T>(ref T field, T value, string propertyName, bool notify, CollectionTracking tracking)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+            {
+                // Like the by-name style, a collection that is already stored still gets its subscription.
+                if (tracking == CollectionTracking.Full && CanBeCollection<T>.Value && field is INotifyCollectionChanged stored)
+                {
+                    SubscribeToCollectionCore(stored, propertyName);
+                }
+
+                return false;
+            }
+
+            // The old value is still in the field here, so its subscription can be removed before assignment.
+            if (tracking != CollectionTracking.None && collectionSubscriptions != null && !typeof(T).IsValueType)
+            {
+                UnsubscribeFromCollection(field, propertyName);
+            }
+
+            field = value;
+
+            if (tracking == CollectionTracking.Full && CanBeCollection<T>.Value && value is INotifyCollectionChanged collection)
+            {
+                SubscribeToCollectionCore(collection, propertyName);
+            }
+
+            if (notify)
+            {
+                NotifyPropertyChanged(propertyName);
+            }
+
+            return true;
+        }
+
         protected T Get<T>([CallerMemberName]string? propertyName = null)
         {
             T toReturn = default(T)!;
@@ -143,6 +218,11 @@ namespace Gum.Mvvm
                 return;
             }
 
+            SubscribeToCollectionCore(collection, propertyName);
+        }
+
+        private void SubscribeToCollectionCore(INotifyCollectionChanged collection, string propertyName)
+        {
             collectionSubscriptions ??= new Dictionary<string, CollectionSubscription>();
             if (collectionSubscriptions.TryGetValue(propertyName, out CollectionSubscription? subscription) == false)
             {
@@ -293,7 +373,7 @@ namespace Gum.Mvvm
                             childrenProps = notifyRelationships[parent];
                         }
 
-                        childrenProps.Add(child);
+                        childrenProps.Add(string.Intern(child));
                     }
                 }
             }
@@ -302,23 +382,55 @@ namespace Gum.Mvvm
         protected void ChangeAndNotify<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
-            if (EqualityComparer<T>.Default.Equals(property, value) == false)
-            {
-                property = value;
-                NotifyPropertyChanged(propertyName);
-            }
+            // The same as Set(ref ...) except that a collection's contents are not watched.
+            SetField(ref property, value, propertyName!, notify: true, CollectionTracking.None);
         }
 
         // PropertyChangedEventArgs is immutable, so one instance per property name is reused across
         // all notifications and all ViewModel instances instead of allocating one per notification.
         private static readonly ConcurrentDictionary<string, PropertyChangedEventArgs> _eventArgsCache = new();
 
+        // The same cache keyed on the string instance, so a hit hashes no characters. Property names normally
+        // come from [CallerMemberName] or nameof, which are interned literals, so one instance per name hits
+        // every time. Only interned instances are added, which bounds the table by the number of literals in
+        // the program; a name built at run time takes the by-value cache above.
+        private static readonly ConcurrentDictionary<string, PropertyChangedEventArgs> _eventArgsByReference =
+            new(ReferenceStringComparer.Instance);
+
+        private sealed class ReferenceStringComparer : IEqualityComparer<string>
+        {
+            public static readonly ReferenceStringComparer Instance = new();
+
+            public bool Equals(string? x, string? y) => ReferenceEquals(x, y);
+
+            public int GetHashCode(string value) => RuntimeHelpers.GetHashCode(value);
+        }
+
+        private static PropertyChangedEventArgs GetEventArgs(string propertyName)
+        {
+            return _eventArgsByReference.TryGetValue(propertyName, out PropertyChangedEventArgs? args)
+                ? args
+                : GetEventArgsByValue(propertyName);
+        }
+
+        private static PropertyChangedEventArgs GetEventArgsByValue(string propertyName)
+        {
+            PropertyChangedEventArgs args =
+                _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name));
+            if (ReferenceEquals(string.IsInterned(propertyName), propertyName))
+            {
+                _eventArgsByReference.TryAdd(propertyName, args);
+            }
+
+            return args;
+        }
+
         protected virtual void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             if (PropertyChanged != null)
             {
-                PropertyChanged(this, _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name)));
+                PropertyChanged(this, GetEventArgs(propertyName));
             }
 
             // Most view models declare no [DependsOn]; an empty dictionary skips the lookup call. The

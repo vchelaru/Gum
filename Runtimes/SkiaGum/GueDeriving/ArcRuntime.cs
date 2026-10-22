@@ -870,6 +870,37 @@ public class ArcRuntime
         }
     }
 
+    /// <summary>
+    /// Red1/Green1/Blue1/Alpha1 are aliases of Red/Green/Blue/Alpha (see above), so a channel assigned in code,
+    /// or a Color, also changes the alias a variable reference may read (#6410). The reverse direction is
+    /// covered because the alias setters assign the channel.
+    /// </summary>
+    protected override void NotifyPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null!)
+    {
+        base.NotifyPropertyChanged(propertyName);
+        switch (propertyName)
+        {
+            case "Red":
+                base.NotifyPropertyChanged("Red1");
+                break;
+            case "Green":
+                base.NotifyPropertyChanged("Green1");
+                break;
+            case "Blue":
+                base.NotifyPropertyChanged("Blue1");
+                break;
+            case "Alpha":
+                base.NotifyPropertyChanged("Alpha1");
+                break;
+            case "Color":
+                base.NotifyPropertyChanged("Red1");
+                base.NotifyPropertyChanged("Green1");
+                base.NotifyPropertyChanged("Blue1");
+                base.NotifyPropertyChanged("Alpha1");
+                break;
+        }
+    }
+
     /// <inheritdoc/>
     public override void PreRender()
     {
