@@ -120,6 +120,54 @@ public class NonFiniteSizeBoundLayoutTests : BaseTestClass
         Layout(value).ShouldBe(Layout(null));
     }
 
+    // A plain container, fixed at 120 x 70 or growing to one 80 x 20 child (plus 10 on each axis), with one bound set.
+    private static string ContainerLayout(string bound, float? value, bool growsToContent)
+    {
+        ContainerRuntime parent = new();
+        ContainerRuntime child = new();
+        child.Width = 80;
+        child.Height = 20;
+        parent.AddChild(child);
+        if (growsToContent)
+        {
+            parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+            parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+            parent.Width = 10;
+            parent.Height = 10;
+        }
+        else
+        {
+            parent.Width = 120;
+            parent.Height = 70;
+        }
+
+        parent.SetProperty(bound, value);
+
+        return parent.AbsoluteWidth + "x" + parent.AbsoluteHeight + " child " + child.AbsoluteWidth + "x" + child.AbsoluteHeight
+            + " at " + (child.AbsoluteLeft - parent.AbsoluteLeft) + "," + (child.AbsoluteTop - parent.AbsoluteTop);
+    }
+
+    [Theory]
+    [MemberData(nameof(BoundCases))]
+    public void FixedSizeContainer_NonFiniteBound_LaysOutAsWithNoBound(string bound, float value)
+    {
+        ContainerLayout(bound, value, growsToContent: false).ShouldBe(ContainerLayout(bound, null, growsToContent: false));
+    }
+
+    [Theory]
+    [MemberData(nameof(BoundCases))]
+    public void RelativeToChildrenContainer_NonFiniteBound_LaysOutAsWithNoBound(string bound, float value)
+    {
+        ContainerLayout(bound, value, growsToContent: true).ShouldBe(ContainerLayout(bound, null, growsToContent: true));
+    }
+
+    [Fact]
+    public void Container_FiniteBound_StillLimitsTheSize()
+    {
+        ContainerLayout("MaxWidth", 100f, growsToContent: false).ShouldNotBe(ContainerLayout("MaxWidth", null, growsToContent: false));
+        ContainerLayout("MinHeight", 100f, growsToContent: true).ShouldNotBe(ContainerLayout("MinHeight", null, growsToContent: true));
+    }
+
     private const string LongText = "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a";
 
     // (width, height, wrapped line count) of a text that grows to its content, with the bound set before and after the text.
