@@ -1040,6 +1040,11 @@ public class Text : IVisible, IRenderableIpso,
     public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText) =>
         _styledSubstringSplitter.GetStyledSubstrings(startOfLineIndex, lineOfText, InlineVariables);
 
+    // For the lines of WrappedText, which are drawn and measured every frame: the runs are cached until the
+    // line or the inline variables change. Read-only to callers.
+    private List<StyledSubstring> GetCachedStyledSubstrings(int lineIndex, int startOfLineIndex, string lineOfText) =>
+        _styledSubstringSplitter.GetStyledSubstrings(lineIndex, startOfLineIndex, lineOfText, InlineVariables);
+
     /// <summary>
     /// Rounds a position/origin to whole pixels using the configured <see cref="TextPositionRoundingMode"/>
     /// when the <see cref="EffectiveTextRenderingPositionMode"/> is SnapToPixel; otherwise returns the value unchanged.
@@ -1132,7 +1137,7 @@ public class Text : IVisible, IRenderableIpso,
                 : i * EffectiveLineHeightInPixels * LineHeightMultiplier;
 
             var substrings = InlineVariables.Count > 0
-                ? GetStyledSubstrings(startOfLineIndex, line)
+                ? GetCachedStyledSubstrings(i, startOfLineIndex, line)
                 : null;
 
             if (substrings == null || substrings.Count == 0)
@@ -1170,7 +1175,7 @@ public class Text : IVisible, IRenderableIpso,
         {
             offsets[i] = runningY;
             var line = WrappedText[i];
-            float lineScale = GetLineLayoutScale(startOfLineIndex, line);
+            float lineScale = GetLineLayoutScale(i, startOfLineIndex, line);
             // Issue #4365: divide by EffectiveFontScale, not FontScale -- ResolveRunFont's LayoutScale
             // (what lineScale is maxed against, see GetLineLayoutScale) now composes
             // OversampleCompensationScale, so the divisor must too or an active oversample ratio skews
@@ -1193,14 +1198,14 @@ public class Text : IVisible, IRenderableIpso,
     /// [FontSize]/[FontScale] run's scale for a styled line (the same per-run resolution
     /// <see cref="DrawStyledLine"/> lays out with, so drawn and vertically-advanced sizes cannot drift).
     /// </summary>
-    private float GetLineLayoutScale(int startOfLineIndex, string line)
+    private float GetLineLayoutScale(int lineIndex, int startOfLineIndex, string line)
     {
         if (InlineVariables.Count == 0)
         {
             return EffectiveFontScale;
         }
 
-        var substrings = GetStyledSubstrings(startOfLineIndex, line);
+        var substrings = GetCachedStyledSubstrings(lineIndex, startOfLineIndex, line);
         float maxScale = EffectiveFontScale;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
@@ -1585,7 +1590,7 @@ public class Text : IVisible, IRenderableIpso,
         for (int lineIndex = 0; lineIndex < WrappedText.Count; lineIndex++)
         {
             var line = WrappedText[lineIndex];
-            var substrings = GetStyledSubstrings(startOfLineIndex, line);
+            var substrings = GetCachedStyledSubstrings(lineIndex, startOfLineIndex, line);
 
             float lineHeightFactor;
             float lineWidthInBaseUnits;

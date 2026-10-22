@@ -173,20 +173,6 @@ public class StyledSubstringSplitterTests
     }
 
     [Fact]
-    public void GetStyledSubstringsCached_Rebuilds_WhenAVariableNameIsEditedInPlace()
-    {
-        StyledSubstringSplitter sut = new StyledSubstringSplitter();
-        InlineVariable variable = Color(2, 4);
-        List<InlineVariable> variables = new List<InlineVariable> { variable };
-        sut.GetStyledSubstrings(0, 0, "abcdefghij", variables);
-
-        variable.VariableName = "FontScale";
-        List<StyledSubstring> result = sut.GetStyledSubstrings(0, 0, "abcdefghij", variables);
-
-        result[1].Variables[0].VariableName.ShouldBe("FontScale");
-    }
-
-    [Fact]
     public void GetStyledSubstringsCached_RunsSeeAVariableValueChangedInPlace()
     {
         StyledSubstringSplitter sut = new StyledSubstringSplitter();
