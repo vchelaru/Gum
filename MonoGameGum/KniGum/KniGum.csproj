@@ -19,7 +19,6 @@
 		<TargetFrameworks Condition="'$(IncludeAndroid)' == 'true'">$(TargetFrameworks);net9.0-android</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>2026.4.5.1</Version>

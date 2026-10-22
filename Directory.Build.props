@@ -10,4 +10,12 @@
   <PropertyGroup>
     <WarningsAsErrors>$(WarningsAsErrors);RS0030</WarningsAsErrors>
   </PropertyGroup>
+  <!-- A build never produces a package: no project may set GeneratePackageOnBuild to true (a repo
+       hygiene test fails if one does). The release workflow packs with an explicit `dotnet pack`.
+       Packing on build wrote a .nupkg on every build and forced consumers building Gum from source
+       to pass AdditionalProperties="GeneratePackageOnBuild=false" on their references, which
+       builds each shared library twice in parallel into one obj folder (#6436). -->
+  <PropertyGroup>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
 </Project>
