@@ -51,6 +51,7 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso,
         }
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
             // do nothing
         }
     }
@@ -74,14 +75,33 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso,
         }
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
             // do nothing
         }
     }
     bool IRenderable.Wrap { get { return true; } }
 
-    public float X { get; set; }
+    float _xValue;
+    public float X
+    {
+        get { return _xValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            _xValue = value;
+        }
+    }
 
-    public float Y { get; set; }
+    float _yValue;
+    public float Y
+    {
+        get { return _yValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            _yValue = value;
+        }
+    }
 
     public float Z
     {
@@ -121,9 +141,15 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso,
         }
     }
 
+    float _rotationValue;
     public float Rotation
     {
-        get; set;
+        get { return _rotationValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+            _rotationValue = value;
+        }
     }
 
     public bool FlipHorizontal { get; set; }

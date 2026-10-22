@@ -27,7 +27,16 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso, System.ICloneabl
     ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
 
-    public float Rotation { get; set; }
+    float _rotationValue;
+    public float Rotation
+    {
+        get { return _rotationValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+            _rotationValue = value;
+        }
+    }
 
     public bool FlipHorizontal { get; set; }
 
@@ -37,16 +46,26 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso, System.ICloneabl
         set;
     }
 
+    float _xValue;
     public float X
     {
-        get;
-        set;
+        get { return _xValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            _xValue = value;
+        }
     }
 
+    float _yValue;
     public float Y
     {
-        get;
-        set;
+        get { return _yValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            _yValue = value;
+        }
     }
 
     public float Z
@@ -75,16 +94,26 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso, System.ICloneabl
         get { return BlendState.NonPremultiplied; }
     }
 
+    float _widthValue;
     public float Width
     {
-        get;
-        set;
+        get { return _widthValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
+            _widthValue = value;
+        }
     }
 
+    float _heightValue;
     public float Height
     {
-        get;
-        set;
+        get { return _heightValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
+            _heightValue = value;
+        }
     }
 
 

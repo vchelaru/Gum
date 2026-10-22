@@ -110,14 +110,22 @@ public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRend
     public float X
     {
         get => Position.X;
-        set => Position.X = value;
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            Position.X = value;
+        }
     }
 
     /// <inheritdoc/>
     public float Y
     {
         get => Position.Y;
-        set => Position.Y = value;
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            Position.Y = value;
+        }
     }
 
     /// <inheritdoc/>
@@ -129,6 +137,7 @@ public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRend
         get => mRotation;
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
             mRotation = value;
             UpdatePoints();
         }
@@ -143,6 +152,7 @@ public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRend
         get => mWidth;
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
             mWidth = value;
             UpdatePoints();
         }
@@ -154,6 +164,7 @@ public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRend
         get => mHeight;
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
             mHeight = value;
             UpdatePoints();
         }

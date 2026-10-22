@@ -58,13 +58,21 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
     public float X
     {
         get => Position.X;
-        set => Position.X = value;
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            Position.X = value;
+        }
     }
 
     public float Y
     {
         get => Position.Y;
-        set => Position.Y = value;
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            Position.Y = value;
+        }
     }
 
     public float Z
@@ -88,6 +96,7 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         }
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
             mRotation = value;
             UpdatePoints();
         }
@@ -100,6 +109,7 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         get { return mWidth; }
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
             mWidth = value;
             UpdatePoints();
         }
@@ -130,6 +140,7 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         get { return mHeight; }
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
             mHeight = value;
             UpdatePoints();
         }

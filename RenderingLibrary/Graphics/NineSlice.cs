@@ -184,7 +184,16 @@ public class NineSlice : SpriteBatchRenderableBase,
         }
     }
 
-    public float Rotation { get; set; }
+    float _rotationValue;
+    public float Rotation
+    {
+        get { return _rotationValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+            _rotationValue = value;
+        }
+    }
 
     /// <summary>
     /// Whether the whole nine-slice is mirrored left to right inside its own bounds: the left and
@@ -214,16 +223,26 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     public object? Tag { get; set; }
 
+    float _widthValue;
     public float Width
     {
-        get;
-        set;
+        get { return _widthValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
+            _widthValue = value;
+        }
     }
 
+    float _heightValue;
     public float Height
     {
-        get;
-        set;
+        get { return _heightValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
+            _heightValue = value;
+        }
     }
 
     bool IRenderableIpso.ClipsChildren
@@ -337,12 +356,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         get { return Position.X; }
         set 
         {
-#if FULL_DIAGNOSTICS
-            if (float.IsNaN(value))
-            {
-                throw new Exception("NaN is not an acceptable value");
-            }
-#endif
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
             Position.X = value; 
         }
     }
@@ -352,12 +366,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         get { return Position.Y; }
         set 
         {
-#if FULL_DIAGNOSTICS
-            if (float.IsNaN(value))
-            {
-                throw new Exception("NaN is not an acceptable value");
-            }
-#endif
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
             Position.Y = value; 
         
         }

@@ -147,6 +147,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso, ICloneable
 
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
             mLinePrimitive.Position = new System.Numerics.Vector2(value, mLinePrimitive.Position.Y);
         }
     }
@@ -160,6 +161,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso, ICloneable
 
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
             mLinePrimitive.Position = new System.Numerics.Vector2(mLinePrimitive.Position.X, value);
         }
     }
@@ -185,6 +187,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso, ICloneable
 
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
         }
     }
 
@@ -200,6 +203,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso, ICloneable
 
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
         }
     }
 
@@ -212,6 +216,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso, ICloneable
 
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
         }
     }
 

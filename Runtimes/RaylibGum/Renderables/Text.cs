@@ -804,18 +804,35 @@ public class Text : IVisible, IRenderableIpso,
     public float X
     {
         get => Position.X;
-        set => Position.X = value;
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            Position.X = value;
+        }
     }
 
     public float Y
     {
         get => Position.Y;
-        set => Position.Y = value;
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            Position.Y = value;
+        }
     }
 
     public bool FlipHorizontal { get; set; }
 
-    public float Rotation { get; set; }
+    float _rotationValue;
+    public float Rotation
+    {
+        get { return _rotationValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+            _rotationValue = value;
+        }
+    }
 
     public float? Width
     {
@@ -825,6 +842,7 @@ public class Text : IVisible, IRenderableIpso,
         }
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
             if (mWidth != value)
             {
                 mWidth = value;
@@ -844,6 +862,7 @@ public class Text : IVisible, IRenderableIpso,
         }
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
             if (mHeight != value)
             {
                 mHeight = value;
