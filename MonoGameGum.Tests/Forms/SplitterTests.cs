@@ -214,6 +214,80 @@ public class SplitterTests : BaseTestClass
         _secondPanel.Height.ShouldBe(20);
     }
 
+    // A NaN or infinite minimum is no minimum (#6473): the panels resize as they do with none. Each of the four reads
+    // (first or second panel, rows or columns) is pinned on its own, with a minimum on that panel only.
+    public static TheoryData<bool, bool, float> NonFiniteMinimumCases()
+    {
+        TheoryData<bool, bool, float> data = new();
+        foreach (bool rows in new[] { true, false })
+        {
+            foreach (bool onFirstPanel in new[] { true, false })
+            {
+                foreach (float min in new[] { float.PositiveInfinity, float.NegativeInfinity, float.NaN })
+                {
+                    data.Add(rows, onFirstPanel, min);
+                }
+            }
+        }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteMinimumCases))]
+    public void ApplyResizeChangeInPixels_NonFiniteMinimumOnOnePanel_ResizesAsWithNoMinimum(bool rows, bool onFirstPanel, float min)
+    {
+        float[] withNoMinimum = ResizeTwice(rows, onFirstPanel, null);
+
+        float[] withMinimum = ResizeTwice(rows, onFirstPanel, min);
+
+        withMinimum.ShouldBe(withNoMinimum);
+        withMinimum.ShouldBe(new float[] { 20, 0, 0, 20 });
+    }
+
+    // The sizes of the first and second panel after pushing 20 one way, then 30 back.
+    private float[] ResizeTwice(bool rows, bool onFirstPanel, float? minimum)
+    {
+        if (rows)
+        {
+            SetupVerticalStack();
+        }
+        else
+        {
+            SetupHorizontalStack();
+        }
+        Panel panel = onFirstPanel ? _firstPanel! : _secondPanel!;
+        SetSize(_firstPanel!, rows, 10);
+        SetSize(_secondPanel!, rows, 10);
+        if (rows)
+        {
+            panel.Visual.MinHeight = minimum;
+        }
+        else
+        {
+            panel.Visual.MinWidth = minimum;
+        }
+
+        _splitter!.ApplyResizeChangeInPixels(20);
+        float first = rows ? _firstPanel!.Height : _firstPanel!.Width;
+        float second = rows ? _secondPanel!.Height : _secondPanel!.Width;
+        _splitter.ApplyResizeChangeInPixels(-30);
+        float firstBack = rows ? _firstPanel.Height : _firstPanel.Width;
+        float secondBack = rows ? _secondPanel!.Height : _secondPanel!.Width;
+        return new float[] { first, second, firstBack, secondBack };
+    }
+
+    private static void SetSize(Panel panel, bool rows, float size)
+    {
+        if (rows)
+        {
+            panel.Height = size;
+        }
+        else
+        {
+            panel.Width = size;
+        }
+    }
+
     [Fact]
     public void ApplyResizeChangeInPixels_ShouldNotResize_PastMinHeight()
     {

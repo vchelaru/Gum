@@ -173,6 +173,66 @@ public class WindowTests : BaseTestClass
         }
     }
 
+    // A NaN or infinite minimum is no minimum (#6473): the drag lands where it does with no MinWidth/MinHeight, and
+    // the window never takes an infinite size from the deficit it would otherwise try to make up.
+    [Theory]
+    [InlineData(float.PositiveInfinity)]
+    [InlineData(float.NegativeInfinity)]
+    [InlineData(float.NaN)]
+    public void Resizing_NonFiniteMinWidth_BehavesAsWithNoMinimum_LeftSide(float min)
+    {
+        (float x, float width) unbounded = DragLeftEdge(null);
+
+        (float x, float width) bounded = DragLeftEdge(min);
+
+        float.IsInfinity(bounded.width).ShouldBeFalse();
+        bounded.ShouldBe(unbounded);
+    }
+
+    [Theory]
+    [InlineData(float.PositiveInfinity)]
+    [InlineData(float.NegativeInfinity)]
+    [InlineData(float.NaN)]
+    public void Resizing_NonFiniteMinHeight_BehavesAsWithNoMinimum_TopSide(float min)
+    {
+        (float y, float height) unbounded = DragTopEdge(null);
+
+        (float y, float height) bounded = DragTopEdge(min);
+
+        float.IsInfinity(bounded.height).ShouldBeFalse();
+        bounded.ShouldBe(unbounded);
+    }
+
+    private (float X, float Width) DragLeftEdge(float? minWidth)
+    {
+        Mock<ICursor> cursor = CreateMockCursor();
+        Window sut = new();
+        sut.AddToRoot();
+        InteractiveGue left = sut.Visual.Find<InteractiveGue>("BorderLeftInstance")!;
+        sut.Visual.Width = 50;
+        sut.Visual.MinWidth = minWidth;
+
+        left.TryCallPush();
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(30);
+        left.TryCallDragging();
+        return (sut.X, sut.Width);
+    }
+
+    private (float Y, float Height) DragTopEdge(float? minHeight)
+    {
+        Mock<ICursor> cursor = CreateMockCursor();
+        Window sut = new();
+        sut.AddToRoot();
+        InteractiveGue top = sut.Visual.Find<InteractiveGue>("BorderTopInstance")!;
+        sut.Visual.Height = 50;
+        sut.Visual.MinHeight = minHeight;
+
+        top.TryCallPush();
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(30);
+        top.TryCallDragging();
+        return (sut.Y, sut.Height);
+    }
+
     [Fact]
     public void Resizing_ShouldNotShrinkOrShift_BeyondMinimumWidth_LeftSide()
     {

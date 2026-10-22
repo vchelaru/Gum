@@ -197,18 +197,18 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             if(resizeBehavior == Controls.ResizeBehavior.Rows)
             {
                 var absoluteHeight = firstVisual.AbsoluteHeight;
-                if(firstVisual.MinHeight != null)
+                if(firstVisual.EffectiveMinHeight != null)
                 {
-                    absoluteHeight -= firstVisual.MinHeight.Value;
+                    absoluteHeight -= firstVisual.EffectiveMinHeight.Value;
                 }
                 changeInPixels = Math.Max(-absoluteHeight, changeInPixels);
             }
             else
             {
                 var absoluteWidth = firstVisual.AbsoluteWidth;
-                if(firstVisual.MinWidth != null)
+                if(firstVisual.EffectiveMinWidth != null)
                 {
-                    absoluteWidth -= firstVisual.MinWidth.Value;
+                    absoluteWidth -= firstVisual.EffectiveMinWidth.Value;
                 }
                 changeInPixels = Math.Max(-absoluteWidth, changeInPixels);
             }
@@ -218,18 +218,18 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             if(resizeBehavior == Controls.ResizeBehavior.Rows)
             {
                 var absoluteHeight = secondVisual.AbsoluteHeight;
-                if(secondVisual.MinHeight != null)
+                if(secondVisual.EffectiveMinHeight != null)
                 {
-                    absoluteHeight -= secondVisual.MinHeight.Value;
+                    absoluteHeight -= secondVisual.EffectiveMinHeight.Value;
                 }
                 changeInPixels = Math.Min(absoluteHeight, changeInPixels);
             }
             else
             {
                 var absoluteWidth = secondVisual.AbsoluteWidth;
-                if(secondVisual.MinWidth != null)
+                if(secondVisual.EffectiveMinWidth != null)
                 {
-                    absoluteWidth -= secondVisual.MinWidth.Value;
+                    absoluteWidth -= secondVisual.EffectiveMinWidth.Value;
                 }
                 changeInPixels = Math.Min(absoluteWidth, changeInPixels);
             }

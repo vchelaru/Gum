@@ -1384,14 +1384,14 @@ public class TextRuntime : InteractiveGue
             var heightBefore = ContainedText.WrappedTextHeight;
             if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
             {
-                if (this.MaxWidth == null)
+                if (this.EffectiveMaxWidth == null)
                 {
                     // make it have no line wrap width before assignign the text:
                     ContainedText.Width = null;
                 }
                 else
                 {
-                    ContainedText.Width = this.MaxWidth;
+                    ContainedText.Width = this.EffectiveMaxWidth;
                 }
             }
 
@@ -1431,13 +1431,13 @@ public class TextRuntime : InteractiveGue
         var heightBefore = ContainedText.WrappedTextHeight;
         if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
         {
-            if (this.MaxWidth == null)
+            if (this.EffectiveMaxWidth == null)
             {
                 ContainedText.Width = null;
             }
             else
             {
-                ContainedText.Width = this.MaxWidth;
+                ContainedText.Width = this.EffectiveMaxWidth;
             }
         }
 

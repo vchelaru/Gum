@@ -43,7 +43,19 @@ public class ReferenceRejectedByTargetAllocationTests : BaseTestClass
         rejected.ShouldBeLessThanOrEqualTo(applicable + Tolerance, $"applicable {applicable} bytes per frame, rejected {rejected}");
     }
 
-    private static double MeasureLiveUpdate(bool useExpressions, float first, float second)
+    // A size bound takes infinity (#6473), so a row that sets one to a non-finite value allocates no more than finite ones.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LiveUpdate_MinHeightRowWithNonFiniteValues_AllocatesNoMoreThanFiniteValues(bool useExpressions)
+    {
+        double finite = MeasureLiveUpdate(useExpressions, 10f, 20f, "MinHeight");
+        double nonFinite = MeasureLiveUpdate(useExpressions, float.PositiveInfinity, float.NegativeInfinity, "MinHeight");
+
+        nonFinite.ShouldBeLessThanOrEqualTo(finite + Tolerance, $"finite {finite} bytes per frame, non-finite {nonFinite}");
+    }
+
+    private static double MeasureLiveUpdate(bool useExpressions, float first, float second, string target = "Width")
     {
         ElementSaveExtensions.CustomEvaluateExpression = null;
         if (useExpressions) GumExpressionService.Initialize();
@@ -53,7 +65,7 @@ public class ReferenceRejectedByTargetAllocationTests : BaseTestClass
         element.Instances.Add(new InstanceSave { Name = "Source", BaseType = "Container", ParentContainer = element });
         element.Instances.Add(new InstanceSave { Name = "Target", BaseType = "Container", ParentContainer = element });
         VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = "Target.VariableReferences" };
-        list.Value.Add("Width = Source.StackSpacing");
+        list.Value.Add($"{target} = Source.StackSpacing");
         state.VariableLists.Add(list);
         GumProjectSave project = new GumProjectSave();
         project.Components.Add(element);
