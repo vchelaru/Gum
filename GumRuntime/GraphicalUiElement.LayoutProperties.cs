@@ -51,6 +51,7 @@ public partial class GraphicalUiElement
             {
                 mXUnits = value;
                 UpdateLayout();
+                ReportTypedPropertyChanged("XUnits");
             }
         }
     }
@@ -64,6 +65,7 @@ public partial class GraphicalUiElement
             {
                 mYUnits = value;
                 UpdateLayout();
+                ReportTypedPropertyChanged("YUnits");
             }
         }
     }
@@ -76,6 +78,7 @@ public partial class GraphicalUiElement
             if (mXOrigin != value)
             {
                 mXOrigin = value; UpdateLayout();
+                ReportTypedPropertyChanged("XOrigin");
             }
         }
     }
@@ -88,6 +91,7 @@ public partial class GraphicalUiElement
             if (mYOrigin != value)
             {
                 mYOrigin = value; UpdateLayout();
+                ReportTypedPropertyChanged("YOrigin");
             }
         }
     }
@@ -100,6 +104,7 @@ public partial class GraphicalUiElement
             if (mWidthUnit != value)
             {
                 mWidthUnit = value; UpdateLayout();
+                ReportTypedPropertyChanged("WidthUnits");
             }
         }
     }
@@ -119,6 +124,7 @@ public partial class GraphicalUiElement
                 }
 
                 UpdateLayout();
+                ReportTypedPropertyChanged("HeightUnits");
             }
         }
     }
@@ -135,6 +141,7 @@ public partial class GraphicalUiElement
                 ignoredByParentSize = value;
                 // todo - could be smarter here?
                 UpdateLayout();
+                ReportTypedPropertyChanged("IgnoredByParentSize");
             }
         }
     }
@@ -148,6 +155,7 @@ public partial class GraphicalUiElement
             if (value != childrenLayout)
             {
                 childrenLayout = value; UpdateLayout();
+                ReportTypedPropertyChanged("ChildrenLayout");
             }
         }
     }
@@ -167,6 +175,7 @@ public partial class GraphicalUiElement
             if (autoGridHorizontalCells != value)
             {
                 autoGridHorizontalCells = value; UpdateLayout();
+                ReportTypedPropertyChanged("AutoGridHorizontalCells");
             }
         }
     }
@@ -186,6 +195,7 @@ public partial class GraphicalUiElement
             if (autoGridVerticalCells != value)
             {
                 autoGridVerticalCells = value; UpdateLayout();
+                ReportTypedPropertyChanged("AutoGridVerticalCells");
             }
         }
     }
@@ -210,6 +220,7 @@ public partial class GraphicalUiElement
                     text.TextOverflowVerticalMode = value;
                 }
                 textOverflowVerticalMode = value;
+                ReportTypedPropertyChanged("TextOverflowVerticalMode");
             }
         }
     }
@@ -232,6 +243,7 @@ public partial class GraphicalUiElement
                 {
                     UpdateLayout();
                 }
+                ReportTypedPropertyChanged("StackSpacing");
             }
         }
     }
@@ -297,6 +309,7 @@ public partial class GraphicalUiElement
                 {
                     mContainedObjectAsIpso.FlipHorizontal = value;
                     UpdateLayout();
+                    ReportTypedPropertyChanged("FlipHorizontal");
                 }
             }
         }
@@ -429,6 +442,7 @@ public partial class GraphicalUiElement
                 _maxWidth = value;
 
                 UpdateLayout();
+                ReportTypedPropertyChanged("MaxWidth");
             }
 
         }
@@ -445,6 +459,7 @@ public partial class GraphicalUiElement
                 _minWidth = value;
 
                 UpdateLayout();
+                ReportTypedPropertyChanged("MinWidth");
             }
 
         }
@@ -502,6 +517,7 @@ public partial class GraphicalUiElement
                 _maxHeight = value;
 
                 UpdateLayout();
+                ReportTypedPropertyChanged("MaxHeight");
             }
 
         }
@@ -517,6 +533,7 @@ public partial class GraphicalUiElement
                 _minHeight = value;
 
                 UpdateLayout();
+                ReportTypedPropertyChanged("MinHeight");
             }
 
         }

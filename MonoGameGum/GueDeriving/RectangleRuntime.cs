@@ -312,28 +312,44 @@ public class RectangleRuntime : GraphicalUiElement
     public int FillRed
     {
         get => _fillColor.R;
-        set => FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+        set
+        {
+            FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="FillColor"/>.</summary>
     public int FillGreen
     {
         get => _fillColor.G;
-        set => FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+        set
+        {
+            FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="FillColor"/>.</summary>
     public int FillBlue
     {
         get => _fillColor.B;
-        set => FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+        set
+        {
+            FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="FillColor"/>.</summary>
     public int FillAlpha
     {
         get => _fillColor.A;
-        set => FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+        set
+        {
+            FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     Color _strokeColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
@@ -355,28 +371,44 @@ public class RectangleRuntime : GraphicalUiElement
     public int StrokeRed
     {
         get => _strokeColor.R;
-        set => StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeGreen
     {
         get => _strokeColor.G;
-        set => StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeBlue
     {
         get => _strokeColor.B;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeAlpha
     {
         get => _strokeColor.A;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <inheritdoc cref="Gum.Renderables.LineRectangle.IsFilled"/>
@@ -562,28 +594,44 @@ public class RectangleRuntime : GraphicalUiElement
     public int DropshadowAlpha
     {
         get => ContainedLineRectangle.DropshadowColor.A;
-        set => DropshadowColor = ColorExtensions.WithAlpha(ContainedLineRectangle.DropshadowColor, (byte)value);
+        set
+        {
+            DropshadowColor = ColorExtensions.WithAlpha(ContainedLineRectangle.DropshadowColor, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Red channel of <see cref="DropshadowColor"/>.</summary>
     public int DropshadowRed
     {
         get => ContainedLineRectangle.DropshadowColor.R;
-        set => DropshadowColor = ColorExtensions.WithRed(ContainedLineRectangle.DropshadowColor, (byte)value);
+        set
+        {
+            DropshadowColor = ColorExtensions.WithRed(ContainedLineRectangle.DropshadowColor, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="DropshadowColor"/>.</summary>
     public int DropshadowGreen
     {
         get => ContainedLineRectangle.DropshadowColor.G;
-        set => DropshadowColor = ColorExtensions.WithGreen(ContainedLineRectangle.DropshadowColor, (byte)value);
+        set
+        {
+            DropshadowColor = ColorExtensions.WithGreen(ContainedLineRectangle.DropshadowColor, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="DropshadowColor"/>.</summary>
     public int DropshadowBlue
     {
         get => ContainedLineRectangle.DropshadowColor.B;
-        set => DropshadowColor = ColorExtensions.WithBlue(ContainedLineRectangle.DropshadowColor, (byte)value);
+        set
+        {
+            DropshadowColor = ColorExtensions.WithBlue(ContainedLineRectangle.DropshadowColor, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowOffsetX"/>
@@ -870,28 +918,44 @@ public class RectangleRuntime : GraphicalUiElement
     public int FillRed
     {
         get => _fillColor.R;
-        set => FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+        set
+        {
+            FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="FillColor"/>.</summary>
     public int FillGreen
     {
         get => _fillColor.G;
-        set => FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+        set
+        {
+            FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="FillColor"/>.</summary>
     public int FillBlue
     {
         get => _fillColor.B;
-        set => FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+        set
+        {
+            FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="FillColor"/>.</summary>
     public int FillAlpha
     {
         get => _fillColor.A;
-        set => FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+        set
+        {
+            FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     bool _isFilled = false;
@@ -948,28 +1012,44 @@ public class RectangleRuntime : GraphicalUiElement
     public int StrokeRed
     {
         get => _strokeColor.R;
-        set => StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeGreen
     {
         get => _strokeColor.G;
-        set => StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeBlue
     {
         get => _strokeColor.B;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeAlpha
     {
         get => _strokeColor.A;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     float _strokeWidth = 1;
@@ -1367,6 +1447,7 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, _dropshadowState.DropshadowColor.G, _dropshadowState.DropshadowColor.B, (byte)value);
+            NotifyPropertyChanged();
         }
     }
 
@@ -1376,6 +1457,7 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color((byte)value, _dropshadowState.DropshadowColor.G, _dropshadowState.DropshadowColor.B, _dropshadowState.DropshadowColor.A);
+            NotifyPropertyChanged();
         }
     }
 
@@ -1385,6 +1467,7 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, (byte)value, _dropshadowState.DropshadowColor.B, _dropshadowState.DropshadowColor.A);
+            NotifyPropertyChanged();
         }
     }
 
@@ -1394,6 +1477,7 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, _dropshadowState.DropshadowColor.G, (byte)value, _dropshadowState.DropshadowColor.A);
+            NotifyPropertyChanged();
         }
     }
 
@@ -1684,6 +1768,7 @@ public class RectangleRuntime : GraphicalUiElement
         {
             base.DropshadowBlurX = value;
             base.DropshadowBlurY = value;
+            NotifyPropertyChanged();
         }
     }
 
@@ -1715,22 +1800,76 @@ public class RectangleRuntime : GraphicalUiElement
     /// <see cref="PreRender"/> so the outline traces the same rounded corners as the fill.
     /// Default of 0 keeps the historical hard-cornered visual.
     /// </summary>
-    public float CornerRadius { get; set; }
+    float _skiaCornerRadius;
+    public float CornerRadius
+    {
+        get => _skiaCornerRadius;
+        set
+        {
+            _skiaCornerRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <inheritdoc cref="RectangleRuntime.CornerRadius"/>
-    public float? CustomRadiusTopLeft { get; set; }
+    float? _skiaCustomRadiusTopLeft;
+    public float? CustomRadiusTopLeft
+    {
+        get => _skiaCustomRadiusTopLeft;
+        set
+        {
+            _skiaCustomRadiusTopLeft = value;
+            NotifyPropertyChanged();
+        }
+    }
     /// <inheritdoc cref="RectangleRuntime.CornerRadius"/>
-    public float? CustomRadiusTopRight { get; set; }
+    float? _skiaCustomRadiusTopRight;
+    public float? CustomRadiusTopRight
+    {
+        get => _skiaCustomRadiusTopRight;
+        set
+        {
+            _skiaCustomRadiusTopRight = value;
+            NotifyPropertyChanged();
+        }
+    }
     /// <inheritdoc cref="RectangleRuntime.CornerRadius"/>
-    public float? CustomRadiusBottomLeft { get; set; }
+    float? _skiaCustomRadiusBottomLeft;
+    public float? CustomRadiusBottomLeft
+    {
+        get => _skiaCustomRadiusBottomLeft;
+        set
+        {
+            _skiaCustomRadiusBottomLeft = value;
+            NotifyPropertyChanged();
+        }
+    }
     /// <inheritdoc cref="RectangleRuntime.CornerRadius"/>
-    public float? CustomRadiusBottomRight { get; set; }
+    float? _skiaCustomRadiusBottomRight;
+    public float? CustomRadiusBottomRight
+    {
+        get => _skiaCustomRadiusBottomRight;
+        set
+        {
+            _skiaCustomRadiusBottomRight = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <summary>
     /// Unit of measurement for <see cref="CornerRadius"/> and per-corner overrides. Mirrors
     /// <see cref="SkiaShapeRuntime.StrokeWidthUnits"/>: <c>ScreenPixel</c> divides by camera zoom each frame.
     /// </summary>
-    public DimensionUnitType CornerRadiusUnits { get; set; }
+    DimensionUnitType _skiaCornerRadiusUnits;
+    public DimensionUnitType CornerRadiusUnits
+    {
+        get => _skiaCornerRadiusUnits;
+        set
+        {
+            _skiaCornerRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <inheritdoc/>
     public override void PreRender()

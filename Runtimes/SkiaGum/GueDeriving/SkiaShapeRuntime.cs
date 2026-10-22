@@ -190,25 +190,41 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public int Alpha
     {
         get => ContainedRenderable.Alpha;
-        set => ContainedRenderable.Alpha = value;
+        set
+        {
+            ContainedRenderable.Alpha = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public int Blue
     {
         get => ContainedRenderable.Blue;
-        set => ContainedRenderable.Blue = value;
+        set
+        {
+            ContainedRenderable.Blue = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public int Green
     {
         get => ContainedRenderable.Green;
-        set => ContainedRenderable.Green = value;
+        set
+        {
+            ContainedRenderable.Green = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public int Red
     {
         get => ContainedRenderable.Red;
-        set => ContainedRenderable.Red = value;
+        set
+        {
+            ContainedRenderable.Red = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -221,7 +237,11 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public SKColor Color
     {
         get => ContainedRenderable.Color;
-        set => ContainedRenderable.Color = value;
+        set
+        {
+            ContainedRenderable.Color = value;
+            NotifyPropertyChanged();
+        }
     }
 
     // Issue #2938 regression fix: defaults to transparent (alpha 0) so a freshly-constructed
@@ -253,6 +273,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             _fillColor = value;
             PushFillColorToSlot();
             RefreshSlotGradients();
+            NotifyPropertyChanged();
         }
     }
 
@@ -260,28 +281,44 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public int FillRed
     {
         get => _fillColor.Red;
-        set => FillColor = new SKColor((byte)value, _fillColor.Green, _fillColor.Blue, _fillColor.Alpha);
+        set
+        {
+            FillColor = new SKColor((byte)value, _fillColor.Green, _fillColor.Blue, _fillColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="FillColor"/>.</summary>
     public int FillGreen
     {
         get => _fillColor.Green;
-        set => FillColor = new SKColor(_fillColor.Red, (byte)value, _fillColor.Blue, _fillColor.Alpha);
+        set
+        {
+            FillColor = new SKColor(_fillColor.Red, (byte)value, _fillColor.Blue, _fillColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="FillColor"/>.</summary>
     public int FillBlue
     {
         get => _fillColor.Blue;
-        set => FillColor = new SKColor(_fillColor.Red, _fillColor.Green, (byte)value, _fillColor.Alpha);
+        set
+        {
+            FillColor = new SKColor(_fillColor.Red, _fillColor.Green, (byte)value, _fillColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="FillColor"/>.</summary>
     public int FillAlpha
     {
         get => _fillColor.Alpha;
-        set => FillColor = new SKColor(_fillColor.Red, _fillColor.Green, _fillColor.Blue, (byte)value);
+        set
+        {
+            FillColor = new SKColor(_fillColor.Red, _fillColor.Green, _fillColor.Blue, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     void PushFillColorToSlot()
@@ -337,6 +374,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             // Issue #3009 — keep the stroke slot's gradient start in lockstep with StrokeColor (two-slot only).
             SyncGradientStartToBody();
             RefreshSlotGradients();
+            NotifyPropertyChanged();
         }
     }
 
@@ -344,28 +382,44 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public int StrokeRed
     {
         get => _strokeColor.Red;
-        set => StrokeColor = new SKColor((byte)value, _strokeColor.Green, _strokeColor.Blue, _strokeColor.Alpha);
+        set
+        {
+            StrokeColor = new SKColor((byte)value, _strokeColor.Green, _strokeColor.Blue, _strokeColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeGreen
     {
         get => _strokeColor.Green;
-        set => StrokeColor = new SKColor(_strokeColor.Red, (byte)value, _strokeColor.Blue, _strokeColor.Alpha);
+        set
+        {
+            StrokeColor = new SKColor(_strokeColor.Red, (byte)value, _strokeColor.Blue, _strokeColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeBlue
     {
         get => _strokeColor.Blue;
-        set => StrokeColor = new SKColor(_strokeColor.Red, _strokeColor.Green, (byte)value, _strokeColor.Alpha);
+        set
+        {
+            StrokeColor = new SKColor(_strokeColor.Red, _strokeColor.Green, (byte)value, _strokeColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeAlpha
     {
         get => _strokeColor.Alpha;
-        set => StrokeColor = new SKColor(_strokeColor.Red, _strokeColor.Green, _strokeColor.Blue, (byte)value);
+        set
+        {
+            StrokeColor = new SKColor(_strokeColor.Red, _strokeColor.Green, _strokeColor.Blue, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
     #endregion
 
@@ -386,25 +440,41 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public int Blue1
     {
         get => ContainedRenderable.Blue1;
-        set => ApplyToBothSlots(r => r.Blue1 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Blue1 = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public int Green1
     {
         get => ContainedRenderable.Green1;
-        set => ApplyToBothSlots(r => r.Green1 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Green1 = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public int Red1
     {
         get => ContainedRenderable.Red1;
-        set => ApplyToBothSlots(r => r.Red1 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Red1 = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public int Alpha1
     {
         get => ContainedRenderable.Alpha1;
-        set => ApplyToBothSlots(r => r.Alpha1 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Alpha1 = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public SKColor Color1
@@ -416,6 +486,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             Green1 = value.Green;
             Blue1 = value.Blue;
             Alpha1 = value.Alpha;
+            NotifyPropertyChanged();
         }
     }
 
@@ -423,25 +494,41 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public int Blue2
     {
         get => ContainedRenderable.Blue2;
-        set => ApplyToBothSlots(r => r.Blue2 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Blue2 = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public int Green2
     {
         get => ContainedRenderable.Green2;
-        set => ApplyToBothSlots(r => r.Green2 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Green2 = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public int Red2
     {
         get => ContainedRenderable.Red2;
-        set => ApplyToBothSlots(r => r.Red2 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Red2 = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public int Alpha2
     {
         get => ContainedRenderable.Alpha2;
-        set => ApplyToBothSlots(r => r.Alpha2 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Alpha2 = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public SKColor Color2
@@ -453,49 +540,82 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             Green2 = value.Green;
             Blue2 = value.Blue;
             Alpha2 = value.Alpha;
+            NotifyPropertyChanged();
         }
     }
 
     public float GradientX1
     {
         get => ContainedRenderable.GradientX1;
-        set => ApplyToBothSlots(r => r.GradientX1 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientX1 = value);
+            NotifyPropertyChanged();
+        }
     }
     public GeneralUnitType GradientX1Units
     {
         get => ContainedRenderable.GradientX1Units;
-        set => ApplyToBothSlots(r => r.GradientX1Units = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientX1Units = value);
+            NotifyPropertyChanged();
+        }
     }
     public float GradientY1
     {
         get => ContainedRenderable.GradientY1;
-        set => ApplyToBothSlots(r => r.GradientY1 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientY1 = value);
+            NotifyPropertyChanged();
+        }
     }
     public GeneralUnitType GradientY1Units
     {
         get => ContainedRenderable.GradientY1Units;
-        set => ApplyToBothSlots(r => r.GradientY1Units = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientY1Units = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public float GradientX2
     {
         get => ContainedRenderable.GradientX2;
-        set => ApplyToBothSlots(r => r.GradientX2 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientX2 = value);
+            NotifyPropertyChanged();
+        }
     }
     public GeneralUnitType GradientX2Units
     {
         get => ContainedRenderable.GradientX2Units;
-        set => ApplyToBothSlots(r => r.GradientX2Units = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientX2Units = value);
+            NotifyPropertyChanged();
+        }
     }
     public float GradientY2
     {
         get => ContainedRenderable.GradientY2;
-        set => ApplyToBothSlots(r => r.GradientY2 = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientY2 = value);
+            NotifyPropertyChanged();
+        }
     }
     public GeneralUnitType GradientY2Units
     {
         get => ContainedRenderable.GradientY2Units;
-        set => ApplyToBothSlots(r => r.GradientY2Units = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientY2Units = value);
+            NotifyPropertyChanged();
+        }
     }
 
     bool _useGradient;
@@ -513,37 +633,58 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         {
             _useGradient = value;
             RefreshSlotGradients();
+            NotifyPropertyChanged();
         }
     }
 
     public GradientType GradientType
     {
         get => ContainedRenderable.GradientType;
-        set => ApplyToBothSlots(r => r.GradientType = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientType = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public float GradientInnerRadius
     {
         get => ContainedRenderable.GradientInnerRadius;
-        set => ApplyToBothSlots(r => r.GradientInnerRadius = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientInnerRadius = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public DimensionUnitType GradientInnerRadiusUnits
     {
         get => ContainedRenderable.GradientInnerRadiusUnits;
-        set => ApplyToBothSlots(r => r.GradientInnerRadiusUnits = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientInnerRadiusUnits = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public float GradientOuterRadius
     {
         get => ContainedRenderable.GradientOuterRadius;
-        set => ApplyToBothSlots(r => r.GradientOuterRadius = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientOuterRadius = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public DimensionUnitType GradientOuterRadiusUnits
     {
         get => ContainedRenderable.GradientOuterRadiusUnits;
-        set => ApplyToBothSlots(r => r.GradientOuterRadiusUnits = value);
+        set
+        {
+            ApplyToBothSlots(r => r.GradientOuterRadiusUnits = value);
+            NotifyPropertyChanged();
+        }
     }
 
 
@@ -568,22 +709,33 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             _isFilled = value;
             PushFillColorToSlot();
             RefreshSlotGradients();
+            NotifyPropertyChanged();
         }
     }
 
     // This should NOT modify the contained renderable stroke width directly.
     // Rather it should be a value that does not affect the underlying object until
     // pre-render happens where the StrokeWidthUnits can be adjusted too:
+    float _strokeWidth;
     public float StrokeWidth
     {
-        get;
-        set;
+        get => _strokeWidth;
+        set
+        {
+            _strokeWidth = value;
+            NotifyPropertyChanged();
+        }
     }
 
+    DimensionUnitType _strokeWidthUnits;
     public DimensionUnitType StrokeWidthUnits
     {
-        get;
-        set;
+        get => _strokeWidthUnits;
+        set
+        {
+            _strokeWidthUnits = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -602,6 +754,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         {
             ContainedRenderable.IsAntialiased = value;
             if (StrokeRenderable != null) StrokeRenderable.IsAntialiased = value;
+            NotifyPropertyChanged();
         }
     }
 
@@ -613,19 +766,31 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public Gum.RenderingLibrary.Blend Blend
     {
         get => ContainedRenderable.Blend ?? Gum.RenderingLibrary.Blend.Normal;
-        set => ApplyToBothSlots(r => r.Blend = value);
+        set
+        {
+            ApplyToBothSlots(r => r.Blend = value);
+            NotifyPropertyChanged();
+        }
     }
 
     public float StrokeDashLength
     {
         get => StrokeTarget.StrokeDashLength;
-        set => StrokeTarget.StrokeDashLength = value;
+        set
+        {
+            StrokeTarget.StrokeDashLength = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public float StrokeGapLength
     {
         get => StrokeTarget.StrokeGapLength;
-        set => StrokeTarget.StrokeGapLength = value;
+        set
+        {
+            StrokeTarget.StrokeGapLength = value;
+            NotifyPropertyChanged();
+        }
     }
 
     #endregion
@@ -643,25 +808,41 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public int DropshadowAlpha
     {
         get => _dropshadowColor.Alpha;
-        set => _dropshadowColor = new SKColor(_dropshadowColor.Red, _dropshadowColor.Green, _dropshadowColor.Blue, (byte)value);
+        set
+        {
+            _dropshadowColor = new SKColor(_dropshadowColor.Red, _dropshadowColor.Green, _dropshadowColor.Blue, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     public int DropshadowBlue
     {
         get => _dropshadowColor.Blue;
-        set => _dropshadowColor = new SKColor(_dropshadowColor.Red, _dropshadowColor.Green, (byte)value, _dropshadowColor.Alpha);
+        set
+        {
+            _dropshadowColor = new SKColor(_dropshadowColor.Red, _dropshadowColor.Green, (byte)value, _dropshadowColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     public int DropshadowGreen
     {
         get => _dropshadowColor.Green;
-        set => _dropshadowColor = new SKColor(_dropshadowColor.Red, (byte)value, _dropshadowColor.Blue, _dropshadowColor.Alpha);
+        set
+        {
+            _dropshadowColor = new SKColor(_dropshadowColor.Red, (byte)value, _dropshadowColor.Blue, _dropshadowColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     public int DropshadowRed
     {
         get => _dropshadowColor.Red;
-        set => _dropshadowColor = new SKColor((byte)value, _dropshadowColor.Green, _dropshadowColor.Blue, _dropshadowColor.Alpha);
+        set
+        {
+            _dropshadowColor = new SKColor((byte)value, _dropshadowColor.Green, _dropshadowColor.Blue, _dropshadowColor.Alpha);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -672,28 +853,44 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public SKColor DropshadowColor
     {
         get => _dropshadowColor;
-        set => _dropshadowColor = value;
+        set
+        {
+            _dropshadowColor = value;
+            NotifyPropertyChanged();
+        }
     }
 
     bool _hasDropshadow;
     public bool HasDropshadow
     {
         get => _hasDropshadow;
-        set => _hasDropshadow = value;
+        set
+        {
+            _hasDropshadow = value;
+            NotifyPropertyChanged();
+        }
     }
 
     float _dropshadowOffsetX;
     public float DropshadowOffsetX
     {
         get => _dropshadowOffsetX;
-        set => _dropshadowOffsetX = value;
+        set
+        {
+            _dropshadowOffsetX = value;
+            NotifyPropertyChanged();
+        }
     }
 
     float _dropshadowOffsetY;
     public float DropshadowOffsetY
     {
         get => _dropshadowOffsetY;
-        set => _dropshadowOffsetY = value;
+        set
+        {
+            _dropshadowOffsetY = value;
+            NotifyPropertyChanged();
+        }
     }
 
     float _dropshadowBlurX;
@@ -715,7 +912,11 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
-        set => _dropshadowBlurX = value;
+        set
+        {
+            _dropshadowBlurX = value;
+            NotifyPropertyChanged();
+        }
     }
 
     float _dropshadowBlurY;
@@ -723,7 +924,11 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;
-        set => _dropshadowBlurY = value;
+        set
+        {
+            _dropshadowBlurY = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>

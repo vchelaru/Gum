@@ -196,7 +196,11 @@ public class TextRuntime : InteractiveGue
     public VerticalAlignment VerticalAlignment
     {
         get => ContainedText.VerticalAlignment;
-        set => ContainedText.VerticalAlignment = value;
+        set
+        {
+            ContainedText.VerticalAlignment = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -210,6 +214,7 @@ public class TextRuntime : InteractiveGue
         set
         {
             ContainedText.MaxLettersToShow = value;
+            NotifyPropertyChanged();
         }
     }
 
@@ -359,7 +364,7 @@ public class TextRuntime : InteractiveGue
     public bool UseCustomFont
     {
         get { return useCustomFont; }
-        set { useCustomFont = value; UpdateToFontValues(); }
+        set { useCustomFont = value; UpdateToFontValues(); NotifyPropertyChanged(); }
     }
 
     string? customFontFile;
@@ -374,7 +379,7 @@ public class TextRuntime : InteractiveGue
     public string? CustomFontFile
     {
         get { return customFontFile; }
-        set { customFontFile = value; UpdateToFontValues(); }
+        set { customFontFile = value; UpdateToFontValues(); NotifyPropertyChanged(); }
     }
 
     string? font;
@@ -384,7 +389,11 @@ public class TextRuntime : InteractiveGue
     public string? Font
     {
         get => FontFamily;
-        set => FontFamily = value;
+        set
+        {
+            FontFamily = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -453,7 +462,7 @@ public class TextRuntime : InteractiveGue
     public bool UseFontSmoothing
     {
         get { return useFontSmoothing; }
-        set { useFontSmoothing = value; UpdateToFontValues(); }
+        set { useFontSmoothing = value; UpdateToFontValues(); NotifyPropertyChanged(); }
     }
 
     int outlineThickness;
@@ -501,6 +510,7 @@ public class TextRuntime : InteractiveGue
             hasDropshadow = value;
             UpdateToFontValues();
             ApplyDropshadowToRenderable();
+            NotifyPropertyChanged();
         }
     }
 
@@ -536,39 +546,39 @@ public class TextRuntime : InteractiveGue
     public int DropshadowRed
     {
         get => dropshadowRed;
-        set { dropshadowRed = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowRed = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     public int DropshadowGreen
     {
         get => dropshadowGreen;
-        set { dropshadowGreen = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowGreen = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     public int DropshadowBlue
     {
         get => dropshadowBlue;
-        set { dropshadowBlue = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowBlue = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     public int DropshadowAlpha
     {
         get => dropshadowAlpha;
-        set { dropshadowAlpha = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowAlpha = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     float dropshadowOffsetX;
     public float DropshadowOffsetX
     {
         get => dropshadowOffsetX;
-        set { dropshadowOffsetX = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowOffsetX = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     float dropshadowOffsetY;
     public float DropshadowOffsetY
     {
         get => dropshadowOffsetY;
-        set { dropshadowOffsetY = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowOffsetY = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     float dropshadowBlur;
@@ -591,6 +601,7 @@ public class TextRuntime : InteractiveGue
             _dropshadowBlurY = dropshadowBlur;
 #endif
             UpdateToFontValues();
+            NotifyPropertyChanged();
         }
     }
 
@@ -1477,6 +1488,7 @@ public class TextRuntime : InteractiveGue
             if (_localizeText != value)
             {
                 _localizeText = value;
+                NotifyPropertyChanged();
                 string? originalText = CustomSetPropertyOnRenderableType.TryGetLocalizationKey(this);
                 if (originalText != null)
                 {
