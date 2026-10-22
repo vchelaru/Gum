@@ -114,6 +114,37 @@ public class TextStyledLineHeightTests
         ShouldMatch(text, h, Run(2, 1.5f, 3), Run(2, 1.5f, 1.5f), Plain(2, 1.5f));
     }
 
+    // A line mixing a multiplied base with size runs is the larger of the multiplied base and its tallest run, as on
+    // MonoGame and Raylib (#6467): RichTextKit takes the line's ascent and descent from the tallest run on each side,
+    // so runs of different sizes must not push the two sides past that.
+    [Theory]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 1f, 1.5f, 2f)]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 1f, 1.5f, 1.5f)]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 1f, 3f, 3f)]
+    [InlineData("a[FontSize=10]b[/FontSize][FontSize=30]c[/FontSize]", 1f, 1.5f, 1.5f)]
+    [InlineData("a[FontScale=2]b[/FontScale][FontScale=0.5]c[/FontScale]", 1f, 3f, 3f)]
+    [InlineData("ab[FontScale=1]c[/FontScale]", 2f, 1.5f, 3f)]
+    [InlineData("ab[FontScale=3]c[/FontScale]d[FontScale=1]e[/FontScale]", 2f, 1.5f, 3f)]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 1f, 0.5f, 2f)]
+    [InlineData("a[FontScale=0.5]b[/FontScale]c", 1f, 0.5f, 0.5f)]
+    [InlineData("a[FontScale=0.5]b[/FontScale]c", 2f, 1f, 2f)]
+    public void MixedSizeLine_HeightIsTheLargerOfMultipliedBaseAndTallestRun(string markup, float baseScale, float multiplier, float expectedLines)
+    {
+        float h = PlainLineHeight();
+        Text text = Build(markup, baseScale, multiplier);
+
+        ShouldMatch(text, h, expectedLines);
+    }
+
+    [Fact]
+    public void MixedSizeLines_EachLineIsItsOwnLargerOfMultipliedBaseAndTallestRun()
+    {
+        float h = PlainLineHeight();
+        Text text = Build("a[FontScale=2]b[/FontScale]c\nabc[FontScale=0.5]d[/FontScale]\n[FontScale=3]e[/FontScale]f", 1, 1.5f);
+
+        ShouldMatch(text, h, Run(1, 1.5f, 2), Plain(1, 1.5f), Run(1, 1.5f, 3));
+    }
+
     [Fact]
     public void SizeRunLargerThanMultipliedBase_IsNotMultiplied()
     {

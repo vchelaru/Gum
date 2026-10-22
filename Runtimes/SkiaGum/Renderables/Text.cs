@@ -1152,6 +1152,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth)
     {
+        FitSmallerRunsInsideTallestRunOfEachLine(runs, forcedWidth);
+
         var textBlock = new TextBlock();
         // Code-point start index (in the added-text stream, which lines up with _layoutText since
         // ReplacementCharacter substitution keeps a run's length at 1) -> the glyph offset a [Custom]
@@ -1432,6 +1434,63 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return TextLineHeight.Compute(1, FontScale, LineHeightMultiplier, runScale) / runScale;
     }
 
+    /// <summary>The unmultiplied vertical metrics RichTextKit lays a run out with: ascent as a positive distance
+    /// above the baseline, descent below it, and the font's leading.</summary>
+    private readonly record struct FontLineMetrics(float Ascent, float Descent, float Leading)
+    {
+        public float TextHeight => Ascent + Descent;
+
+        public bool IsValid => TextHeight > 0;
+
+        /// <summary>The extra space RichTextKit adds above and below the glyphs for <paramref name="lineHeight"/>.</summary>
+        public float HalfLeadingFor(float lineHeight) => (lineHeight - 1) * TextHeight / 2 + Leading / 2;
+
+        /// <summary>The distance from the line top to the baseline.</summary>
+        public float TopFor(float lineHeight) => Ascent + HalfLeadingFor(lineHeight);
+
+        /// <summary>The distance from the baseline to the line bottom, which RichTextKit never lets go above the baseline.</summary>
+        public float BottomFor(float lineHeight) => System.Math.Max(0, Descent + HalfLeadingFor(lineHeight));
+
+        /// <summary>The <see cref="Style.LineHeight"/> that puts the run's top at <paramref name="top"/>.</summary>
+        public float LineHeightForTop(float top) => 1 + (2 * (top - Ascent) - Leading) / TextHeight;
+    }
+
+    private readonly record struct FontLineMetricsKey(FontMapper Mapper, string? Family, float Size, int Weight, bool Italic);
+
+    // The metrics depend only on the font, so one probe per distinct font serves every rebuild and every
+    // typewriter frame. Bounded so fonts created at runtime cannot grow it without limit.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<FontLineMetricsKey, FontLineMetrics> _fontLineMetricsCache = new();
+    private const int MaxCachedFontLineMetrics = 256;
+
+    private static FontLineMetrics GetFontLineMetrics(Style style)
+    {
+        var key = new FontLineMetricsKey(FontMapper.Default, style.FontFamily, style.FontSize, style.FontWeight, style.FontItalic);
+        if (_fontLineMetricsCache.TryGetValue(key, out FontLineMetrics cached))
+        {
+            return cached;
+        }
+
+        // Measured at the default line height of 1, whatever the style's own is.
+        var probe = new TextBlock();
+        probe.AddText("x", new Style()
+        {
+            FontFamily = style.FontFamily,
+            FontSize = style.FontSize,
+            FontWeight = style.FontWeight,
+            FontItalic = style.FontItalic,
+        });
+        FontLineMetrics metrics = probe.FontRuns.Count == 0
+            ? default
+            : new FontLineMetrics(-probe.FontRuns[0].Ascent, probe.FontRuns[0].Descent, probe.FontRuns[0].Leading);
+
+        if (_fontLineMetricsCache.Count >= MaxCachedFontLineMetrics)
+        {
+            _fontLineMetricsCache.Clear();
+        }
+        _fontLineMetricsCache[key] = metrics;
+        return metrics;
+    }
+
     /// <summary>
     /// RichTextKit gives a line the height <c>(ascent + descent) * LineHeight + leading</c> (the leading is not
     /// multiplied), and never lets the descent side go negative, so setting <see cref="Style.LineHeight"/> to
@@ -1449,33 +1508,128 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return lineHeightFactor;
         }
 
-        var probe = new TextBlock();
-        probe.AddText("x", style);
-        if (probe.FontRuns.Count == 0)
+        FontLineMetrics metrics = GetFontLineMetrics(style);
+        if (!metrics.IsValid)
         {
             return lineHeightFactor;
         }
 
-        FontRun fontRun = probe.FontRuns[0];
-        float ascent = -fontRun.Ascent;
-        float descent = fontRun.Descent;
-        float leading = fontRun.Leading;
-        float textHeight = ascent + descent;
-        if (textHeight <= 0)
-        {
-            return lineHeightFactor;
-        }
-
-        float wantedHeight = lineHeightFactor * (textHeight + leading);
+        float wantedHeight = lineHeightFactor * (metrics.TextHeight + metrics.Leading);
 
         // Shrinking a line far enough pushes its bottom (descent plus half the extra leading) above the
         // baseline, where RichTextKit stops at the baseline and only the top keeps shrinking.
-        if (wantedHeight >= ascent - descent)
+        if (wantedHeight >= metrics.Ascent - metrics.Descent)
         {
-            return (wantedHeight - leading) / textHeight;
+            return (wantedHeight - metrics.Leading) / metrics.TextHeight;
         }
 
-        return 1 + (2 * (wantedHeight - ascent) - leading) / textHeight;
+        return metrics.LineHeightForTop(wantedHeight);
+    }
+
+    /// <summary>
+    /// A line's top is the highest top and its bottom the lowest bottom of the runs on it, each run having been
+    /// given the extra space for its own height, so runs of different sizes whose extra space splits differently
+    /// between top and bottom make the line taller than its tallest run (#6467). On every line that comes out
+    /// too tall this lowers the line height of the runs that are not the tallest until they fit inside it, so the
+    /// line is exactly its tallest run, as on MonoGame and Raylib. Changes the <see cref="Style.LineHeight"/> of
+    /// <paramref name="runs"/>' styles in place. Lines are found with a layout of the unconstrained text, only when
+    /// the runs differ in size and some have a line height other than 1.
+    /// </summary>
+    private void FitSmallerRunsInsideTallestRunOfEachLine(List<StyledTextRun> runs, float? forcedWidth)
+    {
+        if (runs.Count < 2)
+        {
+            return;
+        }
+
+        bool anyScaledLineHeight = false;
+        bool anyDifferentMetrics = false;
+        FontLineMetrics first = GetFontLineMetrics(runs[0].Style);
+        foreach (StyledTextRun run in runs)
+        {
+            anyScaledLineHeight |= run.Style.LineHeight != 1;
+            anyDifferentMetrics |= GetFontLineMetrics(run.Style) != first;
+        }
+
+        if (!anyScaledLineHeight || !anyDifferentMetrics)
+        {
+            return;
+        }
+
+        var layout = new TextBlock { MaxWidth = forcedWidth ?? this.Width };
+        var styles = new Dictionary<IStyle, Style>(ReferenceEqualityComparer.Instance);
+        foreach (StyledTextRun run in runs)
+        {
+            layout.AddText(run.Text, run.Style);
+            styles[run.Style] = run.Style;
+        }
+
+        // The tallest run of a line keeps its height; every other run on it may only go as high as that run's
+        // top and bottom. A run that is the tallest on any line is left alone.
+        var limit = new Dictionary<Style, float>(ReferenceEqualityComparer.Instance);
+        var tallestSomewhere = new HashSet<Style>(ReferenceEqualityComparer.Instance);
+        var onLine = new List<Style>();
+        foreach (TextLine line in layout.Lines)
+        {
+            onLine.Clear();
+            foreach (FontRun fontRun in line.Runs)
+            {
+                if (styles.TryGetValue(fontRun.Style, out Style? style) && !onLine.Contains(style))
+                {
+                    onLine.Add(style);
+                }
+            }
+
+            if (onLine.Count < 2)
+            {
+                continue;
+            }
+
+            Style tallest = onLine[0];
+            float tallestTop = 0, tallestBottom = 0, maxTop = 0, maxBottom = 0;
+            foreach (Style style in onLine)
+            {
+                FontLineMetrics metrics = GetFontLineMetrics(style);
+                float top = metrics.TopFor(style.LineHeight);
+                float bottom = metrics.BottomFor(style.LineHeight);
+                maxTop = System.Math.Max(maxTop, top);
+                maxBottom = System.Math.Max(maxBottom, bottom);
+                if (style == onLine[0] || top + bottom > tallestTop + tallestBottom
+                    || (top + bottom == tallestTop + tallestBottom && metrics.TextHeight > GetFontLineMetrics(tallest).TextHeight))
+                {
+                    tallest = style;
+                    tallestTop = top;
+                    tallestBottom = bottom;
+                }
+            }
+
+            if (maxTop + maxBottom <= tallestTop + tallestBottom + 0.001f)
+            {
+                continue;
+            }
+
+            tallestSomewhere.Add(tallest);
+            foreach (Style style in onLine)
+            {
+                if (style == tallest)
+                {
+                    continue;
+                }
+
+                FontLineMetrics metrics = GetFontLineMetrics(style);
+                float halfLeadingLimit = System.Math.Min(tallestTop - metrics.Ascent, tallestBottom - metrics.Descent);
+                limit[style] = limit.TryGetValue(style, out float existing) ? System.Math.Min(existing, halfLeadingLimit) : halfLeadingLimit;
+            }
+        }
+
+        foreach (var (style, halfLeadingLimit) in limit)
+        {
+            FontLineMetrics metrics = GetFontLineMetrics(style);
+            if (!tallestSomewhere.Contains(style) && halfLeadingLimit < metrics.HalfLeadingFor(style.LineHeight))
+            {
+                style.LineHeight = System.Math.Max(0, metrics.LineHeightForTop(metrics.Ascent + halfLeadingLimit));
+            }
+        }
     }
 
     /// <summary>
