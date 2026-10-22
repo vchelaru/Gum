@@ -28,6 +28,10 @@ Located in `Runtimes/GumExpressions/`. Provides Roslyn-based expression evaluati
 - `ApplyVariableReferences(ElementSave, StateSave)` — writes hard values into the StateSave. Use before creating UI.
 - `ApplyVariableReferences(GraphicalUiElement, StateSave)` — sets properties on live runtime visuals via `SetProperty`.
 
+### Values the saved type cannot hold (#6414)
+
+A reference carries what code set, not only what a project can store. Reference reads use `TryGetPropertyExact` (internal; the public `TryGetProperty` stays save-safe for the snapshot serializer): X/Y units with no `PositionUnitType` value (`PercentageOfFile`, `PercentageOfOtherDimension`, `MaintainFileAspectRatio`, X `PixelsFromMiddleInverted`) read as the `GeneralUnitType`, and `EvaluatedSyntax.CastTo` leaves a `GeneralUnitType` alone instead of reinterpreting its number. `SetProperty("FontSize", ...)` accepts a float. Known gap: with Gum.Expressions a fractional FontSize reaches a reference as an int, because every result is cast to the saved variable type (FontSize is `int`; fixing it needs a saved-format change). `TypedSetterSweep` asserts exact values for every variable and enum value and names that gap (`IsKnownExpressionGap`).
+
 ### Nullable variables
 
 A typed set reports null too (`label.MinWidth = null` reaches `Shadow.MinWidth = MinWidth`). Live re-evaluation (`VariableReferenceGraph.Evaluate`) writes a null result only to a variable whose type ends in `?` and only when the right side is a plain reference to an existing variable of a compatible type (`MinWidth = Other.MinWidth`; a bool or string read into a `float?` is a failed cast); any other null (unresolved name, failed expression, arithmetic on null) means "nothing evaluated" and keeps the value. `EvaluatedSyntax.CastTo` accepts `float?`/`int?` targets. `TypedSetterSweep` (shared by the MonoGame and Skia tests) covers nullable variables with and without Gum.Expressions, including set back to null.

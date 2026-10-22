@@ -61,12 +61,12 @@ public static class TypedSetterSweep
                 bool isNullable = variable.Type?.EndsWith("?") == true && Nullable.GetUnderlyingType(property.PropertyType) != null;
                 for (int i = 0; i < values.Count; i++)
                 {
-                    if (AreEqual(values[i], initial) || !IsRepresentable(variable.Name, values[i]))
+                    if (AreEqual(values[i], initial))
                     {
                         continue;
                     }
                     yield return new object[] { pair.Key, variable.Name, i, false };
-                    if (includeExpressions)
+                    if (includeExpressions && !IsKnownExpressionGap(variable.Name, values[i]))
                     {
                         yield return new object[] { pair.Key, variable.Name, i, true };
                     }
@@ -104,6 +104,12 @@ public static class TypedSetterSweep
         }
     }
 
+    // FontSize is saved as an int but TextRuntime.FontSize is a float. Gum.Expressions casts every result to the saved
+    // variable type, so a fractional FontSize set in code reaches a reference as an int. Carrying it would need the saved
+    // type to become float (a saved-file format change), so it is a known gap of the expression path (#6414).
+    private static bool IsKnownExpressionGap(string variable, object value) =>
+        variable == "FontSize" && value is float fontSize && fontSize != Math.Floor(fontSize);
+
     private static bool IsColorType(Type type) => type.Name is "Color" or "SKColor";
 
     private static object ColorValue(Type type, byte r, byte g, byte b, byte a)
@@ -130,29 +136,21 @@ public static class TypedSetterSweep
     private static IReadOnlyList<object> ValuesFor(Type type)
     {
         Type underlying = Nullable.GetUnderlyingType(type) ?? type;
-        if (underlying == typeof(float)) return new object[] { 3f, 7f, 100f };
-        if (underlying == typeof(int)) return new object[] { 5, 200 };
+        // Edge values: zero, negative, a fraction that is not exact in binary, a large fraction, and an int beyond what a float holds.
+        if (underlying == typeof(float)) return new object[] { 3f, 7f, 100f, 0f, -2.5f, 0.1f, 123456.789f };
+        if (underlying == typeof(int)) return new object[] { 5, 200, 0, 255, -1, 16777217 };
         if (underlying == typeof(bool)) return new object[] { true, false };
-        if (underlying == typeof(string)) return new object[] { "changed" };
+        if (underlying == typeof(string)) return new object[] { "changed", "", "two\nlines \"q\" {0} \\ é" };
         if (underlying.IsEnum) return Enum.GetValues(underlying).Cast<object>().ToList();
         if (IsColorType(underlying) && underlying.GetConstructors().Any(c => c.GetParameters().Length == 4 && c.GetParameters().All(p => p.ParameterType == typeof(byte))))
         {
-            return new object[] { ColorValue(underlying, 11, 22, 33, 44), ColorValue(underlying, 200, 150, 100, 250) };
+            return new object[]
+            {
+                ColorValue(underlying, 11, 22, 33, 44), ColorValue(underlying, 200, 150, 100, 250),
+                ColorValue(underlying, 0, 0, 0, 0), ColorValue(underlying, 255, 255, 255, 255),
+            };
         }
         return Array.Empty<object>();
-    }
-
-    // XUnits and YUnits are GeneralUnitType properties but PositionUnitType variables. The dimension-only units
-    // (PercentageOfFile, PercentageOfOtherDimension, MaintainFileAspectRatio) and, on X, the obsolete
-    // PixelsFromMiddleInverted have no PositionUnitType value, so a reference cannot carry them.
-    private static bool IsRepresentable(string variableName, object value)
-    {
-        if (value is not Gum.Converters.GeneralUnitType generalUnit || (variableName != "XUnits" && variableName != "YUnits"))
-        {
-            return true;
-        }
-        bool isXAxis = variableName == "XUnits";
-        return Gum.Converters.UnitConverter.ConvertToGeneralUnit(Gum.Converters.UnitConverter.ConvertToPositionUnit(generalUnit, isXAxis)) == generalUnit;
     }
 
     private static bool AreEqual(object? a, object? b)
@@ -165,7 +163,8 @@ public static class TypedSetterSweep
         {
             return Equals(a, b);
         }
-        return a != null && b != null && Math.Abs(Convert.ToDouble(a) - Convert.ToDouble(b)) < 0.0001;
+        // Exact: a reference must carry the value unchanged, not within a tolerance.
+        return a != null && b != null && Convert.ToDouble(a) == Convert.ToDouble(b);
     }
 
     /// <summary>

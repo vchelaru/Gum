@@ -1257,6 +1257,15 @@ public class EvaluatedSyntax
             Type? enumType = ResolveEnumType(desiredType);
             if (enumType != null)
             {
+                // An exact read of XUnits/YUnits (a unit set in code that PositionUnitType cannot hold, such as
+                // PercentageOfFile) is a GeneralUnitType. Enum.ToObject would reinterpret its number as another
+                // unit, and SetProperty takes the GeneralUnitType as is.
+                if (this.Value is Gum.Converters.GeneralUnitType)
+                {
+                    this.EvaluatedType = desiredType;
+                    return true;
+                }
+
                 try
                 {
                     this.Value = this.Value is string enumName
