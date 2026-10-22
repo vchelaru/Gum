@@ -245,7 +245,9 @@ Each variable has a type, such as `float` for `X` or `int` for `FontSize`, which
 
 A plain reference such as `XUnits = Source.XUnits` copies the value exactly, including values that only code can set. `PercentageOfFile`, `PercentageOfOtherDimension`, and `MaintainFileAspectRatio` on `XUnits` and `YUnits` carry over, and so does a fractional `FontSize` such as `12.5`.
 
-Without the package, the variable on the right and the variable on the left must have the same type. Gum does not convert between types, so a reference such as `Width = Source.IsBold` or `Width = Source.Text` does not work. Add `Gum.Expressions` when the types differ.
+Without the package, the variable on the right and the variable on the left must have the same type. When they differ, such as `Width = Source.IsBold`, the variable on the left keeps its current value and Gum reports an error that names the reference. The error appears as a `[Gum]` line on `Console.Error` and through `CustomSetPropertyOnRenderable.PropertyAssignmentError`, once for each broken reference on each component.
+
+The error tells you to add `Gum.Expressions` when it converts that pair: `int`, `float`, and `double` among themselves, any value into a `string`, and a `string` into an enum. A pair it cannot convert, such as a `bool` or `string` into a number, a number into a `bool`, or one enum into another, gets an error that says so. A `FontSize` accepts an `int` or a `float`, and an enum variable accepts an `int`, so those references apply as written.
 
 ### With Gum.Expressions
 
@@ -263,7 +265,7 @@ After you call `GumExpressionService.Initialize()`, Gum evaluates the right side
 | Text or a `bool` | A number (`int`, `float`, or `double`) | The reference is not applied and the variable keeps its current value. Text such as `"12"` is not turned into a number. |
 | Anything else that does not fit, such as a number into a `bool` | Any | The reference is not applied and the variable keeps its current value. |
 
-A fractional `FontSize` is the one value that does not carry over unchanged. `FontSize` is saved as an `int`, so the result of a reference is truncated when Gum writes it to `FontSize`. A `FontSize` of `12.5` set in code is read as `12.5` inside an expression, but a plain `FontSize = Source.FontSize` writes `12`. The same truncation applies to any fractional result written to an `int` variable, including `OutlineThickness`, the `Red`, `Green`, `Blue`, and `Alpha` color channels, `TextureLeft`, `TextureTop`, `TextureWidth`, `TextureHeight`, `AutoGridHorizontalCells`, and `AutoGridVerticalCells`.
+A fractional `FontSize` is the one value that does not carry over unchanged. `FontSize` is saved as an `int`, so the result of a reference is truncated when Gum writes it to `FontSize`. A `FontSize` of `12.5` set in code is read as `12.5` inside an expression, but a plain `FontSize = Source.FontSize` writes `12`. The same truncation applies to any fractional result written to an `int` variable.
 
 For nullable variables, see the nullable paragraph in [Live Updates Within a Component](#live-updates-within-a-component).
 
