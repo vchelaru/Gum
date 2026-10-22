@@ -1222,7 +1222,7 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     private float StyledLineHeight(float baseScale, float tallestSizeRunScale)
     {
-        return LineHeightInPixels * System.Math.Max(baseScale * LineHeightMultiplier, tallestSizeRunScale);
+        return TextLineHeight.Compute(LineHeightInPixels, baseScale, LineHeightMultiplier, tallestSizeRunScale);
     }
 
     /// <summary>
