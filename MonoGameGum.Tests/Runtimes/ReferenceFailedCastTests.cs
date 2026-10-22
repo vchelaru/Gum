@@ -154,6 +154,17 @@ public class ReferenceFailedCastTests : BaseTestClass
         return data;
     }
 
+    // The matrix's source and target columns, for tests that decide the outcome themselves.
+    public static TheoryData<string, object?, string, object> MatrixPairs()
+    {
+        TheoryData<string, object?, string, object> data = new();
+        foreach (object[] row in Matrix())
+        {
+            data.Add((string)row[0], row[1], (string)row[2], row[3]);
+        }
+        return data;
+    }
+
     [Theory]
     [MemberData(nameof(Matrix))]
     public void ApplyAllVariableReferences_EverySourceIntoEveryTargetWithGumExpressions_AppliesOrKeepsTheValueAndReportsOnce(
@@ -333,9 +344,9 @@ public class ReferenceFailedCastTests : BaseTestClass
 
     // The package never does worse than none: every pair that applies without it applies with it, with no report.
     [Theory]
-    [MemberData(nameof(Matrix))]
+    [MemberData(nameof(MatrixPairs))]
     public void ApplyAllVariableReferences_PairThatAppliesWithoutGumExpressions_AppliesWithGumExpressionsToo(
-        string source, object? sourceValue, string target, object old, Outcome outcome, object? expected)
+        string source, object? sourceValue, string target, object old)
     {
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ComponentSave withoutPackage = BuildMatrixPair(source, sourceValue, target, old, useExpressions: false);

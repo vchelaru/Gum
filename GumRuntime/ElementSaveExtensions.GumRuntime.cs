@@ -45,7 +45,8 @@ namespace GumRuntime
         // CustomEvaluateExpression (which can only return null) so the reference can say why it was not applied (#6463).
         // TryReadReference clears it before each evaluation and reads it right after, so an evaluator that does not set it
         // simply reports nothing. It is a side channel, not a second evaluation: a live row that is refused every frame
-        // must not evaluate twice.
+        // must not evaluate twice. Evaluators must not nest: a wrapper that evaluates a second expression inside
+        // CustomEvaluateExpression makes the outer reference report the inner value.
 #nullable enable
         [ThreadStatic]
         internal static object? RejectedCastValue;
