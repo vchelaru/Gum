@@ -1230,6 +1230,12 @@ namespace GumRuntime
             public string? VariableName;
             public object? OldValue;
             public object? NewValue;
+
+            /// <summary>
+            /// True when <see cref="NewValue"/> is null because the reference evaluated to null for a nullable
+            /// variable and null was written (see <c>propagateNull</c>), not because nothing was evaluated.
+            /// </summary>
+            public bool AssignsNull;
         }
 
         /// <summary>
@@ -1246,6 +1252,13 @@ namespace GumRuntime
         /// rendered, in which case such identifiers are simply unresolvable.
         /// </summary>
         public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
+        {
+            return ApplyVariableReferencesOnSpecificOwner(instanceLeft, referenceString, stateSave, liveRoot, propagateNull: false);
+        }
+
+        // propagateNull: when true, a null result is written to a nullable variable instead of being skipped.
+#nullable enable
+        internal static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot, bool propagateNull)
         {
 
             //////////////////////////////Early Out/////////////////////////////////
@@ -1283,7 +1296,10 @@ namespace GumRuntime
 
             object? valueBefore = null;
             string? effectiveLeft = null;
-            if (value != null)
+            // A null result is a value only for a nullable variable (MinWidth = Other.MinWidth where Other has none),
+            // and only when the caller asks (live re-evaluation); otherwise null means nothing was evaluated.
+            bool assignsNull = value == null && propagateNull && leftSideType != null && leftSideType.EndsWith("?");
+            if (value != null || assignsNull)
             {
                 if (instanceLeft == null)
                 {
@@ -1294,16 +1310,18 @@ namespace GumRuntime
                     effectiveLeft = $"{instanceLeft.Name}.{left}";
                 }
                 valueBefore = stateSave.GetValue(effectiveLeft);
-                stateSave.SetValue(effectiveLeft, value, instanceLeft);
+                stateSave.SetValue(effectiveLeft, value, instanceLeft, assignsNull ? leftSideType : null);
             }
 
             return new VariableReferenceAssignmentResult
             {
                 NewValue = value,
                 OldValue = valueBefore,
-                VariableName = effectiveLeft
+                VariableName = effectiveLeft,
+                AssignsNull = assignsNull
             };
         }
+#nullable restore
 
         private static object? GetRightSideValue(StateSave stateSave, string right, string? leftSideType, GraphicalUiElement? liveRoot = null)
         {

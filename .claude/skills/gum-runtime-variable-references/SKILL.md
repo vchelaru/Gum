@@ -28,6 +28,10 @@ Located in `Runtimes/GumExpressions/`. Provides Roslyn-based expression evaluati
 - `ApplyVariableReferences(ElementSave, StateSave)` — writes hard values into the StateSave. Use before creating UI.
 - `ApplyVariableReferences(GraphicalUiElement, StateSave)` — sets properties on live runtime visuals via `SetProperty`.
 
+### Nullable variables
+
+A typed set reports null too (`label.MinWidth = null` reaches `Shadow.MinWidth = MinWidth`). Live re-evaluation (`VariableReferenceGraph.Evaluate`) writes a null result only to a variable whose type ends in `?`; for any other type null still means "nothing evaluated". `EvaluatedSyntax.CastTo` accepts `float?`/`int?` targets. `TypedSetterSweep` (shared by the MonoGame and Skia tests) covers nullable variables with and without Gum.Expressions, including set back to null.
+
 ## Architecture
 
 ```

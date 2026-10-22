@@ -534,7 +534,7 @@ public partial class GraphicalUiElement
 #if !FRB
         // The property reader is not part of the FlatRedBall build.
         if (GetReferenceAudience(propertyName) != ReferenceAudience.None &&
-            this.TryGetProperty(propertyName, out object? value) && value != null)
+            this.TryGetProperty(propertyName, out object? value))
         {
             ReportReferenceSourceChanged(propertyName, value);
         }
