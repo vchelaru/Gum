@@ -285,7 +285,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Alpha
     {
         get => ContainedRenderable.Alpha;
-        set => ContainedRenderable.Alpha = value;
+        set
+        {
+            ContainedRenderable.Alpha = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -295,7 +299,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Blue
     {
         get => ContainedRenderable.Blue;
-        set => ContainedRenderable.Blue = value;
+        set
+        {
+            ContainedRenderable.Blue = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -305,7 +313,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Green
     {
         get => ContainedRenderable.Green;
-        set => ContainedRenderable.Green = value;
+        set
+        {
+            ContainedRenderable.Green = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -315,7 +327,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Red
     {
         get => ContainedRenderable.Red;
-        set => ContainedRenderable.Red = value;
+        set
+        {
+            ContainedRenderable.Red = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -325,7 +341,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public Color Color
     {
         get => ContainedRenderable.Color;
-        set => ContainedRenderable.Color = value;
+        set
+        {
+            ContainedRenderable.Color = value;
+            NotifyPropertyChanged();
+        }
     }
 
     #endregion
@@ -339,7 +359,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Blue1
     {
         get => ContainedRenderable.Blue1;
-        set => ContainedRenderable.Blue1 = value;
+        set
+        {
+            ContainedRenderable.Blue1 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -349,7 +373,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Green1
     {
         get => ContainedRenderable.Green1;
-        set => ContainedRenderable.Green1 = value;
+        set
+        {
+            ContainedRenderable.Green1 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -359,7 +387,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Red1
     {
         get => ContainedRenderable.Red1;
-        set => ContainedRenderable.Red1 = value;
+        set
+        {
+            ContainedRenderable.Red1 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -369,7 +401,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Alpha1
     {
         get => ContainedRenderable.Alpha1;
-        set => ContainedRenderable.Alpha1 = value;
+        set
+        {
+            ContainedRenderable.Alpha1 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -394,7 +430,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Blue2
     {
         get => ContainedRenderable.Blue2;
-        set => ContainedRenderable.Blue2 = value;
+        set
+        {
+            ContainedRenderable.Blue2 = value;
+            NotifyPropertyChanged();
+        }
     }
 
 
@@ -405,7 +445,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Green2
     {
         get => ContainedRenderable.Green2;
-        set => ContainedRenderable.Green2 = value;
+        set
+        {
+            ContainedRenderable.Green2 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -415,7 +459,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Red2
     {
         get => ContainedRenderable.Red2;
-        set => ContainedRenderable.Red2 = value;
+        set
+        {
+            ContainedRenderable.Red2 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -425,7 +473,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int Alpha2
     {
         get => ContainedRenderable.Alpha2;
-        set => ContainedRenderable.Alpha2 = value;
+        set
+        {
+            ContainedRenderable.Alpha2 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -449,7 +501,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float GradientX1
     {
         get => ContainedRenderable.GradientX1;
-        set => ContainedRenderable.GradientX1 = value;
+        set
+        {
+            ContainedRenderable.GradientX1 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -458,7 +514,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public GeneralUnitType GradientX1Units
     {
         get => ContainedRenderable.GradientX1Units;
-        set => ContainedRenderable.GradientX1Units = value;
+        set
+        {
+            ContainedRenderable.GradientX1Units = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -467,7 +527,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float GradientY1
     {
         get => ContainedRenderable.GradientY1;
-        set => ContainedRenderable.GradientY1 = value;
+        set
+        {
+            ContainedRenderable.GradientY1 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -476,7 +540,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public GeneralUnitType GradientY1Units
     {
         get => ContainedRenderable.GradientY1Units;
-        set => ContainedRenderable.GradientY1Units = value;
+        set
+        {
+            ContainedRenderable.GradientY1Units = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -485,7 +553,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float GradientX2
     {
         get => ContainedRenderable.GradientX2;
-        set => ContainedRenderable.GradientX2 = value;
+        set
+        {
+            ContainedRenderable.GradientX2 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -494,7 +566,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public GeneralUnitType GradientX2Units
     {
         get => ContainedRenderable.GradientX2Units;
-        set => ContainedRenderable.GradientX2Units = value;
+        set
+        {
+            ContainedRenderable.GradientX2Units = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -503,7 +579,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float GradientY2
     {
         get => ContainedRenderable.GradientY2;
-        set => ContainedRenderable.GradientY2 = value;
+        set
+        {
+            ContainedRenderable.GradientY2 = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -512,7 +592,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public GeneralUnitType GradientY2Units
     {
         get => ContainedRenderable.GradientY2Units;
-        set => ContainedRenderable.GradientY2Units = value;
+        set
+        {
+            ContainedRenderable.GradientY2Units = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -523,7 +607,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public bool UseGradient
     {
         get => ContainedRenderable.UseGradient;
-        set => ContainedRenderable.UseGradient = value;
+        set
+        {
+            ContainedRenderable.UseGradient = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -532,7 +620,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public GradientType GradientType
     {
         get => ContainedRenderable.GradientType;
-        set => ContainedRenderable.GradientType = value;
+        set
+        {
+            ContainedRenderable.GradientType = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -543,7 +635,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float GradientInnerRadius
     {
         get => ContainedRenderable.GradientInnerRadius;
-        set => ContainedRenderable.GradientInnerRadius = value;
+        set
+        {
+            ContainedRenderable.GradientInnerRadius = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -556,7 +652,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public DimensionUnitType GradientInnerRadiusUnits
     {
         get => ContainedRenderable.GradientInnerRadiusUnits;
-        set => ContainedRenderable.GradientInnerRadiusUnits = value;
+        set
+        {
+            ContainedRenderable.GradientInnerRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -565,7 +665,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float GradientOuterRadius
     {
         get => ContainedRenderable.GradientOuterRadius;
-        set => ContainedRenderable.GradientOuterRadius = value;
+        set
+        {
+            ContainedRenderable.GradientOuterRadius = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -578,7 +682,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public DimensionUnitType GradientOuterRadiusUnits
     {
         get => ContainedRenderable.GradientOuterRadiusUnits;
-        set => ContainedRenderable.GradientOuterRadiusUnits = value;
+        set
+        {
+            ContainedRenderable.GradientOuterRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
     }
 
     #endregion
@@ -592,7 +700,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int DropshadowAlpha
     {
         get => ContainedRenderable.DropshadowAlpha;
-        set => ContainedRenderable.DropshadowAlpha = value;
+        set
+        {
+            ContainedRenderable.DropshadowAlpha = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -602,7 +714,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int DropshadowBlue
     {
         get => ContainedRenderable.DropshadowBlue;
-        set => ContainedRenderable.DropshadowBlue = value;
+        set
+        {
+            ContainedRenderable.DropshadowBlue = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -612,7 +728,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int DropshadowGreen
     {
         get => ContainedRenderable.DropshadowGreen;
-        set => ContainedRenderable.DropshadowGreen = value;
+        set
+        {
+            ContainedRenderable.DropshadowGreen = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -622,7 +742,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public int DropshadowRed
     {
         get => ContainedRenderable.DropshadowRed;
-        set => ContainedRenderable.DropshadowRed = value;
+        set
+        {
+            ContainedRenderable.DropshadowRed = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -646,7 +770,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public bool HasDropshadow
     {
         get => ContainedRenderable.HasDropshadow;
-        set => ContainedRenderable.HasDropshadow = value;
+        set
+        {
+            ContainedRenderable.HasDropshadow = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -655,7 +783,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float DropshadowOffsetX
     {
         get => ContainedRenderable.DropshadowOffsetX;
-        set => ContainedRenderable.DropshadowOffsetX = value;
+        set
+        {
+            ContainedRenderable.DropshadowOffsetX = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -664,7 +796,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float DropshadowOffsetY
     {
         get => ContainedRenderable.DropshadowOffsetY;
-        set => ContainedRenderable.DropshadowOffsetY = value;
+        set
+        {
+            ContainedRenderable.DropshadowOffsetY = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -674,14 +810,22 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public float DropshadowBlurX
     {
         get => ContainedRenderable.DropshadowBlurX;
-        set => ContainedRenderable.DropshadowBlurX = value;
+        set
+        {
+            ContainedRenderable.DropshadowBlurX = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <inheritdoc cref="DropshadowBlurX"/>
     public float DropshadowBlurY
     {
         get => ContainedRenderable.DropshadowBlurY;
-        set => ContainedRenderable.DropshadowBlurY = value;
+        set
+        {
+            ContainedRenderable.DropshadowBlurY = value;
+            NotifyPropertyChanged();
+        }
     }
 
     #endregion
@@ -694,7 +838,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public bool IsFilled
     {
         get => ContainedRenderable.IsFilled;
-        set => ContainedRenderable.IsFilled = value;
+        set
+        {
+            ContainedRenderable.IsFilled = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -703,9 +851,15 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     /// </summary>
     public float StrokeWidth
     {
-        get;
-        set;
+        get => _strokeWidth;
+        set
+        {
+            _strokeWidth = value;
+            NotifyPropertyChanged();
+        }
     }
+
+    float _strokeWidth;
 
     /// <summary>
     /// Gets or sets the unit of measurement used for the stroke width. Supported values are
@@ -717,9 +871,15 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     /// </summary>
     public DimensionUnitType StrokeWidthUnits
     {
-        get;
-        set;
+        get => _strokeWidthUnits;
+        set
+        {
+            _strokeWidthUnits = value;
+            NotifyPropertyChanged();
+        }
     }
+
+    DimensionUnitType _strokeWidthUnits;
 
     /// <summary>
     /// Length of each dash segment in pixels when stroking a dashed outline. A value of 0 (the
@@ -729,9 +889,15 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     /// </summary>
     public float StrokeDashLength
     {
-        get;
-        set;
+        get => _strokeDashLength;
+        set
+        {
+            _strokeDashLength = value;
+            NotifyPropertyChanged();
+        }
     }
+
+    float _strokeDashLength;
 
     /// <summary>
     /// Length of the gap between dashes in pixels when stroking a dashed outline. Ignored when
@@ -739,9 +905,15 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     /// </summary>
     public float StrokeGapLength
     {
-        get;
-        set;
+        get => _strokeGapLength;
+        set
+        {
+            _strokeGapLength = value;
+            NotifyPropertyChanged();
+        }
     }
+
+    float _strokeGapLength;
 
     /// <summary>
     /// When <c>true</c> (the default) the shape's edges are rendered with 1 px of anti-aliasing,
@@ -757,9 +929,15 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     /// </summary>
     public bool IsAntialiased
     {
-        get;
-        set;
-    } = true;
+        get => _isAntialiased;
+        set
+        {
+            _isAntialiased = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    bool _isAntialiased = true;
 
     #endregion
 
