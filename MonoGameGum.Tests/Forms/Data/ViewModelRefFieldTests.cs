@@ -1,10 +1,12 @@
 using Gum.Mvvm;
 using MonoGameGum.TestsCommon;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms.Data;
@@ -36,7 +38,9 @@ public class ViewModelRefFieldTests : BaseTestClass
         public ObservableCollection<int>? LegacyItems
         {
             get => _legacyItems;
+#pragma warning disable CS0618 // Deliberately pins the obsolete ChangeAndNotify.
             set => ChangeAndNotify(ref _legacyItems, value);
+#pragma warning restore CS0618
         }
 
         [DependsOn(nameof(IntValue))]
@@ -77,6 +81,21 @@ public class ViewModelRefFieldTests : BaseTestClass
 
         vm.IntValue.ShouldBe(1);
         vm.Named.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ChangeAndNotify_IsObsoleteWarning_PointingAtSet()
+    {
+        MethodInfo method = typeof(ViewModel)
+            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+            .Single(m => m.Name == "ChangeAndNotify");
+
+        ObsoleteAttribute? obsolete = method.GetCustomAttribute<ObsoleteAttribute>();
+
+        obsolete.ShouldNotBeNull();
+        obsolete.IsError.ShouldBeFalse();
+        obsolete.Message.ShouldContain("Set");
+        obsolete.Message.ShouldContain("October 2026");
     }
 
     [Fact]
