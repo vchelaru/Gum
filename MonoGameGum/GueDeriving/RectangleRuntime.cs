@@ -1768,6 +1768,7 @@ public class RectangleRuntime : GraphicalUiElement
         {
             base.DropshadowBlurX = value;
             base.DropshadowBlurY = value;
+            NotifyPropertyChanged();
         }
     }
 
@@ -1799,22 +1800,76 @@ public class RectangleRuntime : GraphicalUiElement
     /// <see cref="PreRender"/> so the outline traces the same rounded corners as the fill.
     /// Default of 0 keeps the historical hard-cornered visual.
     /// </summary>
-    public float CornerRadius { get; set; }
+    float _skiaCornerRadius;
+    public float CornerRadius
+    {
+        get => _skiaCornerRadius;
+        set
+        {
+            _skiaCornerRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <inheritdoc cref="RectangleRuntime.CornerRadius"/>
-    public float? CustomRadiusTopLeft { get; set; }
+    float? _skiaCustomRadiusTopLeft;
+    public float? CustomRadiusTopLeft
+    {
+        get => _skiaCustomRadiusTopLeft;
+        set
+        {
+            _skiaCustomRadiusTopLeft = value;
+            NotifyPropertyChanged();
+        }
+    }
     /// <inheritdoc cref="RectangleRuntime.CornerRadius"/>
-    public float? CustomRadiusTopRight { get; set; }
+    float? _skiaCustomRadiusTopRight;
+    public float? CustomRadiusTopRight
+    {
+        get => _skiaCustomRadiusTopRight;
+        set
+        {
+            _skiaCustomRadiusTopRight = value;
+            NotifyPropertyChanged();
+        }
+    }
     /// <inheritdoc cref="RectangleRuntime.CornerRadius"/>
-    public float? CustomRadiusBottomLeft { get; set; }
+    float? _skiaCustomRadiusBottomLeft;
+    public float? CustomRadiusBottomLeft
+    {
+        get => _skiaCustomRadiusBottomLeft;
+        set
+        {
+            _skiaCustomRadiusBottomLeft = value;
+            NotifyPropertyChanged();
+        }
+    }
     /// <inheritdoc cref="RectangleRuntime.CornerRadius"/>
-    public float? CustomRadiusBottomRight { get; set; }
+    float? _skiaCustomRadiusBottomRight;
+    public float? CustomRadiusBottomRight
+    {
+        get => _skiaCustomRadiusBottomRight;
+        set
+        {
+            _skiaCustomRadiusBottomRight = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <summary>
     /// Unit of measurement for <see cref="CornerRadius"/> and per-corner overrides. Mirrors
     /// <see cref="SkiaShapeRuntime.StrokeWidthUnits"/>: <c>ScreenPixel</c> divides by camera zoom each frame.
     /// </summary>
-    public DimensionUnitType CornerRadiusUnits { get; set; }
+    DimensionUnitType _skiaCornerRadiusUnits;
+    public DimensionUnitType CornerRadiusUnits
+    {
+        get => _skiaCornerRadiusUnits;
+        set
+        {
+            _skiaCornerRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     /// <inheritdoc/>
     public override void PreRender()

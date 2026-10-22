@@ -1686,6 +1686,7 @@ public class CircleRuntime : GraphicalUiElement
         {
             base.DropshadowBlurX = value;
             base.DropshadowBlurY = value;
+            NotifyPropertyChanged();
         }
     }
 
