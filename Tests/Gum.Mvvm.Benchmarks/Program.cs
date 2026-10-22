@@ -7,6 +7,8 @@ using Gum.Mvvm.Benchmarks;
 // Usage: dotnet run -c Release --project Tests/Gum.Mvvm.Benchmarks -- [--quick] [--runs <n>] [--type <name>] [--out <file>]
 bool quick = args.Contains("--quick");
 string? typeFilter = ValueOf("--type");
+// --types a,b,c: exact type names (case-insensitive); a quick way to run a subset for alternating comparisons.
+string[]? typeList = ValueOf("--types")?.Split(',');
 string? outputPath = ValueOf("--out");
 Settings settings = quick ? Settings.Quick : Settings.Full;
 if (ValueOf("--runs") is string runsText)
@@ -52,7 +54,7 @@ void RunType<T, TVm, TPlain>(
     where TVm : struct, IAccessor<T>
     where TPlain : struct, IAccessor<T>
 {
-    if (typeFilter != null && !type.Contains(typeFilter, StringComparison.OrdinalIgnoreCase))
+    if (!TypeSelected(type))
     {
         return;
     }
@@ -76,7 +78,25 @@ void RunType<T, TVm, TPlain>(
     Record(type, "vm.setNewSub", n => Loops.SetNew(withSubscriber, a, b, n));
     Record(type, "vm.setNewDep", n => Loops.SetNew(withDependent, a, b, n));
     Record(type, "vm.setQuiet", n => Loops.SetQuiet(viewModel, a, b, n));
+
+    // Field style (#6356): Set(ref _v, value); same property, same values.
+    RefViewModel<T> refPlain = new(a);
+    RefViewModel<T> refSubscribed = new(a);
+    refSubscribed.PropertyChanged += subscriber.OnPropertyChanged;
+    RefAccessor<T> refAccessor = new(refPlain);
+    RefAccessor<T> refSubAccessor = new(refSubscribed);
+    RefAccessor<T> refDepAccessor = new(new RefViewModelWithDependent<T>(a));
+    Record(type, "rvm.get", n => Loops.Get<T, RefAccessor<T>>(refAccessor, n));
+    Record(type, "rvm.setSame", n => Loops.SetSame(refAccessor, a, n));
+    Record(type, "rvm.setNew", n => Loops.SetNew(refAccessor, a, b, n));
+    Record(type, "rvm.setNewSub", n => Loops.SetNew(refSubAccessor, a, b, n));
+    Record(type, "rvm.setNewDep", n => Loops.SetNew(refDepAccessor, a, b, n));
+    Record(type, "rvm.setQuiet", n => Loops.SetQuiet(refAccessor, a, b, n));
 }
+
+bool TypeSelected(string type) =>
+    (typeFilter == null || type.Contains(typeFilter, StringComparison.OrdinalIgnoreCase)) &&
+    (typeList == null || typeList.Contains(type, StringComparer.OrdinalIgnoreCase));
 
 RunType("string", m => new VmText(m), m => new PlainText(m), Values.TextA, Values.TextB);
 RunType("ObservableCollection<int>", m => new VmItems(m), m => new PlainItems(m), Values.ItemsA, Values.ItemsB);
@@ -93,7 +113,7 @@ RunType("struct 16 B, no IEquatable", m => new VmUnequatable(m), m => new PlainU
     Values.UnequatableA, Values.UnequatableB);
 
 // ChangeAndNotify over a backing field: the notification cost without the property dictionary.
-if (typeFilter == null)
+if (typeFilter == null && typeList == null)
 {
     foreach ((string type, Func<FieldBackedViewModel, Action<int>> setNew) in new (string, Func<FieldBackedViewModel, Action<int>>)[]
     {
@@ -122,6 +142,12 @@ Console.WriteLine(report);
 if (outputPath != null)
 {
     File.WriteAllText(outputPath, report);
+}
+if (ValueOf("--csv") is string csvPath)
+{
+    // type;case;ns;bytes per line, for taking the median over several runs.
+    File.WriteAllLines(csvPath, results.Select(r => string.Join(';', r.Key.Type, r.Key.Case,
+        r.Value.Ns.ToString("0.###", CultureInfo.InvariantCulture), r.Value.Bytes.ToString("0.###", CultureInfo.InvariantCulture))));
 }
 
 return 0;
@@ -201,6 +227,17 @@ string BuildReport(Dictionary<(string Type, string Case), Result> results)
     sb.AppendLine(plainAllocations.Count == 0
         ? "Plain cases allocated 0 B/op."
         : $"Plain cases that allocated: {string.Join(", ", plainAllocations)}.");
+
+    sb.AppendLine();
+    sb.AppendLine("Field style, Set(ref _v, value), ns/op (B/op).");
+    sb.AppendLine();
+    sb.AppendLine("| Type | get | set same | set new | set new + 1 subscriber | set new + [DependsOn] | SetWithoutNotifying |");
+    sb.AppendLine("|---|---|---|---|---|---|---|");
+    foreach (string type in types)
+    {
+        string Cell(string name) => $"{Ns(results[(type, name)])} ({Bytes(results[(type, name)])})";
+        sb.AppendLine($"| {type} | {Cell("rvm.get")} | {Cell("rvm.setSame")} | {Cell("rvm.setNew")} | {Cell("rvm.setNewSub")} | {Cell("rvm.setNewDep")} | {Cell("rvm.setQuiet")} |");
+    }
 
     if (results.ContainsKey(("float", "field.setNew")))
     {
