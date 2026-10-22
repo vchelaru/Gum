@@ -1,3 +1,4 @@
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Collections.Generic;
 using System.Globalization;
@@ -196,5 +197,29 @@ public class TextStyledLineHeightTests
         Text text = Build("[FontScale=3]a[/FontScale]\n", 2, 1.5f);
 
         ShouldMatch(text, h, true, new[] { Run(2, 1.5f, 3), Plain(2, 1.5f) });
+    }
+
+    [Theory]
+    [InlineData("a\n", 2, 1f)]
+    [InlineData("a\n", 2, 1.5f)]
+    [InlineData("a\nb\n", 3, 1f)]
+    [InlineData("a\nb\n", 3, 1.5f)]
+    public void TrailingNewline_VerticalAlignmentCentersAndBottomsTheCountedEmptyLine(string markup, int lineCount, float multiplier)
+    {
+        float h = PlainLineHeight();
+        const float boxHeight = 400;
+        // MonoGame and Raylib place the block using every counted line, the empty last line included.
+        float drawn = lineCount * multiplier * h;
+        float tolerance = drawn * LeadingResidualFraction + ExactTolerance * h * lineCount;
+
+        Text center = Build(markup, 1, multiplier);
+        center.Height = boxHeight;
+        center.VerticalAlignment = VerticalAlignment.Center;
+        center.GetVerticalAlignmentOffset(center.GetTextBlock()).ShouldBe((boxHeight - drawn) / 2, tolerance);
+
+        Text bottom = Build(markup, 1, multiplier);
+        bottom.Height = boxHeight;
+        bottom.VerticalAlignment = VerticalAlignment.Bottom;
+        bottom.GetVerticalAlignmentOffset(bottom.GetTextBlock()).ShouldBe(boxHeight - drawn, tolerance);
     }
 }

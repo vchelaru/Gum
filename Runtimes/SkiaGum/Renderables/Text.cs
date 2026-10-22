@@ -1000,7 +1000,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <see cref="Render"/> (positioning the painted block) and <see cref="GetCharacterIndexAtPosition(float, float)"/>
     /// (converting a screen click into the same block-local coordinate space), so the two never drift apart.
     /// </summary>
-    private float GetVerticalAlignmentOffset(TextBlock textBlock)
+    internal float GetVerticalAlignmentOffset(TextBlock textBlock)
     {
         if (VerticalAlignment == VerticalAlignment.Center)
         {
