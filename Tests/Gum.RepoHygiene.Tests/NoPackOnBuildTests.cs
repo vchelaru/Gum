@@ -9,7 +9,7 @@ namespace Gum.RepoHygiene.Tests;
 /// to avoid that has to reference it with <c>AdditionalProperties="GeneratePackageOnBuild=false"</c>,
 /// which makes MSBuild build the shared libraries twice, in parallel, into the same obj folder
 /// (CS2012 / file-lock failures, #6436). Packages come only from the release workflow's explicit
-/// <c>dotnet pack</c> step.
+/// <c>dotnet pack</c> step. The one exception is <see cref="Frb1OnlyPackOnBuildProjects"/>.
 /// </summary>
 public class NoPackOnBuildTests
 {
@@ -21,16 +21,40 @@ public class NoPackOnBuildTests
     private static readonly string[] SkippedFolders =
         { "bin", "obj", "node_modules", ".git", "fna", "Sokol.NET" };
 
+    // FRB1 packages. They are published by hand from a local build, are in no solution the release
+    // workflow packs, and are not reachable from any consumer-from-source path (MonoGameGum,
+    // KernSmith.MonoGameGum, MonoGameGumShapes, GumCommon), so the double-build in #6436 cannot
+    // happen for them. FRB1 is frozen: these keep packing on build.
+    private static readonly string[] Frb1OnlyPackOnBuildProjects =
+    {
+        "GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/GumCore.DesktopGlNet6.csproj",
+        "GumCore/GumCoreXnaPc/GumCore.FNA/GumCore.FNA.csproj",
+        "GumCore/GumCoreXnaPc/GumCore.Kni.Web/GumCore.Kni.Web.csproj",
+        "GumDataTypes/GumDataTypesNet6.csproj",
+        "ToolsUtilities/ToolsUtilitiesStandard.csproj",
+    };
+
     [Fact]
-    public void NoCheckedInMsbuildFile_EnablesGeneratePackageOnBuild()
+    public void NoCheckedInMsbuildFile_EnablesGeneratePackageOnBuild_ExceptFrb1OnlyProjects()
     {
         List<string> offenders = EnumerateMsbuildFiles(RepoPaths.RepoRoot)
             .Where(path => PackOnBuildEnabled.IsMatch(File.ReadAllText(path)))
             .Select(path => Path.GetRelativePath(RepoPaths.RepoRoot, path).Replace('\\', '/'))
+            .Where(path => !Frb1OnlyPackOnBuildProjects.Contains(path))
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToList();
 
         offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Frb1OnlyProjects_StillEnableGeneratePackageOnBuild()
+    {
+        List<string> dropped = Frb1OnlyPackOnBuildProjects
+            .Where(path => !PackOnBuildEnabled.IsMatch(File.ReadAllText(Path.Combine(RepoPaths.RepoRoot, path))))
+            .ToList();
+
+        dropped.ShouldBeEmpty();
     }
 
     [Fact]

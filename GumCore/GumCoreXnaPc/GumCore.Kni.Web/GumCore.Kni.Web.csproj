@@ -13,6 +13,7 @@
 		<PackageId>FlatRedBall.GumCore.Kni.Web</PackageId>
 		<Title>GumCore for FlatRedBall (Web)</Title>
 		<Authors>FlatRedBall</Authors>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Description>Gum layout and rendering runtime, built for FlatRedBall</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>1.0.0</Version>
