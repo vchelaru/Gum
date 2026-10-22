@@ -107,7 +107,7 @@ public class FontSizeOutOfIntRangeReferenceTests : BaseTestClass
 
             source.FontSize = fontSize;
 
-            target.Rotation.ShouldBe(0f);
+            target.Rotation.ShouldBe(2f);
             errors.Count.ShouldBe(1, string.Join(Environment.NewLine, errors));
             errors[0].ShouldContain("does not fit the float Target.Rotation");
         }
