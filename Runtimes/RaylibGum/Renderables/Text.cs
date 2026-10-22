@@ -981,19 +981,6 @@ public class Text : IVisible, IRenderableIpso,
     // not sure if basesize is correct here...
     public int LineHeightInPixels => _lineHeightInPixels;
 
-    /// <summary>
-    /// <see cref="LineHeightInPixels"/> compensated for automatic font oversampling (issue #4365,
-    /// manual-test finding). LineHeightInPixels is baked from the LIVE <see cref="Font"/>'s raw metrics
-    /// -- which balloon right along with the raster once <c>RegenerateOversampledFont</c> swaps in the
-    /// oversampled Font, even though the glyph DRAW size is shrunk back down via
-    /// <see cref="EffectiveFontScale"/>. Used wherever a per-line vertical ADVANCE (not a run-relative
-    /// ratio) is computed directly from LineHeightInPixels, so line spacing doesn't visibly grow with
-    /// the oversample ratio while glyph size stays put. Not used by <see cref="DrawStyledLine"/>'s
-    /// baseline math -- there, <c>maxScale</c> (built from <see cref="ResolveRunFont"/>'s LayoutScale)
-    /// already carries this same compensation, so applying it again here would double-compensate.
-    /// </summary>
-    private float EffectiveLineHeightInPixels => LineHeightInPixels * _oversampleCompensationScale;
-
     bool IRenderable.Wrap => false;
 
 
@@ -1163,7 +1150,7 @@ public class Text : IVisible, IRenderableIpso,
             var linePosition = position;
             linePosition.Y += isStyled
                 ? styledLineTop
-                : i * EffectiveLineHeightInPixels * LineHeightMultiplier;
+                : GetLineAdvance(i, startOfLineIndex, line) * i;
 
             var substrings = InlineVariables.Count > 0
                 ? GetCachedStyledSubstrings(i, startOfLineIndex, line)
@@ -1222,18 +1209,11 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     private float GetLineAdvance(int lineIndex, int startOfLineIndex, string line)
     {
+        // lineScale is the line's absolute layout scale (FontScale, or the tallest run's scale, each already
+        // composed with OversampleCompensationScale, which shrinks the oversampled font's larger
+        // LineHeightInPixels back to the size it is drawn at). Matches MonoGame: lineHeight * scale * LineHeightMultiplier.
         float lineScale = GetLineLayoutScale(lineIndex, startOfLineIndex, line);
-        // Issue #4365: divide by EffectiveFontScale, not FontScale -- ResolveRunFont's LayoutScale
-        // (what lineScale is maxed against, see GetLineLayoutScale) now composes
-        // OversampleCompensationScale, so the divisor must too or an active oversample ratio skews
-        // every run's height factor away from its intended (ratio-to-base) value.
-        float effectiveFontScale = EffectiveFontScale;
-        float lineHeightFactor = effectiveFontScale > 0 ? lineScale / effectiveFontScale : 1;
-        // Issue #4365 (manual-test finding): lineHeightFactor above is a pure ratio (1 for a plain
-        // line, 2 for a [FontScale=2] line, etc.) normalized against EffectiveFontScale, so it no
-        // longer carries any oversample-ratio cancellation -- EffectiveLineHeightInPixels supplies
-        // that separately, or line spacing balloons with the oversample ratio (see its doc comment).
-        return EffectiveLineHeightInPixels * lineHeightFactor * LineHeightMultiplier;
+        return LineHeightInPixels * lineScale * LineHeightMultiplier;
     }
 
     /// <summary>
