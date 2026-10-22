@@ -283,6 +283,60 @@ public class EvaluatedSyntaxTests : BaseTestClass
         result.Value.ShouldBe("42");
     }
 
+    [Fact]
+    public void CastTo_EnumOfAnotherEnumType_Fails()
+    {
+        StateSave state = BuildState(("Instance.YOrigin", RenderingLibrary.Graphics.VerticalAlignment.Bottom, "VerticalAlignment"));
+
+        EvaluatedSyntax result = Evaluate("Instance.YOrigin", state);
+
+        result.CastTo("HorizontalAlignment").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CastTo_EnumOfTheSameEnumType_Succeeds()
+    {
+        StateSave state = BuildState(("Instance.XOrigin", RenderingLibrary.Graphics.HorizontalAlignment.Right, "HorizontalAlignment"));
+
+        EvaluatedSyntax result = Evaluate("Instance.XOrigin", state);
+
+        result.CastTo("HorizontalAlignment").ShouldBeTrue();
+        result.Value.ShouldBe(RenderingLibrary.Graphics.HorizontalAlignment.Right);
+    }
+
+    [Fact]
+    public void CastTo_WholeNumberToEnum_SelectsTheEnumValue()
+    {
+        StateSave state = BuildState(("Instance.Width", 2, "int"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width", state);
+
+        result.CastTo("HorizontalAlignment").ShouldBeTrue();
+        result.Value.ShouldBe(RenderingLibrary.Graphics.HorizontalAlignment.Right);
+    }
+
+    [Fact]
+    public void CastTo_TextNamingAnEnumValueToEnum_SelectsTheEnumValueIgnoringCase()
+    {
+        StateSave state = BuildState(("Instance.Text", "rIGHT", "string"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Text", state);
+
+        result.CastTo("HorizontalAlignment").ShouldBeTrue();
+        result.Value.ShouldBe(RenderingLibrary.Graphics.HorizontalAlignment.Right);
+    }
+
+    [Fact]
+    public void CastTo_EnumToString_WritesTheValueName()
+    {
+        StateSave state = BuildState(("Instance.XOrigin", RenderingLibrary.Graphics.HorizontalAlignment.Right, "HorizontalAlignment"));
+
+        EvaluatedSyntax result = Evaluate("Instance.XOrigin", state);
+
+        result.CastTo("string").ShouldBeTrue();
+        result.Value.ShouldBe("Right");
+    }
+
     #endregion
 
     #region ComparisonOperators

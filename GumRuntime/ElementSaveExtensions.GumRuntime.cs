@@ -1197,12 +1197,19 @@ namespace GumRuntime
             return GetRootVariable(leftVariableName, instanceLeft, stateSave)?.Type;
         }
 
+
 #nullable enable
         private static VariableSave? GetRootVariable(string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave)
         {
             // Variable references need a state owned by an element (RecursiveVariableFinder requires it).
             var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer!;
             return ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance);
+        }
+
+        // The type of the variable a reference row writes: what the state says, else the element's root definition.
+        private static string? GetLeftSideType(VariableSave? leftVariableOnState, string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave)
+        {
+            return leftVariableOnState?.Type ?? GetRootVariableType(leftVariableName, instanceLeft, stateSave);
         }
 #nullable restore
 
@@ -1348,11 +1355,7 @@ namespace GumRuntime
                 : instanceLeft.Name + "." + left;
 
             VariableSave? leftVariableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
-            leftSideType = leftVariableOnState?.Type;
-            if (leftSideType == null)
-            {
-                leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
-            }
+            leftSideType = GetLeftSideType(leftVariableOnState, leftVariableName, instanceLeft, stateSave);
 
             right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
 
@@ -1366,6 +1369,21 @@ namespace GumRuntime
             {
                 value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
                 sourceType = CustomEvaluateExpression == null ? "bool" : null;
+                if (value == null && CustomEvaluateExpression != null && leftSideType != null
+                    && !IsPrimitiveTypeName(StripNullable(leftSideType)) && !IsNegation(right))
+                {
+                    // Gum.Expressions refuses an enum value of another enum type, which leaves no value to say why.
+                    // For an enum target, read the plain reference to name the source's type for the report.
+                    object? plainValue = ReadPlainReference(stateSave, right, findSourceType: true, out sourceType);
+                    if (!(plainValue is Enum))
+                    {
+                        sourceType = null;
+                    }
+                    else
+                    {
+                        value = plainValue;
+                    }
+                }
             }
 
             if (ReportedMismatch(referenceString, right, left, leftVariableName, leftSideType, sourceType, value, leftVariableOnState, instanceLeft, stateSave, liveRoot))
@@ -1395,7 +1413,9 @@ namespace GumRuntime
             string? leftSideType, string? sourceType, object? value, VariableSave? leftVariableOnState, InstanceSave? instanceLeft,
             StateSave stateSave, GraphicalUiElement? liveRoot)
         {
-            if (value == null || leftSideType == null || CustomEvaluateExpression != null)
+            // With Gum.Expressions the evaluator converts what it can, so only an enum value it refused (sourceType is
+            // set for nothing else, see TryReadReference) is judged here.
+            if (value == null || leftSideType == null || (CustomEvaluateExpression != null && sourceType == null))
             {
                 return false;
             }
@@ -1681,13 +1701,8 @@ namespace GumRuntime
             var left = split[0];
             var leftVariableName = instanceLeft == null ? left : instanceLeft.Name + "." + left;
 
-            string? leftSideType = null;
             var variableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
-            leftSideType = variableOnState?.Type;
-            if (leftSideType == null)
-            {
-                leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
-            }
+            string? leftSideType = GetLeftSideType(variableOnState, leftVariableName, instanceLeft, stateSave);
 
             var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
             var values =GetAllRightSideValues(stateSave, right, leftSideType, liveRoot).ToList();

@@ -1266,6 +1266,14 @@ public class EvaluatedSyntax
                     return true;
                 }
 
+                // A value of a different enum type (VerticalAlignment.Bottom into a HorizontalAlignment variable) has no
+                // meaning as this one: its number would select an unrelated value, so the cast fails (#6441). A whole
+                // number and a name still select a value.
+                if (this.Value is Enum && this.Value.GetType().Name != enumType.Name)
+                {
+                    return false;
+                }
+
                 try
                 {
                     this.Value = this.Value is string enumName

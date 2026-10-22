@@ -28,4 +28,10 @@ KernSmith picks a glyph rasterizer via `RasterizerBackend`, each backend its own
 
 `GumFontGenerator.Generate` throws `PlatformNotSupportedException` when called on browser-wasm with no explicit `backend` argument, instead of leaving the failure to KernSmith or a silent fallback — see `GumFontGenerator.IsBrowserPlatform` (test seam for `OperatingSystem.IsBrowser`).
 
+## Mobile builds and package references
+
+`KernSmith.GumCommon` and `KernSmith.MonoGameGum` add `net9.0-ios` / `net9.0-android` behind the same `IncludeIOS` / `IncludeAndroid` opt-in as `MonoGameGum.csproj`. The mobile builds reference `KernSmith.Rasterizers.StbTrueType` instead of FreeType (its native library does not link on iOS), and `GumFontGenerator.GetPlatformDefaultBackend` makes StbTrueType the default there. `GumFontGenerator` force-runs the StbTrueType static constructor whenever the resolved backend is StbTrueType, passed or defaulted, because trimmed builds drop KernSmith's backend discovery.
+
+A packed project must reference an engine platform package (`MonoGame.Framework.*`, `nkast.*`) with `PrivateAssets="All"`, or every consumer restores a second MonoGame. `Tests/Gum.RepoHygiene.Tests/PackedPlatformPackageTests.cs` enforces it, and `KernSmithMobilePackagingTests.cs` pins the mobile conditions, since the mobile TFMs cannot be built without workloads.
+
 See `docs/code/files-and-fonts/font-strategies.md` for the user-facing font strategy comparison.
