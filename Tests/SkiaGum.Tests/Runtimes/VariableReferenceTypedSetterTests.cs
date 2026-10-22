@@ -58,13 +58,15 @@ public class VariableReferenceTypedSetterTests : IDisposable
 
     private sealed class MissingDocumentContentLoader(IContentLoader? inner) : IContentLoader
     {
-        private static bool IsDocument<T>() => typeof(T) == typeof(Animation) || typeof(T) == typeof(SKSvg);
+        // Only a path that is not a file is treated as missing, so a file that exists and fails to load still throws.
+        private static bool IsMissingDocument<T>(string contentName) =>
+            (typeof(T) == typeof(Animation) || typeof(T) == typeof(SKSvg)) && !File.Exists(contentName);
 
         public T? LoadContent<T>(string contentName) =>
-            IsDocument<T>() || inner == null ? default : inner.LoadContent<T>(contentName);
+            IsMissingDocument<T>(contentName) || inner == null ? default : inner.LoadContent<T>(contentName);
 
         public T? TryLoadContent<T>(string contentName) =>
-            IsDocument<T>() || inner == null ? default : inner.TryLoadContent<T>(contentName);
+            IsMissingDocument<T>(contentName) || inner == null ? default : inner.TryLoadContent<T>(contentName);
     }
 
     // SpriteRuntime.SourceFile always reads null (it loads a texture or animation chains), so there is no value to follow.

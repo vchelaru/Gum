@@ -1100,15 +1100,22 @@ public partial class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
         }
-        else if(containedObjectAsIpso is VectorSprite)
+        else if(containedObjectAsIpso is VectorSprite asSvg)
         {
-            // VectorSprite is not a RenderableShapeBase, so it goes through SvgRuntime plus the
-            // reflection fallback. No shared shape-base properties (Blend, etc.) apply. Writing the
-            // renderable directly would leave SvgRuntime.SourceFile stale, so a same-component
-            // reference reading it would never see the value (#6422).
+            // VectorSprite is not a RenderableShapeBase, so it stays on its dedicated handler
+            // plus the reflection fallback. No shared shape-base properties (Blend, etc.) apply.
+            // A SvgRuntime takes SourceFile through its own setter, which a variable reference
+            // reads back; writing the renderable directly would leave it stale (#6422). A project
+            // instance is a plain GraphicalUiElement (Skia registers no SvgRuntime for "Svg"), so
+            // the handler below still serves it. A missing file throws on both paths.
+            if(!handled && propertyName == "SourceFile" && graphicalUiElement is SvgRuntime svgRuntime)
+            {
+                svgRuntime.SourceFile = value as string;
+                handled = true;
+            }
             if(!handled)
             {
-                handled = TrySetPropertyOnRuntime(graphicalUiElement, propertyName, value);
+                handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
             }
         }
         else if(containedObjectAsIpso is Sprite asSprite)
@@ -1548,6 +1555,27 @@ public partial class CustomSetPropertyOnRenderable
                     return true;
                 }
                 break;
+        }
+        return false;
+    }
+
+    private static bool TrySetPropertyOnSvg(VectorSprite asSvg, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        switch(propertyName) 
+        {
+            case "SourceFile":
+                var asString = value as string;
+
+                if(!string.IsNullOrEmpty(asString))
+                {
+                    asSvg.Texture = RenderingLibrary.Content.ContentLoader.LoadSvg(asString);
+                }
+                else
+                {
+                    asSvg.Texture = null;
+                }
+                graphicalUiElement.UpdateLayout();
+                return true;
         }
         return false;
     }
