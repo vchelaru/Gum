@@ -335,7 +335,7 @@ public static class IWrappedTextExtensions
                     else
                     {
                         // Track zero-width space positions as preferred break points for mid-word wrapping.
-                        // When a line needs to wrap mid-word, we prefer breaking at zero-width space (​)
+                        // When a line needs to wrap mid-word, we prefer breaking at zero-width space (\u200B)
                         // positions if they exist, as they indicate logical break points in the text.
                         int? preferredBreakIndex = null;
 
@@ -346,7 +346,7 @@ public static class IWrappedTextExtensions
                             float substringLength = textInstance.MeasureString(stringToUse.AsSpan(wordStart, i + 1), absoluteLineStartIndex);
 
                             // Check if there's a zero-width space at this position that could be a preferred break point
-                            if (stringToUse[wordStart + i] == '​' && substringLength < wrappingWidth)
+                            if (stringToUse[wordStart + i] == '\u200B' && substringLength < wrappingWidth)
                             {
                                 preferredBreakIndex = i;
                             }
