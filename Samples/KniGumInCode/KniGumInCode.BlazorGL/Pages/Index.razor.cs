@@ -26,6 +26,9 @@ namespace KniGumInCode.Pages
             {
                 _game = new KniGumInCodeGame();
                 _game.Run();
+#if GUM_AUTOMATION
+                KniGumInCode.Automation.GumAutomationBridge.Install(JsRuntime, _game);
+#endif
             }
 
             // run gameloop
