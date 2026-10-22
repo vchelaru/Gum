@@ -391,7 +391,7 @@ public partial class GraphicalUiElement
     /// <remarks>
     /// Animations and state application call this for you. Call it directly after changing a variable
     /// through a typed property, such as <c>element.X = 5</c>, when a reference reads it. Rows read every other
-    /// variable from the element's authored values.
+    /// variable at the value the element holds now, falling back to the authored value for one it cannot read.
     /// </remarks>
     /// <param name="changedVariables">The variables that changed, with their new values. Names are relative to this element,
     /// such as <c>Progress</c> or <c>Instance.Width</c>.</param>
@@ -421,9 +421,116 @@ public partial class GraphicalUiElement
         for (int i = 0; i < changedVariables.Count; i++)
         {
             evaluationState.Variables.Add(changedVariables[i]);
+            RecordReferenceInput(changedVariables[i].Name, changedVariables[i].Value);
         }
 
+        // Every other input a row reads is the value the object holds now, not the authored one (#6411).
+        AddLiveInputs(affected, evaluationState);
+
         VariableReferenceGraph.Evaluate(affected, evaluationState, this);
+    }
+
+    // Variables that have no property on the visual (a component's custom variables) are not held
+    // anywhere on the live object, so the last value reported for each is kept here. Read only when the
+    // object cannot be asked, and only for names some row reads.
+    private Dictionary<string, object?>? _referenceInputs;
+
+    // Keeps the value of a variable some row reads. For an instance-qualified name the instance holds it.
+    internal void RecordReferenceInput(string name, object? value)
+    {
+        GraphicalUiElement? owner = this;
+        string propertyName = name;
+        int dot = name.IndexOf('.');
+        if (dot >= 0)
+        {
+            owner = GetGraphicalUiElementByName(name.Substring(0, dot));
+            propertyName = name.Substring(dot + 1);
+        }
+        if (owner == null)
+        {
+            return;
+        }
+        owner._referenceInputs ??= new Dictionary<string, object?>();
+        owner._referenceInputs[propertyName] = value;
+    }
+
+    private bool TryReadLiveInput(string name, out object? value)
+    {
+        value = null;
+        GraphicalUiElement? owner = this;
+        string propertyName = name;
+        int dot = name.IndexOf('.');
+        if (dot >= 0)
+        {
+            owner = GetGraphicalUiElementByName(name.Substring(0, dot));
+            propertyName = name.Substring(dot + 1);
+        }
+        if (owner == null)
+        {
+            return false;
+        }
+
+        // Laid-out values are resolved by the evaluator from the live tree.
+        if (propertyName.StartsWith("Absolute", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+#if !FRB
+        // The property reader is not part of the FlatRedBall build.
+        if (owner.TryGetProperty(propertyName, out value) && value != null)
+        {
+            return true;
+        }
+#endif
+        // A null cannot be seeded: the state would fall back to the authored value for it.
+        return owner._referenceInputs != null && owner._referenceInputs.TryGetValue(propertyName, out value) && value != null;
+    }
+
+    private static bool StateHasVariable(DataTypes.Variables.StateSave state, string name)
+    {
+        for (int i = 0; i < state.Variables.Count; i++)
+        {
+            if (state.Variables[i].Name == name)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool WrittenByAny(List<ReferenceRow> rows, string name)
+    {
+        for (int i = 0; i < rows.Count; i++)
+        {
+            if (rows[i].WrittenName == name)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Puts the live value of every input the rows read into the state they evaluate against. The changed
+    // variables are already there, and a result of one of the rows is computed in order, so neither is read.
+    private void AddLiveInputs(List<ReferenceRow> rows, DataTypes.Variables.StateSave state)
+    {
+        for (int i = 0; i < rows.Count; i++)
+        {
+            string[] reads = rows[i].ReadNames;
+            for (int j = 0; j < reads.Length; j++)
+            {
+                string read = reads[j];
+                if (StateHasVariable(state, read) || WrittenByAny(rows, read))
+                {
+                    continue;
+                }
+                if (TryReadLiveInput(read, out object? value))
+                {
+                    state.Variables.Add(new DataTypes.Variables.VariableSave { Name = read, Value = value, SetsValue = true });
+                }
+            }
+        }
     }
 
     /// <summary>

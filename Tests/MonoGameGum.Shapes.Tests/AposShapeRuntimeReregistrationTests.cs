@@ -11,7 +11,7 @@ namespace MonoGameGum.Shapes.Tests;
 // AposShapeRuntime.UninitializeRuntimeTypes() (the reflection teardown hook added in #4416) never
 // resets _registered, so a subsequent Initialize's re-scan silently no-ops and Arc/ColoredCircle/
 // Line/RoundedRectangle never come back.
-public class AposShapeRuntimeReregistrationTests
+public class AposShapeRuntimeReregistrationTests : RegistrationIsolatedTest
 {
     [Fact]
     public void RegisterRuntimeTypes_AfterUninitializeRuntimeTypes_ReregistersGueInstantiation()
