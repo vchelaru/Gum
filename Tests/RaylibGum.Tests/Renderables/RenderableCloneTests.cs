@@ -188,6 +188,21 @@ public class RenderableCloneTests : BaseTestClass
         allocated.ShouldBe(0);
     }
 
+    // #6420: the scratch list that holds the last wrap's lines belongs to one Text; a clone sharing it
+    // would let one Text's re-wrap hand its lines to the other.
+    [Fact]
+    public void Text_Clone_GetsItsOwnPreviousWrappedTextScratch()
+    {
+        Text original = new(SystemManagers.Default);
+
+        Text clone = (Text)((ICloneable)original).Clone();
+
+        System.Reflection.FieldInfo field = typeof(Text).GetField(
+            "mPreviousWrappedText", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        field.GetValue(original).ShouldNotBeNull();
+        field.GetValue(clone).ShouldNotBeSameAs(field.GetValue(original));
+    }
+
     [Fact]
     public void Text_Clone_ResetsParent()
     {
