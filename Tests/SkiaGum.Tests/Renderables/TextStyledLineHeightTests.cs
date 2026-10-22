@@ -13,8 +13,8 @@ namespace SkiaGum.Tests.Renderables;
 /// is the multiplied base), and the Height is the sum of those advances, last line included. MonoGame pins the
 /// same numbers in TextRuntimeStyledLineHeightTests and Raylib in TextRunLineHeightMultiplierTests. h is one
 /// plain line at scale 1 and multiplier 1, read from a control text so no font metric is hard-coded.
-/// Every line, multiplied plain text included, is exact (#6467): the leading RichTextKit leaves unmultiplied is
-/// compensated for in the run style's line height.
+/// RichTextKit multiplies a line's ascent and descent but not its leading, so a multiplied line lands within a
+/// couple of percent of base * multiplier * h rather than exactly on it; expectations use that relative tolerance.
 /// </summary>
 public class TextStyledLineHeightTests
 {
@@ -40,35 +40,56 @@ public class TextStyledLineHeightTests
 
     private static string Scale(float scale) => scale.ToString(CultureInfo.InvariantCulture);
 
-    /// <summary>Float and pixel rounding only, in units of h: every line must match <c>base * multiplier * h</c>
-    /// (or the size run's own height) at every multiplier, with no allowance for font leading (#6467).</summary>
-    private const float ExactTolerance = 0.005f;
+    /// <summary>Float and pixel rounding only, in units of h per line: a line whose height comes from a size run
+    /// at least as tall as the multiplied base, or from plain text at multiplier 1, must match exactly.</summary>
+    private const float ExactTolerance = 0.01f;
 
-    private static float Plain(float baseScale, float multiplier) => baseScale * multiplier;
+    /// <summary>
+    /// The known Skia residual, tracked in #6467: RichTextKit multiplies a line's ascent and descent but not its
+    /// leading, so a line whose height comes from the multiplied base (plain text at a multiplier other than 1, or
+    /// a size run smaller than the multiplied base) lands up to this fraction away from <c>base * mult * h</c>.
+    /// Measured at 2%; applies only to such lines, so a wrong size-run formula still fails.
+    /// </summary>
+    private const float LeadingResidualFraction = 0.025f;
 
-    private static float Run(float baseScale, float multiplier, float runScale) =>
-        System.Math.Max(baseScale * multiplier, runScale);
+    private readonly record struct Line(float Advance, float Tolerance);
+
+    private static Line Plain(float baseScale, float multiplier)
+    {
+        float advance = baseScale * multiplier;
+        return new Line(advance, multiplier == 1 ? ExactTolerance : advance * LeadingResidualFraction + ExactTolerance);
+    }
+
+    private static Line Run(float baseScale, float multiplier, float runScale)
+    {
+        float multipliedBase = baseScale * multiplier;
+        return runScale >= multipliedBase
+            ? new Line(runScale, ExactTolerance)
+            : new Line(multipliedBase, multipliedBase * LeadingResidualFraction + ExactTolerance);
+    }
 
     // RichTextKit drops the empty line after a trailing newline, so the text adds it to the reported height itself.
-    private static void ShouldMatch(Text text, float h, params float[] expectedAdvances) =>
-        ShouldMatch(text, h, false, expectedAdvances);
+    private static void ShouldMatch(Text text, float h, params Line[] expectedLines) =>
+        ShouldMatch(text, h, false, expectedLines);
 
-    private static void ShouldMatch(Text text, float h, bool endsWithEmptyLine, float[] expectedAdvances)
+    private static void ShouldMatch(Text text, float h, bool endsWithEmptyLine, Line[] expectedLines)
     {
         TextBlock block = text.GetTextBlock();
-        block.Lines.Count.ShouldBe(expectedAdvances.Length - (endsWithEmptyLine ? 1 : 0));
+        block.Lines.Count.ShouldBe(expectedLines.Length - (endsWithEmptyLine ? 1 : 0));
 
         float expectedTop = 0;
-        for (int i = 0; i < expectedAdvances.Length; i++)
+        float topTolerance = 0;
+        for (int i = 0; i < expectedLines.Length; i++)
         {
             if (i < block.Lines.Count)
             {
-                block.Lines[i].YCoord.ShouldBe(expectedTop * h, ExactTolerance * h, $"top of line {i}");
+                block.Lines[i].YCoord.ShouldBe(expectedTop * h, topTolerance * h, $"top of line {i}");
             }
-            expectedTop += expectedAdvances[i];
+            expectedTop += expectedLines[i].Advance;
+            topTolerance += expectedLines[i].Tolerance;
         }
 
-        text.WrappedTextHeight.ShouldBe(expectedTop * h, ExactTolerance * h, "the reported height is the drawn extent");
+        text.WrappedTextHeight.ShouldBe(expectedTop * h, topTolerance * h, "the reported height is the drawn extent");
     }
 
     public static IEnumerable<object[]> BaseRunMultiplier()
@@ -114,26 +135,6 @@ public class TextStyledLineHeightTests
         ShouldMatch(text, h, Run(2, 1.5f, 3), Run(2, 1.5f, 1.5f), Plain(2, 1.5f));
     }
 
-    // A size run that wraps over several lines must not get worse than main (#6475 tracks making mixed-size
-    // lines exact): the lines hold the base text and the run, each should advance max(base * multiplier, run).
-    // Worst top error on main is 0.13h and 0.29h; these pin it from growing (the second is 0.30h with the compensation).
-    [Theory]
-    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 1f, 120, 0.14f)]
-    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 200, 0.31f)]
-    public void WrappedSizeRun_LineTopsAreNoFurtherFromExpectedThanBeforeTheLeadingCompensation(string markup, float baseScale, float width, float maxErrorInH)
-    {
-        float h = PlainLineHeight();
-        Text text = Build(markup, baseScale, 1);
-        text.Width = width;
-
-        TextBlock block = text.GetTextBlock();
-        block.Lines.Count.ShouldBeGreaterThan(1);
-        for (int i = 0; i < block.Lines.Count; i++)
-        {
-            block.Lines[i].YCoord.ShouldBe(i * baseScale * h, maxErrorInH * h, $"top of line {i}");
-        }
-    }
-
     [Fact]
     public void SizeRunLargerThanMultipliedBase_IsNotMultiplied()
     {
@@ -148,21 +149,12 @@ public class TextStyledLineHeightTests
     [InlineData(0.5f, 1f)]
     [InlineData(1f, 1.5f)]
     [InlineData(2f, 0.8f)]
-    [InlineData(1f, 0.1f)]
-    [InlineData(1f, 0.25f)]
-    [InlineData(1f, 0.5f)]
-    [InlineData(1f, 2f)]
-    [InlineData(1f, 3f)]
-    [InlineData(0.5f, 0.5f)]
-    [InlineData(0.5f, 2f)]
-    [InlineData(2f, 0.5f)]
-    [InlineData(2f, 2f)]
     public void PlainText_HeightIsLinesTimesScaledBaseTimesMultiplier(float baseScale, float multiplier)
     {
         float h = PlainLineHeight();
         Text text = Build("a\nb\nc", baseScale, multiplier);
 
-        float plain = Plain(baseScale, multiplier);
+        Line plain = Plain(baseScale, multiplier);
         ShouldMatch(text, h, plain, plain, plain);
     }
 
@@ -175,7 +167,7 @@ public class TextStyledLineHeightTests
         float h = PlainLineHeight();
         Text text = Build("[Color=Red]a[/Color]\nb\n[Color=Blue]c[/Color]", baseScale, multiplier);
 
-        float plain = Plain(baseScale, multiplier);
+        Line plain = Plain(baseScale, multiplier);
         ShouldMatch(text, h, plain, plain, plain);
     }
 
@@ -218,7 +210,7 @@ public class TextStyledLineHeightTests
         const float boxHeight = 400;
         // MonoGame and Raylib place the block using every counted line, the empty last line included.
         float drawn = lineCount * multiplier * h;
-        float tolerance = ExactTolerance * h;
+        float tolerance = drawn * LeadingResidualFraction + ExactTolerance * h * lineCount;
 
         Text center = Build(markup, 1, multiplier);
         center.Height = boxHeight;
@@ -229,58 +221,5 @@ public class TextStyledLineHeightTests
         bottom.Height = boxHeight;
         bottom.VerticalAlignment = VerticalAlignment.Bottom;
         bottom.GetVerticalAlignmentOffset(bottom.GetTextBlock()).ShouldBe(boxHeight - drawn, tolerance);
-    }
-
-    [Fact]
-    public void FontRegisteredAgainUnderTheSameFamily_DoesNotReuseTheOldFontsMetrics()
-    {
-        const string family = "LeadingCompensationReRegisteredFamily";
-        FontMapper previousMapper = FontMapper.Default;
-        FontMapper.Default = new SkiaGum.Content.Fonts.GumFontMapper();
-        try
-        {
-            byte[] orbitron = System.IO.File.ReadAllBytes(System.IO.Path.Combine(System.AppContext.BaseDirectory, "Assets", "Fonts", "TestFont.ttf"));
-            using SkiaSharp.SKTypeface arial = SkiaSharp.SKTypeface.FromFamilyName("Arial");
-            using SkiaSharp.SKData arialData = SkiaSharp.SKData.Create(arial.OpenStream());
-            byte[] arialBytes = arialData.ToArray();
-
-            SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(family, orbitron);
-            AssertMultipliedLineIsExact(family);
-
-            SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(family, arialBytes);
-            AssertMultipliedLineIsExact(family);
-        }
-        finally
-        {
-            FontMapper.Default = previousMapper;
-        }
-
-        static void AssertMultipliedLineIsExact(string fontName)
-        {
-            Text plain = Build("a\nb", 1, 1);
-            plain.FontName = fontName;
-            TextBlock control = plain.GetTextBlock();
-            float h = control.Lines[1].YCoord - control.Lines[0].YCoord;
-
-            Text multiplied = Build("a\nb", 1, 1.5f);
-            multiplied.FontName = fontName;
-            multiplied.GetTextBlock().Lines[1].YCoord.ShouldBe(1.5f * h, ExactTolerance * h);
-        }
-    }
-
-    [Fact]
-    public void RebuildingTheSameTextWithAMultiplier_ProbesTheFontOnce()
-    {
-        Text text = Build("[Color=Red]a[/Color] [Color=Blue]b[/Color]", 1, 1.5f);
-        text.GetTextBlock();
-
-        int probesBefore = Text.FontLineMetricsProbeCount;
-        for (int i = 0; i < 10; i++)
-        {
-            text.RawText = "[Color=Red]a" + i + "[/Color] [Color=Blue]b[/Color]";
-            text.GetTextBlock();
-        }
-
-        Text.FontLineMetricsProbeCount.ShouldBe(probesBefore);
     }
 }

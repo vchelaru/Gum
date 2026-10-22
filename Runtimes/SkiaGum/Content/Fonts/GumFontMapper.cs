@@ -29,6 +29,13 @@ public class GumFontMapper : FontMapper
 
     private static readonly ConditionalWeakTable<SKTypeface, string> typefaceKeys = new();
     private static int nextTypefaceId;
+    private static int registrationVersion;
+
+    /// <summary>
+    /// Changes whenever a font is registered or re-registered, so a cache of anything derived from a resolved
+    /// font (the line metrics SkiaGum's text compensates its line height with) knows to drop its entries.
+    /// </summary>
+    internal static int RegistrationVersion => System.Threading.Volatile.Read(ref registrationVersion);
 
     /// <summary>
     /// Embedded fonts registered via <see cref="RegisterFont"/>, keyed by family name + style slot
@@ -65,6 +72,7 @@ public class GumFontMapper : FontMapper
         string key = $"__typeface_{Interlocked.Increment(ref nextTypefaceId)}";
         registry[key] = typeface;
         typefaceKeys.Add(typeface, key);
+        Interlocked.Increment(ref registrationVersion);
         return key;
     }
 
@@ -103,6 +111,7 @@ public class GumFontMapper : FontMapper
         }
 
         registry[fullPath] = typeface;
+        Interlocked.Increment(ref registrationVersion);
         return fullPath;
     }
 
@@ -168,6 +177,7 @@ public class GumFontMapper : FontMapper
         }
 
         embeddedFontRegistry[GetEmbeddedFontKey(familyName, style)] = typeface;
+        Interlocked.Increment(ref registrationVersion);
         return typeface;
     }
 
