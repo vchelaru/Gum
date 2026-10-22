@@ -574,19 +574,23 @@ public partial class GraphicalUiElement
     // such as a NaN canvas size, which FULL_DIAGNOSTICS reports.
     static float ToFiniteSize(float size) => float.IsInfinity(size) ? 0 : size;
 
-    // Min wins over max when they conflict.
+    // Min wins over max when they conflict. A bound that is not a finite number is no limit (#6473): a maximum of
+    // +infinity or a minimum of -infinity already was, and a minimum of +infinity or a maximum of -infinity cannot be
+    // met, so it would otherwise hand an infinite size to the renderable (which throws under FULL_DIAGNOSTICS).
     static float ClampToMinMax(float value, float? min, float? max)
     {
-        if (value > max)
+        if (max.HasValue && IsFiniteBound(max.Value) && value > max.Value)
         {
             value = max.Value;
         }
-        if (value < min)
+        if (min.HasValue && IsFiniteBound(min.Value) && value < min.Value)
         {
             value = min.Value;
         }
         return value;
     }
+
+    static bool IsFiniteBound(float bound) => !float.IsNaN(bound) && !float.IsInfinity(bound);
 
     // A zero, negative or non-finite aspect ratio (such as from an empty texture) cannot size the
     // other axis, so MaintainFileAspectRatio falls back as if the renderable had no aspect ratio.
