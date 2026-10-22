@@ -100,3 +100,21 @@ Noise: this run was on a busy laptop; the middle half of the runs typically span
 - A new-value set of a value type allocates the box (24 B, 48 B for the 32 B struct); reference types do not, except collections.
 - A struct without `IEquatable<T>` allocates about 200 B even for a same-value set (`ValueType.Equals` boxing), and costs 500 ns or more.
 - `ObservableCollection` sets allocate 100 to 220 B and cost 300 ns or more (the collection-changed unsubscribe and subscribe).
+
+## Field style (#6356)
+
+`Set<T>(ref T field, T value)` and `SetWithoutNotifying(ref field, value)` on `ViewModel`. Rows prefixed `rvm.` are
+`Set(ref _v, value)`. `--types int,string` runs only those exact type names (comma separated) and `--csv <file>` writes
+`type;case;ns;bytes` lines; used for alternating A/B runs of two builds: `--runs 5` per run, alternate the binaries, compare medians.
+The machine may only have a newer .NET runtime: run with `DOTNET_ROLL_FORWARD=Major`.
+
+## Browser (Blazor WebAssembly, Debug)
+
+`Tests/Gum.Mvvm.Benchmarks.Wasm` runs the same model classes and loops (int and string; old by-name and ref-field, plus a plain baseline) in the browser on the Mono interpreter. It is in no solution, so CI does not build it. No `wasm-tools` workload is needed.
+
+```
+dotnet publish Tests/Gum.Mvvm.Benchmarks.Wasm -c Debug -o <out>
+python -m http.server 8080 --directory <out>/wwwroot
+```
+
+Open `http://localhost:8080/` (serve from the root; the page sets `<base href="/">`). It starts by itself and takes about 45 s: 5 alternating rounds of about 150 ms per case, median ns/op. The table appears on the page; `window.__gumBenchResults` holds the same data as JSON (`meta`, `results[]` with `nsPerOp`, `bytesPerOp`, per-round `roundNs`) and `window.__gumBenchDone` turns true when finished (`__gumBenchError` is set on failure). The query string overrides the defaults: `?rounds=3&target=100&types=int,string,float,class`. Keep the tab in the foreground while it runs; background tabs are throttled and distort timings.
