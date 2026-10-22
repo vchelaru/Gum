@@ -10,6 +10,7 @@ description: Gum's behaviors system and the design-time → runtime Forms wrappi
 Behaviors are named capability contracts stored as `.behx` XML files in the project's `Behaviors/` folder. Each behavior (`BehaviorSave`) declares:
 - A `Name` (e.g. `"ButtonBehavior"`)
 - Required visual state `Categories` (with state names like Enabled/Disabled/Highlighted/Pushed)
+  - A control assigns its logical state names on purpose and chooses which states it implements; the visual state for an unimplemented one is thrown away as intended, so a state name that does not exist is never reported.
 - Optional `RequiredVariables` and `RequiredInstances`
 - A `DefaultImplementation` path pointing to the default visual (e.g. `"Controls/ButtonStandard"`)
 

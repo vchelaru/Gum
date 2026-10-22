@@ -1398,13 +1398,38 @@ namespace GumRuntime
                 value = null;
                 mismatchReported = true;
             }
+
+            // A float or double variable never takes a NaN or infinity from a reference (#6457). The setters of X, Y, Width,
+            // Height, Rotation and FontScale throw on one under FULL_DIAGNOSTICS and take it silently otherwise, and no other
+            // float has a use for it, so the one check sits here, in front of both. A nullable float is left alone: infinity
+            // is a usable MaxWidth.
+            if (value != null && !mismatchReported && leftSideType != null && IsNonFiniteForNumberVariable(value, leftSideType)
+                && ReportedRejectedCast(referenceString, right, leftVariableName, leftSideType, value, stateSave, liveRoot))
+            {
+                value = null;
+                mismatchReported = true;
+            }
             return true;
         }
 
-        // True, after reporting once per row, when Gum.Expressions evaluated the right side but refused to cast its value to the
-        // left side's type (#6463): a bool or text into a number, an enum into a number, a name that is no value of the enum, a
-        // float or double the target cannot hold (#6456). The variable keeps its value, the same as for a mismatch without the
-        // package, so a reference is never silently dropped.
+        private static bool IsNonFiniteForNumberVariable(object value, string variableType)
+        {
+            if (variableType != "float" && variableType != "double")
+            {
+                return false;
+            }
+            if (value is float single)
+            {
+                return float.IsNaN(single) || float.IsInfinity(single);
+            }
+            return value is double precise && (double.IsNaN(precise) || double.IsInfinity(precise));
+        }
+
+        // True, after reporting once per row, when a value cannot be applied to the left side's type: Gum.Expressions evaluated
+        // the right side but refused to cast it (#6463: a bool or text into a number, an enum into a number, a name that is no
+        // value of the enum, a float or double the target cannot hold, #6456), or the value is a NaN or infinity for a float
+        // or double variable (#6457). The variable keeps its value, the same as for a mismatch without the package, so a
+        // reference is never silently dropped.
         private static bool ReportedRejectedCast(string referenceString, string right, string leftVariableName,
             string leftSideType, object rejectedValue, StateSave stateSave, GraphicalUiElement? liveRoot)
         {
