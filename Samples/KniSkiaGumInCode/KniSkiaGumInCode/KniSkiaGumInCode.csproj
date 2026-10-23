@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+	  The KNI Skia version of ../../MonoGameGumInCode: the feature screens built in code, drawn by
+	  SkiaGum through Runtimes/KniSkiaGum. The screens are the SKIA builds of the shared screen files, as
+	  in ../../SilkNetGum, and their textures and shader come from that sample.
+	-->
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<!-- Differs from the referenced Runtimes/KniSkiaGum project's assembly name ("KniSkiaGum") so the
+		     two outputs never overwrite each other in this project's bin folder. -->
+		<AssemblyName>KniSkiaGumInCode</AssemblyName>
+		<TargetFramework>net8.0</TargetFramework>
+		<RollForward>Major</RollForward>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<KniPlatform>DesktopGL</KniPlatform>
+		<TieredCompilation>false</TieredCompilation>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="nkast.Xna.Framework" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="[4.3.9001]" />
+		<!-- Draws Skia into a KNI Texture2D render target. Gum draws into that target's SKCanvas. -->
+		<PackageReference Include="SkiaGameRendering.Kni.DesktopGL" Version="0.19.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<!-- Selects the Skia branch of the shared screen files. -->
+		<DefineConstants>$(DefineConstants);SKIA</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- The same screens SilkNetGum shows, shared by link so the backends can be compared side by side. -->
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\FormsScreen.cs" Link="Screens\FormsScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\TextScreen.cs" Link="Screens\TextScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\CirclesScreen.cs" Link="Screens\CirclesScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RectanglesScreen.cs" Link="Screens\RectanglesScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SvgScreen.cs" Link="Screens\SvgScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetScreen.cs" Link="Screens\RenderTargetScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetShaderScreen.cs" Link="Screens\RenderTargetShaderScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\ZoomScreen.cs" Link="Screens\ZoomScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
+		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\ArcsScreen.cs" Link="Screens\ArcsScreen.cs" />
+		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\PolygonsScreen.cs" Link="Screens\PolygonsScreen.cs" />
+		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\SilkNetGum\SilkNetGumSample\Content\GumProject\**\*.*" LinkBase="Content\GumProject" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\SilkNetGum\SilkNetGumSample\resources\**\*.*" LinkBase="resources" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+</Project>

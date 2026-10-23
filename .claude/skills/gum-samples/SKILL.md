@@ -51,7 +51,7 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 ## KNI Skia counterparts of the MonoGame/KNI samples
 
-`Samples/KniSkiaGumFromFile` and `Samples/KniSkiaGumImmediateMode` are the KNI Skia versions of the samples with the same suffix, built on the `Samples/KniSkiaGum` host setup. `KniSkiaGumFromFile` has no Gum project of its own: its csproj copies `Samples/KniGumFromFile/KniGumFromFileContent` to `Content/`, so editing that project changes both samples.
+`Samples/KniSkiaGumFromFile`, `KniSkiaGumImmediateMode`, `KniSkiaGumInCode`, `KniSkiaGumFontLoading` and `KniSkiaGumCodeGeneration` are the KNI Skia versions of the samples with the same suffix, built on the `Samples/KniSkiaGum` host setup. `KniSkiaGumFromFile` has no Gum project of its own: its csproj copies `Samples/KniGumFromFile/KniGumFromFileContent` to `Content/`, so editing that project changes both samples. `KniSkiaGumCodeGeneration` owns a copy of the MonoGame sample's Gum project, because its `ProjectCodeSettings.codsj` names a different namespace; its `*.Generated.cs` come from `gumcli codegen` on that copy.
 
 ## Host-embedded samples (SkiaGumWpfSample, MauiSkiaGum)
 
