@@ -1214,8 +1214,11 @@ public class Renderer : IRenderer
             Camera.ClientLeft = 0;
             Camera.ClientTop = 0;
 
-            var left = System.Math.Max(cameraLeft, oldX);
-            var top = System.Math.Max(cameraTop, oldY);
+            // A turned container bakes its whole rectangle, so its target is never clamped to the
+            // camera (see GetRenderTargetBounds).
+            bool isTurned = renderable.IsRenderTargetTurned();
+            var left = isTurned ? oldX : System.Math.Max(cameraLeft, oldX);
+            var top = isTurned ? oldY : System.Math.Max(cameraTop, oldY);
 
             Camera.X = left;
             Camera.Y = top;
@@ -1243,11 +1246,20 @@ public class Renderer : IRenderer
             gumBatch = gumBatch ?? new GumBatch(OwnManagers);
 
 
-            // todo  - rotations don't currently work:
-            //var rotationRadians = MathHelper.ToRadians(renderable.Rotation);
-            //var matrix = Matrix.CreateRotationZ(rotationRadians);
-            //gumBatch.Begin(matrix);
-            gumBatch.Begin();
+            // Children draw turned by the container's absolute rotation; turning them back about the
+            // container's origin bakes them upright, and DrawRenderTargetToScreen turns the whole
+            // image (#6602). Gum rotation is counterclockwise, which is CreateRotationZ(-angle) on a
+            // Y-down screen, so undoing it is +angle.
+            var absoluteRotation = renderable.GetAbsoluteRotation();
+            Microsoft.Xna.Framework.Matrix? undoRotation = null;
+            if (absoluteRotation != 0)
+            {
+                undoRotation =
+                    Microsoft.Xna.Framework.Matrix.CreateTranslation(-oldX, -oldY, 0) *
+                    Microsoft.Xna.Framework.Matrix.CreateRotationZ(Microsoft.Xna.Framework.MathHelper.ToRadians(absoluteRotation)) *
+                    Microsoft.Xna.Framework.Matrix.CreateTranslation(oldX, oldY, 0);
+            }
+            gumBatch.Begin(undoRotation);
 
 
             //gumBatch.Draw(renderable);
@@ -1449,8 +1461,13 @@ public class Renderer : IRenderer
         // directly.
         var color = CreateRenderTargetCompositeTint(renderableAlpha);
 
-        renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
-        renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
+        // The bake is upright and unclamped for a turned container, so the blit turns it by the
+        // container's absolute rotation about its origin (#6602). Inside a parent's bake the parent's
+        // undo matrix takes its share back off.
+        bool isTurned = renderable.IsRenderTargetTurned();
+        float rotation = renderable.GetAbsoluteRotation();
+        renderTargetRenderableSprite.X = isTurned ? renderable.GetAbsoluteX() : System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
+        renderTargetRenderableSprite.Y = isTurned ? renderable.GetAbsoluteY() : System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
         renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
         renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
 
@@ -1470,7 +1487,7 @@ public class Renderer : IRenderer
 
         if (renderTargetEffect == null && compositeBlendState == null)
         {
-            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
+            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: rotation, objectCausingRendering: renderable);
         }
         else
         {
@@ -1488,7 +1505,7 @@ public class Renderer : IRenderer
             }
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
-            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
+            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: rotation, objectCausingRendering: renderable);
 
             mRenderStateVariables.BlendState = previousBlendState;
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable);
