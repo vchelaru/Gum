@@ -121,6 +121,21 @@ public class RendererRenderLayerTests : IDisposable
         PixelAt(surface, 20, 4).Alpha.ShouldBe((byte)0, "because the matrix is applied once");
     }
 
+    [Fact]
+    public void SortableLayer_ContainingARenderTarget_BakesAndDrawsIt()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        ContainerRuntime renderTarget = new() { Width = 16, Height = 16, IsRenderTarget = true };
+        renderTarget.Children.Add(CreateRectangle(x: 0, y: 0, width: 16, SKColors.Red));
+        SortableLayer sortableLayer = new();
+        sortableLayer.Add(renderTarget);
+        AddToMainLayer(new SortableLayerHost(sortableLayer));
+
+        SystemManagers.Default.Draw();
+
+        PixelAt(surface, 4, 4).ShouldBe(SKColors.Red, "because RenderLayer's PreRender bakes render targets, as MonoGame's does");
+    }
+
     public void Dispose()
     {
         Layer mainLayer = SystemManagers.Default.Renderer.MainLayer;

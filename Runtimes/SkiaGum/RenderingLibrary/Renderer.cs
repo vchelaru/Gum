@@ -840,7 +840,7 @@ namespace RenderingLibrary.Graphics
         /// Draws <paramref name="layer"/> on the current canvas under the layer's own camera, like
         /// MonoGame's RenderLayer: PreRenders it (unless <paramref name="prerender"/> is false), sorts
         /// it by Z, then draws it. A <see cref="SortableLayer"/> drawn as a renderable inside another
-        /// layer comes through here. Render-target containers in the layer are not baked.
+        /// layer comes through here.
         /// </summary>
         public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)
         {
@@ -853,6 +853,13 @@ namespace RenderingLibrary.Graphics
             SKCanvas canvas = skiaManagers.Canvas;
             SKMatrix? outerBaseMatrix = _cameraBaseMatrix;
             SKMatrix? outerCallerMatrix = _cameraCallerMatrix;
+
+            if (prerender)
+            {
+                // MonoGame's PreRender bakes render targets too. The bake draws on its own offscreen
+                // canvas, so it is safe in the middle of the outer layer's walk.
+                BakeRenderTargets(layer.Renderables, skiaManagers);
+            }
 
             canvas.Save();
             if (outerBaseMatrix.HasValue)
