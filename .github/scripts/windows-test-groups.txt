@@ -21,6 +21,7 @@ headless Tests/Gum.NetStandard.Tests
 headless Tests/SilkNetGum.Tests
 headless Tests/KniSkiaGum.Tests
 headless Tests/UnityGum.Tests
+headless Tests/StrideGum.Tests
 headless Tests/Gum.ProjectServices.SkiaGum.Tests
 
 # console;verbosity=normal streams every test's duration as it finishes, so a timeout still shows

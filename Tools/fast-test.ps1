@@ -39,11 +39,13 @@ $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
 . (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1')
+. (Join-Path $PSScriptRoot 'TestProjects.ps1')
 
 $requests = @($Tests | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
 # Only test projects a repo solution includes are candidates, so a class in an orphan project (one
-# no solution or CI builds) never triggers its build.
+# no solution or CI builds) never triggers its build. A library named *Tests* is not a test project,
+# and the frozen WPF head's tests run only when named as Project:Class.
 $solutionProjects = @{}
 foreach ($solution in @(Get-ChildItem -File -Path (Join-Path $repo '*'), (Join-Path $repo 'Tests/*') -Include '*.sln', '*.slnx' -ErrorAction SilentlyContinue)) {
     $solutionDir = Split-Path -Parent $solution.FullName
@@ -55,7 +57,9 @@ foreach ($solution in @(Get-ChildItem -File -Path (Join-Path $repo '*'), (Join-P
         $solutionProjects[([System.IO.Path]::GetRelativePath($repo, $full) -replace '\\', '/')] = $true
     }
 }
-$testProjects = @($solutionProjects.Keys | Where-Object { (Split-Path -Leaf $_) -like '*Tests*.csproj' } | Sort-Object)
+$testProjects = @($solutionProjects.Keys | Where-Object {
+        [System.IO.Path]::GetFileNameWithoutExtension($_) -notin $frozenTestProjects -and (Test-IsTestProject (Join-Path $repo $_))
+    } | Sort-Object)
 
 # A request is [Project:]Class[.Method]; Project is the csproj name without extension.
 $parsed = foreach ($request in $requests) {
