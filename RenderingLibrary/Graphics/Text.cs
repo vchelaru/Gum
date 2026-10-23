@@ -1247,13 +1247,13 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             padding += System.Math.Max(System.Math.Abs(DropshadowOffsetX), System.Math.Abs(DropshadowOffsetY)) * EffectiveFontScale;
         }
 
-        rotationRadians = -MathHelper.ToRadians(this.GetAbsoluteRotation());
-        float cos = (float)System.Math.Cos(rotationRadians);
-        float sin = (float)System.Math.Sin(rotationRadians);
+        float rotationDegrees = this.GetAbsoluteRotation();
+        rotationRadians = -MathHelper.ToRadians(rotationDegrees);
+        BitmapFont.GetRotatedAxes(rotationDegrees, out Vector2 xAxis, out Vector2 yAxis);
 
         Vector2 origin = new Vector2(mTempForRendering!.GetAbsoluteLeft(), mTempForRendering.GetAbsoluteTop());
         // Step back by the padding along the text's own x and y axes.
-        topLeft = origin + new Vector2(-padding * cos + padding * sin, -padding * sin - padding * cos);
+        topLeft = origin - (padding * xAxis) - (padding * yAxis);
         size = new Vector2(WrappedTextWidth + 2 * padding, WrappedTextHeight + 2 * padding);
     }
 
@@ -1343,12 +1343,15 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     {
         // The caller runs UpdateIpsoForRendering first.
         var tempForRendering = mTempForRendering!;
-        var absoluteTop = tempForRendering.GetAbsoluteTop();
 
         int startOfLineIndex = 0;
 
         var rotation = this.GetAbsoluteRotation();
-        float topOfLine = absoluteTop;
+        // Runs advance along the text's x axis and lines along its y axis, so a rotated block stays on
+        // its rotated baseline (#6549). At zero rotation the axes are exact units, so the sums below
+        // equal the unrotated ones bit for bit.
+        BitmapFont.GetRotatedAxes(rotation, out Vector2 xAxis, out Vector2 yAxis);
+        Vector2 startOfLine = new Vector2(tempForRendering.GetAbsoluteLeft(), tempForRendering.GetAbsoluteTop());
         var lettersLeft = maxLettersToShow;
         for (int i = 0; i < WrappedText.Count; i++)
         {
@@ -1356,7 +1359,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             {
                 break;
             }
-            var absoluteLeft = tempForRendering.GetAbsoluteLeft();
+            Vector2 startOfRun = startOfLine;
             var lineOfText = WrappedText[i];
 
             var color = Color;
@@ -1372,9 +1375,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     fontToUse.ShadowFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                         this,
                         requiredWidth, widths, spriteRenderer, DropshadowColor,
-                        absoluteLeft + DropshadowOffsetX * EffectiveFontScale,
-                        topOfLine + DropshadowOffsetY * EffectiveFontScale,
-                        this.GetAbsoluteRotation(), EffectiveFontScale,
+                        startOfLine.X + DropshadowOffsetX * EffectiveFontScale,
+                        startOfLine.Y + DropshadowOffsetY * EffectiveFontScale,
+                        rotation, EffectiveFontScale,
                         EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                         overlapDirection: OverlapDirection);
                 }
@@ -1382,13 +1385,13 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 fontToUse.DrawTextLines(lineByLineList, HorizontalAlignment,
                     this,
                     requiredWidth, widths, spriteRenderer, color,
-                    absoluteLeft,
-                    topOfLine,
-                    this.GetAbsoluteRotation(), EffectiveFontScale,
+                    startOfLine.X,
+                    startOfLine.Y,
+                    rotation, EffectiveFontScale,
                     EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                     overlapDirection: OverlapDirection);
 
-                topOfLine += fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
+                startOfLine += fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier) * yAxis;
                 maxLettersToShow -= lineOfText.Length;
             }
             else
@@ -1410,7 +1413,6 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     color = Color;
                     ResolveRunFont(substring.Variables, fontToUse, out BitmapFont? runFont, out float fontScale);
                     BitmapFont effectiveFont = runFont ?? fontToUse;
-                    var effectiveTopOfLine = topOfLine;
                     float yOffset = 0;
                     float xOffset = 0;
                     float scaleX = 1;
@@ -1514,7 +1516,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
 
                     var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
-                    effectiveTopOfLine += baselineDifference;
+                    // The baseline shift and the letter offsets are in the text's own space, so they turn with it.
+                    Vector2 runPosition = startOfRun + (baselineDifference * yAxis) + (xOffset * xAxis) + (yOffset * yAxis);
 
                     // Issue #3528: gate on the per-run resolved font's own ShadowFont, not the whole-Text
                     // HasDropshadow - a [HasDropshadow] BBCode tag resolves effectiveFont with (or without)
@@ -1531,8 +1534,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                             individualLineWidth,
                             spriteRenderer,
                             DropshadowColor,
-                            absoluteLeft + xOffset + DropshadowOffsetX * fontScale,
-                            effectiveTopOfLine + yOffset + DropshadowOffsetY * fontScale,
+                            runPosition.X + DropshadowOffsetX * fontScale,
+                            runPosition.Y + DropshadowOffsetY * fontScale,
                             rotation + rotationOffset,
                             fontScale * scaleX,
                             fontScale * scaleY,
@@ -1549,8 +1552,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         individualLineWidth,
                         spriteRenderer, 
                         color,
-                        absoluteLeft + xOffset,
-                        effectiveTopOfLine + yOffset,
+                        runPosition.X,
+                        runPosition.Y,
                         rotation + rotationOffset, 
                         fontScale * scaleX, 
                         fontScale * scaleY, 
@@ -1565,11 +1568,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         lettersLeft -= substring.Substring.Length;
                     }
 
-                    absoluteLeft += rect.Width / scaleX;
+                    startOfRun += (rect.Width / scaleX) * xAxis;
 
                 }
 
-                topOfLine += lineHeight;
+                startOfLine += lineHeight * yAxis;
             }
             startOfLineIndex += lineOfText.Length;
         }
