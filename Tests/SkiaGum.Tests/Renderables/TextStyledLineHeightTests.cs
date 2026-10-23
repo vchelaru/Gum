@@ -14,8 +14,8 @@ namespace SkiaGum.Tests.Renderables;
 /// same numbers in TextRuntimeStyledLineHeightTests and Raylib in TextRunLineHeightMultiplierTests. h is one
 /// plain line at scale 1 and multiplier 1, read from a control text so no font metric is hard-coded.
 /// Text without a size run is exact (#6467): RichTextKit multiplies a line's ascent and descent but not its
-/// leading, and the Skia text compensates for that. Text with a size run is sized per line (#6475),
-/// exact too; text with a font-family run keeps main's line heights, pinned by FontRunText_LineTopsAreUnchanged.
+/// leading, and the Skia text compensates for that. Text with a size or font-family run is sized line by line and
+/// is exact too (#6475): a font-family run counts as its own font's plain line height, never multiplied, as on MonoGame.
 /// </summary>
 public class TextStyledLineHeightTests
 {
