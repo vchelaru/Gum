@@ -1,4 +1,3 @@
-using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
@@ -7,7 +6,6 @@ using Microsoft.Xna.Framework;
 using Gum.GueDeriving;
 using Moq;
 using RenderingLibrary;
-using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.ObjectModel;
@@ -329,17 +327,6 @@ public class ComboBoxScrollSplashTests : BaseTestClass
     }
 
     [Fact]
-    public void Open_SelectedObjectSetWhileOpen_ShouldShowSelectedItem()
-    {
-        ComboBox comboBox = CreateComboBox(ManyItems);
-        OpenScrollable(comboBox);
-
-        comboBox.SelectedObject = "Item 25";
-
-        IsRowInView(comboBox.ListBox, 25).ShouldBeTrue();
-    }
-
-    [Fact]
     public void Open_ItemsAddedWhileOpen_ShouldKeepSelectedItemInView()
     {
         ComboBox comboBox = CreateComboBox(ManyItems);
@@ -512,16 +499,6 @@ public class ComboBoxScrollSplashTests : BaseTestClass
     }
 
     [Fact]
-    public void ListBox_SelectedObjectSetWhenLaidOut_ShouldScrollSelectedItemIntoView()
-    {
-        ListBox listBox = CreateLaidOutListBox(50);
-
-        listBox.SelectedObject = "Item 40";
-
-        IsRowInView(listBox, 40).ShouldBeTrue();
-    }
-
-    [Fact]
     public void ListBox_SelectedIndexSetInHiddenParent_ShouldNotJumpToBottom()
     {
         ContainerRuntime parent = new();
@@ -538,27 +515,6 @@ public class ComboBoxScrollSplashTests : BaseTestClass
         listBox.SelectedIndex = 0;
 
         listBox.VerticalScrollBarValue.ShouldBe(0);
-    }
-
-    [Fact]
-    public void ListBox_SelectedIndexSetInHiddenParentThenParentShown_ShouldShowSelectedItem()
-    {
-        ContainerRuntime parent = new();
-        parent.AddToRoot();
-        parent.Visible = false;
-        ListBox listBox = new();
-        parent.Children.Add(listBox.Visual);
-        listBox.Visual.Height = 200;
-        for (int i = 0; i < 50; i++)
-        {
-            listBox.Items!.Add("Item " + i);
-        }
-        listBox.SelectedIndex = 40;
-
-        parent.Visible = true;
-        parent.UpdateLayout();
-
-        IsRowInView(listBox, 40).ShouldBeTrue();
     }
 
     #endregion

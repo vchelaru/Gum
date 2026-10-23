@@ -1634,7 +1634,10 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <param name="scrollIntoViewStyle">The desired location of the item after scrolling.</param>
     public void ScrollIndexIntoView(int itemIndex, ScrollIntoViewStyle scrollIntoViewStyle = ScrollIntoViewStyle.BringIntoView)
     {
-        if (itemIndex != -1)
+        // Layout is deferred while a list box is invisible (or inside an invisible parent), so its
+        // rows still sit at Y = 0 and every row looks "below the view". Scrolling then jumps to the
+        // maximum (#6643). There is nothing to bring into view until it is shown.
+        if (itemIndex != -1 && Visual.AbsoluteVisible)
         {
             // itemIndex is a genuine Items-space index, so it can be resolved directly by position
             // (GetRowForItemsIndex) - no need to round-trip through the item's data value, which

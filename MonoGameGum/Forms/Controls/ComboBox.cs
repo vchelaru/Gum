@@ -286,7 +286,7 @@ public class ComboBox :
         {
             if (value && IsDropDownOpen == false)
             {
-                ShowListBoxInstance();
+                OpenDropDown();
             }
             else if (!value && IsDropDownOpen)
             {
@@ -436,9 +436,27 @@ public class ComboBox :
         }
         else
         {
-            ShowListBoxInstance();
+            OpenDropDown();
         }
 
+    }
+
+    // Set when the selection changes while the drop-down is closed, because the list box is not laid
+    // out then and cannot scroll the new selection into view. Resolved on the next open (#6643).
+    private bool _scrollSelectionIntoViewOnOpen;
+
+    private void OpenDropDown()
+    {
+        ShowListBoxInstance();
+
+        if (_scrollSelectionIntoViewOnOpen)
+        {
+            _scrollSelectionIntoViewOnOpen = false;
+            if (SelectedIndex > -1)
+            {
+                listBox.ScrollIndexIntoView(SelectedIndex);
+            }
+        }
     }
 
     private void ShowListBoxInstance()
@@ -582,6 +600,11 @@ public class ComboBox :
 
     private void HandleSelectionChanged(object? sender, SelectionChangedEventArgs args)
     {
+        if (!IsDropDownOpen)
+        {
+            _scrollSelectionIntoViewOnOpen = true;
+        }
+
         // If we bind the Text, then don't set this here, the binding will take care of it
         if (!IsDataBound(nameof(Text)))
         {
