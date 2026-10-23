@@ -22,6 +22,7 @@ partial class KeyboardKeyRuntime : ContainerRuntime
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/KeyboardKey", typeof(KeyboardKeyRuntime));
     }
     public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
+    private bool _tryCreateFormsObject = true;
     public enum ButtonCategory
     {
         Enabled,
@@ -69,6 +70,7 @@ partial class KeyboardKeyRuntime : ContainerRuntime
 
     public KeyboardKeyRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/KeyboardKey");
@@ -80,7 +82,7 @@ partial class KeyboardKeyRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
         }

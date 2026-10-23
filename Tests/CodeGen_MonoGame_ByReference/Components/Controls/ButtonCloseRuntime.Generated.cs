@@ -22,6 +22,7 @@ partial class ButtonCloseRuntime : ContainerRuntime
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonClose", typeof(ButtonCloseRuntime));
     }
     public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
+    private bool _tryCreateFormsObject = true;
     public enum ButtonCategory
     {
         Enabled,
@@ -63,6 +64,7 @@ partial class ButtonCloseRuntime : ContainerRuntime
 
     public ButtonCloseRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/ButtonClose");
@@ -74,7 +76,7 @@ partial class ButtonCloseRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
         }

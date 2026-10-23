@@ -21,9 +21,11 @@ partial class PanelRuntime : ContainerRuntime
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/Panel", typeof(PanelRuntime));
     }
     public global::Gum.Forms.Controls.Panel FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Panel;
+    private bool _tryCreateFormsObject = true;
 
     public PanelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/Panel");
@@ -35,7 +37,7 @@ partial class PanelRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.Panel(this);
         }

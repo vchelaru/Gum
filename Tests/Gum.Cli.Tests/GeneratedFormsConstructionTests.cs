@@ -16,11 +16,12 @@ using System.Reflection;
 namespace Gum.Cli.Tests;
 
 /// <summary>
-/// Compiles the FullyInCode output of the Forms template (plus components derived from template
+/// Compiles the generated output of the Forms template (plus components derived from template
 /// controls) and constructs the generated controls, so generated code that touches its children
-/// before they exist, or builds them in the wrong order, fails here rather than in a game.
+/// before they exist, builds them in the wrong order, or creates a second Forms control on one
+/// visual fails here rather than in a game. Gum Forms FullyInCode and legacy MonoGame FindByName.
 /// </summary>
-public class FullyInCodeFormsConstructionTests : BaseTestClass
+public class GeneratedFormsConstructionTests : BaseTestClass
 {
     [Fact]
     public void Constructor_EveryGeneratedFormsControl_DoesNotThrow()
@@ -151,7 +152,102 @@ public class FullyInCodeFormsConstructionTests : BaseTestClass
     private static object? Call(object target, string methodName, string argument) =>
         target.GetType().GetMethod(methodName, new[] { typeof(string) })!.Invoke(target, new object[] { argument });
 
-    private Assembly GenerateAndCompile()
+    [Fact]
+    public void Constructor_LegacyMonoGameFindByName_EveryFormsComponentConstructs()
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName);
+        LoadProjectForFindByName();
+        Type graphicalUiElementType = typeof(global::Gum.Wireframe.GraphicalUiElement);
+
+        List<string> failures = new List<string>();
+        int constructed = 0;
+        foreach (Type type in generated.GetTypes().Where(item =>
+            graphicalUiElementType.IsAssignableFrom(item) && !item.IsAbstract))
+        {
+            try
+            {
+                object visual = Activator.CreateInstance(type, true, true)!;
+                // Components with a Forms behavior declare FormsControl and create it in AfterFullCreation.
+                if (type.GetProperty("FormsControl", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) != null
+                    && Get(visual, "FormsControl") == null)
+                {
+                    failures.Add($"{type.Name}: no Forms control");
+                }
+                constructed++;
+            }
+            catch (TargetInvocationException exception)
+            {
+                Exception inner = exception.InnerException ?? exception;
+                string frames = string.Join(" <- ", (inner.StackTrace ?? "").Split('\n').Take(6).Select(line => line.Trim()));
+                failures.Add($"{type.Name}: {inner.GetType().Name} {inner.Message} {frames}");
+            }
+        }
+
+        failures.ShouldBeEmpty(string.Join(" | ", failures));
+        constructed.ShouldBeGreaterThan(10);
+    }
+
+    // A generated runtime registers itself as the default visual of its Forms type, so `new Button()`
+    // builds that runtime with tryCreateFormsObject: false and then becomes the Forms control of it.
+    [Fact]
+    public void FormsControlConstructor_LegacyMonoGameFindByName_UsesGeneratedVisualWithoutSecondControl()
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName);
+        LoadProjectForFindByName();
+        Type frameworkElementType = GumCommon.GetType("Gum.Forms.Controls.FrameworkElement", throwOnError: true)!;
+        IDictionary templates = (IDictionary)frameworkElementType.GetProperty("DefaultFormsTemplates")!.GetValue(null)!;
+        Dictionary<object, object?> previousTemplates = templates.Keys.Cast<object>().ToDictionary(key => key, key => templates[key]);
+        try
+        {
+            System.Runtime.CompilerServices.RuntimeHelpers.RunModuleConstructor(generated.ManifestModule.ModuleHandle);
+            Type buttonType = GumCommon.GetType("Gum.Forms.Controls.Button", throwOnError: true)!;
+            Type listBoxItemType = GumCommon.GetType("Gum.Forms.Controls.ListBoxItem", throwOnError: true)!;
+
+            List<string> failures = new List<string>();
+            foreach (Type formsType in new[] { buttonType, listBoxItemType })
+            {
+                try
+                {
+                    object control = Activator.CreateInstance(formsType)!;
+                    object visual = Get(control, "Visual")!;
+                    visual.GetType().Assembly.ShouldBeSameAs(generated, formsType.Name);
+                    Get(visual, "FormsControlAsObject").ShouldBeSameAs(control, formsType.Name);
+                }
+                catch (TargetInvocationException exception)
+                {
+                    failures.Add($"{formsType.Name}: {exception.InnerException?.Message}");
+                }
+            }
+            failures.ShouldBeEmpty(string.Join(" | ", failures));
+        }
+        finally
+        {
+            templates.Clear();
+            foreach (KeyValuePair<object, object?> pair in previousTemplates)
+            {
+                templates[pair.Key] = pair.Value;
+            }
+        }
+    }
+
+    // What GumService.Initialize does with a gumx before FindByName code builds from it.
+    private void LoadProjectForFindByName()
+    {
+        Type systemManagersType = MonoGameGum.GetType("RenderingLibrary.SystemManagers", throwOnError: true)!;
+        systemManagersType.GetMethod("RegisterComponentRuntimeInstantiations", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .Invoke(systemManagersType.GetProperty("Default")!.GetValue(null), null);
+        GumProjectSave project = GumProjectSave.Load(Path.Combine(TempDirectory, "MyProject.gumx"), out _)!;
+        Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
+        Gum.Managers.StandardElementsManager.Self.RegisterExtendedDefaultStates();
+        project.Initialize();
+        MonoGameGum.GetType("Gum.Forms.FormsUtilities", throwOnError: true)!
+            .GetMethod("RegisterFromFileFormRuntimeDefaults", BindingFlags.Public | BindingFlags.Static)!
+            .Invoke(null, null);
+    }
+
+    private Assembly GenerateAndCompile(
+        OutputLibrary outputLibrary = OutputLibrary.GumForms,
+        ObjectInstantiationType instantiationType = ObjectInstantiationType.FullyInCode)
     {
         string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new FormsTemplateCreator().Create(gumxPath);
@@ -166,7 +262,8 @@ public class FullyInCodeFormsConstructionTests : BaseTestClass
         CodeOutputProjectSettingsManager settingsManager = new CodeOutputProjectSettingsManager(
             new SilentLogger(), new FixedProjectDirectoryProvider(TempDirectory + Path.DirectorySeparatorChar));
         CodeOutputProjectSettings settings = settingsManager.CreateOrLoadSettingsForProject();
-        settings.ObjectInstantiationType = ObjectInstantiationType.FullyInCode;
+        settings.OutputLibrary = outputLibrary;
+        settings.ObjectInstantiationType = instantiationType;
         settingsManager.WriteSettingsForProject(settings);
 
         CliTestHelper codegen = CliTestHelper.Run("codegen", gumxPath);

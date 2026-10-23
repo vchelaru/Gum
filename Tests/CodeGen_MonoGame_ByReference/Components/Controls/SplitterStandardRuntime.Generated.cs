@@ -22,10 +22,12 @@ partial class SplitterStandardRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Splitter)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new SplitterStandardRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.Splitter FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Splitter;
+    private bool _tryCreateFormsObject = true;
     public NineSliceRuntime NineSliceInstance { get; protected set; }
 
     public SplitterStandardRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/SplitterStandard");
@@ -37,7 +39,7 @@ partial class SplitterStandardRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.Splitter(this);
         }

@@ -22,6 +22,7 @@ partial class MenuItemRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.MenuItem)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new MenuItemRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.MenuItem FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.MenuItem;
+    private bool _tryCreateFormsObject = true;
     public enum MenuItemCategory
     {
         Enabled,
@@ -62,6 +63,7 @@ partial class MenuItemRuntime : ContainerRuntime
 
     public MenuItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/MenuItem");
@@ -73,7 +75,7 @@ partial class MenuItemRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.MenuItem(this);
         }

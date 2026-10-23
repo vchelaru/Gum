@@ -22,11 +22,13 @@ partial class MenuRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Menu)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new MenuRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.Menu FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Menu;
+    private bool _tryCreateFormsObject = true;
     public NineSliceRuntime Background { get; protected set; }
     public ContainerRuntime InnerPanelInstance { get; protected set; }
 
     public MenuRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/Menu");
@@ -38,7 +40,7 @@ partial class MenuRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.Menu(this);
         }

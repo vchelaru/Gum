@@ -24,6 +24,7 @@ partial class ComboBoxRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ComboBox)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new ComboBoxRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.ComboBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ComboBox;
+    private bool _tryCreateFormsObject = true;
     public enum ComboBoxCategory
     {
         Enabled,
@@ -67,6 +68,7 @@ partial class ComboBoxRuntime : ContainerRuntime
 
     public ComboBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/ComboBox");
@@ -78,7 +80,7 @@ partial class ComboBoxRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.ComboBox(this);
         }

@@ -23,6 +23,7 @@ partial class RadioButtonRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.RadioButton)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new RadioButtonRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.RadioButton FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.RadioButton;
+    private bool _tryCreateFormsObject = true;
     public enum RadioButtonCategory
     {
         EnabledOn,
@@ -78,6 +79,7 @@ partial class RadioButtonRuntime : ContainerRuntime
 
     public RadioButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/RadioButton");
@@ -89,7 +91,7 @@ partial class RadioButtonRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.RadioButton(this);
         }

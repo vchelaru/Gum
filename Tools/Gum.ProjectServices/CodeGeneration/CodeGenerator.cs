@@ -1746,7 +1746,7 @@ public class CodeGenerator
         // are attached.
         if (!isFullyInstantiatingInCode)
         {
-            TryInstantiateForms(context);
+            TryInstantiateForms(context, onlyIfRequestedInConstructor: true);
         }
 
         foreach (var instance in context.Element.Instances)
@@ -1779,14 +1779,21 @@ public class CodeGenerator
         context.StringBuilder.AppendLine(context.Tabs + "}");
     }
 
-    private static void TryInstantiateForms(CodeGenerationContext context)
+    // FindByName builds the Forms control in AfterFullCreation, which has no access to the
+    // constructor's tryCreateFormsObject, so the constructor stores it in this field.
+    const string TryCreateFormsObjectField = "_tryCreateFormsObject";
+
+    private static void TryInstantiateForms(CodeGenerationContext context, bool onlyIfRequestedInConstructor = false)
     {
         if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
         {
             GetGumFormsTypeFromBehaviors(context.Element, out string? gumFormsType, out _);
             if (gumFormsType != null)
             {
-                context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null)");
+                // A Forms control constructed on a generated visual (new Button() through
+                // DefaultFormsTemplates) asks for no control here, and becomes the visual's control itself.
+                string requestCheck = onlyIfRequestedInConstructor ? $" && {TryCreateFormsObjectField}" : "";
+                context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null{requestCheck})");
                 context.StringBuilder.AppendLine($"{context.Tabs}{{");
                 {
                     context.TabCount++;
@@ -2197,6 +2204,10 @@ public class CodeGenerator
         var stringBuilder = context.StringBuilder;
 
         stringBuilder.AppendLine($"{context.Tabs}public {gumFormsType} FormsControl => FormsControlAsObject as {gumFormsType};");
+        if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName)
+        {
+            stringBuilder.AppendLine($"{context.Tabs}private bool {TryCreateFormsObjectField} = true;");
+        }
     }
 
     #endregion
@@ -3625,6 +3636,16 @@ public class CodeGenerator
             #endregion
 
             #region Gum-required constructor code
+
+            if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary) &&
+                projectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName)
+            {
+                GetGumFormsTypeFromBehaviors(element, out string? findByNameFormsType, out _);
+                if (findByNameFormsType != null)
+                {
+                    stringBuilder.AppendLine(context.Tabs + $"{TryCreateFormsObjectField} = tryCreateFormsObject;");
+                }
+            }
 
             var shouldGenerateFullInstantiation =
                 UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary) ||
