@@ -121,6 +121,7 @@ public class GumServiceInitializeTests
         // alone: raylib apps commonly use their own resources folder, and defaulting this would be an
         // unwarranted assumption (#4577).
         Gum.GumService.Default.Uninitialize();
+        string original = FileManager.RelativeDirectory;
         FileManager.RelativeDirectory = System.IO.Path.GetTempPath();
         string sentinel = FileManager.RelativeDirectory;
 
@@ -133,6 +134,7 @@ public class GumServiceInitializeTests
         finally
         {
             Gum.GumService.Default.Uninitialize();
+            FileManager.RelativeDirectory = original;
             TestAssemblyInitialize.ApplyDefaultTestState();
         }
     }
@@ -205,6 +207,34 @@ public class GumServiceInitializeTests
         {
             GumService.Default.Uninitialize();
             TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    // #6491: Uninitialize restores the RelativeDirectory a loaded project replaced.
+    [Fact]
+    public void Uninitialize_AfterProjectLoad_RestoresRelativeDirectory()
+    {
+        Gum.GumService.Default.Uninitialize();
+        string original = FileManager.RelativeDirectory;
+        string projectDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "RaylibUninitializeTests_" + System.IO.Path.GetRandomFileName());
+        System.IO.Directory.CreateDirectory(projectDirectory);
+        try
+        {
+            string gumxPath = System.IO.Path.Combine(projectDirectory, "Proj.gumx");
+            new Gum.DataTypes.GumProjectSave().Save(gumxPath, saveElements: false);
+            Gum.GumService.Default.Initialize(gumxPath);
+            FileManager.RelativeDirectory.ShouldNotBe(original);
+
+            Gum.GumService.Default.Uninitialize();
+
+            FileManager.RelativeDirectory.ShouldBe(original);
+        }
+        finally
+        {
+            Gum.GumService.Default.Uninitialize();
+            FileManager.RelativeDirectory = original;
+            TestAssemblyInitialize.ApplyDefaultTestState();
+            try { System.IO.Directory.Delete(projectDirectory, recursive: true); } catch { /* best-effort */ }
         }
     }
 }
