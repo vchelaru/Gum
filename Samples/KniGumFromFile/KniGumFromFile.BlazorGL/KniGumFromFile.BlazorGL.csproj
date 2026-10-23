@@ -25,6 +25,7 @@
   <ItemGroup>
     <Compile Include="Pages\Index.razor.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Bench/*.cs" />
   </ItemGroup>
 
   <ItemGroup>
