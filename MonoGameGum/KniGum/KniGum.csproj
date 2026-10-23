@@ -267,6 +267,8 @@
 		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" PrivateAssets="All" />
 
 		<PackageReference Include="TextCopy" Version="6.2.1" />
+		<!-- Spike #6156: decode-and-premultiply without a GetData/SetData round trip. -->
+		<PackageReference Include="StbImageSharp" Version="2.30.15" />
 	</ItemGroup>
 
   <ItemGroup>

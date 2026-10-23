@@ -34,4 +34,30 @@ public static class TexturePremultiply
                 pixel.A);
         }
     }
+
+    /// <summary>
+    /// Scales each RGBA byte quad's color by its alpha, in place, with the same rounding as the
+    /// <see cref="Color"/> overload. Fully transparent texels become (0,0,0,0).
+    /// </summary>
+    /// <param name="rgba">Tightly packed RGBA bytes; null is a no-op.</param>
+    public static void Premultiply(byte[]? rgba)
+    {
+        if (rgba == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i + 3 < rgba.Length; i += 4)
+        {
+            int alpha = rgba[i + 3];
+            if (alpha == 255)
+            {
+                continue;
+            }
+
+            rgba[i] = (byte)((rgba[i] * alpha + 127) / 255);
+            rgba[i + 1] = (byte)((rgba[i + 1] * alpha + 127) / 255);
+            rgba[i + 2] = (byte)((rgba[i + 2] * alpha + 127) / 255);
+        }
+    }
 }

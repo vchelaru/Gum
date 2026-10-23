@@ -90,18 +90,19 @@ public sealed class ContentLoader : IContentLoader
         }
 
         bool isFromContentManager = false;
+        bool isPremultipliedOnLoad;
         if (FileManager.IsUrl(fileName))
         {
-            toReturn = LoadTextureFromUrl(fileName, managers);
+            toReturn = LoadTextureFromUrl(fileName, managers, out isPremultipliedOnLoad);
         }
         else
         {
-            toReturn = LoadTextureFromFile(fileName, out isFromContentManager, managers);
+            toReturn = LoadTextureFromFile(fileName, out isFromContentManager, out isPremultipliedOnLoad, managers);
         }
 
         // A ContentManager texture is that manager's cached instance, shared with the game, and the
         // content pipeline premultiplies by default. Bleeding it would corrupt the game's own draws.
-        if (!isFromContentManager)
+        if (!isFromContentManager && !isPremultipliedOnLoad)
         {
             if (Graphics.Renderer.UsePremultipliedAlpha)
             {
@@ -144,6 +145,29 @@ public sealed class ContentLoader : IContentLoader
     }
 
     /// <summary>
+    /// Creates a texture from an encoded image stream. On KNI with
+    /// <see cref="Graphics.Renderer.UsePremultipliedAlpha"/> set, decodes the image itself
+    /// (StbImageSharp, the decoder KNI's GL and BlazorGL paths use), premultiplies the bytes and
+    /// uploads once, so no GetData/SetData round trip is needed (spike for issue #6156).
+    /// </summary>
+    private static Texture2D CreateTextureFromStream(GraphicsDevice device, System.IO.Stream stream, out bool isPremultipliedOnLoad)
+    {
+#if KNI
+        if (Graphics.Renderer.UsePremultipliedAlpha)
+        {
+            var image = StbImageSharp.ImageResult.FromStream(stream, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
+            TexturePremultiply.Premultiply(image.Data);
+            var texture = new Texture2D(device, image.Width, image.Height, false, SurfaceFormat.Color);
+            texture.SetData(image.Data);
+            isPremultipliedOnLoad = true;
+            return texture;
+        }
+#endif
+        isPremultipliedOnLoad = false;
+        return Texture2D.FromStream(device, stream);
+    }
+
+    /// <summary>
     /// Premultiplies the texture's color by its alpha in place (issue #6154). Only applies to
     /// uncompressed <see cref="SurfaceFormat.Color"/> textures. Callers skip ContentManager textures.
     /// </summary>
@@ -176,7 +200,7 @@ public sealed class ContentLoader : IContentLoader
         return fileNameStandardized;
     }
 
-    private Texture2D LoadTextureFromUrl(string fileName, SystemManagers? managers)
+    private Texture2D LoadTextureFromUrl(string fileName, SystemManagers? managers, out bool isPremultipliedOnLoad)
     {
 
         Renderer renderer = Renderer.Self ?? managers!.Renderer;
@@ -187,8 +211,7 @@ public sealed class ContentLoader : IContentLoader
         using (var stream = GetUrlStream(fileName))
         {
             // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
-            texture = Texture2D.FromStream(renderer.GraphicsDevice!,
-                stream);
+            texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isPremultipliedOnLoad);
 
             texture.Name = fileNameStandardized;
         }
@@ -215,11 +238,13 @@ public sealed class ContentLoader : IContentLoader
     /// <param name="fileName">The filename to load</param>
     /// <param name="isFromContentManager">True when the texture came from <see cref="XnaContentManager"/>, which
     /// owns and caches it, rather than being created by this loader.</param>
+    /// <param name="isPremultipliedOnLoad">True when the decode already premultiplied the pixels.</param>
     /// <param name="managers">The optional SystemManagers to use when loading the file to obtain a GraphicsDevice</param>
     /// <returns>The loaded Texture2D</returns>
-    private Texture2D? LoadTextureFromFile(string fileName, out bool isFromContentManager, SystemManagers? managers = null)
+    private Texture2D? LoadTextureFromFile(string fileName, out bool isFromContentManager, out bool isPremultipliedOnLoad, SystemManagers? managers = null)
     {
         isFromContentManager = false;
+        isPremultipliedOnLoad = false;
         string fileNameStandardized = FileManager.Standardize(fileName, true, false);
 
         if (FileManager.IsRelative(fileNameStandardized))
@@ -334,8 +359,7 @@ public sealed class ContentLoader : IContentLoader
                 using var stream = FileManager.GetStreamForFile(fileNameStandardized);
 
                 // Headless (no device): FromStream throws, which the catch below handles.
-                Texture2D texture = Texture2D.FromStream(renderer.GraphicsDevice!,
-                    stream);
+                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isPremultipliedOnLoad);
 
                 texture.Name = fileNameStandardized;
 
