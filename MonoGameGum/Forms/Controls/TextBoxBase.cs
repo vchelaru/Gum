@@ -2130,7 +2130,12 @@ public abstract class TextBoxBase :
         }
         if (target.YUnits == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle)
         {
-            adjusted -= textComponent.AbsoluteHeight / 2.0f;
+            // PixelsFromMiddle is measured from the middle of the target's parent. The text is
+            // usually inset from that parent (the default visual's is 4px shorter), so the
+            // text's own height puts the target half that inset below the line (#6624).
+            float parentHeight = target.EffectiveParentGue?.AbsoluteHeight
+                ?? GraphicalUiElement.CanvasHeight;
+            adjusted -= parentHeight / 2.0f;
         }
         return adjusted;
     }
