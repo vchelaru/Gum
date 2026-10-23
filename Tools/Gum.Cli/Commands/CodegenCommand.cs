@@ -9,6 +9,8 @@ using Gum.Managers;
 using Gum.Expressions;
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Gum.Cli.Commands;
 
@@ -121,9 +123,22 @@ public static class CodegenCommand
                 return 2;
             }
 
-            projectSettings = autoResult.Settings!;
-            projectSettingsManager.WriteSettingsForProject(projectSettings);
-            Console.WriteLine($"Auto-configured code generation settings (CodeProjectRoot: {projectSettings.CodeProjectRoot}, Namespace: {projectSettings.RootNamespace}).");
+            if (File.Exists(settingsFilePath))
+            {
+                // The file holds the user's other settings: fill in only CodeProjectRoot and write
+                // that one field back, keeping every other key (including ones Gum doesn't know).
+                projectSettings.CodeProjectRoot = autoResult.Settings!.CodeProjectRoot;
+                JObject settingsJson = JObject.Parse(File.ReadAllText(settingsFilePath));
+                settingsJson[nameof(CodeOutputProjectSettings.CodeProjectRoot)] = projectSettings.CodeProjectRoot;
+                File.WriteAllText(settingsFilePath, settingsJson.ToString(Formatting.Indented));
+                Console.WriteLine($"Auto-configured CodeProjectRoot: {projectSettings.CodeProjectRoot}.");
+            }
+            else
+            {
+                projectSettings = autoResult.Settings!;
+                projectSettingsManager.WriteSettingsForProject(projectSettings);
+                Console.WriteLine($"Auto-configured code generation settings (CodeProjectRoot: {projectSettings.CodeProjectRoot}, Namespace: {projectSettings.RootNamespace}).");
+            }
         }
 
         try

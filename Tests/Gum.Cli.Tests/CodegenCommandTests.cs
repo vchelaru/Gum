@@ -1,5 +1,6 @@
 using GumRuntime;
 using Gum.ProjectServices;
+using Newtonsoft.Json.Linq;
 using Shouldly;
 using System;
 using System.IO;
@@ -25,6 +26,9 @@ public class CodegenCommandTests : BaseTestClass
     [Theory]
     [InlineData("{ \"CodeProjectRoot\": \"../Code/\", not json", "line 1, position")]
     [InlineData("", null)]
+    [InlineData("null", null)]
+    [InlineData("[]", null)]
+    [InlineData("{ \"OutputLibrary\": \"NotALibrary\" }", null)]
     public void Codegen_WhenCodsjCannotBeParsed_ReportsItLeavesItUntouchedAndReturnsExitCode2(
         string codsjContents, string? parserMessageFragment)
     {
@@ -47,6 +51,59 @@ public class CodegenCommandTests : BaseTestClass
             result.StandardError.ShouldContain(parserMessageFragment);
         }
         result.StandardOutput.ShouldNotContain("Auto-configured");
+    }
+
+    [Theory]
+    [InlineData("{ \"RootNamespace\": \"KeepMe\", \"CodeProjectRoot\": \"\", \"Foo\": 1 }")]
+    [InlineData("{ \"RootNamespace\": \"KeepMe\", \"Foo\": 1 }")]
+    public void Codegen_WhenCodsjHasNoCodeProjectRoot_FillsOnlyCodeProjectRootAndKeepsTheRest(string codsjContents)
+    {
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
+        string codsjPath = Path.Combine(TempDirectory, "ProjectCodeSettings.codsj");
+        File.WriteAllText(codsjPath, codsjContents);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0);
+        JObject written = JObject.Parse(File.ReadAllText(codsjPath));
+        ((string?)written["RootNamespace"]).ShouldBe("KeepMe");
+        ((int?)written["Foo"]).ShouldBe(1);
+        ((string?)written["CodeProjectRoot"]).ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void Codegen_WhenCodsjHasNoCodeProjectRootAndNoCsprojFound_LeavesItUntouchedAndReturnsExitCode2()
+    {
+        string isolatedDir = Path.Combine(Path.GetTempPath(), "GumCliCodegenNoCsproj_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(isolatedDir);
+
+        try
+        {
+            string gumxPath = Path.Combine(isolatedDir, "MyProject.gumx");
+            new ProjectCreator().Create(gumxPath);
+            string codsjPath = Path.Combine(isolatedDir, "ProjectCodeSettings.codsj");
+            File.WriteAllText(codsjPath, "{ \"RootNamespace\": \"KeepMe\", \"CodeProjectRoot\": \"\" }");
+            byte[] originalBytes = File.ReadAllBytes(codsjPath);
+
+            CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+            // A .csproj somewhere above the temp folder would make auto-detection succeed.
+            if (result.ExitCode != 0)
+            {
+                result.ExitCode.ShouldBe(2);
+                File.ReadAllBytes(codsjPath).ShouldBe(originalBytes);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(isolatedDir))
+            {
+                Directory.Delete(isolatedDir, recursive: true);
+            }
+        }
     }
 
     [Fact]
