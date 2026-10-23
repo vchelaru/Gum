@@ -92,7 +92,7 @@ public class TextRuntimeUnsupportedCustomFontTests : IDisposable
         sut.UseCustomFont = true;
         sut.CustomFontFile = "Fonts/MyFont.fnt";
 
-        ((Text)sut.RenderableComponent).FontName.ShouldBe(sut.Font);
+        sut.RenderableComponent.ShouldBeOfType<Text>().FontName.ShouldBe(sut.Font);
     }
 
     [Fact]
