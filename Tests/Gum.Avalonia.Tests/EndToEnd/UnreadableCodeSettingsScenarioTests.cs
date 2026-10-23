@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -201,28 +202,37 @@ public class UnreadableCodeSettingsScenarioTests
         using CodeTabHarness code = new CodeTabHarness();
         ComponentSave style = code.Project.AddComponent("Style");
         ComponentSave button = code.Project.AddComponent("Button");
-        InstanceSave label = code.Project.AddInstance(button, "Label", "Text");
         code.Select(style);
         code.Tree.Grid.TypeAndEnter("Width", "90");
-        code.Tree.Click(code.Tree.NodeFor(label));
+        code.Select(button);
         code.Tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Components/Style.Width");
         code.Tree.SaveAll();
         // Button follows Style, so a Style edit reaches it through the reference.
-        code.Select(button);
         code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
         code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
         string buttonCode = code.CodeFile("Components/Button.Generated.cs");
+        // The tool's startup sends a reference-driven change to the plugins; the test host does not wire it.
+        Action<ElementSave, InstanceSave?, string, object?, bool> sendToPlugins =
+            (element, instance, name, oldValue, isFullCommit) =>
+                TestAppBuilder.Services.GetRequiredService<IPluginManager>().VariableSetThroughReference(element, instance, name, oldValue, isFullCommit);
+        GumRuntime.ElementSaveExtensions.VariableChangedThroughReference += sendToPlugins;
+        try
+        {
+            // Readable: the reference regenerates Button, though Style is the element being edited.
+            DeleteCodeFolder(code);
+            EditStyleWidth(code, style, "120");
+            File.Exists(buttonCode).ShouldBeTrue("a change through a reference regenerates the element that takes it");
 
-        // Readable: the reference regenerates Button, though Style is the element being edited.
-        DeleteCodeFolder(code);
-        EditStyleWidth(code, style, "120");
-        File.Exists(buttonCode).ShouldBeTrue("a change through a reference regenerates the element that takes it");
+            DeleteCodeFolder(code);
+            BreakSettingsFileOnDisk(code);
+            EditStyleWidth(code, style, "150");
 
-        DeleteCodeFolder(code);
-        BreakSettingsFileOnDisk(code);
-        EditStyleWidth(code, style, "150");
-
-        CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
+            CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
+        }
+        finally
+        {
+            GumRuntime.ElementSaveExtensions.VariableChangedThroughReference -= sendToPlugins;
+        }
     }
 
     private static void DeleteCodeFolder(CodeTabHarness code)
@@ -245,7 +255,7 @@ public class UnreadableCodeSettingsScenarioTests
         code.Select(style);
         code.Tree.Grid.TypeAndEnter("Width", width);
         // Elements the reference reached are generated after the commit, from the UI thread's queue.
-        global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        global::Avalonia.Threading.Dispatcher.UIThread.RunJobs(global::Avalonia.Threading.DispatcherPriority.Background);
     }
 
     [AvaloniaFact]
@@ -262,7 +272,7 @@ public class UnreadableCodeSettingsScenarioTests
         string beforeChange = File.ReadAllText(customFile);
 
         // Readable: the custom code's declaration follows the new base type.
-        code.Tree.Grid.PickComboItem("BaseType", "Button");
+        code.Tree.Grid.PickComboItem("BaseType", "Rectangle");
         string afterReadableChange = File.ReadAllText(customFile);
         afterReadableChange.ShouldNotBe(beforeChange, "a base type change rewrites the custom code's declaration");
 
