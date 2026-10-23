@@ -86,7 +86,13 @@ public class KeyboardStateProcessor
     public virtual void Update()
     {
         mLastFrameKeyboardState = mKeyboardState;
-        mKeyboardState = ReadKeyboardState();
+        mKeyboardState = GetKeyboardState();
     }
+
+    /// <summary>
+    /// Reads the keyboard for this frame. <see cref="Update"/> calls it; a subclass overrides it to
+    /// replace the input source, for automation and tests, without reading the OS keyboard.
+    /// </summary>
+    protected virtual KeyboardState GetKeyboardState() => ReadKeyboardState();
 
 }

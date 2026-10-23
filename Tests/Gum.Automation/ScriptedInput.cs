@@ -1,9 +1,11 @@
 using Gum.Input;
-using Gum.Wireframe;
+using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 using GumKeys = Gum.Forms.Input.Keys;
+using Keyboard = Gum.Input.Keyboard;
+using Keys = Microsoft.Xna.Framework.Input.Keys;
 
 namespace Gum.Automation;
 
@@ -19,15 +21,11 @@ public enum MouseButton
 }
 
 /// <summary>
-/// Gum's real <see cref="Cursor"/> fed from scripted state instead of <c>Mouse.GetState()</c>, so
-/// push, click, double-click, drag and roll-over logic is Gum's own and the OS mouse is never read.
+/// Gum's real <see cref="Cursor"/> whose input source is scripted state instead of the OS mouse: it
+/// overrides only <see cref="Cursor.GetMouseState"/> and <see cref="Cursor.GetTouchCollection"/>, so
+/// Gum's unmodified Activity does push, click, double-click, drag and roll-over. Positions are screen pixels.
 /// </summary>
-/// <remarks>
-/// Re-implements <see cref="ICursor.Activity"/>, which is what Forms calls each frame. Calling
-/// <see cref="Cursor.Activity(double)"/> through the concrete <see cref="Cursor"/> type would poll the
-/// real mouse, so hosts must only reach it through <see cref="ICursor"/>. Positions are screen pixels.
-/// </remarks>
-public sealed class ScriptedCursor : Cursor, ICursor
+public sealed class ScriptedCursor : Cursor
 {
     private int _x;
     private int _y;
@@ -74,38 +72,54 @@ public sealed class ScriptedCursor : Cursor, ICursor
     public void Scroll(int detents) => _wheel += detents * 120;
 
     /// <inheritdoc/>
-    public new void Activity(double gameTime)
-    {
-        MouseState state = new MouseState(_x, _y, _wheel,
-            PrimaryHeld ? ButtonState.Pressed : ButtonState.Released,
-            MiddleHeld ? ButtonState.Pressed : ButtonState.Released,
-            SecondaryHeld ? ButtonState.Pressed : ButtonState.Released,
-            ButtonState.Released, ButtonState.Released);
-        Activity(gameTime, state, new TouchCollection(), isMobile: false);
-    }
+    protected override MouseState GetMouseState() => new MouseState(_x, _y, _wheel,
+        PrimaryHeld ? ButtonState.Pressed : ButtonState.Released,
+        MiddleHeld ? ButtonState.Pressed : ButtonState.Released,
+        SecondaryHeld ? ButtonState.Pressed : ButtonState.Released,
+        ButtonState.Released, ButtonState.Released);
+
+    /// <inheritdoc/>
+    protected override TouchCollection GetTouchCollection() => new TouchCollection();
 }
 
 /// <summary>
-/// A keyboard whose held keys and typed text come from the script. Key repeat follows Gum's own
-/// <see cref="PolledKeyboard"/> timing on the game time Forms passes in.
+/// Gum's real <see cref="Keyboard"/> whose input source is scripted: held keys come from a
+/// <see cref="KeyboardStateProcessor"/> overriding <c>GetKeyboardState</c>, and typed text from an
+/// override of <see cref="Keyboard.GetTypedText"/>. Key repeat and typed-key logic stay Gum's own.
 /// </summary>
-public sealed class ScriptedKeyboard : PolledKeyboard
+public sealed class ScriptedKeyboard : Keyboard
 {
-    private static readonly GumKeys[] AllKeys = Enum.GetValues<GumKeys>().Distinct().ToArray();
-    private readonly HashSet<GumKeys> _held = new();
+    private readonly ScriptedKeyboardState _state = new();
+    private readonly StringBuilder _pendingText = new();
 
-    /// <inheritdoc/>
-    protected override IEnumerable<GumKeys> SupportedKeys => AllKeys;
-
-    /// <inheritdoc/>
-    protected override bool IsDeviceKeyDown(GumKeys key) => _held.Contains(key);
+    /// <summary>Creates a keyboard with no keys held and no window.</summary>
+    public ScriptedKeyboard() : base(null)
+    {
+        KeyboardStateProcessor = _state;
+    }
 
     /// <summary>Sets whether <paramref name="key"/> is held on the next frame.</summary>
     public void SetKey(GumKeys key, bool held)
     {
-        if (held) { _held.Add(key); } else { _held.Remove(key); }
+        Keys xnaKey = (Keys)(int)key;
+        if (held) { _state.Held.Add(xnaKey); } else { _state.Held.Remove(xnaKey); }
     }
 
     /// <summary>Queues text delivered to the focused control on the next frame.</summary>
-    public void QueueText(string text) => AppendTypedText(text);
+    public void QueueText(string text) => _pendingText.Append(text);
+
+    /// <inheritdoc/>
+    protected override string? GetTypedText()
+    {
+        string text = _pendingText.ToString();
+        _pendingText.Clear();
+        return text;
+    }
+
+    private sealed class ScriptedKeyboardState : KeyboardStateProcessor
+    {
+        public HashSet<Keys> Held { get; } = new();
+
+        protected override KeyboardState GetKeyboardState() => new KeyboardState(Held.ToArray());
+    }
 }

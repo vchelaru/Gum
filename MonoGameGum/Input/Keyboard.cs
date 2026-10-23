@@ -234,6 +234,9 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     // assigned, so they skip input that arrives in that window.
     StringBuilder? windowTextInputBuffer;
     string processedStringFromWindow = string.Empty;
+    // Whether the last Activity had a typed-text source (window text events or a GetTypedText override).
+    // Without one, GetStringTyped derives characters from key presses.
+    bool hasTypedTextSource;
 
 
 #if !FNA && !ANDROID
@@ -286,7 +289,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         //    return "";
 
         ///////////////////////////////////////early out//////////////////////////////////
-        if (windowTextInputBuffer != null)
+        if (hasTypedTextSource)
         {
             return processedStringFromWindow;
         }
@@ -446,14 +449,9 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
         // Check for any new keys found by the TextInput event and store them in processedStringFromWindow 
         // which we will later handle in TextBox.HandleCharEntered() via Property GetStringTyped()
-        if (windowTextInputBuffer != null)
-        {
-            lock (windowTextInputBuffer)
-            {
-                processedStringFromWindow = windowTextInputBuffer.ToString();
-                windowTextInputBuffer.Clear();
-            }
-        }
+        string? typedText = GetTypedText();
+        hasTypedTextSource = typedText != null;
+        processedStringFromWindow = typedText ?? string.Empty;
 
         // Gather all the keys from Keyboard.GetState()
         KeyboardStateProcessor.Update();
@@ -463,6 +461,27 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
         // Process any held down keys from Keyboard.GetState()
         HandleKeyStillDown(currentTime);
+    }
+
+    /// <summary>
+    /// Returns the text typed since the previous frame, or null when this keyboard has no text source,
+    /// in which case <see cref="GetStringTyped"/> derives characters from key presses.
+    /// <see cref="Activity(double)"/> calls it once per frame. The default drains the game window's text
+    /// events; a subclass overrides it to replace the input source, for automation and tests.
+    /// </summary>
+    protected virtual string? GetTypedText()
+    {
+        StringBuilder? buffer = windowTextInputBuffer;
+        if (buffer == null)
+        {
+            return null;
+        }
+        lock (buffer)
+        {
+            string text = buffer.ToString();
+            buffer.Clear();
+            return text;
+        }
     }
 
     // Handles initial Key press

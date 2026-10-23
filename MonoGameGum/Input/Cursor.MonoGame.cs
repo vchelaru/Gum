@@ -27,12 +27,20 @@ public partial class Cursor
     /// <see cref="GameWindow"/> for mobile touch-offset math.</param>
     internal static Cursor CreateForCurrentPlatform(Game? game) => new Cursor(game?.Window);
 
-    private MouseState GetMouseState()
+    /// <summary>
+    /// Reads the mouse for this frame. <see cref="Activity(double)"/> calls it; a subclass overrides it to
+    /// replace the input source, for automation and tests, without reading the OS mouse.
+    /// </summary>
+    protected virtual MouseState GetMouseState()
     {
         return Microsoft.Xna.Framework.Input.Mouse.GetState();
     }
 
-    private TouchCollection GetTouchCollection()
+    /// <summary>
+    /// Reads the touch points for this frame. <see cref="Activity(double)"/> calls it; a subclass overrides it
+    /// to replace the input source, for automation and tests, without reading the OS touch panel.
+    /// </summary>
+    protected virtual TouchCollection GetTouchCollection()
     {
         TouchCollection touchCollection;
         // In MonoGame there's no way to check if GameWindow has been set.
