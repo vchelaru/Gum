@@ -35,13 +35,13 @@ Run the following from the root of the repository:
 
 ```sh
 dotnet build Gum.slnx
-dotnet run --project Tool/Gum.Avalonia
+dotnet run --no-build --project Tool/Gum.Avalonia
 ```
 
 To open a project on startup, add its path after `--`:
 
 ```sh
-dotnet run --project Tool/Gum.Avalonia -- path/to/MyProject.gumj
+dotnet run --no-build --project Tool/Gum.Avalonia -- path/to/MyProject.gumj
 ```
 
 ### Building Plugins
