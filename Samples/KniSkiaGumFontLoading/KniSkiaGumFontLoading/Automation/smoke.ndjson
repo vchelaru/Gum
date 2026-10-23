@@ -1,0 +1,4 @@
+// Smoke script for the KniSkiaGumFontLoading sample (one screen, no controls). Run from the build output folder (bin/Debug/net8.0):
+// KniSkiaGumFontLoading.exe --gum-automation Automation/smoke.ndjson --gum-automation-hide --gum-automation-report automation-report.txt
+{"cmd":"step","frames":5}
+{"cmd":"screenshot","path":"automation-fonts.png"}

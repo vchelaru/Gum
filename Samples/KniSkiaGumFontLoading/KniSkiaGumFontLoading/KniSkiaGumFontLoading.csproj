@@ -41,4 +41,13 @@
 		<None Include="..\..\SilkNetGum\SilkNetGumSample\Winter Selfie.ttf" Link="Content\Fonts\Winter Selfie.ttf" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
+	<!-- In-process automation (scripted Gum input, NDJSON runner, off-screen window). Debug only, so it
+	     never ships to players. The launch command is at the top of Automation/smoke.ndjson. -->
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<ProjectReference Include="..\..\..\Tests\Gum.Automation.KniSkia\Gum.Automation.KniSkia.csproj" />
+		<None Update="Automation\**\*.ndjson">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 </Project>

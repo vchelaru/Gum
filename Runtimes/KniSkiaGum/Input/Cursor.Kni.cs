@@ -77,7 +77,11 @@ public partial class Cursor
             i => new Vector2(current[i].Position.X, current[i].Position.Y));
     }
 
-    private MouseState GetMouseState()
+    /// <summary>
+    /// Reads this frame's mouse state. Override to supply input from another source, such as a
+    /// scripted cursor in automation, as MonoGameGum's and RaylibGum's cursors allow.
+    /// </summary>
+    protected virtual MouseState GetMouseState()
     {
         XnaMouseState mouse = ReadMouse();
         return new MouseState

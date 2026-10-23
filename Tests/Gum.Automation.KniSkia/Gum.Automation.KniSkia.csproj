@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Gum.Automation for KNI Skia hosts (Runtimes/KniSkiaGum): the same driver, NDJSON runner, host and
+    window parker, compiled from ../Gum.Automation's sources against KniSkiaGum instead of MonoGameGum.
+    The KNISKIA branches in those files cover the few places the hosts differ (Gum's neutral mouse
+    state, typed text, no viewport inset, the Skia screenshot). Test and tooling code only; not packed.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <RootNamespace>Gum.Automation</RootNamespace>
+    <DefineConstants>$(DefineConstants);KNISKIA</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Gum.Automation\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Same KNI version as KniSkiaGum. Compile-time only: the game brings its own KNI platform package. -->
+    <PackageReference Include="nkast.Xna.Framework" VersionOverride="4.2.9001" PrivateAssets="All" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" VersionOverride="4.2.9001" PrivateAssets="All" />
+    <PackageReference Include="nkast.Xna.Framework.Input" VersionOverride="4.2.9001" PrivateAssets="All" />
+    <PackageReference Include="nkast.Xna.Framework.Game" VersionOverride="4.2.9001" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+  </ItemGroup>
+
+</Project>

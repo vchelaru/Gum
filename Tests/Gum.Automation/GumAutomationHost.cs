@@ -110,6 +110,8 @@ public sealed class GumAutomationHost
     private static void HideBeforeFirstShow(Game game)
     {
         Environment.SetEnvironmentVariable("SDL_WINDOW_NO_ACTIVATION_WHEN_SHOWN", "1");
+#if !KNISKIA
+        // KNI's GameWindow has no Position; there the parker moves the window on the first Update.
         Point offScreen = new Point(-32000, -32000);
         game.Window.Position = offScreen;
         if (game.Services.GetService(typeof(IGraphicsDeviceService)) is IGraphicsDeviceService graphics)
@@ -117,6 +119,7 @@ public sealed class GumAutomationHost
             graphics.DeviceCreated += (_, _) => game.Window.Position = offScreen;
             graphics.DeviceReset += (_, _) => game.Window.Position = offScreen;
         }
+#endif
     }
 
     /// <summary>The driver the script runs through.</summary>
@@ -205,18 +208,54 @@ public sealed class GumAutomationHost
     private static void SaveGumFrame(GraphicsDevice device, string path)
     {
         PresentationParameters parameters = device.PresentationParameters;
+#if KNISKIA
+        // Gum draws into any SKCanvas, so the frame is rendered into an offscreen Skia surface. The
+        // game's own canvas (or none, before the game's first Draw) is put back afterwards.
+        global::RenderingLibrary.SystemManagers managers = global::RenderingLibrary.SystemManagers.Default;
+        SkiaSharp.SKCanvas? previousCanvas = null;
+        try
+        {
+            previousCanvas = managers.Canvas;
+        }
+        catch (InvalidOperationException)
+        {
+            // The getter throws until a canvas is assigned; the game has not drawn yet.
+        }
+        using SkiaSharp.SKSurface surface = SkiaSharp.SKSurface.Create(
+            new SkiaSharp.SKImageInfo(parameters.BackBufferWidth, parameters.BackBufferHeight));
+        surface.Canvas.Clear(SkiaSharp.SKColors.Black);
+        try
+        {
+            GumService.Default.Draw(surface.Canvas);
+        }
+        finally
+        {
+            managers.Canvas = previousCanvas!;
+        }
+        CreateFolderOf(path);
+        using SkiaSharp.SKImage image = surface.Snapshot();
+        using SkiaSharp.SKData png = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+        using FileStream stream = File.Create(path);
+        png.SaveTo(stream);
+#else
         using RenderTarget2D target = new RenderTarget2D(device, parameters.BackBufferWidth, parameters.BackBufferHeight);
         device.SetRenderTarget(target);
         device.Clear(Color.Black);
         GumService.Default.Draw();
         device.SetRenderTarget(null);
+        CreateFolderOf(path);
+        using FileStream stream = File.Create(path);
+        target.SaveAsPng(stream, target.Width, target.Height);
+#endif
+    }
+
+    private static void CreateFolderOf(string path)
+    {
         string? folder = Path.GetDirectoryName(Path.GetFullPath(path));
         if (folder != null)
         {
             Directory.CreateDirectory(folder);
         }
-        using FileStream stream = File.Create(path);
-        target.SaveAsPng(stream, target.Width, target.Height);
     }
 
     private static string? ValueAfter(string[] args, string flag)

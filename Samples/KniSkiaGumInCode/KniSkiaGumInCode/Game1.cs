@@ -20,6 +20,12 @@ public class Game1 : Game
     private readonly GraphicsDeviceManager _graphics;
     private SkiaRenderTarget2D? _canvas;
 
+#if DEBUG
+    // Plays an NDJSON script when launched with --gum-automation <script>; null otherwise.
+    // Automation/smoke.ndjson has the launch command; GumAutomationHost documents the flags.
+    private readonly Gum.Automation.GumAutomationHost? _automation;
+#endif
+
     private StackPanel _navStrip = null!;
     private FrameworkElement? _currentScreen;
 
@@ -32,6 +38,10 @@ public class Game1 : Game
         };
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
+
+#if DEBUG
+        _automation = Gum.Automation.GumAutomationHost.FromArgs(Environment.GetCommandLineArgs(), this);
+#endif
     }
 
     protected override void Initialize()
@@ -92,6 +102,7 @@ public class Game1 : Game
     private void AddFitModeRadio(string text, bool isChecked, Action onChecked)
     {
         RadioButton radio = new RadioButton();
+        radio.Name = "FitMode" + text;
         radio.GroupName = "FitMode";
         radio.Text = text;
         radio.IsChecked = isChecked;
@@ -102,6 +113,8 @@ public class Game1 : Game
     private void AddNavButton(string text, Action onClick)
     {
         Button button = new Button();
+        // Named so automation scripts can target it, e.g. NavForms or NavRenderTarget.
+        button.Name = "Nav" + text.Replace(" ", "");
         button.Text = text;
         button.Click += (_, _) => onClick();
         _navStrip.AddChild(button);
@@ -129,8 +142,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed
-            || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        bool isAutomated = false;
+#if DEBUG
+        _automation?.BeforeUpdate();
+        // An automation run reads no OS input; the script's scripted cursor and keyboard drive Gum.
+        isAutomated = _automation != null;
+#endif
+        if (!isAutomated && (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed
+            || Keyboard.GetState().IsKeyDown(Keys.Escape)))
         {
             Exit();
         }

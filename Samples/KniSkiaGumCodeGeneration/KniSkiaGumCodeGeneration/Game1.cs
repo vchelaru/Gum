@@ -15,6 +15,12 @@ public class Game1 : Game
 {
     private readonly GraphicsDeviceManager _graphics;
     private SkiaRenderTarget2D? _canvas;
+
+#if DEBUG
+    // Plays an NDJSON script when launched with --gum-automation <script>; null otherwise.
+    // Automation/smoke.ndjson has the launch command; GumAutomationHost documents the flags.
+    private readonly Gum.Automation.GumAutomationHost? _automation;
+#endif
     private MainMenuFullGeneration? _mainMenu;
 
     public Game1()
@@ -25,6 +31,10 @@ public class Game1 : Game
             PreferredBackBufferHeight = 720
         };
         IsMouseVisible = true;
+
+#if DEBUG
+        _automation = Gum.Automation.GumAutomationHost.FromArgs(Environment.GetCommandLineArgs(), this);
+#endif
     }
 
     protected override void Initialize()
@@ -44,6 +54,9 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
+#if DEBUG
+        _automation?.BeforeUpdate();
+#endif
         GumService.Default.Update(gameTime);
         base.Update(gameTime);
     }
