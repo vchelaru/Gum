@@ -273,6 +273,8 @@ public class Text : IVisible, IRenderableIpso,
         public Font Font;
         public float DrawSize;
         public float Scale;
+        /// <summary>The factor the run's glyphs are stretched by, which the outline thickness is stretched by (#6669).</summary>
+        public float OutlineScale;
         /// <summary>The run's line height and baseline (from the line top) in pixels, from the run's own font.</summary>
         public float LineHeight;
         public float BaselineFromTop;
@@ -1452,7 +1454,7 @@ public class Text : IVisible, IRenderableIpso,
             DrawTextPro(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, DropshadowColor);
         }
 
-        DrawOutline(fontValue, line, linePosition, origin, fontValue.BaseSize * EffectiveFontScale, Color);
+        DrawOutline(fontValue, line, linePosition, origin, fontValue.BaseSize * EffectiveFontScale, EffectiveFontScale, Color);
 
         // Texture filtering is applied once when the font's atlas texture is loaded/built (see
         // ContentLoader.DefaultTextureFilter, #3496), not per-draw — a per-line GPU state reset here
@@ -1471,12 +1473,18 @@ public class Text : IVisible, IRenderableIpso,
         public readonly Font Font;
         public readonly float DrawSize;
         public readonly float LayoutScale;
+        /// <summary>
+        /// The factor the run's glyphs are stretched by (FontScale, with the oversample compensation for the base
+        /// font), which an outline's thickness is stretched by. A FontSize is not part of it (#6669).
+        /// </summary>
+        public readonly float OutlineScale;
 
-        public ResolvedRunFont(Font font, float drawSize, float layoutScale)
+        public ResolvedRunFont(Font font, float drawSize, float layoutScale, float outlineScale)
         {
             Font = font;
             DrawSize = drawSize;
             LayoutScale = layoutScale;
+            OutlineScale = outlineScale;
         }
     }
 
@@ -1541,6 +1549,7 @@ public class Text : IVisible, IRenderableIpso,
 
         float baseSize = baseFont.BaseSize;
         float drawSize;
+        float outlineScale = sizeFontScale;
         if (hasSwapFont)
         {
             // A crisp font rasterized at the requested size: draw it at its native size times the run's
@@ -1555,10 +1564,11 @@ public class Text : IVisible, IRenderableIpso,
         else
         {
             drawSize = baseSize * scale;
+            outlineScale = scale;
         }
 
         float layoutScale = baseSize > 0 ? drawSize / baseSize : scale;
-        return new ResolvedRunFont(drawFont, drawSize, layoutScale);
+        return new ResolvedRunFont(drawFont, drawSize, layoutScale, outlineScale);
     }
 
     /// <summary>
@@ -1698,6 +1708,7 @@ public class Text : IVisible, IRenderableIpso,
             // A [Custom] scale or rotation changes only how the letter is drawn, so it sizes nothing here.
             drawRun.DrawSize = resolvedFont.DrawSize;
             drawRun.Scale = resolvedFont.LayoutScale;
+            drawRun.OutlineScale = resolvedFont.OutlineScale;
             SetRunLineMetrics(ref drawRun);
             drawRun.Text = runText;
             drawRun.XOffset = xOffset;
@@ -1754,7 +1765,7 @@ public class Text : IVisible, IRenderableIpso,
                 DrawTextPro(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, 0, drawRun.DrawSize, 0, DropshadowColor);
             }
 
-            DrawOutline(drawRun.Font, drawRun.Text, runPosition, runOrigin, drawRun.DrawSize, drawRun.Color);
+            DrawOutline(drawRun.Font, drawRun.Text, runPosition, runOrigin, drawRun.DrawSize, drawRun.OutlineScale, drawRun.Color);
             DrawTextPro(drawRun.Font, drawRun.Text, runPosition, runOrigin, 0, drawRun.DrawSize, 0, drawRun.Color);
 
             advance += drawRun.Width;
@@ -1801,11 +1812,11 @@ public class Text : IVisible, IRenderableIpso,
             DrawTransformed(runShadowFont, ref drawRun, SnapToPixelIfNeeded(
                 scaledTopLeft + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale, totalRotation), DropshadowColor);
         }
-        if (RaylibFontOutlineRegistry.TryGet(drawRun.Font.Texture.Id, out int outlineThickness))
+        // An upright ring as thick as DrawOutline's, around the transformed letter.
+        if (RaylibFontOutlineRegistry.TryGetOffsets(drawRun.Font.Texture.Id, drawRun.OutlineScale, out Vector2[] outlineOffsets))
         {
-            // An upright ring of the same fixed thickness as DrawOutline, around the transformed letter.
             Color outlineColor = new Color((byte)0, (byte)0, (byte)0, drawRun.Color.A);
-            foreach (Vector2 offset in RaylibFontOutlineRegistry.GetOffsets(outlineThickness))
+            foreach (Vector2 offset in outlineOffsets)
             {
                 DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft + offset, outlineColor);
             }
@@ -1815,18 +1826,19 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// Draws the outline of a font loaded without a font creator (#6639): the glyphs in black, at the offsets of a
-    /// round outline of the font's OutlineThickness, a fixed number of pixels whatever the FontScale, so the fill drawn after
-    /// it sits on top. A font with an outline baked into its atlas (from a creator) has none registered.
+    /// round outline of the font's OutlineThickness stretched by <paramref name="outlineScale"/>, the factor the glyphs are
+    /// stretched by (#6669), so the fill
+    /// drawn after it sits on top. A font with an outline baked into its atlas (from a creator) has none registered.
     /// </summary>
-    private static void DrawOutline(Font font, string text, Vector2 position, Vector2 origin, float drawSize, Color color)
+    private static void DrawOutline(Font font, string text, Vector2 position, Vector2 origin, float drawSize, float outlineScale, Color color)
     {
-        if (!RaylibFontOutlineRegistry.TryGet(font.Texture.Id, out int thickness))
+        if (!RaylibFontOutlineRegistry.TryGetOffsets(font.Texture.Id, outlineScale, out Vector2[] offsets))
         {
             return;
         }
 
         Color outlineColor = new Color((byte)0, (byte)0, (byte)0, color.A);
-        foreach (Vector2 offset in RaylibFontOutlineRegistry.GetOffsets(thickness))
+        foreach (Vector2 offset in offsets)
         {
             DrawTextPro(font, text, position + offset, origin, 0, drawSize, 0, outlineColor);
         }

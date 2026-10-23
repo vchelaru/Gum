@@ -38,6 +38,29 @@ internal static class RaylibFontOutlineRegistry
         return _thicknessByTextureId.TryGetValue(textureId, out thickness);
     }
 
+    /// <summary>The largest scaled outline radius drawn, so a large FontScale cannot cost thousands of passes per line.</summary>
+    public const int MaxScaledRadius = 16;
+
+    /// <summary>
+    /// The offsets of the outline of the font with the given atlas texture id, its thickness stretched by
+    /// <paramref name="scale"/>, or false when the font has no outline registered. <paramref name="scale"/> is the
+    /// factor the glyphs are stretched by (FontScale and the global scale): an outline baked into the atlas by a
+    /// creator stretches with the image, so this one does too (#6669). A FontSize is not part of it, since it loads
+    /// the atlas at that size and leaves the thickness in pixels.
+    /// </summary>
+    public static bool TryGetOffsets(uint textureId, float scale, out Vector2[] offsets)
+    {
+        offsets = System.Array.Empty<Vector2>();
+        if (!TryGet(textureId, out int thickness))
+        {
+            return false;
+        }
+
+        int scaledRadius = System.Math.Clamp((int)System.MathF.Round(thickness * scale), 1, MaxScaledRadius);
+        offsets = GetOffsets(scaledRadius);
+        return true;
+    }
+
     public static void Remove(uint textureId)
     {
         _thicknessByTextureId.Remove(textureId);
