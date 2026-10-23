@@ -114,6 +114,52 @@ public partial class CustomSetPropertyOnRenderable
         PropertyAssignmentError?.Invoke(message);
     }
 
+#if SKIA
+    // Skia-only: the GumShapes projects link this file but have no GumFontMapper and no GumCommon internals.
+    /// <summary>
+    /// Reports a font file a Skia text could not use, once per element and file, since the font is resolved again on
+    /// every font property change: a missing file through <see cref="GraphicalUiElement.MissingFileBehavior"/>, and a
+    /// file that is not a TrueType/OpenType font (a .fnt bitmap font, or one that does not parse) as unsupported.
+    /// The text keeps drawing with its default font.
+    /// </summary>
+    internal static void ReportUnresolvedFontFile(TextRuntime element)
+    {
+        string variableName = element.UseCustomFont ? nameof(TextRuntime.CustomFontFile) : nameof(TextRuntime.Font);
+        string? fontFile = element.UseCustomFont ? element.CustomFontFile : element.Font;
+        if (string.IsNullOrEmpty(fontFile))
+        {
+            return;
+        }
+
+        bool isFontFile = global::RenderingLibrary.Graphics.Fonts.BmfcSave.IsFontFilePath(fontFile);
+        if (isFontFile && !SkiaGum.Content.Fonts.GumFontMapper.FontFileExists(fontFile))
+        {
+            string message = $"Text {element.Name} uses {variableName} {fontFile}, which was not found; " +
+                "this text draws with the default font instead." +
+                "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory" +
+                "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                throw new System.IO.FileNotFoundException(message, fontFile);
+            }
+            if (GumRuntime.ElementSaveExtensions.IsFirstReport(element, fontFile, variableName))
+            {
+                RaisePropertyAssignmentError(message);
+            }
+            return;
+        }
+
+        // A Font that is not a file path is a family name, which falls back to a system font without a report.
+        if ((isFontFile || element.UseCustomFont)
+            && GumRuntime.ElementSaveExtensions.IsFirstReport(element, fontFile, variableName))
+        {
+            RaisePropertyAssignmentError(
+                $"Text {element.Name} uses {variableName} {fontFile}, which is not a TrueType or OpenType font Skia can render. " +
+                "Skia needs a .ttf or .otf custom font file; this text draws with the default font instead.");
+        }
+    }
+#endif
+
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
     // gradient color channels, gradient endpoints, etc.) forward to BOTH slots; reflection

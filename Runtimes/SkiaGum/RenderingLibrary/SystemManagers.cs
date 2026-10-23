@@ -141,9 +141,13 @@ namespace RenderingLibrary
             {
                 // #3670/#3703: resolve CustomFontFile/Font-as-path .ttf/.otf sources through
                 // GumFontMapper instead of passing Font straight through as a system family name.
-                asText.FontName = SkiaGum.Content.Fonts.GumFontMapper.ResolveFontFamily(
-                    textRuntime.UseCustomFont, textRuntime.CustomFontFile, textRuntime.Font)
-                    ?? textRuntime.Font ?? "Arial";
+                string? resolvedFamily = SkiaGum.Content.Fonts.GumFontMapper.ResolveFontFamily(
+                    textRuntime.UseCustomFont, textRuntime.CustomFontFile, textRuntime.Font);
+                if (resolvedFamily == null)
+                {
+                    CustomSetPropertyOnRenderable.ReportUnresolvedFontFile(textRuntime);
+                }
+                asText.FontName = resolvedFamily ?? textRuntime.Font ?? "Arial";
                 asText.IsItalic = textRuntime.IsItalic;
                 // BoldWeight is an embolden multiplier (1.0 = normal). Do NOT set CSS weights (400/700)
                 // here. Forward the stored value (not IsBold ? 1.5f : 1.0f) -- recomputing from the

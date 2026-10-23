@@ -1610,16 +1610,23 @@ namespace GumRuntime
         {
             if (liveRoot != null)
             {
-                HashSet<(string Line, string Variable)> reported = ReportedByOwner.GetOrCreateValue(liveRoot);
-                lock (reported)
-                {
-                    return reported.Add((referenceString, variableName));
-                }
+                return IsFirstReport(liveRoot, referenceString, variableName);
             }
 
             lock (ReportedWithoutOwner)
             {
                 return ReportedWithoutOwner.Add((stateSave.ParentContainer?.Name ?? string.Empty, referenceString, variableName));
+            }
+        }
+
+        // Also used by a platform that reports a value it cannot apply on every font or layout update (Skia's .fnt
+        // CustomFontFile), so an element reports a given line once.
+        internal static bool IsFirstReport(GraphicalUiElement owner, string line, string variableName)
+        {
+            HashSet<(string Line, string Variable)> reported = ReportedByOwner.GetOrCreateValue(owner);
+            lock (reported)
+            {
+                return reported.Add((line, variableName));
             }
         }
 
