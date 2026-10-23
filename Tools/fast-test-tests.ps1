@@ -46,6 +46,8 @@ try {
         @('test A.Tests/A.Tests.csproj FullyQualifiedName~A.UntrackedTests.|FullyQualifiedName~A.UntrackedTests+')
     Assert-Plan 'class only in a project outside every solution is refused' 'OutsideOnlyTests' `
         @('REFUSED: not a test class in any test project: OutsideOnlyTests')
+    Assert-Plan 'Project:Class runs a project outside every solution when named' 'Outside.Tests:OutsideOnlyTests' `
+        @('test Outside.Tests/Outside.Tests.csproj FullyQualifiedName~O.OutsideOnlyTests.|FullyQualifiedName~O.OutsideOnlyTests+')
 }
 finally { Remove-Item -Recurse -Force $scratch -ErrorAction SilentlyContinue }
 

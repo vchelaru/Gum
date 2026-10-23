@@ -7,7 +7,7 @@ description: Pixel tests that render Gum through a real FlatRedBall (FRB1) game.
 
 `Tests/FlatRedBall.GumRendering.Tests` draws Gum through FRB's own `GumIdb` and checks single pixels against arithmetic. It exists because `MonoGameGum.IntegrationTests` cannot model FRB's premultiplied pipeline (`NormalBlendState == AlphaBlend`). Run it after changing blend states, `Sprite.Render`, or the render-target bake/composite in `Renderer.cs`. For compile-only checks see `frb-build-verification`.
 
-Run it by path: `dotnet test Tests/FlatRedBall.GumRendering.Tests`. It is in no solution, and the build skips itself with a warning when `../FlatRedBall` is missing.
+Run it by path, `dotnet test Tests/FlatRedBall.GumRendering.Tests`, or one class with `pwsh Tools/fast-test.ps1 FlatRedBall.GumRendering.Tests:BlendMathTests`; it is in no solution, so fast-test needs the `Project:` prefix. The build skips itself with a warning when `../FlatRedBall` is missing.
 
 | File | Purpose |
 |---|---|

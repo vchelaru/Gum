@@ -6,7 +6,8 @@ project) are refused: CI runs the broad suites, a local run is only for the code
 
 .PARAMETER Tests
 Test class names, or Class.Method, comma separated or as separate arguments. Project:Class (or
-Project:Class.Method, Project being the csproj name) picks one project when a class name is in several.
+Project:Class.Method, Project being the csproj name) picks one project when a class name is in several,
+and is the only way to run a test project no repo solution includes.
 
 .PARAMETER NoBuild
 Skip the build step (the projects were already built by a previous run).
@@ -64,6 +65,12 @@ $parsed = foreach ($request in $requests) {
     $parts = $rest -split '\.', 2
     [pscustomobject]@{ Request = $request; Project = $projectName; Class = $parts[0]; Method = if ($parts.Count -gt 1) { $parts[1] } else { $null } }
 }
+# A project named explicitly by Project:Class is a candidate even when no repo solution includes it
+# (the FRB pixel harness, the KniGumInCode Playwright tests), since naming it is the opt-in.
+foreach ($name in @($parsed | Where-Object { $_.Project } | ForEach-Object { $_.Project } | Sort-Object -Unique)) {
+    if ($testProjects | Where-Object { [System.IO.Path]::GetFileNameWithoutExtension($_) -eq $name }) { continue }
+    $testProjects += @(git ls-files -- "$name.csproj" "*/$name.csproj")
+}
 $classNames = $parsed | ForEach-Object { $_.Class } | Sort-Object -Unique
 $classPattern = "class[[:space:]]+($($classNames -join '|'))([^A-Za-z0-9_]|$)"
 
@@ -106,7 +113,7 @@ foreach ($item in $parsed) {
 $unknown = @($parsed | Where-Object { $targets[$_.Request].Count -eq 0 } | ForEach-Object { $_.Request })
 if ($unknown.Count -gt 0) {
     Write-Host "REFUSED: not a test class in any test project: $($unknown -join ', ')"
-    Write-Host "Name test classes (optionally Project:Class or Class.Method), never a namespace, a folder or a whole project. CI runs the broad suites. Only projects in a repo solution count."
+    Write-Host "Name test classes (optionally Project:Class or Class.Method), never a namespace, a folder or a whole project. CI runs the broad suites. Only projects in a repo solution count, unless named as Project:Class."
     exit 2
 }
 
