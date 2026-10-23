@@ -127,3 +127,22 @@
         return 'ok uid=' + tex.nkUid + ' decode=' + (t1 - t0).toFixed(1) + ' upload=' + (t2 - t1).toFixed(1);
     };
 })();
+
+// SPIKE #6156 (not for merge): raw-pixel gum.pkg bench helpers. BrotliDecode is KNI's template decoder (index.html).
+window.gumBrotliJs = function (bytes) {
+    const out = window.BrotliDecode(new Int8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+    return new Uint8Array(out.buffer, out.byteOffset, out.byteLength);
+};
+window.gumBrotliJsTimed = function (bytes) {
+    const input = new Int8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const t0 = performance.now();
+    window.BrotliDecode(input);
+    return performance.now() - t0;
+};
+window.gumDecompressionStreamFormats = function () {
+    const ok = [];
+    for (const f of ['gzip', 'deflate', 'deflate-raw', 'brotli', 'br']) {
+        try { new DecompressionStream(f); ok.push(f + ':yes'); } catch (e) { ok.push(f + ':no'); }
+    }
+    return navigator.userAgent + ' ' + ok.join(',');
+};

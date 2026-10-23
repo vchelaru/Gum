@@ -47,9 +47,9 @@ namespace KniGumFromFile.Pages
         {
             try
             {
-                PremultiplyBench.Run(_game.GraphicsDevice, Console.WriteLine);
-                WebLoadBench.RunE(_game, Console.WriteLine);
-                await WebLoadBench.RunD(JsRuntime, _game, Console.WriteLine);
+                // Earlier spikes: PremultiplyBench.Run, WebLoadBench.RunE / RunD.
+                PkgLoadBench.Run(JsRuntime, _game.GraphicsDevice, Console.WriteLine);
+                await System.Threading.Tasks.Task.CompletedTask;
             }
             catch (Exception e)
             {
