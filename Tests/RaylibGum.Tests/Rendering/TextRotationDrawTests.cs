@@ -61,7 +61,7 @@ public class TextRotationDrawTests : BaseTestClass
     {
         // MonoGame draws text turned by anything but a whole quarter where it falls, unsnapped.
         Color[] whole = Render("IW", left: 80, top: 120, text => text.Rotation = 30);
-        Color[] subpixel = Render("IW", left: 80.5f, top: 120.5f, text => text.Rotation = 30);
+        Color[] subpixel = Render("IW", left: 80.3f, top: 120.3f, text => text.Rotation = 30);
 
         subpixel.SequenceEqual(whole).ShouldBeFalse();
     }
