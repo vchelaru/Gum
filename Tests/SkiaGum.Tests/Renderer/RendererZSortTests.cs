@@ -73,6 +73,21 @@ public class RendererZSortTests : IDisposable
     }
 
     [Fact]
+    public void Draw_PreRenderMovesY_SortsOnTheMovedY()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        MovesOnPreRenderRectangle red = new() { Y = 0, Width = 16, Height = 16, IsFilled = true, FillColor = SKColors.Red, PreRenderY = 8 };
+        RectangleRuntime lime = CreateRectangle(x: 0, y: 4, SKColors.Lime);
+        SystemManagers.Default.Renderer.MainLayer.SecondarySortOnY = true;
+        AddToMainLayer(red);
+        AddToMainLayer(lime);
+
+        SystemManagers.Default.Draw();
+
+        PixelAt(surface, 4, 12).ShouldBe(SKColors.Red, "because the layer sorts after PreRender, as MonoGame's RenderLayer does, so red's moved Y of 8 puts it below lime");
+    }
+
+    [Fact]
     public void Draw_ChildrenWithZAgainstOrder_DrawInChildOrder()
     {
         using SKSurface surface = CreateInitializedSurface(32);
@@ -127,5 +142,16 @@ public class RendererZSortTests : IDisposable
         using SKImage image = surface.Snapshot();
         using SKBitmap bitmap = SKBitmap.FromImage(image);
         return bitmap.GetPixel(x, y);
+    }
+
+    private class MovesOnPreRenderRectangle : RectangleRuntime
+    {
+        public float PreRenderY { get; set; }
+
+        public override void PreRender()
+        {
+            Y = PreRenderY;
+            base.PreRender();
+        }
     }
 }
