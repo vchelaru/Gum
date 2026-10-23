@@ -45,6 +45,8 @@
     <None Include="Content\Fonts\Orbitron-Black.ttf" CopyToOutputDirectory="PreserveNewest" />
     <!-- #6567: a second TTF with different ascent/descent proportions, for the TTF baseline tests. -->
     <None Include="Content\Fonts\OpenSans-Regular.ttf" CopyToOutputDirectory="PreserveNewest" />
+    <!-- #6620: one family in four style cuts, for the native fallback's bold/italic lookup. -->
+    <None Include="..\..\Themes\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\Nunito-*.ttf" Link="Content\Fonts\Nunito\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

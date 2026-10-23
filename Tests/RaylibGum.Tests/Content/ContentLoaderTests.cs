@@ -1,4 +1,4 @@
-using Raylib_cs;
+﻿using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using Shouldly;
@@ -977,6 +977,31 @@ public class ContentLoaderTests : BaseTestClass
             {
                 Directory.Delete(tempRoot, recursive: true);
             }
+        }
+    }
+
+    // #6620: LoadContent<Font> has no size argument, so a font file it loads directly is rasterized at a
+    // fixed em of 24 pixels. Text loads its own size through the font cascade, not through this call.
+    [Fact]
+    public void LoadContent_Font_TtfFile_LoadsAtEmSize24()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        LoaderManager.Self.CacheTextures = false;
+        string ttfPath = Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "OpenSans-Regular.ttf");
+        Font font = default;
+        try
+        {
+            font = LoaderManager.Self.LoadContent<Font>(ttfPath);
+
+            font.BaseSize.ShouldBe(24);
+        }
+        finally
+        {
+            if (font.Texture.Id != 0)
+            {
+                TtfFontLoader.Unload(font);
+            }
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
         }
     }
 }
