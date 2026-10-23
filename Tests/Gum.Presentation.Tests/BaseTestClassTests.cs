@@ -80,4 +80,12 @@ public class BaseTestClassTests : BaseTestClass
     {
         FileManagerStateAssert.DisposeRestores(() => new BaseTestClass());
     }
+
+    // A project or fallback Standard Element one test leaves on ObjectFinder.Self would otherwise change
+    // how later tests resolve elements and font paths (#6517).
+    [Fact]
+    public void Dispose_ResetsObjectFinder_WhenATestLeftAProjectAndFallbacks()
+    {
+        ObjectFinderStateAssert.DisposeResets(() => new BaseTestClass());
+    }
 }

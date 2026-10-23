@@ -95,10 +95,6 @@ public class GumServiceTests : BaseTestClass
         }
         finally
         {
-            // ObjectFinder.Self.GumProjectSave is process-wide static state (no BaseTestClass/Dispose
-            // hook in this test project to reset it) -- leaving it set here would fail an unrelated
-            // "no project loaded" test in another class.
-            Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
             try { Directory.Delete(sourceDirectory, recursive: true); } catch { /* best-effort */ }
         }
     }
@@ -159,8 +155,6 @@ public class GumServiceTests : BaseTestClass
         }
         finally
         {
-            ToolsUtilities.FileManager.CustomGetStreamFromFile = hookBefore;
-            Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
             try { Directory.Delete(stagingDirectory, recursive: true); } catch { /* best-effort */ }
             try { Directory.Delete(bundleDirectory, recursive: true); } catch { /* best-effort */ }
         }
@@ -195,7 +189,6 @@ public class GumServiceTests : BaseTestClass
         }
         finally
         {
-            ToolsUtilities.FileManager.CustomGetStreamFromFile = hookBefore;
             GumService.Default.Initialize(surface.Canvas, 200, 100);
             try { Directory.Delete(stagingDirectory, recursive: true); } catch { /* best-effort */ }
         }
@@ -239,7 +232,6 @@ public class GumServiceTests : BaseTestClass
         }
         finally
         {
-            Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
             try { Directory.Delete(sourceDirectory, recursive: true); } catch { /* best-effort */ }
         }
     }
@@ -388,7 +380,6 @@ public class GumServiceTests : BaseTestClass
         }
         finally
         {
-            ToolsUtilities.FileManager.RelativeDirectory = relativeDirectoryBefore;
             GumService.Default.Initialize(surface.Canvas, 200, 100);
             try { Directory.Delete(sourceDirectory, recursive: true); } catch { /* best-effort */ }
         }
