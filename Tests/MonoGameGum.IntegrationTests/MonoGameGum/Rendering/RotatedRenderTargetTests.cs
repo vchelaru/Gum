@@ -256,6 +256,27 @@ public class RotatedRenderTargetTests : BaseTestClass
         coverage.CenterY.ShouldBe(expectedY, 1f, label);
     }
 
+    // The bake of a turned ClipsChildren render target crops a child that overflows it on every
+    // side, leaving exactly the turned container rectangle (#6618).
+    [Fact]
+    public void Draw_RotatedRenderTargetThatClipsChildren_CropsAnOverflowingChild()
+    {
+        ContainerRuntime container = new()
+        {
+            X = 120, Y = 120, Width = 80, Height = 80, Rotation = 30, IsRenderTarget = true, ClipsChildren = true,
+        };
+        container.AddChild(SolidRect(-60, -60, 200, 200, Red));
+
+        Coverage coverage = Measure(Capture(container), IsRed);
+
+        float expectedX = 120 + (float)((40 * System.Math.Cos(System.Math.PI / 6)) + (40 * System.Math.Sin(System.Math.PI / 6)));
+        float expectedY = 120 + (float)((-40 * System.Math.Sin(System.Math.PI / 6)) + (40 * System.Math.Cos(System.Math.PI / 6)));
+        string label = coverage.ToString();
+        coverage.Count.ShouldBeInRange(6000, 6600, label);
+        coverage.CenterX.ShouldBe(expectedX, 1f, label);
+        coverage.CenterY.ShouldBe(expectedY, 1f, label);
+    }
+
     record struct Coverage(int Count, float CenterX, float CenterY);
 
     static bool IsRed(XnaColor c) => c.R > 150 && c.G < 80 && c.B < 80;
