@@ -486,24 +486,18 @@ namespace RenderingLibrary.Graphics
 
             if (renderable.ClipsChildren)
             {
-                var absoluteX = renderable.GetAbsoluteX();
-                var absoluteY = renderable.GetAbsoluteY();
-
-                var width = renderable.Width;
-                var height = renderable.Height;
-
-                var rect = new SKRect(absoluteX, absoluteY, absoluteX + width, absoluteY + height);
+                var bounds = renderable.GetClipTransform(out SKRect localRect).MapRect(localRect);
 
                 isOnScreen =
-                    rect.Bottom > canvas.LocalClipBounds.Top &&
-                    rect.Top < canvas.LocalClipBounds.Bottom &&
-                    rect.Right > canvas.LocalClipBounds.Left &&
-                    rect.Left < canvas.LocalClipBounds.Right;
+                    bounds.Bottom > canvas.LocalClipBounds.Top &&
+                    bounds.Top < canvas.LocalClipBounds.Bottom &&
+                    bounds.Right > canvas.LocalClipBounds.Left &&
+                    bounds.Left < canvas.LocalClipBounds.Right;
 
                 if (isOnScreen)
                 {
                     canvas.Save();
-                    canvas.ClipRect(rect);
+                    canvas.ClipTo(renderable);
                     renderable.Render(managers);
                 }
             }

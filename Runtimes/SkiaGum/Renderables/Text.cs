@@ -979,10 +979,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             canvas.Save();
 
             // set the clip rect *after* save so it gets undone and restored
-            var clipRect = this.GetEffectiveClipRect();
-            if(clipRect != null)
+            var clipper = this.GetEffectiveClipper();
+            if(clipper != null)
             {
-                canvas.ClipRect(clipRect.Value);
+                canvas.ClipTo(clipper);
             }
 
             canvas.SetMatrix(result);
