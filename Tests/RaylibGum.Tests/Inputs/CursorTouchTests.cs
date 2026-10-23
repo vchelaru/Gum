@@ -8,12 +8,12 @@ namespace RaylibGum.Tests.Inputs;
 public class CursorTouchTests
 {
     [Fact]
-    public void CreateTouchCollection_CopiesEachRaylibTouchPoint()
+    public void Create_CopiesEachRaylibTouchPoint()
     {
         int[] ids = { 7, 9 };
         Vector2[] positions = { new Vector2(10, 20), new Vector2(30, 40) };
 
-        TouchCollection touches = Cursor.CreateTouchCollection(2, i => ids[i], i => positions[i]);
+        TouchCollection touches = TouchCollection.Create(2, i => ids[i], i => positions[i]);
 
         touches.Count.ShouldBe(2);
         touches[0].Id.ShouldBe(7);
@@ -76,8 +76,8 @@ public class CursorTouchTests
     };
 
     private static TouchCollection Touches(int x, int y) =>
-        Cursor.CreateTouchCollection(1, _ => 0, _ => new Vector2(x, y));
+        TouchCollection.Create(1, _ => 0, _ => new Vector2(x, y));
 
     private static TouchCollection NoTouches() =>
-        Cursor.CreateTouchCollection(0, _ => 0, _ => Vector2.Zero);
+        TouchCollection.Create(0, _ => 0, _ => Vector2.Zero);
 }
