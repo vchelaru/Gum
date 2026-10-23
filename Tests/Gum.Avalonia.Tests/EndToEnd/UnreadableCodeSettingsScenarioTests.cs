@@ -119,6 +119,38 @@ public class UnreadableCodeSettingsScenarioTests
     }
 
     [AvaloniaFact]
+    public void UnparsableSettingsFile_PreviewShowsNoCodeBuiltFromTheDefaults()
+    {
+        using CodeTabHarness code = OpenWithUnparsableSettings();
+
+        code.Preview.ShouldNotContain("class Card");
+        code.Preview.ShouldContain(code.ViewModel.ProjectSettingsLoadError!);
+    }
+
+    [AvaloniaFact]
+    public void UnparsableSettingsFile_HeaderDoesNotOfferSetup()
+    {
+        using CodeTabHarness code = OpenWithUnparsableSettings();
+
+        List<string> texts = ShownTexts(code);
+        texts.ShouldNotContain("Code Generation Setup");
+        texts.ShouldContain("Code Generation");
+    }
+
+    [AvaloniaFact]
+    public void UnparsableSettingsFile_FolderPickersOnTheSettingsPageAreDisabled()
+    {
+        using CodeTabHarness code = OpenWithUnparsableSettings();
+        code.Input.Layout();
+
+        List<Button> pickers = code.ProjectSettingsPage.Grid.GetVisualDescendants().OfType<Button>()
+            .Where(button => button.Content as string == "...")
+            .ToList();
+        pickers.ShouldNotBeEmpty();
+        pickers.ShouldAllBe(button => !button.IsEffectivelyEnabled);
+    }
+
+    [AvaloniaFact]
     public void ResetToDefaults_AfterConfirming_OverwritesTheFile_AndTheTabBecomesEditable()
     {
         using CodeTabHarness code = OpenWithUnparsableSettings();

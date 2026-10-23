@@ -121,6 +121,14 @@ public class CodeOutputTabController
             _viewModel.Code = "// Select a Screen, Component, or Standard to see generated code";
             return;
         }
+
+        // The settings in hand are defaults standing in for an unreadable file, so code built from
+        // them is not what the project would generate.
+        if (_viewModel.HasProjectSettingsLoadError)
+        {
+            _viewModel.Code = "// " + _viewModel.ProjectSettingsLoadErrorText.Replace("\n", "\n// ");
+            return;
+        }
         /////////////////////end early out/////////////////
 
         // Defensive: never feed the generator an unsupported combination (e.g. a Raylib project whose

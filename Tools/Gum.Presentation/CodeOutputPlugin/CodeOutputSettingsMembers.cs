@@ -227,7 +227,9 @@ public class CodeOutputSettingsMembers
         member.CustomGetTypeEvent += (owner) => typeof(string);
         UseFolderPicker(member);
 
-        _viewModel.NeedsSetup = _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
+        // Setup would save over an unreadable file, so it is not offered then.
+        _viewModel.NeedsSetup = !_viewModel.HasProjectSettingsLoadError
+            && _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
 
         return member;
     }
