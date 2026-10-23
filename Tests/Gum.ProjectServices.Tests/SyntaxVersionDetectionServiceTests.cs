@@ -886,6 +886,59 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         result.Source.ShouldBe(SyntaxVersionSource.Fallback);
     }
 
+    private SyntaxVersionResult DetectWithReferences(string items)
+    {
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup>" + items + "</ItemGroup></Project>");
+        return _sut.Detect(AutoDetectSettings, gameDir);
+    }
+
+    // An unstamped user project whose folder and parent folder hold an ordinary AssemblyAttributes.cs.
+    private void CreateUnstampedUserProject(string name)
+    {
+        string dir = Path.Combine(_tempDirectory, "libs", name);
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(_tempDirectory, "libs", "AssemblyAttributes.cs"), "[assembly: System.CLSCompliant(true)]");
+        File.WriteAllText(Path.Combine(dir, "AssemblyAttributes.cs"), "[assembly: System.CLSCompliant(true)]");
+        File.WriteAllText(Path.Combine(dir, name + ".dll"), "not a dll");
+    }
+
+    [Theory]
+    [InlineData("MyGameGum")]
+    [InlineData("Gum")]
+    [InlineData("MonoGameGum.Extras")]
+    public void Detect_UnstampedUserProjectNamedLikeARuntime_FallsBackToLatest(string name)
+    {
+        CreateUnstampedUserProject(name);
+
+        SyntaxVersionResult result = DetectWithReferences(
+            $"<ProjectReference Include=\"../libs/{name}/{name}.csproj\" />" +
+            $"<Reference Include=\"{name}\"><HintPath>../libs/{name}/{name}.dll</HintPath></Reference>");
+
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
+    }
+
+    [Theory]
+    [InlineData("MyGameGum")]
+    [InlineData("Gum")]
+    public void Detect_UnstampedUserProjectBeforeRealRuntime_ReadsTheRuntime(string name)
+    {
+        CreateUnstampedUserProject(name);
+        string monoGameGumDir = Path.Combine(_tempDirectory, "gumsrc", "MonoGameGum");
+        Directory.CreateDirectory(monoGameGumDir);
+        File.WriteAllText(Path.Combine(monoGameGumDir, "AssemblyAttributes.cs"), "[assembly: GumSyntaxVersion(Version = 3)]");
+
+        SyntaxVersionResult result = DetectWithReferences(
+            $"<ProjectReference Include=\"../libs/{name}/{name}.csproj\" />" +
+            "<ProjectReference Include=\"../gumsrc/MonoGameGum/MonoGameGum.csproj\" />");
+
+        result.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+        result.Version.ShouldBe(3);
+    }
+
     private static string FindRepoRoot()
     {
         string? current = AppContext.BaseDirectory;
