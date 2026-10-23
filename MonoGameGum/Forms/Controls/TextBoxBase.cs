@@ -2224,7 +2224,10 @@ public abstract class TextBoxBase :
         {
             adjusted -= ScaledLineHeightInPixels / 2.0f;
         }
-        else if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Bottom)
+        // TextBaseline on a target that is not text is its bottom edge (see GraphicalUiElement), so it
+        // lands on the row's bottom like Bottom.
+        else if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Bottom ||
+            target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.TextBaseline)
         {
             adjusted += ScaledLineHeightInPixels / 2.0f;
         }
