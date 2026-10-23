@@ -80,10 +80,8 @@ public class KeyboardXnaKeysOverloadTests
         sut.IsKeyLetter(GumKeys.D1).ShouldBeFalse();
     }
 
-    // The obsolete XNA overloads keep working until they are removed (#5028), so this pins them.
-#pragma warning disable CS0618
     [Fact]
-    public void ObsoleteXnaKeysOverloads_ShouldStillReadKeyboardState()
+    public void XnaKeysOverloads_ShouldStillReadKeyboardState()
     {
         Mock<KeyboardStateProcessor> processor = new Mock<KeyboardStateProcessor>();
         processor.Setup(x => x.IsKeyDown(XnaKeys.A)).Returns(true);
@@ -102,10 +100,9 @@ public class KeyboardXnaKeysOverloadTests
         IInputReceiverKeyboard asInterface = sut;
         asInterface.KeyDown(XnaKeys.A).ShouldBeTrue();
     }
-#pragma warning restore CS0618
 
     [Fact]
-    public void XnaKeysOverloads_ShouldAllBeObsoleteWithReplacementAndDates()
+    public void XnaKeysOverloads_ShouldNotBeObsolete()
     {
         List<MethodInfo> xnaOverloads = new List<MethodInfo>();
         foreach (Type type in new[] { typeof(Keyboard), typeof(IInputReceiverKeyboardMonoGame), typeof(XnaKeyboardExtensions) })
@@ -124,13 +121,7 @@ public class KeyboardXnaKeysOverloadTests
 
         foreach (MethodInfo method in xnaOverloads)
         {
-            ObsoleteAttribute? obsolete = method.GetCustomAttribute<ObsoleteAttribute>();
-            obsolete.ShouldNotBeNull($"{method.DeclaringType!.Name}.{method.Name}(XnaKeys) must be [Obsolete]");
-            obsolete!.IsError.ShouldBeFalse();
-            string message = obsolete.Message ?? string.Empty;
-            message.ShouldContain("Gum.Forms.Input.Keys");
-            message.ShouldContain("March 2027");
-            message.ShouldContain("July 2027");
+            method.GetCustomAttribute<ObsoleteAttribute>().ShouldBeNull($"{method.DeclaringType!.Name}.{method.Name}(XnaKeys) must not be [Obsolete]");
         }
     }
 }
