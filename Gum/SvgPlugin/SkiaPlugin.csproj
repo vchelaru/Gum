@@ -10,10 +10,10 @@
 	  <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;INCLUDE_SVG; GUM</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;INCLUDE_SVG;GUM;FULL_DIAGNOSTICS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants);INCLUDE_SVG;GUM</DefineConstants>
+    <DefineConstants>$(DefineConstants);INCLUDE_SVG;GUM;FULL_DIAGNOSTICS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="SkiaInGumShared\obj\**" />

@@ -760,12 +760,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         get { return mFontScale; }
         set
         {
-#if FULL_DIAGNOSTICS
-            if (float.IsNaN(value) || float.IsInfinity(value))
-            {
-                throw new ArgumentException($"Invalid value: {value}. FontScale cannot be NaN.");
-            }
-#endif
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "FontScale");
 
             var newValue = System.Math.Max(0, value);
 
