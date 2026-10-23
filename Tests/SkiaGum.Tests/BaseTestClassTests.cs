@@ -64,4 +64,32 @@ public class BaseTestClassTests
             LoaderManager.Self.ContentLoader = original;
         }
     }
+
+    // A test that turns texture caching on or off would otherwise change whether later tests reload files (#6585).
+    [Fact]
+    public void Dispose_RestoresCacheTextures_WhenATestChangedIt()
+    {
+        BaseTestClass testClass = new BaseTestClass();
+        bool before = LoaderManager.Self.CacheTextures;
+
+        LoaderManager.Self.CacheTextures = !before;
+        testClass.Dispose();
+
+        LoaderManager.Self.CacheTextures.ShouldBe(before);
+    }
+
+    // [Custom=Name] callbacks are process-wide, so a name one test registers would otherwise draw a later
+    // test's same-named tag with the earlier test's callback (#6580).
+    [Fact]
+    public void Dispose_RemovesLetterCustomizations_ATestRegistered()
+    {
+        BaseTestClass testClass = new BaseTestClass();
+
+        global::SkiaGum.Text.Customizations["BaseTestClassTests"] = (index, block) => new global::SkiaGum.LetterCustomization();
+        global::SkiaGum.Text.ContextCustomizations["BaseTestClassTests"] = (index, block, prior) => prior;
+        testClass.Dispose();
+
+        global::SkiaGum.Text.Customizations.ShouldNotContainKey("BaseTestClassTests");
+        global::SkiaGum.Text.ContextCustomizations.ShouldNotContainKey("BaseTestClassTests");
+    }
 }
