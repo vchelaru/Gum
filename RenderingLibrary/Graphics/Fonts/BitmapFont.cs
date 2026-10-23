@@ -935,6 +935,26 @@ public class BitmapFont : IDisposable
     static List<int> sMeasuredLineWidths = new List<int>();
 
     /// <summary>
+    /// Returns the screen directions of text's local X and Y axes at a rotation in degrees.
+    /// At zero rotation they are exactly <see cref="Vector2.UnitX"/> and <see cref="Vector2.UnitY"/>.
+    /// </summary>
+    internal static void GetRotatedAxes(float rotationDegrees, out Vector2 xAxis, out Vector2 yAxis)
+    {
+        xAxis = Vector2.UnitX;
+        yAxis = Vector2.UnitY;
+
+        if (rotationDegrees != 0)
+        {
+            var rotationRadians = MathHelper.ToRadians(rotationDegrees);
+            xAxis.X = (float)System.Math.Cos(-rotationRadians);
+            xAxis.Y = (float)System.Math.Sin(-rotationRadians);
+
+            yAxis.X = (float)System.Math.Cos(-rotationRadians + MathHelper.PiOver2);
+            yAxis.Y = (float)System.Math.Sin(-rotationRadians + MathHelper.PiOver2);
+        }
+    }
+
+    /// <summary>
     /// Draws pre-split lines of text directly to the screen via the <paramref name="spriteRenderer"/>,
     /// character by character. The caller must provide pre-computed <paramref name="widths"/> (one per line)
     /// that match the <paramref name="lines"/> list; a mismatch will cause an index-out-of-range error
@@ -1009,17 +1029,7 @@ public class BitmapFont : IDisposable
 
         var rotationRadians = MathHelper.ToRadians(rotationDegrees);
 
-        Vector2 xAxis = Vector2.UnitX;
-        Vector2 yAxis = Vector2.UnitY;
-
-        if (rotationDegrees != 0)
-        {
-            xAxis.X = (float)System.Math.Cos(-rotationRadians);
-            xAxis.Y = (float)System.Math.Sin(-rotationRadians);
-
-            yAxis.X = (float)System.Math.Cos(-rotationRadians + MathHelper.PiOver2);
-            yAxis.Y = (float)System.Math.Sin(-rotationRadians + MathHelper.PiOver2);
-        }
+        GetRotatedAxes(rotationDegrees, out Vector2 xAxis, out Vector2 yAxis);
 
         int numberOfLettersRendered = 0;
 
