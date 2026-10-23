@@ -117,4 +117,30 @@ public class TextHitTestRotationTests : BaseTestClass
 
         textBox.GetCaretIndexAtPosition(screenX, screenY).ShouldBe(3);
     }
+    // Up and Down keep the caret's column on the adjacent line whatever the TextBox's rotation (#6607).
+    [Theory]
+    [InlineData(0)]
+    [InlineData(90)]
+    [InlineData(-45)]
+    public void UpDownArrows_RotatedMultiLineTextBox_ShouldKeepColumnOnAdjacentLine(float rotation)
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = global::Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+        textBox.Width = 300;
+        textBox.Height = 200;
+        textBox.Visual.X = 100;
+        textBox.Visual.Y = 80;
+        textBox.Text = "abcdef\nghijkl\nmnopqr";
+        textBox.Visual.Rotation = rotation;
+        textBox.IsFocused = true;
+        textBox.CaretIndex = "abcdef\nghi".Length;
+
+        textBox.HandleKeyDown(global::Gum.Forms.Input.Keys.Up, false, false, false);
+        textBox.CaretIndex.ShouldBe(3);
+
+        textBox.HandleKeyDown(global::Gum.Forms.Input.Keys.Down, false, false, false);
+        textBox.HandleKeyDown(global::Gum.Forms.Input.Keys.Down, false, false, false);
+        textBox.CaretIndex.ShouldBe("abcdef\nghijkl\nmno".Length);
+    }
 }

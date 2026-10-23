@@ -1033,17 +1033,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     internal float GetVerticalAlignmentOffset(TextBlock textBlock)
     {
-        if (VerticalAlignment == VerticalAlignment.Center)
-        {
-            return (Height - GetMeasuredHeight(textBlock)) / 2.0f;
-        }
-
-        if (VerticalAlignment == VerticalAlignment.Bottom)
-        {
-            return Height - GetMeasuredHeight(textBlock);
-        }
-
-        return 0;
+        return VerticalAlignment == VerticalAlignment.Top
+            ? 0
+            : TextHitTesting.GetVerticalAlignmentOffset(VerticalAlignment, Height, GetMeasuredHeight(textBlock));
     }
 
     // No OverlapDirection over here either -- paintBlock.Paint below hands the whole shaped run to

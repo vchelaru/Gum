@@ -37,11 +37,8 @@ public static class TextExtensions
         TextHitTesting.UnrotatePoint(textInstance, ref screenX, ref screenY);
 
         var lineHeight = textInstance.LineHeightInPixels * textInstance.LineHeightMultiplier;
-        var topOfText = textInstance.GetAbsoluteTop();
-        if (textInstance.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
-        {
-            topOfText = textInstance.GetAbsoluteCenterY() - (lineHeight * textInstance.WrappedText.Count - 1) / 2.0f;
-        }
+        var topOfText = textInstance.GetAbsoluteTop() + TextHitTesting.GetVerticalAlignmentOffset(
+            textInstance.VerticalAlignment, textInstance.EffectiveHeight, textInstance.WrappedTextHeight);
 
         return TextHitTesting.GetIndexInWrappedLines(
             textInstance.WrappedText,
