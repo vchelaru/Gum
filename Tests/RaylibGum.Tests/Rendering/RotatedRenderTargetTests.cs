@@ -279,6 +279,31 @@ public class RotatedRenderTargetTests : BaseTestClass
         coverage.CenterY.ShouldBe(expectedY, 1f, label);
     }
 
+    // A render-target container that is itself ClipsChildren and turned shows its whole turned
+    // rectangle: the bake already crops to it, so the composite needs no further clip (#6618).
+    [Theory]
+    [InlineData(0f)]
+    [InlineData(30f)]
+    [InlineData(90f)]
+    public void Draw_RotatedRenderTargetThatClipsChildren_ShowsTheWholeTurnedRectangle(float rotation)
+    {
+        ContainerRuntime container = new()
+        {
+            X = 120, Y = 120, Width = 80, Height = 80, Rotation = rotation, IsRenderTarget = true, ClipsChildren = true,
+        };
+        container.AddChild(SolidRect(0, 0, 80, 80, Red));
+
+        Coverage coverage = Measure(Capture(container), IsRed);
+
+        double radians = rotation * System.Math.PI / 180;
+        float expectedX = 120 + (float)((40 * System.Math.Cos(radians)) + (40 * System.Math.Sin(radians)));
+        float expectedY = 120 + (float)((-40 * System.Math.Sin(radians)) + (40 * System.Math.Cos(radians)));
+        string label = coverage.ToString();
+        coverage.Count.ShouldBeInRange(6000, 6600, label);
+        coverage.CenterX.ShouldBe(expectedX, 1f, label);
+        coverage.CenterY.ShouldBe(expectedY, 1f, label);
+    }
+
     record struct Coverage(int Count, float CenterX, float CenterY);
 
     static bool IsRed(Color c) => c.R > 150 && c.G < 80 && c.B < 80;
