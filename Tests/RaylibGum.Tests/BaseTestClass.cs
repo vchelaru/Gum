@@ -146,6 +146,7 @@ public class BaseTestClass : IDisposable
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
 
         _fileManagerState.Restore();
+        ObjectFinderState.Reset();
 
         Text.Customizations.Clear();
         Text.ContextCustomizations.Clear();

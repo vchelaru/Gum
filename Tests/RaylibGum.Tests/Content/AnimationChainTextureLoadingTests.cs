@@ -182,7 +182,6 @@ public class AnimationChainTextureLoadingTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibAnimChainTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -208,7 +207,6 @@ public class AnimationChainTextureLoadingTests : BaseTestClass
         }
         finally
         {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {

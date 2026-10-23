@@ -14,7 +14,7 @@ using SkiaSharp;
 
 namespace SkiaGum.Tests;
 
-public class GumServiceTests
+public class GumServiceTests : BaseTestClass
 {
     [Fact]
     public void ExportSnapshot_ShouldWriteLoadableProjectFromLiveRoot()

@@ -13,7 +13,7 @@ using Xunit;
 
 namespace SkiaGum.Tests.Content;
 
-public class SkiaResourceManagerTests
+public class SkiaResourceManagerTests : BaseTestClass
 {
     [Fact]
     public void ObsoleteMessage_ShouldStateErrorAndRemovalDates()

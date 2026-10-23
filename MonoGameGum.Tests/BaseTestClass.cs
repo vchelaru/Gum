@@ -175,16 +175,7 @@ public class BaseTestClass : IDisposable
         // not after Reset — so this Reset is intended for test-introduced state.
         RenderableRegistry.Reset();
 
-        // ObjectFinder.Self is a cross-test singleton (see ObjectFinderTests). Any Standard Element
-        // registered as a fallback via RegisterFallbackStandardElements must be cleared the same way,
-        // or it leaks into unrelated tests.
-        ObjectFinder.Self.ClearFallbackStandardElements();
-
-        // Same singleton, same hazard: a loaded project changes how a later, unrelated test resolves
-        // font file paths (CustomSetPropertyOnRenderable.ResolveFontFilePath resolves against the
-        // project's directory when it has a FullFileName) and looks up elements. Reset so only a test
-        // that deliberately sets this up (and is inside its own try/finally) sees a project loaded.
-        ObjectFinder.Self.GumProjectSave = null;
+        ObjectFinderState.Reset();
 
         // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
         ResetCanvasAndRoots();

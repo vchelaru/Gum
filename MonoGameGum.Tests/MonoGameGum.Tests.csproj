@@ -58,6 +58,8 @@
   <ItemGroup>
     <Compile Include="..\Tests\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
     <Compile Include="..\Tests\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
+    <Compile Include="..\Tests\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
+    <Compile Include="..\Tests\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />
   </ItemGroup>
 
 </Project>

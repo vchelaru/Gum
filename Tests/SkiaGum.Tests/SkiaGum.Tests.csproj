@@ -34,6 +34,10 @@
 		<Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
 		<Compile Include="..\Shared\ShimRetention.cs" Link="Shared\ShimRetention.cs" />
 		<Compile Include="..\Shared\TypedSetterSweep.cs" Link="Shared\TypedSetterSweep.cs" />
+		<Compile Include="..\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
+		<Compile Include="..\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
+		<Compile Include="..\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
+		<Compile Include="..\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />
 	</ItemGroup>
 
 	<!-- Golden-image baselines for GoldenImages/*Tests.cs (pixel-diff regression tests). -->

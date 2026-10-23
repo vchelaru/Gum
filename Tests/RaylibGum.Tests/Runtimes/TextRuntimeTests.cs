@@ -171,8 +171,6 @@ public class TextRuntimeTests : BaseTestClass
         };
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -222,8 +220,6 @@ public class TextRuntimeTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -347,8 +343,6 @@ public class TextRuntimeTests : BaseTestClass
     private static void WithFontLoadRecording(string uniqueFontName, Action<Func<int>> body)
     {
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         bool savedSuspended = GraphicalUiElement.IsAllLayoutSuspended;
         try
         {
@@ -372,8 +366,6 @@ public class TextRuntimeTests : BaseTestClass
         {
             GraphicalUiElement.IsAllLayoutSuspended = savedSuspended;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -424,8 +416,6 @@ public class TextRuntimeTests : BaseTestClass
     private static void WithFontLoadRecordingPaths(string uniqueFontName, Action<Func<List<string>>> body)
     {
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         bool savedSuspended = GraphicalUiElement.IsAllLayoutSuspended;
         try
         {
@@ -449,8 +439,6 @@ public class TextRuntimeTests : BaseTestClass
         {
             GraphicalUiElement.IsAllLayoutSuspended = savedSuspended;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -780,8 +768,6 @@ public class TextRuntimeTests : BaseTestClass
         };
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -797,8 +783,6 @@ public class TextRuntimeTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
