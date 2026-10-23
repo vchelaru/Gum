@@ -45,6 +45,10 @@ Assert-Builds 'file linked by a Directory.Build.props builds the projects under 
     'Runtimes/SkiaGum/CustomSetPropertyOnRenderable.cs' `
     @('Runtimes/GumShapes/KniGumShapes.csproj', 'Runtimes/GumShapes/MonoGameGumShapes.csproj', 'Runtimes/SkiaGum/SkiaGum.csproj')
 
+# Building the head csproj alone leaves the plugins out of later Gum.slnx builds (CLAUDE.md).
+Assert-Plan 'file in the Avalonia head builds Gum.slnx, not the head csproj' `
+    'Tool/Gum.Avalonia/HeadOptions.cs' 'build Gum.slnx'
+
 Assert-Builds 'file linked by a csproj and by a .props another .props imports builds every project that sees it' `
     'MonoGameGum/Input/CursorExtensions.cs' `
     @('MonoGameGum/KniGum/KniGum.csproj', 'MonoGameGum/MonoGameGum.csproj','Runtimes/KniSkiaGum/KniSkiaGum.csproj', 'Runtimes/RaylibGum/RaylibGum.csproj',

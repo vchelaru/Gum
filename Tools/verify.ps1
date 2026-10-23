@@ -355,9 +355,18 @@ foreach ($project in $indirectProjects.Keys) {
     }
 }
 
+# The Avalonia head builds through Gum.slnx: built by its csproj alone, its plugins stay missing from
+# later Gum.slnx builds until a --no-incremental rebuild (CLAUDE.md "Building and Testing").
+$headProject = Join-Path $repo 'Tool/Gum.Avalonia/Gum.Avalonia.csproj'
+function Get-BuildTarget([string]$project) {
+    if ((Get-Key $project) -eq (Get-Key $headProject)) { return Join-Path $repo 'Gum.slnx' }
+    return $project
+}
+$buildTargets = @($sourceProjects | ForEach-Object { Get-BuildTarget $_ } | Sort-Object -Unique)
+
 if ($ListOnly) {
     foreach ($project in $testFilters.Keys | Sort-Object) { Write-Host "test         $($project.Substring($repo.Length + 1))" }
-    foreach ($project in $sourceProjects | Sort-Object) { Write-Host "build        $($project.Substring($repo.Length + 1))" }
+    foreach ($project in $buildTargets) { Write-Host "build        $($project.Substring($repo.Length + 1))" }
     foreach ($entry in $unbuilt) { Write-Host "NOT BUILT    $entry" }
     exit 0
 }
@@ -382,12 +391,15 @@ foreach ($project in $testFilters.Keys | Sort-Object) {
     Invoke-Step -Name "test $relativeProject ($filter)" -Command $command -TimeoutSeconds 300
 }
 
-foreach ($project in $sourceProjects | Sort-Object) {
+foreach ($project in $buildTargets) {
     $relativeProject = $project.Substring($repo.Length + 1)
     if (Skip-WithoutSokol "build $relativeProject" $relativeProject) { continue }
     # Same $(SolutionDir) post-build copy as above: the frozen WPF head's plugin projects need it
     # whenever they are built by csproj, not only through the test project.
-    Invoke-Step -Name "build $relativeProject" -Command @('build', $project, '-nologo', '-v:q', "-p:SolutionDir=$repo\")
+    $command = @('build', $project, '-nologo', '-v:q', "-p:SolutionDir=$repo\")
+    # Only the .gumj Preview window needs the GumPreview variants a Debug Gum.slnx build publishes.
+    if ($project -like '*.slnx') { $command += '-p:SkipPreviewVariantPublish=true' }
+    Invoke-Step -Name "build $relativeProject" -Command $command
 }
 
 foreach ($entry in $unbuilt) { Write-Host "NOT BUILT    $entry" }

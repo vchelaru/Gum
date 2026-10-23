@@ -170,12 +170,7 @@ export PATH=$HOME/.dotnet:$PATH
 bash /mnt/c/git/Gum/Tools/ParityShots/sync-to-linux-clone.sh ~/Gum /mnt/c/git/Gum
 
 cd ~/Gum
-dotnet build Tool/Gum.Avalonia/Gum.Avalonia.csproj -c Release
-for p in Gum/ConvertToJsonPlugin/ConvertToJsonPlugin.csproj Gum/EventOutputPlugin/EventOutputPlugin.csproj \
-         Gum/GumFormsPlugin/GumFormsPlugin.csproj Gum/ImportFromGumxPlugin/ImportFromGumxPlugin.csproj \
-         Gum/PerformanceMeasurementPlugin/PerformanceMeasurementPlugin.csproj Gum/SvgPlugin/SkiaPlugin.csproj; do
-  dotnet build $p -c Release
-done
+dotnet build Gum.slnx -c Release -p:SkipPreviewVariantPublish=true
 cp -r Tests/CodeGen_Skia_ByReference/Content/GumProject /tmp/gumrun
 GUM_ECHO_OUTPUT=1 dotnet Tool/Gum.Avalonia/bin/Release/net10.0/Gum.Avalonia.dll /tmp/gumrun/*.gumx --exit-after 30 --screenshot /tmp/linux.png
 dotnet test Tests/Gum.Presentation.Tests
