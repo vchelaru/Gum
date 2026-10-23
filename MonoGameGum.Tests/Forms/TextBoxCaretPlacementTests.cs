@@ -103,6 +103,112 @@ public class TextBoxCaretPlacementTests : BaseTestClass
         selections[1].GetAbsoluteCenterY().ShouldBe(firstLineCenter + contained.LineHeightInPixels, tolerance: 0.01f);
     }
 
+    // A Forms control must never throw during layout, so a vertical unit the converter cannot
+    // convert falls back to the raw value (#6630).
+    [Theory]
+    [InlineData(GeneralUnitType.PercentageOfFile)]
+    [InlineData(GeneralUnitType.PercentageOfOtherDimension)]
+    [InlineData(GeneralUnitType.PixelsFromBaseline)]
+    [InlineData(GeneralUnitType.MaintainFileAspectRatio)]
+    public void Caret_UnsupportedYUnits_ShouldNotThrowAndKeepFiniteY(GeneralUnitType yUnits)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        GraphicalUiElement caret = GetCaret(textBox);
+        caret.YUnits = yUnits;
+
+        Should.NotThrow(() =>
+        {
+            textBox.CaretIndex = 0;
+            textBox.CaretIndex = 1;
+        });
+        float.IsFinite(caret.Y).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(GeneralUnitType.PercentageOfFile)]
+    [InlineData(GeneralUnitType.PercentageOfOtherDimension)]
+    [InlineData(GeneralUnitType.PixelsFromBaseline)]
+    [InlineData(GeneralUnitType.MaintainFileAspectRatio)]
+    public void Selection_UnsupportedYUnits_ShouldNotThrowAndKeepFiniteY(GeneralUnitType yUnits)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        textBox.Text = "abc\ndef";
+        ((TextBoxBaseVisual)textBox.Visual).SelectionInstance.YUnits = yUnits;
+
+        Should.NotThrow(() =>
+        {
+            textBox.SelectionStart = 1;
+            textBox.SelectionLength = 5;
+        });
+        GetVisibleSelections(textBox).ShouldAllBe(selection => float.IsFinite(selection.Y));
+    }
+
+    // A rotated text turns the caret through the same conversion, so it must not throw either.
+    [Theory]
+    [InlineData(GeneralUnitType.PercentageOfFile)]
+    [InlineData(GeneralUnitType.PercentageOfOtherDimension)]
+    public void Caret_UnsupportedYUnitsWithRotatedText_ShouldNotThrow(GeneralUnitType yUnits)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        GetCaret(textBox).YUnits = yUnits;
+
+        Should.NotThrow(() =>
+        {
+            ((TextBoxBaseVisual)textBox.Visual).TextInstance.Rotation = 30;
+            textBox.CaretIndex = 0;
+            textBox.CaretIndex = 1;
+        });
+        float.IsFinite(GetCaret(textBox).Y).ShouldBeTrue();
+    }
+
+    // A parent with no height gives a Percentage Y nothing to be a percentage of; Y must stay finite.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Caret_PercentageYInZeroHeightParent_ShouldNotThrowAndKeepFiniteY(bool rotatedText)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
+        ContainerRuntime zeroHeightParent = new();
+        zeroHeightParent.Height = 0;
+        zeroHeightParent.Width = 100;
+        visual.AddChild(zeroHeightParent);
+        zeroHeightParent.AddChild(visual.CaretInstance);
+        visual.CaretInstance.YUnits = GeneralUnitType.Percentage;
+
+        Should.NotThrow(() =>
+        {
+            if (rotatedText)
+            {
+                visual.TextInstance.Rotation = 30;
+            }
+            textBox.CaretIndex = 0;
+            textBox.CaretIndex = 1;
+        });
+        float.IsFinite(visual.CaretInstance.Y).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Selection_PercentageYInZeroHeightParent_ShouldNotThrowAndKeepFiniteY()
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        textBox.Text = "abc\ndef";
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
+        ContainerRuntime zeroHeightParent = new();
+        zeroHeightParent.Height = 0;
+        zeroHeightParent.Width = 100;
+        visual.ClipContainer.AddChild(zeroHeightParent);
+        zeroHeightParent.AddChild(visual.SelectionInstance);
+        visual.SelectionInstance.YUnits = GeneralUnitType.Percentage;
+
+        Should.NotThrow(() =>
+        {
+            textBox.SelectionStart = 1;
+            textBox.SelectionLength = 5;
+        });
+        float.IsFinite(visual.SelectionInstance.Y).ShouldBeTrue();
+    }
+
     // Single-line selection fills the box less 2px on each side.
     [Fact]
     public void Selection_SingleLine_ShouldBeInsetTwoPixelsFromBox()
