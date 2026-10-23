@@ -1411,6 +1411,8 @@ public class Text : IVisible, IRenderableIpso,
         Font drawFont = baseFont;
         bool hasSwapFont = false;
         float scale = FontScale * oversampleCompensationScale;
+        // The run's scale without the oversample compensation, which a size font does not need (#6486).
+        float sizeFontScale = FontScale;
         float? absolutePixelSize = null;
 
         foreach (var variable in variables)
@@ -1420,7 +1422,8 @@ public class Text : IVisible, IRenderableIpso,
                 case nameof(FontScale):
                     // An inline [FontScale=v] tag is an ABSOLUTE per-run scale (not relative to the
                     // Text-level FontScale), so it must independently compose the same compensation.
-                    scale = (float)variable.Value * oversampleCompensationScale;
+                    sizeFontScale = (float)variable.Value;
+                    scale = sizeFontScale * oversampleCompensationScale;
                     break;
                 // "BitmapFont" is the shared historical marker name the font-resolution stack model emits for
                 // every font-family tag (Font / FontSize / IsBold / IsItalic / OutlineThickness). On Raylib
@@ -1445,14 +1448,14 @@ public class Text : IVisible, IRenderableIpso,
         float drawSize;
         if (hasSwapFont)
         {
-            // A crisp font rasterized at the requested size: draw it at its native size times the base
-            // render scale, exactly as MonoGame renders a swapped BitmapFont.
-            drawSize = drawFont.BaseSize * FontScale;
+            // A crisp font rasterized at the requested size: draw it at its native size times the run's
+            // scale, exactly as MonoGame renders a swapped BitmapFont.
+            drawSize = drawFont.BaseSize * sizeFontScale;
         }
         else if (absolutePixelSize.HasValue)
         {
             // No font creator wired: approximate the swap by scaling the base atlas to the absolute size.
-            drawSize = absolutePixelSize.Value * FontScale;
+            drawSize = absolutePixelSize.Value * sizeFontScale;
         }
         else
         {
