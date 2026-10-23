@@ -91,13 +91,26 @@ public class MissingBaseInstanceRepairTests : BaseTestClass
         bool changed = project.RepairMissingDefinedByBaseInstances();
 
         changed.ShouldBeTrue();
-        Names(derived).ShouldBe("A,C,B");
+        Names(derived).ShouldBe("A,B,C");
         InstanceSave repaired = derived.GetInstance("B")!;
         repaired.DefinedByBase.ShouldBeTrue();
         repaired.BaseType.ShouldBe("Container");
         repaired.ParentContainer.ShouldBeSameAs(derived);
         Names(baseComponent).ShouldBe("A,B");
         baseComponent.GetInstance("B")!.DefinedByBase.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void RepairMissingDefinedByBaseInstances_FirstBaseInstanceMissing_InsertsItBeforeTheRest()
+    {
+        GumProjectSave project = new GumProjectSave();
+        AddComponent(project, "Base", "Container", "A", "B");
+        ComponentSave derived = AddComponent(project, "Derived", "Base", "C");
+        derived.Instances.Insert(0, new InstanceSave { Name = "B", BaseType = "Container", DefinedByBase = true, ParentContainer = derived });
+
+        project.RepairMissingDefinedByBaseInstances().ShouldBeTrue();
+
+        Names(derived).ShouldBe("A,B,C");
     }
 
     [Fact]
@@ -111,8 +124,8 @@ public class MissingBaseInstanceRepairTests : BaseTestClass
 
         project.RepairMissingDefinedByBaseInstances().ShouldBeTrue();
 
-        Names(parent).ShouldBe("P,G");
-        child.Instances.Select(item => item.Name).OrderBy(item => item).ShouldBe(new[] { "C", "G", "P" });
+        Names(parent).ShouldBe("G,P");
+        Names(child).ShouldBe("G,P,C");
         child.Instances.Where(item => item.Name != "C").ShouldAllBe(item => item.DefinedByBase);
     }
 
@@ -142,7 +155,7 @@ public class MissingBaseInstanceRepairTests : BaseTestClass
 
         project.RepairMissingDefinedByBaseInstances().ShouldBeTrue();
 
-        derived.Instances.Select(item => item.Name).OrderBy(item => item).ShouldBe(new[] { "A", "B", "C" });
+        Names(derived).ShouldBe("A,B,C");
         derived.GetInstance("B")!.DefinedByBase.ShouldBeTrue();
         derived.GetInstance("B")!.ParentContainer.ShouldBeSameAs(derived);
         derived.GetInstance("C")!.DefinedByBase.ShouldBeFalse();

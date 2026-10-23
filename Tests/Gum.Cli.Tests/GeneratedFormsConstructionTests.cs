@@ -285,7 +285,7 @@ public class GeneratedFormsConstructionTests : BaseTestClass
 
         object visual = Activator.CreateInstance(type, true, true)!;
 
-        ChildNames(visual).ShouldBe("A,C,B");
+        ChildNames(visual).ShouldBe("A,B,C");
         Get(visual, "A").ShouldNotBeNull();
         Get(visual, "B").ShouldBeSameAs(Call(visual, "GetGraphicalUiElementByName", "B"));
         Get(visual, "B").ShouldNotBeNull();
@@ -300,7 +300,7 @@ public class GeneratedFormsConstructionTests : BaseTestClass
 
         object visual = Activator.CreateInstance(type, true, true)!;
 
-        ChildNames(visual).Split(',').OrderBy(item => item).ShouldBe(new[] { "G", "K", "P" });
+        ChildNames(visual).ShouldBe("G,P,K");
         Get(visual, "G").ShouldNotBeNull();
         Get(visual, "P").ShouldNotBeNull();
         Get(visual, "K").ShouldNotBeNull();
@@ -312,7 +312,7 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddDerivedMissingBaseInstance);
         LoadProjectForFindByName();
 
-        RuntimeChildNames("Elements/MissDerived").ShouldBe("A,C,B");
+        RuntimeChildNames("Elements/MissDerived").ShouldBe("A,B,C");
     }
 
     // The base screen is hand written so the generated derived screen compiles (#6656).
@@ -341,10 +341,44 @@ public class GeneratedFormsConstructionTests : BaseTestClass
             });
         LoadProjectForFindByName();
 
-        RuntimeChildNames("MissScreenDerived").ShouldBe("C,A,B");
+        RuntimeChildNames("MissScreenDerived").ShouldBe("A,B,C");
     }
 
-    private static string RuntimeChildNames(string elementName)
+    // The base nests B under A with a base-defined Parent; the derived element lacks both.
+    private static void AddDerivedMissingNestedBaseInstances(GumProjectSave project)
+    {
+        ComponentSave baseComponent = AddComponent(project, "Elements/NestBase", "Container", ("A", "Container"));
+        baseComponent.Instances.Add(new InstanceSave { Name = "B", BaseType = "Container", ParentContainer = baseComponent });
+        baseComponent.DefaultState!.Variables.Add(new VariableSave { Name = "B.Parent", Type = "string", Value = "A", SetsValue = true });
+        ComponentSave derived = AddComponent(project, "Elements/NestDerived", "Elements/NestBase", ("C", "Container"));
+        derived.Instances.RemoveAll(item => item.DefinedByBase);
+    }
+
+    [Fact]
+    public void Constructor_LegacyMonoGameFindByNameDerived_RepairedInstanceWithBaseParent_StaysUnderItsParent()
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddDerivedMissingNestedBaseInstances);
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == "NestDerivedRuntime");
+
+        object visual = Activator.CreateInstance(type, true, true)!;
+
+        ChildNames(visual).ShouldBe("A,C");
+        ChildNames(Get(visual, "A")!).ShouldBe("B");
+        Get(visual, "B.Parent").ShouldBeSameAs(Get(visual, "A"));
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_DerivedComponent_RepairedInstanceWithBaseParent_StaysUnderItsParent()
+    {
+        GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddDerivedMissingNestedBaseInstances);
+        LoadProjectForFindByName();
+
+        RuntimeChildNames("Elements/NestDerived").ShouldBe("A,C");
+        RuntimeChildNames("Elements/NestDerived", "A").ShouldBe("B");
+    }
+
+    private static string RuntimeChildNames(string elementName, string? childPath = null)
     {
         ElementSave element = Gum.Managers.ObjectFinder.Self.GetElementSave(elementName)!;
         object systemManagers = MonoGameGum.GetType("RenderingLibrary.SystemManagers", throwOnError: true)!
@@ -352,6 +386,10 @@ public class GeneratedFormsConstructionTests : BaseTestClass
 
         global::Gum.Wireframe.GraphicalUiElement visual = global::GumRuntime.ElementSaveExtensions.ToGraphicalUiElement(
             element, (global::RenderingLibrary.ISystemManagers)systemManagers, addToManagers: false);
+        if (childPath != null)
+        {
+            visual = visual.GetGraphicalUiElementByName(childPath)!;
+        }
 
         return string.Join(",", visual.Children.Cast<global::Gum.Wireframe.GraphicalUiElement>().Select(child => child.Name));
     }

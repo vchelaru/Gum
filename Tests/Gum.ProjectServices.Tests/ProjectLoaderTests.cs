@@ -259,7 +259,7 @@ public class ProjectLoaderTests
 
             result.Success.ShouldBeTrue();
             ComponentSave derived = result.Project!.Components.Single(item => item.Name == "RepairDerived");
-            derived.Instances.Select(item => item.Name).OrderBy(item => item).ShouldBe(new[] { "A", "B", "C" });
+            string.Join(",", derived.Instances.Select(item => item.Name)).ShouldBe("A,B,C");
             derived.GetInstance("A")!.DefinedByBase.ShouldBeTrue();
             derived.GetInstance("B")!.DefinedByBase.ShouldBeTrue();
             derived.GetInstance("C")!.DefinedByBase.ShouldBeFalse();
