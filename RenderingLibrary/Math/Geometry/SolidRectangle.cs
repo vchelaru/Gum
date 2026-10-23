@@ -206,7 +206,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
             Rectangle? sourceRect = renderer.SinglePixelSourceRectangle;
 
             var rotation =
-                this.GetAbsoluteRotation(ignoreParentRotationIfRenderTarget: true);
+                this.GetAbsoluteRotation();
 
             Sprite.Render((SystemManagers)managers, renderer.SpriteRenderer, this, texture, Color, sourceRect, false,
                 rotation);

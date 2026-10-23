@@ -249,7 +249,7 @@ public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRend
         {
             var texture = renderer.SinglePixelTexture;
             var sourceRectangle = renderer.SinglePixelSourceRectangle;
-            var rotation = this.GetAbsoluteRotation(ignoreParentRotationIfRenderTarget: true);
+            var rotation = this.GetAbsoluteRotation();
 
             // managers is always a real SystemManagers when Render is invoked by the actual
             // renderer -- same assumption SolidRectangle/LineRectangle's own Render() methods make.

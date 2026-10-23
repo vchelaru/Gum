@@ -219,6 +219,15 @@ namespace RenderingLibrary
         }
 
         /// <summary>
+        /// True when the argument or any of its parents has a non-zero rotation, so its rectangle is
+        /// not on screen axes even when its absolute rotation sums to zero.
+        /// </summary>
+        public static bool IsTurnedInChain(this IRenderableIpso ipso)
+        {
+            return ipso.Rotation != 0 || (ipso.Parent != null && ipso.Parent.IsTurnedInChain());
+        }
+
+        /// <summary>
         /// Returns the absolute rotation in degrees.
         /// </summary>
         /// <param name="ipso">The object for which to return rotation.</param>
