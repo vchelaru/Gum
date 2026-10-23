@@ -8,7 +8,7 @@ using RenderingLibrary.Graphics;
 
 namespace MonoGameGumInCode.Screens;
 
-// Deep-dive on RoundedRectangleRuntime's gradient surface. Three rows of three cells -
+// Deep-dive on a rounded RectangleRuntime's gradient surface. Three rows of three cells -
 // every cell uses the same rectangle size so the configuration is what changes, not the
 // canvas. Each cell shows a rectangle on top and a small label beneath naming the
 // configuration. Together the nine variants cover:
@@ -75,7 +75,7 @@ internal class GradientScreen : FrameworkElement
     }
 
     private static void AddCell(ContainerRuntime row, string labelText,
-        System.Action<RoundedRectangleRuntime> configure)
+        System.Action<RectangleRuntime> configure)
     {
         ContainerRuntime cell = new ContainerRuntime();
         cell.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
@@ -86,12 +86,16 @@ internal class GradientScreen : FrameworkElement
         cell.Height = 0;
         row.AddChild(cell);
 
-        RoundedRectangleRuntime rect = new RoundedRectangleRuntime();
+        RectangleRuntime rect = new RectangleRuntime();
         rect.Width = RectWidth;
         rect.Height = RectHeight;
         rect.CornerRadius = 6;
         rect.UseGradient = true;
-        rect.Red1 = StartColor.R; rect.Green1 = StartColor.G; rect.Blue1 = StartColor.B; rect.Alpha1 = 255;
+        // The gradient start is the fill color, so a filled rectangle with no stroke draws
+        // StartColor -> EndColor.
+        rect.IsFilled = true;
+        rect.FillColor = StartColor;
+        rect.StrokeWidth = 0;
         rect.Red2 = EndColor.R;   rect.Green2 = EndColor.G;   rect.Blue2 = EndColor.B;   rect.Alpha2 = 255;
         configure(rect);
         cell.AddChild(rect);
@@ -103,7 +107,7 @@ internal class GradientScreen : FrameworkElement
         cell.AddChild(label);
     }
 
-    private static void ConfigureLinearHorizontal(RoundedRectangleRuntime rect)
+    private static void ConfigureLinearHorizontal(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Linear;
         rect.GradientX1Units = GeneralUnitType.PixelsFromSmall; rect.GradientX1 = 0;
@@ -112,7 +116,7 @@ internal class GradientScreen : FrameworkElement
         rect.GradientY2Units = GeneralUnitType.PixelsFromMiddle; rect.GradientY2 = 0;
     }
 
-    private static void ConfigureLinearVertical(RoundedRectangleRuntime rect)
+    private static void ConfigureLinearVertical(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Linear;
         rect.GradientX1Units = GeneralUnitType.PixelsFromMiddle; rect.GradientX1 = 0;
@@ -121,7 +125,7 @@ internal class GradientScreen : FrameworkElement
         rect.GradientY2Units = GeneralUnitType.PixelsFromLarge; rect.GradientY2 = 0;
     }
 
-    private static void ConfigureLinearDiagonal(RoundedRectangleRuntime rect)
+    private static void ConfigureLinearDiagonal(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Linear;
         rect.GradientX1Units = GeneralUnitType.PixelsFromSmall; rect.GradientX1 = 0;
@@ -134,7 +138,7 @@ internal class GradientScreen : FrameworkElement
     // the renderer treats coincident endpoints by sweeping the second color across most of
     // the area - useful for showing what NOT to do, and that the units math handles the
     // degenerate case without crashing. Offset slightly so it's not literally zero-length.
-    private static void ConfigureLinearFromMiddle(RoundedRectangleRuntime rect)
+    private static void ConfigureLinearFromMiddle(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Linear;
         rect.GradientX1Units = GeneralUnitType.PixelsFromMiddle; rect.GradientX1 = -60;
@@ -147,7 +151,7 @@ internal class GradientScreen : FrameworkElement
     // the fix, the Percentage branches in RenderableShapeBase.GetGradient overwrote the
     // world offset and the rectangle rendered flat (end color everywhere). A visible
     // top-to-bottom gradient here means the fix is intact.
-    private static void ConfigureLinearPercentageFull(RoundedRectangleRuntime rect)
+    private static void ConfigureLinearPercentageFull(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Linear;
         rect.GradientX1Units = GeneralUnitType.Percentage; rect.GradientX1 = 50;
@@ -160,7 +164,7 @@ internal class GradientScreen : FrameworkElement
     // so the leftmost 25% is solid start color and the rightmost 25% is solid end color -
     // a quick visual check that Percentage endpoints really map into the rectangle's
     // local space, not somewhere far outside it.
-    private static void ConfigureLinearPercentagePartial(RoundedRectangleRuntime rect)
+    private static void ConfigureLinearPercentagePartial(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Linear;
         rect.GradientX1Units = GeneralUnitType.Percentage; rect.GradientX1 = 25;
@@ -169,7 +173,7 @@ internal class GradientScreen : FrameworkElement
         rect.GradientY2Units = GeneralUnitType.Percentage; rect.GradientY2 = 50;
     }
 
-    private static void ConfigureRadialCentered(RoundedRectangleRuntime rect)
+    private static void ConfigureRadialCentered(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Radial;
         rect.GradientX1Units = GeneralUnitType.PixelsFromMiddle; rect.GradientX1 = 0;
@@ -178,7 +182,7 @@ internal class GradientScreen : FrameworkElement
         rect.GradientOuterRadius = 100;
     }
 
-    private static void ConfigureRadialDonut(RoundedRectangleRuntime rect)
+    private static void ConfigureRadialDonut(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Radial;
         rect.GradientX1Units = GeneralUnitType.PixelsFromMiddle; rect.GradientX1 = 0;
@@ -189,7 +193,7 @@ internal class GradientScreen : FrameworkElement
         rect.GradientOuterRadius = 100;
     }
 
-    private static void ConfigureRadialPercentageOuter(RoundedRectangleRuntime rect)
+    private static void ConfigureRadialPercentageOuter(RectangleRuntime rect)
     {
         rect.GradientType = GradientType.Radial;
         rect.GradientX1Units = GeneralUnitType.PixelsFromMiddle; rect.GradientX1 = 0;
