@@ -78,10 +78,9 @@ public enum TextPositionRoundingMode
 
 /// <summary>
 /// Mirrors <c>RenderingLibrary.Graphics.LetterCustomization</c> on the MonoGame-family runtime -
-/// the per-letter styling a <c>[Custom]</c> callback can apply. Not every field is representable on
-/// Raylib: <see cref="Text.DrawStyledLine"/> draws a run via a single <c>DrawTextPro</c> call, which only
-/// supports a uniform font size, so <see cref="ScaleX"/>/<see cref="ScaleY"/> are approximated by their
-/// average when both are set rather than applied independently per axis.
+/// the per-letter styling a <c>[Custom]</c> callback can apply. ScaleX/ScaleY/RotationDegrees change only how
+/// the letter is drawn, as on MonoGame: it is scaled about the cell point ScaleXOrigin/ScaleYOrigin name
+/// (Center by default) and turned about the scaled cell's top-left; layout and the next letter do not move.
 /// </summary>
 public struct LetterCustomization
 {
@@ -279,6 +278,10 @@ public class Text : IVisible, IRenderableIpso,
         public float XOffset;
         public float YOffset;
         public float Rotation;
+        public float ScaleX;
+        public float ScaleY;
+        public HorizontalAlignment ScaleXOrigin;
+        public VerticalAlignment ScaleYOrigin;
     }
 
     StyledRunDraw[] _styledRunScratch = Array.Empty<StyledRunDraw>();
@@ -1471,9 +1474,8 @@ public class Text : IVisible, IRenderableIpso,
     /// font (a resolved swap font from the Font / FontSize / IsBold / IsItalic / OutlineThickness family, or
     /// a FontScale multiplier / FontSize absolute-px atlas scale). Runs are laid out left-to-right and
     /// baseline-aligned so a larger run sits on the same baseline as its neighbors. <c>[Custom]</c> per-letter
-    /// callbacks (#3640) run per-run below, applying XOffset/YOffset/RotationDegrees/Color/
-    /// ReplacementCharacter directly; ScaleX/ScaleY are approximated by their average since a run draws via
-    /// one uniform-fontSize <c>DrawTextPro</c> call, and ScaleXOrigin/ScaleYOrigin are not honored.
+    /// callbacks (#3640) run per-run below, applying XOffset/YOffset/Color/ReplacementCharacter directly; a
+    /// scaled or rotated letter is drawn by <see cref="DrawTransformedRun"/>.
     /// </summary>
     private void DrawStyledLine(Font fontValue, List<StyledSubstring> substrings, int lettersToDraw, Vector2 linePosition, float absoluteLeft, float originY)
     {
@@ -1510,7 +1512,10 @@ public class Text : IVisible, IRenderableIpso,
             float xOffset = 0;
             float yOffset = 0;
             float rotationDegrees = 0;
-            float customScale = 1;
+            float scaleX = 1;
+            float scaleY = 1;
+            HorizontalAlignment scaleXOrigin = HorizontalAlignment.Center;
+            VerticalAlignment scaleYOrigin = VerticalAlignment.Center;
 
             foreach (var variable in run.Variables)
             {
@@ -1546,8 +1551,8 @@ public class Text : IVisible, IRenderableIpso,
                                         XOffset = xOffset,
                                         YOffset = yOffset,
                                         Color = System.Drawing.Color.FromArgb(runColor.A, runColor.R, runColor.G, runColor.B),
-                                        ScaleX = customScale,
-                                        ScaleY = customScale,
+                                        ScaleX = scaleX,
+                                        ScaleY = scaleY,
                                         RotationDegrees = rotationDegrees,
                                     };
                                     response = contextFunction(call.CharacterIndex, call.TextBlock, context);
@@ -1578,18 +1583,17 @@ public class Text : IVisible, IRenderableIpso,
                                 {
                                     runText = response.ReplacementCharacter.Value.ToString();
                                 }
-                                if (response.ScaleX != null && response.ScaleY != null)
+                                if (response.ScaleX != null)
                                 {
-                                    customScale = (response.ScaleX.Value + response.ScaleY.Value) / 2f;
+                                    scaleX = response.ScaleX.Value;
                                 }
-                                else if (response.ScaleX != null)
+                                if (response.ScaleY != null)
                                 {
-                                    customScale = response.ScaleX.Value;
+                                    scaleY = response.ScaleY.Value;
                                 }
-                                else if (response.ScaleY != null)
-                                {
-                                    customScale = response.ScaleY.Value;
-                                }
+                                // The origins come from this response only, as on MonoGame.
+                                scaleXOrigin = response.ScaleXOrigin ?? HorizontalAlignment.Center;
+                                scaleYOrigin = response.ScaleYOrigin ?? VerticalAlignment.Center;
                             }
                         }
                         break;
@@ -1599,12 +1603,17 @@ public class Text : IVisible, IRenderableIpso,
             ref StyledRunDraw drawRun = ref runs[s];
             drawRun.Color = runColor;
             drawRun.Font = resolvedFont.Font;
-            drawRun.DrawSize = resolvedFont.DrawSize * customScale;
-            drawRun.Scale = resolvedFont.LayoutScale * customScale;
+            // A [Custom] scale or rotation changes only how the letter is drawn, so it sizes nothing here.
+            drawRun.DrawSize = resolvedFont.DrawSize;
+            drawRun.Scale = resolvedFont.LayoutScale;
             drawRun.Text = runText;
             drawRun.XOffset = xOffset;
             drawRun.YOffset = yOffset;
             drawRun.Rotation = rotationDegrees;
+            drawRun.ScaleX = scaleX;
+            drawRun.ScaleY = scaleY;
+            drawRun.ScaleXOrigin = scaleXOrigin;
+            drawRun.ScaleYOrigin = scaleYOrigin;
             drawRun.Width = MeasureTextEx(resolvedFont.Font, runText, drawRun.DrawSize, 0).X;
             totalWidth += drawRun.Width;
             maxScale = System.Math.Max(maxScale, drawRun.Scale);
@@ -1635,6 +1644,13 @@ public class Text : IVisible, IRenderableIpso,
             var runPosition = new Vector2(lineStartX + advance + drawRun.XOffset, linePosition.Y + baselineDelta + drawRun.YOffset);
             var runOrigin = new Vector2(0, originY);
 
+            if (drawRun.ScaleX != 1 || drawRun.ScaleY != 1 || drawRun.Rotation != 0)
+            {
+                DrawTransformedRun(ref drawRun, new Vector2(runPosition.X, runPosition.Y - originY));
+                advance += drawRun.Width;
+                continue;
+            }
+
             runPosition = SnapToPixelIfNeeded(runPosition);
             runOrigin = SnapToPixelIfNeeded(runOrigin);
 
@@ -1645,13 +1661,45 @@ public class Text : IVisible, IRenderableIpso,
             {
                 var shadowRunPosition = SnapToPixelIfNeeded(
                     runPosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale);
-                DrawTextPro(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, drawRun.Rotation, drawRun.DrawSize, 0, DropshadowColor);
+                DrawTextPro(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, 0, drawRun.DrawSize, 0, DropshadowColor);
             }
 
-            DrawTextPro(drawRun.Font, drawRun.Text, runPosition, runOrigin, drawRun.Rotation, drawRun.DrawSize, 0, drawRun.Color);
+            DrawTextPro(drawRun.Font, drawRun.Text, runPosition, runOrigin, 0, drawRun.DrawSize, 0, drawRun.Color);
 
             advance += drawRun.Width;
         }
+    }
+
+    /// <summary>
+    /// Draws a <c>[Custom]</c> letter that is scaled or rotated, as MonoGame and Skia do: its cell (laid out at
+    /// <paramref name="cellTopLeft"/>, unscaled) is scaled by ScaleX/ScaleY about the point ScaleXOrigin/ScaleYOrigin
+    /// name, then turned counterclockwise about the scaled cell's top-left. DrawTextPro takes one font size, so
+    /// the non-uniform scale goes on the rlgl matrix instead.
+    /// </summary>
+    private void DrawTransformedRun(ref StyledRunDraw drawRun, Vector2 cellTopLeft)
+    {
+        float lineHeight = LineHeightInPixels * drawRun.Scale;
+        float baselineFromTop = (LineHeightInPixels - _descenderHeight) * drawRun.Scale;
+        Vector2 scaledTopLeft = LetterCellScale.GetScaledTopLeft(cellTopLeft.X, cellTopLeft.Y, drawRun.Width, lineHeight,
+            baselineFromTop, drawRun.ScaleX, drawRun.ScaleY, drawRun.ScaleXOrigin, drawRun.ScaleYOrigin);
+
+        if (HasDropshadow && RaylibFontShadowRegistry.TryGet(drawRun.Font.Texture.Id, out Font runShadowFont))
+        {
+            DrawTransformed(runShadowFont, ref drawRun,
+                scaledTopLeft + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale, DropshadowColor);
+        }
+        DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft, drawRun.Color);
+    }
+
+    private static void DrawTransformed(Font font, ref StyledRunDraw drawRun, Vector2 scaledTopLeft, Color color)
+    {
+        Raylib_cs.Rlgl.PushMatrix();
+        Raylib_cs.Rlgl.Translatef(scaledTopLeft.X, scaledTopLeft.Y, 0);
+        // Gum rotation is counterclockwise; rlgl's is clockwise on a y-down screen.
+        Raylib_cs.Rlgl.Rotatef(-drawRun.Rotation, 0, 0, 1);
+        Raylib_cs.Rlgl.Scalef(drawRun.ScaleX, drawRun.ScaleY, 1);
+        DrawTextPro(font, drawRun.Text, Vector2.Zero, Vector2.Zero, 0, drawRun.DrawSize, 0, color);
+        Raylib_cs.Rlgl.PopMatrix();
     }
 
     public void SetNeedsRefreshToTrue()
