@@ -321,12 +321,14 @@ public class UpdateEveryFrameSplashTests : BaseTestClass
         ContainerRuntime parent = new();
         root.AddChild(parent);
         NeedsToggleControl control = new() { Needed = false };
-        parent.AddChild(CreateVisual(control));
+        InteractiveGue visual = CreateVisual(control);
+        parent.AddChild(visual);
         RunFrames(root, 3);
         parent.Visible = false;
         RunFrames(root, 2);
 
         control.Needed = true;
+        visual.InvalidateSubtreeCaches();
         parent.Visible = true;
         int before = control.Calls;
         RunFrames(root, 3);
