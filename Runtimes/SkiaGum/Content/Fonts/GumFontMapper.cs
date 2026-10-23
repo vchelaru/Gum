@@ -83,7 +83,7 @@ public class GumFontMapper : FontMapper
     /// </summary>
     public static string? RegisterFontFile(string fontFilePath)
     {
-        string fullPath = ToolsUtilities.FileManager.Standardize(fontFilePath, preserveCase: true, makeAbsolute: true);
+        string fullPath = ToFullPath(fontFilePath);
 
         if (registry.ContainsKey(fullPath))
         {
@@ -114,6 +114,16 @@ public class GumFontMapper : FontMapper
         Interlocked.Increment(ref registrationVersion);
         return fullPath;
     }
+
+    /// <summary>
+    /// Whether <paramref name="fontFilePath"/> exists where <see cref="RegisterFontFile"/> looks for it, so a caller
+    /// can tell a missing font file from one that exists but does not parse.
+    /// </summary>
+    internal static bool FontFileExists(string fontFilePath) =>
+        ToolsUtilities.FileManager.FileExists(ToFullPath(fontFilePath));
+
+    private static string ToFullPath(string fontFilePath) =>
+        ToolsUtilities.FileManager.Standardize(fontFilePath, preserveCase: true, makeAbsolute: true);
 
     /// <summary>
     /// Loads <paramref name="fontData"/> as a typeface. SkiaSharp reads TrueType, OpenType and

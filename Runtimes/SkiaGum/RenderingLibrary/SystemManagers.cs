@@ -136,9 +136,9 @@ namespace RenderingLibrary
                 // GumFontMapper instead of passing Font straight through as a system family name.
                 string? resolvedFamily = SkiaGum.Content.Fonts.GumFontMapper.ResolveFontFamily(
                     textRuntime.UseCustomFont, textRuntime.CustomFontFile, textRuntime.Font);
-                if (resolvedFamily == null && textRuntime.UseCustomFont)
+                if (resolvedFamily == null)
                 {
-                    CustomSetPropertyOnRenderable.ReportUnsupportedCustomFontFile(textRuntime);
+                    CustomSetPropertyOnRenderable.ReportUnresolvedFontFile(textRuntime);
                 }
                 asText.FontName = resolvedFamily ?? textRuntime.Font ?? "Arial";
                 asText.IsItalic = textRuntime.IsItalic;

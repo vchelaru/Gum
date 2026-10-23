@@ -11,6 +11,7 @@ using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 
 namespace SkiaGum.Tests.GueDeriving;
@@ -34,6 +35,7 @@ public class TextRuntimeUnsupportedCustomFontTests : IDisposable
 
     public void Dispose()
     {
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
         CustomSetPropertyOnRenderable.PropertyAssignmentError -= _handler;
         ObjectFinder.Self.GumProjectSave = null;
     }
@@ -80,7 +82,7 @@ public class TextRuntimeUnsupportedCustomFontTests : IDisposable
 
         string message = _reported.ShouldHaveSingleItem();
         message.ShouldBe(
-            "Text TitleText uses CustomFontFile Fonts/MyFont.fnt, which Skia cannot render. " +
+            "Text TitleText uses CustomFontFile Fonts/MyFont.fnt, which is not a TrueType or OpenType font Skia can render. " +
             "Skia needs a .ttf or .otf custom font file; this text draws with the default font instead.");
     }
 
@@ -145,5 +147,67 @@ public class TextRuntimeUnsupportedCustomFontTests : IDisposable
         sut.UseCustomFont = true;
 
         _reported.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CustomFontFile_MissingTtf_ReportsNotFoundOnce()
+    {
+        TextRuntime sut = new() { Name = "TitleText" };
+
+        sut.UseCustomFont = true;
+        sut.CustomFontFile = "Fonts/DoesNotExist.ttf";
+        sut.FontSize = 30;
+
+        string message = _reported.ShouldHaveSingleItem();
+        message.ShouldStartWith(
+            "Text TitleText uses CustomFontFile Fonts/DoesNotExist.ttf, which was not found; " +
+            "this text draws with the default font instead.");
+        message.ShouldNotContain("Skia needs");
+    }
+
+    [Fact]
+    public void CustomFontFile_MissingTtf_WithThrowException_Throws()
+    {
+        TextRuntime sut = new() { Name = "TitleText" };
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+        sut.UseCustomFont = true;
+
+        Should.Throw<FileNotFoundException>(() => sut.CustomFontFile = "Fonts/DoesNotExist.ttf")
+            .Message.ShouldContain("Fonts/DoesNotExist.ttf");
+    }
+
+    [Fact]
+    public void CustomFontFile_CorruptTtf_ReportsNotRenderable()
+    {
+        string corruptPath = Path.Combine(Path.GetTempPath(), "GumCorruptFont_" + Guid.NewGuid().ToString("N") + ".ttf");
+        File.WriteAllBytes(corruptPath, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+        try
+        {
+            TextRuntime sut = new() { Name = "TitleText" };
+
+            sut.UseCustomFont = true;
+            sut.CustomFontFile = corruptPath;
+
+            string message = _reported.ShouldHaveSingleItem();
+            message.ShouldBe(
+                $"Text TitleText uses CustomFontFile {corruptPath}, which is not a TrueType or OpenType font Skia can render. " +
+                "Skia needs a .ttf or .otf custom font file; this text draws with the default font instead.");
+        }
+        finally
+        {
+            File.Delete(corruptPath);
+        }
+    }
+
+    [Fact]
+    public void Font_MissingTtfPath_ReportsNotFoundNamingFont()
+    {
+        TextRuntime sut = new() { Name = "TitleText" };
+
+        sut.Font = "Fonts/DoesNotExist.ttf";
+
+        _reported.ShouldHaveSingleItem().ShouldStartWith(
+            "Text TitleText uses Font Fonts/DoesNotExist.ttf, which was not found; " +
+            "this text draws with the default font instead.");
     }
 }
