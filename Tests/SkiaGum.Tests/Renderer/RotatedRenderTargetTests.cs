@@ -12,15 +12,17 @@ namespace SkiaGum.Tests.Renderer;
 /// target: its children turn with it and nothing inside its own rectangle is clipped (#6588).
 /// Text resamples differently when the baked image is turned, so scenes are compared by shape: how
 /// many pixels each child covers and where their center is, not pixel for pixel. Shape centers
-/// match within 0.1 pixel, so their tolerance catches a 1 pixel shift; text drawn upright into the
-/// bake and then turned rasterizes differently from text drawn turned (up to 1.4 pixels), so its
-/// tolerance is wider and the shapes carry the position check.
+/// match within 0.1 pixel, so their tolerance catches a 1 pixel shift. Text drawn upright into the
+/// bake and then turned rasterizes differently from text drawn turned, and glyph rasterization
+/// differs by OS (about 1.5 pixels on macOS), so the text tolerance is 4 pixels: the shapes carry
+/// the fine position check, and the text check still catches a double rotation, which moves the
+/// text about 22 pixels.
 /// </summary>
 public class RotatedRenderTargetTests
 {
     const int Size = 240;
     const float ShapeCenterTolerance = 0.25f;
-    const float TextCenterTolerance = 1.5f;
+    const float TextCenterTolerance = 4f;
 
     public RotatedRenderTargetTests()
     {
