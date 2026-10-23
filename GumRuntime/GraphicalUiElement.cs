@@ -329,7 +329,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// hidden or suspended (for example when this element or an ancestor is shown). Lets a control
     /// finish work that needed a laid-out subtree, such as scrolling an item into view.
     /// </summary>
-    public event EventHandler? LayoutResumed;
+    internal event EventHandler? LayoutResumed;
     public event EventHandler<ParentChangedEventArgs>? ParentChanged;
 
     public class ParentChangedEventArgs

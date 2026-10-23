@@ -158,6 +158,11 @@ public partial class GraphicalUiElement
                 // What the user suspended on a descendant stays suspended.
                 ResumeChildrenIfDirty(skipSuspendedChildren: true);
             }
+
+            if (!IsAllLayoutSuspended)
+            {
+                LayoutResumed?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 

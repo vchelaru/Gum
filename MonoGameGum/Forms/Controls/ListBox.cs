@@ -562,11 +562,13 @@ public class ListBox : ItemsControl, IInputReceiver
         if (_layoutResumedVisual != null)
         {
             _layoutResumedVisual.LayoutResumed -= HandleVisualLayoutResumed;
+            _layoutResumedVisual.ParentChanged -= HandleVisualParentChanged;
         }
         _layoutResumedVisual = Visual;
         if (_layoutResumedVisual != null)
         {
             _layoutResumedVisual.LayoutResumed += HandleVisualLayoutResumed;
+            _layoutResumedVisual.ParentChanged += HandleVisualParentChanged;
         }
 
         if (selectedData != null)
@@ -1754,6 +1756,10 @@ public class ListBox : ItemsControl, IInputReceiver
     private InteractiveGue? _layoutResumedVisual;
 
     private void HandleVisualLayoutResumed(object? sender, EventArgs e) => ApplyPendingScrollIntoView();
+
+    // Reparenting under a visible parent lays the list box out without resuming anything.
+    private void HandleVisualParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs e) =>
+        ApplyPendingScrollIntoView();
 
     #endregion
 

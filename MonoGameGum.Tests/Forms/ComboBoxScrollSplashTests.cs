@@ -569,6 +569,39 @@ public class ComboBoxScrollSplashTests : BaseTestClass
     }
 
     [Fact]
+    public void ListBox_HiddenWhileSuspendedThenShownAndResumedWithoutArgument_ShouldShowSelectedItem()
+    {
+        ListBox listBox = new();
+        listBox.Visual.Height = 200;
+        listBox.AddToRoot();
+        listBox.IsVisible = false;
+        for (int i = 0; i < 50; i++)
+        {
+            listBox.Items!.Add("Item " + i);
+        }
+        listBox.Visual.SuspendLayout();
+        listBox.SelectedIndex = 40;
+
+        listBox.IsVisible = true;
+        listBox.Visual.ResumeLayout();
+
+        IsRowInView(listBox, 40).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_HiddenParentReparentedToVisibleParent_ShouldShowSelectedItem()
+    {
+        (ContainerRuntime hiddenParent, ListBox listBox) = CreateListBoxInHiddenParent(50);
+        listBox.SelectedIndex = 40;
+        ContainerRuntime visibleParent = new();
+        visibleParent.AddToRoot();
+
+        visibleParent.Children.Add(listBox.Visual);
+
+        IsRowInView(listBox, 40).ShouldBeTrue();
+    }
+
+    [Fact]
     public void ListBox_HiddenSelectedItemRemovedThenShown_ShouldNotScrollOrThrow()
     {
         (ContainerRuntime parent, ListBox listBox) = CreateListBoxInHiddenParent(50);
