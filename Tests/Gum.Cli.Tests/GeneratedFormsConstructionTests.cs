@@ -263,14 +263,21 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         derived.Instances.RemoveAll(item => item.Name == "B");
     }
 
-    // #6597. A derived element saved without one of its base's instances as DefinedByBase builds only
-    // the instances in its own list: the generated FindByName ctor (base built with fullInstantiation:
-    // false, #6577) and the plain runtime ToGraphicalUiElement agree, so the base's field stays null and
-    // nothing throws. Neither gumcli nor the runtime repairs the list on load; the tool repairs
-    // components only (ProjectManager.RecreateMissingDefinedByBaseObjects). If #6597 decides to repair or
-    // report on load, these two flip.
+    // Three levels where every derived level is saved without the instances it inherits.
+    private static void AddChainMissingBaseInstances(GumProjectSave project)
+    {
+        AddComponent(project, "Elements/MissChainG", "Container", ("G", "Container"));
+        ComponentSave parent = AddComponent(project, "Elements/MissChainP", "Elements/MissChainG", ("P", "Container"));
+        parent.Instances.RemoveAll(item => item.DefinedByBase);
+        ComponentSave child = AddComponent(project, "Elements/MissChainK", "Elements/MissChainP", ("K", "Container"));
+        child.Instances.RemoveAll(item => item.DefinedByBase);
+    }
+
+    // #6597. A derived element saved without one of its base's instances as DefinedByBase is repaired on
+    // load (GumProjectSave.Initialize), so the generated FindByName ctor (base built with fullInstantiation:
+    // false, #6577) and the plain runtime ToGraphicalUiElement both build the base's instance.
     [Fact]
-    public void Constructor_LegacyMonoGameFindByNameDerived_BaseInstanceMissingFromDerivedList_IsNotBuilt()
+    public void Constructor_LegacyMonoGameFindByNameDerived_BaseInstanceMissingFromDerivedList_IsBuilt()
     {
         Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddDerivedMissingBaseInstance);
         LoadProjectForFindByName();
@@ -278,24 +285,75 @@ public class GeneratedFormsConstructionTests : BaseTestClass
 
         object visual = Activator.CreateInstance(type, true, true)!;
 
-        ChildNames(visual).ShouldBe("A,C");
+        ChildNames(visual).ShouldBe("A,C,B");
         Get(visual, "A").ShouldNotBeNull();
-        Get(visual, "B").ShouldBeNull();
+        Get(visual, "B").ShouldBeSameAs(Call(visual, "GetGraphicalUiElementByName", "B"));
+        Get(visual, "B").ShouldNotBeNull();
     }
 
     [Fact]
-    public void ToGraphicalUiElement_DerivedComponent_BaseInstanceMissingFromDerivedList_IsNotBuilt()
+    public void Constructor_LegacyMonoGameFindByNameDerived_EveryLevelMissingItsBaseInstances_BuildsAllOfThem()
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddChainMissingBaseInstances);
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == "MissChainKRuntime");
+
+        object visual = Activator.CreateInstance(type, true, true)!;
+
+        ChildNames(visual).Split(',').OrderBy(item => item).ShouldBe(new[] { "G", "K", "P" });
+        Get(visual, "G").ShouldNotBeNull();
+        Get(visual, "P").ShouldNotBeNull();
+        Get(visual, "K").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_DerivedComponent_BaseInstanceMissingFromDerivedList_IsBuilt()
     {
         GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddDerivedMissingBaseInstance);
         LoadProjectForFindByName();
-        ElementSave derived = Gum.Managers.ObjectFinder.Self.GetElementSave("Elements/MissDerived")!;
+
+        RuntimeChildNames("Elements/MissDerived").ShouldBe("A,C,B");
+    }
+
+    // The base screen is hand written so the generated derived screen compiles (#6656).
+    [Fact]
+    public void ToGraphicalUiElement_DerivedScreen_BaseInstanceMissingFromDerivedList_IsBuilt()
+    {
+        GenerateAndCompile(
+            OutputLibrary.MonoGame,
+            ObjectInstantiationType.FindByName,
+            editProject: project =>
+            {
+                ScreenSave baseScreen = AddScreen(project, "MissScreenBase", baseType: null, ("A", "Container"));
+                baseScreen.Instances.Add(new InstanceSave { Name = "B", BaseType = "Container", ParentContainer = baseScreen });
+                ScreenSave derived = AddScreen(project, "MissScreenDerived", baseScreen.Name, ("C", "Container"));
+                derived.Instances.RemoveAll(item => item.DefinedByBase);
+            },
+            editSettings: settings => settings.BaseTypesNotCodeGenerated = "MissScreenBase",
+            afterCodegen: () =>
+            {
+                foreach (string path in Directory.GetFiles(TempDirectory, "MissScreenBaseRuntime*.cs", SearchOption.AllDirectories))
+                {
+                    File.Delete(path);
+                }
+                File.WriteAllText(Path.Combine(TempDirectory, "MissScreenBase.cs"),
+                    "namespace MyGame.Screens; public class MissScreenBase : global::Gum.Wireframe.GraphicalUiElement { }");
+            });
+        LoadProjectForFindByName();
+
+        RuntimeChildNames("MissScreenDerived").ShouldBe("C,A,B");
+    }
+
+    private static string RuntimeChildNames(string elementName)
+    {
+        ElementSave element = Gum.Managers.ObjectFinder.Self.GetElementSave(elementName)!;
         object systemManagers = MonoGameGum.GetType("RenderingLibrary.SystemManagers", throwOnError: true)!
             .GetProperty("Default")!.GetValue(null)!;
 
         global::Gum.Wireframe.GraphicalUiElement visual = global::GumRuntime.ElementSaveExtensions.ToGraphicalUiElement(
-            derived, (global::RenderingLibrary.ISystemManagers)systemManagers, addToManagers: false);
+            element, (global::RenderingLibrary.ISystemManagers)systemManagers, addToManagers: false);
 
-        string.Join(",", visual.Children.Cast<global::Gum.Wireframe.GraphicalUiElement>().Select(child => child.Name)).ShouldBe("A,C");
+        return string.Join(",", visual.Children.Cast<global::Gum.Wireframe.GraphicalUiElement>().Select(child => child.Name));
     }
 
     // The base is hand written (listed in BaseTypesNotCodeGenerated), so it never builds its element:

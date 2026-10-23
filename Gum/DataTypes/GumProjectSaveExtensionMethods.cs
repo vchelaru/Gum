@@ -156,6 +156,12 @@ namespace Gum.DataTypes
                 }
             }
 
+            if (gumProjectSave.RepairMissingDefinedByBaseInstances())
+            {
+                wasModified = true;
+                modifications?.Add(nameof(RepairMissingDefinedByBaseInstances));
+            }
+
             foreach (var behavior in gumProjectSave.Behaviors)
             {
 
@@ -361,6 +367,11 @@ namespace Gum.DataTypes
                 }
             }
 
+        }
+
+        public static bool RepairMissingDefinedByBaseInstances(this GumProjectSave gumProjectSave)
+        {
+            return false;
         }
 
         /// <summary>
