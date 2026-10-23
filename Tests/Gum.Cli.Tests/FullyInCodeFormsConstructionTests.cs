@@ -23,6 +23,8 @@ namespace Gum.Cli.Tests;
 public class FullyInCodeFormsConstructionTests : IDisposable
 {
     private readonly string _tempDirectory;
+    private readonly global::Gum.Wireframe.MissingFileBehavior _previousMissingFileBehavior =
+        global::Gum.Wireframe.GraphicalUiElement.MissingFileBehavior;
 
     public FullyInCodeFormsConstructionTests()
     {
@@ -267,6 +269,10 @@ public class FullyInCodeFormsConstructionTests : IDisposable
         Install(typeof(global::Gum.Wireframe.GraphicalUiElement), "UpdateFontFromProperties", customSetProperty, "UpdateToFontValues");
         Install(typeof(global::GumRuntime.ElementSaveExtensions), "CustomCreateGraphicalComponentFunc", renderableCreator, "HandleCreateGraphicalComponent");
 
+        // The template's sprites point at a texture the headless run cannot load. An in-process gumcli
+        // command that ran SystemManagers.Initialize earlier leaves this at ThrowException; Dispose restores it.
+        global::Gum.Wireframe.GraphicalUiElement.MissingFileBehavior = global::Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+
         // No project loaded: generated code then skips the standard-element lookups, which need a renderer.
         Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
     }
@@ -346,6 +352,7 @@ public class FullyInCodeFormsConstructionTests : IDisposable
 
     public void Dispose()
     {
+        global::Gum.Wireframe.GraphicalUiElement.MissingFileBehavior = _previousMissingFileBehavior;
         if (Directory.Exists(_tempDirectory))
         {
             Directory.Delete(_tempDirectory, recursive: true);
