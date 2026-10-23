@@ -2160,6 +2160,7 @@ public class GraphicalUiElementTests : BaseTestClass
         "SizeChanged",
         "PositionChanged",
         "VisibleChanged",
+        "LayoutResumed",
         "ParentChanged",
         "PropertyChanged",
         "BindingContextChanged",

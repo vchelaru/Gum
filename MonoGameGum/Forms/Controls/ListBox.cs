@@ -366,6 +366,7 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 // Clear all selections
                 ReplaceSelectedRows(new List<ListBoxItem>());
+                _pendingScrollRow = null;
 
                 // Sync the IsSelected state of all ListBoxItems
                 SyncIsSelectedFromSelectedItems();
@@ -557,6 +558,18 @@ public class ListBox : ItemsControl, IInputReceiver
 
         // do base first, so InnerPanel can get assigned by the base
         base.ReactToVisualChanged();
+
+        if (_layoutResumedVisual != null)
+        {
+            _layoutResumedVisual.LayoutResumed -= HandleVisualLayoutResumed;
+            _layoutResumedVisual.ParentChanged -= HandleVisualParentChanged;
+        }
+        _layoutResumedVisual = Visual;
+        if (_layoutResumedVisual != null)
+        {
+            _layoutResumedVisual.LayoutResumed += HandleVisualLayoutResumed;
+            _layoutResumedVisual.ParentChanged += HandleVisualParentChanged;
+        }
 
         if (selectedData != null)
         {
@@ -1645,6 +1658,18 @@ public class ListBox : ItemsControl, IInputReceiver
                 return;
             }
 
+            // Layout is deferred while a list box is invisible (or inside an invisible parent), so its
+            // rows still sit at Y = 0 and every row looks "below the view". Scrolling now would jump to
+            // the maximum (#6643). Remember the request (the latest wins) and apply it once shown.
+            if (!Visual.AbsoluteVisible)
+            {
+                _pendingScrollRow = visual;
+                _pendingScrollStyle = scrollIntoViewStyle;
+                return;
+            }
+
+            _pendingScrollRow = null;
+
             var visualAsIpso = (IPositionedSizedObject)visual.Visual;
             var visualTop = visualAsIpso.Y;
             var visualBottom = visualAsIpso.Y + visualAsIpso.Height;
@@ -1705,6 +1730,36 @@ public class ListBox : ItemsControl, IInputReceiver
             }
         }
     }
+
+    private ListBoxItem? _pendingScrollRow;
+    private ScrollIntoViewStyle _pendingScrollStyle;
+
+    /// <summary>
+    /// Performs a scroll-into-view that was requested while this list box was not visible. Does nothing
+    /// if there is no pending request, the list box is still not visible, or the row was removed.
+    /// </summary>
+    internal void ApplyPendingScrollIntoView()
+    {
+        ListBoxItem? row = _pendingScrollRow;
+        if (row == null || !Visual.AbsoluteVisible)
+        {
+            return;
+        }
+
+        _pendingScrollRow = null;
+        if (ListBoxItemsInternal.Contains(row))
+        {
+            ScrollIndexIntoView(GetItemsIndexForRow(row), _pendingScrollStyle);
+        }
+    }
+
+    private InteractiveGue? _layoutResumedVisual;
+
+    private void HandleVisualLayoutResumed(object? sender, EventArgs e) => ApplyPendingScrollIntoView();
+
+    // Reparenting under a visible parent lays the list box out without resuming anything.
+    private void HandleVisualParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs e) =>
+        ApplyPendingScrollIntoView();
 
     #endregion
 

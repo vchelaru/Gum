@@ -323,6 +323,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public event EventHandler? SizeChanged;
     public event EventHandler? PositionChanged;
     public event EventHandler? VisibleChanged;
+
+    /// <summary>
+    /// Raised after this element and its descendants have been given the layout they skipped while
+    /// hidden or suspended (for example when this element or an ancestor is shown). Lets a control
+    /// finish work that needed a laid-out subtree, such as scrolling an item into view.
+    /// </summary>
+    internal event EventHandler? LayoutResumed;
     public event EventHandler<ParentChangedEventArgs>? ParentChanged;
 
     public class ParentChangedEventArgs
@@ -634,6 +641,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.SizeChanged = null;
         newClone.PositionChanged = null;
         newClone.VisibleChanged = null;
+        newClone.LayoutResumed = null;
         newClone.ParentChanged = null;
         newClone.PropertyChanged = null;
         newClone.ResetBindingStateForClone();

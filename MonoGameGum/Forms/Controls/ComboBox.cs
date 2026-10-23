@@ -286,7 +286,7 @@ public class ComboBox :
         {
             if (value && IsDropDownOpen == false)
             {
-                ShowListBoxInstance();
+                OpenDropDown();
             }
             else if (!value && IsDropDownOpen)
             {
@@ -436,9 +436,18 @@ public class ComboBox :
         }
         else
         {
-            ShowListBoxInstance();
+            OpenDropDown();
         }
 
+    }
+
+    private void OpenDropDown()
+    {
+        ShowListBoxInstance();
+
+        // A selection made while closed was queued by the list box (it cannot scroll until it is
+        // laid out); now that the drop-down is laid out, bring it into view (#6643).
+        listBox.ApplyPendingScrollIntoView();
     }
 
     private void ShowListBoxInstance()
@@ -582,6 +591,13 @@ public class ComboBox :
 
     private void HandleSelectionChanged(object? sender, SelectionChangedEventArgs args)
     {
+        if (!IsDropDownOpen && listBox.SelectedIndex > -1)
+        {
+            // Queues the scroll in the list box until the drop-down is opened. This also covers
+            // selections that did not scroll themselves, such as SelectedObject.
+            listBox.ScrollIndexIntoView(listBox.SelectedIndex);
+        }
+
         // If we bind the Text, then don't set this here, the binding will take care of it
         if (!IsDataBound(nameof(Text)))
         {
