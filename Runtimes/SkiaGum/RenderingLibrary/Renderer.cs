@@ -203,6 +203,7 @@ namespace RenderingLibrary.Graphics
         private void StartHostFrameRenderTargets()
         {
             DisposeBakedImages();
+            _referencedRenderTargetOwners.Clear();
             _renderTargetService.ClearUnusedRenderTargetsLastFrame();
             _hostFrameStarted = true;
         }
@@ -211,18 +212,9 @@ namespace RenderingLibrary.Graphics
         // layer's camera.
         private void DrawTopLevel(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
         {
-            // Collect render-target containers referenced by a visible Sprite before baking, so an
-            // invisible-but-referenced container still bakes (#1643).
             _referencedRenderTargetOwners.Clear();
-            CollectReferencedRenderTargets(whatToRender);
-
-            // Bake every render-target container's subtree into its offscreen surface before the
-            // camera transform is applied to the screen canvas. Each bake swaps managers.Canvas to
-            // its own offscreen canvas and restores it, so nothing leaks between the two.
-            if (HasAnyRenderTarget(whatToRender))
-            {
-                BakeRenderTargetsInSubtree(whatToRender, managers);
-            }
+            // Before the camera transform is applied to the screen canvas.
+            BakeRenderTargets(whatToRender, managers);
 
             ApplyCamera(managers.Canvas, layer, matrix: null);
             DrawList(whatToRender, managers, layer);
@@ -314,11 +306,7 @@ namespace RenderingLibrary.Graphics
         public void Begin(SKMatrix? matrix = null, GumBatchDrawMode mode = GumBatchDrawMode.Immediate)
         {
             SKCanvas canvas = OwnManagers.Canvas;
-            if (!_hostFrameStarted)
-            {
-                StartHostFrameRenderTargets();
-                _batchStartedHostFrame = true;
-            }
+            TryStartHostFrameForBatch();
             _cycleCanvas = canvas;
             _cycleMode = mode;
             ApplyCamera(canvas, MainLayer, matrix);
@@ -326,7 +314,8 @@ namespace RenderingLibrary.Graphics
 
         /// <summary>
         /// Draws <paramref name="renderable"/> and its children between <see cref="Begin"/> and
-        /// <see cref="End"/>. Render-target containers drawn this way are not baked.
+        /// <see cref="End"/>. Render-target containers drawn this way are not baked; bake them with
+        /// <see cref="PreRenderRoots"/> before <see cref="Begin"/>.
         /// </summary>
         public void Draw(IRenderableIpso renderable)
         {
@@ -384,6 +373,47 @@ namespace RenderingLibrary.Graphics
                 _cycleMode = GumBatchDrawMode.Immediate;
                 _cycleCanvas?.Restore();
                 _cycleCanvas = null;
+            }
+        }
+
+        readonly List<IRenderableIpso> _preRenderRootsBuffer = new List<IRenderableIpso>();
+
+        /// <summary>
+        /// Bakes render targets for roots drawn through <see cref="GumBatch"/> (or
+        /// <see cref="Begin"/>/<see cref="Draw(IRenderableIpso)"/>/<see cref="End"/>), which does not
+        /// bake them itself. Bakes every <see cref="IRenderableIpso.IsRenderTarget"/> container under
+        /// <paramref name="roots"/>, including targets referenced by a
+        /// <see cref="IRenderTargetTextureReferencer.RenderTargetTextureSource"/> in the roots, and
+        /// keeps their surfaces from being swept. The roots do not need to be in a <see cref="Layer"/>.
+        /// Call it once per frame (or once per batch of roots) before the <c>Begin</c> that draws
+        /// them, never between <c>Begin</c> and <c>End</c>.
+        /// </summary>
+        /// <param name="roots">The roots about to be drawn.</param>
+        public void PreRenderRoots(IEnumerable<IRenderableIpso> roots)
+        {
+            _preRenderRootsBuffer.Clear();
+            _preRenderRootsBuffer.AddRange(roots);
+            try
+            {
+                TryStartHostFrameForBatch();
+                // Adds to this frame's referenced owners rather than replacing them, like MonoGame,
+                // so a sprite in an earlier call keeps its invisible source baking in a later one.
+                BakeRenderTargets(_preRenderRootsBuffer, OwnManagers);
+            }
+            finally
+            {
+                _preRenderRootsBuffer.Clear();
+            }
+        }
+
+        // The first GumBatch call of a host frame (Begin or PreRenderRoots) runs the frame work, so
+        // the full-scene Draw that may follow does not sweep again.
+        private void TryStartHostFrameForBatch()
+        {
+            if (!_hostFrameStarted)
+            {
+                StartHostFrameRenderTargets();
+                _batchStartedHostFrame = true;
             }
         }
 
@@ -675,7 +705,25 @@ namespace RenderingLibrary.Graphics
 
             // The snapshot stays valid across the frame via SkiaSharp copy-on-write; the persistent
             // surface is only re-cleared next frame, after DisposeBakedImages frees this snapshot.
+            // A second bake in the same frame (PreRenderRoots then a full-scene Draw) replaces it.
+            if (_bakedImages.TryGetValue(owner, out SKImage? previous))
+            {
+                previous?.Dispose();
+            }
             _bakedImages[owner] = renderTarget.Surface.Snapshot();
+        }
+
+        // Bakes every render-target container's subtree under whatToRender into its offscreen
+        // surface, marking it used so the next sweep keeps it. Render-target containers referenced
+        // by a visible Sprite are collected first, so an invisible-but-referenced container still
+        // bakes (#1643). Each bake swaps managers.Canvas to its own offscreen canvas and restores it.
+        private void BakeRenderTargets(IList<IRenderableIpso> whatToRender, SystemManagers managers)
+        {
+            CollectReferencedRenderTargets(whatToRender);
+            if (HasAnyRenderTarget(whatToRender))
+            {
+                BakeRenderTargetsInSubtree(whatToRender, managers);
+            }
         }
 
         // Composites a render-target container's baked texture at the container's rectangle, honoring
