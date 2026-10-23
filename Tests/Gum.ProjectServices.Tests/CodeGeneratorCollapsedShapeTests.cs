@@ -10,10 +10,11 @@ using System.Linq;
 namespace Gum.ProjectServices.Tests;
 
 /// <summary>
-/// Tests for #2775: when the resolved runtime syntax version is &gt;= 2, MonoGame codegen emits the
+/// Tests for #2775: when the resolved runtime syntax version is &gt;= 3, MonoGame codegen emits the
 /// collapsed two-slot shape runtimes (<c>CircleRuntime</c> / <c>RectangleRuntime</c>) for the legacy
 /// <c>ColoredCircle</c> / <c>ColoredRectangle</c> / <c>RoundedRectangle</c> standard elements, and
-/// translates their single-color variables to the fill/stroke channel properties. Versions below 2,
+/// translates their single-color variables to the fill/stroke channel properties. Versions below 3
+/// (the channel properties and <c>IsFilled</c> shipped after version 2 was stamped, #6613),
 /// FindByName instantiation, and non-MonoGame output libraries keep the legacy emission.
 /// </summary>
 public class CodeGeneratorCollapsedShapeTests : BaseTestClass
@@ -155,10 +156,10 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_FindByNameV2_KeepsLegacyRuntime()
+    public void GetCodeForInstance_ColoredCircle_FindByNameV3_KeepsLegacyRuntime()
     {
         AddColoredCircleStandard();
-        CodeOutputProjectSettings settings = CreateMonoGameSettings("2");
+        CodeOutputProjectSettings settings = CreateMonoGameSettings("3");
         settings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
 
         string code = GenerateInstanceCode("ColoredCircle", "CircleInstance", settings);
@@ -168,14 +169,14 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_SkiaV2_KeepsLegacyRuntime()
+    public void GetCodeForInstance_ColoredCircle_SkiaV3_KeepsLegacyRuntime()
     {
         AddColoredCircleStandard();
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings
         {
             OutputLibrary = OutputLibrary.Skia,
             RootNamespace = "MyGame",
-            SyntaxVersion = "2",
+            SyntaxVersion = "3",
         };
 
         string code = GenerateInstanceCode("ColoredCircle", "CircleInstance", settings);
@@ -202,14 +203,53 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_V2_DropsGradientStartColor()
+    public void GetCodeForInstance_ColoredCircle_V2_KeepsLegacyRuntimeAndColorVariables()
     {
+        // Version 2 was stamped before FillRed/StrokeRed/IsFilled shipped on CircleRuntime (#6613),
+        // so a version-2 runtime may lack every member the collapsed emission assigns.
         AddColoredCircleStandard();
 
         string code = GenerateInstanceCode(
             "ColoredCircle",
             "CircleInstance",
             CreateMonoGameSettings("2"),
+            ("Red", 10, "int"));
+
+        code.ShouldContain("new global::Gum.GueDeriving.ColoredCircleRuntime();");
+        code.ShouldContain("CircleInstance.Red = 10;");
+        code.ShouldNotContain("CircleInstance.FillRed");
+        code.ShouldNotContain("CircleInstance.IsFilled = true;");
+    }
+
+    [Fact]
+    public void GetInheritance_ColoredCircle_V2_KeepsLegacyRuntime()
+    {
+        AddColoredCircleStandard();
+        ObjectFinder.Self.GumProjectSave = Project;
+
+        try
+        {
+            ComponentSave component = CreateComponent("MyShape", "ColoredCircle");
+
+            string? result = CodeGenerator.GetInheritance(component, CreateMonoGameSettings("2"), resolvedSyntaxVersion: 2);
+
+            result.ShouldBe("global::Gum.GueDeriving.ColoredCircleRuntime");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void GetCodeForInstance_ColoredCircle_V3_DropsGradientStartColor()
+    {
+        AddColoredCircleStandard();
+
+        string code = GenerateInstanceCode(
+            "ColoredCircle",
+            "CircleInstance",
+            CreateMonoGameSettings("3"),
             ("Red1", 100, "int"),
             ("Alpha1", 200, "int"));
 
@@ -218,11 +258,11 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_V2_EmitsCircleRuntime()
+    public void GetCodeForInstance_ColoredCircle_V3_EmitsCircleRuntime()
     {
         AddColoredCircleStandard();
 
-        string code = GenerateInstanceCode("ColoredCircle", "CircleInstance", CreateMonoGameSettings("2"));
+        string code = GenerateInstanceCode("ColoredCircle", "CircleInstance", CreateMonoGameSettings("3"));
 
         code.ShouldContain("public CircleRuntime CircleInstance");
         code.ShouldContain("new global::Gum.GueDeriving.CircleRuntime();");
@@ -230,39 +270,39 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_V2_EmitsFilledBaselineBlock()
+    public void GetCodeForInstance_ColoredCircle_V3_EmitsFilledBaselineBlock()
     {
         AddColoredCircleStandard();
 
-        string code = GenerateInstanceCode("ColoredCircle", "CircleInstance", CreateMonoGameSettings("2"));
+        string code = GenerateInstanceCode("ColoredCircle", "CircleInstance", CreateMonoGameSettings("3"));
 
         code.ShouldContain("CircleInstance.IsFilled = true;");
         code.ShouldContain("CircleInstance.StrokeWidth = 0f;");
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_V2_Filled_DropsStrokeWidth()
+    public void GetCodeForInstance_ColoredCircle_V3_Filled_DropsStrokeWidth()
     {
         AddColoredCircleStandard();
 
         string code = GenerateInstanceCode(
             "ColoredCircle",
             "CircleInstance",
-            CreateMonoGameSettings("2"),
+            CreateMonoGameSettings("3"),
             ("StrokeWidth", 5.0f, "float"));
 
         code.ShouldNotContain("StrokeWidth = 5");
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_V2_Filled_RoutesColorChannelsToFill()
+    public void GetCodeForInstance_ColoredCircle_V3_Filled_RoutesColorChannelsToFill()
     {
         AddColoredCircleStandard();
 
         string code = GenerateInstanceCode(
             "ColoredCircle",
             "CircleInstance",
-            CreateMonoGameSettings("2"),
+            CreateMonoGameSettings("3"),
             ("Red", 10, "int"),
             ("Green", 20, "int"),
             ("Blue", 30, "int"),
@@ -276,25 +316,25 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_V2_KeepsLegacyElementSaveLookup()
+    public void GetCodeForInstance_ColoredCircle_V3_KeepsLegacyElementSaveLookup()
     {
         AddColoredCircleStandard();
 
-        string code = GenerateInstanceCode("ColoredCircle", "CircleInstance", CreateMonoGameSettings("2"));
+        string code = GenerateInstanceCode("ColoredCircle", "CircleInstance", CreateMonoGameSettings("3"));
 
         // States and categories still come from the legacy .gumx standard element.
         code.ShouldContain("GetStandardElement(\"ColoredCircle\")");
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_V2_NotFilled_KeepsStrokeWidth()
+    public void GetCodeForInstance_ColoredCircle_V3_NotFilled_KeepsStrokeWidth()
     {
         AddColoredCircleStandard();
 
         string code = GenerateInstanceCode(
             "ColoredCircle",
             "CircleInstance",
-            CreateMonoGameSettings("2"),
+            CreateMonoGameSettings("3"),
             ("IsFilled", false, "bool"),
             ("StrokeWidth", 5.0f, "float"));
 
@@ -303,14 +343,14 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredCircle_V2_NotFilled_RoutesColorChannelsToStroke()
+    public void GetCodeForInstance_ColoredCircle_V3_NotFilled_RoutesColorChannelsToStroke()
     {
         AddColoredCircleStandard();
 
         string code = GenerateInstanceCode(
             "ColoredCircle",
             "CircleInstance",
-            CreateMonoGameSettings("2"),
+            CreateMonoGameSettings("3"),
             ("IsFilled", false, "bool"),
             ("Red", 10, "int"));
 
@@ -320,14 +360,14 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ColoredRectangle_V2_EmitsRectangleRuntimeAndFillChannels()
+    public void GetCodeForInstance_ColoredRectangle_V3_EmitsRectangleRuntimeAndFillChannels()
     {
         AddColoredRectangleVariables();
 
         string code = GenerateInstanceCode(
             "ColoredRectangle",
             "RectangleInstance",
-            CreateMonoGameSettings("2"),
+            CreateMonoGameSettings("3"),
             ("Red", 10, "int"));
 
         code.ShouldContain("new global::Gum.GueDeriving.RectangleRuntime();");
@@ -338,25 +378,25 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_RoundedRectangle_V2_CornerRadiusExplicit_PassesThrough()
+    public void GetCodeForInstance_RoundedRectangle_V3_CornerRadiusExplicit_PassesThrough()
     {
         AddRoundedRectangleStandard();
 
         string code = GenerateInstanceCode(
             "RoundedRectangle",
             "RoundedInstance",
-            CreateMonoGameSettings("2"),
+            CreateMonoGameSettings("3"),
             ("CornerRadius", 8.0f, "float"));
 
         code.ShouldContain("RoundedInstance.CornerRadius = 8");
     }
 
     [Fact]
-    public void GetCodeForInstance_RoundedRectangle_V2_EmitsCornerRadiusBaseline()
+    public void GetCodeForInstance_RoundedRectangle_V3_EmitsCornerRadiusBaseline()
     {
         AddRoundedRectangleStandard();
 
-        string code = GenerateInstanceCode("RoundedRectangle", "RoundedInstance", CreateMonoGameSettings("2"));
+        string code = GenerateInstanceCode("RoundedRectangle", "RoundedInstance", CreateMonoGameSettings("3"));
 
         // Legacy RoundedRectangle defaulted CornerRadius to 5; the collapsed RectangleRuntime
         // defaults to 0, so the baseline must carry the legacy default.
@@ -364,11 +404,11 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_RoundedRectangle_V2_EmitsRectangleRuntime()
+    public void GetCodeForInstance_RoundedRectangle_V3_EmitsRectangleRuntime()
     {
         AddRoundedRectangleStandard();
 
-        string code = GenerateInstanceCode("RoundedRectangle", "RoundedInstance", CreateMonoGameSettings("2"));
+        string code = GenerateInstanceCode("RoundedRectangle", "RoundedInstance", CreateMonoGameSettings("3"));
 
         code.ShouldContain("public RectangleRuntime RoundedInstance");
         code.ShouldContain("new global::Gum.GueDeriving.RectangleRuntime();");
@@ -396,7 +436,7 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetInheritance_ColoredCircle_V2_FindByName_KeepsLegacyRuntime()
+    public void GetInheritance_ColoredCircle_V3_FindByName_KeepsLegacyRuntime()
     {
         AddColoredCircleStandard();
         ObjectFinder.Self.GumProjectSave = Project;
@@ -404,10 +444,10 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
         try
         {
             ComponentSave component = CreateComponent("MyShape", "ColoredCircle");
-            CodeOutputProjectSettings settings = CreateMonoGameSettings("2");
+            CodeOutputProjectSettings settings = CreateMonoGameSettings("3");
             settings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
 
-            string? result = CodeGenerator.GetInheritance(component, settings, resolvedSyntaxVersion: 2);
+            string? result = CodeGenerator.GetInheritance(component, settings, resolvedSyntaxVersion: 3);
 
             result.ShouldBe("global::Gum.GueDeriving.ColoredCircleRuntime");
         }
@@ -418,7 +458,7 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
     }
 
     [Fact]
-    public void GetInheritance_ColoredCircle_V2_ReturnsCircleRuntime()
+    public void GetInheritance_ColoredCircle_V3_ReturnsCircleRuntime()
     {
         AddColoredCircleStandard();
         ObjectFinder.Self.GumProjectSave = Project;
@@ -427,7 +467,7 @@ public class CodeGeneratorCollapsedShapeTests : BaseTestClass
         {
             ComponentSave component = CreateComponent("MyShape", "ColoredCircle");
 
-            string? result = CodeGenerator.GetInheritance(component, CreateMonoGameSettings("2"), resolvedSyntaxVersion: 2);
+            string? result = CodeGenerator.GetInheritance(component, CreateMonoGameSettings("3"), resolvedSyntaxVersion: 3);
 
             result.ShouldBe("global::Gum.GueDeriving.CircleRuntime");
         }

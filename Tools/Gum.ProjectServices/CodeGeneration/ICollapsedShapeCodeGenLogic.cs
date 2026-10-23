@@ -8,7 +8,7 @@ namespace Gum.ProjectServices.CodeGeneration;
 /// (<c>CircleRuntime</c> / <c>RectangleRuntime</c>) in place of the legacy
 /// <c>ColoredCircle</c> / <c>ColoredRectangle</c> / <c>RoundedRectangle</c> standard elements,
 /// and how their single-color variables translate to the fill/stroke channel properties.
-/// Issue #2775; gated on runtime syntax version 2 (#2774).
+/// Issue #2775; gated on runtime syntax version 3 (#6613).
 /// </summary>
 public interface ICollapsedShapeCodeGenLogic
 {
@@ -46,7 +46,7 @@ public interface ICollapsedShapeCodeGenLogic
     /// standard to its stroke channel property (for example <c>Red</c> becomes <c>StrokeRed</c>),
     /// which is where the runtime's obsolete single-color members route. Returns the name unchanged
     /// for other elements, other variables, and syntax versions below
-    /// <c>OutlineShapeStrokeChannelSyntaxVersion</c>.
+    /// <c>ShapeColorChannelSyntaxVersion</c>.
     /// </summary>
     string TranslateOutlineShapeVariableRootName(string? standardElementName, string rootName, int resolvedSyntaxVersion);
 
