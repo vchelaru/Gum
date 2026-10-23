@@ -455,6 +455,12 @@ public class ComboBox :
     {
         _hadFocusOnListBoxOpened = IsFocused;
 
+#if !FRB
+        // An open drop-down needs Activity every frame (IUpdateEveryFrame.IsActivityNeeded), which
+        // ancestors that already went idle would otherwise skip.
+        Visual.InvalidateSubtreeCaches();
+#endif
+
         var wasSuspenced = GraphicalUiElement.IsAllLayoutSuspended;
         if(!wasSuspenced)
         {
@@ -527,11 +533,6 @@ public class ComboBox :
         var width = listBoxVisual.AbsoluteWidth;
         var height = listBoxVisual.AbsoluteHeight;
 
-        _placedAbsoluteX = Visual.AbsoluteX;
-        _placedAbsoluteY = Visual.AbsoluteY;
-        _placedAbsoluteWidth = Visual.AbsoluteWidth;
-        _placedAbsoluteHeight = Visual.AbsoluteHeight;
-
         // Now that we have the values, detach it:
         this.Visual.Children.Remove(listBoxVisual);
         listBox.X = x;
@@ -541,6 +542,13 @@ public class ComboBox :
         listBox.Width = width;
         listBox.Height = height;
         ListBox.ShowPopupListBox(listBox, this.Visual);
+
+        // Recorded last, with the list box detached: this is the state later frames compare against,
+        // and a ComboBox sized to its children has a different rect while the list box is attached.
+        _placedAbsoluteX = Visual.AbsoluteX;
+        _placedAbsoluteY = Visual.AbsoluteY;
+        _placedAbsoluteWidth = Visual.AbsoluteWidth;
+        _placedAbsoluteHeight = Visual.AbsoluteHeight;
     }
 
     private void RestoreListBoxLayoutValues()
@@ -561,6 +569,10 @@ public class ComboBox :
     /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle changes
     /// (canvas resize, UI scale, or this control or an ancestor moving). Does nothing when closed.
     /// </summary>
+    // Only an open drop-down needs the per-frame check; a closed ComboBox must not stop its ancestors
+    // from going idle. ShowListBoxInstance invalidates the idle caches when the drop-down opens.
+    bool Gum.Wireframe.IUpdateEveryFrame.IsActivityNeeded => IsDropDownOpen;
+
     void Gum.Wireframe.IUpdateEveryFrame.Activity(double secondDifference)
     {
         if (!IsDropDownOpen)
