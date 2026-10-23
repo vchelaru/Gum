@@ -169,7 +169,8 @@ public partial class Cursor : ICursor
     {
         var renderer = global::RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return ((X - GetViewportLeft()) / zoom) + renderer.Camera.X ?? 0;
+        // No viewport (no GraphicsDevice, as in headless tests) means no offset.
+        return ((X - (GetViewportLeft() ?? 0)) / zoom) + renderer.Camera.X;
     }
 
     /// <summary>
@@ -187,7 +188,8 @@ public partial class Cursor : ICursor
     {
         var renderer = global::RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return ((Y - GetViewportTop()) / zoom) + renderer.Camera.Y ?? 0;
+        // No viewport (no GraphicsDevice, as in headless tests) means no offset.
+        return ((Y - (GetViewportTop() ?? 0)) / zoom) + renderer.Camera.Y;
     }
 
     /// <summary>
