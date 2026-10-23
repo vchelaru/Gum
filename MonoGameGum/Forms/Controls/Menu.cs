@@ -130,6 +130,18 @@ public class Menu : ItemsControl
             }
         }
 
+        // A next-push action added during a push only runs on the following push (#1437), so
+        // HandleNextPush cannot tell that this selection came from the push that is happening now.
+        // Decide it here: a cursor selection that opens a submenu turns on hover switching (#6692).
+        bool selectedByCursor = MainCursor.PrimaryPush || MainCursor.PrimaryClick;
+        if (selectedByCursor && (sender as MenuItem)?.Items?.Count > 0)
+        {
+            foreach (var item in MenuItemsInternal)
+            {
+                item.SetSelectOnHighlightRecursively(true);
+            }
+        }
+
         AddNextPushAction(HandleNextPush);
     }
 
