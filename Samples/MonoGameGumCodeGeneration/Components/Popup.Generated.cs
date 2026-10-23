@@ -1,31 +1,28 @@
 //Code for Popup (Container)
-using GumRuntime;
-using System.Linq;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
-
-using RenderingLibrary.Graphics;
-
-using MonoGameGum.GueDeriving;
+using GumRuntime;
 using MonoGameGumCodeGeneration.Components;
+using RenderingLibrary.Graphics;
 using System.Linq;
 namespace MonoGameGumCodeGeneration.Components;
 partial class Popup
 {
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
     [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
     public static void RegisterRuntimeType()
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Popup");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named Popup - did you forget to load a Gum project?");
-#endif
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("Popup") ?? throw new System.InvalidOperationException("Could not find an element named Popup - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Popup(visual);
             return visual;
@@ -42,7 +39,8 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
 
     public Popup(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public Popup() : base(new ContainerRuntime())
@@ -62,28 +60,33 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
     {
-        NineSliceInstance = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        NineSliceInstance = new global::Gum.GueDeriving.NineSliceRuntime();
         NineSliceInstance.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.AddStatesAndCategoriesRecursivelyToGue(NineSliceInstance.ElementSave);
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.SetInitialState();
         NineSliceInstance.Name = "NineSliceInstance";
-        TextInstance = new global::MonoGameGum.GueDeriving.TextRuntime();
+        TextInstance = new global::Gum.GueDeriving.TextRuntime();
         TextInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(NineSliceInstance);
+        this.Visual.AddChild(this.NineSliceInstance);
         NineSliceInstance.AddChild(TextInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.NineSliceInstance.Blue = 137;
         this.NineSliceInstance.Green = 17;
@@ -114,6 +117,16 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.TextInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }
