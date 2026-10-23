@@ -310,20 +310,7 @@ public class ListBox : ItemsControl, IInputReceiver
             // specific occurrence can't be disambiguated - resolve to a single (first-match) row,
             // same as GetListBoxItemForData's other callers. This still guarantees only ONE row
             // ends up selected, never every row sharing the value (issue #3509).
-            List<ListBoxItem> rows = new List<ListBoxItem>();
-            if (value != null)
-            {
-                var row = GetListBoxItemForData(value);
-                if (row != null)
-                {
-                    rows.Add(row);
-                }
-            }
-
-            ReplaceSelectedRows(rows);
-
-            // Sync the IsSelected state of all ListBoxItems
-            SyncIsSelectedFromSelectedItems();
+            SelectSingleRowAndScrollIntoView(value != null ? GetListBoxItemForData(value) : null);
 
             PushValueToViewModel();
         }
@@ -347,34 +334,45 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             if (value > -1 && value < (Items?.Count ?? 0))
             {
-                var row = GetRowForItemsIndex(value);
-
-                List<ListBoxItem> rows = new List<ListBoxItem>();
-                if (row != null)
-                {
-                    rows.Add(row);
-                }
-
-                ReplaceSelectedRows(rows);
-
-                // Sync the IsSelected state of all ListBoxItems
-                SyncIsSelectedFromSelectedItems();
-
-                ScrollIndexIntoView(value);
+                SelectSingleRowAndScrollIntoView(GetRowForItemsIndex(value));
             }
             else if (value == -1)
             {
                 // Clear all selections
-                ReplaceSelectedRows(new List<ListBoxItem>());
-                _pendingScrollRow = null;
-
-                // Sync the IsSelected state of all ListBoxItems
-                SyncIsSelectedFromSelectedItems();
+                SelectSingleRowAndScrollIntoView(null);
             }
             else
             {
                 throw new IndexOutOfRangeException();
             }
+        }
+    }
+
+    /// <summary>
+    /// Makes <paramref name="row"/> the only selected row (or clears the selection when null) and
+    /// scrolls it into view, queuing the scroll if the list box is not visible. Shared by the
+    /// SelectedIndex and SelectedObject setters so both scroll identically.
+    /// </summary>
+    private void SelectSingleRowAndScrollIntoView(ListBoxItem? row)
+    {
+        List<ListBoxItem> rows = new List<ListBoxItem>();
+        if (row != null)
+        {
+            rows.Add(row);
+        }
+
+        ReplaceSelectedRows(rows);
+
+        // Sync the IsSelected state of all ListBoxItems
+        SyncIsSelectedFromSelectedItems();
+
+        if (row != null)
+        {
+            ScrollIndexIntoView(GetItemsIndexForRow(row));
+        }
+        else
+        {
+            _pendingScrollRow = null;
         }
     }
 
