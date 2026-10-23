@@ -37,11 +37,42 @@ public class StyledTextRotationTests : BaseTestClass
         (int Left, int Top, int Right, int Bottom) plainBounds =
             RenderLitBounds(game.GraphicsDevice, managers, plain, rotation);
 
-        // One pixel of slack: the styled path measures and places each run separately.
-        System.Math.Abs(styledBounds.Left - plainBounds.Left).ShouldBeLessThanOrEqualTo(1, $"left, styled {styledBounds} plain {plainBounds}");
-        System.Math.Abs(styledBounds.Top - plainBounds.Top).ShouldBeLessThanOrEqualTo(1, $"top, styled {styledBounds} plain {plainBounds}");
-        System.Math.Abs(styledBounds.Right - plainBounds.Right).ShouldBeLessThanOrEqualTo(1, $"right, styled {styledBounds} plain {plainBounds}");
-        System.Math.Abs(styledBounds.Bottom - plainBounds.Bottom).ShouldBeLessThanOrEqualTo(1, $"bottom, styled {styledBounds} plain {plainBounds}");
+        // No slack: each run and line starts where the same letter starts in the plain text (#6575).
+        styledBounds.ShouldBe(plainBounds, $"styled {styledBounds} plain {plainBounds}");
+    }
+
+    [Theory]
+    [InlineData(0f, "[Color=Red]HH[/Color][Color=Lime]HH[/Color]", "HHHH")]
+    [InlineData(0f, "[Color=Red]H[/Color][Color=Lime]H[/Color][Color=Blue]H[/Color]H", "HHHH")]
+    [InlineData(0f, "[Color=Red]HH[/Color] HH", "HH HH")]
+    [InlineData(90f, "[Color=Red]HH[/Color][Color=Lime]HH[/Color]", "HHHH")]
+    [InlineData(180f, "[Color=Red]HH[/Color][Color=Lime]HH[/Color]", "HHHH")]
+    [InlineData(30f, "[Color=Red]HH[/Color][Color=Lime]HH[/Color]", "HHHH")]
+    public void StyledRuns_LightExactlyThePixelsUnstyledTextLights(float rotation, string styled, string plain)
+    {
+        // Issue #6575: a run advances by its letters' full XAdvance, which is where the same letter starts
+        // in the plain line, so the lit pixels match exactly with no per-run drift. The measured width
+        // trims only the line's last glyph (TrimRight), so it is shorter than a run's advance by design.
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+
+        bool[] styledLit = RenderLitMask(game.GraphicsDevice, managers, styled, rotation, out float styledWidth);
+        bool[] plainLit = RenderLitMask(game.GraphicsDevice, managers, plain, rotation, out float plainWidth);
+
+        styledWidth.ShouldBe(plainWidth);
+
+        int litCount = 0;
+        for (int i = 0; i < plainLit.Length; i++)
+        {
+            if (plainLit[i])
+            {
+                litCount++;
+            }
+            styledLit[i].ShouldBe(plainLit[i], $"pixel ({i % CaptureSize}, {i / CaptureSize})");
+        }
+        litCount.ShouldBeGreaterThan(0);
     }
 
     [Theory]
@@ -78,6 +109,36 @@ public class StyledTextRotationTests : BaseTestClass
         finally
         {
             Text.Customizations.Remove(customizationName);
+        }
+    }
+
+    private static bool[] RenderLitMask(GraphicsDevice gd, SystemManagers managers, string value, float rotation,
+        out float width)
+    {
+        TextRuntime text = new();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = DimensionUnitType.RelativeToChildren;
+        text.X = 100;
+        text.Y = 100;
+        text.Rotation = rotation;
+        text.Text = value;
+        text.AddToManagers(managers, null);
+
+        try
+        {
+            text.UpdateLayout();
+            width = text.GetAbsoluteWidth();
+            XnaColor[] pixels = Render(gd, managers);
+            bool[] lit = new bool[pixels.Length];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                lit[i] = pixels[i].R > 0 || pixels[i].G > 0 || pixels[i].B > 0;
+            }
+            return lit;
+        }
+        finally
+        {
+            text.RemoveFromManagers();
         }
     }
 
