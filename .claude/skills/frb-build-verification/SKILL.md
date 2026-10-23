@@ -42,6 +42,8 @@ The Forms canary (`FlatRedBall.Forms.DesktopGlNet6.csproj`) still reads `..\Gum\
 
 A session that must not touch the primary checkout can build the canary through junctions instead: make a folder with a `Gum` junction to the worktree and a `FlatRedBall` junction to the FRB repo, then build the Forms csproj from the `FlatRedBall` junction. MSBuild keeps the junction path, so the `..\Gum` imports land in the worktree. Put the folder at a drive root (for example `F:\frbc`); under a long temp path the build fails with `MSB3030`/`MSB3491` path-length errors that look like compile errors. Delete the junctions afterwards with `(Get-Item <path>).Delete()`.
 
+**Run the junction build from the PowerShell tool, never the Bash tool.** From Git Bash, MSBuild resolves the junction to its real path, so `..\Gum` lands in the primary checkout: the build passes against the wrong source and rewrites the primary checkout's `obj/`. Confirm the log's project paths start with the junction folder.
+
 ## Canaries
 
 Pick by what you changed. **The "Lives in" column is the repo containing the `.csproj` file itself** — don't go hunting for it in the other repo. Both rows still need the FlatRedBall sibling present (row 1's target also pulls in some FlatRedBall-side `Embedded\*.cs` files), but only row 2's `.csproj` is physically located there.
@@ -55,6 +57,8 @@ Pick by what you changed. **The "Lives in" column is the repo containing the `.c
 `GueDeriving/*Runtime`, `MonoGameGum/Renderables/`, `MonoGameGum/ExtensionMethods/`, `MonoGameGum/Input/` (Cursor, Keyboard, gamepad drivers), and the `Forms/DefaultVisuals/` runtimes are **not** compiled by FRB1 (it generates its own) — changing only those needs no FRB build.
 
 **Don't infer this from the directory path.** `FormsUtilities.cs` lives under `MonoGameGum/Forms/` but is not `Include`d in `FlatRedBall.Forms.Shared.projitems`, so it needs no canary despite the directory match — even though it has its own live `#if FRB` branches (those serve other consumers of the file, not FRB). The inverse also happens: `Input/CursorExtensions.cs` lives under the normally-not-compiled `MonoGameGum/Input/`, but is `Include`d in `FlatRedBall.Forms.Shared.projitems` (it carries the `GetEventFailureReason` diagnostic, which Forms uses), so editing it *does* need the Forms canary. `grep` the exact filename against the projitems file in the table above before requiring a canary; if it's not `Include`d there, FRB doesn't compile it.
+
+**A file in `FlatRedBall.Forms.Shared.projitems` (`TextBoxBase.cs`, most of `Forms/Controls/`) needs the Forms canary even when the GumCore canary is green.** GumCore does not compile Forms, so a Forms control calling a GumCommon helper that GumCore lacks, or an internal GumCore member, fails only in the Forms build. GumCore internals reach FlatRedBall.Forms through `GumCore/FrbFormsInternalsVisibleTo.cs`.
 
 ## Interpreting results — baseline first
 

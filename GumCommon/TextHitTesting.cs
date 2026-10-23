@@ -36,6 +36,23 @@ internal static class TextHitTesting
     }
 
     /// <summary>
+    /// The distance from the top of a Text's box down to the top of its wrapped lines, as every
+    /// renderer draws them: centered text splits the leftover height, bottom-aligned text takes all of it.
+    /// </summary>
+    public static float GetVerticalAlignmentOffset(VerticalAlignment verticalAlignment, float boxHeight, float wrappedTextHeight)
+    {
+        switch (verticalAlignment)
+        {
+            case VerticalAlignment.Center:
+                return (boxHeight - wrappedTextHeight) / 2.0f;
+            case VerticalAlignment.Bottom:
+                return boxHeight - wrappedTextHeight;
+            default:
+                return 0;
+        }
+    }
+
+    /// <summary>
     /// Returns the index into the concatenation of <paramref name="lines"/> nearest a point given
     /// relative to the top-left of the first line, before horizontal alignment.
     /// </summary>
