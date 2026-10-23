@@ -79,6 +79,32 @@ public class GumBatchRenderTargetBakeTests
     }
 
     [Fact]
+    public void PreRenderRoots_SpriteAndInvisibleSourceInSeparateCalls_BakesSource()
+    {
+        using SKSurface surface = CreateInitializedSurface(128);
+        ContainerRuntime source = CreateRedRenderTargetContainer();
+        source.Visible = false;
+        SpriteRuntime sprite = CreateSpriteReferencing(source);
+        GumBatch batch = new();
+
+        for (int frame = 0; frame < 2; frame++)
+        {
+            GumService.Default.Update(frame + 1.0);
+            surface.Canvas.Clear(SKColors.Black);
+
+            SystemManagers.Default.Renderer.PreRenderRoots(new List<IRenderableIpso> { sprite });
+            SystemManagers.Default.Renderer.PreRenderRoots(new List<IRenderableIpso> { source });
+
+            batch.Begin();
+            batch.Draw(sprite);
+            batch.End();
+        }
+
+        PixelAt(surface, 32, 32).ShouldBe(SKColors.Red,
+            "because the sprite referenced the source in an earlier PreRenderRoots call this frame");
+    }
+
+    [Fact]
     public void AlternatingGumBatchOnlyAndDrawFrames_KeepRenderTargetSurface()
     {
         using SKSurface surface = CreateInitializedSurface(128);
