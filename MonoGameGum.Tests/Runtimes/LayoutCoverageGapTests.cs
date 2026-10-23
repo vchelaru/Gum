@@ -767,7 +767,7 @@ public class LayoutCoverageGapTests : BaseTestClass
     /// </summary>
     private sealed class UnguardedRenderable : IRenderableIpso
     {
-        public string Name { get; set; } = "";
+        public string? Name { get; set; }
         public bool Visible { get; set; } = true;
         public bool ClipsChildren { get; set; }
         public bool IsRenderTarget { get; set; }
