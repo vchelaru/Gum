@@ -1272,11 +1272,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>
     /// The <c>TextBlock</c> that <see cref="Render"/> actually paints. When <see cref="MaxLettersToShow"/>
     /// is null (or already covers the whole text) this is the full cached block, leaving the render
-    /// fast path unchanged. Otherwise a throwaway block is built from the revealed prefix -- styled runs
-    /// (<see cref="GetVisibleStyledRuns"/>) when the text carries BBCode markup (issue #3701), or plain
-    /// <see cref="GetVisibleWrappedText"/> text otherwise -- so only the first N letters are drawn; because
-    /// each revealed line is a prefix of a full wrapped line and the breaks are re-inserted as hard
-    /// newlines, the revealed lines land in the same positions as in the full layout. The cached block
+    /// fast path unchanged. Otherwise a throwaway block is built from the revealed prefix's styled runs
+    /// (<see cref="GetVisibleStyledRuns"/>) so only the first N letters are drawn; because each revealed
+    /// line is a prefix of a full wrapped line and the soft breaks are re-inserted as hard newlines, the
+    /// revealed lines land in the same positions as in the full layout. The cached block
     /// (used for measurement / caret math) is untouched. Exposed internally for unit testing.
     /// </summary>
     internal TextBlock GetPaintTextBlock(TextBlock fullBlock)
@@ -1299,12 +1298,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
 
         // Reveal keeps per-run BBCode styling (issue #3701): GetVisibleStyledRuns slices the same
-        // styled runs GetTextBlock uses for the full layout down to the revealed prefix, rather than
-        // falling back to the tag-stripped plain text GetVisibleWrappedText returns.
-        List<StyledTextRun> runs = _hasMarkup
-            ? GetVisibleStyledRuns(fullBlock)
-            : new List<StyledTextRun> { new StyledTextRun(string.Join("\n", GetVisibleWrappedText()), GetStyle()) };
-        return BuildTextBlockFromRuns(runs, this.Width);
+        // styled runs GetTextBlock uses for the full layout down to the revealed prefix. Plain text is
+        // one run, so it takes the same path.
+        return BuildTextBlockFromRuns(GetVisibleStyledRuns(fullBlock), this.Width);
     }
 
 
@@ -1454,7 +1450,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 }
             }
 
-            if (lineIndex < visibleLines.Count - 1)
+            // A line ending in a hard break already carries its '\n'; a second one would add an empty line (#6484).
+            if (lineIndex < visibleLines.Count - 1 && !visibleLines[lineIndex].EndsWith('\n'))
             {
                 // The break sizes the line it ends (see AttachLineBreaksToPrecedingRun), so it takes that line's style.
                 Style breakStyle = lineStyle ?? (runIndex < fullRuns.Count ? fullRuns[runIndex].Style : GetStyle());
