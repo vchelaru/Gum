@@ -84,8 +84,8 @@ partial class PercentBar : global::Gum.Forms.Controls.FrameworkElement
 
     public PercentBar(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public PercentBar() : base(new ContainerRuntime())
@@ -99,7 +99,7 @@ partial class PercentBar : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -124,6 +124,14 @@ partial class PercentBar : global::Gum.Forms.Controls.FrameworkElement
         VerticalLinesInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.VerticalLines();
         VerticalLinesInstance.Name = "VerticalLinesInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        BarContainer = this.Visual?.GetGraphicalUiElementByName("BarContainer") as global::Gum.GueDeriving.NineSliceRuntime;
+        Bar = this.Visual?.GetGraphicalUiElementByName("Bar") as global::Gum.GueDeriving.NineSliceRuntime;
+        CautionLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<CautionLines>(this.Visual,"CautionLinesInstance");
+        VerticalLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<VerticalLines>(this.Visual,"VerticalLinesInstance");
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Background);
@@ -132,7 +140,7 @@ partial class PercentBar : global::Gum.Forms.Controls.FrameworkElement
         Bar.AddChild(CautionLinesInstance.Visual);
         Bar.AddChild(VerticalLinesInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.SetProperty("StyleCategoryState", "Bordered");
@@ -172,15 +180,14 @@ partial class PercentBar : global::Gum.Forms.Controls.FrameworkElement
         this.VerticalLinesInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

@@ -42,8 +42,8 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
 
     public SettingsView(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public SettingsView() : base(new ContainerRuntime())
@@ -57,7 +57,7 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -73,6 +73,14 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
         SoundSliderInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Slider();
         SoundSliderInstance.Name = "SoundSliderInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        FullscreenCheckboxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<CheckBox>(this.Visual,"FullscreenCheckboxInstance");
+        MusicVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"MusicVolumeLabel");
+        MusicSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Slider>(this.Visual,"MusicSliderInstance");
+        SoundVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"SoundVolumeLabel");
+        SoundSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Slider>(this.Visual,"SoundSliderInstance");
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.FullscreenCheckboxInstance.Visual);
@@ -81,7 +89,7 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
         this.Visual.AddChild(((global::Gum.GueDeriving.TextRuntime)this.SoundVolumeLabel.Visual));
         this.Visual.AddChild(this.SoundSliderInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.FullscreenCheckboxInstance.Text = @"Fullscreen";
         this.FullscreenCheckboxInstance.Visual.Width = 0f;
@@ -105,15 +113,14 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
         this.SoundSliderInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

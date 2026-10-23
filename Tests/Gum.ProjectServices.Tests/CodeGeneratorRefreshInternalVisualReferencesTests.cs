@@ -97,8 +97,8 @@ public class CodeGeneratorRefreshInternalVisualReferencesTests : BaseTestClass
             // The Forms base constructor gets a Visual with no children yet, so the control finds its
             // named children once the constructor has parented them (#6529).
             code.ShouldNotContain("base.RefreshInternalVisualReferences();");
-            code.ShouldContain("if (_isVisualBuilt) base.ReactToVisualChanged();");
-            code.IndexOf("ReactToBuiltVisual();", code.IndexOf("AssignParents();")).ShouldBeGreaterThan(0);
+            code.ShouldContain("if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();");
+            code.IndexOf("ReactToGeneratedVisual();", code.IndexOf("AssignParents();")).ShouldBeGreaterThan(0);
         }
         finally
         {

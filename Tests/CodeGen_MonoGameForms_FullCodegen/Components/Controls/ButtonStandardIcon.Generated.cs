@@ -122,8 +122,8 @@ partial class ButtonStandardIcon : global::Gum.Forms.Controls.Button
 
     public ButtonStandardIcon(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public ButtonStandardIcon() : base(new ContainerRuntime())
@@ -138,7 +138,7 @@ partial class ButtonStandardIcon : global::Gum.Forms.Controls.Button
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -161,6 +161,13 @@ partial class ButtonStandardIcon : global::Gum.Forms.Controls.Button
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        Icon = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"Icon");
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Background);
@@ -168,7 +175,7 @@ partial class ButtonStandardIcon : global::Gum.Forms.Controls.Button
         this.Visual.AddChild(this.Icon.Visual);
         this.Visual.AddChild(this.FocusedIndicator);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "Primary");
         this.Background.SetProperty("StyleCategoryState", "Bordered");
@@ -204,15 +211,14 @@ partial class ButtonStandardIcon : global::Gum.Forms.Controls.Button
         this.FocusedIndicator.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

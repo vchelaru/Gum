@@ -39,8 +39,8 @@ partial class Menu : global::Gum.Forms.Controls.Menu
 
     public Menu(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public Menu() : base(new ContainerRuntime())
@@ -61,7 +61,7 @@ partial class Menu : global::Gum.Forms.Controls.Menu
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -77,12 +77,17 @@ partial class Menu : global::Gum.Forms.Controls.Menu
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.SetInitialState();
         InnerPanelInstance.Name = "InnerPanelInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Background);
         this.Visual.AddChild(this.InnerPanelInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.Height = -0f;
@@ -110,15 +115,14 @@ partial class Menu : global::Gum.Forms.Controls.Menu
         this.InnerPanelInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

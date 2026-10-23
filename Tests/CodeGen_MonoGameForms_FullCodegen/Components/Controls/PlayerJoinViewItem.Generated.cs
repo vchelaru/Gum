@@ -177,8 +177,8 @@ partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
 
     public PlayerJoinViewItem(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public PlayerJoinViewItem() : base(new ContainerRuntime())
@@ -191,7 +191,7 @@ partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -209,13 +209,19 @@ partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
         InputDeviceIcon = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         InputDeviceIcon.Name = "InputDeviceIcon";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        ControllerDisplayNameTextInstance = this.Visual?.GetGraphicalUiElementByName("ControllerDisplayNameTextInstance") as global::Gum.GueDeriving.TextRuntime;
+        InputDeviceIcon = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"InputDeviceIcon");
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Background);
         this.Visual.AddChild(this.ControllerDisplayNameTextInstance);
         this.Visual.AddChild(this.InputDeviceIcon.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "Black");
         this.Background.SetProperty("StyleCategoryState", "Panel");
@@ -249,15 +255,14 @@ partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
         this.InputDeviceIcon.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

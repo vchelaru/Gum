@@ -103,8 +103,8 @@ partial class Slider : global::Gum.Forms.Controls.Slider
 
     public Slider(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public Slider() : base(new ContainerRuntime())
@@ -118,7 +118,7 @@ partial class Slider : global::Gum.Forms.Controls.Slider
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -141,6 +141,13 @@ partial class Slider : global::Gum.Forms.Controls.Slider
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        TrackInstance = this.Visual?.GetGraphicalUiElementByName("TrackInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        TrackBackground = this.Visual?.GetGraphicalUiElementByName("TrackBackground") as global::Gum.GueDeriving.NineSliceRuntime;
+        ThumbInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonStandard>(this.Visual,"ThumbInstance");
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.TrackInstance);
@@ -148,7 +155,7 @@ partial class Slider : global::Gum.Forms.Controls.Slider
         TrackInstance.AddChild(ThumbInstance.Visual);
         this.Visual.AddChild(this.FocusedIndicator);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.TrackInstance.Height = 0f;
         this.TrackInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -183,15 +190,14 @@ partial class Slider : global::Gum.Forms.Controls.Slider
         this.FocusedIndicator.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

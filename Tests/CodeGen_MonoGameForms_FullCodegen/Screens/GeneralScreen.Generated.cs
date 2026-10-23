@@ -79,7 +79,7 @@ partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
 
     public GeneralScreen(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
         CustomInitialize();
     }
     public GeneralScreen() : base(new ContainerRuntime())
@@ -102,12 +102,17 @@ partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
         LabelInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         LabelInstance.Name = "LabelInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        CircleInstance = this.Visual?.GetGraphicalUiElementByName("CircleInstance") as global::Gum.GueDeriving.CircleRuntime;
+        LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"LabelInstance");
+    }
     protected virtual void AssignParents()
     {
         LabelInstance.AddChild(CircleInstance);
         this.AddChild(LabelInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Visual.Width = 0f;
         this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;

@@ -99,8 +99,8 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
 
     public ScrollViewer(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public ScrollViewer() : base(new ContainerRuntime())
@@ -112,7 +112,7 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -140,6 +140,14 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        VerticalScrollBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ScrollBar>(this.Visual,"VerticalScrollBarInstance");
+        ClipContainerInstance = this.Visual?.GetGraphicalUiElementByName("ClipContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Background);
@@ -148,7 +156,7 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
         ClipContainerInstance.AddChild(InnerPanelInstance);
         this.Visual.AddChild(this.FocusedIndicator);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.SetProperty("StyleCategoryState", "Bordered");
@@ -194,15 +202,14 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
         this.FocusedIndicator.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

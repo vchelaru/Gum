@@ -47,8 +47,8 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
 
     public InputDeviceSelector(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public InputDeviceSelector() : base(new ContainerRuntime())
@@ -70,7 +70,7 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -114,6 +114,19 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
         InputDeviceSelectionItemInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.InputDeviceSelectionItem();
         InputDeviceSelectionItemInstance3.Name = "InputDeviceSelectionItemInstance3";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        TextInstance1 = this.Visual?.GetGraphicalUiElementByName("TextInstance1") as global::Gum.GueDeriving.TextRuntime;
+        ContainerInstance1 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance1") as global::Gum.GueDeriving.ContainerRuntime;
+        InputDeviceContainerInstance = this.Visual?.GetGraphicalUiElementByName("InputDeviceContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        ContainerInstance2 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance2") as global::Gum.GueDeriving.ContainerRuntime;
+        InputDeviceSelectionItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance");
+        InputDeviceSelectionItemInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance1");
+        InputDeviceSelectionItemInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance2");
+        InputDeviceSelectionItemInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance3");
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Background);
@@ -127,7 +140,7 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
         InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance2.Visual);
         InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance3.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "Primary");
         this.Background.SetProperty("StyleCategoryState", "Panel");
@@ -196,15 +209,14 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
 
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

@@ -38,8 +38,8 @@ partial class SplitterStandard : global::Gum.Forms.Controls.Splitter
 
     public SplitterStandard(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public SplitterStandard() : base(new ContainerRuntime())
@@ -56,7 +56,7 @@ partial class SplitterStandard : global::Gum.Forms.Controls.Splitter
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -67,11 +67,15 @@ partial class SplitterStandard : global::Gum.Forms.Controls.Splitter
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.SetInitialState();
         NineSliceInstance.Name = "NineSliceInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::Gum.GueDeriving.NineSliceRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.NineSliceInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.NineSliceInstance.SetProperty("ColorCategoryState", "DarkGray");
         this.NineSliceInstance.SetProperty("StyleCategoryState", "Bordered");
@@ -87,15 +91,14 @@ partial class SplitterStandard : global::Gum.Forms.Controls.Splitter
         this.NineSliceInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

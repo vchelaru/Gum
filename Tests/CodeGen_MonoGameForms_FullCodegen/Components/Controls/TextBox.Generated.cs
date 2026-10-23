@@ -140,8 +140,8 @@ partial class TextBox : global::Gum.Forms.Controls.TextBox
 
     public TextBox(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public TextBox() : base(new ContainerRuntime())
@@ -156,7 +156,7 @@ partial class TextBox : global::Gum.Forms.Controls.TextBox
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -197,6 +197,16 @@ partial class TextBox : global::Gum.Forms.Controls.TextBox
         if (CaretInstance.ElementSave != null) CaretInstance.SetInitialState();
         CaretInstance.Name = "CaretInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        ClipContainer = this.Visual?.GetGraphicalUiElementByName("ClipContainer") as global::Gum.GueDeriving.ContainerRuntime;
+        SelectionInstance = this.Visual?.GetGraphicalUiElementByName("SelectionInstance") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        PlaceholderTextInstance = this.Visual?.GetGraphicalUiElementByName("PlaceholderTextInstance") as global::Gum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
+        CaretInstance = this.Visual?.GetGraphicalUiElementByName("CaretInstance") as global::Gum.GueDeriving.SpriteRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Background);
@@ -207,7 +217,7 @@ partial class TextBox : global::Gum.Forms.Controls.TextBox
         this.Visual.AddChild(this.FocusedIndicator);
         ClipContainer.AddChild(CaretInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.SetProperty("StyleCategoryState", "Bordered");
@@ -290,15 +300,14 @@ partial class TextBox : global::Gum.Forms.Controls.TextBox
         this.CaretInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

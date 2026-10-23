@@ -59,8 +59,8 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
 
     public Styles(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public Styles() : base(new ContainerRuntime())
@@ -81,7 +81,7 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -226,6 +226,32 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
         if (Title.ElementSave != null) Title.SetInitialState();
         Title.Name = "Title";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Colors = this.Visual?.GetGraphicalUiElementByName("Colors") as global::Gum.GueDeriving.ContainerRuntime;
+        Black = this.Visual?.GetGraphicalUiElementByName("Black") as global::Gum.GueDeriving.RectangleRuntime;
+        DarkGray = this.Visual?.GetGraphicalUiElementByName("DarkGray") as global::Gum.GueDeriving.RectangleRuntime;
+        Gray = this.Visual?.GetGraphicalUiElementByName("Gray") as global::Gum.GueDeriving.RectangleRuntime;
+        LightGray = this.Visual?.GetGraphicalUiElementByName("LightGray") as global::Gum.GueDeriving.RectangleRuntime;
+        White = this.Visual?.GetGraphicalUiElementByName("White") as global::Gum.GueDeriving.RectangleRuntime;
+        PrimaryDark = this.Visual?.GetGraphicalUiElementByName("PrimaryDark") as global::Gum.GueDeriving.RectangleRuntime;
+        Primary = this.Visual?.GetGraphicalUiElementByName("Primary") as global::Gum.GueDeriving.RectangleRuntime;
+        PrimaryLight = this.Visual?.GetGraphicalUiElementByName("PrimaryLight") as global::Gum.GueDeriving.RectangleRuntime;
+        Success = this.Visual?.GetGraphicalUiElementByName("Success") as global::Gum.GueDeriving.RectangleRuntime;
+        Warning = this.Visual?.GetGraphicalUiElementByName("Warning") as global::Gum.GueDeriving.RectangleRuntime;
+        Danger = this.Visual?.GetGraphicalUiElementByName("Danger") as global::Gum.GueDeriving.RectangleRuntime;
+        Accent = this.Visual?.GetGraphicalUiElementByName("Accent") as global::Gum.GueDeriving.RectangleRuntime;
+        Tiny = this.Visual?.GetGraphicalUiElementByName("Tiny") as global::Gum.GueDeriving.TextRuntime;
+        Small = this.Visual?.GetGraphicalUiElementByName("Small") as global::Gum.GueDeriving.TextRuntime;
+        Normal = this.Visual?.GetGraphicalUiElementByName("Normal") as global::Gum.GueDeriving.TextRuntime;
+        Emphasis = this.Visual?.GetGraphicalUiElementByName("Emphasis") as global::Gum.GueDeriving.TextRuntime;
+        Strong = this.Visual?.GetGraphicalUiElementByName("Strong") as global::Gum.GueDeriving.TextRuntime;
+        H3 = this.Visual?.GetGraphicalUiElementByName("H3") as global::Gum.GueDeriving.TextRuntime;
+        H2 = this.Visual?.GetGraphicalUiElementByName("H2") as global::Gum.GueDeriving.TextRuntime;
+        H1 = this.Visual?.GetGraphicalUiElementByName("H1") as global::Gum.GueDeriving.TextRuntime;
+        TextStyles = this.Visual?.GetGraphicalUiElementByName("TextStyles") as global::Gum.GueDeriving.ContainerRuntime;
+        Title = this.Visual?.GetGraphicalUiElementByName("Title") as global::Gum.GueDeriving.TextRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Colors);
@@ -252,7 +278,7 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
         this.Visual.AddChild(this.TextStyles);
         TextStyles.AddChild(Title);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Colors.ChildrenLayout = global::Gum.Managers.ChildrenLayout.LeftToRightStack;
         this.Colors.Height = 69f;
@@ -351,15 +377,14 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
         this.Title.Text = @"Title";
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

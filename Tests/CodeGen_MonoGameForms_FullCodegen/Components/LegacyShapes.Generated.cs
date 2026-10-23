@@ -40,8 +40,8 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
 
     public LegacyShapes(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public LegacyShapes() : base(new ContainerRuntime())
@@ -52,7 +52,7 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -88,6 +88,13 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
         RoundedDefault.CornerRadius = 5f;
         RoundedDefault.Name = "RoundedDefault";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        FilledCircle = this.Visual?.GetGraphicalUiElementByName("FilledCircle") as global::Gum.GueDeriving.CircleRuntime;
+        OutlineCircle = this.Visual?.GetGraphicalUiElementByName("OutlineCircle") as global::Gum.GueDeriving.CircleRuntime;
+        RoundedCustom = this.Visual?.GetGraphicalUiElementByName("RoundedCustom") as global::Gum.GueDeriving.RectangleRuntime;
+        RoundedDefault = this.Visual?.GetGraphicalUiElementByName("RoundedDefault") as global::Gum.GueDeriving.RectangleRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.FilledCircle);
@@ -95,7 +102,7 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
         this.Visual.AddChild(this.RoundedCustom);
         this.Visual.AddChild(this.RoundedDefault);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.FilledCircle.FillBlue = 30;
         this.FilledCircle.FillGreen = 20;
@@ -109,15 +116,14 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
 
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

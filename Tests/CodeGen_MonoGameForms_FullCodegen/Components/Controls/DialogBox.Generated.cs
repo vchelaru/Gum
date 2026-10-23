@@ -40,8 +40,8 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
 
     public DialogBox(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public DialogBox() : base(new ContainerRuntime())
@@ -56,7 +56,7 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -74,13 +74,19 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
         ContinueIndicatorInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         ContinueIndicatorInstance.Name = "ContinueIndicatorInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        ContinueIndicatorInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"ContinueIndicatorInstance");
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.NineSliceInstance);
         this.Visual.AddChild(this.TextInstance);
         this.Visual.AddChild(this.ContinueIndicatorInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.NineSliceInstance.SetProperty("ColorCategoryState", "Primary");
         this.NineSliceInstance.SetProperty("StyleCategoryState", "Panel");
@@ -109,15 +115,14 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
         this.ContinueIndicatorInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

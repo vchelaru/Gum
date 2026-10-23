@@ -124,8 +124,8 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
 
     public TreeViewToggle(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public TreeViewToggle() : base(new ContainerRuntime())
@@ -141,7 +141,7 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -154,12 +154,17 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
         IconInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance.Name = "IconInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::Gum.GueDeriving.NineSliceRuntime;
+        IconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"IconInstance");
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.NineSliceInstance);
         NineSliceInstance.AddChild(IconInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.NineSliceInstance.SetProperty("ColorCategoryState", "Primary");
         this.NineSliceInstance.SetProperty("StyleCategoryState", "Bordered");
@@ -171,15 +176,14 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
         this.IconInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

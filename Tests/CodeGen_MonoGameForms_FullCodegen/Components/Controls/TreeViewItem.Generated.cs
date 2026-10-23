@@ -40,8 +40,8 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
 
     public TreeViewItem(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public TreeViewItem() : base(new ContainerRuntime())
@@ -57,7 +57,7 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -72,13 +72,19 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.SetInitialState();
         InnerPanelInstance.Name = "InnerPanelInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        ToggleButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TreeViewToggle>(this.Visual,"ToggleButtonInstance");
+        ListBoxItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ListBoxItem>(this.Visual,"ListBoxItemInstance");
+        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.ToggleButtonInstance.Visual);
         this.Visual.AddChild(this.ListBoxItemInstance.Visual);
         this.Visual.AddChild(this.InnerPanelInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
 
         this.ListBoxItemInstance.Visual.Height = 24f;
@@ -97,15 +103,14 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
         this.InnerPanelInstance.Y = 24f;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

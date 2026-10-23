@@ -38,8 +38,8 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
 
     public Toast(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public Toast() : base(new ContainerRuntime())
@@ -59,7 +59,7 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -75,12 +75,17 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.Background);
         this.Visual.AddChild(this.TextInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "Primary");
         this.Background.SetProperty("StyleCategoryState", "Panel");
@@ -112,15 +117,14 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
         this.TextInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();

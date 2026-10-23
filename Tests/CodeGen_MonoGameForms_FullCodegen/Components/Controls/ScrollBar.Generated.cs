@@ -63,8 +63,8 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
 
     public ScrollBar(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
-        ReactToBuiltVisual();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public ScrollBar() : base(new ContainerRuntime())
@@ -79,7 +79,7 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
 
         ApplyDefaultVariables();
         AssignParents();
-        ReactToBuiltVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -101,6 +101,14 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
         ThumbInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         ThumbInstance.Name = "ThumbInstance";
     }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        UpButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonIcon>(this.Visual,"UpButtonInstance");
+        DownButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonIcon>(this.Visual,"DownButtonInstance");
+        TrackInstance = this.Visual?.GetGraphicalUiElementByName("TrackInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        TrackBackground = this.Visual?.GetGraphicalUiElementByName("TrackBackground") as global::Gum.GueDeriving.NineSliceRuntime;
+        ThumbInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonStandard>(this.Visual,"ThumbInstance");
+    }
     protected virtual void AssignParents()
     {
         this.Visual.AddChild(this.UpButtonInstance.Visual);
@@ -109,7 +117,7 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
         TrackInstance.AddChild(TrackBackground);
         TrackInstance.AddChild(ThumbInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.UpButtonInstance.IconCategory = CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon.IconCategory.Arrow1;
         this.UpButtonInstance.Visual.Height = 24f;
@@ -157,15 +165,14 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
         this.ThumbInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
     }
-    private bool _isVisualBuilt;
+    private bool _isGeneratedVisualBuilt;
     protected override void ReactToVisualChanged()
     {
-        if (_isVisualBuilt) base.ReactToVisualChanged();
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
     }
-    protected void ReactToBuiltVisual()
+    private void ReactToGeneratedVisual()
     {
-        if (_isVisualBuilt) return;
-        _isVisualBuilt = true;
+        _isGeneratedVisualBuilt = true;
         ReactToVisualChanged();
     }
     partial void CustomInitialize();
