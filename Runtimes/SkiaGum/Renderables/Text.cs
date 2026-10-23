@@ -954,8 +954,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             var textBlock = GetCachedTextBlock();
             
-            //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
-            SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-Rotation);
+            // Gum uses counterclockwise rotation, Skia uses clockwise, so invert. The absolute rotation
+            // includes every parent's, as on MonoGame.
+            SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-this.GetAbsoluteRotation());
             // The text turns about its top-left, so the vertical alignment offset turns with it, as on
             // MonoGame and Raylib. Horizontal alignment is already inside the block's own layout.
             SKPoint verticalOffset = rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
