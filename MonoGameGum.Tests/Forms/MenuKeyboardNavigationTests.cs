@@ -447,6 +447,49 @@ public class MenuKeyboardNavigationTests : BaseTestClass
         FrameworkElement.PopupRoot.Children!.Count.ShouldBe(0);
     }
 
+    [Fact]
+    public void ClickElsewhere_AfterKeyboardOpen_ClosesTheMenu()
+    {
+        Bar bar = CreateFocusedBar();
+        Press(Keys.Down);
+        bar.File.IsPopupVisible.ShouldBeTrue("precondition: Down opens the submenu");
+
+        // The cursor rests in the window away from the menu for a frame, then pushes and releases there.
+        // Like the mouse tests' PushOn(null), but with the idle frame first: a next-push action queued
+        // this frame only becomes runnable on a later in-window frame, which the off-screen test cursor
+        // never gives it.
+        float x = GraphicalUiElement.CanvasWidth - 1;
+        float y = GraphicalUiElement.CanvasHeight - 1;
+        bool isPush = false;
+        bool isDown = false;
+        bool isClick = false;
+        Mock<ICursor> cursor = new();
+        cursor.SetupProperty(c => c.VisualOver);
+        cursor.SetupProperty(c => c.WindowPushed);
+        cursor.Setup(c => c.PrimaryPush).Returns(() => isPush);
+        cursor.Setup(c => c.PrimaryDown).Returns(() => isDown);
+        cursor.Setup(c => c.PrimaryClick).Returns(() => isClick);
+        cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(c => c.LastPrimaryPushTime).Returns(5);
+        cursor.Setup(c => c.X).Returns((int)x);
+        cursor.Setup(c => c.Y).Returns((int)y);
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(y);
+        Gum.Forms.FormsUtilities.SetCursor(cursor.Object);
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        isPush = true;
+        isDown = true;
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        isPush = false;
+        isDown = false;
+        isClick = true;
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        bar.File.IsPopupVisible.ShouldBeFalse();
+        bar.File.IsSelected.ShouldBeFalse();
+    }
+
     #endregion
 
     #region Shared highlight
