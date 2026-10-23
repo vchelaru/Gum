@@ -18,6 +18,73 @@ using System.Collections.ObjectModel;
 namespace MonoGameGum.Tests.Runtimes;
 public class GraphicalUiElementTests : BaseTestClass
 {
+    // A rotated element's origin offset turns with it, so setting X on a centered-Y element moves
+    // its drawn top-left by more than X alone; X must not be copied straight to the renderable (#6609).
+    [Fact]
+    public void X_RotatedCenteredYElement_ShouldMatchFullLayout()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 300;
+        parent.Height = 40;
+        ContainerRuntime sut = new();
+        sut.Height = 20;
+        sut.YOrigin = VerticalAlignment.Center;
+        sut.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        sut.Rotation = 30;
+        parent.AddChild(sut);
+
+        sut.X = 25;
+        float placedX = ((IPositionedSizedObject)sut).X;
+        sut.UpdateLayout();
+
+        placedX.ShouldBe(((IPositionedSizedObject)sut).X, 0.001f);
+    }
+
+    // The Y counterpart: a root-level top-origin element turned about a centered X origin.
+    [Fact]
+    public void Y_RotatedCenteredXRootElement_ShouldMatchFullLayout()
+    {
+        ContainerRuntime sut = new();
+        sut.Width = 40;
+        sut.XOrigin = HorizontalAlignment.Center;
+        sut.Rotation = 30;
+
+        sut.Y = 25;
+        float placedY = ((IPositionedSizedObject)sut).Y;
+        sut.UpdateLayout();
+
+        placedY.ShouldBe(((IPositionedSizedObject)sut).Y, 0.001f);
+    }
+
+    // Setting X or Y on a rotated element places it where a full layout would, for every origin.
+    [Theory]
+    [InlineData(30f)]
+    [InlineData(-90f)]
+    public void XY_RotatedRootElement_ShouldMatchFullLayoutForEveryOrigin(float rotation)
+    {
+        foreach (HorizontalAlignment xOrigin in new[] { HorizontalAlignment.Left, HorizontalAlignment.Center, HorizontalAlignment.Right })
+        {
+            foreach (VerticalAlignment yOrigin in new[] { VerticalAlignment.Top, VerticalAlignment.Center, VerticalAlignment.Bottom })
+            {
+                ContainerRuntime sut = new();
+                sut.Width = 40;
+                sut.Height = 20;
+                sut.XOrigin = xOrigin;
+                sut.YOrigin = yOrigin;
+                sut.Rotation = rotation;
+
+                sut.X = 25;
+                sut.Y = 15;
+                float placedX = ((IPositionedSizedObject)sut).X;
+                float placedY = ((IPositionedSizedObject)sut).Y;
+                sut.UpdateLayout();
+
+                placedX.ShouldBe(((IPositionedSizedObject)sut).X, 0.001f, $"X, {xOrigin}/{yOrigin}");
+                placedY.ShouldBe(((IPositionedSizedObject)sut).Y, 0.001f, $"Y, {xOrigin}/{yOrigin}");
+            }
+        }
+    }
+
 
     #region Constructor Tests
 

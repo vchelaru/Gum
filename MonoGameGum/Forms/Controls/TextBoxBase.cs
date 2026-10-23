@@ -93,6 +93,17 @@ public abstract class TextBoxBase :
 
     List<GraphicalUiElement> _selectionInstances = new List<GraphicalUiElement>();
 
+    // The caret and selection turn with the text's own rotation (#6609); see TurnWithText.
+    // Single-line mode never sets the caret's Y, so the Y and rotation it had before it was
+    // turned are kept here and restored before it is placed again, so the turn never piles up.
+    bool _isCaretTurnedWithText;
+    float _caretUnturnedY;
+    float _caretTurnedY;
+    float _caretUnturnedRotation;
+    float _caretTurnedRotation;
+    float _selectionAuthoredRotation;
+    bool _isSelectionTurnedWithText;
+
     GraphicalUiElement? selectionTemplate;
 
     /// <summary>
@@ -557,11 +568,14 @@ public abstract class TextBoxBase :
         // The previous visual's selection instances do not belong to this one.
         _selectionInstances.Clear();
         selectionTemplate = null;
+        _isCaretTurnedWithText = false;
+        _isSelectionTurnedWithText = false;
 
         selectionInstance = base.Visual.GetGraphicalUiElementByName("SelectionInstance");
         if (selectionInstance != null)
         {
             _selectionInstanceYOffset = selectionInstance.Y;
+            _selectionAuthoredRotation = selectionInstance.Rotation;
             _selectionInstances.Add(selectionInstance);
         }
 
@@ -1404,6 +1418,8 @@ public abstract class TextBoxBase :
 
     protected void UpdateCaretPositionFromCaretIndex()
     {
+        UndoCaretTurnWithText();
+
         if (IsRenderedAsSingleLine)
         {
             // make sure we measure a valid string
@@ -1438,6 +1454,73 @@ public abstract class TextBoxBase :
 
             caretComponent.Y = ResolveLineYForComponent(caretY, caretComponent);
         }
+
+        TurnCaretWithText();
+    }
+
+    private void UndoCaretTurnWithText()
+    {
+        if (!_isCaretTurnedWithText)
+        {
+            return;
+        }
+        _isCaretTurnedWithText = false;
+
+        // A value changed since the turn (a state applied, multi-line placement) is new and is kept.
+        if (caretComponent.Y == _caretTurnedY)
+        {
+            caretComponent.Y = _caretUnturnedY;
+        }
+        if (caretComponent.Rotation == _caretTurnedRotation)
+        {
+            caretComponent.Rotation = _caretUnturnedRotation;
+        }
+    }
+
+    private void TurnCaretWithText()
+    {
+        if (textComponent.Rotation == 0)
+        {
+            return;
+        }
+
+        _caretUnturnedY = caretComponent.Y;
+        _caretUnturnedRotation = caretComponent.Rotation;
+        TurnWithText(caretComponent, _caretUnturnedRotation);
+        _caretTurnedY = caretComponent.Y;
+        _caretTurnedRotation = caretComponent.Rotation;
+        _isCaretTurnedWithText = true;
+    }
+
+    /// <summary>
+    /// Turns <paramref name="element"/>, placed as if the text were not rotated, about the text's
+    /// origin by the text's own rotation, the way the renderer turns the glyphs. Assumes the
+    /// element and the text share a parent.
+    /// </summary>
+    private void TurnWithText(GraphicalUiElement element, float unturnedRotation)
+    {
+        float rotation = textComponent.Rotation;
+        var parent = element.EffectiveParentGue;
+        float parentWidth = parent?.AbsoluteWidth ?? GraphicalUiElement.CanvasWidth;
+        float parentHeight = parent?.AbsoluteHeight ?? GraphicalUiElement.CanvasHeight;
+        var converter = global::Gum.Converters.UnitConverter.Self;
+        const global::Gum.Converters.GeneralUnitType pixels = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+
+        float pivotX = converter.ConvertXPosition(textComponent.X, textComponent.XUnits, pixels, parentWidth);
+        float pivotY = converter.ConvertYPosition(textComponent.Y, textComponent.YUnits, pixels, parentHeight);
+        float offsetX = converter.ConvertXPosition(element.X, element.XUnits, pixels, parentWidth) - pivotX;
+        float offsetY = converter.ConvertYPosition(element.Y, element.YUnits, pixels, parentHeight) - pivotY;
+
+        // Counterclockwise on screen (y down), as GraphicalUiElement rotates.
+        double radians = rotation * System.Math.PI / 180;
+        float cos = (float)System.Math.Cos(radians);
+        float sin = (float)System.Math.Sin(radians);
+        float turnedX = pivotX + offsetX * cos + offsetY * sin;
+        float turnedY = pivotY - offsetX * sin + offsetY * cos;
+
+        element.X = converter.ConvertXPosition(turnedX, pixels, element.XUnits, parentWidth);
+        element.Y = converter.ConvertYPosition(turnedY, pixels, element.YUnits, parentHeight);
+        element.Rotation = unturnedRotation + rotation;
     }
 
     private void UpdateToIsFocused() => UpdateToIsFocused(wasFocused: isFocused);
@@ -1764,7 +1847,16 @@ public abstract class TextBoxBase :
                 selection.Width = selectionStartEnds[i].Width;
                 selection.Visible = true;
                 selection.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                if (textComponent.Rotation != 0)
+                {
+                    TurnWithText(selection, _selectionAuthoredRotation);
+                }
+                else if (_isSelectionTurnedWithText)
+                {
+                    selection.Rotation = _selectionAuthoredRotation;
+                }
             }
+            _isSelectionTurnedWithText = textComponent.Rotation != 0;
         }
         else if (selectionInstance != null)
         {
@@ -2178,8 +2270,50 @@ public abstract class TextBoxBase :
         // The glyph top of line N is the drawn block's top plus N*lineHeight; its center is that
         // plus glyphHalfHeight.
         float offset = VerticalAlignmentOffset + lineNumber * lineHeight + glyphHalfHeight;
-        var caretY = (textComponent as IPositionedSizedObject).Y + offset;
+        var caretY = UnrotatedTextTop + offset;
         return caretY;
+    }
+
+    /// <summary>
+    /// The top of the text's box in its parent, as if neither the text nor its parent were rotated.
+    /// The renderable's Y is turned by both rotations, so for rotated text it is turned back: by the
+    /// parent's rotation about the parent, then by the text's own rotation about its origin.
+    /// </summary>
+    float UnrotatedTextTop
+    {
+        get
+        {
+            var ipso = (IPositionedSizedObject)textComponent;
+            if (textComponent.GetAbsoluteRotation() == 0)
+            {
+                return ipso.Y;
+            }
+
+            float parentRotation = textComponent.Parent?.GetAbsoluteRotation() ?? 0;
+            double parentRadians = parentRotation * System.Math.PI / 180;
+            // The inverse of the counterclockwise turn maps (x, y) to (x cos - y sin, x sin + y cos).
+            float originTopInParent = ipso.X * (float)System.Math.Sin(parentRadians) + ipso.Y * (float)System.Math.Cos(parentRadians);
+
+            float originOffsetX = textComponent.XOrigin switch
+            {
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Center => -ipso.Width / 2.0f,
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Right => -ipso.Width,
+                _ => 0
+            };
+            float originOffsetY = textComponent.YOrigin switch
+            {
+                global::RenderingLibrary.Graphics.VerticalAlignment.Center => -ipso.Height / 2.0f,
+                global::RenderingLibrary.Graphics.VerticalAlignment.Bottom => -ipso.Height,
+                global::RenderingLibrary.Graphics.VerticalAlignment.TextBaseline =>
+                    -ipso.Height + coreTextObject.DescenderHeight * coreTextObject.FontScale,
+                _ => 0
+            };
+
+            // The renderable sits at origin + R(originOffset); the unrotated top is origin + originOffset.
+            double radians = textComponent.Rotation * System.Math.PI / 180;
+            float turnedOriginOffsetY = -originOffsetX * (float)System.Math.Sin(radians) + originOffsetY * (float)System.Math.Cos(radians);
+            return originTopInParent - turnedOriginOffsetY + originOffsetY;
+        }
     }
 
 
