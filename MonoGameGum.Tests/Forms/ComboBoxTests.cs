@@ -1146,6 +1146,76 @@ public  class ComboBoxTests : BaseTestClass
         comboBox.IsDropDownOpen.ShouldBeTrue();
     }
 
+    [Fact]
+    public void Activity_ComboBoxClosed_DoesNotKeepAncestorsFromGoingIdle()
+    {
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.Children!.Add(container);
+        ComboBox comboBox = new();
+        container.Children!.Add(comboBox.Visual);
+
+        Tick();
+        Tick();
+        Tick();
+
+        container.IsIdle.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Activity_ComboBoxOpenedAfterGoingIdle_IsNotIdleUntilClosed()
+    {
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.Children!.Add(container);
+        ComboBox comboBox = new();
+        container.Children!.Add(comboBox.Visual);
+        comboBox.Items!.Add("Apple");
+        comboBox.Items.Add("Banana");
+        Tick();
+        Tick();
+        Tick();
+        container.IsIdle.ShouldBeTrue("precondition: a closed ComboBox lets the subtree go idle");
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+
+        comboBox.IsDropDownOpen = true;
+        float popupYAtOpen = popup.AbsoluteY;
+        comboBox.Y += 50;
+        comboBox.Visual.UpdateLayout();
+        Tick();
+        Tick();
+
+        container.IsIdle.ShouldBeFalse();
+        popup.AbsoluteY.ShouldBe(popupYAtOpen + 50, 0.5f);
+
+        comboBox.IsDropDownOpen = false;
+        Tick();
+        Tick();
+        Tick();
+
+        container.IsIdle.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Activity_ComboBoxSizedToChildren_DoesNotPlaceAgainWhileNothingMoves()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana", "Cherry");
+        comboBox.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        comboBox.Visual.Width = 0;
+        comboBox.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        comboBox.Visual.Height = 0;
+        comboBox.Visual.UpdateLayout();
+        comboBox.IsDropDownOpen = true;
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        // A placement would put the popup back below the ComboBox, undoing this nudge.
+        popup.X += 30;
+        float popupX = popup.X;
+
+        Tick();
+        Tick();
+        Tick();
+
+        popup.X.ShouldBe(popupX);
+    }
+
     private static void Tick() => Gum.GumService.Default.Root.AnimateSelf(0.016);
 
     #endregion

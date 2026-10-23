@@ -38,5 +38,5 @@ public partial class GraphicalUiElement
     internal bool IsHiddenForCaches => mContainedObjectAsIVisible != null && Visible == false;
 
     // True when AnimateSelf would do nothing for this element's subtree right now.
-    bool IsIdle => _isIdle || IsHiddenForCaches;
+    internal bool IsIdle => _isIdle || IsHiddenForCaches;
 }
