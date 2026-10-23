@@ -89,7 +89,25 @@ public static class CodegenCommand
         ICodeGenLogger logger = new ConsoleCodeGenLogger();
         IProjectDirectoryProvider projectDirectoryProvider = new FixedProjectDirectoryProvider(projectDirectory);
         var projectSettingsManager = new CodeOutputProjectSettingsManager(logger, projectDirectoryProvider);
-        CodeOutputProjectSettings projectSettings = projectSettingsManager.CreateOrLoadSettingsForProject();
+        string settingsFilePath = Path.Combine(projectDirectory!, "ProjectCodeSettings.codsj");
+        CodeOutputProjectSettings projectSettings;
+        if (File.Exists(settingsFilePath))
+        {
+            // An unreadable file is the user's settings, so it is reported and never replaced by
+            // auto-configured defaults. The loader has already printed the parser's message.
+            CodeOutputProjectSettings? loaded = projectSettingsManager.TryLoadSettingsForProject();
+            if (loaded == null)
+            {
+                Console.Error.WriteLine($"error: could not read code generation settings from {settingsFilePath}. " +
+                    "Fix or delete the file and run codegen again; it was left unchanged.");
+                return 2;
+            }
+            projectSettings = loaded;
+        }
+        else
+        {
+            projectSettings = projectSettingsManager.CreateOrLoadSettingsForProject();
+        }
 
         if (string.IsNullOrEmpty(projectSettings.CodeProjectRoot))
         {

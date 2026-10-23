@@ -22,6 +22,33 @@ public class CodegenCommandTests : BaseTestClass
         File.Exists(codsjPath).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("{ \"CodeProjectRoot\": \"../Code/\", not json", "line 1, position")]
+    [InlineData("", null)]
+    public void Codegen_WhenCodsjCannotBeParsed_ReportsItLeavesItUntouchedAndReturnsExitCode2(
+        string codsjContents, string? parserMessageFragment)
+    {
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        // A csproj is present, so a missing settings file would be auto-configured and written.
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
+        string codsjPath = Path.Combine(TempDirectory, "ProjectCodeSettings.codsj");
+        File.WriteAllText(codsjPath, codsjContents);
+        byte[] originalBytes = File.ReadAllBytes(codsjPath);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(2);
+        File.ReadAllBytes(codsjPath).ShouldBe(originalBytes);
+        result.StandardError.ShouldContain(codsjPath);
+        if (parserMessageFragment != null)
+        {
+            result.StandardError.ShouldContain(parserMessageFragment);
+        }
+        result.StandardOutput.ShouldNotContain("Auto-configured");
+    }
+
     [Fact]
     public void Codegen_WhenCsprojReferencesNoGumRuntime_EmitsCurrentNamespacesNotLegacyOnes()
     {
