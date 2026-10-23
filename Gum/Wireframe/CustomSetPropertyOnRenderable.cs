@@ -2773,6 +2773,11 @@ public partial class CustomSetPropertyOnRenderable
         // The slot may hold the empty placeholder cached when no FontCache .fnt was found under this key.
         loaderManager.Dispose(cacheKey);
         loaderManager.AddDisposable(cacheKey, new NativeFallbackManagedFont(nativeFont.Value));
+        if (textRuntime.OutlineThickness > 0)
+        {
+            // A plain TTF atlas has no outline; Text draws one from this (#6639).
+            global::RenderingLibrary.RaylibFontOutlineRegistry.Register(nativeFont.Value.Texture.Id, textRuntime.OutlineThickness);
+        }
         return nativeFont.Value;
     }
 #endif
