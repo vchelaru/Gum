@@ -1073,6 +1073,9 @@ public  class ComboBoxTests : BaseTestClass
         GraphicalUiElement.CanvasWidth = 700;
         GraphicalUiElement.CanvasHeight = 500;
         Gum.GumService.Default.Root.UpdateLayout();
+        // GumService.Update sizes the popup root to the canvas each frame, before the roots animate.
+        Gum.Forms.FormsUtilities.SetDimensionsToCanvas(FrameworkElement.PopupRoot);
+        FrameworkElement.PopupRoot.UpdateLayout();
         Tick();
 
         float bottom = popup.AbsoluteY + popup.AbsoluteHeight;
