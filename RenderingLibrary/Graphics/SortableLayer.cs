@@ -1,7 +1,4 @@
-﻿#if SKIA
-using System;
-#endif
-using BlendState = Gum.BlendState;
+﻿using BlendState = Gum.BlendState;
 
 namespace RenderingLibrary.Graphics
 {
@@ -31,15 +28,6 @@ namespace RenderingLibrary.Graphics
             get;
             set;
         }
-
-
-
-#if SKIA
-        public void Render(SkiaSharp.SKCanvas canvas)
-        {
-            throw new NotImplementedException();
-        }
-#endif
 
 #if !NET8_0_OR_GREATER
     public string BatchKey => string.Empty;

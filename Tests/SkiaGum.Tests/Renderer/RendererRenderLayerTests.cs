@@ -1,0 +1,189 @@
+using Gum;
+using Gum.GueDeriving;
+using Gum.Wireframe;
+using RenderingLibrary;
+using RenderingLibrary.Graphics;
+using Shouldly;
+using SkiaSharp;
+
+namespace SkiaGum.Tests.Renderer;
+
+/// <summary>
+/// Renderer.RenderLayer and a SortableLayer drawn as a renderable inside another layer, matching
+/// MonoGame: the layer is PreRendered, sorted by Z and drawn under its own camera.
+/// </summary>
+public class RendererRenderLayerTests : IDisposable
+{
+    readonly List<IRenderableIpso> _added = new();
+
+    public RendererRenderLayerTests()
+    {
+        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+    }
+
+    [Fact]
+    public void RenderLayer_RenderablesAddedAgainstZ_DrawsByZ()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        Layer layer = new();
+        RectangleRuntime red = CreateRectangle(x: 0, y: 0, width: 16, SKColors.Red);
+        red.Z = 1;
+        RectangleRuntime lime = CreateRectangle(x: 8, y: 8, width: 16, SKColors.Lime);
+        layer.Add(red);
+        layer.Add(lime);
+
+        SystemManagers.Default.Renderer.RenderLayer(SystemManagers.Default, layer);
+
+        PixelAt(surface, 12, 12).ShouldBe(SKColors.Red, "because RenderLayer sorts by Z, so the higher-Z red draws last");
+    }
+
+    [Fact]
+    public void RenderLayer_DefaultPrerender_PreRendersBeforeSorting()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        Layer layer = new() { SecondarySortOnY = true };
+        MovesOnPreRenderRectangle red = new() { Y = 0, Width = 16, Height = 16, IsFilled = true, FillColor = SKColors.Red, PreRenderY = 8 };
+        RectangleRuntime lime = CreateRectangle(x: 0, y: 4, width: 16, SKColors.Lime);
+        layer.Add(red);
+        layer.Add(lime);
+
+        SystemManagers.Default.Renderer.RenderLayer(SystemManagers.Default, layer);
+
+        PixelAt(surface, 4, 12).ShouldBe(SKColors.Red, "because RenderLayer PreRenders first, moving red to Y 8, below lime");
+    }
+
+    [Fact]
+    public void SortableLayer_InMainLayer_DrawsSortedWithItsSiblings()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        SortableLayer sortableLayer = new();
+        sortableLayer.Add(CreateRectangle(x: 0, y: 0, width: 32, SKColors.Lime));
+        SortableLayerHost host = new(sortableLayer) { Z = 1 };
+        RectangleRuntime red = CreateRectangle(x: 0, y: 0, width: 32, SKColors.Red);
+        red.Z = 0;
+        RectangleRuntime blue = CreateRectangle(x: 16, y: 0, width: 16, SKColors.Blue);
+        blue.Z = 2;
+        AddToMainLayer(blue);
+        AddToMainLayer(host);
+        AddToMainLayer(red);
+
+        SystemManagers.Default.Draw();
+
+        PixelAt(surface, 4, 4).ShouldBe(SKColors.Lime, "because the sortable layer (Z 1) draws over red (Z 0)");
+        PixelAt(surface, 20, 4).ShouldBe(SKColors.Blue, "because blue (Z 2) draws over the sortable layer");
+    }
+
+    [Fact]
+    public void SortableLayer_InMainLayerWithCameraOffset_AppliesTheCameraOnce()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        SystemManagers.Default.Renderer.Camera.X = -8;
+        SortableLayer sortableLayer = new();
+        sortableLayer.Add(CreateRectangle(x: 0, y: 0, width: 8, SKColors.Red));
+        AddToMainLayer(new SortableLayerHost(sortableLayer));
+
+        SystemManagers.Default.Draw();
+
+        PixelAt(surface, 4, 4).Alpha.ShouldBe((byte)0, "because the camera moves the rectangle right by 8");
+        PixelAt(surface, 12, 4).ShouldBe(SKColors.Red, "because the camera is applied once, not once per layer");
+        PixelAt(surface, 20, 4).Alpha.ShouldBe((byte)0, "because a second camera offset would put the rectangle here");
+    }
+
+    [Fact]
+    public void SortableLayer_InScreenSpaceInsideAWorldLayer_UsesItsOwnCamera()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        SystemManagers.Default.Renderer.Camera.X = -8;
+        SortableLayer sortableLayer = new() { LayerCameraSettings = new LayerCameraSettings { IsInScreenSpace = true } };
+        sortableLayer.Add(CreateRectangle(x: 0, y: 0, width: 8, SKColors.Red));
+        AddToMainLayer(new SortableLayerHost(sortableLayer));
+
+        SystemManagers.Default.Draw();
+
+        PixelAt(surface, 4, 4).ShouldBe(SKColors.Red, "because, as in MonoGame, the sortable layer draws under its own camera, which ignores the main camera in screen space");
+        PixelAt(surface, 12, 4).Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void SortableLayer_DrawnThroughGumBatchWithAMatrix_AppliesTheMatrixOnce()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        SortableLayer sortableLayer = new();
+        sortableLayer.Add(CreateRectangle(x: 0, y: 0, width: 8, SKColors.Red));
+        RenderingLibrary.Graphics.Renderer renderer = SystemManagers.Default.Renderer;
+
+        renderer.Begin(SKMatrix.CreateTranslation(8, 0));
+        renderer.Draw(new SortableLayerHost(sortableLayer));
+        renderer.End();
+
+        PixelAt(surface, 4, 4).Alpha.ShouldBe((byte)0, "because the GumBatch matrix moves the rectangle right by 8");
+        PixelAt(surface, 12, 4).ShouldBe(SKColors.Red, "because the sortable layer keeps the GumBatch matrix, as MonoGame's ForcedMatrix applies to every layer");
+        PixelAt(surface, 20, 4).Alpha.ShouldBe((byte)0, "because the matrix is applied once");
+    }
+
+    public void Dispose()
+    {
+        Layer mainLayer = SystemManagers.Default.Renderer.MainLayer;
+        foreach (IRenderableIpso renderable in _added)
+        {
+            mainLayer.Remove(renderable);
+        }
+        SystemManagers.Default.Renderer.Camera.X = 0;
+    }
+
+    private void AddToMainLayer(IRenderableIpso renderable)
+    {
+        SystemManagers.Default.Renderer.MainLayer.Add(renderable);
+        _added.Add(renderable);
+    }
+
+    private static SKSurface CreateInitializedSurface(int size)
+    {
+        SKSurface surface = SKSurface.Create(new SKImageInfo(size, size));
+        GumService.Default.Initialize(surface.Canvas, size, size);
+        surface.Canvas.Clear(SKColors.Transparent);
+        return surface;
+    }
+
+    private static RectangleRuntime CreateRectangle(float x, float y, float width, SKColor color) => new()
+    {
+        X = x,
+        Y = y,
+        Width = width,
+        Height = 16,
+        IsFilled = true,
+        FillColor = color,
+    };
+
+    private static SKColor PixelAt(SKSurface surface, int x, int y)
+    {
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        return bitmap.GetPixel(x, y);
+    }
+
+    // A SortableLayer is an IRenderable, not an IRenderableIpso, so it reaches a layer through a
+    // renderable that draws it.
+    private class SortableLayerHost : InvisibleRenderable
+    {
+        readonly SortableLayer _sortableLayer;
+
+        public SortableLayerHost(SortableLayer sortableLayer)
+        {
+            _sortableLayer = sortableLayer;
+        }
+
+        public override void Render(ISystemManagers managers) => _sortableLayer.Render(managers);
+    }
+
+    private class MovesOnPreRenderRectangle : RectangleRuntime
+    {
+        public float PreRenderY { get; set; }
+
+        public override void PreRender()
+        {
+            Y = PreRenderY;
+            base.PreRender();
+        }
+    }
+}
