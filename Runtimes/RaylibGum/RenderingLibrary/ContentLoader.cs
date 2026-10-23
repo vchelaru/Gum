@@ -106,16 +106,14 @@ public sealed class ContentLoader : IContentLoader
             string? diskPath = FileManager.ResolveExistingFilePath(contentName);
             if (diskPath != null)
             {
-                font = LoadFontEx(diskPath, 24, null, 0);
-                TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
+                font = LoadTtfFont(diskPath);
             }
         }
 
         string? ttfPath = font == null ? FileManager.ResolveExistingFilePath(contentName + ".ttf") : null;
         if (ttfPath != null)
         {
-            font = LoadFontEx(ttfPath, 24, null, 0);
-            TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
+            font = LoadTtfFont(ttfPath);
         }
 
         if(font == null)
@@ -123,8 +121,7 @@ public sealed class ContentLoader : IContentLoader
             var systemFontPath = GetSystemFontPath(contentName);
             if (File.Exists(systemFontPath))
             {
-                font = LoadFontEx(systemFontPath, 24, null, 0);
-                TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
+                font = LoadTtfFont(systemFontPath);
             }
             else
             {
@@ -144,6 +141,18 @@ public sealed class ContentLoader : IContentLoader
 
 
         return loaded;
+    }
+
+    /// <summary>
+    /// The size, in pixels of em, a font file loaded natively (not from a .fnt) is rasterized at.
+    /// </summary>
+    private const int NativeTtfFontSize = 24;
+
+    private static Font LoadTtfFont(string path)
+    {
+        Font font = TtfFontLoader.LoadFont(path, NativeTtfFontSize);
+        TextureFilterApplier(font.Texture, DefaultTextureFilter);
+        return font;
     }
 
     private static Texture2D LoadTexture2D(string fileName)
