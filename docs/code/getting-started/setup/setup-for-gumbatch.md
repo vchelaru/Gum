@@ -16,6 +16,8 @@ This quick start uses **KernSmith** to generate font atlases in memory at runtim
 The KernSmith package (`KernSmith.MonoGameGum` or `KernSmith.KniGum`) is for **dynamic font generation** — it creates a `BitmapFont` from any font and size in memory at runtime. It's the recommended font path for MonoGame and KNI, but it is separate from GumBatch and entirely optional: if you prefer to make and ship your own `.fnt` files, you can skip it and use [Alternative: Loading a .fnt File](#alternative-loading-a-fnt-file) below. For the full picture, see the [Fonts](../../files-and-fonts/fonts.md) hub and [Font Strategies](../../files-and-fonts/font-strategies.md) pages.
 {% endhint %}
 
+On SkiaSharp runtimes, skip the KernSmith steps below: create a GumBatch with `new GumBatch()` after initializing Gum, and pass a font name and size to `DrawString` (see [Rendering Strings](../../rendering/gumbatch.md#rendering-strings)).
+
 To initialize a GumBatch, you must:
 
 * Add the KernSmith NuGet package for your runtime

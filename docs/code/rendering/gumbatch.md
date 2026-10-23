@@ -31,6 +31,13 @@ GumBatch draws through the same `Camera` as the rest of Gum, the one at `GumServ
 
 `Begin` accepts an optional transform: `Begin(Matrix)`. This matrix **composes on top of** the camera transform rather than replacing it. The effective transform is your matrix multiplied with the camera's view.
 
+On SkiaSharp runtimes, the matrix is an `SKMatrix`:
+
+```csharp
+// Draw
+gumBatch.Begin(SKMatrix.CreateScale(2, 2));
+```
+
 {% hint style="warning" %}
 Because the matrix composes on top of the camera, setting `Camera.Zoom` to a non-default value **and** passing a scaling matrix to `Begin(Matrix)` applies the scale twice. Drive scaling from a single source: either leave the matrix off and use `Camera.Zoom`, or pass a matrix and keep `Camera.Zoom` at `1`.
 {% endhint %}
@@ -108,7 +115,14 @@ If you would rather load a specific `.fnt` file instead of using KernSmith, set 
 
 GumBatch can also render strings directly via `DrawString`. This is a lower-level API than `TextRuntime` (it does not support layout, wrapping, or rotation) but the call shape matches `SpriteBatch.DrawString` and is convenient for quick HUD-style text.
 
-`DrawString` takes a `BitmapFont`. The recommended way to obtain one is to ask KernSmith for it directly:
+On SkiaSharp runtimes, `DrawString` takes a font name and size instead of a `BitmapFont`, and an `SKPoint` and `SKColor` for the position and color. You do not need KernSmith or a `BitmapFont`:
+
+```csharp
+// Draw
+gumBatch.DrawString("Arial", 18, "I am at X=100, Y=200", new SKPoint(100, 200), SKColors.White);
+```
+
+On MonoGame, KNI, and FNA, `DrawString` takes a `BitmapFont`. The recommended way to obtain one is to ask KernSmith for it directly:
 
 ```csharp
 // Class scope
@@ -282,6 +296,15 @@ gumBatch.End();
 // now set the render target to null to draw it to screen:
 GraphicsDevice.SetRenderTarget(null);
 spriteBatch.Draw(MyRenderTarget, new Vector2(0, 0), Color.White);
+```
+
+On SkiaSharp runtimes, pass the canvas you want to draw on to `Begin`. GumBatch draws onto that canvas until `End`, then goes back to the canvas it used before:
+
+```csharp
+// Draw
+gumBatch.Begin(offscreenSurface.Canvas);
+gumBatch.Draw(SomeGumObject);
+gumBatch.End();
 ```
 
 {% hint style="info" %}
