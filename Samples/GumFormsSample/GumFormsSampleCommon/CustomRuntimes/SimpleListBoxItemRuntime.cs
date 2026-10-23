@@ -17,13 +17,16 @@ internal class SimpleListBoxItemRuntime : ListBoxItemVisual
         {
             base.Children.Remove(GetGraphicalUiElementByName("TextInstance"));
 
-            var coloredRectangle = new ColoredRectangleRuntime();
+            var coloredRectangle = new RectangleRuntime();
             coloredRectangle.Width = 50;
             coloredRectangle.Height = 50;
+            coloredRectangle.IsFilled = true;
+            coloredRectangle.StrokeWidth = 0;
+            coloredRectangle.IsAntialiased = false;
             var random = new System.Random();
-            coloredRectangle.Red = random.Next(255);
-            coloredRectangle.Blue = random.Next(255);
-            coloredRectangle.Green = random.Next(255);
+            coloredRectangle.FillRed = random.Next(255);
+            coloredRectangle.FillBlue = random.Next(255);
+            coloredRectangle.FillGreen = random.Next(255);
 
             base.Children.Add(coloredRectangle);
         }

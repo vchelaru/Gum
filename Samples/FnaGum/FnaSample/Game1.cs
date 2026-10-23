@@ -44,7 +44,7 @@ namespace FnaSample
             Root = new MainScreenRuntime();
             Root.AddToManagers();
 
-            //var rectangle = new ColoredRectangleRuntime();
+            //var rectangle = new RectangleRuntime();
 
             //Root = new ContainerRuntime();
             //Root.AddToManagers();

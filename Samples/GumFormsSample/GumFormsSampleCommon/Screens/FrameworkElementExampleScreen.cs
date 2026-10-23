@@ -219,10 +219,13 @@ namespace GumFormsSample.Screens
             {
                 var random = new System.Random();
 
-                var child = new ColoredRectangleRuntime();
-                child.Red = random.Next(255);
-                child.Green = random.Next(255);
-                child.Blue = random.Next(255);
+                var child = new RectangleRuntime();
+                child.IsFilled = true;
+                child.StrokeWidth = 0;
+                child.IsAntialiased = false;
+                child.FillRed = random.Next(255);
+                child.FillGreen = random.Next(255);
+                child.FillBlue = random.Next(255);
                 scrollViewer.InnerPanel.Children.Add(child);
 
             };

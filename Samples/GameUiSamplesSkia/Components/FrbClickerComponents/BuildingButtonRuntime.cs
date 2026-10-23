@@ -45,11 +45,14 @@ internal class BuildingButtonRuntime : InteractiveGue
             this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             this.Height = 64;
 
-            var background = new ColoredRectangleRuntime();
+            var background = new RectangleRuntime();
             background.Width = 0;
             background.Height = 0;
             background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            background.IsFilled = true;
+            background.StrokeWidth = 0;
+            background.IsAntialiased = false;
             background.Name = "ButtonBackground";
             this.Children.Add(background);
 
@@ -79,8 +82,18 @@ internal class BuildingButtonRuntime : InteractiveGue
                     {
                         new ()
                         {
-                            Name = "ButtonBackground.Color",
-                            Value = new Color(0, 0, 128),
+                            Name = "ButtonBackground.FillRed",
+                            Value = 0,
+                        },
+                        new ()
+                        {
+                            Name = "ButtonBackground.FillGreen",
+                            Value = 0,
+                        },
+                        new ()
+                        {
+                            Name = "ButtonBackground.FillBlue",
+                            Value = 128,
                         }
                     }
             });
@@ -92,8 +105,18 @@ internal class BuildingButtonRuntime : InteractiveGue
                     {
                         new ()
                         {
-                            Name = "ButtonBackground.Color",
-                            Value = new Color(0, 0, 160),
+                            Name = "ButtonBackground.FillRed",
+                            Value = 0,
+                        },
+                        new ()
+                        {
+                            Name = "ButtonBackground.FillGreen",
+                            Value = 0,
+                        },
+                        new ()
+                        {
+                            Name = "ButtonBackground.FillBlue",
+                            Value = 160,
                         }
                     }
             });
@@ -105,8 +128,18 @@ internal class BuildingButtonRuntime : InteractiveGue
                     {
                         new ()
                         {
-                            Name = "ButtonBackground.Color",
-                            Value = new Color(0, 0, 96),
+                            Name = "ButtonBackground.FillRed",
+                            Value = 0,
+                        },
+                        new ()
+                        {
+                            Name = "ButtonBackground.FillGreen",
+                            Value = 0,
+                        },
+                        new ()
+                        {
+                            Name = "ButtonBackground.FillBlue",
+                            Value = 96,
                         }
                     }
             });
@@ -118,8 +151,18 @@ internal class BuildingButtonRuntime : InteractiveGue
                     {
                         new ()
                         {
-                            Name = "ButtonBackground.Color",
-                            Value = new Color(48, 48, 64),
+                            Name = "ButtonBackground.FillRed",
+                            Value = 48,
+                        },
+                        new ()
+                        {
+                            Name = "ButtonBackground.FillGreen",
+                            Value = 48,
+                        },
+                        new ()
+                        {
+                            Name = "ButtonBackground.FillBlue",
+                            Value = 64,
                         }
                     }
             });
