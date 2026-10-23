@@ -44,6 +44,11 @@ public sealed class ContentLoader : IContentLoader
     internal static Action<Texture2D, Raylib_cs.TextureFilter> TextureFilterApplier { get; set; } = SetTextureFilter;
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// A <see cref="Raylib_cs.Font"/> loaded from a font file or system family name (not a .fnt) has no size to
+    /// load at, so it is rasterized with an em of 24 pixels; draw it at another size and it scales. To get a font
+    /// at a given size, set FontSize on a Text instead, which rasterizes at that size.
+    /// </remarks>
     public T? LoadContent<T>(string contentName)
     {
         if (typeof(T) == typeof(Texture2D))
@@ -120,33 +125,44 @@ public sealed class ContentLoader : IContentLoader
     }
 
     /// <summary>
-    /// The size, in pixels of em, a font file loaded natively (not from a .fnt) is rasterized at.
+    /// The size, in pixels of em, a font file loaded natively (not from a .fnt) by <see cref="LoadContent{T}"/> is
+    /// rasterized at. A Text loads its own FontSize through the font cascade instead.
     /// </summary>
     private const int NativeTtfFontSize = 24;
 
     /// <summary>
     /// Loads the font file <paramref name="contentName"/> resolves to (a path, the path plus <c>.ttf</c>, or a
     /// system font family) so its em is <paramref name="fontSize"/> pixels, or returns null when no file is found.
+    /// For a system family, <paramref name="isBold"/> and <paramref name="isItalic"/> pick the matching cut when the
+    /// system has one, as Skia's font manager does; a font file is loaded as it is, as Skia loads it (#6620).
     /// The caller owns the font and caches it; nothing is added to <see cref="LoaderManager"/> here.
     /// </summary>
-    internal static Font? TryLoadTtfFont(string contentName, int fontSize)
+    internal static Font? TryLoadTtfFont(string contentName, int fontSize, bool isBold = false, bool isItalic = false)
     {
-        string? path = ResolveTtfFontPath(contentName);
+        string? path = ResolveTtfFontPath(contentName, isBold, isItalic);
         return path != null ? LoadTtfFont(path, fontSize) : null;
     }
 
     /// <summary>
     /// Finds the font file for a name the native loader accepts: an existing path, that path plus <c>.ttf</c>,
-    /// or a system font family. raylib's native loaders take a raw path, so the macOS .app
-    /// Contents/Resources/ copy is resolved here (#5450).
+    /// or a system font family (its bold/italic cut when one is requested and found, else its regular file).
+    /// raylib's native loaders take a raw path, so the macOS .app Contents/Resources/ copy is resolved here (#5450).
     /// </summary>
-    private static string? ResolveTtfFontPath(string contentName)
+    private static string? ResolveTtfFontPath(string contentName, bool isBold = false, bool isItalic = false)
     {
         string? path = FileManager.ResolveExistingFilePath(contentName)
             ?? FileManager.ResolveExistingFilePath(contentName + ".ttf");
         if (path != null)
         {
             return path;
+        }
+        if (isBold || isItalic)
+        {
+            string? styledPath = SystemFontStyleFinder.Find(SystemFontDirectory, contentName, isBold, isItalic);
+            if (styledPath != null)
+            {
+                return styledPath;
+            }
         }
         string systemFontPath = GetSystemFontPath(contentName);
         return File.Exists(systemFontPath) ? systemFontPath : null;
@@ -528,6 +544,17 @@ public sealed class ContentLoader : IContentLoader
         return fileNameStandardized;
     }
 
+    /// <summary>
+    /// Replaces the system font folder a family name is looked up in. Tests point it at a folder of known fonts.
+    /// </summary>
+    internal static string? SystemFontDirectoryOverride { get; set; }
+
+    private static string SystemFontDirectory => SystemFontDirectoryOverride
+        ?? (OperatingSystem.IsWindows() ? "C:/Windows/Fonts"
+            : OperatingSystem.IsLinux() ? "/usr/share/fonts/truetype"
+            : OperatingSystem.IsMacOS() ? "/System/Library/Fonts"
+            : string.Empty);
+
     private static string GetSystemFontPath(string fontFileName)
     {
         if(fontFileName.EndsWith(".ttf") == false)
@@ -535,11 +562,7 @@ public sealed class ContentLoader : IContentLoader
             fontFileName = fontFileName + ".ttf";
         }
 
-        var directory =
-            OperatingSystem.IsWindows() ? "C:/Windows/Fonts"
-            : OperatingSystem.IsLinux() ? "/usr/share/fonts/truetype"
-            : OperatingSystem.IsMacOS() ? "/System/Library/Fonts"
-            : string.Empty;
+        string directory = SystemFontDirectory;
 
         // first check no-space since that's what Windows does:
         var noSpace = Path.Combine(directory, fontFileName.Replace(" ", ""));

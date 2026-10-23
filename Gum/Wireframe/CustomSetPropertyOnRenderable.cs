@@ -2745,7 +2745,8 @@ public partial class CustomSetPropertyOnRenderable
     /// <summary>
     /// Loads <paramref name="fontFamily"/> (a family name or font file path) natively at the Text's FontSize and
     /// caches it under <paramref name="cacheKey"/>, which carries the size, so each size gets its own atlas and
-    /// is disposed through <see cref="ManagedFont"/> (#6591). A custom content loader is asked first and its
+    /// is disposed through <see cref="ManagedFont"/> (#6591). A system family loads its bold/italic cut, as on
+    /// Skia (#6620). A custom content loader is asked first and its
     /// font is used as it returns it; a name no font file matches still goes through
     /// <see cref="global::RenderingLibrary.Content.LoaderManager.LoadContent{T}"/>.
     /// </summary>
@@ -2762,7 +2763,8 @@ public partial class CustomSetPropertyOnRenderable
         }
 
         int fontSize = System.Math.Max(1, (int)System.MathF.Round(textRuntime.FontSize));
-        Raylib_cs.Font? nativeFont = global::RenderingLibrary.Content.ContentLoader.TryLoadTtfFont(fontFamily, fontSize);
+        Raylib_cs.Font? nativeFont = global::RenderingLibrary.Content.ContentLoader.TryLoadTtfFont(
+            fontFamily, fontSize, textRuntime.IsBold, textRuntime.IsItalic);
         if (nativeFont == null)
         {
             return loaderManager.LoadContent<Raylib_cs.Font>(fontFamily);
