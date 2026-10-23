@@ -253,6 +253,12 @@ public class CodeOutputTabController
         ElementSave[] elements = _pendingElements.ToArray();
         _pendingElements.Clear();
 
+        // Queued while the settings were readable; the file may have turned unreadable since.
+        if (_viewModel.HasProjectSettingsLoadError)
+        {
+            return;
+        }
+
         foreach (ElementSave element in elements)
         {
             CodeOutputElementSettings elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);

@@ -235,6 +235,35 @@ public class UnreadableCodeSettingsScenarioTests
         }
     }
 
+    [AvaloniaFact]
+    public void ARegenerationQueuedWhileReadable_WritesNothing_IfTheFileTurnsUnreadableBeforeItRuns()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave style = code.Project.AddComponent("Style");
+        ComponentSave button = code.Project.AddComponent("Button");
+        code.Select(style);
+        code.Tree.Grid.TypeAndEnter("Width", "90");
+        code.Select(button);
+        code.Tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Components/Style.Width");
+        code.Tree.SaveAll();
+        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
+        DeleteCodeFolder(code);
+        code.Select(style);
+
+        // What the tool sends when a reference re-applies a variable on Button. Sent straight to the
+        // plugins, since the gesture drivers drain the dispatcher after every edit.
+        TestAppBuilder.Services.GetRequiredService<IPluginManager>()
+            .VariableSetThroughReference(button, instance: null, "Width", oldValue: null, isFullCommit: true);
+        CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty("generation waits for the dispatcher");
+
+        // Unreadable by the time the queued job runs.
+        BreakSettingsFileOnDisk(code);
+        global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+        CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
+    }
+
     private static void DeleteCodeFolder(CodeTabHarness code)
     {
         if (Directory.Exists(code.CodeFolder))
