@@ -77,6 +77,25 @@ public class TextHitTestRotationTests : BaseTestClass
         sut.GetCharacterIndexAtPosition(screenX, screenY).ShouldBe("Line1\n".Length + 3);
     }
 
+    // A fractional line height picks the line under the point; truncating y before dividing put
+    // a point just below the first line's bottom back on the first line.
+    [Fact]
+    public void GetCharacterIndexAtPosition_FractionalLineHeight_ShouldReturnLineUnderPoint()
+    {
+        TextRuntime sut = new();
+        sut.Width = 200;
+        sut.Text = "Line1\nLine2";
+        Text contained = (Text)sut.RenderableComponent!;
+        int baseLineHeight = contained.LineHeightInPixels;
+        contained.LineHeightMultiplier = (baseLineHeight + 0.5f) / baseLineHeight;
+        float lineHeight = baseLineHeight * contained.LineHeightMultiplier;
+        float localX = contained.MeasureString("Lin") + 1;
+
+        (float screenX, float screenY) = LocalToScreen(contained, localX, lineHeight + 0.2f);
+
+        sut.GetCharacterIndexAtPosition(screenX, screenY).ShouldBe("Line1\n".Length + 3);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(90)]
