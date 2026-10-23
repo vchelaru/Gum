@@ -46,6 +46,19 @@ try {
         @('test A.Tests/A.Tests.csproj FullyQualifiedName~A.UntrackedTests.|FullyQualifiedName~A.UntrackedTests+')
     Assert-Plan 'class only in a project outside every solution is refused' 'OutsideOnlyTests' `
         @('REFUSED: not a test class in any test project: OutsideOnlyTests')
+
+    # fast-test and verify read the classic "Passed!"/"Failed!" summary; the terminal logger prints
+    # "Test summary:" instead, so a run with it on reported NOTESTS for tests that ran.
+    $previous = $env:MSBUILDTERMINALLOGGER
+    $env:MSBUILDTERMINALLOGGER = 'on'
+    try {
+        . (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1')
+        $result = Invoke-Dotnet -Command @('msbuild', (Join-Path $scratch 'A.Tests/A.Tests.csproj'), '-nologo', '-getProperty:MSBUILDTERMINALLOGGER') -TimeoutSeconds 60
+        $value = ($result.Output | Where-Object { $_ } | Select-Object -Last 1)
+        if ($value -eq 'off') { Write-Host 'pass  dotnet runs with the terminal logger off even when the environment turns it on' }
+        else { Write-Host "FAIL  dotnet runs with the terminal logger off even when the environment turns it on`n  MSBUILDTERMINALLOGGER was: $value"; $failures++ }
+    }
+    finally { $env:MSBUILDTERMINALLOGGER = $previous }
 }
 finally { Remove-Item -Recurse -Force $scratch -ErrorAction SilentlyContinue }
 
