@@ -47,7 +47,11 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 ## GameUiSamplesSkia (a game ported to the KNI Skia host)
 
-`Samples/GameUiSamplesSkia/` is `Samples/GameUiSamples/` (Stardew, HyTale, Hollow Knight, FRB clicker) drawn by SkiaGum through `Runtimes/KniSkiaGum` instead of the XNA-family renderer. It is a copy with its own generated code (`SyntaxVersion` 5, so `Gum.GueDeriving`, not `MonoGameGum.GueDeriving`), so a change to the game's screens has to be made in both. Porting traps: Skia colors are `SKColor` (XNA `Color` in a state `Value` or property assignment fails at run time or compile time), Gum can only initialize inside a render pass because the canvas exists only there, and the Skia `GumService` has no `GameTime`. Verify without running the exe by rendering each screen to an `SKSurface` and comparing against `gumcli screenshot` of the original project.
+`Samples/GameUiSamplesSkia/` is `Samples/GameUiSamples/` (Stardew, HyTale, Hollow Knight, FRB clicker) drawn by SkiaGum through `Runtimes/KniSkiaGum` instead of the XNA-family renderer. It is a copy with its own generated code (`SyntaxVersion` 5, so `Gum.GueDeriving`, not `MonoGameGum.GueDeriving`), so a change to the game's screens has to be made in both. Porting traps: Skia colors are `SKColor` (XNA `Color` in a state `Value` or property assignment fails at run time or compile time). Verify without running the exe by rendering each screen to an `SKSurface` and comparing against `gumcli screenshot` of the original project.
+
+## KNI Skia counterparts of the MonoGame/KNI samples
+
+`Samples/KniSkiaGumFromFile` and `Samples/KniSkiaGumImmediateMode` are the KNI Skia versions of the samples with the same suffix, built on the `Samples/KniSkiaGum` host setup. `KniSkiaGumFromFile` has no Gum project of its own: its csproj copies `Samples/KniGumFromFile/KniGumFromFileContent` to `Content/`, so editing that project changes both samples.
 
 ## Host-embedded samples (SkiaGumWpfSample, MauiSkiaGum)
 
