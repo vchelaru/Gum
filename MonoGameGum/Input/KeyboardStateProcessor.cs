@@ -81,7 +81,7 @@ public class KeyboardStateProcessor
 
     /// <summary>
     /// Advances the processor by one frame, capturing the current <see cref="KeyboardState"/>.
-    /// Called internally by <see cref="Keyboard.Activity"/> — not typically called directly.
+    /// Called internally by <c>Keyboard.Activity</c> — not typically called directly.
     /// </summary>
     public virtual void Update()
     {
