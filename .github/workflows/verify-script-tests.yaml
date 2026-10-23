@@ -1,10 +1,12 @@
 name: Verify Script Tests
 
-# Tests which projects Tools/verify.ps1 builds for a changed file. No build, about 10 seconds.
+# Tests which projects Tools/verify.ps1 builds for a changed file, and which projects and filters
+# Tools/fast-test.ps1 picks for a request. No build, about 15 seconds.
 on:
   pull_request:
     paths:
       - 'Tools/verify*.ps1'
+      - 'Tools/fast-test*.ps1'
       - '.github/workflows/verify-script-tests.yaml'
 
 concurrency:
@@ -22,3 +24,6 @@ jobs:
       - name: Test verify.ps1 project resolution
         shell: pwsh
         run: ./Tools/verify-tests.ps1
+      - name: Test fast-test.ps1 class resolution
+        shell: pwsh
+        run: ./Tools/fast-test-tests.ps1
