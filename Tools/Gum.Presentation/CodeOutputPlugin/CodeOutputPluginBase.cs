@@ -437,7 +437,7 @@ public abstract class CodeOutputPluginBase : PluginBase
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        if (true)
+        if (!IsProjectSettingsReadOnly)
         {
             _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
         }
@@ -450,11 +450,16 @@ public abstract class CodeOutputPluginBase : PluginBase
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        if (true)
+        if (!IsProjectSettingsReadOnly)
         {
             _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
         }
 
+        if (IsProjectSettingsReadOnly)
+        {
+            RefreshCodeDisplay();
+            return;
+        }
         _controller?.HandleVariableSetThroughReference(element, codeOutputProjectSettings, isFullCommit);
     }
     private void HandleVariableAdd(ElementSave? elementSave, string variableName)
