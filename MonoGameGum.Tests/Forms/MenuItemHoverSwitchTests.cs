@@ -154,6 +154,20 @@ public class MenuItemHoverSwitchTests : BaseTestClass
     }
 
     [Fact]
+    public void Push_SiblingTopLevelItemWhileOpen_SwitchesAndStaysOpen()
+    {
+        Bar bar = CreateBar();
+        OpenWithPush(bar.File);
+
+        PushOn(bar.Edit.Visual, pushTime: 2);
+
+        bar.File.IsSelected.ShouldBeFalse();
+        bar.File.IsPopupVisible.ShouldBeFalse();
+        bar.Edit.IsSelected.ShouldBeTrue();
+        bar.Edit.IsPopupVisible.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Hover_SiblingInSubmenu_SwitchesTheNestedSubmenu()
     {
         Bar bar = CreateBar();
