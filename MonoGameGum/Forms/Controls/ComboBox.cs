@@ -657,8 +657,13 @@ public class ComboBox :
     {
         if (args.NewValue == null || !Visual.AbsoluteVisible)
         {
-            // Detached from the tree, or moved somewhere hidden.
-            HideListBox(restoreFocus: false);
+            // Detached from the tree, or moved somewhere hidden. This runs inside the Children change of
+            // the old or new parent; when that parent is also the popup's root (a ComboBox directly in
+            // PopupRoot or ModalRoot), removing the popup now would change the notifying collection.
+            GraphicalUiElement? popupParent = listBox.Visual.Parent;
+            bool popupRootIsNotifying = popupParent != null &&
+                (popupParent == args.OldValue || popupParent == args.NewValue);
+            HideListBox(restoreFocus: false, deferRemovingPopup: popupRootIsNotifying);
         }
         else
         {
@@ -706,7 +711,10 @@ public class ComboBox :
         }
     }
 
-    private void HideListBox(bool restoreFocus = true)
+    /// <param name="restoreFocus">Whether focus returns to this ComboBox if it had focus when opened.</param>
+    /// <param name="deferRemovingPopup">When true, the popup is hidden now but only removed from its root
+    /// on the next GumService update, for callers that run inside a change of the root's Children.</param>
+    private void HideListBox(bool restoreFocus = true, bool deferRemovingPopup = false)
     {
 #if !FRB
         StopWatchingAncestors();
@@ -717,19 +725,30 @@ public class ComboBox :
             // The ComboBox may already be out of the tree (its Visual has no managers), but the popup is
             // in the popup layer, which does.
             var managers = Visual?.EffectiveManagers ?? listBox.Visual.EffectiveManagers;
+            ListBox hiddenListBox = listBox;
 
             listBox.IsVisible = false;
-            // Don't do this, because doing so removes the bindings
-            //listBox.Visual.RemoveFromManagers();
-            listBox.Visual.Parent = null;
 
-            RestoreListBoxLayoutValues();
-
-            managers?.Renderer.MainLayer.Remove(listBox.Visual);
-#if FRB
-#else
-            listBox.Visual.GetTopParent()?.Children.Remove(listBox.Visual);
+#if !FRB
+            if (deferRemovingPopup && global::RenderingLibrary.IGumService.Default != null)
+            {
+                // Put the layout values back now so opening again before the removal runs saves the
+                // right values; the removal skips a popup that was opened again in the meantime.
+                RestoreListBoxLayoutValues();
+                global::RenderingLibrary.IGumService.Default.DeferredQueue.Enqueue(() =>
+                {
+                    if (!hiddenListBox.IsVisible)
+                    {
+                        RemovePopupFromLayers(hiddenListBox, managers);
+                    }
+                });
+            }
+            else
 #endif
+            {
+                RemovePopupFromLayers(hiddenListBox, managers);
+                RestoreListBoxLayoutValues();
+            }
 
             UpdateState();
 
@@ -738,6 +757,19 @@ public class ComboBox :
                 IsFocused = true;
             }
         }
+    }
+
+    private static void RemovePopupFromLayers(ListBox popup, ISystemManagers? managers)
+    {
+        // Don't do this, because doing so removes the bindings
+        //popup.Visual.RemoveFromManagers();
+        popup.Visual.Parent = null;
+
+        managers?.Renderer.MainLayer.Remove(popup.Visual);
+#if FRB
+#else
+        popup.Visual.GetTopParent()?.Children.Remove(popup.Visual);
+#endif
     }
 
     private void HandleLosePush(object? sender, EventArgs args)
