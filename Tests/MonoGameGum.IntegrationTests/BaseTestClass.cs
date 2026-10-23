@@ -1,5 +1,4 @@
 ﻿using Gum.GueDeriving;
-using Gum.Managers;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
 using System;
@@ -69,14 +68,15 @@ public class BaseTestClass : IDisposable
 
         InteractiveGue.CurrentInputReceiver = null;
 
-        GumService.Default.Root.Children.Clear();
+        // Root is null until a test initializes the default service.
+        GumService.Default.Root?.Children.Clear();
         GumService.Default.ModalRoot?.Children.Clear();
         GumService.Default.PopupRoot?.Children.Clear();
 
-        // ObjectFinder.Self is a process-wide singleton. If a previous test loaded
-        // a .gumx, the project sticks around and pollutes tests that assert on the
+        // ObjectFinder.Self is a process-wide singleton. A project or fallback Standard Element a test
+        // leaves would change how later tests resolve elements, and fail tests that assert on the
         // "no project loaded" state (e.g. LoadAnimations_ThrowsException_WhenNoProjectLoaded).
-        ObjectFinder.Self.GumProjectSave = null;
+        ObjectFinderState.Reset();
 
         _fileManagerState.Restore();
 

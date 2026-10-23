@@ -43,23 +43,15 @@ public class GumFontMapperTests : BaseTestClass
         byte[] fontBytes = File.ReadAllBytes(FixtureTtfPath);
         string offDiskDirectory = Guid.NewGuid().ToString("N");
         string offDiskPath = Path.Combine(AppContext.BaseDirectory, "NotOnDisk", offDiskDirectory, "TestFont.ttf");
-        Func<string, Stream>? previousHook = ToolsUtilities.FileManager.CustomGetStreamFromFile;
 
-        try
-        {
-            ToolsUtilities.FileManager.CustomGetStreamFromFile = requestedPath =>
-                requestedPath.Contains(offDiskDirectory)
-                    ? new MemoryStream(fontBytes)
-                    : throw new FileNotFoundException($"Unexpected read of '{requestedPath}'.", requestedPath);
+        ToolsUtilities.FileManager.CustomGetStreamFromFile = requestedPath =>
+            requestedPath.Contains(offDiskDirectory)
+                ? new MemoryStream(fontBytes)
+                : throw new FileNotFoundException($"Unexpected read of '{requestedPath}'.", requestedPath);
 
-            string? familyKey = GumFontMapper.RegisterFontFile(offDiskPath);
+        string? familyKey = GumFontMapper.RegisterFontFile(offDiskPath);
 
-            familyKey.ShouldNotBeNullOrEmpty();
-        }
-        finally
-        {
-            ToolsUtilities.FileManager.CustomGetStreamFromFile = previousHook;
-        }
+        familyKey.ShouldNotBeNullOrEmpty();
     }
 
     /// <summary>
@@ -73,7 +65,6 @@ public class GumFontMapperTests : BaseTestClass
         string loosePath = Path.Combine(
             AppContext.BaseDirectory, "Assets", "Fonts", "HookWins_" + Guid.NewGuid().ToString("N") + ".ttf");
         File.WriteAllText(loosePath, "stale loose copy, not a font");
-        Func<string, Stream>? previousHook = ToolsUtilities.FileManager.CustomGetStreamFromFile;
 
         try
         {
@@ -85,7 +76,6 @@ public class GumFontMapperTests : BaseTestClass
         }
         finally
         {
-            ToolsUtilities.FileManager.CustomGetStreamFromFile = previousHook;
             try { File.Delete(loosePath); } catch { /* best-effort */ }
         }
     }
@@ -100,7 +90,6 @@ public class GumFontMapperTests : BaseTestClass
         string onDiskCopyPath = Path.Combine(
             AppContext.BaseDirectory, "Assets", "Fonts", "HookMiss_" + Guid.NewGuid().ToString("N") + ".ttf");
         File.Copy(FixtureTtfPath, onDiskCopyPath);
-        Func<string, Stream>? previousHook = ToolsUtilities.FileManager.CustomGetStreamFromFile;
 
         try
         {
@@ -113,7 +102,6 @@ public class GumFontMapperTests : BaseTestClass
         }
         finally
         {
-            ToolsUtilities.FileManager.CustomGetStreamFromFile = previousHook;
             try { File.Delete(onDiskCopyPath); } catch { /* best-effort */ }
         }
     }
@@ -163,39 +151,23 @@ public class GumFontMapperTests : BaseTestClass
         // (MonoGameGum/GumService.cs sets it to the project's folder) -- a relative path bundled
         // next to the exe silently fails to resolve once that happens (falls back to the default
         // font with no error), unless the file actually lives under the new RelativeDirectory.
-        string previousRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
-        try
-        {
-            ToolsUtilities.FileManager.RelativeDirectory =
-                Path.Combine(AppContext.BaseDirectory, "Assets") + Path.DirectorySeparatorChar;
+        ToolsUtilities.FileManager.RelativeDirectory =
+            Path.Combine(AppContext.BaseDirectory, "Assets") + Path.DirectorySeparatorChar;
 
-            string? familyKey = GumFontMapper.RegisterFontFile("Fonts/TestFont.ttf");
+        string? familyKey = GumFontMapper.RegisterFontFile("Fonts/TestFont.ttf");
 
-            familyKey.ShouldNotBeNullOrEmpty();
-        }
-        finally
-        {
-            ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
-        }
+        familyKey.ShouldNotBeNullOrEmpty();
     }
 
     [Fact]
     public void RegisterFontFile_WithRelativePath_WhenRelativeDirectoryDoesNotContainFile_ReturnsNull()
     {
-        string previousRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
-        try
-        {
-            ToolsUtilities.FileManager.RelativeDirectory = AppContext.BaseDirectory;
+        ToolsUtilities.FileManager.RelativeDirectory = AppContext.BaseDirectory;
 
-            // No "Fonts" subfolder directly under AppContext.BaseDirectory -- only under Assets/Fonts.
-            string? familyKey = GumFontMapper.RegisterFontFile("Fonts/TestFont.ttf");
+        // No "Fonts" subfolder directly under AppContext.BaseDirectory -- only under Assets/Fonts.
+        string? familyKey = GumFontMapper.RegisterFontFile("Fonts/TestFont.ttf");
 
-            familyKey.ShouldBeNull();
-        }
-        finally
-        {
-            ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
-        }
+        familyKey.ShouldBeNull();
     }
 
     // Format parity with .ttf: .otf/.ttc are sniffed by content (the fixture's TrueType bytes under

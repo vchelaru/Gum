@@ -35,7 +35,6 @@ public class EmbeddedResourceContentLoaderTests : BaseTestClass
     {
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumSkiaTryLoadTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
 
         try
         {
@@ -58,7 +57,6 @@ public class EmbeddedResourceContentLoaderTests : BaseTestClass
         }
         finally
         {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             if (Directory.Exists(tempRoot))
             {
                 Directory.Delete(tempRoot, recursive: true);
@@ -93,31 +91,23 @@ public class EmbeddedResourceContentLoaderTests : BaseTestClass
         byte[] contentBytes = CreateContentBytes(fileName);
         string offDiskDirectory = "NotOnDisk_" + Guid.NewGuid().ToString("N");
         string offDiskPath = Path.Combine(Path.GetTempPath(), offDiskDirectory, fileName);
-        Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
 
-        try
+        FileManager.CustomGetStreamFromFile = requestedPath =>
+            requestedPath.Contains(offDiskDirectory)
+                ? new MemoryStream(contentBytes)
+                : throw new FileNotFoundException($"Unexpected read of '{requestedPath}'.", requestedPath);
+
+        EmbeddedResourceContentLoader loader = new EmbeddedResourceContentLoader();
+
+        object? loaded = Path.GetExtension(fileName) switch
         {
-            FileManager.CustomGetStreamFromFile = requestedPath =>
-                requestedPath.Contains(offDiskDirectory)
-                    ? new MemoryStream(contentBytes)
-                    : throw new FileNotFoundException($"Unexpected read of '{requestedPath}'.", requestedPath);
+            ".png" => loader.LoadContent<SKBitmap>(offDiskPath),
+            ".svg" => loader.LoadContent<Svg.Skia.SKSvg>(offDiskPath),
+            ".json" => loader.LoadContent<SkiaSharp.Skottie.Animation>(offDiskPath),
+            _ => loader.LoadContent<SKTypeface>(offDiskPath),
+        };
 
-            EmbeddedResourceContentLoader loader = new EmbeddedResourceContentLoader();
-
-            object? loaded = Path.GetExtension(fileName) switch
-            {
-                ".png" => loader.LoadContent<SKBitmap>(offDiskPath),
-                ".svg" => loader.LoadContent<Svg.Skia.SKSvg>(offDiskPath),
-                ".json" => loader.LoadContent<SkiaSharp.Skottie.Animation>(offDiskPath),
-                _ => loader.LoadContent<SKTypeface>(offDiskPath),
-            };
-
-            loaded.ShouldNotBeNull();
-        }
-        finally
-        {
-            FileManager.CustomGetStreamFromFile = previousHook;
-        }
+        loaded.ShouldNotBeNull();
     }
 
     // #5255: gumcli pack writes the .gumpkg next to the loose content, so a stale loose copy often
@@ -133,7 +123,6 @@ public class EmbeddedResourceContentLoaderTests : BaseTestClass
         byte[] contentBytes = CreateContentBytes(fileName);
         string directory = Path.Combine(Path.GetTempPath(), "GumSkiaHookWins_" + Guid.NewGuid().ToString("N"));
         string loosePath = Path.Combine(directory, fileName);
-        Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
 
         try
         {
@@ -158,7 +147,6 @@ public class EmbeddedResourceContentLoaderTests : BaseTestClass
         }
         finally
         {
-            FileManager.CustomGetStreamFromFile = previousHook;
             Directory.Delete(directory, recursive: true);
         }
     }

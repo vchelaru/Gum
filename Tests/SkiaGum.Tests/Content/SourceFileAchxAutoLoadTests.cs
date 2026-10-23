@@ -89,7 +89,6 @@ public class SourceFileAchxAutoLoadTests : BaseTestClass
 
         IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
 
         try
         {
@@ -129,7 +128,6 @@ public class SourceFileAchxAutoLoadTests : BaseTestClass
         {
             LoaderManager.Self.ContentLoader = originalLoader;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             if (Directory.Exists(tempRoot))
             {
                 Directory.Delete(tempRoot, recursive: true);

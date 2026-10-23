@@ -118,19 +118,11 @@ public class ContentLoaderTests : BaseTestClass
     [Fact]
     public void StandardizeCaseSensitive_PrefixesRelativePathsWithTheRelativeDirectory_AndKeepsCase()
     {
-        string previousRelativeDirectory = FileManager.RelativeDirectory;
-        try
-        {
-            FileManager.RelativeDirectory = "/game/Content/";
+        FileManager.RelativeDirectory = "/game/Content/";
 
-            string standardized = ContentLoader.StandardizeCaseSensitive("Images/../Hero.PNG");
+        string standardized = ContentLoader.StandardizeCaseSensitive("Images/../Hero.PNG");
 
-            standardized.Replace('\\', '/').ShouldEndWith("/game/Content/Hero.PNG");
-        }
-        finally
-        {
-            FileManager.RelativeDirectory = previousRelativeDirectory;
-        }
+        standardized.Replace('\\', '/').ShouldEndWith("/game/Content/Hero.PNG");
     }
 
 #pragma warning disable CS0618 // The obsolete loader must keep working until it is removed.

@@ -40,8 +40,6 @@ public class SkiaResourceManagerTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumSkiaResMgrConcTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-
         try
         {
             const int fileCount = 500;
@@ -74,7 +72,6 @@ public class SkiaResourceManagerTests : BaseTestClass
         }
         finally
         {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             if (Directory.Exists(tempRoot))
             {
                 Directory.Delete(tempRoot, recursive: true);
@@ -90,19 +87,11 @@ public class SkiaResourceManagerTests : BaseTestClass
     [InlineData("Images/Button.png")]
     public void GetAbsoluteFilePath_RelativeName_ShouldUseNativeSeparators(string resourceName)
     {
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-        try
-        {
-            FileManager.RelativeDirectory = "/game/Content/";
+        FileManager.RelativeDirectory = "/game/Content/";
 
-            string path = SkiaResourceManager.GetAbsoluteFilePath(resourceName);
+        string path = SkiaResourceManager.GetAbsoluteFilePath(resourceName);
 
-            path.ShouldBe("/game/Content/Images/Button.png".Replace('/', Path.DirectorySeparatorChar));
-        }
-        finally
-        {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
-        }
+        path.ShouldBe("/game/Content/Images/Button.png".Replace('/', Path.DirectorySeparatorChar));
     }
 
     // #5221: a hook that serves only its own bundle (the .gumpkg hook with no fallback) must not
@@ -111,7 +100,6 @@ public class SkiaResourceManagerTests : BaseTestClass
     public void GetSKBitmap_WhenHookDoesNotServeTheFile_ShouldStillLoadItFromDisk()
     {
         string absolutePath = Path.Combine(Path.GetTempPath(), "GumSkiaHookDiskTest_" + Guid.NewGuid().ToString("N") + ".png");
-        Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
         try
         {
             using (SKBitmap source = new SKBitmap(3, 2))
@@ -130,7 +118,6 @@ public class SkiaResourceManagerTests : BaseTestClass
         }
         finally
         {
-            FileManager.CustomGetStreamFromFile = previousHook;
             File.Delete(absolutePath);
         }
     }
@@ -181,8 +168,6 @@ public class SkiaResourceManagerTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumSkiaResMgrTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-
         try
         {
             string fileName = "skia_loader_test.png";
@@ -210,7 +195,6 @@ public class SkiaResourceManagerTests : BaseTestClass
         }
         finally
         {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             if (Directory.Exists(tempRoot))
             {
                 Directory.Delete(tempRoot, recursive: true);

@@ -8,7 +8,8 @@ namespace Gum.Presentation.Tests;
 /// <summary>
 /// Headless base for Gum.Presentation tests that exercise logic depending on the shared
 /// GumCommon singletons. Initializes <see cref="StandardElementsManager"/> (so element/state
-/// defaults resolve) and clears <see cref="ObjectFinder"/>'s project on both construction and
+/// defaults resolve) and clears <see cref="ObjectFinder"/>'s project and fallback Standard Elements
+/// (<see cref="ObjectFinderState.Reset"/>) on both construction and
 /// dispose to keep the singleton from leaking state across tests. Resetting only on dispose
 /// depends on every prior test's own cleanup succeeding — a test that throws before reaching
 /// its dispose, or one that never derives from this class, leaves the static dirty for
@@ -33,13 +34,13 @@ public class BaseTestClass : IDisposable
     {
         _originalCanvasWidth = GraphicalUiElement.CanvasWidth;
         _originalCanvasHeight = GraphicalUiElement.CanvasHeight;
-        ObjectFinder.Self.GumProjectSave = null;
+        ObjectFinderState.Reset();
         StandardElementsManager.Self.Initialize();
     }
 
     public virtual void Dispose()
     {
-        ObjectFinder.Self.GumProjectSave = null;
+        ObjectFinderState.Reset();
         _fileManagerState.Restore();
         GraphicalUiElement.CanvasWidth = _originalCanvasWidth;
         GraphicalUiElement.CanvasHeight = _originalCanvasHeight;
