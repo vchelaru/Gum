@@ -394,6 +394,10 @@ jobs:
       - name: Build Theme Projects
         run: pwsh Tools/build-theme-projects.ps1 -Cli "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
 
+      # KNI Skia has no output library of its own; its projects generate with Gum Forms like every runtime.
+      - name: Build Theme Projects (KNI Skia)
+        run: pwsh Tools/build-theme-projects.ps1 -Cli "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe" -Platform kniskia
+
   # Saves the Windows NuGet package cache on pushes to main (#6282). PR runs only restore it, so a PR
   # never pays the save. Separate from Build-and-Test so the push-to-main run's Windows leg stays a no-op
   # and no required context is affected. A hit means the packages are already cached, so it does nothing.
