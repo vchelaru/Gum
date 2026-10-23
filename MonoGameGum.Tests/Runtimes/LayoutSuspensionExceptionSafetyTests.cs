@@ -178,6 +178,7 @@ public class LayoutSuspensionExceptionSafetyTests : BaseTestClass
         // the popup is sized before it is parented, #6686).
         VisualTemplate originalTemplate = FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)];
         bool injectionEnabled = true;
+        bool? suspendedAtThrow = null;
         FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] = new VisualTemplate(() =>
         {
             GraphicalUiElement popupVisual = originalTemplate.CreateContent(null);
@@ -191,6 +192,7 @@ public class LayoutSuspensionExceptionSafetyTests : BaseTestClass
             {
                 if (armed && injectionEnabled)
                 {
+                    suspendedAtThrow = GraphicalUiElement.IsAllLayoutSuspended;
                     throw new InvalidOperationException(ThrowMessage);
                 }
                 originalApply?.Invoke();
@@ -209,6 +211,8 @@ public class LayoutSuspensionExceptionSafetyTests : BaseTestClass
 
             ShouldThrowInjected(() => fileItem.IsSelected = true);
 
+            // The throw must happen inside the sizing window; otherwise the restore below proves nothing.
+            suspendedAtThrow.ShouldBe(true);
             GraphicalUiElement.IsAllLayoutSuspended.ShouldBe(previous);
         }
         finally
