@@ -437,7 +437,8 @@ namespace Gum.DataTypes
                     int existingIndex = IndexOfInstance(element, instanceInBase.Name);
                     if (existingIndex >= 0)
                     {
-                        insertIndex = existingIndex + 1;
+                        // Never move back: a base that is itself missing instances repeats names in the inherited list.
+                        insertIndex = Math.Max(insertIndex, existingIndex + 1);
                     }
                     else
                     {

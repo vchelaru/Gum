@@ -129,6 +129,24 @@ public class MissingBaseInstanceRepairTests : BaseTestClass
         child.Instances.Where(item => item.Name != "C").ShouldAllBe(item => item.DefinedByBase);
     }
 
+    // The child is repaired before its parent, so the parent still lacks i1 and the inherited list repeats i0.
+    [Fact]
+    public void RepairMissingDefinedByBaseInstances_ParentAlsoMissingAnInstanceAndIsRepairedAfterTheChild_KeepsBaseOrder()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ComponentSave child = AddComponent(project, "Child", "Parent", "C0");
+        ComponentSave parent = AddComponent(project, "Parent", "Grand", "P0", "P1");
+        ComponentSave grand = AddComponent(project, "Grand", "Container", "i0", "i1");
+        parent.Instances.Insert(0, new InstanceSave { Name = "i0", BaseType = "Container", DefinedByBase = true, ParentContainer = parent });
+        child.Instances.Insert(0, new InstanceSave { Name = "i1", BaseType = "Container", DefinedByBase = true, ParentContainer = child });
+
+        project.RepairMissingDefinedByBaseInstances().ShouldBeTrue();
+
+        Names(child).ShouldBe("i0,i1,P0,P1,C0");
+        Names(parent).ShouldBe("i0,i1,P0,P1");
+        Names(grand).ShouldBe("i0,i1");
+    }
+
     [Fact]
     public void RepairMissingDefinedByBaseInstances_NothingMissing_ReturnsFalseAndAddsNothing()
     {
