@@ -55,14 +55,16 @@ foreach ($file in $untracked) {
 }
 $changedFiles += $untracked
 
-function Find-Project([string]$file) {
+# Every csproj in the nearest folder above the file: a folder can hold several (Runtimes/GumShapes has
+# a MonoGame and a KNI project), and each compiles the file through its default glob.
+function Find-Projects([string]$file) {
     $dir = Split-Path -Parent (Join-Path $repo $file)
     while ($dir -and $dir.Length -ge $repo.Length) {
-        $csproj = Get-ChildItem -Path $dir -Filter *.csproj -File -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($csproj) { return $csproj.FullName }
+        $csprojs = @(Get-ChildItem -Path $dir -Filter *.csproj -File -ErrorAction SilentlyContinue | ForEach-Object FullName)
+        if ($csprojs.Count -gt 0) { return $csprojs }
         $dir = Split-Path -Parent $dir
     }
-    return $null
+    return @()
 }
 
 # A source file can reach a project without sitting under its directory: a csproj can link it with
@@ -217,21 +219,22 @@ $sourceProjects = [System.Collections.Generic.HashSet[string]]::new()
 $indirectProjects = [ordered]@{}
 $unbuilt = [System.Collections.Generic.List[string]]::new()
 foreach ($file in ($changedFiles | Where-Object { $_ -like '*.cs' -or $_ -like '*.projitems' })) {
-    $project = if ($file -like '*.cs') { Find-Project $file }
+    $projects = if ($file -like '*.cs') { @(Find-Projects $file) } else { @() }
     $via = Find-IndirectProjects $file
-    if (-not $project -and $via.Count -eq 0) { $unbuilt.Add("$file (no project directory and no csproj, .projitems or .props includes it)"); continue }
-    foreach ($indirect in $via.Keys | Where-Object { $_ -ne $project }) {
+    if ($projects.Count -eq 0 -and $via.Count -eq 0) { $unbuilt.Add("$file (no project directory and no csproj, .projitems or .props includes it)"); continue }
+    foreach ($indirect in $via.Keys | Where-Object { $projects -notcontains $_ }) {
         if (-not $indirectProjects.Contains($indirect)) { $indirectProjects[$indirect] = [System.Collections.Generic.List[string]]::new() }
         $indirectProjects[$indirect].Add("$file ($($via[$indirect]))")
     }
-    if (-not $project) { continue }
-    if ($project -match '\.Tests\.csproj$|GumToolUnitTests\.csproj$') {
-        $className = [System.IO.Path]::GetFileNameWithoutExtension($file)
-        if (-not $testFilters.ContainsKey($project)) { $testFilters[$project] = @() }
-        $testFilters[$project] += "FullyQualifiedName~$className"
-    }
-    else {
-        [void]$sourceProjects.Add($project)
+    foreach ($project in $projects) {
+        if ($project -match '\.Tests\.csproj$|GumToolUnitTests\.csproj$') {
+            $className = [System.IO.Path]::GetFileNameWithoutExtension($file)
+            if (-not $testFilters.ContainsKey($project)) { $testFilters[$project] = @() }
+            $testFilters[$project] += "FullyQualifiedName~$className"
+        }
+        else {
+            [void]$sourceProjects.Add($project)
+        }
     }
 }
 
@@ -297,6 +300,15 @@ if ($testFilters.Count -eq 0 -and $sourceProjects.Count -eq 0 -and $indirectProj
 # Files with no project directory build whatever includes them. A project that cannot build on this
 # machine (missing FlatRedBall sibling or fna submodule) is listed as unverified, not failed.
 $unverified = [System.Collections.Generic.List[string]]::new()
+foreach ($project in @($sourceProjects)) {
+    # A folder's second csproj can be a variant that needs a missing dependency (SkiaInGum.FNA needs fna).
+    $missing = Find-MissingDependency $project ([System.Collections.Generic.HashSet[string]]::new())
+    if (-not $missing) { continue }
+    $relativeProject = $project.Substring($repo.Length + 1)
+    Write-Host ("skipped      build $relativeProject`: needs $missing, which is missing here, unverified")
+    $unverified.Add("$relativeProject (needs $missing)")
+    [void]$sourceProjects.Remove($project)
+}
 foreach ($project in $indirectProjects.Keys) {
     $relativeProject = $project.Substring($repo.Length + 1)
     $reasons = ($indirectProjects[$project] | Select-Object -First 3) -join '; '

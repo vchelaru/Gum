@@ -32,9 +32,9 @@ Assert-Builds 'file linked by a csproj and by a .props another .props imports bu
       'Runtimes/SilkNetGum/SilkNetGum.csproj', 'Runtimes/StrideGum/StrideGum.csproj',
       'Runtimes/UnityGum/UnityGum.csproj')
 
-Assert-Builds 'file nothing links builds only its own project' `
+Assert-Builds 'file in a folder with two csprojs, linked by nothing, builds both and nothing else' `
     'Runtimes/GumShapes/AssemblyInfo.cs' `
-    @('Runtimes/GumShapes/KniGumShapes.csproj')
+    @('Runtimes/GumShapes/KniGumShapes.csproj', 'Runtimes/GumShapes/MonoGameGumShapes.csproj')
 
 if ($failures -gt 0) { Write-Host "`n$failures failed"; exit 1 }
 Write-Host "`nall passed"
