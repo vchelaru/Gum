@@ -379,6 +379,9 @@ namespace RenderingLibrary.Graphics
                 // Cleared and restored even when a Render throws, so the next cycle neither redraws
                 // this cycle's roots (#4584) nor inherits its matrix.
                 _deferredRoots.Clear();
+                // A Draw outside a Begin/End pair draws immediately instead of queuing for an End
+                // that may never come.
+                _cycleMode = GumBatchDrawMode.Immediate;
                 _cycleCanvas?.Restore();
                 _cycleCanvas = null;
             }

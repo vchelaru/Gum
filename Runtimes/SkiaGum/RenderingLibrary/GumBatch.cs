@@ -1,4 +1,4 @@
-﻿using SkiaGum;
+using SkiaGum;
 using SkiaSharp;
 using System;
 

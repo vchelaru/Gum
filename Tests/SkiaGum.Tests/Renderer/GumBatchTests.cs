@@ -1,4 +1,4 @@
-﻿using Gum;
+using Gum;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -69,6 +69,21 @@ public class GumBatchTests
 
         PixelAt(surface, 12, 12).ShouldBe(SKColors.Red, "because Deferred sorts by Z at End, so the higher-Z red draws last");
         PixelAt(surface, 20, 20).ShouldBe(SKColors.Lime);
+    }
+
+    [Fact]
+    public void RendererDraw_AfterDeferredCycleEnds_DrawsImmediately()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        surface.Canvas.Clear(SKColors.Black);
+        RenderingLibrary.Graphics.Renderer renderer = SystemManagers.Default.Renderer;
+        GumBatch gumBatch = new();
+
+        gumBatch.Begin(mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred);
+        gumBatch.End();
+        renderer.Draw(CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red));
+
+        PixelAt(surface, 4, 4).ShouldBe(SKColors.Red, "because End returns the renderer to Immediate, so a Draw outside a cycle is not queued");
     }
 
     [Fact]
