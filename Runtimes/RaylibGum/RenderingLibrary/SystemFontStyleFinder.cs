@@ -17,7 +17,8 @@ internal static class SystemFontStyleFinder
 {
     private readonly record struct FontFace(string Family, bool IsBold, bool IsItalic, string Path);
 
-    private static readonly ConcurrentDictionary<string, IReadOnlyList<FontFace>> facesByDirectory =
+    // Lazy so threads that ask for one folder at the same time share a single scan.
+    private static readonly ConcurrentDictionary<string, Lazy<IReadOnlyList<FontFace>>> facesByDirectory =
         new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
@@ -31,7 +32,8 @@ internal static class SystemFontStyleFinder
             return null;
         }
 
-        foreach (FontFace face in facesByDirectory.GetOrAdd(directory, ReadFaces))
+        foreach (FontFace face in facesByDirectory.GetOrAdd(directory,
+            folder => new Lazy<IReadOnlyList<FontFace>>(() => ReadFaces(folder))).Value)
         {
             if (face.IsBold == isBold && face.IsItalic == isItalic
                 && string.Equals(face.Family, family, StringComparison.OrdinalIgnoreCase))

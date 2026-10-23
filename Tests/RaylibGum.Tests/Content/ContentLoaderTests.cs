@@ -1,4 +1,4 @@
-﻿using Raylib_cs;
+using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using Shouldly;
