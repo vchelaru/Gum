@@ -345,12 +345,31 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// Raises <see cref="PropertyChanged"/> without reporting to variable references. For a color channel
+    /// setter that assigns its color, which already reported the channel.
+    /// </summary>
+    private protected void RaisePropertyChangedEvent([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null!)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
     // A color is its channels: assigning Color changes Red, Green, Blue and Alpha, which are variables, so the
-    // references that read a channel must follow a color assigned in code (#6410).
+    // references that read a channel must follow a color assigned in code (#6410). The same holds for the
+    // shape and text colors whose channels are prefixed (FillColor: FillRed, ...).
     private void ReportColorChannels(string propertyName)
     {
         switch (propertyName)
         {
+            case "FillColor":
+            case "StrokeColor":
+            case "DropshadowColor":
+                string prefix = propertyName.Substring(0, propertyName.Length - "Color".Length);
+                ReportTypedPropertyChanged(prefix + "Red");
+                ReportTypedPropertyChanged(prefix + "Green");
+                ReportTypedPropertyChanged(prefix + "Blue");
+                ReportTypedPropertyChanged(prefix + "Alpha");
+                break;
             case "Color":
                 ReportTypedPropertyChanged("Red");
                 ReportTypedPropertyChanged("Green");

@@ -23,6 +23,9 @@ public class VariableReferenceTypedSetterTests : RegistrationIsolatedTest
         ["RoundedRectangle"] = () => new RoundedRectangleRuntime(),
 #pragma warning restore CS0618
         ["Svg"] = () => new SvgRuntime(),
+        // With Apos.Shapes registered the fill and stroke are Apos renderables.
+        ["Circle"] = () => new CircleRuntime(),
+        ["Rectangle"] = () => new RectangleRuntime(),
     };
 
     public VariableReferenceTypedSetterTests()

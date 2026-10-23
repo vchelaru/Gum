@@ -14,6 +14,13 @@ public class CollapsedShapeCodeGenLogic : ICollapsedShapeCodeGenLogic
     /// </summary>
     public const int CollapsedShapeSyntaxVersion = 2;
 
+    /// <summary>
+    /// The first runtime syntax version guaranteed to have the stroke channel properties
+    /// (<c>StrokeRed</c>, ...) on the plain <c>CircleRuntime</c> / <c>RectangleRuntime</c>. They
+    /// shipped after version 2 was stamped, so version 2 is not a safe floor.
+    /// </summary>
+    public const int OutlineShapeStrokeChannelSyntaxVersion = 3;
+
     /// <inheritdoc/>
     public bool ShouldCollapse(string? standardElementName, int resolvedSyntaxVersion, CodeOutputProjectSettings? projectSettings)
     {
@@ -76,6 +83,18 @@ public class CollapsedShapeCodeGenLogic : ICollapsedShapeCodeGenLogic
             "Alpha" => channelPrefix + "Alpha",
             _ => rootName,
         };
+    }
+
+    /// <inheritdoc/>
+    public string TranslateOutlineShapeVariableRootName(string? standardElementName, string rootName, int resolvedSyntaxVersion)
+    {
+        if (resolvedSyntaxVersion < OutlineShapeStrokeChannelSyntaxVersion ||
+            standardElementName is not ("Circle" or "Rectangle"))
+        {
+            return rootName;
+        }
+
+        return TranslateVariableRootName(rootName, effectiveIsFilled: false);
     }
 
     /// <inheritdoc/>

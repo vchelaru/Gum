@@ -265,6 +265,21 @@ public class CircleRuntimeTests : BaseTestClass
         stroke.Color.ShouldBe(new Color(11, 22, 33, 44));
     }
 
+    // #6611: the obsolete channels color the outline on every runtime and leave the fill alone.
+    [Fact]
+    public void LegacyRed_WritesStroke_LeavesFill()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.FillColor = new Color(1, 2, 3, 4);
+
+        sut.Red = 60;
+
+        IStrokedCircleRenderable stroke = sut.RenderableComponent.ShouldBeAssignableTo<IStrokedCircleRenderable>()!;
+        stroke.Color.R.ShouldBe((byte)60);
+        sut.FillColor.ShouldBe(new Color(1, 2, 3, 4));
+    }
+
     [Fact]
     public void LegacyColor_RoutesToStrokeRenderable()
     {

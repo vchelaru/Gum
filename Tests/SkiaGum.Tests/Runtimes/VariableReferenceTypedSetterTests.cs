@@ -87,4 +87,19 @@ public class VariableReferenceTypedSetterTests : IDisposable
         useExpressions.ShouldBeFalse("Gum.Expressions is not referenced by this project");
         TypedSetterSweep.Run(Factories, screen => screen.ToGraphicalUiElement(_systemManagers, addToManagers: false), standard, variable, valueIndex);
     }
+
+    // A channel write goes through its color, which reports the channels too; the reference still applies once.
+    [Theory]
+    [InlineData("Circle", "FillRed", "FillRed")]
+    [InlineData("Circle", "StrokeRed", "StrokeRed")]
+    [InlineData("Rectangle", "FillRed", "FillRed")]
+    [InlineData("Circle", "FillColor", "FillRed")]
+    public void TypedSet_ChannelReference_AppliesOnce(string standard, string variable, string referenced)
+    {
+        object value = variable.EndsWith("Color") ? new SkiaSharp.SKColor(1, 2, 3, 4) : (object)7;
+
+        int applies = TypedSetterSweep.CountReferenceApplies(Factories, screen => screen.ToGraphicalUiElement(_systemManagers, addToManagers: false), standard, variable, value, referenced);
+
+        applies.ShouldBe(1);
+    }
 }

@@ -82,11 +82,15 @@ public static class TypedSetterSweep
                     }
                 }
             }
-            // Color is not a variable, but setting it changes Red, Green, Blue and Alpha (and on shapes their
-            // numbered aliases), which are.
-            PropertyInfo? colorProperty = GetTypedProperty(fresh.GetType(), "Color");
-            if (colorProperty != null && IsColorType(colorProperty.PropertyType) && isExcluded?.Invoke(pair.Key, "Color") != true)
+            // A color is not a variable, but setting it changes its channels (Color: Red, Green, Blue and Alpha, and
+            // on shapes their aliases; FillColor: FillRed, ...), which are.
+            foreach (string colorName in ColorPropertyNames)
             {
+                PropertyInfo? colorProperty = GetTypedProperty(fresh.GetType(), colorName);
+                if (colorProperty == null || !IsColorType(colorProperty.PropertyType) || isExcluded?.Invoke(pair.Key, colorName) == true)
+                {
+                    continue;
+                }
                 IReadOnlyList<object> colors = ValuesFor(colorProperty.PropertyType);
                 object? initialColor = colorProperty.GetValue(fresh);
                 for (int i = 0; i < colors.Count; i++)
@@ -95,10 +99,10 @@ public static class TypedSetterSweep
                     {
                         continue;
                     }
-                    yield return new object[] { pair.Key, "Color", i, false };
+                    yield return new object[] { pair.Key, colorName, i, false };
                     if (includeExpressions)
                     {
-                        yield return new object[] { pair.Key, "Color", i, true };
+                        yield return new object[] { pair.Key, colorName, i, true };
                     }
                 }
             }
@@ -110,6 +114,8 @@ public static class TypedSetterSweep
     // type to become float (a saved-file format change), so it is a known gap of the expression path (#6414).
     private static bool IsKnownExpressionGap(string variable, object value) =>
         variable == "FontSize" && value is float fontSize && fontSize != Math.Floor(fontSize);
+
+    private static readonly string[] ColorPropertyNames = { "Color", "FillColor", "StrokeColor", "DropshadowColor" };
 
     private static bool IsColorType(Type type) => type.Name is "Color" or "SKColor";
 
@@ -223,33 +229,7 @@ public static class TypedSetterSweep
     private static void RunPass(Dictionary<string, Func<GraphicalUiElement>> factories, Func<ScreenSave, GraphicalUiElement> createRuntime,
         string standard, string variable, int valueIndex, string referenced)
     {
-        GumProjectSave project = new GumProjectSave();
-        foreach (KeyValuePair<string, Func<GraphicalUiElement>> pair in factories)
-        {
-            StandardElementSave element = new StandardElementSave { Name = pair.Key };
-            element.States.Add(StandardElementsManager.Self.GetDefaultStateFor(pair.Key)!);
-            element.DefaultState!.ParentContainer = element;
-            project.StandardElements.Add(element);
-            ElementSaveExtensions.RegisterGueInstantiation(pair.Key, pair.Value);
-        }
-        ObjectFinder.Self.GumProjectSave = project;
-
-        ComponentSave component = new ComponentSave { Name = "Label", BaseType = standard };
-        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
-        component.States.Add(state);
-        component.Instances.Add(new InstanceSave { Name = "Shadow", BaseType = standard, ParentContainer = component });
-        VariableListSave<string> rows = new VariableListSave<string> { Type = "string", Name = "Shadow.VariableReferences" };
-        rows.Value.Add($"{referenced} = {referenced}");
-        state.VariableLists.Add(rows);
-        project.Components.Add(component);
-        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
-        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
-        screen.Instances.Add(new InstanceSave { Name = "Label1", BaseType = "Label", ParentContainer = screen });
-        project.Screens.Add(screen);
-
-        GraphicalUiElement root = createRuntime(screen);
-        GraphicalUiElement label = root.GetGraphicalUiElementByName("Label1")!;
-        GraphicalUiElement shadow = label.GetGraphicalUiElementByName("Shadow")!;
+        (GraphicalUiElement label, GraphicalUiElement shadow) = BuildLabel(factories, createRuntime, standard, referenced);
         PropertyInfo property = GetTypedProperty(label.GetType(), variable)!;
         object? newValue;
         if (valueIndex == SetBackToNull)
@@ -280,5 +260,61 @@ public static class TypedSetterSweep
             throw new Xunit.Sdk.XunitException(
                 $"{standard}.{variable}{how} set to {newValue ?? "null"} (label reads {expected}), the shadow has {actual}");
         }
+    }
+
+    /// <summary>
+    /// Counts how many times a single assignment of <paramref name="variable"/> on the label applies the
+    /// row <c>referenced = referenced</c> to the shadow, read as PropertyChanged events for <paramref name="referenced"/>.
+    /// </summary>
+    public static int CountReferenceApplies(Dictionary<string, Func<GraphicalUiElement>> factories,
+        Func<ScreenSave, GraphicalUiElement> createRuntime, string standard, string variable, object value, string referenced)
+    {
+        (GraphicalUiElement label, GraphicalUiElement shadow) = BuildLabel(factories, createRuntime, standard, referenced);
+        int applies = 0;
+        shadow.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == referenced)
+            {
+                applies++;
+            }
+        };
+
+        GetTypedProperty(label.GetType(), variable)!.SetValue(label, value);
+
+        return applies;
+    }
+
+    /// <summary>A screen holding a component with an instance <c>Shadow</c> carrying the row <c>referenced = referenced</c>.</summary>
+    private static (GraphicalUiElement Label, GraphicalUiElement Shadow) BuildLabel(Dictionary<string, Func<GraphicalUiElement>> factories,
+        Func<ScreenSave, GraphicalUiElement> createRuntime, string standard, string referenced)
+    {
+        GumProjectSave project = new GumProjectSave();
+        foreach (KeyValuePair<string, Func<GraphicalUiElement>> pair in factories)
+        {
+            StandardElementSave element = new StandardElementSave { Name = pair.Key };
+            element.States.Add(StandardElementsManager.Self.GetDefaultStateFor(pair.Key)!);
+            element.DefaultState!.ParentContainer = element;
+            project.StandardElements.Add(element);
+            ElementSaveExtensions.RegisterGueInstantiation(pair.Key, pair.Value);
+        }
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave component = new ComponentSave { Name = "Label", BaseType = standard };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        component.Instances.Add(new InstanceSave { Name = "Shadow", BaseType = standard, ParentContainer = component });
+        VariableListSave<string> rows = new VariableListSave<string> { Type = "string", Name = "Shadow.VariableReferences" };
+        rows.Value.Add($"{referenced} = {referenced}");
+        state.VariableLists.Add(rows);
+        project.Components.Add(component);
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Label1", BaseType = "Label", ParentContainer = screen });
+        project.Screens.Add(screen);
+
+        GraphicalUiElement root = createRuntime(screen);
+        GraphicalUiElement label = root.GetGraphicalUiElementByName("Label1")!;
+        GraphicalUiElement shadow = label.GetGraphicalUiElementByName("Shadow")!;
+        return (label, shadow);
     }
 }

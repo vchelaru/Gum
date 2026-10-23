@@ -540,6 +540,7 @@ public class TextRuntime : InteractiveGue
 #endif
             UpdateToFontValues();
             ApplyDropshadowToRenderable();
+            NotifyPropertyChanged();
         }
     }
 
