@@ -45,6 +45,40 @@ public class StyledTextRotationTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData(0f, "[Color=Red]HH[/Color][Color=Lime]HH[/Color]", "HHHH")]
+    [InlineData(0f, "[Color=Red]H[/Color][Color=Lime]H[/Color][Color=Blue]H[/Color]H", "HHHH")]
+    [InlineData(0f, "[Color=Red]HH[/Color] HH", "HH HH")]
+    [InlineData(90f, "[Color=Red]HH[/Color][Color=Lime]HH[/Color]", "HHHH")]
+    [InlineData(180f, "[Color=Red]HH[/Color][Color=Lime]HH[/Color]", "HHHH")]
+    [InlineData(30f, "[Color=Red]HH[/Color][Color=Lime]HH[/Color]", "HHHH")]
+    public void StyledRuns_LightExactlyThePixelsUnstyledTextLights(float rotation, string styled, string plain)
+    {
+        // Issue #6575: a run advances by its letters' full XAdvance, which is where the same letter starts
+        // in the plain line, so the lit pixels match exactly with no per-run drift. The measured width
+        // trims only the line's last glyph (TrimRight), so it is shorter than a run's advance by design.
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+
+        bool[] styledLit = RenderLitMask(game.GraphicsDevice, managers, styled, rotation, out float styledWidth);
+        bool[] plainLit = RenderLitMask(game.GraphicsDevice, managers, plain, rotation, out float plainWidth);
+
+        styledWidth.ShouldBe(plainWidth);
+
+        int litCount = 0;
+        for (int i = 0; i < plainLit.Length; i++)
+        {
+            if (plainLit[i])
+            {
+                litCount++;
+            }
+            styledLit[i].ShouldBe(plainLit[i], $"pixel ({i % CaptureSize}, {i / CaptureSize})");
+        }
+        litCount.ShouldBeGreaterThan(0);
+    }
+
+    [Theory]
     // XOffset 10 and YOffset 6 move along the text's own axes: unrotated that is (+10, +6) on screen,
     // at 90 degrees the x axis points up and the y axis right, so (+6, -10).
     [InlineData(0f, 10, 6)]
@@ -78,6 +112,36 @@ public class StyledTextRotationTests : BaseTestClass
         finally
         {
             Text.Customizations.Remove(customizationName);
+        }
+    }
+
+    private static bool[] RenderLitMask(GraphicsDevice gd, SystemManagers managers, string value, float rotation,
+        out float width)
+    {
+        TextRuntime text = new();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = DimensionUnitType.RelativeToChildren;
+        text.X = 100;
+        text.Y = 100;
+        text.Rotation = rotation;
+        text.Text = value;
+        text.AddToManagers(managers, null);
+
+        try
+        {
+            text.UpdateLayout();
+            width = text.GetAbsoluteWidth();
+            XnaColor[] pixels = Render(gd, managers);
+            bool[] lit = new bool[pixels.Length];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                lit[i] = pixels[i].R > 0 || pixels[i].G > 0 || pixels[i].B > 0;
+            }
+            return lit;
+        }
+        finally
+        {
+            text.RemoveFromManagers();
         }
     }
 
