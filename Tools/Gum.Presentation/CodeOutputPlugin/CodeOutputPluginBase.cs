@@ -243,7 +243,8 @@ public abstract class CodeOutputPluginBase : PluginBase
         this.InstanceReordered += HandleInstanceReordered;
 
         this.ElementSelected += HandleElementSelected;
-        this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings, _codeGenerator.GetVisualApiForElement(element));
+        this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings, _codeGenerator.GetVisualApiForElement(element),
+            moveCodeFiles: !IsProjectSettingsReadOnly);
         this.ElementAdd += HandleElementAdd;
         this.ElementDuplicate += _newElementCodeSettingsService.HandleElementDuplicate;
         this.ElementDelete += HandleElementDeleted;
@@ -300,7 +301,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
     /// <summary>
     /// Whether ProjectCodeSettings.codsj exists but could not be read. No settings are saved then,
-    /// since that would write over the user's file.
+    /// since that would write over the user's file, and no code is generated or moved.
     /// </summary>
     private bool IsProjectSettingsReadOnly => viewModel.ProjectSettingsLoadError != null;
 
@@ -436,7 +437,10 @@ public abstract class CodeOutputPluginBase : PluginBase
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        if (!IsProjectSettingsReadOnly)
+        {
+            _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        }
 
         HandleRefreshAndExport(isFullCommit);
     }
@@ -446,8 +450,16 @@ public abstract class CodeOutputPluginBase : PluginBase
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        if (!IsProjectSettingsReadOnly)
+        {
+            _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        }
 
+        if (IsProjectSettingsReadOnly)
+        {
+            RefreshCodeDisplay();
+            return;
+        }
         _controller?.HandleVariableSetThroughReference(element, codeOutputProjectSettings, isFullCommit);
     }
     private void HandleVariableAdd(ElementSave? elementSave, string variableName)
@@ -484,16 +496,32 @@ public abstract class CodeOutputPluginBase : PluginBase
     private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
 
 
-    private void HandleRefreshAndExport(bool isFullCommit = true) =>
+    // While the project's code settings can't be read, edits only refresh the preview: generating
+    // or moving code would use settings that may no longer match the file.
+    private void HandleRefreshAndExport(bool isFullCommit = true)
+    {
+        if (IsProjectSettingsReadOnly)
+        {
+            RefreshCodeDisplay();
+            return;
+        }
         _controller?.HandleRefreshAndExport(codeOutputProjectSettings, isFullCommit);
+    }
 
     // Refresh + auto-regenerate for an explicit owning element rather than the live
     // SelectedElement. Used by instance add/delete events because the affected instance
     // may live in an element that is not currently selected (e.g. delete fired from a
     // tree-view selection that doesn't match what the codegen tab is viewing), in
     // which case regenerating for SelectedElement writes the wrong file or NREs.
-    private void HandleRefreshAndExportForElement(ElementSave? element) =>
+    private void HandleRefreshAndExportForElement(ElementSave? element)
+    {
+        if (IsProjectSettingsReadOnly)
+        {
+            RefreshCodeDisplay();
+            return;
+        }
         _controller?.HandleRefreshAndExportForElement(element, codeOutputProjectSettings);
+    }
 
     private void RefreshCodeDisplay() => _controller?.RefreshCodeDisplay(codeOutputProjectSettings);
 
@@ -613,9 +641,10 @@ public abstract class CodeOutputPluginBase : PluginBase
     private void HandleGenerateAllCodeButtonClicked(bool showPopups = true)
     {
         GumProjectSave? gumProject = _projectState.GumProjectSave;
-        if (gumProject == null)
+        if (gumProject == null || IsProjectSettingsReadOnly)
         {
-            // Nothing is loaded, so there is nothing to generate; the caller still completes.
+            // Nothing is loaded, or the settings to generate with can't be read; the caller still
+            // completes.
             return;
         }
         _codeGenerationService.GenerateCodeForAllElements(gumProject, codeOutputProjectSettings);
@@ -626,8 +655,13 @@ public abstract class CodeOutputPluginBase : PluginBase
         }
     }
 
-    private void GenerateCodeForElement(bool showPopups, ElementSave? element, CodeOutputElementSettings? settings = null) =>
-        _controller?.GenerateCodeForElement(showPopups, element, codeOutputProjectSettings, settings);
+    private void GenerateCodeForElement(bool showPopups, ElementSave? element, CodeOutputElementSettings? settings = null)
+    {
+        if (!IsProjectSettingsReadOnly)
+        {
+            _controller?.GenerateCodeForElement(showPopups, element, codeOutputProjectSettings, settings);
+        }
+    }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 

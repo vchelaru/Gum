@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -149,6 +150,71 @@ public class UnreadableCodeSettingsScenarioTests
         pickers.ShouldNotBeEmpty();
         pickers.ShouldAllBe(button => !button.IsEffectivelyEnabled);
     }
+
+    [AvaloniaFact]
+    public void UnparsableAtLoad_AutomaticGenerationAndRenames_WriteNoCode()
+    {
+        using CodeTabHarness code = new CodeTabHarness(folder => File.WriteAllText(Path.Combine(folder, "ProjectCodeSettings.codsj"), Unparsable));
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        // The element's own settings are readable and ask for generation on every change.
+        File.WriteAllText(Path.Combine(code.Project.ProjectFolder, "Components", "Card.codsj"),
+            Newtonsoft.Json.JsonConvert.SerializeObject(new Gum.ProjectServices.CodeGeneration.CodeOutputElementSettings
+            {
+                GenerationBehavior = Gum.ProjectServices.CodeGeneration.GenerationBehavior.GenerateAutomaticallyOnPropertyChange,
+            }));
+        code.Select(card);
+
+        EditRenameAndAddInstance(code, card);
+
+        CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
+    }
+
+    [AvaloniaFact]
+    public void UnreadableAfterAnEditOnDisk_AutomaticGenerationAndRenames_WriteNoCode()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
+        if (Directory.Exists(code.CodeFolder))
+        {
+            Directory.Delete(code.CodeFolder, recursive: true);
+        }
+
+        File.WriteAllText(SettingsFile(code), Unparsable);
+        TestAppBuilder.Services.GetRequiredService<FileChangeReactionLogic>().ReactToFileChanged(new FilePath(SettingsFile(code)));
+        code.ViewModel.ProjectSettingsLoadError.ShouldNotBeNull();
+
+        EditRenameAndAddInstance(code, card);
+
+        CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
+        File.Exists(Path.Combine(code.Project.ProjectFolder, "Components", "Panel.codsj"))
+            .ShouldBeTrue("the element's own settings file still follows a rename");
+    }
+
+    // Each gesture here regenerates or moves an auto-generated element's code when the settings are readable.
+    private static void EditRenameAndAddInstance(CodeTabHarness code, ComponentSave card)
+    {
+        code.Tree.Grid.TypeAndEnter("Width", "175");
+        InstanceSave label = code.Project.AddInstance(card, "Label", "Text");
+        code.Tree.Click(code.Tree.NodeFor(label));
+        code.Tree.Grid.TypeAndEnter("X", "40");
+        code.Tree.Grid.TypeAndEnter("Name", "Title");
+        code.Project.Dialogs.AnswerNext<Gum.Dialogs.RenameElementDialogViewModel>(dialog => { dialog.Value = "Panel"; return true; });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Tree.Click(code.Tree.NodeFor(card));
+        code.Tree.Press(global::Avalonia.Input.Key.F2, global::Avalonia.Input.PhysicalKey.F2);
+        card.Name.ShouldBe("Panel");
+        // What an editor integration sends to generate every element.
+        TestAppBuilder.Services.GetRequiredService<IMessenger>()
+            .Send(new Gum.Messages.RequestCodeGenerationMessage());
+    }
+
+    private static List<string> CodeFilesUnder(string folder) =>
+        Directory.GetFiles(folder, "*.cs", SearchOption.AllDirectories).ToList();
 
     [AvaloniaFact]
     public void ResetToDefaults_AfterConfirming_OverwritesTheFile_AndTheTabBecomesEditable()

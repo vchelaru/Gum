@@ -36,7 +36,10 @@ public class RenameService
         _headerRewriter = new CustomCodeHeaderRewriter(codeGenerator, customCodeGenerator);
     }
 
-    public void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi)
+    /// <param name="moveCodeFiles">False while the project's code settings can't be read: the
+    /// element's .codsj still moves, but its code files are left where they are.</param>
+    public void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi,
+        bool moveCodeFiles = true)
     {
         try
         {
@@ -44,7 +47,7 @@ public class RenameService
             // follows the element even when no code output folder is configured.
             MoveElementSettingsFile(element, oldName);
 
-            if (codeOutputProjectSettings.CodeProjectRoot == string.Empty)
+            if (!moveCodeFiles || codeOutputProjectSettings.CodeProjectRoot == string.Empty)
             {
                 return;
             }
