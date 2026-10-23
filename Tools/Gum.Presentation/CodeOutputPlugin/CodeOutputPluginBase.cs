@@ -303,7 +303,7 @@ public abstract class CodeOutputPluginBase : PluginBase
     /// Whether ProjectCodeSettings.codsj exists but could not be read. No settings are saved then,
     /// since that would write over the user's file, and no code is generated or moved.
     /// </summary>
-    private bool IsProjectSettingsReadOnly => viewModel.ProjectSettingsLoadError != null;
+    private bool IsProjectSettingsReadOnly => viewModel.HasProjectSettingsLoadError;
 
     /// <summary>
     /// Re-reads ProjectCodeSettings.codsj after it changes on disk (a pull, a branch switch, a hand
