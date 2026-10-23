@@ -1347,6 +1347,42 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 #endif
 
+    /// <summary>
+    /// Reads one direction from the gamepad's D-pad or left stick, repeating while held, for controls that
+    /// move through their own items (ListBox, Menu). When several are held, Left wins over Up, Up over
+    /// Right, and Right over Down.
+    /// </summary>
+    internal static RepositionDirections? GetRepeatedGamepadDirection(GamePadForNavigation gamepad)
+    {
+        RepositionDirections? direction = null;
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down))
+        {
+            direction = RepositionDirections.Down;
+        }
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
+        {
+            direction = RepositionDirections.Right;
+        }
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up))
+        {
+            direction = RepositionDirections.Up;
+        }
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
+        {
+            direction = RepositionDirections.Left;
+        }
+
+        return direction;
+    }
+
     protected void HandleGamepadNavigation(GamePadForNavigation gamepad)
     {
 #if !FRB
