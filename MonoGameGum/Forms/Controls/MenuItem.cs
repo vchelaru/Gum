@@ -22,6 +22,9 @@ namespace Gum.Forms.Controls;
 #endif
 
 public class MenuItem : ItemsControl
+#if !FRB
+    , Gum.Wireframe.IUpdateEveryFrame
+#endif
 {
     #region Fields/Properties
 
@@ -611,20 +614,13 @@ public class MenuItem : ItemsControl
                 itemsPopup.InnerPanel.Children.Add(frameworkElementItem.Visual);
             }
 
-            itemsPopup.Visual.X = this.Visual.AbsoluteLeft;
-            itemsPopup.Visual.Y = this.Visual.GetAbsoluteBottom();
-            var parent = this.Visual.Parent;
-            if (parent != null)
-            {
-                if (parent is GraphicalUiElement asGue && asGue.ChildrenLayout == global::Gum.Managers.ChildrenLayout.TopToBottomStack)
-                {
-                    itemsPopup.Visual.X = this.Visual.GetAbsoluteRight();
-                    itemsPopup.Visual.Y = this.Visual.AbsoluteTop;
-                }
-            }
+            PlaceItemsPopup();
 
-
-            ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false);
+#if !FRB
+            // An open submenu needs Activity every frame (IUpdateEveryFrame.IsActivityNeeded), which
+            // ancestors that already went idle would otherwise skip.
+            Visual.InvalidateSubtreeCaches();
+#endif
             if (visualTemplateVisual == null)
             {
                 // let's suppress layout for performance reasons, and to prevent issues with scrollbars:
@@ -677,6 +673,60 @@ public class MenuItem : ItemsControl
         }
     }
 
+    /// <summary>
+    /// Puts the sub-item popup in the popup layer next to this item: below it for a top-level item,
+    /// to its right when this item is in a vertical stack (a submenu). Clamps it to the screen.
+    /// Used when the popup opens and again whenever this item's absolute rectangle changes.
+    /// </summary>
+    private void PlaceItemsPopup()
+    {
+        var popupVisual = itemsPopup!.Visual;
+        popupVisual.X = this.Visual.AbsoluteLeft;
+        popupVisual.Y = this.Visual.GetAbsoluteBottom();
+        var parent = this.Visual.Parent;
+        if (parent != null)
+        {
+            if (parent is GraphicalUiElement asGue && asGue.ChildrenLayout == global::Gum.Managers.ChildrenLayout.TopToBottomStack)
+            {
+                popupVisual.X = this.Visual.GetAbsoluteRight();
+                popupVisual.Y = this.Visual.AbsoluteTop;
+            }
+        }
+
+        ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false);
+
+        _placedAbsoluteX = Visual.AbsoluteX;
+        _placedAbsoluteY = Visual.AbsoluteY;
+        _placedAbsoluteWidth = Visual.AbsoluteWidth;
+        _placedAbsoluteHeight = Visual.AbsoluteHeight;
+    }
+
+#if !FRB
+    // Only an open submenu needs the per-frame check; a closed MenuItem must not stop its ancestors
+    // from going idle. TryShowPopup and the close paths invalidate the idle caches.
+    bool Gum.Wireframe.IUpdateEveryFrame.IsActivityNeeded => IsPopupVisible;
+
+    /// <summary>
+    /// While the submenu is open, places it again whenever this item's absolute rectangle changes
+    /// (canvas resize, UI scale, or this item or an ancestor moving). Does nothing when closed.
+    /// </summary>
+    void Gum.Wireframe.IUpdateEveryFrame.Activity(double secondDifference)
+    {
+        if (!IsPopupVisible)
+        {
+            return;
+        }
+
+        if (Visual.AbsoluteX != _placedAbsoluteX ||
+            Visual.AbsoluteY != _placedAbsoluteY ||
+            Visual.AbsoluteWidth != _placedAbsoluteWidth ||
+            Visual.AbsoluteHeight != _placedAbsoluteHeight)
+        {
+            PlaceItemsPopup();
+        }
+    }
+#endif
+
     public void HidePopupRecursively()
     {
         if(this.IsPopupVisible)
@@ -694,7 +744,9 @@ public class MenuItem : ItemsControl
                 itemsPopup.Visual.GetTopParent()?.Children.Remove(itemsPopup.Visual);
 #endif
                 itemsPopup = null;
-
+#if !FRB
+                Visual.InvalidateSubtreeCaches();
+#endif
             }
 #if FULL_DIAGNOSTICS
             else if (itemsPopup?.IsVisible == true)
@@ -745,6 +797,9 @@ public class MenuItem : ItemsControl
             }
             itemsPopup.Visual.Parent = null;
             itemsPopup = null;
+#if !FRB
+            Visual.InvalidateSubtreeCaches();
+#endif
         }
     }
 
@@ -757,6 +812,12 @@ public class MenuItem : ItemsControl
     }
 
     ScrollViewer? itemsPopup;
+
+    // This item's absolute rectangle when the popup was last placed; a change means the popup is stale.
+    float _placedAbsoluteX;
+    float _placedAbsoluteY;
+    float _placedAbsoluteWidth;
+    float _placedAbsoluteHeight;
 
     public bool IsPopupVisible => itemsPopup?.IsVisible == true;
 
