@@ -51,7 +51,7 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 ## KNI Skia counterparts of the MonoGame/KNI samples
 
-`Samples/KniSkiaGumFromFile` and `Samples/KniSkiaGumImmediateMode` are the KNI Skia versions of the samples with the same suffix, built on the `Samples/KniSkiaGum` host setup. `KniSkiaGumFromFile` has no Gum project of its own: its csproj copies `Samples/KniGumFromFile/KniGumFromFileContent` to `Content/`, so editing that project changes both samples.
+`Samples/KniSkiaGumFromFile`, `KniSkiaGumImmediateMode`, `KniSkiaGumInCode`, `KniSkiaGumFontLoading` and `KniSkiaGumCodeGeneration` are the KNI Skia versions of the samples with the same suffix, built on the `Samples/KniSkiaGum` host setup. `KniSkiaGumFromFile` has no Gum project of its own: its csproj copies `Samples/KniGumFromFile/KniGumFromFileContent` to `Content/`, so editing that project changes both samples. `KniSkiaGumCodeGeneration` owns a copy of the MonoGame sample's Gum project, because its `ProjectCodeSettings.codsj` names a different namespace; its `*.Generated.cs` come from `gumcli codegen` on that copy.
 
 ## Host-embedded samples (SkiaGumWpfSample, MauiSkiaGum)
 
@@ -63,7 +63,7 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 ## Verification is human-driven
 
-These samples exist for visual confirmation; they have no automated assertions. After adding a screen, build the sample and tell the user to run it and eyeball the new screen. Behavioral correctness still gets a unit test in the matching `Tests/*` project (see [[tdd]]) — the sample is the visual complement, not a replacement.
+These samples exist for visual confirmation. Samples wired to the automation driver (`MonoGameGumInCode` through `Tests/Gum.Automation`; the KNI Skia samples through `Tests/Gum.Automation.KniSkia`, which compiles the same sources with `KNISKIA`) can also run off-screen with `--gum-automation Automation/smoke.ndjson --gum-automation-hide` (Debug only); controls a script targets need a `Name`. After adding a screen, build the sample and tell the user to run it and eyeball the new screen. Behavioral correctness still gets a unit test in the matching `Tests/*` project (see [[tdd]]) — the sample is the visual complement, not a replacement.
 
 A brand-new standalone sample project (not one of the "big three") still ships a `.sln` alongside its `.csproj`, mirroring `FontPlayground.MonoGame.sln` — the user opens and runs these in Visual Studio, not via `dotnet run`.
 

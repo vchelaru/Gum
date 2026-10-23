@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+	  The KNI Skia version of ../../MonoGameGumFontLoading: texts that load their font from a file,
+	  drawn by SkiaGum through Runtimes/KniSkiaGum. Skia renders TrueType/OpenType files, not
+	  bmfont .fnt atlases, so the fonts are .ttf files linked from the other samples.
+	-->
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<AssemblyName>KniSkiaGumFontLoading</AssemblyName>
+		<TargetFramework>net8.0</TargetFramework>
+		<RollForward>Major</RollForward>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<KniPlatform>DesktopGL</KniPlatform>
+		<TieredCompilation>false</TieredCompilation>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="nkast.Xna.Framework" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="[4.3.9001]" />
+		<!-- Draws Skia into a KNI Texture2D render target. Gum draws into that target's SKCanvas. -->
+		<PackageReference Include="SkiaGameRendering.Kni.DesktopGL" Version="0.19.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\Fonts\CustomFont.ttf" Link="Content\Fonts\CustomFont.ttf" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\SilkNetGum\SilkNetGumSample\Super Morning.ttf" Link="Content\Fonts\Super Morning.ttf" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\SilkNetGum\SilkNetGumSample\Winter Selfie.ttf" Link="Content\Fonts\Winter Selfie.ttf" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<!-- In-process automation (scripted Gum input, NDJSON runner, off-screen window). Debug only, so it
+	     never ships to players. The launch command is at the top of Automation/smoke.ndjson. -->
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<ProjectReference Include="..\..\..\Tests\Gum.Automation.KniSkia\Gum.Automation.KniSkia.csproj" />
+		<None Update="Automation\**\*.ndjson">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

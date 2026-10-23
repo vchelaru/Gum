@@ -1,0 +1,8 @@
+// Smoke script for the KniSkiaGumFontLoading sample (one screen, no controls). Run from the build output folder (bin/Debug/net8.0):
+// KniSkiaGumFontLoading.exe --gum-automation Automation/smoke.ndjson --gum-automation-hide --gum-automation-report automation-report.txt
+// Each text's width is the width of its custom font; a font that fails to load falls back to the default font and changes it.
+{"cmd":"step","frames":5}
+{"cmd":"assert","target":"CustomFontText","property":"AbsoluteWidth","equals":172.265625}
+{"cmd":"assert","target":"SuperMorningText","property":"AbsoluteWidth","equals":188.82422}
+{"cmd":"assert","target":"WinterSelfieText","property":"AbsoluteWidth","equals":163.05469}
+{"cmd":"screenshot","path":"automation-fonts.png"}

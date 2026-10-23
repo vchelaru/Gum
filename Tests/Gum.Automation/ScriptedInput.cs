@@ -1,11 +1,19 @@
 using Gum.Input;
 using System.Text;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Input.Touch;
 using GumKeys = Gum.Forms.Input.Keys;
 using Keyboard = Gum.Input.Keyboard;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
+using KeyboardState = Microsoft.Xna.Framework.Input.KeyboardState;
+#if KNISKIA
+// KniSkiaGum's cursor reads Gum's engine-neutral mouse state; its keyboard takes typed text through
+// PolledKeyboard.AppendTypedText.
+using ButtonState = Gum.Input.ButtonState;
+using MouseState = Gum.Input.MouseState;
+#else
+using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Input.Touch;
+#endif
 
 namespace Gum.Automation;
 
@@ -22,7 +30,7 @@ public enum MouseButton
 
 /// <summary>
 /// Gum's real <see cref="Cursor"/> whose input source is scripted state instead of the OS mouse: it
-/// overrides only <see cref="Cursor.GetMouseState"/> and <see cref="Cursor.GetTouchCollection"/>, so
+/// overrides only <see cref="Cursor.GetMouseState"/> (and, on MonoGame, <c>GetTouchCollection</c>), so
 /// Gum's unmodified Activity does push, click, double-click, drag and roll-over. Positions are screen pixels.
 /// </summary>
 public sealed class ScriptedCursor : Cursor
@@ -71,6 +79,18 @@ public sealed class ScriptedCursor : Cursor
     /// <summary>Turns the wheel; negative scrolls down. One detent is 120 wheel units.</summary>
     public void Scroll(int detents) => _wheel += detents * 120;
 
+#if KNISKIA
+    /// <inheritdoc/>
+    protected override MouseState GetMouseState() => new MouseState
+    {
+        X = _x,
+        Y = _y,
+        ScrollWheelValue = _wheel,
+        LeftButton = PrimaryHeld ? ButtonState.Pressed : ButtonState.Released,
+        MiddleButton = MiddleHeld ? ButtonState.Pressed : ButtonState.Released,
+        RightButton = SecondaryHeld ? ButtonState.Pressed : ButtonState.Released,
+    };
+#else
     /// <inheritdoc/>
     protected override MouseState GetMouseState() => new MouseState(_x, _y, _wheel,
         PrimaryHeld ? ButtonState.Pressed : ButtonState.Released,
@@ -80,17 +100,20 @@ public sealed class ScriptedCursor : Cursor
 
     /// <inheritdoc/>
     protected override TouchCollection GetTouchCollection() => new TouchCollection();
+#endif
 }
 
 /// <summary>
 /// Gum's real <see cref="Keyboard"/> whose input source is scripted: held keys come from a
 /// <see cref="KeyboardStateProcessor"/> overriding <c>GetKeyboardState</c>, and typed text from an
-/// override of <see cref="Keyboard.GetTypedText"/>. Key repeat and typed-key logic stay Gum's own.
+/// override of <c>GetTypedText</c> (on KNI Skia, <c>AppendTypedText</c>). Key repeat and typed-key logic stay Gum's own.
 /// </summary>
 public sealed class ScriptedKeyboard : Keyboard
 {
     private readonly ScriptedKeyboardState _state = new();
+#if !KNISKIA
     private readonly StringBuilder _pendingText = new();
+#endif
 
     /// <summary>Creates a keyboard with no keys held and no window.</summary>
     public ScriptedKeyboard() : base(null)
@@ -105,6 +128,10 @@ public sealed class ScriptedKeyboard : Keyboard
         if (held) { _state.Held.Add(xnaKey); } else { _state.Held.Remove(xnaKey); }
     }
 
+#if KNISKIA
+    /// <summary>Queues text delivered to the focused control on the next frame.</summary>
+    public void QueueText(string text) => AppendTypedText(text);
+#else
     /// <summary>Queues text delivered to the focused control on the next frame.</summary>
     public void QueueText(string text) => _pendingText.Append(text);
 
@@ -115,6 +142,7 @@ public sealed class ScriptedKeyboard : Keyboard
         _pendingText.Clear();
         return text;
     }
+#endif
 
     private sealed class ScriptedKeyboardState : KeyboardStateProcessor
     {

@@ -60,6 +60,8 @@ internal class FormsScreen : FrameworkElement
         stackPanel.AddChild(disabledButton);
 
         var checkBox = new CheckBox();
+        // Named so automation scripts can target it.
+        checkBox.Name = "NormalCheckBox";
         checkBox.Y = gap;
         checkBox.Text = "Normal Checkbox";
         checkBox.Width = 200;
@@ -152,6 +154,7 @@ internal class FormsScreen : FrameworkElement
         stackPanel.AddChild(disabledSlider);
 
         var textBox = new TextBox();
+        textBox.Name = "NormalTextBox";
         textBox.Y = gap;
         textBox.Placeholder = "Enter text here";
         textBox.Width = 200;

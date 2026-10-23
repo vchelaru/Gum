@@ -130,9 +130,15 @@ public sealed class GumDriver
             return ((int)worldX, (int)worldY);
         }
         Camera camera = renderer.Camera;
+#if KNISKIA
+        // Skia hosts draw into a canvas that fills the window, so there is no viewport inset.
+        (int left, int top) = (0, 0);
+#else
         Rectangle? viewport = renderer.GraphicsDevice?.Viewport.Bounds;
-        return ((int)((worldX - camera.X) * camera.Zoom + (viewport?.Left ?? 0)),
-            (int)((worldY - camera.Y) * camera.Zoom + (viewport?.Top ?? 0)));
+        (int left, int top) = (viewport?.Left ?? 0, viewport?.Top ?? 0);
+#endif
+        return ((int)((worldX - camera.X) * camera.Zoom + left),
+            (int)((worldY - camera.Y) * camera.Zoom + top));
     }
 
     /// <summary>Moves the cursor and runs one frame.</summary>

@@ -1,0 +1,8 @@
+// Smoke script for the KniSkiaGumCodeGeneration sample (one generated screen). Run from the build output folder (bin/Debug/net8.0):
+// KniSkiaGumCodeGeneration.exe --gum-automation Automation/smoke.ndjson --gum-automation-hide --gum-automation-report automation-report.txt
+{"cmd":"step","frames":5}
+{"cmd":"assert","target":"MainMenu","property":"Name","equals":"MainMenu"}
+{"cmd":"assert","target":"TextInstance","property":"Text","equals":"I'm setting the text here in custom code."}
+{"cmd":"assert","target":"ComponentWithStatesInstance","property":"Visible","equals":true}
+{"cmd":"click","target":"PopupInstance"}
+{"cmd":"screenshot","path":"automation-mainmenu.png"}
