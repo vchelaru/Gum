@@ -1223,7 +1223,11 @@ public class CodeGenerator
 
                 if (!string.IsNullOrWhiteSpace(instanceName))
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{instanceName}.{exposedVariable.GetRootName()} = ({type})newValue;");
+                    VariableSave? mauiRootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
+                    string targetName = mauiRootVariable == null
+                        ? exposedVariable.GetRootName()
+                        : GetExposedRootVariableCodeName(mauiRootVariable, foundInstance, context);
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{instanceName}.{targetName} = ({type})newValue;");
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{instanceName}?.EffectiveManagers?.InvalidateSurface();");
                 }
                 else
@@ -1274,6 +1278,7 @@ public class CodeGenerator
 
                     string sourceObjectCSharpName = _codeGenerationNameVerifier.ToCSharpName(sourceObject);
                     string? sourceObjectCast = null;
+                    string rootVariableCodeName = GetExposedRootVariableCodeName(rootVariable, foundInstance, context);
 
                     ElementSave? sourceInstanceElement = null;
                     string? textRuntimeCast = null;
@@ -1353,7 +1358,7 @@ public class CodeGenerator
 
                     if (hasGetter)
                     {
-                        var variableNameAfterDot = exposedVariableOnInstanceElement?.ExposedAsName ?? rootVariable?.Name;
+                        var variableNameAfterDot = exposedVariableOnInstanceElement?.ExposedAsName ?? rootVariableCodeName;
 
                         if (sourceObjectCast != null)
                         {
@@ -1393,7 +1398,7 @@ public class CodeGenerator
                         else
                         {
 
-                            var variableNameAfterDot = exposedVariableOnInstanceElement?.ExposedAsName ?? rootVariable?.Name;
+                            var variableNameAfterDot = exposedVariableOnInstanceElement?.ExposedAsName ?? rootVariableCodeName;
 
                             if (sourceObjectCast != null)
                             {
@@ -6074,14 +6079,51 @@ public class CodeGenerator
 
         string rootName = variable.GetRootName().Replace(" ", "");
 
-        // #2775 — legacy single-color shape variables route to the collapsed runtimes'
-        // fill/stroke channel properties.
-        if (TryGetCollapsedShapeVariableContext(context, out bool effectiveIsFilled))
+        return TranslateShapeVariableRootName(
+            GetVariableOwnerStandardElement(context), rootName, context.Element, context.Instance, context);
+    }
+
+    /// <summary>
+    /// Maps a legacy single-color shape variable to the runtime property that replaces it: the
+    /// collapsed runtimes' fill/stroke channels (#2775), or the stroke channels for the plain
+    /// Circle/Rectangle, whose single-color members are obsolete and route to the stroke (#6594).
+    /// </summary>
+    private string TranslateShapeVariableRootName(StandardElementSave? owner, string rootName,
+        ElementSave container, InstanceSave? instance, CodeGenerationContext context)
+    {
+        if (owner != null &&
+            _collapsedShapeLogic.ShouldCollapse(owner.Name, context.ResolvedSyntaxVersion, context.CodeOutputProjectSettings))
         {
-            rootName = _collapsedShapeLogic.TranslateVariableRootName(rootName, effectiveIsFilled);
+            bool effectiveIsFilled = _collapsedShapeLogic.GetEffectiveIsFilled(container, instance, owner);
+            return _collapsedShapeLogic.TranslateVariableRootName(rootName, effectiveIsFilled);
         }
 
-        return rootName;
+        return _collapsedShapeLogic.TranslateOutlineShapeVariableRootName(owner?.Name, rootName, context.ResolvedSyntaxVersion);
+    }
+
+    /// <summary>
+    /// The code name of the runtime property an exposed variable forwards to.
+    /// </summary>
+    private string GetExposedRootVariableCodeName(VariableSave rootVariable, InstanceSave? instance, CodeGenerationContext context) =>
+        TranslateShapeVariableRootName(
+            ObjectFinder.Self.GetContainerOf(rootVariable) as StandardElementSave,
+            rootVariable.Name, context.Element, instance, context);
+
+    /// <summary>
+    /// The standard element whose runtime receives the variable being generated: the instance's
+    /// base element, or the generated element's own base type.
+    /// </summary>
+    private static StandardElementSave? GetVariableOwnerStandardElement(CodeGenerationContext context)
+    {
+        if (context.Instance != null)
+        {
+            return ObjectFinder.Self.GetElementSave(context.Instance) as StandardElementSave;
+        }
+        if (!string.IsNullOrEmpty(context.Element?.BaseType))
+        {
+            return ObjectFinder.Self.GetStandardElement(context.Element.BaseType);
+        }
+        return null;
     }
 
     /// <summary>
@@ -6093,17 +6135,7 @@ public class CodeGenerator
     {
         effectiveIsFilled = true;
 
-        ElementSave? shapeElement = null;
-        if (context.Instance != null)
-        {
-            shapeElement = ObjectFinder.Self.GetElementSave(context.Instance);
-        }
-        else if (!string.IsNullOrEmpty(context.Element?.BaseType))
-        {
-            shapeElement = ObjectFinder.Self.GetStandardElement(context.Element.BaseType);
-        }
-
-        if (shapeElement is not StandardElementSave standardElement ||
+        if (GetVariableOwnerStandardElement(context) is not StandardElementSave standardElement ||
             !_collapsedShapeLogic.ShouldCollapse(standardElement.Name, context.ResolvedSyntaxVersion, context.CodeOutputProjectSettings))
         {
             return false;

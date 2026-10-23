@@ -6,6 +6,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using System;
 using System.Collections.Generic;
+using Shouldly;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -61,5 +62,20 @@ public class VariableReferenceTypedSetterTests : BaseTestClass
         }
 
         TypedSetterSweep.Run(Factories, screen => screen.ToGraphicalUiElement(), standard, variable, valueIndex);
+    }
+
+    // A channel write goes through its color, which reports the channels too; the reference still applies once.
+    [Theory]
+    [InlineData("Circle", "FillRed", "FillRed")]
+    [InlineData("Circle", "StrokeRed", "StrokeRed")]
+    [InlineData("Rectangle", "FillRed", "FillRed")]
+    [InlineData("Circle", "FillColor", "FillRed")]
+    public void TypedSet_ChannelReference_AppliesOnce(string standard, string variable, string referenced)
+    {
+        object value = variable.EndsWith("Color") ? new Microsoft.Xna.Framework.Color(1, 2, 3, 4) : (object)7;
+
+        int applies = TypedSetterSweep.CountReferenceApplies(Factories, screen => screen.ToGraphicalUiElement(), standard, variable, value, referenced);
+
+        applies.ShouldBe(1);
     }
 }

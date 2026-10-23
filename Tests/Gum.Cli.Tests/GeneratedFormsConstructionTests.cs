@@ -51,6 +51,33 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         constructed.ShouldBeGreaterThan(10);
     }
 
+    // #6594: generated code uses no obsolete runtime member, so a game building it sees no CS0618.
+    [Fact]
+    public void Compile_GumForms_UsesNoObsoleteMember()
+    {
+        GenerateAndCompile(obsoleteUseIsError: true, editProject: AddLegacyColoredOutlineShapes);
+    }
+
+    // A project saved before the v3 standard surface keeps Red/Green/Blue/Alpha on the plain Circle
+    // and Rectangle, and instances set them.
+    private static void AddLegacyColoredOutlineShapes(GumProjectSave project)
+    {
+        ComponentSave component = AddComponent(project, "Elements/LegacyOutlines", "Container", ("OutlineCircle", "Circle"));
+        component.Instances.Add(new InstanceSave { Name = "OutlineRectangle", BaseType = "Rectangle", ParentContainer = component });
+        foreach (string standardName in new[] { "Circle", "Rectangle" })
+        {
+            StandardElementSave standard = project.StandardElements.Single(item => item.Name == standardName);
+            foreach (string channel in new[] { "Red", "Green", "Blue", "Alpha" })
+            {
+                standard.DefaultState!.Variables.Add(new VariableSave { Name = channel, Type = "int", Value = 255, SetsValue = true });
+                component.DefaultState!.Variables.Add(new VariableSave
+                {
+                    Name = $"Outline{standardName}.{channel}", Type = "int", Value = 100, SetsValue = true,
+                });
+            }
+        }
+    }
+
     [Fact]
     public void Constructor_GeneratedButton_AppliesStateWithChildrenParented()
     {
@@ -287,11 +314,13 @@ public class GeneratedFormsConstructionTests : BaseTestClass
 
     private Assembly GenerateAndCompile(
         OutputLibrary outputLibrary = OutputLibrary.GumForms,
-        ObjectInstantiationType instantiationType = ObjectInstantiationType.FullyInCode)
+        ObjectInstantiationType instantiationType = ObjectInstantiationType.FullyInCode,
+        bool obsoleteUseIsError = false,
+        Action<GumProjectSave>? editProject = null)
     {
         string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new FormsTemplateCreator().Create(gumxPath);
-        AddDerivedComponents(gumxPath);
+        AddDerivedComponents(gumxPath, editProject);
         File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup>" +
             "<PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.4\" />" +
@@ -309,14 +338,14 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         CliTestHelper codegen = CliTestHelper.Run("codegen", gumxPath);
         codegen.ExitCode.ShouldBe(0, codegen.StandardError + codegen.StandardOutput);
 
-        Assembly generated = Compile(Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories));
+        Assembly generated = Compile(Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories), obsoleteUseIsError);
         InstallHeadlessRuntime();
         return generated;
     }
 
     // Each derived component adds a child and overrides a default at both levels. Every base child is
     // also stored on the derived level as a DefinedByBase instance, as the tool saves it.
-    private static void AddDerivedComponents(string gumxPath)
+    private static void AddDerivedComponents(string gumxPath, Action<GumProjectSave>? editProject)
     {
         GumProjectSave project = GumProjectSave.Load(gumxPath, out _)!;
         foreach (string baseName in new[] { "Controls/ButtonClose", "Controls/TextBox", "Controls/Window" })
@@ -344,6 +373,8 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         // A derived level that moves a base child under its own child.
         ComponentSave reparent = AddComponent(project, "Elements/ChainReparent", "Elements/ChainB", ("Holder", "Container"));
         reparent.DefaultState!.Variables.Add(new VariableSave { Name = "BChild.Parent", Type = "string", Value = "Holder", SetsValue = true });
+
+        editProject?.Invoke(project);
 
         project.Save(gumxPath, saveElements: true);
     }
@@ -405,7 +436,7 @@ public class GeneratedFormsConstructionTests : BaseTestClass
 
     private static Assembly MonoGameGum => Assembly.Load("MonoGameGum");
 
-    private static Assembly Compile(IEnumerable<string> paths)
+    private static Assembly Compile(IEnumerable<string> paths, bool obsoleteUseIsError)
     {
         CSharpParseOptions parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
         List<SyntaxTree> trees = paths
@@ -428,7 +459,10 @@ public class GeneratedFormsConstructionTests : BaseTestClass
             trees,
             referencePaths.Where(File.Exists).Select(path => MetadataReference.CreateFromFile(path)),
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
-                nullableContextOptions: NullableContextOptions.Annotations));
+                nullableContextOptions: NullableContextOptions.Annotations,
+                specificDiagnosticOptions: obsoleteUseIsError
+                    ? new Dictionary<string, ReportDiagnostic> { ["CS0618"] = ReportDiagnostic.Error }
+                    : null));
 
         using MemoryStream stream = new MemoryStream();
         EmitResult result = compilation.Emit(stream);

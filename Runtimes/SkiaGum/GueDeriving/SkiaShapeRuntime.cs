@@ -285,8 +285,26 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             PushFillColorToSlot();
             RefreshSlotGradients();
             NotifyPropertyChanged();
+            ReportLegacyColorChannels();
         }
     }
+
+    /// <summary>
+    /// The legacy channels (Red..Alpha, Red1..Alpha1) read the contained renderable, which FillColor and
+    /// StrokeColor write (single-slot model, the fill slot, the gradient start that follows the body color),
+    /// so their references re-read after either is assigned. A reference whose value did not change is
+    /// left as it was.
+    /// </summary>
+    void ReportLegacyColorChannels()
+    {
+        foreach (string channel in LegacyColorChannels)
+        {
+            ReportTypedPropertyChanged(channel);
+        }
+    }
+
+    static readonly string[] LegacyColorChannels =
+        { "Red", "Green", "Blue", "Alpha", "Red1", "Green1", "Blue1", "Alpha1" };
 
     /// <summary>Red channel of <see cref="FillColor"/>.</summary>
     public int FillRed
@@ -295,7 +313,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set
         {
             FillColor = new SKColor((byte)value, _fillColor.Green, _fillColor.Blue, _fillColor.Alpha);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -306,7 +324,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set
         {
             FillColor = new SKColor(_fillColor.Red, (byte)value, _fillColor.Blue, _fillColor.Alpha);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -317,7 +335,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set
         {
             FillColor = new SKColor(_fillColor.Red, _fillColor.Green, (byte)value, _fillColor.Alpha);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -328,7 +346,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set
         {
             FillColor = new SKColor(_fillColor.Red, _fillColor.Green, _fillColor.Blue, (byte)value);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -386,6 +404,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             SyncGradientStartToBody();
             RefreshSlotGradients();
             NotifyPropertyChanged();
+            ReportLegacyColorChannels();
         }
     }
 
@@ -396,7 +415,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set
         {
             StrokeColor = new SKColor((byte)value, _strokeColor.Green, _strokeColor.Blue, _strokeColor.Alpha);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -407,7 +426,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set
         {
             StrokeColor = new SKColor(_strokeColor.Red, (byte)value, _strokeColor.Blue, _strokeColor.Alpha);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -418,7 +437,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set
         {
             StrokeColor = new SKColor(_strokeColor.Red, _strokeColor.Green, (byte)value, _strokeColor.Alpha);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -429,7 +448,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set
         {
             StrokeColor = new SKColor(_strokeColor.Red, _strokeColor.Green, _strokeColor.Blue, (byte)value);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
     #endregion

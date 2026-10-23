@@ -272,7 +272,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -283,7 +283,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -294,7 +294,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -305,7 +305,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -331,7 +331,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -342,7 +342,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -353,7 +353,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -364,7 +364,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -611,7 +611,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -622,7 +622,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -633,7 +633,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -644,7 +644,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -707,7 +707,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -718,7 +718,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -729,7 +729,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -740,7 +740,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1084,7 +1084,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, _dropshadowState.DropshadowColor.G, _dropshadowState.DropshadowColor.B, (byte)value);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1094,7 +1094,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color((byte)value, _dropshadowState.DropshadowColor.G, _dropshadowState.DropshadowColor.B, _dropshadowState.DropshadowColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1104,7 +1104,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, (byte)value, _dropshadowState.DropshadowColor.B, _dropshadowState.DropshadowColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1114,7 +1114,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, _dropshadowState.DropshadowColor.G, (byte)value, _dropshadowState.DropshadowColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1493,7 +1493,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, _dropshadowColor.B, (byte)value);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1504,7 +1504,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color((byte)value, _dropshadowColor.G, _dropshadowColor.B, _dropshadowColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1515,7 +1515,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowColor.R, (byte)value, _dropshadowColor.B, _dropshadowColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1526,7 +1526,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, (byte)value, _dropshadowColor.A);
-            NotifyPropertyChanged();
+            RaisePropertyChangedEvent();
         }
     }
 
@@ -1594,36 +1594,45 @@ public class CircleRuntime : GraphicalUiElement
     // same way the XNA-like and raylib surfaces do it. The members stay live on the base for the
     // legacy single-color shapes (Arc, RoundedRectangle, ColoredCircle, ...). Color is already
     // [Obsolete] on the base, so only Red/Green/Blue/Alpha need shadowing here.
+    // They write the stroke, matching the obsolete members on MonoGame and raylib (#6611).
+
+    /// <summary>The obsolete <c>Color</c> writes the stroke too (#6611).</summary>
+    protected override SKColor SolidColor
+    {
+        get => StrokeColor;
+        set => StrokeColor = value;
+    }
+
     /// <summary>Obsolete: use <see cref="SkiaShapeRuntime.FillColor"/> or <see cref="SkiaShapeRuntime.StrokeColor"/>.</summary>
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public new int Alpha
     {
-        get => base.Alpha;
-        set => base.Alpha = value;
+        get => StrokeAlpha;
+        set => StrokeAlpha = value;
     }
 
     /// <inheritdoc cref="Alpha"/>
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public new int Red
     {
-        get => base.Red;
-        set => base.Red = value;
+        get => StrokeRed;
+        set => StrokeRed = value;
     }
 
     /// <inheritdoc cref="Alpha"/>
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public new int Green
     {
-        get => base.Green;
-        set => base.Green = value;
+        get => StrokeGreen;
+        set => StrokeGreen = value;
     }
 
     /// <inheritdoc cref="Alpha"/>
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public new int Blue
     {
-        get => base.Blue;
-        set => base.Blue = value;
+        get => StrokeBlue;
+        set => StrokeBlue = value;
     }
 
     // Issue #3009 — the gradient START stop is the active body color (FillColor when filled,

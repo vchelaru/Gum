@@ -42,6 +42,15 @@ public interface ICollapsedShapeCodeGenLogic
     string TranslateVariableRootName(string rootName, bool effectiveIsFilled);
 
     /// <summary>
+    /// Translates a legacy single-color variable on the plain <c>Circle</c> / <c>Rectangle</c>
+    /// standard to its stroke channel property (for example <c>Red</c> becomes <c>StrokeRed</c>),
+    /// which is where the runtime's obsolete single-color members route. Returns the name unchanged
+    /// for other elements, other variables, and syntax versions below
+    /// <c>OutlineShapeStrokeChannelSyntaxVersion</c>.
+    /// </summary>
+    string TranslateOutlineShapeVariableRootName(string? standardElementName, string rootName, int resolvedSyntaxVersion);
+
+    /// <summary>
     /// Returns whether a legacy shape variable has no target on the collapsed runtime and must be
     /// skipped entirely (gradient start color always; stroke variables when the shape is filled).
     /// </summary>

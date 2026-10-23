@@ -880,11 +880,11 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
         this.KeyRight.Visual.Y = 40f;
         this.KeyRight.Visual.YUnits = global::Gum.Converters.GeneralUnitType.Percentage;
 
-        this.HighlightRectangle.Blue = 0;
-        this.HighlightRectangle.Green = 128;
+        this.HighlightRectangle.StrokeBlue = 0;
+        this.HighlightRectangle.StrokeGreen = 128;
         this.HighlightRectangle.Height = -6f;
         this.HighlightRectangle.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.HighlightRectangle.Red = 0;
+        this.HighlightRectangle.StrokeRed = 0;
         this.HighlightRectangle.Visible = false;
         this.HighlightRectangle.Width = -6f;
         this.HighlightRectangle.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;

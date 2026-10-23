@@ -126,6 +126,21 @@ public class CircleRuntimeTests : BaseTestClass
         sut.Radius.ShouldBe(16);
     }
 
+    // #6611: the obsolete channels color the outline on every runtime and leave the fill alone.
+    [Fact]
+    public void Red_WritesStroke_LeavesFill()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.FillColor = new Color(1, 2, 3, 4);
+
+        sut.Red = 60;
+
+        LineCircle inner = (LineCircle)sut.RenderableComponent!;
+        (inner.StrokeColor ?? inner.Color).R.ShouldBe((byte)60);
+        sut.FillColor.ShouldBe(new Color(1, 2, 3, 4));
+    }
+
     [Fact]
     public void Red_ShouldRoundTrip()
     {
