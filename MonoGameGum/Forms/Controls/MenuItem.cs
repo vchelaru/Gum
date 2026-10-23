@@ -701,6 +701,14 @@ public class MenuItem : ItemsControl
         if (Items == null || Items.Count == 0)
         {
             // Nothing left to show. Deselect rather than only tear down, so the item can open again.
+            // The rows leave with the popup, so no cursor roll-off will clear their highlight.
+            foreach (FrameworkElement leaving in popupRows)
+            {
+                if (leaving is MenuItem leavingMenuItem)
+                {
+                    leavingMenuItem.IsHighlighted = false;
+                }
+            }
             IsSelected = false;
             HidePopupRecursively();
             return;
@@ -748,6 +756,8 @@ public class MenuItem : ItemsControl
                 // Close its submenu first: the popup it opened is not in this popup and would be left behind.
                 removedMenuItem.HidePopupRecursively();
                 removedMenuItem.IsSelected = false;
+                // It left the popup, so no cursor roll-off will clear its highlight.
+                removedMenuItem.IsHighlighted = false;
                 generatedPopupRows.Remove(removedMenuItem);
             }
             DetachPopupRow(removed);
