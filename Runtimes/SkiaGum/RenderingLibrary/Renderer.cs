@@ -217,10 +217,16 @@ namespace RenderingLibrary.Graphics
             BakeRenderTargets(whatToRender, managers);
 
             ApplyCamera(managers.Canvas, layer, matrix: null);
-            DrawList(whatToRender, managers, layer);
-            // Undoes this layer's camera so the next layer (or the next frame) starts from a clean
-            // matrix (#4330).
-            RestoreCamera(managers.Canvas);
+            try
+            {
+                DrawList(whatToRender, managers, layer);
+            }
+            finally
+            {
+                // Undoes this layer's camera so the next layer (or the next frame) starts from a
+                // clean matrix (#4330), even when a Render throws.
+                RestoreCamera(managers.Canvas);
+            }
         }
 
         // The canvas matrix the active camera was applied on top of (the host's own transform) and
@@ -229,6 +235,11 @@ namespace RenderingLibrary.Graphics
         // rather than composing it with the camera of the layer it is drawn in.
         SKMatrix? _cameraBaseMatrix;
         SKMatrix? _cameraCallerMatrix;
+
+        // Greater than zero while a render target's children bake. A layer drawn then (a
+        // SortableLayer among them) draws in render-target space like the other children, the way
+        // MonoGame's bake rebases its camera into that space.
+        int _bakeDepth;
 
         // Saves the canvas, then applies the camera and, when given, a caller matrix applied before it
         // (the same order MonoGame composes GumBatch's matrix with the camera view:
@@ -713,10 +724,17 @@ namespace RenderingLibrary.Graphics
 
             SKCanvas screenCanvas = managers.Canvas;
             managers.Canvas = offscreenCanvas;
-            DrawList(container.Children, managers);
-            managers.Canvas = screenCanvas;
-
-            offscreenCanvas.Restore();
+            _bakeDepth++;
+            try
+            {
+                DrawList(container.Children, managers);
+            }
+            finally
+            {
+                _bakeDepth--;
+                managers.Canvas = screenCanvas;
+                offscreenCanvas.Restore();
+            }
 
             // The snapshot stays valid across the frame via SkiaSharp copy-on-write; the persistent
             // surface is only re-cleared next frame, after DisposeBakedImages frees this snapshot.
@@ -859,6 +877,12 @@ namespace RenderingLibrary.Graphics
                 // MonoGame's PreRender bakes render targets too. The bake draws on its own offscreen
                 // canvas, so it is safe in the middle of the outer layer's walk.
                 BakeRenderTargets(layer.Renderables, skiaManagers);
+            }
+
+            if (_bakeDepth > 0)
+            {
+                DrawList(layer.Renderables, skiaManagers, layer, prerender);
+                return;
             }
 
             canvas.Save();

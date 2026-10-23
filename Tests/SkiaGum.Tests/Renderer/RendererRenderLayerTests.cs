@@ -136,6 +136,75 @@ public class RendererRenderLayerTests : IDisposable
         PixelAt(surface, 4, 4).ShouldBe(SKColors.Red, "because RenderLayer's PreRender bakes render targets, as MonoGame's does");
     }
 
+    [Fact]
+    public void SortableLayer_InsideARenderTargetWithCameraOffsetAndZoom_BakesLikeThePlainChildren()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        SystemManagers.Default.Renderer.Camera.X = -8;
+        SystemManagers.Default.Renderer.Camera.Zoom = 2;
+        SortableLayer sortableLayer = new();
+        sortableLayer.Add(CreateRectangle(x: 0, y: 0, width: 8, SKColors.Red));
+        ContainerRuntime renderTarget = new() { Width = 16, Height = 16, IsRenderTarget = true };
+        renderTarget.Children.Add(new GraphicalUiElement(new SortableLayerHost(sortableLayer)));
+        AddToMainLayer(renderTarget);
+
+        SystemManagers.Default.Draw();
+
+        PixelAt(surface, 20, 4).ShouldBe(SKColors.Red, "because, as in MonoGame, the bake draws the sortable layer in render-target space like any other child, and the composite applies the camera once (world 0 maps to screen 16)");
+    }
+
+    [Fact]
+    public void SortableLayer_InsideARenderTargetInsideASortableLayer_BakesInRenderTargetSpace()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        SystemManagers.Default.Renderer.Camera.X = -8;
+        SortableLayer innerLayer = new();
+        innerLayer.Add(CreateRectangle(x: 0, y: 0, width: 8, SKColors.Red));
+        ContainerRuntime renderTarget = new() { Width = 16, Height = 16, IsRenderTarget = true };
+        renderTarget.Children.Add(new GraphicalUiElement(new SortableLayerHost(innerLayer)));
+        SortableLayer outerLayer = new();
+        outerLayer.Add(renderTarget);
+        AddToMainLayer(new SortableLayerHost(outerLayer));
+
+        SystemManagers.Default.Draw();
+
+        PixelAt(surface, 4, 4).Alpha.ShouldBe((byte)0, "because the camera moves the render target right by 8");
+        PixelAt(surface, 12, 4).ShouldBe(SKColors.Red, "because the inner layer bakes in render-target space even while the outer layer's camera is active");
+    }
+
+    [Fact]
+    public void Draw_RenderThrows_RestoresTheCanvasAndCameraState()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        int saveCountBefore = surface.Canvas.SaveCount;
+        ThrowingRenderable throwing = new();
+        AddToMainLayer(throwing);
+
+        Should.Throw<InvalidOperationException>(() => SystemManagers.Default.Draw());
+
+        surface.Canvas.SaveCount.ShouldBe(saveCountBefore, "because the camera's Save is restored even when a Render throws");
+        SystemManagers.Default.Renderer.MainLayer.Remove(throwing);
+        Layer layer = new();
+        layer.Add(CreateRectangle(x: 0, y: 0, width: 8, SKColors.Red));
+        surface.Canvas.Translate(8, 0);
+        SystemManagers.Default.Renderer.RenderLayer(SystemManagers.Default, layer);
+        PixelAt(surface, 12, 4).ShouldBe(SKColors.Red, "because a standalone RenderLayer keeps the host's transform, not one left over from the failed Draw");
+    }
+
+    [Fact]
+    public void Draw_RenderThrowsWhileBaking_RestoresTheScreenCanvas()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        SKCanvas screenCanvas = SystemManagers.Default.Canvas;
+        ContainerRuntime renderTarget = new() { Width = 16, Height = 16, IsRenderTarget = true };
+        renderTarget.Children.Add(new GraphicalUiElement(new ThrowingRenderable()));
+        AddToMainLayer(renderTarget);
+
+        Should.Throw<InvalidOperationException>(() => SystemManagers.Default.Draw());
+
+        SystemManagers.Default.Canvas.ShouldBeSameAs(screenCanvas, "because the bake puts the screen canvas back even when a Render throws");
+    }
+
     public void Dispose()
     {
         Layer mainLayer = SystemManagers.Default.Renderer.MainLayer;
@@ -144,6 +213,7 @@ public class RendererRenderLayerTests : IDisposable
             mainLayer.Remove(renderable);
         }
         SystemManagers.Default.Renderer.Camera.X = 0;
+        SystemManagers.Default.Renderer.Camera.Zoom = 1;
     }
 
     private void AddToMainLayer(IRenderableIpso renderable)
@@ -189,6 +259,11 @@ public class RendererRenderLayerTests : IDisposable
         }
 
         public override void Render(ISystemManagers managers) => _sortableLayer.Render(managers);
+    }
+
+    private class ThrowingRenderable : InvisibleRenderable
+    {
+        public override void Render(ISystemManagers managers) => throw new InvalidOperationException("Render failed");
     }
 
     private class MovesOnPreRenderRectangle : RectangleRuntime
