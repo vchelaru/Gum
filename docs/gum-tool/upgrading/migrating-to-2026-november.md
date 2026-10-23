@@ -505,6 +505,21 @@ This affects you only if an instance sets a variable that its control now hides.
 
 To migrate, regenerate your code and look at the changes. To drop a stale value, remove it from the instance in the tool.
 
+### FullyInCode Forms Components Construct Correctly
+
+Before this version, a Gum Forms component generated with an **Object Instantiation Type** of **FullyInCode** threw when constructed if its control has named children, such as a `Button`, `TextBox`, `ComboBox`, `Slider` or `Window`. The error was a null reference or a "must have a child named ..." message. A component that inherits from another component also left the base component's children unattached. These components now construct correctly.
+
+The generated code for these components has a new shape:
+
+* `InitializeInstances`, `ApplyDefaultVariables` and `AssignParents` are `protected virtual`, and each inheriting component overrides them. `ApplyDefaultVariables` used to be `private`.
+* The root component overrides `ReactToVisualChanged` and has the generated members `_isGeneratedVisualBuilt` and `ReactToGeneratedVisual`. The control reacts to its visual once, after every child is created and parented.
+* The constructor that takes an existing visual calls the new `InitializeInstancesFromVisual`, which uses that visual's children instead of creating a second set.
+
+This affects you only if you generate Gum Forms code with **FullyInCode**. To migrate, regenerate your code, then fix these errors if they appear:
+
+* `CS0111` on `ReactToVisualChanged`: your custom partial class already overrides it. Move that code into `CustomInitialize`, which runs after the control has reacted to its finished visual. `CustomInitialize` runs once, so code that must also run when `Visual` is replaced belongs in a class that derives from the component and overrides `ReactToVisualChanged`.
+* `CS0114` on `ApplyDefaultVariables` or `InitializeInstancesFromVisual`: a class you derived from a generated component declares a method with that name. Add `override` and call the base method first, or rename your method.
+
 ### raylib and Sokol Repeat Held Keys With Gum's Timing
 
 On raylib and Sokol, holding a key such as an arrow, Backspace, or Delete now repeats after `RepeatDelay` (500 ms) at `RepeatRate` (70 ms), the same as MonoGame, KNI, FNA and the Skia hosts. Before this version these two hosts used the operating system's key repeat for `KeyTyped` and `KeysTyped`.
