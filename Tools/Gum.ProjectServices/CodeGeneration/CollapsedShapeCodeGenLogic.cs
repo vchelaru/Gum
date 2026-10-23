@@ -8,18 +8,13 @@ namespace Gum.ProjectServices.CodeGeneration;
 public class CollapsedShapeCodeGenLogic : ICollapsedShapeCodeGenLogic
 {
     /// <summary>
-    /// The runtime syntax version that introduced the collapsed shape runtimes (#2774 / PR #2910).
-    /// Below this version, codegen keeps emitting the legacy types so existing pipelines don't
-    /// churn at runtime-upgrade time.
+    /// The first runtime syntax version guaranteed to have the channel properties (<c>FillRed</c>,
+    /// <c>StrokeRed</c>, ...) and <c>IsFilled</c> on <c>CircleRuntime</c> / <c>RectangleRuntime</c>.
+    /// Both the collapsed shape emission (#2775) and the plain Circle/Rectangle stroke routing
+    /// (#6594) assign them. They shipped after version 2 was stamped, so version 2 is not a safe
+    /// floor (#6613). Below this version, codegen keeps the legacy types and variable names.
     /// </summary>
-    public const int CollapsedShapeSyntaxVersion = 2;
-
-    /// <summary>
-    /// The first runtime syntax version guaranteed to have the stroke channel properties
-    /// (<c>StrokeRed</c>, ...) on the plain <c>CircleRuntime</c> / <c>RectangleRuntime</c>. They
-    /// shipped after version 2 was stamped, so version 2 is not a safe floor.
-    /// </summary>
-    public const int OutlineShapeStrokeChannelSyntaxVersion = 3;
+    public const int ShapeColorChannelSyntaxVersion = 3;
 
     /// <inheritdoc/>
     public bool ShouldCollapse(string? standardElementName, int resolvedSyntaxVersion, CodeOutputProjectSettings? projectSettings)
@@ -34,7 +29,7 @@ public class CollapsedShapeCodeGenLogic : ICollapsedShapeCodeGenLogic
 
         // FindByName casts must match what the runtime .gumx loader instantiates, which is still
         // the legacy type — only fully-in-code instantiation may target the collapsed runtimes.
-        return resolvedSyntaxVersion >= CollapsedShapeSyntaxVersion &&
+        return resolvedSyntaxVersion >= ShapeColorChannelSyntaxVersion &&
             isMonoGameFamily &&
             projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode &&
             TryGetCollapsedRuntimeName(standardElementName) != null;
@@ -88,7 +83,7 @@ public class CollapsedShapeCodeGenLogic : ICollapsedShapeCodeGenLogic
     /// <inheritdoc/>
     public string TranslateOutlineShapeVariableRootName(string? standardElementName, string rootName, int resolvedSyntaxVersion)
     {
-        if (resolvedSyntaxVersion < OutlineShapeStrokeChannelSyntaxVersion ||
+        if (resolvedSyntaxVersion < ShapeColorChannelSyntaxVersion ||
             standardElementName is not ("Circle" or "Rectangle"))
         {
             return rootName;

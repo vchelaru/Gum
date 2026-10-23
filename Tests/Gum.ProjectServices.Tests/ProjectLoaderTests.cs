@@ -115,6 +115,67 @@ public class ProjectLoaderTests
     }
 
     [Fact]
+    public void Load_ShouldStripGradientColor1_FromPlainCircleInstance()
+    {
+        // Red1/Green1/Blue1/Alpha1 no longer exist on Circle/Rectangle (#3009). The tool strips
+        // leftovers on load; the headless load (gumcli codegen) must too, or codegen emits a member
+        // that is obsolete with error: true (#6612).
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            string componentPath = Path.Combine(tempDir, "Components", "ShapeComponent.gucx");
+            File.WriteAllText(componentPath, """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>ShapeComponent</Name>
+                  <BaseType>Container</BaseType>
+                  <State>
+                    <Name>Default</Name>
+                    <Variable>
+                      <Type>int</Type>
+                      <Name>CircleInstance.Red1</Name>
+                      <Value xsi:type="xsd:int">10</Value>
+                      <SetsValue>true</SetsValue>
+                    </Variable>
+                    <Variable>
+                      <Type>int</Type>
+                      <Name>CircleInstance.Red2</Name>
+                      <Value xsi:type="xsd:int">20</Value>
+                      <SetsValue>true</SetsValue>
+                    </Variable>
+                  </State>
+                  <Instance>
+                    <Name>CircleInstance</Name>
+                    <BaseType>Circle</BaseType>
+                  </Instance>
+                </ComponentSave>
+                """);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            const string componentRef = """  <ComponentReference Name="ShapeComponent" />""";
+            gumxContent = gumxContent.Replace("</GumProjectSave>", componentRef + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            result.Success.ShouldBeTrue();
+            List<string?> variableNames = result.Project!.Components.Single().DefaultState.Variables
+                .Select(item => item.Name).ToList();
+            variableNames.ShouldNotContain("CircleInstance.Red1");
+            variableNames.ShouldContain("CircleInstance.Red2");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Load_ShouldNotReportError_WhenBehaviorFileUsesInstanceSaveInRequiredInstances()
     {
         string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));

@@ -379,9 +379,9 @@ The `Gum.Analyzers` package ships an automated code fix (`GUM002`): place the cu
 
 The obsolete types will remain in place until at least the December 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
 
-### Code generation targets the collapsed shapes at syntax version 2
+### Code generation targets the collapsed shapes at syntax version 3
 
-Code generation (the Gum tool's **Code** tab and `gumcli codegen`) now emits the collapsed shape runtimes for the legacy shape standard elements. When the detected [syntax version](syntax-versions.md) is 2 or higher, the project's output library is MonoGame or MonoGameForms, and object instantiation is fully-in-code, regenerating produces:
+Code generation (the Gum tool's **Code** tab and `gumcli codegen`) now emits the collapsed shape runtimes for the legacy shape standard elements. When the detected [syntax version](syntax-versions.md) is 3 or higher, the project's output library is MonoGame or MonoGameForms, and object instantiation is fully-in-code, regenerating produces:
 
 | `.gumx` standard element | Generated type before | Generated type now |
 | --- | --- | --- |
@@ -396,7 +396,7 @@ After regenerating, update any hand-written code that references the generated f
 * **Declared types**: code like `ColoredCircleRuntime circle = Screen.MyCircle;` no longer compiles, because the generated field is now typed `CircleRuntime`. The `GUM002` code fix updates these; use **Fix all in solution**.
 * **Runtime casts**: code like `GetGraphicalUiElementByName("MyCircle") as ColoredCircleRuntime` still compiles but returns null at runtime, because the generated object is now a `CircleRuntime`. The analyzer cannot fix casts automatically; search for `as ColoredCircleRuntime` (and the rectangle equivalents) and change the cast to the collapsed type.
 
-Projects using `FindByName` instantiation are unaffected; generated code keeps referencing the legacy types there, because runtime `.gumx` loading still creates them. Projects whose runtime reports a syntax version below 2 also keep the previous output. See [Syntax Versions](syntax-versions.md) for how the version is detected and how to override it.
+Projects using `FindByName` instantiation are unaffected; generated code keeps referencing the legacy types there, because runtime `.gumx` loading still creates them. Projects whose runtime reports a syntax version below 3 also keep the previous output. See [Syntax Versions](syntax-versions.md) for how the version is detected and how to override it.
 
 ### Legacy single-color members and `Radius` on `CircleRuntime` / `RectangleRuntime` are now `[Obsolete]`
 

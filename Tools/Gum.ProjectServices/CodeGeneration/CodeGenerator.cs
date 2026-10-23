@@ -872,7 +872,7 @@ public class CodeGenerator
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
 
-            // #2775 — at syntax version >= 2 the legacy single-color shape standards emit the
+            // #2775 — at syntax version >= 3 the legacy single-color shape standards emit the
             // collapsed two-slot runtimes. Standard elements only: a component could legally
             // share a legacy shape's name.
             string? collapsedName = null;
