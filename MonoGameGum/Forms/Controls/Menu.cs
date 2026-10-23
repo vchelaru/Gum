@@ -17,6 +17,7 @@ using FlatRedBall.Math.Geometry;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
+using RepositionDirections = FlatRedBall.Math.Geometry.RepositionDirections;
 namespace FlatRedBall.Forms.Controls;
 #endif
 

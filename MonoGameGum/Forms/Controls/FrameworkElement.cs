@@ -35,6 +35,7 @@ using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 // Duck-typed alias (same trick as GamepadButton/Buttons above) so gamepad-handling method
 // bodies can be written once instead of duplicated per platform under #if FRB.
 using GamePadForNavigation = FlatRedBall.Input.Xbox360GamePad;
+using RepositionDirections = FlatRedBall.Math.Geometry.RepositionDirections;
 namespace FlatRedBall.Forms.Controls;
 #else
 // Non-FRB branch. These Forms control files compile exactly once — into GumCommon
