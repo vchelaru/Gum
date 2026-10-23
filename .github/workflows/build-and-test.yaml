@@ -616,11 +616,32 @@ jobs:
       # AllLibraries too, behind a ~200 s workload restore and a ~257 s build, only to run the tests;
       # it now builds just the projects it tests (next step), with no workloads and no submodules
       # (#6092). The Windows-only TFM (SkiaGum.Maui's net9.0-windows) is built by Build-Generated-Code.
+      # timeout-minutes (#6673): one run sat here for 44 minutes with no output and no retrievable log.
+      # The last 17 macOS runs took 82-153 s, so 15 minutes fails a hang fast with room for a cold cache.
+      # The file logger writes as it goes, so the diagnostics step below can tail it after a timeout.
       - name: Build AllLibraries
+        id: build-alllibraries
         if: runner.os == 'macOS' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        timeout-minutes: 15
         run: |
           dotnet restore "AllLibraries.sln" -p:IncludeAndroid=true --verbosity quiet
-          dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0 -p:IncludeAndroid=true
+          dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0 -p:IncludeAndroid=true -flp:"logfile=build-alllibraries.log;verbosity=normal"
+
+      - name: Build AllLibraries diagnostics
+        if: always() && (steps.build-alllibraries.outcome == 'failure' || steps.build-alllibraries.outcome == 'cancelled')
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e   # bash runs with -e -o pipefail; an empty grep must not skip the later diagnostics
+          echo "::group::dotnet / MSBuild processes"
+          ps -axo pid,ppid,etime,stat,pcpu,pmem,command | grep -Ei 'dotnet|msbuild|VBCSCompiler|xcode|clang' | grep -v grep | cut -c1-300 | head -100 || true
+          echo "::endgroup::"
+          echo "::group::load and memory"
+          uptime; vm_stat | head -12
+          echo "::endgroup::"
+          echo "::group::tail of build-alllibraries.log"
+          if [ -f build-alllibraries.log ]; then tail -n 300 build-alllibraries.log | cut -c1-400; else echo "no build-alllibraries.log (build did not start)"; fi
+          echo "::endgroup::"
 
       # Windows: build only the test projects run below (Tests/CiTestProjects.slnf, a filter over
       # AllLibraries.sln), plus whatever they reference. They are plain net8.0/net10.0, so no workloads.
