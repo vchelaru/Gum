@@ -22,16 +22,8 @@ namespace MonoGameGum.Tests.Runtimes;
 // contexts are registered by hand instead of through GumService.Initialize.
 public class GumContextTests : BaseTestClass
 {
+    // BaseTestClass restores the registrations and hooks ClearRegistrations clears, and the relative directory.
     private readonly List<GumContext> _contexts = new List<GumContext>();
-    private readonly string _originalRelativeDirectory = FileManager.RelativeDirectory;
-
-    // ClearRegistrations also nulls these process-wide hooks that other tests rely on.
-    private readonly Func<string, ISystemManagers, IRenderable?>? _originalCreateComponent =
-        ElementSaveExtensions.CustomCreateGraphicalComponentFunc;
-    private readonly Func<StateSave, string, string?, GraphicalUiElement?, object?>? _originalEvaluate =
-        ElementSaveExtensions.CustomEvaluateExpression;
-    private readonly Func<StateSave, string, string?, GraphicalUiElement?, IEnumerable<object>>? _originalEvaluateAllBranches =
-        ElementSaveExtensions.CustomEvaluateExpressionAllBranches;
 
     private readonly IGumService? _originalDefault = IGumService.Default;
 
@@ -61,11 +53,6 @@ public class GumContextTests : BaseTestClass
             context.Release();
         }
         IGumService.Default = _originalDefault;
-        ElementSaveExtensions.Reset();
-        ElementSaveExtensions.CustomCreateGraphicalComponentFunc = _originalCreateComponent;
-        ElementSaveExtensions.CustomEvaluateExpression = _originalEvaluate;
-        ElementSaveExtensions.CustomEvaluateExpressionAllBranches = _originalEvaluateAllBranches;
-        FileManager.RelativeDirectory = _originalRelativeDirectory;
         base.Dispose();
     }
 
