@@ -18,6 +18,7 @@ A bug usually exists because a test was missing. Nearby behavior in the same are
 
 ## What happens to a red test
 
+- **First check whether the PR caused it.** Run the red test against `main`. If it also fails on main it is a pre-existing bug: follow the rules below. If it passes on main and fails only on this branch, the PR's own change broke it: that is a regression, so fix it inside the same PR and do not file a separate issue or park the test on a branch.
 - Do not fix it inside the splash PR, and do not skip or exclude the test (a skipped test counts as untracked).
 - File one issue per distinct bug (`gum-issue-creation`), naming the failing test. Keep the red test on a branch and link that branch from the issue, so the test lands with its fix.
 - The splash PR contains the fix for the reported bug and the green tests only.
