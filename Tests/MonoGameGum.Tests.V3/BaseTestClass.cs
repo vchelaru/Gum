@@ -9,11 +9,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Tests.Shared;
 
 namespace MonoGameGum.Tests.V3;
 
 public class BaseTestClass : IDisposable
 {
+    // Captured before the constructor body runs, so it is the state the previous test left.
+    private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+
     public BaseTestClass()
     {
         // The shared roots are laid out against the canvas, so restore it before laying them out.
@@ -113,6 +117,8 @@ public class BaseTestClass : IDisposable
         // Clear any per-capability factories a test registered into the static
         // RenderableRegistry so they don't leak into the next test.
         RenderableRegistry.Reset();
+
+        _fileManagerState.Restore();
 
         // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
         ResetCanvasAndRoots();

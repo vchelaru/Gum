@@ -7,6 +7,7 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using ToolsUtilities;
+using Gum.Tests.Shared;
 using Keys = Gum.Forms.Input.Keys;
 
 namespace SkiaHostTests;
@@ -19,6 +20,9 @@ namespace SkiaHostTests;
 /// </summary>
 public abstract class SkiaHostTestBase : IDisposable
 {
+    // Captured before the constructor body runs, so it is the state the previous test left.
+    private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+
     // Renderables present right after the assembly bootstrap (Root + Forms defaults). Anything found
     // beyond this set was added by a test and is swept in Dispose (#3066).
     private static readonly HashSet<IRenderableIpso> BaselineRenderables = new();
@@ -153,7 +157,7 @@ public abstract class SkiaHostTestBase : IDisposable
         // would call SKImage.FromBitmap on a disposed bitmap and crash the host with an
         // AccessViolationException. Leaving the cache intact keeps the sprite sheet valid across tests.
 
-        FileManager.CustomGetStreamFromFile = null;
+        _fileManagerState.Restore();
 
         // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
         ResetCanvasAndRoots();

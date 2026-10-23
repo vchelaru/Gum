@@ -8,10 +8,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Input;
+using Gum.Tests.Shared;
 
 namespace MonoGameGum.IntegrationTests;
 public class BaseTestClass : IDisposable
 {
+    // Captured before the constructor body runs, so it is the state the previous test left.
+    private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+
     public virtual void Dispose()
     {
         // GumService.Default follows IGumService.Default, the current service. A test that initialized a service
@@ -73,6 +77,8 @@ public class BaseTestClass : IDisposable
         // a .gumx, the project sticks around and pollutes tests that assert on the
         // "no project loaded" state (e.g. LoadAnimations_ThrowsException_WhenNoProjectLoaded).
         ObjectFinder.Self.GumProjectSave = null;
+
+        _fileManagerState.Restore();
 
         // Clear any per-capability factories a test registered into the static
         // RenderableRegistry so they don't leak into the next test.

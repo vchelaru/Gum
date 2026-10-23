@@ -13,10 +13,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
+using Gum.Tests.Shared;
 
 namespace MonoGameGum.Tests;
 public class BaseTestClass : IDisposable
 {
+    // Captured before the constructor body runs, so it is the state the previous test left.
+    private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
 
     public BaseTestClass()
     {
@@ -160,7 +163,7 @@ public class BaseTestClass : IDisposable
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = false;
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
 
-        FileManager.CustomGetStreamFromFile = null;
+        _fileManagerState.Restore();
 
         RenderingLibrary.Graphics.Text.Customizations.Clear();
         RenderingLibrary.Graphics.Text.ContextCustomizations.Clear();

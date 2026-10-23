@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using Gum.Tests.Shared;
 using Shouldly;
 using Xunit;
 
@@ -135,5 +136,14 @@ public class BaseTestClassTests
         testBase.Dispose();
 
         Text.IsMidWordLineBreakEnabled.ShouldBeTrue();
+    }
+
+    // A test that changes where files resolve from (directly, or through GumService Initialize/
+    // Uninitialize or a project load) would otherwise change which font or file every later test
+    // loads (#6496).
+    [Fact]
+    public void Dispose_RestoresFileManagerState_WhenATestChangedIt()
+    {
+        FileManagerStateAssert.DisposeRestores(() => new BaseTestClass());
     }
 }
