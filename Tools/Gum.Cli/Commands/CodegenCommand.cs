@@ -9,6 +9,8 @@ using Gum.Managers;
 using Gum.Expressions;
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Gum.Cli.Commands;
 
@@ -89,7 +91,25 @@ public static class CodegenCommand
         ICodeGenLogger logger = new ConsoleCodeGenLogger();
         IProjectDirectoryProvider projectDirectoryProvider = new FixedProjectDirectoryProvider(projectDirectory);
         var projectSettingsManager = new CodeOutputProjectSettingsManager(logger, projectDirectoryProvider);
-        CodeOutputProjectSettings projectSettings = projectSettingsManager.CreateOrLoadSettingsForProject();
+        string settingsFilePath = Path.Combine(projectDirectory!, "ProjectCodeSettings.codsj");
+        CodeOutputProjectSettings projectSettings;
+        if (File.Exists(settingsFilePath))
+        {
+            // An unreadable file is the user's settings, so it is reported and never replaced by
+            // auto-configured defaults. The loader has already printed the parser's message.
+            CodeOutputProjectSettings? loaded = projectSettingsManager.TryLoadSettingsForProject();
+            if (loaded == null)
+            {
+                Console.Error.WriteLine($"error: could not read code generation settings from {settingsFilePath}. " +
+                    "Fix or delete the file and run codegen again; it was left unchanged.");
+                return 2;
+            }
+            projectSettings = loaded;
+        }
+        else
+        {
+            projectSettings = projectSettingsManager.CreateOrLoadSettingsForProject();
+        }
 
         if (string.IsNullOrEmpty(projectSettings.CodeProjectRoot))
         {
@@ -103,9 +123,22 @@ public static class CodegenCommand
                 return 2;
             }
 
-            projectSettings = autoResult.Settings!;
-            projectSettingsManager.WriteSettingsForProject(projectSettings);
-            Console.WriteLine($"Auto-configured code generation settings (CodeProjectRoot: {projectSettings.CodeProjectRoot}, Namespace: {projectSettings.RootNamespace}).");
+            if (File.Exists(settingsFilePath))
+            {
+                // The file holds the user's other settings: fill in only CodeProjectRoot and write
+                // that one field back, keeping every other key (including ones Gum doesn't know).
+                projectSettings.CodeProjectRoot = autoResult.Settings!.CodeProjectRoot;
+                JObject settingsJson = JObject.Parse(File.ReadAllText(settingsFilePath));
+                settingsJson[nameof(CodeOutputProjectSettings.CodeProjectRoot)] = projectSettings.CodeProjectRoot;
+                File.WriteAllText(settingsFilePath, settingsJson.ToString(Formatting.Indented));
+                Console.WriteLine($"Auto-configured CodeProjectRoot: {projectSettings.CodeProjectRoot}.");
+            }
+            else
+            {
+                projectSettings = autoResult.Settings!;
+                projectSettingsManager.WriteSettingsForProject(projectSettings);
+                Console.WriteLine($"Auto-configured code generation settings (CodeProjectRoot: {projectSettings.CodeProjectRoot}, Namespace: {projectSettings.RootNamespace}).");
+            }
         }
 
         try
