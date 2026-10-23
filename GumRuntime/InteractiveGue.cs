@@ -1048,6 +1048,11 @@ public partial class InteractiveGue : GraphicalUiElement
         });
     }
 
+    // Whether this exact action is still waiting for the next push. An action that has started running
+    // is no longer queued, and ClearNextPushActions drops queued actions without running them.
+    internal static bool IsNextPushActionQueued(Action action) =>
+        nextPushActionHoldingList.Contains(action) || nextPushActions.Contains(action);
+
     public static void ClearNextPushActions()
     {
         nextPushActionHoldingList.Clear();
