@@ -1435,6 +1435,16 @@ public class Renderer : IRenderer
         for (int i = 0; i < count; i++)
         {
             DrawCommand command = commands[i];
+
+            // A render-target container's own ClipsChildren already cropped its bake, and its
+            // composite is only that baked image. Clipping the composite again with the container's
+            // unturned rectangle would cut a turned container (#6618), so it joins no clip scope,
+            // as on raylib.
+            if (command.Target.IsRenderTarget && command.Kind != DrawCommandKind.DrawRenderable)
+            {
+                continue;
+            }
+
             switch (command.Kind)
             {
                 case DrawCommandKind.BeginClip:
@@ -1837,7 +1847,8 @@ public class Renderer : IRenderer
             shouldResetStates = true;
         }
 
-        if (renderable.ClipsChildren)
+        // A render-target container's composite is already cropped by its bake (#6618).
+        if (renderable.ClipsChildren && !renderable.IsRenderTarget)
         {
             var clipRectangle = Camera.GetScissorRectangleFor(layer, renderable, _bakedContainer);
 
