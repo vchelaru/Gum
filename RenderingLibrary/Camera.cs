@@ -374,8 +374,14 @@ namespace RenderingLibrary
         public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer? layer, IRenderableIpso ipso) =>
             camera.GetCullTestBoundsFor(layer, ipso, bakedContainer: null);
 
-        /// <inheritdoc cref="GetCullTestBoundsFor(Camera, Layer?, IRenderableIpso)"/>
-        /// <param name="bakedContainer">The render-target container being baked, or null outside a bake (#6618).</param>
+        /// <summary>
+        /// <see cref="GetCullTestBoundsFor(Camera, Layer?, IRenderableIpso)"/> while drawing the bake of
+        /// <paramref name="bakedContainer"/>, or null outside a bake (#6618).
+        /// </summary>
+        /// <param name="camera">The camera.</param>
+        /// <param name="layer">The layer, or null.</param>
+        /// <param name="ipso">The renderable to test.</param>
+        /// <param name="bakedContainer">The render-target container being baked, or null.</param>
         public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer? layer, IRenderableIpso ipso, IRenderableIpso? bakedContainer)
         {
             if (ipso == null)
