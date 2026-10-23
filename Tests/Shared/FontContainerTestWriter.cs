@@ -89,24 +89,39 @@ public static class FontContainerTestWriter
     /// Wraps a single-font sfnt in a TrueType Collection: a 16-byte 'ttcf' header whose one entry
     /// points at the font's table directory, with every table offset shifted by that header.
     /// </summary>
-    public static byte[] ToTtc(byte[] sfnt)
-    {
-        const int headerSize = 16;
-        int tableCount = BinaryPrimitives.ReadUInt16BigEndian(sfnt.AsSpan(4));
-        byte[] collection = new byte[headerSize + sfnt.Length];
-        BinaryPrimitives.WriteUInt32BigEndian(collection, 0x74746366); // 'ttcf'
-        BinaryPrimitives.WriteUInt16BigEndian(collection.AsSpan(4), 1);
-        BinaryPrimitives.WriteUInt16BigEndian(collection.AsSpan(6), 0);
-        BinaryPrimitives.WriteUInt32BigEndian(collection.AsSpan(8), 1);
-        BinaryPrimitives.WriteUInt32BigEndian(collection.AsSpan(12), headerSize);
-        sfnt.CopyTo(collection, headerSize);
+    public static byte[] ToTtc(byte[] sfnt) => ToTtc(new[] { sfnt });
 
-        for (int i = 0; i < tableCount; i++)
+    /// <summary>
+    /// Packs single-font sfnts into one TrueType Collection, in order: a 'ttcf' header with one entry per font,
+    /// each font embedded whole with its table offsets shifted by where it starts.
+    /// </summary>
+    public static byte[] ToTtc(IReadOnlyList<byte[]> sfnts)
+    {
+        int headerSize = 12 + 4 * sfnts.Count;
+        byte[] header = new byte[headerSize];
+        BinaryPrimitives.WriteUInt32BigEndian(header, 0x74746366); // 'ttcf'
+        BinaryPrimitives.WriteUInt16BigEndian(header.AsSpan(4), 1);
+        BinaryPrimitives.WriteUInt16BigEndian(header.AsSpan(6), 0);
+        BinaryPrimitives.WriteUInt32BigEndian(header.AsSpan(8), (uint)sfnts.Count);
+
+        using MemoryStream output = new();
+        output.Write(header);
+        for (int face = 0; face < sfnts.Count; face++)
         {
-            Span<byte> offsetField = collection.AsSpan(headerSize + 12 + 16 * i + 8, 4);
-            BinaryPrimitives.WriteUInt32BigEndian(offsetField, BinaryPrimitives.ReadUInt32BigEndian(offsetField) + headerSize);
+            int start = (int)output.Position;
+            BinaryPrimitives.WriteUInt32BigEndian(header.AsSpan(12 + 4 * face), (uint)start);
+            byte[] sfnt = (byte[])sfnts[face].Clone();
+            int tableCount = BinaryPrimitives.ReadUInt16BigEndian(sfnt.AsSpan(4));
+            for (int i = 0; i < tableCount; i++)
+            {
+                Span<byte> offsetField = sfnt.AsSpan(12 + 16 * i + 8, 4);
+                BinaryPrimitives.WriteUInt32BigEndian(offsetField, BinaryPrimitives.ReadUInt32BigEndian(offsetField) + (uint)start);
+            }
+            output.Write(sfnt);
         }
 
+        byte[] collection = output.ToArray();
+        header.CopyTo(collection, 0);
         return collection;
     }
 

@@ -107,7 +107,7 @@ public sealed class ContentLoader : IContentLoader
         else
         {
             FontFileFace? ttfFace = ResolveTtfFontFace(contentName);
-            font = ttfFace != null ? LoadTtfFont(ttfFace.Value, NativeTtfFontSize) : default(Font);
+            font = ttfFace != null ? LoadTtfFont(ttfFace.Value, NativeTtfFontSize) : null;
         }
 
         // Every branch above assigns a value (default(Font) when nothing loads).
@@ -200,11 +200,39 @@ public sealed class ContentLoader : IContentLoader
         return null;
     }
 
-    private static Font LoadTtfFont(FontFileFace face, int fontSize)
+    /// <summary>
+    /// Loads the face, or returns null when it cannot be: the file is gone or locked since it was found, the face is
+    /// missing from its collection, or raylib rejects the data and hands back its own default font (which must
+    /// never be cached, registered or unloaded as if it were this font).
+    /// </summary>
+    private static Font? LoadTtfFont(FontFileFace face, int fontSize)
     {
         Font font;
-        byte[]? faceData = face.FaceIndex >= 0 ? FontCollection.ExtractFace(face.Path, face.FaceIndex) : null;
-        font = faceData != null ? TtfFontLoader.LoadFont(faceData, fontSize) : TtfFontLoader.LoadFont(face.Path, fontSize);
+        try
+        {
+            if (face.FaceIndex >= 0)
+            {
+                byte[]? faceData = FontCollection.ExtractFace(face.Path, face.FaceIndex);
+                if (faceData == null)
+                {
+                    return null;
+                }
+                font = TtfFontLoader.LoadFont(faceData, fontSize);
+            }
+            else
+            {
+                font = TtfFontLoader.LoadFont(face.Path, fontSize);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
+        if (TtfFontLoader.IsRaylibDefaultFont(font))
+        {
+            return null;
+        }
         TextureFilterApplier(font.Texture, DefaultTextureFilter);
         return font;
     }

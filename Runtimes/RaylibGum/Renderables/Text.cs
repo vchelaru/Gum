@@ -1801,15 +1801,7 @@ public class Text : IVisible, IRenderableIpso,
             DrawTransformed(runShadowFont, ref drawRun, SnapToPixelIfNeeded(
                 scaledTopLeft + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale, totalRotation), DropshadowColor);
         }
-        if (RaylibFontOutlineRegistry.TryGet(drawRun.Font.Texture.Id, out int outlineThickness))
-        {
-            Color outlineColor = new Color((byte)0, (byte)0, (byte)0, drawRun.Color.A);
-            foreach (Vector2 offset in RaylibFontOutlineRegistry.GetOffsets(outlineThickness * drawRun.Scale))
-            {
-                DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft + offset, outlineColor);
-            }
-        }
-        DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft, drawRun.Color);
+        DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft, drawRun.Color, withOutline: true);
     }
 
     /// <summary>
@@ -1831,13 +1823,18 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
-    private static void DrawTransformed(Font font, ref StyledRunDraw drawRun, Vector2 scaledTopLeft, Color color)
+    private static void DrawTransformed(Font font, ref StyledRunDraw drawRun, Vector2 scaledTopLeft, Color color, bool withOutline = false)
     {
         Raylib_cs.Rlgl.PushMatrix();
         Raylib_cs.Rlgl.Translatef(scaledTopLeft.X, scaledTopLeft.Y, 0);
         // Gum rotation is counterclockwise; rlgl's is clockwise on a y-down screen.
         Raylib_cs.Rlgl.Rotatef(-drawRun.Rotation, 0, 0, 1);
         Raylib_cs.Rlgl.Scalef(drawRun.ScaleX, drawRun.ScaleY, 1);
+        if (withOutline)
+        {
+            // Inside the matrix, so the outline turns and scales with the letter.
+            DrawOutline(font, drawRun.Text, Vector2.Zero, Vector2.Zero, drawRun.DrawSize, drawRun.Scale, color);
+        }
         DrawTextPro(font, drawRun.Text, Vector2.Zero, Vector2.Zero, 0, drawRun.DrawSize, 0, color);
         Raylib_cs.Rlgl.PopMatrix();
     }

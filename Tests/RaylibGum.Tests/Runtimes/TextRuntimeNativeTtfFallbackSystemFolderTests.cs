@@ -1,5 +1,6 @@
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using GumTestSupport;
 using Raylib_cs;
 using RaylibGum.Renderables;
 using RenderingLibrary.Content;
@@ -97,6 +98,39 @@ public class TextRuntimeNativeTtfFallbackSystemFolderTests : BaseTestClass
     }
 
     [Fact]
+    public void TryLoadTtfFont_CollectionDeletedAfterTheFolderWasScanned_ReturnsNull()
+    {
+        string collectionPath = Path.Combine(_fontDirectory, "Faces.ttc");
+        WriteCollection(collectionPath, "Nunito-Regular.ttf");
+        SystemFontStyleFinder.Find(_fontDirectory, Family, false, false).ShouldNotBeNull();
+        File.Delete(collectionPath);
+
+        Font? font = null;
+        Should.NotThrow(() => font = ContentLoader.TryLoadTtfFont(Family, 32));
+
+        font.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void UnreadableFontData_IsNotLoadedAsRaylibsDefaultFont(bool inCollection)
+    {
+        if (inCollection)
+        {
+            File.WriteAllBytes(Path.Combine(_fontDirectory, "Faces.ttc"), FontContainerTestWriter.ToTtc(UnreadableNunito()));
+        }
+        else
+        {
+            File.WriteAllBytes(Path.Combine(_fontDirectory, "Broken.ttf"), UnreadableNunito());
+        }
+
+        ContentLoader.TryLoadTtfFont(Family, 32).ShouldBeNull();
+        _cacheKeys.Add(ContentLoader.StandardizeCaseSensitive(Family));
+        LoaderManager.Self.LoadContent<Font>(Family).BaseSize.ShouldBe(0);
+    }
+
+    [Fact]
     public void GetSystemFontFolders_ListsTheFoldersEachPlatformKeepsFontsIn()
     {
         // macOS keeps Arial under Supplemental, a subfolder of the first folder, so it is searched with it.
@@ -116,31 +150,29 @@ public class TextRuntimeNativeTtfFallbackSystemFolderTests : BaseTestClass
     /// </summary>
     private static void WriteCollection(string path, params string[] faceFileNames)
     {
-        int headerSize = 12 + 4 * faceFileNames.Length;
-        byte[] header = new byte[headerSize];
-        "ttcf"u8.CopyTo(header);
-        BinaryPrimitives.WriteUInt32BigEndian(header.AsSpan(4), 0x00010000);
-        BinaryPrimitives.WriteUInt32BigEndian(header.AsSpan(8), (uint)faceFileNames.Length);
-
-        using MemoryStream output = new();
-        output.Write(header);
-        for (int i = 0; i < faceFileNames.Length; i++)
+        List<byte[]> faces = new();
+        foreach (string name in faceFileNames)
         {
-            // Each file is embedded whole, so its table offsets move by where it starts.
-            long start = output.Position;
-            BinaryPrimitives.WriteUInt32BigEndian(header.AsSpan(12 + 4 * i), (uint)start);
-            byte[] font = File.ReadAllBytes(NunitoGlyphSignature.PathOf(faceFileNames[i]));
-            int tableCount = BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(4));
-            for (int table = 0; table < tableCount; table++)
-            {
-                Span<byte> offset = font.AsSpan(12 + 16 * table + 8);
-                BinaryPrimitives.WriteUInt32BigEndian(offset, BinaryPrimitives.ReadUInt32BigEndian(offset) + (uint)start);
-            }
-            output.Write(font);
+            faces.Add(File.ReadAllBytes(NunitoGlyphSignature.PathOf(name)));
         }
-        output.Position = 0;
-        output.Write(header);
-        File.WriteAllBytes(path, output.ToArray());
+        File.WriteAllBytes(path, FontContainerTestWriter.ToTtc(faces));
+    }
+
+    /// <summary>
+    /// Nunito Regular with its cmap table renamed, which raylib cannot read, so it returns its own default font.
+    /// </summary>
+    private static byte[] UnreadableNunito()
+    {
+        byte[] font = File.ReadAllBytes(NunitoGlyphSignature.PathOf("Nunito-Regular.ttf"));
+        int tableCount = BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(4));
+        for (int i = 0; i < tableCount; i++)
+        {
+            if (System.Text.Encoding.ASCII.GetString(font, 12 + 16 * i, 4) == "cmap")
+            {
+                font[12 + 16 * i] = (byte)'x';
+            }
+        }
+        return font;
     }
 
     private TextRuntime CreateText(string font, bool isBold, bool isItalic)

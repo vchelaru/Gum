@@ -17,14 +17,25 @@ internal static class RaylibFontOutlineRegistry
 {
     private static readonly Dictionary<uint, int> _thicknessByTextureId = new();
 
+    /// <summary>
+    /// Records the thickness for the font with the given atlas texture id; a thickness of 0 clears the entry, so a
+    /// reused texture id never keeps the outline of the font that had it before.
+    /// </summary>
     public static void Register(uint textureId, int thickness)
     {
-        _thicknessByTextureId[textureId] = thickness;
+        if (thickness > 0)
+        {
+            _thicknessByTextureId[textureId] = thickness;
+        }
+        else
+        {
+            _thicknessByTextureId.Remove(textureId);
+        }
     }
 
     public static bool TryGet(uint textureId, out int thickness)
     {
-        return _thicknessByTextureId.TryGetValue(textureId, out thickness) && thickness > 0;
+        return _thicknessByTextureId.TryGetValue(textureId, out thickness);
     }
 
     public static void Remove(uint textureId)
