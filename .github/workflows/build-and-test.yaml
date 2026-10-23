@@ -632,8 +632,9 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
+          set +e   # bash runs with -e -o pipefail; an empty grep must not skip the later diagnostics
           echo "::group::dotnet / MSBuild processes"
-          ps -axo pid,ppid,etime,stat,pcpu,pmem,command | grep -Ei 'dotnet|msbuild|VBCSCompiler|xcode|clang|ld ' | grep -v grep | cut -c1-300 | head -100
+          ps -axo pid,ppid,etime,stat,pcpu,pmem,command | grep -Ei 'dotnet|msbuild|VBCSCompiler|xcode|clang' | grep -v grep | cut -c1-300 | head -100 || true
           echo "::endgroup::"
           echo "::group::load and memory"
           uptime; vm_stat | head -12
