@@ -217,6 +217,60 @@ public class ProjectLoaderTests
         }
     }
 
+    // #6597: a derived component saved without one of its base's instances is repaired in memory only.
+    [Fact]
+    public void Load_ShouldRepairMissingBaseInstanceInMemoryOnly_WhenDerivedComponentLacksIt()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            new ProjectCreator().Create(gumxPath);
+
+            string baseXml = """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>RepairBase</Name>
+                  <BaseType>Container</BaseType>
+                  <Instance><Name>A</Name><BaseType>Container</BaseType></Instance>
+                  <Instance><Name>B</Name><BaseType>Container</BaseType></Instance>
+                </ComponentSave>
+                """;
+            string derivedXml = """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>RepairDerived</Name>
+                  <BaseType>RepairBase</BaseType>
+                  <Instance><Name>C</Name><BaseType>Container</BaseType></Instance>
+                </ComponentSave>
+                """;
+            string componentDir = Path.Combine(tempDir, "Components");
+            File.WriteAllText(Path.Combine(componentDir, "RepairBase.gucx"), baseXml);
+            string derivedPath = Path.Combine(componentDir, "RepairDerived.gucx");
+            File.WriteAllText(derivedPath, derivedXml);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = gumxContent.Replace("</GumProjectSave>",
+                "  <ComponentReference Name=\"RepairBase\" />\n  <ComponentReference Name=\"RepairDerived\" />\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            result.Success.ShouldBeTrue();
+            ComponentSave derived = result.Project!.Components.Single(item => item.Name == "RepairDerived");
+            string.Join(",", derived.Instances.Select(item => item.Name)).ShouldBe("A,B,C");
+            derived.GetInstance("A")!.DefinedByBase.ShouldBeTrue();
+            derived.GetInstance("B")!.DefinedByBase.ShouldBeTrue();
+            derived.GetInstance("C")!.DefinedByBase.ShouldBeFalse();
+            File.ReadAllText(derivedPath).ShouldBe(derivedXml);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
     [Fact]
     public void Load_ShouldPreserveComponentInstances_WhenComponentFileHasInstances()
     {

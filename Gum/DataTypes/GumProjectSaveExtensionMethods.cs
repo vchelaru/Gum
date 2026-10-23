@@ -156,6 +156,12 @@ namespace Gum.DataTypes
                 }
             }
 
+            if (gumProjectSave.RepairMissingDefinedByBaseInstances())
+            {
+                wasModified = true;
+                modifications?.Add(nameof(RepairMissingDefinedByBaseInstances));
+            }
+
             foreach (var behavior in gumProjectSave.Behaviors)
             {
 
@@ -361,6 +367,105 @@ namespace Gum.DataTypes
                 }
             }
 
+        }
+
+        /// <summary>
+        /// Adds, as DefinedByBase instances, every instance an element inherits from its screen or component
+        /// ancestors but does not hold itself (#6597). An element is expected to carry all of its base's
+        /// instances; a file saved without one would otherwise lose that child in the tool, in generated
+        /// code and in <c>ToGraphicalUiElement</c>. This only edits the loaded project in memory: it never
+        /// writes to disk, and the returned bool lets a caller that owns the files (the tool) decide to re-save.
+        /// Repaired instances are inserted where a correct file has them: base instances in the base's order ahead of the element's own.
+        /// </summary>
+        /// <returns>True if any instance was added. A second call returns false.</returns>
+        public static bool RepairMissingDefinedByBaseInstances(this GumProjectSave gumProjectSave)
+        {
+            // The project is searched directly, not through ObjectFinder, because the headless loader and
+            // the runtimes call Initialize before (or without) pointing ObjectFinder at the project.
+            bool wasAnythingAdded = RepairMissingBaseInstances(gumProjectSave.Screens);
+            wasAnythingAdded |= RepairMissingBaseInstances(gumProjectSave.Components);
+            return wasAnythingAdded;
+        }
+
+        private static bool RepairMissingBaseInstances<T>(List<T> elements) where T : ElementSave
+        {
+            Dictionary<string, ElementSave>? elementsByName = null;
+            bool wasAnythingAdded = false;
+
+            foreach (T element in elements)
+            {
+                if (string.IsNullOrWhiteSpace(element.BaseType))
+                {
+                    continue;
+                }
+
+                if (elementsByName == null)
+                {
+                    elementsByName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
+                    foreach (T candidate in elements)
+                    {
+                        elementsByName[candidate.Name] = candidate;
+                    }
+                }
+
+                // Walk up the whole chain: a base that is itself missing instances still passes down
+                // everything its own bases define. The visited set stops a circular BaseType.
+                List<InstanceSave>? inherited = null;
+                HashSet<ElementSave> visited = new HashSet<ElementSave> { element };
+                ElementSave current = element;
+                while (!string.IsNullOrWhiteSpace(current.BaseType) &&
+                    elementsByName.TryGetValue(current.BaseType, out ElementSave? baseElement) &&
+                    visited.Add(baseElement))
+                {
+                    // Higher ancestors go first, so the list reads grandparent, parent, as a correct file would.
+                    inherited ??= new List<InstanceSave>();
+                    inherited.InsertRange(0, baseElement.Instances);
+                    current = baseElement;
+                }
+
+                if (inherited == null)
+                {
+                    continue;
+                }
+
+                // A missing instance goes right after the previous inherited instance the element holds (at the
+                // front when none precedes it), so base instances end up in the base's order ahead of the
+                // element's own, and everything already present keeps its relative order.
+                int insertIndex = 0;
+                foreach (InstanceSave instanceInBase in inherited)
+                {
+                    int existingIndex = IndexOfInstance(element, instanceInBase.Name);
+                    if (existingIndex >= 0)
+                    {
+                        // Never move back: a base that is itself missing instances repeats names in the inherited list.
+                        insertIndex = Math.Max(insertIndex, existingIndex + 1);
+                    }
+                    else
+                    {
+                        InstanceSave instance = instanceInBase.Clone();
+                        instance.DefinedByBase = true;
+                        instance.ParentContainer = element;
+                        element.Instances.Insert(insertIndex, instance);
+                        insertIndex++;
+                        wasAnythingAdded = true;
+                    }
+                }
+            }
+
+            return wasAnythingAdded;
+        }
+
+        private static int IndexOfInstance(ElementSave element, string name)
+        {
+            for (int i = 0; i < element.Instances.Count; i++)
+            {
+                if (element.Instances[i].Name == name)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>
