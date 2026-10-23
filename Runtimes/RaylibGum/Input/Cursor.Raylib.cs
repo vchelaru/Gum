@@ -30,7 +30,11 @@ public partial class Cursor
     /// </summary>
     internal static Cursor CreateForCurrentPlatform() => new Cursor();
 
-    private MouseState GetMouseState()
+    /// <summary>
+    /// Reads the mouse for this frame. <see cref="Activity(double)"/> calls it; a subclass overrides it to
+    /// replace the input source, for automation and tests, without reading the OS mouse.
+    /// </summary>
+    protected virtual MouseState GetMouseState()
     {
         var state = new MouseState();
 
@@ -44,9 +48,13 @@ public partial class Cursor
         return state;
     }
 
+    /// <summary>
+    /// Reads the touch points for this frame. <see cref="Activity(double)"/> calls it; a subclass overrides it
+    /// to replace the input source, for automation and tests, without reading the OS touch panel.
+    /// </summary>
     // raylib reports touch points only on its touch backends (Android, web); desktop GLFW always
     // reports zero, so desktop keeps reading the mouse.
-    private TouchCollection GetTouchCollection() =>
+    protected virtual TouchCollection GetTouchCollection() =>
         TouchCollection.Create(Raylib.GetTouchPointCount(), Raylib.GetTouchPointId, Raylib.GetTouchPosition);
 
     private int? GetViewportLeft() =>

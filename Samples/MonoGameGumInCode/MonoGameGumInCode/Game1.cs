@@ -20,6 +20,12 @@ namespace MonoGameGumInCode
         private StackPanel _navStrip;
         private FrameworkElement _currentScreen;
 
+#if DEBUG
+        // Plays an NDJSON script when launched with --gum-automation <script>; null otherwise.
+        // Automation/smoke.ndjson has the launch command; GumAutomationHost documents the flags.
+        private readonly Gum.Automation.GumAutomationHost _automation;
+#endif
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -45,6 +51,10 @@ namespace MonoGameGumInCode
             IsMouseVisible = true;
 
             Window.AllowUserResizing = true;
+
+#if DEBUG
+            _automation = Gum.Automation.GumAutomationHost.FromArgs(System.Environment.GetCommandLineArgs(), this);
+#endif
         }
 
         protected override void Initialize()
@@ -127,6 +137,8 @@ namespace MonoGameGumInCode
         private void AddNavButton(string text, System.Action onClick)
         {
             var button = new Button();
+            // Named so automation scripts can target it, e.g. NavForms or NavRenderTarget.
+            button.Name = "Nav" + text.Replace(" ", "");
             button.Text = text;
             button.Click += (_, _) => onClick();
             _navStrip.AddChild(button);
@@ -164,7 +176,13 @@ namespace MonoGameGumInCode
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            bool isAutomated = false;
+#if DEBUG
+            _automation?.BeforeUpdate();
+            // An automation run reads no OS input; the script's scripted cursor and keyboard drive Gum.
+            isAutomated = _automation != null;
+#endif
+            if (!isAutomated && (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape)))
                 Exit();
 
             GumService.Default.Update(gameTime);

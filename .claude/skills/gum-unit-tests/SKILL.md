@@ -91,6 +91,10 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   test writes `.fnt`/`.png` files; a test that needs real fonts must register the real generator
   and await it.
 
+## Scripted Forms input (Gum.Automation)
+
+`Tests/Gum.Automation` drives Forms in-process without the OS mouse or keyboard: `GumDriver.ForGumService(GumService.Default)` then `Install()` gives click/drag/scroll/type/key/read by element name, and `GumScriptRunner.Run(driver, ndjson)` plays an NDJSON script with per-line pass/fail (commands are documented on `GumScriptCommand`). Use it instead of a hand-written `ICursor`/keyboard fake. A desktop app plays a script off-screen via `GumAutomationHost` (`Samples/MonoGameGumInCode`, launch command in its `Automation/smoke.ndjson`).
+
 ## Save parity corpus
 
 `ParityCorpus/` holds whole project folders that must re-save byte for byte in every culture and on
