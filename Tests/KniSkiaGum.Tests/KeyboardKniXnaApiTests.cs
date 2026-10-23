@@ -84,10 +84,8 @@ public class KeyboardKniXnaApiTests
         Keyboard.NumberOfKeys.ShouldBe(255);
     }
 
-    // The obsolete XNA overloads mirror KniGum's until they are removed there (#5028), so this pins them.
-#pragma warning disable CS0618
     [Fact]
-    public void ObsoleteXnaKeysOverloads_ShouldMatchTheGumKeysOverloads()
+    public void XnaKeysOverloads_ShouldMatchTheGumKeysOverloads()
     {
         Keyboard sut = CreateKeyboard(XnaKeys.A, XnaKeys.Enter);
         sut.Activity(0);
@@ -107,10 +105,9 @@ public class KeyboardKniXnaApiTests
         sut.KeyReleased(XnaKeys.Enter).ShouldBeTrue();
         sut.KeyPushed(XnaKeys.Enter).ShouldBeFalse();
     }
-#pragma warning restore CS0618
 
     [Fact]
-    public void XnaKeysOverloads_ShouldAllBeObsoleteWithReplacementAndDates()
+    public void XnaKeysOverloads_ShouldNotBeObsolete()
     {
         List<MethodInfo> xnaOverloads = new List<MethodInfo>();
         foreach (Type type in new[] { typeof(Keyboard), typeof(IInputReceiverKeyboardMonoGame), typeof(XnaKeyboardExtensions) })
@@ -129,13 +126,7 @@ public class KeyboardKniXnaApiTests
 
         foreach (MethodInfo method in xnaOverloads)
         {
-            ObsoleteAttribute? obsolete = method.GetCustomAttribute<ObsoleteAttribute>();
-            obsolete.ShouldNotBeNull($"{method.DeclaringType!.Name}.{method.Name}(XnaKeys) must be [Obsolete]");
-            obsolete!.IsError.ShouldBeFalse();
-            string message = obsolete.Message ?? string.Empty;
-            message.ShouldContain("Gum.Forms.Input.Keys");
-            message.ShouldContain("March 2027");
-            message.ShouldContain("July 2027");
+            method.GetCustomAttribute<ObsoleteAttribute>().ShouldBeNull($"{method.DeclaringType!.Name}.{method.Name}(XnaKeys) must not be [Obsolete]");
         }
     }
 }

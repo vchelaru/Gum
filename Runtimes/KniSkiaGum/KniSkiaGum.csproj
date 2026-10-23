@@ -45,7 +45,6 @@
 		<Compile Include="..\..\MonoGameGum\Input\KeyboardStateProcessor.cs" Link="Input\KeyboardStateProcessor.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\IInputReceiverKeyboardMonoGame.cs" Link="Input\IInputReceiverKeyboardMonoGame.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\XnaKeyboardExtensions.cs" Link="Input\XnaKeyboardExtensions.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\XnaKeysObsolescence.cs" Link="Input\XnaKeysObsolescence.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

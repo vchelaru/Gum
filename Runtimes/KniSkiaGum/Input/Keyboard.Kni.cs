@@ -88,38 +88,28 @@ public class Keyboard : PolledKeyboard, IInputReceiverKeyboardMonoGame
     public bool IsKeyLetter(GumKeys key) => key >= GumKeys.A && key <= GumKeys.Z;
 
     /// <summary>
-    /// XNA <see cref="XnaKeys"/> overload. Use the <see cref="GumKeys"/> overload instead.
+    /// Returns whether the specified XNA key is currently held down.
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool KeyDown(XnaKeys key) => KeyDown((GumKeys)(int)key);
 
     /// <summary>
-    /// XNA <see cref="XnaKeys"/> overload. Use the <see cref="GumKeys"/> overload instead.
+    /// Returns whether the specified XNA key was pressed this frame.
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool KeyPushed(XnaKeys key) => KeyPushed((GumKeys)(int)key);
 
     /// <summary>
-    /// XNA <see cref="XnaKeys"/> overload. Use the <see cref="GumKeys"/> overload instead.
+    /// Returns whether the specified XNA key was released this frame.
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool KeyReleased(XnaKeys key) => KeyReleased((GumKeys)(int)key);
 
     /// <summary>
-    /// XNA <see cref="XnaKeys"/> overload. Use the <see cref="GumKeys"/> overload instead.
+    /// Returns whether the specified XNA key was "typed" this frame (pushed or repeating while held).
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool KeyTyped(XnaKeys key) => KeyTyped((GumKeys)(int)key);
 
     /// <summary>
-    /// XNA <see cref="XnaKeys"/> overload. Use the <see cref="GumKeys"/> overload instead.
+    /// Returns whether the specified XNA key is a letter (A through Z).
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool IsKeyLetter(XnaKeys key) => IsKeyLetter((GumKeys)(int)key);
 
     /// <inheritdoc/>

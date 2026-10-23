@@ -323,10 +323,8 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     }
 
     /// <summary>
-    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// Returns whether the specified XNA key is currently held down.
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool KeyDown(Keys key) => KeyDownCore(key);
 
     private bool KeyDownCore(Keys key)
@@ -351,10 +349,8 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     }
 
     /// <summary>
-    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// Returns whether the specified XNA key was "typed" this frame (pushed or repeating while held).
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool KeyTyped(Keys key) => KeyTypedCore(key);
 
     private bool KeyTypedCore(Keys key)
@@ -377,10 +373,8 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     }
 
     /// <summary>
-    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// Returns whether the specified XNA key was pressed this frame.
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool KeyPushed(Keys key) => KeyPushedCore(key);
 
     private bool KeyPushedCore(Keys key)
@@ -402,10 +396,8 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     }
 
     /// <summary>
-    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// Returns whether the specified XNA key was released this frame.
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool KeyReleased(Keys key) => KeyReleasedCore(key);
 
     private bool KeyReleasedCore(Keys key)
@@ -593,10 +585,8 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     }
 
     /// <summary>
-    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// Returns whether the specified XNA key is a letter (A through Z).
     /// </summary>
-    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
-    [Obsolete(XnaKeysObsolescence.Message)]
     public bool IsKeyLetter(Keys key) => IsKeyLetterCore(key);
 
     private static bool IsKeyLetterCore(Keys key)
