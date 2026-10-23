@@ -114,7 +114,8 @@ internal class CirclesScreen : FrameworkElement
         foreach ((Color color, float x, float y) in discs)
         {
             CircleRuntime circle = new();
-            circle.Radius = 26;
+            circle.Width = 52;
+            circle.Height = 52;
             circle.FillColor = color;
             circle.IsFilled = true;
             circle.Blend = Gum.RenderingLibrary.Blend.Additive;
@@ -169,7 +170,8 @@ internal class CirclesScreen : FrameworkElement
         foreach (float radius in new[] { 16f, 24f, 32f, 48f })
         {
             CircleRuntime circle = new();
-            circle.Radius = radius;
+            circle.Width = radius * 2;
+            circle.Height = radius * 2;
             circle.StrokeColor = new Color(255, 255, 255, 255);
             row.Children.Add(circle);
         }
@@ -182,7 +184,8 @@ internal class CirclesScreen : FrameworkElement
         foreach (byte alpha in new byte[] { 255, 192, 128, 64 })
         {
             CircleRuntime circle = new();
-            circle.Radius = 24;
+            circle.Width = 48;
+            circle.Height = 48;
             circle.StrokeColor = new Color((byte)255, (byte)255, (byte)255, alpha);
             row.Children.Add(circle);
         }
@@ -194,19 +197,22 @@ internal class CirclesScreen : FrameworkElement
         ContainerRuntime row = BuildHorizontalRow();
 
         CircleRuntime filled = new();
-        filled.Radius = 28;
+        filled.Width = 56;
+        filled.Height = 56;
         filled.FillColor = new Color(220, 20, 60, 255); // Crimson
         filled.IsFilled = true;
         row.Children.Add(filled);
 
         CircleRuntime stroked = new();
-        stroked.Radius = 28;
+        stroked.Width = 56;
+        stroked.Height = 56;
         stroked.StrokeColor = new Color(0, 255, 255, 255); // Cyan
         stroked.StrokeWidth = 3;
         row.Children.Add(stroked);
 
         CircleRuntime defaultCircle = new();
-        defaultCircle.Radius = 28;
+        defaultCircle.Width = 56;
+        defaultCircle.Height = 56;
         row.Children.Add(defaultCircle);
 
         return row;
@@ -218,7 +224,8 @@ internal class CirclesScreen : FrameworkElement
         foreach (float strokeWidth in new[] { 1f, 2f, 4f, 8f })
         {
             CircleRuntime circle = new();
-            circle.Radius = 24;
+            circle.Width = 48;
+            circle.Height = 48;
             circle.StrokeColor = new Color(144, 238, 144, 255); // LightGreen
             circle.StrokeWidth = strokeWidth;
             row.Children.Add(circle);
@@ -245,7 +252,8 @@ internal class CirclesScreen : FrameworkElement
 
         // Linear horizontal: white → steel blue
         CircleRuntime linearH = new();
-        linearH.Radius = 28;
+        linearH.Width = 56;
+        linearH.Height = 56;
         linearH.FillColor = new Color(255, 255, 255, 255); // gradient start stop is the fill color
         linearH.IsFilled = true;
         linearH.UseGradient = true;
@@ -257,7 +265,8 @@ internal class CirclesScreen : FrameworkElement
 
         // Linear vertical: gold → crimson
         CircleRuntime linearV = new();
-        linearV.Radius = 28;
+        linearV.Width = 56;
+        linearV.Height = 56;
         linearV.FillColor = new Color(255, 215, 0, 255); // Gold
         linearV.IsFilled = true;
         linearV.UseGradient = true;
@@ -269,7 +278,8 @@ internal class CirclesScreen : FrameworkElement
 
         // Linear diagonal: cyan → magenta
         CircleRuntime linearD = new();
-        linearD.Radius = 28;
+        linearD.Width = 56;
+        linearD.Height = 56;
         linearD.FillColor = new Color(0, 255, 255, 255); // Cyan
         linearD.IsFilled = true;
         linearD.UseGradient = true;
@@ -281,7 +291,8 @@ internal class CirclesScreen : FrameworkElement
 
         // Radial centered: white → dark green
         CircleRuntime radial = new();
-        radial.Radius = 28;
+        radial.Width = 56;
+        radial.Height = 56;
         radial.FillColor = new Color(255, 255, 255, 255);
         radial.IsFilled = true;
         radial.UseGradient = true;
@@ -306,14 +317,16 @@ internal class CirclesScreen : FrameworkElement
         foreach (bool aa in new[] { true, false })
         {
             CircleRuntime filled = new();
-            filled.Radius = 28;
+            filled.Width = 56;
+            filled.Height = 56;
             filled.FillColor = new Color(218, 165, 32, 255); // Goldenrod
             filled.IsFilled = true;
             filled.IsAntialiased = aa;
             row.Children.Add(filled);
 
             CircleRuntime ring = new();
-            ring.Radius = 28;
+            ring.Width = 56;
+            ring.Height = 56;
             ring.StrokeColor = new Color(255, 255, 255, 255);
             ring.StrokeWidth = 1;
             ring.IsAntialiased = aa;
@@ -334,14 +347,16 @@ internal class CirclesScreen : FrameworkElement
 
         // Baseline: no shadow.
         CircleRuntime baseline = new();
-        baseline.Radius = 28;
+        baseline.Width = 56;
+        baseline.Height = 56;
         baseline.FillColor = goldenrod;
         baseline.IsFilled = true;
         row.Children.Add(baseline);
 
         // Soft shadow: noticeable offset, generous blur, default opaque black.
         CircleRuntime soft = new();
-        soft.Radius = 28;
+        soft.Width = 56;
+        soft.Height = 56;
         soft.FillColor = goldenrod;
         soft.IsFilled = true;
         soft.HasDropshadow = true;
@@ -352,7 +367,8 @@ internal class CirclesScreen : FrameworkElement
 
         // Hard offset: bigger offset, no blur, semi-transparent black.
         CircleRuntime hard = new();
-        hard.Radius = 28;
+        hard.Width = 56;
+        hard.Height = 56;
         hard.FillColor = goldenrod;
         hard.IsFilled = true;
         hard.HasDropshadow = true;
@@ -366,7 +382,8 @@ internal class CirclesScreen : FrameworkElement
         // background (offset = 0 would tuck the entire shadow under the opaque disk and leave
         // only a thin halo, which on a blue page reads as nothing).
         CircleRuntime colored = new();
-        colored.Radius = 28;
+        colored.Width = 56;
+        colored.Height = 56;
         colored.FillColor = goldenrod;
         colored.IsFilled = true;
         colored.HasDropshadow = true;
@@ -380,7 +397,8 @@ internal class CirclesScreen : FrameworkElement
         // body's alpha cut to 80. The shadow must fade alongside the body rather than leaving an
         // opaque ghost behind a translucent disk.
         CircleRuntime fadedBody = new();
-        fadedBody.Radius = 28;
+        fadedBody.Width = 56;
+        fadedBody.Height = 56;
         fadedBody.FillColor = new Color(218, 165, 32, 80);
         fadedBody.IsFilled = true;
         fadedBody.HasDropshadow = true;
@@ -400,14 +418,16 @@ internal class CirclesScreen : FrameworkElement
 
         // Baseline: solid stroke (dash=0).
         CircleRuntime solid = new();
-        solid.Radius = 28;
+        solid.Width = 56;
+        solid.Height = 56;
         solid.StrokeColor = new Color(255, 255, 255, 255);
         solid.StrokeWidth = 2;
         row.Children.Add(solid);
 
         // Short 6/4 dash.
         CircleRuntime short64 = new();
-        short64.Radius = 28;
+        short64.Width = 56;
+        short64.Height = 56;
         short64.StrokeColor = new Color(255, 255, 255, 255);
         short64.StrokeWidth = 2;
         short64.StrokeDashLength = 6;
@@ -417,7 +437,8 @@ internal class CirclesScreen : FrameworkElement
         // Tight 2/2 dotted. AA stays ON so the dashes render as crisp 1 px dots with smooth edges
         // rather than jaggies.
         CircleRuntime dotted = new();
-        dotted.Radius = 28;
+        dotted.Width = 56;
+        dotted.Height = 56;
         dotted.StrokeColor = new Color(255, 255, 255, 255);
         dotted.StrokeWidth = 1;
         dotted.StrokeDashLength = 2;
@@ -426,7 +447,8 @@ internal class CirclesScreen : FrameworkElement
 
         // Long-dash motif: 12/6 with a thicker stroke.
         CircleRuntime longDash = new();
-        longDash.Radius = 28;
+        longDash.Width = 56;
+        longDash.Height = 56;
         longDash.StrokeColor = new Color(144, 238, 144, 255); // LightGreen
         longDash.StrokeWidth = 3;
         longDash.StrokeDashLength = 12;
@@ -455,7 +477,8 @@ internal class CirclesScreen : FrameworkElement
         ContainerRuntime row = BuildHorizontalRow();
 
         CircleRuntime strokeLast = new();
-        strokeLast.Radius = 28;
+        strokeLast.Width = 56;
+        strokeLast.Height = 56;
         strokeLast.FillColor = new Color(220, 20, 60, 255); // Crimson
         strokeLast.IsFilled = true;
         strokeLast.StrokeColor = new Color(0, 255, 255, 255); // Cyan
@@ -463,7 +486,8 @@ internal class CirclesScreen : FrameworkElement
         row.Children.Add(strokeLast);
 
         CircleRuntime fillLast = new();
-        fillLast.Radius = 28;
+        fillLast.Width = 56;
+        fillLast.Height = 56;
         fillLast.StrokeColor = new Color(255, 0, 255, 255); // Magenta
         fillLast.StrokeWidth = 4;
         fillLast.FillColor = new Color(255, 215, 0, 255); // Gold
@@ -476,7 +500,8 @@ internal class CirclesScreen : FrameworkElement
         // background color instead of blending away, which a dashed or differently-colored
         // stroke would hide.
         CircleRuntime blackOnBlack = new();
-        blackOnBlack.Radius = 28;
+        blackOnBlack.Width = 56;
+        blackOnBlack.Height = 56;
         blackOnBlack.FillColor = new Color(0, 0, 0, 255);
         blackOnBlack.IsFilled = true;
         blackOnBlack.StrokeColor = new Color(0, 0, 0, 255);
@@ -486,7 +511,8 @@ internal class CirclesScreen : FrameworkElement
         // Dashed stroke over a fill, thin vs thick, so dash rendering is confirmed alongside the
         // two-slot fill+stroke composition rather than only on its own in BuildDashedStrokeRow.
         CircleRuntime dashedThin = new();
-        dashedThin.Radius = 28;
+        dashedThin.Width = 56;
+        dashedThin.Height = 56;
         dashedThin.FillColor = new Color(220, 20, 60, 255); // Crimson
         dashedThin.IsFilled = true;
         dashedThin.StrokeColor = new Color(255, 255, 255, 255);
@@ -496,7 +522,8 @@ internal class CirclesScreen : FrameworkElement
         row.Children.Add(dashedThin);
 
         CircleRuntime dashedThick = new();
-        dashedThick.Radius = 28;
+        dashedThick.Width = 56;
+        dashedThick.Height = 56;
         dashedThick.FillColor = new Color(255, 215, 0, 255); // Gold
         dashedThick.IsFilled = true;
         dashedThick.StrokeColor = new Color(0, 255, 255, 255); // Cyan
@@ -519,7 +546,8 @@ internal class CirclesScreen : FrameworkElement
         foreach (float strokeWidth in new[] { 1f, 2f, 3f, 4f })
         {
             CircleRuntime circle = new();
-            circle.Radius = 28;
+            circle.Width = 56;
+            circle.Height = 56;
             circle.FillColor = new Color(255, 0, 0, 255);
             circle.IsFilled = true;
             circle.StrokeColor = new Color(255, 255, 255, 255);
@@ -586,7 +614,8 @@ internal class CirclesScreen : FrameworkElement
         frame.IsFilled = true;
 
         CircleRuntime circle = new();
-        circle.Radius = 32;
+        circle.Width = 64;
+        circle.Height = 64;
         circle.FillColor = new Color(46, 139, 87, 255); // SeaGreen
         circle.IsFilled = true;
         circle.StrokeColor = new Color(255, 255, 0, 255);
@@ -627,7 +656,8 @@ internal class CirclesScreen : FrameworkElement
         frame.IsFilled = true;
 
         CircleRuntime circle = new();
-        circle.Radius = 28;
+        circle.Width = 56;
+        circle.Height = 56;
         circle.XOrigin = HorizontalAlignment.Center;
         circle.XUnits = GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
@@ -670,7 +700,8 @@ internal class CirclesScreen : FrameworkElement
         frame.IsFilled = true;
 
         CircleRuntime circle = new();
-        circle.Radius = 22;
+        circle.Width = 44;
+        circle.Height = 44;
         circle.FillColor = new Color(255, 165, 0, 255); // Orange
         circle.IsFilled = true;
         circle.XOrigin = HorizontalAlignment.Center;

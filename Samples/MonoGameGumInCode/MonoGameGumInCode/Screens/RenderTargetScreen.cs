@@ -94,10 +94,13 @@ internal class RenderTargetScreen : FrameworkElement
     // backdrop rather than the page color.
     private static ContainerRuntime BuildFrame(float width, float height)
     {
-        var frame = new ColoredRectangleRuntime();
+        var frame = new RectangleRuntime();
         frame.Width = width;
         frame.Height = height;
-        frame.Color = Rgba(70, 70, 90, 255);
+        frame.IsFilled = true;
+        frame.FillColor = Rgba(70, 70, 90, 255);
+        frame.StrokeWidth = 0;
+        frame.IsAntialiased = false;
 
         var holder = new ContainerRuntime();
         holder.Width = width;
@@ -106,14 +109,17 @@ internal class RenderTargetScreen : FrameworkElement
         return holder;
     }
 
-    private static ColoredRectangleRuntime Rect(float x, float y, float width, float height, Color color)
+    private static RectangleRuntime Rect(float x, float y, float width, float height, Color color)
     {
-        var rect = new ColoredRectangleRuntime();
+        var rect = new RectangleRuntime();
         rect.X = x;
         rect.Y = y;
         rect.Width = width;
         rect.Height = height;
-        rect.Color = color;
+        rect.IsFilled = true;
+        rect.FillColor = color;
+        rect.StrokeWidth = 0;
+        rect.IsAntialiased = false;
         return rect;
     }
 
