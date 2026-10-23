@@ -130,10 +130,41 @@ public class Menu : ItemsControl
             }
         }
 
-        AddNextPushAction(HandleNextPush);
+        QueueNextPushAction();
     }
 
     #endregion
+
+    // Whether a next-push action is queued and has not run yet. Selecting items queues one, and only one
+    // is needed to close the menu on the next push, however many times items are selected before it.
+    bool _isNextPushQueued;
+
+    private void QueueNextPushAction()
+    {
+        if (_isNextPushQueued)
+        {
+            return;
+        }
+
+        _isNextPushQueued = true;
+
+        // Not the owner overload (FrameworkElement.AddNextPushAction): that drops the action without
+        // running it when the Visual has left the tree, which would leave _isNextPushQueued set forever.
+        InteractiveGue.AddNextPushAction(RunQueuedPushAction);
+    }
+
+    private void RunQueuedPushAction()
+    {
+        _isNextPushQueued = false;
+
+#if !FRB
+        if (Visual.EffectiveManagers == null)
+        {
+            return;
+        }
+#endif
+        HandleNextPush();
+    }
 
     private void HandleNextPush()
     {
@@ -188,7 +219,7 @@ public class Menu : ItemsControl
         }
         else
         {
-            AddNextPushAction(HandleNextPush);
+            QueueNextPushAction();
         }
     }
 

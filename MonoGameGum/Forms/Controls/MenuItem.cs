@@ -481,6 +481,11 @@ public class MenuItem : ItemsControl
         base.HandleItemsCollectionChanged(sender, e);
 
         RefreshSubmenuIndicatorVisibility();
+
+        if (itemsPopup != null)
+        {
+            RefreshOpenPopup();
+        }
     }
 
     private void RefreshSubmenuIndicatorVisibility()
@@ -582,41 +587,22 @@ public class MenuItem : ItemsControl
             // sometimes the Gum project includes children, so let's remove them:
             itemsPopup.InnerPanel.Children.Clear();
             MenuItemsInternal.Clear();
+            popupRows.Clear();
+            generatedPopupRows.Clear();
+            isPopupSizedByItems = visualTemplateVisual == null;
 
             foreach (var item in Items)
             {
-                MenuItem? menuItem;
-                FrameworkElement frameworkElementItem;
+                FrameworkElement row = CreatePopupRow(item);
+                popupRows.Add(row);
+                AttachPopupRow(row);
 
-                if (item is FrameworkElement asFrameworkElement)
-                {
-                    frameworkElementItem = asFrameworkElement;
-                    menuItem = frameworkElementItem as MenuItem;
-                }
-                else
-                {
-                    menuItem = new MenuItem();
-                    frameworkElementItem = menuItem;
-                    menuItem.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                    menuItem.UpdateToObject(item);
-                    menuItem.BindingContext = item;
-                }
-                
-                if(menuItem != null)
-                {
-                    menuItem.SelectOnHighlight = this.SelectOnHighlight;
-                    MenuItemsInternal.Add(menuItem);
-                    menuItem.ParentMenuItem = this;
-                    menuItem.Selected += HandleSubItemSelected;
-                }
-
-
-                itemsPopup.InnerPanel.Children.Add(frameworkElementItem.Visual);
+                itemsPopup.InnerPanel.Children.Add(row.Visual);
             }
 
 #if !FRB
             // The popup's size must be resolved before it is placed, because placing clamps it to the screen (#6686).
-            if (visualTemplateVisual == null)
+            if (isPopupSizedByItems)
             {
                 SizePopupToItems();
             }
@@ -632,7 +618,7 @@ public class MenuItem : ItemsControl
             WatchAncestorsWhileOpen();
 #endif
 #if FRB
-            if (visualTemplateVisual == null)
+            if (isPopupSizedByItems)
             {
                 SizePopupToItems();
             }
@@ -641,6 +627,186 @@ public class MenuItem : ItemsControl
             itemsPopup.RepositionToKeepInScreen();
 #endif
         }
+    }
+
+    // The row controls in the open popup, in Items order, including controls that are not MenuItems.
+    readonly List<FrameworkElement> popupRows = new List<FrameworkElement>();
+
+    // The rows this item created for data objects in Items (as opposed to controls supplied in Items).
+    readonly HashSet<MenuItem> generatedPopupRows = new HashSet<MenuItem>();
+
+    // True when the popup is a plain ScrollViewer that sizes itself to its rows, false when a
+    // ScrollViewerVisualTemplate supplied it.
+    bool isPopupSizedByItems;
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic per-item BindingContext assignment when populating sub-items from a " +
+            "bound collection. Any by-name VM member resolution happens in the item template's own " +
+            "bindings, which already carry this warning at the SetBinding call that created them.")]
+    private FrameworkElement CreatePopupRow(object item)
+    {
+        if (item is FrameworkElement asFrameworkElement)
+        {
+            return asFrameworkElement;
+        }
+
+        MenuItem menuItem = new MenuItem();
+        menuItem.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        menuItem.UpdateToObject(item);
+        menuItem.BindingContext = item;
+        generatedPopupRows.Add(menuItem);
+        return menuItem;
+    }
+
+    // Makes a popup row one of this item's sub-items: highlight behavior, parent, and sibling deselection.
+    private void AttachPopupRow(FrameworkElement row)
+    {
+        if (row is MenuItem menuItem)
+        {
+            menuItem.SelectOnHighlight = this.SelectOnHighlight;
+            MenuItemsInternal.Add(menuItem);
+            menuItem.ParentMenuItem = this;
+            menuItem.Selected += HandleSubItemSelected;
+        }
+    }
+
+    // Undoes AttachPopupRow, leaving the row's Visual where it is.
+    private void DetachPopupRow(FrameworkElement row)
+    {
+        if (row is MenuItem menuItem)
+        {
+            menuItem.Selected -= HandleSubItemSelected;
+            menuItem.ParentMenuItem = null;
+        }
+    }
+
+    // Called when the popup closes: sub-items stop reporting to this item until the next open.
+    private void ReleasePopupRows()
+    {
+        foreach (MenuItem menuItem in MenuItemsInternal)
+        {
+            menuItem.Selected -= HandleSubItemSelected;
+        }
+        popupRows.Clear();
+        generatedPopupRows.Clear();
+    }
+
+    /// <summary>
+    /// Brings the open popup in line with Items after it changed: rows for removed items leave (closing
+    /// any submenu they have open), rows for new items join, and rows that stay are untouched so their
+    /// highlight, selection and open submenu survive. The popup is then sized and placed again.
+    /// </summary>
+    private void RefreshOpenPopup()
+    {
+        if (Items == null || Items.Count == 0)
+        {
+            // Nothing left to show. Deselect rather than only tear down, so the item can open again.
+            IsSelected = false;
+            HidePopupRecursively();
+            return;
+        }
+
+        ScrollViewer popup = itemsPopup!;
+        List<FrameworkElement> oldRows = new List<FrameworkElement>(popupRows);
+        List<FrameworkElement> unclaimedRows = new List<FrameworkElement>(oldRows);
+        List<FrameworkElement> newRows = new List<FrameworkElement>(Items.Count);
+
+        foreach (object item in Items)
+        {
+            FrameworkElement? row = null;
+            if (item is FrameworkElement asFrameworkElement)
+            {
+                int index = unclaimedRows.IndexOf(asFrameworkElement);
+                if (index > -1)
+                {
+                    unclaimedRows.RemoveAt(index);
+                    row = asFrameworkElement;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < unclaimedRows.Count; i++)
+                {
+                    if (unclaimedRows[i] is MenuItem generated && generatedPopupRows.Contains(generated) &&
+                        Equals(generated.BindingContext, item))
+                    {
+                        row = generated;
+                        unclaimedRows.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            newRows.Add(row ?? CreatePopupRow(item));
+        }
+
+        // Rows left unclaimed belong to removed items.
+        foreach (FrameworkElement removed in unclaimedRows)
+        {
+            if (removed is MenuItem removedMenuItem)
+            {
+                // Close its submenu first: the popup it opened is not in this popup and would be left behind.
+                removedMenuItem.HidePopupRecursively();
+                removedMenuItem.IsSelected = false;
+                generatedPopupRows.Remove(removedMenuItem);
+            }
+            DetachPopupRow(removed);
+            removed.Visual.Parent = null;
+        }
+
+        for (int i = 0; i < newRows.Count; i++)
+        {
+            FrameworkElement row = newRows[i];
+            if (!oldRows.Contains(row))
+            {
+                AttachPopupRow(row);
+            }
+
+            GraphicalUiElement visual = row.Visual;
+            if (popup.InnerPanel.Children.Count > i && popup.InnerPanel.Children[i] == visual)
+            {
+                continue;
+            }
+
+            // A row that moved leaves and re-enters; its own submenu closes with it.
+            if (visual.Parent == popup.InnerPanel)
+            {
+                visual.Parent = null;
+            }
+            popup.InnerPanel.Children.Insert(i, visual);
+        }
+
+        popupRows.Clear();
+        popupRows.AddRange(newRows);
+
+        MenuItemsInternal.Clear();
+        foreach (FrameworkElement row in newRows)
+        {
+            if (row is MenuItem menuItem)
+            {
+                MenuItemsInternal.Add(menuItem);
+            }
+        }
+
+#if !FRB
+        // The rows changed the popup's size, so it has to be sized and clamped again.
+        if (isPopupSizedByItems)
+        {
+            SizePopupToItems();
+        }
+
+        PlaceItemsPopup();
+#endif
+#if FRB
+        PlaceItemsPopup();
+        if (isPopupSizedByItems)
+        {
+            SizePopupToItems();
+        }
+
+        GuiManager.SortZAndLayerBased();
+        popup.RepositionToKeepInScreen();
+#endif
     }
 
     /// <summary>
@@ -793,6 +959,8 @@ public class MenuItem : ItemsControl
             {
                 item.IsSelected = false;
             }
+
+            ReleasePopupRows();
         }
     }
 
@@ -836,6 +1004,7 @@ public class MenuItem : ItemsControl
             }
             itemsPopup.Visual.Parent = null;
             itemsPopup = null;
+            ReleasePopupRows();
 #if !FRB
             StopWatchingAncestors();
             Visual.InvalidateSubtreeCaches();
