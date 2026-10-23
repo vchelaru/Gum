@@ -53,3 +53,14 @@ public class ManagedFont : IDisposable
         }
     }
 }
+
+/// <summary>
+/// A font the native TTF fallback loaded because no font creator produced one. The font cache replaces it
+/// once a creator is wired, as it replaces an empty placeholder.
+/// </summary>
+internal sealed class NativeFallbackManagedFont : ManagedFont
+{
+    public NativeFallbackManagedFont(Font font) : base(font)
+    {
+    }
+}

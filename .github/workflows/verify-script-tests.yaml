@@ -7,6 +7,7 @@ on:
     paths:
       - 'Tools/verify*.ps1'
       - 'Tools/fast-test*.ps1'
+      - 'Tools/TestProjects.ps1'
       - '.github/workflows/verify-script-tests.yaml'
 
 concurrency:

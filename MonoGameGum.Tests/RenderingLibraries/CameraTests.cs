@@ -36,7 +36,7 @@ public class CameraTests : BaseTestClass
         public bool Visible { get; set; } = true;
         public bool AbsoluteVisible => Visible;
         public bool ClipsChildren { get; set; }
-        public bool IsRenderTarget => false;
+        public bool IsRenderTarget { get; set; }
         public ObservableCollection<IRenderableIpso> Children { get; }
         public IRenderableIpso? Parent { get; set; }
         IVisible? IVisible.Parent => Parent;
@@ -83,6 +83,35 @@ public class CameraTests : BaseTestClass
         bounds.Width.ShouldBe(200);
         bounds.Height.ShouldBe(100);
         bounds.HasVisibleArea.ShouldBeTrue();
+    }
+
+    // A turned render target bakes its whole rectangle (#6602); one turned only by a plain parent is
+    // axis-aligned on screen and still clamps; one inside a turned render-target ancestor's bake does
+    // not, because that bake's camera is in the ancestor's upright space.
+    [Theory]
+    [InlineData(30f, -30f, false, -50f, 0f, 50f)]
+    [InlineData(0f, 30f, false, -100f, -30f, 50f)]
+    [InlineData(30f, -30f, true, -100f, -30f, 50f)]
+    public void GetRenderTargetBounds_ClampsOnlyOnScreenAxes(float parentRotation, float rotation,
+        bool isParentRenderTarget, float expectedLeft, float expectedTop, float expectedRight)
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        camera.X = -50;
+        camera.Y = 0;
+        camera.Zoom = 1;
+
+        StubRenderable parent = new StubRenderable { Rotation = parentRotation, IsRenderTarget = isParentRenderTarget };
+        StubRenderable ipso = new StubRenderable { X = -100, Y = -30, Width = 150, Height = 100, Rotation = rotation };
+        ipso.Parent = parent;
+
+        RenderTargetBounds bounds = camera.GetRenderTargetBounds(ipso);
+
+        bounds.Left.ShouldBe(expectedLeft);
+        bounds.Top.ShouldBe(expectedTop);
+        bounds.Right.ShouldBe(expectedRight);
     }
 
     [Fact]
@@ -228,7 +257,7 @@ public class CameraTests : BaseTestClass
         public bool Visible { get; set; } = true;
         public bool AbsoluteVisible => Visible;
         public bool ClipsChildren { get; set; }
-        public bool IsRenderTarget => false;
+        public bool IsRenderTarget { get; set; }
         public ObservableCollection<IRenderableIpso> Children { get; }
         public IRenderableIpso? Parent { get; set; }
         IVisible? IVisible.Parent => Parent;
@@ -359,7 +388,7 @@ public class CameraTests : BaseTestClass
         public bool Visible { get; set; } = true;
         public bool AbsoluteVisible => Visible;
         public bool ClipsChildren { get; set; }
-        public bool IsRenderTarget => false;
+        public bool IsRenderTarget { get; set; }
         public ObservableCollection<IRenderableIpso> Children { get; }
         public IRenderableIpso? Parent { get; set; }
         IVisible? IVisible.Parent => Parent;

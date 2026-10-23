@@ -158,7 +158,7 @@ public partial class Keyboard
         }
     }
 
-    // Exposed so the shared Keyboard.cs #if ANDROID block in GetStringTyped can return it.
+    // Exposed so the shared Keyboard.cs #if ANDROID block in GetTypedText can return it.
     string processedString => _processedString;
 
     bool KeyDownAndroid(Keys key)

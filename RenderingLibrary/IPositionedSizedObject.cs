@@ -219,6 +219,25 @@ namespace RenderingLibrary
         }
 
         /// <summary>
+        /// True when a render-target container's rectangle is not on the axes its bake and composite
+        /// clamp against: it is turned itself, or it composites inside the turned bake of a
+        /// render-target ancestor, whose camera is in that ancestor's upright space while this
+        /// container's position is in world space. A container turned only by a plain parent
+        /// (absolute rotation 0) is axis-aligned on screen, so it still clamps.
+        /// </summary>
+        public static bool IsRenderTargetTurned(this IRenderableIpso ipso)
+        {
+            return ipso.GetAbsoluteRotation() != 0 || HasTurnedRenderTargetAncestor(ipso);
+        }
+
+        static bool HasTurnedRenderTargetAncestor(IRenderableIpso ipso)
+        {
+            var parent = ipso.Parent;
+            return parent != null &&
+                ((parent.IsRenderTarget && parent.GetAbsoluteRotation() != 0) || HasTurnedRenderTargetAncestor(parent));
+        }
+
+        /// <summary>
         /// Returns the absolute rotation in degrees.
         /// </summary>
         /// <param name="ipso">The object for which to return rotation.</param>

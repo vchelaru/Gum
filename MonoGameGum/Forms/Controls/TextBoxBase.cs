@@ -764,56 +764,25 @@ public abstract class TextBoxBase :
     // screen-coordinates -> caret-index hit-test used by mouse clicks.
     internal int GetCaretIndexAtPosition(float screenX, float screenY)
     {
-        var leftOfText = this.textComponent.GetAbsoluteLeft();
-        var cursorOffset = screenX - leftOfText;
+        TextHitTesting.UnrotatePoint(coreTextObject, ref screenX, ref screenY);
 
-        int index = 0;
+        var cursorOffset = screenX - this.textComponent.GetAbsoluteLeft();
 
         if (IsRenderedAsSingleLine)
         {
-            var textToUse = DisplayedText;
-            index = GetIndex(cursorOffset, textToUse);
-        }
-        else
-        {
-            var lineHeight = EffectiveLineHeightInPixels;
-            var topOfText = this.textComponent.GetAbsoluteTop();
-            if (this.coreTextObject.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
-            {
-                topOfText = this.textComponent.GetAbsoluteCenterY() - lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;
-            }
-            var cursorYOffset = screenY - topOfText;
-
-            var lineOn = System.Math.Max(0, System.Math.Min((int)(cursorYOffset / lineHeight), coreTextObject.WrappedText.Count - 1));
-
-            if (lineOn < coreTextObject.WrappedText.Count)
-            {
-                string lineText = coreTextObject.WrappedText[lineOn];
-                cursorOffset -= GetLineXOffsetForHorizontalAlignment(lineText);
-                int indexInThisLine = GetIndex(cursorOffset, lineText);
-
-                var isOnLastLine = lineOn == coreTextObject.WrappedText.Count - 1;
-                if(!isOnLastLine && 
-                    indexInThisLine == lineText.Length &&
-                    indexInThisLine > 0 &&
-                    char.IsWhiteSpace(lineText[indexInThisLine-1]))
-                {
-                    index = indexInThisLine - 1;
-                }
-                else
-                {
-                    index = indexInThisLine;
-                }
-            }
-
-            for (int line = 0; line < lineOn; line++)
-            {
-                index += coreTextObject.WrappedText[line].Length;
-            }
-
+            return GetIndex(cursorOffset, DisplayedText);
         }
 
-        return index;
+        var lineHeight = EffectiveLineHeightInPixels;
+        var topOfText = this.textComponent.GetAbsoluteTop() + VerticalAlignmentOffset;
+
+        return TextHitTesting.GetIndexInWrappedLines(
+            coreTextObject.WrappedText,
+            cursorOffset,
+            screenY - topOfText,
+            lineHeight,
+            GetLineXOffsetForHorizontalAlignment,
+            GetIndex);
     }
 
     // Walks characters accumulating their X-advance until we pass cursorOffset, then returns
@@ -1051,60 +1020,44 @@ public abstract class TextBoxBase :
 #endif
     }
 
-    private void MoveCursorUpOneLine()
-    {
-        GetAbsolutePositionsFromCaret(out float absoluteX, out float absoluteY, out int lineNumber);
+    private void MoveCursorUpOneLine() => MoveCaretToAdjacentLine(-1);
 
-        if (lineNumber == 0)
+    private void MoveCursorDownOneLine() => MoveCaretToAdjacentLine(1);
+
+    // Works in the text's own unrotated frame: the caret keeps its x offset from the text's left
+    // edge and moves to the middle of the adjacent line, so rotation never enters the math (#6607).
+    private void MoveCaretToAdjacentLine(int direction)
+    {
+        GetLineNumber(caretIndex, out int lineNumber, out _, out int relativeIndexOnLine);
+        var lines = coreTextObject.WrappedText;
+        int targetLine = lineNumber + direction;
+
+        if (lineNumber <= 0 && direction < 0)
         {
             CaretIndex = 0;
         }
-        else
-        {
-            var lineHeight = EffectiveLineHeightInPixels;
-            var newY = absoluteY - lineHeight;
-            var index = GetCaretIndexAtPosition(absoluteX, newY);
-            CaretIndex = index;
-        }
-    }
-
-    private void MoveCursorDownOneLine()
-    {
-        GetAbsolutePositionsFromCaret(out float absoluteX, out float absoluteY, out int lineNumber);
-
-        if (lineNumber == coreTextObject.WrappedText.Count - 1)
+        else if (lineNumber >= lines.Count - 1 && direction > 0)
         {
             CaretIndex = DisplayedText?.Length ?? 0;
         }
         else
         {
+            float caretXOffset = 0;
+            if (lineNumber >= 0)
+            {
+                string line = lines[lineNumber];
+                string beforeCaret = line.Substring(0, System.Math.Min(relativeIndexOnLine, line.Length));
+                caretXOffset = MeasureStringScaled(beforeCaret, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full)
+                    + GetLineXOffsetForHorizontalAlignment(line);
+            }
             var lineHeight = EffectiveLineHeightInPixels;
-            var newY = absoluteY + lineHeight;
-            var index = GetCaretIndexAtPosition(absoluteX, newY);
-            CaretIndex = index;
-        }
-    }
-
-    private void GetAbsolutePositionsFromCaret(out float absoluteX, out float absoluteY, out int lineNumber)
-    {
-        GetLineNumber(caretIndex, out lineNumber, out int absoluteStartOfLine, out int relativeIndexOnLine);
-
-        // When holding SHIFT (selecting), the caret isn't positioned
-        // automatically. Even if we set the CaretIndex (property), layout
-        // is suspended due to the caretComponent being invisible. Therefore,
-        // let's just extract out the values:
-        //var absoluteX = caretComponent.GetAbsoluteCenterX();
-        //var absoluteY = caretComponent.GetAbsoluteCenterY();
-        absoluteX = 0f;
-        if (lineNumber != -1 && lineNumber < coreTextObject.WrappedText.Count)
-        {
-            absoluteX = GetXCaretPositionForLineRelativeToTextParent(coreTextObject.WrappedText[lineNumber], relativeIndexOnLine);
-        }
-        absoluteY = GetCenterOfYForLinePixelsFromSmall(lineNumber);
-        if (this.coreTextObject.Parent is { } textParent)
-        {
-            absoluteX += textParent.GetAbsoluteLeft();
-            absoluteY += textParent.GetAbsoluteTop();
+            CaretIndex = TextHitTesting.GetIndexInWrappedLines(
+                lines,
+                caretXOffset,
+                (targetLine + 0.5f) * lineHeight,
+                lineHeight,
+                GetLineXOffsetForHorizontalAlignment,
+                GetIndex);
         }
     }
 
@@ -2153,6 +2106,10 @@ public abstract class TextBoxBase :
     float CoreTextObjectHeight =>
         coreTextObject.GetAbsoluteBottom() - coreTextObject.GetAbsoluteTop();
 
+    // The distance from the top of the text's box to the top of its first drawn line.
+    float VerticalAlignmentOffset => TextHitTesting.GetVerticalAlignmentOffset(
+        coreTextObject.VerticalAlignment, CoreTextObjectHeight, coreTextObject.WrappedTextHeight);
+
     /// <summary>
     /// Adjusts a center-of-line Y (in PixelsFromSmall, as produced by
     /// <see cref="GetCenterOfYForLinePixelsFromSmall"/>) into the value to assign
@@ -2213,24 +2170,9 @@ public abstract class TextBoxBase :
         var lineHeight = EffectiveLineHeightInPixels;
         var glyphHalfHeight = ScaledLineHeightInPixels / 2.0f;
 
-        float offset;
-
-        if (coreTextObject.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
-        {
-            // Center of glyph row N relative to the centered text block: the
-            // block top is at (componentHeight - count*lineHeight)/2, the glyph
-            // top of line N is blockTop + N*lineHeight, and the glyph center
-            // is glyphTop + glyphHalfHeight.
-            offset = (CoreTextObjectHeight - coreTextObject.WrappedText.Count * lineHeight) / 2.0f;
-            offset += lineNumber * lineHeight;
-            offset += glyphHalfHeight;
-        }
-        else
-        {
-            // Top-aligned: glyph top of line N is at N*lineHeight (from
-            // textComponent top); its center is that + glyphHalfHeight.
-            offset = lineNumber * lineHeight + glyphHalfHeight;
-        }
+        // The glyph top of line N is the drawn block's top plus N*lineHeight; its center is that
+        // plus glyphHalfHeight.
+        float offset = VerticalAlignmentOffset + lineNumber * lineHeight + glyphHalfHeight;
         var caretY = (textComponent as IPositionedSizedObject).Y + offset;
         return caretY;
     }

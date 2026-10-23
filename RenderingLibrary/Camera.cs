@@ -539,10 +539,19 @@ namespace RenderingLibrary
         /// </summary>
         public static RenderTargetBounds GetRenderTargetBounds(this Camera camera, IRenderableIpso renderable)
         {
-            float left = System.Math.Max(camera.AbsoluteLeft, renderable.GetAbsoluteLeft());
-            float right = System.Math.Min(camera.AbsoluteRight, renderable.GetAbsoluteRight());
-            float top = System.Math.Max(camera.AbsoluteTop, renderable.GetAbsoluteTop());
-            float bottom = System.Math.Min(camera.AbsoluteBottom, renderable.GetAbsoluteBottom());
+            float left = renderable.GetAbsoluteLeft();
+            float right = renderable.GetAbsoluteRight();
+            float top = renderable.GetAbsoluteTop();
+            float bottom = renderable.GetAbsoluteBottom();
+            // Clamping to the camera only works on screen axes; a turned container's rectangle is
+            // not on them, so it bakes whole (#6602).
+            if (!renderable.IsRenderTargetTurned())
+            {
+                left = System.Math.Max(camera.AbsoluteLeft, left);
+                right = System.Math.Min(camera.AbsoluteRight, right);
+                top = System.Math.Max(camera.AbsoluteTop, top);
+                bottom = System.Math.Min(camera.AbsoluteBottom, bottom);
+            }
 
             int width = global::RenderingLibrary.Math.MathFunctions.RoundToInt((right - left) * camera.Zoom);
             int height = global::RenderingLibrary.Math.MathFunctions.RoundToInt((bottom - top) * camera.Zoom);

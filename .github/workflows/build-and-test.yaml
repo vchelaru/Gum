@@ -673,8 +673,6 @@ jobs:
       # Bucket A — RUN IN CI (headless: pure data, IO, codegen, analyzers, or
       # MonoGame's headless TestGame harness):
       #   - MonoGameGum.Tests              (headless TestGame harness)
-      #   - GumToolUnitTests               (WPF tool unit tests; no longer run in
-      #                                     CI since the WPF head is frozen)
       #   - Gum.Bundle.Tests               (brotli/tar/format; pure IO)
       #   - Gum.ProjectServices.Tests      (headless project loading, codegen)
       #   - Gum.Presentation.Tests         (headless undo/redo + relocated tool
@@ -715,6 +713,9 @@ jobs:
       #                                     state fed through test seams, headless)
       #   - UnityGum.Tests                 (Unity runtime: SkiaGum renderer + host-
       #                                     pushed input; no Unity needed. #5506)
+      #   - StrideGum.Tests                (Gum.Stride runtime: SkiaGum renderer +
+      #                                     mocked Stride.Input; the net10.0 build, no
+      #                                     D3D11 device. #6559)
       #   - RaylibGum.Tests                (raylib runtime; Windows-only. Needs an
       #                                     OpenGL 3.3 context the GPU-less runners
       #                                     lack, supplied by Mesa llvmpipe software
@@ -762,11 +763,8 @@ jobs:
       # MonoGameGum.Shapes.Tests graduated to Bucket A above: it turned out to be
       # fully headless (no GraphicsDevice at all), so the original "requires a real
       # graphics device" rationale never applied to it.
-      # MonoGameFum.FromFile.Tests (a typo'd "MonoGameGum") was dead scaffolding —
-      # a csproj with zero source files and zero project references, added by
-      # accident in an unrelated PR (#2085) and never filled in. Deleted rather
-      # than promoted or documented as excluded, since there was nothing in it to
-      # run or to protect.
+      #
+      # Not run: GumToolUnitTests, the frozen WPF head's tests (ADR-0017).
       #
       # MonoGameGum.IntegrationTests graduated from Bucket D to Bucket A in #4190. Its
       # "needs a real GraphicsDevice" exclusion predated Mesa llvmpipe (#3250) and was
@@ -848,6 +846,12 @@ jobs:
       - name: UnityGum.Tests
         if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/UnityGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # StrideGum.Tests is the Gum.Stride runtime (SkiaGum renderer + Stride.Input host). It tests the
+      # net10.0 build: CPU raster SKSurface and mocked Stride input, no D3D11 device, so it runs headless.
+      - name: StrideGum.Tests
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        run: dotnet test "Tests/StrideGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
       # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless

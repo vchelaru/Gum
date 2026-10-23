@@ -1705,14 +1705,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             alignmentOffset.X = widthDifference;
         }
 
-        if (this.VerticalAlignment == Graphics.VerticalAlignment.Center)
-        {
-            alignmentOffset.Y = (this.EffectiveHeight - mTempForRendering.Height) / 2.0f;
-        }
-        else if (this.VerticalAlignment == Graphics.VerticalAlignment.Bottom)
-        {
-            alignmentOffset.Y = this.EffectiveHeight - mTempForRendering.Height;
-        }
+        alignmentOffset.Y = TextHitTesting.GetVerticalAlignmentOffset(
+            this.VerticalAlignment, this.EffectiveHeight, mTempForRendering.Height);
 
         var absoluteRotation = this.GetAbsoluteRotation();
         if (absoluteRotation != 0)

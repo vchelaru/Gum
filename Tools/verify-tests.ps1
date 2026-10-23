@@ -26,6 +26,21 @@ function Assert-Builds([string]$name, [string]$file, [string[]]$expected) {
     }
 }
 
+# A changed file in a test project runs its class; one in a library that is not a test project builds
+# it. A test project is IsTestProject true or a Microsoft.NET.Test.Sdk reference, whatever its name.
+function Assert-Plan([string]$name, [string]$file, [string]$expected) {
+    $output = @(& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'verify.ps1') -Files $file -ListOnly 6>&1 | ForEach-Object { "$_" })
+    $actual = @($output | Where-Object { $_ -match '^(test|build)\s+' } | ForEach-Object { (($_ -replace '\s+', ' ').Trim()) -replace '\\', '/' })
+    if (($actual -join '; ') -ceq $expected) { Write-Host "pass  $name" }
+    else { Write-Host "FAIL  $name`n  expected: $expected`n  actual:   $($actual -join '; ')"; $script:failures++ }
+}
+
+Assert-Plan 'file in a test project not named *.Tests runs as a test' `
+    'Tests/Gum.Layout.Benchmarks/LayoutTreeShapes.cs' 'test Tests/Gum.Layout.Benchmarks/Gum.Layout.Benchmarks.csproj'
+
+Assert-Plan 'file in a *TestsCommon library builds it' `
+    'Tests/MonoGameGum.TestsCommon/StaticRegistrationScope.cs' 'build Tests/MonoGameGum.TestsCommon/MonoGameGum.TestsCommon.csproj'
+
 Assert-Builds 'file linked by a Directory.Build.props builds the projects under that props' `
     'Runtimes/SkiaGum/CustomSetPropertyOnRenderable.cs' `
     @('Runtimes/GumShapes/KniGumShapes.csproj', 'Runtimes/GumShapes/MonoGameGumShapes.csproj', 'Runtimes/SkiaGum/SkiaGum.csproj')
@@ -49,7 +64,7 @@ Assert-Builds 'file every linking csproj removes with Compile Remove builds only
 $scratch = Join-Path ([System.IO.Path]::GetTempPath()) "verify-tests-$PID"
 try {
     New-Item -ItemType Directory -Force -Path (Join-Path $scratch 'Tools'), (Join-Path $scratch 'A'), (Join-Path $scratch 'B') | Out-Null
-    Copy-Item (Join-Path $PSScriptRoot 'verify.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1') (Join-Path $scratch 'Tools')
+    Copy-Item (Join-Path $PSScriptRoot 'verify.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1') (Join-Path $scratch 'Tools')
     Set-Content (Join-Path $scratch 'A/A.csproj') '<Project />'
     Set-Content (Join-Path $scratch 'B/B.csproj') '<Project />'
     $git = { git -C $scratch -c user.name=t -c user.email=t@t -c core.autocrlf=false @args 2>&1 | Out-Null }

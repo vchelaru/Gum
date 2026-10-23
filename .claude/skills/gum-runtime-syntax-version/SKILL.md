@@ -13,8 +13,7 @@ Not the same thing as `.gumx` file format versioning (see `gum-project-versionin
 - Stamped via `AssemblyAttributes.cs` in each runtime project:
   - `GumCommon/AssemblyAttributes.cs`
   - `MonoGameGum/AssemblyAttributes.cs` (KniGum and FnaGum csprojs glob `..\**\*.cs`, so they inherit this stamp automatically)
-  - `Runtimes/RaylibGum/AssemblyAttributes.cs`
-  - `Runtimes/SkiaGum/AssemblyAttributes.cs`
+  - `Runtimes/<Name>/AssemblyAttributes.cs` for RaylibGum, SkiaGum and every Skia host (KniSkiaGum, SilkNetGum, StrideGum, UnityGum, SkiaGum.Standalone/.Maui/.ShadowDusk/.Wpf)
 - Detection (tool side): `Tools/Gum.ProjectServices/CodeGeneration/SyntaxVersionDetectionService.cs`.
 - Public docs / version table (the version history lives here, not in this skill):
   `docs/gum-tool/upgrading/syntax-versions.md` — published at
@@ -23,19 +22,21 @@ Not the same thing as `.gumx` file format versioning (see `gum-project-versionin
 ## How detection works
 
 A manual `SyntaxVersion` in `.codsj` wins. Otherwise reads the consumer's `.csproj` (`CodeProjectCsprojLocator` prefers `Assembly-CSharp.csproj`, then the shortest name):
-1. If `ProjectReference` → finds `MonoGameGum`/`RaylibGum`/`SkiaGum`/`KniGum`/`FnaGum`, opens that project's `AssemblyAttributes.cs`, regex-parses the version.
+1. If `ProjectReference` to a runtime → opens `AssemblyAttributes.cs` in that project's folder, or the folder above it (KniGum/FnaGum), and regex-parses the version.
 2. Else if `PackageReference` → locates the DLL in the NuGet cache (`NUGET_PACKAGES` if set, else `~/.nuget/packages`), reads the attribute via `MetadataLoadContext`. A floating `Version="*"` / `"2026.*"` resolves to the highest restored stable version in the cache, so the package must be restored before detection works.
 3. Else if a `<Reference>` has a `<HintPath>` to a runtime DLL (how Unity references Gum) → reads that DLL's attribute.
 
-A new runtime should be added to `GumRuntimeNames` and `GumPackageNames` in `SyntaxVersionDetectionService` so its stamped version is read. It does not go in the legacy-era lists.
+A runtime project or dll is recognized by name: `<Engine>Gum` or `<Engine>Gum.<Host>` (`IsRuntimeName`), so a new runtime or host named that way needs no list entry for ProjectReference or HintPath. Its NuGet package ID must still be added to `GumPackageNames`, because add-on packages (`Gum.Expressions`, `Gum.Shapes.*`) share the `Gum.` prefix. It does not go in the legacy-era lists.
 
-When none of the three finds a version, the fallback depends on which runtimes the csproj references. Only the runtimes that existed before unification (`LegacyEraRuntimeNames` / `LegacyEraPackageNames`: MonoGame, KNI, FNA, Skia) fall back to 0, because an old build lacks the attribute. Anything else (Stride, Silk.NET, raylib, a new runtime, or no Gum reference) resolves to `SyntaxVersionDetectionService.LatestSyntaxVersion`, the stamp on GumCommon.
+When none of the three finds a version, the fallback depends on which runtimes the csproj references. Only the runtimes that existed before unification (`LegacyEraRuntimeNames` / `LegacyEraPackageNames`: MonoGame, KNI, FNA, Skia and the SkiaGum.Maui/.Wpf hosts) fall back to 0, because an old build lacks the attribute. Anything else (Stride, Silk.NET, raylib, a new runtime, or no Gum reference) resolves to `SyntaxVersionDetectionService.LatestSyntaxVersion`, the stamp on GumCommon.
 
 **GumCommon is not on the detection scan list** — stamping it is for assembly-metadata consistency, not for codegen detection.
 
+**A detection or stamp change can change the version a `Tests/CodeGen_*` harness resolves**, which makes its checked-in output stale. `Detect_CodeGenHarnessProject_MatchesTheVersionItsOutputWasGeneratedAt` pins each harness; when it fails, regenerate (see `gum-tool-codegen`) and update the pin.
+
 ## When to bump
 
-When the runtime surface that codegen cares about changes in a way that requires the tool to emit different code (renamed/removed role interfaces, new runtime types, namespace changes). Bump all four assemblies in lock step and add a row to the version table.
+When the runtime surface that codegen cares about changes in a way that requires the tool to emit different code (renamed/removed role interfaces, new runtime types, namespace changes). Bump every stamped assembly (grep `GumSyntaxVersion(Version`) in lock step and add a row to the version table.
 
 ## Gate on a safe floor, not the exact release that added the API
 

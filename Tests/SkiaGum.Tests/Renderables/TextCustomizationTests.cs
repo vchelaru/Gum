@@ -18,7 +18,7 @@ namespace SkiaGum.Tests.Renderables;
 /// override) and XOffset/YOffset (applied as an actual glyph-position nudge via RichTextKit's
 /// <c>FontRun.MoveGlyphs</c>, since <see cref="Style"/> has no offset concept).
 /// </summary>
-public class TextCustomizationTests
+public class TextCustomizationTests : BaseTestClass
 {
     private static Text MakeText()
     {

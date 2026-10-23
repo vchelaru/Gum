@@ -187,6 +187,46 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         constructed.ShouldBeGreaterThan(10);
     }
 
+    [Theory]
+    [InlineData("ButtonCloseDerivedRuntime", "Background,Icon,FocusedIndicator,Extra")]
+    [InlineData("ButtonCloseThirdLevelRuntime", "Background,Icon,FocusedIndicator,Extra,ThirdExtra")]
+    [InlineData("ChainCRuntime", "AChild,BChild,CChild")]
+    public void Constructor_LegacyMonoGameFindByNameDerived_BuildsOnceWithOneFormsControl(string typeName, string expectedChildren)
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName);
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == typeName);
+
+        object visual = Activator.CreateInstance(type, true, true)!;
+
+        ChildNames(visual).ShouldBe(expectedChildren);
+        object? formsControl = Get(visual, "FormsControlAsObject");
+        if (typeName.StartsWith("ButtonClose"))
+        {
+            formsControl.ShouldNotBeNull();
+            Get(formsControl, "Visual").ShouldBeSameAs(visual);
+        }
+        else
+        {
+            formsControl.ShouldBeNull();
+        }
+    }
+
+    [Theory]
+    [InlineData("ButtonCloseDerivedRuntime")]
+    [InlineData("ButtonCloseThirdLevelRuntime")]
+    public void Constructor_LegacyMonoGameFindByNameDerived_NoFormsControlWhenNotRequested(string typeName)
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName);
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == typeName);
+
+        object visual = Activator.CreateInstance(type, true, false)!;
+
+        Get(visual, "FormsControlAsObject").ShouldBeNull();
+        ChildNames(visual).ShouldNotBeEmpty();
+    }
+
     // A generated runtime registers itself as the default visual of its Forms type, so `new Button()`
     // builds that runtime with tryCreateFormsObject: false and then becomes the Forms control of it.
     [Fact]
@@ -274,8 +314,8 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         return generated;
     }
 
-    // Each derived component adds a child and overrides a default at both levels. A base child the
-    // derived level sets a variable on is stored as a DefinedByBase instance, as the tool saves it.
+    // Each derived component adds a child and overrides a default at both levels. Every base child is
+    // also stored on the derived level as a DefinedByBase instance, as the tool saves it.
     private static void AddDerivedComponents(string gumxPath)
     {
         GumProjectSave project = GumProjectSave.Load(gumxPath, out _)!;
@@ -287,27 +327,22 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         }
 
         ComponentSave derivedButton = project.Components.Single(item => item.Name == "Controls/ButtonCloseDerived");
-        AddBaseInstance(derivedButton, "FocusedIndicator", "NineSlice");
         Set(derivedButton, "FocusedIndicator.Visible", true);
 
         // Third level over a Forms control.
         ComponentSave thirdLevel = AddComponent(project, "Controls/ButtonCloseThirdLevel", "Controls/ButtonCloseDerived", ("ThirdExtra", "Container"));
-        AddBaseInstance(thirdLevel, "Extra", "Container");
         Set(thirdLevel, "Width", 200f);
         Set(thirdLevel, "Extra.Width", 33f);
 
         // A chain with no Forms behavior.
         AddComponent(project, "Elements/ChainA", "Container", ("AChild", "Container"));
         ComponentSave chainB = AddComponent(project, "Elements/ChainB", "Elements/ChainA", ("BChild", "Container"));
-        AddBaseInstance(chainB, "AChild", "Container");
         Set(chainB, "AChild.Width", 5f);
         ComponentSave chainC = AddComponent(project, "Elements/ChainC", "Elements/ChainB", ("CChild", "Container"));
-        AddBaseInstance(chainC, "BChild", "Container");
         Set(chainC, "BChild.Width", 6f);
 
         // A derived level that moves a base child under its own child.
         ComponentSave reparent = AddComponent(project, "Elements/ChainReparent", "Elements/ChainB", ("Holder", "Container"));
-        AddBaseInstance(reparent, "BChild", "Container");
         reparent.DefaultState!.Variables.Add(new VariableSave { Name = "BChild.Parent", Type = "string", Value = "Holder", SetsValue = true });
 
         project.Save(gumxPath, saveElements: true);
@@ -317,14 +352,16 @@ public class GeneratedFormsConstructionTests : BaseTestClass
     {
         ComponentSave component = new ComponentSave { Name = name, BaseType = baseType };
         component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        ComponentSave? baseComponent = project.Components.SingleOrDefault(item => item.Name == baseType);
+        foreach (InstanceSave baseInstance in baseComponent?.Instances ?? new List<InstanceSave>())
+        {
+            component.Instances.Add(new InstanceSave { Name = baseInstance.Name, BaseType = baseInstance.BaseType, DefinedByBase = true, ParentContainer = component });
+        }
         component.Instances.Add(new InstanceSave { Name = instance.Name, BaseType = instance.BaseType, ParentContainer = component });
         project.Components.Add(component);
         project.ComponentReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Component });
         return component;
     }
-
-    private static void AddBaseInstance(ComponentSave component, string name, string baseType) =>
-        component.Instances.Add(new InstanceSave { Name = name, BaseType = baseType, DefinedByBase = true, ParentContainer = component });
 
     private static void Set(ComponentSave component, string name, object value) =>
         component.DefaultState!.Variables.Add(new VariableSave

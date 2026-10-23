@@ -49,6 +49,30 @@ public class CodeWindowViewModel : ViewModel
         set => Set(value);
     }
     
+    /// <summary>
+    /// Why ProjectCodeSettings.codsj could not be read, or null when it was read or is missing.
+    /// While set, the Code tab saves no settings and offers only Reset to defaults.
+    /// </summary>
+    public string? ProjectSettingsLoadError
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(ProjectSettingsLoadError))]
+    public bool HasProjectSettingsLoadError => ProjectSettingsLoadError != null;
+
+    /// <summary>What the Code tab shows while <see cref="ProjectSettingsLoadError"/> is set.</summary>
+    [DependsOn(nameof(ProjectSettingsLoadError))]
+    public string ProjectSettingsLoadErrorText =>
+        $"ProjectCodeSettings.codsj could not be read, so code generation settings are read-only until it is fixed:\n{ProjectSettingsLoadError}";
+
+    /// <summary>Raised by <see cref="RequestResetProjectSettings"/>; the plugin confirms and resets.</summary>
+    public event System.Action? ResetProjectSettingsRequested;
+
+    /// <summary>Asks to replace an unreadable ProjectCodeSettings.codsj with the default settings.</summary>
+    public void RequestResetProjectSettings() => ResetProjectSettingsRequested?.Invoke();
+
     public WhatToView WhatToView
     {
         get => Get<WhatToView>();

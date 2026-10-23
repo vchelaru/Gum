@@ -211,7 +211,7 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator, IGrowableRaylibFon
         // skipped: KernSmith's incremental sessions reject Variants outright.
         if (!string.IsNullOrEmpty(bmfcSave.FontFile) && !bmfcSave.HasDropshadow && result.Pages.Count == 1)
         {
-            RaylibFontMetricsRegistry.TryGet(font.Texture.Id, out RaylibFontMetricsRegistry.FontLineMetrics metrics);
+            RaylibFontMetricsRegistry.TryGet(font, out RaylibFontMetricsRegistry.FontLineMetrics metrics);
             _growableModels[bmfcSave.FontCacheFileName] = result.Model;
             _growableFonts[bmfcSave.FontCacheFileName] = new GrowableFontState(font, metrics.LineHeight, metrics.BaselineY);
         }
@@ -274,7 +274,7 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator, IGrowableRaylibFon
 
             texture = UploadTexture(buffer, result.PageWidth, result.PageHeight);
             ContentLoader.TextureFilterApplier(texture, ContentLoader.DefaultTextureFilter);
-            RaylibFontMetricsRegistry.Register(texture.Id, state.LineHeight, state.BaselineY);
+            RaylibFontMetricsRegistry.Register(texture, state.CanonicalFont.BaseSize, state.LineHeight, state.BaselineY);
         }
         else
         {

@@ -532,7 +532,7 @@ public class Text : IVisible, IRenderableIpso,
     /// because raylib's Font struct can't hold them. Use those so line height includes the
     /// descender region exactly as the MonoGame BitmapFont does — otherwise a Text (and any
     /// container sized RelativeToChildren around it, e.g. a ListBoxItem) is short by that region.
-    /// Fonts without recorded metrics (raylib's built-in default, TTF via LoadFontEx) fall back to
+    /// Fonts without recorded metrics (raylib's built-in default, a TTF from raylib's own LoadFontEx) fall back to
     /// native measurement, which returns ~BaseSize, with the baseline from <see cref="TryGetTtfBaselineY"/>. Extracted from <see cref="UpdateLineHeightInPixels"/>
     /// (which caches this for the LIVE <see cref="Font"/>) so <see cref="MeasurementLineHeightInPixels"/>
     /// can compute the same metrics for <see cref="EffectiveMeasurementFont"/> instead (issue #4330):
@@ -547,7 +547,7 @@ public class Text : IVisible, IRenderableIpso,
             throw new InvalidOperationException("Cannot measure text because IsWindowReady() is false - did you remember to call InitWindow first?");
         }
 
-        if (RaylibFontMetricsRegistry.TryGet(font.Texture.Id, out var metrics))
+        if (RaylibFontMetricsRegistry.TryGet(font, out var metrics))
         {
             lineHeightInPixels = metrics.LineHeight;
             descenderHeight = metrics.LineHeight - metrics.BaselineY;

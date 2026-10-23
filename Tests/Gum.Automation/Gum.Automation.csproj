@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    In-process automation for Gum Forms on MonoGame: a scripted cursor and keyboard, a driver API,
+    an NDJSON script runner and an off-screen window parker. Test and tooling code only; it is not
+    packed and ships in no runtime package.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" VersionOverride="3.8.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+  </ItemGroup>
+
+</Project>

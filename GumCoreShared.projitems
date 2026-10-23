@@ -30,6 +30,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Localization\LocalizationRuntimeState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Runtime\ReferenceDependencies.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Runtime\VariableReferenceGraph.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\TextHitTesting.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCore\FrbFormsInternalsVisibleTo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorInstanceSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorReference.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorSave.cs" />

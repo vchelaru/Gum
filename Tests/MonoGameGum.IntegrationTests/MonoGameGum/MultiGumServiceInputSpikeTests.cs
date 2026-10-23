@@ -1,5 +1,6 @@
 #pragma warning disable CS0618 // WindowOver / WindowPushed are the obsolete aliases of VisualOver / VisualPushed; the spike checks both
 using Gum.DataTypes;
+using Gum.Automation;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Converters;
@@ -671,34 +672,6 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass, IClassFixture<Theme
     #endregion
 
     #region Scripted input
-
-    /// <summary>
-    /// A real <see cref="Cursor"/> whose per-frame mouse state is scripted instead of read from the OS.
-    /// Hides Activity(double) so that FormsUtilities.Update, which calls it through ICursor, feeds the script in.
-    /// </summary>
-    private sealed class ScriptedCursor : Cursor, ICursor
-    {
-        private int _x;
-        private int _y;
-        private bool _leftDown;
-
-        public ScriptedCursor() : base((GameWindow?)null) { }
-
-        public void Place(int x, int y, bool leftDown)
-        {
-            _x = x;
-            _y = y;
-            _leftDown = leftDown;
-        }
-
-        public new void Activity(double gameTime)
-        {
-            MouseState state = new MouseState(_x, _y, 0,
-                _leftDown ? ButtonState.Pressed : ButtonState.Released,
-                ButtonState.Released, ButtonState.Released, ButtonState.Released, ButtonState.Released);
-            Activity(gameTime, state, new TouchCollection(), isMobile: false);
-        }
-    }
 
     /// <summary>A keyboard whose pressed keys and typed text come from the test. Counts how often it is polled.</summary>
     private sealed class ScriptedKeyboard : PolledKeyboard

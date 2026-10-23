@@ -210,13 +210,13 @@ public class ContentLoaderTests : BaseTestClass
             uint textureId = font.Texture.Id;
 
             // Loaded: Font18Arial.fnt's lineHeight/base are registered against the atlas texture id.
-            RaylibFontMetricsRegistry.TryGet(textureId, out _).ShouldBeTrue();
+            RaylibFontMetricsRegistry.IsRegistered(textureId).ShouldBeTrue();
 
             ManagedFont managedFont = new ManagedFont(font);
             managedFont.Dispose();
 
             // Unloaded: the entry is gone, so a reused texture id cannot return stale metrics.
-            RaylibFontMetricsRegistry.TryGet(textureId, out _).ShouldBeFalse();
+            RaylibFontMetricsRegistry.IsRegistered(textureId).ShouldBeFalse();
         }
         finally
         {
@@ -406,9 +406,9 @@ public class ContentLoaderTests : BaseTestClass
 
             // The shadow's metrics entry is dropped with it, so a reused texture id can't inherit it.
             uint shadowTextureId = shadowFont.Texture.Id;
-            RaylibFontMetricsRegistry.TryGet(shadowTextureId, out _).ShouldBeTrue();
+            RaylibFontMetricsRegistry.IsRegistered(shadowTextureId).ShouldBeTrue();
             new ManagedFont(font).Dispose();
-            RaylibFontMetricsRegistry.TryGet(shadowTextureId, out _).ShouldBeFalse();
+            RaylibFontMetricsRegistry.IsRegistered(shadowTextureId).ShouldBeFalse();
         }
         finally
         {

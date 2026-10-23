@@ -66,24 +66,31 @@ public class CodeOutputProjectSettingsManager
     {
         CodeOutputProjectSettings? toReturn = TryLoadSettingsForProject();
 
-        if (toReturn == null)
-        {
-            toReturn = new CodeOutputProjectSettings();
+        return toReturn ?? CreateDefaultSettings();
+    }
 
-            toReturn.SetDefaults();
-
-            MigrateIfNeeded(toReturn);
-        }
-
-        return toReturn;
+    /// <summary>The settings a project without a ProjectCodeSettings.codsj uses.</summary>
+    public static CodeOutputProjectSettings CreateDefaultSettings()
+    {
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings();
+        settings.SetDefaults();
+        MigrateIfNeeded(settings);
+        return settings;
     }
 
     /// <summary>
     /// Loads the project code settings from disk, or returns null when the file is missing or can't
     /// be read (the error is logged).
     /// </summary>
-    public CodeOutputProjectSettings? TryLoadSettingsForProject()
+    public CodeOutputProjectSettings? TryLoadSettingsForProject() => TryLoadSettingsForProject(out _);
+
+    /// <summary>
+    /// Loads the project code settings from disk, or returns null when the file is missing or can't
+    /// be read. <paramref name="loadError"/> is why a file that exists could not be read, else null.
+    /// </summary>
+    public CodeOutputProjectSettings? TryLoadSettingsForProject(out string? loadError)
     {
+        loadError = null;
         CodeOutputProjectSettings? toReturn = null;
         var fileName = GetProjectCodeSettingsFilePath();
         try
@@ -97,6 +104,7 @@ public class CodeOutputProjectSettingsManager
         }
         catch (Exception e)
         {
+            loadError = e.Message;
             _logger.PrintError($"Error loading project code settings from {fileName}: {e.Message}");
         }
 

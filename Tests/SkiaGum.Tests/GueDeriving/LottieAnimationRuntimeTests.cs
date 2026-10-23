@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SkiaGum.Tests.GueDeriving;
 
-public class LottieAnimationRuntimeTests
+public class LottieAnimationRuntimeTests : BaseTestClass
 {
     public LottieAnimationRuntimeTests()
     {
@@ -20,7 +20,6 @@ public class LottieAnimationRuntimeTests
     {
         string path = Path.Combine(Path.GetTempPath(), "GumLottieRuntimeTest_" + Guid.NewGuid().ToString("N") + ".json");
         File.WriteAllText(path, "{\"v\":\"5.5.2\",\"fr\":30,\"ip\":0,\"op\":30,\"w\":10,\"h\":10,\"nm\":\"t\",\"ddd\":0,\"assets\":[],\"layers\":[]}");
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
 
         try
@@ -36,7 +35,6 @@ public class LottieAnimationRuntimeTests
         }
         finally
         {
-            LoaderManager.Self.ContentLoader = originalLoader;
             File.Delete(path);
         }
     }

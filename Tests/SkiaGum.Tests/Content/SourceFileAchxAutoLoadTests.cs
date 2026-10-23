@@ -87,9 +87,6 @@ public class SourceFileAchxAutoLoadTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumSkiaAchxAutoLoad_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
-        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-
         try
         {
             string achxPath = Path.Combine(tempRoot, "test.achx").Replace('\\', '/');
@@ -126,8 +123,6 @@ public class SourceFileAchxAutoLoadTests : BaseTestClass
         }
         finally
         {
-            LoaderManager.Self.ContentLoader = originalLoader;
-            LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {
                 Directory.Delete(tempRoot, recursive: true);
