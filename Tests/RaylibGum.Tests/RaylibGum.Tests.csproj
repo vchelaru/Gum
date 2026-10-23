@@ -54,6 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
     <Compile Include="..\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
     <Compile Include="..\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
     <Compile Include="..\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
