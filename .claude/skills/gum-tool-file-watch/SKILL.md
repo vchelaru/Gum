@@ -93,7 +93,7 @@ The ignore list (`FileWatchIgnoreList`) is time-based only.
 | `ganx` | Print warning — Gum does not support runtime reload of animation collections |
 | `behx` | Reload behavior definition |
 | `csv`, `resx` | Reload localization file (RESX also matches satellites via `IsLocalizationFileThatShouldTriggerReload`) |
-| `ProjectCodeSettings.codsj` | Handled by the code output plugin's `ReactToFileChanged` (`CodeOutputPluginBase.HandleFileChanged`): reload only, never regenerate or migrate; an unreadable file keeps the current settings |
+| `ProjectCodeSettings.codsj` | Handled by the code output plugin's `ReactToFileChanged` (`CodeOutputPluginBase.HandleFileChanged`): reload only, never regenerate or migrate; an unreadable file keeps the current settings and makes the Code tab read-only until a readable version arrives or the user resets it |
 
 ## Debug UI Panel
 
@@ -110,7 +110,7 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 
 **Double-event prevention for Gum XML files**: When `FileSystemWatcher` fires a `Created` event for `.gumx`/`.gusx`/`.gutx`/`.gucx`/`.ganx`/`.behx` files, it is ignored. These formats trigger both `Changed` and `Created` on save; only `Changed` is processed to avoid duplicates. Non-Gum files (e.g., PNG) _do_ process `Created`.
 
-**Rename for PNG, CSV, and RESX**: `HandleRename` routes renames for `.png`, `.csv`, and `.resx`. Many editors (Vim, JetBrains, some VS Code modes) use an atomic-save pattern — write to a temp file, then rename it over the target — so rename events must be handled for these types to avoid silently missing external edits.
+**Renames are routed for every reacted-to extension**: `ReactToRename` forwards renames for the extensions in its list (images, Gum files, `.csv`, `.resx`, `.codsj`, ...). Many editors (Vim, JetBrains, some VS Code modes) save by writing a temp file and renaming it over the target, so a type missing from that list silently misses external edits.
 
 **Delete only reacts for element files**: `ReactToDelete` queues a deleted element file like a change, so the flush can flag the element's source as missing. Other deletes are ignored.
 
