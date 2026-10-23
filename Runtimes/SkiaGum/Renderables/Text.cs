@@ -1084,8 +1084,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // plain text _hasMarkup is false and _layoutText == mRawText, keeping the render path unchanged.
     private bool _hasMarkup;
     // True when a run changes the size ([FontSize], [FontScale]) or the font family ([Font]), set by ParseMarkup.
-    private bool _hasSizeRun;
-    private bool _hasFontRun;
+    private bool _hasHeightRun;
     private string? _layoutText;
     private List<InlineVariable> _inlineVariables = new();
     private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
@@ -1181,7 +1180,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>Whether the styled runs are refit line by line (<see cref="FitRunsToLines"/>) after a first layout.</summary>
-    private bool FitsRunsPerLine => _hasSizeRun && !_hasFontRun;
+    private bool FitsRunsPerLine => _hasHeightRun;
 
     /// <summary>
     /// Lays out the given styled runs into a RichTextKit <c>TextBlock</c>, applying this Text's
@@ -1325,16 +1324,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         public readonly Style Style;
         public readonly float XOffset;
         public readonly float YOffset;
-        /// <summary>True when the run sets its own size ([FontSize]/[FontScale]), which the multiplier never scales.</summary>
-        public readonly bool IsSizeRun;
+        /// <summary>True when the run sets its own size ([FontSize]/[FontScale]) or font ([Font]): its line is its own
+        /// plain line height, which the multiplier never scales (#6475).</summary>
+        public readonly bool IsHeightRun;
 
-        public StyledTextRun(string text, Style style, float xOffset = 0, float yOffset = 0, bool isSizeRun = false)
+        public StyledTextRun(string text, Style style, float xOffset = 0, float yOffset = 0, bool isHeightRun = false)
         {
             Text = text;
             Style = style;
             XOffset = xOffset;
             YOffset = yOffset;
-            IsSizeRun = isSizeRun;
+            IsHeightRun = isHeightRun;
         }
     }
 
@@ -1362,8 +1362,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         foreach (var substring in substrings)
         {
-            var (style, text, xOffset, yOffset, isSizeRun) = BuildRunStyle(substring.Substring, substring.Variables);
-            runs.Add(new StyledTextRun(text, style, xOffset, yOffset, isSizeRun));
+            var (style, text, xOffset, yOffset, isHeightRun) = BuildRunStyle(substring.Substring, substring.Variables);
+            runs.Add(new StyledTextRun(text, style, xOffset, yOffset, isHeightRun));
         }
 
         AttachLineBreaksToPrecedingRun(runs);
@@ -1389,14 +1389,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 continue;
             }
 
-            runs[i - 1] = new StyledTextRun(previous.Text + "\n", previous.Style, isSizeRun: previous.IsSizeRun);
+            runs[i - 1] = new StyledTextRun(previous.Text + "\n", previous.Style, isHeightRun: previous.IsHeightRun);
             if (run.Text.Length == 1)
             {
                 runs.RemoveAt(i);
             }
             else
             {
-                runs[i] = new StyledTextRun(run.Text.Substring(1), run.Style, isSizeRun: run.IsSizeRun);
+                runs[i] = new StyledTextRun(run.Text.Substring(1), run.Style, isHeightRun: run.IsHeightRun);
             }
         }
     }
@@ -1442,7 +1442,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
                 int take = System.Math.Min(available, remaining);
                 string text = run.Text.Substring(runOffset, take);
-                result.Add(new StyledTextRun(text, run.Style, run.XOffset, run.YOffset, run.IsSizeRun));
+                result.Add(new StyledTextRun(text, run.Style, run.XOffset, run.YOffset, run.IsHeightRun));
                 lineStyle = run.Style;
 
                 runOffset += take;
@@ -1614,11 +1614,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>
-    /// Sizes every line of a text with a size run on its own (#6475). A run's <see cref="Style.LineHeight"/> applies
-    /// to every line the run reaches, and a line takes its top and its bottom from whichever of its runs reaches
-    /// furthest, so one factor per run cannot make each line <see cref="TextLineHeight.Combine"/> of the multiplied
-    /// base and the tallest size run on it. This splits the runs at the line breaks of <paramref name="layout"/>
-    /// (laid out from the same runs, so the breaks are where the glyphs land; a line height never moves them) and
+    /// Sizes every line of a text with a size or font run on its own (#6475). A run's <see cref="Style.LineHeight"/>
+    /// applies to every line the run reaches, and a line takes its top and its bottom from whichever of its runs
+    /// reaches furthest, so one factor per run cannot make each line <see cref="TextLineHeight.Combine"/> of the
+    /// multiplied base and the tallest size or font run on it (that run's own plain line, never multiplied, as on
+    /// MonoGame). This splits the runs at the line breaks of <paramref name="layout"/> (laid out from the same runs, so the breaks are where the glyphs land; a line height never moves them) and
     /// fits each line: its tallest font is set to the line's height, and every other run on the line is lowered
     /// until it reaches no higher and no lower than that one.
     /// </summary>
@@ -1663,7 +1663,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     position++;
                 }
 
-                lineRuns.Add(new StyledTextRun(run.Text.Substring(pieceStart, charIndex - pieceStart), run.Style, run.XOffset, run.YOffset, run.IsSizeRun));
+                lineRuns.Add(new StyledTextRun(run.Text.Substring(pieceStart, charIndex - pieceStart), run.Style, run.XOffset, run.YOffset, run.IsHeightRun));
             }
         }
 
@@ -1675,14 +1675,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// to <paramref name="result"/>, and clears <paramref name="lineRuns"/>.</summary>
     private void FitLine(List<StyledTextRun> lineRuns, FontLineMetrics baseMetrics, List<StyledTextRun> result)
     {
-        float tallestSizeRun = 0;
+        float tallestHeightRun = 0;
         FontLineMetrics tallest = default;
         foreach (StyledTextRun run in lineRuns)
         {
             FontLineMetrics metrics = GetFontLineMetrics(run.Style);
-            if (run.IsSizeRun)
+            if (run.IsHeightRun)
             {
-                tallestSizeRun = System.Math.Max(tallestSizeRun, metrics.PlainHeight);
+                tallestHeightRun = System.Math.Max(tallestHeightRun, metrics.PlainHeight);
             }
             if (metrics.PlainHeight > tallest.PlainHeight)
             {
@@ -1690,7 +1690,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
         }
 
-        float lineHeight = TextLineHeight.Combine(LineHeightMultiplier * baseMetrics.PlainHeight, tallestSizeRun);
+        float lineHeight = TextLineHeight.Combine(LineHeightMultiplier * baseMetrics.PlainHeight, tallestHeightRun);
         bool canFit = tallest.IsValid && lineHeight > 0 && !float.IsNaN(lineHeight) && !float.IsInfinity(lineHeight);
         float tallestLineHeight = canFit ? tallest.LineHeightForHeight(lineHeight) : 1;
         float top = tallest.TopFor(tallestLineHeight);
@@ -1702,7 +1702,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             float runLineHeight = !canFit || !metrics.IsValid ? run.Style.LineHeight
                 : metrics == tallest ? tallestLineHeight
                 : System.Math.Min(metrics.LineHeightForTop(top), metrics.LineHeightForBottom(bottom));
-            result.Add(new StyledTextRun(run.Text, WithLineHeight(run.Style, runLineHeight), run.XOffset, run.YOffset, run.IsSizeRun));
+            result.Add(new StyledTextRun(run.Text, WithLineHeight(run.Style, runLineHeight), run.XOffset, run.YOffset, run.IsHeightRun));
         }
 
         lineRuns.Clear();
@@ -1731,7 +1731,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// applies after layout. A null or empty <paramref name="variables"/> reproduces <see cref="GetStyle"/>
     /// exactly.
     /// </summary>
-    private (Style Style, string Text, float XOffset, float YOffset, bool IsSizeRun) BuildRunStyle(string runText, List<InlineVariable>? variables)
+    private (Style Style, string Text, float XOffset, float YOffset, bool IsHeightRun) BuildRunStyle(string runText, List<InlineVariable>? variables)
     {
         var color = this.Color;
         string? fontFamily = EffectiveFontFamily;
@@ -1744,6 +1744,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         float yOffset = 0;
         string text = runText;
         bool isSizeRun = false;
+        bool isFontRun = false;
 
         if (variables != null)
         {
@@ -1753,6 +1754,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 {
                     case "Font":
                         fontFamily = (string)variable.Value;
+                        isFontRun = true;
                         break;
                     case "Color":
                         if (variable.Value is System.Drawing.Color drawingColor)
@@ -1859,14 +1861,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         };
 
         // Style.LineHeight multiplies a run's ascent and descent but not its leading, so the factor is
-        // adjusted until the line is exactly the multiplier times a plain line of this run (#6467). A size run's
-        // factor is replaced line by line in FitRunsToLines (#6475). Text with a font-family run keeps the
-        // uncompensated factors: what such a line should measure is still open (#6475).
-        style.LineHeight = _hasFontRun
-            ? (isSizeRun ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize) : LineHeightMultiplier)
+        // adjusted until the line is exactly the multiplier times a plain line of this run (#6467). In text with a
+        // size or font run, every factor is replaced line by line in FitRunsToLines (#6475).
+        style.LineHeight = isSizeRun
+            ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize)
             : GetLeadingCompensatedLineHeight(style, LineHeightMultiplier);
 
-        return (style, text, xOffset, yOffset, isSizeRun);
+        return (style, text, xOffset, yOffset, isSizeRun || isFontRun);
     }
 
     /// <summary>
@@ -1878,8 +1879,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private void ParseMarkup()
     {
         _inlineVariables.Clear();
-        _hasSizeRun = false;
-        _hasFontRun = false;
+        _hasHeightRun = false;
 
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
@@ -1905,8 +1905,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         BuildInlineVariables(tags);
         foreach (InlineVariable variable in _inlineVariables)
         {
-            _hasSizeRun |= variable.VariableName == "FontSize" || variable.VariableName == "FontScale";
-            _hasFontRun |= variable.VariableName == "Font";
+            _hasHeightRun |= variable.VariableName == "FontSize" || variable.VariableName == "FontScale" || variable.VariableName == "Font";
         }
     }
 

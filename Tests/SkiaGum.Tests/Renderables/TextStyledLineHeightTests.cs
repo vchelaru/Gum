@@ -31,6 +31,42 @@ public class TextStyledLineHeightTests
         return text;
     }
 
+    /// <summary>For each character of the tag-stripped text, whether it is inside a [FontSize], [FontScale] or [Font] tag.</summary>
+    private static bool[] HeightRunCharacters(string markup)
+    {
+        List<bool> result = new();
+        int depth = 0;
+        int index = 0;
+        while (index < markup.Length)
+        {
+            System.Text.RegularExpressions.Match tag = System.Text.RegularExpressions.Regex.Match(markup.Substring(index), @"^\[(/?)(\w+)(=[^\]]*)?\]");
+            if (tag.Success)
+            {
+                if (tag.Groups[2].Value is "FontSize" or "FontScale" or "Font")
+                {
+                    depth += tag.Groups[1].Value == "/" ? -1 : 1;
+                }
+                index += tag.Length;
+            }
+            else
+            {
+                result.Add(depth > 0);
+                index++;
+            }
+        }
+
+        return result.ToArray();
+    }
+
+    /// <summary>One plain line of <paramref name="fontFamily"/> at size 20, scale 1 and multiplier 1.</summary>
+    private static float PlainLineHeight(string fontFamily)
+    {
+        Text control = Build("a\nb", 1, 1);
+        control.FontName = fontFamily;
+        TextBlock block = control.GetTextBlock();
+        return block.Lines[1].YCoord - block.Lines[0].YCoord;
+    }
+
     private static float PlainLineHeight()
     {
         TextBlock control = Build("a\nb", 1, 1).GetTextBlock();
@@ -150,10 +186,11 @@ public class TextStyledLineHeightTests
         ShouldMatch(text, h, Run(2, 1.5f, 3), Run(2, 1.5f, 1.5f), Plain(2, 1.5f));
     }
 
-    // #6475: a size run shares lines with base text and wraps over several lines, so each line is sized on its own:
-    // it advances max(base * multiplier, the tallest size run on that line) * h (TextLineHeight.Compute), exactly
-    // like MonoGame and Raylib. The size runs on a line are read from the laid-out block's own font runs (a run
-    // whose pixel size differs from the base); the multiplier never changes which glyphs land on which line.
+    // #6475: a size or font-family run shares lines with base text and wraps over several lines, so each line is
+    // sized on its own: it advances max(base * multiplier, the tallest such run on that line) * h
+    // (TextLineHeight.Compute), exactly like MonoGame and Raylib. A run's height is its own plain line, never
+    // multiplied: its size times its font's plain line height. Which characters are in such a run comes from the
+    // markup; the multiplier never changes which glyphs land on which line.
     [Theory]
     [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 100f)]
     [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 200f)]
@@ -211,12 +248,45 @@ public class TextStyledLineHeightTests
     [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 1f, 1f, 100f)]
     [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 1f, 0.8f, 100f)]
     [InlineData("a\n[FontScale=1.5]b[/FontScale]\nc\n", 2f, 1.5f, 200f)]
-    public void SizeRunText_EachLineAdvancesMaxOfMultipliedBaseAndTallestRunOnIt(string markup, float baseScale, float multiplier, float width)
+    [InlineData("a[Font=Courier New]b[/Font]\nc\nd", 1f, 1.5f, 1000f)]
+    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 1f, 1.5f, 100f)]
+    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 1f, 1.5f, 200f)]
+    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 2f, 3f, 100f)]
+    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 2f, 3f, 200f)]
+    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 1f, 1.5f, 100f)]
+    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 1f, 1.5f, 200f)]
+    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 2f, 3f, 100f)]
+    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 2f, 3f, 200f)]
+    [InlineData("x[Font=Times New Roman]y[/Font]z", 1f, 1.5f, 100f)]
+    [InlineData("x[Font=Times New Roman]y[/Font]z", 1f, 1.5f, 200f)]
+    [InlineData("x[Font=Times New Roman]y[/Font]z", 2f, 3f, 100f)]
+    [InlineData("x[Font=Times New Roman]y[/Font]z", 2f, 3f, 200f)]
+    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 1f, 1.5f, 100f)]
+    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 1f, 1.5f, 200f)]
+    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 2f, 3f, 100f)]
+    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 2f, 3f, 200f)]
+    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 1f, 1.5f, 100f)]
+    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 1f, 1.5f, 200f)]
+    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 2f, 3f, 100f)]
+    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 2f, 3f, 200f)]
+    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 1f, 1.5f, 100f)]
+    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 1f, 1.5f, 200f)]
+    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 2f, 3f, 100f)]
+    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 2f, 3f, 200f)]
+    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 1f, 1.5f, 100f)]
+    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 1f, 1.5f, 200f)]
+    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 2f, 3f, 100f)]
+    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 2f, 3f, 200f)]
+    [InlineData("[FontScale=1]a[/FontScale] b\nc", 1f, 0.8f, 1000f)]
+    [InlineData("a [Font=Courier New][FontScale=2]b[/FontScale][/Font] c\nd", 1f, 1.5f, 1000f)]
+    [InlineData("a [Font=Courier New]b[/Font] c\nd", 1f, 0.8f, 1000f)]
+    [InlineData("a [Font=Courier New]b[/Font] c\nd", 1f, 1f, 1000f)]
+    public void HeightRunText_EachLineAdvancesMaxOfMultipliedBaseAndTallestRunOnIt(string markup, float baseScale, float multiplier, float width)
     {
         float h = PlainLineHeight();
         Text text = Build(markup, baseScale, multiplier);
         text.Width = width;
-        float baseFontSize = 20 * baseScale;
+        bool[] inHeightRun = HeightRunCharacters(markup);
 
         TextBlock block = text.GetTextBlock();
         float expectedTop = 0;
@@ -224,8 +294,8 @@ public class TextStyledLineHeightTests
         {
             block.Lines[i].YCoord.ShouldBe(expectedTop * h, 0.005f * h, $"top of line {i}");
             float tallestRun = block.Lines[i].Runs
-                .Where(run => System.Math.Abs(run.Style.FontSize - baseFontSize) > 0.01f)
-                .Select(run => run.Style.FontSize / 20)
+                .Where(run => inHeightRun[run.Start])
+                .Select(run => run.Style.FontSize / 20 * PlainLineHeight(run.Style.FontFamily) / h)
                 .DefaultIfEmpty(0)
                 .Max();
             expectedTop += TextLineHeight.Compute(1, baseScale, multiplier, tallestRun);
@@ -268,56 +338,6 @@ public class TextStyledLineHeightTests
         Text text = Build("a\nb\n", 2, 1.5f);
 
         ShouldMatchExactly(text, h, 3, lineCount: 3, endsWithEmptyLine: true);
-    }
-
-    // A font-family run ([Font=...]) mixed with the base font on one line has the same problem as a size run:
-    // the line's top and bottom come from different fonts, so compensating each run alone overshoots (#6475). Such
-    // text keeps main's line heights, pinned in units of h from main.
-    [Theory]
-    [InlineData("a[Font=Courier New]b[/Font]\nc\nd", 1f, 1.5f, 1000f, "0.000,1.552,3.038,4.523")]
-    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 1f, 1.5f, 100f, "0.000,1.486,2.963,4.441,5.919,7.471,8.956,10.442,11.928")]
-    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 1f, 1.5f, 200f, "0.000,1.552,3.030,4.581,6.067")]
-    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 2f, 3f, 100f, "0.000,5.886,11.797,17.708,23.619,29.530,35.440,41.351,47.262,53.301,59.187,65.073,70.959,76.845,82.732,88.618,94.504,100.390")]
-    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 2f, 3f, 200f, "0.000,5.886,11.797,17.708,23.619,29.657,35.544,41.430,47.316")]
-    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 1f, 1.5f, 100f, "0.000,1.478,2.955,4.433,5.911,7.389,8.866,10.418,11.904")]
-    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 1f, 1.5f, 200f, "0.000,1.478,2.955,4.507")]
-    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 2f, 3f, 100f, "0.000,5.911,11.822,17.732,23.643,29.554,35.465,41.376,47.287,53.197,59.236,65.122,71.008")]
-    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 2f, 3f, 200f, "0.000,5.911,11.822,17.732,23.643,29.554,35.465,41.504,47.390")]
-    [InlineData("x[Font=Times New Roman]y[/Font]z", 1f, 1.5f, 100f, "0.000,1.492")]
-    [InlineData("x[Font=Times New Roman]y[/Font]z", 1f, 1.5f, 200f, "0.000,1.492")]
-    [InlineData("x[Font=Times New Roman]y[/Font]z", 2f, 3f, 100f, "0.000,5.886")]
-    [InlineData("x[Font=Times New Roman]y[/Font]z", 2f, 3f, 200f, "0.000,5.886")]
-    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 1f, 1.5f, 100f, "0.000,1.486,3.038,4.523,6.009,7.495,8.981")]
-    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 1f, 1.5f, 200f, "0.000,1.552,3.038,4.523")]
-    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 2f, 3f, 100f, "0.000,5.886,11.772,17.683,23.722,29.608,35.494,41.380,47.267,53.153,59.039,64.925,70.811")]
-    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 2f, 3f, 200f, "0.000,5.886,11.925,17.811,23.697,29.583,35.470")]
-    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 1f, 1.5f, 100f, "0.000,1.478,2.959,4.445,5.931")]
-    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 1f, 1.5f, 200f, "0.000,1.478,2.959,4.445")]
-    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 2f, 3f, 100f, "0.000,5.911,11.763,17.649,23.535,29.422")]
-    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 2f, 3f, 200f, "0.000,5.911,11.763,17.649,23.535")]
-    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 1f, 1.5f, 100f, "0.000,1.486,2.972,4.449,6.001,7.487,8.973,10.458")]
-    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 1f, 1.5f, 200f, "0.000,1.486,3.038,4.523")]
-    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 2f, 3f, 100f, "0.000,5.886,11.772,17.659,23.545,29.456,35.366,41.405,47.291,53.177,59.064,64.950,70.836")]
-    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 2f, 3f, 200f, "0.000,5.886,11.772,17.683,23.722,29.608,35.494,41.380")]
-    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 1f, 1.5f, 100f, "0.000,1.552,3.038,4.523,6.009,7.495,8.981")]
-    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 1f, 1.5f, 200f, "0.000,1.552,3.038,4.523")]
-    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 2f, 3f, 100f, "0.000,6.039,11.925,17.811,23.697,29.583,35.470,41.356,47.242,53.128,59.014,64.901,70.787")]
-    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 2f, 3f, 200f, "0.000,6.039,11.925,17.811,23.697,29.583,35.470")]
-    public void FontRunText_LineTopsAreUnchanged(string markup, float baseScale, float multiplier, float width, string expectedTopsAndHeightInH)
-    {
-        float h = PlainLineHeight();
-        Text text = Build(markup, baseScale, multiplier);
-        text.Width = width;
-
-        float[] expected = expectedTopsAndHeightInH.Split(',').Select(value => float.Parse(value, CultureInfo.InvariantCulture)).ToArray();
-        TextBlock block = text.GetTextBlock();
-        block.Lines.Count.ShouldBe(expected.Length - 1);
-        for (int i = 0; i < block.Lines.Count; i++)
-        {
-            block.Lines[i].YCoord.ShouldBe(expected[i] * h, 0.002f * h, $"top of line {i}");
-        }
-
-        text.WrappedTextHeight.ShouldBe(expected[expected.Length - 1] * h, 0.002f * h, "the reported height");
     }
 
     [Fact]
