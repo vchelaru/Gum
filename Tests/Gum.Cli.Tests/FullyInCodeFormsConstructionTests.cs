@@ -219,7 +219,7 @@ public class FullyInCodeFormsConstructionTests : IDisposable
         // A derived level that moves a base child under its own child.
         ComponentSave reparent = AddComponent(project, "Elements/ChainReparent", "Elements/ChainB", ("Holder", "Container"));
         AddBaseInstance(reparent, "BChild", "Container");
-        reparent.DefaultState.Variables.Add(new VariableSave { Name = "BChild.Parent", Type = "string", Value = "Holder", SetsValue = true });
+        reparent.DefaultState!.Variables.Add(new VariableSave { Name = "BChild.Parent", Type = "string", Value = "Holder", SetsValue = true });
 
         project.Save(gumxPath, saveElements: true);
     }
@@ -238,7 +238,7 @@ public class FullyInCodeFormsConstructionTests : IDisposable
         component.Instances.Add(new InstanceSave { Name = name, BaseType = baseType, DefinedByBase = true, ParentContainer = component });
 
     private static void Set(ComponentSave component, string name, object value) =>
-        component.DefaultState.Variables.Add(new VariableSave
+        component.DefaultState!.Variables.Add(new VariableSave
         {
             Name = name,
             Type = value is bool ? "bool" : "float",
