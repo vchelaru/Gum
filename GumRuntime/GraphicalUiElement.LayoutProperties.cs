@@ -415,8 +415,10 @@ public partial class GraphicalUiElement
     // rotation) would move it or depend on it.
     bool CanPlacePositionDirectly(XOrY axis)
     {
-        // A rotated element's origin offset turns with it, so each axis depends on the other origin.
-        if (mRotation != 0)
+        // A rotated element's origin offset turns with it, so the position on this axis also depends
+        // on the origin on the other axis, unless that origin is the top-left one.
+        if (mRotation != 0 &&
+            (axis == XOrY.X ? mYOrigin != VerticalAlignment.Top : mXOrigin != HorizontalAlignment.Left))
         {
             return false;
         }

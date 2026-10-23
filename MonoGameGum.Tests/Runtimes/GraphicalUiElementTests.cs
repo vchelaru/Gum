@@ -40,6 +40,51 @@ public class GraphicalUiElementTests : BaseTestClass
         placedX.ShouldBe(((IPositionedSizedObject)sut).X, 0.001f);
     }
 
+    // The Y counterpart: a root-level top-origin element turned about a centered X origin.
+    [Fact]
+    public void Y_RotatedCenteredXRootElement_ShouldMatchFullLayout()
+    {
+        ContainerRuntime sut = new();
+        sut.Width = 40;
+        sut.XOrigin = HorizontalAlignment.Center;
+        sut.Rotation = 30;
+
+        sut.Y = 25;
+        float placedY = ((IPositionedSizedObject)sut).Y;
+        sut.UpdateLayout();
+
+        placedY.ShouldBe(((IPositionedSizedObject)sut).Y, 0.001f);
+    }
+
+    // Setting X or Y on a rotated element places it where a full layout would, for every origin.
+    [Theory]
+    [InlineData(30f)]
+    [InlineData(-90f)]
+    public void XY_RotatedRootElement_ShouldMatchFullLayoutForEveryOrigin(float rotation)
+    {
+        foreach (HorizontalAlignment xOrigin in new[] { HorizontalAlignment.Left, HorizontalAlignment.Center, HorizontalAlignment.Right })
+        {
+            foreach (VerticalAlignment yOrigin in new[] { VerticalAlignment.Top, VerticalAlignment.Center, VerticalAlignment.Bottom })
+            {
+                ContainerRuntime sut = new();
+                sut.Width = 40;
+                sut.Height = 20;
+                sut.XOrigin = xOrigin;
+                sut.YOrigin = yOrigin;
+                sut.Rotation = rotation;
+
+                sut.X = 25;
+                sut.Y = 15;
+                float placedX = ((IPositionedSizedObject)sut).X;
+                float placedY = ((IPositionedSizedObject)sut).Y;
+                sut.UpdateLayout();
+
+                placedX.ShouldBe(((IPositionedSizedObject)sut).X, 0.001f, $"X, {xOrigin}/{yOrigin}");
+                placedY.ShouldBe(((IPositionedSizedObject)sut).Y, 0.001f, $"Y, {xOrigin}/{yOrigin}");
+            }
+        }
+    }
+
 
     #region Constructor Tests
 

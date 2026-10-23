@@ -46,7 +46,8 @@ public class TextBoxCaretRotationTests : BaseTestClass
         AssertSameOffset(GetOffsetInTextFrame(sut, GetCaret(sut)), GetOffsetInTextFrame(unrotated, GetCaret(unrotated)));
     }
 
-    // Rotating the whole TextBox already turned the caret with it before #6609.
+    // Rotating the whole TextBox already turned the caret before #6609, but multi-line placement
+    // read the rotated renderable Y, so the caret sat about 3px off the line.
     [Fact]
     public void Caret_WholeTextBoxRotated_ShouldTurnWithText()
     {
