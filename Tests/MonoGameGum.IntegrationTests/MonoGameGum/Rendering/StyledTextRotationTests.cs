@@ -37,11 +37,8 @@ public class StyledTextRotationTests : BaseTestClass
         (int Left, int Top, int Right, int Bottom) plainBounds =
             RenderLitBounds(game.GraphicsDevice, managers, plain, rotation);
 
-        // One pixel of slack: the styled path measures and places each run separately.
-        System.Math.Abs(styledBounds.Left - plainBounds.Left).ShouldBeLessThanOrEqualTo(1, $"left, styled {styledBounds} plain {plainBounds}");
-        System.Math.Abs(styledBounds.Top - plainBounds.Top).ShouldBeLessThanOrEqualTo(1, $"top, styled {styledBounds} plain {plainBounds}");
-        System.Math.Abs(styledBounds.Right - plainBounds.Right).ShouldBeLessThanOrEqualTo(1, $"right, styled {styledBounds} plain {plainBounds}");
-        System.Math.Abs(styledBounds.Bottom - plainBounds.Bottom).ShouldBeLessThanOrEqualTo(1, $"bottom, styled {styledBounds} plain {plainBounds}");
+        // No slack: each run and line starts where the same letter starts in the plain text (#6575).
+        styledBounds.ShouldBe(plainBounds, $"styled {styledBounds} plain {plainBounds}");
     }
 
     [Theory]
