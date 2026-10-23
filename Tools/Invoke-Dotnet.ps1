@@ -9,6 +9,9 @@ function Invoke-Dotnet {
     foreach ($argument in $Command) { $psi.ArgumentList.Add($argument) }
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
+    # Callers parse the classic console summary ("Passed!"/"Failed!"); the terminal logger, if an
+    # environment turns it on, prints "Test summary:" instead and every run would read as NOTESTS.
+    $psi.Environment['MSBUILDTERMINALLOGGER'] = 'off'
     $process = [System.Diagnostics.Process]::Start($psi)
     $standardOutput = $process.StandardOutput.ReadToEndAsync()
     $standardError = $process.StandardError.ReadToEndAsync()
