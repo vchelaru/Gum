@@ -12,10 +12,12 @@ public class BaseTestClass : IDisposable
 {
     // Captured before the constructor body runs, so it is the state the previous test left.
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+    private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
 
     public virtual void Dispose()
     {
         _fileManagerState.Restore();
+        _graphicalUiElementState.Restore();
         ObjectFinderState.Reset();
     }
 }

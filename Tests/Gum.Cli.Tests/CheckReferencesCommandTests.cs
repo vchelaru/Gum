@@ -2,24 +2,8 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class CheckReferencesCommandTests : IDisposable
+public class CheckReferencesCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public CheckReferencesCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliCheckRefsTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
-    }
-
     [Fact]
     public void CheckReferences_CleanProject_ExitCode0()
     {
@@ -54,7 +38,7 @@ public class CheckReferencesCommandTests : IDisposable
         result.StandardOutput.ShouldContain("fixed: BadComponent");
 
         // The fixed .gucx on disk must now contain a materialized <Variable Name="X" ... />.
-        string componentPath = Path.Combine(_tempDirectory, "FixOnSave", "Components", "BadComponent.gucx");
+        string componentPath = Path.Combine(TempDirectory, "FixOnSave", "Components", "BadComponent.gucx");
         string contents = File.ReadAllText(componentPath);
         contents.ShouldContain("Name=\"X\"",
             customMessage: "the propagated scalar should now be persisted in the component file");
@@ -63,7 +47,7 @@ public class CheckReferencesCommandTests : IDisposable
     [Fact]
     public void CheckReferences_NonexistentProject_ExitCode2()
     {
-        string fakePath = Path.Combine(_tempDirectory, "nonexistent.gumx");
+        string fakePath = Path.Combine(TempDirectory, "nonexistent.gumx");
 
         CliTestHelper result = CliTestHelper.Run("check-references", fakePath);
 
@@ -97,7 +81,7 @@ public class CheckReferencesCommandTests : IDisposable
 
     private string CreateTestProject(string name)
     {
-        string filePath = Path.Combine(_tempDirectory, name, name + ".gumx");
+        string filePath = Path.Combine(TempDirectory, name, name + ".gumx");
         CliTestHelper.Run("new", filePath);
         return filePath;
     }

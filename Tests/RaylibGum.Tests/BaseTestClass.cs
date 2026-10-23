@@ -21,6 +21,7 @@ public class BaseTestClass : IDisposable
 {
     // Captured before the constructor body runs, so it is the state the previous test left.
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+    private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
 
     // #3066: renderables present right after the assembly bootstrap (Root + Forms defaults).
     // Anything found on a layer beyond this set was added by a test — typically via AddToManagers
@@ -146,6 +147,7 @@ public class BaseTestClass : IDisposable
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
 
         _fileManagerState.Restore();
+        _graphicalUiElementState.Restore();
         ObjectFinderState.Reset();
 
         Text.Customizations.Clear();

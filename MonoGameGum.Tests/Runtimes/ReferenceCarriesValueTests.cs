@@ -6,7 +6,6 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum.TestsCommon;
 using Shouldly;
 using System;
 using Xunit;
@@ -20,19 +19,11 @@ namespace MonoGameGum.Tests.Runtimes;
 /// </summary>
 public class ReferenceCarriesValueTests : BaseTestClass
 {
-    private readonly StaticRegistrationScope _registrations = new();
-
     public ReferenceCarriesValueTests()
     {
         StandardElementsManager.Self.Initialize();
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
-    }
-
-    public override void Dispose()
-    {
-        _registrations.Dispose();
-        base.Dispose();
     }
 
     [Theory]

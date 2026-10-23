@@ -22,6 +22,7 @@ public abstract class SkiaHostTestBase : IDisposable
 {
     // Captured before the constructor body runs, so it is the state the previous test left.
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+    private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
 
     // Renderables present right after the assembly bootstrap (Root + Forms defaults). Anything found
     // beyond this set was added by a test and is swept in Dispose (#3066).
@@ -158,6 +159,7 @@ public abstract class SkiaHostTestBase : IDisposable
         // AccessViolationException. Leaving the cache intact keeps the sprite sheet valid across tests.
 
         _fileManagerState.Restore();
+        _graphicalUiElementState.Restore();
         ObjectFinderState.Reset();
 
         // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.

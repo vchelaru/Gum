@@ -8,7 +8,6 @@ using Moq;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Shouldly;
-using System;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -39,18 +38,7 @@ public class LayoutRenderableSetterTests : BaseTestClass
         }
     }
 
-    readonly Action<IText, GraphicalUiElement>? _originalFontLoader;
-
-    public LayoutRenderableSetterTests()
-    {
-        _originalFontLoader = GraphicalUiElement.UpdateFontFromProperties;
-    }
-
-    public override void Dispose()
-    {
-        GraphicalUiElement.UpdateFontFromProperties = _originalFontLoader;
-        base.Dispose();
-    }
+    // Tests below replace GraphicalUiElement.UpdateFontFromProperties; BaseTestClass restores it.
 
     static GraphicalUiElement CreateRelativeToChildrenText(FakeText renderable)
     {

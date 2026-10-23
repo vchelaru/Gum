@@ -87,8 +87,7 @@ chars count=0
 
     private static List<string> RunCapturingErrors(IContentLoader loader, string fntFile, string pageFile, Action act)
     {
-        IContentLoader? savedLoader = LoaderManager.Self.ContentLoader;
-        Func<string, System.IO.Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        // BaseTestClass restores the content loader and the stream hook.
         List<string> captured = new();
         void Handler(string message) => captured.Add(message);
         CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
@@ -108,8 +107,6 @@ chars count=0
         }
         finally
         {
-            LoaderManager.Self.ContentLoader = savedLoader;
-            FileManager.CustomGetStreamFromFile = savedHook;
             CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
         }
         return captured;

@@ -14,6 +14,7 @@ public class BaseTestClass : IDisposable
 {
     // Captured before the constructor body runs, so it is the state the previous test left.
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+    private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
 
     public virtual void Dispose()
     {
@@ -79,6 +80,7 @@ public class BaseTestClass : IDisposable
         ObjectFinderState.Reset();
 
         _fileManagerState.Restore();
+        _graphicalUiElementState.Restore();
 
         // Clear any per-capability factories a test registered into the static
         // RenderableRegistry so they don't leak into the next test.

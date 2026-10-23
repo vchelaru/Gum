@@ -4,16 +4,8 @@ using System.Text.Json;
 
 namespace Gum.Cli.Tests;
 
-public class CheckCommandTests : IDisposable
+public class CheckCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public CheckCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliCheckTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void Check_CleanProject_ShouldReturnExitCode0()
     {
@@ -39,7 +31,7 @@ public class CheckCommandTests : IDisposable
     [Fact]
     public void Check_MissingProjectFile_ShouldReturnExitCode2()
     {
-        string fakePath = Path.Combine(_tempDirectory, "nonexistent.gumx");
+        string fakePath = Path.Combine(TempDirectory, "nonexistent.gumx");
 
         CliTestHelper result = CliTestHelper.Run("check", fakePath);
 
@@ -146,7 +138,7 @@ public class CheckCommandTests : IDisposable
     /// </summary>
     private string CreateTestProject(string name)
     {
-        string filePath = Path.Combine(_tempDirectory, name, name + ".gumx");
+        string filePath = Path.Combine(TempDirectory, name, name + ".gumx");
         CliTestHelper.Run("new", filePath);
         return filePath;
     }
@@ -308,13 +300,5 @@ public class CheckCommandTests : IDisposable
         string componentRef = $"""  <ComponentReference Name="{name}" />""";
         gumxContent = gumxContent.Replace("</GumProjectSave>", componentRef + "\n</GumProjectSave>");
         File.WriteAllText(gumxFilePath, gumxContent);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

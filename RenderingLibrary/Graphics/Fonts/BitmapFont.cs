@@ -935,6 +935,26 @@ public class BitmapFont : IDisposable
     static List<int> sMeasuredLineWidths = new List<int>();
 
     /// <summary>
+    /// Returns the screen directions of text's local X and Y axes at a rotation in degrees.
+    /// At zero rotation they are exactly <see cref="Vector2.UnitX"/> and <see cref="Vector2.UnitY"/>.
+    /// </summary>
+    internal static void GetRotatedAxes(float rotationDegrees, out Vector2 xAxis, out Vector2 yAxis)
+    {
+        xAxis = Vector2.UnitX;
+        yAxis = Vector2.UnitY;
+
+        if (rotationDegrees != 0)
+        {
+            var rotationRadians = MathHelper.ToRadians(rotationDegrees);
+            xAxis.X = (float)System.Math.Cos(-rotationRadians);
+            xAxis.Y = (float)System.Math.Sin(-rotationRadians);
+
+            yAxis.X = (float)System.Math.Cos(-rotationRadians + MathHelper.PiOver2);
+            yAxis.Y = (float)System.Math.Sin(-rotationRadians + MathHelper.PiOver2);
+        }
+    }
+
+    /// <summary>
     /// Draws pre-split lines of text directly to the screen via the <paramref name="spriteRenderer"/>,
     /// character by character. The caller must provide pre-computed <paramref name="widths"/> (one per line)
     /// that match the <paramref name="lines"/> list; a mismatch will cause an index-out-of-range error
@@ -1009,17 +1029,7 @@ public class BitmapFont : IDisposable
 
         var rotationRadians = MathHelper.ToRadians(rotationDegrees);
 
-        Vector2 xAxis = Vector2.UnitX;
-        Vector2 yAxis = Vector2.UnitY;
-
-        if (rotationDegrees != 0)
-        {
-            xAxis.X = (float)System.Math.Cos(-rotationRadians);
-            xAxis.Y = (float)System.Math.Sin(-rotationRadians);
-
-            yAxis.X = (float)System.Math.Cos(-rotationRadians + MathHelper.PiOver2);
-            yAxis.Y = (float)System.Math.Sin(-rotationRadians + MathHelper.PiOver2);
-        }
+        GetRotatedAxes(rotationDegrees, out Vector2 xAxis, out Vector2 yAxis);
 
         int numberOfLettersRendered = 0;
 
@@ -1106,7 +1116,7 @@ public class BitmapFont : IDisposable
                 {
                     char c = line[charIndex];
                     var sourceRect =
-                        GetCharacterRect(c, lineNumber, ref currentLetterOrigin, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
+                        GetCharacterRect(c, lineNumber, ref currentLetterOrigin, out destRect, out pageIndex, scaleX, scaleY, lineHeightMultiplier);
 
                     if (charIndex == 0)
                     {
@@ -1256,7 +1266,14 @@ public class BitmapFont : IDisposable
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 currentCharacterDrawPosition, out FloatRectangle destinationRectangle,
-        out int pageIndex, float fontScale = 1, float lineHeightMultiplier = 1)
+        out int pageIndex, float fontScale = 1, float lineHeightMultiplier = 1) =>
+        GetCharacterRect(c, lineNumber, ref currentCharacterDrawPosition, out destinationRectangle, out pageIndex,
+            fontScale, fontScale, lineHeightMultiplier);
+
+    // Horizontal placement and advance use scaleX; vertical placement and size use scaleY, so a [Custom]
+    // letter with ScaleX != ScaleY sits at the right height in its cell (#6548).
+    private Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 currentCharacterDrawPosition, out FloatRectangle destinationRectangle,
+        out int pageIndex, float scaleX, float scaleY, float lineHeightMultiplier)
     {
         if (Texture == null)
         {
@@ -1291,15 +1308,13 @@ public class BitmapFont : IDisposable
             //characterInfo.GetPixelXOffset(mLineHeightInPixels);
 
             // Shift the point by the xOffset, which affects destination (drawing) but does not affect the advance of the position for the next letter
-            currentCharacterDrawPosition.X += xOffset * fontScale;
-            currentCharacterDrawPosition.Y = GetCharacterTop(lineNumber, distanceFromTop, fontScale, lineHeightMultiplier);
-            destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * fontScale, sourceHeight * fontScale);
+            currentCharacterDrawPosition.X += xOffset * scaleX;
+            currentCharacterDrawPosition.Y = GetCharacterTop(lineNumber, distanceFromTop, scaleY, lineHeightMultiplier);
+            destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * scaleX, sourceHeight * scaleY);
 
             // Shift it back now that we have the destinationRectangle
-            currentCharacterDrawPosition.X -= xOffset * fontScale;
-            currentCharacterDrawPosition.X += 
-                //characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
-                characterInfo.XAdvance * fontScale;
+            currentCharacterDrawPosition.X -= xOffset * scaleX;
+            currentCharacterDrawPosition.X += characterInfo.XAdvance * scaleX;
         }
         else
         {

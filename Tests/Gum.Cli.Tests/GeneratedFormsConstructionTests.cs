@@ -21,18 +21,8 @@ namespace Gum.Cli.Tests;
 /// before they exist, builds them in the wrong order, or creates a second Forms control on one
 /// visual fails here rather than in a game. Gum Forms FullyInCode and legacy MonoGame FindByName.
 /// </summary>
-public class GeneratedFormsConstructionTests : IDisposable
+public class GeneratedFormsConstructionTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-    private readonly global::Gum.Wireframe.MissingFileBehavior _previousMissingFileBehavior =
-        global::Gum.Wireframe.GraphicalUiElement.MissingFileBehavior;
-
-    public GeneratedFormsConstructionTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliFullyInCode_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void Constructor_EveryGeneratedFormsControl_DoesNotThrow()
     {
@@ -90,7 +80,7 @@ public class GeneratedFormsConstructionTests : IDisposable
     public void Constructor_DerivedButton_AppliesStateAfterDerivedDefaults()
     {
         object button = Construct(GenerateAndCompile(), "ButtonCloseDerived");
-        File.ReadAllText(Directory.GetFiles(_tempDirectory, "ButtonCloseDerived.Generated.cs", SearchOption.AllDirectories).Single())
+        File.ReadAllText(Directory.GetFiles(TempDirectory, "ButtonCloseDerived.Generated.cs", SearchOption.AllDirectories).Single())
             .ShouldContain("this.FocusedIndicator.Visible = true;");
 
         // The derived default shows FocusedIndicator; the Enabled state, applied after the defaults, hides it.
@@ -246,7 +236,7 @@ public class GeneratedFormsConstructionTests : IDisposable
         Type systemManagersType = MonoGameGum.GetType("RenderingLibrary.SystemManagers", throwOnError: true)!;
         systemManagersType.GetMethod("RegisterComponentRuntimeInstantiations", BindingFlags.NonPublic | BindingFlags.Instance)!
             .Invoke(systemManagersType.GetProperty("Default")!.GetValue(null), null);
-        GumProjectSave project = GumProjectSave.Load(Path.Combine(_tempDirectory, "MyProject.gumx"), out _)!;
+        GumProjectSave project = GumProjectSave.Load(Path.Combine(TempDirectory, "MyProject.gumx"), out _)!;
         Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
         Gum.Managers.StandardElementsManager.Self.RegisterExtendedDefaultStates();
         project.Initialize();
@@ -259,10 +249,10 @@ public class GeneratedFormsConstructionTests : IDisposable
         OutputLibrary outputLibrary = OutputLibrary.GumForms,
         ObjectInstantiationType instantiationType = ObjectInstantiationType.FullyInCode)
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new FormsTemplateCreator().Create(gumxPath);
         AddDerivedComponents(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup>" +
             "<PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.4\" />" +
             "</ItemGroup></Project>");
@@ -270,7 +260,7 @@ public class GeneratedFormsConstructionTests : IDisposable
         // codegen replaces settings without a CodeProjectRoot with auto-detected FindByName ones.
         CliTestHelper.Run("codegen-init", gumxPath).ExitCode.ShouldBe(0);
         CodeOutputProjectSettingsManager settingsManager = new CodeOutputProjectSettingsManager(
-            new SilentLogger(), new FixedProjectDirectoryProvider(_tempDirectory + Path.DirectorySeparatorChar));
+            new SilentLogger(), new FixedProjectDirectoryProvider(TempDirectory + Path.DirectorySeparatorChar));
         CodeOutputProjectSettings settings = settingsManager.CreateOrLoadSettingsForProject();
         settings.OutputLibrary = outputLibrary;
         settings.ObjectInstantiationType = instantiationType;
@@ -279,7 +269,7 @@ public class GeneratedFormsConstructionTests : IDisposable
         CliTestHelper codegen = CliTestHelper.Run("codegen", gumxPath);
         codegen.ExitCode.ShouldBe(0, codegen.StandardError + codegen.StandardOutput);
 
-        Assembly generated = Compile(Directory.GetFiles(_tempDirectory, "*.cs", SearchOption.AllDirectories));
+        Assembly generated = Compile(Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories));
         InstallHeadlessRuntime();
         return generated;
     }
@@ -367,7 +357,7 @@ public class GeneratedFormsConstructionTests : IDisposable
         Install(typeof(global::GumRuntime.ElementSaveExtensions), "CustomCreateGraphicalComponentFunc", renderableCreator, "HandleCreateGraphicalComponent");
 
         // The template's sprites point at a texture the headless run cannot load. An in-process gumcli
-        // command that ran SystemManagers.Initialize earlier leaves this at ThrowException; Dispose restores it.
+        // command that ran SystemManagers.Initialize earlier leaves this at ThrowException; BaseTestClass restores it.
         global::Gum.Wireframe.GraphicalUiElement.MissingFileBehavior = global::Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
 
         // No project loaded: generated code then skips the standard-element lookups, which need a renderer.
@@ -445,14 +435,5 @@ public class GeneratedFormsConstructionTests : IDisposable
         public void PrintOutput(string message) { }
 
         public void PrintError(string message) { }
-    }
-
-    public void Dispose()
-    {
-        global::Gum.Wireframe.GraphicalUiElement.MissingFileBehavior = _previousMissingFileBehavior;
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

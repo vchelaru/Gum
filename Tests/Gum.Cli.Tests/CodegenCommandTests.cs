@@ -6,51 +6,43 @@ using System.IO;
 
 namespace Gum.Cli.Tests;
 
-public class CodegenCommandTests : IDisposable
+public class CodegenCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public CodegenCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliCodegenTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void Codegen_WhenNoCodsjAndCsprojFound_AutoCreatesCodsj()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
 
         CliTestHelper.Run("codegen", gumxPath);
 
-        string codsjPath = Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj");
+        string codsjPath = Path.Combine(TempDirectory, "ProjectCodeSettings.codsj");
         File.Exists(codsjPath).ShouldBeTrue();
     }
 
     [Fact]
     public void Codegen_WhenCsprojReferencesNoGumRuntime_EmitsCurrentNamespacesNotLegacyOnes()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new FormsTemplateCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
 
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
 
         result.ExitCode.ShouldBe(0);
-        string generated = File.ReadAllText(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.Generated.cs"));
+        string generated = File.ReadAllText(Path.Combine(TempDirectory, "Components", "Controls", "ButtonStandard.Generated.cs"));
         generated.ShouldNotContain("MonoGameGum");
     }
 
     [Fact]
     public void Codegen_WhenNoCodsjAndCsprojFound_PrintsAutoConfigMessage()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
 
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
@@ -61,9 +53,9 @@ public class CodegenCommandTests : IDisposable
     [Fact]
     public void Codegen_WhenNoCodsjAndCsprojFound_ReturnsExitCode0()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
 
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
@@ -103,14 +95,14 @@ public class CodegenCommandTests : IDisposable
     [Fact]
     public void Codegen_WhenNoCodsjAndCsprojFound_WritesNonEmptyCodeProjectRoot()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
 
         CliTestHelper.Run("codegen", gumxPath);
 
-        string codsjPath = Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj");
+        string codsjPath = Path.Combine(TempDirectory, "ProjectCodeSettings.codsj");
         string contents = File.ReadAllText(codsjPath);
         contents.ShouldContain("CodeProjectRoot");
         contents.ShouldNotContain("\"CodeProjectRoot\": \"\"");
@@ -121,9 +113,9 @@ public class CodegenCommandTests : IDisposable
     [InlineData("2000.1.1.1", false)]  // runtime older than the CLI
     public void Codegen_WarnsOnStderrOnlyWhenPackageReferenceIsNewerThanCli(string runtimeVersion, bool expectWarning)
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             $"""
             <Project Sdk="Microsoft.NET.Sdk">
               <ItemGroup>
@@ -149,9 +141,9 @@ public class CodegenCommandTests : IDisposable
     [Fact]
     public void Codegen_PrintsResolvedCodeProjectRoot()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "./",
@@ -166,7 +158,7 @@ public class CodegenCommandTests : IDisposable
 
         // The resolved (absolute) output root must be visible so misconfigured
         // CodeProjectRoot values (e.g. machine-specific absolute paths) are obvious.
-        result.StandardOutput.ShouldContain(_tempDirectory);
+        result.StandardOutput.ShouldContain(TempDirectory);
     }
 
     [Fact]
@@ -174,9 +166,9 @@ public class CodegenCommandTests : IDisposable
     {
         // Settings saved on Windows use backslashes; on macOS/Linux those are file-name
         // characters, so the printed root must be converted rather than shown as "Output\".
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "Output\\",
@@ -189,16 +181,16 @@ public class CodegenCommandTests : IDisposable
 
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
 
-        string expectedRoot = Path.Combine(_tempDirectory, "Output") + Path.DirectorySeparatorChar;
+        string expectedRoot = Path.Combine(TempDirectory, "Output") + Path.DirectorySeparatorChar;
         result.StandardOutput.ShouldContain("Generating code into " + expectedRoot);
     }
 
     [Fact]
     public void Codegen_GeneratedCodeFolder_WritesAndPrintsTheFolderUnderCodeProjectRoot()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "Output/",
@@ -212,7 +204,7 @@ public class CodegenCommandTests : IDisposable
 
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
 
-        string expectedFolder = Path.Combine(_tempDirectory, "Output", "Gum", "Generated") + Path.DirectorySeparatorChar;
+        string expectedFolder = Path.Combine(TempDirectory, "Output", "Gum", "Generated") + Path.DirectorySeparatorChar;
         result.StandardOutput.ShouldContain("Generating code into " + expectedFolder);
         File.Exists(Path.Combine(expectedFolder, "StandardElements.Generated.cs")).ShouldBeTrue();
     }
@@ -228,11 +220,11 @@ public class CodegenCommandTests : IDisposable
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
 
         result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
-        string expectedFolder = Path.Combine(_tempDirectory, Path.Combine(expectedScreensFolder.Split('/')));
+        string expectedFolder = Path.Combine(TempDirectory, Path.Combine(expectedScreensFolder.Split('/')));
         string generatedPath = Path.Combine(expectedFolder, "TestScreen.Generated.cs");
         File.Exists(generatedPath).ShouldBeTrue();
         File.Exists(Path.Combine(expectedFolder, "TestScreen.cs")).ShouldBeTrue();
-        File.Exists(Path.Combine(_tempDirectory, "Screens", "TestScreen.Generated.cs")).ShouldBeFalse();
+        File.Exists(Path.Combine(TempDirectory, "Screens", "TestScreen.Generated.cs")).ShouldBeFalse();
         File.ReadAllText(generatedPath).ShouldContain("namespace TestNamespace.Screens");
     }
 
@@ -245,7 +237,7 @@ public class CodegenCommandTests : IDisposable
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
 
         result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
-        File.Exists(Path.Combine(_tempDirectory, "GumCodeGen", "Screens", "TestScreen.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "GumCodeGen", "Screens", "TestScreen.Generated.cs")).ShouldBeTrue();
         File.Exists(leftBehind).ShouldBeFalse(
             customMessage: "the copy in the unprefixed folder no longer matches where the element generates");
         result.StandardOutput.ShouldContain("Pruned 1");
@@ -254,7 +246,7 @@ public class CodegenCommandTests : IDisposable
     [Fact]
     public void Codegen_WhenProjectHasLocalizationCsv_GeneratedCodeContainsApplyLocalization()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
 
         string screenXml =
@@ -278,9 +270,9 @@ public class CodegenCommandTests : IDisposable
               </Instance>
             </ScreenSave>
             """;
-        File.WriteAllText(Path.Combine(_tempDirectory, "Screens", "TestScreen.gusx"), screenXml);
+        File.WriteAllText(Path.Combine(TempDirectory, "Screens", "TestScreen.gusx"), screenXml);
 
-        File.WriteAllText(Path.Combine(_tempDirectory, "LocalizationDB.csv"),
+        File.WriteAllText(Path.Combine(TempDirectory, "LocalizationDB.csv"),
             "String ID,English,Spanish\nT_OK,OK,De acuerdo\n");
 
         string gumxContent = File.ReadAllText(gumxPath);
@@ -290,7 +282,7 @@ public class CodegenCommandTests : IDisposable
             "</GumProjectSave>");
         File.WriteAllText(gumxPath, gumxContent);
 
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "./",
@@ -304,7 +296,7 @@ public class CodegenCommandTests : IDisposable
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
 
         result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
-        string generatedPath = Path.Combine(_tempDirectory, "Screens", "TestScreen.Generated.cs");
+        string generatedPath = Path.Combine(TempDirectory, "Screens", "TestScreen.Generated.cs");
         File.Exists(generatedPath).ShouldBeTrue(
             customMessage: "codegen should have written the generated screen file");
         string generatedContents = File.ReadAllText(generatedPath);
@@ -319,7 +311,7 @@ public class CodegenCommandTests : IDisposable
         // Start from an unwired evaluator: the reference reads another element, and `codegen`
         // must not depend on another command having initialized it.
         ElementSaveExtensions.CustomEvaluateExpression = null;
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
         AddComponent(gumxPath, "Styles",
             """
@@ -358,7 +350,7 @@ public class CodegenCommandTests : IDisposable
               </State>
             </ComponentSave>
             """);
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "./",
@@ -387,9 +379,9 @@ public class CodegenCommandTests : IDisposable
     [Fact]
     public void Codegen_WhenFormsComponentInheritsSpriteWithoutBehaviors_SkipsItWithAnErrorAndExitsNonZero()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "Components", "FromSprite.gucx"),
+        File.WriteAllText(Path.Combine(TempDirectory, "Components", "FromSprite.gucx"),
             """
             <?xml version="1.0" encoding="utf-8"?>
             <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -403,7 +395,7 @@ public class CodegenCommandTests : IDisposable
         string gumxContent = File.ReadAllText(gumxPath);
         File.WriteAllText(gumxPath, gumxContent.Replace("</GumProjectSave>",
             "  <ComponentReference Name=\"FromSprite\" />\n</GumProjectSave>"));
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "./",
@@ -419,13 +411,13 @@ public class CodegenCommandTests : IDisposable
         result.ExitCode.ShouldBe(1, customMessage: result.StandardOutput);
         result.StandardError.ShouldContain("error: FromSprite:");
         result.StandardError.ShouldContain("must either inherit from Container");
-        File.Exists(Path.Combine(_tempDirectory, "Components", "FromSprite.Generated.cs")).ShouldBeFalse();
+        File.Exists(Path.Combine(TempDirectory, "Components", "FromSprite.Generated.cs")).ShouldBeFalse();
     }
 
     [Fact]
     public void Codegen_WhenRaylibOutputLibrary_GeneratesFindByNameWiring()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
 
         string screenXml =
@@ -440,14 +432,14 @@ public class CodegenCommandTests : IDisposable
               </Instance>
             </ScreenSave>
             """;
-        File.WriteAllText(Path.Combine(_tempDirectory, "Screens", "TestScreen.gusx"), screenXml);
+        File.WriteAllText(Path.Combine(TempDirectory, "Screens", "TestScreen.gusx"), screenXml);
 
         string gumxContent = File.ReadAllText(gumxPath);
         gumxContent = gumxContent.Replace("</GumProjectSave>",
             "  <ScreenReference Name=\"TestScreen\" />\n</GumProjectSave>");
         File.WriteAllText(gumxPath, gumxContent);
 
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "./",
@@ -463,7 +455,7 @@ public class CodegenCommandTests : IDisposable
         result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
         // Plain (non-Forms) codegen names the generated class "<Element>Runtime" — same
         // convention as plain MonoGame — so the file is TestScreenRuntime.Generated.cs.
-        string generatedPath = Path.Combine(_tempDirectory, "Screens", "TestScreenRuntime.Generated.cs");
+        string generatedPath = Path.Combine(TempDirectory, "Screens", "TestScreenRuntime.Generated.cs");
         File.Exists(generatedPath).ShouldBeTrue(
             customMessage: "codegen should have written the generated screen file");
         string generatedContents = File.ReadAllText(generatedPath);
@@ -476,9 +468,9 @@ public class CodegenCommandTests : IDisposable
     {
         // Issue #3505: CI's Codegen Drift Check regeneration (Tests/GenerateAllCodeGenProjects.bat,
         // which shells out to this exact "gumcli codegen" path) needs the fallback file produced.
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "./",
@@ -492,7 +484,7 @@ public class CodegenCommandTests : IDisposable
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
 
         result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
-        string generatedPath = Path.Combine(_tempDirectory, "StandardElements.Generated.cs");
+        string generatedPath = Path.Combine(TempDirectory, "StandardElements.Generated.cs");
         File.Exists(generatedPath).ShouldBeTrue(
             customMessage: "codegen should have written the Standard Elements fallback file");
         string contents = File.ReadAllText(generatedPath);
@@ -510,8 +502,8 @@ public class CodegenCommandTests : IDisposable
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--element", "TestScreen");
 
         result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
-        File.Exists(Path.Combine(_tempDirectory, "Screens", "TestScreen.Generated.cs")).ShouldBeTrue();
-        File.Exists(Path.Combine(_tempDirectory, "StandardElements.Generated.cs")).ShouldBeFalse();
+        File.Exists(Path.Combine(TempDirectory, "Screens", "TestScreen.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "StandardElements.Generated.cs")).ShouldBeFalse();
     }
 
     [Fact]
@@ -519,10 +511,10 @@ public class CodegenCommandTests : IDisposable
     {
         // A file where the output folder should be makes directory creation fail on every OS, the
         // same way a committed absolute path to another machine's folder does.
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         CliTestHelper.Run("new", gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "Blocked"), "not a folder");
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "Blocked"), "not a folder");
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "Blocked/Output/",
@@ -543,10 +535,10 @@ public class CodegenCommandTests : IDisposable
     [Fact]
     public void Codegen_WhenRaylibWithFullyInCode_ReturnsExitCode1WithClearError()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
 
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "./",
@@ -595,7 +587,7 @@ public class CodegenCommandTests : IDisposable
     {
         string gumxPath = CreateProjectWithCodeSettings();
         WriteGeneratedFile("DeletedScreen");
-        string customCodePath = Path.Combine(_tempDirectory, "Screens", "DeletedScreen.cs");
+        string customCodePath = Path.Combine(TempDirectory, "Screens", "DeletedScreen.cs");
         File.WriteAllText(customCodePath, "partial class DeletedScreen { }");
 
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
@@ -619,9 +611,9 @@ public class CodegenCommandTests : IDisposable
 
     private string CreateProjectWithCodeSettings()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             """
             {
               "CodeProjectRoot": "./",
@@ -636,9 +628,9 @@ public class CodegenCommandTests : IDisposable
 
     private string CreateProjectWithScreen(string screenName, string generatedCodeFolderPrefix)
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "Screens", screenName + ".gusx"),
+        File.WriteAllText(Path.Combine(TempDirectory, "Screens", screenName + ".gusx"),
             $"""
             <?xml version="1.0" encoding="utf-8"?>
             <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -651,7 +643,7 @@ public class CodegenCommandTests : IDisposable
         string gumxContent = File.ReadAllText(gumxPath);
         File.WriteAllText(gumxPath, gumxContent.Replace("</GumProjectSave>",
             $"  <ScreenReference Name=\"{screenName}\" />\n</GumProjectSave>"));
-        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
             $$"""
             {
               "CodeProjectRoot": "./",
@@ -667,18 +659,10 @@ public class CodegenCommandTests : IDisposable
 
     private string WriteGeneratedFile(string elementName)
     {
-        string screensDirectory = Path.Combine(_tempDirectory, "Screens");
+        string screensDirectory = Path.Combine(TempDirectory, "Screens");
         Directory.CreateDirectory(screensDirectory);
         string path = Path.Combine(screensDirectory, elementName + ".Generated.cs");
         File.WriteAllText(path, $"//Code for {elementName}\r\npublic partial class {elementName} {{ }}");
         return path;
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

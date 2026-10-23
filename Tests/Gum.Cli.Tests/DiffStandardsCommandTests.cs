@@ -2,16 +2,8 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class DiffStandardsCommandTests : IDisposable
+public class DiffStandardsCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public DiffStandardsCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliDiffStandardsTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void DiffStandards_FreshEmptyProject_ShouldReturnExitCode0()
     {
@@ -73,7 +65,7 @@ public class DiffStandardsCommandTests : IDisposable
     [Fact]
     public void DiffStandards_MissingProjectFile_ShouldReturnExitCode2()
     {
-        string fakePath = Path.Combine(_tempDirectory, "nonexistent.gumx");
+        string fakePath = Path.Combine(TempDirectory, "nonexistent.gumx");
 
         CliTestHelper result = CliTestHelper.Run("diff-standards", fakePath);
 
@@ -83,16 +75,8 @@ public class DiffStandardsCommandTests : IDisposable
 
     private string CreateTestProject(string name)
     {
-        string filePath = Path.Combine(_tempDirectory, name, name + ".gumx");
+        string filePath = Path.Combine(TempDirectory, name, name + ".gumx");
         CliTestHelper.Run("new", filePath, "--template", "empty");
         return filePath;
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

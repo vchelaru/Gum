@@ -4,7 +4,6 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum.TestsCommon;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -20,7 +19,6 @@ namespace MonoGameGum.Tests.Runtimes;
 /// </summary>
 public class ReferenceRejectedByTargetTests : BaseTestClass
 {
-    private readonly StaticRegistrationScope _registrations = new();
     private readonly List<string> _errors = new();
 
     public ReferenceRejectedByTargetTests()
@@ -42,10 +40,6 @@ public class ReferenceRejectedByTargetTests : BaseTestClass
     public override void Dispose()
     {
         CustomSetPropertyOnRenderable.PropertyAssignmentError -= Record;
-        _registrations.Dispose();
-        ElementSaveExtensions.CustomEvaluateExpression = null;
-        ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
-        ObjectFinder.Self.GumProjectSave = null;
         base.Dispose();
     }
 

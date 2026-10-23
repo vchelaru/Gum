@@ -956,8 +956,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             
             //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
             SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-Rotation);
-            var absoluteX = this.GetAbsoluteX();
-            var absoluteY = this.GetAbsoluteY() + GetVerticalAlignmentOffset(textBlock);
+            // The text turns about its top-left, so the vertical alignment offset turns with it, as on
+            // MonoGame and Raylib. Horizontal alignment is already inside the block's own layout.
+            SKPoint verticalOffset = rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
+            var absoluteX = this.GetAbsoluteX() + verticalOffset.X;
+            var absoluteY = this.GetAbsoluteY() + verticalOffset.Y;
             (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY);
 
             SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
@@ -1419,27 +1422,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         /// </summary>
         public SKMatrix GetDrawMatrix(SKRect cell, float baseline)
         {
-            float anchorX = ScaleXOrigin switch
-            {
-                HorizontalAlignment.Left => cell.Left,
-                HorizontalAlignment.Right => cell.Right,
-                _ => cell.MidX,
-            };
-            float anchorY = ScaleYOrigin switch
-            {
-                VerticalAlignment.Top => cell.Top,
-                VerticalAlignment.Bottom => cell.Bottom,
-                VerticalAlignment.TextBaseline => baseline,
-                _ => cell.MidY,
-            };
-            float originX = anchorX + (cell.Left - anchorX) * ScaleX;
-            float originY = anchorY + (cell.Top - anchorY) * ScaleY;
+            Vector2 origin = LetterCellScale.GetScaledTopLeft(cell.Left, cell.Top, cell.Width, cell.Height,
+                baseline - cell.Top, ScaleX, ScaleY, ScaleXOrigin, ScaleYOrigin);
 
             SKMatrix matrix = SKMatrix.CreateTranslation(-cell.Left, -cell.Top);
             matrix = matrix.PostConcat(SKMatrix.CreateScale(ScaleX, ScaleY));
             // Gum rotation is counterclockwise; Skia's is clockwise.
             matrix = matrix.PostConcat(SKMatrix.CreateRotationDegrees(-RotationDegrees));
-            return matrix.PostConcat(SKMatrix.CreateTranslation(originX, originY));
+            return matrix.PostConcat(SKMatrix.CreateTranslation(origin.X, origin.Y));
         }
     }
 

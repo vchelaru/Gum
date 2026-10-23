@@ -14,12 +14,16 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 using Gum.Tests.Shared;
+using MonoGameGum.TestsCommon;
 
 namespace MonoGameGum.Tests;
 public class BaseTestClass : IDisposable
 {
     // Captured before the constructor body runs, so it is the state the previous test left.
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+    private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
+    // The renderable hooks, element-type registrations, default font and content loader (#6565).
+    private readonly StaticRegistrationScope _registrations = new();
 
     public BaseTestClass()
     {
@@ -164,6 +168,7 @@ public class BaseTestClass : IDisposable
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
 
         _fileManagerState.Restore();
+        _graphicalUiElementState.Restore();
 
         RenderingLibrary.Graphics.Text.Customizations.Clear();
         RenderingLibrary.Graphics.Text.ContextCustomizations.Clear();
@@ -175,6 +180,7 @@ public class BaseTestClass : IDisposable
         // not after Reset — so this Reset is intended for test-introduced state.
         RenderableRegistry.Reset();
 
+        _registrations.Dispose();
         ObjectFinderState.Reset();
 
         // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
