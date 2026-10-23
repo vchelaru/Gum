@@ -86,6 +86,43 @@ public class CursorKniTouchTests : BaseTestClass
     }
 
     [Fact]
+    public void Activity_IsMobile_NegativeFractionalTouch_TruncatesBeforeOffset()
+    {
+        // KniGum converts the touch position to int before adding the client-bounds origin, so -0.5
+        // truncates to 0 and lands on the origin; adding first would give (int)9.5 = 9.
+        TestGameWindow window = new TestGameWindow { Bounds = new Microsoft.Xna.Framework.Rectangle(10, 20, 300, 200) };
+        XnaTouchCollection touches = new XnaTouchCollection(new[]
+        {
+            new XnaTouchLocation(1, XnaTouchLocationState.Pressed, new XnaVector2(-0.5f, -0.5f)),
+        });
+        Cursor cursor = new Cursor(window) { ReadMouse = () => default, ReadTouches = () => touches };
+        cursor.IsMobile = true;
+
+        cursor.Activity(0);
+
+        cursor.X.ShouldBe(10);
+        cursor.Y.ShouldBe(20);
+    }
+
+    [Fact]
+    public void Activity_NoTouchPanel_KeepsLastFrameTouches()
+    {
+        // As on KniGum: a frame with no touch panel reuses the last frame's touches instead of
+        // reading them as released.
+        XnaTouchCollection? touches = Touches((40, 50));
+        Cursor cursor = new Cursor { ReadMouse = () => default, ReadTouches = () => touches };
+        cursor.Activity(0);
+
+        touches = null;
+        cursor.Activity(0.02);
+
+        cursor.X.ShouldBe(40);
+        cursor.Y.ShouldBe(50);
+        cursor.PrimaryDown.ShouldBeTrue();
+        cursor.PrimaryClick.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Activity_NotMobile_DoesNotOffsetTouch()
     {
         TestGameWindow window = new TestGameWindow { Bounds = new Microsoft.Xna.Framework.Rectangle(10, 20, 300, 200) };
