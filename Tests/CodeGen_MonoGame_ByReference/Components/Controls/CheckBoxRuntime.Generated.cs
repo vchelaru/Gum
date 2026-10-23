@@ -23,6 +23,7 @@ partial class CheckBoxRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.CheckBox)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new CheckBoxRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.CheckBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.CheckBox;
+    private bool _tryCreateFormsObject = true;
     public enum CheckBoxCategory
     {
         EnabledOn,
@@ -85,6 +86,7 @@ partial class CheckBoxRuntime : ContainerRuntime
 
     public CheckBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/CheckBox");
@@ -96,7 +98,7 @@ partial class CheckBoxRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.CheckBox(this);
         }

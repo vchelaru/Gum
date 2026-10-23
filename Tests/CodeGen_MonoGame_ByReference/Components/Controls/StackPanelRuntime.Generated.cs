@@ -21,9 +21,11 @@ partial class StackPanelRuntime : ContainerRuntime
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/StackPanel", typeof(StackPanelRuntime));
     }
     public global::Gum.Forms.Controls.StackPanel FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.StackPanel;
+    private bool _tryCreateFormsObject = true;
 
     public StackPanelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/StackPanel");
@@ -35,7 +37,7 @@ partial class StackPanelRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.StackPanel(this);
         }

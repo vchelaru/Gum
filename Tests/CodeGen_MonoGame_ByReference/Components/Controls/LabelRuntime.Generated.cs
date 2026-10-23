@@ -21,9 +21,11 @@ partial class LabelRuntime : global::Gum.GueDeriving.TextRuntime
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/Label", typeof(LabelRuntime));
     }
     public global::Gum.Forms.Controls.Label FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Label;
+    private bool _tryCreateFormsObject = true;
 
     public LabelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/Label");
@@ -35,7 +37,7 @@ partial class LabelRuntime : global::Gum.GueDeriving.TextRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.Label(this);
         }

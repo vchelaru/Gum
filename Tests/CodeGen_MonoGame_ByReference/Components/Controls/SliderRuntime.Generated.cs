@@ -23,6 +23,7 @@ partial class SliderRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Slider)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new SliderRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.Slider FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Slider;
+    private bool _tryCreateFormsObject = true;
     public enum SliderCategory
     {
         Enabled,
@@ -71,6 +72,7 @@ partial class SliderRuntime : ContainerRuntime
 
     public SliderRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/Slider");
@@ -82,7 +84,7 @@ partial class SliderRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.Slider(this);
         }

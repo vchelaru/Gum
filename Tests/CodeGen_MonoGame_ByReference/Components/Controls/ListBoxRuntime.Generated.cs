@@ -23,6 +23,7 @@ partial class ListBoxRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ListBox)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new ListBoxRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.ListBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ListBox;
+    private bool _tryCreateFormsObject = true;
     public enum ListBoxCategory
     {
         Enabled,
@@ -65,6 +66,7 @@ partial class ListBoxRuntime : ContainerRuntime
 
     public ListBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/ListBox");
@@ -76,7 +78,7 @@ partial class ListBoxRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.ListBox(this);
         }

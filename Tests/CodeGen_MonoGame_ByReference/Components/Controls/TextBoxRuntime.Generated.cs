@@ -23,6 +23,7 @@ partial class TextBoxRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.TextBox)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new TextBoxRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.TextBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.TextBox;
+    private bool _tryCreateFormsObject = true;
     public enum TextBoxCategory
     {
         Enabled,
@@ -119,6 +120,7 @@ partial class TextBoxRuntime : ContainerRuntime
 
     public TextBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/TextBox");
@@ -130,7 +132,7 @@ partial class TextBoxRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.TextBox(this);
         }

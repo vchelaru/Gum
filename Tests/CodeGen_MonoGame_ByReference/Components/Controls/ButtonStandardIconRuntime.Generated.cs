@@ -22,6 +22,7 @@ partial class ButtonStandardIconRuntime : ContainerRuntime
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandardIcon", typeof(ButtonStandardIconRuntime));
     }
     public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
+    private bool _tryCreateFormsObject = true;
     public enum ButtonCategory
     {
         Enabled,
@@ -75,6 +76,7 @@ partial class ButtonStandardIconRuntime : ContainerRuntime
 
     public ButtonStandardIconRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandardIcon");
@@ -86,7 +88,7 @@ partial class ButtonStandardIconRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
         }

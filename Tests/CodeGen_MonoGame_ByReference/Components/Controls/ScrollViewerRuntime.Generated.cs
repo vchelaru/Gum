@@ -23,6 +23,7 @@ partial class ScrollViewerRuntime : ContainerRuntime
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ScrollViewer)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new ScrollViewerRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.ScrollViewer FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ScrollViewer;
+    private bool _tryCreateFormsObject = true;
     public enum ScrollBarVisibility
     {
         NoScrollBar,
@@ -91,6 +92,7 @@ partial class ScrollViewerRuntime : ContainerRuntime
 
     public ScrollViewerRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/ScrollViewer");
@@ -102,7 +104,7 @@ partial class ScrollViewerRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
+        if (FormsControl == null && _tryCreateFormsObject)
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.ScrollViewer(this);
         }
