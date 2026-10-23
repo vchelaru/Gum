@@ -225,7 +225,7 @@ namespace RenderingLibrary.Graphics
             }
 
             ApplyCamera(managers.Canvas, layer, matrix: null);
-            DrawList(whatToRender, managers);
+            DrawList(whatToRender, managers, layer);
             // Matches the Save in ApplyCamera: undoes this layer's camera so the next layer (or the
             // next frame) starts from a clean matrix (#4330).
             managers.Canvas.Restore();
@@ -392,9 +392,13 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
-        void DrawList(IList<IRenderableIpso> whatToRender, SystemManagers managers)
+        // A layer's top-level list is sorted after PreRender, like MonoGame's RenderLayer: a stable
+        // sort on Z (then Y with SecondarySortOnY), every frame, so a PreRender that moves an element
+        // sorts on the moved value. Children are never sorted.
+        void DrawList(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layerToSort = null)
         {
             PreRender(whatToRender);
+            layerToSort?.SortRenderables();
 
             var count = whatToRender.Count;
 
