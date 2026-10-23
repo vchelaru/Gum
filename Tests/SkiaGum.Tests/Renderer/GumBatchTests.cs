@@ -60,7 +60,7 @@ public class GumBatchTests
     {
         using SKSurface surface = CreateInitializedSurface(32);
         surface.Canvas.Clear(SKColors.Blue);
-        SolidRectangleRuntime rectangle = CreateRectangle(x: 4, y: 4, size: 8, SKColors.Red);
+        RectangleRuntime rectangle = CreateRectangle(x: 4, y: 4, size: 8, SKColors.Red);
         GumBatch gumBatch = new();
 
         gumBatch.Begin();
@@ -92,8 +92,8 @@ public class GumBatchTests
     {
         using SKSurface surface = CreateInitializedSurface(32);
         surface.Canvas.Clear(SKColors.Black);
-        SolidRectangleRuntime first = CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red);
-        SolidRectangleRuntime second = CreateRectangle(x: 16, y: 16, size: 8, SKColors.Lime);
+        RectangleRuntime first = CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red);
+        RectangleRuntime second = CreateRectangle(x: 16, y: 16, size: 8, SKColors.Lime);
         GumBatch gumBatch = new();
 
         gumBatch.Begin();
@@ -112,7 +112,7 @@ public class GumBatchTests
     {
         using SKSurface surface = CreateInitializedSurface(32);
         surface.Canvas.Clear(SKColors.Black);
-        SolidRectangleRuntime rectangle = CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red);
+        RectangleRuntime rectangle = CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red);
         GumBatch gumBatch = new();
 
         gumBatch.Begin(SKMatrix.CreateScale(2, 2));
@@ -129,15 +129,15 @@ public class GumBatchTests
         using SKSurface surface = CreateInitializedSurface(64);
         surface.Canvas.Clear(SKColors.Black);
         SystemManagers.Default.Renderer.Camera.Zoom = 2;
-        SolidRectangleRuntime rectangle = CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red);
+        RectangleRuntime rectangle = CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red);
         GumBatch gumBatch = new();
 
         gumBatch.Begin(SKMatrix.CreateScale(3, 3));
         gumBatch.Draw(rectangle);
         gumBatch.End();
 
-        PixelAt(surface, 46, 46).ShouldBe(SKColors.Red, "because matrix 3x composed with zoom 2x scales 8 to 48");
-        PixelAt(surface, 50, 50).ShouldBe(SKColors.Black);
+        PixelAt(surface, 30, 30).ShouldBe(SKColors.Red, "because matrix 3x composed with zoom 2x scales the fill (1..7) to 6..42");
+        PixelAt(surface, 52, 30).ShouldBe(SKColors.Black);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class GumBatchTests
         using SKSurface surface = CreateInitializedSurface(64);
         surface.Canvas.Clear(SKColors.Black);
         SystemManagers.Default.Renderer.Camera.X = 10;
-        SolidRectangleRuntime rectangle = CreateRectangle(x: 10, y: 0, size: 8, SKColors.Red);
+        RectangleRuntime rectangle = CreateRectangle(x: 10, y: 0, size: 8, SKColors.Red);
         GumBatch gumBatch = new();
 
         // MonoGame composes matrix * cameraView: world (10..18) scales to (20..36), then the
@@ -155,7 +155,7 @@ public class GumBatchTests
         gumBatch.Draw(rectangle);
         gumBatch.End();
 
-        PixelAt(surface, 25, 8).ShouldBe(SKColors.Red);
+        PixelAt(surface, 20, 8).ShouldBe(SKColors.Red);
         PixelAt(surface, 6, 8).ShouldBe(SKColors.Black);
     }
 
@@ -166,7 +166,7 @@ public class GumBatchTests
         surface.Canvas.Clear(SKColors.Black);
         SystemManagers.Default.Renderer.Camera.X = 10;
         SystemManagers.Default.Renderer.Camera.Y = 10;
-        SolidRectangleRuntime rectangle = CreateRectangle(x: 10, y: 10, size: 8, SKColors.Red);
+        RectangleRuntime rectangle = CreateRectangle(x: 10, y: 10, size: 8, SKColors.Red);
         GumBatch gumBatch = new();
 
         gumBatch.Begin();
@@ -272,7 +272,7 @@ public class GumBatchTests
         return surface;
     }
 
-    private static SolidRectangleRuntime CreateRectangle(float x, float y, float size, SKColor color) => new()
+    private static RectangleRuntime CreateRectangle(float x, float y, float size, SKColor color) => new()
     {
         X = x,
         Y = y,

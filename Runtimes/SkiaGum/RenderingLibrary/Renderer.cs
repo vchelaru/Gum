@@ -260,7 +260,7 @@ namespace RenderingLibrary.Graphics
             if (matrix.HasValue)
             {
                 SKMatrix callerMatrix = matrix.Value;
-                canvas.Concat(ref callerMatrix);
+                canvas.Concat(in callerMatrix);
             }
         }
 
