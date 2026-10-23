@@ -41,6 +41,68 @@ public class TextOutlineTests
     }
 
     [Fact]
+    public void GetStyle_ScalesHaloWithFontScale()
+    {
+        Text sut = new();
+        sut.OutlineThickness = 4;
+        sut.FontScale = 1;
+        float halfScale = sut.GetStyle().HaloWidth;
+
+        sut.FontScale = 2;
+        float doubleScale = sut.GetStyle().HaloWidth;
+
+        halfScale.ShouldBe(8f);
+        doubleScale.ShouldBe(16f);
+    }
+
+    [Fact]
+    public void GetStyle_KeepsHaloTheSame_WhenOnlyFontSizeChanges()
+    {
+        Text sut = new();
+        sut.OutlineThickness = 4;
+        sut.FontScale = 2;
+        sut.FontSize = 20;
+        float atSmallSize = sut.GetStyle().HaloWidth;
+
+        sut.FontSize = 60;
+        float atLargeSize = sut.GetStyle().HaloWidth;
+
+        atLargeSize.ShouldBe(atSmallSize);
+    }
+
+    [Fact]
+    public void GetStyle_ScalesHaloWithGlobalTextScale()
+    {
+        decimal previous = Text.GlobalTextScale;
+        try
+        {
+            Text sut = new();
+            sut.OutlineThickness = 4;
+            Text.GlobalTextScale = 2m;
+
+            sut.GetStyle().HaloWidth.ShouldBe(16f);
+        }
+        finally
+        {
+            Text.GlobalTextScale = previous;
+        }
+    }
+
+    [Fact]
+    public void GetStyledRuns_ScalesHaloOfAFontScaleRunByTheRunsOwnScale()
+    {
+        Text sut = new();
+        sut.OutlineThickness = 3;
+        sut.FontScale = 1;
+        sut.RawText = "plain [FontScale=3]big[/FontScale]";
+
+        List<Text.StyledTextRun> runs = sut.GetStyledRuns();
+
+        runs.Single(r => r.Text == "big").Style.HaloWidth.ShouldBe(18f);
+        runs.First(r => r.Text.StartsWith("plain")).Style.HaloWidth.ShouldBe(6f);
+    }
+
+    [Fact]
     public void OutlineColor_DefaultsToBlack()
     {
         Text sut = new();
