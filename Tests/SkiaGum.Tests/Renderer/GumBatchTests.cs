@@ -328,7 +328,8 @@ public class GumBatchTests
         Y = y,
         Width = size,
         Height = size,
-        Color = color,
+        IsFilled = true,
+        FillColor = color,
     };
 
     private static SKColor PixelAt(SKSurface surface, int x, int y)
