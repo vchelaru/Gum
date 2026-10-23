@@ -12,7 +12,9 @@ namespace Gum.Tests.Shared;
 public static class GraphicalUiElementStateAssert
 {
     /// <param name="startTest">Constructs the base class, as xUnit does at the start of a test.</param>
-    public static void DisposeRestores(Func<IDisposable> startTest)
+    /// <param name="checkCanvas">False for a base whose Dispose sets the canvas to fixed values, so
+    /// the canvas check could not fail without the restore.</param>
+    public static void DisposeRestores(Func<IDisposable> startTest, bool checkCanvas = true)
     {
         GraphicalUiElementState before = GraphicalUiElementState.Capture();
         try
@@ -32,8 +34,11 @@ public static class GraphicalUiElementStateAssert
             test.Dispose();
 
             GraphicalUiElement.MissingFileBehavior.ShouldBe(missingFileBehavior);
-            GraphicalUiElement.CanvasWidth.ShouldBe(canvasWidth);
-            GraphicalUiElement.CanvasHeight.ShouldBe(canvasHeight);
+            if (checkCanvas)
+            {
+                GraphicalUiElement.CanvasWidth.ShouldBe(canvasWidth);
+                GraphicalUiElement.CanvasHeight.ShouldBe(canvasHeight);
+            }
         }
         finally
         {

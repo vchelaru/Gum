@@ -152,6 +152,8 @@ public class BaseTestClassTests
     [Fact]
     public void Dispose_RestoresGraphicalUiElementState_WhenATestChangedIt()
     {
-        GraphicalUiElementStateAssert.DisposeRestores(() => new BaseTestClass());
+        // Dispose resets the canvas to fixed values (ResetCanvasAndRoots), so only MissingFileBehavior
+        // here depends on the restore.
+        GraphicalUiElementStateAssert.DisposeRestores(() => new BaseTestClass(), checkCanvas: false);
     }
 }
