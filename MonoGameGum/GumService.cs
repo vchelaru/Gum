@@ -127,6 +127,10 @@ public partial class GumService : IGumService
 
     public Renderer Renderer => this.SystemManagers.Renderer;
 
+    // The RelativeDirectory in effect before Initialize pointed it at a loaded project, restored by
+    // Uninitialize. Null when no project has been loaded since the last Uninitialize.
+    private string? _relativeDirectoryBeforeProjectLoad;
+
     private SystemManagers? _systemManagers;
     public SystemManagers SystemManagers
     {
@@ -683,6 +687,7 @@ public partial class GumService : IGumService
 
             var gumDirectory = FileManager.GetDirectory(absoluteFile);
 
+            _relativeDirectoryBeforeProjectLoad ??= FileManager.RelativeDirectory;
             FileManager.RelativeDirectory = gumDirectory;
 
             ApplyStandardElementDefaults(gumProject);
@@ -892,9 +897,13 @@ public partial class GumService : IGumService
             IGumService.Default = null;
         }
 
-        // Only reset RelativeDirectory if a project was loaded (it gets set to the project directory).
-        // Reset to the default value expected before initialization.
-        FileManager.RelativeDirectory = "Content/";
+        // Restore the RelativeDirectory a loaded project replaced; leave it alone otherwise. Raylib never
+        // points it at "Content/", so forcing that here changed how every later font resolved (#6491).
+        if (_relativeDirectoryBeforeProjectLoad != null)
+        {
+            FileManager.RelativeDirectory = _relativeDirectoryBeforeProjectLoad;
+            _relativeDirectoryBeforeProjectLoad = null;
+        }
 
         IsInitialized = false;
 
