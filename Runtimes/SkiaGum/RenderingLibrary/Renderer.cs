@@ -721,6 +721,10 @@ namespace RenderingLibrary.Graphics
             offscreenCanvas.Clear(SKColors.Transparent);
             offscreenCanvas.Save();
             offscreenCanvas.Translate(-left, -top);
+            // Children draw turned by the container's absolute rotation; turning them back about the
+            // container's origin bakes them upright, and the composite turns the whole image (#6588).
+            // Gum rotation is counterclockwise and Skia's is clockwise, so undoing it is +rotation.
+            offscreenCanvas.RotateDegrees(container.GetAbsoluteRotation(), left, top);
 
             SKCanvas screenCanvas = managers.Canvas;
             managers.Canvas = offscreenCanvas;
@@ -792,6 +796,24 @@ namespace RenderingLibrary.Graphics
             float top = container.GetAbsoluteY();
             SKRect destination = new SKRect(left, top, left + width, top + height);
 
+            // The bake is upright, so turn the composite by the container's absolute rotation about
+            // its origin (#6588). The shaded path's child shader stays in this local space too.
+            SKCanvas canvas = managers.Canvas;
+            canvas.Save();
+            canvas.RotateDegrees(-container.GetAbsoluteRotation(), left, top);
+            try
+            {
+                DrawRenderTargetImage(image, destination, paint, owner, left, top, width, height, canvas);
+            }
+            finally
+            {
+                canvas.Restore();
+            }
+        }
+
+        private static void DrawRenderTargetImage(SKImage image, SKRect destination, SKPaint paint,
+            IRenderableIpso owner, float left, float top, int width, int height, SKCanvas canvas)
+        {
             // Optional post-process shader (ContainerRuntime.RenderTargetEffect / SourceShaderFile,
             // #3998). The effect is image-independent (declares a `uniform shader SpriteTexture`
             // child, the same texture name MonoGame .fx/.slang shaders use) -- the baked image is
@@ -800,7 +822,7 @@ namespace RenderingLibrary.Graphics
             SKRuntimeEffect? effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
             if (effect == null)
             {
-                managers.Canvas.DrawImage(image, destination, SKSamplingOptions.Default, paint);
+                canvas.DrawImage(image, destination, SKSamplingOptions.Default, paint);
                 return;
             }
 
@@ -832,7 +854,7 @@ namespace RenderingLibrary.Graphics
             }
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
-            managers.Canvas.DrawRect(destination, paint);
+            canvas.DrawRect(destination, paint);
         }
 
         // For a nested render-target container the walk hands the GraphicalUiElement wrapper; for a

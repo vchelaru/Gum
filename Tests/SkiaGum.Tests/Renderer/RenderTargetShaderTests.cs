@@ -95,6 +95,48 @@ half4 main(float2 coord) {
         Math.Abs(withShader.Red - withShader.Blue).ShouldBeLessThan(20);
     }
 
+    // The shaded composite turns with a rotated container like the plain one (#6588): the child
+    // in the container's top-right corner lands above the container's origin, outside the
+    // container's axis-aligned rectangle, and still reads back gray.
+    [Fact]
+    public void Draw_RenderTargetEffect_OnRotatedContainer_ShadesTheTurnedImage()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 200));
+        GumService.Default.Initialize(surface.Canvas, 200, 200);
+
+        using SKRuntimeEffect effect = CompileGrayscaleEffect();
+        ContainerRuntime renderTarget = new()
+        {
+            X = 60,
+            Y = 60,
+            Width = 60,
+            Height = 60,
+            Rotation = 30,
+            IsRenderTarget = true,
+            RenderTargetEffect = effect,
+        };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            X = 40,
+            Width = 20,
+            Height = 20,
+            IsFilled = true,
+            FillColor = SKColors.Red,
+        });
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        surface.Canvas.Clear(SKColors.Black);
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        // Local (50, 10) turned 30 degrees counterclockwise about (60, 60).
+        SKColor shaded = bitmap.GetPixel(108, 44);
+        shaded.Red.ShouldBeGreaterThan((byte)50);
+        Math.Abs(shaded.Red - shaded.Green).ShouldBeLessThan(20);
+        Math.Abs(shaded.Red - shaded.Blue).ShouldBeLessThan(20);
+    }
+
     [Fact]
     public void Draw_SourceShaderFile_GraysTheCompositedPixels_WhenResolverRegistered()
     {
