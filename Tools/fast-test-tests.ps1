@@ -22,11 +22,22 @@ function Assert-Plan([string]$name, [string]$request, [string[]]$expected) {
 }
 
 try {
-    foreach ($dir in 'Tools', 'A.Tests', 'B.Tests', 'Outside.Tests') { New-Item -ItemType Directory -Force -Path (Join-Path $scratch $dir) | Out-Null }
-    Copy-Item (Join-Path $PSScriptRoot 'fast-test.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1') (Join-Path $scratch 'Tools')
-    foreach ($project in 'A.Tests', 'B.Tests', 'Outside.Tests') { Set-Content (Join-Path $scratch "$project/$project.csproj") '<Project />' }
-    Set-Content (Join-Path $scratch 'All.slnx') "<Solution>`n  <Project Path=`"A.Tests/A.Tests.csproj`" />`n</Solution>"
-    Set-Content (Join-Path $scratch 'Other.sln') "Project(`"{9A19103F-16F7-4668-BE54-9A1E7A4F7556}`") = `"B.Tests`", `"B.Tests\B.Tests.csproj`", `"{11111111-1111-1111-1111-111111111111}`"`nEndProject"
+    foreach ($dir in 'Tools', 'A.Tests', 'B.Tests', 'Outside.Tests', 'Lib.TestsCommon', 'GumToolUnitTests') { New-Item -ItemType Directory -Force -Path (Join-Path $scratch $dir) | Out-Null }
+    Copy-Item (Join-Path $PSScriptRoot 'fast-test.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1') (Join-Path $scratch 'Tools')
+    # A test project is one with IsTestProject true or a Microsoft.NET.Test.Sdk reference; a library
+    # named *Tests* (shared test scaffolding) is not.
+    $isTestProject = '<Project><PropertyGroup><IsTestProject>true</IsTestProject></PropertyGroup></Project>'
+    $testSdk = '<Project><ItemGroup><PackageReference Include="Microsoft.NET.Test.Sdk" /></ItemGroup></Project>'
+    Set-Content (Join-Path $scratch 'A.Tests/A.Tests.csproj') $isTestProject
+    Set-Content (Join-Path $scratch 'B.Tests/B.Tests.csproj') $testSdk
+    Set-Content (Join-Path $scratch 'Outside.Tests/Outside.Tests.csproj') $isTestProject
+    Set-Content (Join-Path $scratch 'GumToolUnitTests/GumToolUnitTests.csproj') $testSdk
+    Set-Content (Join-Path $scratch 'Lib.TestsCommon/Lib.TestsCommon.csproj') '<Project><ItemGroup><PackageReference Include="xunit" /></ItemGroup></Project>'
+    Set-Content (Join-Path $scratch 'All.slnx') "<Solution>`n  <Project Path=`"A.Tests/A.Tests.csproj`" />`n  <Project Path=`"Lib.TestsCommon/Lib.TestsCommon.csproj`" />`n</Solution>"
+    Set-Content (Join-Path $scratch 'Other.sln') ("Project(`"{9A19103F-16F7-4668-BE54-9A1E7A4F7556}`") = `"B.Tests`", `"B.Tests\B.Tests.csproj`", `"{11111111-1111-1111-1111-111111111111}`"`nEndProject`n" +
+        "Project(`"{9A19103F-16F7-4668-BE54-9A1E7A4F7556}`") = `"GumToolUnitTests`", `"GumToolUnitTests\GumToolUnitTests.csproj`", `"{22222222-2222-2222-2222-222222222222}`"`nEndProject")
+    Set-Content (Join-Path $scratch 'Lib.TestsCommon/Common.cs') "namespace L;`npublic class CommonOnlyTests { }"
+    Set-Content (Join-Path $scratch 'GumToolUnitTests/Frozen.cs') "namespace F;`npublic class DupTests { }`npublic class FrozenOnlyTests { }"
     Set-Content (Join-Path $scratch 'A.Tests/Dup.cs') "namespace A;`npublic class DupTests`n{`n    public void OnlyInA() { }`n}"
     Set-Content (Join-Path $scratch 'B.Tests/Dup.cs') "namespace B;`npublic class DupTests`n{`n    public void OnlyInB() { }`n}"
     Set-Content (Join-Path $scratch 'Outside.Tests/Outside.cs') "namespace O;`npublic class DupTests { }`npublic class OutsideOnlyTests { }"
@@ -48,6 +59,12 @@ try {
         @('REFUSED: not a test class in any test project: OutsideOnlyTests')
     Assert-Plan 'Project:Class runs a project outside every solution when named' 'Outside.Tests:OutsideOnlyTests' `
         @('test Outside.Tests/Outside.Tests.csproj FullyQualifiedName~O.OutsideOnlyTests.|FullyQualifiedName~O.OutsideOnlyTests+')
+    Assert-Plan 'class only in a solution library named *Tests* that is not a test project is refused' 'CommonOnlyTests' `
+        @('REFUSED: not a test class in any test project: CommonOnlyTests')
+    Assert-Plan 'class only in the frozen WPF head tests is refused unless the project is named' 'FrozenOnlyTests' `
+        @('REFUSED: not a test class in any test project: FrozenOnlyTests')
+    Assert-Plan 'Project:Class runs the frozen WPF head tests when named' 'GumToolUnitTests:FrozenOnlyTests' `
+        @('test GumToolUnitTests/GumToolUnitTests.csproj FullyQualifiedName~F.FrozenOnlyTests.|FullyQualifiedName~F.FrozenOnlyTests+')
 
     # fast-test and verify read the classic "Passed!"/"Failed!" summary; the terminal logger prints
     # "Test summary:" instead, so a run with it on reported NOTESTS for tests that ran.

@@ -240,6 +240,8 @@ function Find-MissingDependency([string]$csproj, [System.Collections.Generic.Has
     return $null
 }
 
+. (Join-Path $PSScriptRoot 'TestProjects.ps1')
+
 # Changed test classes grouped by test project (file name == class name by convention), and
 # changed source projects. Every changed .cs and .projitems is also resolved through the include
 # index, so a file linked into other projects builds those too.
@@ -256,7 +258,7 @@ foreach ($file in ($changedFiles | Where-Object { $_ -like '*.cs' -or $_ -like '
         $indirectProjects[$indirect].Add("$file ($($via[$indirect]))")
     }
     foreach ($project in $projects) {
-        if ($project -match '\.Tests\.csproj$|GumToolUnitTests\.csproj$') {
+        if (Test-IsTestProject $project) {
             $className = [System.IO.Path]::GetFileNameWithoutExtension($file)
             if (-not $testFilters.ContainsKey($project)) { $testFilters[$project] = @() }
             $testFilters[$project] += "FullyQualifiedName~$className"
