@@ -102,6 +102,7 @@ public class CodeOutputSettingsMembers
 
         projectCategory.Members.Add(CreateSyntaxVersionMember());
 
+        MarkReadOnlyWhileSettingsAreUnreadable(projectCategory);
         return projectCategory;
     }
 
@@ -122,8 +123,24 @@ public class CodeOutputSettingsMembers
             ElementSettings?.GenerationBehavior == GenerationBehavior.GenerateManually ||
             ElementSettings?.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
 
+        MarkReadOnlyWhileSettingsAreUnreadable(elementCategory);
         return elementCategory;
     }
+
+    // An unreadable ProjectCodeSettings.codsj shows defaults in its place, which no edit may save.
+    private void MarkReadOnlyWhileSettingsAreUnreadable(MemberCategory category)
+    {
+        if (_viewModel.HasProjectSettingsLoadError)
+        {
+            foreach (InstanceMember member in category.Members)
+            {
+                member.IsReadOnly = true;
+            }
+        }
+    }
+
+    /// <summary>Asks the views to rebuild the rows, as after the settings were replaced.</summary>
+    public void RequestRebuild() => RebuildRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>Fills in the project settings automatically, as the Auto setup button does.</summary>
     /// <returns>Whether setup went ahead.</returns>
@@ -210,7 +227,9 @@ public class CodeOutputSettingsMembers
         member.CustomGetTypeEvent += (owner) => typeof(string);
         UseFolderPicker(member);
 
-        _viewModel.NeedsSetup = _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
+        // Setup would save over an unreadable file, so it is not offered then.
+        _viewModel.NeedsSetup = !_viewModel.HasProjectSettingsLoadError
+            && _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
 
         return member;
     }

@@ -242,6 +242,25 @@ public class FileWatchManagerTests : IDisposable
     }
 
     [Fact]
+    public void EnableWithDirectories_ThenFlush_ShouldReactToProjectCodeSettingsRenamedIntoWatchedDirectory()
+    {
+        // The Code tab says changes to ProjectCodeSettings.codsj reload automatically, so an
+        // atomic save of it (temp file renamed over it) must be queued too (#6600).
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        FileWatchManager sut = BuildSut(out _, out _, out _, watchedDirectory);
+
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+
+        string tempName = Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj.tmp");
+        File.WriteAllText(tempName, "{}");
+        FilePath renamedFile = new FilePath(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"));
+        File.Move(tempName, renamedFile.FullPath);
+
+        PollUntil(() => sut.ChangedFilesWaitingForFlush.Contains(renamedFile)).ShouldBeTrue(
+            "a rename onto ProjectCodeSettings.codsj should be queued like an in-place save");
+    }
+
+    [Fact]
     public void EnableWithDirectories_ShouldCreateDirectory_WhenWatchedDirectoryDoesNotExistYet()
     {
         // Issue #4259: watching a directory that hasn't been created yet (e.g. FontCache/ before

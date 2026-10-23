@@ -1,4 +1,4 @@
-﻿using CodeOutputPlugin.Manager;
+using CodeOutputPlugin.Manager;
 using Gum.ProjectServices.CodeGeneration;
 using Gum;
 using Gum.Commands;
@@ -177,6 +177,7 @@ public abstract class CodeOutputPluginBase : PluginBase
             new CodeGenerationAutoSetupService());
 
         _settingsMembers = new CodeOutputSettingsMembers(projectState, syntaxVersionDetectionService, viewModel);
+        viewModel.ResetProjectSettingsRequested += HandleResetProjectSettingsRequested;
     }
 
     private DeleteOptionCheckboxViewModel? _deleteCustomCodeOption;
@@ -242,7 +243,8 @@ public abstract class CodeOutputPluginBase : PluginBase
         this.InstanceReordered += HandleInstanceReordered;
 
         this.ElementSelected += HandleElementSelected;
-        this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings, _codeGenerator.GetVisualApiForElement(element));
+        this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings, _codeGenerator.GetVisualApiForElement(element),
+            moveCodeFiles: !IsProjectSettingsReadOnly);
         this.ElementAdd += HandleElementAdd;
         this.ElementDuplicate += _newElementCodeSettingsService.HandleElementDuplicate;
         this.ElementDelete += HandleElementDeleted;
@@ -285,19 +287,30 @@ public abstract class CodeOutputPluginBase : PluginBase
     {
         // Services resolve ProjectDirectory lazily via IProjectDirectoryProvider,
         // so no reconstruction is needed here — just reload project-scoped settings.
-        codeOutputProjectSettings = _codeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
+        // A file that does not parse is the user's settings: the defaults stand in for display
+        // only, and nothing is saved until the file is fixed (it reloads) or reset.
+        CodeOutputProjectSettings? loaded = _codeOutputProjectSettingsManager.TryLoadSettingsForProject(out string? loadError);
+        codeOutputProjectSettings = loaded ?? CodeOutputProjectSettingsManager.CreateDefaultSettings();
+        viewModel.ProjectSettingsLoadError = loadError;
         _locationWatcher.Reset(codeOutputProjectSettings);
         _settingsMembers.HandleProjectLoaded();
+        _settingsMembers.ProjectSettings = codeOutputProjectSettings;
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         HandleElementSelected(null);
     }
 
     /// <summary>
+    /// Whether ProjectCodeSettings.codsj exists but could not be read. No settings are saved then,
+    /// since that would write over the user's file, and no code is generated or moved.
+    /// </summary>
+    private bool IsProjectSettingsReadOnly => viewModel.ProjectSettingsLoadError != null;
+
+    /// <summary>
     /// Re-reads ProjectCodeSettings.codsj after it changes on disk (a pull, a branch switch, a hand
     /// edit). This only reloads: the change arrives with whatever regeneration it needed already
     /// done, so nothing is regenerated, migrated or written here. An unreadable file (half-written,
-    /// merge conflict) keeps the current settings rather than falling back to defaults that the next
-    /// settings edit would write over it.
+    /// merge conflict) keeps the current settings and makes the Code tab read-only until a later
+    /// change makes it readable again, so no settings edit writes over it.
     /// </summary>
     private void HandleFileChanged(FilePath file)
     {
@@ -307,7 +320,12 @@ public abstract class CodeOutputPluginBase : PluginBase
             return;
         }
 
-        CodeOutputProjectSettings? reloaded = _codeOutputProjectSettingsManager.TryLoadSettingsForProject();
+        CodeOutputProjectSettings? reloaded = _codeOutputProjectSettingsManager.TryLoadSettingsForProject(out string? loadError);
+        if (loadError != null)
+        {
+            SetProjectSettingsLoadError(loadError);
+            return;
+        }
         if (reloaded == null)
         {
             return;
@@ -315,17 +333,47 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         // Gum's own settings writes come back through the watcher too; skipping an unchanged file
         // keeps them from rebuilding the settings grid under the user.
-        if (JsonConvert.SerializeObject(reloaded) == JsonConvert.SerializeObject(codeOutputProjectSettings))
+        if (!IsProjectSettingsReadOnly && JsonConvert.SerializeObject(reloaded) == JsonConvert.SerializeObject(codeOutputProjectSettings))
         {
             return;
         }
         /////////////////End Early Out/////////////////
 
-        codeOutputProjectSettings = reloaded;
+        ApplyProjectSettings(reloaded);
+    }
+
+    private void HandleResetProjectSettingsRequested()
+    {
+        const string question = "Replace ProjectCodeSettings.codsj with the default code generation settings? " +
+            "Its current contents will be lost.";
+        if (_dialogService.ShowMessage(question, "Reset code generation settings", MessageDialogStyle.YesNo) != MessageDialogResult.Affirmative)
+        {
+            return;
+        }
+
+        CodeOutputProjectSettings defaults = CodeOutputProjectSettingsManager.CreateDefaultSettings();
+        _codeOutputProjectSettingsManager.WriteSettingsForProject(defaults);
+        ApplyProjectSettings(defaults);
+    }
+
+    /// <summary>Makes <paramref name="settings"/>, just read from or written to disk, the project's settings.</summary>
+    private void ApplyProjectSettings(CodeOutputProjectSettings settings)
+    {
+        codeOutputProjectSettings = settings;
         // The files on disk came with these settings, so a later edit compares against them.
         _locationWatcher.Reset(codeOutputProjectSettings);
+        _settingsMembers.ProjectSettings = codeOutputProjectSettings;
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
+        viewModel.ProjectSettingsLoadError = null;
+        _settingsMembers.RequestRebuild();
         RefreshCodeDisplay();
+    }
+
+    private void SetProjectSettingsLoadError(string? loadError)
+    {
+        viewModel.ProjectSettingsLoadError = loadError;
+        // The rows are built read-only while the file is unreadable.
+        _settingsMembers.RequestRebuild();
     }
 
     private void HandleStateSelected(StateSave? state)
@@ -389,7 +437,10 @@ public abstract class CodeOutputPluginBase : PluginBase
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        if (!IsProjectSettingsReadOnly)
+        {
+            _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        }
 
         HandleRefreshAndExport(isFullCommit);
     }
@@ -399,8 +450,16 @@ public abstract class CodeOutputPluginBase : PluginBase
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        if (!IsProjectSettingsReadOnly)
+        {
+            _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        }
 
+        if (IsProjectSettingsReadOnly)
+        {
+            RefreshCodeDisplay();
+            return;
+        }
         _controller?.HandleVariableSetThroughReference(element, codeOutputProjectSettings, isFullCommit);
     }
     private void HandleVariableAdd(ElementSave? elementSave, string variableName)
@@ -437,16 +496,32 @@ public abstract class CodeOutputPluginBase : PluginBase
     private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
 
 
-    private void HandleRefreshAndExport(bool isFullCommit = true) =>
+    // While the project's code settings can't be read, edits only refresh the preview: generating
+    // or moving code would use settings that may no longer match the file.
+    private void HandleRefreshAndExport(bool isFullCommit = true)
+    {
+        if (IsProjectSettingsReadOnly)
+        {
+            RefreshCodeDisplay();
+            return;
+        }
         _controller?.HandleRefreshAndExport(codeOutputProjectSettings, isFullCommit);
+    }
 
     // Refresh + auto-regenerate for an explicit owning element rather than the live
     // SelectedElement. Used by instance add/delete events because the affected instance
     // may live in an element that is not currently selected (e.g. delete fired from a
     // tree-view selection that doesn't match what the codegen tab is viewing), in
     // which case regenerating for SelectedElement writes the wrong file or NREs.
-    private void HandleRefreshAndExportForElement(ElementSave? element) =>
+    private void HandleRefreshAndExportForElement(ElementSave? element)
+    {
+        if (IsProjectSettingsReadOnly)
+        {
+            RefreshCodeDisplay();
+            return;
+        }
         _controller?.HandleRefreshAndExportForElement(element, codeOutputProjectSettings);
+    }
 
     private void RefreshCodeDisplay() => _controller?.RefreshCodeDisplay(codeOutputProjectSettings);
 
@@ -494,6 +569,10 @@ public abstract class CodeOutputPluginBase : PluginBase
                 // do nothing
                 break;
             case nameof(viewModel.InheritanceLocation):
+                if (IsProjectSettingsReadOnly)
+                {
+                    break;
+                }
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                 _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
                 _locationWatcher.CheckAfterEdit(codeOutputProjectSettings);
@@ -506,6 +585,12 @@ public abstract class CodeOutputPluginBase : PluginBase
 
     private void HandleCodeOutputPropertyChanged()
     {
+        ///////////////////Early Out///////////////////
+        if (IsProjectSettingsReadOnly)
+        {
+            return;
+        }
+        /////////////////End Early Out/////////////////
         _controller?.HandleCodeOutputPropertyChanged(codeOutputProjectSettings);
         // After the write, so the migration that may follow plans against the saved settings.
         _locationWatcher.CheckAfterEdit(codeOutputProjectSettings);
@@ -556,9 +641,10 @@ public abstract class CodeOutputPluginBase : PluginBase
     private void HandleGenerateAllCodeButtonClicked(bool showPopups = true)
     {
         GumProjectSave? gumProject = _projectState.GumProjectSave;
-        if (gumProject == null)
+        if (gumProject == null || IsProjectSettingsReadOnly)
         {
-            // Nothing is loaded, so there is nothing to generate; the caller still completes.
+            // Nothing is loaded, or the settings to generate with can't be read; the caller still
+            // completes.
             return;
         }
         _codeGenerationService.GenerateCodeForAllElements(gumProject, codeOutputProjectSettings);
@@ -569,8 +655,13 @@ public abstract class CodeOutputPluginBase : PluginBase
         }
     }
 
-    private void GenerateCodeForElement(bool showPopups, ElementSave? element, CodeOutputElementSettings? settings = null) =>
-        _controller?.GenerateCodeForElement(showPopups, element, codeOutputProjectSettings, settings);
+    private void GenerateCodeForElement(bool showPopups, ElementSave? element, CodeOutputElementSettings? settings = null)
+    {
+        if (!IsProjectSettingsReadOnly)
+        {
+            _controller?.GenerateCodeForElement(showPopups, element, codeOutputProjectSettings, settings);
+        }
+    }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
