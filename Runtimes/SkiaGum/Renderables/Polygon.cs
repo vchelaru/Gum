@@ -16,8 +16,38 @@ public class Polygon : RenderableShapeBase
         get; set;
     }
 
-    public GeneralUnitType PointXUnits { get; set; } = GeneralUnitType.PixelsFromSmall;
-    public GeneralUnitType PointYUnits { get; set; } = GeneralUnitType.PixelsFromSmall;
+    GeneralUnitType _pointXUnits = GeneralUnitType.PixelsFromSmall;
+    GeneralUnitType _pointYUnits = GeneralUnitType.PixelsFromSmall;
+
+    /// <summary>
+    /// How point X values are measured against the polygon's width: PixelsFromSmall (from the left), PixelsFromLarge
+    /// (from the right), PixelsFromMiddle or Percentage. Any other unit throws
+    /// an <see cref="ArgumentException"/>; PolygonRuntime reports it instead.
+    /// </summary>
+    public GeneralUnitType PointXUnits
+    {
+        get => _pointXUnits;
+        set
+        {
+            ThrowIfUnsupportedPointUnit(value, nameof(PointXUnits));
+            _pointXUnits = value;
+        }
+    }
+
+    /// <summary>
+    /// How point Y values are measured against the polygon's height: PixelsFromSmall (from the top), PixelsFromLarge
+    /// (from the bottom), PixelsFromMiddle or Percentage. Any other unit throws
+    /// an <see cref="ArgumentException"/>; PolygonRuntime reports it instead.
+    /// </summary>
+    public GeneralUnitType PointYUnits
+    {
+        get => _pointYUnits;
+        set
+        {
+            ThrowIfUnsupportedPointUnit(value, nameof(PointYUnits));
+            _pointYUnits = value;
+        }
+    }
 
     public Polygon()
     {
@@ -75,8 +105,8 @@ public class Polygon : RenderableShapeBase
     /// Ray-cast hit test in world space. Mirrors the same-named method on the MG/Raylib
     /// <c>LinePolygon</c> renderables so <see cref="Gum.GueDeriving.PolygonRuntime"/>
     /// can override <see cref="Gum.Wireframe.GraphicalUiElement.IsPointInside"/> uniformly.
-    /// Inverse-rotates the world point into local space, applies the Percentage /
-    /// PixelsFromSmall unit conversion used by <see cref="DrawBound"/>, then runs the
+    /// Inverse-rotates the world point into local space, applies the point unit
+    /// conversion used by <see cref="DrawBound"/>, then runs the
     /// standard even-odd ray cast against the polygon's edges.
     /// </summary>
     public bool IsPointInside(float worldX, float worldY)
@@ -120,10 +150,23 @@ public class Polygon : RenderableShapeBase
         return inside;
     }
 
-    void ScalePoint(SKPoint point, float width, float height, out float x, out float y)
+    // Points are measured against the polygon's own size, the way a position is measured against its parent.
+    void ScalePoint(SKPoint point, float width, float height, out float x, out float y) =>
+        UnitConverter.Self.ConvertToPixelCoordinates(point.X, point.Y, PointXUnits, PointYUnits, width, height, 0, 0, out x, out y);
+
+    // Units that compare a point to a file, a baseline or the other coordinate have no meaning for a polygon point.
+    internal static bool IsSupportedPointUnit(GeneralUnitType unit) =>
+        unit == GeneralUnitType.PixelsFromSmall
+        || unit == GeneralUnitType.PixelsFromLarge
+        || unit == GeneralUnitType.PixelsFromMiddle
+        || unit == GeneralUnitType.Percentage;
+
+    static void ThrowIfUnsupportedPointUnit(GeneralUnitType unit, string propertyName)
     {
-        x = PointXUnits == GeneralUnitType.Percentage ? point.X * width / 100f : point.X;
-        y = PointYUnits == GeneralUnitType.Percentage ? point.Y * height / 100f : point.Y;
+        if (!IsSupportedPointUnit(unit))
+        {
+            throw new ArgumentException($"A polygon point cannot use {propertyName} {unit}.", propertyName);
+        }
     }
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
@@ -133,54 +176,26 @@ public class Polygon : RenderableShapeBase
 
         var thisPosition = new SKPoint(boundingRect.Left, boundingRect.Top);
 
-        GetXY(boundingRect, Points[0], out float x, out float y);
+        ScalePoint(Points[0], boundingRect.Width, boundingRect.Height, out float firstX, out float firstY);
+        SKPoint first = new SKPoint(firstX, firstY) + thisPosition;
 
-        builder.MoveTo(new SKPoint(x, y) + thisPosition);
+        builder.MoveTo(first);
 
         for (int i = 1; i < Points.Count; i++)
         {
             var point = Points[i];
-            GetXY(boundingRect, point, out x, out y);
+            ScalePoint(point, boundingRect.Width, boundingRect.Height, out float x, out float y);
 
             builder.LineTo(new SKPoint(x, y) + thisPosition);
         }
 
         if (IsClosed)
         {
-            builder.LineTo(Points[0] + thisPosition);
+            builder.LineTo(first);
             builder.Close();
         }
 
         using SKPath path = builder.Detach();
         canvas.DrawPath(path, paint);
-    }
-
-    private void GetXY(SKRect boundingRect, SKPoint point, out float x, out float y)
-    {
-        x = point.X;
-        y = point.Y;
-        switch (PointXUnits)
-        {
-            case GeneralUnitType.PixelsFromSmall:
-                break;
-            case GeneralUnitType.Percentage:
-                x = x * boundingRect.Width / 100.0f;
-                break;
-            default:
-                throw new NotImplementedException($"Need to implement {PointXUnits}");
-        }
-
-        switch (PointYUnits)
-        {
-            case GeneralUnitType.PixelsFromSmall:
-                break;
-            case GeneralUnitType.Percentage:
-                y = y * boundingRect.Height / 100.0f;
-                break;
-            default:
-                throw new NotImplementedException($"Need to implement {PointYUnits}");
-
-        }
-
     }
 }

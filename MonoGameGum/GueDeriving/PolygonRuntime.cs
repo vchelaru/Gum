@@ -422,21 +422,47 @@ public class PolygonRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// Unit of measurement for point X coordinates. Skia-only.
+    /// Unit of measurement for point X coordinates: PixelsFromSmall, PixelsFromLarge, PixelsFromMiddle or Percentage
+    /// of the polygon's size. Any other unit is reported once per element and unit through
+    /// <c>CustomSetPropertyOnRenderable.PropertyAssignmentError</c>, and the current unit is kept. Skia-only.
     /// </summary>
     public Gum.Converters.GeneralUnitType PointXUnits
     {
         get => ContainedPolygon.PointXUnits;
-        set => ContainedPolygon.PointXUnits = value;
+        set => SetPointUnits(value, nameof(PointXUnits));
     }
 
     /// <summary>
-    /// Unit of measurement for point Y coordinates. Skia-only.
+    /// Unit of measurement for point Y coordinates: PixelsFromSmall, PixelsFromLarge, PixelsFromMiddle or Percentage
+    /// of the polygon's size. Any other unit is reported once per element and unit through
+    /// <c>CustomSetPropertyOnRenderable.PropertyAssignmentError</c>, and the current unit is kept. Skia-only.
     /// </summary>
     public Gum.Converters.GeneralUnitType PointYUnits
     {
         get => ContainedPolygon.PointYUnits;
-        set => ContainedPolygon.PointYUnits = value;
+        set => SetPointUnits(value, nameof(PointYUnits));
+    }
+
+    void SetPointUnits(Gum.Converters.GeneralUnitType value, string propertyName)
+    {
+        bool isX = propertyName == nameof(PointXUnits);
+        if (Polygon.IsSupportedPointUnit(value))
+        {
+            if (isX)
+            {
+                ContainedPolygon.PointXUnits = value;
+            }
+            else
+            {
+                ContainedPolygon.PointYUnits = value;
+            }
+        }
+        else if (GumRuntime.ElementSaveExtensions.IsFirstReport(this, value.ToString(), propertyName))
+        {
+            Gum.Converters.GeneralUnitType current = isX ? ContainedPolygon.PointXUnits : ContainedPolygon.PointYUnits;
+            SkiaGum.CustomSetPropertyOnRenderable.RaisePropertyAssignmentError(
+                $"Polygon {Name} cannot use {propertyName} {value}; it keeps {current}.");
+        }
     }
 #endif
 
