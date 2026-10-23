@@ -40,6 +40,9 @@ public class ComboBox :
     Gum.Forms.Controls.FrameworkElement, 
 #endif 
     IInputReceiver
+#if !FRB
+    , Gum.Wireframe.IUpdateEveryFrame
+#endif
 {
     #region Fields/Properties
 
@@ -297,6 +300,13 @@ public class ComboBox :
 
     bool _hadFocusOnListBoxOpened;
 
+    // The ComboBox visual's absolute rectangle the popup was last placed against, so an open
+    // drop-down can be placed again when the ComboBox moves or resizes (including through an ancestor).
+    float _placedAbsoluteX;
+    float _placedAbsoluteY;
+    float _placedAbsoluteWidth;
+    float _placedAbsoluteHeight;
+
     #endregion
 
     #region Events
@@ -467,14 +477,8 @@ public class ComboBox :
             listBox.Visual.UpdateLayout();
         }
 
-        // Adding this to the Visual will force a layout....
-        this.Visual.Children.Add(listBox.Visual);
-        // ... so grab the absolute values:
-        var x = listBox.Visual.AbsoluteX;
-        var y = listBox.Visual.AbsoluteY;
-        var width = listBox.Visual.AbsoluteWidth;
-        var height = listBox.Visual.AbsoluteHeight;
-
+        // The values the list box has while attached to this ComboBox are only available now, before
+        // it is detached into the popup layer:
         listBoxWidthUnits = listBox.Visual.WidthUnits;
         listBoxHeightUnits = listBox.Visual.HeightUnits;
         listBoxXUnits = listBox.Visual.XUnits;
@@ -485,16 +489,7 @@ public class ComboBox :
         listBoxWidth = listBox.Visual.Width;
         listBoxHeight = listBox.Visual.Height;
 
-        // Now that we have the values, detach it:
-        this.Visual.Children.Remove(listBox.Visual);
-        listBox.X = x;
-        listBox.Y = y;
-        listBox.Visual.WidthUnits = DimensionUnitType.Absolute;
-        listBox.Visual.HeightUnits = DimensionUnitType.Absolute;
-        listBox.Width = width;
-        listBox.Height = height;
-        ListBox.ShowPopupListBox(listBox, this.Visual);
-
+        PlaceListBoxRelativeToComboBox();
 
 #if FRB
         GuiManager.AddNextPushAction(TryHideFromPush);
@@ -509,6 +504,79 @@ public class ComboBox :
 
         UpdateState();
     }
+
+    /// <summary>
+    /// Puts the list box in the popup layer at the pixel position that matches this ComboBox's
+    /// current layout. Expects the list box's pre-popup layout values to be saved in the listBox*
+    /// fields; they are re-applied first so this also works when the list box is already a popup.
+    /// </summary>
+    private void PlaceListBoxRelativeToComboBox()
+    {
+        var listBoxVisual = listBox.Visual;
+
+        // A list box that is already a popup has absolute units; go back to the values
+        // it has when attached to the ComboBox so the layout engine resolves them again.
+        listBoxVisual.Parent = null;
+        RestoreListBoxLayoutValues();
+
+        // Adding this to the Visual will force a layout....
+        this.Visual.Children.Add(listBoxVisual);
+        // ... so grab the absolute values:
+        var x = listBoxVisual.AbsoluteX;
+        var y = listBoxVisual.AbsoluteY;
+        var width = listBoxVisual.AbsoluteWidth;
+        var height = listBoxVisual.AbsoluteHeight;
+
+        _placedAbsoluteX = Visual.AbsoluteX;
+        _placedAbsoluteY = Visual.AbsoluteY;
+        _placedAbsoluteWidth = Visual.AbsoluteWidth;
+        _placedAbsoluteHeight = Visual.AbsoluteHeight;
+
+        // Now that we have the values, detach it:
+        this.Visual.Children.Remove(listBoxVisual);
+        listBox.X = x;
+        listBox.Y = y;
+        listBoxVisual.WidthUnits = DimensionUnitType.Absolute;
+        listBoxVisual.HeightUnits = DimensionUnitType.Absolute;
+        listBox.Width = width;
+        listBox.Height = height;
+        ListBox.ShowPopupListBox(listBox, this.Visual);
+    }
+
+    private void RestoreListBoxLayoutValues()
+    {
+        listBox.Visual.XUnits = listBoxXUnits;
+        listBox.Visual.YUnits = listBoxYUnits;
+        listBox.Visual.WidthUnits = listBoxWidthUnits;
+        listBox.Visual.HeightUnits = listBoxHeightUnits;
+
+        listBox.Visual.X = listBoxX;
+        listBox.Visual.Y = listBoxY;
+        listBox.Visual.Width = listBoxWidth;
+        listBox.Visual.Height = listBoxHeight;
+    }
+
+#if !FRB
+    /// <summary>
+    /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle changes
+    /// (canvas resize, UI scale, or this control or an ancestor moving). Does nothing when closed.
+    /// </summary>
+    void Gum.Wireframe.IUpdateEveryFrame.Activity(double secondDifference)
+    {
+        if (!IsDropDownOpen)
+        {
+            return;
+        }
+
+        if (Visual.AbsoluteX != _placedAbsoluteX ||
+            Visual.AbsoluteY != _placedAbsoluteY ||
+            Visual.AbsoluteWidth != _placedAbsoluteWidth ||
+            Visual.AbsoluteHeight != _placedAbsoluteHeight)
+        {
+            PlaceListBoxRelativeToComboBox();
+        }
+    }
+#endif
 
     private void TryHideFromPush()
     {
@@ -550,15 +618,7 @@ public class ComboBox :
             //listBox.Visual.RemoveFromManagers();
             listBox.Visual.Parent = null;
 
-            listBox.Visual.XUnits = listBoxXUnits;
-            listBox.Visual.YUnits = listBoxYUnits;
-            listBox.Visual.WidthUnits = listBoxWidthUnits;
-            listBox.Visual.HeightUnits = listBoxHeightUnits;
-
-            listBox.Visual.X = listBoxX;
-            listBox.Visual.Y = listBoxY;
-            listBox.Visual.Width = listBoxWidth;
-            listBox.Visual.Height = listBoxHeight;
+            RestoreListBoxLayoutValues();
 
             Visual.EffectiveManagers.Renderer.MainLayer.Remove(listBox.Visual);
 #if FRB
