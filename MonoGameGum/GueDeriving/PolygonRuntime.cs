@@ -75,12 +75,12 @@ public class PolygonRuntime : InteractiveGue
     protected override RenderableShapeBase ContainedRenderable => ContainedPolygon;
 
     // A polygon is an outline on every backend (MonoGame's LinePolygon draws only lines), so these
-    // read and write StrokeColor rather than SkiaShapeRuntime's fill/stroke-agnostic slot.
+    // override SkiaShapeRuntime's fill/stroke-agnostic slot with StrokeColor.
 
     /// <summary>
     /// The red component of the polygon color (<see cref="SkiaShapeRuntime.StrokeColor"/>). Ranges from 0 to 255.
     /// </summary>
-    public new int Red
+    public override int Red
     {
         get => StrokeColor.Red;
         set
@@ -93,7 +93,7 @@ public class PolygonRuntime : InteractiveGue
     /// <summary>
     /// The green component of the polygon color (<see cref="SkiaShapeRuntime.StrokeColor"/>). Ranges from 0 to 255.
     /// </summary>
-    public new int Green
+    public override int Green
     {
         get => StrokeColor.Green;
         set
@@ -106,7 +106,7 @@ public class PolygonRuntime : InteractiveGue
     /// <summary>
     /// The blue component of the polygon color (<see cref="SkiaShapeRuntime.StrokeColor"/>). Ranges from 0 to 255.
     /// </summary>
-    public new int Blue
+    public override int Blue
     {
         get => StrokeColor.Blue;
         set
@@ -120,7 +120,7 @@ public class PolygonRuntime : InteractiveGue
     /// The alpha (opacity) component of the polygon color (<see cref="SkiaShapeRuntime.StrokeColor"/>).
     /// Ranges from 0 (fully transparent) to 255 (fully opaque).
     /// </summary>
-    public new int Alpha
+    public override int Alpha
     {
         get => StrokeColor.Alpha;
         set
@@ -134,14 +134,23 @@ public class PolygonRuntime : InteractiveGue
     /// Gets or sets the color used to render the polygon outline. Same value as
     /// <see cref="SkiaShapeRuntime.StrokeColor"/>.
     /// </summary>
+    // Declared new rather than overridden so it is not obsolete like SkiaShapeRuntime.Color; both
+    // reach the outline through SolidColor.
     public new SKColor Color
     {
-        get => StrokeColor;
+        get => SolidColor;
         set
         {
-            StrokeColor = value;
+            SolidColor = value;
             NotifyPropertyChanged();
         }
+    }
+
+    /// <inheritdoc/>
+    protected override SKColor SolidColor
+    {
+        get => StrokeColor;
+        set => StrokeColor = value;
     }
 #endif
 

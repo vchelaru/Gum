@@ -279,4 +279,66 @@ public class PolygonRuntimeTests
         sut.Blue.ShouldBe(30);
         sut.Alpha.ShouldBe(40);
     }
+    // A reference typed as the base SkiaShapeRuntime reaches the same outline color as PolygonRuntime.
+    [Fact]
+    public void RedGreenBlueAlpha_SetThroughBaseReference_ShouldBeReadThroughPolygon()
+    {
+        PolygonRuntime sut = new();
+        SkiaShapeRuntime asBase = sut;
+
+        asBase.Red = 7;
+        asBase.Green = 8;
+        asBase.Blue = 9;
+        asBase.Alpha = 10;
+
+        sut.Red.ShouldBe(7);
+        sut.Green.ShouldBe(8);
+        sut.Blue.ShouldBe(9);
+        sut.Alpha.ShouldBe(10);
+        sut.StrokeColor.ShouldBe(new SKColor(7, 8, 9, 10));
+    }
+
+    [Fact]
+    public void RedGreenBlueAlpha_SetThroughPolygon_ShouldBeReadThroughBaseReference()
+    {
+        PolygonRuntime sut = new();
+        SkiaShapeRuntime asBase = sut;
+
+        sut.Red = 7;
+        sut.Green = 8;
+        sut.Blue = 9;
+        sut.Alpha = 10;
+
+        asBase.Red.ShouldBe(7);
+        asBase.Green.ShouldBe(8);
+        asBase.Blue.ShouldBe(9);
+        asBase.Alpha.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Color_SetThroughBaseReference_ShouldBeReadThroughPolygon()
+    {
+        PolygonRuntime sut = new();
+        SkiaShapeRuntime asBase = sut;
+
+#pragma warning disable CS0618 // SkiaShapeRuntime.Color is obsolete
+        asBase.Color = SKColors.Orange;
+#pragma warning restore CS0618
+
+        sut.Color.ShouldBe(SKColors.Orange);
+        sut.StrokeColor.ShouldBe(SKColors.Orange);
+    }
+
+    [Fact]
+    public void Color_SetThroughPolygon_ShouldBeReadThroughBaseReference()
+    {
+        PolygonRuntime sut = new();
+        SkiaShapeRuntime asBase = sut;
+
+        sut.Color = SKColors.Orange;
+
+#pragma warning disable CS0618 // SkiaShapeRuntime.Color is obsolete
+        asBase.Color.ShouldBe(SKColors.Orange);
+#pragma warning restore CS0618
+    }
 }

@@ -187,7 +187,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
 
     #region Solid colors
 
-    public int Alpha
+    public virtual int Alpha
     {
         get => ContainedRenderable.Alpha;
         set
@@ -197,7 +197,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         }
     }
 
-    public int Blue
+    public virtual int Blue
     {
         get => ContainedRenderable.Blue;
         set
@@ -207,7 +207,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         }
     }
 
-    public int Green
+    public virtual int Green
     {
         get => ContainedRenderable.Green;
         set
@@ -217,7 +217,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         }
     }
 
-    public int Red
+    public virtual int Red
     {
         get => ContainedRenderable.Red;
         set
@@ -236,12 +236,23 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     [Obsolete("Use FillColor or StrokeColor instead. See issue #2785; full fill+stroke composition arrives in #2790.")]
     public SKColor Color
     {
-        get => ContainedRenderable.Color;
+        get => SolidColor;
         set
         {
-            ContainedRenderable.Color = value;
+            SolidColor = value;
             NotifyPropertyChanged();
         }
+    }
+
+    /// <summary>
+    /// The color behind the obsolete <see cref="Color"/>: the contained renderable's color slot.
+    /// A runtime whose <see cref="Color"/> means something narrower (PolygonRuntime: the outline)
+    /// overrides this so every reference reads and writes the same color.
+    /// </summary>
+    protected virtual SKColor SolidColor
+    {
+        get => ContainedRenderable.Color;
+        set => ContainedRenderable.Color = value;
     }
 
     // Issue #2938 regression fix: defaults to transparent (alpha 0) so a freshly-constructed
