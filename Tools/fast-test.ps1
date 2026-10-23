@@ -5,10 +5,14 @@ the elapsed time of every step. Names that are not a test class (a namespace, a 
 project) are refused: CI runs the broad suites, a local run is only for the code under work.
 
 .PARAMETER Tests
-Test class names, or Class.Method, comma separated or as separate arguments.
+Test class names, or Class.Method, comma separated or as separate arguments. Project:Class (or
+Project:Class.Method, Project being the csproj name) picks one project when a class name is in several.
 
 .PARAMETER NoBuild
 Skip the build step (the projects were already built by a previous run).
+
+.PARAMETER ListOnly
+Print the projects and filters that would run, without building or testing.
 
 .PARAMETER BuildTimeoutSeconds
 Hard limit for each build. Default 300.
@@ -25,6 +29,7 @@ param(
     [Parameter(Mandatory, Position = 0, ValueFromRemainingArguments)]
     [string[]]$Tests,
     [switch]$NoBuild,
+    [switch]$ListOnly,
     [int]$BuildTimeoutSeconds = 300,
     [int]$TestTimeoutSeconds = 240
 )
@@ -36,16 +41,38 @@ Set-Location $repo
 
 $requests = @($Tests | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
-$testProjects = @(git ls-files '*Tests*.csproj' | Where-Object { $_ })
-$classNames = $requests | ForEach-Object { ($_ -split '\.')[0] } | Sort-Object -Unique
+# Only test projects a repo solution includes are candidates, so a class in an orphan project (one
+# no solution or CI builds) never triggers its build.
+$solutionProjects = @{}
+foreach ($solution in @(Get-ChildItem -File -Path (Join-Path $repo '*'), (Join-Path $repo 'Tests/*') -Include '*.sln', '*.slnx' -ErrorAction SilentlyContinue)) {
+    $solutionDir = Split-Path -Parent $solution.FullName
+    $text = Get-Content -Raw $solution.FullName
+    $paths = if ($solution.Extension -eq '.slnx') { [regex]::Matches($text, '<Project\s+Path="([^"]+\.csproj)"') }
+             else { [regex]::Matches($text, '"([^"]+\.csproj)"') }
+    foreach ($match in $paths) {
+        $full = [System.IO.Path]::GetFullPath((Join-Path $solutionDir ($match.Groups[1].Value -replace '\\', '/')))
+        $solutionProjects[([System.IO.Path]::GetRelativePath($repo, $full) -replace '\\', '/')] = $true
+    }
+}
+$testProjects = @($solutionProjects.Keys | Where-Object { (Split-Path -Leaf $_) -like '*Tests*.csproj' } | Sort-Object)
+
+# A request is [Project:]Class[.Method]; Project is the csproj name without extension.
+$parsed = foreach ($request in $requests) {
+    $projectName = $null
+    $rest = $request
+    if ($request -match '^(?<project>[^:]+):(?<rest>.+)$') { $projectName = $Matches.project; $rest = $Matches.rest }
+    $parts = $rest -split '\.', 2
+    [pscustomobject]@{ Request = $request; Project = $projectName; Class = $parts[0]; Method = if ($parts.Count -gt 1) { $parts[1] } else { $null } }
+}
+$classNames = $parsed | ForEach-Object { $_.Class } | Sort-Object -Unique
 $classPattern = "class[[:space:]]+($($classNames -join '|'))([^A-Za-z0-9_]|$)"
 
-# class name -> list of @{ Project; Namespace }. git grep is used because a PowerShell scan of every
-# test project's sources takes half a minute.
+# class name -> list of @{ Project; Namespace; Files }. git grep is used because a PowerShell scan of
+# every test project's sources takes half a minute; --untracked finds a new file not yet added.
 $found = @{}
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 $projectDirs = $testProjects | ForEach-Object { @{ Project = $_; Dir = ((Split-Path -Parent $_) -replace '\\', '/') + '/' } }
-foreach ($line in (git grep -nIE $classPattern -- '*.cs')) {
+foreach ($line in (git grep --untracked -nIE $classPattern -- '*.cs')) {
     if ($line -notmatch '^(?<file>[^:]+):\d+:.*class\s+(?<name>\w+)') { continue }
     $file = $Matches.file
     $name = $Matches.name
@@ -55,30 +82,51 @@ foreach ($line in (git grep -nIE $classPattern -- '*.cs')) {
     $namespaceMatch = Select-String -Path (Join-Path $repo $file) -Pattern '^\s*namespace\s+([\w.]+)' -List
     $namespace = if ($namespaceMatch) { $namespaceMatch.Matches[0].Groups[1].Value } else { '' }
     if (-not $found.ContainsKey($name)) { $found[$name] = @() }
-    if (-not ($found[$name] | Where-Object { $_.Project -eq $owner.Project -and $_.Namespace -eq $namespace })) {
-        $found[$name] += @{ Project = $owner.Project; Namespace = $namespace }
-    }
+    $existing = $found[$name] | Where-Object { $_.Project -eq $owner.Project -and $_.Namespace -eq $namespace }
+    if ($existing) { $existing.Files += $file }
+    else { $found[$name] += @{ Project = $owner.Project; Namespace = $namespace; Files = @($file) } }
 }
 Write-Host ("resolved      {0,4:N0}s  {1} request(s) against {2} test project(s)" -f $sw.Elapsed.TotalSeconds, $requests.Count, $testProjects.Count)
 
-$unknown = @($requests | Where-Object { -not $found.ContainsKey(($_ -split '\.')[0]) })
+# request -> the locations it runs in
+$targets = @{}
+foreach ($item in $parsed) {
+    $locations = @($found[$item.Class] | Where-Object { $_ })
+    if ($item.Project) { $locations = @($locations | Where-Object { [System.IO.Path]::GetFileNameWithoutExtension($_.Project) -eq $item.Project }) }
+    if ($item.Method -and $locations.Count -gt 1) {
+        # A class in several projects: run Class.Method only where the method is declared, so the
+        # others do not report NOTESTS. An inherited method is declared nowhere; keep every project then.
+        $methodName = ($item.Method -split '[.(]')[0]
+        $declaring = @($locations | Where-Object { Select-String -Path ($_.Files | ForEach-Object { Join-Path $repo $_ }) -Pattern "\b$([regex]::Escape($methodName))\s*\(" -Quiet })
+        if ($declaring.Count -gt 0) { $locations = $declaring }
+    }
+    $targets[$item.Request] = $locations
+}
+
+$unknown = @($parsed | Where-Object { $targets[$_.Request].Count -eq 0 } | ForEach-Object { $_.Request })
 if ($unknown.Count -gt 0) {
     Write-Host "REFUSED: not a test class in any test project: $($unknown -join ', ')"
-    Write-Host "Name test classes (optionally Class.Method), never a namespace, a folder or a whole project. CI runs the broad suites."
+    Write-Host "Name test classes (optionally Project:Class or Class.Method), never a namespace, a folder or a whole project. CI runs the broad suites. Only projects in a repo solution count."
     exit 2
 }
 
 # project -> filter terms
 $filters = @{}
-foreach ($request in $requests) {
-    $parts = $request -split '\.', 2
-    foreach ($location in $found[$parts[0]]) {
-        $qualified = if ($location.Namespace) { "$($location.Namespace).$($parts[0])" } else { $parts[0] }
-        $terms = if ($parts.Count -gt 1) { @("FullyQualifiedName~$qualified.$($parts[1])") }
+foreach ($item in $parsed) {
+    $locations = $targets[$item.Request]
+    if ($locations.Count -gt 1) { Write-Host "$($item.Request) is in $($locations.Count) projects, running it in: $(($locations | ForEach-Object { [System.IO.Path]::GetFileNameWithoutExtension($_.Project) }) -join ', ') (Project:Class picks one)" }
+    foreach ($location in $locations) {
+        $qualified = if ($location.Namespace) { "$($location.Namespace).$($item.Class)" } else { $item.Class }
+        $terms = if ($item.Method) { @("FullyQualifiedName~$qualified.$($item.Method)") }
                  else { @("FullyQualifiedName~$qualified.", "FullyQualifiedName~$qualified+") }
         if (-not $filters.ContainsKey($location.Project)) { $filters[$location.Project] = @() }
         $filters[$location.Project] += $terms
     }
+}
+
+if ($ListOnly) {
+    foreach ($project in $filters.Keys | Sort-Object) { Write-Host "test  $project  $(($filters[$project] | Sort-Object -Unique) -join '|')" }
+    exit 0
 }
 
 $failed = $false
