@@ -13,7 +13,7 @@ namespace SkiaGum.Tests.Content;
 /// ones, so code that holds an <see cref="IContentLoader"/> or reads <c>GumService.ContentLoader</c>
 /// moves between runtimes unchanged.
 /// </summary>
-public class ContentLoaderTests
+public class ContentLoaderTests : BaseTestClass
 {
     private static string WritePng(string directory, string fileName, int width, int height)
     {

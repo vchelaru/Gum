@@ -158,6 +158,7 @@ public abstract class SkiaHostTestBase : IDisposable
         // AccessViolationException. Leaving the cache intact keeps the sprite sheet valid across tests.
 
         _fileManagerState.Restore();
+        ObjectFinderState.Reset();
 
         // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
         ResetCanvasAndRoots();

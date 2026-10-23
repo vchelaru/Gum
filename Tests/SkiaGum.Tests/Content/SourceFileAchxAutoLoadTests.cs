@@ -15,7 +15,7 @@ namespace SkiaGum.Tests.Content;
 // Setting a Sprite or NineSlice SourceFile to an .achx must load its animation chains, the same
 // as the MonoGame/raylib dispatcher (issue #5226). Skia used to hand the .achx to
 // LoadContent<SKBitmap>, leaving AnimationChains null.
-public class SourceFileAchxAutoLoadTests
+public class SourceFileAchxAutoLoadTests : BaseTestClass
 {
     public SourceFileAchxAutoLoadTests()
     {

@@ -50,7 +50,6 @@ public class SourceFileAchjAutoLoadTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibAchjAutoLoad_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -94,7 +93,6 @@ public class SourceFileAchjAutoLoadTests : BaseTestClass
         }
         finally
         {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {

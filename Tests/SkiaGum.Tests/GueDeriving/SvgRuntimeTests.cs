@@ -15,16 +15,11 @@ using Xunit;
 
 namespace SkiaGum.Tests.GueDeriving;
 
-public class SvgRuntimeTests : IDisposable
+public class SvgRuntimeTests : BaseTestClass
 {
     public SvgRuntimeTests()
     {
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-    }
-
-    public void Dispose()
-    {
-        ObjectFinder.Self.GumProjectSave = null;
     }
 
     private static string WriteSvg()

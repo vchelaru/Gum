@@ -16,7 +16,7 @@ namespace SkiaGum.Tests.Content;
 // IContentLoader contract (TryXxx should never throw) and diverging from every other backend's
 // ContentLoader (MonoGame-family, Raylib, Sokol), which all implement it as a non-throwing
 // mirror of LoadContent.
-public class EmbeddedResourceContentLoaderTests
+public class EmbeddedResourceContentLoaderTests : BaseTestClass
 {
     [Fact]
     public void ObsoleteMessage_ShouldStateErrorAndRemovalDates()

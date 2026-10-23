@@ -263,8 +263,6 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
     private static void WithCachingOnAndNoFontFiles(Action body)
     {
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = true;
@@ -277,8 +275,6 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -295,8 +291,6 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
         };
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = true;
@@ -312,8 +306,6 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 }

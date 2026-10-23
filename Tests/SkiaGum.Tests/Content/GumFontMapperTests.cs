@@ -11,7 +11,7 @@ namespace SkiaGum.Tests.Content;
 /// Pins #3670/#3703: Skia resolves a custom .ttf/.otf font file to a loaded SKTypeface via
 /// GumFontMapper, instead of the previous total no-op (Skia never had a custom-font path).
 /// </summary>
-public class GumFontMapperTests
+public class GumFontMapperTests : BaseTestClass
 {
     private static readonly string FixtureTtfPath =
         Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts", "TestFont.ttf");

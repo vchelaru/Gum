@@ -119,6 +119,7 @@ public class BaseTestClass : IDisposable
         RenderableRegistry.Reset();
 
         _fileManagerState.Restore();
+        ObjectFinderState.Reset();
 
         // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
         ResetCanvasAndRoots();

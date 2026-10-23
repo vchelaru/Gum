@@ -61,7 +61,6 @@ public class ContentLoaderTests : BaseTestClass
         Raylib_cs.TextureFilter savedDefaultFilter = ContentLoader.DefaultTextureFilter;
         Action<Texture2D, Raylib_cs.TextureFilter> savedApplier = ContentLoader.TextureFilterApplier;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Bilinear;
@@ -97,7 +96,6 @@ public class ContentLoaderTests : BaseTestClass
             ContentLoader.DefaultTextureFilter = savedDefaultFilter;
             ContentLoader.TextureFilterApplier = savedApplier;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -108,7 +106,6 @@ public class ContentLoaderTests : BaseTestClass
     public void LoadContent_Font_WhenFntMissingFromDiskAndHook_ShouldReturnEmptyFontWithoutThrowing()
     {
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -126,7 +123,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -140,7 +136,6 @@ public class ContentLoaderTests : BaseTestClass
         string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -153,7 +148,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -175,7 +169,6 @@ public class ContentLoaderTests : BaseTestClass
             Path.Combine(resourcesDirectory, "Orbitron-Black.ttf"));
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -190,7 +183,6 @@ public class ContentLoaderTests : BaseTestClass
         {
             FileManager.MacOSBundleExecutableDirectoryOverride = null;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
             try { Directory.Delete(Path.GetDirectoryName(Path.GetDirectoryName(contents))!, recursive: true); } catch { /* best-effort */ }
         }
     }
@@ -207,7 +199,6 @@ public class ContentLoaderTests : BaseTestClass
         string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             // No caching: we own the only ManagedFont for this load, so disposing it is the sole
@@ -230,7 +221,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -333,7 +323,6 @@ public class ContentLoaderTests : BaseTestClass
         };
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             // Disable caching so a prior load of the same logical name can't mask the result.
@@ -379,7 +368,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -398,7 +386,6 @@ public class ContentLoaderTests : BaseTestClass
         };
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -426,7 +413,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -456,7 +442,6 @@ public class ContentLoaderTests : BaseTestClass
         File.WriteAllBytes(Path.Combine(looseDirectory, "Font18Arial_0.png"), pageBytes);
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -475,7 +460,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
             Directory.Delete(looseDirectory, recursive: true);
         }
     }
@@ -493,7 +477,6 @@ public class ContentLoaderTests : BaseTestClass
         };
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -513,7 +496,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -534,7 +516,6 @@ public class ContentLoaderTests : BaseTestClass
         byte[] pageBytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Content", "FontCache", "Font18Arial_0.png"));
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -575,7 +556,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -609,7 +589,6 @@ public class ContentLoaderTests : BaseTestClass
         List<string> errors = new List<string>();
         Action<string> errorHandler = errors.Add;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -630,7 +609,6 @@ public class ContentLoaderTests : BaseTestClass
         {
             RaylibGum.Renderables.CustomSetPropertyOnRenderable.PropertyAssignmentError -= errorHandler;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
             if (Directory.Exists(directory))
             {
                 Directory.Delete(directory, recursive: true);
@@ -660,7 +638,6 @@ public class ContentLoaderTests : BaseTestClass
         File.WriteAllBytes(Path.Combine(looseDirectory, "Page1.png"), pageBytes);
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -677,7 +654,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
             Directory.Delete(looseDirectory, recursive: true);
         }
     }
@@ -692,7 +668,6 @@ public class ContentLoaderTests : BaseTestClass
         byte[] pageBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png"));
 
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
-        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
             LoaderManager.Self.CacheTextures = false;
@@ -723,7 +698,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             LoaderManager.Self.CacheTextures = savedCacheTextures;
-            FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
@@ -738,7 +712,6 @@ public class ContentLoaderTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibMissingFileTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -753,7 +726,6 @@ public class ContentLoaderTests : BaseTestClass
         }
         finally
         {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {
@@ -777,7 +749,6 @@ public class ContentLoaderTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibStreamHookTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -810,7 +781,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             FileManager.CustomGetStreamFromFile = null;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {
@@ -827,7 +797,6 @@ public class ContentLoaderTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibLooseOverHookTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -846,7 +815,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             FileManager.CustomGetStreamFromFile = null;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {
@@ -889,7 +857,6 @@ public class ContentLoaderTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibContentLoaderTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -923,7 +890,6 @@ public class ContentLoaderTests : BaseTestClass
         }
         finally
         {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {
@@ -941,7 +907,6 @@ public class ContentLoaderTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibTryLoadMissingTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -959,7 +924,6 @@ public class ContentLoaderTests : BaseTestClass
         }
         finally
         {
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {
@@ -979,7 +943,6 @@ public class ContentLoaderTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibTryLoadHookTest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        string savedRelativeDirectory = FileManager.RelativeDirectory;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -1009,7 +972,6 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             FileManager.CustomGetStreamFromFile = null;
-            FileManager.RelativeDirectory = savedRelativeDirectory;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {
