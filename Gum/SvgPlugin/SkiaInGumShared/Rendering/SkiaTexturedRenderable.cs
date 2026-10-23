@@ -29,6 +29,7 @@ namespace SkiaGum.Renderables
         // without triggering needsUpdate on the drawable.
         float _width;
         float _height;
+        float _rotation;
 
         #endregion
 
@@ -72,13 +73,21 @@ namespace SkiaGum.Renderables
         public float X
         {
             get => _position.X;
-            set => _position.X = value;
+            set
+            {
+                NonFiniteCheck.ThrowIfNotFinite(value, "X");
+                _position.X = value;
+            }
         }
 
         public float Y
         {
             get => _position.Y;
-            set => _position.Y = value;
+            set
+            {
+                NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+                _position.Y = value;
+            }
         }
 
         public float Z { get; set; }
@@ -88,6 +97,7 @@ namespace SkiaGum.Renderables
             get => _width;
             set
             {
+                NonFiniteCheck.ThrowIfNotFinite(value, "Width");
                 _width = value;
                 _drawable.Width = value;
             }
@@ -98,12 +108,21 @@ namespace SkiaGum.Renderables
             get => _height;
             set
             {
+                NonFiniteCheck.ThrowIfNotFinite(value, "Height");
                 _height = value;
                 _drawable.Height = value;
             }
         }
 
-        public float Rotation { get; set; }
+        public float Rotation
+        {
+            get => _rotation;
+            set
+            {
+                NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+                _rotation = value;
+            }
+        }
 
         public bool FlipHorizontal { get; set; }
         public bool FlipVertical { get; set; }

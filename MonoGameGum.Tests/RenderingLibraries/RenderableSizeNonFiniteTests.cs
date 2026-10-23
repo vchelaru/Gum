@@ -94,6 +94,24 @@ public class RenderableSizeNonFiniteTests
 #endif
     }
 
+    [Theory]
+    [InlineData(float.PositiveInfinity)]
+    [InlineData(float.NegativeInfinity)]
+    [InlineData(float.NaN)]
+    public void TextFontScale_NonFiniteValue_IsRejectedOnlyWithDiagnostics(float value)
+    {
+        Text text = new Text(null, "hi");
+        text.FontScale = 2;
+
+#if FULL_DIAGNOSTICS
+        ArgumentException exception = Should.Throw<ArgumentException>(() => text.FontScale = value);
+        exception.Message.ShouldBe("Invalid FontScale: " + value);
+        text.FontScale.ShouldBe(2, "because a rejected value is not stored");
+#else
+        Should.NotThrow(() => text.FontScale = value);
+#endif
+    }
+
     [Fact]
     public void FiniteValues_AreStoredUnchanged()
     {
