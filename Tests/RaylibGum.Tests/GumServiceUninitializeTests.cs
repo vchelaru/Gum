@@ -39,4 +39,28 @@ public class GumServiceUninitializeTests
             TestAssemblyInitialize.ApplyDefaultTestState();
         }
     }
+
+    // #6491: Uninitialize used to set RelativeDirectory to "Content/" whether or not a project had
+    // pointed it anywhere. Raylib never uses "Content/" (SystemManagers leaves it alone), so every text
+    // after an Uninitialize resolved "Arial 18" to a Content/FontCache .fnt instead of system Arial.
+    [Fact]
+    public void Uninitialize_WithNoProjectLoaded_LeavesRelativeDirectoryUnchanged()
+    {
+        string original = ToolsUtilities.FileManager.RelativeDirectory;
+        Font originalFont = Text.DefaultFont;
+        try
+        {
+            GumService.Default.InitializeForTesting();
+
+            GumService.Default.Uninitialize();
+
+            ToolsUtilities.FileManager.RelativeDirectory.ShouldBe(original);
+        }
+        finally
+        {
+            ToolsUtilities.FileManager.RelativeDirectory = original;
+            Text.DefaultFont = originalFont;
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
 }

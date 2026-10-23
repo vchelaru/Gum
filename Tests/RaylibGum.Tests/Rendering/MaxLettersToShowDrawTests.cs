@@ -101,6 +101,18 @@ public class MaxLettersToShowDrawTests : BaseTestClass
             styled: true);
     }
 
+    // #6487: at this width "consectetur a" fits on one line but "consectetur adipiscing" does not, so the
+    // cut (letter 40 is the "a") lands on the first letter of a word that wraps to the next line.
+    [Fact]
+    public void Draw_StyledWrappedText_CutAtTheFirstLetterOfAWrappedWord_DrawsItOnTheWrappedLine()
+    {
+        AssertWrappedDrawsLikeControl(
+            "lorem [Color=Red]ipsum dolor[/Color] sit amet consectetur [Color=Blue]adipiscing elit[/Color] sed do",
+            count: 40,
+            wrapWidth: 118,
+            styled: true);
+    }
+
     [Fact]
     public void Draw_NullCount_ShowsEverything()
     {
@@ -129,9 +141,10 @@ public class MaxLettersToShowDrawTests : BaseTestClass
 
     /// <summary>
     /// Builds the control from the wrapped lines the real text produced: the letters that fit within
-    /// <paramref name="count"/> across lines, one line per drawn line. Styled controls reuse the markup
-    /// untouched, so only the plain case needs the lines re-joined; the styled wrapped case checks the
-    /// pixel difference against a control with the same wrap and the letters past the cut blanked.
+    /// <paramref name="count"/> across lines, one line per drawn line, drawn without wrapping. The styled
+    /// case keeps the markup, blanks the letters past the cut and breaks it where the real text wrapped:
+    /// letting the control wrap itself would move a cut word's first letter up a line whenever that
+    /// letter alone fits there (#6487).
     /// </summary>
     private static void AssertWrappedDrawsLikeControl(string markup, int count, float wrapWidth, bool styled)
     {
@@ -144,7 +157,7 @@ public class MaxLettersToShowDrawTests : BaseTestClass
         string control;
         if (styled)
         {
-            control = BlankPastTheCut(markup, count);
+            control = BreakAtTheWrappedLines(BlankPastTheCut(markup, count), lines);
         }
         else
         {
@@ -164,7 +177,7 @@ public class MaxLettersToShowDrawTests : BaseTestClass
             control = builder.ToString();
         }
 
-        Color[] expected = Render(control, maxLetters: null, styled ? wrapWidth : 0);
+        Color[] expected = Render(control, maxLetters: null, wrapWidth: 0);
         if (count == 0)
         {
             InkCount(actual).ShouldBe(0, "because zero letters are shown");
@@ -177,8 +190,53 @@ public class MaxLettersToShowDrawTests : BaseTestClass
     }
 
     /// <summary>
+    /// The markup with a newline inserted wherever one of <paramref name="lines"/> ends without one, so it
+    /// draws on those lines without wrapping. Tags are not part of the stripped text the lines split.
+    /// </summary>
+    private static string BreakAtTheWrappedLines(string markup, List<string> lines)
+    {
+        HashSet<int> breaks = new();
+        int end = 0;
+        for (int i = 0; i < lines.Count - 1; i++)
+        {
+            end += lines[i].Length;
+            if (!lines[i].EndsWith('\n'))
+            {
+                breaks.Add(end);
+            }
+        }
+
+        System.Text.StringBuilder builder = new();
+        int stripped = 0;
+        bool inTag = false;
+        foreach (char c in markup)
+        {
+            if (c == '[')
+            {
+                inTag = true;
+            }
+
+            if (!inTag)
+            {
+                if (breaks.Contains(stripped))
+                {
+                    builder.Append('\n');
+                }
+                stripped++;
+            }
+            builder.Append(c);
+
+            if (c == ']')
+            {
+                inTag = false;
+            }
+        }
+        return builder.ToString();
+    }
+
+    /// <summary>
     /// The markup with every visible letter past <paramref name="count"/> replaced by a space (the tags
-    /// and every letter index stay put, so the wrap and the runs are the same and a space draws nothing).
+    /// and every letter index stay put, so the runs are the same and a space draws nothing).
     /// </summary>
     private static string BlankPastTheCut(string markup, int count)
     {

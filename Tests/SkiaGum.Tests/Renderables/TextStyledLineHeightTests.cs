@@ -14,9 +14,8 @@ namespace SkiaGum.Tests.Renderables;
 /// same numbers in TextRuntimeStyledLineHeightTests and Raylib in TextRunLineHeightMultiplierTests. h is one
 /// plain line at scale 1 and multiplier 1, read from a control text so no font metric is hard-coded.
 /// Text without a size run is exact (#6467): RichTextKit multiplies a line's ascent and descent but not its
-/// leading, and the Skia text compensates for that. Text with a size run keeps the uncompensated line heights, so a
-/// multiplied line there lands within a couple of percent of base * multiplier * h; tracked in #6475, and pinned
-/// exactly by SizeRunText_LineTopsAreUnchanged so that it cannot get worse.
+/// leading, and the Skia text compensates for that. Text with a size or font-family run is sized line by line and
+/// is exact too (#6475): a font-family run counts as its own font's plain line height, never multiplied, as on MonoGame.
 /// </summary>
 public class TextStyledLineHeightTests
 {
@@ -30,6 +29,42 @@ public class TextStyledLineHeightTests
         text.LineHeightMultiplier = multiplier;
         text.RawText = markup;
         return text;
+    }
+
+    /// <summary>For each character of the tag-stripped text, whether it is inside a [FontSize], [FontScale] or [Font] tag.</summary>
+    private static bool[] HeightRunCharacters(string markup)
+    {
+        List<bool> result = new();
+        int depth = 0;
+        int index = 0;
+        while (index < markup.Length)
+        {
+            System.Text.RegularExpressions.Match tag = System.Text.RegularExpressions.Regex.Match(markup.Substring(index), @"^\[(/?)(\w+)(=[^\]]*)?\]");
+            if (tag.Success)
+            {
+                if (tag.Groups[2].Value is "FontSize" or "FontScale" or "Font")
+                {
+                    depth += tag.Groups[1].Value == "/" ? -1 : 1;
+                }
+                index += tag.Length;
+            }
+            else
+            {
+                result.Add(depth > 0);
+                index++;
+            }
+        }
+
+        return result.ToArray();
+    }
+
+    /// <summary>One plain line of <paramref name="fontFamily"/> at size 20, scale 1 and multiplier 1.</summary>
+    private static float PlainLineHeight(string fontFamily)
+    {
+        Text control = Build("a\nb", 1, 1);
+        control.FontName = fontFamily;
+        TextBlock block = control.GetTextBlock();
+        return block.Lines[1].YCoord - block.Lines[0].YCoord;
     }
 
     private static float PlainLineHeight()
@@ -151,75 +186,149 @@ public class TextStyledLineHeightTests
         ShouldMatch(text, h, Run(2, 1.5f, 3), Run(2, 1.5f, 1.5f), Plain(2, 1.5f));
     }
 
-    // Text with a size run keeps the uncompensated line heights (#6475), so its line tops are whatever they were
-    // before the leading compensation; pinned in units of h (read from the code before the change) so any change
-    // to a size-run text, better or worse, is visible and has to be made on purpose.
+    // #6475: a size or font-family run shares lines with base text and wraps over several lines, so each line is
+    // sized on its own: it advances max(base * multiplier, the tallest such run on that line) * h
+    // (TextLineHeight.Compute), exactly like MonoGame and Raylib. A run's height is its own plain line, never
+    // multiplied: its size times its font's plain line height. Which characters are in such a run comes from the
+    // markup; the multiplier never changes which glyphs land on which line.
     [Theory]
-    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 100f, "0.000,2.972,5.908,8.844,11.780,14.716,18.046,21.018")]
-    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 200f, "0.000,3.331,6.267,9.597")]
-    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 3f, 100f, "0.000,5.886,11.737,17.587,23.438,29.289,35.534,41.420")]
-    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 3f, 200f, "0.000,6.245,12.096,18.341")]
-    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 1f, 1f, 120f, "0.000,1.072,2.065,3.058,4.129")]
-    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1.5f, 100f, "0.000,2.943,5.886,9.145,12.117")]
-    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1.5f, 200f, "0.000,3.259,6.230")]
-    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 3f, 100f, "0.000,5.858,11.716,17.889,23.775")]
-    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 3f, 200f, "0.000,6.173,12.060")]
-    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1f, 200f, "0.000,2.287,4.287")]
-    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 1.5f, 100f, "0.000,2.972")]
-    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 1.5f, 200f, "0.000,2.972")]
-    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 3f, 100f, "0.000,5.886")]
-    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 3f, 200f, "0.000,5.886")]
-    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 1.5f, 100f, "0.000,3.402")]
-    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 1.5f, 200f, "0.000,3.402")]
-    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 3f, 100f, "0.000,6.317")]
-    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 3f, 200f, "0.000,6.317")]
-    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 1.5f, 100f, "0.000,2.972,5.943,8.915,11.886,14.858,17.829,20.801,23.772,26.744,29.716,32.687,35.659,38.630")]
-    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 1.5f, 200f, "0.000,2.972,5.943,8.915,11.886,14.858,17.829")]
-    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 3f, 100f, "0.000,5.886,11.772,17.659,23.545,29.431,35.317,41.203,47.090,52.976,58.862,64.748,70.634,76.521")]
-    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 3f, 200f, "0.000,5.886,11.772,17.659,23.545,29.431,35.317")]
-    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 1.5f, 100f, "0.000,3.000,6.287,9.259,12.230,15.202,18.173,21.145,24.117,27.088,30.060,33.031,36.003,38.974,41.946")]
-    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 1.5f, 200f, "0.000,3.287,6.259,9.230,12.202,15.173,18.145")]
-    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 3f, 100f, "0.000,5.915,12.117,18.003,23.889,29.775,35.661,41.548,47.434,53.320,59.206,65.092,70.979,76.865,82.751")]
-    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 3f, 200f, "0.000,6.202,12.088,17.974,23.861,29.747,35.633")]
-    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 1.5f, 100f, "0.000,2.972,5.900,8.829,12.232,15.203")]
-    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 1.5f, 200f, "0.000,3.402,6.805")]
-    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 3f, 100f, "0.000,5.886,11.730,17.573,23.890,29.777")]
-    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 3f, 200f, "0.000,6.317,12.634")]
-    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 1.5f, 100f, "0.000,2.972,5.943,8.915,11.886,14.858,17.829,20.801,23.772,26.744")]
-    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 1.5f, 200f, "0.000,2.972,5.943,8.915,11.886,14.858,17.829")]
-    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 3f, 100f, "0.000,5.886,11.772,17.659,23.545,29.431,35.317,41.203,47.090,52.976")]
-    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 3f, 200f, "0.000,5.886,11.772,17.659,23.545,29.431,35.317")]
-    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 1.5f, 100f, "0.000,3.000,6.287,9.259,12.518,15.489,18.461,21.432,24.404,27.375,30.347,33.318")]
-    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 1.5f, 200f, "0.000,3.287,6.546,9.518,12.489,15.461,18.432")]
-    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 3f, 100f, "0.000,5.915,12.117,18.003,24.176,30.062,35.949,41.835,47.721,53.607,59.493,65.380")]
-    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 3f, 200f, "0.000,6.202,12.375,18.262,24.148,30.034,35.920")]
-    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 1.5f, 100f, "0.000,2.972,5.929,8.886,12.001,14.973,17.944,20.916,23.888,26.859,29.831,32.802")]
-    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 1.5f, 200f, "0.000,3.115,6.230,9.202,12.173,15.145")]
-    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 3f, 100f, "0.000,5.886,11.758,17.630,23.660,29.546,35.432,41.319,47.205,53.091,58.977,64.863")]
-    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 3f, 200f, "0.000,6.030,12.060,17.946,23.832,29.718")]
-    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 1.5f, 100f, "0.000,3.259,6.230,9.202,12.173,15.145,18.117,21.088,24.060,27.031,30.003,32.974,35.946")]
-    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 1.5f, 200f, "0.000,3.259,6.230,9.202,12.173,15.145")]
-    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 3f, 100f, "0.000,6.173,12.060,17.946,23.832,29.718,35.604,41.491,47.377,53.263,59.149,65.035,70.922")]
-    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 3f, 200f, "0.000,6.173,12.060,17.946,23.832,29.718")]
-    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 1.5f, 100f, "0.000,3.331,6.302,9.274,12.245,15.217,18.188,21.160,24.131,27.103,30.075")]
-    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 1.5f, 200f, "0.000,3.331,6.302,9.274,12.245,15.217,18.188")]
-    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 3f, 100f, "0.000,6.245,12.131,18.018,23.904,29.790,35.676,41.562,47.449,53.335,59.221")]
-    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 3f, 200f, "0.000,6.245,12.131,18.018,23.904,29.790,35.676")]
-    public void SizeRunText_LineTopsAreUnchanged(string markup, float baseScale, float multiplier, float width, string expectedTopsAndHeightInH)
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 100f)]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 200f)]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 3f, 100f)]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 3f, 200f)]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 1f, 1f, 120f)]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1.5f, 100f)]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1.5f, 200f)]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 3f, 100f)]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 3f, 200f)]
+    [InlineData("[FontSize=10]long wrapped text[/FontSize] Wmw", 2f, 1f, 200f)]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 1.5f, 100f)]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 1.5f, 200f)]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 3f, 100f)]
+    [InlineData("a[FontScale=2]b[/FontScale]c", 2f, 3f, 200f)]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 1.5f, 100f)]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 1.5f, 200f)]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 3f, 100f)]
+    [InlineData("abc[FontScale=0.5]d[/FontScale]", 2f, 3f, 200f)]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 1.5f, 100f)]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 1.5f, 200f)]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 3f, 100f)]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 2f, 3f, 200f)]
+    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 1.5f, 100f)]
+    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 1.5f, 200f)]
+    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 3f, 100f)]
+    [InlineData("[FontScale=3]Huge[/FontScale] line then normal text that wraps around the width", 2f, 3f, 200f)]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 1.5f, 100f)]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 1.5f, 200f)]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 3f, 100f)]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 2f, 3f, 200f)]
+    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 1.5f, 100f)]
+    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 1.5f, 200f)]
+    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 3f, 100f)]
+    [InlineData("one\n[FontScale=2]two[/FontScale]\nthree four five six seven eight", 2f, 3f, 200f)]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 1.5f, 100f)]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 1.5f, 200f)]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 3f, 100f)]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 3f, 200f)]
+    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 1.5f, 100f)]
+    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 1.5f, 200f)]
+    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 3f, 100f)]
+    [InlineData("[Color=Red]red[/Color] [FontScale=1.5]bigger red words[/FontScale] [Color=Blue]blue[/Color] words that go on and on", 2f, 3f, 200f)]
+    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 1.5f, 100f)]
+    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 1.5f, 200f)]
+    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 3f, 100f)]
+    [InlineData("ab[FontScale=1]c[/FontScale]d wraps when there is enough text to wrap here", 2f, 3f, 200f)]
+    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 1.5f, 100f)]
+    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 1.5f, 200f)]
+    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 3f, 100f)]
+    [InlineData("[FontScale=0.75]small start[/FontScale] then base text that continues on for a while", 2f, 3f, 200f)]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 1f, 0.8f, 120f)]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 1f, 1f, 100f)]
+    [InlineData("The [FontScale=2]big[/FontScale] brown fox jumps over the lazy dog again and again", 1f, 0.8f, 100f)]
+    [InlineData("small [FontScale=0.5]tiny words that wrap around a few lines here[/FontScale] after", 1f, 1f, 100f)]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 1f, 0.8f, 100f)]
+    [InlineData("a\n[FontScale=1.5]b[/FontScale]\nc\n", 2f, 1.5f, 200f)]
+    [InlineData("a[Font=Courier New]b[/Font]\nc\nd", 1f, 1.5f, 1000f)]
+    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 1f, 1.5f, 100f)]
+    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 1f, 1.5f, 200f)]
+    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 2f, 3f, 100f)]
+    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 2f, 3f, 200f)]
+    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 1f, 1.5f, 100f)]
+    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 1f, 1.5f, 200f)]
+    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 2f, 3f, 100f)]
+    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 2f, 3f, 200f)]
+    [InlineData("x[Font=Times New Roman]y[/Font]z", 1f, 1.5f, 100f)]
+    [InlineData("x[Font=Times New Roman]y[/Font]z", 1f, 1.5f, 200f)]
+    [InlineData("x[Font=Times New Roman]y[/Font]z", 2f, 3f, 100f)]
+    [InlineData("x[Font=Times New Roman]y[/Font]z", 2f, 3f, 200f)]
+    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 1f, 1.5f, 100f)]
+    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 1f, 1.5f, 200f)]
+    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 2f, 3f, 100f)]
+    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 2f, 3f, 200f)]
+    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 1f, 1.5f, 100f)]
+    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 1f, 1.5f, 200f)]
+    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 2f, 3f, 100f)]
+    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 2f, 3f, 200f)]
+    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 1f, 1.5f, 100f)]
+    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 1f, 1.5f, 200f)]
+    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 2f, 3f, 100f)]
+    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 2f, 3f, 200f)]
+    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 1f, 1.5f, 100f)]
+    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 1f, 1.5f, 200f)]
+    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 2f, 3f, 100f)]
+    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 2f, 3f, 200f)]
+    [InlineData("[FontScale=1]a[/FontScale] b\nc", 1f, 0.8f, 1000f)]
+    [InlineData("a [Font=Courier New][FontScale=2]b[/FontScale][/Font] c\nd", 1f, 1.5f, 1000f)]
+    [InlineData("a [Font=Courier New]b[/Font] c\nd", 1f, 0.8f, 1000f)]
+    [InlineData("a [Font=Courier New]b[/Font] c\nd", 1f, 1f, 1000f)]
+    public void HeightRunText_EachLineAdvancesMaxOfMultipliedBaseAndTallestRunOnIt(string markup, float baseScale, float multiplier, float width)
     {
         float h = PlainLineHeight();
         Text text = Build(markup, baseScale, multiplier);
         text.Width = width;
+        bool[] inHeightRun = HeightRunCharacters(markup);
 
-        float[] expected = expectedTopsAndHeightInH.Split(',').Select(value => float.Parse(value, CultureInfo.InvariantCulture)).ToArray();
         TextBlock block = text.GetTextBlock();
-        block.Lines.Count.ShouldBe(expected.Length - 1);
+        float expectedTop = 0;
         for (int i = 0; i < block.Lines.Count; i++)
         {
-            block.Lines[i].YCoord.ShouldBe(expected[i] * h, 0.002f * h, $"top of line {i}");
+            block.Lines[i].YCoord.ShouldBe(expectedTop * h, 0.005f * h, $"top of line {i}");
+            float tallestRun = block.Lines[i].Runs
+                .Where(run => inHeightRun[run.Start])
+                .Select(run => run.Style.FontSize / 20 * PlainLineHeight(run.Style.FontFamily) / h)
+                .DefaultIfEmpty(0)
+                .Max();
+            expectedTop += TextLineHeight.Compute(1, baseScale, multiplier, tallestRun);
         }
 
-        text.WrappedTextHeight.ShouldBe(expected[expected.Length - 1] * h, 0.002f * h, "the reported height");
+        if (markup.EndsWith('\n'))
+        {
+            expectedTop += baseScale * multiplier;
+        }
+
+        text.WrappedTextHeight.ShouldBe(expectedTop * h, 0.005f * h, "the reported height is the drawn extent");
+    }
+
+    [Theory]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 1f, 1f, 120f)]
+    [InlineData("Start [FontScale=0.75]The quick brown fox jumps over the lazy dog and again[/FontScale] end", 2f, 1.5f, 200f)]
+    [InlineData("[FontSize=30]Large[/FontSize] and [FontSize=10]small[/FontSize] mixed in wrapped text example", 2f, 1.5f, 100f)]
+    public void SizeRunText_TypewriterReveal_KeepsTheFullLayoutsLineTops(string markup, float baseScale, float multiplier, float width)
+    {
+        Text text = Build(markup, baseScale, multiplier);
+        text.Width = width;
+        TextBlock full = text.GetCachedTextBlock();
+        int letters = text.WrappedText.Sum(line => line.Length);
+        full.Lines.Count.ShouldBeGreaterThan(2);
+
+        text.MaxLettersToShow = letters - 1;
+        TextBlock revealed = text.GetPaintTextBlock(full);
+
+        revealed.Lines.Count.ShouldBe(full.Lines.Count);
+        for (int i = 0; i < full.Lines.Count; i++)
+        {
+            revealed.Lines[i].YCoord.ShouldBe(full.Lines[i].YCoord, 0.01f, $"top of line {i}");
+        }
     }
 
     [Fact]
@@ -229,56 +338,6 @@ public class TextStyledLineHeightTests
         Text text = Build("a\nb\n", 2, 1.5f);
 
         ShouldMatchExactly(text, h, 3, lineCount: 3, endsWithEmptyLine: true);
-    }
-
-    // A font-family run ([Font=...]) mixed with the base font on one line has the same problem as a size run:
-    // the line's top and bottom come from different fonts, so compensating each run alone overshoots (#6475). Such
-    // text keeps main's line heights, pinned in units of h from main like SizeRunText_LineTopsAreUnchanged.
-    [Theory]
-    [InlineData("a[Font=Courier New]b[/Font]\nc\nd", 1f, 1.5f, 1000f, "0.000,1.552,3.038,4.523")]
-    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 1f, 1.5f, 100f, "0.000,1.486,2.963,4.441,5.919,7.471,8.956,10.442,11.928")]
-    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 1f, 1.5f, 200f, "0.000,1.552,3.030,4.581,6.067")]
-    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 2f, 3f, 100f, "0.000,5.886,11.797,17.708,23.619,29.530,35.440,41.351,47.262,53.301,59.187,65.073,70.959,76.845,82.732,88.618,94.504,100.390")]
-    [InlineData("Hello [Font=Courier New]monospaced words in the middle[/Font] and back to Arial text that wraps", 2f, 3f, 200f, "0.000,5.886,11.797,17.708,23.619,29.657,35.544,41.430,47.316")]
-    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 1f, 1.5f, 100f, "0.000,1.478,2.955,4.433,5.911,7.389,8.866,10.418,11.904")]
-    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 1f, 1.5f, 200f, "0.000,1.478,2.955,4.507")]
-    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 2f, 3f, 100f, "0.000,5.911,11.822,17.732,23.643,29.554,35.465,41.376,47.287,53.197,59.236,65.122,71.008")]
-    [InlineData("[Font=Courier New]All courier text here that wraps around[/Font] then arial", 2f, 3f, 200f, "0.000,5.911,11.822,17.732,23.643,29.554,35.465,41.504,47.390")]
-    [InlineData("x[Font=Times New Roman]y[/Font]z", 1f, 1.5f, 100f, "0.000,1.492")]
-    [InlineData("x[Font=Times New Roman]y[/Font]z", 1f, 1.5f, 200f, "0.000,1.492")]
-    [InlineData("x[Font=Times New Roman]y[/Font]z", 2f, 3f, 100f, "0.000,5.886")]
-    [InlineData("x[Font=Times New Roman]y[/Font]z", 2f, 3f, 200f, "0.000,5.886")]
-    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 1f, 1.5f, 100f, "0.000,1.486,3.038,4.523,6.009,7.495,8.981")]
-    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 1f, 1.5f, 200f, "0.000,1.552,3.038,4.523")]
-    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 2f, 3f, 100f, "0.000,5.886,11.772,17.683,23.722,29.608,35.494,41.380,47.267,53.153,59.039,64.925,70.811")]
-    [InlineData("one two [Font=Courier New]three[/Font] four five six seven eight nine ten", 2f, 3f, 200f, "0.000,5.886,11.925,17.811,23.697,29.583,35.470")]
-    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 1f, 1.5f, 100f, "0.000,1.478,2.959,4.445,5.931")]
-    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 1f, 1.5f, 200f, "0.000,1.478,2.959,4.445")]
-    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 2f, 3f, 100f, "0.000,5.911,11.763,17.649,23.535,29.422")]
-    [InlineData("[Font=Courier New]a[/Font]\n[Font=Times New Roman]b[/Font]\nc d e f g h i j k", 2f, 3f, 200f, "0.000,5.911,11.763,17.649,23.535")]
-    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 1f, 1.5f, 100f, "0.000,1.486,2.972,4.449,6.001,7.487,8.973,10.458")]
-    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 1f, 1.5f, 200f, "0.000,1.486,3.038,4.523")]
-    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 2f, 3f, 100f, "0.000,5.886,11.772,17.659,23.545,29.456,35.366,41.405,47.291,53.177,59.064,64.950,70.836")]
-    [InlineData("plain text then [Color=Red]red [Font=Courier New]red courier[/Font][/Color] and more words to wrap", 2f, 3f, 200f, "0.000,5.886,11.772,17.683,23.722,29.608,35.494,41.380")]
-    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 1f, 1.5f, 100f, "0.000,1.552,3.038,4.523,6.009,7.495,8.981")]
-    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 1f, 1.5f, 200f, "0.000,1.552,3.038,4.523")]
-    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 2f, 3f, 100f, "0.000,6.039,11.925,17.811,23.697,29.583,35.470,41.356,47.242,53.128,59.014,64.901,70.787")]
-    [InlineData("[Font=Courier New]mono[/Font] [IsBold]bold[/IsBold] words that are many and wrap around the area", 2f, 3f, 200f, "0.000,6.039,11.925,17.811,23.697,29.583,35.470")]
-    public void FontRunText_LineTopsAreUnchanged(string markup, float baseScale, float multiplier, float width, string expectedTopsAndHeightInH)
-    {
-        float h = PlainLineHeight();
-        Text text = Build(markup, baseScale, multiplier);
-        text.Width = width;
-
-        float[] expected = expectedTopsAndHeightInH.Split(',').Select(value => float.Parse(value, CultureInfo.InvariantCulture)).ToArray();
-        TextBlock block = text.GetTextBlock();
-        block.Lines.Count.ShouldBe(expected.Length - 1);
-        for (int i = 0; i < block.Lines.Count; i++)
-        {
-            block.Lines[i].YCoord.ShouldBe(expected[i] * h, 0.002f * h, $"top of line {i}");
-        }
-
-        text.WrappedTextHeight.ShouldBe(expected[expected.Length - 1] * h, 0.002f * h, "the reported height");
     }
 
     [Fact]

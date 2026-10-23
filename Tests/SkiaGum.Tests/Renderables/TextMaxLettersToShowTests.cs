@@ -2,6 +2,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum;
 using System.Linq;
+using Topten.RichTextKit;
 
 namespace SkiaGum.Tests.Renderables;
 
@@ -105,5 +106,37 @@ public class TextMaxLettersToShowTests
         text.MaxLettersToShow = 3;
 
         text.WrappedText.ShouldBe(fullWrapped);
+    }
+
+    [Theory]
+    [InlineData("first line\nsecond line\nthird", 1000f)]
+    [InlineData("a\n\nb\nc\n", 1000f)]
+    [InlineData("[Color=Red]red line[/Color]\nplain [Color=Blue]blue[/Color]\nend", 1000f)]
+    [InlineData("[FontScale=1.5]Big[/FontScale] line\nsecond [FontSize=10]small[/FontSize] words\nthird line here", 1000f)]
+    [InlineData("Start [FontScale=0.75]quick brown fox\njumps over the lazy dog[/FontScale] end\nlast line wraps too", 120f)]
+    public void GetPaintTextBlock_AtEveryRevealStep_LinesArePrefixOfFullLayout(string rawText, float width)
+    {
+        Text text = new();
+        text.FontName = "Arial";
+        text.FontSize = 20;
+        text.Width = width;
+        text.LineHeightMultiplier = 1.5f;
+        text.RawText = rawText;
+        TextBlock full = text.GetCachedTextBlock();
+        string laidOut = string.Concat(text.WrappedText);
+
+        for (int shown = 1; shown < laidOut.Length; shown++)
+        {
+            text.MaxLettersToShow = shown;
+            TextBlock revealed = text.GetPaintTextBlock(full);
+
+            // Every full line that has a revealed letter, and no other.
+            int expectedLines = full.Lines.Count(line => line.Start < shown);
+            revealed.Lines.Count.ShouldBe(expectedLines, $"line count at {shown} letters");
+            for (int i = 0; i < revealed.Lines.Count; i++)
+            {
+                revealed.Lines[i].YCoord.ShouldBe(full.Lines[i].YCoord, 0.05f, $"top of line {i} at {shown} letters");
+            }
+        }
     }
 }

@@ -8,6 +8,7 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
+using System.Collections.ObjectModel;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -760,31 +761,59 @@ public class LayoutCoverageGapTests : BaseTestClass
         exception.Message.ShouldContain("unitOffsetY");
     }
 
-    [Fact]
-    public void UpdateLayout_ShouldThrow_WhenCenteredYOriginIsMeasuredAgainstNaNHeight()
+    /// <summary>
+    /// A renderable without the NonFiniteCheck guard, so a NaN size reaches the layout engine's own
+    /// AdjustOffsetsByOrigin check instead of being rejected by the renderable first (#6481).
+    /// </summary>
+    private sealed class UnguardedRenderable : IRenderableIpso
     {
-        ContainerRuntime element = CreateContainer(100, 100);
-        element.HeightUnits = DimensionUnitType.PercentageOfParent;
-        element.YOrigin = VerticalAlignment.Center;
-        GraphicalUiElement.CanvasHeight = float.NaN;
-
-        Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
-        // The container's renderable rejects the NaN height before the offset check is reached (#6477).
-        exception.Message.ShouldContain("Invalid Height");
+        public string? Name { get; set; }
+        public bool Visible { get; set; } = true;
+        public bool ClipsChildren { get; set; }
+        public bool IsRenderTarget { get; set; }
+        public ObservableCollection<IRenderableIpso> Children { get; } = new();
+        public IRenderableIpso? Parent { get; set; }
+        IVisible? IVisible.Parent => Parent;
+        public bool AbsoluteVisible => Visible;
+        public void SetParentDirect(IRenderableIpso? newParent) => Parent = newParent;
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public float Rotation { get; set; }
+        public bool FlipHorizontal { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
+        public object? Tag { get; set; }
+        public int Alpha => 255;
+        public ColorOperation ColorOperation => ColorOperation.Modulate;
+        public Gum.BlendState BlendState => Gum.BlendState.NonPremultiplied;
+        public bool Wrap => false;
+        public string BatchKey { get; set; } = "";
+        public object? BatchSortKey { get; set; }
+        public void Render(ISystemManagers managers) { }
+        public void PreRender() { }
+        public void StartBatch(ISystemManagers managers) { }
+        public void EndBatch(ISystemManagers managers) { }
     }
 
-    [Fact]
-    public void UpdateLayout_ShouldThrow_WhenRotatedCenteredYOriginIsMeasuredAgainstNaNHeight()
+    [Theory]
+    // Rotating the NaN origin offset spreads it to X, which is checked first.
+    [InlineData(0f, "unitOffsetY")]
+    [InlineData(45f, "unitOffsetX")]
+    public void UpdateLayout_ShouldThrow_WhenCenteredYOriginIsMeasuredAgainstNaNHeight(float rotation, string nanOffset)
     {
-        ContainerRuntime element = CreateContainer(100, 100);
+        GraphicalUiElement element = new GraphicalUiElement(new UnguardedRenderable());
+        element.WidthUnits = DimensionUnitType.Absolute;
+        element.Width = 100;
         element.HeightUnits = DimensionUnitType.PercentageOfParent;
+        element.Height = 100;
         element.YOrigin = VerticalAlignment.Center;
-        element.Rotation = 45;
+        element.Rotation = rotation;
         GraphicalUiElement.CanvasHeight = float.NaN;
 
         Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
-        // The container's renderable rejects the NaN height before the offset check is reached (#6477).
-        exception.Message.ShouldContain("Invalid Height");
+        exception.Message.ShouldContain("AdjustOffsetsByOrigin");
+        exception.Message.ShouldContain(nanOffset);
     }
 
     #endregion
