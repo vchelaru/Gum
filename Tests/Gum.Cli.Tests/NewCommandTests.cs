@@ -287,6 +287,27 @@ public class NewCommandTests : IDisposable
     }
 
     [Fact]
+    public void New_WithKniSkiaPlatform_ShouldCreateKniGameDrawingGumThroughSkia()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "kniskia", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
+        csproj.ShouldContain("<PackageReference Include=\"Gum.KniSkia\"");
+        csproj.ShouldContain("<PackageReference Include=\"SkiaGameRendering.Kni.DesktopGL\"");
+        csproj.ShouldContain("<PackageReference Include=\"nkast.Kni.Platform.SDL2.GL\"");
+        csproj.ShouldNotContain("Gum.KNI\"");
+        File.Exists(Path.Combine(projectDir, "Program.cs")).ShouldBeTrue();
+        string game = File.ReadAllText(Path.Combine(projectDir, "Game1.cs"));
+        game.ShouldContain("namespace MyGame;");
+        game.ShouldContain("GumUI.Initialize(this, \"Content/GumProject/GumProject.gumj\")");
+        game.ShouldContain("SkiaRenderTarget2D");
+        game.ShouldContain("GumUI.Draw(_canvas.Canvas)");
+    }
+
+    [Fact]
     public void New_WithUnknownPlatform_ShouldReturnExitCode2NamingValidValues()
     {
         string projectDir = Path.Combine(_tempDirectory, "MyGame");
@@ -297,6 +318,7 @@ public class NewCommandTests : IDisposable
         result.StandardError.ShouldContain("bogus");
         result.StandardError.ShouldContain("monogame");
         result.StandardError.ShouldContain("silknet");
+        result.StandardError.ShouldContain("kniskia");
         Directory.Exists(projectDir).ShouldBeFalse();
     }
 

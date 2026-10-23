@@ -1,0 +1,92 @@
+using System;
+using Gum;
+using Gum.Forms.Controls;
+using Microsoft.Xna.Framework;
+using SkiaGameRendering;
+using SkiaSharp;
+
+namespace {{RootNamespace}};
+
+// Gum draws into the SKCanvas of a SkiaRenderTarget2D (a KNI texture), which is then
+// composited onto the back buffer.
+public class Game1 : Game
+{
+    private GraphicsDeviceManager _graphics;
+    private SkiaRenderTarget2D _canvas;
+
+    GumService GumUI => GumService.Default;
+
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        IsMouseVisible = true;
+        Window.AllowUserResizing = true;
+    }
+
+    protected override void Initialize()
+    {
+        // The graphics device exists once the base Initialize has run.
+        base.Initialize();
+
+        // Create screens and components in the Gum tool, generate code, then add them here with:
+        // new MyScreen().AddToRoot();
+        GumUI.Initialize(this, "Content/GumProject/GumProject.gumj");
+
+        Button button = new Button();
+        button.AddToRoot();
+        button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        // SkiaRenderer attaches to the GraphicsDevice once KNI has created it.
+        if (!SkiaRenderer.IsInitialized && SkiaRenderer.IsReady)
+        {
+            SkiaRenderer.Initialize(GraphicsDevice);
+        }
+
+        GraphicsDevice.SetRenderTarget(null);
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        if (SkiaRenderer.IsInitialized)
+        {
+            DrawGum();
+        }
+
+        base.Draw(gameTime);
+    }
+
+    private void DrawGum()
+    {
+        int width = GraphicsDevice.PresentationParameters.BackBufferWidth;
+        int height = GraphicsDevice.PresentationParameters.BackBufferHeight;
+
+        // A SkiaRenderTarget2D has a fixed size, so a resized window needs a new one.
+        bool resized = _canvas == null || _canvas.Texture.Width != width || _canvas.Texture.Height != height;
+        if (resized)
+        {
+            _canvas?.Dispose();
+            _canvas = new SkiaRenderTarget2D(GraphicsDevice, width, height);
+            GumUI.HandleResize(width, height);
+        }
+
+        _canvas.Begin();
+        _canvas.Canvas.Clear(SKColors.Transparent);
+        GumUI.Draw(_canvas.Canvas);
+        _canvas.End();
+    }
+
+    protected override void UnloadContent()
+    {
+        _canvas?.Dispose();
+        _canvas = null;
+        SkiaRenderer.Dispose();
+        base.UnloadContent();
+    }
+}
