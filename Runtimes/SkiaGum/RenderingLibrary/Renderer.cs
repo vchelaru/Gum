@@ -217,15 +217,33 @@ namespace RenderingLibrary.Graphics
             BakeRenderTargets(whatToRender, managers);
 
             ApplyCamera(managers.Canvas, layer, matrix: null);
-            DrawList(whatToRender, managers, layer);
-            // Matches the Save in ApplyCamera: undoes this layer's camera so the next layer (or the
-            // next frame) starts from a clean matrix (#4330).
-            managers.Canvas.Restore();
+            try
+            {
+                DrawList(whatToRender, managers, layer);
+            }
+            finally
+            {
+                // Undoes this layer's camera so the next layer (or the next frame) starts from a
+                // clean matrix (#4330), even when a Render throws.
+                RestoreCamera(managers.Canvas);
+            }
         }
+
+        // The canvas matrix the active camera was applied on top of (the host's own transform) and
+        // the caller matrix applied with it. RenderLayer swaps the active camera for its layer's
+        // own on top of these, the way MonoGame's RenderLayer begins its layer's camera absolutely
+        // rather than composing it with the camera of the layer it is drawn in.
+        SKMatrix? _cameraBaseMatrix;
+        SKMatrix? _cameraCallerMatrix;
+
+        // Greater than zero while a render target's children bake. A layer drawn then (a
+        // SortableLayer among them) draws in render-target space like the other children, the way
+        // MonoGame's bake rebases its camera into that space.
+        int _bakeDepth;
 
         // Saves the canvas, then applies the camera and, when given, a caller matrix applied before it
         // (the same order MonoGame composes GumBatch's matrix with the camera view:
-        // matrix * cameraView). Every caller Restores.
+        // matrix * cameraView). Every caller undoes it with RestoreCamera.
         private void ApplyCamera(SKCanvas canvas, Layer? layer, SKMatrix? matrix)
         {
             // Issue #4330: SKCanvas is a persistent, mutate-in-place matrix stack -- unlike a fresh
@@ -233,6 +251,8 @@ namespace RenderingLibrary.Graphics
             // (raylib's BeginMode2D/EndMode2D), Scale/Translate calls accumulate onto whatever the
             // previous cycle applied unless undone. Without this Save and the caller's Restore, a
             // non-1 Camera.Zoom compounded every frame.
+            _cameraBaseMatrix = canvas.TotalMatrix;
+            _cameraCallerMatrix = matrix;
             canvas.Save();
 
             // Each layer gets its own effective camera position/zoom from LayerCameraSettings
@@ -371,7 +391,10 @@ namespace RenderingLibrary.Graphics
                 // A Draw outside a Begin/End pair draws immediately instead of queuing for an End
                 // that may never come.
                 _cycleMode = GumBatchDrawMode.Immediate;
-                _cycleCanvas?.Restore();
+                if (_cycleCanvas != null)
+                {
+                    RestoreCamera(_cycleCanvas);
+                }
                 _cycleCanvas = null;
             }
         }
@@ -425,9 +448,12 @@ namespace RenderingLibrary.Graphics
         // A layer's top-level list is sorted after PreRender, like MonoGame's RenderLayer: a stable
         // sort on Z (then Y with SecondarySortOnY), every frame, so a PreRender that moves an element
         // sorts on the moved value. Children are never sorted.
-        void DrawList(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layerToSort = null)
+        void DrawList(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layerToSort = null, bool prerender = true)
         {
-            PreRender(whatToRender);
+            if (prerender)
+            {
+                PreRender(whatToRender);
+            }
             layerToSort?.SortRenderables();
 
             var count = whatToRender.Count;
@@ -698,10 +724,17 @@ namespace RenderingLibrary.Graphics
 
             SKCanvas screenCanvas = managers.Canvas;
             managers.Canvas = offscreenCanvas;
-            DrawList(container.Children, managers);
-            managers.Canvas = screenCanvas;
-
-            offscreenCanvas.Restore();
+            _bakeDepth++;
+            try
+            {
+                DrawList(container.Children, managers);
+            }
+            finally
+            {
+                _bakeDepth--;
+                managers.Canvas = screenCanvas;
+                offscreenCanvas.Restore();
+            }
 
             // The snapshot stays valid across the frame via SkiaSharp copy-on-write; the persistent
             // surface is only re-cleared next frame, after DisposeBakedImages frees this snapshot.
@@ -814,9 +847,62 @@ namespace RenderingLibrary.Graphics
             return source;
         }
 
+        private void RestoreCamera(SKCanvas canvas)
+        {
+            canvas.Restore();
+            _cameraBaseMatrix = null;
+            _cameraCallerMatrix = null;
+        }
+
+        /// <summary>
+        /// Draws <paramref name="layer"/> on the current canvas under the layer's own camera, like
+        /// MonoGame's RenderLayer: PreRenders it (unless <paramref name="prerender"/> is false), sorts
+        /// it by Z, then draws it. A <see cref="SortableLayer"/> drawn as a renderable inside another
+        /// layer comes through here.
+        /// </summary>
         public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)
         {
-            throw new NotImplementedException();
+            if (layer.Renderables.Count == 0)
+            {
+                return;
+            }
+
+            SystemManagers skiaManagers = (SystemManagers)managers;
+            SKCanvas canvas = skiaManagers.Canvas;
+            SKMatrix? outerBaseMatrix = _cameraBaseMatrix;
+            SKMatrix? outerCallerMatrix = _cameraCallerMatrix;
+
+            if (prerender)
+            {
+                // MonoGame's PreRender bakes render targets too. The bake draws on its own offscreen
+                // canvas, so it is safe in the middle of the outer layer's walk.
+                BakeRenderTargets(layer.Renderables, skiaManagers);
+            }
+
+            if (_bakeDepth > 0)
+            {
+                DrawList(layer.Renderables, skiaManagers, layer, prerender);
+                return;
+            }
+
+            canvas.Save();
+            if (outerBaseMatrix.HasValue)
+            {
+                // Drops the camera of the layer this one is drawn in, keeping the host's transform.
+                canvas.SetMatrix(outerBaseMatrix.Value);
+            }
+            ApplyCamera(canvas, layer, outerCallerMatrix);
+            try
+            {
+                DrawList(layer.Renderables, skiaManagers, layer, prerender);
+            }
+            finally
+            {
+                canvas.Restore();
+                canvas.Restore();
+                _cameraBaseMatrix = outerBaseMatrix;
+                _cameraCallerMatrix = outerCallerMatrix;
+            }
         }
     }
 }
