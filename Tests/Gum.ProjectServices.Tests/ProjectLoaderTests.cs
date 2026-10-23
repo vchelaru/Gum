@@ -252,9 +252,7 @@ public class ProjectLoaderTests
 
             string gumxContent = File.ReadAllText(gumxPath);
             gumxContent = gumxContent.Replace("</GumProjectSave>",
-                "  <ComponentReference Name=\"RepairBase\" />
-  <ComponentReference Name=\"RepairDerived\" />
-</GumProjectSave>");
+                "  <ComponentReference Name=\"RepairBase\" />\n  <ComponentReference Name=\"RepairDerived\" />\n</GumProjectSave>");
             File.WriteAllText(gumxPath, gumxContent);
 
             ProjectLoadResult result = _sut.Load(gumxPath);
