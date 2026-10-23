@@ -409,38 +409,7 @@ public class ComboBoxFollowSplashTests : BaseTestClass
 
     #region Tree changes while open
 
-    [Fact]
-    public void Follow_RemovedFromTheTreeWhileOpenThenAddedAtAnotherPlace_PopupFollows()
-    {
-        ComboBox comboBox = CreateComboBox("Apple", "Banana", "Cherry");
-        comboBox.IsDropDownOpen = true;
-        (float X, float Y) offset = OffsetFromComboBox(comboBox);
-
-        Gum.GumService.Default.Root.Children!.Remove(comboBox.Visual);
-        Tick();
-        comboBox.X += 140;
-        Gum.GumService.Default.Root.Children.Add(comboBox.Visual);
-        Tick();
-
-        ShouldKeepOffset(comboBox, offset);
-    }
-
-    [Fact]
-    public void Follow_AncestorHiddenThenShownAtANewPosition_PopupFollowsAfterShown()
-    {
-        (ContainerRuntime container, ComboBox comboBox) = CreateInContainer();
-        comboBox.IsDropDownOpen = true;
-        (float X, float Y) offset = OffsetFromComboBox(comboBox);
-        container.Visible = false;
-        Tick();
-        container.X += 100;
-        container.UpdateLayout();
-
-        container.Visible = true;
-        Tick();
-
-        ShouldKeepOffset(comboBox, offset);
-    }
+    // Removing the ComboBox, or hiding it or an ancestor, closes the drop-down (#6681); see ComboBoxHiddenWhileOpenTests.
 
     [Fact]
     public void Follow_VisualReplacedWhileOpen_TickingDoesNotThrow()
@@ -500,25 +469,6 @@ public class ComboBoxFollowSplashTests : BaseTestClass
 
         container.IsIdle.ShouldBeTrue();
         comboBox.IsDropDownOpen.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Idle_OpenComboBoxAncestorHiddenAndShown_StaysAwakeAndKeepsFollowing()
-    {
-        (ContainerRuntime container, ComboBox comboBox) = CreateInContainer();
-        comboBox.IsDropDownOpen = true;
-        (float X, float Y) offset = OffsetFromComboBox(comboBox);
-        Tick();
-        container.Visible = false;
-        Tick();
-        container.Visible = true;
-
-        comboBox.X += 45;
-        Tick();
-        Tick();
-
-        container.IsIdle.ShouldBeFalse();
-        ShouldKeepOffset(comboBox, offset);
     }
 
     [Fact]

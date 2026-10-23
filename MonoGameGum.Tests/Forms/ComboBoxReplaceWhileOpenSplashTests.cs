@@ -1,0 +1,164 @@
+using System;
+using System.Linq;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
+using MonoGameGum.Tests.Input;
+using Moq;
+using RenderingLibrary;
+using Shouldly;
+using Xunit;
+
+namespace MonoGameGum.Tests.Forms;
+
+/// <summary>
+/// Splash-damage finding from #6644, fixed by #6684: replacing a ComboBox's ListBox or Visual while the
+/// drop-down is open closes the drop-down, so the old popup is not left in PopupRoot.
+/// </summary>
+public class ComboBoxReplaceWhileOpenSplashTests : BaseTestClass
+{
+    private static ComboBox CreateComboBox(params string[] items)
+    {
+        ComboBox comboBox = new();
+        comboBox.AddToRoot();
+        foreach (string item in items)
+        {
+            comboBox.Items!.Add(item);
+        }
+        return comboBox;
+    }
+
+    private static void PushElsewhere()
+    {
+        float x = GraphicalUiElement.CanvasWidth - 1;
+        float y = GraphicalUiElement.CanvasHeight - 1;
+        Mock<ICursor> cursor = new();
+        cursor.Setup(c => c.PrimaryPush).Returns(true);
+        cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(c => c.X).Returns((int)x);
+        cursor.Setup(c => c.Y).Returns((int)y);
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(y);
+        Gum.Forms.FormsUtilities.SetCursor(cursor.Object);
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+    }
+
+    [Fact]
+    public void ListBox_ReplacedWhileClosed_ChangesNothingInThePopupRoot()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        int popupRootChildren = FrameworkElement.PopupRoot.Children!.Count;
+
+        comboBox.ListBox = new ListBox();
+
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+        FrameworkElement.PopupRoot.Children!.Count.ShouldBe(popupRootChildren);
+    }
+
+    [Fact]
+    public void ListBox_ReplacedWhileOpen_ComboBoxIsClosedAndOldPopupIsHidden()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        ListBox original = comboBox.ListBox;
+        comboBox.IsDropDownOpen = true;
+        ListBox replacement = new();
+
+        comboBox.ListBox = replacement;
+
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+        original.IsVisible.ShouldBeFalse();
+        original.Visual.Parent.ShouldBeNull();
+        replacement.IsVisible.ShouldBeFalse();
+        FrameworkElement.PopupRoot.Children!.ShouldNotContain(replacement.Visual);
+    }
+
+    [Fact]
+    public void ListBox_ReplacedWhileOpen_LaterPushElsewhereDoesNotMoveFocusToTheComboBox()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        Button other = new();
+        other.AddToRoot();
+        comboBox.IsFocused = true;
+        comboBox.IsDropDownOpen = true;
+        comboBox.ListBox = new ListBox();
+        other.IsFocused = true;
+
+        // Runs the push action the open drop-down queued, as a click outside the ComboBox would.
+        PushElsewhere();
+
+        other.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_ReplacedWhileOpen_OldPopupIsNotLeftInPopupRoot()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        ListBox original = comboBox.ListBox;
+        comboBox.IsDropDownOpen = true;
+
+        comboBox.ListBox = new ListBox();
+
+        FrameworkElement.PopupRoot.Children!.ShouldNotContain(original.Visual);
+    }
+
+    [Fact]
+    public void ListBox_ReplacedWhileOpen_ReplacementOpensInThePopupRoot()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        ListBox original = comboBox.ListBox;
+        comboBox.IsDropDownOpen = true;
+        ListBox replacement = new();
+        comboBox.ListBox = replacement;
+
+        comboBox.IsDropDownOpen = true;
+
+        comboBox.IsDropDownOpen.ShouldBeTrue();
+        FrameworkElement.PopupRoot.Children!.ShouldContain(replacement.Visual);
+        FrameworkElement.PopupRoot.Children!.ShouldNotContain(original.Visual);
+    }
+
+    [Fact]
+    public void Visual_ReplacedWhileOpen_PopupIsNotLeftInPopupRoot()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        comboBox.IsDropDownOpen = true;
+
+        comboBox.Visual = null!;
+
+        FrameworkElement.PopupRoot.Children!.ShouldNotContain(popup);
+    }
+
+    [Fact]
+    public void Visual_ReplacedWithAnotherWhileOpen_ComboBoxIsClosedAndCanOpenAgain()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        GraphicalUiElement oldPopup = comboBox.ListBox.Visual;
+        comboBox.IsDropDownOpen = true;
+
+        comboBox.Visual = new Gum.Forms.DefaultVisuals.V3.ComboBoxVisual(
+            fullInstantiation: true, tryCreateFormsObject: false);
+
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+        FrameworkElement.PopupRoot.Children!.ShouldNotContain(oldPopup);
+        comboBox.Visual.AddToRoot();
+        comboBox.IsDropDownOpen = true;
+        FrameworkElement.PopupRoot.Children!.ShouldContain(comboBox.ListBox.Visual);
+    }
+
+    [Fact]
+    public void Visual_ReplacedWhileOpen_LaterPushElsewhereDoesNotMoveFocusToTheComboBox()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        Button other = new();
+        other.AddToRoot();
+        comboBox.IsFocused = true;
+        comboBox.IsDropDownOpen = true;
+        comboBox.Visual = null!;
+        other.IsFocused = true;
+
+        PushElsewhere();
+
+        other.IsFocused.ShouldBeTrue();
+    }
+}
