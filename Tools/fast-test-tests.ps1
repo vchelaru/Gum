@@ -51,3 +51,4 @@ finally { Remove-Item -Recurse -Force $scratch -ErrorAction SilentlyContinue }
 
 if ($failures -gt 0) { Write-Host "`n$failures failed"; exit 1 }
 Write-Host "`nall passed"
+exit 0
