@@ -176,10 +176,13 @@ namespace MonoGameGumInCode
 
         protected override void Update(GameTime gameTime)
         {
+            bool isAutomated = false;
 #if DEBUG
             _automation?.BeforeUpdate();
+            // An automation run reads no OS input; the script's scripted cursor and keyboard drive Gum.
+            isAutomated = _automation != null;
 #endif
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (!isAutomated && (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape)))
                 Exit();
 
             GumService.Default.Update(gameTime);

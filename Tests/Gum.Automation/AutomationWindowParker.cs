@@ -44,6 +44,10 @@ public sealed class AutomationWindowParker
     public static AutomationWindowParker? CreateForCurrentPlatform() =>
         OperatingSystem.IsWindows() ? new AutomationWindowParker(new Win32WindowPlacer()) : null;
 
+    /// <summary>The window that owns keyboard focus (Windows), otherwise zero.</summary>
+    public static IntPtr ForegroundWindow() =>
+        OperatingSystem.IsWindows() ? Win32WindowPlacer.Foreground() : IntPtr.Zero;
+
     /// <summary>Parks the window; the first call with a window also returns focus to the window below.</summary>
     public void Tick()
     {
@@ -147,6 +151,8 @@ internal sealed class Win32WindowPlacer : IWindowPlacer
     public IntPtr MainWindow => System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle;
 
     public bool IsForeground(IntPtr window) => GetForegroundWindow() == window;
+
+    internal static IntPtr Foreground() => GetForegroundWindow();
 
     public IntPtr WindowBelow(IntPtr window)
     {

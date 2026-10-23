@@ -71,11 +71,10 @@ public sealed class GumAutomationHost
         }
         string? reportPath = ValueAfter(args, ReportFlag);
         AutomationWindowParker? parker = args.Contains(HideFlag) ? AutomationWindowParker.CreateForCurrentPlatform() : null;
+        IntPtr foregroundAtStart = AutomationWindowParker.ForegroundWindow();
         if (parker != null)
         {
-            // Placed before the window is first shown where the platform allows it; the parker
-            // repeats the move every frame because MonoGame re-centers the window when it sizes it.
-            game.Window.Position = new Point(-32000, -32000);
+            HideBeforeFirstShow(game);
         }
 
         GumAutomationHost? host = null;
@@ -83,6 +82,12 @@ public sealed class GumAutomationHost
             game, parker, result =>
             {
                 string report = result.ToString() + (result.Passed ? "AUTOMATION PASSED" : "AUTOMATION FAILED");
+                if (parker != null)
+                {
+                    // Read in-process: the hidden run must leave the user's foreground window alone.
+                    bool unchanged = AutomationWindowParker.ForegroundWindow() == foregroundAtStart;
+                    report += Environment.NewLine + (unchanged ? "FOREGROUND UNCHANGED" : "FOREGROUND CHANGED");
+                }
                 Console.WriteLine(report);
                 if (reportPath != null)
                 {
@@ -93,6 +98,25 @@ public sealed class GumAutomationHost
             });
         host.Driver.ScreenshotWriter = path => host.RunOnGameThread(() => SaveGumFrame(game.GraphicsDevice, path));
         return host;
+    }
+
+    /// <summary>
+    /// Keeps the window off-screen and unfocused from its first frame. MonoGame DesktopGL creates the
+    /// SDL window hidden, sizes and centers it when the device is created, and shows it when the loop
+    /// starts. SDL's <c>SDL_WINDOW_NO_ACTIVATION_WHEN_SHOWN</c> hint (read from the environment when
+    /// the window is shown) stops that show from taking focus, and moving the window once the device
+    /// exists puts it off-screen before it is shown.
+    /// </summary>
+    private static void HideBeforeFirstShow(Game game)
+    {
+        Environment.SetEnvironmentVariable("SDL_WINDOW_NO_ACTIVATION_WHEN_SHOWN", "1");
+        Point offScreen = new Point(-32000, -32000);
+        game.Window.Position = offScreen;
+        if (game.Services.GetService(typeof(IGraphicsDeviceService)) is IGraphicsDeviceService graphics)
+        {
+            graphics.DeviceCreated += (_, _) => game.Window.Position = offScreen;
+            graphics.DeviceReset += (_, _) => game.Window.Position = offScreen;
+        }
     }
 
     /// <summary>The driver the script runs through.</summary>
