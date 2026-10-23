@@ -12,4 +12,12 @@ public class BaseTestClassTests
     {
         FileManagerStateAssert.DisposeRestores(() => new BaseTestClass());
     }
+
+    // SystemManagers.Initialize sets MissingFileBehavior to ThrowException, so a test that initializes
+    // a runtime would otherwise make every later test throw on a missing file (#6556).
+    [Fact]
+    public void Dispose_RestoresGraphicalUiElementState_WhenATestChangedIt()
+    {
+        GraphicalUiElementStateAssert.DisposeRestores(() => new BaseTestClass());
+    }
 }

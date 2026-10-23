@@ -10,16 +10,8 @@ namespace Gum.Cli.Tests;
 // the same process (screenshot --backend raylib exercises only one). See ScreenshotCommandTests for
 // why raylib itself is Windows-only in CI; MonoGame DesktopGL needs the same Mesa llvmpipe override
 // there (already wired for this project, #4174).
-public class DiffScreenshotsCommandTests : IDisposable
+public class DiffScreenshotsCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public DiffScreenshotsCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliDiffScreenshotsTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void DiffScreenshots_IdenticallyRenderingProject_ReturnsExitCode0()
     {
@@ -29,7 +21,7 @@ public class DiffScreenshotsCommandTests : IDisposable
         }
 
         string projectPath = CreateProjectWithScreen();
-        string outputDirectory = Path.Combine(_tempDirectory, "renders");
+        string outputDirectory = Path.Combine(TempDirectory, "renders");
 
         CliTestHelper result = CliTestHelper.Run(
             "diff-screenshots", projectPath, "--output", outputDirectory);
@@ -46,7 +38,7 @@ public class DiffScreenshotsCommandTests : IDisposable
     public void DiffScreenshots_ProjectFileDoesNotExist_ReturnsExitCode2()
     {
         CliTestHelper result = CliTestHelper.Run(
-            "diff-screenshots", Path.Combine(_tempDirectory, "DoesNotExist.gumx"));
+            "diff-screenshots", Path.Combine(TempDirectory, "DoesNotExist.gumx"));
 
         result.ExitCode.ShouldBe(2);
         result.StandardError.ShouldContain("not found");
@@ -54,7 +46,7 @@ public class DiffScreenshotsCommandTests : IDisposable
 
     private string CreateProjectWithScreen()
     {
-        string projectPath = Path.Combine(_tempDirectory, "Project.gumx");
+        string projectPath = Path.Combine(TempDirectory, "Project.gumx");
 
         ProjectCreator creator = new ProjectCreator();
         GumProjectSave project = creator.Create(projectPath);
@@ -73,13 +65,5 @@ public class DiffScreenshotsCommandTests : IDisposable
         project.Save(projectPath, saveElements: true);
 
         return projectPath;
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

@@ -14,7 +14,7 @@ namespace Gum.Cli.Tests;
 /// placeholders in FormsControlPlaceholders.cs, so these tests compare the generated output
 /// against the real MonoGameGum types.
 /// </summary>
-public class FormsTemplateCodegenHidingTests : IDisposable
+public class FormsTemplateCodegenHidingTests : BaseTestClass
 {
     private static readonly Regex ClassRegex = new Regex(
         @"^partial class \w+ : global::(?<base>Gum\.Forms\.Controls\.\w+)", RegexOptions.Multiline);
@@ -24,20 +24,12 @@ public class FormsTemplateCodegenHidingTests : IDisposable
         @"^    public (?<modifiers>(?:(?:static|override|new|virtual|const|readonly) )*)(?<type>[\w\.<>\?\[\],:]+) (?<name>\w+)\s*(\{|;|=|$)",
         RegexOptions.Multiline);
 
-    private readonly string _tempDirectory;
-
-    public FormsTemplateCodegenHidingTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliHidingTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void Codegen_FormsTemplate_DoesNotHideMembersOfRealFormsBaseClass()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new FormsTemplateCreator().Create(gumxPath);
-        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup>" +
             "<PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.4\" />" +
             "</ItemGroup></Project>");
@@ -50,7 +42,7 @@ public class FormsTemplateCodegenHidingTests : IDisposable
         List<string> hidden = new List<string>();
         int checkedClasses = 0;
 
-        foreach (string path in Directory.GetFiles(_tempDirectory, "*.Generated.cs", SearchOption.AllDirectories))
+        foreach (string path in Directory.GetFiles(TempDirectory, "*.Generated.cs", SearchOption.AllDirectories))
         {
             string code = File.ReadAllText(path);
             Match classMatch = ClassRegex.Match(code);
@@ -91,13 +83,5 @@ public class FormsTemplateCodegenHidingTests : IDisposable
             PropertyInfo property => Array.Exists(property.GetAccessors(true), IsVisibleToDerivedClass),
             _ => true
         };
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

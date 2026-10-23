@@ -13,18 +13,10 @@ namespace Gum.Cli.Tests;
 /// Every bundled Forms theme, created through <c>gumcli new --theme</c>, must generate code that does not
 /// assign TextRuntime-only members through <c>Visual</c>, which is typed InteractiveGue (#5933).
 /// </summary>
-public class ThemeCodegenTests : IDisposable
+public class ThemeCodegenTests : BaseTestClass
 {
     private static readonly Regex TextOnlyVisualAssignment = new Regex(
         @"Visual\.(Font|FontSize|IsBold|IsItalic|Red|Green|Blue)\s*=");
-
-    private readonly string _tempDirectory;
-
-    public ThemeCodegenTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliThemeCodegen_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
 
     public static IEnumerable<object[]> ThemeNames()
     {
@@ -39,7 +31,7 @@ public class ThemeCodegenTests : IDisposable
     [MemberData(nameof(ThemeNames))]
     public void Codegen_ThemeProject_DoesNotAssignTextOnlyMembersThroughVisual(string theme)
     {
-        string projectDirectory = Path.Combine(_tempDirectory, "ThemeGame");
+        string projectDirectory = Path.Combine(TempDirectory, "ThemeGame");
         CliTestHelper.Run("new", projectDirectory, "--theme", theme, "--platform", "monogame", "--no-restore")
             .ExitCode.ShouldBe(0);
         string gumFolder = Path.Combine(projectDirectory, "Content", "GumProject");
@@ -73,13 +65,5 @@ public class ThemeCodegenTests : IDisposable
         public void PrintOutput(string message) { }
 
         public void PrintError(string message) { }
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

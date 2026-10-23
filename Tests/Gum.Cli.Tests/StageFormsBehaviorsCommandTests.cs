@@ -4,33 +4,17 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class StageFormsBehaviorsCommandTests : IDisposable
+public class StageFormsBehaviorsCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public StageFormsBehaviorsCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliStageFormsBehaviorsTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
-    }
-
     [Fact]
     public void StageFormsBehaviors_LinkedBehaviorWithOverride_WritesResolvedFileAndExitCode0()
     {
-        string sharedDir = Path.Combine(_tempDirectory, "FormsBehaviors");
+        string sharedDir = Path.Combine(TempDirectory, "FormsBehaviors");
         Directory.CreateDirectory(sharedDir);
         new BehaviorSave { Name = "ButtonBehavior", DefaultImplementation = "Controls/ButtonStandard" }
             .Save(Path.Combine(sharedDir, "ButtonBehavior.behx"), useCompactFormat: true);
 
-        string themeDir = Path.Combine(_tempDirectory, "Bubblegum");
+        string themeDir = Path.Combine(TempDirectory, "Bubblegum");
         Directory.CreateDirectory(themeDir);
         GumProjectSave themeProject = new();
         themeProject.BehaviorReferences.Add(new BehaviorReference
@@ -42,7 +26,7 @@ public class StageFormsBehaviorsCommandTests : IDisposable
         string themeGumxPath = Path.Combine(themeDir, "GumProject.gumx");
         themeProject.Save(themeGumxPath, saveElements: false);
 
-        string destinationDir = Path.Combine(_tempDirectory, "Staged", "Behaviors");
+        string destinationDir = Path.Combine(TempDirectory, "Staged", "Behaviors");
 
         CliTestHelper result = CliTestHelper.Run("stage-forms-behaviors", themeGumxPath, destinationDir);
 
@@ -55,8 +39,8 @@ public class StageFormsBehaviorsCommandTests : IDisposable
     [Fact]
     public void StageFormsBehaviors_MissingProjectFile_ShouldReturnExitCode2()
     {
-        string fakePath = Path.Combine(_tempDirectory, "nonexistent.gumx");
-        string destinationDir = Path.Combine(_tempDirectory, "Staged", "Behaviors");
+        string fakePath = Path.Combine(TempDirectory, "nonexistent.gumx");
+        string destinationDir = Path.Combine(TempDirectory, "Staged", "Behaviors");
 
         CliTestHelper result = CliTestHelper.Run("stage-forms-behaviors", fakePath, destinationDir);
 

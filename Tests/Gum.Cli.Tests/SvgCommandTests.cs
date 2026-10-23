@@ -6,21 +6,13 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class SvgCommandTests : IDisposable
+public class SvgCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public SvgCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliSvgTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void Svg_WithValidProject_WritesSvgFile()
     {
         string projectPath = CreateProjectWithScreen();
-        string outputPath = Path.Combine(_tempDirectory, "Screen.svg");
+        string outputPath = Path.Combine(TempDirectory, "Screen.svg");
 
         CliTestHelper result = CliTestHelper.Run("svg", projectPath, "Screen", "--output", outputPath);
 
@@ -31,7 +23,7 @@ public class SvgCommandTests : IDisposable
     [Fact]
     public void Svg_WithMissingProject_ReturnsExitCode2()
     {
-        string projectPath = Path.Combine(_tempDirectory, "DoesNotExist.gumx");
+        string projectPath = Path.Combine(TempDirectory, "DoesNotExist.gumx");
 
         CliTestHelper result = CliTestHelper.Run("svg", projectPath, "Screen");
 
@@ -46,7 +38,7 @@ public class SvgCommandTests : IDisposable
     public void ExportSvgInProcess_WithValidProject_ReturnsNullAndWritesSvgFile()
     {
         string projectPath = CreateProjectWithScreen();
-        string outputPath = Path.Combine(_tempDirectory, "Screen.svg");
+        string outputPath = Path.Combine(TempDirectory, "Screen.svg");
 
         string? error = SvgCommand.ExportSvgInProcess(projectPath, "Screen", outputPath);
 
@@ -58,7 +50,7 @@ public class SvgCommandTests : IDisposable
     public void ExportSvgInProcess_WithUnknownElement_ReturnsErrorMessage()
     {
         string projectPath = CreateProjectWithScreen();
-        string outputPath = Path.Combine(_tempDirectory, "Screen.svg");
+        string outputPath = Path.Combine(TempDirectory, "Screen.svg");
 
         string? error = SvgCommand.ExportSvgInProcess(projectPath, "NoSuchScreen", outputPath);
 
@@ -69,7 +61,7 @@ public class SvgCommandTests : IDisposable
 
     private string CreateProjectWithScreen()
     {
-        string projectPath = Path.Combine(_tempDirectory, "Project.gumx");
+        string projectPath = Path.Combine(TempDirectory, "Project.gumx");
 
         ProjectCreator creator = new ProjectCreator();
         GumProjectSave project = creator.Create(projectPath);
@@ -88,13 +80,5 @@ public class SvgCommandTests : IDisposable
         project.Save(projectPath, saveElements: true);
 
         return projectPath;
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

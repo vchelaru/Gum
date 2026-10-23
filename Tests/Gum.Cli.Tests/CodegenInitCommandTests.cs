@@ -4,24 +4,16 @@ using System.IO;
 
 namespace Gum.Cli.Tests;
 
-public class CodegenInitCommandTests : IDisposable
+public class CodegenInitCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public CodegenInitCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliCodegenInitTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void CodegenInit_WhenCodsjAlreadyExists_ReturnsExitCode2WithoutForce()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         File.WriteAllText(gumxPath, "");
-        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
+        string csprojPath = Path.Combine(TempDirectory, "MyGame.csproj");
         File.WriteAllText(csprojPath, "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
-        string codsjPath = Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj");
+        string codsjPath = Path.Combine(TempDirectory, "ProjectCodeSettings.codsj");
         File.WriteAllText(codsjPath, "{}");
 
         CliTestHelper result = CliTestHelper.Run("codegen-init", gumxPath);
@@ -33,11 +25,11 @@ public class CodegenInitCommandTests : IDisposable
     [Fact]
     public void CodegenInit_WhenCodsjAlreadyExistsWithForce_Overwrites()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         File.WriteAllText(gumxPath, "");
-        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
+        string csprojPath = Path.Combine(TempDirectory, "MyGame.csproj");
         File.WriteAllText(csprojPath, "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
-        string codsjPath = Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj");
+        string codsjPath = Path.Combine(TempDirectory, "ProjectCodeSettings.codsj");
         File.WriteAllText(codsjPath, "{}");
 
         CliTestHelper result = CliTestHelper.Run("codegen-init", gumxPath, "--force");
@@ -51,24 +43,24 @@ public class CodegenInitCommandTests : IDisposable
     [Fact]
     public void CodegenInit_WhenCsprojExists_CreatesCodsj()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         File.WriteAllText(gumxPath, "");
-        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
+        string csprojPath = Path.Combine(TempDirectory, "MyGame.csproj");
         File.WriteAllText(csprojPath, "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
 
         CliTestHelper result = CliTestHelper.Run("codegen-init", gumxPath);
 
         result.ExitCode.ShouldBe(0);
-        string codsjPath = Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj");
+        string codsjPath = Path.Combine(TempDirectory, "ProjectCodeSettings.codsj");
         File.Exists(codsjPath).ShouldBeTrue();
     }
 
     [Fact]
     public void CodegenInit_WhenCsprojExists_PrintsConfiguredValues()
     {
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         File.WriteAllText(gumxPath, "");
-        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
+        string csprojPath = Path.Combine(TempDirectory, "MyGame.csproj");
         File.WriteAllText(csprojPath, "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
 
         CliTestHelper result = CliTestHelper.Run("codegen-init", gumxPath);
@@ -82,10 +74,10 @@ public class CodegenInitCommandTests : IDisposable
     [Fact]
     public void CodegenInit_UnityProjectWithExplicitCsproj_RecordsItAndWritesCodeUnderAssets()
     {
-        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Assets"));
-        string csprojPath = Path.Combine(_tempDirectory, "Assembly-CSharp.csproj");
+        Directory.CreateDirectory(Path.Combine(TempDirectory, "Assets"));
+        string csprojPath = Path.Combine(TempDirectory, "Assembly-CSharp.csproj");
         File.WriteAllText(csprojPath, "<Project></Project>");
-        string gumDirectory = Path.Combine(_tempDirectory, "Assets", "StreamingAssets", "GumProject");
+        string gumDirectory = Path.Combine(TempDirectory, "Assets", "StreamingAssets", "GumProject");
         Directory.CreateDirectory(gumDirectory);
         string gumxPath = Path.Combine(gumDirectory, "MyProject.gumx");
         File.WriteAllText(gumxPath, "");
@@ -135,19 +127,11 @@ public class CodegenInitCommandTests : IDisposable
     [Fact]
     public void CodegenInit_WhenProjectFileNotFound_ReturnsExitCode2()
     {
-        string nonExistentPath = Path.Combine(_tempDirectory, "DoesNotExist.gumx");
+        string nonExistentPath = Path.Combine(TempDirectory, "DoesNotExist.gumx");
 
         CliTestHelper result = CliTestHelper.Run("codegen-init", nonExistentPath);
 
         result.ExitCode.ShouldBe(2);
         result.StandardError.ShouldContain("error");
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }
