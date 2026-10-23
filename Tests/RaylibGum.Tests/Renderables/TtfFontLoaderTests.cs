@@ -72,6 +72,30 @@ public class TtfFontLoaderTests : BaseTestClass
     }
 
     [Fact]
+    public void LineHeight_RawFontReusingTheTextureIdOfAFontFreedWithoutUnload_IsItsOwn()
+    {
+        // Freeing a TtfFontLoader font with raylib's UnloadFont leaves its registered metrics behind; a later
+        // font that gets the same texture id must not pick them up.
+        string path = Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "OpenSans-Regular.ttf");
+        Font registered = TtfFontLoader.LoadFont(path, 24);
+        uint staleTextureId = registered.Texture.Id;
+        UnloadFont(registered);
+
+        Font raw = LoadFontEx(path, 40, null, 0);
+        try
+        {
+            raw.Texture.Id.ShouldBe(staleTextureId, "sanity check: raylib must reuse the freed texture id");
+
+            LineHeightOf(raw).ShouldBe(40);
+        }
+        finally
+        {
+            UnloadFont(raw);
+            RaylibFontMetricsRegistry.Remove(staleTextureId);
+        }
+    }
+
+    [Fact]
     public void LoadContent_TtfFile_LoadsAtTheSameSizeAsTtfFontLoader()
     {
         // ContentLoader's own TTF branch must size the font the same way as every other raylib TTF load.

@@ -37,7 +37,7 @@ public static class TtfFontLoader
         }
 
         int baselineY = (int)(ascent * (loadSize / (float)(ascent - descent)));
-        RaylibFontMetricsRegistry.Register(font.Texture.Id, loadSize, baselineY);
+        RaylibFontMetricsRegistry.Register(font.Texture, fontSize, loadSize, baselineY);
         // raylib draws a glyph scaled by the requested draw size over BaseSize, so a BaseSize of the em draws
         // the atlas 1:1 at FontSize, and every size Gum derives from BaseSize is in em units.
         font.BaseSize = fontSize;

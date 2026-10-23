@@ -460,7 +460,7 @@ public sealed class ContentLoader : IContentLoader
         // raylib's Font has no lineHeight/base field, so record the .fnt's values keyed by the atlas
         // texture id. The Text renderable uses these for line height and descender so raylib matches
         // the MonoGame BitmapFont; without it, line height collapses to BaseSize (no descender region).
-        RaylibFontMetricsRegistry.Register(pageTexture.Id, common.LineHeight, common.Base);
+        RaylibFontMetricsRegistry.Register(pageTexture, info.Size, common.LineHeight, common.Base);
 
         // Apply the project's texture filter (#3496) once, here, since every bitmap-font
         // construction path (BuildBitmapFont, KernSmith's BuildFontFromFntText)
