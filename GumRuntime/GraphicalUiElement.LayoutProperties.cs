@@ -415,6 +415,11 @@ public partial class GraphicalUiElement
     // rotation) would move it or depend on it.
     bool CanPlacePositionDirectly(XOrY axis)
     {
+        // A rotated element's origin offset turns with it, so each axis depends on the other origin.
+        if (mRotation != 0)
+        {
+            return false;
+        }
         var effectiveParent = EffectiveParentGue;
         if (effectiveParent == null)
         {

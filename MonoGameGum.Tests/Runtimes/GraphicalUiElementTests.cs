@@ -18,6 +18,28 @@ using System.Collections.ObjectModel;
 namespace MonoGameGum.Tests.Runtimes;
 public class GraphicalUiElementTests : BaseTestClass
 {
+    // A rotated element's origin offset turns with it, so setting X on a centered-Y element moves
+    // its drawn top-left by more than X alone; X must not be copied straight to the renderable (#6609).
+    [Fact]
+    public void X_RotatedCenteredYElement_ShouldMatchFullLayout()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 300;
+        parent.Height = 40;
+        ContainerRuntime sut = new();
+        sut.Height = 20;
+        sut.YOrigin = VerticalAlignment.Center;
+        sut.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        sut.Rotation = 30;
+        parent.AddChild(sut);
+
+        sut.X = 25;
+        float placedX = ((IPositionedSizedObject)sut).X;
+        sut.UpdateLayout();
+
+        placedX.ShouldBe(((IPositionedSizedObject)sut).X, 0.001f);
+    }
+
 
     #region Constructor Tests
 
