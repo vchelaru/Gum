@@ -28,13 +28,14 @@ public class ComboBoxReplaceWhileOpenSplashTests : BaseTestClass
         return comboBox;
     }
 
-    private static void PushElsewhere()
+    private static void PushElsewhere(InteractiveGue? visualOver = null)
     {
         float x = GraphicalUiElement.CanvasWidth - 1;
         float y = GraphicalUiElement.CanvasHeight - 1;
         Mock<ICursor> cursor = new();
         cursor.Setup(c => c.PrimaryPush).Returns(true);
         cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(c => c.VisualOver).Returns(visualOver);
         cursor.Setup(c => c.X).Returns((int)x);
         cursor.Setup(c => c.Y).Returns((int)y);
         cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
@@ -87,6 +88,20 @@ public class ComboBoxReplaceWhileOpenSplashTests : BaseTestClass
         PushElsewhere();
 
         other.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_ReplacedWhileOpen_PushOverTheComboBoxDoesNotKeepTheOldPushActionAlive()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        comboBox.IsDropDownOpen = true;
+        comboBox.ListBox = new ListBox();
+
+        // A push over the ComboBox is what makes an open drop-down queue its push action again.
+        PushElsewhere(comboBox.Visual);
+        PushElsewhere(comboBox.Visual);
+
+        InteractiveGue.PendingNextPushActionCount.ShouldBe(0);
     }
 
     [Fact]
@@ -154,7 +169,8 @@ public class ComboBoxReplaceWhileOpenSplashTests : BaseTestClass
         other.AddToRoot();
         comboBox.IsFocused = true;
         comboBox.IsDropDownOpen = true;
-        comboBox.Visual = null!;
+        comboBox.Visual = new Gum.Forms.DefaultVisuals.V3.ComboBoxVisual(
+            fullInstantiation: true, tryCreateFormsObject: false);
         other.IsFocused = true;
 
         PushElsewhere();

@@ -74,6 +74,13 @@ public class ComboBox :
             // and parenting properly!
             if(value != listBox)
             {
+                // The old list box may be the open popup; closing it first removes it from the popup
+                // layer and puts its layout values back (#6684).
+                if (listBox != null && listBox.IsVisible)
+                {
+                    HideListBox();
+                }
+
                 listBox = value;
 
                 listBox.IsVisible = false;
@@ -358,6 +365,12 @@ public class ComboBox :
     /// <inheritdoc/>
     protected override void ReactToVisualRemoved()
     {
+        // The popup lives outside this Visual; close it while the old Visual is still available (#6684).
+        if (listBox != null && listBox.IsVisible)
+        {
+            HideListBox();
+        }
+
         base.ReactToVisualRemoved();
 
         // FRB1 only: these lambdas cannot be unsubscribed when the Visual is replaced, so the old
@@ -514,6 +527,8 @@ public class ComboBox :
 #else
 
         InteractiveGue.AddNextPushAction(TryHideFromPush, Visual);
+
+        WatchAncestorsWhileOpen();
 #endif
 
 
@@ -599,8 +614,69 @@ public class ComboBox :
     }
 #endif
 
+#if !FRB
+    // While open, the popup is in the popup layer, so hiding this ComboBox or an ancestor, or detaching
+    // it from the tree, would leave the popup on screen: AnimateSelf skips hidden elements, so Activity
+    // never ticks to notice. Instead of polling, the drop-down listens to the visibility and parent
+    // changes of the Visual and each ancestor, and closes itself the way a native combo box does (#6681).
+    readonly List<GraphicalUiElement> _watchedAncestors = new();
+
+    private void WatchAncestorsWhileOpen()
+    {
+        StopWatchingAncestors();
+
+        GraphicalUiElement? current = Visual;
+        while (current != null)
+        {
+            current.VisibleChanged += HandleWatchedVisibleChanged;
+            current.ParentChanged += HandleWatchedParentChanged;
+            _watchedAncestors.Add(current);
+            current = current.Parent;
+        }
+    }
+
+    private void StopWatchingAncestors()
+    {
+        for (int i = 0; i < _watchedAncestors.Count; i++)
+        {
+            _watchedAncestors[i].VisibleChanged -= HandleWatchedVisibleChanged;
+            _watchedAncestors[i].ParentChanged -= HandleWatchedParentChanged;
+        }
+        _watchedAncestors.Clear();
+    }
+
+    private void HandleWatchedVisibleChanged(object? sender, EventArgs args)
+    {
+        if (!Visual.AbsoluteVisible)
+        {
+            HideListBox(restoreFocus: false);
+        }
+    }
+
+    private void HandleWatchedParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs args)
+    {
+        if (args.NewValue == null || !Visual.AbsoluteVisible)
+        {
+            // Detached from the tree, or moved somewhere hidden.
+            HideListBox(restoreFocus: false);
+        }
+        else
+        {
+            // Moved to another parent: the popup follows through Activity, and the ancestors to listen to changed.
+            WatchAncestorsWhileOpen();
+        }
+    }
+#endif
+
     private void TryHideFromPush()
     {
+        // A push action queued by an earlier open can run after the drop-down closed (or its ListBox or
+        // Visual was replaced); there is nothing to hide, and it must not queue itself again.
+        if (!IsDropDownOpen)
+        {
+            return;
+        }
+
         var cursor = MainCursor;
 
 
@@ -630,10 +706,18 @@ public class ComboBox :
         }
     }
 
-    private void HideListBox()
+    private void HideListBox(bool restoreFocus = true)
     {
-        if (Visual.EffectiveManagers != null && listBox.IsVisible)
+#if !FRB
+        StopWatchingAncestors();
+#endif
+
+        if (listBox.IsVisible)
         {
+            // The ComboBox may already be out of the tree (its Visual has no managers), but the popup is
+            // in the popup layer, which does.
+            var managers = Visual?.EffectiveManagers ?? listBox.Visual.EffectiveManagers;
+
             listBox.IsVisible = false;
             // Don't do this, because doing so removes the bindings
             //listBox.Visual.RemoveFromManagers();
@@ -641,18 +725,18 @@ public class ComboBox :
 
             RestoreListBoxLayoutValues();
 
-            Visual.EffectiveManagers.Renderer.MainLayer.Remove(listBox.Visual);
+            managers?.Renderer.MainLayer.Remove(listBox.Visual);
 #if FRB
 #else
             listBox.Visual.GetTopParent()?.Children.Remove(listBox.Visual);
 #endif
 
             UpdateState();
-        }
 
-        if(_hadFocusOnListBoxOpened)
-        {
-            IsFocused = true;
+            if (restoreFocus && _hadFocusOnListBoxOpened)
+            {
+                IsFocused = true;
+            }
         }
     }
 
