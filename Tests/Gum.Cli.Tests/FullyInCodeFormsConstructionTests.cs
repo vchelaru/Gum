@@ -95,6 +95,39 @@ public class FullyInCodeFormsConstructionTests : IDisposable
         Get(button, "FocusedIndicator.Parent").ShouldBeSameAs(Get(button, "Visual"));
     }
 
+    [Theory]
+    [InlineData("ButtonCloseDerived", "Background,Icon,FocusedIndicator,Extra")]
+    [InlineData("ButtonCloseThirdLevel", "Background,Icon,FocusedIndicator,Extra,ThirdExtra")]
+    [InlineData("ChainC", "AChild,BChild,CChild")]
+    public void Constructor_DerivedChain_ParentsEachChildOnceInLevelOrder(string typeName, string expectedChildren)
+    {
+        object control = Construct(GenerateAndCompile(), typeName);
+
+        ChildNames(Get(control, "Visual")!).ShouldBe(expectedChildren);
+    }
+
+    [Fact]
+    public void Constructor_DerivedLevelReparentingABaseChild_MovesIt()
+    {
+        object control = Construct(GenerateAndCompile(), "ChainReparent");
+        object visual = Get(control, "Visual")!;
+
+        ChildNames(visual).ShouldBe("AChild,Holder");
+        ChildNames(Get(control, "Holder")!).ShouldBe("BChild");
+    }
+
+    [Fact]
+    public void Constructor_ThirdLevel_AppliesEveryLevelsDefaultsInOrder()
+    {
+        object button = Construct(GenerateAndCompile(), "ButtonCloseThirdLevel");
+
+        Get(button, "Visual.Width").ShouldBe(200f);
+        Get(button, "Extra.Width").ShouldBe(33f);
+    }
+
+    private static string ChildNames(object visual) =>
+        string.Join(",", ((IEnumerable)Get(visual, "Children")!).Cast<object>().Select(child => Get(child, "Name")));
+
     [Fact]
     public void Constructor_ExistingVisual_BindsToItsChildrenWithoutDuplicates()
     {
@@ -152,35 +185,66 @@ public class FullyInCodeFormsConstructionTests : IDisposable
         return generated;
     }
 
-    // Each derived component adds a child and overrides a default at both levels.
+    // Each derived component adds a child and overrides a default at both levels. A base child the
+    // derived level sets a variable on is stored as a DefinedByBase instance, as the tool saves it.
     private static void AddDerivedComponents(string gumxPath)
     {
         GumProjectSave project = GumProjectSave.Load(gumxPath, out _)!;
-        (string BaseName, string DerivedName)[] pairs =
+        foreach (string baseName in new[] { "Controls/ButtonClose", "Controls/TextBox", "Controls/Window" })
         {
-            ("Controls/ButtonClose", "Controls/ButtonCloseDerived"),
-            ("Controls/TextBox", "Controls/TextBoxDerived"),
-            ("Controls/Window", "Controls/WindowDerived"),
-        };
-        foreach ((string baseName, string derivedName) in pairs)
-        {
-            ComponentSave component = new ComponentSave { Name = derivedName, BaseType = baseName };
-            StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
-            component.States.Add(defaultState);
-            component.Instances.Add(new InstanceSave { Name = "Extra", BaseType = "Container", ParentContainer = component });
-            defaultState.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 150f, SetsValue = true });
-            defaultState.Variables.Add(new VariableSave { Name = "Extra.Width", Type = "float", Value = 17f, SetsValue = true });
-            if (baseName == "Controls/ButtonClose")
-            {
-                // A base child the derived level overrides is stored as a DefinedByBase instance, as the tool saves it.
-                component.Instances.Add(new InstanceSave { Name = "FocusedIndicator", BaseType = "NineSlice", DefinedByBase = true, ParentContainer = component });
-                defaultState.Variables.Add(new VariableSave { Name = "FocusedIndicator.Visible", Type = "bool", Value = true, SetsValue = true });
-            }
-            project.Components.Add(component);
-            project.ComponentReferences.Add(new ElementReference { Name = derivedName, ElementType = ElementType.Component });
+            ComponentSave component = AddComponent(project, baseName + "Derived", baseName, ("Extra", "Container"));
+            Set(component, "Width", 150f);
+            Set(component, "Extra.Width", 17f);
         }
+
+        ComponentSave derivedButton = project.Components.Single(item => item.Name == "Controls/ButtonCloseDerived");
+        AddBaseInstance(derivedButton, "FocusedIndicator", "NineSlice");
+        Set(derivedButton, "FocusedIndicator.Visible", true);
+
+        // Third level over a Forms control.
+        ComponentSave thirdLevel = AddComponent(project, "Controls/ButtonCloseThirdLevel", "Controls/ButtonCloseDerived", ("ThirdExtra", "Container"));
+        AddBaseInstance(thirdLevel, "Extra", "Container");
+        Set(thirdLevel, "Width", 200f);
+        Set(thirdLevel, "Extra.Width", 33f);
+
+        // A chain with no Forms behavior.
+        AddComponent(project, "Elements/ChainA", "Container", ("AChild", "Container"));
+        ComponentSave chainB = AddComponent(project, "Elements/ChainB", "Elements/ChainA", ("BChild", "Container"));
+        AddBaseInstance(chainB, "AChild", "Container");
+        Set(chainB, "AChild.Width", 5f);
+        ComponentSave chainC = AddComponent(project, "Elements/ChainC", "Elements/ChainB", ("CChild", "Container"));
+        AddBaseInstance(chainC, "BChild", "Container");
+        Set(chainC, "BChild.Width", 6f);
+
+        // A derived level that moves a base child under its own child.
+        ComponentSave reparent = AddComponent(project, "Elements/ChainReparent", "Elements/ChainB", ("Holder", "Container"));
+        AddBaseInstance(reparent, "BChild", "Container");
+        reparent.DefaultState.Variables.Add(new VariableSave { Name = "BChild.Parent", Type = "string", Value = "Holder", SetsValue = true });
+
         project.Save(gumxPath, saveElements: true);
     }
+
+    private static ComponentSave AddComponent(GumProjectSave project, string name, string baseType, (string Name, string BaseType) instance)
+    {
+        ComponentSave component = new ComponentSave { Name = name, BaseType = baseType };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Instances.Add(new InstanceSave { Name = instance.Name, BaseType = instance.BaseType, ParentContainer = component });
+        project.Components.Add(component);
+        project.ComponentReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Component });
+        return component;
+    }
+
+    private static void AddBaseInstance(ComponentSave component, string name, string baseType) =>
+        component.Instances.Add(new InstanceSave { Name = name, BaseType = baseType, DefinedByBase = true, ParentContainer = component });
+
+    private static void Set(ComponentSave component, string name, object value) =>
+        component.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = name,
+            Type = value is bool ? "bool" : "float",
+            Value = value,
+            SetsValue = true,
+        });
 
     private static void InstallHeadlessRuntime()
     {

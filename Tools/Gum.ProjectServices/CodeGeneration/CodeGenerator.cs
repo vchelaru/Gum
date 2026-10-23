@@ -3494,6 +3494,13 @@ public class CodeGenerator
 
         foreach (var instance in context.Element.Instances)
         {
+            // base.AssignParents already parented a base child; it is assigned again only when this
+            // level moves it to a different parent.
+            if (isDerived && IsGumFormsFullyInCode(context) && instance.DefinedByBase &&
+                context.Element.DefaultState?.GetVariableSave(instance.Name + ".Parent") == null)
+            {
+                continue;
+            }
             context.Instance = instance;
             FillWithParentAssignments(context);
         }
