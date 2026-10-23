@@ -614,62 +614,80 @@ public class MenuItem : ItemsControl
                 itemsPopup.InnerPanel.Children.Add(frameworkElementItem.Visual);
             }
 
+#if !FRB
+            // The popup's size must be resolved before it is placed, because placing clamps it to the screen (#6686).
+            if (visualTemplateVisual == null)
+            {
+                SizePopupToItems();
+            }
+#endif
+
             PlaceItemsPopup();
 
 #if !FRB
             // An open submenu needs Activity every frame (IUpdateEveryFrame.IsActivityNeeded), which
             // ancestors that already went idle would otherwise skip.
             Visual.InvalidateSubtreeCaches();
+
+            WatchAncestorsWhileOpen();
 #endif
+#if FRB
             if (visualTemplateVisual == null)
             {
-                // let's suppress layout for performance reasons, and to prevent issues with scrollbars:
-                var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
-                GraphicalUiElement.IsAllLayoutSuspended = true;
-
-                //var oldHorizontalScrollBarVisibility = itemsPopup.HorizontalScrollBarVisibility;
-                //var oldVerticalScrollBarVisibility = itemsPopup.VerticalScrollBarVisibility;
-
-                try
-                {
-                    itemsPopup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
-                    itemsPopup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-
-                    itemsPopup.VerticalSizeMode = SizeMode.Auto;
-                    itemsPopup.HorizontalSizeMode = SizeMode.Auto;
-
-                    // We can't make assumptions about the structure of the popup, so we have to just recursively
-                    // climb up from the inner panel and size it according to its children.
-                    var parentForSizing = itemsPopup.InnerPanel;
-                    while(parentForSizing != null)
-                    {
-                        parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                        parentForSizing.Width = 0;
-                        parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                        parentForSizing.Height = 0;
-
-                        if (parentForSizing == itemsPopup.Visual)
-                        {
-                            break;
-                        }
-                        parentForSizing = parentForSizing.Parent;
-                    }
-                }
-                finally
-                {
-                    GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-                }
-
-                if (!wasSuppressed)
-                {
-                    itemsPopup.Visual.UpdateLayout();
-                }
+                SizePopupToItems();
             }
 
-#if FRB
             GuiManager.SortZAndLayerBased();
             itemsPopup.RepositionToKeepInScreen();
 #endif
+        }
+    }
+
+    /// <summary>
+    /// For a plain ScrollViewer popup (no visual template), makes the popup and everything between
+    /// it and its inner panel size to the items, then resolves that layout.
+    /// </summary>
+    private void SizePopupToItems()
+    {
+        ScrollViewer popup = itemsPopup!;
+
+        // let's suppress layout for performance reasons, and to prevent issues with scrollbars:
+        var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+
+        try
+        {
+            popup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            popup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+
+            popup.VerticalSizeMode = SizeMode.Auto;
+            popup.HorizontalSizeMode = SizeMode.Auto;
+
+            // We can't make assumptions about the structure of the popup, so we have to just recursively
+            // climb up from the inner panel and size it according to its children.
+            var parentForSizing = popup.InnerPanel;
+            while(parentForSizing != null)
+            {
+                parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                parentForSizing.Width = 0;
+                parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                parentForSizing.Height = 0;
+
+                if (parentForSizing == popup.Visual)
+                {
+                    break;
+                }
+                parentForSizing = parentForSizing.Parent;
+            }
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+        }
+
+        if (!wasSuppressed)
+        {
+            popup.Visual.UpdateLayout();
         }
     }
 
@@ -699,6 +717,19 @@ public class MenuItem : ItemsControl
         _placedAbsoluteY = Visual.AbsoluteY;
         _placedAbsoluteWidth = Visual.AbsoluteWidth;
         _placedAbsoluteHeight = Visual.AbsoluteHeight;
+
+#if !FRB
+        // Placing moved this popup to the end of the popup root, which would draw it over any
+        // submenu already open from one of its items. Placing those again puts them back on top, in
+        // order, and also moves them with this popup (#6688).
+        foreach (MenuItem item in MenuItemsInternal)
+        {
+            if (item.IsPopupVisible)
+            {
+                item.PlaceItemsPopup();
+            }
+        }
+#endif
     }
 
 #if !FRB
@@ -745,6 +776,7 @@ public class MenuItem : ItemsControl
 #endif
                 itemsPopup = null;
 #if !FRB
+                StopWatchingAncestors();
                 Visual.InvalidateSubtreeCaches();
 #endif
             }
@@ -789,19 +821,95 @@ public class MenuItem : ItemsControl
 
         if (itemsPopup != null)
         {
+            // This item may already be out of the tree (no managers), but the popup is in the popup
+            // layer, which has them.
+            var managers = Visual.EffectiveManagers
+#if !FRB
+                ?? itemsPopup.Visual.EffectiveManagers
+#endif
+                ;
             itemsPopup.IsVisible = false;
-            if (Visual.EffectiveManagers != null)
+            if (managers != null)
             {
                 itemsPopup.Visual.RemoveFromManagers();
-                Visual.EffectiveManagers.Renderer.MainLayer.Remove(itemsPopup.Visual);
+                managers.Renderer.MainLayer.Remove(itemsPopup.Visual);
             }
             itemsPopup.Visual.Parent = null;
             itemsPopup = null;
 #if !FRB
+            StopWatchingAncestors();
             Visual.InvalidateSubtreeCaches();
 #endif
         }
     }
+
+#if !FRB
+    // While the submenu is open its popup is in the popup layer, so hiding this item or an ancestor, or
+    // detaching it from the tree, would leave the popup on screen: AnimateSelf skips hidden elements,
+    // so Activity never ticks to notice. Instead of polling, an open submenu listens to the visibility
+    // and parent changes of its Visual and each ancestor, and closes itself (#6688).
+    readonly List<GraphicalUiElement> _watchedAncestors = new();
+
+    private void WatchAncestorsWhileOpen()
+    {
+        StopWatchingAncestors();
+
+        // A submenu item stops at the popup that holds it. That popup is moved out of and back into the
+        // popup root whenever its owner places it again, and the owner closes this item's submenu when
+        // it closes itself, so nothing above that popup concerns this item.
+        GraphicalUiElement? owningPopup = ParentMenuItem?.itemsPopup?.Visual;
+        GraphicalUiElement? current = Visual;
+        while (current != null && current != owningPopup)
+        {
+            current.VisibleChanged += HandleWatchedVisibleChanged;
+            current.ParentChanged += HandleWatchedParentChanged;
+            _watchedAncestors.Add(current);
+            current = current.Parent as GraphicalUiElement;
+        }
+    }
+
+    private void StopWatchingAncestors()
+    {
+        for (int i = 0; i < _watchedAncestors.Count; i++)
+        {
+            _watchedAncestors[i].VisibleChanged -= HandleWatchedVisibleChanged;
+            _watchedAncestors[i].ParentChanged -= HandleWatchedParentChanged;
+        }
+        _watchedAncestors.Clear();
+    }
+
+    private void HandleWatchedVisibleChanged(object? sender, EventArgs args)
+    {
+        if (!Visual.AbsoluteVisible)
+        {
+            CloseSubmenuBecauseTreeChanged();
+        }
+    }
+
+    private void HandleWatchedParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs args)
+    {
+        if (args.NewValue == null || !Visual.AbsoluteVisible)
+        {
+            // Detached from the tree, or moved somewhere hidden.
+            CloseSubmenuBecauseTreeChanged();
+        }
+        else
+        {
+            // Moved to another parent: the popup follows through Activity, and the ancestors to listen to changed.
+            WatchAncestorsWhileOpen();
+        }
+    }
+
+    private void CloseSubmenuBecauseTreeChanged()
+    {
+        TearDownPopup();
+        if (isSelected)
+        {
+            isSelected = false;
+            UpdateState(force: true);
+        }
+    }
+#endif
 
     public void HideChildrenPopupsRecursively()
     {

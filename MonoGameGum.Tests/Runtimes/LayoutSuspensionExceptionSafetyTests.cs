@@ -174,14 +174,16 @@ public class LayoutSuspensionExceptionSafetyTests : BaseTestClass
     {
         // The guarded block only runs when no ScrollViewerVisualTemplate produced a popup visual.
         // Hiding the scroll bars re-applies the "NoScrollBar" state, which is where the throw
-        // is injected (armed once the popup has been parented, so construction is unaffected).
+        // is injected (armed once the items are added to the popup, so construction is unaffected;
+        // the popup is sized before it is parented, #6686).
         VisualTemplate originalTemplate = FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)];
         bool injectionEnabled = true;
         FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] = new VisualTemplate(() =>
         {
             GraphicalUiElement popupVisual = originalTemplate.CreateContent(null);
             bool armed = false;
-            popupVisual.ParentChanged += (_, _) => armed = true;
+            popupVisual.GetGraphicalUiElementByName("InnerPanelInstance")!.Children!.CollectionChanged +=
+                (_, _) => armed = true;
             StateSave noScrollBar = popupVisual.Categories[ScrollViewer.ScrollBarVisibilityCategoryName]
                 .States.Find(item => item.Name == "NoScrollBar")!;
             Action? originalApply = noScrollBar.Apply;
