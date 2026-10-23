@@ -122,121 +122,245 @@ namespace RenderingLibrary.Graphics
         // RenderTargetTextureSource, so an invisible-but-referenced container still bakes (#1643).
         readonly HashSet<IRenderableIpso> _referencedRenderTargetOwners = new HashSet<IRenderableIpso>();
 
+        SystemManagers? _ownManagers;
+
         public void Initialize(SystemManagers managers)
         {
+            _ownManagers = managers;
             _layers.Add(new Layer());
             _layers[0].Name = "Main Layer";
         }
 
         public void Draw(SystemManagers? managers)
         {
-            //ClearPerformanceRecordingVariables();
-
             managers ??= SystemManagers.Default
                 ?? throw new InvalidOperationException("No SystemManagers was passed and SystemManagers.Default is null.");
 
             Draw(managers, _layers);
-
-            //ForceEnd();
         }
 
         public void Draw(SystemManagers managers, List<Layer> layers)
         {
+            BeginHostFrame(managers);
             foreach(var layer in layers)
             {
-                Draw(layer.Renderables, managers, isTopLevelDraw: true, layer: layer);
+                DrawTopLevel(layer.Renderables, managers, layer);
             }
         }
-
-        //public void Draw(SystemManagers systemManagers)
-        //{
-        //    var canvas = systemManagers.Canvas;
-        //}
-
 
         // This syntax is a little different than standard Gum, but we're moving in that direction incrementally:
         public void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers)
         {
-            Draw(whatToRender, managers, true);
+            BeginHostFrame(managers);
+            DrawTopLevel(whatToRender, managers, layer: null);
         }
 
         public void Draw(ObservableCollection<IRenderableIpso> whatToRender, SystemManagers managers)
         {
-            Draw(whatToRender, managers, true);
+            BeginHostFrame(managers);
+            DrawTopLevel(whatToRender, managers, layer: null);
         }
 
-        void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false, Layer? layer = null)
+        // Set by the once-per-frame work and reset by NotifyHostFrameAdvanced, so GumBatch cycles
+        // (several Begin/End pairs per frame) run it at most once per host frame, and never after a
+        // full-scene Draw already did. Mirrors the XNA Renderer's host-frame latches.
+        bool _hostFrameStarted;
+
+        // Set when a GumBatch Begin ran the frame work this frame, so the full-scene Draw that follows
+        // does not sweep again: a second sweep finds nothing marked used since the first and destroys
+        // every render-target surface. Draw consumes it, so a host that never calls Update still
+        // sweeps once per frame.
+        bool _batchStartedHostFrame;
+
+        // Called once per host frame by GumService.Update.
+        internal void NotifyHostFrameAdvanced()
         {
-            if (isTopLevelDraw)
+            _hostFrameStarted = false;
+            _batchStartedHostFrame = false;
+        }
+
+        // Once per full-scene Draw: drop last frame's snapshots, sweep offscreen surfaces whose owner
+        // wasn't baked last frame (removed, hidden, or resized), then clear. Mirrors the
+        // raylib/MonoGame RenderTargetService pattern (#3988). Clearing here rather than per layer
+        // keeps earlier layers of the same frame.
+        private void BeginHostFrame(SystemManagers managers)
+        {
+            if (_batchStartedHostFrame)
             {
-                // Frame-boundary lifecycle: drop last frame's snapshots, then sweep offscreen surfaces
-                // whose owner wasn't baked last frame (removed, hidden, or resized). Mirrors the
-                // raylib/MonoGame RenderTargetService pattern (#3988).
-                DisposeBakedImages();
-                _renderTargetService.ClearUnusedRenderTargetsLastFrame();
-
-                // Collect render-target containers referenced by a visible Sprite before baking, so an
-                // invisible-but-referenced container still bakes (#1643).
-                _referencedRenderTargetOwners.Clear();
-                CollectReferencedRenderTargets(whatToRender);
-
-                if (ClearsCanvas)
-                {
-                    managers.Canvas.Clear();
-                }
-
-                // Bake every render-target container's subtree into its offscreen surface before the
-                // camera transform is applied to the screen canvas. Each bake swaps managers.Canvas to
-                // its own offscreen canvas and restores it, so nothing leaks between the two.
-                if (HasAnyRenderTarget(whatToRender))
-                {
-                    BakeRenderTargetsInSubtree(whatToRender, managers);
-                }
-
-                // Issue #4330 (manual-test finding): SKCanvas is a persistent, mutate-in-place matrix
-                // stack -- unlike a fresh matrix passed per frame (XNALIKE's SpriteBatch.Begin) or an
-                // explicit begin/end pair (raylib's BeginMode2D/EndMode2D), Scale/Translate calls here
-                // accumulate onto whatever the PREVIOUS top-level Draw call (previous frame, or a
-                // previous layer within the same frame) already applied unless undone. Without this
-                // Save (and the matching Restore at the end of this method), a non-1 Camera.Zoom
-                // compounded every single frame with no further input -- confirmed to grow unboundedly
-                // ("everything off screen") within a couple of seconds.
-                managers.Canvas.Save();
-
-                // Each layer gets its own effective camera position/zoom from LayerCameraSettings
-                // (falling back to the main camera when the layer has none set), so a screen-space
-                // HUD layer actually renders fixed on screen instead of panning/zooming with
-                // everything else (#4367). A null layer (the public Draw(IList<...>)/Draw
-                // (ObservableCollection<...>) overloads, which have no Layer to consult) keeps the
-                // prior main-camera-only behavior.
-                float effectiveZoom = Camera.Zoom;
-                float effectiveCameraX = Camera.X;
-                float effectiveCameraY = Camera.Y;
-                if (layer != null)
-                {
-                    layer.GetEffectiveCamera(Camera, out effectiveCameraX, out effectiveCameraY, out effectiveZoom);
-                }
-
-                if (effectiveZoom != 1)
-                {
-                    managers.Canvas.Scale(effectiveZoom);
-                }
-
-                var translateX = -effectiveCameraX;
-                var translateY = -effectiveCameraY;
-
-                if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
-                {
-                    translateX += (Camera.ClientWidth / 2.0f);
-                    translateY += (Camera.ClientHeight / 2.0f);
-                }
-
-                if(translateX != 0 || translateY != 0)
-                {
-                    managers.Canvas.Translate(translateX, translateY);
-                }
+                _batchStartedHostFrame = false;
+            }
+            else
+            {
+                StartHostFrameRenderTargets();
             }
 
+            if (ClearsCanvas)
+            {
+                managers.Canvas.Clear();
+            }
+        }
+
+        private void StartHostFrameRenderTargets()
+        {
+            DisposeBakedImages();
+            _renderTargetService.ClearUnusedRenderTargetsLastFrame();
+            _hostFrameStarted = true;
+        }
+
+        // Per layer of a full-scene Draw: bake this layer's render targets, then walk it under the
+        // layer's camera.
+        private void DrawTopLevel(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
+        {
+            // Collect render-target containers referenced by a visible Sprite before baking, so an
+            // invisible-but-referenced container still bakes (#1643).
+            _referencedRenderTargetOwners.Clear();
+            CollectReferencedRenderTargets(whatToRender);
+
+            // Bake every render-target container's subtree into its offscreen surface before the
+            // camera transform is applied to the screen canvas. Each bake swaps managers.Canvas to
+            // its own offscreen canvas and restores it, so nothing leaks between the two.
+            if (HasAnyRenderTarget(whatToRender))
+            {
+                BakeRenderTargetsInSubtree(whatToRender, managers);
+            }
+
+            ApplyCamera(managers.Canvas, layer, matrix: null);
+            DrawList(whatToRender, managers);
+            // Matches the Save in ApplyCamera: undoes this layer's camera so the next layer (or the
+            // next frame) starts from a clean matrix (#4330).
+            managers.Canvas.Restore();
+        }
+
+        // Saves the canvas, then applies the camera and, when given, a caller matrix applied before it
+        // (the same order MonoGame composes GumBatch's matrix with the camera view:
+        // matrix * cameraView). Every caller Restores.
+        private void ApplyCamera(SKCanvas canvas, Layer? layer, SKMatrix? matrix)
+        {
+            // Issue #4330: SKCanvas is a persistent, mutate-in-place matrix stack -- unlike a fresh
+            // matrix passed per frame (XNALIKE's SpriteBatch.Begin) or an explicit begin/end pair
+            // (raylib's BeginMode2D/EndMode2D), Scale/Translate calls accumulate onto whatever the
+            // previous cycle applied unless undone. Without this Save and the caller's Restore, a
+            // non-1 Camera.Zoom compounded every frame.
+            canvas.Save();
+
+            // Each layer gets its own effective camera position/zoom from LayerCameraSettings
+            // (falling back to the main camera when the layer has none set), so a screen-space
+            // HUD layer renders fixed on screen (#4367). A null layer (the public Draw(IList<...>)/
+            // Draw(ObservableCollection<...>) overloads, which have no Layer) uses the main camera.
+            float effectiveZoom = Camera.Zoom;
+            float effectiveCameraX = Camera.X;
+            float effectiveCameraY = Camera.Y;
+            if (layer != null)
+            {
+                layer.GetEffectiveCamera(Camera, out effectiveCameraX, out effectiveCameraY, out effectiveZoom);
+            }
+
+            if (effectiveZoom != 1)
+            {
+                canvas.Scale(effectiveZoom);
+            }
+
+            var translateX = -effectiveCameraX;
+            var translateY = -effectiveCameraY;
+
+            if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
+            {
+                translateX += (Camera.ClientWidth / 2.0f);
+                translateY += (Camera.ClientHeight / 2.0f);
+            }
+
+            if(translateX != 0 || translateY != 0)
+            {
+                canvas.Translate(translateX, translateY);
+            }
+
+            if (matrix.HasValue)
+            {
+                SKMatrix callerMatrix = matrix.Value;
+                canvas.Concat(in callerMatrix);
+            }
+        }
+
+        #region Immediate mode (GumBatch)
+
+        /// <summary>
+        /// How <see cref="Draw(IRenderableIpso)"/> calls between a <see cref="Begin"/>/<see cref="End"/>
+        /// pair are submitted. Same shape as the MonoGame renderer's enum.
+        /// </summary>
+        public enum GumBatchDrawMode
+        {
+            /// <summary>
+            /// Each <see cref="Draw(IRenderableIpso)"/> call draws immediately, in call order.
+            /// </summary>
+            Immediate,
+
+            /// <summary>
+            /// Not supported on Skia yet: <see cref="Begin"/> throws <see cref="NotSupportedException"/>.
+            /// </summary>
+            Deferred,
+        }
+
+        SKCanvas? _cycleCanvas;
+
+        /// <summary>
+        /// Starts an immediate-mode cycle on <see cref="SystemManagers.Canvas"/>: applies the camera
+        /// and, when given, <paramref name="matrix"/> before it. Does not clear the canvas, and does
+        /// not dispose render-target textures a full-scene Draw baked earlier in the same frame.
+        /// </summary>
+        public void Begin(SKMatrix? matrix = null, GumBatchDrawMode mode = GumBatchDrawMode.Immediate)
+        {
+            if (mode == GumBatchDrawMode.Deferred)
+            {
+                throw new NotSupportedException(
+                    "GumBatchDrawMode.Deferred is not supported on Skia yet. Use GumBatchDrawMode.Immediate.");
+            }
+
+            SKCanvas canvas = OwnManagers.Canvas;
+            if (!_hostFrameStarted)
+            {
+                StartHostFrameRenderTargets();
+                _batchStartedHostFrame = true;
+            }
+            _cycleCanvas = canvas;
+            ApplyCamera(canvas, MainLayer, matrix);
+        }
+
+        /// <summary>
+        /// Draws <paramref name="renderable"/> and its children between <see cref="Begin"/> and
+        /// <see cref="End"/>. Render-target containers drawn this way are not baked.
+        /// </summary>
+        public void Draw(IRenderableIpso renderable)
+        {
+            if (!renderable.Visible)
+            {
+                return;
+            }
+
+            SystemManagers managers = OwnManagers;
+            renderable.PreRender();
+            if (renderable.Children != null)
+            {
+                PreRender(renderable.Children);
+            }
+            DrawRenderable(renderable, managers);
+        }
+
+        /// <summary>
+        /// Ends the cycle started by <see cref="Begin"/>, restoring the canvas matrix it changed.
+        /// </summary>
+        public void End()
+        {
+            _cycleCanvas?.Restore();
+            _cycleCanvas = null;
+        }
+
+        SystemManagers OwnManagers => _ownManagers
+            ?? throw new InvalidOperationException("The Renderer has not been initialized. Call SystemManagers.Initialize first.");
+
+        #endregion
+
+        void DrawList(IList<IRenderableIpso> whatToRender, SystemManagers managers)
+        {
             PreRender(whatToRender);
 
             var count = whatToRender.Count;
@@ -246,68 +370,66 @@ namespace RenderingLibrary.Graphics
                 var renderable = whatToRender[i];
                 if (renderable.Visible)
                 {
-                    // A render-target container composites its baked offscreen texture in place of
-                    // walking its live children (its subtree was baked in the pre-pass, #3988). A
-                    // hidden one is skipped by the Visible check above, so no stale texture ghosts.
-                    if (renderable.IsRenderTarget)
-                    {
-                        CompositeRenderTarget(renderable, managers);
-                        continue;
-                    }
-
-                    var canvas = ((SystemManagers)managers).Canvas;
-
-                    var isOnScreen = true;
-
-                    if (renderable.ClipsChildren)
-                    {
-                        var absoluteX = renderable.GetAbsoluteX();
-                        var absoluteY = renderable.GetAbsoluteY();
-
-                        var width = renderable.Width;
-                        var height = renderable.Height;
-
-                        var rect = new SKRect(absoluteX, absoluteY, absoluteX + width, absoluteY + height);
-
-                        isOnScreen =
-                            rect.Bottom > canvas.LocalClipBounds.Top &&
-                            rect.Top < canvas.LocalClipBounds.Bottom &&
-                            rect.Right > canvas.LocalClipBounds.Left &&
-                            rect.Left < canvas.LocalClipBounds.Right;
-
-                        if (isOnScreen)
-                        {
-                            canvas.Save();
-                            canvas.ClipRect(rect);
-                            renderable.Render(managers);
-                        }
-                    }
-                    else
-                    {
-                        renderable.Render(managers);
-                    }
-
-                    if (isOnScreen)
-                    {
-                        if (RenderUsingHierarchy)
-                        {
-                            Draw(renderable.Children, managers, false);
-                        }
-
-                        if (renderable.ClipsChildren)
-                        {
-                            canvas.Restore();
-                        }
-                    }
+                    DrawRenderable(renderable, managers);
                 }
             }
+        }
 
-            if (isTopLevelDraw)
+        // Draws one visible renderable and (with RenderUsingHierarchy) its children.
+        private void DrawRenderable(IRenderableIpso renderable, SystemManagers managers)
+        {
+            // A render-target container composites its baked offscreen texture in place of
+            // walking its live children (its subtree was baked in the pre-pass, #3988). A
+            // hidden one is skipped by the caller's Visible check, so no stale texture ghosts.
+            if (renderable.IsRenderTarget)
             {
-                // Matches the canvas.Save() at the top of this method's isTopLevelDraw block --
-                // undoes this frame's camera Scale/Translate so the next top-level Draw call (next
-                // frame, or the next layer this same frame) starts from a clean matrix (#4330).
-                managers.Canvas.Restore();
+                CompositeRenderTarget(renderable, managers);
+                return;
+            }
+
+            var canvas = managers.Canvas;
+
+            var isOnScreen = true;
+
+            if (renderable.ClipsChildren)
+            {
+                var absoluteX = renderable.GetAbsoluteX();
+                var absoluteY = renderable.GetAbsoluteY();
+
+                var width = renderable.Width;
+                var height = renderable.Height;
+
+                var rect = new SKRect(absoluteX, absoluteY, absoluteX + width, absoluteY + height);
+
+                isOnScreen =
+                    rect.Bottom > canvas.LocalClipBounds.Top &&
+                    rect.Top < canvas.LocalClipBounds.Bottom &&
+                    rect.Right > canvas.LocalClipBounds.Left &&
+                    rect.Left < canvas.LocalClipBounds.Right;
+
+                if (isOnScreen)
+                {
+                    canvas.Save();
+                    canvas.ClipRect(rect);
+                    renderable.Render(managers);
+                }
+            }
+            else
+            {
+                renderable.Render(managers);
+            }
+
+            if (isOnScreen)
+            {
+                if (RenderUsingHierarchy)
+                {
+                    DrawList(renderable.Children, managers);
+                }
+
+                if (renderable.ClipsChildren)
+                {
+                    canvas.Restore();
+                }
             }
         }
 
@@ -381,6 +503,10 @@ namespace RenderingLibrary.Graphics
             => _bakedImages.TryGetValue(ResolveRenderTargetCacheOwner(container), out SKImage? image)
                 ? image
                 : null;
+
+        // The cached offscreen surface for a render-target container, for tests.
+        internal SKSurface? TryGetRenderTargetSurfaceFor(IRenderableIpso container)
+            => _renderTargetService.TryGetExisting(ResolveRenderTargetCacheOwner(container))?.Surface;
 
         private void DisposeBakedImages()
         {
@@ -505,7 +631,7 @@ namespace RenderingLibrary.Graphics
 
             SKCanvas screenCanvas = managers.Canvas;
             managers.Canvas = offscreenCanvas;
-            Draw(container.Children, managers, isTopLevelDraw: false);
+            DrawList(container.Children, managers);
             managers.Canvas = screenCanvas;
 
             offscreenCanvas.Restore();

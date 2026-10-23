@@ -58,6 +58,13 @@ namespace RenderingLibrary
             set => _canvas = value;
         }
 
+        // The assigned canvas, or null, without the getter's throw. GumBatch restores it at End.
+        internal SkiaSharp.SKCanvas? CanvasOrNull
+        {
+            get => _canvas;
+            set => _canvas = value;
+        }
+
 
         RenderingLibrary.Graphics.Renderer? _renderer;
 
