@@ -5,6 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.Tests.Shared;
+using GumRuntime;
+using Moq;
+using RenderingLibrary.Content;
 using Shouldly;
 using Xunit;
 
@@ -155,5 +158,46 @@ public class BaseTestClassTests
         // Dispose resets the canvas to fixed values (ResetCanvasAndRoots), so only MissingFileBehavior
         // here depends on the restore.
         GraphicalUiElementStateAssert.DisposeRestores(() => new BaseTestClass(), checkCanvas: false);
+    }
+
+    // Tests replace the renderable hooks, the default font, the content loader and the element-type
+    // registrations, and GumService.Uninitialize nulls the hooks. Left in place, every later test
+    // creates, adds or measures renderables through the stand-in (#6565).
+    [Fact]
+    public void Dispose_RestoresRuntimeHooksAndRegistrations_WhenATestChangedThem()
+    {
+        var setProperty = GraphicalUiElement.SetPropertyOnRenderable;
+        var updateFont = GraphicalUiElement.UpdateFontFromProperties;
+        var throwForMissingFiles = GraphicalUiElement.ThrowExceptionsForMissingFiles;
+        var addRenderable = GraphicalUiElement.AddRenderableToManagers;
+        var removeRenderable = GraphicalUiElement.RemoveRenderableFromManagers;
+        var createComponent = ElementSaveExtensions.CustomCreateGraphicalComponentFunc;
+        BitmapFont? defaultBitmapFont = Text.DefaultBitmapFont;
+        IContentLoader contentLoader = LoaderManager.Self.ContentLoader;
+        const string elementName = "LeakedElement6565";
+
+        BaseTestClass test = new BaseTestClass();
+        GraphicalUiElement.SetPropertyOnRenderable = (_, _, _, _) => false;
+        GraphicalUiElement.UpdateFontFromProperties = null;
+        GraphicalUiElement.ThrowExceptionsForMissingFiles = _ => { };
+        GraphicalUiElement.AddRenderableToManagers = (_, _, _) => { };
+        GraphicalUiElement.RemoveRenderableFromManagers = (_, _) => { };
+        ElementSaveExtensions.CustomCreateGraphicalComponentFunc = (_, _) => null;
+        Text.DefaultBitmapFont = null;
+        LoaderManager.Self.ContentLoader = new Mock<IContentLoader>().Object;
+        ElementSaveExtensions.RegisterGueInstantiation(elementName, () => new ContainerRuntime());
+
+        test.Dispose();
+
+        GraphicalUiElement.SetPropertyOnRenderable.ShouldBe(setProperty);
+        GraphicalUiElement.UpdateFontFromProperties.ShouldBe(updateFont);
+        GraphicalUiElement.ThrowExceptionsForMissingFiles.ShouldBe(throwForMissingFiles);
+        GraphicalUiElement.AddRenderableToManagers.ShouldBe(addRenderable);
+        GraphicalUiElement.RemoveRenderableFromManagers.ShouldBe(removeRenderable);
+        ElementSaveExtensions.CustomCreateGraphicalComponentFunc.ShouldBe(createComponent);
+        Text.DefaultBitmapFont.ShouldBe(defaultBitmapFont);
+        LoaderManager.Self.ContentLoader.ShouldBe(contentLoader);
+        Gum.ElementTypeRegistry.Base.ContainsName(elementName).ShouldBeFalse();
+        (Gum.GumContext.Current?.ElementTypes.ContainsName(elementName) ?? false).ShouldBeFalse();
     }
 }
