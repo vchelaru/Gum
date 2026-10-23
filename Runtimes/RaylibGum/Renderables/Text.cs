@@ -571,6 +571,11 @@ public class Text : IVisible, IRenderableIpso,
     private static bool TryGetTtfBaselineY(Font font, out int baselineY)
     {
         baselineY = 0;
+        if (!HasGlyphData(font))
+        {
+            return false;
+        }
+
         GlyphInfo glyph = GetGlyphInfo(font, 'H');
         if (glyph.Value != 'H')
         {
@@ -585,6 +590,16 @@ public class Text : IVisible, IRenderableIpso,
 
         baselineY = glyph.OffsetY + glyphHeight;
         return baselineY > 0 && baselineY <= font.BaseSize;
+    }
+
+    /// <summary>
+    /// Whether raylib's glyph lookups can read this font. They index the native glyph and rec arrays without
+    /// checking them, so an empty or unloaded <see cref="Font"/> would crash the process.
+    /// </summary>
+    internal static unsafe bool HasGlyphData(Font font)
+    {
+        return font.Texture.Id != 0 && font.BaseSize > 0 && font.GlyphCount > 0
+            && font.Glyphs != null && font.Recs != null;
     }
 
     /// <summary>

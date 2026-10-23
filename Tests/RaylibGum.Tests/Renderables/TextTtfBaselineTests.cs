@@ -77,6 +77,21 @@ public class TextTtfBaselineTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void DescenderHeight_FontWithoutGlyphData_StaysTwo()
+    {
+        // A font that failed to load (no texture, no glyphs) must not reach raylib's glyph lookup, which
+        // dereferences the glyph array natively and crashes the process.
+        Font unloaded = new Font { BaseSize = 24 };
+        Text.HasGlyphData(unloaded).ShouldBeFalse();
+
+        TextRuntime runtime = new();
+        Text text = (Text)runtime.RenderableComponent!;
+        text.Font = unloaded;
+
+        text.DescenderHeight.ShouldBe(2);
+    }
+
     private static (short ascent, short descent) ReadHheaAscentDescent(byte[] bytes)
     {
         int tableCount = BinaryPrimitives.ReadUInt16BigEndian(bytes.AsSpan(4));
