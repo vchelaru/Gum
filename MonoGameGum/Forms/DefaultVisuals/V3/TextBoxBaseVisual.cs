@@ -261,7 +261,11 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         SelectionInstance.X = 15f;
         SelectionInstance.XOrigin = HorizontalAlignment.Left;
         SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-        SelectionInstance.Y = 2f;
+        // Centered so a multi-line selection sits on its line, as the caret does, while the
+        // single-line selection still fills the box less 2px on each side (#6630).
+        SelectionInstance.Y = 0f;
+        SelectionInstance.YOrigin = VerticalAlignment.Center;
+        SelectionInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         SelectionInstance.Texture = uiSpriteSheetTexture;
         SelectionInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         ClipContainer.AddChild(SelectionInstance);

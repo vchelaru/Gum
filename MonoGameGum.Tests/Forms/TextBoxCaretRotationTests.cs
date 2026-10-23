@@ -133,6 +133,21 @@ public class TextBoxCaretRotationTests : BaseTestClass
         AssertSameOffset(GetOffsetInTextFrame(sut, selection), GetOffsetInTextFrame(unrotated, GetVisibleSelections(unrotated)[0]));
     }
 
+    // Rotating the text after the caret is placed moves the caret at once (#6637).
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Caret_TextRotatedAfterPlacement_ShouldTurnWithText(bool multiLine)
+    {
+        TextBox expected = CreateTextBox(multiLine, textRotation: 30);
+        TextBox sut = CreateTextBox(multiLine, textRotation: 0);
+
+        GetVisual(sut).TextInstance.Rotation = 30;
+
+        GetCaret(sut).GetAbsoluteRotation().ShouldBe(30, Tolerance);
+        AssertSameOffset(GetOffsetInTextFrame(sut, GetCaret(sut)), GetOffsetInTextFrame(expected, GetCaret(expected)));
+    }
+
     static TextBox CreateTextBox(bool multiLine, float textRotation)
     {
         TextBox textBox = new();

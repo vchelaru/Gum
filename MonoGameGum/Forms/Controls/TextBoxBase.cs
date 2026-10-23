@@ -600,6 +600,7 @@ public abstract class TextBoxBase :
                 OnTextChanged(this.coreTextObject.RawText);
                 break;
             case "HorizontalAlignment":
+            case nameof(GraphicalUiElement.Rotation):
                 UpdateCaretPositionFromCaretIndex();
                 UpdateToSelection();
                 break;
@@ -1914,7 +1915,7 @@ public abstract class TextBoxBase :
                 var selectionPosition = new SelectionPosition();
                 selectionPosition.XStart = startXForSelection;
                 var offsetPixelsFromSmall = GetCenterOfYForLinePixelsFromSmall(i);
-                selectionPosition.Y = ResolveLineYForComponent(offsetPixelsFromSmall, selectionTemplate ?? selectionInstance);
+                selectionPosition.Y = ResolveLineYForComponent(offsetPixelsFromSmall, selectionInstance);
 
                 selectionPosition.Width = endXForSelection - startXForSelection;
 
@@ -2203,9 +2204,9 @@ public abstract class TextBoxBase :
         coreTextObject.VerticalAlignment, CoreTextObjectHeight, coreTextObject.WrappedTextHeight);
 
     /// <summary>
-    /// Adjusts a center-of-line Y (in PixelsFromSmall, as produced by
+    /// Adjusts a center-of-line Y (in PixelsFromSmall of the text's parent, as produced by
     /// <see cref="GetCenterOfYForLinePixelsFromSmall"/>) into the value to assign
-    /// to <paramref name="target"/>'s Y, honoring the target's YOrigin and YUnits.
+    /// to <paramref name="target"/>'s Y, honoring the target's parent, YOrigin and YUnits.
     /// Used for both caret placement and selection-rectangle placement so the two
     /// stay in sync.
     /// </summary>
@@ -2220,16 +2221,18 @@ public abstract class TextBoxBase :
             // multiplier-worth below the actual glyph row.
             adjusted -= ScaledLineHeightInPixels / 2.0f;
         }
-        if (target.YUnits == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle)
+
+        var targetParent = target.EffectiveParentGue;
+        var textParent = textComponent.EffectiveParentGue;
+        if (targetParent != textParent)
         {
-            // PixelsFromMiddle is measured from the middle of the target's parent. The text is
-            // usually inset from that parent (the default visual's is 4px shorter), so the
-            // text's own height puts the target half that inset below the line (#6624).
-            float parentHeight = target.EffectiveParentGue?.AbsoluteHeight
-                ?? GraphicalUiElement.CanvasHeight;
-            adjusted -= parentHeight / 2.0f;
+            // The line Y is measured from the text's parent; the target is placed in its own parent.
+            adjusted += (textParent?.AbsoluteTop ?? 0) - (targetParent?.AbsoluteTop ?? 0);
         }
-        return adjusted;
+
+        float parentHeight = targetParent?.AbsoluteHeight ?? GraphicalUiElement.CanvasHeight;
+        return global::Gum.Converters.UnitConverter.Self.ConvertYPosition(adjusted,
+            global::Gum.Converters.GeneralUnitType.PixelsFromSmall, target.YUnits, parentHeight);
     }
 
     // The full per-line vertical step used by the renderer:
