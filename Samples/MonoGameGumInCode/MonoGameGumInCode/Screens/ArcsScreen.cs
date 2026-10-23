@@ -168,7 +168,7 @@ internal class ArcsScreen : FrameworkElement
         linearH.Thickness = 8;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
-        linearH.Color1 = Color.White;
+        linearH.Color = Color.White;
         linearH.Color2 = Color.SteelBlue;
         linearH.GradientX1 = 0; linearH.GradientY1 = 0;
         linearH.GradientX2 = 60; linearH.GradientY2 = 0;
@@ -181,7 +181,7 @@ internal class ArcsScreen : FrameworkElement
         linearV.Thickness = 8;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
-        linearV.Color1 = Color.Gold;
+        linearV.Color = Color.Gold;
         linearV.Color2 = Color.Crimson;
         linearV.GradientX1 = 0; linearV.GradientY1 = 0;
         linearV.GradientX2 = 0; linearV.GradientY2 = 60;
@@ -194,7 +194,7 @@ internal class ArcsScreen : FrameworkElement
         linearD.Thickness = 8;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
-        linearD.Color1 = Color.Cyan;
+        linearD.Color = Color.Cyan;
         linearD.Color2 = Color.Magenta;
         linearD.GradientX1 = 0; linearD.GradientY1 = 0;
         linearD.GradientX2 = 60; linearD.GradientY2 = 60;
@@ -207,7 +207,7 @@ internal class ArcsScreen : FrameworkElement
         radial.Thickness = 8;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
-        radial.Color1 = Color.White;
+        radial.Color = Color.White;
         radial.Color2 = Color.DarkGreen;
         radial.GradientX1 = 30; radial.GradientY1 = 30;
         radial.GradientInnerRadius = 0;
@@ -222,7 +222,7 @@ internal class ArcsScreen : FrameworkElement
         wedge.Thickness = 30; // W / 2 → wedge
         wedge.UseGradient = true;
         wedge.GradientType = GradientType.Linear;
-        wedge.Color1 = Color.Orange;
+        wedge.Color = Color.Orange;
         wedge.Color2 = Color.DeepPink;
         wedge.GradientX1 = 0; wedge.GradientY1 = 0;
         wedge.GradientX2 = 60; wedge.GradientY2 = 60;

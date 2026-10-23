@@ -43,7 +43,8 @@ internal class ClippingScreen : FrameworkElement
         CircleRuntime outsideClipShape = new();
         outsideClipShape.X = 20;
         outsideClipShape.Y = 20;
-        outsideClipShape.Radius = 24;
+        outsideClipShape.Width = 48;
+        outsideClipShape.Height = 48;
         outsideClipShape.FillColor = Color.OrangeRed;
         outsideClipShape.IsFilled = true;
         AddChild(outsideClipShape);
@@ -83,7 +84,8 @@ internal class ClippingScreen : FrameworkElement
             CircleRuntime dot = new();
             dot.X = 16;
             dot.Y = 8;
-            dot.Radius = 12;
+            dot.Width = 24;
+            dot.Height = 24;
             dot.FillColor = Color.Goldenrod;
             dot.IsFilled = true;
             row.AddChild(dot);
