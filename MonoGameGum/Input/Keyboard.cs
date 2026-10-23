@@ -209,7 +209,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
             // MonoGame's AndroidGameWindow does not expose the TextInput event that the
             // desktop GameWindow does. On Android we rely on Keyboard.Android.cs — an IME
             // KeyPress listener registered lazily from ShowKeyboard() — to populate
-            // processedString, and GetStringTyped returns that directly.
+            // processedString, which GetTypedText returns unchanged as this frame's typed text.
 #else
             var succeeded = false;
             try
@@ -424,7 +424,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
         // After the key handling, so the key-press fallback in GetTypedText sees this frame's keys.
         // TextBox reads the result through GetStringTyped.
-        typedTextThisFrame = AppendNumPadEnter(GetTypedText() ?? string.Empty);
+        typedTextThisFrame = GetTypedText() ?? string.Empty;
     }
 
     /// <summary>
@@ -440,12 +440,13 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         StringBuilder? buffer = windowTextInputBuffer;
         if (buffer != null)
         {
+            string text;
             lock (buffer)
             {
-                string text = buffer.ToString();
+                text = buffer.ToString();
                 buffer.Clear();
-                return text;
             }
+            return AppendNumPadEnter(text);
         }
 
 #if ANDROID
@@ -532,8 +533,8 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         }
     }
 
-    // The ENTER key (char 13 \r) is normally handled by TextInput. However, when the Number Pad ENTER key
-    // is pressed, TextInput does not receive it. It is detected through the key state instead, so a newline
+    // Window text path only. The ENTER key (char 13 \r) is normally handled by TextInput. However, when the
+    // Number Pad ENTER key is pressed, TextInput does not receive it. It is detected through the key state instead, so a newline
     // is added unless the typed text already has one, which keeps the normal ENTER key from firing twice.
     private string AppendNumPadEnter(string text)
     {

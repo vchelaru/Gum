@@ -138,6 +138,36 @@ public class InputSourceSeamTests : BaseTestClass
     }
 
     [Fact]
+    public void GetTypedText_WithNoWindowOrOverride_ShiftEnterTypesNothing()
+    {
+        // The number-pad Enter newline belongs to the window text path only; key presses alone keep
+        // their own character mapping, which has no Shift+Enter character.
+        SourcedKeyboardState state = new SourcedKeyboardState();
+        Gum.Input.Keyboard keyboard = new Gum.Input.Keyboard { KeyboardStateProcessor = state };
+
+        state.Held = new[] { XnaKeys.LeftShift };
+        keyboard.Activity(1);
+        state.Held = new[] { XnaKeys.LeftShift, XnaKeys.Enter };
+        keyboard.Activity(1.1);
+
+        keyboard.GetStringTyped().ShouldBe("");
+    }
+
+    [Fact]
+    public void GetTypedText_Overridden_EnterKeyAddsNothingToTheOverridesText()
+    {
+        SourcedKeyboard keyboard = new SourcedKeyboard
+        {
+            KeyboardStateProcessor = new SourcedKeyboardState { Held = new[] { XnaKeys.Enter } },
+            NextText = "Hi",
+        };
+
+        keyboard.Activity(1);
+
+        keyboard.GetStringTyped().ShouldBe("Hi");
+    }
+
+    [Fact]
     public void GetTypedText_WithNoWindowOrOverride_SkipsCtrlShortcuts()
     {
         SourcedKeyboardState state = new SourcedKeyboardState();
