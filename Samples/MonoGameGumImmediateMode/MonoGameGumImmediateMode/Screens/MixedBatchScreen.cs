@@ -14,7 +14,7 @@ namespace MonoGameGumImmediateMode.Screens
     public class MixedBatchScreen : IImmediateModeScreen
     {
         private Texture2D _pixel;
-        private ColoredRectangleRuntime _gumRectangle;
+        private RectangleRuntime _gumRectangle;
         private TextRuntime _label;
 
         public void Initialize(GraphicsDevice graphicsDevice)
@@ -24,10 +24,13 @@ namespace MonoGameGumImmediateMode.Screens
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
 
-            _gumRectangle = new ColoredRectangleRuntime();
+            _gumRectangle = new RectangleRuntime();
             _gumRectangle.Width = 160;
             _gumRectangle.Height = 80;
-            _gumRectangle.Color = Color.DarkGreen;
+            _gumRectangle.IsFilled = true;
+            _gumRectangle.FillColor = Color.DarkGreen;
+            _gumRectangle.StrokeWidth = 0;
+            _gumRectangle.IsAntialiased = false;
             _gumRectangle.X = 60;
             _gumRectangle.Y = 120;
 
