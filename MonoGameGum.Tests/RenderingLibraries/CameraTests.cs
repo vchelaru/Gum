@@ -114,6 +114,31 @@ public class CameraTests : BaseTestClass
         bounds.Right.ShouldBe(expectedRight);
     }
 
+    // Inside the bake of a container turned 90 degrees about (100, 100), a descendant sitting at
+    // local (40, 0) is at world (100, 60); the bake draws it upright at (140, 100), so its clip and
+    // cull rectangles start there (#6618).
+    [Fact]
+    public void GetScissorRectangleFor_InTurnedBake_TurnsTheTopLeftBackAboutTheContainer()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        camera.Zoom = 1;
+
+        StubRenderable container = new StubRenderable { X = 100, Y = 100, Width = 100, Height = 100, Rotation = 90, IsRenderTarget = true };
+        StubRenderable clip = new StubRenderable { X = 0, Y = -40, Width = 40, Height = 30 };
+        clip.Parent = container;
+
+        System.Drawing.Rectangle scissor = camera.GetScissorRectangleFor(layer: null, clip, container);
+        System.Drawing.Rectangle cull = camera.GetCullTestBoundsFor(layer: null, clip, container);
+
+        scissor.ShouldBe(new System.Drawing.Rectangle(140, 100, 40, 30));
+        cull.ShouldBe(scissor);
+        camera.GetScissorRectangleFor(layer: null, clip, bakedContainer: null)
+            .ShouldBe(new System.Drawing.Rectangle(100, 60, 40, 30));
+    }
+
     [Fact]
     public void GetRenderTargetBounds_EntirelyOffCamera_HasNoVisibleArea()
     {

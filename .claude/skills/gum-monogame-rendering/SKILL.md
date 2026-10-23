@@ -83,6 +83,10 @@ Gum runs in two alpha worlds and blend/render-target code must serve both. The t
 
 **Testing gotcha:** `MonoGameGum.IntegrationTests` does not run `GumIdb`'s premultiplied setup, so a pixel test there won't match a real FRB scene. Pin premultiplied-pipeline blend decisions with a logic test (`RenderTargetBakeBlendStateTests`), and check the end-to-end pixels in `Tests/FlatRedBall.GumRendering.Tests` (see `frb-pixel-harness`). It runs by hand next to a FlatRedBall checkout and is not part of the compile-only FRB canary.
 
+## Clip and Cull Rectangles Inside a Turned Render-Target Bake
+
+A turned `IsRenderTarget` container bakes its children upright, but a descendant's absolute position is where it sits turned in the world. Any scissor or cull rectangle computed inside the bake must go through `GetAbsoluteBoundsInBake(bakedContainer, ...)` (via `GetScissorRectangleFor`/`GetCullTestBoundsFor` with the `bakedContainer` argument, or `ClipBoundsSource(camera, layer, container)`), which turns the descendant's top-left back about the container. Renderer's `_bakedContainer` carries the container during the bake; raylib has `_bakeContainer`. A new place that builds a clip rect in the bake must pass it too.
+
 ## Two Independent Batchers
 
 1. **MonoGame `SpriteBatch`** — wrapped by `SpriteBatchStack` (push/pop of render-state parameters). Used by sprites, text, NineSlice, SolidRectangle. Anything inheriting `SpriteBatchRenderableBase` declares `BatchKey="SpriteBatch"`.

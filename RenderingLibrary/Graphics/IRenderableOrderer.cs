@@ -26,6 +26,7 @@ public readonly struct ClipBoundsSource
 {
     private readonly Camera? _camera;
     private readonly Layer? _layer;
+    private readonly IRenderableIpso? _bakedContainer;
     private readonly Func<IRenderableIpso, System.Drawing.Rectangle>? _getScissorRectangle;
     private readonly Func<IRenderableIpso, System.Drawing.Rectangle>? _getCullTestBounds;
 
@@ -35,9 +36,20 @@ public readonly struct ClipBoundsSource
     /// supplied.
     /// </summary>
     public ClipBoundsSource(Camera camera, Layer? layer = null)
+        : this(camera, layer, bakedContainer: null)
+    {
+    }
+
+    /// <summary>
+    /// Maps through <paramref name="camera"/> while drawing the bake of
+    /// <paramref name="bakedContainer"/>, whose children bake upright when the container is turned,
+    /// so a descendant's clip and cull rectangles are turned back the same way (#6618).
+    /// </summary>
+    public ClipBoundsSource(Camera camera, Layer? layer, IRenderableIpso? bakedContainer)
     {
         _camera = camera;
         _layer = layer;
+        _bakedContainer = bakedContainer;
         _getScissorRectangle = null;
         _getCullTestBounds = null;
     }
@@ -58,6 +70,7 @@ public readonly struct ClipBoundsSource
     {
         _camera = null;
         _layer = null;
+        _bakedContainer = null;
         _getScissorRectangle = getScissorRectangle;
         _getCullTestBounds = getCullTestBounds ?? getScissorRectangle;
     }
@@ -80,7 +93,7 @@ public readonly struct ClipBoundsSource
     /// </summary>
     public System.Drawing.Rectangle GetScissorRectangle(IRenderableIpso renderable) =>
         _camera != null
-            ? _camera.GetScissorRectangleFor(_layer, renderable)
+            ? _camera.GetScissorRectangleFor(_layer, renderable, _bakedContainer)
             : _getScissorRectangle!(renderable);
 
     /// <summary>
@@ -89,7 +102,7 @@ public readonly struct ClipBoundsSource
     /// </summary>
     public System.Drawing.Rectangle GetCullTestBounds(IRenderableIpso renderable) =>
         _camera != null
-            ? _camera.GetCullTestBoundsFor(_layer, renderable)
+            ? _camera.GetCullTestBoundsFor(_layer, renderable, _bakedContainer)
             : _getCullTestBounds!(renderable);
 }
 
