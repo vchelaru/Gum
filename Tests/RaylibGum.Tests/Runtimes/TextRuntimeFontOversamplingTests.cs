@@ -564,13 +564,13 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
             // Every KernSmith-generated font is registered in RaylibFontMetricsRegistry (ContentLoader.
             // BuildFontFromFntText) and removed only when its owning ManagedFont is disposed -- the same
             // signal ContentLoaderTests uses to prove a font was actually unloaded.
-            RaylibFontMetricsRegistry.TryGet(firstOversampledTextureId, out _).ShouldBeTrue(
+            RaylibFontMetricsRegistry.IsRegistered(firstOversampledTextureId).ShouldBeTrue(
                 "sanity check that the first oversampled font was actually created and registered");
 
             // Mirrors a continuous zoom gesture re-rasterizing again at a different size.
             textRuntime.RegenerateOversampledFont(3.0f).ShouldBeTrue();
 
-            RaylibFontMetricsRegistry.TryGet(firstOversampledTextureId, out _).ShouldBeFalse(
+            RaylibFontMetricsRegistry.IsRegistered(firstOversampledTextureId).ShouldBeFalse(
                 "because the superseded oversampled font isn't cached or referenced anywhere else, so it " +
                 "must be unloaded (via ManagedFont) when replaced or its GPU atlas texture leaks (issue #4364)");
         }

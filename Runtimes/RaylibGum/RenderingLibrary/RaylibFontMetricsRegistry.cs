@@ -3,12 +3,13 @@ using System.Collections.Generic;
 namespace RenderingLibrary;
 
 /// <summary>
-/// Associates a Gum bitmap font's line-spacing metrics (the .fnt <c>lineHeight</c> and <c>base</c>)
-/// with the atlas texture id of the loaded raylib font.
+/// Associates a font's line-spacing metrics (a .fnt's <c>lineHeight</c> and <c>base</c>, or a TTF's loaded
+/// through <c>TtfFontLoader</c>) with the atlas texture id of the loaded raylib font.
 /// </summary>
 /// <remarks>
 /// raylib's <see cref="Raylib_cs.Font"/> struct carries only <c>BaseSize</c> — it has no field for a
-/// bitmap font's lineHeight/baseline — so when a Gum .fnt is assembled those values are recorded here
+/// font's lineHeight/baseline — so when a Gum .fnt is assembled or a TTF is loaded through
+/// <c>TtfFontLoader</c> those values are recorded here
 /// and looked up by the <c>Text</c> renderable when it measures lines. Without this, the renderable
 /// reconstructed line height as <c>MeasureTextEx("M") ≈ BaseSize</c>, dropping the descender region
 /// that the MonoGame <c>BitmapFont.LineHeightInPixels</c> keeps — so a Text (and any container sized
@@ -17,7 +18,9 @@ namespace RenderingLibrary;
 /// Keyed by atlas texture id because that value travels with the (copied) <see cref="Raylib_cs.Font"/>
 /// struct through LoaderManager caching and reassignment, whereas the parsed .fnt metadata is
 /// discarded. Entries are removed when the owning <see cref="ManagedFont"/> is disposed, since raylib
-/// may later reuse the freed texture id. Accessed only on the single render/content-load thread.
+/// may later reuse the freed texture id. A font freed some other way (raylib's own <c>UnloadFont</c>)
+/// leaves its entry behind, so each entry also records the font's BaseSize and atlas size, and a lookup
+/// whose font differs in any of them finds nothing. Accessed only on the single render/content-load thread.
 /// </remarks>
 internal static class RaylibFontMetricsRegistry
 {
@@ -40,25 +43,58 @@ internal static class RaylibFontMetricsRegistry
         }
     }
 
-    private static readonly Dictionary<uint, FontLineMetrics> _metricsByTextureId = new();
+    private readonly struct Entry
+    {
+        public readonly FontLineMetrics Metrics;
+        public readonly int BaseSize;
+        public readonly int TextureWidth;
+        public readonly int TextureHeight;
+
+        public Entry(FontLineMetrics metrics, int baseSize, int textureWidth, int textureHeight)
+        {
+            Metrics = metrics;
+            BaseSize = baseSize;
+            TextureWidth = textureWidth;
+            TextureHeight = textureHeight;
+        }
+    }
+
+    private static readonly Dictionary<uint, Entry> _entriesByTextureId = new();
 
     /// <summary>
-    /// Records the line metrics for the font whose atlas has the given texture id, overwriting any
-    /// prior entry for that id.
+    /// Records the line metrics for a font of <paramref name="baseSize"/> whose atlas is
+    /// <paramref name="texture"/>, overwriting any prior entry for that texture id.
     /// </summary>
-    public static void Register(uint textureId, int lineHeight, int baselineY)
+    public static void Register(Raylib_cs.Texture2D texture, int baseSize, int lineHeight, int baselineY)
     {
-        _metricsByTextureId[textureId] = new FontLineMetrics(lineHeight, baselineY);
+        _entriesByTextureId[texture.Id] = new Entry(new FontLineMetrics(lineHeight, baselineY), baseSize, texture.Width, texture.Height);
     }
 
     /// <summary>
-    /// Looks up the line metrics recorded for the given atlas texture id. Returns false for fonts that
-    /// were not assembled from a Gum .fnt (raylib's built-in default font, TTF loaded via LoadFontEx),
-    /// in which case callers fall back to native measurement.
+    /// Looks up the line metrics recorded for <paramref name="font"/>. Returns false for fonts without
+    /// recorded metrics (raylib's built-in default font, a TTF loaded with raylib's own LoadFontEx) and for a
+    /// font that only reuses the texture id of a freed one, in which case callers fall back to native measurement.
     /// </summary>
-    public static bool TryGet(uint textureId, out FontLineMetrics metrics)
+    public static bool TryGet(Raylib_cs.Font font, out FontLineMetrics metrics)
     {
-        return _metricsByTextureId.TryGetValue(textureId, out metrics);
+        if (_entriesByTextureId.TryGetValue(font.Texture.Id, out Entry entry)
+            && entry.BaseSize == font.BaseSize
+            && entry.TextureWidth == font.Texture.Width
+            && entry.TextureHeight == font.Texture.Height)
+        {
+            metrics = entry.Metrics;
+            return true;
+        }
+        metrics = default;
+        return false;
+    }
+
+    /// <summary>
+    /// Whether any metrics are recorded under the given atlas texture id.
+    /// </summary>
+    public static bool IsRegistered(uint textureId)
+    {
+        return _entriesByTextureId.ContainsKey(textureId);
     }
 
     /// <summary>
@@ -67,6 +103,6 @@ internal static class RaylibFontMetricsRegistry
     /// </summary>
     public static void Remove(uint textureId)
     {
-        _metricsByTextureId.Remove(textureId);
+        _entriesByTextureId.Remove(textureId);
     }
 }

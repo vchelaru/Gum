@@ -9,6 +9,7 @@ using KernSmith.Gum;
 using Raylib_cs;
 using RaylibGum.Renderables;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Numerics;
@@ -268,16 +269,16 @@ public class BasicShapes
     {
         // Arial 18 across the board — the prior 04B_30_ pixel bubble font at 24 px made nav
         // buttons too tall and looked out of place next to the shape gallery. raylib's
-        // LoadFontEx pulls glyph atlases from any TTF/OTF; Arial ships with Windows. If
+        // TtfFontLoader pulls glyph atlases from any TTF/OTF; Arial ships with Windows. If
         // missing (non-Windows / locked-down boxes), fall back to the bundled pixel font so
         // the sample still runs.
         const int fontSize = 18;
         string fontFilePath = @"C:\Windows\Fonts\arial.ttf";
-        Font font = LoadFontEx(fontFilePath, fontSize, null, 0);
+        Font font = TtfFontLoader.LoadFont(fontFilePath, fontSize);
         if (font.BaseSize == 0)
         {
             fontFilePath = "resources/04B_30_.TTF";
-            font = LoadFontEx(fontFilePath, fontSize, null, 0);
+            font = TtfFontLoader.LoadFont(fontFilePath, fontSize);
         }
 
         // Drives Forms text (buttons, labels, etc.) via CustomFontFile+FontSize, NOT a raw Font
