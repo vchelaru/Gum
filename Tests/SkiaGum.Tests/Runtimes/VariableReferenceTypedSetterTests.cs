@@ -16,7 +16,7 @@ namespace SkiaGum.Tests.Runtimes;
 /// is also a Gum variable updates a same-component reference that reads it (#6393). Gum.Expressions is
 /// not referenced here, so only the plain-lookup path runs.
 /// </summary>
-public class VariableReferenceTypedSetterTests : IDisposable
+public class VariableReferenceTypedSetterTests : BaseTestClass
 {
     private static readonly Dictionary<string, Func<GraphicalUiElement>> Factories = new()
     {
@@ -36,7 +36,6 @@ public class VariableReferenceTypedSetterTests : IDisposable
     };
 
     private readonly SystemManagers _systemManagers = new SystemManagers();
-    private readonly IContentLoader? _originalContentLoader = LoaderManager.Self.ContentLoader;
 
     public VariableReferenceTypedSetterTests()
     {
@@ -46,14 +45,7 @@ public class VariableReferenceTypedSetterTests : IDisposable
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
         // The sweep assigns made-up file names; a missing Svg or Lottie file throws, so those load as nothing.
-        LoaderManager.Self.ContentLoader = new MissingDocumentContentLoader(_originalContentLoader);
-    }
-
-    public void Dispose()
-    {
-        // No ElementSaveExtensions.Reset(): it would drop the renderable factory the first Initialize installed.
-        ObjectFinder.Self.GumProjectSave = null;
-        LoaderManager.Self.ContentLoader = _originalContentLoader;
+        LoaderManager.Self.ContentLoader = new MissingDocumentContentLoader(LoaderManager.Self.ContentLoader);
     }
 
     private sealed class MissingDocumentContentLoader(IContentLoader? inner) : IContentLoader

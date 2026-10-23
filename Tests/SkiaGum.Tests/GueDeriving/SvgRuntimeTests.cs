@@ -34,7 +34,6 @@ public class SvgRuntimeTests : BaseTestClass
     public void ToGraphicalUiElement_SvgInstanceWithSourceFile_LoadsTexture()
     {
         string svgPath = WriteSvg();
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
         SystemManagers systemManagers = new SystemManagers();
         systemManagers.Initialize();
@@ -62,7 +61,6 @@ public class SvgRuntimeTests : BaseTestClass
         }
         finally
         {
-            LoaderManager.Self.ContentLoader = originalLoader;
             File.Delete(svgPath);
         }
     }
@@ -71,22 +69,14 @@ public class SvgRuntimeTests : BaseTestClass
     public void SetPropertySourceFile_MissingFile_ThrowsOnSvgRuntimeAndPlainElement()
     {
         string missing = Path.Combine(Path.GetTempPath(), "GumMissing_" + Guid.NewGuid().ToString("N") + ".svg");
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
 
-        try
-        {
-            SvgRuntime runtime = new SvgRuntime();
-            Should.Throw<ArgumentException>(() => runtime.SetProperty("SourceFile", missing));
+        SvgRuntime runtime = new SvgRuntime();
+        Should.Throw<ArgumentException>(() => runtime.SetProperty("SourceFile", missing));
 
-            GraphicalUiElement plain = new GraphicalUiElement();
-            plain.SetContainedObject(new VectorSprite());
-            Should.Throw<ArgumentException>(() => plain.SetProperty("SourceFile", missing));
-        }
-        finally
-        {
-            LoaderManager.Self.ContentLoader = originalLoader;
-        }
+        GraphicalUiElement plain = new GraphicalUiElement();
+        plain.SetContainedObject(new VectorSprite());
+        Should.Throw<ArgumentException>(() => plain.SetProperty("SourceFile", missing));
     }
 
     [Fact]
@@ -95,7 +85,6 @@ public class SvgRuntimeTests : BaseTestClass
         string svgPath = Path.Combine(Path.GetTempPath(), "GumSvgRuntimeTest_" + Guid.NewGuid().ToString("N") + ".svg");
         File.WriteAllText(svgPath,
             "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect width=\"10\" height=\"10\" fill=\"red\"/></svg>");
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
 
         try
@@ -110,7 +99,6 @@ public class SvgRuntimeTests : BaseTestClass
         }
         finally
         {
-            LoaderManager.Self.ContentLoader = originalLoader;
             File.Delete(svgPath);
         }
     }
@@ -121,7 +109,6 @@ public class SvgRuntimeTests : BaseTestClass
         string svgPath = Path.Combine(Path.GetTempPath(), "GumSvgRuntimeTest_" + Guid.NewGuid().ToString("N") + ".svg");
         File.WriteAllText(svgPath,
             "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect width=\"10\" height=\"10\" fill=\"red\"/></svg>");
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
 
         try
@@ -135,7 +122,6 @@ public class SvgRuntimeTests : BaseTestClass
         }
         finally
         {
-            LoaderManager.Self.ContentLoader = originalLoader;
             File.Delete(svgPath);
         }
     }

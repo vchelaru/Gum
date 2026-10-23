@@ -87,7 +87,6 @@ public class SourceFileAchxAutoLoadTests : BaseTestClass
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumSkiaAchxAutoLoad_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
 
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         bool savedCacheTextures = LoaderManager.Self.CacheTextures;
 
         try
@@ -126,7 +125,6 @@ public class SourceFileAchxAutoLoadTests : BaseTestClass
         }
         finally
         {
-            LoaderManager.Self.ContentLoader = originalLoader;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             if (Directory.Exists(tempRoot))
             {

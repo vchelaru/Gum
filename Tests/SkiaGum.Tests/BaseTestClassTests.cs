@@ -1,4 +1,6 @@
 using Gum.Tests.Shared;
+using RenderingLibrary.Content;
+using Shouldly;
 
 namespace SkiaGum.Tests;
 
@@ -26,5 +28,40 @@ public class BaseTestClassTests
     public void Dispose_ResetsObjectFinder_WhenATestLeftAProjectAndFallbacks()
     {
         ObjectFinderStateAssert.DisposeResets(() => new BaseTestClass());
+    }
+
+    // A test that swaps in its own loader would otherwise leave every later test loading through it (#6585).
+    [Fact]
+    public void Dispose_RestoresContentLoader_WhenATestReplacedIt()
+    {
+        BaseTestClass testClass = new BaseTestClass();
+        IContentLoader? before = LoaderManager.Self.ContentLoader;
+
+        LoaderManager.Self.ContentLoader = new ContentLoader();
+        testClass.Dispose();
+
+        LoaderManager.Self.ContentLoader.ShouldBeSameAs(before);
+    }
+
+    // SystemManagers.Initialize assigns ContentLoader only on its first call in the process. Restoring a
+    // null captured before that call would leave every later test with no loader, because no later
+    // Initialize assigns it again (#6585).
+    [Fact]
+    public void Dispose_LeavesAContentLoader_WhenTheTestStartedBeforeAnyInitialize()
+    {
+        IContentLoader? original = LoaderManager.Self.ContentLoader;
+        try
+        {
+            LoaderManager.Self.ContentLoader = null;
+            BaseTestClass testClass = new BaseTestClass();
+
+            testClass.Dispose();
+
+            LoaderManager.Self.ContentLoader.ShouldNotBeNull();
+        }
+        finally
+        {
+            LoaderManager.Self.ContentLoader = original;
+        }
     }
 }

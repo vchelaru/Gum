@@ -16,7 +16,7 @@ namespace SkiaGum.Tests.GueDeriving;
 /// <summary>
 /// Setters that change what a Skia renderable reports as its size must re-run layout.
 /// </summary>
-public class LayoutRenderableSetterTests
+public class LayoutRenderableSetterTests : BaseTestClass
 {
     public LayoutRenderableSetterTests()
     {
@@ -114,23 +114,15 @@ public class LayoutRenderableSetterTests
     [Fact]
     public void NineSliceSourceFile_ShouldResizePercentageOfSourceFileNineSlice()
     {
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = new MockContentLoader(200, 80);
-        try
-        {
-            NineSliceRuntime sut = new();
-            sut.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
-            sut.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
+        NineSliceRuntime sut = new();
+        sut.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
+        sut.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
 
-            sut.SetProperty("SourceFile", "frame.png");
+        sut.SetProperty("SourceFile", "frame.png");
 
-            sut.AbsoluteWidth.ShouldBe(200);
-            sut.AbsoluteHeight.ShouldBe(80);
-        }
-        finally
-        {
-            LoaderManager.Self.ContentLoader = originalLoader;
-        }
+        sut.AbsoluteWidth.ShouldBe(200);
+        sut.AbsoluteHeight.ShouldBe(80);
     }
 
     [Fact]
@@ -139,7 +131,6 @@ public class LayoutRenderableSetterTests
         string svgPath = Path.Combine(Path.GetTempPath(), "GumSvgLayoutTest_" + Guid.NewGuid().ToString("N") + ".svg");
         File.WriteAllText(svgPath,
             "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"10\"><rect width=\"20\" height=\"10\" fill=\"red\"/></svg>");
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
         try
         {
@@ -152,7 +143,6 @@ public class LayoutRenderableSetterTests
         }
         finally
         {
-            LoaderManager.Self.ContentLoader = originalLoader;
             File.Delete(svgPath);
         }
     }
