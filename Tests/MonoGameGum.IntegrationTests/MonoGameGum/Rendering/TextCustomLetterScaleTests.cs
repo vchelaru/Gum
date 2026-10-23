@@ -27,6 +27,8 @@ public class TextCustomLetterScaleTests : BaseTestClass
     // Same ScaleX, different ScaleY: the lit columns must match.
     [InlineData(2f, 1f, 2f, 2f, false)]
     [InlineData(1f, 2f, 1f, 1f, false)]
+    // Scale 1 on both axes against a ScaleY-only letter: no ScaleX, so the columns match.
+    [InlineData(1f, 1f, 1f, 3f, false)]
     public void CustomLetter_RowsFollowScaleY_ColumnsFollowScaleX(
         float scaleXA, float scaleYA, float scaleXB, float scaleYB, bool compareRows)
     {
