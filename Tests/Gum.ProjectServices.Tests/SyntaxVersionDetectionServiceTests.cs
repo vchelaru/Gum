@@ -755,6 +755,102 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         result.Version.ShouldBe(3);
     }
 
+    // Every runtime in this repo that stamps a GumSyntaxVersion, referenced by its real csproj.
+    // KniGum and FnaGum compile MonoGameGum's source, stamp included, from the folder above them.
+    [Theory]
+    [InlineData("MonoGameGum/MonoGameGum.csproj", "MonoGameGum")]
+    [InlineData("MonoGameGum/KniGum/KniGum.csproj", "KniGum")]
+    [InlineData("MonoGameGum/FnaGum/FnaGum.csproj", "FnaGum")]
+    [InlineData("Runtimes/RaylibGum/RaylibGum.csproj", "RaylibGum")]
+    [InlineData("Runtimes/SkiaGum/SkiaGum.csproj", "SkiaGum")]
+    [InlineData("Runtimes/KniSkiaGum/KniSkiaGum.csproj", "KniSkiaGum")]
+    [InlineData("Runtimes/SilkNetGum/SilkNetGum.csproj", "SilkNetGum")]
+    [InlineData("Runtimes/StrideGum/StrideGum.csproj", "StrideGum")]
+    [InlineData("Runtimes/UnityGum/UnityGum.csproj", "UnityGum")]
+    public void Detect_ProjectReferenceToRepoRuntime_ReadsItsStamp(string csprojRelativePath, string projectName)
+    {
+        string runtimeCsproj = Path.Combine(FindRepoRoot(), csprojRelativePath);
+        File.Exists(runtimeCsproj).ShouldBeTrue(runtimeCsproj);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+$@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <ProjectReference Include=""{runtimeCsproj}"" />
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = _sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
+        result.Description.ShouldEndWith($"ProjectReference to {projectName})");
+    }
+
+    [Fact]
+    public void Detect_NuGetPackage_KniSkia_ReadsSyntaxVersion()
+    {
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        string tfmDir = Path.Combine(nuGetCacheRoot, "gum.kniskia", "2026.10.1.1", "lib", "net8.0");
+        Directory.CreateDirectory(tfmDir);
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"), Path.Combine(tfmDir, "KniSkiaGum.dll"));
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Gum.KniSkia"" Version=""2026.10.1.1"" />
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
+    }
+
+    [Fact]
+    public void Detect_ProjectReferenceToNonRuntimeWithStamp_IsNotRead()
+    {
+        // Only a project named like a runtime (ending in "Gum") is a runtime; GumCommon is stamped
+        // for metadata consistency, not for detection.
+        string referencedProjectDir = Path.Combine(_tempDirectory, "libs", "GumCommon");
+        Directory.CreateDirectory(referencedProjectDir);
+        File.WriteAllText(Path.Combine(referencedProjectDir, "AssemblyAttributes.cs"),
+            "[assembly: GumSyntaxVersion(Version = 1)]\n");
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <ProjectReference Include=""..\libs\GumCommon\GumCommon.csproj"" />
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = _sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
+    }
+
+    private static string FindRepoRoot()
+    {
+        string? current = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(current))
+        {
+            if (File.Exists(Path.Combine(current, "Gum.slnx")))
+            {
+                return current;
+            }
+            current = Path.GetDirectoryName(current);
+        }
+        throw new InvalidOperationException("could not locate repo root from " + AppContext.BaseDirectory);
+    }
+
     [Fact]
     public void Detect_NuGetPackage_FloatingVersion_UsesHighestRestoredVersion()
     {
@@ -854,6 +950,30 @@ $@"<Project ToolsVersion=""4.0"">
   <ItemGroup>
     <Reference Include=""SkiaGum"">
       {referenceBody}
+    </Reference>
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = _sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.AssemblyReference);
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
+    }
+
+    [Theory]
+    [InlineData("UnityGum")]
+    [InlineData("KniSkiaGum")]
+    public void Detect_AssemblyReference_HostRuntimeDll_ReadsSyntaxVersion(string assemblyName)
+    {
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        string dllDir = Path.Combine(gameDir, "Assets", "Gum", "DLLs");
+        Directory.CreateDirectory(dllDir);
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"), Path.Combine(dllDir, assemblyName + ".dll"));
+        File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp.csproj"),
+$@"<Project ToolsVersion=""4.0"">
+  <ItemGroup>
+    <Reference Include=""{assemblyName}"">
+      <HintPath>Assets\Gum\DLLs\{assemblyName}.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>");
