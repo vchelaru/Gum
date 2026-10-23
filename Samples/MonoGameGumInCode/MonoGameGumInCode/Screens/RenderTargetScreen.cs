@@ -100,6 +100,7 @@ internal class RenderTargetScreen : FrameworkElement
         frame.IsFilled = true;
         frame.FillColor = Rgba(70, 70, 90, 255);
         frame.StrokeWidth = 0;
+        frame.IsAntialiased = false;
 
         var holder = new ContainerRuntime();
         holder.Width = width;
@@ -118,6 +119,7 @@ internal class RenderTargetScreen : FrameworkElement
         rect.IsFilled = true;
         rect.FillColor = color;
         rect.StrokeWidth = 0;
+        rect.IsAntialiased = false;
         return rect;
     }
 
