@@ -12,14 +12,17 @@ namespace MonoGameGumImmediateMode.Screens
     /// </summary>
     public class ParentChildScreen : IImmediateModeScreen
     {
-        private ColoredRectangleRuntime _buttonRectangle;
+        private RectangleRuntime _buttonRectangle;
 
         public void Initialize(GraphicsDevice graphicsDevice)
         {
-            _buttonRectangle = new ColoredRectangleRuntime();
+            _buttonRectangle = new RectangleRuntime();
             _buttonRectangle.Width = 200;
             _buttonRectangle.Height = 48;
-            _buttonRectangle.Color = Color.DarkBlue;
+            _buttonRectangle.IsFilled = true;
+            _buttonRectangle.FillColor = Color.DarkBlue;
+            _buttonRectangle.StrokeWidth = 0;
+            _buttonRectangle.IsAntialiased = false;
             _buttonRectangle.X = 60;
             _buttonRectangle.Y = 120;
 

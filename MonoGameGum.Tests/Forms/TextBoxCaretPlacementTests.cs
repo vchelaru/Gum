@@ -278,11 +278,13 @@ public class TextBoxCaretPlacementTests : BaseTestClass
     }
 
     // The caret sits on its line whichever edge of itself YOrigin positions (#6648). The caret is as
-    // tall as the line, so its center is the line's center for every origin.
+    // tall as the line, so its center is the line's center for every origin. TextBaseline on a
+    // non-text caret is its bottom edge (as in GraphicalUiElement), so it behaves like Bottom (#6660).
     [Theory]
     [InlineData(VerticalAlignment.Top)]
     [InlineData(VerticalAlignment.Center)]
     [InlineData(VerticalAlignment.Bottom)]
+    [InlineData(VerticalAlignment.TextBaseline)]
     public void CaretCenter_MultiLineWithAuthoredYOrigin_ShouldMatchDrawnLineCenter(VerticalAlignment yOrigin)
     {
         TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
@@ -302,6 +304,7 @@ public class TextBoxCaretPlacementTests : BaseTestClass
     [InlineData(VerticalAlignment.Top)]
     [InlineData(VerticalAlignment.Center)]
     [InlineData(VerticalAlignment.Bottom)]
+    [InlineData(VerticalAlignment.TextBaseline)]
     public void SelectionCenter_MultiLineWithAuthoredYOrigin_ShouldMatchDrawnLineCenter(VerticalAlignment yOrigin)
     {
         TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);

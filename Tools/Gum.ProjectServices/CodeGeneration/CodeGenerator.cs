@@ -273,38 +273,7 @@ public class CodeGenerationContext
 
     public VisualApi VisualApi => GetVisualApiForElement(Element);
 
-    VisualApi GetVisualApiForElement(ElementSave element)
-    {
-        VisualApi visualApi;
-        //if(element is ScreenSave)
-        //{
-        // screens are always XamarinForms
-        //visualApi = VisualApi.XamarinForms;
-        // Update August 23, 2022
-        // No, the code gen may be 
-        // be used for entirely Skia
-        // pages such as PDF generation.
-        // Therefore, we should always look
-        // to the IsXamarinFormsControl value:
-        //visualApi = VisualApi.XamarinForms;
-        //}
-        //else
-        {
-            var defaultState = element.DefaultState!;
-            var rvf = new RecursiveVariableFinder(defaultState);
-            var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
-            if (isXamForms == true)
-            {
-                visualApi = VisualApi.XamarinForms;
-            }
-            else
-            {
-                visualApi = VisualApi.Gum;
-            }
-        }
-        return visualApi;
-
-    }
+    VisualApi GetVisualApiForElement(ElementSave element) => CodeGenerator.ResolveVisualApi(element);
 }
 
 #endregion
@@ -795,7 +764,7 @@ public class CodeGenerator
 
         if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
         {
-            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings, context.ResolvedSyntaxVersion);
+            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings, context.ResolvedSyntaxVersion, _codeGenerationNameVerifier);
             header += " : " + inheritance;
         }
 
@@ -901,7 +870,7 @@ public class CodeGenerator
         return className;
     }
 
-    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings, int resolvedSyntaxVersion = 0)
+    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings, int resolvedSyntaxVersion = 0, CodeGenerationNameVerifier? nameVerifier = null)
     {
         string? inheritance = null;
         if (element is ScreenSave)
@@ -912,7 +881,9 @@ public class CodeGenerator
 
             if (!string.IsNullOrEmpty(element.BaseType))
             {
-                inheritance = element.BaseType;
+                // A generated base is inherited by its class name; a hand-written one, or one this
+                // project does not know, keeps the name as written.
+                inheritance = GetGeneratedBaseClassName(element, projectSettings, nameVerifier) ?? element.BaseType;
             }
             else if (!string.IsNullOrEmpty(projectSettings.DefaultScreenBase))
             {
@@ -991,24 +962,54 @@ public class CodeGenerator
             {
                 inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
             }
-            if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
+            if (GetGeneratedBaseClassName(element, projectSettings, nameVerifier) is string generatedBaseName)
             {
-                // for standards, append "Runtime"
-                // Update March 14, 2025
-                // Why only on standards?
-                // A component (such as MessageBox)
-                // could inherit from UserControl, which
-                // generates UserControlRuntime.
-                var parentElement = ObjectFinder.Self.GetElementSave(inheritance);
-                if (element != null)
-                {
-                    inheritance = inheritance + "Runtime";
-                }
+                inheritance = generatedBaseName;
+            }
+            else if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
+            {
+                // Append "Runtime" even for a base this project does not know: a component
+                // (such as MessageBox) could inherit from UserControl, which generates UserControlRuntime.
+                inheritance = inheritance + "Runtime";
             }
         }
 
         return inheritance;
     }
+
+    /// <summary>
+    /// The class name the generator gives <paramref name="element"/>'s base element, which a derived class
+    /// must inherit: folder stripped, plus "Runtime" unless Gum Forms or the base is a Xamarin Forms control
+    /// (what <c>GetClassNameForType</c> returns for the base, sanitized by <paramref name="nameVerifier"/> when given). Null when the base is not generated here: no
+    /// base, one this project does not contain, a standard element, or one listed in
+    /// <see cref="CodeOutputProjectSettings.BaseTypesNotCodeGenerated"/>.
+    /// </summary>
+    private static string? GetGeneratedBaseClassName(ElementSave element, CodeOutputProjectSettings projectSettings, CodeGenerationNameVerifier? nameVerifier)
+    {
+        if (string.IsNullOrEmpty(element.BaseType) || IsBaseTypeNotCodeGenerated(element.BaseType, projectSettings))
+        {
+            return null;
+        }
+
+        ElementSave? baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+        if (baseElement == null || baseElement is StandardElementSave || baseElement.DefaultState == null)
+        {
+            return null;
+        }
+
+        string name = baseElement.Name;
+        name = name.Substring(name.LastIndexOfAny(new[] { '/', '\\' }) + 1);
+
+        bool hasRuntimeSuffix = projectSettings.OutputLibrary != OutputLibrary.GumForms &&
+            ResolveVisualApi(baseElement) == VisualApi.Gum;
+        string className = hasRuntimeSuffix ? name + "Runtime" : name;
+
+        // The declaration sanitizes the name (spaces, leading digit, keyword); the inherited name must match.
+        return nameVerifier == null ? className : nameVerifier.ToCSharpName(className);
+    }
+
+    private static bool IsBaseTypeNotCodeGenerated(string baseType, CodeOutputProjectSettings? projectSettings) =>
+        projectSettings?.BaseTypesNotCodeGenerated?.Split('\n').Select(item => item.Trim()).Contains(baseType) == true;
 
     /// <summary>
     /// Returns the message explaining why <paramref name="element"/> has no valid Forms base class, or
@@ -1606,15 +1607,9 @@ public class CodeGenerator
         var foundBase = ObjectFinder.Self.GetElementSave(element.BaseType);
         var isDerived = foundBase != null && (foundBase is StandardElementSave) == false;
 
-        if (isDerived && projectSettings?.BaseTypesNotCodeGenerated != null)
+        if (isDerived && IsBaseTypeNotCodeGenerated(element.BaseType, projectSettings))
         {
-            // check the settings:
-            var split = projectSettings?.BaseTypesNotCodeGenerated.Split('\n').Select(item => item.Trim()).ToArray();
-
-            if (split?.Contains(element.BaseType) == true)
-            {
-                isDerived = false;
-            }
+            isDerived = false;
         }
 
         return isDerived;
@@ -6774,7 +6769,9 @@ public class CodeGenerator
     }
 
 
-    public VisualApi GetVisualApiForElement(ElementSave element)
+    public VisualApi GetVisualApiForElement(ElementSave element) => ResolveVisualApi(element);
+
+    internal static VisualApi ResolveVisualApi(ElementSave element)
     {
         VisualApi visualApi;
         //if(element is ScreenSave)
