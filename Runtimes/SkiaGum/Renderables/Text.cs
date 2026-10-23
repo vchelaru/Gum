@@ -2174,9 +2174,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// The text-local rectangle the blend is limited to: the measured block plus room for the outline
     /// and drop shadow.
     /// </summary>
-    private SKRect GetBlendLayerBounds(TextBlock textBlock)
+    internal SKRect GetBlendLayerBounds(TextBlock textBlock)
     {
-        float outlinePadding = OutlineThickness * (float)GlobalTextScale * FontScale;
+        // The halo is a stroke centered on the glyph edge, so half its width shows outward; the widest run decides.
+        float outlinePadding = 0;
+        foreach (StyledTextRun run in GetStyledRuns())
+        {
+            outlinePadding = System.Math.Max(outlinePadding, run.Style.HaloWidth / 2f);
+        }
         float padding = 2 + outlinePadding;
         if (HasDropshadow)
         {

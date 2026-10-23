@@ -103,6 +103,22 @@ public class TextOutlineTests
     }
 
     [Fact]
+    public void GetBlendLayerBounds_PadsByTheHaloOfTheLargestFontScaleRun()
+    {
+        Text sut = new();
+        sut.OutlineThickness = 2;
+        sut.FontScale = 1;
+        sut.RawText = "plain [FontScale=3]big[/FontScale]";
+        Topten.RichTextKit.TextBlock block = sut.GetTextBlock();
+
+        SKRect bounds = sut.GetBlendLayerBounds(block);
+
+        // The [FontScale=3] run's outline reaches 2 * 3 pixels past the block, plus the 2 pixel margin.
+        (bounds.Left).ShouldBeLessThanOrEqualTo(-8f);
+        (bounds.Right - block.MeasuredWidth).ShouldBeGreaterThanOrEqualTo(8f);
+    }
+
+    [Fact]
     public void OutlineColor_DefaultsToBlack()
     {
         Text sut = new();

@@ -44,8 +44,8 @@ public class TextNativeTtfFallbackOutlineDrawTests : BaseTestClass
     {
         // The tolerance covers the plain glyph's faint antialiased edge, which the overlapping outline passes push
         // over the ink threshold.
-        TextInkRender.Bounds plain = Render(outlineThickness: 0);
-        TextInkRender.Bounds outlined = Render(outlineThickness: 3);
+        TextInkRender.Bounds plain = Render(outlineThickness: 0, fontScale: 1);
+        TextInkRender.Bounds outlined = Render(outlineThickness: 3, fontScale: 1);
 
         (plain.Left - outlined.Left).ShouldBeInRange(2f, 6f);
         (outlined.Right - plain.Right).ShouldBeInRange(2f, 6f);
@@ -75,6 +75,21 @@ public class TextNativeTtfFallbackOutlineDrawTests : BaseTestClass
 
         GrowthLeft(24).ShouldBe(GrowthLeft(36), 1f);
         GrowthLeft(24).ShouldBeInRange(2f, 4f);
+    }
+
+    [Fact]
+    public void Draw_OutlineThickness_IsNotGrownByAFontSizeRun()
+    {
+        // [FontSize=n] draws the base atlas at n pixels when no creator can rasterize it, but a FontSize never changes
+        // the outline thickness (#6669).
+        float GrowthLeft(string markup) =>
+            RenderMarkup(markup, 0).Left - RenderMarkup(markup, 3).Left;
+
+        float plain = GrowthLeft("H");
+        float withFontSizeRun = GrowthLeft("[FontSize=44]H[/FontSize]");
+
+        plain.ShouldBeInRange(2f, 4f);
+        withFontSizeRun.ShouldBe(plain, 1f);
     }
 
     [Fact]
@@ -111,10 +126,14 @@ public class TextNativeTtfFallbackOutlineDrawTests : BaseTestClass
     private TextInkRender.Bounds Render(int outlineThickness, float fontScale = 2, float fontSize = 32) =>
         TextInkRender.InkBounds(RenderPixels(outlineThickness, fontScale, fontSize));
 
-    private Color[] RenderPixels(int outlineThickness, float fontScale = 2, float fontSize = 32)
+    // A base FontSize of 24 at FontScale 1, so a [FontSize=44] run is larger than the base atlas.
+    private TextInkRender.Bounds RenderMarkup(string markup, int outlineThickness) =>
+        TextInkRender.InkBounds(RenderPixels(outlineThickness, 1, 24, markup));
+
+    private Color[] RenderPixels(int outlineThickness, float fontScale = 2, float fontSize = 32, string markup = "H")
     {
         string fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "Nunito", FontFileName);
-        return TextInkRender.Render("H", 60, 60, text =>
+        return TextInkRender.Render(markup, 60, 60, text =>
         {
             text.Font = fontPath;
             text.FontSize = fontSize;

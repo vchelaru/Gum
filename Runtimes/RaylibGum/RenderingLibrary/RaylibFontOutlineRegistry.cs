@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Numerics;
-using Raylib_cs;
 
 namespace RenderingLibrary;
 
@@ -39,21 +38,25 @@ internal static class RaylibFontOutlineRegistry
         return _thicknessByTextureId.TryGetValue(textureId, out thickness);
     }
 
+    /// <summary>The largest scaled outline radius drawn, so a large FontScale cannot cost thousands of passes per line.</summary>
+    public const int MaxScaledRadius = 16;
+
     /// <summary>
-    /// The offsets of the outline for <paramref name="font"/> drawn at <paramref name="drawSize"/>, or false when the
-    /// font has no outline registered. The thickness is stretched by <paramref name="drawSize"/> over the font's own
-    /// size, the factor the glyphs are stretched by, as a creator's outline baked into the atlas is (#6669); a
-    /// different FontSize loads a different atlas at that size, so it leaves the thickness alone.
+    /// The offsets of the outline of the font with the given atlas texture id, its thickness stretched by
+    /// <paramref name="scale"/>, or false when the font has no outline registered. <paramref name="scale"/> is the
+    /// factor the glyphs are stretched by (FontScale and the global scale): an outline baked into the atlas by a
+    /// creator stretches with the image, so this one does too (#6669). A FontSize is not part of it, since it loads
+    /// the atlas at that size and leaves the thickness in pixels.
     /// </summary>
-    public static bool TryGetOffsets(Font font, float drawSize, out Vector2[] offsets)
+    public static bool TryGetOffsets(uint textureId, float scale, out Vector2[] offsets)
     {
         offsets = System.Array.Empty<Vector2>();
-        if (font.BaseSize <= 0 || !TryGet(font.Texture.Id, out int thickness))
+        if (!TryGet(textureId, out int thickness))
         {
             return false;
         }
 
-        int scaledRadius = System.Math.Max(1, (int)System.MathF.Round(thickness * drawSize / font.BaseSize));
+        int scaledRadius = System.Math.Clamp((int)System.MathF.Round(thickness * scale), 1, MaxScaledRadius);
         offsets = GetOffsets(scaledRadius);
         return true;
     }
