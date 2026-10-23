@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
+using Raylib_cs;
 
 namespace RenderingLibrary;
 
@@ -36,6 +37,25 @@ internal static class RaylibFontOutlineRegistry
     public static bool TryGet(uint textureId, out int thickness)
     {
         return _thicknessByTextureId.TryGetValue(textureId, out thickness);
+    }
+
+    /// <summary>
+    /// The offsets of the outline for <paramref name="font"/> drawn at <paramref name="drawSize"/>, or false when the
+    /// font has no outline registered. The thickness is stretched by <paramref name="drawSize"/> over the font's own
+    /// size, the factor the glyphs are stretched by, as a creator's outline baked into the atlas is (#6669); a
+    /// different FontSize loads a different atlas at that size, so it leaves the thickness alone.
+    /// </summary>
+    public static bool TryGetOffsets(Font font, float drawSize, out Vector2[] offsets)
+    {
+        offsets = System.Array.Empty<Vector2>();
+        if (font.BaseSize <= 0 || !TryGet(font.Texture.Id, out int thickness))
+        {
+            return false;
+        }
+
+        int scaledRadius = System.Math.Max(1, (int)System.MathF.Round(thickness * drawSize / font.BaseSize));
+        offsets = GetOffsets(scaledRadius);
+        return true;
     }
 
     public static void Remove(uint textureId)

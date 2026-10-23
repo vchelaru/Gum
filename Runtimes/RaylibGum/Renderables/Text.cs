@@ -1801,11 +1801,11 @@ public class Text : IVisible, IRenderableIpso,
             DrawTransformed(runShadowFont, ref drawRun, SnapToPixelIfNeeded(
                 scaledTopLeft + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale, totalRotation), DropshadowColor);
         }
-        if (RaylibFontOutlineRegistry.TryGet(drawRun.Font.Texture.Id, out int outlineThickness))
+        // An upright ring as thick as DrawOutline's, around the transformed letter.
+        if (RaylibFontOutlineRegistry.TryGetOffsets(drawRun.Font, drawRun.DrawSize, out Vector2[] outlineOffsets))
         {
-            // An upright ring of the same fixed thickness as DrawOutline, around the transformed letter.
             Color outlineColor = new Color((byte)0, (byte)0, (byte)0, drawRun.Color.A);
-            foreach (Vector2 offset in RaylibFontOutlineRegistry.GetOffsets(outlineThickness))
+            foreach (Vector2 offset in outlineOffsets)
             {
                 DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft + offset, outlineColor);
             }
@@ -1815,18 +1815,18 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// Draws the outline of a font loaded without a font creator (#6639): the glyphs in black, at the offsets of a
-    /// round outline of the font's OutlineThickness, a fixed number of pixels whatever the FontScale, so the fill drawn after
-    /// it sits on top. A font with an outline baked into its atlas (from a creator) has none registered.
+    /// round outline of the font's OutlineThickness stretched by the same factor as the glyphs (#6669), so the fill
+    /// drawn after it sits on top. A font with an outline baked into its atlas (from a creator) has none registered.
     /// </summary>
     private static void DrawOutline(Font font, string text, Vector2 position, Vector2 origin, float drawSize, Color color)
     {
-        if (!RaylibFontOutlineRegistry.TryGet(font.Texture.Id, out int thickness))
+        if (!RaylibFontOutlineRegistry.TryGetOffsets(font, drawSize, out Vector2[] offsets))
         {
             return;
         }
 
         Color outlineColor = new Color((byte)0, (byte)0, (byte)0, color.A);
-        foreach (Vector2 offset in RaylibFontOutlineRegistry.GetOffsets(thickness))
+        foreach (Vector2 offset in offsets)
         {
             DrawTextPro(font, text, position + offset, origin, 0, drawSize, 0, outlineColor);
         }

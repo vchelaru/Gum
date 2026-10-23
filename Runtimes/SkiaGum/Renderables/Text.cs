@@ -1970,7 +1970,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // pass instead; the join is now a vendored round-join fix (issue #4068), so the native
             // per-run halo is used directly, which is also what makes per-run [OutlineThickness]
             // possible (issue #4037) -- RichTextKit paints per-run halo natively in one pass.
-            HaloWidth = outlineThickness > 0 ? outlineThickness * 2f : 0f,
+            // The thickness is stretched by the scale the glyphs get (GlobalTextScale and the run's FontScale)
+            // and not by FontSize, as on MonoGame and Raylib where the outline is baked into the font (#6669).
+            HaloWidth = outlineThickness > 0 ? outlineThickness * 2f * (float)GlobalTextScale * fontScale : 0f,
             // RichTextKit's halo gate (`Style.HaloColor != SKColor.Empty`) ignores HaloWidth, and a
             // Stroke-style SKPaint with StrokeWidth 0 draws as a 1px hairline instead of nothing -- so
             // passing OutlineColor through unconditionally drew a thin outline on every glyph whenever
@@ -2174,7 +2176,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     private SKRect GetBlendLayerBounds(TextBlock textBlock)
     {
-        float padding = 2 + OutlineThickness;
+        float outlinePadding = OutlineThickness * (float)GlobalTextScale * FontScale;
+        float padding = 2 + outlinePadding;
         if (HasDropshadow)
         {
             padding += System.Math.Max(System.Math.Abs(DropshadowOffsetX), System.Math.Abs(DropshadowOffsetY))
@@ -2190,7 +2193,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 SKRect letterRect = SKRect.Create(letter.PaintOffset.X, letter.PaintOffset.Y,
                     letter.Block.MeasuredWidth, letter.Block.MeasuredHeight);
                 // The letter's outline scales with it.
-                letterRect.Inflate(OutlineThickness, OutlineThickness);
+                letterRect.Inflate(outlinePadding, outlinePadding);
                 bounds.Union(letter.Matrix.MapRect(letterRect));
             }
         }
