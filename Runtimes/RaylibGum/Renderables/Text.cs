@@ -172,8 +172,8 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// The descender height (line height minus baseline) as defined by the font, ignoring FontScale.
-    /// Recovered from the loaded .fnt's lineHeight/base; defaults to 2 for fonts without recorded
-    /// metrics (raylib's built-in default font, TTF loaded via LoadFontEx).
+    /// Recovered from the loaded .fnt's lineHeight/base, or from the glyph offsets of a TTF loaded via
+    /// LoadFontEx; defaults to 2 for raylib's built-in default font.
     /// </summary>
     private int _descenderHeight = 2;
 
@@ -530,7 +530,7 @@ public class Text : IVisible, IRenderableIpso,
     /// descender region exactly as the MonoGame BitmapFont does — otherwise a Text (and any
     /// container sized RelativeToChildren around it, e.g. a ListBoxItem) is short by that region.
     /// Fonts without recorded metrics (raylib's built-in default, TTF via LoadFontEx) fall back to
-    /// native measurement, which returns ~BaseSize. Extracted from <see cref="UpdateLineHeightInPixels"/>
+    /// native measurement, which returns ~BaseSize, with the baseline from <see cref="TryGetTtfBaselineY"/>. Extracted from <see cref="UpdateLineHeightInPixels"/>
     /// (which caches this for the LIVE <see cref="Font"/>) so <see cref="MeasurementLineHeightInPixels"/>
     /// can compute the same metrics for <see cref="EffectiveMeasurementFont"/> instead (issue #4330):
     /// height/word-wrap must stay pinned to the measurement font exactly like width already does, or a
@@ -552,8 +552,34 @@ public class Text : IVisible, IRenderableIpso,
         else
         {
             lineHeightInPixels = (int)(MeasureTextEx(font, "M", font.BaseSize, 0).Y + .5);
-            descenderHeight = 2;
+            descenderHeight = TryGetTtfBaselineY(font, out int baselineY)
+                ? lineHeightInPixels - baselineY
+                : 2;
         }
+    }
+
+    /// <summary>
+    /// Recovers where raylib draws the baseline of a TTF loaded with <c>LoadFontEx</c> (#6567). raylib
+    /// offsets each glyph by the scaled font ascent, so a flat-bottomed glyph ('H') ends exactly on the
+    /// baseline. Returns false for raylib's built-in default font, whose glyph cells span the whole line,
+    /// and for fonts without an 'H'.
+    /// </summary>
+    private static bool TryGetTtfBaselineY(Font font, out int baselineY)
+    {
+        baselineY = 0;
+        if (font.Texture.Id == GetFontDefault().Texture.Id)
+        {
+            return false;
+        }
+
+        GlyphInfo glyph = GetGlyphInfo(font, 'H');
+        if (glyph.Value != 'H')
+        {
+            return false;
+        }
+
+        baselineY = glyph.OffsetY + (int)GetGlyphAtlasRec(font, 'H').Height;
+        return baselineY > 0 && baselineY <= font.BaseSize;
     }
 
     /// <summary>

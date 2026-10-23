@@ -43,6 +43,8 @@
     <!-- #4515: a real .ttf whose bytes are served through an in-memory CustomGetStreamFromFile hook,
          standing in for a font that lives inside a .gumpkg rather than on disk. -->
     <None Include="Content\Fonts\Orbitron-Black.ttf" CopyToOutputDirectory="PreserveNewest" />
+    <!-- #6567: a second TTF with different ascent/descent proportions, for the TTF baseline tests. -->
+    <None Include="..\CodeGen_Maui_FullCodegen\Resources\Fonts\OpenSans-Regular.ttf" Link="Content\Fonts\OpenSans-Regular.ttf" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
