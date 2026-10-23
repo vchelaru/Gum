@@ -254,6 +254,145 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         ChildNames(visual).ShouldNotBeEmpty();
     }
 
+    // #6597: a derived component saved without one of its base's instances as DefinedByBase.
+    private static void AddDerivedMissingBaseInstance(GumProjectSave project)
+    {
+        ComponentSave baseComponent = AddComponent(project, "Elements/MissBase", "Container", ("A", "Container"));
+        baseComponent.Instances.Add(new InstanceSave { Name = "B", BaseType = "Container", ParentContainer = baseComponent });
+        ComponentSave derived = AddComponent(project, "Elements/MissDerived", "Elements/MissBase", ("C", "Container"));
+        derived.Instances.RemoveAll(item => item.Name == "B");
+    }
+
+    // #6597. A derived element saved without one of its base's instances as DefinedByBase builds only
+    // the instances in its own list: the generated FindByName ctor (base built with fullInstantiation:
+    // false, #6577) and the plain runtime ToGraphicalUiElement agree, so the base's field stays null and
+    // nothing throws. Neither gumcli nor the runtime repairs the list on load; the tool repairs
+    // components only (ProjectManager.RecreateMissingDefinedByBaseObjects). If #6597 decides to repair or
+    // report on load, these two flip.
+    [Fact]
+    public void Constructor_LegacyMonoGameFindByNameDerived_BaseInstanceMissingFromDerivedList_IsNotBuilt()
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddDerivedMissingBaseInstance);
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == "MissDerivedRuntime");
+
+        object visual = Activator.CreateInstance(type, true, true)!;
+
+        ChildNames(visual).ShouldBe("A,C");
+        Get(visual, "A").ShouldNotBeNull();
+        Get(visual, "B").ShouldBeNull();
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_DerivedComponent_BaseInstanceMissingFromDerivedList_IsNotBuilt()
+    {
+        GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddDerivedMissingBaseInstance);
+        LoadProjectForFindByName();
+        ElementSave derived = Gum.Managers.ObjectFinder.Self.GetElementSave("Elements/MissDerived")!;
+        object systemManagers = MonoGameGum.GetType("RenderingLibrary.SystemManagers", throwOnError: true)!
+            .GetProperty("Default")!.GetValue(null)!;
+
+        global::Gum.Wireframe.GraphicalUiElement visual = global::GumRuntime.ElementSaveExtensions.ToGraphicalUiElement(
+            derived, (global::RenderingLibrary.ISystemManagers)systemManagers, addToManagers: false);
+
+        string.Join(",", visual.Children.Cast<global::Gum.Wireframe.GraphicalUiElement>().Select(child => child.Name)).ShouldBe("A,C");
+    }
+
+    // The base is hand written (listed in BaseTypesNotCodeGenerated), so it never builds its element:
+    // the derived ctor makes no base(fullInstantiation: false) call and builds every level itself.
+    [Fact]
+    public void Constructor_LegacyMonoGameFindByNameDerived_BaseTypeNotCodeGenerated_BuildsEachChildOnce()
+    {
+        Assembly generated = GenerateAndCompile(
+            OutputLibrary.MonoGame,
+            ObjectInstantiationType.FindByName,
+            editProject: project =>
+            {
+                ComponentSave baseComponent = AddComponent(project, "Elements/HandBase", "Container", ("A", "Container"));
+                AddComponent(project, "Elements/HandDerived", baseComponent.Name, ("C", "Container"));
+            },
+            editSettings: settings => settings.BaseTypesNotCodeGenerated = "Elements/HandBase",
+            afterCodegen: () =>
+            {
+                foreach (string path in Directory.GetFiles(TempDirectory, "HandBaseRuntime*.cs", SearchOption.AllDirectories))
+                {
+                    File.Delete(path);
+                }
+                File.WriteAllText(Path.Combine(TempDirectory, "HandBaseRuntime.cs"),
+                    "namespace MyGame.Components.Elements; public class HandBaseRuntime : global::Gum.GueDeriving.ContainerRuntime { }");
+            });
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == "HandDerivedRuntime");
+
+        object visual = Activator.CreateInstance(type, true, true)!;
+
+        ChildNames(visual).ShouldBe("A,C");
+        File.ReadAllText(Directory.GetFiles(TempDirectory, "HandDerivedRuntime.Generated.cs", SearchOption.AllDirectories).Single())
+            .ShouldNotContain("base(fullInstantiation");
+    }
+
+    // A screen derives from a screen through its BaseType. The derived class inherits the BaseType name
+    // verbatim, so the base is a hand-written class listed in BaseTypesNotCodeGenerated (#6656 covers a
+    // generated base screen).
+    [Fact]
+    public void Constructor_LegacyMonoGameFindByNameDerived_ScreenWithHandWrittenBase_BuildsEachChildOnce()
+    {
+        Assembly generated = GenerateAndCompile(
+            OutputLibrary.MonoGame,
+            ObjectInstantiationType.FindByName,
+            editProject: project =>
+            {
+                ScreenSave baseScreen = AddScreen(project, "ScreenBase", baseType: null, ("A", "Container"));
+                AddScreen(project, "ScreenDerived", baseScreen.Name, ("C", "Container"));
+            },
+            editSettings: settings => settings.BaseTypesNotCodeGenerated = "ScreenBase",
+            afterCodegen: () =>
+            {
+                foreach (string path in Directory.GetFiles(TempDirectory, "ScreenBaseRuntime*.cs", SearchOption.AllDirectories))
+                {
+                    File.Delete(path);
+                }
+                File.WriteAllText(Path.Combine(TempDirectory, "ScreenBase.cs"),
+                    "namespace MyGame.Screens; public class ScreenBase : global::Gum.Wireframe.GraphicalUiElement { }");
+            });
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == "ScreenDerivedRuntime");
+
+        object visual = Activator.CreateInstance(type, true, true)!;
+
+        ChildNames(visual).ShouldBe("A,C");
+    }
+
+    // Raylib and Silk emit the same derived ctor as MonoGame, so a derived runtime builds its tree once.
+    [Theory]
+    [InlineData(OutputLibrary.MonoGame)]
+    [InlineData(OutputLibrary.Raylib)]
+    [InlineData(OutputLibrary.Silk)]
+    public void Generate_LegacyFindByNameDerived_PassesFullInstantiationFalseToBase(OutputLibrary outputLibrary)
+    {
+        Generate(outputLibrary, ObjectInstantiationType.FindByName, editProject: null);
+
+        string derived = File.ReadAllText(Directory.GetFiles(TempDirectory, "ButtonCloseDerivedRuntime.Generated.cs", SearchOption.AllDirectories).Single());
+        derived.ShouldContain("public ButtonCloseDerivedRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation: false, tryCreateFormsObject: tryCreateFormsObject)");
+        string root = File.ReadAllText(Directory.GetFiles(TempDirectory, "ButtonCloseRuntime.Generated.cs", SearchOption.AllDirectories).Single());
+        root.ShouldNotContain("base(fullInstantiation");
+    }
+
+    private static ScreenSave AddScreen(GumProjectSave project, string name, string? baseType, (string Name, string BaseType) instance)
+    {
+        ScreenSave screen = new ScreenSave { Name = name, BaseType = baseType };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        ScreenSave? baseScreen = project.Screens.SingleOrDefault(item => item.Name == baseType);
+        foreach (InstanceSave baseInstance in baseScreen?.Instances ?? new List<InstanceSave>())
+        {
+            screen.Instances.Add(new InstanceSave { Name = baseInstance.Name, BaseType = baseInstance.BaseType, DefinedByBase = true, ParentContainer = screen });
+        }
+        screen.Instances.Add(new InstanceSave { Name = instance.Name, BaseType = instance.BaseType, ParentContainer = screen });
+        project.Screens.Add(screen);
+        project.ScreenReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Screen });
+        return screen;
+    }
+
     // A generated runtime registers itself as the default visual of its Forms type, so `new Button()`
     // builds that runtime with tryCreateFormsObject: false and then becomes the Forms control of it.
     [Fact]
@@ -316,7 +455,23 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         OutputLibrary outputLibrary = OutputLibrary.GumForms,
         ObjectInstantiationType instantiationType = ObjectInstantiationType.FullyInCode,
         bool obsoleteUseIsError = false,
-        Action<GumProjectSave>? editProject = null)
+        Action<GumProjectSave>? editProject = null,
+        Action<CodeOutputProjectSettings>? editSettings = null,
+        Action? afterCodegen = null)
+    {
+        Generate(outputLibrary, instantiationType, editProject, editSettings);
+        afterCodegen?.Invoke();
+
+        Assembly generated = Compile(Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories), obsoleteUseIsError);
+        InstallHeadlessRuntime();
+        return generated;
+    }
+
+    private void Generate(
+        OutputLibrary outputLibrary,
+        ObjectInstantiationType instantiationType,
+        Action<GumProjectSave>? editProject,
+        Action<CodeOutputProjectSettings>? editSettings = null)
     {
         string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new FormsTemplateCreator().Create(gumxPath);
@@ -333,14 +488,11 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         CodeOutputProjectSettings settings = settingsManager.CreateOrLoadSettingsForProject();
         settings.OutputLibrary = outputLibrary;
         settings.ObjectInstantiationType = instantiationType;
+        editSettings?.Invoke(settings);
         settingsManager.WriteSettingsForProject(settings);
 
         CliTestHelper codegen = CliTestHelper.Run("codegen", gumxPath);
         codegen.ExitCode.ShouldBe(0, codegen.StandardError + codegen.StandardOutput);
-
-        Assembly generated = Compile(Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories), obsoleteUseIsError);
-        InstallHeadlessRuntime();
-        return generated;
     }
 
     // Each derived component adds a child and overrides a default at both levels. Every base child is
