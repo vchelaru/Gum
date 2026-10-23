@@ -271,6 +271,8 @@ public partial class GraphicalUiElement
         }
     }
 
+    static readonly System.ComponentModel.PropertyChangedEventArgs s_rotationChangedArgs = new(nameof(Rotation));
+
     /// <summary>
     /// Rotation in degrees. Positive value rotates counterclockwise.
     /// </summary>
@@ -294,6 +296,9 @@ public partial class GraphicalUiElement
 
                 UpdateLayout();
                 ReportTypedPropertyChanged("Rotation", value);
+                // Raised so a TextBox re-places its caret when its text turns (#6637). Rotation
+                // about a top-left origin moves nothing, so no layout event reports it.
+                PropertyChanged?.Invoke(this, s_rotationChangedArgs);
             }
         }
     }

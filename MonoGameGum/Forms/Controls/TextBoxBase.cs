@@ -600,6 +600,7 @@ public abstract class TextBoxBase :
                 OnTextChanged(this.coreTextObject.RawText);
                 break;
             case "HorizontalAlignment":
+            case nameof(GraphicalUiElement.Rotation):
                 UpdateCaretPositionFromCaretIndex();
                 UpdateToSelection();
                 break;
@@ -1507,9 +1508,9 @@ public abstract class TextBoxBase :
         const global::Gum.Converters.GeneralUnitType pixels = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
         float pivotX = converter.ConvertXPosition(textComponent.X, textComponent.XUnits, pixels, parentWidth);
-        float pivotY = converter.ConvertYPosition(textComponent.Y, textComponent.YUnits, pixels, parentHeight);
+        float pivotY = ConvertYPositionOrKeep(textComponent.Y, textComponent.YUnits, pixels, parentHeight);
         float offsetX = converter.ConvertXPosition(element.X, element.XUnits, pixels, parentWidth) - pivotX;
-        float offsetY = converter.ConvertYPosition(element.Y, element.YUnits, pixels, parentHeight) - pivotY;
+        float offsetY = ConvertYPositionOrKeep(element.Y, element.YUnits, pixels, parentHeight) - pivotY;
 
         // Counterclockwise on screen (y down), as GraphicalUiElement rotates.
         double radians = rotation * System.Math.PI / 180;
@@ -1519,7 +1520,7 @@ public abstract class TextBoxBase :
         float turnedY = pivotY - offsetX * sin + offsetY * cos;
 
         element.X = converter.ConvertXPosition(turnedX, pixels, element.XUnits, parentWidth);
-        element.Y = converter.ConvertYPosition(turnedY, pixels, element.YUnits, parentHeight);
+        element.Y = ConvertYPositionOrKeep(turnedY, pixels, element.YUnits, parentHeight);
         element.Rotation = unturnedRotation + rotation;
     }
 
@@ -1914,7 +1915,7 @@ public abstract class TextBoxBase :
                 var selectionPosition = new SelectionPosition();
                 selectionPosition.XStart = startXForSelection;
                 var offsetPixelsFromSmall = GetCenterOfYForLinePixelsFromSmall(i);
-                selectionPosition.Y = ResolveLineYForComponent(offsetPixelsFromSmall, selectionTemplate ?? selectionInstance);
+                selectionPosition.Y = ResolveLineYForComponent(offsetPixelsFromSmall, selectionInstance);
 
                 selectionPosition.Width = endXForSelection - startXForSelection;
 
@@ -2203,9 +2204,9 @@ public abstract class TextBoxBase :
         coreTextObject.VerticalAlignment, CoreTextObjectHeight, coreTextObject.WrappedTextHeight);
 
     /// <summary>
-    /// Adjusts a center-of-line Y (in PixelsFromSmall, as produced by
+    /// Adjusts a center-of-line Y (in PixelsFromSmall of the text's parent, as produced by
     /// <see cref="GetCenterOfYForLinePixelsFromSmall"/>) into the value to assign
-    /// to <paramref name="target"/>'s Y, honoring the target's YOrigin and YUnits.
+    /// to <paramref name="target"/>'s Y, honoring the target's parent, YOrigin and YUnits.
     /// Used for both caret placement and selection-rectangle placement so the two
     /// stay in sync.
     /// </summary>
@@ -2220,17 +2221,50 @@ public abstract class TextBoxBase :
             // multiplier-worth below the actual glyph row.
             adjusted -= ScaledLineHeightInPixels / 2.0f;
         }
-        if (target.YUnits == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle)
+
+        var targetParent = target.EffectiveParentGue;
+        var textParent = textComponent.EffectiveParentGue;
+        if (targetParent != textParent)
         {
-            // PixelsFromMiddle is measured from the middle of the target's parent. The text is
-            // usually inset from that parent (the default visual's is 4px shorter), so the
-            // text's own height puts the target half that inset below the line (#6624).
-            float parentHeight = target.EffectiveParentGue?.AbsoluteHeight
-                ?? GraphicalUiElement.CanvasHeight;
-            adjusted -= parentHeight / 2.0f;
+            // The line Y is measured from the text's parent; the target is placed in its own parent.
+            adjusted += (textParent?.AbsoluteTop ?? 0) - (targetParent?.AbsoluteTop ?? 0);
         }
-        return adjusted;
+
+        float parentHeight = targetParent?.AbsoluteHeight ?? GraphicalUiElement.CanvasHeight;
+        return ConvertYPositionOrKeep(adjusted,
+            global::Gum.Converters.GeneralUnitType.PixelsFromSmall, target.YUnits, parentHeight);
     }
+
+    /// <summary>
+    /// Converts a Y between vertical units. A Forms control must never throw during layout, so a
+    /// unit the converter does not support, or a Percentage of a parent with no height (which has no
+    /// finite pixel equivalent), returns <paramref name="y"/> unconverted rather than throwing or
+    /// producing infinity or NaN.
+    /// </summary>
+    private static float ConvertYPositionOrKeep(float y, global::Gum.Converters.GeneralUnitType fromUnit,
+        global::Gum.Converters.GeneralUnitType toUnit, float parentHeight)
+    {
+        if (!IsConvertibleYUnit(fromUnit) || !IsConvertibleYUnit(toUnit) || fromUnit == toUnit)
+        {
+            return y;
+        }
+
+        bool usesPercentage = fromUnit == global::Gum.Converters.GeneralUnitType.Percentage
+            || toUnit == global::Gum.Converters.GeneralUnitType.Percentage;
+        if (usesPercentage && !(parentHeight > 0))
+        {
+            return y;
+        }
+
+        float converted = global::Gum.Converters.UnitConverter.Self.ConvertYPosition(y, fromUnit, toUnit, parentHeight);
+        return float.IsFinite(converted) ? converted : y;
+    }
+
+    private static bool IsConvertibleYUnit(global::Gum.Converters.GeneralUnitType unit) =>
+        unit == global::Gum.Converters.GeneralUnitType.PixelsFromSmall
+        || unit == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle
+        || unit == global::Gum.Converters.GeneralUnitType.PixelsFromLarge
+        || unit == global::Gum.Converters.GeneralUnitType.Percentage;
 
     // The full per-line vertical step used by the renderer:
     // rawLineHeight × FontScale × LineHeightMultiplier. Used for inter-line

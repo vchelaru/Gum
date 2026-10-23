@@ -108,33 +108,36 @@ public class TextBoxVisualTests
     }
 
     [Fact]
-    public void Selection_Y_ShouldNotDriftOnRepeatedUpdates()
+    public void Selection_Y_ShouldApplyAuthoredOffsetWithoutDrifting()
     {
-        // Regression test: SelectionInstance.Y = 2f in the V3 visual. Because selectionInstance
-        // IS _selectionInstances[0], writing to selection.Y at i==0 modifies the value that gets
-        // read as the offset on the next call, causing the selection to drift down by 2px per update.
-        TextBox textBox = new();
-        textBox.Text = "line one\nline two\nline three";
-        textBox.AcceptsReturn = true;
+        // selectionInstance IS _selectionInstances[0], so writing selection.Y at i==0 would modify
+        // the value read as the authored offset on the next call, drifting the selection down by
+        // the offset per update.
+        TextBox withOffset = CreateMultiLineTextBox(authoredSelectionY: 2);
+        TextBox withoutOffset = CreateMultiLineTextBox(authoredSelectionY: 0);
+        GraphicalUiElement selection = withOffset.Visual.GetGraphicalUiElementByName("SelectionInstance")!;
 
-        GraphicalUiElement SelectionInstance = textBox.Visual.GetGraphicalUiElementByName("SelectionInstance");
+        float firstY = selection.Y;
+        withOffset.SelectionStart = 1;
+        float secondY = selection.Y;
+        withOffset.SelectionStart = 0;
+        float thirdY = selection.Y;
 
-        // Select some text to trigger UpdateToSelection
-        textBox.SelectionStart = 0;
-        textBox.SelectionLength = 5;
-        float firstY = SelectionInstance.Y;
-
-        // Change selection to trigger UpdateToSelection again
-        textBox.SelectionStart = 1;
-        float secondY = SelectionInstance.Y;
-
-        // Change again
-        textBox.SelectionStart = 0;
-        float thirdY = SelectionInstance.Y;
-
-        // Y should remain stable, not drift
+        firstY.ShouldBe(withoutOffset.Visual.GetGraphicalUiElementByName("SelectionInstance")!.Y + 2, 0.01f);
         secondY.ShouldBe(firstY, "Selection Y drifted between first and second update");
         thirdY.ShouldBe(firstY, "Selection Y drifted between first and third update");
+    }
+
+    static TextBox CreateMultiLineTextBox(float authoredSelectionY)
+    {
+        TextBoxVisual visual = new(tryCreateFormsObject: false);
+        visual.SelectionInstance.Y = authoredSelectionY;
+        TextBox textBox = new(visual);
+        textBox.Text = "line one\nline two\nline three";
+        textBox.AcceptsReturn = true;
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 5;
+        return textBox;
     }
 
     [Fact]

@@ -1,8 +1,12 @@
 using Gum.Forms.Controls;
+using Gum.Converters;
 using Gum.Forms.DefaultVisuals.V3;
+using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System.Linq;
 using Xunit;
 using Text = RenderingLibrary.Graphics.Text;
 
@@ -41,6 +45,189 @@ public class TextBoxCaretPlacementTests : BaseTestClass
 
         GetCaret(textBox).GetAbsoluteCenterY().ShouldBe(drawnLineCenter, tolerance: 0.51f);
     }
+
+    // A caret authored with any vertical unit lands on the drawn line (#6630).
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle)]
+    [InlineData(GeneralUnitType.PixelsFromLarge)]
+    public void CaretCenter_MultiLineWithAuthoredYUnits_ShouldMatchDrawnLineCenter(GeneralUnitType yUnits)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        GetCaret(textBox).YUnits = yUnits;
+        textBox.CaretIndex = 0;
+        textBox.CaretIndex = 1;
+        Text contained = GetCoreText(textBox);
+        float drawnLineCenter = contained.UpdateIpsoForRenderingForTests().Y + contained.LineHeightInPixels / 2.0f;
+
+        GetCaret(textBox).GetAbsoluteCenterY().ShouldBe(drawnLineCenter, tolerance: 0.01f);
+    }
+
+    // A Visual may parent the caret somewhere other than the text's parent (#6630).
+    [Fact]
+    public void CaretCenter_MultiLineCaretInOtherParent_ShouldMatchDrawnLineCenter()
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
+        ContainerRuntime caretParent = new();
+        caretParent.Y = 30;
+        caretParent.Height = 60;
+        caretParent.Width = 100;
+        visual.AddChild(caretParent);
+        caretParent.AddChild(visual.CaretInstance);
+        textBox.CaretIndex = 0;
+        textBox.CaretIndex = 1;
+        Text contained = GetCoreText(textBox);
+        float drawnLineCenter = contained.UpdateIpsoForRenderingForTests().Y + contained.LineHeightInPixels / 2.0f;
+
+        GetCaret(textBox).GetAbsoluteCenterY().ShouldBe(drawnLineCenter, tolerance: 0.01f);
+    }
+
+    // Each multi-line selection rectangle is centered on its drawn line, like the caret (#6630).
+    [Theory]
+    [InlineData(VerticalAlignment.Top)]
+    [InlineData(VerticalAlignment.Center)]
+    [InlineData(VerticalAlignment.Bottom)]
+    public void SelectionCenter_MultiLine_ShouldMatchDrawnLineCenter(VerticalAlignment verticalAlignment)
+    {
+        TextBox textBox = CreateTextBox(verticalAlignment, multiLine: true);
+        textBox.Text = "abc\ndef";
+        textBox.SelectionStart = 1;
+        textBox.SelectionLength = 5;
+        Text contained = GetCoreText(textBox);
+        float firstLineCenter = contained.UpdateIpsoForRenderingForTests().Y + contained.LineHeightInPixels / 2.0f;
+
+        GraphicalUiElement[] selections = GetVisibleSelections(textBox);
+        selections.Length.ShouldBe(2);
+        selections[0].GetAbsoluteCenterY().ShouldBe(firstLineCenter, tolerance: 0.01f);
+        selections[1].GetAbsoluteCenterY().ShouldBe(firstLineCenter + contained.LineHeightInPixels, tolerance: 0.01f);
+    }
+
+    // A Forms control must never throw during layout, so a vertical unit the converter cannot
+    // convert falls back to the raw value (#6630).
+    [Theory]
+    [InlineData(GeneralUnitType.PercentageOfFile)]
+    [InlineData(GeneralUnitType.PercentageOfOtherDimension)]
+    [InlineData(GeneralUnitType.PixelsFromBaseline)]
+    [InlineData(GeneralUnitType.MaintainFileAspectRatio)]
+    public void Caret_UnsupportedYUnits_ShouldNotThrowAndKeepFiniteY(GeneralUnitType yUnits)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        GraphicalUiElement caret = GetCaret(textBox);
+        caret.YUnits = yUnits;
+
+        Should.NotThrow(() =>
+        {
+            textBox.CaretIndex = 0;
+            textBox.CaretIndex = 1;
+        });
+        float.IsFinite(caret.Y).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(GeneralUnitType.PercentageOfFile)]
+    [InlineData(GeneralUnitType.PercentageOfOtherDimension)]
+    [InlineData(GeneralUnitType.PixelsFromBaseline)]
+    [InlineData(GeneralUnitType.MaintainFileAspectRatio)]
+    public void Selection_UnsupportedYUnits_ShouldNotThrowAndKeepFiniteY(GeneralUnitType yUnits)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        textBox.Text = "abc\ndef";
+        ((TextBoxBaseVisual)textBox.Visual).SelectionInstance.YUnits = yUnits;
+
+        Should.NotThrow(() =>
+        {
+            textBox.SelectionStart = 1;
+            textBox.SelectionLength = 5;
+        });
+        GetVisibleSelections(textBox).ShouldAllBe(selection => float.IsFinite(selection.Y));
+    }
+
+    // A rotated text turns the caret through the same conversion, so it must not throw either.
+    [Theory]
+    [InlineData(GeneralUnitType.PercentageOfFile)]
+    [InlineData(GeneralUnitType.PercentageOfOtherDimension)]
+    public void Caret_UnsupportedYUnitsWithRotatedText_ShouldNotThrow(GeneralUnitType yUnits)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        GetCaret(textBox).YUnits = yUnits;
+
+        Should.NotThrow(() =>
+        {
+            ((TextBoxBaseVisual)textBox.Visual).TextInstance.Rotation = 30;
+            textBox.CaretIndex = 0;
+            textBox.CaretIndex = 1;
+        });
+        float.IsFinite(GetCaret(textBox).Y).ShouldBeTrue();
+    }
+
+    // A parent with no height gives a Percentage Y nothing to be a percentage of; Y must stay finite.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Caret_PercentageYInZeroHeightParent_ShouldNotThrowAndKeepFiniteY(bool rotatedText)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
+        ContainerRuntime zeroHeightParent = new();
+        zeroHeightParent.Height = 0;
+        zeroHeightParent.Width = 100;
+        visual.AddChild(zeroHeightParent);
+        zeroHeightParent.AddChild(visual.CaretInstance);
+        visual.CaretInstance.YUnits = GeneralUnitType.Percentage;
+
+        Should.NotThrow(() =>
+        {
+            if (rotatedText)
+            {
+                visual.TextInstance.Rotation = 30;
+            }
+            textBox.CaretIndex = 0;
+            textBox.CaretIndex = 1;
+        });
+        float.IsFinite(visual.CaretInstance.Y).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Selection_PercentageYInZeroHeightParent_ShouldNotThrowAndKeepFiniteY()
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        textBox.Text = "abc\ndef";
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
+        ContainerRuntime zeroHeightParent = new();
+        zeroHeightParent.Height = 0;
+        zeroHeightParent.Width = 100;
+        visual.ClipContainer.AddChild(zeroHeightParent);
+        zeroHeightParent.AddChild(visual.SelectionInstance);
+        visual.SelectionInstance.YUnits = GeneralUnitType.Percentage;
+
+        Should.NotThrow(() =>
+        {
+            textBox.SelectionStart = 1;
+            textBox.SelectionLength = 5;
+        });
+        float.IsFinite(visual.SelectionInstance.Y).ShouldBeTrue();
+    }
+
+    // Single-line selection fills the box less 2px on each side.
+    [Fact]
+    public void Selection_SingleLine_ShouldBeInsetTwoPixelsFromBox()
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Center, multiLine: false);
+        textBox.Height = 40;
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 2;
+
+        GraphicalUiElement selection = GetVisibleSelections(textBox).Single();
+        selection.AbsoluteTop.ShouldBe(textBox.Visual.AbsoluteTop + 2, tolerance: 0.01f);
+        selection.AbsoluteHeight.ShouldBe(36, tolerance: 0.01f);
+    }
+
+    static GraphicalUiElement[] GetVisibleSelections(TextBox textBox) =>
+        ((TextBoxBaseVisual)textBox.Visual).ClipContainer.Children
+            .OfType<GraphicalUiElement>()
+            .Where(child => child.Name == "SelectionInstance" && child.Visible)
+            .ToArray();
 
     static TextBox CreateTextBox(VerticalAlignment verticalAlignment, bool multiLine)
     {
