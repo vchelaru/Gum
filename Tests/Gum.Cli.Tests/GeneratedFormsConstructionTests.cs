@@ -254,6 +254,33 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         ChildNames(visual).ShouldNotBeEmpty();
     }
 
+    // #6656: a derived screen inherits the generated class of its base screen, not the raw BaseType.
+    [Fact]
+    public void Compile_LegacyMonoGameFindByName_DerivedScreenOverGeneratedScreen()
+    {
+        GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddDerivedScreens);
+    }
+
+    private static void AddDerivedScreens(GumProjectSave project)
+    {
+        foreach ((string name, string? baseType, string instanceName) in new[]
+        {
+            ("Screens/DerivedScreenBase", (string?)null, "BaseChild"),
+            ("Screens/DerivedScreenDerived", "Screens/DerivedScreenBase", "DerivedChild"),
+        })
+        {
+            ScreenSave screen = new ScreenSave { Name = name, BaseType = baseType };
+            screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+            if (baseType != null)
+            {
+                screen.Instances.Add(new InstanceSave { Name = "BaseChild", BaseType = "Container", DefinedByBase = true, ParentContainer = screen });
+            }
+            screen.Instances.Add(new InstanceSave { Name = instanceName, BaseType = "Container", ParentContainer = screen });
+            project.Screens.Add(screen);
+            project.ScreenReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Screen });
+        }
+    }
+
     // A generated runtime registers itself as the default visual of its Forms type, so `new Button()`
     // builds that runtime with tryCreateFormsObject: false and then becomes the Forms control of it.
     [Fact]
