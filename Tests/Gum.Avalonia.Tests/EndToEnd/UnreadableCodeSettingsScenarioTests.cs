@@ -249,27 +249,19 @@ public class UnreadableCodeSettingsScenarioTests
         code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
         code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
         DeleteCodeFolder(code);
-        Action<ElementSave, InstanceSave?, string, object?, bool> sendToPlugins =
-            (element, instance, name, oldValue, isFullCommit) =>
-                TestAppBuilder.Services.GetRequiredService<IPluginManager>().VariableSetThroughReference(element, instance, name, oldValue, isFullCommit);
-        GumRuntime.ElementSaveExtensions.VariableChangedThroughReference += sendToPlugins;
-        try
-        {
-            // Readable when Button is queued.
-            code.Select(style);
-            code.Tree.Grid.TypeAndEnter("Width", "120");
-            CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty("the queued job has not run yet");
+        code.Select(style);
 
-            // Unreadable by the time the queued job runs.
-            BreakSettingsFileOnDisk(code);
-            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs(global::Avalonia.Threading.DispatcherPriority.Background);
+        // What the tool sends when a reference re-applies a variable on Button. Sent straight to the
+        // plugins, since the gesture drivers drain the dispatcher after every edit.
+        TestAppBuilder.Services.GetRequiredService<IPluginManager>()
+            .VariableSetThroughReference(button, instance: null, "Width", oldValue: null, isFullCommit: true);
+        CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty("generation waits for the dispatcher");
 
-            CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
-        }
-        finally
-        {
-            GumRuntime.ElementSaveExtensions.VariableChangedThroughReference -= sendToPlugins;
-        }
+        // Unreadable by the time the queued job runs.
+        BreakSettingsFileOnDisk(code);
+        global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+        CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
     }
 
     private static void DeleteCodeFolder(CodeTabHarness code)
