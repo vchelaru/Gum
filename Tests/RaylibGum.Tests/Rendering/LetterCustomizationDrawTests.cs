@@ -3,7 +3,7 @@ using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
-using static Raylib_cs.Raylib;
+using static RaylibGum.Tests.Rendering.TextInkRender;
 using LetterCustomization = Gum.Renderables.LetterCustomization;
 using Text = Gum.Renderables.Text;
 
@@ -16,9 +16,6 @@ namespace RaylibGum.Tests.Rendering;
 /// </summary>
 public class LetterCustomizationDrawTests : BaseTestClass
 {
-    private const int CanvasWidth = 240;
-    private const int CanvasHeight = 240;
-
     [Fact]
     public void Draw_CustomTagWithNoTransform_DrawsSamePixelsAsPlainText()
     {
@@ -133,29 +130,43 @@ public class LetterCustomizationDrawTests : BaseTestClass
         customized.Right.ShouldBe(plain.Right);
     }
 
-    private readonly record struct Bounds(float Left, float Top, float Right, float Bottom)
+    [Theory]
+    [InlineData(0f)]
+    [InlineData(90f)]
+    public void Draw_CustomTagTransformAtSubpixelPosition_SnapsToTheNearestPixel(float rotationDegrees)
     {
-        public float Width => Right - Left;
-        public float Height => Bottom - Top;
+        // #6554: MonoGame snaps a scaled glyph's position, and a rotated one's when the turn is a whole
+        // quarter (SpriteRenderer.ShouldSnapPosition), so it lands where it would at the rounded position.
+        Text.Customizations["SnapScaled"] = (index, block) => new LetterCustomization
+        {
+            ScaleX = 1.25f,
+            ScaleY = 1.25f,
+            ScaleXOrigin = HorizontalAlignment.Left,
+            ScaleYOrigin = VerticalAlignment.Top,
+            RotationDegrees = rotationDegrees,
+        };
+
+        Color[] whole = Render("[Custom=SnapScaled]I[/Custom]", left: 80, top: 80);
+        Color[] subpixel = Render("[Custom=SnapScaled]I[/Custom]", left: 80.3f, top: 80.3f);
+
+        subpixel.SequenceEqual(whole).ShouldBeTrue();
     }
 
-    private static Bounds InkBounds(Color[] pixels)
+    [Fact]
+    public void Draw_CustomTagRotationOffAQuarterTurn_IsNotSnapped()
     {
-        int left = int.MaxValue, top = int.MaxValue, right = int.MinValue, bottom = int.MinValue;
-        for (int i = 0; i < pixels.Length; i++)
+        // #6554: MonoGame draws a glyph turned by anything but a whole quarter where it falls, unsnapped.
+        Text.Customizations["Tilted"] = (index, block) => new LetterCustomization
         {
-            if (pixels[i].A > 128)
-            {
-                int x = i % CanvasWidth;
-                int y = i / CanvasWidth;
-                left = Math.Min(left, x);
-                top = Math.Min(top, y);
-                right = Math.Max(right, x + 1);
-                bottom = Math.Max(bottom, y + 1);
-            }
-        }
-        left.ShouldNotBe(int.MaxValue, "because something is drawn");
-        return new Bounds(left, top, right, bottom);
+            ScaleX = 1.5f,
+            ScaleY = 1.5f,
+            RotationDegrees = 30,
+        };
+
+        Color[] whole = Render("[Custom=Tilted]I[/Custom]", left: 80, top: 80);
+        Color[] subpixel = Render("[Custom=Tilted]I[/Custom]", left: 80.5f, top: 80.5f);
+
+        subpixel.SequenceEqual(whole).ShouldBeFalse();
     }
 
     private static Text BuildText(string markup, float left, float top, out TextRuntime runtime)
@@ -168,41 +179,5 @@ public class LetterCustomizationDrawTests : BaseTestClass
         Gum.GumService.Default.Root.Children!.Add(runtime);
         Gum.GumService.Default.Root.UpdateLayout();
         return (Text)runtime.RenderableComponent!;
-    }
-
-    private static Color[] Render(string markup, float left, float top)
-    {
-        ContainerRuntime container = new();
-        container.Width = CanvasWidth;
-        container.Height = CanvasHeight;
-        container.IsRenderTarget = true;
-
-        TextRuntime text = new();
-        text.X = left;
-        text.Y = top;
-        text.FontScale = 2;
-        text.Text = markup;
-        container.Children.Add(text);
-
-        Gum.GumService.Default.Root.Children!.Add(container);
-        Gum.GumService.Default.Root.UpdateLayout();
-
-        BeginDrawing();
-        Gum.GumService.Default.Draw();
-        EndDrawing();
-
-        RenderTexture2D rt = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
-        Image image = LoadImageFromTexture(rt.Texture);
-        Color[] result = new Color[CanvasWidth * CanvasHeight];
-        for (int y = 0; y < CanvasHeight; y++)
-        {
-            for (int x = 0; x < CanvasWidth; x++)
-            {
-                result[y * CanvasWidth + x] = GetImageColor(image, x, rt.Texture.Height - 1 - y);
-            }
-        }
-        UnloadImage(image);
-        Gum.GumService.Default.Root.Children.Remove(container);
-        return result;
     }
 }

@@ -1082,11 +1082,19 @@ public class Text : IVisible, IRenderableIpso,
     /// Rounds a position/origin to whole pixels using the configured <see cref="TextPositionRoundingMode"/>
     /// when the <see cref="EffectiveTextRenderingPositionMode"/> is SnapToPixel; otherwise returns the value unchanged.
     /// Rounding origin along with position avoids the baseline misalignment / "sizzle" seen on small pixel
-    /// fonts when vertical alignment produces fractional values.
+    /// fonts when vertical alignment produces fractional values. Text turned by <see cref="_renderRotation"/>
+    /// snaps only at a whole quarter turn, see the overload taking the rotation.
     /// </summary>
-    private Vector2 SnapToPixelIfNeeded(Vector2 value)
+    private Vector2 SnapToPixelIfNeeded(Vector2 value) => SnapToPixelIfNeeded(value, _renderRotation);
+
+    /// <summary>
+    /// Snaps like <see cref="SnapToPixelIfNeeded(Vector2)"/> for something drawn turned counterclockwise by
+    /// <paramref name="rotationDegrees"/>: only a whole quarter turn keeps the pixel grid, so any other turn is
+    /// left unsnapped, as MonoGame's SpriteRenderer does for glyphs.
+    /// </summary>
+    private Vector2 SnapToPixelIfNeeded(Vector2 value, float rotationDegrees)
     {
-        if (EffectiveTextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
+        if (EffectiveTextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel || !IsQuarterTurn(rotationDegrees))
         {
             return value;
         }
@@ -1101,6 +1109,22 @@ public class Text : IVisible, IRenderableIpso,
                 return new Vector2(MathFunctions.RoundToInt(value.X), MathFunctions.RoundToInt(value.Y));
         }
     }
+
+    /// <summary>
+    /// True when <paramref name="rotationDegrees"/> is a whole number of quarter turns, within the tenth of a
+    /// degree MonoGame's SpriteRenderer tolerates.
+    /// </summary>
+    private static bool IsQuarterTurn(float rotationDegrees)
+    {
+        float quarterTurns = System.Math.Abs(rotationDegrees / 90f);
+        return System.Math.Abs(quarterTurns - MathF.Round(quarterTurns)) < 0.1f / 90f;
+    }
+
+    /// <summary>
+    /// The absolute rotation the current <see cref="Render"/> call turns the whole block by, read by the
+    /// snapping so it snaps only at a whole quarter turn.
+    /// </summary>
+    private float _renderRotation;
 
     public void Render(ISystemManagers managers)
     {
@@ -1126,6 +1150,21 @@ public class Text : IVisible, IRenderableIpso,
         {
             position.Y += this.Height;
             origin.Y = MeasurementFontScale * mPreRenderHeight ?? 0;
+        }
+
+        // Text.Rotation turns the whole block counterclockwise about the Text's top-left, as on MonoGame and
+        // Skia, so styled runs and [Custom] letters (which push their own matrix) turn with it. Everything
+        // below lays out unturned; the pivot is snapped so a quarter turn keeps snapped glyphs on the grid.
+        _renderRotation = this.GetAbsoluteRotation();
+        bool isRotated = _renderRotation != 0;
+        if (isRotated)
+        {
+            Vector2 pivot = SnapToPixelIfNeeded(new Vector2(absoluteLeft, this.GetAbsoluteTop()));
+            Raylib_cs.Rlgl.PushMatrix();
+            Raylib_cs.Rlgl.Translatef(pivot.X, pivot.Y, 0);
+            // Gum rotation is counterclockwise; rlgl's is clockwise on a y-down screen.
+            Raylib_cs.Rlgl.Rotatef(-_renderRotation, 0, 0, 1);
+            Raylib_cs.Rlgl.Translatef(-pivot.X, -pivot.Y, 0);
         }
 
         int lettersShown = 0;
@@ -1193,6 +1232,11 @@ public class Text : IVisible, IRenderableIpso,
             }
 
             startOfLineIndex += WrappedText[i].Length;
+        }
+
+        if (isRotated)
+        {
+            Raylib_cs.Rlgl.PopMatrix();
         }
 
         if (Blend.HasValue)
@@ -1674,7 +1718,8 @@ public class Text : IVisible, IRenderableIpso,
     /// Draws a <c>[Custom]</c> letter that is scaled or rotated, as MonoGame and Skia do: its cell (laid out at
     /// <paramref name="cellTopLeft"/>, unscaled) is scaled by ScaleX/ScaleY about the point ScaleXOrigin/ScaleYOrigin
     /// name, then turned counterclockwise about the scaled cell's top-left. DrawTextPro takes one font size, so
-    /// the non-uniform scale goes on the rlgl matrix instead.
+    /// the non-uniform scale goes on the rlgl matrix instead. Its top-left snaps to the pixel grid when the
+    /// letter's turn plus the Text's is a whole quarter turn, as MonoGame snaps such a glyph's position (#6554).
     /// </summary>
     private void DrawTransformedRun(ref StyledRunDraw drawRun, Vector2 cellTopLeft)
     {
@@ -1682,11 +1727,13 @@ public class Text : IVisible, IRenderableIpso,
         float baselineFromTop = (LineHeightInPixels - _descenderHeight) * drawRun.Scale;
         Vector2 scaledTopLeft = LetterCellScale.GetScaledTopLeft(cellTopLeft.X, cellTopLeft.Y, drawRun.Width, lineHeight,
             baselineFromTop, drawRun.ScaleX, drawRun.ScaleY, drawRun.ScaleXOrigin, drawRun.ScaleYOrigin);
+        float totalRotation = _renderRotation + drawRun.Rotation;
+        scaledTopLeft = SnapToPixelIfNeeded(scaledTopLeft, totalRotation);
 
         if (HasDropshadow && RaylibFontShadowRegistry.TryGet(drawRun.Font.Texture.Id, out Font runShadowFont))
         {
-            DrawTransformed(runShadowFont, ref drawRun,
-                scaledTopLeft + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale, DropshadowColor);
+            DrawTransformed(runShadowFont, ref drawRun, SnapToPixelIfNeeded(
+                scaledTopLeft + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale, totalRotation), DropshadowColor);
         }
         DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft, drawRun.Color);
     }
