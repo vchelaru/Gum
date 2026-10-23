@@ -441,22 +441,13 @@ public class ComboBox :
 
     }
 
-    // Set when the selection changes while the drop-down is closed, because the list box is not laid
-    // out then and cannot scroll the new selection into view. Resolved on the next open (#6643).
-    private bool _scrollSelectionIntoViewOnOpen;
-
     private void OpenDropDown()
     {
         ShowListBoxInstance();
 
-        if (_scrollSelectionIntoViewOnOpen)
-        {
-            _scrollSelectionIntoViewOnOpen = false;
-            if (SelectedIndex > -1)
-            {
-                listBox.ScrollIndexIntoView(SelectedIndex);
-            }
-        }
+        // A selection made while closed was queued by the list box (it cannot scroll until it is
+        // laid out); now that the drop-down is laid out, bring it into view (#6643).
+        listBox.ApplyPendingScrollIntoView();
     }
 
     private void ShowListBoxInstance()
@@ -600,9 +591,11 @@ public class ComboBox :
 
     private void HandleSelectionChanged(object? sender, SelectionChangedEventArgs args)
     {
-        if (!IsDropDownOpen)
+        if (!IsDropDownOpen && listBox.SelectedIndex > -1)
         {
-            _scrollSelectionIntoViewOnOpen = true;
+            // Queues the scroll in the list box until the drop-down is opened. This also covers
+            // selections that did not scroll themselves, such as SelectedObject.
+            listBox.ScrollIndexIntoView(listBox.SelectedIndex);
         }
 
         // If we bind the Text, then don't set this here, the binding will take care of it

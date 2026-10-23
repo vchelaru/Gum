@@ -517,6 +517,104 @@ public class ComboBoxScrollSplashTests : BaseTestClass
         listBox.VerticalScrollBarValue.ShouldBe(0);
     }
 
+    [Fact]
+    public void ListBox_HiddenFromStartLastItemSelectedThenShown_ShouldShowSelectedItem()
+    {
+        (ContainerRuntime parent, ListBox listBox) = CreateListBoxInHiddenParent(50);
+
+        listBox.SelectedIndex = 49;
+        parent.Visible = true;
+        parent.UpdateLayout();
+
+        IsRowInView(listBox, 49).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_LaidOutThenHiddenSelectionChangedThenShown_ShouldShowSelectedItem()
+    {
+        ListBox listBox = CreateLaidOutListBox(50);
+        listBox.SelectedIndex = 40;
+        listBox.IsVisible = false;
+
+        listBox.SelectedIndex = 0;
+        listBox.IsVisible = true;
+
+        IsRowInView(listBox, 0).ShouldBeTrue();
+        listBox.VerticalScrollBarValue.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ListBox_SelectedIndexSetInHiddenParentThenParentShown_ShouldShowSelectedItem()
+    {
+        (ContainerRuntime parent, ListBox listBox) = CreateListBoxInHiddenParent(50);
+        listBox.SelectedIndex = 40;
+
+        parent.Visible = true;
+        parent.UpdateLayout();
+
+        IsRowInView(listBox, 40).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_HiddenScrollRequestsThenShown_ShouldApplyLatestRequest()
+    {
+        (ContainerRuntime parent, ListBox listBox) = CreateListBoxInHiddenParent(50);
+        listBox.SelectedIndex = 40;
+
+        listBox.ScrollIndexIntoView(5);
+        parent.Visible = true;
+        parent.UpdateLayout();
+
+        IsRowInView(listBox, 5).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_HiddenSelectedItemRemovedThenShown_ShouldNotScrollOrThrow()
+    {
+        (ContainerRuntime parent, ListBox listBox) = CreateListBoxInHiddenParent(50);
+        listBox.SelectedIndex = 49;
+        listBox.Items!.RemoveAt(49);
+
+        parent.Visible = true;
+        parent.UpdateLayout();
+
+        listBox.VerticalScrollBarValue.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ListBox_HiddenSelectionClearedThenShown_ShouldNotScroll()
+    {
+        (ContainerRuntime parent, ListBox listBox) = CreateListBoxInHiddenParent(50);
+        listBox.SelectedIndex = 49;
+        listBox.SelectedIndex = -1;
+
+        parent.Visible = true;
+        parent.UpdateLayout();
+
+        listBox.VerticalScrollBarValue.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ComboBox_InHiddenParentSelectionSetThenParentShownThenOpened_ShouldShowSelectedItem()
+    {
+        ContainerRuntime parent = new();
+        parent.AddToRoot();
+        parent.Visible = false;
+        ComboBox comboBox = new();
+        parent.Children.Add(comboBox.Visual);
+        for (int i = 0; i < ManyItems; i++)
+        {
+            comboBox.Items!.Add("Item " + i);
+        }
+        comboBox.SelectedIndex = 20;
+
+        parent.Visible = true;
+        parent.UpdateLayout();
+        OpenScrollable(comboBox);
+
+        IsRowInView(comboBox.ListBox, 20).ShouldBeTrue();
+    }
+
     #endregion
 
     #region ScrollViewer value after layout changes
@@ -582,6 +680,21 @@ public class ComboBoxScrollSplashTests : BaseTestClass
             collection.Add(prefix + i);
         }
         return collection;
+    }
+
+    private static (ContainerRuntime Parent, ListBox ListBox) CreateListBoxInHiddenParent(int itemCount)
+    {
+        ContainerRuntime parent = new();
+        parent.AddToRoot();
+        parent.Visible = false;
+        ListBox listBox = new();
+        parent.Children.Add(listBox.Visual);
+        listBox.Visual.Height = 200;
+        for (int i = 0; i < itemCount; i++)
+        {
+            listBox.Items!.Add("Item " + i);
+        }
+        return (parent, listBox);
     }
 
     private static ListBox CreateLaidOutListBox(int itemCount)

@@ -203,6 +203,8 @@ public partial class GraphicalUiElement
 
         ResumeChildrenIfDirty(skipSuspendedChildren);
 
+        LayoutResumed?.Invoke(this, EventArgs.Empty);
+
         return didCallUpdateLayout;
     }
 
