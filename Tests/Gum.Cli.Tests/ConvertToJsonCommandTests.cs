@@ -2,28 +2,12 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class ConvertToJsonCommandTests : IDisposable
+public class ConvertToJsonCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public ConvertToJsonCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliConvertToJsonTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
-    }
-
     [Fact]
     public void ConvertToJson_FormsProject_ShouldWriteGumjSiblingAndLeaveGumxUntouched()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject", "MyProject.gumx");
+        string filePath = Path.Combine(TempDirectory, "MyProject", "MyProject.gumx");
         CliTestHelper.Run("new", filePath);
         byte[] gumxBytesBefore = File.ReadAllBytes(filePath);
 
@@ -31,14 +15,14 @@ public class ConvertToJsonCommandTests : IDisposable
 
         result.ExitCode.ShouldBe(0);
         result.StandardOutput.ShouldContain("MyProject.gumj");
-        File.Exists(Path.Combine(_tempDirectory, "MyProject", "MyProject.gumj")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "MyProject", "MyProject.gumj")).ShouldBeTrue();
         File.ReadAllBytes(filePath).ShouldBe(gumxBytesBefore);
     }
 
     [Fact]
     public void ConvertToJson_MissingProjectFile_ShouldReturnExitCode2()
     {
-        string fakePath = Path.Combine(_tempDirectory, "nonexistent.gumx");
+        string fakePath = Path.Combine(TempDirectory, "nonexistent.gumx");
 
         CliTestHelper result = CliTestHelper.Run("convert-to-json", fakePath);
 

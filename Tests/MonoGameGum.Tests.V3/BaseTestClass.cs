@@ -17,6 +17,7 @@ public class BaseTestClass : IDisposable
 {
     // Captured before the constructor body runs, so it is the state the previous test left.
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+    private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
 
     public BaseTestClass()
     {
@@ -119,6 +120,7 @@ public class BaseTestClass : IDisposable
         RenderableRegistry.Reset();
 
         _fileManagerState.Restore();
+        _graphicalUiElementState.Restore();
         ObjectFinderState.Reset();
 
         // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.

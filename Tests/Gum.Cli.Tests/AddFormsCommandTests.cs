@@ -5,35 +5,27 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class AddFormsCommandTests : IDisposable
+public class AddFormsCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public AddFormsCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliAddFormsTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void AddForms_OnEmptyProject_ShouldAddFormsControlsAndFontFiles()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string filePath = Path.Combine(TempDirectory, "MyProject.gumx");
         CliTestHelper.Run("new", filePath, "--template", "empty");
 
         CliTestHelper result = CliTestHelper.Run("add-forms", filePath);
 
         result.ExitCode.ShouldBe(0);
-        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeTrue();
-        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behx")).ShouldBeTrue();
-        File.Exists(Path.Combine(_tempDirectory, "Fonts", "LiberationSans-Regular.ttf")).ShouldBeTrue();
-        File.Exists(Path.Combine(_tempDirectory, "UISpriteSheet.png")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Behaviors", "ButtonBehavior.behx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Fonts", "LiberationSans-Regular.ttf")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "UISpriteSheet.png")).ShouldBeTrue();
     }
 
     [Fact]
     public void AddForms_OnEmptyProject_ShouldReferenceTheAddedComponentsStandardsAndBehaviors()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string filePath = Path.Combine(TempDirectory, "MyProject.gumx");
         CliTestHelper.Run("new", filePath, "--template", "empty");
 
         CliTestHelper result = CliTestHelper.Run("add-forms", filePath);
@@ -52,10 +44,10 @@ public class AddFormsCommandTests : IDisposable
     [Fact]
     public void AddForms_WhenAComponentAlreadyExists_ShouldSkipItWithoutOverwriting()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string filePath = Path.Combine(TempDirectory, "MyProject.gumx");
         CliTestHelper.Run("new", filePath, "--template", "forms");
 
-        string buttonPath = Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx");
+        string buttonPath = Path.Combine(TempDirectory, "Components", "Controls", "ButtonStandard.gucx");
         File.SetLastWriteTimeUtc(buttonPath, DateTime.UtcNow.AddDays(-1));
         DateTime originalWriteTime = File.GetLastWriteTimeUtc(buttonPath);
 
@@ -68,15 +60,15 @@ public class AddFormsCommandTests : IDisposable
     [Fact]
     public void AddForms_OnJsonProject_ShouldAddJsonElementFiles()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject.gumj");
+        string filePath = Path.Combine(TempDirectory, "MyProject.gumj");
         CliTestHelper.Run("new", filePath, "--template", "empty");
 
         CliTestHelper result = CliTestHelper.Run("add-forms", filePath);
 
         result.ExitCode.ShouldBe(0);
-        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucj")).ShouldBeTrue();
-        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeFalse();
-        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behj")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Components", "Controls", "ButtonStandard.gucj")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeFalse();
+        File.Exists(Path.Combine(TempDirectory, "Behaviors", "ButtonBehavior.behj")).ShouldBeTrue();
 
         ProjectLoadResult loadResult = new ProjectLoader().Load(filePath);
         loadResult.Success.ShouldBeTrue();
@@ -86,19 +78,11 @@ public class AddFormsCommandTests : IDisposable
     [Fact]
     public void AddForms_WhenProjectDoesNotExist_ShouldReturnExitCode2()
     {
-        string filePath = Path.Combine(_tempDirectory, "DoesNotExist.gumx");
+        string filePath = Path.Combine(TempDirectory, "DoesNotExist.gumx");
 
         CliTestHelper result = CliTestHelper.Run("add-forms", filePath);
 
         result.ExitCode.ShouldBe(2);
         result.StandardError.ShouldContain("not found");
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

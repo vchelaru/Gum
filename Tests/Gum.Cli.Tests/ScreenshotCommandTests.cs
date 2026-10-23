@@ -7,16 +7,8 @@ using SkiaSharp;
 
 namespace Gum.Cli.Tests;
 
-public class ScreenshotCommandTests : IDisposable
+public class ScreenshotCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public ScreenshotCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliScreenshotTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     // Proves `--backend raylib` actually dispatches to RaylibScreenshotService end-to-end through
     // the CLI's option parsing (#4174) — pixel-level rendering correctness is covered by
     // Gum.ProjectServices.Raylib.Tests. The default ("monogame") backend's dispatch is pre-existing,
@@ -35,7 +27,7 @@ public class ScreenshotCommandTests : IDisposable
         }
 
         string projectPath = CreateProjectWithScreen();
-        string outputPath = Path.Combine(_tempDirectory, "Screen.png");
+        string outputPath = Path.Combine(TempDirectory, "Screen.png");
 
         CliTestHelper result = CliTestHelper.Run(
             "screenshot", projectPath, "Screen", "--output", outputPath, "--backend", "raylib");
@@ -67,7 +59,7 @@ public class ScreenshotCommandTests : IDisposable
         }
 
         string projectPath = CreateProjectWithScreen();
-        string outputPath = Path.Combine(_tempDirectory, "Screen.png");
+        string outputPath = Path.Combine(TempDirectory, "Screen.png");
 
         CliTestHelper result = CliTestHelper.Run(
             "screenshot", projectPath, "Screen", "--output", outputPath,
@@ -98,7 +90,7 @@ public class ScreenshotCommandTests : IDisposable
 
     private string CreateProjectWithScreen()
     {
-        string projectPath = Path.Combine(_tempDirectory, "Project.gumx");
+        string projectPath = Path.Combine(TempDirectory, "Project.gumx");
 
         ProjectCreator creator = new ProjectCreator();
         GumProjectSave project = creator.Create(projectPath);
@@ -117,13 +109,5 @@ public class ScreenshotCommandTests : IDisposable
         project.Save(projectPath, saveElements: true);
 
         return projectPath;
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

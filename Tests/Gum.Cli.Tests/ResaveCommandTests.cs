@@ -2,24 +2,8 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class ResaveCommandTests : IDisposable
+public class ResaveCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public ResaveCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliResaveTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
-    }
-
     // The Forms template's files are hand-maintained and not all in saved form (trailing newlines,
     // blank lines), so the first save may reformat them; every save after that must be stable.
     [Theory]
@@ -27,7 +11,7 @@ public class ResaveCommandTests : IDisposable
     [InlineData(true)]
     public void Resave_FreshFormsProject_SecondSaveShouldMatchTheFirst(bool raw)
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject", "MyProject.gumx");
+        string filePath = Path.Combine(TempDirectory, "MyProject", "MyProject.gumx");
         CliTestHelper.Run("new", filePath);
         string[] arguments = raw ? new[] { "resave", filePath, "--raw" } : new[] { "resave", filePath };
         CliTestHelper.Run(arguments).ExitCode.ShouldBe(0);
@@ -45,9 +29,9 @@ public class ResaveCommandTests : IDisposable
     [Fact]
     public void Resave_ShouldRewriteElementFiles()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject", "MyProject.gumx");
+        string filePath = Path.Combine(TempDirectory, "MyProject", "MyProject.gumx");
         CliTestHelper.Run("new", filePath, "--template", "empty");
-        string standardFile = Directory.GetFiles(Path.Combine(_tempDirectory, "MyProject", "Standards"), "*.gutx").First();
+        string standardFile = Directory.GetFiles(Path.Combine(TempDirectory, "MyProject", "Standards"), "*.gutx").First();
         string savedContent = File.ReadAllText(standardFile);
         File.WriteAllText(standardFile, savedContent + "<!-- not part of the saved format -->");
 
@@ -62,7 +46,7 @@ public class ResaveCommandTests : IDisposable
     [InlineData(true)]
     public void Resave_MissingProjectFile_ShouldReturnExitCode2(bool raw)
     {
-        string fakePath = Path.Combine(_tempDirectory, "nonexistent.gumx");
+        string fakePath = Path.Combine(TempDirectory, "nonexistent.gumx");
 
         CliTestHelper result = raw
             ? CliTestHelper.Run("resave", fakePath, "--raw")
@@ -74,7 +58,7 @@ public class ResaveCommandTests : IDisposable
 
     private Dictionary<string, byte[]> ReadAllFiles()
     {
-        return Directory.GetFiles(_tempDirectory, "*", SearchOption.AllDirectories)
+        return Directory.GetFiles(TempDirectory, "*", SearchOption.AllDirectories)
             .ToDictionary(path => path, File.ReadAllBytes);
     }
 }

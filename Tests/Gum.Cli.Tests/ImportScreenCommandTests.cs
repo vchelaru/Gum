@@ -2,24 +2,8 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class ImportScreenCommandTests : IDisposable
+public class ImportScreenCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public ImportScreenCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliImportScreenTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
-    }
-
     [Fact]
     public void ImportScreen_ShouldAddReferenceAndWriteScreenFile()
     {
@@ -92,7 +76,7 @@ public class ImportScreenCommandTests : IDisposable
     [Fact]
     public void ImportScreen_NonexistentProject_ExitCode2()
     {
-        string fakeProjectPath = Path.Combine(_tempDirectory, "nonexistent.gumx");
+        string fakeProjectPath = Path.Combine(TempDirectory, "nonexistent.gumx");
         string screenPath = WriteStagedScreen("Unused", "Screen1");
 
         CliTestHelper result = CliTestHelper.Run("import-screen", fakeProjectPath, screenPath);
@@ -104,7 +88,7 @@ public class ImportScreenCommandTests : IDisposable
     public void ImportScreen_NonexistentScreenFile_ExitCode2()
     {
         string projectPath = CreateTestProject("MissingScreen");
-        string fakeScreenPath = Path.Combine(_tempDirectory, "nonexistent.gusx");
+        string fakeScreenPath = Path.Combine(TempDirectory, "nonexistent.gusx");
 
         CliTestHelper result = CliTestHelper.Run("import-screen", projectPath, fakeScreenPath);
 
@@ -113,14 +97,14 @@ public class ImportScreenCommandTests : IDisposable
 
     private string CreateTestProject(string name)
     {
-        string filePath = Path.Combine(_tempDirectory, name, name + ".gumx");
+        string filePath = Path.Combine(TempDirectory, name, name + ".gumx");
         CliTestHelper.Run("new", filePath);
         return filePath;
     }
 
     private string WriteStagedScreen(string projectName, string screenName, string stagingFolderName = "staged")
     {
-        string stagingDirectory = Path.Combine(_tempDirectory, projectName, stagingFolderName);
+        string stagingDirectory = Path.Combine(TempDirectory, projectName, stagingFolderName);
         Directory.CreateDirectory(stagingDirectory);
         string screenPath = Path.Combine(stagingDirectory, screenName + ".gusx");
         File.WriteAllText(screenPath,

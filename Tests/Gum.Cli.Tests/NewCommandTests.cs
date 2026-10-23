@@ -3,20 +3,12 @@ using Shouldly;
 
 namespace Gum.Cli.Tests;
 
-public class NewCommandTests : IDisposable
+public class NewCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-
-    public NewCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliNewTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-    }
-
     [Fact]
     public void New_WithGumxExtension_ShouldCreateProjectAtExactPath()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        string filePath = Path.Combine(TempDirectory, "MyProject.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath);
 
@@ -28,7 +20,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithDirectoryName_ShouldCreateProjectInsideDirectory()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir);
 
@@ -42,55 +34,55 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithGumjExtension_ShouldCreateProjectAtExactPath()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyProject.gumj");
+        string filePath = Path.Combine(TempDirectory, "MyProject.gumj");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath);
 
         result.ExitCode.ShouldBe(0);
         File.Exists(filePath).ShouldBeTrue();
-        File.Exists(Path.Combine(_tempDirectory, "MyProject.gumx")).ShouldBeFalse();
+        File.Exists(Path.Combine(TempDirectory, "MyProject.gumx")).ShouldBeFalse();
     }
 
     [Fact]
     public void New_ShouldCreateStandardSubfolders()
     {
-        string filePath = Path.Combine(_tempDirectory, "SubfolderTest.gumx");
+        string filePath = Path.Combine(TempDirectory, "SubfolderTest.gumx");
 
         CliTestHelper.Run("new", filePath);
 
-        Directory.Exists(Path.Combine(_tempDirectory, "Screens")).ShouldBeTrue();
-        Directory.Exists(Path.Combine(_tempDirectory, "Components")).ShouldBeTrue();
-        Directory.Exists(Path.Combine(_tempDirectory, "Standards")).ShouldBeTrue();
-        Directory.Exists(Path.Combine(_tempDirectory, "Behaviors")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(TempDirectory, "Screens")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(TempDirectory, "Components")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(TempDirectory, "Standards")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(TempDirectory, "Behaviors")).ShouldBeTrue();
     }
 
     [Fact]
     public void New_DefaultTemplate_ShouldBeFormsTemplate()
     {
-        string filePath = Path.Combine(_tempDirectory, "FormsDefault.gumx");
+        string filePath = Path.Combine(TempDirectory, "FormsDefault.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath);
 
         result.ExitCode.ShouldBe(0);
-        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeTrue();
     }
 
     [Fact]
     public void New_WithTheme_ShouldCreateProjectFromTheme()
     {
-        string filePath = Path.Combine(_tempDirectory, "Themed.gumx");
+        string filePath = Path.Combine(TempDirectory, "Themed.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "meadow");
 
         result.ExitCode.ShouldBe(0);
-        File.Exists(Path.Combine(_tempDirectory, "Components", "Meadow", "Controls", "Label.gucx")).ShouldBeTrue();
-        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Components", "Meadow", "Controls", "Label.gucx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Behaviors", "ButtonBehavior.behx")).ShouldBeTrue();
     }
 
     [Fact]
     public void New_WithUnknownTheme_ShouldReturnExitCode2AndListThemes()
     {
-        string filePath = Path.Combine(_tempDirectory, "Themed.gumx");
+        string filePath = Path.Combine(TempDirectory, "Themed.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "NoSuchTheme");
 
@@ -103,7 +95,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithThemeAndEmptyTemplate_ShouldReturnExitCode2()
     {
-        string filePath = Path.Combine(_tempDirectory, "Themed.gumx");
+        string filePath = Path.Combine(TempDirectory, "Themed.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath, "--template", "empty", "--theme", "Meadow");
 
@@ -114,18 +106,18 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithStandardTheme_ShouldCreateTheDefaultFormsTemplate()
     {
-        string filePath = Path.Combine(_tempDirectory, "Standard.gumx");
+        string filePath = Path.Combine(TempDirectory, "Standard.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "Standard");
 
         result.ExitCode.ShouldBe(0);
-        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeTrue();
     }
 
     [Fact]
     public void New_WhenProjectAlreadyExists_ShouldReturnExitCode2()
     {
-        string filePath = Path.Combine(_tempDirectory, "Existing.gumx");
+        string filePath = Path.Combine(TempDirectory, "Existing.gumx");
         CliTestHelper.Run("new", filePath);
 
         CliTestHelper result = CliTestHelper.Run("new", filePath);
@@ -137,7 +129,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithInvalidTemplate_ShouldReturnExitCode2()
     {
-        string filePath = Path.Combine(_tempDirectory, "InvalidTemplate.gumx");
+        string filePath = Path.Combine(TempDirectory, "InvalidTemplate.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath, "--template", "bogus");
 
@@ -148,23 +140,23 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithTemplateEmpty_ShouldCreateStandardFiles()
     {
-        string filePath = Path.Combine(_tempDirectory, "EmptyTemplate.gumx");
+        string filePath = Path.Combine(TempDirectory, "EmptyTemplate.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath, "-t", "empty");
 
         result.ExitCode.ShouldBe(0);
-        File.Exists(Path.Combine(_tempDirectory, "Standards", "Text.gutx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Standards", "Text.gutx")).ShouldBeTrue();
     }
 
     [Fact]
     public void New_WithTemplateEmpty_ShouldNotCreateFormsControls()
     {
-        string filePath = Path.Combine(_tempDirectory, "EmptyNoForms.gumx");
+        string filePath = Path.Combine(TempDirectory, "EmptyNoForms.gumx");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath, "-t", "empty");
 
         result.ExitCode.ShouldBe(0);
-        Directory.Exists(Path.Combine(_tempDirectory, "Components", "Controls")).ShouldBeFalse();
+        Directory.Exists(Path.Combine(TempDirectory, "Components", "Controls")).ShouldBeFalse();
     }
 
     [Fact]
@@ -173,13 +165,13 @@ public class NewCommandTests : IDisposable
         string originalCurrentDirectory = Directory.GetCurrentDirectory();
         try
         {
-            Directory.SetCurrentDirectory(_tempDirectory);
+            Directory.SetCurrentDirectory(TempDirectory);
 
             CliTestHelper result = CliTestHelper.Run("new");
 
             result.ExitCode.ShouldBe(0);
             // Defaults to .gumj (JSON, AOT-safe) when no path is given at all (#4705).
-            string expectedGumj = Path.Combine(_tempDirectory, "GumProject", "GumProject.gumj");
+            string expectedGumj = Path.Combine(TempDirectory, "GumProject", "GumProject.gumj");
             File.Exists(expectedGumj).ShouldBeTrue();
             result.StandardOutput.ShouldContain("Created project:");
         }
@@ -195,7 +187,7 @@ public class NewCommandTests : IDisposable
         string originalCurrentDirectory = Directory.GetCurrentDirectory();
         try
         {
-            Directory.SetCurrentDirectory(_tempDirectory);
+            Directory.SetCurrentDirectory(TempDirectory);
 
             CliTestHelper.Run("new");
             CliTestHelper result = CliTestHelper.Run("new");
@@ -215,7 +207,7 @@ public class NewCommandTests : IDisposable
         // The default "forms" template is extracted from an XML-only embedded resource (#4705);
         // this proves the end-to-end gumcli path actually converts it, not just the lower-level
         // FormsTemplateCreator unit.
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir);
 
@@ -231,7 +223,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithPlatform_ShouldCreateHostProjectWithGumProjectAndCodegenSettings()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--no-restore");
 
@@ -247,7 +239,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithPlatform_ShouldProduceProjectThatCodegenAcceptsAndChecksClean()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
         CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--no-restore");
         string gumjPath = Path.Combine(projectDir, "Content", "GumProject", "GumProject.gumj");
 
@@ -262,7 +254,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithStridePlatform_ShouldCreateHostProjectWithoutGameClass()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "stride", "--no-restore");
 
@@ -277,7 +269,7 @@ public class NewCommandTests : IDisposable
     [InlineData("silk.net")]
     public void New_WithSilkNetPlatform_ShouldCreateHostProjectWithoutGameClass(string platform)
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", platform, "--no-restore");
 
@@ -289,7 +281,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithKniSkiaPlatform_ShouldCreateKniGameDrawingGumThroughSkia()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "kniskia", "--no-restore");
 
@@ -310,7 +302,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithUnknownPlatform_ShouldReturnExitCode2NamingValidValues()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "bogus");
 
@@ -325,7 +317,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithFnaPlatform_ShouldReturnExitCode2ExplainingItNeedsSource()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "fna");
 
@@ -337,7 +329,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithPlatformAndProjectFilePath_ShouldReturnExitCode2()
     {
-        string filePath = Path.Combine(_tempDirectory, "MyGame.gumj");
+        string filePath = Path.Combine(TempDirectory, "MyGame.gumj");
 
         CliTestHelper result = CliTestHelper.Run("new", filePath, "--platform", "monogame", "--no-restore");
 
@@ -349,7 +341,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithPlatformAndExistingProject_ShouldReturnExitCode2()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
         CliTestHelper.Run("new", projectDir, "--platform", "raylib", "--no-restore");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "raylib", "--no-restore");
@@ -361,7 +353,7 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithPlatformAndSourceLinked_ShouldReferenceRuntimeProjectInsteadOfPackage()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--source-linked", "--no-restore");
 
@@ -375,20 +367,12 @@ public class NewCommandTests : IDisposable
     [Fact]
     public void New_WithSourceLinkedButNoPlatform_ShouldReturnExitCode2()
     {
-        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "--source-linked");
 
         result.ExitCode.ShouldBe(2);
         result.StandardError.ShouldContain("--platform");
         Directory.Exists(projectDir).ShouldBeFalse();
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_tempDirectory))
-        {
-            Directory.Delete(_tempDirectory, recursive: true);
-        }
     }
 }

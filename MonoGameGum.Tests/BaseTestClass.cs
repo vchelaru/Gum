@@ -20,6 +20,7 @@ public class BaseTestClass : IDisposable
 {
     // Captured before the constructor body runs, so it is the state the previous test left.
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+    private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
 
     public BaseTestClass()
     {
@@ -164,6 +165,7 @@ public class BaseTestClass : IDisposable
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
 
         _fileManagerState.Restore();
+        _graphicalUiElementState.Restore();
 
         RenderingLibrary.Graphics.Text.Customizations.Clear();
         RenderingLibrary.Graphics.Text.ContextCustomizations.Clear();

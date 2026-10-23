@@ -20,20 +20,17 @@ namespace Gum.Presentation.Tests;
 /// Also restores the <see cref="FileManager"/> settings (<see cref="FileManager.RelativeDirectory"/>,
 /// <see cref="FileManager.UserApplicationDataFolderOverride"/> and the rest of <see cref="FileManagerState"/>)
 /// on dispose, so a test may point them anywhere without changing where later tests resolve files.
-/// Likewise the canvas size (<see cref="GraphicalUiElement.CanvasWidth"/>), a process-wide static the
-/// wireframe layout reads.
+/// Likewise <see cref="GraphicalUiElementState"/>: the canvas size, which the wireframe layout reads, and
+/// <see cref="GraphicalUiElement.MissingFileBehavior"/>.
 /// </para>
 /// </summary>
 public class BaseTestClass : IDisposable
 {
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
-    private readonly float _originalCanvasWidth;
-    private readonly float _originalCanvasHeight;
+    private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
 
     public BaseTestClass()
     {
-        _originalCanvasWidth = GraphicalUiElement.CanvasWidth;
-        _originalCanvasHeight = GraphicalUiElement.CanvasHeight;
         ObjectFinderState.Reset();
         StandardElementsManager.Self.Initialize();
     }
@@ -42,7 +39,6 @@ public class BaseTestClass : IDisposable
     {
         ObjectFinderState.Reset();
         _fileManagerState.Restore();
-        GraphicalUiElement.CanvasWidth = _originalCanvasWidth;
-        GraphicalUiElement.CanvasHeight = _originalCanvasHeight;
+        _graphicalUiElementState.Restore();
     }
 }

@@ -3,24 +3,11 @@ using Gum.DataTypes;
 using Gum.Localization;
 using Gum.ProjectServices;
 using Shouldly;
-using ToolsUtilities;
 
 namespace Gum.Cli.Tests;
 
-public class PackCommandTests : IDisposable
+public class PackCommandTests : BaseTestClass
 {
-    private readonly string _tempDirectory;
-    private readonly Func<string, Stream>? _previousHook;
-
-    public PackCommandTests()
-    {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliPackTests_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDirectory);
-        // GumBundleLoader.Resolve installs FileManager.CustomGetStreamFromFile as global mutable
-        // state; stash/restore around it so this test class stays isolated from others.
-        _previousHook = FileManager.CustomGetStreamFromFile;
-    }
-
     [Fact]
     public void Pack_default_inclusion_includes_core_fontcache_and_external_files()
     {
@@ -90,7 +77,7 @@ public class PackCommandTests : IDisposable
     [Fact]
     public void Pack_exits_with_2_when_project_file_does_not_exist()
     {
-        string projectPath = Path.Combine(_tempDirectory, "DoesNotExist", "Missing.gumx");
+        string projectPath = Path.Combine(TempDirectory, "DoesNotExist", "Missing.gumx");
 
         CliTestHelper result = CliTestHelper.Run("pack", projectPath);
 
@@ -228,7 +215,7 @@ public class PackCommandTests : IDisposable
         // "empty" template (not the default "forms" one): forms pulls in SourcePath-linked
         // behaviors that are only staged via `gumcli stage-forms-behaviors`, which is an
         // unrelated, pre-existing gap - not part of this JSON-extension regression.
-        string projectDir = Path.Combine(_tempDirectory, "JsonProject");
+        string projectDir = Path.Combine(TempDirectory, "JsonProject");
         string projectPath = Path.Combine(projectDir, "JsonProject.gumx");
         CliTestHelper.Run("new", projectPath, "--template", "empty").ExitCode.ShouldBe(0);
         CliTestHelper.Run("convert-to-json", projectPath).ExitCode.ShouldBe(0);
@@ -263,7 +250,7 @@ public class PackCommandTests : IDisposable
         // hardcode ".gumx" for the bundle's internal project entry, so a bundle packed from a
         // JSON-format (.gumj) project failed to load with a FileNotFoundException even though
         // packing it reported success.
-        string projectDir = Path.Combine(_tempDirectory, "JsonLoadProject");
+        string projectDir = Path.Combine(TempDirectory, "JsonLoadProject");
         string projectPath = Path.Combine(projectDir, "JsonLoadProject.gumx");
         CliTestHelper.Run("new", projectPath, "--template", "empty").ExitCode.ShouldBe(0);
         CliTestHelper.Run("convert-to-json", projectPath).ExitCode.ShouldBe(0);
@@ -349,7 +336,7 @@ public class PackCommandTests : IDisposable
     public void Pack_writes_output_to_specified_path_when_dash_o()
     {
         string projectPath = CreateCleanProject("SpecifiedOut");
-        string outputPath = Path.Combine(_tempDirectory, "custom-name.gumpkg");
+        string outputPath = Path.Combine(TempDirectory, "custom-name.gumpkg");
 
         CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
 
@@ -364,7 +351,7 @@ public class PackCommandTests : IDisposable
     /// </summary>
     private string CreateCleanProject(string name)
     {
-        string projectDir = Path.Combine(_tempDirectory, name);
+        string projectDir = Path.Combine(TempDirectory, name);
         Directory.CreateDirectory(projectDir);
         string filePath = Path.Combine(projectDir, name + ".gumx");
 
@@ -412,7 +399,7 @@ public class PackCommandTests : IDisposable
 
     private string CreateProjectWithTextFontFile(string name)
     {
-        string projectDir = Path.Combine(_tempDirectory, name);
+        string projectDir = Path.Combine(TempDirectory, name);
         Directory.CreateDirectory(projectDir);
         string projectPath = Path.Combine(projectDir, name + ".gumx");
         new ProjectCreator().Create(projectPath);
@@ -515,19 +502,5 @@ public class PackCommandTests : IDisposable
         using FileStream stream = File.OpenRead(bundlePath);
         GumBundle bundle = GumBundleReader.Read(stream);
         return new Dictionary<string, byte[]>(bundle.Entries);
-    }
-
-    public void Dispose()
-    {
-        FileManager.CustomGetStreamFromFile = _previousHook;
-        if (Directory.Exists(_tempDirectory))
-        {
-            try
-            {
-                Directory.Delete(_tempDirectory, recursive: true);
-            }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
-        }
     }
 }
