@@ -144,6 +144,9 @@ namespace RenderingLibrary.Graphics
             BeginHostFrame(managers);
             foreach(var layer in layers)
             {
+                // Every frame, like MonoGame's RenderLayer: a stable sort on Z (then Y with
+                // SecondarySortOnY) of the layer's top-level renderables; children keep their order.
+                layer.SortRenderables();
                 DrawTopLevel(layer.Renderables, managers, layer);
             }
         }
