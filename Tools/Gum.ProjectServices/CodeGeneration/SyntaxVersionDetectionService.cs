@@ -54,11 +54,9 @@ public enum SyntaxVersionSource
 /// <inheritdoc/>
 public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 {
-    // Gum runtimes that stamp a GumSyntaxVersion. These are both the project names and the
-    // assembly (dll) names.
-    private static readonly string[] GumRuntimeNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum", "StrideGum" };
-
-    // Published NuGet package IDs of the runtimes above.
+    // Published NuGet package IDs of the Gum runtimes. Runtime project and dll names follow a rule
+    // instead (see IsRuntimeName), but package IDs do not: add-on packages such as Gum.Expressions and
+    // Gum.Shapes.MonoGame share the "Gum." prefix, and FindRuntimePackageVersion needs the runtime's.
     private static readonly string[] GumPackageNames =
     {
         "Gum.MonoGame",
@@ -68,13 +66,17 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         "Gum.raylib",
         "Gum.sokol",
         "Gum.SilkNet",
-        "Gum.Stride"
+        "Gum.Stride",
+        "Gum.KniSkia",
+        "Gum.SkiaSharp.Standalone",
+        "Gum.SkiaSharp.Maui",
+        "Gum.SkiaSharp.ShadowDusk"
     };
 
     // The subset of the runtimes above that shipped before the namespace unification. Only these can
     // be an old build whose version is unreadable; every other runtime started on the current conventions.
-    private static readonly string[] LegacyEraRuntimeNames = { "MonoGameGum", "KniGum", "FnaGum", "SkiaGum" };
-    private static readonly string[] LegacyEraPackageNames = { "Gum.MonoGame", "Gum.KNI", "Gum.FNA", "Gum.SkiaSharp" };
+    private static readonly string[] LegacyEraRuntimeNames = { "MonoGameGum", "KniGum", "FnaGum", "SkiaGum", "SkiaGum.Maui", "SkiaGum.Wpf" };
+    private static readonly string[] LegacyEraPackageNames = { "Gum.MonoGame", "Gum.KNI", "Gum.FNA", "Gum.SkiaSharp", "Gum.SkiaSharp.Maui" };
 
     private readonly ICodeGenLogger _logger;
     private readonly string _nuGetCacheRoot;
@@ -219,10 +221,11 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
     private SyntaxVersionResult? TryDetectFromProjectReference(string csprojContents, string csprojPath)
     {
         // Look for a ProjectReference to a Gum runtime that stamps a GumSyntaxVersion.
-        foreach (string projectName in GumRuntimeNames)
+        foreach (Match referenceMatch in ProjectReferenceIncludeRegex.Matches(csprojContents))
         {
-            string? relativePath = ExtractProjectReferencePath(csprojContents, projectName);
-            if (relativePath == null)
+            string relativePath = referenceMatch.Groups[1].Value;
+            string projectName = Path.GetFileNameWithoutExtension(relativePath.Replace('\\', '/'));
+            if (!IsRuntimeName(projectName))
             {
                 continue;
             }
@@ -244,13 +247,14 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
                 continue;
             }
 
-            string assemblyAttributesPath = Path.Combine(referencedProjectDir, "AssemblyAttributes.cs");
-            if (!File.Exists(assemblyAttributesPath))
+            // KniGum and FnaGum compile MonoGameGum's source, stamp included, from the folder above them.
+            int? version = ParseVersionFromSourceFile(Path.Combine(referencedProjectDir, "AssemblyAttributes.cs"));
+            string? parentDir = Path.GetDirectoryName(referencedProjectDir);
+            if (!version.HasValue && parentDir != null)
             {
-                continue;
+                version = ParseVersionFromSourceFile(Path.Combine(parentDir, "AssemblyAttributes.cs"));
             }
 
-            int? version = ParseVersionFromSourceFile(assemblyAttributesPath);
             if (version.HasValue)
             {
                 return new SyntaxVersionResult
@@ -267,17 +271,16 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 
     private SyntaxVersionResult? TryDetectFromAssemblyReference(string csprojContents, string csprojPath)
     {
-        foreach (string runtimeName in GumRuntimeNames)
+        foreach (Match referenceMatch in ReferenceHintPathRegex.Matches(csprojContents))
         {
-            string? hintPath = ExtractReferenceHintPath(csprojContents, runtimeName);
-            if (hintPath == null)
+            // Same separator normalization as TryDetectFromProjectReference. A relative HintPath
+            // is relative to the .csproj; Path.Combine keeps an absolute one as-is.
+            string hintPath = referenceMatch.Groups[1].Value.Replace('\\', '/');
+            string runtimeName = Path.GetFileNameWithoutExtension(hintPath);
+            if (!hintPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || !IsRuntimeName(runtimeName))
             {
                 continue;
             }
-
-            // Same separator normalization as TryDetectFromProjectReference. A relative HintPath
-            // is relative to the .csproj; Path.Combine keeps an absolute one as-is.
-            hintPath = hintPath.Replace('\\', '/');
 
             string csprojDir = Path.GetDirectoryName(csprojPath) ?? csprojPath;
             string dllPath;
@@ -343,6 +346,24 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         return null;
     }
 
+    private static readonly Regex ProjectReferenceIncludeRegex =
+        new Regex("<ProjectReference\\s+Include=\"([^\"]*)\"", RegexOptions.IgnoreCase);
+
+    private static readonly Regex ReferenceHintPathRegex =
+        new Regex(@"<Reference\b[^>]*>(?:(?!</Reference>).)*?<HintPath>\s*([^<]*?)\s*</HintPath>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+    // Every Gum runtime's project and dll is named <Engine>Gum (MonoGameGum, KniSkiaGum, UnityGum),
+    // or <Engine>Gum.<Host> for a host built on one (SkiaGum.Standalone), so a new runtime is found
+    // without being listed. GumCommon is stamped too but is not a runtime. A matching name with no
+    // stamp is skipped.
+    private static bool IsRuntimeName(string name)
+    {
+        int dotIndex = name.IndexOf('.');
+        string engineName = dotIndex < 0 ? name : name.Substring(0, dotIndex);
+        return engineName.EndsWith("Gum", StringComparison.OrdinalIgnoreCase);
+    }
+
     internal static string? ExtractReferenceHintPath(string csprojContents, string assemblyName)
     {
         // Match a HintPath to the runtime's dll anywhere inside a plain assembly Reference,
@@ -360,7 +381,8 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
     {
         // Match: <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
         // or: <ProjectReference Include="path\to\MonoGameGum.csproj">
-        string pattern = $"<ProjectReference\\s+Include=\"([^\"]*{Regex.Escape(projectName)}[^\"]*)\"";
+        // The file name must equal the project name, so SkiaGum does not match KniSkiaGum or SkiaGum.Standalone.
+        string pattern = $"<ProjectReference\\s+Include=\"((?:[^\"]*[\\\\/])?{Regex.Escape(projectName)}\\.csproj)\"";
         Match match = Regex.Match(csprojContents, pattern, RegexOptions.IgnoreCase);
         return match.Success ? match.Groups[1].Value : null;
     }
