@@ -883,7 +883,7 @@ public class CodeGenerator
             {
                 // A generated base is inherited by its class name; a hand-written one, or one this
                 // project does not know, keeps the name as written.
-                inheritance = GetGeneratedBaseClassName(element, projectSettings) ?? element.BaseType;
+                inheritance = GetGeneratedBaseClassName(element, projectSettings, nameVerifier) ?? element.BaseType;
             }
             else if (!string.IsNullOrEmpty(projectSettings.DefaultScreenBase))
             {
@@ -962,15 +962,15 @@ public class CodeGenerator
             {
                 inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
             }
-            if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
+            if (GetGeneratedBaseClassName(element, projectSettings, nameVerifier) is string generatedBaseName)
+            {
+                inheritance = generatedBaseName;
+            }
+            else if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
             {
                 // Append "Runtime" even for a base this project does not know: a component
                 // (such as MessageBox) could inherit from UserControl, which generates UserControlRuntime.
                 inheritance = inheritance + "Runtime";
-            }
-            else if (GetGeneratedBaseClassName(element, projectSettings) is string generatedBaseName)
-            {
-                inheritance = generatedBaseName;
             }
         }
 
@@ -980,11 +980,11 @@ public class CodeGenerator
     /// <summary>
     /// The class name the generator gives <paramref name="element"/>'s base element, which a derived class
     /// must inherit: folder stripped, plus "Runtime" unless Gum Forms or the base is a Xamarin Forms control
-    /// (what <c>GetClassNameForType</c> returns for the base). Null when the base is not generated here: no
+    /// (what <c>GetClassNameForType</c> returns for the base, sanitized by <paramref name="nameVerifier"/> when given). Null when the base is not generated here: no
     /// base, one this project does not contain, a standard element, or one listed in
     /// <see cref="CodeOutputProjectSettings.BaseTypesNotCodeGenerated"/>.
     /// </summary>
-    private static string? GetGeneratedBaseClassName(ElementSave element, CodeOutputProjectSettings projectSettings)
+    private static string? GetGeneratedBaseClassName(ElementSave element, CodeOutputProjectSettings projectSettings, CodeGenerationNameVerifier? nameVerifier)
     {
         if (string.IsNullOrEmpty(element.BaseType) || IsBaseTypeNotCodeGenerated(element.BaseType, projectSettings))
         {
@@ -1002,7 +1002,10 @@ public class CodeGenerator
 
         bool hasRuntimeSuffix = projectSettings.OutputLibrary != OutputLibrary.GumForms &&
             ResolveVisualApi(baseElement) == VisualApi.Gum;
-        return hasRuntimeSuffix ? name + "Runtime" : name;
+        string className = hasRuntimeSuffix ? name + "Runtime" : name;
+
+        // The declaration sanitizes the name (spaces, leading digit, keyword); the inherited name must match.
+        return nameVerifier == null ? className : nameVerifier.ToCSharpName(className);
     }
 
     private static bool IsBaseTypeNotCodeGenerated(string baseType, CodeOutputProjectSettings? projectSettings) =>
