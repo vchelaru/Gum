@@ -396,7 +396,7 @@ After regenerating, update any hand-written code that references the generated f
 * **Declared types**: code like `ColoredCircleRuntime circle = Screen.MyCircle;` no longer compiles, because the generated field is now typed `CircleRuntime`. The `GUM002` code fix updates these; use **Fix all in solution**.
 * **Runtime casts**: code like `GetGraphicalUiElementByName("MyCircle") as ColoredCircleRuntime` still compiles but returns null at runtime, because the generated object is now a `CircleRuntime`. The analyzer cannot fix casts automatically; search for `as ColoredCircleRuntime` (and the rectangle equivalents) and change the cast to the collapsed type.
 
-Projects using `FindByName` instantiation are unaffected; generated code keeps referencing the legacy types there, because runtime `.gumx` loading still creates them. Projects whose runtime reports a syntax version below 3 also keep the previous output, because some runtimes that report version 2 lack the `Fill...`, `Stroke...` and `IsFilled` members. See [Syntax Versions](syntax-versions.md) for how the version is detected and how to override it.
+Projects using `FindByName` instantiation are unaffected; generated code keeps referencing the legacy types there, because runtime `.gumx` loading still creates them. Projects whose runtime reports a syntax version below 3 also keep the previous output. See [Syntax Versions](syntax-versions.md) for how the version is detected and how to override it.
 
 ### Legacy single-color members and `Radius` on `CircleRuntime` / `RectangleRuntime` are now `[Obsolete]`
 
