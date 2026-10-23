@@ -350,8 +350,8 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
 
     private void RenderNinePatch(Texture2D texture, float absoluteRotation, (float X, float Y) animationOffset)
     {
-        int x = (int)this.GetAbsoluteLeft();
-        int y = (int)this.GetAbsoluteTop();
+        float x = this.GetAbsoluteLeft();
+        float y = this.GetAbsoluteTop();
 
         var destinationRectangle = new Rectangle(
             x + animationOffset.X, y + animationOffset.Y, this.Width, this.Height);

@@ -1,4 +1,3 @@
-using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Raylib_cs;
@@ -17,11 +16,7 @@ namespace RaylibGum.Tests.Rendering;
 public class RotatedRenderTargetTests : BaseTestClass
 {
     const int Size = 240;
-    // A raylib Sprite truncates its world position to whole pixels (Sprite.Render). Inside a turned
-    // render target the bake undoes the rotation from that truncated position, so the upright copy
-    // lands at a fractional texel offset and its edges rasterize up to half a pixel away from the
-    // plain draw's. MonoGame and Skia use 0.5.
-    const float ShapeCenterTolerance = 1f;
+    const float ShapeCenterTolerance = 0.5f;
     const float TextCenterTolerance = 1.5f;
 
     static readonly Color Red = new((byte)255, (byte)0, (byte)0, (byte)255);
@@ -44,8 +39,8 @@ public class RotatedRenderTargetTests : BaseTestClass
                 Rotation = containerRotation,
                 IsRenderTarget = isRenderTarget,
             };
-            container.AddChild(SolidSprite(40, 0, 20, 20, Red));
-            container.AddChild(SolidSprite(0, 40, 20, 20, Blue));
+            container.AddChild(SolidRect(40, 0, 20, 20, Red));
+            container.AddChild(SolidRect(0, 40, 20, 20, Blue));
             container.AddChild(new TextRuntime { X = 0, Y = 20, Text = "WW", Color = Color.White });
             parent.AddChild(container);
             return parent;
@@ -72,13 +67,13 @@ public class RotatedRenderTargetTests : BaseTestClass
                 X = 100, Y = 100, Width = 90, Height = 90, Rotation = 30,
                 IsRenderTarget = useRenderTargets && isOuterRenderTarget,
             };
-            outer.AddChild(SolidSprite(0, 60, 20, 20, Blue));
+            outer.AddChild(SolidRect(0, 60, 20, 20, Blue));
             ContainerRuntime inner = new()
             {
                 X = 20, Y = 0, Width = 60, Height = 60, Rotation = 20,
                 IsRenderTarget = useRenderTargets && isInnerRenderTarget,
             };
-            inner.AddChild(SolidSprite(10, 20, 20, 20, Red));
+            inner.AddChild(SolidRect(10, 20, 20, 20, Red));
             outer.AddChild(inner);
             return outer;
         }
@@ -101,8 +96,8 @@ public class RotatedRenderTargetTests : BaseTestClass
                 XOrigin = HorizontalAlignment.Center,
                 YOrigin = VerticalAlignment.Center,
             };
-            container.AddChild(SolidSprite(40, 0, 20, 20, Red));
-            container.AddChild(SolidSprite(0, 40, 20, 20, Blue));
+            container.AddChild(SolidRect(40, 0, 20, 20, Red));
+            container.AddChild(SolidRect(0, 40, 20, 20, Blue));
             return container;
         }
 
@@ -128,8 +123,8 @@ public class RotatedRenderTargetTests : BaseTestClass
             {
                 X = x, Y = y, Width = 60, Height = 60, IsRenderTarget = isRenderTarget,
             };
-            container.AddChild(SolidSprite(0, 0, 60, 60, Blue));
-            container.AddChild(SolidSprite(25, 30, 30, 25, Red));
+            container.AddChild(SolidRect(0, 0, 60, 60, Blue));
+            container.AddChild(SolidRect(25, 30, 30, 25, Red));
             return container;
         }
 
@@ -151,7 +146,7 @@ public class RotatedRenderTargetTests : BaseTestClass
             {
                 X = 100, Y = 100, Width = 60, Height = 60, Rotation = rotation, IsRenderTarget = true,
             };
-            container.AddChild(SolidSprite(40, 10, 50, 20, Red));
+            container.AddChild(SolidRect(40, 10, 50, 20, Red));
             return container;
         }
 
@@ -174,7 +169,7 @@ public class RotatedRenderTargetTests : BaseTestClass
         {
             X = 60, Y = 60, Width = 60, Height = 60, Rotation = 30, IsRenderTarget = isRenderTarget,
         };
-        container.AddChild(SolidSprite(40, 0, 20, 20, Red));
+        container.AddChild(SolidRect(40, 0, 20, 20, Red));
 
         Color[] pixels = Capture(container);
 
@@ -198,8 +193,8 @@ public class RotatedRenderTargetTests : BaseTestClass
             {
                 X = x, Y = y, Width = 60, Height = 60, Rotation = 30, IsRenderTarget = isRenderTarget,
             };
-            container.AddChild(SolidSprite(0, 0, 60, 60, Blue));
-            container.AddChild(SolidSprite(25, 30, 30, 25, Red));
+            container.AddChild(SolidRect(0, 0, 60, 60, Blue));
+            container.AddChild(SolidRect(25, 30, 30, 25, Red));
             return container;
         }
 
@@ -221,29 +216,16 @@ public class RotatedRenderTargetTests : BaseTestClass
             {
                 X = 40, Y = 40, Width = 40, Height = 40, Rotation = 30, IsRenderTarget = isRenderTarget,
             };
-            container.AddChild(SolidSprite(25, 0, 15, 15, Red));
-            container.AddChild(SolidSprite(0, 25, 15, 15, Blue));
+            container.AddChild(SolidRect(25, 0, 15, 15, Red));
+            container.AddChild(SolidRect(0, 25, 15, 15, Blue));
             return container;
         }
 
         Color[] plain = Capture(Build(isRenderTarget: false), zoom: zoom);
         Color[] viaRenderTarget = Capture(Build(isRenderTarget: true), zoom: zoom);
 
-        // The sprites' truncated world position is magnified by the zoom, so the tolerance is too.
-        AssertSameCoverage(plain, viaRenderTarget, IsRed, minimumCount: 600, ShapeCenterTolerance * zoom, countTolerancePercent: 10);
-        AssertSameCoverage(plain, viaRenderTarget, IsBlue, minimumCount: 600, ShapeCenterTolerance * zoom, countTolerancePercent: 10);
-    }
-
-    readonly System.Collections.Generic.List<Texture2D> _textures = new();
-
-    public override void Dispose()
-    {
-        foreach (Texture2D texture in _textures)
-        {
-            UnloadTexture(texture);
-        }
-        _textures.Clear();
-        base.Dispose();
+        AssertSameCoverage(plain, viaRenderTarget, IsRed, minimumCount: 600, ShapeCenterTolerance, countTolerancePercent: 10);
+        AssertSameCoverage(plain, viaRenderTarget, IsBlue, minimumCount: 600, ShapeCenterTolerance, countTolerancePercent: 10);
     }
 
     record struct Coverage(int Count, float CenterX, float CenterY);
@@ -254,26 +236,10 @@ public class RotatedRenderTargetTests : BaseTestClass
 
     static bool IsTextColored(Color c) => c.R > 100 && c.G > 100 && c.B > 100;
 
-    // A sprite, not a ColoredRectangle: raylib's SolidRectangle draws axis-aligned, so only a
-    // sprite turns with its container in both the plain and the render-target scene.
-    SpriteRuntime SolidSprite(float x, float y, float width, float height, Color color)
-    {
-        Image image = GenImageColor(4, 4, color);
-        Texture2D texture = LoadTextureFromImage(image);
-        UnloadImage(image);
-        _textures.Add(texture);
-
-        return new SpriteRuntime
-        {
-            X = x,
-            Y = y,
-            WidthUnits = DimensionUnitType.Absolute,
-            HeightUnits = DimensionUnitType.Absolute,
-            Width = width,
-            Height = height,
-            Texture = texture,
-        };
-    }
+#pragma warning disable CS0618 // ColoredRectangleRuntime is obsolete; it is the SolidRectangle-backed runtime MonoGame's copy uses.
+    static ColoredRectangleRuntime SolidRect(float x, float y, float width, float height, Color color) =>
+        new() { X = x, Y = y, Width = width, Height = height, Color = color };
+#pragma warning restore CS0618
 
     static void AssertSameCoverage(Color[] expected, Color[] actual, System.Func<Color, bool> predicate,
         int minimumCount, float centerTolerance, int countTolerancePercent)
@@ -317,7 +283,7 @@ public class RotatedRenderTargetTests : BaseTestClass
         {
             X = wrapperX, Y = wrapperY, Width = Size / zoom, Height = Size / zoom, IsRenderTarget = true,
         };
-        wrapper.AddChild(SolidSprite(0, 0, Size / zoom, Size / zoom, Color.Black));
+        wrapper.AddChild(SolidRect(0, 0, Size / zoom, Size / zoom, Color.Black));
         wrapper.AddChild(scene);
 
         GumService.Default.Root.Children.Add(wrapper);

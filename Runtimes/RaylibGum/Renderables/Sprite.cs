@@ -201,8 +201,8 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             return;
         }
 
-        int x = (int)this.GetAbsoluteLeft();
-        int y = (int)this.GetAbsoluteTop();
+        float x = this.GetAbsoluteLeft();
+        float y = this.GetAbsoluteTop();
 
         var absoluteRotation = this.GetAbsoluteRotation();
 

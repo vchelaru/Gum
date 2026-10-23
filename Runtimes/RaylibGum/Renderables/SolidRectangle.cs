@@ -36,11 +36,11 @@ public class SolidRectangle : InvisibleRenderable
         if (!Visible) return;
 
 
-        int x = (int)this.GetAbsoluteLeft();
-        int y = (int)this.GetAbsoluteTop();
-        int width = (int)this.Width;
-        int height = (int)this.Height;
+        // Turned about its world position, counterclockwise for a positive rotation, at float
+        // precision, like MonoGame's SolidRectangle and raylib's Sprite.
+        var destination = new Raylib_cs.Rectangle(
+            this.GetAbsoluteLeft(), this.GetAbsoluteTop(), this.Width, this.Height);
 
-        Raylib.DrawRectangle(x,y, width, height, Color);
+        DrawRectanglePro(destination, System.Numerics.Vector2.Zero, -this.GetAbsoluteRotation(), Color);
     }
 }
