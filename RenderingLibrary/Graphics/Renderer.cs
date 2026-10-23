@@ -1216,7 +1216,7 @@ public class Renderer : IRenderer
 
             // A turned container bakes its whole rectangle, so its target is never clamped to the
             // camera (see GetRenderTargetBounds).
-            bool isTurned = renderable.IsTurnedInChain();
+            bool isTurned = renderable.IsRenderTargetTurned();
             var left = isTurned ? oldX : System.Math.Max(cameraLeft, oldX);
             var top = isTurned ? oldY : System.Math.Max(cameraTop, oldY);
 
@@ -1464,7 +1464,7 @@ public class Renderer : IRenderer
         // The bake is upright and unclamped for a turned container, so the blit turns it by the
         // container's absolute rotation about its origin (#6602). Inside a parent's bake the parent's
         // undo matrix takes its share back off.
-        bool isTurned = renderable.IsTurnedInChain();
+        bool isTurned = renderable.IsRenderTargetTurned();
         float rotation = renderable.GetAbsoluteRotation();
         renderTargetRenderableSprite.X = isTurned ? renderable.GetAbsoluteX() : System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
         renderTargetRenderableSprite.Y = isTurned ? renderable.GetAbsoluteY() : System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);

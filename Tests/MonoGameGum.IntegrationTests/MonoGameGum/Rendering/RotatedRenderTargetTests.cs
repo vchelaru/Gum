@@ -111,6 +111,32 @@ public class RotatedRenderTargetTests : BaseTestClass
         AssertSameCoverage(plain, viaRenderTarget, IsBlue, minimumCount: 300, ShapeCenterTolerance, countTolerancePercent: 10);
     }
 
+    // An upright render target partly off camera bakes only its visible part, clamped to the camera
+    // (#3478), and still lands where the plain container draws. The capture is the viewport, so the
+    // camera is Size x Size.
+    [Theory]
+    [InlineData(-30f, -30f)]
+    [InlineData(200f, 200f)]
+    public void Draw_UprightRenderTargetPartlyOffCamera_MatchesWithoutRenderTarget(float x, float y)
+    {
+        GraphicalUiElement Build(bool isRenderTarget)
+        {
+            ContainerRuntime container = new()
+            {
+                X = x, Y = y, Width = 60, Height = 60, IsRenderTarget = isRenderTarget,
+            };
+            container.AddChild(SolidRect(0, 0, 60, 60, Blue));
+            container.AddChild(SolidRect(25, 30, 30, 25, Red));
+            return container;
+        }
+
+        XnaColor[] plain = Capture(Build(isRenderTarget: false));
+        XnaColor[] viaRenderTarget = Capture(Build(isRenderTarget: true));
+
+        AssertSameCoverage(plain, viaRenderTarget, IsRed, minimumCount: 50, ShapeCenterTolerance, countTolerancePercent: 5);
+        AssertSameCoverage(plain, viaRenderTarget, IsBlue, minimumCount: 150, ShapeCenterTolerance, countTolerancePercent: 5);
+    }
+
     // A render target truncates a child that overflows it; turning the container keeps the same
     // truncated area (a 50x20 child at x 40 keeps only the part inside the 60x60 container).
     [Fact]

@@ -545,7 +545,7 @@ namespace RenderingLibrary
             float bottom = renderable.GetAbsoluteBottom();
             // Clamping to the camera only works on screen axes; a turned container's rectangle is
             // not on them, so it bakes whole (#6602).
-            if (!renderable.IsTurnedInChain())
+            if (!renderable.IsRenderTargetTurned())
             {
                 left = System.Math.Max(camera.AbsoluteLeft, left);
                 right = System.Math.Min(camera.AbsoluteRight, right);
