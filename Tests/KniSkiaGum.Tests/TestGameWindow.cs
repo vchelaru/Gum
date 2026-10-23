@@ -11,7 +11,12 @@ namespace KniSkiaGum.Tests;
 internal sealed class TestGameWindow : XnaGameWindow
 {
     public override bool AllowUserResizing { get; set; }
-    public override Microsoft.Xna.Framework.Rectangle ClientBounds => default;
+    /// <summary>
+    /// What <see cref="ClientBounds"/> reports. Mobile touch positions are offset by its origin.
+    /// </summary>
+    public Microsoft.Xna.Framework.Rectangle Bounds { get; set; }
+
+    public override Microsoft.Xna.Framework.Rectangle ClientBounds => Bounds;
     public override Microsoft.Xna.Framework.DisplayOrientation CurrentOrientation => default;
     public override nint Handle => 0;
     public override string ScreenDeviceName => "";

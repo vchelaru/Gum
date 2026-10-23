@@ -53,7 +53,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     public XnaGame Game => _game ?? throw new InvalidOperationException(
         "GumService has not been initialized. Call GumService.Initialize(game) first.");
 
-    private partial Cursor CreateHostCursor() => new Cursor();
+    private partial Cursor CreateHostCursor() => new Cursor(_window);
 
     private partial Keyboard? CreateHostKeyboard() => new Keyboard(_window);
 

@@ -16,7 +16,8 @@ public partial class Cursor : IDisposable
     // in Cursor.cs expects. Hosts report notches, not totals.
     private double _scrollWheelUnits;
 
-    // Touches the host supplies when IsMobile is true. Empty for hosts that don't wire touch.
+    // The host's touches for this frame, set by ReadHostTouches or the host's SetTouches. Empty for
+    // hosts that don't wire touch.
     private TouchCollection _hostTouches = new TouchCollection();
 
     private const int ScrollUnitsPerNotch = 120;
@@ -38,7 +39,14 @@ public partial class Cursor : IDisposable
         _unsubscribe = null;
     }
 
-    private TouchCollection GetTouchCollection() => _hostTouches;
+    // A host that polls its touch device implements this to refresh _hostTouches each frame.
+    partial void ReadHostTouches();
+
+    private TouchCollection GetTouchCollection()
+    {
+        ReadHostTouches();
+        return _hostTouches;
+    }
 
     // Skia hosts draw into a canvas that fills the window, so there is no viewport inset.
     private int? GetViewportLeft() => 0;
