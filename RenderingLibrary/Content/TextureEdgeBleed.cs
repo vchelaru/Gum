@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using System;
+using System.Runtime.InteropServices;
 
 namespace RenderingLibrary.Content;
 
@@ -23,23 +25,39 @@ public static class TextureEdgeBleed
     /// <param name="pixels">Row-major pixel data (length must be <paramref name="width"/> * <paramref name="height"/>).</param>
     /// <param name="width">Texture width in texels.</param>
     /// <param name="height">Texture height in texels.</param>
-    public static void Bleed(Color[] pixels, int width, int height)
+    public static void Bleed(Color[]? pixels, int width, int height)
     {
-        if (pixels == null || width <= 0 || height <= 0)
+        if (pixels == null)
+        {
+            return;
+        }
+
+        BleedRgba(MemoryMarshal.AsBytes(pixels.AsSpan()), width, height);
+    }
+
+    /// <summary>
+    /// Same as <see cref="Bleed(Color[], int, int)"/> over tightly packed row-major RGBA bytes.
+    /// </summary>
+    /// <param name="rgba">Row-major RGBA bytes (length must be 4 * <paramref name="width"/> * <paramref name="height"/>).</param>
+    /// <param name="width">Texture width in texels.</param>
+    /// <param name="height">Texture height in texels.</param>
+    public static void BleedRgba(Span<byte> rgba, int width, int height)
+    {
+        if (width <= 0 || height <= 0)
         {
             return;
         }
 
         // Read from a snapshot so bleeding never cascades within the single pass (results are
         // independent of iteration order, and a just-filled texel can't seed its neighbors).
-        Color[] source = (Color[])pixels.Clone();
+        byte[] source = rgba.ToArray();
 
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
-                int index = (y * width) + x;
-                if (source[index].A != 0)
+                int index = ((y * width) + x) * 4;
+                if (source[index + 3] != 0)
                 {
                     // Visible (or partially visible) texels already carry the right color.
                     continue;
@@ -68,12 +86,12 @@ public static class TextureEdgeBleed
                             continue;
                         }
 
-                        Color neighbor = source[(ny * width) + nx];
-                        if (neighbor.A != 0)
+                        int neighbor = ((ny * width) + nx) * 4;
+                        if (source[neighbor + 3] != 0)
                         {
-                            r += neighbor.R;
-                            g += neighbor.G;
-                            b += neighbor.B;
+                            r += source[neighbor];
+                            g += source[neighbor + 1];
+                            b += source[neighbor + 2];
                             count++;
                         }
                     }
@@ -81,8 +99,10 @@ public static class TextureEdgeBleed
 
                 if (count > 0)
                 {
-                    // Keep alpha 0 — only the color the sampler interpolates toward changes.
-                    pixels[index] = new Color((byte)(r / count), (byte)(g / count), (byte)(b / count), (byte)0);
+                    // Keep alpha 0: only the color the sampler interpolates toward changes.
+                    rgba[index] = (byte)(r / count);
+                    rgba[index + 1] = (byte)(g / count);
+                    rgba[index + 2] = (byte)(b / count);
                 }
             }
         }

@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using System;
+using System.Runtime.InteropServices;
 
 namespace RenderingLibrary.Content;
 
@@ -18,20 +20,27 @@ public static class TexturePremultiply
             return;
         }
 
-        for (int i = 0; i < pixels.Length; i++)
+        PremultiplyRgba(MemoryMarshal.AsBytes(pixels.AsSpan()));
+    }
+
+    /// <summary>
+    /// Scales each RGBA byte quad's color by its alpha, in place, rounding to nearest
+    /// (alpha 128 turns 255 into 128). Fully transparent texels become (0,0,0,0).
+    /// </summary>
+    /// <param name="rgba">Tightly packed RGBA bytes in any texel order.</param>
+    public static void PremultiplyRgba(Span<byte> rgba)
+    {
+        for (int i = 0; i + 3 < rgba.Length; i += 4)
         {
-            Color pixel = pixels[i];
-            if (pixel.A == 255)
+            int alpha = rgba[i + 3];
+            if (alpha == 255)
             {
                 continue;
             }
 
-            int alpha = pixel.A;
-            pixels[i] = new Color(
-                (byte)((pixel.R * alpha + 127) / 255),
-                (byte)((pixel.G * alpha + 127) / 255),
-                (byte)((pixel.B * alpha + 127) / 255),
-                pixel.A);
+            rgba[i] = (byte)((rgba[i] * alpha + 127) / 255);
+            rgba[i + 1] = (byte)((rgba[i + 1] * alpha + 127) / 255);
+            rgba[i + 2] = (byte)((rgba[i + 2] * alpha + 127) / 255);
         }
     }
 }

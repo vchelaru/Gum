@@ -90,27 +90,21 @@ public sealed class ContentLoader : IContentLoader
         }
 
         bool isFromContentManager = false;
+        bool isProcessedOnLoad;
         if (FileManager.IsUrl(fileName))
         {
-            toReturn = LoadTextureFromUrl(fileName, managers);
+            toReturn = LoadTextureFromUrl(fileName, managers, out isProcessedOnLoad);
         }
         else
         {
-            toReturn = LoadTextureFromFile(fileName, out isFromContentManager, managers);
+            toReturn = LoadTextureFromFile(fileName, out isFromContentManager, out isProcessedOnLoad, managers);
         }
 
         // A ContentManager texture is that manager's cached instance, shared with the game, and the
         // content pipeline premultiplies by default. Bleeding it would corrupt the game's own draws.
-        if (!isFromContentManager)
+        if (!isFromContentManager && !isProcessedOnLoad)
         {
-            if (Graphics.Renderer.UsePremultipliedAlpha)
-            {
-                ApplyPremultiply(toReturn);
-            }
-            else
-            {
-                ApplyEdgeBleed(toReturn);
-            }
+            ProcessLoadedTexture(toReturn);
         }
 
         if (LoaderManager.Self.CacheTextures && toReturn != null)
@@ -122,42 +116,72 @@ public sealed class ContentLoader : IContentLoader
     }
 
     /// <summary>
-    /// Bleeds edge color into fully-transparent texels so a non-premultiplied Linear pipeline does
-    /// not darken anti-aliased edges toward black (issue #3691). No-op unless
-    /// <see cref="Graphics.Renderer.BleedTransparentTextureEdgesOnLoad"/> is set, and only applies to
-    /// uncompressed <see cref="SurfaceFormat.Color"/> textures. Callers skip ContentManager textures,
-    /// which can also be <see cref="SurfaceFormat.Color"/>.
+    /// Applies <see cref="ProcessLoadedPixels"/> to a texture through a GetData/SetData round trip.
+    /// Only applies to uncompressed <see cref="SurfaceFormat.Color"/> textures. Callers skip
+    /// ContentManager textures, which can also be <see cref="SurfaceFormat.Color"/>.
     /// </summary>
-    private static void ApplyEdgeBleed(Texture2D? texture)
+    private static void ProcessLoadedTexture(Texture2D? texture)
     {
+        bool usePremultipliedAlpha = Graphics.Renderer.UsePremultipliedAlpha;
+        bool bleedTransparentEdges = Graphics.Renderer.BleedTransparentTextureEdgesOnLoad;
         if (texture == null
-            || !Graphics.Renderer.BleedTransparentTextureEdgesOnLoad
-            || texture.Format != SurfaceFormat.Color)
+            || texture.Format != SurfaceFormat.Color
+            || (!usePremultipliedAlpha && !bleedTransparentEdges))
         {
             return;
         }
 
         var pixels = new Microsoft.Xna.Framework.Color[texture.Width * texture.Height];
         texture.GetData(pixels);
-        TextureEdgeBleed.Bleed(pixels, texture.Width, texture.Height);
+        ProcessLoadedPixels(System.Runtime.InteropServices.MemoryMarshal.AsBytes(pixels.AsSpan()),
+            texture.Width, texture.Height, usePremultipliedAlpha, bleedTransparentEdges);
         texture.SetData(pixels);
     }
 
     /// <summary>
-    /// Premultiplies the texture's color by its alpha in place (issue #6154). Only applies to
-    /// uncompressed <see cref="SurfaceFormat.Color"/> textures. Callers skip ContentManager textures.
+    /// The load-time fix-up for straight-alpha RGBA texels: premultiplies them (issue #6154) when
+    /// <paramref name="usePremultipliedAlpha"/> is set, otherwise bleeds edge color into
+    /// fully-transparent texels (issue #3691) when <paramref name="bleedTransparentEdges"/> is set,
+    /// so a non-premultiplied Linear pipeline does not darken anti-aliased edges toward black.
     /// </summary>
-    private static void ApplyPremultiply(Texture2D? texture)
+    internal static void ProcessLoadedPixels(Span<byte> rgba, int width, int height,
+        bool usePremultipliedAlpha, bool bleedTransparentEdges)
     {
-        if (texture == null || texture.Format != SurfaceFormat.Color)
+        if (usePremultipliedAlpha)
         {
-            return;
+            TexturePremultiply.PremultiplyRgba(rgba);
         }
+        else if (bleedTransparentEdges)
+        {
+            TextureEdgeBleed.BleedRgba(rgba, width, height);
+        }
+    }
 
-        var pixels = new Microsoft.Xna.Framework.Color[texture.Width * texture.Height];
-        texture.GetData(pixels);
-        TexturePremultiply.Premultiply(pixels);
-        texture.SetData(pixels);
+    /// <summary>
+    /// Creates a texture from an encoded image stream. <paramref name="isProcessedOnLoad"/> is true
+    /// when the pixels already went through <see cref="ProcessLoadedPixels"/>.
+    /// </summary>
+    private static Texture2D CreateTextureFromStream(GraphicsDevice device, System.IO.Stream stream,
+        out bool isProcessedOnLoad)
+    {
+#if KNI && !FRB
+        if (OperatingSystem.IsBrowser())
+        {
+            // KNI BlazorGL: decode and fix up the bytes here, then upload once, so the fix-up needs no
+            // GetData readback. Switch to Texture2D.FromStream with a color processor once a KNI
+            // release has it: https://github.com/kniEngine/kni/pull/2740
+            byte[] rgba = StbTextureDecoder.Decode(stream, out int width, out int height);
+            ProcessLoadedPixels(rgba, width, height,
+                Graphics.Renderer.UsePremultipliedAlpha,
+                Graphics.Renderer.BleedTransparentTextureEdgesOnLoad);
+            var texture = new Texture2D(device, width, height, false, SurfaceFormat.Color);
+            texture.SetData(rgba);
+            isProcessedOnLoad = true;
+            return texture;
+        }
+#endif
+        isProcessedOnLoad = false;
+        return Texture2D.FromStream(device, stream);
     }
 
     public static string StandardizeCaseSensitive(string fileName)
@@ -176,7 +200,7 @@ public sealed class ContentLoader : IContentLoader
         return fileNameStandardized;
     }
 
-    private Texture2D LoadTextureFromUrl(string fileName, SystemManagers? managers)
+    private Texture2D LoadTextureFromUrl(string fileName, SystemManagers? managers, out bool isProcessedOnLoad)
     {
 
         Renderer renderer = Renderer.Self ?? managers!.Renderer;
@@ -187,8 +211,7 @@ public sealed class ContentLoader : IContentLoader
         using (var stream = GetUrlStream(fileName))
         {
             // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
-            texture = Texture2D.FromStream(renderer.GraphicsDevice!,
-                stream);
+            texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isProcessedOnLoad);
 
             texture.Name = fileNameStandardized;
         }
@@ -215,11 +238,13 @@ public sealed class ContentLoader : IContentLoader
     /// <param name="fileName">The filename to load</param>
     /// <param name="isFromContentManager">True when the texture came from <see cref="XnaContentManager"/>, which
     /// owns and caches it, rather than being created by this loader.</param>
+    /// <param name="isProcessedOnLoad">True when the pixels already went through <see cref="ProcessLoadedPixels"/>.</param>
     /// <param name="managers">The optional SystemManagers to use when loading the file to obtain a GraphicsDevice</param>
     /// <returns>The loaded Texture2D</returns>
-    private Texture2D? LoadTextureFromFile(string fileName, out bool isFromContentManager, SystemManagers? managers = null)
+    private Texture2D? LoadTextureFromFile(string fileName, out bool isFromContentManager, out bool isProcessedOnLoad, SystemManagers? managers = null)
     {
         isFromContentManager = false;
+        isProcessedOnLoad = false;
         string fileNameStandardized = FileManager.Standardize(fileName, true, false);
 
         if (FileManager.IsRelative(fileNameStandardized))
@@ -334,8 +359,7 @@ public sealed class ContentLoader : IContentLoader
                 using var stream = FileManager.GetStreamForFile(fileNameStandardized);
 
                 // Headless (no device): FromStream throws, which the catch below handles.
-                Texture2D texture = Texture2D.FromStream(renderer.GraphicsDevice!,
-                    stream);
+                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isProcessedOnLoad);
 
                 texture.Name = fileNameStandardized;
 
