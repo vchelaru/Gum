@@ -22,7 +22,7 @@ using SkiaGum.Renderables;
 using SkiaGum.Helpers;
 using RenderingLibrary.Graphics;
 using Color = SkiaSharp.SKColor;
-using Rectangle = SkiaSharp.SKRect;
+using Rectangle = SkiaSharp.SKRectI;
 using Texture2D = SkiaSharp.SKBitmap;
 using ContainedSpriteType = SkiaGum.Renderables.Sprite;
 #else
@@ -206,30 +206,31 @@ public class SpriteRuntime : GraphicalUiElement
         }
     }
 
-#if !SKIA
     /// <summary>
-    /// The source rectangle in the texture to render, using platform-specific Rectangle type.
+    /// The source rectangle in the texture to render, using the platform's rectangle type (SKRectI on Skia).
     /// Setting this also updates TextureLeft, TextureTop, TextureWidth, and TextureHeight.
     /// TextureAddress must be set to Custom for these values to affect rendering.
     /// </summary>
     public Rectangle SourceRectangle
     {
-        get => new Rectangle(
-#if RAYLIB
-            TextureLeft, TextureTop, TextureWidth, TextureHeight
+#if SKIA
+        get => Rectangle.Create(TextureLeft, TextureTop, TextureWidth, TextureHeight);
 #else
-            (int)TextureLeft, (int)TextureTop, (int)TextureWidth, (int)TextureHeight
+        get => new Rectangle(TextureLeft, TextureTop, TextureWidth, TextureHeight);
 #endif
-            );
         set
         {
+#if SKIA
+            TextureLeft = value.Left;
+            TextureTop = value.Top;
+#else
             TextureLeft = (int)value.X;
             TextureTop = (int)value.Y;
+#endif
             TextureWidth = (int)value.Width;
             TextureHeight = (int)value.Height;
         }
     }
-#endif
 
     #region AnimationChain
 
@@ -355,7 +356,7 @@ public class SpriteRuntime : GraphicalUiElement
     // The #if gate on this obsolete Texture2D shim reflects its historical footprint and is
     // intentionally not widened. Obsolete APIs are deprecated paths; spreading them to backends
     // that never had them just plants a dead surface in new code. (Skia keeps a separate string
-    // SourceFile below — that one is the live API there, not the obsolete shim.) See NineSliceRuntime.
+    // SourceFile below, obsolete in favor of SourceFileName like MonoGame's.) See NineSliceRuntime.
 #if !SKIA
     /// <summary>
     /// Obsolete. Use Texture instead.
@@ -368,16 +369,20 @@ public class SpriteRuntime : GraphicalUiElement
     }
 #else
     /// <summary>
-    /// The file path to the texture, or to an .achx/.achj animation chain file whose chains are
-    /// loaded into <see cref="AnimationChains"/>. Loads through the LoaderManager.
+    /// Obsolete. Use <see cref="SourceFileName"/> instead. Returns the path last assigned through
+    /// this property or <see cref="SourceFileName"/>.
     /// </summary>
+    // Obsoleted 2026-10-22. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.
+    [Obsolete("Use SourceFileName. SourceFile becomes an error no earlier than May 2027 and is removed no earlier than November 2027.")]
     public string? SourceFile
     {
-        // eventually we may want to store this off somehow
-        get => null;
+        get => _sourceFileName;
         // The Skia dispatcher owns the texture-vs-animation-chain branch.
         set => SourceFileName = value!;
     }
+
+    // The path last assigned through SourceFileName, read back by the obsolete SourceFile getter.
+    string? _sourceFileName;
 #endif
 
     /// <summary>
@@ -414,6 +419,9 @@ public class SpriteRuntime : GraphicalUiElement
     {
         set
         {
+#if SKIA
+            _sourceFileName = value;
+#endif
             base.SetProperty("SourceFile", value);
             if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
             {

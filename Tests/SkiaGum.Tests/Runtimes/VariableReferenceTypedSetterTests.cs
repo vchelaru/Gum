@@ -69,7 +69,7 @@ public class VariableReferenceTypedSetterTests : IDisposable
             IsMissingDocument<T>(contentName) || inner == null ? default : inner.TryLoadContent<T>(contentName);
     }
 
-    // SpriteRuntime.SourceFile always reads null (it loads a texture or animation chains), so there is no value to follow.
+    // SpriteRuntime.SourceFile is obsolete; its live replacement SourceFileName has no getter, so there is no value to follow.
     private static bool IsExcluded(string standard, string variable) => standard == "Sprite" && variable == "SourceFile";
 
     public static IEnumerable<object[]> Variables()

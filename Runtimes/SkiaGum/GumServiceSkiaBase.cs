@@ -191,7 +191,13 @@ public abstract class GumServiceSkiaBase : IGumService
         throw new NotSupportedException(
             "SkiaGum requires a canvas. Call GumService.Default.Initialize(SKCanvas, ..., gumProjectFile) instead.");
 
-    IRenderer IGumService.Renderer => SystemManagers.Default.Renderer;
+    /// <summary>
+    /// The renderer of the <see cref="SystemManagers"/> this service initialized.
+    /// Matches <c>GumService.Renderer</c> on the MonoGame/KNI runtime.
+    /// </summary>
+    public Renderer Renderer => SystemManagers.Renderer;
+
+    IRenderer IGumService.Renderer => Renderer;
 
     // Skia is a rendering technology, not a windowing/input system, so the render-only base creates no
     // cursor or keyboard and these are null there. A host that overrides CreateCursor/CreateKeyboard
@@ -201,13 +207,21 @@ public abstract class GumServiceSkiaBase : IGumService
 
     IInputReceiverKeyboard? IGumService.Keyboard => FormsUtilities.Keyboard;
 
-    float IGumService.CanvasWidth
+    /// <summary>
+    /// Gets or sets the width of the canvas, which acts as the root-most coordinate space. This value
+    /// represents the "internal coordinates" which can be adjusted by Camera zoom.
+    /// </summary>
+    public float CanvasWidth
     {
         get => GraphicalUiElement.CanvasWidth;
         set => GraphicalUiElement.CanvasWidth = value;
     }
 
-    float IGumService.CanvasHeight
+    /// <summary>
+    /// Gets or sets the height of the canvas, which acts as the root-most coordinate space. This value
+    /// represents the "internal coordinates" which can be adjusted by Camera zoom.
+    /// </summary>
+    public float CanvasHeight
     {
         get => GraphicalUiElement.CanvasHeight;
         set => GraphicalUiElement.CanvasHeight = value;
@@ -559,6 +573,20 @@ public abstract class GumServiceSkiaBase : IGumService
         }
 
         IsInitialized = true;
+    }
+
+    /// <summary>
+    /// Marks GumService as initialized without requiring a canvas.
+    /// Intended for use in unit tests only.
+    /// </summary>
+    public void InitializeForTesting()
+    {
+        IsInitialized = true;
+        FormsRefreshStylesHooks.Install();
+
+        // Extensions in GumCommon (e.g. FrameworkElementExt.AddToRoot) resolve the runtime via
+        // IGumService.Default, so tests that bypass Initialize still need this set.
+        IGumService.Default = this;
     }
 
     // The CustomGetStreamFromFile hook the current bundle load installed, or null for a loose project.

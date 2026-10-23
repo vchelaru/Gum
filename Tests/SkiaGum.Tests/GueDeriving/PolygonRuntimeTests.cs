@@ -240,4 +240,105 @@ public class PolygonRuntimeTests
         sut.StrokeGapLength = 2;
         sut.StrokeGapLength.ShouldBe(2);
     }
+    // Issue #6510: Red/Green/Blue/Alpha/Color match MonoGame's PolygonRuntime, where a polygon is an
+    // outline, so they read and write the outline color (StrokeColor).
+    [Fact]
+    public void Color_Set_ShouldSetStrokeColor()
+    {
+        PolygonRuntime sut = new();
+
+        sut.Color = SKColors.CornflowerBlue;
+
+        sut.StrokeColor.ShouldBe(SKColors.CornflowerBlue);
+        sut.Color.ShouldBe(SKColors.CornflowerBlue);
+    }
+
+    [Fact]
+    public void Color_Get_ShouldReturnStrokeColor()
+    {
+        PolygonRuntime sut = new();
+
+        sut.StrokeColor = SKColors.Orange;
+
+        sut.Color.ShouldBe(SKColors.Orange);
+    }
+
+    [Fact]
+    public void RedGreenBlueAlpha_Set_ShouldSetStrokeColorChannels()
+    {
+        PolygonRuntime sut = new();
+
+        sut.Red = 10;
+        sut.Green = 20;
+        sut.Blue = 30;
+        sut.Alpha = 40;
+
+        sut.StrokeColor.ShouldBe(new SKColor(10, 20, 30, 40));
+        sut.Red.ShouldBe(10);
+        sut.Green.ShouldBe(20);
+        sut.Blue.ShouldBe(30);
+        sut.Alpha.ShouldBe(40);
+    }
+    // A reference typed as the base SkiaShapeRuntime reaches the same outline color as PolygonRuntime.
+    [Fact]
+    public void RedGreenBlueAlpha_SetThroughBaseReference_ShouldBeReadThroughPolygon()
+    {
+        PolygonRuntime sut = new();
+        SkiaShapeRuntime asBase = sut;
+
+        asBase.Red = 7;
+        asBase.Green = 8;
+        asBase.Blue = 9;
+        asBase.Alpha = 10;
+
+        sut.Red.ShouldBe(7);
+        sut.Green.ShouldBe(8);
+        sut.Blue.ShouldBe(9);
+        sut.Alpha.ShouldBe(10);
+        sut.StrokeColor.ShouldBe(new SKColor(7, 8, 9, 10));
+    }
+
+    [Fact]
+    public void RedGreenBlueAlpha_SetThroughPolygon_ShouldBeReadThroughBaseReference()
+    {
+        PolygonRuntime sut = new();
+        SkiaShapeRuntime asBase = sut;
+
+        sut.Red = 7;
+        sut.Green = 8;
+        sut.Blue = 9;
+        sut.Alpha = 10;
+
+        asBase.Red.ShouldBe(7);
+        asBase.Green.ShouldBe(8);
+        asBase.Blue.ShouldBe(9);
+        asBase.Alpha.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Color_SetThroughBaseReference_ShouldBeReadThroughPolygon()
+    {
+        PolygonRuntime sut = new();
+        SkiaShapeRuntime asBase = sut;
+
+#pragma warning disable CS0618 // SkiaShapeRuntime.Color is obsolete
+        asBase.Color = SKColors.Orange;
+#pragma warning restore CS0618
+
+        sut.Color.ShouldBe(SKColors.Orange);
+        sut.StrokeColor.ShouldBe(SKColors.Orange);
+    }
+
+    [Fact]
+    public void Color_SetThroughPolygon_ShouldBeReadThroughBaseReference()
+    {
+        PolygonRuntime sut = new();
+        SkiaShapeRuntime asBase = sut;
+
+        sut.Color = SKColors.Orange;
+
+#pragma warning disable CS0618 // SkiaShapeRuntime.Color is obsolete
+        asBase.Color.ShouldBe(SKColors.Orange);
+#pragma warning restore CS0618
+    }
 }
