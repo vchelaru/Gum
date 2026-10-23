@@ -49,6 +49,9 @@ public class GumBatchTests
         GumBatch gumBatch = new();
 
         Should.Throw<NotSupportedException>(() => gumBatch.Begin(mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred));
+        using SKSurface otherSurface = SKSurface.Create(new SKImageInfo(32, 32));
+        Should.Throw<NotSupportedException>(() => gumBatch.Begin(otherSurface.Canvas, mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred));
+        SystemManagers.Default.Canvas.ShouldBeSameAs(surface.Canvas, "because a failed Begin keeps the host canvas");
 
         // A failed Begin leaves the batch usable.
         gumBatch.Begin();
@@ -313,6 +316,29 @@ public class GumBatchTests
 
         SystemManagers.Default.Renderer.TryGetRenderTargetSurfaceFor(renderTarget)
             .ShouldBeNull("because a host that never calls Update still sweeps once per frame");
+    }
+
+    [Fact]
+    public void End_AfterBeginWithCanvas_RestoresPreviousCanvas()
+    {
+        using SKSurface hostSurface = CreateInitializedSurface(32);
+        using SKSurface offscreenSurface = SKSurface.Create(new SKImageInfo(32, 32));
+        hostSurface.Canvas.Clear(SKColors.Black);
+        offscreenSurface.Canvas.Clear(SKColors.Black);
+        GumBatch gumBatch = new();
+
+        gumBatch.Begin(offscreenSurface.Canvas);
+        gumBatch.Draw(CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red));
+        gumBatch.End();
+
+        SystemManagers.Default.Canvas.ShouldBeSameAs(hostSurface.Canvas);
+
+        gumBatch.Begin();
+        gumBatch.Draw(CreateRectangle(x: 16, y: 16, size: 8, SKColors.Lime));
+        gumBatch.End();
+
+        PixelAt(hostSurface, 20, 20).ShouldBe(SKColors.Lime);
+        PixelAt(offscreenSurface, 20, 20).ShouldBe(SKColors.Black);
     }
 
     private static SKSurface CreateInitializedSurface(int size)
