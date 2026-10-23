@@ -1,4 +1,4 @@
-using SkiaGum;
+﻿using SkiaGum;
 using SkiaSharp;
 using System;
 
@@ -44,7 +44,8 @@ public class GumBatch
     /// <summary>
     /// Starts drawing on <see cref="SystemManagers.Canvas"/>. <paramref name="matrix"/>, when given,
     /// applies before the camera, the same composition MonoGame uses.
-    /// <see cref="Renderer.GumBatchDrawMode.Deferred"/> is not supported on Skia yet and throws.
+    /// With <see cref="Renderer.GumBatchDrawMode.Deferred"/>, draws wait for <see cref="End"/> and
+    /// are sorted by Z.
     /// </summary>
     public void Begin(SKMatrix? matrix = null, Renderer.GumBatchDrawMode mode = Renderer.GumBatchDrawMode.Immediate)
     {
@@ -123,13 +124,18 @@ public class GumBatch
         }
         State = GumBatchState.NotRendering;
 
-        systemManagers.Renderer.End();
-
-        if (restoreCanvasAtEnd)
+        try
         {
-            systemManagers.CanvasOrNull = canvasToRestore;
-            canvasToRestore = null;
-            restoreCanvasAtEnd = false;
+            systemManagers.Renderer.End();
+        }
+        finally
+        {
+            if (restoreCanvasAtEnd)
+            {
+                systemManagers.CanvasOrNull = canvasToRestore;
+                canvasToRestore = null;
+                restoreCanvasAtEnd = false;
+            }
         }
     }
 }

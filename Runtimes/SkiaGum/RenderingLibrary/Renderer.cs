@@ -295,12 +295,16 @@ namespace RenderingLibrary.Graphics
             Immediate,
 
             /// <summary>
-            /// Not supported on Skia yet: <see cref="Begin"/> throws <see cref="NotSupportedException"/>.
+            /// <see cref="Draw(IRenderableIpso)"/> calls accumulate and draw at <see cref="End"/>,
+            /// stable-sorted by <c>IRenderableIpso.Z</c> (equal Z keeps call order), the same order
+            /// MonoGame's Deferred mode produces.
             /// </summary>
             Deferred,
         }
 
         SKCanvas? _cycleCanvas;
+        GumBatchDrawMode _cycleMode;
+        readonly List<IRenderableIpso> _deferredRoots = new List<IRenderableIpso>();
 
         /// <summary>
         /// Starts an immediate-mode cycle on <see cref="SystemManagers.Canvas"/>: applies the camera
@@ -309,12 +313,6 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public void Begin(SKMatrix? matrix = null, GumBatchDrawMode mode = GumBatchDrawMode.Immediate)
         {
-            if (mode == GumBatchDrawMode.Deferred)
-            {
-                throw new NotSupportedException(
-                    "GumBatchDrawMode.Deferred is not supported on Skia yet. Use GumBatchDrawMode.Immediate.");
-            }
-
             SKCanvas canvas = OwnManagers.Canvas;
             if (!_hostFrameStarted)
             {
@@ -322,6 +320,7 @@ namespace RenderingLibrary.Graphics
                 _batchStartedHostFrame = true;
             }
             _cycleCanvas = canvas;
+            _cycleMode = mode;
             ApplyCamera(canvas, MainLayer, matrix);
         }
 
@@ -331,27 +330,58 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public void Draw(IRenderableIpso renderable)
         {
-            if (!renderable.Visible)
+            if (renderable.Visible)
             {
-                return;
+                renderable.PreRender();
+                if (renderable.Children != null)
+                {
+                    PreRender(renderable.Children);
+                }
             }
 
-            SystemManagers managers = OwnManagers;
-            renderable.PreRender();
-            if (renderable.Children != null)
+            if (_cycleMode == GumBatchDrawMode.Deferred)
             {
-                PreRender(renderable.Children);
+                // Visibility is checked at End, like MonoGame's deferred flush.
+                _deferredRoots.Add(renderable);
             }
-            DrawRenderable(renderable, managers);
+            else if (renderable.Visible)
+            {
+                DrawRenderable(renderable, OwnManagers);
+            }
         }
 
         /// <summary>
-        /// Ends the cycle started by <see cref="Begin"/>, restoring the canvas matrix it changed.
+        /// Ends the cycle started by <see cref="Begin"/>: in <see cref="GumBatchDrawMode.Deferred"/>
+        /// draws the accumulated renderables sorted by Z, then restores the canvas matrix Begin changed.
         /// </summary>
         public void End()
         {
-            _cycleCanvas?.Restore();
-            _cycleCanvas = null;
+            try
+            {
+                if (_deferredRoots.Count > 0)
+                {
+                    // The same stable Z sort MonoGame's deferred flush uses. Layer 0's
+                    // SecondarySortOnY is not applied there either, so equal Z keeps call order.
+                    Layer.SortByZ(_deferredRoots);
+                    SystemManagers managers = OwnManagers;
+                    for (int i = 0; i < _deferredRoots.Count; i++)
+                    {
+                        IRenderableIpso renderable = _deferredRoots[i];
+                        if (renderable.Visible)
+                        {
+                            DrawRenderable(renderable, managers);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                // Cleared and restored even when a Render throws, so the next cycle neither redraws
+                // this cycle's roots (#4584) nor inherits its matrix.
+                _deferredRoots.Clear();
+                _cycleCanvas?.Restore();
+                _cycleCanvas = null;
+            }
         }
 
         SystemManagers OwnManagers => _ownManagers
