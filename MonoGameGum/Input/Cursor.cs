@@ -573,7 +573,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
             // which adjust on mobile to account for different aspect ratios. We need to consider
             // this to address problems with offsets which were reported when working on the Dungeon
             // Slime MonoGame mobile tutorial.
-#if XNALIKE
+#if XNALIKE || KNISKIA
             int xOffset = isMobile && _gameWindow != null ? _gameWindow.ClientBounds.X : 0;
             int yOffset = isMobile && _gameWindow != null ? _gameWindow.ClientBounds.Y : 0;
 #else

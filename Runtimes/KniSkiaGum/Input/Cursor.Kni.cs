@@ -39,19 +39,20 @@ public partial class Cursor
     internal Func<XnaMouseState> ReadMouse { get; set; } = XnaMouse.GetState;
 
     /// <summary>
-    /// Reads the touch panel. Replaced in tests; KNI's <c>TouchPanel.GetState</c> is a static device read.
+    /// Reads the touch panel, or returns null when KNI has no touch panel. Replaced in tests; KNI's
+    /// <c>TouchPanel.GetState</c> is a static device read.
     /// </summary>
-    internal Func<XnaTouchCollection> ReadTouches { get; set; } = ReadTouchPanel;
+    internal Func<XnaTouchCollection?> ReadTouches { get; set; } = ReadTouchPanel;
 
     // Same guards as KniGum: KNI has no touch panel until a platform creates one, and reading it
     // throws without a platform input factory (as in tests), so no touch panel means no touches.
     private static readonly XnaTouchCollection NoTouches = new XnaTouchCollection(Array.Empty<XnaTouchLocation>());
 
-    private static XnaTouchCollection ReadTouchPanel()
+    private static XnaTouchCollection? ReadTouchPanel()
     {
         try
         {
-            return XnaTouchPanel.Current != null ? XnaTouchPanel.GetState() : NoTouches;
+            return XnaTouchPanel.Current != null ? XnaTouchPanel.GetState() : null;
         }
         catch
         {
@@ -59,18 +60,21 @@ public partial class Cursor
         }
     }
 
-    // Called by GetTouchCollection in Cursor.SkiaHost.cs before it returns the host's touches.
+    // Called by GetTouchCollection in Cursor.SkiaHost.cs before it returns the host's touches. The
+    // shared Activity in Cursor.cs adds the mobile client-bounds offset, as on KniGum.
     partial void ReadHostTouches()
     {
-        XnaTouchCollection touches = ReadTouches();
-        // As on KniGum: on mobile, touches are relative to the client bounds, so add their origin.
-        bool offset = IsMobile && _gameWindow != null;
-        int xOffset = offset ? _gameWindow!.ClientBounds.X : 0;
-        int yOffset = offset ? _gameWindow!.ClientBounds.Y : 0;
+        XnaTouchCollection? touches = ReadTouches();
+        // As on KniGum: with no touch panel, keep last frame's touches.
+        if (touches == null)
+        {
+            return;
+        }
+        XnaTouchCollection current = touches.Value;
         _hostTouches = TouchCollection.Create(
-            touches.Count,
-            i => touches[i].Id,
-            i => new Vector2(touches[i].Position.X + xOffset, touches[i].Position.Y + yOffset));
+            current.Count,
+            i => current[i].Id,
+            i => new Vector2(current[i].Position.X, current[i].Position.Y));
     }
 
     private MouseState GetMouseState()
