@@ -116,7 +116,7 @@ namespace Gum.ProjectServices.CodeGeneration
         /// <see cref="CodeOutputProjectSettings.InheritanceLocation"/> puts it; null when there is none.
         /// </summary>
         public string? GetBaseClass(ElementSave element, CodeOutputProjectSettings projectSettings) =>
-            CodeGenerator.GetInheritance(element, projectSettings, _codeGenerator.ResolveSyntaxVersion(projectSettings));
+            CodeGenerator.GetInheritance(element, projectSettings, _codeGenerator.ResolveSyntaxVersion(projectSettings), _nameVerifier);
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
 

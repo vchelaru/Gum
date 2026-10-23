@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ProjectServices.CodeGeneration;
+using Moq;
 using Shouldly;
 
 namespace Gum.ProjectServices.Tests;
@@ -121,6 +122,67 @@ public class CodeGeneratorDerivedBaseNameTests : BaseTestClass
         ComponentSave derived = AddComponent("Elements/Derived", "Elements/Base");
 
         string? result = CodeGenerator.GetInheritance(derived, new CodeOutputProjectSettings { OutputLibrary = library });
+
+        result.ShouldBe(expected);
+    }
+
+    // The inherited name must be the one the base class declaration uses, which sanitizes it.
+    private static CodeGenerationNameVerifier CreateNameVerifier()
+    {
+        Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
+        mockNameVerifier
+            .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out It.Ref<string>.IsAny, out It.Ref<CommonValidationError>.IsAny))
+            .Returns((string name, out string whyNot, out CommonValidationError error) =>
+            {
+                whyNot = null!;
+                error = CommonValidationError.None;
+                if (name.Length > 0 && name[0] != '_' && !char.IsLetter(name[0]))
+                {
+                    whyNot = "Name may not begin with a digit";
+                    error = CommonValidationError.InvalidStartingCharacterForCSharp;
+                }
+                else if (name == "class")
+                {
+                    whyNot = "Name is a C# reserved keyword";
+                    error = CommonValidationError.ReservedCSharpKeyword;
+                }
+                return error == CommonValidationError.None;
+            });
+        return new CodeGenerationNameVerifier(mockNameVerifier.Object);
+    }
+
+    [Theory]
+    [InlineData(OutputLibrary.MonoGame, "My Screen", "My_ScreenRuntime")]
+    [InlineData(OutputLibrary.Raylib, "1X", "_1XRuntime")]
+    [InlineData(OutputLibrary.Silk, "Screens/My Screen", "My_ScreenRuntime")]
+    [InlineData(OutputLibrary.Skia, "1X", "_1XRuntime")]
+    [InlineData(OutputLibrary.GumForms, "My Screen", "My_Screen")]
+    [InlineData(OutputLibrary.GumForms, "1X", "_1X")]
+    [InlineData(OutputLibrary.GumForms, "class", "@class")]
+    public void GetInheritance_ScreenOverGeneratedScreenWithUnsafeName_UsesSanitizedDeclaredName(OutputLibrary library, string baseName, string expected)
+    {
+        AddScreen(baseName);
+        ScreenSave derived = AddScreen("Derived", baseName);
+
+        string? result = CodeGenerator.GetInheritance(
+            derived, new CodeOutputProjectSettings { OutputLibrary = library }, nameVerifier: CreateNameVerifier());
+
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(OutputLibrary.MonoGame, "My Comp", "My_CompRuntime")]
+    [InlineData(OutputLibrary.Raylib, "1X", "_1XRuntime")]
+    [InlineData(OutputLibrary.Skia, "My Comp", "My_CompRuntime")]
+    [InlineData(OutputLibrary.GumForms, "My Comp", "My_Comp")]
+    [InlineData(OutputLibrary.GumForms, "class", "@class")]
+    public void GetInheritance_ComponentOverGeneratedComponentWithUnsafeName_UsesSanitizedDeclaredName(OutputLibrary library, string baseName, string expected)
+    {
+        AddComponent(baseName, "Container");
+        ComponentSave derived = AddComponent("Derived", baseName);
+
+        string? result = CodeGenerator.GetInheritance(
+            derived, new CodeOutputProjectSettings { OutputLibrary = library }, nameVerifier: CreateNameVerifier());
 
         result.ShouldBe(expected);
     }

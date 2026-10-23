@@ -764,7 +764,7 @@ public class CodeGenerator
 
         if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
         {
-            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings, context.ResolvedSyntaxVersion);
+            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings, context.ResolvedSyntaxVersion, _codeGenerationNameVerifier);
             header += " : " + inheritance;
         }
 
@@ -870,7 +870,7 @@ public class CodeGenerator
         return className;
     }
 
-    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings, int resolvedSyntaxVersion = 0)
+    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings, int resolvedSyntaxVersion = 0, CodeGenerationNameVerifier? nameVerifier = null)
     {
         string? inheritance = null;
         if (element is ScreenSave)
