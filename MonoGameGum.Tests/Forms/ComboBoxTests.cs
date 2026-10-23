@@ -1015,6 +1015,138 @@ public  class ComboBoxTests : BaseTestClass
 
     #endregion
 
+    #region Open drop-down follows the ComboBox
+
+    [Fact]
+    public void Activity_CanvasResized_OpenDropDownKeepsOffsetFromComboBox()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana", "Cherry");
+        comboBox.Anchor(Anchor.Center);
+        comboBox.IsDropDownOpen = true;
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        float offsetX = popup.AbsoluteX - comboBox.Visual.AbsoluteX;
+        float offsetY = popup.AbsoluteY - comboBox.Visual.AbsoluteY;
+        float comboXAtOpen = comboBox.Visual.AbsoluteX;
+
+        GraphicalUiElement.CanvasWidth = 1200;
+        GraphicalUiElement.CanvasHeight = 900;
+        Gum.GumService.Default.Root.UpdateLayout();
+        comboBox.Visual.AbsoluteX.ShouldNotBe(comboXAtOpen);
+        Tick();
+
+        popup.AbsoluteX.ShouldBe(comboBox.Visual.AbsoluteX + offsetX, 0.5f);
+        popup.AbsoluteY.ShouldBe(comboBox.Visual.AbsoluteY + offsetY, 0.5f);
+        popup.Parent.ShouldBeSameAs(FrameworkElement.PopupRoot);
+    }
+
+    [Fact]
+    public void Activity_AncestorMoved_OpenDropDownFollowsComboBox()
+    {
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.Children!.Add(container);
+        ComboBox comboBox = new();
+        container.Children!.Add(comboBox.Visual);
+        comboBox.Items!.Add("Apple");
+        comboBox.Items.Add("Banana");
+        comboBox.IsDropDownOpen = true;
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        float offsetX = popup.AbsoluteX - comboBox.Visual.AbsoluteX;
+        float offsetY = popup.AbsoluteY - comboBox.Visual.AbsoluteY;
+
+        container.X += 120;
+        container.Y += 40;
+        container.UpdateLayout();
+        Tick();
+
+        popup.AbsoluteX.ShouldBe(comboBox.Visual.AbsoluteX + offsetX, 0.5f);
+        popup.AbsoluteY.ShouldBe(comboBox.Visual.AbsoluteY + offsetY, 0.5f);
+    }
+
+    [Fact]
+    public void Activity_ComboBoxMovesNearBottomEdge_OpenDropDownIsClampedToCanvas()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana", "Cherry");
+        comboBox.Anchor(Anchor.BottomRight);
+        comboBox.IsDropDownOpen = true;
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+
+        GraphicalUiElement.CanvasWidth = 700;
+        GraphicalUiElement.CanvasHeight = 500;
+        Gum.GumService.Default.Root.UpdateLayout();
+        Tick();
+
+        float bottom = popup.AbsoluteY + popup.AbsoluteHeight;
+        float right = popup.AbsoluteX + popup.AbsoluteWidth;
+        bottom.ShouldBe(GraphicalUiElement.CanvasHeight, 0.5f);
+        right.ShouldBeLessThanOrEqualTo(GraphicalUiElement.CanvasWidth + 0.5f);
+    }
+
+    [Fact]
+    public void Activity_DropDownClosed_DoesNotTouchPopup()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana", "Cherry");
+        comboBox.Anchor(Anchor.Center);
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        float popupXBefore = popup.X;
+        float popupYBefore = popup.Y;
+
+        GraphicalUiElement.CanvasWidth = 1200;
+        GraphicalUiElement.CanvasHeight = 900;
+        Gum.GumService.Default.Root.UpdateLayout();
+        Tick();
+
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+        popup.Parent.ShouldBeNull();
+        popup.X.ShouldBe(popupXBefore);
+        popup.Y.ShouldBe(popupYBefore);
+    }
+
+    [Fact]
+    public void Activity_ComboBoxUnchanged_DoesNotMovePopup()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana", "Cherry");
+        comboBox.IsDropDownOpen = true;
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        // Something other than the ComboBox moves the popup: re-placement must be driven by the
+        // ComboBox's rectangle changing, not run every frame.
+        popup.X += 30;
+        float popupX = popup.X;
+
+        Tick();
+
+        popup.X.ShouldBe(popupX);
+    }
+
+    [Fact]
+    public void Activity_ComboBoxMoved_OpenDropDownKeepsScrollAndSelection()
+    {
+        ComboBox comboBox = CreateComboBox();
+        for (int i = 0; i < 40; i++)
+        {
+            comboBox.Items!.Add("Item " + i);
+        }
+        comboBox.IsDropDownOpen = true;
+        comboBox.SelectedIndex = 2;
+        comboBox.ListBox.VerticalScrollBarValue = 60;
+        double scrollBefore = comboBox.ListBox.VerticalScrollBarValue;
+        scrollBefore.ShouldBeGreaterThan(0);
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        float popupYBefore = popup.AbsoluteY;
+
+        comboBox.Y += 50;
+        comboBox.Visual.UpdateLayout();
+        Tick();
+
+        popup.AbsoluteY.ShouldBe(popupYBefore + 50, 0.5f);
+        comboBox.ListBox.VerticalScrollBarValue.ShouldBe(scrollBefore);
+        comboBox.SelectedIndex.ShouldBe(2);
+        comboBox.IsDropDownOpen.ShouldBeTrue();
+    }
+
+    private static void Tick() => Gum.GumService.Default.Root.AnimateSelf(0.016);
+
+    #endregion
+
     #region Runtime properties
 
     [Fact]
