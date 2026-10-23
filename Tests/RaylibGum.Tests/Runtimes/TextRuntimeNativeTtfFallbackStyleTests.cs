@@ -36,10 +36,10 @@ public class TextRuntimeNativeTtfFallbackStyleTests : BaseTestClass
         // The regular cut is named as the family-name lookup expects; the other cuts keep their own names.
         _fontDirectory = Path.Combine(Path.GetTempPath(), "Gum6620_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_fontDirectory);
-        File.Copy(NunitoPath("Nunito-Regular.ttf"), Path.Combine(_fontDirectory, Family + ".ttf"));
+        File.Copy(NunitoGlyphSignature.PathOf("Nunito-Regular.ttf"), Path.Combine(_fontDirectory, Family + ".ttf"));
         foreach (string cut in new[] { "Nunito-Bold.ttf", "Nunito-Italic.ttf", "Nunito-BoldItalic.ttf" })
         {
-            File.Copy(NunitoPath(cut), Path.Combine(_fontDirectory, cut));
+            File.Copy(NunitoGlyphSignature.PathOf(cut), Path.Combine(_fontDirectory, cut));
         }
         ContentLoader.SystemFontDirectoryOverride = _fontDirectory;
     }
@@ -73,17 +73,17 @@ public class TextRuntimeNativeTtfFallbackStyleTests : BaseTestClass
     {
         TextRuntime text = CreateText(Family, 32, isBold, isItalic);
 
-        GlyphSignature(FontOf(text)).ShouldBe(GlyphSignatureOf(NunitoPath(expectedCut), 32));
+        NunitoGlyphSignature.Of(FontOf(text)).ShouldBe(NunitoGlyphSignature.OfFile(NunitoGlyphSignature.PathOf(expectedCut), 32));
     }
 
     [Fact]
     public void FontFilePath_IsBold_LoadsThatFileUnchanged()
     {
-        string regularPath = NunitoPath("Nunito-Regular.ttf");
+        string regularPath = NunitoGlyphSignature.PathOf("Nunito-Regular.ttf");
 
         TextRuntime text = CreateText(regularPath, 32, isBold: true, isItalic: false);
 
-        GlyphSignature(FontOf(text)).ShouldBe(GlyphSignatureOf(regularPath, 32));
+        NunitoGlyphSignature.Of(FontOf(text)).ShouldBe(NunitoGlyphSignature.OfFile(regularPath, 32));
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class TextRuntimeNativeTtfFallbackStyleTests : BaseTestClass
 
         TextRuntime text = CreateText(Family, 32, isBold: true, isItalic: false);
 
-        GlyphSignature(FontOf(text)).ShouldBe(GlyphSignatureOf(NunitoPath("Nunito-Regular.ttf"), 32));
+        NunitoGlyphSignature.Of(FontOf(text)).ShouldBe(NunitoGlyphSignature.OfFile(NunitoGlyphSignature.PathOf("Nunito-Regular.ttf"), 32));
     }
 
     private TextRuntime CreateText(string font, float fontSize, bool isBold, bool isItalic)
@@ -118,36 +118,5 @@ public class TextRuntimeNativeTtfFallbackStyleTests : BaseTestClass
         return FileManager.Standardize(text.GetFontCacheFileName(fontFilePath), preserveCase: true, makeAbsolute: true);
     }
 
-    private static string NunitoPath(string fileName) =>
-        Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "Nunito", fileName);
-
     private static Font FontOf(TextRuntime text) => ((Text)text.RenderableComponent!).Font;
-
-    /// <summary>
-    /// Advance and atlas size of a few glyphs, which differ between the cuts of one family.
-    /// </summary>
-    private static string GlyphSignature(Font font)
-    {
-        List<string> parts = new();
-        foreach (char character in "HWamg")
-        {
-            GlyphInfo glyph = Raylib.GetGlyphInfo(font, character);
-            Rectangle rec = Raylib.GetGlyphAtlasRec(font, character);
-            parts.Add($"{character}:{glyph.AdvanceX}/{glyph.OffsetX}/{rec.Width}x{rec.Height}");
-        }
-        return string.Join(" ", parts);
-    }
-
-    private static string GlyphSignatureOf(string path, int fontSize)
-    {
-        Font font = TtfFontLoader.LoadFont(path, fontSize);
-        try
-        {
-            return GlyphSignature(font);
-        }
-        finally
-        {
-            TtfFontLoader.Unload(font);
-        }
-    }
 }

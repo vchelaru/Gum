@@ -106,8 +106,8 @@ public sealed class ContentLoader : IContentLoader
         }
         else
         {
-            string? ttfPath = ResolveTtfFontPath(contentName);
-            font = ttfPath != null ? LoadTtfFont(ttfPath, NativeTtfFontSize) : default(Font);
+            FontFileFace? ttfFace = ResolveTtfFontFace(contentName);
+            font = ttfFace != null ? LoadTtfFont(ttfFace.Value, NativeTtfFontSize) : null;
         }
 
         // Every branch above assigns a value (default(Font) when nothing loads).
@@ -139,38 +139,100 @@ public sealed class ContentLoader : IContentLoader
     /// </summary>
     internal static Font? TryLoadTtfFont(string contentName, int fontSize, bool isBold = false, bool isItalic = false)
     {
-        string? path = ResolveTtfFontPath(contentName, isBold, isItalic);
-        return path != null ? LoadTtfFont(path, fontSize) : null;
+        FontFileFace? face = ResolveTtfFontFace(contentName, isBold, isItalic);
+        return face != null ? LoadTtfFont(face.Value, fontSize) : null;
     }
 
     /// <summary>
-    /// Finds the font file for a name the native loader accepts: an existing path, that path plus <c>.ttf</c>,
-    /// or a system font family (its bold/italic cut when one is requested and found, else its regular file).
-    /// raylib's native loaders take a raw path, so the macOS .app Contents/Resources/ copy is resolved here (#5450).
+    /// Finds the font face for a name the native loader accepts: an existing path, that path plus <c>.ttf</c>,
+    /// or a system font family (its bold/italic cut when one is requested and found, else its regular face). A
+    /// family is looked up by the family name inside each font file of the system font folders, .ttc/.otc
+    /// collections included, and by file name. raylib's native loaders take a raw path, so the macOS .app
+    /// Contents/Resources/ copy is resolved here (#5450).
     /// </summary>
-    private static string? ResolveTtfFontPath(string contentName, bool isBold = false, bool isItalic = false)
+    private static FontFileFace? ResolveTtfFontFace(string contentName, bool isBold = false, bool isItalic = false)
     {
         string? path = FileManager.ResolveExistingFilePath(contentName)
             ?? FileManager.ResolveExistingFilePath(contentName + ".ttf");
         if (path != null)
         {
-            return path;
+            return new FontFileFace(path, FontCollection.IsCollectionExtension(path) ? 0 : -1);
         }
+
+        string[] folders = SystemFontFolders;
         if (isBold || isItalic)
         {
-            string? styledPath = SystemFontStyleFinder.Find(SystemFontDirectory, contentName, isBold, isItalic);
-            if (styledPath != null)
+            foreach (string folder in folders)
             {
-                return styledPath;
+                FontFileFace? styledFace = SystemFontStyleFinder.Find(folder, contentName, isBold, isItalic);
+                if (styledFace != null)
+                {
+                    return styledFace;
+                }
             }
         }
-        string systemFontPath = GetSystemFontPath(contentName);
-        return File.Exists(systemFontPath) ? systemFontPath : null;
+
+        string fileName = contentName.EndsWith(".ttf") ? contentName : contentName + ".ttf";
+        foreach (string folder in GetFileLookupFolders(folders))
+        {
+            // First check no-space since that's what Windows does.
+            string noSpace = Path.Combine(folder, fileName.Replace(" ", ""));
+            if (File.Exists(noSpace))
+            {
+                return new FontFileFace(noSpace);
+            }
+            string spaced = Path.Combine(folder, fileName);
+            if (File.Exists(spaced))
+            {
+                return new FontFileFace(spaced);
+            }
+        }
+
+        // The file is not named after the family (or is a collection): find it by the family name inside the files.
+        foreach (string folder in folders)
+        {
+            FontFileFace? regularFace = SystemFontStyleFinder.Find(folder, contentName, false, false);
+            if (regularFace != null)
+            {
+                return regularFace;
+            }
+        }
+        return null;
     }
 
-    private static Font LoadTtfFont(string path, int fontSize)
+    /// <summary>
+    /// Loads the face, or returns null when it cannot be: the file is gone or locked since it was found, the face is
+    /// missing from its collection, or raylib rejects the data and hands back its own default font (which must
+    /// never be cached, registered or unloaded as if it were this font).
+    /// </summary>
+    private static Font? LoadTtfFont(FontFileFace face, int fontSize)
     {
-        Font font = TtfFontLoader.LoadFont(path, fontSize);
+        Font font;
+        try
+        {
+            if (face.FaceIndex >= 0)
+            {
+                byte[]? faceData = FontCollection.ExtractFace(face.Path, face.FaceIndex);
+                if (faceData == null)
+                {
+                    return null;
+                }
+                font = TtfFontLoader.LoadFont(faceData, fontSize);
+            }
+            else
+            {
+                font = TtfFontLoader.LoadFont(face.Path, fontSize);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
+        if (TtfFontLoader.IsRaylibDefaultFont(font))
+        {
+            return null;
+        }
         TextureFilterApplier(font.Texture, DefaultTextureFilter);
         return font;
     }
@@ -545,34 +607,55 @@ public sealed class ContentLoader : IContentLoader
     }
 
     /// <summary>
-    /// Replaces the system font folder a family name is looked up in. Tests point it at a folder of known fonts.
+    /// Replaces the system font folders a family name is looked up in. Tests point it at a folder of known fonts.
     /// </summary>
     internal static string? SystemFontDirectoryOverride { get; set; }
 
-    private static string SystemFontDirectory => SystemFontDirectoryOverride
-        ?? (OperatingSystem.IsWindows() ? "C:/Windows/Fonts"
-            : OperatingSystem.IsLinux() ? "/usr/share/fonts/truetype"
-            : OperatingSystem.IsMacOS() ? "/System/Library/Fonts"
-            : string.Empty);
+    private static string[] SystemFontFolders => SystemFontDirectoryOverride != null
+        ? new[] { SystemFontDirectoryOverride }
+        : GetSystemFontFolders(OperatingSystem.IsWindows(), OperatingSystem.IsLinux(), OperatingSystem.IsMacOS(),
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
 
-    private static string GetSystemFontPath(string fontFileName)
+    /// <summary>
+    /// The folders (each searched recursively) a platform keeps its fonts in: the system folders and the current
+    /// user's. macOS keeps Arial and other common faces under <c>Supplemental</c>, Linux splits fonts into per-family
+    /// folders under <c>/usr/share/fonts</c>.
+    /// </summary>
+    internal static string[] GetSystemFontFolders(bool isWindows, bool isLinux, bool isMacOS, string userProfile)
     {
-        if(fontFileName.EndsWith(".ttf") == false)
+        if (isWindows)
         {
-            fontFileName = fontFileName + ".ttf";
+            return new[] { "C:/Windows/Fonts" };
         }
-
-        string directory = SystemFontDirectory;
-
-        // first check no-space since that's what Windows does:
-        var noSpace = Path.Combine(directory, fontFileName.Replace(" ", ""));
-        if(System.IO.File.Exists(noSpace))
+        if (isLinux)
         {
-            return noSpace;
+            return new[]
+            {
+                "/usr/share/fonts", "/usr/local/share/fonts",
+                Path.Combine(userProfile, ".local/share/fonts"), Path.Combine(userProfile, ".fonts"),
+            };
         }
-        else
+        if (isMacOS)
         {
-            return Path.Combine(directory, fontFileName);
+            return new[]
+            {
+                "/System/Library/Fonts", "/Library/Fonts", Path.Combine(userProfile, "Library/Fonts"),
+            };
+        }
+        return Array.Empty<string>();
+    }
+
+    /// <summary>
+    /// The folders a font file named after its family is looked up in directly: the font folders, plus the
+    /// subfolders fonts are conventionally named after their family in (<c>truetype</c>, <c>Supplemental</c>).
+    /// </summary>
+    private static IEnumerable<string> GetFileLookupFolders(string[] folders)
+    {
+        foreach (string folder in folders)
+        {
+            yield return folder;
+            yield return Path.Combine(folder, "truetype");
+            yield return Path.Combine(folder, "Supplemental");
         }
     }
 

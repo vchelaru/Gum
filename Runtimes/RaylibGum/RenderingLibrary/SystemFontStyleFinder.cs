@@ -15,7 +15,7 @@ namespace RenderingLibrary.Content;
 /// </summary>
 internal static class SystemFontStyleFinder
 {
-    private readonly record struct FontFace(string Family, bool IsBold, bool IsItalic, string Path);
+    private readonly record struct FontFace(string Family, bool IsBold, bool IsItalic, FontFileFace File);
 
     // Lazy so threads that ask for one folder at the same time share a single scan.
     private static readonly ConcurrentDictionary<string, Lazy<IReadOnlyList<FontFace>>> facesByDirectory =
@@ -23,9 +23,10 @@ internal static class SystemFontStyleFinder
 
     /// <summary>
     /// Returns the path of the cut of <paramref name="family"/> in <paramref name="directory"/> (searched
-    /// recursively) whose bold and italic bits equal the requested ones, or null when there is none.
+    /// recursively) whose bold and italic bits equal the requested ones, or null when there is none. A face of a
+    /// font collection (.ttc/.otc) is found like a face of a plain font file.
     /// </summary>
-    public static string? Find(string directory, string family, bool isBold, bool isItalic)
+    public static FontFileFace? Find(string directory, string family, bool isBold, bool isItalic)
     {
         if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
         {
@@ -38,7 +39,7 @@ internal static class SystemFontStyleFinder
             if (face.IsBold == isBold && face.IsItalic == isItalic
                 && string.Equals(face.Family, family, StringComparison.OrdinalIgnoreCase))
             {
-                return face.Path;
+                return face.File;
             }
         }
         return null;
@@ -51,7 +52,9 @@ internal static class SystemFontStyleFinder
         foreach (string file in Directory.EnumerateFiles(directory, "*", options))
         {
             string extension = Path.GetExtension(file);
-            if (!extension.Equals(".ttf", StringComparison.OrdinalIgnoreCase)
+            bool isCollection = FontCollection.IsCollectionExtension(file);
+            if (!isCollection
+                && !extension.Equals(".ttf", StringComparison.OrdinalIgnoreCase)
                 && !extension.Equals(".otf", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
@@ -60,9 +63,13 @@ internal static class SystemFontStyleFinder
             try
             {
                 using FileStream stream = File.OpenRead(file);
-                if (TryReadFace(stream, file, out FontFace face))
+                IReadOnlyList<long> faceOffsets = FontCollection.GetFaceOffsets(stream);
+                for (int i = 0; i < faceOffsets.Count; i++)
                 {
-                    faces.Add(face);
+                    if (TryReadFace(stream, new FontFileFace(file, isCollection ? i : -1), faceOffsets[i], out FontFace face))
+                    {
+                        faces.Add(face);
+                    }
                 }
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
@@ -74,19 +81,20 @@ internal static class SystemFontStyleFinder
     }
 
     /// <summary>
-    /// Reads only the table directory and the name, OS/2 and head tables, not the whole file.
+    /// Reads only the table directory and the name, OS/2 and head tables of the face at
+    /// <paramref name="faceOffset"/>, not the whole file.
     /// </summary>
-    private static bool TryReadFace(Stream stream, string path, out FontFace face)
+    private static bool TryReadFace(Stream stream, FontFileFace file, long faceOffset, out FontFace face)
     {
         face = default;
-        byte[]? header = ReadAt(stream, 0, 12);
+        byte[]? header = ReadAt(stream, faceOffset, 12);
         if (header == null)
         {
             return false;
         }
 
         int tableCount = BinaryPrimitives.ReadUInt16BigEndian(header.AsSpan(4));
-        byte[]? directory = ReadAt(stream, 12, tableCount * 16);
+        byte[]? directory = ReadAt(stream, faceOffset + 12, tableCount * 16);
         if (directory == null)
         {
             return false;
@@ -131,7 +139,7 @@ internal static class SystemFontStyleFinder
             return false;
         }
 
-        face = new FontFace(family, isBold, isItalic, path);
+        face = new FontFace(family, isBold, isItalic, file);
         return true;
     }
 
