@@ -618,12 +618,18 @@ public class Renderer : IRenderer
 
         BatchDrawCallCounter counter = BatchDrawCallCounter;
 
+        // Children draw turned by their absolute rotation, so the bake undoes the container's own
+        // absolute rotation about its origin (its absolute top-left, the pivot it turns about) and
+        // the texture holds the upright container; CompositeRenderTarget turns it back (#6617,
+        // MonoGame's undoRotation matrix). raylib's Camera2D rotates clockwise for a positive angle
+        // and Gum counterclockwise, so the container's rotation passes through unchanged. A turned
+        // container's bounds are unclamped (GetRenderTargetBounds), so Left/Top is that origin.
         Camera2D bakeCamera = new Camera2D
         {
             Target = new System.Numerics.Vector2(bounds.Left, bounds.Top),
             Offset = System.Numerics.Vector2.Zero,
             Zoom = _camera.Zoom,
-            Rotation = 0,
+            Rotation = container.GetAbsoluteRotation(),
         };
 
         // Swap in the reusable bake scissor stack (avoids a per-bake allocation) so the main-walk
@@ -737,12 +743,15 @@ public class Renderer : IRenderer
 
         // Negative source height flips the v range: an RT is stored bottom-up in GL coordinates, so
         // reading it with height -h yields the upright content (same idiom as ShadowBlurRenderer).
+        // The texture holds the upright container (see BakeRenderTarget), so the blit turns it by the
+        // container's absolute rotation about its origin. DrawTexturePro turns clockwise for a
+        // positive angle, Gum counterclockwise, hence the negation (as Sprite does).
         Raylib.DrawTexturePro(
             renderTexture.Value.Texture,
             new Rectangle(0, 0, bounds.Width, -bounds.Height),
             new Rectangle(bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top),
             System.Numerics.Vector2.Zero,
-            0,
+            -container.GetAbsoluteRotation(),
             tint);
 
         if (renderTargetShader != null)
