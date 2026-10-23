@@ -22,6 +22,16 @@ public class TextRotationTests : BaseTestClass
         CountDifferentPixels(inParent, standalone).ShouldBe(0);
     }
 
+    // Centered alignment offsets the text inside its box; that offset turns with the absolute rotation too.
+    [Fact]
+    public void Render_CenteredInRotatedParent_MatchesTextWithTheSummedRotation()
+    {
+        using SKBitmap inParent = RenderText(parentRotation: 60, textRotation: 30, centered: true);
+        using SKBitmap standalone = RenderText(parentRotation: null, textRotation: 90, centered: true);
+
+        CountDifferentPixels(inParent, standalone).ShouldBe(0);
+    }
+
     [Fact]
     public void Render_InUnrotatedParent_MatchesTextWithNoParent()
     {
@@ -45,12 +55,19 @@ public class TextRotationTests : BaseTestClass
         right.ShouldBeGreaterThan(60 + 5);
     }
 
-    static SKBitmap RenderText(float? parentRotation, float textRotation)
+    static SKBitmap RenderText(float? parentRotation, float textRotation, bool centered = false)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(Size, Size));
         surface.Canvas.Clear(SKColors.Transparent);
         Gum.GumService.Default.Initialize(surface.Canvas, Size, Size);
         TextRuntime text = new() { Text = "Hello", Rotation = textRotation };
+        if (centered)
+        {
+            text.Width = 50;
+            text.Height = 50;
+            text.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            text.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
+        }
         if (parentRotation is float rotation)
         {
             ContainerRuntime parent = new() { X = 60, Y = 60, Width = 10, Height = 10, Rotation = rotation };
