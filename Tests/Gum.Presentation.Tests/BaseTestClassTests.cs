@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
+using Gum.Tests.Shared;
 using Shouldly;
 using ToolsUtilities;
 using Xunit;
@@ -69,5 +70,14 @@ public class BaseTestClassTests : BaseTestClass
             GraphicalUiElement.CanvasWidth = originalWidth;
             GraphicalUiElement.CanvasHeight = originalHeight;
         }
+    }
+
+    // A test that changes where files resolve from (directly, or through GumService Initialize/
+    // Uninitialize or a project load) would otherwise change which font or file every later test
+    // loads (#6496).
+    [Fact]
+    public void Dispose_RestoresFileManagerState_WhenATestChangedIt()
+    {
+        FileManagerStateAssert.DisposeRestores(() => new BaseTestClass());
     }
 }

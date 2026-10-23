@@ -25,4 +25,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
+    <Compile Include="..\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
+  </ItemGroup>
+
 </Project>

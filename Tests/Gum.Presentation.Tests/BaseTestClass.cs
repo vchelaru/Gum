@@ -1,4 +1,5 @@
 using Gum.Managers;
+using Gum.Tests.Shared;
 using Gum.Wireframe;
 using ToolsUtilities;
 
@@ -15,22 +16,21 @@ namespace Gum.Presentation.Tests;
 /// doesn't depend on any other test's history. Both singletons live in GumCommon, so this
 /// stays within the headless boundary — no WPF/WinForms required.
 /// <para>
-/// Also restores <see cref="FileManager.UserApplicationDataFolderOverride"/> on dispose, so a test
-/// may point it anywhere (or clear it) without sending later tests out of the process's temp
-/// user-data folder.
+/// Also restores the <see cref="FileManager"/> settings (<see cref="FileManager.RelativeDirectory"/>,
+/// <see cref="FileManager.UserApplicationDataFolderOverride"/> and the rest of <see cref="FileManagerState"/>)
+/// on dispose, so a test may point them anywhere without changing where later tests resolve files.
 /// Likewise the canvas size (<see cref="GraphicalUiElement.CanvasWidth"/>), a process-wide static the
 /// wireframe layout reads.
 /// </para>
 /// </summary>
 public class BaseTestClass : IDisposable
 {
-    private readonly string? _originalUserDataOverride;
+    private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
     private readonly float _originalCanvasWidth;
     private readonly float _originalCanvasHeight;
 
     public BaseTestClass()
     {
-        _originalUserDataOverride = FileManager.UserApplicationDataFolderOverride;
         _originalCanvasWidth = GraphicalUiElement.CanvasWidth;
         _originalCanvasHeight = GraphicalUiElement.CanvasHeight;
         ObjectFinder.Self.GumProjectSave = null;
@@ -40,7 +40,7 @@ public class BaseTestClass : IDisposable
     public virtual void Dispose()
     {
         ObjectFinder.Self.GumProjectSave = null;
-        FileManager.UserApplicationDataFolderOverride = _originalUserDataOverride;
+        _fileManagerState.Restore();
         GraphicalUiElement.CanvasWidth = _originalCanvasWidth;
         GraphicalUiElement.CanvasHeight = _originalCanvasHeight;
     }

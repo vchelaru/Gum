@@ -55,4 +55,9 @@
 		</Content>
 	</ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Tests\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
+    <Compile Include="..\Tests\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
+  </ItemGroup>
+
 </Project>

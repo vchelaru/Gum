@@ -2,6 +2,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
+using Gum.Tests.Shared;
 using Shouldly;
 
 namespace MonoGameGum.Tests.V3;
@@ -72,5 +73,14 @@ public class BaseTestClassTests
         {
             Gum.GumService.Default.Root.Children!.Clear();
         }
+    }
+
+    // A test that changes where files resolve from (directly, or through GumService Initialize/
+    // Uninitialize or a project load) would otherwise change which font or file every later test
+    // loads (#6496).
+    [Fact]
+    public void Dispose_RestoresFileManagerState_WhenATestChangedIt()
+    {
+        FileManagerStateAssert.DisposeRestores(() => new BaseTestClass());
     }
 }

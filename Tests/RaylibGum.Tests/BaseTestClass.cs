@@ -12,12 +12,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
+using Gum.Tests.Shared;
 using Keys = Gum.Forms.Input.Keys;
 
 namespace RaylibGum.Tests;
 
 public class BaseTestClass : IDisposable
 {
+    // Captured before the constructor body runs, so it is the state the previous test left.
+    private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
+
     // #3066: renderables present right after the assembly bootstrap (Root + Forms defaults).
     // Anything found on a layer beyond this set was added by a test — typically via AddToManagers
     // without a matching RemoveFromManagers — and is swept in Dispose. Left in place, a leaked
@@ -141,7 +145,7 @@ public class BaseTestClass : IDisposable
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = false;
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
 
-        FileManager.CustomGetStreamFromFile = null;
+        _fileManagerState.Restore();
 
         Text.Customizations.Clear();
         Text.ContextCustomizations.Clear();
