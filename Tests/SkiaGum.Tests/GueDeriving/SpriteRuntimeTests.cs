@@ -41,7 +41,7 @@ public class MockContentLoader : IContentLoader
     public T TryLoadContent<T>(string contentName) => LoadContent<T>(contentName);
 }
 
-public class SpriteRuntimeTests
+public class SpriteRuntimeTests : BaseTestClass
 {
     public SpriteRuntimeTests()
     {
@@ -196,23 +196,15 @@ public class SpriteRuntimeTests
     public void SourceFile_SettingPath_ShouldLoadViaLoaderManager()
     {
         var mockLoader = new MockContentLoader();
-        var originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = mockLoader;
 
-        try
-        {
-            var sut = new SpriteRuntime();
+        var sut = new SpriteRuntime();
 #pragma warning disable CS0618 // Type or member is obsolete
-            sut.SourceFile = "test_path.png";
+        sut.SourceFile = "test_path.png";
 #pragma warning restore CS0618
 
-            mockLoader.LastLoadedName.ShouldBe("test_path.png");
-            sut.Texture.ShouldBe(mockLoader.LastLoadedContent);
-        }
-        finally
-        {
-            LoaderManager.Self.ContentLoader = originalLoader;
-        }
+        mockLoader.LastLoadedName.ShouldBe("test_path.png");
+        sut.Texture.ShouldBe(mockLoader.LastLoadedContent);
     }
 
     // Regression for AnimationFrame.ToAnimationFrame missing the SKIA texture-loading
@@ -224,30 +216,22 @@ public class SpriteRuntimeTests
     public void ToAnimationFrame_OnSkia_ShouldLoadTextureViaLoaderManager()
     {
         MockContentLoader mockLoader = new MockContentLoader();
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = mockLoader;
 
-        try
+        Gum.Content.AnimationChain.AnimationFrameSave save = new Gum.Content.AnimationChain.AnimationFrameSave
         {
-            Gum.Content.AnimationChain.AnimationFrameSave save = new Gum.Content.AnimationChain.AnimationFrameSave
-            {
-                TextureName = "fake_texture.png",
-                FrameLength = 0.1f,
-                LeftCoordinate = 0f,
-                RightCoordinate = 1f,
-                TopCoordinate = 0f,
-                BottomCoordinate = 1f,
-            };
+            TextureName = "fake_texture.png",
+            FrameLength = 0.1f,
+            LeftCoordinate = 0f,
+            RightCoordinate = 1f,
+            TopCoordinate = 0f,
+            BottomCoordinate = 1f,
+        };
 
-            AnimationFrame frame = save.ToAnimationFrame();
+        AnimationFrame frame = save.ToAnimationFrame();
 
-            frame.Texture.ShouldNotBeNull();
-            mockLoader.LastLoadedName.ShouldEndWith("fake_texture.png");
-        }
-        finally
-        {
-            LoaderManager.Self.ContentLoader = originalLoader;
-        }
+        frame.Texture.ShouldNotBeNull();
+        mockLoader.LastLoadedName.ShouldEndWith("fake_texture.png");
     }
 
     // Regression for #3549: the Pixel-coordinate conversion block in
@@ -261,32 +245,24 @@ public class SpriteRuntimeTests
     public void ToAnimationFrame_OnSkia_ConvertsPixelCoordinatesToUv()
     {
         MockContentLoader mockLoader = new MockContentLoader(bitmapWidth: 10, bitmapHeight: 10);
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = mockLoader;
 
-        try
+        Gum.Content.AnimationChain.AnimationFrameSave save = new Gum.Content.AnimationChain.AnimationFrameSave
         {
-            Gum.Content.AnimationChain.AnimationFrameSave save = new Gum.Content.AnimationChain.AnimationFrameSave
-            {
-                TextureName = "fake_texture.png",
-                FrameLength = 0.1f,
-                LeftCoordinate = 2f,
-                RightCoordinate = 8f,
-                TopCoordinate = 2f,
-                BottomCoordinate = 8f,
-            };
+            TextureName = "fake_texture.png",
+            FrameLength = 0.1f,
+            LeftCoordinate = 2f,
+            RightCoordinate = 8f,
+            TopCoordinate = 2f,
+            BottomCoordinate = 8f,
+        };
 
-            AnimationFrame frame = save.ToAnimationFrame(loadTexture: true, coordinateType: Gum.Content.AnimationChain.TextureCoordinateType.Pixel);
+        AnimationFrame frame = save.ToAnimationFrame(loadTexture: true, coordinateType: Gum.Content.AnimationChain.TextureCoordinateType.Pixel);
 
-            frame.LeftCoordinate.ShouldBe(0.2f);
-            frame.RightCoordinate.ShouldBe(0.8f);
-            frame.TopCoordinate.ShouldBe(0.2f);
-            frame.BottomCoordinate.ShouldBe(0.8f);
-        }
-        finally
-        {
-            LoaderManager.Self.ContentLoader = originalLoader;
-        }
+        frame.LeftCoordinate.ShouldBe(0.2f);
+        frame.RightCoordinate.ShouldBe(0.8f);
+        frame.TopCoordinate.ShouldBe(0.2f);
+        frame.BottomCoordinate.ShouldBe(0.8f);
     }
 
     // Regression for the IAnimatable duplication bug: IAnimatable.cs was being
@@ -461,43 +437,27 @@ public class SpriteRuntimeTests
     public void SourceFile_Get_ShouldReturnAssignedPath()
     {
         MockContentLoader mockLoader = new();
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = mockLoader;
 
-        try
-        {
-            SpriteRuntime sut = new();
+        SpriteRuntime sut = new();
 #pragma warning disable CS0618 // Type or member is obsolete
-            sut.SourceFile = "test_path.png";
+        sut.SourceFile = "test_path.png";
 
-            sut.SourceFile.ShouldBe("test_path.png");
+        sut.SourceFile.ShouldBe("test_path.png");
 #pragma warning restore CS0618
-        }
-        finally
-        {
-            LoaderManager.Self.ContentLoader = originalLoader;
-        }
     }
 
     [Fact]
     public void SourceFile_Get_ShouldReturnPathAssignedThroughSourceFileName()
     {
         MockContentLoader mockLoader = new();
-        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = mockLoader;
 
-        try
-        {
-            SpriteRuntime sut = new();
-            sut.SourceFileName = "other_path.png";
+        SpriteRuntime sut = new();
+        sut.SourceFileName = "other_path.png";
 
 #pragma warning disable CS0618 // Type or member is obsolete
-            sut.SourceFile.ShouldBe("other_path.png");
+        sut.SourceFile.ShouldBe("other_path.png");
 #pragma warning restore CS0618
-        }
-        finally
-        {
-            LoaderManager.Self.ContentLoader = originalLoader;
-        }
     }
 }
