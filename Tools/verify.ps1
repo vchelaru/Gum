@@ -35,13 +35,17 @@ function Get-Key([string]$path) { ($path -replace '/', '\').ToLowerInvariant() }
 # Changed line ranges per file (lower-cased, backslash-relative path -> list of [start, end]).
 # A warning counts as "new" when it sits on a line this branch added or changed; a file with
 # hundreds of pre-existing nullable warnings would otherwise drown the one you introduced.
+# The diff starts where this branch left Base, so commits merged into Base since then are not
+# treated as this branch's changes.
 $changedLines = @{}
-$changedFiles = if ($Files) { @($Files | ForEach-Object { $_ -replace '\\', '/' }) } else { @(git diff --name-only $Base 2>$null | Where-Object { $_ }) }
+$diffBase = git merge-base HEAD $Base 2>$null
+if (-not $diffBase) { $diffBase = $Base }
+$changedFiles = if ($Files) { @($Files | ForEach-Object { $_ -replace '\\', '/' }) } else { @(git diff --name-only $diffBase 2>$null | Where-Object { $_ }) }
 foreach ($file in $changedFiles) {
     if ($Files) { $changedLines[(Get-Key $file)] = @(, @(1, [int]::MaxValue)); continue }
     $ranges = @()
     # Group names avoid 'count': on the $Matches hashtable that resolves to Hashtable.Count.
-    foreach ($hunk in @(git diff -U0 $Base -- $file 2>$null | Where-Object { $_ -match '^@@ .* \+(?<first>\d+)(,(?<len>\d+))? @@' })) {
+    foreach ($hunk in @(git diff -U0 $diffBase -- $file 2>$null | Where-Object { $_ -match '^@@ .* \+(?<first>\d+)(,(?<len>\d+))? @@' })) {
         [void]($hunk -match '^@@ .* \+(?<first>\d+)(,(?<len>\d+))? @@')
         [int]$first = $Matches['first']
         [int]$len = if ($Matches.ContainsKey('len')) { $Matches['len'] } else { 1 }
@@ -95,15 +99,33 @@ function Add-ToIndex([hashtable]$table, [string]$key, [string]$value) {
 function Add-CompileInclude($index, [string]$target, [string]$owner) {
     $key = Get-RepoKey $target
     if ($key -notmatch '[*?]') { Add-ToIndex $index.Exact $key $owner; return }
-    # Glob: '**\' spans directories, '*' and '?' stay within one.
+    $index.Globs.Add(@{ Regex = (ConvertTo-KeyRegex $key); Owner = $owner })
+}
+
+# Glob: '**\' spans directories, '*' and '?' stay within one.
+function ConvertTo-KeyRegex([string]$key) {
     $pattern = [regex]::Escape($key).Replace('\*\*\\', '(?:.*\\)?').Replace('\*\*', '.*').Replace('\*', '[^\\]*').Replace('\?', '[^\\]')
-    $index.Globs.Add(@{ Regex = [regex]::new("^$pattern$"); Owner = $owner })
+    return [regex]::new("^$pattern$")
+}
+
+# Records a <Compile Remove> (exact path or glob) for a csproj; Test-Removed checks a file against them.
+function Add-CompileRemove($index, [string]$target, [string]$csproj) {
+    $csprojKey = Get-Key $csproj
+    if (-not $index.Removed.ContainsKey($csprojKey)) { $index.Removed[$csprojKey] = [System.Collections.Generic.List[regex]]::new() }
+    $index.Removed[$csprojKey].Add((ConvertTo-KeyRegex (Get-RepoKey $target)))
+}
+
+function Test-Removed([string]$csproj, [string]$fileKey) {
+    $removes = (Get-IncludeIndex).Removed[(Get-Key $csproj)]
+    if (-not $removes) { return $false }
+    return [bool]($removes | Where-Object { $_.IsMatch($fileKey) } | Select-Object -First 1)
 }
 
 function Get-IncludeIndex {
     if ($script:includeIndex) { return $script:includeIndex }
     # Exact/Globs: included file (or glob) -> csproj/projitems that include it. Importers: projitems -> csproj.
-    $index = @{ Exact = @{}; Globs = [System.Collections.Generic.List[object]]::new(); Importers = @{} }
+    # Removed: csproj -> <Compile Remove> patterns from it and the .props/.targets it sees.
+    $index = @{ Exact = @{}; Globs = [System.Collections.Generic.List[object]]::new(); Importers = @{}; Removed = @{} }
     $files = @(git ls-files --cached --others --exclude-standard -- '*.csproj' '*.projitems' '*.props' '*.targets' | Where-Object { $_ -and (Test-Path (Join-Path $repo $_)) })
     $text = @{}
     foreach ($relative in $files) { $text[(Join-Path $repo $relative)] = Get-Content -Raw (Join-Path $repo $relative) }
@@ -120,6 +142,10 @@ function Get-IncludeIndex {
             if ($target) { Add-CompileInclude $index $target $relative }
         }
         if ($relative -notlike '*.csproj') { continue }
+        foreach ($m in [regex]::Matches($text[$full], '<Compile\s+Remove="(?<p>[^"]+)"')) {
+            $target = Resolve-MsBuildPath $m.Groups['p'].Value $dir
+            if ($target) { Add-CompileRemove $index $target $full }
+        }
 
         # The .props/.targets this csproj sees: the nearest Directory.Build.props/.targets above it,
         # its own imports, and whatever those import in turn.
@@ -147,10 +173,12 @@ function Get-IncludeIndex {
             }
             # An item path in an imported file is relative to the project, not to the imported file;
             # only $(MSBuildThisFileDirectory) points at the imported file's folder.
-            foreach ($m in [regex]::Matches($text[$props], '<Compile\s+Include="(?<p>[^"]+)"')) {
+            foreach ($m in [regex]::Matches($text[$props], '<Compile\s+(?<kind>Include|Remove)="(?<p>[^"]+)"')) {
                 $item = $m.Groups['p'].Value.Replace('$(MSBuildThisFileDirectory)', $propsDir + '/')
                 $target = Resolve-MsBuildPath $item $dir
-                if ($target) { Add-CompileInclude $index $target "$relative|$(Split-Path -Leaf $props)" }
+                if (-not $target) { continue }
+                if ($m.Groups['kind'].Value -eq 'Remove') { Add-CompileRemove $index $target $full }
+                else { Add-CompileInclude $index $target "$relative|$(Split-Path -Leaf $props)" }
             }
         }
     }
@@ -171,8 +199,8 @@ function Get-Importers([string]$projitemsKey) {
     return $all
 }
 
-# Project (full path) -> why it compiles this file, for a file Find-Project could not place.
-# Empty when nothing compiles the file.
+# Project (full path) -> why it compiles this file through a link, minus projects that
+# <Compile Remove> it. Empty when no link reaches the file.
 function Find-IndirectProjects([string]$file) {
     $index = Get-IncludeIndex
     $found = [ordered]@{}
@@ -192,6 +220,7 @@ function Find-IndirectProjects([string]$file) {
             foreach ($importer in Get-Importers (Get-Key $owner)) { $found[$importer] = "imports $(Split-Path -Leaf $owner)" }
         }
     }
+    foreach ($project in @($found.Keys)) { if (Test-Removed $project $key) { $found.Remove($project) } }
     return $found
 }
 
@@ -219,7 +248,7 @@ $sourceProjects = [System.Collections.Generic.HashSet[string]]::new()
 $indirectProjects = [ordered]@{}
 $unbuilt = [System.Collections.Generic.List[string]]::new()
 foreach ($file in ($changedFiles | Where-Object { $_ -like '*.cs' -or $_ -like '*.projitems' })) {
-    $projects = if ($file -like '*.cs') { @(Find-Projects $file) } else { @() }
+    $projects = if ($file -like '*.cs') { @(Find-Projects $file | Where-Object { -not (Test-Removed $_ (Get-Key $file)) }) } else { @() }
     $via = Find-IndirectProjects $file
     if ($projects.Count -eq 0 -and $via.Count -eq 0) { $unbuilt.Add("$file (no project directory and no csproj, .projitems or .props includes it)"); continue }
     foreach ($indirect in $via.Keys | Where-Object { $projects -notcontains $_ }) {

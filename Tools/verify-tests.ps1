@@ -10,11 +10,15 @@ $ErrorActionPreference = 'Stop'
 $failures = 0
 
 function Assert-Builds([string]$name, [string]$file, [string[]]$expected) {
-    $output = @(& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'verify.ps1') -Files $file -ListOnly 6>&1 | ForEach-Object { "$_" })
+    $errorFile = Join-Path ([System.IO.Path]::GetTempPath()) "verify-tests-$PID.err"
+    $output = @(& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'verify.ps1') -Files $file -ListOnly 2>$errorFile 6>&1 | ForEach-Object { "$_" })
+    $errors = @(Get-Content $errorFile -ErrorAction SilentlyContinue | Where-Object { $_ })
+    Remove-Item $errorFile -ErrorAction SilentlyContinue
+    $output += $errors
     $actual = @($output | Where-Object { $_ -match '^build\s+' } | ForEach-Object { ($_ -replace '^build\s+', '') -replace '\\', '/' } |
         Where-Object { $_ -notlike 'Runtimes/SokolGum/*' } | Sort-Object)
     $expectedText = ($expected | Sort-Object) -join '; '
-    if (($actual -join '; ') -ceq $expectedText) {
+    if ($errors.Count -eq 0 -and ($actual -join '; ') -ceq $expectedText) {
         Write-Host "pass  $name"
     } else {
         Write-Host "FAIL  $name`n  expected: $expectedText`n  actual:   $($actual -join '; ')`n  output:`n    $($output -join "`n    ")"
@@ -35,6 +39,35 @@ Assert-Builds 'file linked by a csproj and by a .props another .props imports bu
 Assert-Builds 'file in a folder with two csprojs, linked by nothing, builds both and nothing else' `
     'Runtimes/GumShapes/AssemblyInfo.cs' `
     @('Runtimes/GumShapes/KniGumShapes.csproj', 'Runtimes/GumShapes/MonoGameGumShapes.csproj')
+
+Assert-Builds 'file every linking csproj removes with Compile Remove builds only the projects that keep it' `
+    'MonoGameGum/Input/KeyCombo.cs' `
+    @('GumCommon/GumCommon.csproj')
+
+# A branch is compared with the point it left Base, so files merged into Base since then are not
+# treated as changed. Runs verify.ps1 in a scratch repo where Base moved after the branch point.
+$scratch = Join-Path ([System.IO.Path]::GetTempPath()) "verify-tests-$PID"
+try {
+    New-Item -ItemType Directory -Force -Path (Join-Path $scratch 'Tools'), (Join-Path $scratch 'A'), (Join-Path $scratch 'B') | Out-Null
+    Copy-Item (Join-Path $PSScriptRoot 'verify.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1') (Join-Path $scratch 'Tools')
+    Set-Content (Join-Path $scratch 'A/A.csproj') '<Project />'
+    Set-Content (Join-Path $scratch 'B/B.csproj') '<Project />'
+    $git = { git -C $scratch -c user.name=t -c user.email=t@t -c core.autocrlf=false @args 2>&1 | Out-Null }
+    & $git init -q -b base
+    & $git add -A; & $git commit -q -m root
+    & $git checkout -q -b branch
+    Set-Content (Join-Path $scratch 'A/OnBranch.cs') 'class OnBranch {}'
+    & $git add -A; & $git commit -q -m branch
+    & $git checkout -q base
+    Set-Content (Join-Path $scratch 'B/MergedToBase.cs') 'class MergedToBase {}'
+    & $git add -A; & $git commit -q -m base
+    & $git checkout -q branch
+    $output = @(& pwsh -NoProfile -File (Join-Path $scratch 'Tools/verify.ps1') -Base base -ListOnly 6>&1 | ForEach-Object { "$_" })
+    $actual = @($output | Where-Object { $_ -match '^build\s+' } | ForEach-Object { ($_ -replace '^build\s+', '') -replace '\\', '/' })
+    if (($actual -join '; ') -ceq 'A/A.csproj') { Write-Host 'pass  files merged into Base after the branch point are not changed' }
+    else { Write-Host "FAIL  files merged into Base after the branch point are not changed`n  expected: A/A.csproj`n  actual:   $($actual -join '; ')"; $failures++ }
+}
+finally { Remove-Item -Recurse -Force $scratch -ErrorAction SilentlyContinue }
 
 if ($failures -gt 0) { Write-Host "`n$failures failed"; exit 1 }
 Write-Host "`nall passed"
