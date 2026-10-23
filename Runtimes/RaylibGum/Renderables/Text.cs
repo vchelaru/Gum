@@ -173,7 +173,7 @@ public class Text : IVisible, IRenderableIpso,
     /// <summary>
     /// The descender height (line height minus baseline) as defined by the font, ignoring FontScale.
     /// Recovered from the loaded .fnt's lineHeight/base, or from the glyph offsets of a TTF loaded via
-    /// LoadFontEx; defaults to 2 for raylib's built-in default font.
+    /// LoadFontEx; defaults to 2 for raylib's built-in default font and sprite-sheet fonts.
     /// </summary>
     private int _descenderHeight = 2;
 
@@ -273,6 +273,9 @@ public class Text : IVisible, IRenderableIpso,
         public Font Font;
         public float DrawSize;
         public float Scale;
+        /// <summary>The run's line height and baseline (from the line top) in pixels, from the run's own font.</summary>
+        public float LineHeight;
+        public float BaselineFromTop;
         public float Width;
         public string Text;
         public float XOffset;
@@ -561,24 +564,26 @@ public class Text : IVisible, IRenderableIpso,
     /// <summary>
     /// Recovers where raylib draws the baseline of a TTF loaded with <c>LoadFontEx</c> (#6567). raylib
     /// offsets each glyph by the scaled font ascent, so a flat-bottomed glyph ('H') ends exactly on the
-    /// baseline. Returns false for raylib's built-in default font, whose glyph cells span the whole line,
-    /// and for fonts without an 'H'.
+    /// baseline. Returns false for fonts without an 'H' and for fonts whose glyph cells span the whole
+    /// line (raylib's built-in default font, a sprite sheet loaded with <c>LoadFontFromImage</c>), where
+    /// the cell's bottom says nothing about the baseline.
     /// </summary>
     private static bool TryGetTtfBaselineY(Font font, out int baselineY)
     {
         baselineY = 0;
-        if (font.Texture.Id == GetFontDefault().Texture.Id)
-        {
-            return false;
-        }
-
         GlyphInfo glyph = GetGlyphInfo(font, 'H');
         if (glyph.Value != 'H')
         {
             return false;
         }
 
-        baselineY = glyph.OffsetY + (int)GetGlyphAtlasRec(font, 'H').Height;
+        int glyphHeight = (int)GetGlyphAtlasRec(font, 'H').Height;
+        if (glyphHeight >= font.BaseSize)
+        {
+            return false;
+        }
+
+        baselineY = glyph.OffsetY + glyphHeight;
         return baselineY > 0 && baselineY <= font.BaseSize;
     }
 
@@ -1564,7 +1569,7 @@ public class Text : IVisible, IRenderableIpso,
         // Issue #4365: EffectiveFontScale, not FontScale -- must match ResolveRunFont's now-compensated
         // LayoutScale (see GetTallestSizeRunScale) so the baseline math below isn't skewed under an active
         // oversample ratio.
-        float maxScale = EffectiveFontScale;
+        float maxBaseline = (LineHeightInPixels - _descenderHeight) * EffectiveFontScale;
 
         // Only the runs holding the first lettersToDraw letters of the line are drawn (the MaxLettersToShow
         // reveal), the last of them cut short.
@@ -1676,6 +1681,7 @@ public class Text : IVisible, IRenderableIpso,
             // A [Custom] scale or rotation changes only how the letter is drawn, so it sizes nothing here.
             drawRun.DrawSize = resolvedFont.DrawSize;
             drawRun.Scale = resolvedFont.LayoutScale;
+            SetRunLineMetrics(ref drawRun);
             drawRun.Text = runText;
             drawRun.XOffset = xOffset;
             drawRun.YOffset = yOffset;
@@ -1686,10 +1692,8 @@ public class Text : IVisible, IRenderableIpso,
             drawRun.ScaleYOrigin = scaleYOrigin;
             drawRun.Width = MeasureTextEx(resolvedFont.Font, runText, drawRun.DrawSize, 0).X;
             totalWidth += drawRun.Width;
-            maxScale = System.Math.Max(maxScale, drawRun.Scale);
+            maxBaseline = System.Math.Max(maxBaseline, drawRun.BaselineFromTop);
         }
-
-        float maxBaseline = (LineHeightInPixels - _descenderHeight) * maxScale;
 
         float lineStartX = absoluteLeft;
         if (HorizontalAlignment == HorizontalAlignment.Center)
@@ -1707,9 +1711,8 @@ public class Text : IVisible, IRenderableIpso,
         for (int s = 0; s < runCount; s++)
         {
             ref StyledRunDraw drawRun = ref runs[s];
-            var runScale = drawRun.Scale;
             // Push shorter runs down so every run shares the tallest run's baseline.
-            float baselineDelta = maxBaseline - (LineHeightInPixels - _descenderHeight) * runScale;
+            float baselineDelta = maxBaseline - drawRun.BaselineFromTop;
 
             var runPosition = new Vector2(lineStartX + advance + drawRun.XOffset, linePosition.Y + baselineDelta + drawRun.YOffset);
             var runOrigin = new Vector2(0, originY);
@@ -1741,6 +1744,27 @@ public class Text : IVisible, IRenderableIpso,
     }
 
     /// <summary>
+    /// A run drawn with the Text's own font scales that font's metrics; a run with a swapped font uses the
+    /// swapped font's own line height and baseline at its draw size, as MonoGame aligns each run by its
+    /// font's <c>BaselineY</c>.
+    /// </summary>
+    private void SetRunLineMetrics(ref StyledRunDraw drawRun)
+    {
+        if (drawRun.Font.Texture.Id == _font.Texture.Id || drawRun.Font.BaseSize <= 0)
+        {
+            drawRun.LineHeight = LineHeightInPixels * drawRun.Scale;
+            drawRun.BaselineFromTop = (LineHeightInPixels - _descenderHeight) * drawRun.Scale;
+        }
+        else
+        {
+            GetLineHeightAndDescender(drawRun.Font, out int runLineHeight, out int runDescender);
+            float runFontScale = drawRun.DrawSize / drawRun.Font.BaseSize;
+            drawRun.LineHeight = runLineHeight * runFontScale;
+            drawRun.BaselineFromTop = (runLineHeight - runDescender) * runFontScale;
+        }
+    }
+
+    /// <summary>
     /// Draws a <c>[Custom]</c> letter that is scaled or rotated, as MonoGame and Skia do: its cell (laid out at
     /// <paramref name="cellTopLeft"/>, unscaled) is scaled by ScaleX/ScaleY about the point ScaleXOrigin/ScaleYOrigin
     /// name, then turned counterclockwise about the scaled cell's top-left. DrawTextPro takes one font size, so
@@ -1749,10 +1773,8 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     private void DrawTransformedRun(ref StyledRunDraw drawRun, Vector2 cellTopLeft)
     {
-        float lineHeight = LineHeightInPixels * drawRun.Scale;
-        float baselineFromTop = (LineHeightInPixels - _descenderHeight) * drawRun.Scale;
-        Vector2 scaledTopLeft = LetterCellScale.GetScaledTopLeft(cellTopLeft.X, cellTopLeft.Y, drawRun.Width, lineHeight,
-            baselineFromTop, drawRun.ScaleX, drawRun.ScaleY, drawRun.ScaleXOrigin, drawRun.ScaleYOrigin);
+        Vector2 scaledTopLeft = LetterCellScale.GetScaledTopLeft(cellTopLeft.X, cellTopLeft.Y, drawRun.Width, drawRun.LineHeight,
+            drawRun.BaselineFromTop, drawRun.ScaleX, drawRun.ScaleY, drawRun.ScaleXOrigin, drawRun.ScaleYOrigin);
         float totalRotation = _renderRotation + drawRun.Rotation;
         scaledTopLeft = SnapToPixelIfNeeded(scaledTopLeft, totalRotation);
 

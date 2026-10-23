@@ -53,6 +53,30 @@ public class TextTtfBaselineTests : BaseTestClass
         text.DescenderHeight.ShouldBe(2);
     }
 
+    [Fact]
+    public void DescenderHeight_ImageFontFromLoadFontFromImage_StaysTwo()
+    {
+        // A sprite-sheet font's glyph cells span the whole line, so the bottom of its 'H' cell says nothing
+        // about where the baseline is.
+        Image sheet = GenImageColor(10, 14, Color.Magenta);
+        ImageDrawRectangle(ref sheet, 1, 1, 8, 12, Color.White);
+        Font font = LoadFontFromImage(sheet, Color.Magenta, 'H');
+        UnloadImage(sheet);
+        try
+        {
+            font.BaseSize.ShouldBe(12, "sanity check: the sheet must load as one 12px-tall glyph");
+            TextRuntime runtime = new();
+            Text text = (Text)runtime.RenderableComponent!;
+            text.Font = font;
+
+            text.DescenderHeight.ShouldBe(2);
+        }
+        finally
+        {
+            UnloadFont(font);
+        }
+    }
+
     private static (short ascent, short descent) ReadHheaAscentDescent(byte[] bytes)
     {
         int tableCount = BinaryPrimitives.ReadUInt16BigEndian(bytes.AsSpan(4));
