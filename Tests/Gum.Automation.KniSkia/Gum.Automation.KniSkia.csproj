@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Same KNI version as KniSkiaGum. Compile-time only: the game brings its own KNI platform package. -->
+    <!-- Compiles against KNI 4.2.9001, the version KniSkiaGum compiles against. Compile-time only: the
+         samples bring their own KNI packages (4.3.9001) and run on those. -->
     <PackageReference Include="nkast.Xna.Framework" VersionOverride="4.2.9001" PrivateAssets="All" />
     <PackageReference Include="nkast.Xna.Framework.Graphics" VersionOverride="4.2.9001" PrivateAssets="All" />
     <PackageReference Include="nkast.Xna.Framework.Input" VersionOverride="4.2.9001" PrivateAssets="All" />

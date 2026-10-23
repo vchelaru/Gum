@@ -31,7 +31,8 @@ public class Game1 : Game
         IsMouseVisible = true;
 
 #if DEBUG
-        _automation = Gum.Automation.GumAutomationHost.FromArgs(Environment.GetCommandLineArgs(), this);
+        // The texts are added to the managers, not the root, so the script finds them through _texts.
+        _automation = Gum.Automation.GumAutomationHost.FromArgs(Environment.GetCommandLineArgs(), this, _texts);
 #endif
     }
 
@@ -42,9 +43,9 @@ public class Game1 : Game
 
         GumService.Default.Initialize(this);
 
-        AddText("Content/Fonts/CustomFont.ttf", "I use CustomFont", 0);
-        AddText("Content/Fonts/Super Morning.ttf", "I use Super Morning", 30);
-        AddText("Content/Fonts/Winter Selfie.ttf", "I use Winter Selfie", 60);
+        AddText("CustomFontText", "Content/Fonts/CustomFont.ttf", "I use CustomFont", 0);
+        AddText("SuperMorningText", "Content/Fonts/Super Morning.ttf", "I use Super Morning", 30);
+        AddText("WinterSelfieText", "Content/Fonts/Winter Selfie.ttf", "I use Winter Selfie", 60);
 
         _immediateText = new TextRuntime
         {
@@ -56,10 +57,11 @@ public class Game1 : Game
         };
     }
 
-    private void AddText(string fontFile, string text, float yPosition)
+    private void AddText(string name, string fontFile, string text, float yPosition)
     {
         TextRuntime textRuntime = new TextRuntime
         {
+            Name = name,
             UseCustomFont = true,
             CustomFontFile = fontFile,
             Text = text,

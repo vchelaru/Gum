@@ -62,7 +62,13 @@ public sealed class GumAutomationHost
     /// otherwise null. Uses <see cref="GumService.Default"/>'s roots and a screenshot writer that renders
     /// Gum into a render target.
     /// </summary>
-    public static GumAutomationHost? FromArgs(string[] args, Game game)
+    /// <param name="args">The process arguments.</param>
+    /// <param name="game">The game the script drives.</param>
+    /// <param name="extraRoots">
+    /// Elements searched by name after GumService's roots, for visuals added with
+    /// <c>AddToManagers</c> instead of <c>AddToRoot</c>. Enumerated on each search, so a list filled later works.
+    /// </param>
+    public static GumAutomationHost? FromArgs(string[] args, Game game, IEnumerable<GraphicalUiElement>? extraRoots = null)
     {
         string? scriptPath = ValueAfter(args, ScriptFlag);
         if (scriptPath == null)
@@ -78,7 +84,7 @@ public sealed class GumAutomationHost
         }
 
         GumAutomationHost? host = null;
-        host = new GumAutomationHost(File.ReadAllText(scriptPath), () => GumDriver.RootsOf(GumService.Default),
+        host = new GumAutomationHost(File.ReadAllText(scriptPath), () => GumDriver.RootsOf(GumService.Default).Concat(extraRoots ?? Enumerable.Empty<GraphicalUiElement>()),
             game, parker, result =>
             {
                 string report = result.ToString() + (result.Passed ? "AUTOMATION PASSED" : "AUTOMATION FAILED");
@@ -133,14 +139,47 @@ public sealed class GumAutomationHost
 #if KNISKIA
     private static void SdlMoveOffScreen(IntPtr sdlWindow)
     {
-        if (sdlWindow != IntPtr.Zero)
+        if (sdlWindow == IntPtr.Zero)
         {
-            SDL_SetWindowPosition(sdlWindow, -32000, -32000);
+            return;
         }
+        SdlSetWindowPosition? setPosition = LoadSdlSetWindowPosition();
+        if (setPosition == null)
+        {
+            // The parker still moves the window on the first Update; only the pre-show move is lost.
+            Console.Error.WriteLine("Gum automation: SDL_SetWindowPosition was not found, so the window " +
+                "is parked from the first Update instead of before it is shown.");
+            return;
+        }
+        setPosition(sdlWindow, -32000, -32000);
     }
 
-    [System.Runtime.InteropServices.DllImport("SDL2")]
-    private static extern void SDL_SetWindowPosition(IntPtr window, int x, int y);
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    private delegate void SdlSetWindowPosition(IntPtr window, int x, int y);
+
+    private static SdlSetWindowPosition? _sdlSetWindowPosition;
+
+    // KNI's SDL binding is internal, so the SDL2 library KNI loaded is resolved by its platform name.
+    private static SdlSetWindowPosition? LoadSdlSetWindowPosition()
+    {
+        if (_sdlSetWindowPosition != null)
+        {
+            return _sdlSetWindowPosition;
+        }
+        string[] names = OperatingSystem.IsWindows() ? new[] { "SDL2.dll", "SDL2" }
+            : OperatingSystem.IsMacOS() ? new[] { "libSDL2-2.0.0.dylib", "libSDL2.dylib", "SDL2" }
+            : new[] { "libSDL2-2.0.so.0", "libSDL2.so", "SDL2" };
+        foreach (string name in names)
+        {
+            if (System.Runtime.InteropServices.NativeLibrary.TryLoad(name, typeof(GumAutomationHost).Assembly, null, out IntPtr library)
+                && System.Runtime.InteropServices.NativeLibrary.TryGetExport(library, "SDL_SetWindowPosition", out IntPtr export))
+            {
+                _sdlSetWindowPosition = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<SdlSetWindowPosition>(export);
+                return _sdlSetWindowPosition;
+            }
+        }
+        return null;
+    }
 
     private sealed class RunOnInitialize : GameComponent
     {
