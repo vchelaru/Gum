@@ -184,6 +184,68 @@ public class RotatedRenderTargetTests : BaseTestClass
         IsRed(pixel).ShouldBeTrue($"pixel was {pixel.R},{pixel.G},{pixel.B},{pixel.A}");
     }
 
+    // A turned render target is not clamped to the camera; the part on camera still lands where the
+    // plain container draws, at either edge of the 800x600 test camera.
+    [Theory]
+    [InlineData(0f, 0f, -20f, 10f)]
+    [InlineData(560f, 360f, 170f, 190f)]
+    public void Draw_RotatedRenderTargetPartlyOffCamera_MatchesWithoutRenderTarget(
+        float wrapperX, float wrapperY, float x, float y)
+    {
+        GraphicalUiElement Build(bool isRenderTarget)
+        {
+            ContainerRuntime container = new()
+            {
+                X = x, Y = y, Width = 60, Height = 60, Rotation = 30, IsRenderTarget = isRenderTarget,
+            };
+            container.AddChild(SolidSprite(0, 0, 60, 60, Blue));
+            container.AddChild(SolidSprite(25, 30, 30, 25, Red));
+            return container;
+        }
+
+        Color[] plain = Capture(Build(isRenderTarget: false), wrapperX, wrapperY);
+        Color[] viaRenderTarget = Capture(Build(isRenderTarget: true), wrapperX, wrapperY);
+
+        AssertSameCoverage(plain, viaRenderTarget, IsRed, minimumCount: 50, ShapeCenterTolerance, countTolerancePercent: 10);
+        AssertSameCoverage(plain, viaRenderTarget, IsBlue, minimumCount: 150, ShapeCenterTolerance, countTolerancePercent: 10);
+    }
+
+    // A camera zoom scales the bake and the composite; a turned render target still matches.
+    [Fact]
+    public void Draw_RotatedRenderTargetWithCameraZoom_MatchesWithoutRenderTarget()
+    {
+        const float zoom = 2;
+        GraphicalUiElement Build(bool isRenderTarget)
+        {
+            ContainerRuntime container = new()
+            {
+                X = 40, Y = 40, Width = 40, Height = 40, Rotation = 30, IsRenderTarget = isRenderTarget,
+            };
+            container.AddChild(SolidSprite(25, 0, 15, 15, Red));
+            container.AddChild(SolidSprite(0, 25, 15, 15, Blue));
+            return container;
+        }
+
+        Color[] plain = Capture(Build(isRenderTarget: false), zoom: zoom);
+        Color[] viaRenderTarget = Capture(Build(isRenderTarget: true), zoom: zoom);
+
+        // The sprites' truncated world position is magnified by the zoom, so the tolerance is too.
+        AssertSameCoverage(plain, viaRenderTarget, IsRed, minimumCount: 600, ShapeCenterTolerance * zoom, countTolerancePercent: 10);
+        AssertSameCoverage(plain, viaRenderTarget, IsBlue, minimumCount: 600, ShapeCenterTolerance * zoom, countTolerancePercent: 10);
+    }
+
+    readonly System.Collections.Generic.List<Texture2D> _textures = new();
+
+    public override void Dispose()
+    {
+        foreach (Texture2D texture in _textures)
+        {
+            UnloadTexture(texture);
+        }
+        _textures.Clear();
+        base.Dispose();
+    }
+
     record struct Coverage(int Count, float CenterX, float CenterY);
 
     static bool IsRed(Color c) => c.R > 150 && c.G < 80 && c.B < 80;
@@ -194,11 +256,12 @@ public class RotatedRenderTargetTests : BaseTestClass
 
     // A sprite, not a ColoredRectangle: raylib's SolidRectangle draws axis-aligned, so only a
     // sprite turns with its container in both the plain and the render-target scene.
-    static SpriteRuntime SolidSprite(float x, float y, float width, float height, Color color)
+    SpriteRuntime SolidSprite(float x, float y, float width, float height, Color color)
     {
         Image image = GenImageColor(4, 4, color);
         Texture2D texture = LoadTextureFromImage(image);
         UnloadImage(image);
+        _textures.Add(texture);
 
         return new SpriteRuntime
         {
@@ -247,24 +310,33 @@ public class RotatedRenderTargetTests : BaseTestClass
 
     // Draws the scene inside an upright Size x Size render-target wrapper at (wrapperX, wrapperY) on
     // a black background and returns the wrapper's baked texture, rows in top-left draw order.
-    static Color[] Capture(GraphicalUiElement scene, float wrapperX = 0, float wrapperY = 0)
+    // With a camera zoom the wrapper is Size / zoom units wide, so its texture is still Size pixels.
+    Color[] Capture(GraphicalUiElement scene, float wrapperX = 0, float wrapperY = 0, float zoom = 1)
     {
         ContainerRuntime wrapper = new()
         {
-            X = wrapperX, Y = wrapperY, Width = Size, Height = Size, IsRenderTarget = true,
+            X = wrapperX, Y = wrapperY, Width = Size / zoom, Height = Size / zoom, IsRenderTarget = true,
         };
-        wrapper.AddChild(SolidSprite(0, 0, Size, Size, Color.Black));
+        wrapper.AddChild(SolidSprite(0, 0, Size / zoom, Size / zoom, Color.Black));
         wrapper.AddChild(scene);
 
         GumService.Default.Root.Children.Add(wrapper);
         GumService.Default.Root.UpdateLayout();
 
-        for (int i = 0; i < 2; i++)
+        Renderer.Self.Camera.Zoom = zoom;
+        try
         {
-            BeginDrawing();
-            ClearBackground(Color.Black);
-            GumService.Default.Draw();
-            EndDrawing();
+            for (int i = 0; i < 2; i++)
+            {
+                BeginDrawing();
+                ClearBackground(Color.Black);
+                GumService.Default.Draw();
+                EndDrawing();
+            }
+        }
+        finally
+        {
+            Renderer.Self.Camera.Zoom = 1;
         }
 
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(wrapper)!.Value;
