@@ -33,12 +33,41 @@ public class TtfFontLoaderTests : BaseTestClass
             float kernSmithCapHeight = GetGlyphAtlasRec(kernSmith, 'H').Height;
             nativeCapHeight.ShouldBe(kernSmithCapHeight, 1.5f, "'H' must be as tall as KernSmith's at the same FontSize");
 
+            native.BaseSize.ShouldBe(kernSmith.BaseSize, "BaseSize is the em, as for a KernSmith font");
             BaselineOf(native).ShouldBe(BaselineOf(kernSmith), 1.5f, "the baseline must sit where KernSmith's does");
+            LineHeightOf(native).ShouldBe(LineHeightOf(kernSmith), 1.5f, "the line must be as tall as KernSmith's");
         }
         finally
         {
-            UnloadFont(native);
+            TtfFontLoader.Unload(native);
             new ManagedFont(kernSmith).Dispose();
+        }
+    }
+
+    [Fact]
+    public void FontSizeRun_AtTheLoadedSize_DrawsAsWideAsPlainText_WithoutAFontCreator()
+    {
+        // With no font creator a [FontSize=N] run scales the base atlas to N, treating N as the font's
+        // BaseSize unit, so BaseSize must be the em the font was requested at.
+        string path = Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "OpenSans-Regular.ttf");
+        Font font = TtfFontLoader.LoadFont(path, 24);
+        try
+        {
+            TextRuntime plain = new();
+            ((Text)plain.RenderableComponent!).Font = font;
+            plain.Text = "HHHHHHHH";
+            float plainWidth = ((Text)plain.RenderableComponent!).WrappedTextWidth;
+
+            TextRuntime tagged = new();
+            ((Text)tagged.RenderableComponent!).Font = font;
+            tagged.Text = "[FontSize=24]HHHHHHHH[/FontSize]";
+            float taggedWidth = ((Text)tagged.RenderableComponent!).WrappedTextWidth;
+
+            taggedWidth.ShouldBe(plainWidth, 1f);
+        }
+        finally
+        {
+            TtfFontLoader.Unload(font);
         }
     }
 
@@ -54,14 +83,15 @@ public class TtfFontLoaderTests : BaseTestClass
         {
             Font loaded = LoaderManager.Self.LoadContent<Font>(path);
 
-            loaded.BaseSize.ShouldBe(expected.BaseSize);
-            loaded.BaseSize.ShouldNotBe(24, "OpenSans' ascent-to-descent is larger than its em");
-            UnloadFont(loaded);
+            loaded.BaseSize.ShouldBe(24);
+            LineHeightOf(loaded).ShouldBe(LineHeightOf(expected));
+            LineHeightOf(loaded).ShouldBeGreaterThan(24, "OpenSans' ascent-to-descent is larger than its em");
+            new ManagedFont(loaded).Dispose();
         }
         finally
         {
             LoaderManager.Self.CacheTextures = previousCache;
-            UnloadFont(expected);
+            TtfFontLoader.Unload(expected);
         }
     }
 
@@ -69,13 +99,13 @@ public class TtfFontLoaderTests : BaseTestClass
     [InlineData(new byte[0])]
     [InlineData(new byte[] { 0, 1, 0, 0, 0, 0 })]
     [InlineData(new byte[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 })]
-    public void GetRaylibLoadSize_FileWithoutReadableHeadAndHhea_KeepsTheRequestedSize(byte[] contents)
+    public void TryReadEmMetrics_FileWithoutReadableHeadAndHhea_ReturnsFalse(byte[] contents)
     {
         string path = Path.Combine(Path.GetTempPath(), "TtfFontLoaderTests_" + Path.GetRandomFileName() + ".ttf");
         File.WriteAllBytes(path, contents);
         try
         {
-            TtfFontLoader.GetRaylibLoadSize(path, 24).ShouldBe(24);
+            TtfFontLoader.TryReadEmMetrics(path, out _, out _, out _).ShouldBeFalse();
         }
         finally
         {
@@ -96,6 +126,14 @@ public class TtfFontLoaderTests : BaseTestClass
         Font? font = new KernSmithRaylibFontCreator().TryCreateFont(bmfcSave);
         font.ShouldNotBeNull("sanity check: KernSmith must rasterize the font");
         return font!.Value;
+    }
+
+    private static float LineHeightOf(Font font)
+    {
+        TextRuntime runtime = new();
+        Text text = (Text)runtime.RenderableComponent!;
+        text.Font = font;
+        return text.LineHeightInPixels;
     }
 
     private static float BaselineOf(Font font)

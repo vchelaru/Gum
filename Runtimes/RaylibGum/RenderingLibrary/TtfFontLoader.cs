@@ -16,40 +16,80 @@ public static class TtfFontLoader
 {
     /// <summary>
     /// Loads <paramref name="fontFilePath"/> so the font's em is <paramref name="fontSize"/> pixels. The returned
-    /// font's <see cref="Font.BaseSize"/> is its line height (ascent to descent), not <paramref name="fontSize"/>.
-    /// A file whose head/hhea tables cannot be read loads at <paramref name="fontSize"/> unchanged.
+    /// font's <see cref="Font.BaseSize"/> is <paramref name="fontSize"/>, as for a KernSmith or .fnt font, and its
+    /// line height and baseline are recorded for the <c>Text</c> renderable. Release it with <see cref="Unload"/>.
+    /// A file whose head/hhea tables cannot be read loads as <c>LoadFontEx</c> loads it.
     /// </summary>
     public static Font LoadFont(string fontFilePath, int fontSize)
     {
-        return LoadFontEx(fontFilePath, GetRaylibLoadSize(fontFilePath, fontSize), null, 0);
+        if (!TryReadEmMetrics(fontFilePath, out int unitsPerEm, out int ascent, out int descent))
+        {
+            return LoadFontEx(fontFilePath, fontSize, null, 0);
+        }
+
+        // raylib scales the font so ascent - descent spans the size it is given, and puts the baseline at the
+        // truncated scaled ascent.
+        int loadSize = GetRaylibLoadSize(fontSize, unitsPerEm, ascent, descent);
+        Font font = LoadFontEx(fontFilePath, loadSize, null, 0);
+        if (font.Texture.Id == 0 || font.BaseSize != loadSize)
+        {
+            return font;
+        }
+
+        int baselineY = (int)(ascent * (loadSize / (float)(ascent - descent)));
+        RaylibFontMetricsRegistry.Register(font.Texture.Id, loadSize, baselineY);
+        // raylib draws a glyph scaled by the requested draw size over BaseSize, so a BaseSize of the em draws
+        // the atlas 1:1 at FontSize, and every size Gum derives from BaseSize is in em units.
+        font.BaseSize = fontSize;
+        return font;
+    }
+
+    /// <summary>
+    /// Unloads a font returned by <see cref="LoadFont"/>, including the line metrics recorded for it.
+    /// </summary>
+    public static void Unload(Font font)
+    {
+        RaylibFontMetricsRegistry.Remove(font.Texture.Id);
+        UnloadFont(font);
     }
 
     /// <summary>
     /// The size to pass to <c>LoadFontEx</c> so the font's em is <paramref name="fontSize"/> pixels.
     /// </summary>
-    internal static int GetRaylibLoadSize(string fontFilePath, int fontSize)
+    internal static int GetRaylibLoadSize(int fontSize, int unitsPerEm, int ascent, int descent)
     {
+        return System.Math.Max(1, (int)MathF.Round(fontSize * (ascent - descent) / (float)unitsPerEm));
+    }
+
+    /// <summary>
+    /// Reads the em metrics of a font file; false when the file cannot be read or its tables are missing or
+    /// degenerate.
+    /// </summary>
+    internal static bool TryReadEmMetrics(string fontFilePath, out int unitsPerEm, out int ascent, out int descent)
+    {
+        unitsPerEm = 0;
+        ascent = 0;
+        descent = 0;
         try
         {
             using FileStream stream = File.OpenRead(fontFilePath);
-            if (TryReadEmMetrics(stream, out int unitsPerEm, out int ascent, out int descent)
-                && unitsPerEm > 0 && ascent - descent > 0)
-            {
-                return System.Math.Max(1, (int)MathF.Round(fontSize * (ascent - descent) / (float)unitsPerEm));
-            }
+            return TryReadEmMetrics(stream, out unitsPerEm, out ascent, out descent)
+                && unitsPerEm > 0 && ascent - descent > 0;
         }
         catch (IOException)
         {
+            return false;
         }
         catch (UnauthorizedAccessException)
         {
+            return false;
         }
-        return fontSize;
     }
 
     /// <summary>
     /// Reads unitsPerEm (head table) and ascent/descent (hhea table, the metrics raylib's stb_truetype scales by)
-    /// from an sfnt font. A collection (.ttc) reads its first face, which is the one <c>LoadFontEx</c> loads.
+    /// from a single-face sfnt font. raylib loads only .ttf/.otf files, reading the face at offset 0, so a font
+    /// collection (.ttc) is never read here.
     /// </summary>
     internal static bool TryReadEmMetrics(Stream stream, out int unitsPerEm, out int ascent, out int descent)
     {
@@ -58,18 +98,10 @@ public static class TtfFontLoader
         descent = 0;
 
         Span<byte> buffer = stackalloc byte[16];
-        long fontOffset = 0;
-        if (!TryRead(stream, 0, buffer.Slice(0, 12)))
+        const long fontOffset = 0;
+        if (!TryRead(stream, fontOffset, buffer.Slice(0, 12)))
         {
             return false;
-        }
-        if (buffer[0] == 't' && buffer[1] == 't' && buffer[2] == 'c' && buffer[3] == 'f')
-        {
-            fontOffset = BinaryPrimitives.ReadUInt32BigEndian(buffer.Slice(8));
-            if (!TryRead(stream, fontOffset, buffer.Slice(0, 12)))
-            {
-                return false;
-            }
         }
 
         int tableCount = BinaryPrimitives.ReadUInt16BigEndian(buffer.Slice(4));
