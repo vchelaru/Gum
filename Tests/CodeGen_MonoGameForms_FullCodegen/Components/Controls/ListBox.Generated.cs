@@ -82,6 +82,7 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
     public ListBox(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public ListBox() : base(new ContainerRuntime())
@@ -95,6 +96,7 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -131,16 +133,15 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
         if (ClipContainerParent.ElementSave != null) ClipContainerParent.AddStatesAndCategoriesRecursivelyToGue(ClipContainerParent.ElementSave);
         if (ClipContainerParent.ElementSave != null) ClipContainerParent.SetInitialState();
         ClipContainerParent.Name = "ClipContainerParent";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
+        this.Visual.AddChild(this.Background);
         ClipAndScrollContainer.AddChild(VerticalScrollBarInstance.Visual);
         ClipContainerParent.AddChild(ClipContainerInstance);
         ClipContainerInstance.AddChild(InnerPanelInstance);
-        this.AddChild(FocusedIndicator);
-        this.AddChild(ClipAndScrollContainer);
+        this.Visual.AddChild(this.FocusedIndicator);
+        this.Visual.AddChild(this.ClipAndScrollContainer);
         ClipAndScrollContainer.AddChild(ClipContainerParent);
     }
     private void ApplyDefaultVariables()
@@ -217,6 +218,17 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
         this.ClipContainerParent.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.ClipContainerParent.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

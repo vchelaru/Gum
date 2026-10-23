@@ -41,6 +41,7 @@ partial class DividerVertical : global::Gum.Forms.Controls.FrameworkElement
     public DividerVertical(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public DividerVertical() : base(new ContainerRuntime())
@@ -55,6 +56,7 @@ partial class DividerVertical : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -74,13 +76,12 @@ partial class DividerVertical : global::Gum.Forms.Controls.FrameworkElement
         if (AccentRight.ElementSave != null) AccentRight.AddStatesAndCategoriesRecursivelyToGue(AccentRight.ElementSave);
         if (AccentRight.ElementSave != null) AccentRight.SetInitialState();
         AccentRight.Name = "AccentRight";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(AccentTop);
-        this.AddChild(Line);
-        this.AddChild(AccentRight);
+        this.Visual.AddChild(this.AccentTop);
+        this.Visual.AddChild(this.Line);
+        this.Visual.AddChild(this.AccentRight);
     }
     private void ApplyDefaultVariables()
     {
@@ -128,6 +129,17 @@ partial class DividerVertical : global::Gum.Forms.Controls.FrameworkElement
         this.AccentRight.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
         this.AccentRight.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

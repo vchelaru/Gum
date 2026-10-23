@@ -48,6 +48,7 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
     public InputDeviceSelector(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public InputDeviceSelector() : base(new ContainerRuntime())
@@ -69,6 +70,7 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -111,16 +113,15 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
         InputDeviceSelectionItemInstance2.Name = "InputDeviceSelectionItemInstance2";
         InputDeviceSelectionItemInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.InputDeviceSelectionItem();
         InputDeviceSelectionItemInstance3.Name = "InputDeviceSelectionItemInstance3";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
+        this.Visual.AddChild(this.Background);
         ContainerInstance1.AddChild(TextInstance);
         ContainerInstance2.AddChild(TextInstance1);
-        this.AddChild(ContainerInstance1);
-        this.AddChild(InputDeviceContainerInstance);
-        this.AddChild(ContainerInstance2);
+        this.Visual.AddChild(this.ContainerInstance1);
+        this.Visual.AddChild(this.InputDeviceContainerInstance);
+        this.Visual.AddChild(this.ContainerInstance2);
         InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance.Visual);
         InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance1.Visual);
         InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance2.Visual);
@@ -194,6 +195,17 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
 
 
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

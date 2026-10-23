@@ -101,7 +101,6 @@ partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
         CircleInstance.Name = "CircleInstance";
         LabelInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         LabelInstance.Name = "LabelInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

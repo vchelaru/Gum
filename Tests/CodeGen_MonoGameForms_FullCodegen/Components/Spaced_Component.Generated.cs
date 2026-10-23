@@ -60,6 +60,7 @@ partial class Spaced_Component : global::Gum.Forms.Controls.FrameworkElement
     public Spaced_Component(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public Spaced_Component() : base(new ContainerRuntime())
@@ -70,17 +71,28 @@ partial class Spaced_Component : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
     {
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
     }
     private void ApplyDefaultVariables()
     {
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

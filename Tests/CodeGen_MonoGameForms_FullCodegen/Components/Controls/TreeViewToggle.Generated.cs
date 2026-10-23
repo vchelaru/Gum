@@ -125,6 +125,7 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
     public TreeViewToggle(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public TreeViewToggle() : base(new ContainerRuntime())
@@ -140,6 +141,7 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -151,11 +153,10 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
         NineSliceInstance.Name = "NineSliceInstance";
         IconInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance.Name = "IconInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(NineSliceInstance);
+        this.Visual.AddChild(this.NineSliceInstance);
         NineSliceInstance.AddChild(IconInstance.Visual);
     }
     private void ApplyDefaultVariables()
@@ -169,6 +170,17 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
         this.IconInstance.Visual.Width = 0f;
         this.IconInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

@@ -41,6 +41,7 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
     public LegacyShapes(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public LegacyShapes() : base(new ContainerRuntime())
@@ -51,6 +52,7 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -85,14 +87,13 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
         RoundedDefault.StrokeWidth = 0f;
         RoundedDefault.CornerRadius = 5f;
         RoundedDefault.Name = "RoundedDefault";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(FilledCircle);
-        this.AddChild(OutlineCircle);
-        this.AddChild(RoundedCustom);
-        this.AddChild(RoundedDefault);
+        this.Visual.AddChild(this.FilledCircle);
+        this.Visual.AddChild(this.OutlineCircle);
+        this.Visual.AddChild(this.RoundedCustom);
+        this.Visual.AddChild(this.RoundedDefault);
     }
     private void ApplyDefaultVariables()
     {
@@ -107,6 +108,17 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
         this.RoundedCustom.CornerRadius = 8f;
 
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

@@ -104,6 +104,7 @@ partial class Slider : global::Gum.Forms.Controls.Slider
     public Slider(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public Slider() : base(new ContainerRuntime())
@@ -117,6 +118,7 @@ partial class Slider : global::Gum.Forms.Controls.Slider
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -138,14 +140,13 @@ partial class Slider : global::Gum.Forms.Controls.Slider
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(TrackInstance);
+        this.Visual.AddChild(this.TrackInstance);
         TrackInstance.AddChild(TrackBackground);
         TrackInstance.AddChild(ThumbInstance.Visual);
-        this.AddChild(FocusedIndicator);
+        this.Visual.AddChild(this.FocusedIndicator);
     }
     private void ApplyDefaultVariables()
     {
@@ -181,6 +182,17 @@ partial class Slider : global::Gum.Forms.Controls.Slider
         this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.FocusedIndicator.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

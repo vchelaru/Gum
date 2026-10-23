@@ -60,6 +60,7 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
     public Styles(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public Styles() : base(new ContainerRuntime())
@@ -80,6 +81,7 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -223,11 +225,10 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
         if (Title.ElementSave != null) Title.AddStatesAndCategoriesRecursivelyToGue(Title.ElementSave);
         if (Title.ElementSave != null) Title.SetInitialState();
         Title.Name = "Title";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Colors);
+        this.Visual.AddChild(this.Colors);
         Colors.AddChild(Black);
         Colors.AddChild(DarkGray);
         Colors.AddChild(Gray);
@@ -248,7 +249,7 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
         TextStyles.AddChild(H3);
         TextStyles.AddChild(H2);
         TextStyles.AddChild(H1);
-        this.AddChild(TextStyles);
+        this.Visual.AddChild(this.TextStyles);
         TextStyles.AddChild(Title);
     }
     private void ApplyDefaultVariables()
@@ -349,6 +350,17 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
         this.Title.IsBold = true;
         this.Title.Text = @"Title";
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

@@ -1734,13 +1734,6 @@ public class CodeGenerator
             context.Instance = null;
         }
 
-        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
-        {
-            //RefreshInternalVisualReferences
-            context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
-
-        }
-
         // Initialize animation fields
         GenerateAnimationFieldInitializations(context);
 
@@ -3400,7 +3393,9 @@ public class CodeGenerator
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        // A component's own instances are its Visual's structure. The control's AddChild may
+                        // route content elsewhere (Window puts it in InnerPanelInstance, which is one of these).
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Visual.AddChild({context.CodePrefixNoTabs});");
                     }
                     else
                     {
@@ -3474,6 +3469,38 @@ public class CodeGenerator
 
     #region Constructors
 
+    /// <summary>
+    /// FullyInCode Forms classes pass their Visual to the Forms base constructor before any child exists,
+    /// so the control's reaction to it (finding named children, applying its state) waits until the
+    /// constructor has built and parented the children, the order FindByName gets from a loaded Visual.
+    /// </summary>
+    private static bool DefersFormsVisualReaction(CodeGenerationContext context) =>
+        context.Element is ComponentSave &&
+        context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms &&
+        context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode;
+
+    private static void GenerateDeferredFormsVisualReaction(CodeGenerationContext context)
+    {
+        if (!DefersFormsVisualReaction(context) ||
+            DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings))
+        {
+            return;
+        }
+
+        StringBuilder stringBuilder = context.StringBuilder;
+        stringBuilder.AppendLine(context.Tabs + "private bool _isVisualBuilt;");
+        stringBuilder.AppendLine(context.Tabs + "protected override void ReactToVisualChanged()");
+        stringBuilder.AppendLine(context.Tabs + "{");
+        stringBuilder.AppendLine(context.Tabs + "    if (_isVisualBuilt) base.ReactToVisualChanged();");
+        stringBuilder.AppendLine(context.Tabs + "}");
+        stringBuilder.AppendLine(context.Tabs + "protected void ReactToBuiltVisual()");
+        stringBuilder.AppendLine(context.Tabs + "{");
+        stringBuilder.AppendLine(context.Tabs + "    if (_isVisualBuilt) return;");
+        stringBuilder.AppendLine(context.Tabs + "    _isVisualBuilt = true;");
+        stringBuilder.AppendLine(context.Tabs + "    ReactToVisualChanged();");
+        stringBuilder.AppendLine(context.Tabs + "}");
+    }
+
     private void GenerateConstructors(CodeGenerationContext context)
     {
         var element = context.Element;
@@ -3497,6 +3524,10 @@ public class CodeGenerator
                     if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
                     {
                         stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
+                    }
+                    if (DefersFormsVisualReaction(context))
+                    {
+                        stringBuilder.AppendLine(context.Tabs + "ReactToBuiltVisual();");
                     }
                     // as mentioned below, if not fully in code then this is handled in AfterFullCreation
                     stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
@@ -3710,6 +3741,11 @@ public class CodeGenerator
                 stringBuilder.AppendLine(context.Tabs + "}");
             }
 
+            if (DefersFormsVisualReaction(context))
+            {
+                stringBuilder.AppendLine(context.Tabs + "ReactToBuiltVisual();");
+            }
+
             // If not fully in code, we do this in AfterFullCreation
             stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
         }
@@ -3907,6 +3943,8 @@ public class CodeGenerator
         }
 
         GenerateApplyLocalizationMethod(element, context.TabCount, stringBuilder);
+
+        GenerateDeferredFormsVisualReaction(context);
 
         stringBuilder.AppendLine(context.Tabs + "partial void CustomInitialize();");
 

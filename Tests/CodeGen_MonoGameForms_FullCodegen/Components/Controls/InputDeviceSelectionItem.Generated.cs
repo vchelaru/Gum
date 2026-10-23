@@ -75,6 +75,7 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
     public InputDeviceSelectionItem(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public InputDeviceSelectionItem() : base(new ContainerRuntime())
@@ -88,6 +89,7 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -106,14 +108,13 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
         TextInstance.Name = "TextInstance";
         RemoveDeviceButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonClose();
         RemoveDeviceButtonInstance.Name = "RemoveDeviceButtonInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(IconInstance);
-        this.AddChild(TextInstance);
-        this.AddChild(RemoveDeviceButtonInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.IconInstance.Visual);
+        this.Visual.AddChild(this.TextInstance);
+        this.Visual.AddChild(this.RemoveDeviceButtonInstance.Visual);
     }
     private void ApplyDefaultVariables()
     {
@@ -155,6 +156,17 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
         this.RemoveDeviceButtonInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.RemoveDeviceButtonInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

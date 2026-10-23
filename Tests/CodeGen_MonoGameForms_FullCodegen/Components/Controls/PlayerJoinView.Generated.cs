@@ -43,6 +43,7 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
     public PlayerJoinView(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public PlayerJoinView() : base(new ContainerRuntime())
@@ -56,6 +57,7 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -73,11 +75,10 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
         PlayerJoinViewItem3.Name = "PlayerJoinViewItem3";
         PlayerJoinViewItem4 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.PlayerJoinViewItem();
         PlayerJoinViewItem4.Name = "PlayerJoinViewItem4";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(InnerPanelInstance);
+        this.Visual.AddChild(this.InnerPanelInstance);
         InnerPanelInstance.AddChild(PlayerJoinViewItem1.Visual);
         InnerPanelInstance.AddChild(PlayerJoinViewItem2.Visual);
         InnerPanelInstance.AddChild(PlayerJoinViewItem3.Visual);
@@ -102,6 +103,17 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
 
 
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

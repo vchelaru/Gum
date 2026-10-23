@@ -94,6 +94,7 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
     public PasswordBox(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public PasswordBox() : base(new ContainerRuntime())
@@ -107,6 +108,7 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -141,16 +143,15 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
         if (CaretInstance.ElementSave != null) CaretInstance.AddStatesAndCategoriesRecursivelyToGue(CaretInstance.ElementSave);
         if (CaretInstance.ElementSave != null) CaretInstance.SetInitialState();
         CaretInstance.Name = "CaretInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(SelectionInstance);
-        this.AddChild(TextInstance);
-        this.AddChild(PlaceholderTextInstance);
-        this.AddChild(FocusedIndicator);
-        this.AddChild(CaretInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.SelectionInstance);
+        this.Visual.AddChild(this.TextInstance);
+        this.Visual.AddChild(this.PlaceholderTextInstance);
+        this.Visual.AddChild(this.FocusedIndicator);
+        this.Visual.AddChild(this.CaretInstance);
     }
     private void ApplyDefaultVariables()
     {
@@ -222,6 +223,17 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
         this.CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.CaretInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

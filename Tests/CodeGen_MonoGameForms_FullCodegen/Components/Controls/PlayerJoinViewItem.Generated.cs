@@ -178,6 +178,7 @@ partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
     public PlayerJoinViewItem(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public PlayerJoinViewItem() : base(new ContainerRuntime())
@@ -190,6 +191,7 @@ partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -206,13 +208,12 @@ partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
         ControllerDisplayNameTextInstance.Name = "ControllerDisplayNameTextInstance";
         InputDeviceIcon = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         InputDeviceIcon.Name = "InputDeviceIcon";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(ControllerDisplayNameTextInstance);
-        this.AddChild(InputDeviceIcon);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.ControllerDisplayNameTextInstance);
+        this.Visual.AddChild(this.InputDeviceIcon.Visual);
     }
     private void ApplyDefaultVariables()
     {
@@ -247,6 +248,17 @@ partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
         this.InputDeviceIcon.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.InputDeviceIcon.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

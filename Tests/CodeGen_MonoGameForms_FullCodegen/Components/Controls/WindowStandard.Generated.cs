@@ -50,6 +50,7 @@ partial class WindowStandard : global::Gum.Forms.Window
     public WindowStandard(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public WindowStandard() : base(new ContainerRuntime())
@@ -62,6 +63,7 @@ partial class WindowStandard : global::Gum.Forms.Window
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -91,21 +93,20 @@ partial class WindowStandard : global::Gum.Forms.Window
         BorderLeftInstance.Name = "BorderLeftInstance";
         BorderRightInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderRightInstance.Name = "BorderRightInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(InnerPanelInstance);
-        this.AddChild(TitleBarInstance);
-        this.AddChild(BorderTopLeftInstance);
-        this.AddChild(BorderTopRightInstance);
-        this.AddChild(BorderBottomLeftInstance);
-        this.AddChild(BorderBottomRightInstance);
-        this.AddChild(BorderTopInstance);
-        this.AddChild(BorderBottomInstance);
-        this.AddChild(BorderLeftInstance);
-        this.AddChild(BorderRightInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.InnerPanelInstance.Visual);
+        this.Visual.AddChild(this.TitleBarInstance.Visual);
+        this.Visual.AddChild(this.BorderTopLeftInstance.Visual);
+        this.Visual.AddChild(this.BorderTopRightInstance.Visual);
+        this.Visual.AddChild(this.BorderBottomLeftInstance.Visual);
+        this.Visual.AddChild(this.BorderBottomRightInstance.Visual);
+        this.Visual.AddChild(this.BorderTopInstance.Visual);
+        this.Visual.AddChild(this.BorderBottomInstance.Visual);
+        this.Visual.AddChild(this.BorderLeftInstance.Visual);
+        this.Visual.AddChild(this.BorderRightInstance.Visual);
     }
     private void ApplyDefaultVariables()
     {
@@ -215,6 +216,17 @@ partial class WindowStandard : global::Gum.Forms.Window
         this.BorderRightInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.BorderRightInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

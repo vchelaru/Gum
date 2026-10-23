@@ -131,6 +131,7 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
     public Keyboard(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public Keyboard() : base(new ContainerRuntime())
@@ -148,6 +149,7 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -295,12 +297,11 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
         IconInstance2.Name = "IconInstance2";
         IconInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance3.Name = "IconInstance3";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
         AllRows.AddChild(Row1Keys);
-        this.AddChild(AllRows);
+        this.Visual.AddChild(this.AllRows);
         Row1Keys.AddChild(Key1.Visual);
         Row2Keys.AddChild(KeyQ.Visual);
         Row3Keys.AddChild(KeyA.Visual);
@@ -351,11 +352,11 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
         AllRows.AddChild(Row3Keys);
         AllRows.AddChild(Row4Keys);
         AllRows.AddChild(Row5Keys);
-        this.AddChild(KeyBackspace);
-        this.AddChild(KeyReturn);
-        this.AddChild(KeyLeft);
-        this.AddChild(KeyRight);
-        this.AddChild(HighlightRectangle);
+        this.Visual.AddChild(this.KeyBackspace.Visual);
+        this.Visual.AddChild(this.KeyReturn.Visual);
+        this.Visual.AddChild(this.KeyLeft.Visual);
+        this.Visual.AddChild(this.KeyRight.Visual);
+        this.Visual.AddChild(this.HighlightRectangle);
         KeyBackspace.AddChild(IconInstance);
         KeyReturn.AddChild(IconInstance1);
         KeyLeft.AddChild(IconInstance2);
@@ -856,6 +857,17 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
         this.IconInstance3.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.IconInstance3.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

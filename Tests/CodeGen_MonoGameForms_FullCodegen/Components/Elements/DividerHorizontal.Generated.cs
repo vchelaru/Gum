@@ -41,6 +41,7 @@ partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
     public DividerHorizontal(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public DividerHorizontal() : base(new ContainerRuntime())
@@ -55,6 +56,7 @@ partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -74,13 +76,12 @@ partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
         if (AccentRight.ElementSave != null) AccentRight.AddStatesAndCategoriesRecursivelyToGue(AccentRight.ElementSave);
         if (AccentRight.ElementSave != null) AccentRight.SetInitialState();
         AccentRight.Name = "AccentRight";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(AccentLeft);
-        this.AddChild(Line);
-        this.AddChild(AccentRight);
+        this.Visual.AddChild(this.AccentLeft);
+        this.Visual.AddChild(this.Line);
+        this.Visual.AddChild(this.AccentRight);
     }
     private void ApplyDefaultVariables()
     {
@@ -124,6 +125,17 @@ partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
         this.AccentRight.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
         this.AccentRight.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

@@ -64,6 +64,7 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
     public ScrollBar(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public ScrollBar() : base(new ContainerRuntime())
@@ -78,6 +79,7 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -98,13 +100,12 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
         TrackBackground.Name = "TrackBackground";
         ThumbInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         ThumbInstance.Name = "ThumbInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(UpButtonInstance);
-        this.AddChild(DownButtonInstance);
-        this.AddChild(TrackInstance);
+        this.Visual.AddChild(this.UpButtonInstance.Visual);
+        this.Visual.AddChild(this.DownButtonInstance.Visual);
+        this.Visual.AddChild(this.TrackInstance);
         TrackInstance.AddChild(TrackBackground);
         TrackInstance.AddChild(ThumbInstance.Visual);
     }
@@ -155,6 +156,17 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
         this.ThumbInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.ThumbInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

@@ -37,6 +37,7 @@ partial class Label : global::Gum.Forms.Controls.Label
     public Label(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public Label() : base(new global::Gum.GueDeriving.TextRuntime())
@@ -53,17 +54,28 @@ partial class Label : global::Gum.Forms.Controls.Label
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
     {
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
     }
     private void ApplyDefaultVariables()
     {
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

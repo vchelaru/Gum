@@ -59,7 +59,6 @@ partial class FormsScreen : global::Gum.Forms.Controls.FrameworkElement
     {
         TextBoxInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.TextBox();
         TextBoxInstance.Name = "TextBoxInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

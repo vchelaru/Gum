@@ -93,6 +93,7 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
     public PercentBarIcon(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public PercentBarIcon() : base(new ContainerRuntime())
@@ -106,6 +107,7 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -131,13 +133,12 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
         CautionLinesInstance.Name = "CautionLinesInstance";
         VerticalLinesInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.VerticalLines();
         VerticalLinesInstance.Name = "VerticalLinesInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(IconInstance);
-        this.AddChild(BarContainer);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.IconInstance.Visual);
+        this.Visual.AddChild(this.BarContainer);
         BarContainer.AddChild(Bar);
         Bar.AddChild(CautionLinesInstance.Visual);
         Bar.AddChild(VerticalLinesInstance.Visual);
@@ -192,6 +193,17 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
         this.VerticalLinesInstance.Visual.Width = 0f;
         this.VerticalLinesInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

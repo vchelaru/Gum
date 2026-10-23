@@ -43,6 +43,7 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
     public SettingsView(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public SettingsView() : base(new ContainerRuntime())
@@ -56,6 +57,7 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -70,15 +72,14 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
         SoundVolumeLabel.Name = "SoundVolumeLabel";
         SoundSliderInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Slider();
         SoundSliderInstance.Name = "SoundSliderInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(FullscreenCheckboxInstance);
-        this.AddChild(MusicVolumeLabel);
-        this.AddChild(MusicSliderInstance);
-        this.AddChild(SoundVolumeLabel);
-        this.AddChild(SoundSliderInstance);
+        this.Visual.AddChild(this.FullscreenCheckboxInstance.Visual);
+        this.Visual.AddChild(((global::Gum.GueDeriving.TextRuntime)this.MusicVolumeLabel.Visual));
+        this.Visual.AddChild(this.MusicSliderInstance.Visual);
+        this.Visual.AddChild(((global::Gum.GueDeriving.TextRuntime)this.SoundVolumeLabel.Visual));
+        this.Visual.AddChild(this.SoundSliderInstance.Visual);
     }
     private void ApplyDefaultVariables()
     {
@@ -103,6 +104,17 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
         this.SoundSliderInstance.Visual.Width = 0f;
         this.SoundSliderInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

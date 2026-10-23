@@ -87,6 +87,7 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
     public MenuItem(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public MenuItem() : base(new ContainerRuntime())
@@ -108,6 +109,7 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -132,14 +134,13 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
         if (ContainerInstance.ElementSave != null) ContainerInstance.AddStatesAndCategoriesRecursivelyToGue(ContainerInstance.ElementSave);
         if (ContainerInstance.ElementSave != null) ContainerInstance.SetInitialState();
         ContainerInstance.Name = "ContainerInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
+        this.Visual.AddChild(this.Background);
         ContainerInstance.AddChild(TextInstance);
         ContainerInstance.AddChild(SubmenuIndicatorInstance);
-        this.AddChild(ContainerInstance);
+        this.Visual.AddChild(this.ContainerInstance);
     }
     private void ApplyDefaultVariables()
     {
@@ -193,6 +194,17 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
         this.ContainerInstance.Width = 0f;
         this.ContainerInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

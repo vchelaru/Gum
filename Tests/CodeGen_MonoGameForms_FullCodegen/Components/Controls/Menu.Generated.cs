@@ -40,6 +40,7 @@ partial class Menu : global::Gum.Forms.Controls.Menu
     public Menu(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public Menu() : base(new ContainerRuntime())
@@ -60,6 +61,7 @@ partial class Menu : global::Gum.Forms.Controls.Menu
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -74,12 +76,11 @@ partial class Menu : global::Gum.Forms.Controls.Menu
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.AddStatesAndCategoriesRecursivelyToGue(InnerPanelInstance.ElementSave);
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.SetInitialState();
         InnerPanelInstance.Name = "InnerPanelInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(InnerPanelInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.InnerPanelInstance);
     }
     private void ApplyDefaultVariables()
     {
@@ -108,6 +109,17 @@ partial class Menu : global::Gum.Forms.Controls.Menu
         this.InnerPanelInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.InnerPanelInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

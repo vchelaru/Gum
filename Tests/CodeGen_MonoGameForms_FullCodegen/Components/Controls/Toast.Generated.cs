@@ -39,6 +39,7 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
     public Toast(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public Toast() : base(new ContainerRuntime())
@@ -58,6 +59,7 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -72,12 +74,11 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(TextInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.TextInstance);
     }
     private void ApplyDefaultVariables()
     {
@@ -110,6 +111,17 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
         this.TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

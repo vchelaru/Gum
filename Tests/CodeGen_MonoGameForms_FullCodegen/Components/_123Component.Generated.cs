@@ -70,6 +70,7 @@ partial class _123Component : global::Gum.Forms.Controls.FrameworkElement
     public _123Component(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public _123Component() : base(new ContainerRuntime())
@@ -80,11 +81,11 @@ partial class _123Component : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
     {
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -92,6 +93,17 @@ partial class _123Component : global::Gum.Forms.Controls.FrameworkElement
     private void ApplyDefaultVariables()
     {
         this._123Variable = true;
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

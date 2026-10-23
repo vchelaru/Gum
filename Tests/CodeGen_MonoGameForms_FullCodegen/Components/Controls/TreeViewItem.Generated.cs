@@ -41,6 +41,7 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
     public TreeViewItem(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public TreeViewItem() : base(new ContainerRuntime())
@@ -56,6 +57,7 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -69,13 +71,12 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.AddStatesAndCategoriesRecursivelyToGue(InnerPanelInstance.ElementSave);
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.SetInitialState();
         InnerPanelInstance.Name = "InnerPanelInstance";
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(ToggleButtonInstance);
-        this.AddChild(ListBoxItemInstance);
-        this.AddChild(InnerPanelInstance);
+        this.Visual.AddChild(this.ToggleButtonInstance.Visual);
+        this.Visual.AddChild(this.ListBoxItemInstance.Visual);
+        this.Visual.AddChild(this.InnerPanelInstance);
     }
     private void ApplyDefaultVariables()
     {
@@ -95,6 +96,17 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
         this.InnerPanelInstance.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
         this.InnerPanelInstance.Y = 24f;
 
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

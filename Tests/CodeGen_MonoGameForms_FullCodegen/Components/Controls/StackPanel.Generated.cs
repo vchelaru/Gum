@@ -37,6 +37,7 @@ partial class StackPanel : global::Gum.Forms.Controls.StackPanel
     public StackPanel(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     public StackPanel() : base(new ContainerRuntime())
@@ -48,17 +49,28 @@ partial class StackPanel : global::Gum.Forms.Controls.StackPanel
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToBuiltVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
     {
-        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
     }
     private void ApplyDefaultVariables()
     {
+    }
+    private bool _isVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isVisualBuilt) base.ReactToVisualChanged();
+    }
+    protected void ReactToBuiltVisual()
+    {
+        if (_isVisualBuilt) return;
+        _isVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }
