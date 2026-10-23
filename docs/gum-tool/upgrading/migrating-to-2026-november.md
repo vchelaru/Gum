@@ -528,6 +528,36 @@ On Windows and macOS, `Initialize` also starts `RepeatDelay` and `RepeatRate` fr
 
 Styled text that combines a [FontScale] or [FontSize] run with a LineHeightMultiplier other than 1 now reports its drawn height, because a size run is no longer multiplied: MonoGame, KNI, FNA and Raylib texts like this get shorter with a multiplier above 1 and taller with one below 1, so anything laid out around them shifts. In Skia, lines with a size run now use the same spacing at any multiplier, and a trailing newline adds its empty last line to the height. In Skia, text without a size or font run now measures exactly `LineHeightMultiplier` times its line height, where it was slightly off before, so anything laid out around it can shift by a pixel or two.
 
+### Raylib TTF Text Draws at Its FontSize
+
+On Raylib, text that uses a `.ttf` font without an `InMemoryFontCreator` such as KernSmith now draws so its em equals `FontSize`, the same size as on MonoGame and Skia. Before this version, Gum loaded these fonts at a fixed size of 24 whatever the text's `FontSize`, and sized them smaller than the other runtimes.
+
+Most text that uses a `.ttf` font now draws larger, and text with a `FontSize` other than 24 changes size to match it. Text that uses KernSmith or a `.fnt` font is unchanged.
+
+This affects you only if your Raylib game draws `.ttf` fonts without KernSmith. To migrate, run your game and check text and anything laid out around it. Lower `FontSize` where text is now too large.
+
+### Skia Circle and Rectangle Obsolete Colors Set the Outline
+
+In SkiaSharp projects, the obsolete `Color`, `Red`, `Green`, `Blue` and `Alpha` properties on `CircleRuntime` and `RectangleRuntime` now color the outline, as they do on MonoGame and Raylib. Before this version they colored the fill on Skia.
+
+This affects you only if your Skia code sets one of these properties to color a filled shape. That shape now has a colored outline instead of a colored fill.
+
+To migrate, use `FillColor`, or `FillRed`, `FillGreen`, `FillBlue` and `FillAlpha`, for the fill. Use `StrokeColor` for the outline.
+
+❌ Old:
+
+```csharp
+// Initialize
+circle.Color = SkiaSharp.SKColors.Red;
+```
+
+✅ New:
+
+```csharp
+// Initialize
+circle.FillColor = SkiaSharp.SKColors.Red;
+```
+
 ### KernSmith.MonoGameGum No Longer References Desktop MonoGame
 
 `KernSmith.MonoGameGum` no longer brings in `MonoGame.Framework.DesktopGL`. If your app got MonoGame only through this package, add the MonoGame package for your platform.
