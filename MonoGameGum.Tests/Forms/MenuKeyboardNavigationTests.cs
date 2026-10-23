@@ -492,7 +492,55 @@ public class MenuKeyboardNavigationTests : BaseTestClass
 
     #endregion
 
+    #region Nothing open
+
+    [Fact]
+    public void EscapeOrB_WithNothingOpen_KeepsFocusAndHighlight()
+    {
+        Bar bar = CreateFocusedBar();
+        Press(Keys.Right);
+
+        Press(Keys.Escape);
+        PressGamepad(XnaButtons.B);
+
+        bar.Menu.IsFocused.ShouldBeTrue();
+        InteractiveGue.CurrentInputReceiver.ShouldBe(bar.Menu);
+        ShouldBeOnlyHighlighted(bar.Edit, bar.File, bar.Standalone);
+        bar.Edit.IsPopupVisible.ShouldBeFalse();
+    }
+
+    #endregion
+
+    #region Default visual states
+
+    [Fact]
+    public void MenuVisual_DisabledStates_ShowFocusBarOnlyWhenFocused()
+    {
+        Bar bar = CreateBar();
+        Gum.Forms.DefaultVisuals.V3.MenuVisual visual = (Gum.Forms.DefaultVisuals.V3.MenuVisual)bar.Menu.Visual;
+
+        bar.Menu.Visual.SetProperty(Menu.MenuCategoryStateName, FrameworkElement.DisabledFocusedStateName);
+        visual.FocusedIndicator.Visible.ShouldBeTrue();
+
+        bar.Menu.Visual.SetProperty(Menu.MenuCategoryStateName, FrameworkElement.DisabledStateName);
+        visual.FocusedIndicator.Visible.ShouldBeFalse();
+    }
+
+    #endregion
+
     #region Shared highlight
+
+    [Fact]
+    public void MouseHover_TopLevelWithoutKeyboard_ClearsSiblingHighlight()
+    {
+        Bar bar = CreateBar();
+        bar.File.IsHighlighted = true;
+
+        bar.Edit.IsHighlighted = true;
+
+        ShouldBeOnlyHighlighted(bar.Edit, bar.File, bar.Standalone);
+        bar.Edit.IsPopupVisible.ShouldBeFalse();
+    }
 
     [Fact]
     public void MouseHover_AfterKeyboardHighlight_LeavesOneHighlight_AndArrowsContinueFromIt()
