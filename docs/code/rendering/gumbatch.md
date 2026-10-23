@@ -29,6 +29,8 @@ GumBatch draws through the same `Camera` as the rest of Gum, the one at `GumServ
 
 `Begin` also refreshes the camera's client dimensions from the current `GraphicsDevice.Viewport` on every call, so GumBatch always matches the live viewport size.
 
+On SkiaSharp runtimes, `Begin` does not change the camera size. The size comes from the width and height you pass to `GumService.Default.Initialize` and `GumService.Default.HandleResize`.
+
 `Begin` accepts an optional transform: `Begin(Matrix)`. This matrix **composes on top of** the camera transform rather than replacing it. The effective transform is your matrix multiplied with the camera's view.
 
 On SkiaSharp runtimes, the matrix is an `SKMatrix`:
