@@ -764,56 +764,29 @@ public abstract class TextBoxBase :
     // screen-coordinates -> caret-index hit-test used by mouse clicks.
     internal int GetCaretIndexAtPosition(float screenX, float screenY)
     {
-        var leftOfText = this.textComponent.GetAbsoluteLeft();
-        var cursorOffset = screenX - leftOfText;
+        TextHitTesting.UnrotatePoint(coreTextObject, ref screenX, ref screenY);
 
-        int index = 0;
+        var cursorOffset = screenX - this.textComponent.GetAbsoluteLeft();
 
         if (IsRenderedAsSingleLine)
         {
-            var textToUse = DisplayedText;
-            index = GetIndex(cursorOffset, textToUse);
+            return GetIndex(cursorOffset, DisplayedText);
         }
-        else
+
+        var lineHeight = EffectiveLineHeightInPixels;
+        var topOfText = this.textComponent.GetAbsoluteTop();
+        if (this.coreTextObject.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
         {
-            var lineHeight = EffectiveLineHeightInPixels;
-            var topOfText = this.textComponent.GetAbsoluteTop();
-            if (this.coreTextObject.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
-            {
-                topOfText = this.textComponent.GetAbsoluteCenterY() - lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;
-            }
-            var cursorYOffset = screenY - topOfText;
-
-            var lineOn = System.Math.Max(0, System.Math.Min((int)(cursorYOffset / lineHeight), coreTextObject.WrappedText.Count - 1));
-
-            if (lineOn < coreTextObject.WrappedText.Count)
-            {
-                string lineText = coreTextObject.WrappedText[lineOn];
-                cursorOffset -= GetLineXOffsetForHorizontalAlignment(lineText);
-                int indexInThisLine = GetIndex(cursorOffset, lineText);
-
-                var isOnLastLine = lineOn == coreTextObject.WrappedText.Count - 1;
-                if(!isOnLastLine && 
-                    indexInThisLine == lineText.Length &&
-                    indexInThisLine > 0 &&
-                    char.IsWhiteSpace(lineText[indexInThisLine-1]))
-                {
-                    index = indexInThisLine - 1;
-                }
-                else
-                {
-                    index = indexInThisLine;
-                }
-            }
-
-            for (int line = 0; line < lineOn; line++)
-            {
-                index += coreTextObject.WrappedText[line].Length;
-            }
-
+            topOfText = this.textComponent.GetAbsoluteCenterY() - lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;
         }
 
-        return index;
+        return TextHitTesting.GetIndexInWrappedLines(
+            coreTextObject.WrappedText,
+            cursorOffset,
+            screenY - topOfText,
+            lineHeight,
+            GetLineXOffsetForHorizontalAlignment,
+            GetIndex);
     }
 
     // Walks characters accumulating their X-advance until we pass cursorOffset, then returns
