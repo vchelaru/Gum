@@ -99,7 +99,7 @@ public class TextRuntimeNativeTtfFallbackSizeTests : BaseTestClass
         uint textureId = FontOf(text).Texture.Id;
         string key = _cacheKeys[^2];
 
-        LoaderManager.Self.GetDisposable(key).ShouldBeOfType<ManagedFont>()
+        LoaderManager.Self.GetDisposable(key).ShouldBeAssignableTo<ManagedFont>()!
             .Font.Texture.Id.ShouldBe(textureId, "the loaded font must be cached so it is disposed");
         RaylibFontMetricsRegistry.IsRegistered(textureId).ShouldBeTrue();
 

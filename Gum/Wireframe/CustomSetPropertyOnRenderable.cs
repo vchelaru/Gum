@@ -2674,8 +2674,12 @@ public partial class CustomSetPropertyOnRenderable
         // under this key (ContentLoader.LoadFont). Without this guard the early-return would hand that
         // empty font to every text after the first instead of falling through to the disk / system-font
         // fallback below.
+        //
+        // A font the native TTF fallback loaded is reused only while no creator is wired; once one is, the
+        // creator's font replaces it, as it replaces an empty placeholder.
         if (loaderManager.GetDisposable(fullFileName) is ManagedFont cachedManagedFont
-            && cachedManagedFont.Font.BaseSize != 0)
+            && cachedManagedFont.Font.BaseSize != 0
+            && !(cachedManagedFont is NativeFallbackManagedFont && InMemoryFontCreator != null))
         {
             return cachedManagedFont.Font;
         }
@@ -2757,7 +2761,7 @@ public partial class CustomSetPropertyOnRenderable
 
         // The slot may hold the empty placeholder cached when no FontCache .fnt was found under this key.
         loaderManager.Dispose(cacheKey);
-        loaderManager.AddDisposable(cacheKey, new ManagedFont(nativeFont.Value));
+        loaderManager.AddDisposable(cacheKey, new NativeFallbackManagedFont(nativeFont.Value));
         return nativeFont.Value;
     }
 #endif
