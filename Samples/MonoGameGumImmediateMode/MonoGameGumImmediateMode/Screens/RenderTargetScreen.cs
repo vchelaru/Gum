@@ -8,11 +8,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 
-// This immediate-mode sample intentionally uses the non-shape ColoredRectangleRuntime: no
-// ShapeRenderer is initialized here, so the shape-based RectangleRuntime replacement it's
-// obsoleted in favor of would silently not draw.
-#pragma warning disable CS0618 // ColoredRectangleRuntime is obsolete
-
 namespace MonoGameGumImmediateMode.Screens
 {
     /// <summary>
@@ -45,7 +40,7 @@ namespace MonoGameGumImmediateMode.Screens
         private GraphicsDevice _graphicsDevice;
         private RenderTarget2D _renderTarget;
 
-        private ColoredRectangleRuntime _gameBackground;
+        private RectangleRuntime _gameBackground;
         private ContainerRuntime _inGameContainerForRenderTarget;
         private ContainerRuntime _aboveGameUiContainer;
         private Menu _menu;
@@ -57,10 +52,13 @@ namespace MonoGameGumImmediateMode.Screens
             _graphicsDevice = graphicsDevice;
             _renderTarget = new RenderTarget2D(graphicsDevice, GameWidth, GameHeight);
 
-            _gameBackground = new ColoredRectangleRuntime();
+            _gameBackground = new RectangleRuntime();
             _gameBackground.Width = GameWidth;
             _gameBackground.Height = GameHeight;
-            _gameBackground.Color = new Color(40, 110, 60);
+            _gameBackground.IsFilled = true;
+            _gameBackground.FillColor = new Color(40, 110, 60);
+            _gameBackground.StrokeWidth = 0;
+            _gameBackground.IsAntialiased = false;
 
             var gameButton = new Button();
             gameButton.Text = "Game Button";
@@ -171,4 +169,3 @@ namespace MonoGameGumImmediateMode.Screens
     }
 }
 
-#pragma warning restore CS0618
