@@ -171,6 +171,28 @@ public class TextRunLineHeightMultiplierTests : BaseTestClass
         ShouldReportTheDrawnHeight(text, 1.5f * h);
     }
 
+    // #6486: a run with both a [FontSize] and a [FontScale] is the size font's line at that scale, in either
+    // tag order. No font creator is wired, so [FontSize] scales the base atlas: 4x the base size at 0.5 is 2h.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void FontSizeAndFontScaleOnOneRun_LineIsTheSizeAtTheScale_InEitherTagOrder(bool sizeTagFirst)
+    {
+        float h = PlainLineHeight();
+        TextRuntime runtime = new();
+        runtime.Text = "x";
+        Text text = (Text)runtime.RenderableComponent!;
+        int quadrupleBaseSize = text.Font.BaseSize * 4;
+        runtime.Text = sizeTagFirst
+            ? $"a\n[FontSize={quadrupleBaseSize}][FontScale=0.5]b[/FontScale][/FontSize]\nc"
+            : $"a\n[FontScale=0.5][FontSize={quadrupleBaseSize}]b[/FontSize][/FontScale]\nc";
+
+        IReadOnlyList<float> offsets = text.GetLineTopOffsets();
+
+        (offsets[2] - offsets[1]).ShouldBe(2 * h, 0.01);
+        ShouldReportTheDrawnHeight(text, h);
+    }
+
     [Fact]
     public void RunLine_AfterMultiplierChange_UsesTheNewMultiplier()
     {

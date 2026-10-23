@@ -513,6 +513,66 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
             "because the enlarged font-swap run must be measured at its own size when wrapping, forcing an earlier break");
     }
 
+    // #6486: a run with both a font and a scale is as tall as that font's line at that scale, in either
+    // tag order, and the reported Height agrees with the advance the draw path takes. The run font's line
+    // is 3x the base's and the scale is 0.5, so the run line is 1.5x a plain line, where either tag alone
+    // gives a different height.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void FontAndFontScaleOnOneRun_LineIsRunFontLineAtTheScale_InEitherTagOrder(bool fontTagFirst)
+    {
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, AbcFontData(xadvance: 10, lineHeight: 20));
+        baseFont.SetFontPattern(256, 256);
+        BitmapFont tallFont = new BitmapFont((Texture2D)null!, AbcFontData(xadvance: 10, lineHeight: 60));
+        tallFont.SetFontPattern(256, 256);
+
+        Text plain = new Text();
+        plain.BitmapFont = baseFont;
+        plain.RawText = "A";
+        float h = plain.WrappedTextHeight;
+
+        Text text = new Text();
+        text.BitmapFont = baseFont;
+        InlineVariable font = new InlineVariable { VariableName = "BitmapFont", Value = tallFont, StartIndex = 1, CharacterCount = 1 };
+        InlineVariable scale = new InlineVariable { VariableName = "FontScale", Value = 0.5f, StartIndex = 1, CharacterCount = 1 };
+        text.InlineVariables.Add(fontTagFirst ? font : scale);
+        text.InlineVariables.Add(fontTagFirst ? scale : font);
+        text.RawText = "AB";
+
+        text.WrappedTextHeight.ShouldBe(1.5f * h, tolerance: 0.01f);
+        DrawnAdvance(text, baseFont).ShouldBe(1.5f * h, tolerance: 0.01f);
+    }
+
+    // #6486: each run resolves its font and scale on its own. A scale on one run must not size a later
+    // run that only changes the font: B is drawn at the base scale, so its line is the tall font's 3x.
+    [Fact]
+    public void FontRunAfterScaleRun_IsSizedAtTheBaseScale()
+    {
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, AbcFontData(xadvance: 10, lineHeight: 20));
+        baseFont.SetFontPattern(256, 256);
+        BitmapFont tallFont = new BitmapFont((Texture2D)null!, AbcFontData(xadvance: 10, lineHeight: 60));
+        tallFont.SetFontPattern(256, 256);
+
+        Text plain = new Text();
+        plain.BitmapFont = baseFont;
+        plain.RawText = "A";
+        float h = plain.WrappedTextHeight;
+
+        Text text = new Text();
+        text.BitmapFont = baseFont;
+        text.InlineVariables.Add(new InlineVariable { VariableName = "FontScale", Value = 0.5f, StartIndex = 0, CharacterCount = 1 });
+        text.InlineVariables.Add(new InlineVariable { VariableName = "BitmapFont", Value = tallFont, StartIndex = 1, CharacterCount = 1 });
+        text.RawText = "AB";
+
+        text.WrappedTextHeight.ShouldBe(3 * h, tolerance: 0.01f);
+        DrawnAdvance(text, baseFont).ShouldBe(3 * h, tolerance: 0.01f);
+    }
+
+    // The advance DrawWithInlineVariables takes past the first line.
+    private static float DrawnAdvance(Text text, BitmapFont baseFont) =>
+        text.ComputeStyledLineHeight(baseFont, text.GetCachedStyledSubstrings(0, 0, text.WrappedText[0]), out _);
+
     // Font where the space advances 10px but is only 1px wide, and letters A/B/C are 10px wide with a
     // 10px advance. The narrow space is what exposes per-run TrimRight trimming: an interior run ending
     // in a space loses 9px if measured with TrimRight instead of Full.

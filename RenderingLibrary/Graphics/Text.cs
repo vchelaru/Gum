@@ -1408,8 +1408,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
                     lineByLineList[0] = substring.Substring;
                     color = Color;
-                    var fontScale = EffectiveFontScale;
-                    var effectiveFont = fontToUse;
+                    ResolveRunFont(substring.Variables, fontToUse, out BitmapFont? runFont, out float fontScale);
+                    BitmapFont effectiveFont = runFont ?? fontToUse;
                     var effectiveTopOfLine = topOfLine;
                     float yOffset = 0;
                     float xOffset = 0;
@@ -1422,14 +1422,6 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         if (variable.VariableName == nameof(Color))
                         {
                             color = (System.Drawing.Color)variable.Value;
-                        }
-                        else if (variable.VariableName == nameof(FontScale))
-                        {
-                            fontScale = ComposeFontScale((float)variable.Value);
-                        }
-                        else if (variable.VariableName == nameof(BitmapFont))
-                        {
-                            effectiveFont = (BitmapFont)variable.Value;
                         }
                         else if (variable.VariableName == nameof(Red))
                         {
@@ -1615,31 +1607,47 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         var multipliedBaseHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
         float tallestSizeRunHeight = 0;
 
-        float currentFontScale = EffectiveFontScale;
-        BitmapFont currentFont = fontToUse;
-        maxBaseline = currentFontScale * currentFont.BaselineY;
+        maxBaseline = EffectiveFontScale * fontToUse.BaselineY;
 
         foreach (var substring in substrings)
         {
-            for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+            if (ResolveRunFont(substring.Variables, fontToUse, out BitmapFont? runFont, out float runScale))
             {
-                var variable = substring.Variables[variableIndex];
-                if (variable.VariableName == nameof(FontScale))
-                {
-                    currentFontScale = ComposeFontScale((float)variable.Value);
-                    tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
-                    maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
-                }
-                else if (variable.VariableName == nameof(BitmapFont))
-                {
-                    currentFont = (BitmapFont)variable.Value;
-                    tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
-                    maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
-                }
+                BitmapFont font = runFont ?? fontToUse;
+                tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, font.EffectiveLineHeight(runScale, 1));
+                maxBaseline = System.Math.Max(maxBaseline, runScale * font.BaselineY);
             }
         }
 
         return TextLineHeight.Combine(multipliedBaseHeight, tallestSizeRunHeight);
+    }
+
+    /// <summary>
+    /// The font and scale one styled run is drawn with: <paramref name="baseFont"/> at the effective base scale,
+    /// changed by the run's own [FontScale] and font-family ("BitmapFont") tags in any order. Each run resolves
+    /// from the base, so a tag on one run never carries into the next. Shared by the draw, the line advance and
+    /// the measurement so the three agree. Returns true when the run has either tag (a size run).
+    /// </summary>
+    private bool ResolveRunFont(List<InlineVariable> variables, BitmapFont? baseFont, out BitmapFont? runFont, out float runScale)
+    {
+        runFont = baseFont;
+        runScale = EffectiveFontScale;
+        bool isSizeRun = false;
+        for (int variableIndex = 0; variableIndex < variables.Count; variableIndex++)
+        {
+            var variable = variables[variableIndex];
+            if (variable.VariableName == nameof(FontScale))
+            {
+                runScale = ComposeFontScale((float)variable.Value);
+                isSizeRun = true;
+            }
+            else if (variable.VariableName == nameof(BitmapFont))
+            {
+                runFont = (BitmapFont?)variable.Value;
+                isSizeRun = true;
+            }
+        }
+        return isSizeRun;
     }
 
     // made public for auto tests:
@@ -1952,26 +1960,15 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
             var substring = substrings[substringIndex];
-            float runScale = effectiveFontScale;
-            // Null when no font is loaded yet (see MeasureString); that run then measures as 0.
-            BitmapFont? runFont = mBitmapFont;
+            // runFont is null when no font is loaded yet (see MeasureString); that run then measures as 0.
+            bool isSizeRun = ResolveRunFont(substring.Variables, mBitmapFont, out BitmapFont? runFont, out float runScale);
             float runHeightScale = 0;
-            for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+            if (isSizeRun)
             {
-                var variable = substring.Variables[variableIndex];
-                if (variable.VariableName == nameof(FontScale))
+                runHeightScale = runScale;
+                if (runFont != null && mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
                 {
-                    runScale = ComposeFontScale((float)variable.Value);
-                    runHeightScale = runScale;
-                }
-                else if (variable.VariableName == nameof(BitmapFont))
-                {
-                    runHeightScale = effectiveFontScale;
-                    runFont = (BitmapFont?)variable.Value;
-                    if (runFont != null && mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
-                    {
-                        runHeightScale = effectiveFontScale * runFont.LineHeightInPixels / mBitmapFont.LineHeightInPixels;
-                    }
+                    runHeightScale = runScale * runFont.LineHeightInPixels / mBitmapFont.LineHeightInPixels;
                 }
             }
             var measurementStyle = substringIndex == substrings.Count - 1
