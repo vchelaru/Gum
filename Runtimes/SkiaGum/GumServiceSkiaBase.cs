@@ -737,6 +737,13 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="roots">The roots hot reload patches and animation advances.</param>
     protected void UpdateFrame(double totalSeconds, IEnumerable<GraphicalUiElement> roots)
     {
+        // A new host frame: the first GumBatch.Begin after this runs the once-per-frame
+        // render-target work again (a full-scene Draw always does).
+        if (SystemManagers.Default != null)
+        {
+            SystemManagers.Default.Renderer.NotifyHostFrameAdvanced();
+        }
+
         _windowFit?.PollAndApplyFit();
 
         // Like the MonoGame and raylib Update: a game that zooms changes the canvas size after Initialize,
