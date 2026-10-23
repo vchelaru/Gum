@@ -1,34 +1,29 @@
 //Code for MainMenuFullGeneration
-using GumRuntime;
-using System.Linq;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
-using MonoGameGumCodeGeneration.Components;
-using Gum.StateAnimation.Runtime;
-using Gum.Wireframe;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
+using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
-
-using RenderingLibrary.Graphics;
-
-using MonoGameGum.GueDeriving;
+using GumRuntime;
 using MonoGameGumCodeGeneration.Components;
+using RenderingLibrary.Graphics;
 using System.Linq;
 namespace MonoGameGumCodeGeneration.Screens;
 partial class MainMenuFullGeneration
 {
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
     [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
     public static void RegisterRuntimeType()
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("MainMenuFullGeneration");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named MainMenuFullGeneration - did you forget to load a Gum project?");
-#endif
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("MainMenuFullGeneration") ?? throw new System.InvalidOperationException("Could not find an element named MainMenuFullGeneration - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new MainMenuFullGeneration(visual);
             visual.Width = 0;
@@ -54,7 +49,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
 
     public MainMenuFullGeneration(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
         CustomInitialize();
     }
     public MainMenuFullGeneration() : base(new ContainerRuntime())
@@ -74,32 +69,41 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         PopupInstance.Name = "PopupInstance";
         ComponentWithStatesInstance = new MonoGameGumCodeGeneration.Components.ComponentWithStates();
         ComponentWithStatesInstance.Name = "ComponentWithStatesInstance";
-        TextWithLotsOfPropertiesSet = new global::MonoGameGum.GueDeriving.TextRuntime();
+        TextWithLotsOfPropertiesSet = new global::Gum.GueDeriving.TextRuntime();
         TextWithLotsOfPropertiesSet.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (TextWithLotsOfPropertiesSet.ElementSave != null) TextWithLotsOfPropertiesSet.AddStatesAndCategoriesRecursivelyToGue(TextWithLotsOfPropertiesSet.ElementSave);
         if (TextWithLotsOfPropertiesSet.ElementSave != null) TextWithLotsOfPropertiesSet.SetInitialState();
         TextWithLotsOfPropertiesSet.Name = "TextWithLotsOfPropertiesSet";
-        PolygonInstance = new global::MonoGameGum.GueDeriving.PolygonRuntime();
+        PolygonInstance = new global::Gum.GueDeriving.PolygonRuntime();
         PolygonInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Polygon");
         if (PolygonInstance.ElementSave != null) PolygonInstance.AddStatesAndCategoriesRecursivelyToGue(PolygonInstance.ElementSave);
         if (PolygonInstance.ElementSave != null) PolygonInstance.SetInitialState();
         PolygonInstance.Name = "PolygonInstance";
-        CircleInstance = new global::MonoGameGum.GueDeriving.CircleRuntime();
+        CircleInstance = new global::Gum.GueDeriving.CircleRuntime();
         CircleInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Circle");
         if (CircleInstance.ElementSave != null) CircleInstance.AddStatesAndCategoriesRecursivelyToGue(CircleInstance.ElementSave);
         if (CircleInstance.ElementSave != null) CircleInstance.SetInitialState();
         CircleInstance.Name = "CircleInstance";
-        PolygonInstance1 = new global::MonoGameGum.GueDeriving.PolygonRuntime();
+        PolygonInstance1 = new global::Gum.GueDeriving.PolygonRuntime();
         PolygonInstance1.ElementSave = ObjectFinder.Self.GetStandardElement("Polygon");
         if (PolygonInstance1.ElementSave != null) PolygonInstance1.AddStatesAndCategoriesRecursivelyToGue(PolygonInstance1.ElementSave);
         if (PolygonInstance1.ElementSave != null) PolygonInstance1.SetInitialState();
         PolygonInstance1.Name = "PolygonInstance1";
-        RectangleInstance = new global::MonoGameGum.GueDeriving.RectangleRuntime();
+        RectangleInstance = new global::Gum.GueDeriving.RectangleRuntime();
         RectangleInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Rectangle");
         if (RectangleInstance.ElementSave != null) RectangleInstance.AddStatesAndCategoriesRecursivelyToGue(RectangleInstance.ElementSave);
         if (RectangleInstance.ElementSave != null) RectangleInstance.SetInitialState();
         RectangleInstance.Name = "RectangleInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        PopupInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Popup>(this.Visual,"PopupInstance");
+        ComponentWithStatesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ComponentWithStates>(this.Visual,"ComponentWithStatesInstance");
+        TextWithLotsOfPropertiesSet = this.Visual?.GetGraphicalUiElementByName("TextWithLotsOfPropertiesSet") as global::Gum.GueDeriving.TextRuntime;
+        PolygonInstance = this.Visual?.GetGraphicalUiElementByName("PolygonInstance") as global::Gum.GueDeriving.PolygonRuntime;
+        CircleInstance = this.Visual?.GetGraphicalUiElementByName("CircleInstance") as global::Gum.GueDeriving.CircleRuntime;
+        PolygonInstance1 = this.Visual?.GetGraphicalUiElementByName("PolygonInstance1") as global::Gum.GueDeriving.PolygonRuntime;
+        RectangleInstance = this.Visual?.GetGraphicalUiElementByName("RectangleInstance") as global::Gum.GueDeriving.RectangleRuntime;
     }
     protected virtual void AssignParents()
     {
@@ -111,7 +115,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.AddChild(PolygonInstance1);
         this.AddChild(RectangleInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Visual.Width = 0f;
         this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -156,13 +160,14 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
             new System.Numerics.Vector2(-32f, -32f),
         });
 
-        this.CircleInstance.Alpha = 255;
-        this.CircleInstance.Blue = 255;
-        this.CircleInstance.Green = 0;
-        this.CircleInstance.Radius = 24f;
-        this.CircleInstance.Red = 128;
+        this.CircleInstance.StrokeAlpha = 255;
+        this.CircleInstance.StrokeBlue = 255;
+        this.CircleInstance.StrokeGreen = 0;
+        this.CircleInstance.Height = 48f;
+        this.CircleInstance.StrokeRed = 128;
         this.CircleInstance.Rotation = 0f;
         this.CircleInstance.Visible = true;
+        this.CircleInstance.Width = 48f;
         this.CircleInstance.X = 664f;
         this.CircleInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         this.CircleInstance.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
@@ -186,10 +191,10 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
             new System.Numerics.Vector2(-32f, -32f),
         });
 
-        this.RectangleInstance.Blue = 219;
-        this.RectangleInstance.Green = 168;
+        this.RectangleInstance.StrokeBlue = 219;
+        this.RectangleInstance.StrokeGreen = 168;
         this.RectangleInstance.Height = 94f;
-        this.RectangleInstance.Red = 74;
+        this.RectangleInstance.StrokeRed = 74;
         this.RectangleInstance.Rotation = 0f;
         this.RectangleInstance.Width = 70f;
         this.RectangleInstance.X = 677f;
