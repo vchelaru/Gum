@@ -101,32 +101,8 @@ public sealed class ContentLoader : IContentLoader
         }
         else
         {
-            // raylib's native loaders take a raw path, so resolve the macOS .app Contents/Resources/
-            // copy up front (#5450).
-            string? diskPath = FileManager.ResolveExistingFilePath(contentName);
-            if (diskPath != null)
-            {
-                font = LoadTtfFont(diskPath);
-            }
-        }
-
-        string? ttfPath = font == null ? FileManager.ResolveExistingFilePath(contentName + ".ttf") : null;
-        if (ttfPath != null)
-        {
-            font = LoadTtfFont(ttfPath);
-        }
-
-        if(font == null)
-        {
-            var systemFontPath = GetSystemFontPath(contentName);
-            if (File.Exists(systemFontPath))
-            {
-                font = LoadTtfFont(systemFontPath);
-            }
-            else
-            {
-                font = default(Font);
-            }
+            string? ttfPath = ResolveTtfFontPath(contentName);
+            font = ttfPath != null ? LoadTtfFont(ttfPath, NativeTtfFontSize) : default(Font);
         }
 
         // Every branch above assigns a value (default(Font) when nothing loads).
@@ -148,9 +124,37 @@ public sealed class ContentLoader : IContentLoader
     /// </summary>
     private const int NativeTtfFontSize = 24;
 
-    private static Font LoadTtfFont(string path)
+    /// <summary>
+    /// Loads the font file <paramref name="contentName"/> resolves to (a path, the path plus <c>.ttf</c>, or a
+    /// system font family) so its em is <paramref name="fontSize"/> pixels, or returns null when no file is found.
+    /// The caller owns the font and caches it; nothing is added to <see cref="LoaderManager"/> here.
+    /// </summary>
+    internal static Font? TryLoadTtfFont(string contentName, int fontSize)
     {
-        Font font = TtfFontLoader.LoadFont(path, NativeTtfFontSize);
+        string? path = ResolveTtfFontPath(contentName);
+        return path != null ? LoadTtfFont(path, fontSize) : null;
+    }
+
+    /// <summary>
+    /// Finds the font file for a name the native loader accepts: an existing path, that path plus <c>.ttf</c>,
+    /// or a system font family. raylib's native loaders take a raw path, so the macOS .app
+    /// Contents/Resources/ copy is resolved here (#5450).
+    /// </summary>
+    private static string? ResolveTtfFontPath(string contentName)
+    {
+        string? path = FileManager.ResolveExistingFilePath(contentName)
+            ?? FileManager.ResolveExistingFilePath(contentName + ".ttf");
+        if (path != null)
+        {
+            return path;
+        }
+        string systemFontPath = GetSystemFontPath(contentName);
+        return File.Exists(systemFontPath) ? systemFontPath : null;
+    }
+
+    private static Font LoadTtfFont(string path, int fontSize)
+    {
+        Font font = TtfFontLoader.LoadFont(path, fontSize);
         TextureFilterApplier(font.Texture, DefaultTextureFilter);
         return font;
     }
@@ -524,7 +528,7 @@ public sealed class ContentLoader : IContentLoader
         return fileNameStandardized;
     }
 
-    string GetSystemFontPath(string fontFileName)
+    private static string GetSystemFontPath(string fontFileName)
     {
         if(fontFileName.EndsWith(".ttf") == false)
         {
