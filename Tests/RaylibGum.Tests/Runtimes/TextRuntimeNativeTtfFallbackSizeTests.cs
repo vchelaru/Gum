@@ -136,12 +136,109 @@ public class TextRuntimeNativeTtfFallbackSizeTests : BaseTestClass
         return text;
     }
 
+    [Fact]
+    public void CreatorWiredLater_ReplacesAndDisposesTheNativeFallbackFont()
+    {
+        string path = FontPath("OpenSans-Regular.ttf");
+        TextRuntime native = CreateText(path, 41);
+        string key = _cacheKeys[^2];
+        uint nativeId = FontOf(native).Texture.Id;
+        RaylibFontMetricsRegistry.IsRegistered(nativeId).ShouldBeTrue();
+
+        FreshFontCreator creator = new(path);
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+        TextRuntime created = CreateText(path, 41);
+
+        int callsAfterReplace = creator.Calls;
+        callsAfterReplace.ShouldBeGreaterThan(0);
+        FontOf(created).Texture.Id.ShouldBe(creator.LastFont.Texture.Id);
+        LoaderManager.Self.GetDisposable(key).ShouldBeAssignableTo<ManagedFont>()!
+            .Font.Texture.Id.ShouldBe(creator.LastFont.Texture.Id);
+        RaylibFontMetricsRegistry.IsRegistered(nativeId).ShouldBeFalse("the replaced native font must be disposed");
+
+        CreateText(path, 41);
+        creator.Calls.ShouldBe(callsAfterReplace, "the creator's font is reused once cached");
+    }
+
+    [Fact]
+    public void CustomContentLoader_IsAskedForTheFamilyBeforeTheFontFileLookup()
+    {
+        string path = FontPath("OpenSans-Regular.ttf");
+        Font customFont = TtfFontLoader.LoadFont(path, 20);
+        IContentLoader? previousLoader = LoaderManager.Self.ContentLoader;
+        RecordingContentLoader loader = new(previousLoader!, path, customFont);
+        LoaderManager.Self.ContentLoader = loader;
+        try
+        {
+            TextRuntime text = CreateText(path, 33);
+
+            loader.FontRequests.ShouldContain(path);
+            FontOf(text).Texture.Id.ShouldBe(customFont.Texture.Id);
+        }
+        finally
+        {
+            LoaderManager.Self.ContentLoader = previousLoader;
+            TtfFontLoader.Unload(customFont);
+        }
+    }
+
+    // Returns a new font on every call; handing out one font twice would unload it twice.
+    private sealed class FreshFontCreator : IRaylibFontCreator
+    {
+        private readonly string _path;
+        public FreshFontCreator(string path) => _path = path;
+        public int Calls { get; private set; }
+        public Font LastFont { get; private set; }
+
+        public Font? TryCreateFont(RenderingLibrary.Graphics.Fonts.BmfcSave bmfcSave)
+        {
+            Calls++;
+            LastFont = TtfFontLoader.LoadFont(_path, (int)bmfcSave.FontSize);
+            return LastFont;
+        }
+    }
+
+    // Supplies its own font for one family name and delegates everything else to the built-in loader.
+    private sealed class RecordingContentLoader : IContentLoader
+    {
+        private readonly IContentLoader _inner;
+        private readonly string _family;
+        private readonly Font _font;
+        public List<string> FontRequests { get; } = new();
+
+        public RecordingContentLoader(IContentLoader inner, string family, Font font)
+        {
+            _inner = inner;
+            _family = family;
+            _font = font;
+        }
+
+        public T? LoadContent<T>(string contentName)
+        {
+            if (typeof(T) == typeof(Font))
+            {
+                FontRequests.Add(contentName);
+                if (contentName == _family)
+                {
+                    return (T)(object)_font;
+                }
+            }
+            return _inner.LoadContent<T>(contentName);
+        }
+
+        public T? TryLoadContent<T>(string contentName) => LoadContent<T>(contentName);
+    }
+
     private TextRuntime CreateText(string fontPath, float fontSize)
     {
         TextRuntime text = new();
         text.Font = fontPath;
+        // Setting Font first loads it at the default size too.
+        string defaultSizeKey = FileManager.Standardize(
+            text.GetFontCacheFileName(fontPath), preserveCase: true, makeAbsolute: true);
         text.FontSize = fontSize;
         text.Text = "HHHH";
+        _cacheKeys.Add(defaultSizeKey);
         _cacheKeys.Add(FileManager.Standardize(
             text.GetFontCacheFileName(fontPath), preserveCase: true, makeAbsolute: true));
         // The family-keyed entry the fallback used before #6591.

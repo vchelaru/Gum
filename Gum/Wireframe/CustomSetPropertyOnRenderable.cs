@@ -2745,13 +2745,22 @@ public partial class CustomSetPropertyOnRenderable
     /// <summary>
     /// Loads <paramref name="fontFamily"/> (a family name or font file path) natively at the Text's FontSize and
     /// caches it under <paramref name="cacheKey"/>, which carries the size, so each size gets its own atlas and
-    /// is disposed through <see cref="ManagedFont"/> (#6591). A name no font file matches still goes through
-    /// <see cref="global::RenderingLibrary.Content.LoaderManager.LoadContent{T}"/> so a custom content loader
-    /// can resolve it.
+    /// is disposed through <see cref="ManagedFont"/> (#6591). A custom content loader is asked first and its
+    /// font is used as it returns it; a name no font file matches still goes through
+    /// <see cref="global::RenderingLibrary.Content.LoaderManager.LoadContent{T}"/>.
     /// </summary>
     private static Raylib_cs.Font LoadNativeFallbackFont(Gum.GueDeriving.TextRuntime textRuntime,
         global::RenderingLibrary.Content.LoaderManager loaderManager, string cacheKey, string fontFamily)
     {
+        if (loaderManager.ContentLoader is not global::RenderingLibrary.Content.ContentLoader)
+        {
+            Raylib_cs.Font customFont = loaderManager.LoadContent<Raylib_cs.Font>(fontFamily);
+            if (customFont.BaseSize != 0)
+            {
+                return customFont;
+            }
+        }
+
         int fontSize = System.Math.Max(1, (int)System.MathF.Round(textRuntime.FontSize));
         Raylib_cs.Font? nativeFont = global::RenderingLibrary.Content.ContentLoader.TryLoadTtfFont(fontFamily, fontSize);
         if (nativeFont == null)
