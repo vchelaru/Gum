@@ -117,7 +117,10 @@ public partial class GraphicalUiElement
             && interactive.FormsControlAsObject is IUpdateEveryFrame updatable)
         {
             updatable.Activity(secondDifference);
-            isSelfIdle = false;
+            if (updatable.IsActivityNeeded)
+            {
+                isSelfIdle = false;
+            }
         }
 #endif
 
