@@ -110,18 +110,52 @@ public sealed class GumAutomationHost
     private static void HideBeforeFirstShow(Game game)
     {
         Environment.SetEnvironmentVariable("SDL_WINDOW_NO_ACTIVATION_WHEN_SHOWN", "1");
-#if !KNISKIA
-        // KNI's GameWindow has no Position; there the parker moves the window on the first Update.
+#if KNISKIA
+        // KNI's GameWindow has no Position, but its desktop backend is SDL too: it creates the SDL
+        // window hidden with the device, pulls an off-screen position back onto a display when the
+        // device change ends (after DeviceCreated), and shows the window when the loop starts.
+        // Window.Handle is the SDL window, so it is moved through SDL from a component's Initialize,
+        // which runs after the device change and before the show.
+        Action moveOffScreen = () => SdlMoveOffScreen(game.Window.Handle);
+        game.Components.Add(new RunOnInitialize(game, moveOffScreen));
+#else
         Point offScreen = new Point(-32000, -32000);
-        game.Window.Position = offScreen;
+        Action moveOffScreen = () => game.Window.Position = offScreen;
+#endif
+        moveOffScreen();
         if (game.Services.GetService(typeof(IGraphicsDeviceService)) is IGraphicsDeviceService graphics)
         {
-            graphics.DeviceCreated += (_, _) => game.Window.Position = offScreen;
-            graphics.DeviceReset += (_, _) => game.Window.Position = offScreen;
+            graphics.DeviceCreated += (_, _) => moveOffScreen();
+            graphics.DeviceReset += (_, _) => moveOffScreen();
         }
-#endif
     }
 
+#if KNISKIA
+    private static void SdlMoveOffScreen(IntPtr sdlWindow)
+    {
+        if (sdlWindow != IntPtr.Zero)
+        {
+            SDL_SetWindowPosition(sdlWindow, -32000, -32000);
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("SDL2")]
+    private static extern void SDL_SetWindowPosition(IntPtr window, int x, int y);
+
+    private sealed class RunOnInitialize : GameComponent
+    {
+        private readonly Action _action;
+
+        public RunOnInitialize(Game game, Action action) : base(game) => _action = action;
+
+        public override void Initialize()
+        {
+            _action();
+            base.Initialize();
+        }
+    }
+
+#endif
     /// <summary>The driver the script runs through.</summary>
     public GumDriver Driver { get; }
 
