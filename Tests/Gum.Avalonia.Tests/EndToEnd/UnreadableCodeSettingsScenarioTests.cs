@@ -235,6 +235,43 @@ public class UnreadableCodeSettingsScenarioTests
         }
     }
 
+    [AvaloniaFact]
+    public void ARegenerationQueuedWhileReadable_WritesNothing_IfTheFileTurnsUnreadableBeforeItRuns()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave style = code.Project.AddComponent("Style");
+        ComponentSave button = code.Project.AddComponent("Button");
+        code.Select(style);
+        code.Tree.Grid.TypeAndEnter("Width", "90");
+        code.Select(button);
+        code.Tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Components/Style.Width");
+        code.Tree.SaveAll();
+        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
+        DeleteCodeFolder(code);
+        Action<ElementSave, InstanceSave?, string, object?, bool> sendToPlugins =
+            (element, instance, name, oldValue, isFullCommit) =>
+                TestAppBuilder.Services.GetRequiredService<IPluginManager>().VariableSetThroughReference(element, instance, name, oldValue, isFullCommit);
+        GumRuntime.ElementSaveExtensions.VariableChangedThroughReference += sendToPlugins;
+        try
+        {
+            // Readable when Button is queued.
+            code.Select(style);
+            code.Tree.Grid.TypeAndEnter("Width", "120");
+            CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty("the queued job has not run yet");
+
+            // Unreadable by the time the queued job runs.
+            BreakSettingsFileOnDisk(code);
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs(global::Avalonia.Threading.DispatcherPriority.Background);
+
+            CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
+        }
+        finally
+        {
+            GumRuntime.ElementSaveExtensions.VariableChangedThroughReference -= sendToPlugins;
+        }
+    }
+
     private static void DeleteCodeFolder(CodeTabHarness code)
     {
         if (Directory.Exists(code.CodeFolder))
