@@ -2721,7 +2721,7 @@ public partial class CustomSetPropertyOnRenderable
         // Font can be null when only CustomFontFile is set; there is then no family to fall back to.
         if (fontFromGum.BaseSize == 0 && fallbackFontFamily != null)
         {
-            fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fallbackFontFamily);
+            fontFromGum = LoadNativeFallbackFont(textRuntime, loaderManager, fullFileName, fallbackFontFamily);
         }
         // A wired InMemoryFontCreator declining (returning null) is a documented, normal signal --
         // IRaylibFontCreator.TryCreateFont falls through to disk/system-font on purpose, and that
@@ -2736,6 +2736,29 @@ public partial class CustomSetPropertyOnRenderable
         }
 
         return fontFromGum;
+    }
+
+    /// <summary>
+    /// Loads <paramref name="fontFamily"/> (a family name or font file path) natively at the Text's FontSize and
+    /// caches it under <paramref name="cacheKey"/>, which carries the size, so each size gets its own atlas and
+    /// is disposed through <see cref="ManagedFont"/> (#6591). A name no font file matches still goes through
+    /// <see cref="global::RenderingLibrary.Content.LoaderManager.LoadContent{T}"/> so a custom content loader
+    /// can resolve it.
+    /// </summary>
+    private static Raylib_cs.Font LoadNativeFallbackFont(Gum.GueDeriving.TextRuntime textRuntime,
+        global::RenderingLibrary.Content.LoaderManager loaderManager, string cacheKey, string fontFamily)
+    {
+        int fontSize = System.Math.Max(1, (int)System.MathF.Round(textRuntime.FontSize));
+        Raylib_cs.Font? nativeFont = global::RenderingLibrary.Content.ContentLoader.TryLoadTtfFont(fontFamily, fontSize);
+        if (nativeFont == null)
+        {
+            return loaderManager.LoadContent<Raylib_cs.Font>(fontFamily);
+        }
+
+        // The slot may hold the empty placeholder cached when no FontCache .fnt was found under this key.
+        loaderManager.Dispose(cacheKey);
+        loaderManager.AddDisposable(cacheKey, new ManagedFont(nativeFont.Value));
+        return nativeFont.Value;
     }
 #endif
 
@@ -2956,7 +2979,9 @@ public partial class CustomSetPropertyOnRenderable
                     var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
                     if (fontFromGum.BaseSize == 0 && asText.FontFamily != null)
                     {
-                        fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
+                        string familyCacheKey = ToolsUtilities.FileManager.Standardize(
+                            textRuntime.GetFontCacheFileName(null), preserveCase: true, makeAbsolute: true);
+                        fontFromGum = LoadNativeFallbackFont(textRuntime, loaderManager, familyCacheKey, asText.FontFamily);
                     }
                     AssignFontIfChanged(asText, fontFromGum);
                 }
