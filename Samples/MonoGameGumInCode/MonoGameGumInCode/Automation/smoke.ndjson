@@ -1,0 +1,7 @@
+// Smoke script for the MonoGameGumInCode sample. Run from the sample folder:
+// dotnet run -- --gum-automation Automation/smoke.ndjson --gum-automation-hide --gum-automation-report automation-report.txt
+{"cmd":"step","frames":2}
+{"cmd":"click","target":"NavForms"}
+{"cmd":"step","frames":2}
+{"cmd":"assert","target":"NavForms","property":"Text","equals":"Forms"}
+{"cmd":"screenshot","path":"automation-forms.png"}
