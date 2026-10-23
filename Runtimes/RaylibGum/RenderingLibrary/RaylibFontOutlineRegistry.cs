@@ -47,20 +47,18 @@ internal static class RaylibFontOutlineRegistry
 
     /// <summary>
     /// The pixel offsets, within <paramref name="radius"/> of the origin and not the origin itself, at which the
-    /// glyphs are drawn to form a round outline of that radius. The array is shared; the radius is rounded to a
-    /// whole pixel so a scale animation does not grow the cache.
+    /// glyphs are drawn to form a round outline of that radius in pixels. The array is shared.
     /// </summary>
-    public static Vector2[] GetOffsets(float radius)
+    public static Vector2[] GetOffsets(int radius)
     {
-        int wholeRadius = System.Math.Max(1, (int)System.MathF.Round(radius));
-        if (!_offsetsByRadius.TryGetValue(wholeRadius, out Vector2[]? offsets))
+        if (!_offsetsByRadius.TryGetValue(radius, out Vector2[]? offsets))
         {
             List<Vector2> list = new();
             // The +1 admits the diagonal pixels a radius-1 outline needs; the square grid keeps the passes 1 pixel apart.
-            int limit = wholeRadius * wholeRadius + 1;
-            for (int y = -wholeRadius; y <= wholeRadius; y++)
+            int limit = radius * radius + 1;
+            for (int y = -radius; y <= radius; y++)
             {
-                for (int x = -wholeRadius; x <= wholeRadius; x++)
+                for (int x = -radius; x <= radius; x++)
                 {
                     if ((x != 0 || y != 0) && x * x + y * y <= limit)
                     {
@@ -69,7 +67,7 @@ internal static class RaylibFontOutlineRegistry
                 }
             }
             offsets = list.ToArray();
-            _offsetsByRadius[wholeRadius] = offsets;
+            _offsetsByRadius[radius] = offsets;
         }
         return offsets;
     }

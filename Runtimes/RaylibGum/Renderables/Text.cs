@@ -1452,7 +1452,7 @@ public class Text : IVisible, IRenderableIpso,
             DrawTextPro(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, DropshadowColor);
         }
 
-        DrawOutline(fontValue, line, linePosition, origin, fontValue.BaseSize * EffectiveFontScale, EffectiveFontScale, Color);
+        DrawOutline(fontValue, line, linePosition, origin, fontValue.BaseSize * EffectiveFontScale, Color);
 
         // Texture filtering is applied once when the font's atlas texture is loaded/built (see
         // ContentLoader.DefaultTextureFilter, #3496), not per-draw — a per-line GPU state reset here
@@ -1754,7 +1754,7 @@ public class Text : IVisible, IRenderableIpso,
                 DrawTextPro(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, 0, drawRun.DrawSize, 0, DropshadowColor);
             }
 
-            DrawOutline(drawRun.Font, drawRun.Text, runPosition, runOrigin, drawRun.DrawSize, drawRun.Scale, drawRun.Color);
+            DrawOutline(drawRun.Font, drawRun.Text, runPosition, runOrigin, drawRun.DrawSize, drawRun.Color);
             DrawTextPro(drawRun.Font, drawRun.Text, runPosition, runOrigin, 0, drawRun.DrawSize, 0, drawRun.Color);
 
             advance += drawRun.Width;
@@ -1801,15 +1801,24 @@ public class Text : IVisible, IRenderableIpso,
             DrawTransformed(runShadowFont, ref drawRun, SnapToPixelIfNeeded(
                 scaledTopLeft + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale, totalRotation), DropshadowColor);
         }
-        DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft, drawRun.Color, withOutline: true);
+        if (RaylibFontOutlineRegistry.TryGet(drawRun.Font.Texture.Id, out int outlineThickness))
+        {
+            // An upright ring of the same fixed thickness as DrawOutline, around the transformed letter.
+            Color outlineColor = new Color((byte)0, (byte)0, (byte)0, drawRun.Color.A);
+            foreach (Vector2 offset in RaylibFontOutlineRegistry.GetOffsets(outlineThickness))
+            {
+                DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft + offset, outlineColor);
+            }
+        }
+        DrawTransformed(drawRun.Font, ref drawRun, scaledTopLeft, drawRun.Color);
     }
 
     /// <summary>
     /// Draws the outline of a font loaded without a font creator (#6639): the glyphs in black, at the offsets of a
-    /// round outline of the font's OutlineThickness (scaled by <paramref name="scale"/>), so the fill drawn after
+    /// round outline of the font's OutlineThickness, a fixed number of pixels whatever the FontScale, so the fill drawn after
     /// it sits on top. A font with an outline baked into its atlas (from a creator) has none registered.
     /// </summary>
-    private static void DrawOutline(Font font, string text, Vector2 position, Vector2 origin, float drawSize, float scale, Color color)
+    private static void DrawOutline(Font font, string text, Vector2 position, Vector2 origin, float drawSize, Color color)
     {
         if (!RaylibFontOutlineRegistry.TryGet(font.Texture.Id, out int thickness))
         {
@@ -1817,24 +1826,19 @@ public class Text : IVisible, IRenderableIpso,
         }
 
         Color outlineColor = new Color((byte)0, (byte)0, (byte)0, color.A);
-        foreach (Vector2 offset in RaylibFontOutlineRegistry.GetOffsets(thickness * scale))
+        foreach (Vector2 offset in RaylibFontOutlineRegistry.GetOffsets(thickness))
         {
             DrawTextPro(font, text, position + offset, origin, 0, drawSize, 0, outlineColor);
         }
     }
 
-    private static void DrawTransformed(Font font, ref StyledRunDraw drawRun, Vector2 scaledTopLeft, Color color, bool withOutline = false)
+    private static void DrawTransformed(Font font, ref StyledRunDraw drawRun, Vector2 scaledTopLeft, Color color)
     {
         Raylib_cs.Rlgl.PushMatrix();
         Raylib_cs.Rlgl.Translatef(scaledTopLeft.X, scaledTopLeft.Y, 0);
         // Gum rotation is counterclockwise; rlgl's is clockwise on a y-down screen.
         Raylib_cs.Rlgl.Rotatef(-drawRun.Rotation, 0, 0, 1);
         Raylib_cs.Rlgl.Scalef(drawRun.ScaleX, drawRun.ScaleY, 1);
-        if (withOutline)
-        {
-            // Inside the matrix, so the outline turns and scales with the letter.
-            DrawOutline(font, drawRun.Text, Vector2.Zero, Vector2.Zero, drawRun.DrawSize, drawRun.Scale, color);
-        }
         DrawTextPro(font, drawRun.Text, Vector2.Zero, Vector2.Zero, 0, drawRun.DrawSize, 0, color);
         Raylib_cs.Rlgl.PopMatrix();
     }
