@@ -114,6 +114,25 @@ public partial class CustomSetPropertyOnRenderable
         PropertyAssignmentError?.Invoke(message);
     }
 
+    /// <summary>
+    /// Reports a <see cref="TextRuntime.CustomFontFile"/> Skia cannot render (a .fnt bitmap font: Skia draws
+    /// only .ttf/.otf), once per element and file, since the font is resolved again on every font property change.
+    /// The text keeps drawing with its default font.
+    /// </summary>
+    internal static void ReportUnsupportedCustomFontFile(TextRuntime element)
+    {
+        string? customFontFile = element.CustomFontFile;
+        if (string.IsNullOrEmpty(customFontFile)
+            || !GumRuntime.ElementSaveExtensions.IsFirstReport(element, customFontFile, nameof(TextRuntime.CustomFontFile)))
+        {
+            return;
+        }
+
+        RaisePropertyAssignmentError(
+            $"Text {element.Name} uses CustomFontFile {customFontFile}, which Skia cannot render. " +
+            "Skia needs a .ttf or .otf custom font file; this text draws with the default font instead.");
+    }
+
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
     // gradient color channels, gradient endpoints, etc.) forward to BOTH slots; reflection
