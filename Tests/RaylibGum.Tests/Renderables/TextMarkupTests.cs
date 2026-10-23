@@ -224,16 +224,18 @@ public class TextMarkupTests : BaseTestClass
     }
 
     // A [FontScale] tag has its own run and does not pop the [FontSize] stack, so the size run continues
-    // after it closes. (Under an absolute [FontSize] the base atlas is drawn at that size whatever the scale.)
+    // after it closes. Inside the size run the scale applies to that size, as on MonoGame (#6486), so b is
+    // as wide as a run at twice the size.
     [Fact]
     public void Text_WithFontScaleInsideFontSize_NoFontCreator_FontSizeRunContinuesAfterFontScaleCloses()
     {
         int outer = BaseFontSize() * 2;
 
         float mixed = MarkupWidth($"[FontSize={outer}]a[FontScale=2]b[/FontScale]c[/FontSize]d");
-        float plainRun = MarkupWidth($"[FontSize={outer}]abc[/FontSize]d");
+        float flat = MarkupWidth(
+            $"[FontSize={outer}]a[/FontSize][FontSize={outer * 2}]b[/FontSize][FontSize={outer}]c[/FontSize]d");
 
-        mixed.ShouldBe(plainRun, 1.01);
+        mixed.ShouldBe(flat, 1.01);
     }
 
     // With a font creator wired, [FontSize=N] re-rasterizes a crisp Raylib_cs.Font AT size N (BaseSize == N)
