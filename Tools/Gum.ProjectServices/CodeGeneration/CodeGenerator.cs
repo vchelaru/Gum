@@ -5912,10 +5912,23 @@ public class CodeGenerator
         }
         else if (variable.GetRootName() == "SourceFile")
         {
-            if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary) ||
-                context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
+            OutputLibrary library = context.CodeOutputProjectSettings.OutputLibrary;
+            if (UsesUnifiedGumRuntime(library) || library == OutputLibrary.GumForms)
             {
                 return "SourceFileName";
+            }
+
+            // Skia's string SpriteRuntime.SourceFile is obsolete in favor of SourceFileName (#6510).
+            // Skia-only runtimes (Svg, LottieAnimation) have only SourceFile, so they keep it.
+            if (library == OutputLibrary.Skia || library == OutputLibrary.Maui)
+            {
+                StandardElementSave? ownerStandard = context.Instance != null
+                    ? ObjectFinder.Self.GetRootStandardElementSave(context.Instance)
+                    : ObjectFinder.Self.GetRootStandardElementSave(context.Element);
+                if (ownerStandard?.Name == "Sprite")
+                {
+                    return "SourceFileName";
+                }
             }
         }
 
