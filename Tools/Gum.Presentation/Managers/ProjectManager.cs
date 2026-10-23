@@ -448,11 +448,6 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     _standardElementsManagerGumTool.FixCustomTypeConverters(_gumProjectSave);
                     RecreateMissingStandardElements(_gumProjectSave);
 
-                    if (RecreateMissingDefinedByBaseObjects())
-                    {
-                        modifications.Add(nameof(RecreateMissingDefinedByBaseObjects));
-                    }
-
                     if (_gumProjectSave.AddNewStandardElementTypes())
                     {
                         modifications.Add("AddNewStandardElementTypes");
@@ -670,46 +665,6 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 $"because they are provided by a plugin: {names}.\n\n" +
                 $"Restore the matching Standards/<name>.gutx file from version control, or re-add the " +
                 $"plugin that provides it (for the Skia shapes: Plugins → Add Skia).");
-        }
-    }
-
-    private bool RecreateMissingDefinedByBaseObjects()
-    {
-        var wasAnythingAdded = false;
-
-        foreach (var component in this.GetLoadedProject().Components)
-        {
-            List<InstanceSave> necessaryInstances = new List<InstanceSave>();
-            FillWithNecessaryInstances(component, necessaryInstances);
-            foreach (var instanceInBase in necessaryInstances)
-            {
-                // see if there's a match:
-                var matching = component.GetInstance(instanceInBase.Name);
-
-                if (matching == null)
-                {
-                    var instance = instanceInBase.Clone();
-                    instance.DefinedByBase = true;
-                    component.Instances.Add(instance);
-                    wasAnythingAdded = true;
-                }
-            }
-        }
-        return wasAnythingAdded;
-    }
-
-    private void FillWithNecessaryInstances(ComponentSave component, List<InstanceSave> necessaryInstances)
-    {
-        if (!string.IsNullOrWhiteSpace(component.BaseType))
-        {
-            var baseComponent = ObjectFinder.Self.GetElementSave(component.BaseType) as ComponentSave;
-
-            if (baseComponent != null)
-            {
-                necessaryInstances.AddRange(baseComponent.Instances);
-
-                FillWithNecessaryInstances(baseComponent, necessaryInstances);
-            }
         }
     }
 

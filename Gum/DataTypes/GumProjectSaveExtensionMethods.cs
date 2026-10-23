@@ -369,9 +369,77 @@ namespace Gum.DataTypes
 
         }
 
+        /// <summary>
+        /// Adds, as DefinedByBase instances, every instance an element inherits from its screen or component
+        /// ancestors but does not hold itself (#6597). An element is expected to carry all of its base's
+        /// instances; a file saved without one would otherwise lose that child in the tool, in generated
+        /// code and in <c>ToGraphicalUiElement</c>. This only edits the loaded project in memory: it never
+        /// writes to disk, and the returned bool lets a caller that owns the files (the tool) decide to re-save.
+        /// </summary>
+        /// <returns>True if any instance was added. A second call returns false.</returns>
         public static bool RepairMissingDefinedByBaseInstances(this GumProjectSave gumProjectSave)
         {
-            return false;
+            // The project is searched directly, not through ObjectFinder, because the headless loader and
+            // the runtimes call Initialize before (or without) pointing ObjectFinder at the project.
+            bool wasAnythingAdded = RepairMissingBaseInstances(gumProjectSave.Screens);
+            wasAnythingAdded |= RepairMissingBaseInstances(gumProjectSave.Components);
+            return wasAnythingAdded;
+        }
+
+        private static bool RepairMissingBaseInstances<T>(List<T> elements) where T : ElementSave
+        {
+            Dictionary<string, ElementSave>? elementsByName = null;
+            bool wasAnythingAdded = false;
+
+            foreach (T element in elements)
+            {
+                if (string.IsNullOrWhiteSpace(element.BaseType))
+                {
+                    continue;
+                }
+
+                if (elementsByName == null)
+                {
+                    elementsByName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
+                    foreach (T candidate in elements)
+                    {
+                        elementsByName[candidate.Name] = candidate;
+                    }
+                }
+
+                // Walk up the whole chain: a base that is itself missing instances still passes down
+                // everything its own bases define. The visited set stops a circular BaseType.
+                List<InstanceSave>? inherited = null;
+                HashSet<ElementSave> visited = new HashSet<ElementSave> { element };
+                ElementSave current = element;
+                while (!string.IsNullOrWhiteSpace(current.BaseType) &&
+                    elementsByName.TryGetValue(current.BaseType, out ElementSave? baseElement) &&
+                    visited.Add(baseElement))
+                {
+                    inherited ??= new List<InstanceSave>();
+                    inherited.AddRange(baseElement.Instances);
+                    current = baseElement;
+                }
+
+                if (inherited == null)
+                {
+                    continue;
+                }
+
+                foreach (InstanceSave instanceInBase in inherited)
+                {
+                    if (element.GetInstance(instanceInBase.Name) == null)
+                    {
+                        InstanceSave instance = instanceInBase.Clone();
+                        instance.DefinedByBase = true;
+                        instance.ParentContainer = element;
+                        element.Instances.Add(instance);
+                        wasAnythingAdded = true;
+                    }
+                }
+            }
+
+            return wasAnythingAdded;
         }
 
         /// <summary>
