@@ -104,6 +104,10 @@ public abstract class TextBoxBase :
     float _selectionAuthoredRotation;
     bool _isSelectionTurnedWithText;
 
+    // The text's absolute rotation when the caret and selection were last placed. An ancestor's
+    // rotation raises no event on the text, so OnFocusUpdate compares it to re-place them (#6646).
+    float _placedTextAbsoluteRotation;
+
     GraphicalUiElement? selectionTemplate;
 
     /// <summary>
@@ -751,7 +755,7 @@ public abstract class TextBoxBase :
 
                 var amountToShift = newTextValue - textComponent.X;
                 textComponent.X += amountToShift;
-                caretComponent.X += amountToShift;
+                ShiftCaretXByPixels(amountToShift);
             }
         }
     }
@@ -1141,6 +1145,15 @@ public abstract class TextBoxBase :
 
     public void OnFocusUpdate()
     {
+        if (textComponent != null && textComponent.GetAbsoluteRotation() != _placedTextAbsoluteRotation)
+        {
+            UpdateCaretPositionFromCaretIndex();
+            // Placing writes the values the caret already has, which does not re-run its layout, so
+            // the ancestor's turn would not reach its drawn position.
+            caretComponent.UpdateLayout();
+            UpdateToSelection();
+        }
+
         var gamepads = FrameworkElement.GamePadsForUiControl;
 
         for (int i = 0; i < gamepads.Count; i++)
@@ -1420,6 +1433,7 @@ public abstract class TextBoxBase :
     protected void UpdateCaretPositionFromCaretIndex()
     {
         UndoCaretTurnWithText();
+        _placedTextAbsoluteRotation = textComponent.GetAbsoluteRotation();
 
         if (IsRenderedAsSingleLine)
         {
@@ -1495,22 +1509,27 @@ public abstract class TextBoxBase :
 
     /// <summary>
     /// Turns <paramref name="element"/>, placed as if the text were not rotated, about the text's
-    /// origin by the text's own rotation, the way the renderer turns the glyphs. Assumes the
-    /// element and the text share a parent.
+    /// origin by the text's own rotation, the way the renderer turns the glyphs. The turn is done in
+    /// the text's parent, so an element parented elsewhere is carried into that frame and back.
     /// </summary>
     private void TurnWithText(GraphicalUiElement element, float unturnedRotation)
     {
         float rotation = textComponent.Rotation;
-        var parent = element.EffectiveParentGue;
-        float parentWidth = parent?.AbsoluteWidth ?? GraphicalUiElement.CanvasWidth;
-        float parentHeight = parent?.AbsoluteHeight ?? GraphicalUiElement.CanvasHeight;
-        var converter = global::Gum.Converters.UnitConverter.Self;
+        var textParent = textComponent.EffectiveParentGue;
+        var elementParent = element.EffectiveParentGue;
+        float textParentWidth = textParent?.AbsoluteWidth ?? GraphicalUiElement.CanvasWidth;
+        float textParentHeight = textParent?.AbsoluteHeight ?? GraphicalUiElement.CanvasHeight;
+        float elementParentWidth = elementParent?.AbsoluteWidth ?? GraphicalUiElement.CanvasWidth;
+        float elementParentHeight = elementParent?.AbsoluteHeight ?? GraphicalUiElement.CanvasHeight;
+        (float shiftX, float shiftY) = GetParentOriginInTextParent(element);
         const global::Gum.Converters.GeneralUnitType pixels = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
-        float pivotX = converter.ConvertXPosition(textComponent.X, textComponent.XUnits, pixels, parentWidth);
-        float pivotY = ConvertYPositionOrKeep(textComponent.Y, textComponent.YUnits, pixels, parentHeight);
-        float offsetX = converter.ConvertXPosition(element.X, element.XUnits, pixels, parentWidth) - pivotX;
-        float offsetY = ConvertYPositionOrKeep(element.Y, element.YUnits, pixels, parentHeight) - pivotY;
+        float pivotX = ConvertPositionOrKeep(textComponent.X, textComponent.XUnits, pixels, textParentWidth, isX: true);
+        float pivotY = ConvertPositionOrKeep(textComponent.Y, textComponent.YUnits, pixels, textParentHeight, isX: false);
+        float elementX = ConvertPositionOrKeep(element.X, element.XUnits, pixels, elementParentWidth, isX: true) + shiftX;
+        float elementY = ConvertPositionOrKeep(element.Y, element.YUnits, pixels, elementParentHeight, isX: false) + shiftY;
+        float offsetX = elementX - pivotX;
+        float offsetY = elementY - pivotY;
 
         // Counterclockwise on screen (y down), as GraphicalUiElement rotates.
         double radians = rotation * System.Math.PI / 180;
@@ -1519,8 +1538,8 @@ public abstract class TextBoxBase :
         float turnedX = pivotX + offsetX * cos + offsetY * sin;
         float turnedY = pivotY - offsetX * sin + offsetY * cos;
 
-        element.X = converter.ConvertXPosition(turnedX, pixels, element.XUnits, parentWidth);
-        element.Y = ConvertYPositionOrKeep(turnedY, pixels, element.YUnits, parentHeight);
+        element.X = ConvertPositionOrKeep(turnedX - shiftX, pixels, element.XUnits, elementParentWidth, isX: true);
+        element.Y = ConvertPositionOrKeep(turnedY - shiftY, pixels, element.YUnits, elementParentHeight, isX: false);
         element.Rotation = unturnedRotation + rotation;
     }
 
@@ -1811,6 +1830,7 @@ public abstract class TextBoxBase :
     /// </summary>
     protected void UpdateToSelection()
     {
+        _placedTextAbsoluteRotation = textComponent.GetAbsoluteRotation();
 
         var displayedText = DisplayedText;
         if (selectionInstance != null && selectionLength > 0 && displayedText?.Length > 0)
@@ -1839,7 +1859,7 @@ public abstract class TextBoxBase :
             {
                 var selection = _selectionInstances[i];
 
-                selection.X = selectionStartEnds[i].XStart;
+                selection.X = ResolveLineXForComponent(selectionStartEnds[i].XStart, selection);
                 // Use the stored offset rather than reading selectionInstance.Y at runtime.
                 // selectionInstance IS _selectionInstances[0], so writing selection.Y at i==0
                 // would mutate the value we'd read back, causing the offset to accumulate
@@ -1847,7 +1867,6 @@ public abstract class TextBoxBase :
                 selection.Y = selectionStartEnds[i].Y + _selectionInstanceYOffset;
                 selection.Width = selectionStartEnds[i].Width;
                 selection.Visible = true;
-                selection.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
                 if (textComponent.Rotation != 0)
                 {
                     TurnWithText(selection, _selectionAuthoredRotation);
@@ -2023,7 +2042,6 @@ public abstract class TextBoxBase :
         if (axis == LayoutAxis.Horizontal)
         {
             this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            this.caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
             // Skip the shift entirely when the parent's geometry is invalid
             // (zero or negative absolute width). This happens transiently
@@ -2057,7 +2075,7 @@ public abstract class TextBoxBase :
             if (shiftAmount != 0)
             {
                 this.textComponent.X += shiftAmount;
-                this.caretComponent.X += shiftAmount;
+                ShiftCaretXByPixels(shiftAmount);
             }
 
             // Snap-back: never let the text drift right past its resting position
@@ -2070,7 +2088,7 @@ public abstract class TextBoxBase :
             {
                 float clampShift = _textRestingX - this.textComponent.X;
                 this.textComponent.X += clampShift;
-                this.caretComponent.X += clampShift;
+                ShiftCaretXByPixels(clampShift);
             }
         }
         else
@@ -2136,8 +2154,7 @@ public abstract class TextBoxBase :
     {
         var newPosition = GetXCaretPositionForLineRelativeToTextParent(stringToMeasure, indexIntoLine);
 
-        // assumes caret and text have the same parent
-        this.caretComponent.X = newPosition;
+        this.caretComponent.X = ResolveLineXForComponent(newPosition, caretComponent);
     }
 
     private float GetXCaretPositionRelativeToTextParent(int absoluteIndex)
@@ -2162,25 +2179,11 @@ public abstract class TextBoxBase :
     {
         indexIntoLine = System.Math.Min(indexIntoLine, stringToMeasure.Length);
         var substring = stringToMeasure.Substring(0, indexIntoLine);
-        caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
         // The unified MeasureString overload internally handles the no-font
-        // case (falling back to DefaultBitmapFont, or zero under TEST). The
-        // outer null-guard previously used on MonoGame is preserved as a
-        // portable "do we have something to measure against" check - on
-        // Raylib there is no BitmapFont property, so we guard on the
-        // coreTextObject itself. In practice this is always non-null here,
-        // but keeping the else branch preserves the historical side effect
-        // on caretComponent.X when no measurement can be performed.
-        if (this.coreTextObject != null)
-        {
-            var measure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
-            return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
-        }
-        else
-        {
-            return caretComponent.X = GetLineXOffsetForHorizontalAlignment(stringToMeasure);
-        }
+        // case (falling back to DefaultBitmapFont, or zero under TEST).
+        var measure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+        return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
     }
 
     public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure)
@@ -2213,54 +2216,129 @@ public abstract class TextBoxBase :
     private float ResolveLineYForComponent(float centerOfLineY, GraphicalUiElement target)
     {
         var adjusted = centerOfLineY;
+        // Half the *rendered glyph row* height, not the full inter-line step. The multiplier only
+        // inflates the spacing between lines, so using EffectiveLineHeightInPixels here would push
+        // the edge a multiplier-worth away from the actual glyph row. The target is taken to be
+        // about one glyph row tall, so its top (or bottom) edge sits on the row's edge.
         if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Top)
         {
-            // Half the *rendered glyph row* height — not the full inter-line
-            // step. The multiplier only inflates the spacing between lines, so
-            // using EffectiveLineHeightInPixels here would push the top half a
-            // multiplier-worth below the actual glyph row.
             adjusted -= ScaledLineHeightInPixels / 2.0f;
         }
-
-        var targetParent = target.EffectiveParentGue;
-        var textParent = textComponent.EffectiveParentGue;
-        if (targetParent != textParent)
+        else if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Bottom)
         {
-            // The line Y is measured from the text's parent; the target is placed in its own parent.
-            adjusted += (textParent?.AbsoluteTop ?? 0) - (targetParent?.AbsoluteTop ?? 0);
+            adjusted += ScaledLineHeightInPixels / 2.0f;
         }
 
+        adjusted -= GetParentOriginInTextParent(target).y;
+
+        var targetParent = target.EffectiveParentGue;
         float parentHeight = targetParent?.AbsoluteHeight ?? GraphicalUiElement.CanvasHeight;
-        return ConvertYPositionOrKeep(adjusted,
-            global::Gum.Converters.GeneralUnitType.PixelsFromSmall, target.YUnits, parentHeight);
+        return ConvertPositionOrKeep(adjusted,
+            global::Gum.Converters.GeneralUnitType.PixelsFromSmall, target.YUnits, parentHeight, isX: false);
     }
 
     /// <summary>
-    /// Converts a Y between vertical units. A Forms control must never throw during layout, so a
-    /// unit the converter does not support, or a Percentage of a parent with no height (which has no
-    /// finite pixel equivalent), returns <paramref name="y"/> unconverted rather than throwing or
+    /// Converts a line X (in PixelsFromSmall of the text's parent, as produced by
+    /// <see cref="GetXCaretPositionForLineRelativeToTextParent"/>) into the value to assign to
+    /// <paramref name="target"/>'s X, honoring the target's parent and XUnits. A unit that cannot hold
+    /// a pixel position (or a Percentage of a parent with no width) is replaced by PixelsFromSmall so
+    /// the target still lands on the line.
+    /// </summary>
+    private float ResolveLineXForComponent(float xInTextParent, GraphicalUiElement target)
+    {
+        float x = xInTextParent - GetParentOriginInTextParent(target).x;
+
+        var targetParent = target.EffectiveParentGue;
+        float parentWidth = targetParent?.AbsoluteWidth ?? GraphicalUiElement.CanvasWidth;
+        if (TryConvertPosition(x, global::Gum.Converters.GeneralUnitType.PixelsFromSmall, target.XUnits,
+            parentWidth, isX: true, out float converted))
+        {
+            return converted;
+        }
+
+        target.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        return x;
+    }
+
+    /// <summary>
+    /// Moves the caret along X by a pixel amount, in whatever X units it uses.
+    /// </summary>
+    private void ShiftCaretXByPixels(float pixels)
+    {
+        var parent = caretComponent.EffectiveParentGue;
+        float parentWidth = parent?.AbsoluteWidth ?? GraphicalUiElement.CanvasWidth;
+        bool isPercentage = caretComponent.XUnits == global::Gum.Converters.GeneralUnitType.Percentage;
+        if (!IsConvertiblePositionUnit(caretComponent.XUnits) || (isPercentage && !(parentWidth > 0)))
+        {
+            caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            isPercentage = false;
+        }
+
+        caretComponent.X += isPercentage ? pixels * 100.0f / parentWidth : pixels;
+    }
+
+    /// <summary>
+    /// Where the origin of <paramref name="target"/>'s parent sits in the text's parent, in pixels.
+    /// Zero when they share a parent. A value measured from the text's parent becomes one measured
+    /// from the target's parent by subtracting this.
+    /// </summary>
+    private (float x, float y) GetParentOriginInTextParent(GraphicalUiElement target)
+    {
+        var targetParent = target.EffectiveParentGue;
+        var textParent = textComponent.EffectiveParentGue;
+        if (targetParent == textParent)
+        {
+            return (0, 0);
+        }
+
+        return ((targetParent?.AbsoluteLeft ?? 0) - (textParent?.AbsoluteLeft ?? 0),
+            (targetParent?.AbsoluteTop ?? 0) - (textParent?.AbsoluteTop ?? 0));
+    }
+
+    /// <summary>
+    /// Converts a position between units. A Forms control must never throw during layout, so a unit
+    /// the converter does not support, or a Percentage of a parent with no size (which has no finite
+    /// pixel equivalent), returns <paramref name="value"/> unconverted rather than throwing or
     /// producing infinity or NaN.
     /// </summary>
-    private static float ConvertYPositionOrKeep(float y, global::Gum.Converters.GeneralUnitType fromUnit,
-        global::Gum.Converters.GeneralUnitType toUnit, float parentHeight)
+    private static float ConvertPositionOrKeep(float value, global::Gum.Converters.GeneralUnitType fromUnit,
+        global::Gum.Converters.GeneralUnitType toUnit, float parentSize, bool isX) =>
+        TryConvertPosition(value, fromUnit, toUnit, parentSize, isX, out float converted) ? converted : value;
+
+    private static bool TryConvertPosition(float value, global::Gum.Converters.GeneralUnitType fromUnit,
+        global::Gum.Converters.GeneralUnitType toUnit, float parentSize, bool isX, out float converted)
     {
-        if (!IsConvertibleYUnit(fromUnit) || !IsConvertibleYUnit(toUnit) || fromUnit == toUnit)
+        converted = value;
+        if (!IsConvertiblePositionUnit(fromUnit) || !IsConvertiblePositionUnit(toUnit))
         {
-            return y;
+            return false;
+        }
+        if (fromUnit == toUnit)
+        {
+            return true;
         }
 
         bool usesPercentage = fromUnit == global::Gum.Converters.GeneralUnitType.Percentage
             || toUnit == global::Gum.Converters.GeneralUnitType.Percentage;
-        if (usesPercentage && !(parentHeight > 0))
+        if (usesPercentage && !(parentSize > 0))
         {
-            return y;
+            return false;
         }
 
-        float converted = global::Gum.Converters.UnitConverter.Self.ConvertYPosition(y, fromUnit, toUnit, parentHeight);
-        return float.IsFinite(converted) ? converted : y;
+        var converter = global::Gum.Converters.UnitConverter.Self;
+        float result = isX
+            ? converter.ConvertXPosition(value, fromUnit, toUnit, parentSize)
+            : converter.ConvertYPosition(value, fromUnit, toUnit, parentSize);
+        if (!float.IsFinite(result))
+        {
+            return false;
+        }
+
+        converted = result;
+        return true;
     }
 
-    private static bool IsConvertibleYUnit(global::Gum.Converters.GeneralUnitType unit) =>
+    private static bool IsConvertiblePositionUnit(global::Gum.Converters.GeneralUnitType unit) =>
         unit == global::Gum.Converters.GeneralUnitType.PixelsFromSmall
         || unit == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle
         || unit == global::Gum.Converters.GeneralUnitType.PixelsFromLarge

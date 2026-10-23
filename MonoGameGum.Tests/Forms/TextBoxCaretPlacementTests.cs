@@ -1,5 +1,6 @@
 using Gum.Forms.Controls;
 using Gum.Converters;
+using Gum.DataTypes;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -81,6 +82,240 @@ public class TextBoxCaretPlacementTests : BaseTestClass
         float drawnLineCenter = contained.UpdateIpsoForRenderingForTests().Y + contained.LineHeightInPixels / 2.0f;
 
         GetCaret(textBox).GetAbsoluteCenterY().ShouldBe(drawnLineCenter, tolerance: 0.01f);
+    }
+
+    // The caret sits at the same screen X wherever the Visual parents it and whatever X units it
+    // authors (#6646).
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall, false)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle, false)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, false)]
+    [InlineData(GeneralUnitType.Percentage, false)]
+    [InlineData(GeneralUnitType.PixelsFromSmall, true)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle, true)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, true)]
+    [InlineData(GeneralUnitType.Percentage, true)]
+    public void CaretLeft_MultiLineWithAuthoredXUnitsAndParent_ShouldMatchDefaultPlacement(
+        GeneralUnitType xUnits, bool inOtherParent)
+    {
+        TextBox expected = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBox sut = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)sut.Visual;
+        if (inOtherParent)
+        {
+            MoveToOtherParent(visual, visual.CaretInstance);
+        }
+        visual.CaretInstance.XUnits = xUnits;
+        sut.CaretIndex = 0;
+        sut.CaretIndex = 2;
+        expected.CaretIndex = 0;
+        expected.CaretIndex = 2;
+
+        visual.CaretInstance.AbsoluteLeft.ShouldBe(GetCaret(expected).AbsoluteLeft, tolerance: 0.01f);
+        // The units authored on the Visual are kept, not replaced by the control.
+        visual.CaretInstance.XUnits.ShouldBe(xUnits);
+    }
+
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle)]
+    [InlineData(GeneralUnitType.PixelsFromLarge)]
+    [InlineData(GeneralUnitType.Percentage)]
+    public void CaretLeft_SingleLineCaretInOtherParent_ShouldMatchDefaultPlacement(GeneralUnitType xUnits)
+    {
+        TextBox expected = CreateTextBox(VerticalAlignment.Top, multiLine: false);
+        TextBox sut = CreateTextBox(VerticalAlignment.Top, multiLine: false);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)sut.Visual;
+        MoveToOtherParent(visual, visual.CaretInstance);
+        visual.CaretInstance.XUnits = xUnits;
+        sut.CaretIndex = 0;
+        sut.CaretIndex = 2;
+        expected.CaretIndex = 0;
+        expected.CaretIndex = 2;
+
+        visual.CaretInstance.AbsoluteLeft.ShouldBe(GetCaret(expected).AbsoluteLeft, tolerance: 0.01f);
+    }
+
+    // Scrolling the text to keep the caret in view moves the caret by pixels, in whatever units it uses.
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle)]
+    [InlineData(GeneralUnitType.PixelsFromLarge)]
+    [InlineData(GeneralUnitType.Percentage)]
+    public void CaretLeft_SingleLineScrolledPastEdgeWithAuthoredXUnits_ShouldMatchDefaultPlacement(GeneralUnitType xUnits)
+    {
+        TextBox expected = CreateTextBox(VerticalAlignment.Top, multiLine: false);
+        TextBox sut = CreateTextBox(VerticalAlignment.Top, multiLine: false);
+        ((TextBoxBaseVisual)sut.Visual).CaretInstance.XUnits = xUnits;
+
+        foreach (TextBox textBox in new[] { expected, sut })
+        {
+            textBox.CaretIndex = textBox.Text!.Length;
+            for (int i = 0; i < 40; i++)
+            {
+                textBox.HandleCharEntered('w');
+            }
+        }
+
+        ((TextBoxBaseVisual)sut.Visual).TextInstance.X.ShouldBeLessThan(0, "typing past the edge should have scrolled the text");
+        GetCaret(sut).AbsoluteLeft.ShouldBe(GetCaret(expected).AbsoluteLeft, tolerance: 0.01f);
+    }
+
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall, false)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle, false)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, false)]
+    [InlineData(GeneralUnitType.Percentage, false)]
+    [InlineData(GeneralUnitType.PixelsFromSmall, true)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle, true)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, true)]
+    [InlineData(GeneralUnitType.Percentage, true)]
+    public void SelectionLeft_MultiLineWithAuthoredXUnitsAndParent_ShouldMatchDefaultPlacement(
+        GeneralUnitType xUnits, bool inOtherParent)
+    {
+        TextBox expected = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBox sut = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)sut.Visual;
+        if (inOtherParent)
+        {
+            MoveToOtherParent(visual, visual.SelectionInstance);
+        }
+        visual.SelectionInstance.XUnits = xUnits;
+        foreach (TextBox textBox in new[] { expected, sut })
+        {
+            textBox.Text = "abc\ndef";
+            textBox.SelectionStart = 1;
+            textBox.SelectionLength = 5;
+        }
+
+        GraphicalUiElement[] expectedSelections = GetVisibleSelections(expected);
+        GraphicalUiElement[] actual = GetVisibleSelections(sut, inOtherParent);
+        actual.Length.ShouldBe(2);
+        for (int i = 0; i < actual.Length; i++)
+        {
+            actual[i].AbsoluteLeft.ShouldBe(expectedSelections[i].AbsoluteLeft, tolerance: 0.01f);
+        }
+    }
+
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall)]
+    [InlineData(GeneralUnitType.Percentage)]
+    public void SelectionLeft_SingleLineSelectionInOtherParent_ShouldMatchDefaultPlacement(GeneralUnitType xUnits)
+    {
+        TextBox expected = CreateTextBox(VerticalAlignment.Top, multiLine: false);
+        TextBox sut = CreateTextBox(VerticalAlignment.Top, multiLine: false);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)sut.Visual;
+        MoveToOtherParent(visual, visual.SelectionInstance);
+        visual.SelectionInstance.XUnits = xUnits;
+        foreach (TextBox textBox in new[] { expected, sut })
+        {
+            textBox.SelectionStart = 1;
+            textBox.SelectionLength = 2;
+        }
+
+        GetVisibleSelections(sut, inOtherParent: true).Single().AbsoluteLeft
+            .ShouldBe(GetVisibleSelections(expected).Single().AbsoluteLeft, tolerance: 0.01f);
+    }
+
+    // A Forms control must never throw during layout, and a unit the converter cannot convert
+    // still places the caret and selection correctly (#6646).
+    [Theory]
+    [InlineData(GeneralUnitType.PercentageOfFile)]
+    [InlineData(GeneralUnitType.PercentageOfOtherDimension)]
+    [InlineData(GeneralUnitType.PixelsFromBaseline)]
+    [InlineData(GeneralUnitType.MaintainFileAspectRatio)]
+    public void CaretAndSelection_UnsupportedXUnitsInOtherParent_ShouldNotThrowAndStillMatchDefaultPlacement(
+        GeneralUnitType xUnits)
+    {
+        TextBox expected = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBox sut = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)sut.Visual;
+        MoveToOtherParent(visual, visual.CaretInstance);
+        MoveToOtherParent(visual, visual.SelectionInstance);
+        visual.CaretInstance.XUnits = xUnits;
+        visual.SelectionInstance.XUnits = xUnits;
+
+        Should.NotThrow(() =>
+        {
+            foreach (TextBox textBox in new[] { expected, sut })
+            {
+                textBox.Text = "abc\ndef";
+                textBox.CaretIndex = 0;
+                textBox.CaretIndex = 2;
+                textBox.SelectionStart = 1;
+                textBox.SelectionLength = 5;
+            }
+        });
+
+        float.IsFinite(visual.CaretInstance.X).ShouldBeTrue();
+        visual.CaretInstance.AbsoluteLeft.ShouldBe(GetCaret(expected).AbsoluteLeft, tolerance: 0.01f);
+        GraphicalUiElement[] actual = GetVisibleSelections(sut, inOtherParent: true);
+        actual.ShouldAllBe(selection => float.IsFinite(selection.X));
+        actual[0].AbsoluteLeft.ShouldBe(GetVisibleSelections(expected)[0].AbsoluteLeft, tolerance: 0.01f);
+    }
+
+    // A parent with no width gives a Percentage X nothing to be a percentage of; X must stay finite.
+    [Fact]
+    public void CaretAndSelection_PercentageXInZeroWidthParent_ShouldNotThrowAndKeepFiniteX()
+    {
+        TextBox sut = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)sut.Visual;
+        MoveToOtherParent(visual, visual.CaretInstance, parentWidth: 0);
+        MoveToOtherParent(visual, visual.SelectionInstance, parentWidth: 0);
+        visual.CaretInstance.XUnits = GeneralUnitType.Percentage;
+        visual.SelectionInstance.XUnits = GeneralUnitType.Percentage;
+
+        Should.NotThrow(() =>
+        {
+            sut.Text = "abc\ndef";
+            sut.CaretIndex = 0;
+            sut.CaretIndex = 2;
+            sut.SelectionStart = 1;
+            sut.SelectionLength = 5;
+        });
+        float.IsFinite(visual.CaretInstance.X).ShouldBeTrue();
+        GetVisibleSelections(sut, inOtherParent: true).ShouldAllBe(selection => float.IsFinite(selection.X));
+    }
+
+    // The caret sits on its line whichever edge of itself YOrigin positions (#6648). The caret is as
+    // tall as the line, so its center is the line's center for every origin.
+    [Theory]
+    [InlineData(VerticalAlignment.Top)]
+    [InlineData(VerticalAlignment.Center)]
+    [InlineData(VerticalAlignment.Bottom)]
+    public void CaretCenter_MultiLineWithAuthoredYOrigin_ShouldMatchDrawnLineCenter(VerticalAlignment yOrigin)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        Text contained = GetCoreText(textBox);
+        GraphicalUiElement caret = GetCaret(textBox);
+        caret.HeightUnits = DimensionUnitType.Absolute;
+        caret.Height = contained.LineHeightInPixels;
+        caret.YOrigin = yOrigin;
+        textBox.CaretIndex = 0;
+        textBox.CaretIndex = 1;
+        float drawnLineCenter = contained.UpdateIpsoForRenderingForTests().Y + contained.LineHeightInPixels / 2.0f;
+
+        caret.GetAbsoluteCenterY().ShouldBe(drawnLineCenter, tolerance: 0.01f);
+    }
+
+    [Theory]
+    [InlineData(VerticalAlignment.Top)]
+    [InlineData(VerticalAlignment.Center)]
+    [InlineData(VerticalAlignment.Bottom)]
+    public void SelectionCenter_MultiLineWithAuthoredYOrigin_ShouldMatchDrawnLineCenter(VerticalAlignment yOrigin)
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: true);
+        Text contained = GetCoreText(textBox);
+        GraphicalUiElement selection = ((TextBoxBaseVisual)textBox.Visual).SelectionInstance;
+        selection.HeightUnits = DimensionUnitType.Absolute;
+        selection.Height = contained.LineHeightInPixels;
+        selection.YOrigin = yOrigin;
+        textBox.Text = "abc\ndef";
+        textBox.SelectionStart = 1;
+        textBox.SelectionLength = 2;
+        float drawnLineCenter = contained.UpdateIpsoForRenderingForTests().Y + contained.LineHeightInPixels / 2.0f;
+
+        GetVisibleSelections(textBox).Single().GetAbsoluteCenterY().ShouldBe(drawnLineCenter, tolerance: 0.01f);
     }
 
     // Each multi-line selection rectangle is centered on its drawn line, like the caret (#6630).
@@ -222,6 +457,27 @@ public class TextBoxCaretPlacementTests : BaseTestClass
         selection.AbsoluteTop.ShouldBe(textBox.Visual.AbsoluteTop + 2, tolerance: 0.01f);
         selection.AbsoluteHeight.ShouldBe(36, tolerance: 0.01f);
     }
+
+    // Moves an instance into a container, offset from the text's parent, inside the visual.
+    static ContainerRuntime MoveToOtherParent(TextBoxBaseVisual visual, GraphicalUiElement instance,
+        float parentWidth = 100)
+    {
+        ContainerRuntime parent = new();
+        parent.X = 30;
+        parent.Y = 30;
+        parent.Width = parentWidth;
+        parent.Height = 60;
+        visual.ClipContainer.AddChild(parent);
+        parent.AddChild(instance);
+        return parent;
+    }
+
+    static GraphicalUiElement[] GetVisibleSelections(TextBox textBox, bool inOtherParent) =>
+        ((TextBoxBaseVisual)textBox.Visual).ClipContainer.Children
+            .OfType<GraphicalUiElement>()
+            .SelectMany(child => inOtherParent ? child.Children.OfType<GraphicalUiElement>() : new[] { child })
+            .Where(child => child.Name == "SelectionInstance" && child.Visible)
+            .ToArray();
 
     static GraphicalUiElement[] GetVisibleSelections(TextBox textBox) =>
         ((TextBoxBaseVisual)textBox.Visual).ClipContainer.Children
