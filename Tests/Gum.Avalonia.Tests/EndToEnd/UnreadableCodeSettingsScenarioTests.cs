@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -193,6 +194,92 @@ public class UnreadableCodeSettingsScenarioTests
         CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
         File.Exists(Path.Combine(code.Project.ProjectFolder, "Components", "Panel.codsj"))
             .ShouldBeTrue("the element's own settings file still follows a rename");
+    }
+
+    [AvaloniaFact]
+    public void UnreadableAfterAnEditOnDisk_AChangeThroughAReference_RegeneratesNothing()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave style = code.Project.AddComponent("Style");
+        ComponentSave button = code.Project.AddComponent("Button");
+        code.Select(style);
+        code.Tree.Grid.TypeAndEnter("Width", "90");
+        code.Select(button);
+        code.Tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Components/Style.Width");
+        code.Tree.SaveAll();
+        // Button follows Style, so a Style edit reaches it through the reference.
+        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
+        string buttonCode = code.CodeFile("Components/Button.Generated.cs");
+        // The tool's startup sends a reference-driven change to the plugins; the test host does not wire it.
+        Action<ElementSave, InstanceSave?, string, object?, bool> sendToPlugins =
+            (element, instance, name, oldValue, isFullCommit) =>
+                TestAppBuilder.Services.GetRequiredService<IPluginManager>().VariableSetThroughReference(element, instance, name, oldValue, isFullCommit);
+        GumRuntime.ElementSaveExtensions.VariableChangedThroughReference += sendToPlugins;
+        try
+        {
+            // Readable: the reference regenerates Button, though Style is the element being edited.
+            DeleteCodeFolder(code);
+            EditStyleWidth(code, style, "120");
+            File.Exists(buttonCode).ShouldBeTrue("a change through a reference regenerates the element that takes it");
+
+            DeleteCodeFolder(code);
+            BreakSettingsFileOnDisk(code);
+            EditStyleWidth(code, style, "150");
+
+            CodeFilesUnder(code.Project.ProjectFolder).ShouldBeEmpty();
+        }
+        finally
+        {
+            GumRuntime.ElementSaveExtensions.VariableChangedThroughReference -= sendToPlugins;
+        }
+    }
+
+    private static void DeleteCodeFolder(CodeTabHarness code)
+    {
+        if (Directory.Exists(code.CodeFolder))
+        {
+            Directory.Delete(code.CodeFolder, recursive: true);
+        }
+    }
+
+    private static void BreakSettingsFileOnDisk(CodeTabHarness code)
+    {
+        File.WriteAllText(SettingsFile(code), Unparsable);
+        TestAppBuilder.Services.GetRequiredService<FileChangeReactionLogic>().ReactToFileChanged(new FilePath(SettingsFile(code)));
+        code.ViewModel.ProjectSettingsLoadError.ShouldNotBeNull();
+    }
+
+    private static void EditStyleWidth(CodeTabHarness code, ComponentSave style, string width)
+    {
+        code.Select(style);
+        code.Tree.Grid.TypeAndEnter("Width", width);
+        // Elements the reference reached are generated after the commit, from the UI thread's queue.
+        global::Avalonia.Threading.Dispatcher.UIThread.RunJobs(global::Avalonia.Threading.DispatcherPriority.Background);
+    }
+
+    [AvaloniaFact]
+    public void UnreadableAfterAnEditOnDisk_ChangingBaseType_LeavesTheCustomCodeAlone()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.ViewModel.InheritanceLocation = Gum.ProjectServices.CodeGeneration.InheritanceLocation.InCustomCode;
+        code.ClickGenerate();
+        string customFile = code.CodeFile("Components/Card.cs");
+        string beforeChange = File.ReadAllText(customFile);
+
+        // Readable: the custom code's declaration follows the new base type.
+        code.Tree.Grid.PickComboItem("BaseType", "Rectangle");
+        string afterReadableChange = File.ReadAllText(customFile);
+        afterReadableChange.ShouldNotBe(beforeChange, "a base type change rewrites the custom code's declaration");
+
+        BreakSettingsFileOnDisk(code);
+        code.Tree.Grid.PickComboItem("BaseType", "Container");
+
+        File.ReadAllText(customFile).ShouldBe(afterReadableChange);
     }
 
     // Each gesture here regenerates or moves an auto-generated element's code when the settings are readable.
