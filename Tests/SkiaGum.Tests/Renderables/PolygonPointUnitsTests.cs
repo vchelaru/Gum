@@ -1,4 +1,5 @@
 using Gum.Converters;
+using Gum.GueDeriving;
 using Shouldly;
 using SkiaGum.Renderables;
 using SkiaSharp;
@@ -8,7 +9,8 @@ namespace SkiaGum.Tests.Renderables;
 /// <summary>
 /// PointXUnits / PointYUnits on the Skia polygon (#6537). Points are measured against the polygon's own bounds, the
 /// same way an X/Y position is measured against its parent. Units without a meaning for a polygon point are reported
-/// through PropertyAssignmentError and leave the previous unit in place, so drawing never throws.
+/// by PolygonRuntime through PropertyAssignmentError, once per element and unit, and leave the previous unit in place;
+/// the renderable itself rejects them when set, so drawing never throws.
 /// </summary>
 public class PolygonPointUnitsTests : IDisposable
 {
@@ -106,26 +108,45 @@ public class PolygonPointUnitsTests : IDisposable
 #pragma warning restore CS0618
     public void PointUnits_WithoutMeaningForPoints_AreReportedAndKeepPreviousUnit(GeneralUnitType unit)
     {
-        Polygon polygon = CreateFilledPolygon(new[]
-        {
-            new SKPoint(10, 12),
-            new SKPoint(30, 12),
-            new SKPoint(30, 30),
-            new SKPoint(10, 30),
-        });
-        polygon.PointXUnits = GeneralUnitType.Percentage;
-        polygon.PointYUnits = GeneralUnitType.Percentage;
+        PolygonRuntime runtime = new PolygonRuntime();
+        runtime.PointXUnits = GeneralUnitType.Percentage;
+        runtime.PointYUnits = GeneralUnitType.Percentage;
 
-        polygon.PointXUnits = unit;
-        polygon.PointYUnits = unit;
+        runtime.PointXUnits = unit;
+        runtime.PointYUnits = unit;
 
-        polygon.PointXUnits.ShouldBe(GeneralUnitType.Percentage);
-        polygon.PointYUnits.ShouldBe(GeneralUnitType.Percentage);
+        runtime.PointXUnits.ShouldBe(GeneralUnitType.Percentage);
+        runtime.PointYUnits.ShouldBe(GeneralUnitType.Percentage);
         _reported.Count.ShouldBe(2);
-        _reported[0].ShouldContain(nameof(Polygon.PointXUnits));
+        _reported[0].ShouldContain(nameof(PolygonRuntime.PointXUnits));
         _reported[0].ShouldContain(unit.ToString());
-        _reported[1].ShouldContain(nameof(Polygon.PointYUnits));
+        _reported[1].ShouldContain(nameof(PolygonRuntime.PointYUnits));
+        Polygon polygon = (Polygon)runtime.RenderableComponent;
         Should.NotThrow(() => Draw(polygon, new SKRect(0, 0, 100, 60)).Dispose());
+    }
+
+    [Fact]
+    public void PointUnits_SameMeaninglessUnitAgain_ReportsOnce_AnotherUnitReportsAgain()
+    {
+        PolygonRuntime runtime = new PolygonRuntime();
+
+        runtime.PointXUnits = GeneralUnitType.PercentageOfFile;
+        runtime.PointXUnits = GeneralUnitType.PercentageOfFile;
+        _reported.Count.ShouldBe(1);
+
+        runtime.PointXUnits = GeneralUnitType.PixelsFromBaseline;
+        _reported.Count.ShouldBe(2);
+        _reported[1].ShouldContain(nameof(GeneralUnitType.PixelsFromBaseline));
+    }
+
+    [Fact]
+    public void Renderable_PointUnits_WithoutMeaningForPoints_Throw()
+    {
+        Polygon polygon = new Polygon();
+
+        Should.Throw<ArgumentException>(() => polygon.PointXUnits = GeneralUnitType.PercentageOfFile);
+        Should.Throw<ArgumentException>(() => polygon.PointYUnits = GeneralUnitType.PercentageOfFile);
+        polygon.PointXUnits.ShouldBe(GeneralUnitType.PixelsFromSmall);
     }
 
     private static Polygon CreateFilledPolygon(SKPoint[] points)

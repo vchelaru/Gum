@@ -21,35 +21,31 @@ public class Polygon : RenderableShapeBase
 
     /// <summary>
     /// How point X values are measured against the polygon's width: PixelsFromSmall (from the left), PixelsFromLarge
-    /// (from the right), PixelsFromMiddle or Percentage. Any other unit is reported through
-    /// <see cref="CustomSetPropertyOnRenderable.PropertyAssignmentError"/> and the current unit is kept.
+    /// (from the right), PixelsFromMiddle or Percentage. Any other unit throws
+    /// an <see cref="ArgumentException"/>; PolygonRuntime reports it instead.
     /// </summary>
     public GeneralUnitType PointXUnits
     {
         get => _pointXUnits;
         set
         {
-            if (IsSupportedPointUnit(value, nameof(PointXUnits), _pointXUnits))
-            {
-                _pointXUnits = value;
-            }
+            ThrowIfUnsupportedPointUnit(value, nameof(PointXUnits));
+            _pointXUnits = value;
         }
     }
 
     /// <summary>
     /// How point Y values are measured against the polygon's height: PixelsFromSmall (from the top), PixelsFromLarge
-    /// (from the bottom), PixelsFromMiddle or Percentage. Any other unit is reported through
-    /// <see cref="CustomSetPropertyOnRenderable.PropertyAssignmentError"/> and the current unit is kept.
+    /// (from the bottom), PixelsFromMiddle or Percentage. Any other unit throws
+    /// an <see cref="ArgumentException"/>; PolygonRuntime reports it instead.
     /// </summary>
     public GeneralUnitType PointYUnits
     {
         get => _pointYUnits;
         set
         {
-            if (IsSupportedPointUnit(value, nameof(PointYUnits), _pointYUnits))
-            {
-                _pointYUnits = value;
-            }
+            ThrowIfUnsupportedPointUnit(value, nameof(PointYUnits));
+            _pointYUnits = value;
         }
     }
 
@@ -159,19 +155,17 @@ public class Polygon : RenderableShapeBase
         UnitConverter.Self.ConvertToPixelCoordinates(point.X, point.Y, PointXUnits, PointYUnits, width, height, 0, 0, out x, out y);
 
     // Units that compare a point to a file, a baseline or the other coordinate have no meaning for a polygon point.
-    bool IsSupportedPointUnit(GeneralUnitType unit, string propertyName, GeneralUnitType current)
+    internal static bool IsSupportedPointUnit(GeneralUnitType unit) =>
+        unit == GeneralUnitType.PixelsFromSmall
+        || unit == GeneralUnitType.PixelsFromLarge
+        || unit == GeneralUnitType.PixelsFromMiddle
+        || unit == GeneralUnitType.Percentage;
+
+    static void ThrowIfUnsupportedPointUnit(GeneralUnitType unit, string propertyName)
     {
-        switch (unit)
+        if (!IsSupportedPointUnit(unit))
         {
-            case GeneralUnitType.PixelsFromSmall:
-            case GeneralUnitType.PixelsFromLarge:
-            case GeneralUnitType.PixelsFromMiddle:
-            case GeneralUnitType.Percentage:
-                return true;
-            default:
-                CustomSetPropertyOnRenderable.RaisePropertyAssignmentError(
-                    $"Polygon {Name} cannot use {propertyName} {unit}; it keeps {current}.");
-                return false;
+            throw new ArgumentException($"A polygon point cannot use {propertyName} {unit}.", propertyName);
         }
     }
 
