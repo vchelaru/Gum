@@ -414,6 +414,20 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         result.ShouldBe(@"..\MonoGameGum\KniGum\KniGum.csproj");
     }
 
+    [Theory]
+    [InlineData(@"..\Runtimes\KniSkiaGum\KniSkiaGum.csproj")]
+    [InlineData(@"..\Runtimes\SkiaGum.Standalone\SkiaGum.Standalone.csproj")]
+    public void ExtractProjectReferencePath_OtherProjectContainingTheName_ReturnsNull(string include)
+    {
+        string csproj = $@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <ProjectReference Include=""{include}"" />
+  </ItemGroup>
+</Project>";
+
+        SyntaxVersionDetectionService.ExtractProjectReferencePath(csproj, "SkiaGum").ShouldBeNull();
+    }
+
     [Fact]
     public void ExtractProjectReferencePath_NotPresent_ReturnsNull()
     {
@@ -767,6 +781,10 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     [InlineData("Runtimes/SilkNetGum/SilkNetGum.csproj", "SilkNetGum")]
     [InlineData("Runtimes/StrideGum/StrideGum.csproj", "StrideGum")]
     [InlineData("Runtimes/UnityGum/UnityGum.csproj", "UnityGum")]
+    [InlineData("Runtimes/SkiaGum.Standalone/SkiaGum.Standalone.csproj", "SkiaGum.Standalone")]
+    [InlineData("Runtimes/SkiaGum.Maui/SkiaGum.Maui.csproj", "SkiaGum.Maui")]
+    [InlineData("Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj", "SkiaGum.ShadowDusk")]
+    [InlineData("Runtimes/SkiaGum.Wpf/SkiaGum.Wpf.csproj", "SkiaGum.Wpf")]
     public void Detect_ProjectReferenceToRepoRuntime_ReadsItsStamp(string csprojRelativePath, string projectName)
     {
         string runtimeCsproj = Path.Combine(FindRepoRoot(), csprojRelativePath);
@@ -788,22 +806,26 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         result.Description.ShouldEndWith($"ProjectReference to {projectName})");
     }
 
-    [Fact]
-    public void Detect_NuGetPackage_KniSkia_ReadsSyntaxVersion()
+    [Theory]
+    [InlineData("Gum.KniSkia", "KniSkiaGum")]
+    [InlineData("Gum.SkiaSharp.Standalone", "SkiaGum.Standalone")]
+    [InlineData("Gum.SkiaSharp.Maui", "SkiaGum.Maui")]
+    [InlineData("Gum.SkiaSharp.ShadowDusk", "SkiaGum.ShadowDusk")]
+    public void Detect_NuGetPackage_SkiaHost_ReadsSyntaxVersion(string packageId, string assemblyName)
     {
         string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
-        string tfmDir = Path.Combine(nuGetCacheRoot, "gum.kniskia", "2026.10.1.1", "lib", "net8.0");
+        string tfmDir = Path.Combine(nuGetCacheRoot, packageId.ToLowerInvariant(), "2026.10.1.1", "lib", "net8.0");
         Directory.CreateDirectory(tfmDir);
-        File.Copy(Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"), Path.Combine(tfmDir, "KniSkiaGum.dll"));
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"), Path.Combine(tfmDir, assemblyName + ".dll"));
 
         SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
 
         string gameDir = Path.Combine(_tempDirectory, "game");
         Directory.CreateDirectory(gameDir);
         File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
-@"<Project Sdk=""Microsoft.NET.Sdk"">
+$@"<Project Sdk=""Microsoft.NET.Sdk"">
   <ItemGroup>
-    <PackageReference Include=""Gum.KniSkia"" Version=""2026.10.1.1"" />
+    <PackageReference Include=""{packageId}"" Version=""2026.10.1.1"" />
   </ItemGroup>
 </Project>");
 
@@ -811,6 +833,33 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
         result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
         result.Version.ShouldBe(GumCommonSyntaxVersion);
+    }
+
+    // An unstamped build of a host that shipped before the namespace unification stays on version 0;
+    // one that started after it gets the latest.
+    [Theory]
+    [InlineData("SkiaGum.Maui", 0)]
+    [InlineData("SkiaGum.Wpf", 0)]
+    [InlineData("SkiaGum.Standalone", -1)]
+    [InlineData("SkiaGum.ShadowDusk", -1)]
+    [InlineData("KniSkiaGum", -1)]
+    public void Detect_ProjectReferenceToUnstampedHost_FallsBackByHistory(string projectName, int expectedVersion)
+    {
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "libs", projectName));
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+$@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <ProjectReference Include=""..\libs\{projectName}\{projectName}.csproj"" />
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = _sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
+        result.Version.ShouldBe(expectedVersion == -1 ? GumCommonSyntaxVersion : expectedVersion);
     }
 
     [Fact]
