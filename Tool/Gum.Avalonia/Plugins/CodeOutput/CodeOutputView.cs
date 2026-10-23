@@ -95,6 +95,7 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
             {
                 new Binding(nameof(CodeWindowViewModel.CanGenerateCode)),
                 new Binding(nameof(CodeWindowViewModel.NeedsSetup)) { Converter = BoolConverters.Not },
+                new Binding(nameof(CodeWindowViewModel.HasProjectSettingsLoadError)) { Converter = BoolConverters.Not },
             },
         });
 
@@ -124,6 +125,11 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         Grid settingsBody = new Grid();
         settingsBody.Children.Add(setupButtons);
         settingsBody.Children.Add(_grid);
+        // An unreadable ProjectCodeSettings.codsj leaves nothing to edit: setup or a settings edit
+        // would save the defaults that stand in for it.
+        settingsBody.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.HasProjectSettingsLoadError)) { Converter = BoolConverters.Not });
+
+        StackPanel loadError = CreateLoadErrorPanel(viewModel);
 
         // The project-wide settings are a page of the Settings window; this tab keeps the selected element's.
         HyperlinkButton editProjectSettings = new HyperlinkButton
@@ -138,8 +144,10 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         DockPanel settings = new DockPanel();
         DockPanel.SetDock(settingsHeader, Dock.Top);
         DockPanel.SetDock(editProjectSettings, Dock.Top);
+        DockPanel.SetDock(loadError, Dock.Top);
         settings.Children.Add(settingsHeader);
         settings.Children.Add(editProjectSettings);
+        settings.Children.Add(loadError);
         settings.Children.Add(settingsBody);
 
         Grid generateUi = new Grid { ColumnDefinitions = new ColumnDefinitions("*,4,*") };
@@ -232,6 +240,31 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
 
     /// <summary>The Generate scope's all-elements choice, for tests.</summary>
     internal ToggleButton AllInProjectToggle => _allInProjectToggle;
+
+    // The parse error, a note that fixing the file on disk is enough, and the one action that writes it.
+    private static StackPanel CreateLoadErrorPanel(CodeWindowViewModel viewModel)
+    {
+        StackPanel panel = new StackPanel { Margin = new Thickness(4, 2), Spacing = 6 };
+        panel.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.HasProjectSettingsLoadError)));
+
+        TextBlock error = new TextBlock { Foreground = Brushes.OrangeRed, TextWrapping = TextWrapping.Wrap };
+        error.Bind(TextBlock.TextProperty, new Binding(nameof(CodeWindowViewModel.ProjectSettingsLoadErrorText)));
+        panel.Children.Add(error);
+
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Changes to ProjectCodeSettings.codsj are reloaded automatically",
+            TextWrapping = TextWrapping.Wrap,
+            FontStyle = FontStyle.Italic,
+        });
+
+        Button reset = new Button { Content = "Reset to defaults", Padding = new Thickness(6, 2) };
+        ToolTip.SetTip(reset, "Replace ProjectCodeSettings.codsj with the default code generation settings");
+        reset.Click += (_, _) => viewModel.RequestResetProjectSettings();
+        panel.Children.Add(reset);
+
+        return panel;
+    }
 
     private void RebuildSettings() => _grid.SetCategories(new List<MemberCategory> { _settingsMembers.BuildElementCategory() });
 

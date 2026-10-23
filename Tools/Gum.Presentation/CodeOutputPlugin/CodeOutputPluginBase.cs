@@ -1,4 +1,4 @@
-﻿using CodeOutputPlugin.Manager;
+using CodeOutputPlugin.Manager;
 using Gum.ProjectServices.CodeGeneration;
 using Gum;
 using Gum.Commands;
@@ -177,6 +177,7 @@ public abstract class CodeOutputPluginBase : PluginBase
             new CodeGenerationAutoSetupService());
 
         _settingsMembers = new CodeOutputSettingsMembers(projectState, syntaxVersionDetectionService, viewModel);
+        viewModel.ResetProjectSettingsRequested += HandleResetProjectSettingsRequested;
     }
 
     private DeleteOptionCheckboxViewModel? _deleteCustomCodeOption;
@@ -285,19 +286,30 @@ public abstract class CodeOutputPluginBase : PluginBase
     {
         // Services resolve ProjectDirectory lazily via IProjectDirectoryProvider,
         // so no reconstruction is needed here — just reload project-scoped settings.
-        codeOutputProjectSettings = _codeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
+        // A file that does not parse is the user's settings: the defaults stand in for display
+        // only, and nothing is saved until the file is fixed (it reloads) or reset.
+        CodeOutputProjectSettings? loaded = _codeOutputProjectSettingsManager.TryLoadSettingsForProject(out string? loadError);
+        codeOutputProjectSettings = loaded ?? CodeOutputProjectSettingsManager.CreateDefaultSettings();
+        viewModel.ProjectSettingsLoadError = loadError;
         _locationWatcher.Reset(codeOutputProjectSettings);
         _settingsMembers.HandleProjectLoaded();
+        _settingsMembers.ProjectSettings = codeOutputProjectSettings;
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         HandleElementSelected(null);
     }
 
     /// <summary>
+    /// Whether ProjectCodeSettings.codsj exists but could not be read. No settings are saved then,
+    /// since that would write over the user's file.
+    /// </summary>
+    private bool IsProjectSettingsReadOnly => viewModel.ProjectSettingsLoadError != null;
+
+    /// <summary>
     /// Re-reads ProjectCodeSettings.codsj after it changes on disk (a pull, a branch switch, a hand
     /// edit). This only reloads: the change arrives with whatever regeneration it needed already
     /// done, so nothing is regenerated, migrated or written here. An unreadable file (half-written,
-    /// merge conflict) keeps the current settings rather than falling back to defaults that the next
-    /// settings edit would write over it.
+    /// merge conflict) keeps the current settings and makes the Code tab read-only until a later
+    /// change makes it readable again, so no settings edit writes over it.
     /// </summary>
     private void HandleFileChanged(FilePath file)
     {
@@ -307,7 +319,12 @@ public abstract class CodeOutputPluginBase : PluginBase
             return;
         }
 
-        CodeOutputProjectSettings? reloaded = _codeOutputProjectSettingsManager.TryLoadSettingsForProject();
+        CodeOutputProjectSettings? reloaded = _codeOutputProjectSettingsManager.TryLoadSettingsForProject(out string? loadError);
+        if (loadError != null)
+        {
+            SetProjectSettingsLoadError(loadError);
+            return;
+        }
         if (reloaded == null)
         {
             return;
@@ -315,17 +332,47 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         // Gum's own settings writes come back through the watcher too; skipping an unchanged file
         // keeps them from rebuilding the settings grid under the user.
-        if (JsonConvert.SerializeObject(reloaded) == JsonConvert.SerializeObject(codeOutputProjectSettings))
+        if (!IsProjectSettingsReadOnly && JsonConvert.SerializeObject(reloaded) == JsonConvert.SerializeObject(codeOutputProjectSettings))
         {
             return;
         }
         /////////////////End Early Out/////////////////
 
-        codeOutputProjectSettings = reloaded;
+        ApplyProjectSettings(reloaded);
+    }
+
+    private void HandleResetProjectSettingsRequested()
+    {
+        const string question = "Replace ProjectCodeSettings.codsj with the default code generation settings? " +
+            "Its current contents will be lost.";
+        if (_dialogService.ShowMessage(question, "Reset code generation settings", MessageDialogStyle.YesNo) != MessageDialogResult.Affirmative)
+        {
+            return;
+        }
+
+        CodeOutputProjectSettings defaults = CodeOutputProjectSettingsManager.CreateDefaultSettings();
+        _codeOutputProjectSettingsManager.WriteSettingsForProject(defaults);
+        ApplyProjectSettings(defaults);
+    }
+
+    /// <summary>Makes <paramref name="settings"/>, just read from or written to disk, the project's settings.</summary>
+    private void ApplyProjectSettings(CodeOutputProjectSettings settings)
+    {
+        codeOutputProjectSettings = settings;
         // The files on disk came with these settings, so a later edit compares against them.
         _locationWatcher.Reset(codeOutputProjectSettings);
+        _settingsMembers.ProjectSettings = codeOutputProjectSettings;
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
+        viewModel.ProjectSettingsLoadError = null;
+        _settingsMembers.RequestRebuild();
         RefreshCodeDisplay();
+    }
+
+    private void SetProjectSettingsLoadError(string? loadError)
+    {
+        viewModel.ProjectSettingsLoadError = loadError;
+        // The rows are built read-only while the file is unreadable.
+        _settingsMembers.RequestRebuild();
     }
 
     private void HandleStateSelected(StateSave? state)
@@ -494,6 +541,10 @@ public abstract class CodeOutputPluginBase : PluginBase
                 // do nothing
                 break;
             case nameof(viewModel.InheritanceLocation):
+                if (IsProjectSettingsReadOnly)
+                {
+                    break;
+                }
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                 _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
                 _locationWatcher.CheckAfterEdit(codeOutputProjectSettings);
@@ -506,6 +557,12 @@ public abstract class CodeOutputPluginBase : PluginBase
 
     private void HandleCodeOutputPropertyChanged()
     {
+        ///////////////////Early Out///////////////////
+        if (IsProjectSettingsReadOnly)
+        {
+            return;
+        }
+        /////////////////End Early Out/////////////////
         _controller?.HandleCodeOutputPropertyChanged(codeOutputProjectSettings);
         // After the write, so the migration that may follow plans against the saved settings.
         _locationWatcher.CheckAfterEdit(codeOutputProjectSettings);
