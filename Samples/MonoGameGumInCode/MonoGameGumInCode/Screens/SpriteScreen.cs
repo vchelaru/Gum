@@ -383,18 +383,15 @@ internal class SpriteScreen : FrameworkElement
             cell.Width = 32;
             cell.Height = 32;
 
-            // TODO: switch to RectangleRuntime + FillColor once Apos.Shapes is
-            // linked into this sample (see #2811 / GUM002 migration). Until
-            // then, ColoredRectangleRuntime is the only built-in solid-color
-            // rect that ships without the shape runtime dependency.
-#pragma warning disable CS0618 // ColoredRectangleRuntime is obsolete
-            var redBackground = new ColoredRectangleRuntime();
-#pragma warning restore CS0618
+            var redBackground = new RectangleRuntime();
             redBackground.Width = 32;
             redBackground.Height = 32;
-            redBackground.Red = 255;
-            redBackground.Green = 0;
-            redBackground.Blue = 0;
+            redBackground.IsFilled = true;
+            redBackground.FillRed = 255;
+            redBackground.FillGreen = 0;
+            redBackground.FillBlue = 0;
+            redBackground.StrokeWidth = 0;
+            redBackground.IsAntialiased = false;
             cell.Children.Add(redBackground);
 
             var alphaMasker = new SpriteRuntime();
