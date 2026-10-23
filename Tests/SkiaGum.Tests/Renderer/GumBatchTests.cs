@@ -43,19 +43,109 @@ public class GumBatchTests
     }
 
     [Fact]
-    public void Begin_Deferred_ThrowsNotSupported()
+    public void Deferred_DrawsByZAtEnd_ImmediateDrawsInCallOrder()
     {
         using SKSurface surface = CreateInitializedSurface(32);
+        surface.Canvas.Clear(SKColors.Black);
+        RectangleRuntime red = CreateRectangle(x: 0, y: 0, size: 16, SKColors.Red);
+        red.Z = 1;
+        RectangleRuntime lime = CreateRectangle(x: 8, y: 8, size: 16, SKColors.Lime);
+        lime.Z = 0;
         GumBatch gumBatch = new();
 
-        Should.Throw<NotSupportedException>(() => gumBatch.Begin(mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred));
-        using SKSurface otherSurface = SKSurface.Create(new SKImageInfo(32, 32));
-        Should.Throw<NotSupportedException>(() => gumBatch.Begin(otherSurface.Canvas, mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred));
-        SystemManagers.Default.Canvas.ShouldBeSameAs(surface.Canvas, "because a failed Begin keeps the host canvas");
-
-        // A failed Begin leaves the batch usable.
         gumBatch.Begin();
+        gumBatch.Draw(red);
+        gumBatch.Draw(lime);
         gumBatch.End();
+
+        PixelAt(surface, 12, 12).ShouldBe(SKColors.Lime, "because Immediate draws in call order and ignores Z");
+
+        surface.Canvas.Clear(SKColors.Black);
+        gumBatch.Begin(mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred);
+        gumBatch.Draw(red);
+        gumBatch.Draw(lime);
+        PixelAt(surface, 4, 4).ShouldBe(SKColors.Black, "because Deferred draws nothing before End");
+        gumBatch.End();
+
+        PixelAt(surface, 12, 12).ShouldBe(SKColors.Red, "because Deferred sorts by Z at End, so the higher-Z red draws last");
+        PixelAt(surface, 20, 20).ShouldBe(SKColors.Lime);
+    }
+
+    [Fact]
+    public void RendererDraw_AfterDeferredCycleEnds_DrawsImmediately()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        surface.Canvas.Clear(SKColors.Black);
+        RenderingLibrary.Graphics.Renderer renderer = SystemManagers.Default.Renderer;
+        GumBatch gumBatch = new();
+
+        gumBatch.Begin(mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred);
+        gumBatch.End();
+        renderer.Draw(CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red));
+
+        PixelAt(surface, 4, 4).ShouldBe(SKColors.Red, "because End returns the renderer to Immediate, so a Draw outside a cycle is not queued");
+    }
+
+    [Fact]
+    public void Deferred_EqualZ_KeepsCallOrderEvenWithSecondarySortOnY()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        surface.Canvas.Clear(SKColors.Black);
+        Layer mainLayer = SystemManagers.Default.Renderer.MainLayer;
+        mainLayer.SecondarySortOnY = true;
+        // Drawn in an order that disagrees with Y at equal Z, so a Y sort would put red on top.
+        RectangleRuntime red = CreateRectangle(x: 0, y: 8, size: 16, SKColors.Red);
+        RectangleRuntime lime = CreateRectangle(x: 0, y: 0, size: 16, SKColors.Lime);
+        GumBatch gumBatch = new();
+
+        gumBatch.Begin(mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred);
+        gumBatch.Draw(red);
+        gumBatch.Draw(lime);
+        gumBatch.End();
+
+        PixelAt(surface, 4, 12).ShouldBe(SKColors.Lime, "because equal-Z deferred draws keep call order, like Immediate");
+    }
+
+    [Fact]
+    public void Deferred_WithMatrix_AppliesItToDrawsSubmittedAtEnd()
+    {
+        using SKSurface surface = CreateInitializedSurface(32);
+        surface.Canvas.Clear(SKColors.Black);
+        ContainerRuntime clip = new() { Width = 16, Height = 16, ClipsChildren = true };
+        clip.Children.Add(CreateRectangle(x: 0, y: 0, size: 8, SKColors.Red));
+        GumBatch gumBatch = new();
+
+        gumBatch.Begin(SKMatrix.CreateScale(2, 2), RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred);
+        gumBatch.Draw(clip);
+        gumBatch.End();
+
+        PixelAt(surface, 12, 12).ShouldBe(SKColors.Red, "because the 8x8 rectangle scaled by 2 covers 0-16");
+        surface.Canvas.TotalMatrix.IsIdentity.ShouldBeTrue("because End restores the matrix after the deferred draws");
+    }
+
+    [Fact]
+    public void Deferred_WhenADrawThrows_DoesNotRedrawTheFailedCycleAndRestoresCanvas()
+    {
+        using SKSurface hostSurface = CreateInitializedSurface(32);
+        using SKSurface offscreenSurface = SKSurface.Create(new SKImageInfo(32, 32));
+        ThrowingRenderProbe thrower = new();
+        RenderCountProbe nextCycleProbe = new();
+        GumBatch gumBatch = new();
+
+        gumBatch.Begin(offscreenSurface.Canvas, SKMatrix.CreateScale(2, 2), RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred);
+        gumBatch.Draw(thrower);
+        Should.Throw<InvalidOperationException>(() => gumBatch.End());
+
+        thrower.RenderCount.ShouldBe(1);
+        SystemManagers.Default.Canvas.ShouldBeSameAs(hostSurface.Canvas, "because a failed End still restores the previous canvas");
+        offscreenSurface.Canvas.TotalMatrix.IsIdentity.ShouldBeTrue("because a failed End still restores the canvas matrix");
+
+        gumBatch.Begin(mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred);
+        gumBatch.Draw(nextCycleProbe);
+        Should.NotThrow(() => gumBatch.End());
+
+        thrower.RenderCount.ShouldBe(1, "because the failed cycle's draws must not survive into the next cycle");
+        nextCycleProbe.RenderCount.ShouldBe(1);
     }
 
     [Fact]
@@ -339,6 +429,32 @@ public class GumBatchTests
 
         PixelAt(hostSurface, 20, 20).ShouldBe(SKColors.Lime);
         PixelAt(offscreenSurface, 20, 20).ShouldBe(SKColors.Black);
+    }
+
+    private class RenderCountProbe : ContainerRuntime
+    {
+        public int RenderCount { get; private set; }
+
+        public RenderCountProbe()
+        {
+            Width = 10;
+            Height = 10;
+        }
+
+        public override void Render(ISystemManagers managers)
+        {
+            RenderCount++;
+            base.Render(managers);
+        }
+    }
+
+    private sealed class ThrowingRenderProbe : RenderCountProbe
+    {
+        public override void Render(ISystemManagers managers)
+        {
+            base.Render(managers);
+            throw new InvalidOperationException("Simulated renderable failure.");
+        }
     }
 
     private static SKSurface CreateInitializedSurface(int size)
