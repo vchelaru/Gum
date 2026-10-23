@@ -52,6 +52,7 @@ public class ProjectLoader : IProjectLoader
             else
             {
                 project.Initialize();
+                StripRemovedVariables(project);
 
                 var elementLoadErrors = ParseElementLoadErrors(gumLoadResult.ErrorMessage);
                 var conflictErrors = DetectConflictMarkers(project, projectDirectory, GumProjectSave.IsJsonFormat(filePath));
@@ -77,6 +78,25 @@ public class ProjectLoader : IProjectLoader
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Applies the same load-time cleanup as the tool's load, so headless codegen never emits a
+    /// variable the runtime no longer has (#6612). The cleanup resolves instance base types through
+    /// <see cref="ObjectFinder"/>, so the project is set on it for the duration of the call.
+    /// </summary>
+    private static void StripRemovedVariables(GumProjectSave project)
+    {
+        GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            project.StripCircleRectangleGradientColor1();
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = previousProject;
+        }
     }
 
     /// <summary>
