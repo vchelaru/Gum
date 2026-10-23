@@ -1,5 +1,6 @@
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -143,6 +144,63 @@ public class TextBoxCaretRotationTests : BaseTestClass
         TextBox sut = CreateTextBox(multiLine, textRotation: 0);
 
         GetVisual(sut).TextInstance.Rotation = 30;
+
+        GetCaret(sut).GetAbsoluteRotation().ShouldBe(30, Tolerance);
+        AssertSameOffset(GetOffsetInTextFrame(sut, GetCaret(sut)), GetOffsetInTextFrame(expected, GetCaret(expected)));
+    }
+
+    // Rotating the text's parent (or any ancestor) raises no event on the text, so the first update
+    // of the focused box after the rotation re-places the caret and the selection (#6646).
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CaretAndSelection_TextParentRotatedAfterPlacement_ShouldFollowOnFirstUpdate(bool rotateWholeTextBox)
+    {
+        TextBox expected = CreateTextBox(multiLine: true, textRotation: 0);
+        TextBox sut = CreateTextBox(multiLine: true, textRotation: 0);
+        foreach (TextBox textBox in new[] { expected, sut })
+        {
+            textBox.SelectionStart = 2;
+            textBox.SelectionLength = "cdef\nghij".Length;
+        }
+        GraphicalUiElement rotated(TextBox textBox) =>
+            rotateWholeTextBox ? textBox.Visual : GetVisual(textBox).TextInstance.Parent!;
+        rotated(expected).Rotation = 30;
+        expected.CaretIndex = 0;
+        expected.CaretIndex = "abcdef\nghi".Length;
+        expected.SelectionLength = 0;
+        expected.SelectionLength = "cdef\nghij".Length;
+
+        rotated(sut).Rotation = 30;
+        sut.OnFocusUpdate();
+
+        AssertSameOffset(GetOffsetInTextFrame(sut, GetCaret(sut)), GetOffsetInTextFrame(expected, GetCaret(expected)));
+        GraphicalUiElement[] expectedSelections = GetVisibleSelections(expected);
+        GraphicalUiElement[] actualSelections = GetVisibleSelections(sut);
+        actualSelections.Length.ShouldBe(2);
+        for (int i = 0; i < actualSelections.Length; i++)
+        {
+            AssertSameOffset(GetOffsetInTextFrame(sut, actualSelections[i]), GetOffsetInTextFrame(expected, expectedSelections[i]));
+        }
+    }
+
+    // The turn happens about the text's origin in the text's parent, even when a Visual parents the
+    // caret somewhere else (#6646).
+    [Fact]
+    public void Caret_CaretInOtherParentAndTextRotated_ShouldTurnWithText()
+    {
+        TextBox expected = CreateTextBox(multiLine: true, textRotation: 30);
+        TextBox sut = CreateTextBox(multiLine: true, textRotation: 30);
+        TextBoxBaseVisual visual = GetVisual(sut);
+        ContainerRuntime caretParent = new();
+        caretParent.X = 30;
+        caretParent.Y = 30;
+        caretParent.Width = 100;
+        caretParent.Height = 60;
+        visual.ClipContainer.AddChild(caretParent);
+        caretParent.AddChild(visual.CaretInstance);
+        sut.CaretIndex = 0;
+        sut.CaretIndex = "abcdef\nghi".Length;
 
         GetCaret(sut).GetAbsoluteRotation().ShouldBe(30, Tolerance);
         AssertSameOffset(GetOffsetInTextFrame(sut, GetCaret(sut)), GetOffsetInTextFrame(expected, GetCaret(expected)));
