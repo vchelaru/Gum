@@ -85,19 +85,17 @@ public class GumDriverTests : BaseTestClass
     }
 
     [Fact]
-    public void Drag_FromNamedElement_PushesItAndRaisesDraggingAlongThePath()
+    public void Drag_SliderThumbPastTheTrackEnd_MovesValueToMaximum()
     {
-        Button handle = new Button { Name = "Handle", Width = 40, Height = 40 };
-        handle.AddToRoot();
+        Slider slider = new Slider { Width = 200, Minimum = 0, Maximum = 100, Value = 0 };
+        slider.AddToRoot();
         Gum.GumService.Default.Root.UpdateLayout();
-        List<int> dragXs = new();
-        handle.Visual.Dragging += (_, _) => dragXs.Add(_driver.Cursor.X);
+        GraphicalUiElement thumb = _driver.Find("ThumbInstance");
+        int thumbY = (int)(thumb.AbsoluteTop + thumb.AbsoluteHeight / 2);
 
-        _driver.Drag("Handle", toX: 300, toY: 20, moveFrames: 4);
+        _driver.Drag("ThumbInstance", toX: 400, toY: thumbY, moveFrames: 4);
 
-        // Dragging fires on the push frame and on each of the four move frames.
-        dragXs.Count.ShouldBe(5);
-        dragXs[^1].ShouldBe(300);
+        slider.Value.ShouldBe(100);
         _driver.Cursor.VisualPushed.ShouldBeNull();
     }
 
