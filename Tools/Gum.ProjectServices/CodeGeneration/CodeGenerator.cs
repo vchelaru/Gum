@@ -3609,7 +3609,13 @@ public class CodeGenerator
                 // MonoGame expects 0 or 2-arg constructors. We'll start with 0 for now, and eventually go to 2 if we need Forms support
                 // Update November 3, 2024 - there's code that is generated that expects fullInstantiation. Also the docs recommend a 2-arg
                 // approach so let's do that:
-                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(bool fullInstantiation = true, bool tryCreateFormsObject = true)");
+                // FindByName: SetGraphicalUiElement on the most derived element builds every level, so a
+                // base class must not build its own element first, and its Forms flag must reach it.
+                string baseCall = projectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName &&
+                    DoesElementInheritFromCodeGeneratedElement(element, projectSettings)
+                    ? " : base(fullInstantiation: false, tryCreateFormsObject: tryCreateFormsObject)"
+                    : "";
+                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(bool fullInstantiation = true, bool tryCreateFormsObject = true){baseCall}");
             }
             else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
