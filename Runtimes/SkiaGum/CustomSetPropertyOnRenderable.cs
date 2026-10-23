@@ -114,6 +114,8 @@ public partial class CustomSetPropertyOnRenderable
         PropertyAssignmentError?.Invoke(message);
     }
 
+#if SKIA
+    // Skia-only: the GumShapes projects link this file but have no GumFontMapper and no GumCommon internals.
     /// <summary>
     /// Reports a font file a Skia text could not use, once per element and file, since the font is resolved again on
     /// every font property change: a missing file through <see cref="GraphicalUiElement.MissingFileBehavior"/>, and a
@@ -156,6 +158,7 @@ public partial class CustomSetPropertyOnRenderable
                 "Skia needs a .ttf or .otf custom font file; this text draws with the default font instead.");
         }
     }
+#endif
 
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
