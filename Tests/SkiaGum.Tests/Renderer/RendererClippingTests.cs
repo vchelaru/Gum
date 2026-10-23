@@ -177,6 +177,90 @@ public class RendererClippingTests
         AssertSameCoverage(expected, clipped, IsRed, minimumCount: 1500, ClipCenterTolerance, countTolerancePercent: 3);
     }
 
+    // Unrotated clips keep their pixel-aligned edges: a fractional clip edge rounds to whole
+    // pixels with no partly covered fringe. Children are colored past the clip on every side so
+    // only the clip decides which pixels are drawn.
+    [Fact]
+    public void ClipsChildren_UnrotatedAtFractionalPosition_ClipsToWholePixels()
+    {
+        using SKBitmap bitmap = Render(ClipSceneSize, () =>
+        {
+            ContainerRuntime container = new() { X = 10.3f, Y = 20.7f, Width = 60, Height = 60, ClipsChildren = true };
+            container.Children.Add(Rect(-20, -20, 100, 100, SKColors.Red));
+            return container;
+        });
+
+        AssertDrawnBox(bitmap, left: 10, top: 21, right: 69, bottom: 80, isFilled: true);
+    }
+
+    [Fact]
+    public void ClipsChildren_UnrotatedNested_ClipsToIntersection()
+    {
+        using SKBitmap bitmap = Render(ClipSceneSize, () =>
+        {
+            ContainerRuntime outer = new() { X = 10.3f, Y = 20.7f, Width = 60, Height = 60, ClipsChildren = true };
+            ContainerRuntime inner = new() { X = 30, Y = 30, Width = 60, Height = 60, ClipsChildren = true };
+            inner.Children.Add(Rect(-50, -50, 200, 200, SKColors.Red));
+            outer.Children.Add(inner);
+            return outer;
+        });
+
+        AssertDrawnBox(bitmap, left: 40, top: 51, right: 69, bottom: 80, isFilled: true);
+    }
+
+    [Fact]
+    public void ClipsChildren_UnrotatedTextOverflowing_IsCutAtClipEdge()
+    {
+        using SKBitmap bitmap = Render(ClipSceneSize, () =>
+        {
+            ContainerRuntime container = new() { X = 10.3f, Y = 20.7f, Width = 20, Height = 60, ClipsChildren = true };
+            container.Children.Add(new TextRuntime { X = 0, Y = 0, Text = "WWWWWWWW", Color = SKColors.White });
+            return container;
+        });
+
+        // The text runs past the right edge, so it reaches the last clipped column and stops there.
+        AssertDrawnBox(bitmap, left: 10, top: 21, right: 29, bottom: 80, isFilled: false);
+        DrawnBounds(bitmap).Right.ShouldBe(29);
+    }
+
+    static SKRectI DrawnBounds(SKBitmap bitmap)
+    {
+        int left = int.MaxValue, top = int.MaxValue, right = -1, bottom = -1;
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                if (bitmap.GetPixel(x, y) != SKColors.Black)
+                {
+                    left = System.Math.Min(left, x);
+                    top = System.Math.Min(top, y);
+                    right = System.Math.Max(right, x);
+                    bottom = System.Math.Max(bottom, y);
+                }
+            }
+        }
+        return new SKRectI(left, top, right, bottom);
+    }
+
+    // Every drawn pixel lies inside the inclusive box; a filled scene covers it exactly.
+    static void AssertDrawnBox(SKBitmap bitmap, int left, int top, int right, int bottom, bool isFilled)
+    {
+        SKRectI drawn = DrawnBounds(bitmap);
+        string label = $"drawn={drawn}";
+        if (isFilled)
+        {
+            drawn.ShouldBe(new SKRectI(left, top, right, bottom), label);
+            Measure(bitmap, c => c != SKColors.Black).Count.ShouldBe((right - left + 1) * (bottom - top + 1), label);
+        }
+        else
+        {
+            drawn.Left.ShouldBeGreaterThanOrEqualTo(left, label);
+            drawn.Top.ShouldBeGreaterThanOrEqualTo(top, label);
+            drawn.Right.ShouldBeLessThanOrEqualTo(right, label);
+            drawn.Bottom.ShouldBeLessThanOrEqualTo(bottom, label);
+        }
+    }
+
     static bool IsWhite(SKColor c) => c.Red > 100 && c.Green > 100 && c.Blue > 100;
 
     const int ClipSceneSize = 240;
