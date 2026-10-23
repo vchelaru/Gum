@@ -332,17 +332,24 @@ namespace RenderingLibrary
                 || bounds.Top > clip.Bottom + margin;
         }
 
-        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer? layer, IRenderableIpso? ipso)
+        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer? layer, IRenderableIpso? ipso) =>
+            camera.GetScissorRectangleFor(layer, ipso, bakedContainer: null);
+
+        /// <summary>
+        /// Scissor rectangle for <paramref name="ipso"/> while drawing the bake of
+        /// <paramref name="bakedContainer"/>, a render-target container whose children are baked
+        /// upright (see <see cref="IPositionedSizedObjectExtensionMethods.GetAbsoluteBoundsInBake"/>, #6618).
+        /// Pass null outside a bake.
+        /// </summary>
+        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer? layer, IRenderableIpso? ipso, IRenderableIpso? bakedContainer)
         {
             if (ipso == null)
             {
                 return new System.Drawing.Rectangle(camera.ClientLeft, camera.ClientTop, camera.ClientWidth, camera.ClientHeight);
             }
 
-            return camera.GetScissorRectangleForWorldBounds(
-                layer,
-                ipso.GetAbsoluteLeft(), ipso.GetAbsoluteTop(),
-                ipso.GetAbsoluteRight(), ipso.GetAbsoluteBottom());
+            ipso.GetAbsoluteBoundsInBake(bakedContainer, out float left, out float top, out float right, out float bottom);
+            return camera.GetScissorRectangleForWorldBounds(layer, left, top, right, bottom);
         }
 
         /// <summary>
@@ -364,18 +371,22 @@ namespace RenderingLibrary
         /// is still used, unmodified, to apply the actual GPU clip for ClipsChildren renderables, so
         /// this never changes what's visually cropped, only what gets culled.
         /// </summary>
-        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer? layer, IRenderableIpso ipso)
+        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer? layer, IRenderableIpso ipso) =>
+            camera.GetCullTestBoundsFor(layer, ipso, bakedContainer: null);
+
+        /// <inheritdoc cref="GetCullTestBoundsFor(Camera, Layer?, IRenderableIpso)"/>
+        /// <param name="bakedContainer">The render-target container being baked, or null outside a bake (#6618).</param>
+        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer? layer, IRenderableIpso ipso, IRenderableIpso? bakedContainer)
         {
             if (ipso == null)
             {
                 return camera.GetScissorRectangleFor(layer, ipso);
             }
 
-            float worldTop = ipso.GetAbsoluteTop();
-            float worldBottom = ipso.GetAbsoluteBottom();
+            ipso.GetAbsoluteBoundsInBake(bakedContainer, out float left, out float worldTop, out float right, out float worldBottom);
             ExpandWorldTopBottomForWrappedTextExcess(ipso, ref worldTop, ref worldBottom);
 
-            return camera.GetScissorRectangleForWorldBounds(layer, ipso.GetAbsoluteLeft(), worldTop, ipso.GetAbsoluteRight(), worldBottom);
+            return camera.GetScissorRectangleForWorldBounds(layer, left, worldTop, right, worldBottom);
         }
 
         /// <summary>

@@ -180,6 +180,57 @@ public class RotatedRenderTargetTests : BaseTestClass
         IsRed(pixels[(44 * Size) + 108]).ShouldBeTrue($"pixel was {pixels[(44 * Size) + 108]}");
     }
 
+    // A ClipsChildren container inside a rotated render target keeps its child's overflow inside the
+    // turned clip rectangle (#6618). The 40x40 clip sits at local (40, 0) and holds a 100x100 child,
+    // so exactly the 40x40 clip shows, centered at local (60, 20) turned about the container origin.
+    [Theory]
+    [InlineData(0f)]
+    [InlineData(30f)]
+    [InlineData(-50f)]
+    public void Draw_ClipsChildrenInsideRotatedRenderTarget_ShowsTheTurnedClipRectangle(float rotation)
+    {
+        ContainerRuntime container = new()
+        {
+            X = 100, Y = 100, Width = 100, Height = 100, Rotation = rotation, IsRenderTarget = true,
+        };
+        ContainerRuntime clip = new() { X = 40, Y = 0, Width = 40, Height = 40, ClipsChildren = true };
+        clip.AddChild(SolidRect(0, 0, 100, 100, Red));
+        container.AddChild(clip);
+
+        Coverage coverage = Measure(Capture(container), IsRed);
+
+        double radians = rotation * System.Math.PI / 180;
+        float expectedX = 100 + (float)((60 * System.Math.Cos(radians)) + (20 * System.Math.Sin(radians)));
+        float expectedY = 100 + (float)((-60 * System.Math.Sin(radians)) + (20 * System.Math.Cos(radians)));
+        string label = coverage.ToString();
+        coverage.Count.ShouldBeInRange(1500, 1700, label);
+        coverage.CenterX.ShouldBe(expectedX, 1f, label);
+        coverage.CenterY.ShouldBe(expectedY, 1f, label);
+    }
+
+    // A clip near the far corner of the container, whose child overflows the clip on every side.
+    [Fact]
+    public void Draw_ClipsChildrenNearCornerOfRotatedRenderTarget_ShowsTheTurnedClipRectangle()
+    {
+        ContainerRuntime container = new()
+        {
+            X = 100, Y = 100, Width = 100, Height = 100, Rotation = 30, IsRenderTarget = true,
+        };
+        ContainerRuntime clip = new() { X = 60, Y = 60, Width = 40, Height = 40, ClipsChildren = true };
+        clip.AddChild(SolidRect(-20, -20, 100, 100, Red));
+        container.AddChild(clip);
+
+        Coverage coverage = Measure(Capture(container), IsRed);
+
+        // Clip center is local (80, 80) turned 30 degrees about (100, 100).
+        float expectedX = 100 + (float)((80 * System.Math.Cos(System.Math.PI / 6)) + (80 * System.Math.Sin(System.Math.PI / 6)));
+        float expectedY = 100 + (float)((-80 * System.Math.Sin(System.Math.PI / 6)) + (80 * System.Math.Cos(System.Math.PI / 6)));
+        string label = coverage.ToString();
+        coverage.Count.ShouldBeInRange(1500, 1700, label);
+        coverage.CenterX.ShouldBe(expectedX, 1f, label);
+        coverage.CenterY.ShouldBe(expectedY, 1f, label);
+    }
+
     record struct Coverage(int Count, float CenterX, float CenterY);
 
     static bool IsRed(XnaColor c) => c.R > 150 && c.G < 80 && c.B < 80;

@@ -230,6 +230,42 @@ namespace RenderingLibrary
             return ipso.GetAbsoluteRotation() != 0 || HasTurnedRenderTargetAncestor(ipso);
         }
 
+        /// <summary>
+        /// The absolute bounds of <paramref name="ipso"/> in the space a render-target bake draws in
+        /// (#6618). A turned container bakes its children upright: the bake turns everything back by
+        /// the container's absolute rotation about its absolute top-left, while a descendant's
+        /// absolute position is where it sits turned in the world. A clip or cull rectangle for the
+        /// bake must therefore start at the descendant's top-left turned back the same way. The
+        /// rectangle stays axis-aligned: right and bottom add the unturned width and height, like
+        /// <see cref="GetAbsoluteRight"/>, which is exact for a descendant turned only by the
+        /// container. With no <paramref name="bakedContainer"/>, or one that is not turned, these
+        /// are the plain absolute bounds.
+        /// </summary>
+        public static void GetAbsoluteBoundsInBake(this IRenderableIpso ipso, IRenderableIpso? bakedContainer,
+            out float left, out float top, out float right, out float bottom)
+        {
+            left = ipso.GetAbsoluteLeft();
+            top = ipso.GetAbsoluteTop();
+
+            float rotation = bakedContainer?.GetAbsoluteRotation() ?? 0;
+            if (bakedContainer != null && rotation != 0)
+            {
+                float pivotX = bakedContainer.GetAbsoluteLeft();
+                float pivotY = bakedContainer.GetAbsoluteTop();
+                float radians = MathHelper.ToRadians(rotation);
+                float cos = (float)System.Math.Cos(radians);
+                float sin = (float)System.Math.Sin(radians);
+                float dx = left - pivotX;
+                float dy = top - pivotY;
+                // Gum rotation is counterclockwise on a Y-down screen, so undoing it is +angle.
+                left = pivotX + (dx * cos) - (dy * sin);
+                top = pivotY + (dx * sin) + (dy * cos);
+            }
+
+            right = left + ipso.Width;
+            bottom = top + ipso.Height;
+        }
+
         static bool HasTurnedRenderTargetAncestor(IRenderableIpso ipso)
         {
             var parent = ipso.Parent;

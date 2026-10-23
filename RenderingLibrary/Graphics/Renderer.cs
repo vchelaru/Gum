@@ -1160,6 +1160,11 @@ public class Renderer : IRenderer
         return true;
     }
 
+    // The render-target container whose subtree is being baked right now, null outside a bake.
+    // A clip rectangle drawn inside the bake of a turned container is expressed in the container's
+    // upright space, not in the world (#6618).
+    private IRenderableIpso? _bakedContainer;
+
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
 
@@ -1273,7 +1278,9 @@ public class Renderer : IRenderer
             // before its parent starts) and SubmitBake only blits an already-baked nested target, so
             // a bake never starts inside another one (#5677).
             _isBakingRenderTarget = true;
+            _bakedContainer = renderable;
             SubmitBake(renderable, systemManagers, _layers[0]);
+            _bakedContainer = null;
             _isBakingRenderTarget = false;
 
             gumBatch.End();
@@ -1325,7 +1332,7 @@ public class Renderer : IRenderer
         var children = container.Children;
         if (children != null && children.Count > 0)
         {
-            SiblingOrdering.BuildDrawList(children, _bakeCommands, new ClipBoundsSource(Camera, layer));
+            SiblingOrdering.BuildDrawList(children, _bakeCommands, new ClipBoundsSource(Camera, layer, container));
             Submit(_bakeCommands, managers, layer);
         }
 
@@ -1576,7 +1583,7 @@ public class Renderer : IRenderer
     {
         _clipScopeStack.Push(mRenderStateVariables.ClipRectangle);
 
-        var clipRectangle = Camera.GetScissorRectangleFor(layer, renderable);
+        var clipRectangle = Camera.GetScissorRectangleFor(layer, renderable, _bakedContainer);
         var adjustedRectangle = mRenderStateVariables.ClipRectangle != null
             ? Rectangle.Intersect(clipRectangle, mRenderStateVariables.ClipRectangle.Value)
             : clipRectangle;
@@ -1832,7 +1839,7 @@ public class Renderer : IRenderer
 
         if (renderable.ClipsChildren)
         {
-            var clipRectangle = Camera.GetScissorRectangleFor(layer, renderable);
+            var clipRectangle = Camera.GetScissorRectangleFor(layer, renderable, _bakedContainer);
 
             if (renderState.ClipRectangle == null || clipRectangle != renderState.ClipRectangle.Value)
             {

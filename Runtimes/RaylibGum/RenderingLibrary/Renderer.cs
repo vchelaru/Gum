@@ -58,6 +58,11 @@ public class Renderer : IRenderer
     float _bakeLeft;
     float _bakeTop;
 
+    // The render-target container being baked. A turned container bakes its children upright, so a
+    // descendant's clip and cull rectangles are turned back about the container before they are
+    // rebased onto the bake origin (#6618).
+    IRenderableIpso? _bakeContainer;
+
     // Reused across bakes so a bake doesn't allocate a fresh scissor stack each frame. Swapped in
     // for the duration of a bake and restored afterward; balanced push/pop leaves it empty.
     readonly Stack<System.Drawing.Rectangle> _bakeScissorStack = new();
@@ -511,15 +516,13 @@ public class Renderer : IRenderer
             return _camera.GetScissorRectangleFor(layer, element);
         }
 
+        element.GetAbsoluteBoundsInBake(_bakeContainer,
+            out float worldLeft, out float worldTop, out float worldRight, out float worldBottom);
         float zoom = _camera.Zoom;
-        int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteLeft() - _bakeLeft) * zoom);
-        int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteTop() - _bakeTop) * zoom);
-        int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteRight() - _bakeLeft) * zoom);
-        int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteBottom() - _bakeTop) * zoom);
+        int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt((worldLeft - _bakeLeft) * zoom);
+        int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt((worldTop - _bakeTop) * zoom);
+        int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt((worldRight - _bakeLeft) * zoom);
+        int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt((worldBottom - _bakeTop) * zoom);
         return new System.Drawing.Rectangle(left, top, right - left, bottom - top);
     }
 
@@ -536,19 +539,15 @@ public class Renderer : IRenderer
             return _camera.GetCullTestBoundsFor(layer, element);
         }
 
-        float worldTop = element.GetAbsoluteTop();
-        float worldBottom = element.GetAbsoluteBottom();
+        element.GetAbsoluteBoundsInBake(_bakeContainer,
+            out float worldLeft, out float worldTop, out float worldRight, out float worldBottom);
         CameraScissorExtensions.ExpandWorldTopBottomForWrappedTextExcess(element, ref worldTop, ref worldBottom);
 
         float zoom = _camera.Zoom;
-        int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteLeft() - _bakeLeft) * zoom);
-        int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (worldTop - _bakeTop) * zoom);
-        int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteRight() - _bakeLeft) * zoom);
-        int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (worldBottom - _bakeTop) * zoom);
+        int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt((worldLeft - _bakeLeft) * zoom);
+        int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt((worldTop - _bakeTop) * zoom);
+        int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt((worldRight - _bakeLeft) * zoom);
+        int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt((worldBottom - _bakeTop) * zoom);
         return new System.Drawing.Rectangle(left, top, right - left, bottom - top);
     }
 
@@ -641,7 +640,9 @@ public class Renderer : IRenderer
         bool wasBaking = _isBakingRenderTarget;
         float savedBakeLeft = _bakeLeft;
         float savedBakeTop = _bakeTop;
+        IRenderableIpso? savedBakeContainer = _bakeContainer;
         _isBakingRenderTarget = true;
+        _bakeContainer = container;
         _bakeLeft = bounds.Left;
         _bakeTop = bounds.Top;
 
@@ -687,6 +688,7 @@ public class Renderer : IRenderer
         _isBakingRenderTarget = wasBaking;
         _bakeLeft = savedBakeLeft;
         _bakeTop = savedBakeTop;
+        _bakeContainer = savedBakeContainer;
         _scissorStack = savedScissorStack;
         ActiveCamera2D = savedActiveCamera;
         ActiveRenderTexture = savedActiveRenderTexture;
