@@ -769,6 +769,28 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         result.Version.ShouldBe(3);
     }
 
+    // The checked-in Tests/CodeGen_* output was generated at these versions. A detection change that
+    // moves one makes that output stale (CI's Codegen Drift Check): rerun
+    // Tests/GenerateAllCodeGenProjects.bat, commit the diff, then update the pin here.
+    [Theory]
+    [InlineData("CodeGen_Maui_FullCodegen/Content/GumProject", 5)]
+    [InlineData("CodeGen_MonoGame_ByReference/Content/GumProject", 5)]
+    [InlineData("CodeGen_MonoGameForms_ByReference/Content/GumProject", 5)]
+    [InlineData("CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject", 5)]
+    [InlineData("CodeGen_MonoGameForms_FullCodegen/Content", 5)]
+    [InlineData("CodeGen_Raylib_ByReference/Content/GumProject", 5)]
+    [InlineData("CodeGen_Skia_ByReference/Content/GumProject", 5)]
+    public void Detect_CodeGenHarnessProject_MatchesTheVersionItsOutputWasGeneratedAt(string gumProjectRelativePath, int expectedVersion)
+    {
+        string gumProjectDir = Path.Combine(FindRepoRoot(), "Tests", gumProjectRelativePath);
+        CodeOutputProjectSettings settings = Newtonsoft.Json.JsonConvert.DeserializeObject<CodeOutputProjectSettings>(
+            File.ReadAllText(Path.Combine(gumProjectDir, "ProjectCodeSettings.codsj")))!;
+
+        SyntaxVersionResult result = _sut.Detect(settings, gumProjectDir + Path.DirectorySeparatorChar);
+
+        result.Version.ShouldBe(expectedVersion, result.Description);
+    }
+
     // Every runtime in this repo that stamps a GumSyntaxVersion, referenced by its real csproj.
     // KniGum and FnaGum compile MonoGameGum's source, stamp included, from the folder above them.
     [Theory]

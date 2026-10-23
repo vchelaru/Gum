@@ -32,6 +32,8 @@ When none of the three finds a version, the fallback depends on which runtimes t
 
 **GumCommon is not on the detection scan list** — stamping it is for assembly-metadata consistency, not for codegen detection.
 
+**A detection or stamp change can change the version a `Tests/CodeGen_*` harness resolves**, which makes its checked-in output stale. `Detect_CodeGenHarnessProject_MatchesTheVersionItsOutputWasGeneratedAt` pins each harness; when it fails, regenerate (see `gum-tool-codegen`) and update the pin.
+
 ## When to bump
 
 When the runtime surface that codegen cares about changes in a way that requires the tool to emit different code (renamed/removed role interfaces, new runtime types, namespace changes). Bump every stamped assembly (grep `GumSyntaxVersion(Version`) in lock step and add a row to the version table.
