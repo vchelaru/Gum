@@ -17,7 +17,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     // same-named DLL over the runtime's copy in bin/ and fails at runtime with no build warning.
     private static readonly string[] ReservedProjectNames =
     {
-        "GumCommon", "MonoGameGum", "KniGum", "FnaGum", "RaylibGum", "SkiaGum", "SilkNetGum", "StrideGum"
+        "GumCommon", "MonoGameGum", "KniGum", "FnaGum", "RaylibGum", "SkiaGum", "SilkNetGum", "StrideGum", "KniSkiaGum"
     };
 
     private static readonly Regex ValidProjectName = new Regex("^[A-Za-z_][A-Za-z0-9_.-]*$");
@@ -51,10 +51,11 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             return Fail($"Gum project already exists: {gumProjectPath}");
         }
 
-        string gumReference = $"<PackageReference Include=\"{GetPackageName(platform)}\" Version=\"*\" />";
+        (string packageName, string runtimeProjectPath) = GetGumRuntime(platform);
+        string gumReference = $"<PackageReference Include=\"{packageName}\" Version=\"*\" />";
         if (gumSourceDirectory != null)
         {
-            string runtimeCsproj = Path.GetFullPath(Path.Combine(gumSourceDirectory, GetRuntimeProjectPath(platform)));
+            string runtimeCsproj = Path.GetFullPath(Path.Combine(gumSourceDirectory, runtimeProjectPath));
             if (!File.Exists(runtimeCsproj))
             {
                 return Fail($"Gum source not found: {runtimeCsproj} does not exist. Pass the root of a Gum checkout.");
@@ -108,24 +109,15 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         return null;
     }
 
-    private static string GetPackageName(HostPlatform platform) => platform switch
+    // Each platform's Gum package, and the location of that package's project inside a Gum checkout.
+    private static (string PackageName, string RuntimeProjectPath) GetGumRuntime(HostPlatform platform) => platform switch
     {
-        HostPlatform.MonoGame => "Gum.MonoGame",
-        HostPlatform.Kni => "Gum.KNI",
-        HostPlatform.Raylib => "Gum.raylib",
-        HostPlatform.Stride => "Gum.Stride",
-        HostPlatform.SilkNet => "Gum.SilkNet",
-        _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
-    };
-
-    // Location of each package's project inside a Gum checkout.
-    private static string GetRuntimeProjectPath(HostPlatform platform) => platform switch
-    {
-        HostPlatform.MonoGame => Path.Combine("MonoGameGum", "MonoGameGum.csproj"),
-        HostPlatform.Kni => Path.Combine("MonoGameGum", "KniGum", "KniGum.csproj"),
-        HostPlatform.Raylib => Path.Combine("Runtimes", "RaylibGum", "RaylibGum.csproj"),
-        HostPlatform.Stride => Path.Combine("Runtimes", "StrideGum", "StrideGum.csproj"),
-        HostPlatform.SilkNet => Path.Combine("Runtimes", "SilkNetGum", "SilkNetGum.csproj"),
+        HostPlatform.MonoGame => ("Gum.MonoGame", Path.Combine("MonoGameGum", "MonoGameGum.csproj")),
+        HostPlatform.Kni => ("Gum.KNI", Path.Combine("MonoGameGum", "KniGum", "KniGum.csproj")),
+        HostPlatform.Raylib => ("Gum.raylib", Path.Combine("Runtimes", "RaylibGum", "RaylibGum.csproj")),
+        HostPlatform.Stride => ("Gum.Stride", Path.Combine("Runtimes", "StrideGum", "StrideGum.csproj")),
+        HostPlatform.SilkNet => ("Gum.SilkNet", Path.Combine("Runtimes", "SilkNetGum", "SilkNetGum.csproj")),
+        HostPlatform.KniSkia => ("Gum.KniSkia", Path.Combine("Runtimes", "KniSkiaGum", "KniSkiaGum.csproj")),
         _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
     };
 
@@ -134,7 +126,10 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string gumReference)
     {
         string platformFolder = platform.ToString();
-        string sharedFolder = platform is HostPlatform.MonoGame or HostPlatform.Kni ? "Xna" : platformFolder;
+        // The XNA-style hosts share Program.cs and run a Game1. KNI Skia draws through a Skia canvas,
+        // so it has its own Game1.
+        bool isXnaGame = platform is HostPlatform.MonoGame or HostPlatform.Kni or HostPlatform.KniSkia;
+        string programFolder = isXnaGame ? "Xna" : platformFolder;
 
         File.WriteAllText(
             csprojPath,
@@ -142,13 +137,14 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
                 .Replace("{{GumReference}}", gumReference));
         File.WriteAllText(
             Path.Combine(directory, "Program.cs"),
-            ReadTemplate(sharedFolder, "Program.cs.template", projectName, rootNamespace));
+            ReadTemplate(programFolder, "Program.cs.template", projectName, rootNamespace));
 
-        if (sharedFolder == "Xna")
+        if (isXnaGame)
         {
+            string gameFolder = platform == HostPlatform.KniSkia ? platformFolder : "Xna";
             File.WriteAllText(
                 Path.Combine(directory, "Game1.cs"),
-                ReadTemplate(sharedFolder, "Game1.cs.template", projectName, rootNamespace));
+                ReadTemplate(gameFolder, "Game1.cs.template", projectName, rootNamespace));
         }
     }
 

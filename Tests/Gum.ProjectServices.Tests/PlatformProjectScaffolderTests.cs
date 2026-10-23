@@ -30,6 +30,7 @@ public class PlatformProjectScaffolderTests : IDisposable
     [InlineData(HostPlatform.Raylib, "Gum.raylib", OutputLibrary.GumForms)]
     [InlineData(HostPlatform.Stride, "Gum.Stride", OutputLibrary.GumForms)]
     [InlineData(HostPlatform.SilkNet, "Gum.SilkNet", OutputLibrary.GumForms)]
+    [InlineData(HostPlatform.KniSkia, "Gum.KniSkia", OutputLibrary.GumForms)]
     public void Create_ShouldReferenceGumPackageAndPointCodegenAtHostProject(
         HostPlatform platform, string expectedPackage, OutputLibrary expectedLibrary)
     {
@@ -122,6 +123,7 @@ public class PlatformProjectScaffolderTests : IDisposable
     [InlineData("RaylibGum")]
     [InlineData("SkiaGum")]
     [InlineData("SilkNetGum")]
+    [InlineData("KniSkiaGum")]
     [InlineData("GumCommon")]
     public void Create_WhenNameCollidesWithRuntimeAssembly_ShouldFailWithoutWritingFiles(string name)
     {
@@ -165,6 +167,7 @@ public class PlatformProjectScaffolderTests : IDisposable
     [InlineData(HostPlatform.Raylib, "Runtimes/RaylibGum/RaylibGum.csproj", "Gum.raylib")]
     [InlineData(HostPlatform.Stride, "Runtimes/StrideGum/StrideGum.csproj", "Gum.Stride")]
     [InlineData(HostPlatform.SilkNet, "Runtimes/SilkNetGum/SilkNetGum.csproj", "Gum.SilkNet")]
+    [InlineData(HostPlatform.KniSkia, "Runtimes/KniSkiaGum/KniSkiaGum.csproj", "Gum.KniSkia")]
     public void Create_WithGumSource_ShouldReferenceRuntimeProjectInsteadOfPackage(
         HostPlatform platform, string runtimeCsproj, string packageName)
     {

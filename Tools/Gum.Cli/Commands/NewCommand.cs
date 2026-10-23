@@ -46,7 +46,7 @@ public static class NewCommand
             description: "Create a full, runnable game project for a platform (not just a Gum project), referencing Gum " +
                          "through NuGet, with the Gum project inside it at Content/GumProject and code generation already " +
                          "configured. <path> then names the project folder. Omit this option to create only a Gum project. " +
-                         "Accepted values: 'monogame', 'kni', 'raylib', 'stride' (Windows only), 'silknet'.");
+                         $"Accepted values: {ValidPlatformNames}. 'stride' runs on Windows only; 'kniskia' is KNI drawing Gum through Skia.");
 
         var noRestoreOption = new Option<bool>(
             "--no-restore",
@@ -82,6 +82,21 @@ public static class NewCommand
 
         return command;
     }
+
+    // The --platform values. An alias follows its platform's main name and is not listed as a valid value.
+    private static readonly (string Name, HostPlatform Platform)[] Platforms =
+    {
+        ("monogame", HostPlatform.MonoGame),
+        ("kni", HostPlatform.Kni),
+        ("kniskia", HostPlatform.KniSkia),
+        ("raylib", HostPlatform.Raylib),
+        ("stride", HostPlatform.Stride),
+        ("silknet", HostPlatform.SilkNet),
+        ("silk.net", HostPlatform.SilkNet)
+    };
+
+    private static string ValidPlatformNames =>
+        string.Join(", ", Platforms.GroupBy(entry => entry.Platform).Select(group => group.First().Name));
 
     private const string DefaultProjectName = "GumProject";
     private const string DefaultPlatformProjectName = "MyGumGame";
@@ -195,31 +210,20 @@ public static class NewCommand
     private static int ExecuteWithPlatform(
         string? path, string template, string? themeDirectory, string platform, bool noRestore, bool sourceLinked)
     {
-        HostPlatform hostPlatform;
-        switch (platform.ToLowerInvariant())
+        if (string.Equals(platform, "fna", StringComparison.OrdinalIgnoreCase))
         {
-            case "monogame":
-                hostPlatform = HostPlatform.MonoGame;
-                break;
-            case "kni":
-                hostPlatform = HostPlatform.Kni;
-                break;
-            case "raylib":
-                hostPlatform = HostPlatform.Raylib;
-                break;
-            case "stride":
-                hostPlatform = HostPlatform.Stride;
-                break;
-            case "silknet":
-            case "silk.net":
-                hostPlatform = HostPlatform.SilkNet;
-                break;
-            case "fna":
-                Console.Error.WriteLine("FNA projects can't be scaffolded: FNA is not published to NuGet, so it has to be linked from source.");
-                return 2;
-            default:
-                Console.Error.WriteLine($"Unknown platform '{platform}'. Valid values are: monogame, kni, raylib, stride, silknet.");
-                return 2;
+            Console.Error.WriteLine("FNA projects can't be scaffolded: FNA is not published to NuGet, so it has to be linked from source.");
+            return 2;
+        }
+
+        HostPlatform? match = Platforms
+            .Where(entry => string.Equals(entry.Name, platform, StringComparison.OrdinalIgnoreCase))
+            .Select(entry => (HostPlatform?)entry.Platform)
+            .FirstOrDefault();
+        if (match is not HostPlatform hostPlatform)
+        {
+            Console.Error.WriteLine($"Unknown platform '{platform}'. Valid values are: {ValidPlatformNames}.");
+            return 2;
         }
 
         if (!string.IsNullOrEmpty(path) && GumProjectSave.IsProjectFile(path))

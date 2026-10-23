@@ -18,5 +18,10 @@ public enum HostPlatform
     Stride,
 
     /// <summary>Silk.NET on SDL (Windows, macOS and Linux), referencing the <c>Gum.SilkNet</c> package.</summary>
-    SilkNet
+    SilkNet,
+
+    /// <summary>
+    /// KNI DesktopGL drawing Gum through Skia (SkiaGameRendering), referencing the <c>Gum.KniSkia</c> package.
+    /// </summary>
+    KniSkia
 }
