@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Creates a MonoGame project from every bundled Forms theme with gumcli, generates its code, and compiles it.
+    Creates a project from every bundled Forms theme with gumcli, generates its code, and compiles it.
 
 .DESCRIPTION
-    Each theme goes through `gumcli new --theme <name> --platform monogame --source-linked`, is switched to
+    Each theme goes through `gumcli new --theme <name> --platform <Platform> --source-linked`, is switched to
     FullyInCode (the mode that emits per-variable assignments), is generated with `gumcli codegen`, and is
     built against this checkout's runtime projects. Exits 1 when any theme fails at any step.
 
@@ -12,6 +12,10 @@
 
 .PARAMETER OutputRoot
     Folder the projects are created in. Defaults to a new temp folder, deleted afterwards.
+
+.PARAMETER Platform
+    The `gumcli new --platform` host. Defaults to monogame. CI also runs kniskia, which has no output library
+    of its own and generates with Gum Forms like every other runtime.
 
 .PARAMETER Configuration
     Build configuration. CI passes the one the runtime projects were already built in, so they are not compiled twice.
@@ -23,6 +27,7 @@ param(
     [Parameter(Mandatory = $true)][string]$Cli,
     [string]$OutputRoot = "",
     [string[]]$Theme = @(),
+    [string]$Platform = "monogame",
     [string]$Configuration = "Debug"
 )
 
@@ -54,7 +59,7 @@ $created = $Theme | ForEach-Object -ThrottleLimit 4 -Parallel {
 
     try {
         # 2>&1: gumcli's stderr banner would otherwise reach the parent's error stream, where "Stop" makes it fatal.
-        $log += (& $cli new $project --theme $name --platform monogame --source-linked --no-restore 2>&1 | Out-String)
+        $log += (& $cli new $project --theme $name --platform $using:Platform --source-linked --no-restore 2>&1 | Out-String)
         if ($LASTEXITCODE -ne 0) { throw "gumcli new exited $LASTEXITCODE" }
 
         $gumFolder = Join-Path $project "Content/GumProject"
