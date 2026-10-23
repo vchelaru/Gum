@@ -22,13 +22,16 @@ internal class CustomListBoxItemRuntime : InteractiveGue
             this.Width = 0f;
             this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
 
-            var Background = new ColoredRectangleRuntime();
+            var Background = new RectangleRuntime();
             Background.Name = "Background";
             var TextInstance = new TextRuntime();
             TextInstance.Name = "TextInstance";
             var FocusedIndicator = new RectangleRuntime();
             FocusedIndicator.Name = "FocusedIndicator";
 
+            Background.IsFilled = true;
+            Background.StrokeWidth = 0;
+            Background.IsAntialiased = false;
             Background.Height = 0f;
             Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             Background.Visible = false;
@@ -95,8 +98,18 @@ internal class CustomListBoxItemRuntime : InteractiveGue
                         },
                         new Gum.DataTypes.Variables.VariableSave()
                         {
-                            Value = Microsoft.Xna.Framework.Color.Green,
-                            Name = "Background.Color"
+                            Value = 0,
+                            Name = "Background.FillRed"
+                        },
+                        new Gum.DataTypes.Variables.VariableSave()
+                        {
+                            Value = 128,
+                            Name = "Background.FillGreen"
+                        },
+                        new Gum.DataTypes.Variables.VariableSave()
+                        {
+                            Value = 0,
+                            Name = "Background.FillBlue"
                         },
                         new Gum.DataTypes.Variables.VariableSave()
                         {
@@ -118,8 +131,18 @@ internal class CustomListBoxItemRuntime : InteractiveGue
                         },
                         new Gum.DataTypes.Variables.VariableSave()
                         {
-                            Value = Microsoft.Xna.Framework.Color.Yellow,
-                            Name = "Background.Color"
+                            Value = 255,
+                            Name = "Background.FillRed"
+                        },
+                        new Gum.DataTypes.Variables.VariableSave()
+                        {
+                            Value = 255,
+                            Name = "Background.FillGreen"
+                        },
+                        new Gum.DataTypes.Variables.VariableSave()
+                        {
+                            Value = 0,
+                            Name = "Background.FillBlue"
                         },
                         new Gum.DataTypes.Variables.VariableSave()
                         {

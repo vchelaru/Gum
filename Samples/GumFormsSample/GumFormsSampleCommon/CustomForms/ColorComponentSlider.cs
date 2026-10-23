@@ -85,9 +85,12 @@ public class ColorComponentSlider : Slider
         thumbInstance.Anchor(Gum.Wireframe.Anchor.Bottom);
         thumbInstance.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
 
-        var thumbInstanceVisual = new ColoredRectangleRuntime();
+        var thumbInstanceVisual = new RectangleRuntime();
         thumbInstance.AddChild(thumbInstanceVisual);
         thumbInstanceVisual.Dock(Gum.Wireframe.Dock.Fill);
+        thumbInstanceVisual.IsFilled = true;
+        thumbInstanceVisual.StrokeWidth = 0;
+        thumbInstanceVisual.IsAntialiased = false;
         // todo - set the thumb Sprite image
 
         var textBox = new TextBox();

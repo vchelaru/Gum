@@ -29,13 +29,16 @@ public class ToolTip : InteractiveGue
             this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             this.HasEvents = false;
 
-            var background = new ColoredRectangleRuntime();
+            var background = new RectangleRuntime();
             background.Width = 0;
             background.Height = 0;
             background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             background.Name = "Background";
-            background.Color = new SkiaSharp.SKColor(0, 0, 0);
+            background.IsFilled = true;
+            background.FillColor = new SkiaSharp.SKColor(0, 0, 0);
+            background.StrokeWidth = 0;
+            background.IsAntialiased = false;
             this.Children.Add(background);
 
 

@@ -152,12 +152,15 @@ public class KniGumInCodeGame : Game
             layer.LayerCameraSettings = new LayerCameraSettings();
             layer.LayerCameraSettings.IsInScreenSpace = true;
 
-            var layeredRectangle = new ColoredRectangleRuntime();
+            var layeredRectangle = new RectangleRuntime();
             layeredRectangle.X = 10;
             layeredRectangle.Y = 10;
             layeredRectangle.Width = 120;
             layeredRectangle.Height = 120;
-            layeredRectangle.Color = Color.Blue;
+            layeredRectangle.IsFilled = true;
+            layeredRectangle.FillColor = Color.Blue;
+            layeredRectangle.StrokeWidth = 0;
+            layeredRectangle.IsAntialiased = false;
             layeredRectangle.AddToManagers(SystemManagers.Default, layer);
         }
 
@@ -171,13 +174,16 @@ public class KniGumInCodeGame : Game
 
         AddText(container, "This is a colored rectangle:").Name = "TitleText";
 
-        var coloredRectangleInstance = new ColoredRectangleRuntime();
+        var coloredRectangleInstance = new RectangleRuntime();
         coloredRectangleInstance.Name = "ColoredRectangle";
         coloredRectangleInstance.X = 10;
         coloredRectangleInstance.Y = 10;
         coloredRectangleInstance.Width = 120;
         coloredRectangleInstance.Height = 24;
-        coloredRectangleInstance.Color = Color.White;
+        coloredRectangleInstance.IsFilled = true;
+        coloredRectangleInstance.FillColor = Color.White;
+        coloredRectangleInstance.StrokeWidth = 0;
+        coloredRectangleInstance.IsAntialiased = false;
         container.Children.Add(coloredRectangleInstance);
 
         AddText(container, "This is a (line) rectangle:");
