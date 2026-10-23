@@ -59,6 +59,14 @@ try {
         else { Write-Host "FAIL  dotnet runs with the terminal logger off even when the environment turns it on`n  MSBUILDTERMINALLOGGER was: $value"; $failures++ }
     }
     finally { $env:MSBUILDTERMINALLOGGER = $previous }
+
+    # A NOTESTS result prints the filter and the tail of the output, so its cause shows without a rerun.
+    # The scratch copy's Invoke-Dotnet is swapped for a stub that exits 0 with no test summary.
+    Set-Content (Join-Path $scratch 'Tools/Invoke-Dotnet.ps1') 'function Invoke-Dotnet { param([string[]]$Command, [int]$TimeoutSeconds) @{ Output = @(''stub line 6569''); Exit = 0; TimedOut = $false } }'
+    $output = (& pwsh -NoProfile -File (Join-Path $scratch 'Tools/fast-test.ps1') 'UntrackedTests' -NoBuild 2>&1 6>&1 | ForEach-Object { "$_" }) -join "`n"
+    $name = 'NOTESTS prints the filter and the last lines of the output'
+    if ($output -match 'NOTESTS' -and $output -match 'filter: FullyQualifiedName~A\.UntrackedTests\.' -and $output -match 'stub line 6569') { Write-Host "pass  $name" }
+    else { Write-Host "FAIL  $name`n  output:`n    $($output -replace "`n", "`n    ")"; $failures++ }
 }
 finally { Remove-Item -Recurse -Force $scratch -ErrorAction SilentlyContinue }
 

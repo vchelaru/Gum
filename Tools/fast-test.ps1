@@ -141,7 +141,13 @@ function Invoke-Timed {
     $status = if ($result.TimedOut) { 'TIMEDOUT' } elseif ($result.Exit -ne 0) { 'FAILED' } elseif ($ranNoTests) { 'NOTESTS' } else { 'ok' }
     Write-Host ("{0,-8} {1,4:N0}s  {2}" -f $status, $clock.Elapsed.TotalSeconds, $Name)
     if ($result.TimedOut) { Write-Host "  killed after ${TimeoutSeconds}s with no result. Do not rerun it unchanged: narrow the class list or look for a spinning dotnet process." }
-    if ($ranNoTests -and -not $result.TimedOut -and $result.Exit -eq 0) { Write-Host "  the filter matched no tests" }
+    if ($ranNoTests -and -not $result.TimedOut -and $result.Exit -eq 0) {
+        # No "Passed!"/"Failed!" summary: either the filter matched nothing or the output format changed.
+        # Show both so the cause is visible without a rerun.
+        Write-Host "  no test summary in the output; filter: $($Command[[array]::IndexOf($Command, '--filter') + 1])"
+        Write-Host "  last lines of dotnet test output:"
+        $output | Where-Object { $_.Trim() } | Select-Object -Last 20 | ForEach-Object { Write-Host "    $_" }
+    }
     $output | Where-Object { $_ -match ': error ' } | Sort-Object -Unique | ForEach-Object { Write-Host "  $_" }
     for ($i = 0; $i -lt $output.Count; $i++) {
         $line = $output[$i]
