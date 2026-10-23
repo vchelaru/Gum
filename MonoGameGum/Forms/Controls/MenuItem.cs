@@ -768,12 +768,16 @@ public class MenuItem : ItemsControl
                 continue;
             }
 
-            // A row that moved leaves and re-enters; its own submenu closes with it.
-            if (visual.Parent == popup.InnerPanel)
+            // A row that moved is moved within the panel rather than detached, which would close its own submenu.
+            int currentIndex = popup.InnerPanel.Children.IndexOf(visual);
+            if (currentIndex > -1)
             {
-                visual.Parent = null;
+                popup.InnerPanel.Children.Move(currentIndex, i);
             }
-            popup.InnerPanel.Children.Insert(i, visual);
+            else
+            {
+                popup.InnerPanel.Children.Insert(i, visual);
+            }
         }
 
         popupRows.Clear();

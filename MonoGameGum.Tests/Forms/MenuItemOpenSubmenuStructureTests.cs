@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
@@ -255,6 +255,22 @@ public class MenuItemOpenSubmenuStructureTests : BaseTestClass
         InteractiveGue.PendingNextPushActionCount.ShouldBe(0);
     }
 
+    [Fact]
+    public void PendingPushActionsCleared_ThenOpenedAgain_PushOutsideStillClosesTheMenu()
+    {
+        Bar bar = CreateBar();
+        PushOn(bar.File.Visual, pushTime: 1);
+        bar.File.IsPopupVisible.ShouldBeTrue("precondition: pushing the item opens its submenu");
+        InteractiveGue.ClearNextPushActions();
+        bar.File.IsSelected = false;
+        PushOn(bar.File.Visual, pushTime: 2);
+        bar.File.IsPopupVisible.ShouldBeTrue("precondition: pushing the item opens its submenu again");
+
+        PushOn(null, pushTime: 3);
+
+        bar.File.IsPopupVisible.ShouldBeFalse();
+    }
+
     #endregion
 
     #region Items changing while open (#6695)
@@ -424,6 +440,35 @@ public class MenuItemOpenSubmenuStructureTests : BaseTestClass
         bar.Recent.IsPopupVisible.ShouldBeFalse();
         bar.Recent.IsSelected.ShouldBeFalse();
         PopupRootCount().ShouldBe(baseline + 1);
+    }
+
+    [Fact]
+    public void ItemMovedWhileOpen_ReordersThePopupAndKeepsTheRowsHighlight()
+    {
+        Bar bar = CreateBar();
+        bar.File.IsSelected = true;
+        bar.OpenItem.IsHighlighted = true;
+
+        ((ObservableCollection<object>)bar.File.Items!).Move(1, 2);
+
+        HeadersIn(PopupOf(bar.File)).ShouldBe(new[] { "New", "Recent", "Open" });
+        bar.OpenItem.IsHighlighted.ShouldBeTrue();
+        bar.File.IsPopupVisible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ItemMovedWhileOpen_KeepsTheRowsSelectionAndOpenSubmenu()
+    {
+        Bar bar = CreateBar();
+        bar.File.IsSelected = true;
+        bar.Recent.IsSelected = true;
+
+        ((ObservableCollection<object>)bar.File.Items!).Move(2, 0);
+
+        HeadersIn(PopupOf(bar.File)).ShouldBe(new[] { "Recent", "New", "Open" });
+        bar.Recent.IsSelected.ShouldBeTrue();
+        bar.Recent.IsPopupVisible.ShouldBeTrue();
+        PopupOf(bar.Recent).AbsoluteTop.ShouldBe(bar.Recent.Visual.AbsoluteTop, 0.5f);
     }
 
     [Fact]
