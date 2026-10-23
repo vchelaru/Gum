@@ -40,7 +40,8 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
 
     public TreeViewItem(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public TreeViewItem() : base(new ContainerRuntime())
@@ -56,6 +57,7 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -69,15 +71,20 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.AddStatesAndCategoriesRecursivelyToGue(InnerPanelInstance.ElementSave);
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.SetInitialState();
         InnerPanelInstance.Name = "InnerPanelInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        ToggleButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TreeViewToggle>(this.Visual,"ToggleButtonInstance");
+        ListBoxItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ListBoxItem>(this.Visual,"ListBoxItemInstance");
+        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(ToggleButtonInstance);
-        this.AddChild(ListBoxItemInstance);
-        this.AddChild(InnerPanelInstance);
+        this.Visual.AddChild(this.ToggleButtonInstance.Visual);
+        this.Visual.AddChild(this.ListBoxItemInstance.Visual);
+        this.Visual.AddChild(this.InnerPanelInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
 
         this.ListBoxItemInstance.Visual.Height = 24f;
@@ -95,6 +102,16 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
         this.InnerPanelInstance.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
         this.InnerPanelInstance.Y = 24f;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

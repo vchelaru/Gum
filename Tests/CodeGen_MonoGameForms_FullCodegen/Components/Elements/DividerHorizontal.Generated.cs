@@ -40,7 +40,8 @@ partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
 
     public DividerHorizontal(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public DividerHorizontal() : base(new ContainerRuntime())
@@ -55,6 +56,7 @@ partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -74,15 +76,20 @@ partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
         if (AccentRight.ElementSave != null) AccentRight.AddStatesAndCategoriesRecursivelyToGue(AccentRight.ElementSave);
         if (AccentRight.ElementSave != null) AccentRight.SetInitialState();
         AccentRight.Name = "AccentRight";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        AccentLeft = this.Visual?.GetGraphicalUiElementByName("AccentLeft") as global::Gum.GueDeriving.SpriteRuntime;
+        Line = this.Visual?.GetGraphicalUiElementByName("Line") as global::Gum.GueDeriving.SpriteRuntime;
+        AccentRight = this.Visual?.GetGraphicalUiElementByName("AccentRight") as global::Gum.GueDeriving.SpriteRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(AccentLeft);
-        this.AddChild(Line);
-        this.AddChild(AccentRight);
+        this.Visual.AddChild(this.AccentLeft);
+        this.Visual.AddChild(this.Line);
+        this.Visual.AddChild(this.AccentRight);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.AccentLeft.SetProperty("ColorCategoryState", "Gray");
         this.AccentLeft.Height = 100f;
@@ -124,6 +131,16 @@ partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
         this.AccentRight.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
         this.AccentRight.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

@@ -69,7 +69,8 @@ partial class @interface : global::Gum.Forms.Controls.FrameworkElement
     }
     public @interface(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public @interface() : base(new ContainerRuntime())
@@ -80,18 +81,31 @@ partial class @interface : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
     {
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
     }
     protected virtual void AssignParents()
     {
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.@object = 1f;
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

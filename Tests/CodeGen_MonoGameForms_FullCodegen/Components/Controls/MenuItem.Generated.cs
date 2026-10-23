@@ -86,7 +86,8 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
 
     public MenuItem(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public MenuItem() : base(new ContainerRuntime())
@@ -108,6 +109,7 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -132,16 +134,22 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
         if (ContainerInstance.ElementSave != null) ContainerInstance.AddStatesAndCategoriesRecursivelyToGue(ContainerInstance.ElementSave);
         if (ContainerInstance.ElementSave != null) ContainerInstance.SetInitialState();
         ContainerInstance.Name = "ContainerInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        SubmenuIndicatorInstance = this.Visual?.GetGraphicalUiElementByName("SubmenuIndicatorInstance") as global::Gum.GueDeriving.TextRuntime;
+        ContainerInstance = this.Visual?.GetGraphicalUiElementByName("ContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
+        this.Visual.AddChild(this.Background);
         ContainerInstance.AddChild(TextInstance);
         ContainerInstance.AddChild(SubmenuIndicatorInstance);
-        this.AddChild(ContainerInstance);
+        this.Visual.AddChild(this.ContainerInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.Height = -0f;
@@ -193,6 +201,16 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
         this.ContainerInstance.Width = 0f;
         this.ContainerInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

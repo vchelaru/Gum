@@ -79,7 +79,7 @@ public class CodeGeneratorRefreshInternalVisualReferencesTests : BaseTestClass
     }
 
     [Fact]
-    public void GetGeneratedCodeForElement_GumForms_EmitsRefreshInternalVisualReferences()
+    public void GetGeneratedCodeForElement_GumFormsFullyInCode_DefersVisualReactionUntilChildrenExist()
     {
         GumProjectSave project = Project;
 
@@ -94,7 +94,11 @@ public class CodeGeneratorRefreshInternalVisualReferencesTests : BaseTestClass
                 new CodeOutputElementSettings(),
                 CreateProjectSettings(OutputLibrary.GumForms));
 
-            code.ShouldContain("base.RefreshInternalVisualReferences();");
+            // The Forms base constructor gets a Visual with no children yet, so the control finds its
+            // named children once the constructor has parented them (#6529).
+            code.ShouldNotContain("base.RefreshInternalVisualReferences();");
+            code.ShouldContain("if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();");
+            code.IndexOf("ReactToGeneratedVisual();", code.IndexOf("AssignParents();")).ShouldBeGreaterThan(0);
         }
         finally
         {

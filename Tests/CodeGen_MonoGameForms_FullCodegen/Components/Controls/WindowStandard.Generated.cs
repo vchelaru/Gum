@@ -49,7 +49,8 @@ partial class WindowStandard : global::Gum.Forms.Window
 
     public WindowStandard(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public WindowStandard() : base(new ContainerRuntime())
@@ -62,6 +63,7 @@ partial class WindowStandard : global::Gum.Forms.Window
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -91,23 +93,36 @@ partial class WindowStandard : global::Gum.Forms.Window
         BorderLeftInstance.Name = "BorderLeftInstance";
         BorderRightInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderRightInstance.Name = "BorderRightInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        InnerPanelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"InnerPanelInstance");
+        TitleBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"TitleBarInstance");
+        BorderTopLeftInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"BorderTopLeftInstance");
+        BorderTopRightInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"BorderTopRightInstance");
+        BorderBottomLeftInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"BorderBottomLeftInstance");
+        BorderBottomRightInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"BorderBottomRightInstance");
+        BorderTopInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"BorderTopInstance");
+        BorderBottomInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"BorderBottomInstance");
+        BorderLeftInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"BorderLeftInstance");
+        BorderRightInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Panel>(this.Visual,"BorderRightInstance");
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(InnerPanelInstance);
-        this.AddChild(TitleBarInstance);
-        this.AddChild(BorderTopLeftInstance);
-        this.AddChild(BorderTopRightInstance);
-        this.AddChild(BorderBottomLeftInstance);
-        this.AddChild(BorderBottomRightInstance);
-        this.AddChild(BorderTopInstance);
-        this.AddChild(BorderBottomInstance);
-        this.AddChild(BorderLeftInstance);
-        this.AddChild(BorderRightInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.InnerPanelInstance.Visual);
+        this.Visual.AddChild(this.TitleBarInstance.Visual);
+        this.Visual.AddChild(this.BorderTopLeftInstance.Visual);
+        this.Visual.AddChild(this.BorderTopRightInstance.Visual);
+        this.Visual.AddChild(this.BorderBottomLeftInstance.Visual);
+        this.Visual.AddChild(this.BorderBottomRightInstance.Visual);
+        this.Visual.AddChild(this.BorderTopInstance.Visual);
+        this.Visual.AddChild(this.BorderBottomInstance.Visual);
+        this.Visual.AddChild(this.BorderLeftInstance.Visual);
+        this.Visual.AddChild(this.BorderRightInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "Primary");
         this.Background.SetProperty("StyleCategoryState", "Panel");
@@ -215,6 +230,16 @@ partial class WindowStandard : global::Gum.Forms.Window
         this.BorderRightInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.BorderRightInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

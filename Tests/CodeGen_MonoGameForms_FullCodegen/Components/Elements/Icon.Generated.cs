@@ -635,7 +635,8 @@ partial class Icon : global::Gum.Forms.Controls.FrameworkElement
 
     public Icon(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public Icon() : base(new ContainerRuntime())
@@ -651,6 +652,7 @@ partial class Icon : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -660,13 +662,16 @@ partial class Icon : global::Gum.Forms.Controls.FrameworkElement
         if (IconSprite.ElementSave != null) IconSprite.AddStatesAndCategoriesRecursivelyToGue(IconSprite.ElementSave);
         if (IconSprite.ElementSave != null) IconSprite.SetInitialState();
         IconSprite.Name = "IconSprite";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        IconSprite = this.Visual?.GetGraphicalUiElementByName("IconSprite") as global::Gum.GueDeriving.SpriteRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(IconSprite);
+        this.Visual.AddChild(this.IconSprite);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.IconSprite.SetProperty("ColorCategoryState", "White");
         this.IconSprite.Height = 100f;
@@ -684,6 +689,16 @@ partial class Icon : global::Gum.Forms.Controls.FrameworkElement
         this.IconSprite.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.IconSprite.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

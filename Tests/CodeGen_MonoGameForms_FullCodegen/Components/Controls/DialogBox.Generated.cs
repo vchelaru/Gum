@@ -40,7 +40,8 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
 
     public DialogBox(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public DialogBox() : base(new ContainerRuntime())
@@ -55,6 +56,7 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -71,15 +73,20 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
         TextInstance.Name = "TextInstance";
         ContinueIndicatorInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         ContinueIndicatorInstance.Name = "ContinueIndicatorInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        ContinueIndicatorInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"ContinueIndicatorInstance");
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(NineSliceInstance);
-        this.AddChild(TextInstance);
-        this.AddChild(ContinueIndicatorInstance);
+        this.Visual.AddChild(this.NineSliceInstance);
+        this.Visual.AddChild(this.TextInstance);
+        this.Visual.AddChild(this.ContinueIndicatorInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.NineSliceInstance.SetProperty("ColorCategoryState", "Primary");
         this.NineSliceInstance.SetProperty("StyleCategoryState", "Panel");
@@ -107,6 +114,16 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
         this.ContinueIndicatorInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.ContinueIndicatorInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

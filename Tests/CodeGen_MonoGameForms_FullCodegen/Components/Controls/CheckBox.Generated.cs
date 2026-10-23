@@ -252,7 +252,8 @@ partial class CheckBox : global::Gum.Forms.Controls.CheckBox
 
     public CheckBox(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public CheckBox() : base(new ContainerRuntime())
@@ -266,6 +267,7 @@ partial class CheckBox : global::Gum.Forms.Controls.CheckBox
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -287,16 +289,22 @@ partial class CheckBox : global::Gum.Forms.Controls.CheckBox
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        CheckboxBackground = this.Visual?.GetGraphicalUiElementByName("CheckboxBackground") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        Check = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"Check");
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(CheckboxBackground);
-        this.AddChild(TextInstance);
+        this.Visual.AddChild(this.CheckboxBackground);
+        this.Visual.AddChild(this.TextInstance);
         CheckboxBackground.AddChild(Check.Visual);
-        this.AddChild(FocusedIndicator);
+        this.Visual.AddChild(this.FocusedIndicator);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.CheckboxBackground.SetProperty("ColorCategoryState", "Primary");
         this.CheckboxBackground.SetProperty("StyleCategoryState", "Bordered");
@@ -337,6 +345,16 @@ partial class CheckBox : global::Gum.Forms.Controls.CheckBox
         this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.FocusedIndicator.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

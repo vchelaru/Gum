@@ -92,7 +92,8 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
 
     public PercentBarIcon(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public PercentBarIcon() : base(new ContainerRuntime())
@@ -106,6 +107,7 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -131,18 +133,26 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
         CautionLinesInstance.Name = "CautionLinesInstance";
         VerticalLinesInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.VerticalLines();
         VerticalLinesInstance.Name = "VerticalLinesInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        IconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"IconInstance");
+        BarContainer = this.Visual?.GetGraphicalUiElementByName("BarContainer") as global::Gum.GueDeriving.NineSliceRuntime;
+        Bar = this.Visual?.GetGraphicalUiElementByName("Bar") as global::Gum.GueDeriving.NineSliceRuntime;
+        CautionLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<CautionLines>(this.Visual,"CautionLinesInstance");
+        VerticalLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<VerticalLines>(this.Visual,"VerticalLinesInstance");
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(IconInstance);
-        this.AddChild(BarContainer);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.IconInstance.Visual);
+        this.Visual.AddChild(this.BarContainer);
         BarContainer.AddChild(Bar);
         Bar.AddChild(CautionLinesInstance.Visual);
         Bar.AddChild(VerticalLinesInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.SetProperty("StyleCategoryState", "Bordered");
@@ -192,6 +202,16 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
         this.VerticalLinesInstance.Visual.Width = 0f;
         this.VerticalLinesInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

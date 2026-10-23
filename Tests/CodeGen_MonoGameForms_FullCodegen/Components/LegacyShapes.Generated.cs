@@ -40,7 +40,8 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
 
     public LegacyShapes(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public LegacyShapes() : base(new ContainerRuntime())
@@ -51,6 +52,7 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -85,16 +87,22 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
         RoundedDefault.StrokeWidth = 0f;
         RoundedDefault.CornerRadius = 5f;
         RoundedDefault.Name = "RoundedDefault";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        FilledCircle = this.Visual?.GetGraphicalUiElementByName("FilledCircle") as global::Gum.GueDeriving.CircleRuntime;
+        OutlineCircle = this.Visual?.GetGraphicalUiElementByName("OutlineCircle") as global::Gum.GueDeriving.CircleRuntime;
+        RoundedCustom = this.Visual?.GetGraphicalUiElementByName("RoundedCustom") as global::Gum.GueDeriving.RectangleRuntime;
+        RoundedDefault = this.Visual?.GetGraphicalUiElementByName("RoundedDefault") as global::Gum.GueDeriving.RectangleRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(FilledCircle);
-        this.AddChild(OutlineCircle);
-        this.AddChild(RoundedCustom);
-        this.AddChild(RoundedDefault);
+        this.Visual.AddChild(this.FilledCircle);
+        this.Visual.AddChild(this.OutlineCircle);
+        this.Visual.AddChild(this.RoundedCustom);
+        this.Visual.AddChild(this.RoundedDefault);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.FilledCircle.FillBlue = 30;
         this.FilledCircle.FillGreen = 20;
@@ -107,6 +115,16 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
         this.RoundedCustom.CornerRadius = 8f;
 
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

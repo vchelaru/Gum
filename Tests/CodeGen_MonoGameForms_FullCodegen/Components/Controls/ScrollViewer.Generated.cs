@@ -99,7 +99,8 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
 
     public ScrollViewer(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public ScrollViewer() : base(new ContainerRuntime())
@@ -111,6 +112,7 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -137,17 +139,24 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        VerticalScrollBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ScrollBar>(this.Visual,"VerticalScrollBarInstance");
+        ClipContainerInstance = this.Visual?.GetGraphicalUiElementByName("ClipContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(VerticalScrollBarInstance);
-        this.AddChild(ClipContainerInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.VerticalScrollBarInstance.Visual);
+        this.Visual.AddChild(this.ClipContainerInstance);
         ClipContainerInstance.AddChild(InnerPanelInstance);
-        this.AddChild(FocusedIndicator);
+        this.Visual.AddChild(this.FocusedIndicator);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.SetProperty("StyleCategoryState", "Bordered");
@@ -192,6 +201,16 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
         this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.FocusedIndicator.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

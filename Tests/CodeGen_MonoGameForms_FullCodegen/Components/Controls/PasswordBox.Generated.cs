@@ -93,7 +93,8 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
 
     public PasswordBox(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public PasswordBox() : base(new ContainerRuntime())
@@ -107,6 +108,7 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -141,18 +143,26 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
         if (CaretInstance.ElementSave != null) CaretInstance.AddStatesAndCategoriesRecursivelyToGue(CaretInstance.ElementSave);
         if (CaretInstance.ElementSave != null) CaretInstance.SetInitialState();
         CaretInstance.Name = "CaretInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        SelectionInstance = this.Visual?.GetGraphicalUiElementByName("SelectionInstance") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        PlaceholderTextInstance = this.Visual?.GetGraphicalUiElementByName("PlaceholderTextInstance") as global::Gum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
+        CaretInstance = this.Visual?.GetGraphicalUiElementByName("CaretInstance") as global::Gum.GueDeriving.SpriteRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(SelectionInstance);
-        this.AddChild(TextInstance);
-        this.AddChild(PlaceholderTextInstance);
-        this.AddChild(FocusedIndicator);
-        this.AddChild(CaretInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.SelectionInstance);
+        this.Visual.AddChild(this.TextInstance);
+        this.Visual.AddChild(this.PlaceholderTextInstance);
+        this.Visual.AddChild(this.FocusedIndicator);
+        this.Visual.AddChild(this.CaretInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.SetProperty("StyleCategoryState", "Bordered");
@@ -222,6 +232,16 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
         this.CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.CaretInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

@@ -74,7 +74,8 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
 
     public InputDeviceSelectionItem(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public InputDeviceSelectionItem() : base(new ContainerRuntime())
@@ -88,6 +89,7 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -106,16 +108,22 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
         TextInstance.Name = "TextInstance";
         RemoveDeviceButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonClose();
         RemoveDeviceButtonInstance.Name = "RemoveDeviceButtonInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        IconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"IconInstance");
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        RemoveDeviceButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonClose>(this.Visual,"RemoveDeviceButtonInstance");
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
-        this.AddChild(IconInstance);
-        this.AddChild(TextInstance);
-        this.AddChild(RemoveDeviceButtonInstance);
+        this.Visual.AddChild(this.Background);
+        this.Visual.AddChild(this.IconInstance.Visual);
+        this.Visual.AddChild(this.TextInstance);
+        this.Visual.AddChild(this.RemoveDeviceButtonInstance.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "Primary");
         this.Background.SetProperty("StyleCategoryState", "Panel");
@@ -155,6 +163,16 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
         this.RemoveDeviceButtonInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.RemoveDeviceButtonInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

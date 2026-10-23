@@ -130,7 +130,8 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
 
     public Keyboard(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public Keyboard() : base(new ContainerRuntime())
@@ -148,6 +149,7 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -295,12 +297,75 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
         IconInstance2.Name = "IconInstance2";
         IconInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance3.Name = "IconInstance3";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Row1Keys = this.Visual?.GetGraphicalUiElementByName("Row1Keys") as global::Gum.GueDeriving.ContainerRuntime;
+        AllRows = this.Visual?.GetGraphicalUiElementByName("AllRows") as global::Gum.GueDeriving.ContainerRuntime;
+        Key1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key1");
+        KeyQ = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyQ");
+        KeyA = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyA");
+        KeyZ = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyZ");
+        KeyParenLeft = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyParenLeft");
+        KeyW = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyW");
+        KeyS = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyS");
+        KeyX = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyX");
+        KeyParenRight = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyParenRight");
+        KeyE = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyE");
+        KeyD = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyD");
+        KeyC = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyC");
+        KeySpace = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeySpace");
+        KeyR = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyR");
+        KeyF = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyF");
+        KeyV = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyV");
+        KeyT = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyT");
+        KeyG = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyG");
+        KeyB = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyB");
+        KeyY = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyY");
+        KeyH = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyH");
+        KeyN = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyN");
+        KeyU = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyU");
+        KeyJ = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyJ");
+        KeyM = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyM");
+        KeyI = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyI");
+        KeyK = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyK");
+        KeyComma = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyComma");
+        KeyQuestion = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyQuestion");
+        KeyO = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyO");
+        KeyL = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyL");
+        KeyPeriod = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyPeriod");
+        KeyBang = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyBang");
+        KeyP = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyP");
+        KeyUnderscore = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyUnderscore");
+        KeyHyphen = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyHyphen");
+        KeyAmpersand = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyAmpersand");
+        Key2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key2");
+        Key3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key3");
+        Key4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key4");
+        Key5 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key5");
+        Key6 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key6");
+        Key7 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key7");
+        Key8 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key8");
+        Key9 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key9");
+        Key0 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"Key0");
+        Row2Keys = this.Visual?.GetGraphicalUiElementByName("Row2Keys") as global::Gum.GueDeriving.ContainerRuntime;
+        Row3Keys = this.Visual?.GetGraphicalUiElementByName("Row3Keys") as global::Gum.GueDeriving.ContainerRuntime;
+        Row4Keys = this.Visual?.GetGraphicalUiElementByName("Row4Keys") as global::Gum.GueDeriving.ContainerRuntime;
+        Row5Keys = this.Visual?.GetGraphicalUiElementByName("Row5Keys") as global::Gum.GueDeriving.ContainerRuntime;
+        KeyBackspace = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyBackspace");
+        KeyReturn = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyReturn");
+        KeyLeft = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyLeft");
+        KeyRight = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<KeyboardKey>(this.Visual,"KeyRight");
+        HighlightRectangle = this.Visual?.GetGraphicalUiElementByName("HighlightRectangle") as global::Gum.GueDeriving.RectangleRuntime;
+        IconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"IconInstance");
+        IconInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"IconInstance1");
+        IconInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"IconInstance2");
+        IconInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"IconInstance3");
     }
     protected virtual void AssignParents()
     {
         AllRows.AddChild(Row1Keys);
-        this.AddChild(AllRows);
+        this.Visual.AddChild(this.AllRows);
         Row1Keys.AddChild(Key1.Visual);
         Row2Keys.AddChild(KeyQ.Visual);
         Row3Keys.AddChild(KeyA.Visual);
@@ -351,17 +416,17 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
         AllRows.AddChild(Row3Keys);
         AllRows.AddChild(Row4Keys);
         AllRows.AddChild(Row5Keys);
-        this.AddChild(KeyBackspace);
-        this.AddChild(KeyReturn);
-        this.AddChild(KeyLeft);
-        this.AddChild(KeyRight);
-        this.AddChild(HighlightRectangle);
+        this.Visual.AddChild(this.KeyBackspace.Visual);
+        this.Visual.AddChild(this.KeyReturn.Visual);
+        this.Visual.AddChild(this.KeyLeft.Visual);
+        this.Visual.AddChild(this.KeyRight.Visual);
+        this.Visual.AddChild(this.HighlightRectangle);
         KeyBackspace.AddChild(IconInstance);
         KeyReturn.AddChild(IconInstance1);
         KeyLeft.AddChild(IconInstance2);
         KeyRight.AddChild(IconInstance3);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Row1Keys.ChildrenLayout = global::Gum.Managers.ChildrenLayout.LeftToRightStack;
         this.Row1Keys.Height = 20f;
@@ -856,6 +921,16 @@ partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
         this.IconInstance3.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.IconInstance3.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

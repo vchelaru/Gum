@@ -42,7 +42,7 @@ partial class FormsScreen : global::Gum.Forms.Controls.FrameworkElement
 
     public FormsScreen(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
         CustomInitialize();
     }
     public FormsScreen() : base(new ContainerRuntime())
@@ -59,13 +59,16 @@ partial class FormsScreen : global::Gum.Forms.Controls.FrameworkElement
     {
         TextBoxInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.TextBox();
         TextBoxInstance.Name = "TextBoxInstance";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        TextBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TextBox>(this.Visual,"TextBoxInstance");
     }
     protected virtual void AssignParents()
     {
         this.AddChild(TextBoxInstance);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Visual.Width = 0f;
         this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;

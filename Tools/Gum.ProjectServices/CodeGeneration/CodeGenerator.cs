@@ -1615,6 +1615,39 @@ public class CodeGenerator
         return isDerived;
     }
 
+    /// <summary>
+    /// The Gum Forms FullyInCode constructor that takes an existing visual points the fields at that
+    /// visual's children instead of creating a second, detached set.
+    /// </summary>
+    private void GenerateInitializeInstancesFromVisualMethod(CodeGenerationContext context)
+    {
+        if (!IsGumFormsFullyInCode(context))
+        {
+            return;
+        }
+
+        bool isDerived = DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings);
+        context.StringBuilder.AppendLine(context.Tabs +
+            (isDerived ? "protected override void InitializeInstancesFromVisual()" : "protected virtual void InitializeInstancesFromVisual()"));
+        context.StringBuilder.AppendLine(context.Tabs + "{");
+        context.TabCount++;
+        if (isDerived)
+        {
+            context.StringBuilder.AppendLine(context.Tabs + "base.InitializeInstancesFromVisual();");
+        }
+        foreach (InstanceSave instance in context.Element.Instances)
+        {
+            if (!instance.DefinedByBase)
+            {
+                context.Instance = instance;
+                AddFindByNameAssignment(context);
+            }
+        }
+        context.Instance = null;
+        context.TabCount--;
+        context.StringBuilder.AppendLine(context.Tabs + "}");
+    }
+
     private void GenerateInitializeInstancesMethod(CodeGenerationContext context)
     {
         var isDerived = DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings);
@@ -1732,13 +1765,6 @@ public class CodeGenerator
                 }
             }
             context.Instance = null;
-        }
-
-        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
-        {
-            //RefreshInternalVisualReferences
-            context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
-
         }
 
         // Initialize animation fields
@@ -3400,7 +3426,9 @@ public class CodeGenerator
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        // A component's own instances are its Visual's structure. The control's AddChild may
+                        // route content elsewhere (Window puts it in InnerPanelInstance, which is one of these).
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Visual.AddChild({context.CodePrefixNoTabs});");
                     }
                     else
                     {
@@ -3454,13 +3482,25 @@ public class CodeGenerator
         context.StringBuilder.AppendLine(context.Tabs + "{");
         context.TabCount++;
 
-        if (isDerived)
+        if (isDerived && IsGumFormsFullyInCode(context))
+        {
+            // The root constructor runs this once for the whole chain, so base children are parented first.
+            context.StringBuilder.AppendLine(context.Tabs + "base.AssignParents();");
+        }
+        else if (isDerived)
         {
             context.StringBuilder.AppendLine(context.Tabs + "// Intentionally do not call base.AssignParents so that this class can determine the addition of order");
         }
 
         foreach (var instance in context.Element.Instances)
         {
+            // base.AssignParents already parented a base child; it is assigned again only when this
+            // level moves it to a different parent.
+            if (isDerived && IsGumFormsFullyInCode(context) && instance.DefinedByBase &&
+                context.Element.DefaultState?.GetVariableSave(instance.Name + ".Parent") == null)
+            {
+                continue;
+            }
             context.Instance = instance;
             FillWithParentAssignments(context);
         }
@@ -3473,6 +3513,44 @@ public class CodeGenerator
     #endregion
 
     #region Constructors
+
+    /// <summary>
+    /// FullyInCode Forms classes pass their Visual to the Forms base constructor before any child exists,
+    /// so the control's reaction to it (finding named children, applying its state) waits until the
+    /// constructor has built and parented the children, the order FindByName gets from a loaded Visual.
+    /// </summary>
+    private static bool DefersFormsVisualReaction(CodeGenerationContext context) =>
+        context.Element is ComponentSave && IsGumFormsFullyInCode(context);
+
+    /// <summary>
+    /// Gum Forms FullyInCode classes build every level of an inheritance chain from the root class's
+    /// constructor: InitializeInstances, ApplyDefaultVariables and AssignParents are virtual and each
+    /// override calls its base first, so base children and defaults come before the derived ones.
+    /// </summary>
+    private static bool IsGumFormsFullyInCode(CodeGenerationContext context) =>
+        context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms &&
+        context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode;
+
+    private static void GenerateDeferredFormsVisualReaction(CodeGenerationContext context)
+    {
+        if (!DefersFormsVisualReaction(context) ||
+            DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings))
+        {
+            return;
+        }
+
+        StringBuilder stringBuilder = context.StringBuilder;
+        stringBuilder.AppendLine(context.Tabs + "private bool _isGeneratedVisualBuilt;");
+        stringBuilder.AppendLine(context.Tabs + "protected override void ReactToVisualChanged()");
+        stringBuilder.AppendLine(context.Tabs + "{");
+        stringBuilder.AppendLine(context.Tabs + "    if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();");
+        stringBuilder.AppendLine(context.Tabs + "}");
+        stringBuilder.AppendLine(context.Tabs + "private void ReactToGeneratedVisual()");
+        stringBuilder.AppendLine(context.Tabs + "{");
+        stringBuilder.AppendLine(context.Tabs + "    _isGeneratedVisualBuilt = true;");
+        stringBuilder.AppendLine(context.Tabs + "    ReactToVisualChanged();");
+        stringBuilder.AppendLine(context.Tabs + "}");
+    }
 
     private void GenerateConstructors(CodeGenerationContext context)
     {
@@ -3496,7 +3574,12 @@ public class CodeGenerator
                 {
                     if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
                     {
-                        stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
+                        // The visual already has its children, so the fields point at them.
+                        stringBuilder.AppendLine(context.Tabs + "InitializeInstancesFromVisual();");
+                        if (DefersFormsVisualReaction(context))
+                        {
+                            stringBuilder.AppendLine(context.Tabs + "ReactToGeneratedVisual();");
+                        }
                     }
                     // as mentioned below, if not fully in code then this is handled in AfterFullCreation
                     stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
@@ -3521,7 +3604,10 @@ public class CodeGenerator
             {
                 if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {
-                    stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}() : base(new {context.BaseStandardRuntimeTypeName ?? "ContainerRuntime"}())");
+                    // A derived class gets its Visual, and every level's children, from the root class's constructor.
+                    stringBuilder.AppendLine(context.Tabs + (DoesElementInheritFromCodeGeneratedElement(element, projectSettings)
+                        ? $"public {elementClassName}()"
+                        : $"public {elementClassName}() : base(new {context.BaseStandardRuntimeTypeName ?? "ContainerRuntime"}())"));
                 }
                 else
                 {
@@ -3651,7 +3737,12 @@ public class CodeGenerator
 
         context.Instance = null;
 
-        if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+        bool isDerivedGumFormsFullyInCode = IsGumFormsFullyInCode(context) &&
+            DoesElementInheritFromCodeGeneratedElement(element, projectSettings);
+
+        // A derived Gum Forms class assigns its own root values in its ApplyDefaultVariables override.
+        if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode &&
+            !isDerivedGumFormsFullyInCode)
         {
             FillWithVariableAssignments(visualApi, stringBuilder, context);
         }
@@ -3687,7 +3778,10 @@ public class CodeGenerator
             //stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
             //stringBuilder.AppendLine(context.Tabs + "{");
             //context.TabCount++;
-            stringBuilder.AppendLine(context.Tabs + "ApplyDefaultVariables();");
+            if (!isDerivedGumFormsFullyInCode)
+            {
+                stringBuilder.AppendLine(context.Tabs + "ApplyDefaultVariables();");
+            }
             //context.TabCount--;
             //stringBuilder.AppendLine(context.Tabs + "}");
 
@@ -3708,6 +3802,11 @@ public class CodeGenerator
                 TryInstantiateForms(context);
                 context.TabCount--;
                 stringBuilder.AppendLine(context.Tabs + "}");
+            }
+
+            if (DefersFormsVisualReaction(context) && !isDerivedGumFormsFullyInCode)
+            {
+                stringBuilder.AppendLine(context.Tabs + "ReactToGeneratedVisual();");
             }
 
             // If not fully in code, we do this in AfterFullCreation
@@ -3889,6 +3988,7 @@ public class CodeGenerator
         GenerateConstructors(context);
 
         GenerateInitializeInstancesMethod(context);
+        GenerateInitializeInstancesFromVisualMethod(context);
 
         if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
@@ -3907,6 +4007,8 @@ public class CodeGenerator
         }
 
         GenerateApplyLocalizationMethod(element, context.TabCount, stringBuilder);
+
+        GenerateDeferredFormsVisualReaction(context);
 
         stringBuilder.AppendLine(context.Tabs + "partial void CustomInitialize();");
 
@@ -5533,10 +5635,21 @@ public class CodeGenerator
 
     private void GenerateApplyDefaultVariables(CodeGenerationContext context)
     {
-        var line = "private void ApplyDefaultVariables()";
+        bool isChained = IsGumFormsFullyInCode(context);
+        bool isDerived = DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings);
+        var line = !isChained
+            ? "private void ApplyDefaultVariables()"
+            : isDerived ? "protected override void ApplyDefaultVariables()" : "protected virtual void ApplyDefaultVariables()";
         context.StringBuilder.AppendLine(context.Tabs + line);
         context.StringBuilder.AppendLine(context.Tabs + "{");
         context.TabCount++;
+
+        if (isChained && isDerived)
+        {
+            context.StringBuilder.AppendLine(context.Tabs + "base.ApplyDefaultVariables();");
+            context.Instance = null;
+            FillWithVariableAssignments(context.VisualApi, context.StringBuilder, context);
+        }
 
         foreach (var variable in context.Element.DefaultState!.Variables)
         {

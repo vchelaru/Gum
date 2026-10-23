@@ -44,7 +44,8 @@ partial class VerticalLines : global::Gum.Forms.Controls.FrameworkElement
 
     public VerticalLines(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public VerticalLines() : base(new ContainerRuntime())
@@ -59,6 +60,7 @@ partial class VerticalLines : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -68,13 +70,16 @@ partial class VerticalLines : global::Gum.Forms.Controls.FrameworkElement
         if (LinesSprite.ElementSave != null) LinesSprite.AddStatesAndCategoriesRecursivelyToGue(LinesSprite.ElementSave);
         if (LinesSprite.ElementSave != null) LinesSprite.SetInitialState();
         LinesSprite.Name = "LinesSprite";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        LinesSprite = this.Visual?.GetGraphicalUiElementByName("LinesSprite") as global::Gum.GueDeriving.SpriteRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(LinesSprite);
+        this.Visual.AddChild(this.LinesSprite);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.LinesSprite.SourceFileName = @"UISpriteSheet.png";
         this.LinesSprite.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
@@ -86,6 +91,16 @@ partial class VerticalLines : global::Gum.Forms.Controls.FrameworkElement
         this.LinesSprite.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.LinesSprite.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

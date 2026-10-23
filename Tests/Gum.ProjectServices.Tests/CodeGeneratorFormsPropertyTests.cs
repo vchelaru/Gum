@@ -172,7 +172,7 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
 
         string code = GenerateElement(screen);
 
-        int applyIndex = code.IndexOf("private void ApplyDefaultVariables()", StringComparison.Ordinal);
+        int applyIndex = code.IndexOf(" void ApplyDefaultVariables()", StringComparison.Ordinal);
         applyIndex.ShouldBeGreaterThan(-1);
         code.IndexOf("this.ControlInstance.LargeChange = 25d;", StringComparison.Ordinal).ShouldBeGreaterThan(applyIndex);
     }

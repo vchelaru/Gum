@@ -42,7 +42,8 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
 
     public PlayerJoinView(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public PlayerJoinView() : base(new ContainerRuntime())
@@ -56,6 +57,7 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -73,17 +75,24 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
         PlayerJoinViewItem3.Name = "PlayerJoinViewItem3";
         PlayerJoinViewItem4 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.PlayerJoinViewItem();
         PlayerJoinViewItem4.Name = "PlayerJoinViewItem4";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        PlayerJoinViewItem1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem1");
+        PlayerJoinViewItem2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem2");
+        PlayerJoinViewItem3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem3");
+        PlayerJoinViewItem4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem4");
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(InnerPanelInstance);
+        this.Visual.AddChild(this.InnerPanelInstance);
         InnerPanelInstance.AddChild(PlayerJoinViewItem1.Visual);
         InnerPanelInstance.AddChild(PlayerJoinViewItem2.Visual);
         InnerPanelInstance.AddChild(PlayerJoinViewItem3.Visual);
         InnerPanelInstance.AddChild(PlayerJoinViewItem4.Visual);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.InnerPanelInstance.ChildrenLayout = global::Gum.Managers.ChildrenLayout.TopToBottomStack;
         this.InnerPanelInstance.Height = 0f;
@@ -102,6 +111,16 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
 
 
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }

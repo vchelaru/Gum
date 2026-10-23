@@ -81,7 +81,8 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
 
     public ListBox(InteractiveGue visual) : base(visual)
     {
-        InitializeInstances();
+        InitializeInstancesFromVisual();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     public ListBox() : base(new ContainerRuntime())
@@ -95,6 +96,7 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
 
         ApplyDefaultVariables();
         AssignParents();
+        ReactToGeneratedVisual();
         CustomInitialize();
     }
     protected virtual void InitializeInstances()
@@ -131,19 +133,28 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
         if (ClipContainerParent.ElementSave != null) ClipContainerParent.AddStatesAndCategoriesRecursivelyToGue(ClipContainerParent.ElementSave);
         if (ClipContainerParent.ElementSave != null) ClipContainerParent.SetInitialState();
         ClipContainerParent.Name = "ClipContainerParent";
-        base.RefreshInternalVisualReferences();
+    }
+    protected virtual void InitializeInstancesFromVisual()
+    {
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        VerticalScrollBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ScrollBar>(this.Visual,"VerticalScrollBarInstance");
+        ClipContainerInstance = this.Visual?.GetGraphicalUiElementByName("ClipContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
+        ClipAndScrollContainer = this.Visual?.GetGraphicalUiElementByName("ClipAndScrollContainer") as global::Gum.GueDeriving.ContainerRuntime;
+        ClipContainerParent = this.Visual?.GetGraphicalUiElementByName("ClipContainerParent") as global::Gum.GueDeriving.ContainerRuntime;
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(Background);
+        this.Visual.AddChild(this.Background);
         ClipAndScrollContainer.AddChild(VerticalScrollBarInstance.Visual);
         ClipContainerParent.AddChild(ClipContainerInstance);
         ClipContainerInstance.AddChild(InnerPanelInstance);
-        this.AddChild(FocusedIndicator);
-        this.AddChild(ClipAndScrollContainer);
+        this.Visual.AddChild(this.FocusedIndicator);
+        this.Visual.AddChild(this.ClipAndScrollContainer);
         ClipAndScrollContainer.AddChild(ClipContainerParent);
     }
-    private void ApplyDefaultVariables()
+    protected virtual void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
         this.Background.SetProperty("StyleCategoryState", "Bordered");
@@ -217,6 +228,16 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
         this.ClipContainerParent.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.ClipContainerParent.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
+    }
+    private bool _isGeneratedVisualBuilt;
+    protected override void ReactToVisualChanged()
+    {
+        if (_isGeneratedVisualBuilt) base.ReactToVisualChanged();
+    }
+    private void ReactToGeneratedVisual()
+    {
+        _isGeneratedVisualBuilt = true;
+        ReactToVisualChanged();
     }
     partial void CustomInitialize();
 }
