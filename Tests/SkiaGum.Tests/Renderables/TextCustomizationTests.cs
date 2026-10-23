@@ -202,6 +202,55 @@ public class TextCustomizationTests
         (scaled.Bottom - 80).ShouldBe(2 * (plain.Bottom - 80), tolerance: 2);
     }
 
+    public static IEnumerable<object[]> OriginsAndScales()
+    {
+        foreach (HorizontalAlignment xOrigin in new[] { HorizontalAlignment.Left, HorizontalAlignment.Center, HorizontalAlignment.Right })
+        foreach (VerticalAlignment yOrigin in new[] { VerticalAlignment.Top, VerticalAlignment.Center, VerticalAlignment.Bottom, VerticalAlignment.TextBaseline })
+        foreach ((float scaleX, float scaleY) in new[] { (2f, 3f), (0.5f, 0.25f), (1f, 1.5f), (-1f, 2f) })
+        {
+            yield return new object[] { xOrigin, yOrigin, scaleX, scaleY };
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(OriginsAndScales))]
+    public void GetDrawMatrix_ScaleAboutOrigin_KeepsTheNamedCellPointFixed(
+        HorizontalAlignment xOrigin, VerticalAlignment yOrigin, float scaleX, float scaleY)
+    {
+        SKRect cell = new(10, 20, 18, 32);
+        const float baseline = 29;
+        float anchorX = xOrigin switch
+        {
+            HorizontalAlignment.Left => cell.Left,
+            HorizontalAlignment.Right => cell.Right,
+            _ => cell.MidX,
+        };
+        float anchorY = yOrigin switch
+        {
+            VerticalAlignment.Top => cell.Top,
+            VerticalAlignment.Bottom => cell.Bottom,
+            VerticalAlignment.TextBaseline => baseline,
+            _ => cell.MidY,
+        };
+
+        SKMatrix matrix = new Text.LetterDrawTransform(0, 0, scaleX, scaleY, xOrigin, yOrigin, 0)
+            .GetDrawMatrix(cell, baseline);
+
+        SKPoint anchor = matrix.MapPoint(anchorX, anchorY);
+        anchor.X.ShouldBe(anchorX, tolerance: 0.0001f);
+        anchor.Y.ShouldBe(anchorY, tolerance: 0.0001f);
+        SKPoint topLeft = matrix.MapPoint(cell.Left, cell.Top);
+        SKPoint bottomRight = matrix.MapPoint(cell.Right, cell.Bottom);
+        (bottomRight.X - topLeft.X).ShouldBe(cell.Width * scaleX, tolerance: 0.0001f);
+        (bottomRight.Y - topLeft.Y).ShouldBe(cell.Height * scaleY, tolerance: 0.0001f);
+
+        // Rotation turns the letter about the scaled cell's top-left corner, so that corner does not move.
+        SKPoint rotatedTopLeft = new Text.LetterDrawTransform(0, 0, scaleX, scaleY, xOrigin, yOrigin, 30)
+            .GetDrawMatrix(cell, baseline).MapPoint(cell.Left, cell.Top);
+        rotatedTopLeft.X.ShouldBe(topLeft.X, tolerance: 0.0001f);
+        rotatedTopLeft.Y.ShouldBe(topLeft.Y, tolerance: 0.0001f);
+    }
+
     [Fact]
     public void Render_CustomTagRotation_RotatesLetterCounterclockwiseAboutCellTopLeft()
     {

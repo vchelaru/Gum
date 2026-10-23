@@ -1672,38 +1672,28 @@ public class GraphicalUiElementTests : BaseTestClass
     public void Clone_ShouldAddToAndRemoveFromManagersIndependently_WhenSourceWasAdded()
     {
         // Record what the add/remove hooks put on a layer, so the test doesn't depend on which
-        // manager each renderable type is routed to.
-        Action<IRenderableIpso, ISystemManagers, Layer?>? originalAdd = GraphicalUiElement.AddRenderableToManagers;
-        Action<IRenderableIpso, ISystemManagers>? originalRemove = GraphicalUiElement.RemoveRenderableFromManagers;
+        // manager each renderable type is routed to. BaseTestClass restores the hooks.
         HashSet<IRenderableIpso> registered = new();
         GraphicalUiElement.AddRenderableToManagers = (renderable, _, _) => registered.Add(renderable);
         GraphicalUiElement.RemoveRenderableFromManagers = (renderable, _) => registered.Remove(renderable);
 
-        try
-        {
-            SpriteRuntime source = new();
-            source.AddToManagers(SystemManagers.Default, new Layer());
-            IRenderableIpso sourceRenderable = (IRenderableIpso)source.RenderableComponent!;
+        SpriteRuntime source = new();
+        source.AddToManagers(SystemManagers.Default, new Layer());
+        IRenderableIpso sourceRenderable = (IRenderableIpso)source.RenderableComponent!;
 
-            GraphicalUiElement clone = source.Clone();
-            clone.AddToManagers(SystemManagers.Default, new Layer());
-            IRenderableIpso cloneRenderable = (IRenderableIpso)clone.RenderableComponent!;
+        GraphicalUiElement clone = source.Clone();
+        clone.AddToManagers(SystemManagers.Default, new Layer());
+        IRenderableIpso cloneRenderable = (IRenderableIpso)clone.RenderableComponent!;
 
-            registered.ShouldContain(cloneRenderable,
-                "because the clone was never added, even though the source was");
+        registered.ShouldContain(cloneRenderable,
+            "because the clone was never added, even though the source was");
 
-            source.RemoveFromManagers();
-            registered.ShouldNotContain(sourceRenderable);
-            registered.ShouldContain(cloneRenderable, "because removing the source must not remove the clone");
+        source.RemoveFromManagers();
+        registered.ShouldNotContain(sourceRenderable);
+        registered.ShouldContain(cloneRenderable, "because removing the source must not remove the clone");
 
-            clone.RemoveFromManagers();
-            registered.ShouldNotContain(cloneRenderable);
-        }
-        finally
-        {
-            GraphicalUiElement.AddRenderableToManagers = originalAdd;
-            GraphicalUiElement.RemoveRenderableFromManagers = originalRemove;
-        }
+        clone.RemoveFromManagers();
+        registered.ShouldNotContain(cloneRenderable);
     }
 
     [Fact]

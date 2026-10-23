@@ -10,7 +10,8 @@ using Text = RenderingLibrary.Graphics.Text;
 
 namespace MonoGameGum.Tests.RenderingLibraries;
 
-public class TextTests
+// Derives from BaseTestClass so tests that clear Text.DefaultBitmapFont get it restored (#6565).
+public class TextTests : BaseTestClass
 {
     const string basicBMFontFileData =
 @"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
@@ -658,22 +659,14 @@ char id=67 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
     {
         // A Text created before SystemManagers sets DefaultBitmapFont (e.g. before
         // GumService.Initialize) has no font at all, and MonoGameGum never sets Text.DefaultFont.
-        BitmapFont? savedDefault = Text.DefaultBitmapFont;
         Text.DefaultBitmapFont = null;
-        try
-        {
-            Text text = new Text();
+        Text text = new Text();
 
-            text.MeasureString("hi").ShouldBe(0);
-            text.MeasureString("hi", HorizontalMeasurementStyle.Full).ShouldBe(0);
+        text.MeasureString("hi").ShouldBe(0);
+        text.MeasureString("hi", HorizontalMeasurementStyle.Full).ShouldBe(0);
 
-            text.InlineVariables.Add(new InlineVariable { VariableName = "FontScale", Value = 2f, StartIndex = 0, CharacterCount = 2 });
-            text.MeasureString("hi", absoluteStartIndexInStrippedText: 0).ShouldBe(0);
-        }
-        finally
-        {
-            Text.DefaultBitmapFont = savedDefault;
-        }
+        text.InlineVariables.Add(new InlineVariable { VariableName = "FontScale", Value = 2f, StartIndex = 0, CharacterCount = 2 });
+        text.MeasureString("hi", absoluteStartIndexInStrippedText: 0).ShouldBe(0);
     }
 
     [Fact]
@@ -682,16 +675,9 @@ char id=67 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
         Text text = new Text();
         // No BitmapFont set on the instance. We also expect no DefaultBitmapFont in a
         // plain unit-test run; the overload must not throw in that case.
-        BitmapFont? savedDefault = Text.DefaultBitmapFont;
-        Text.DefaultBitmapFont = null!;
-        try
-        {
-            Should.NotThrow(() => text.MeasureString("hi", HorizontalMeasurementStyle.Full));
-        }
-        finally
-        {
-            Text.DefaultBitmapFont = savedDefault!;
-        }
+        Text.DefaultBitmapFont = null;
+
+        Should.NotThrow(() => text.MeasureString("hi", HorizontalMeasurementStyle.Full));
     }
 
     [Fact]

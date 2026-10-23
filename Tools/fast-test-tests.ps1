@@ -48,6 +48,27 @@ try {
         @('REFUSED: not a test class in any test project: OutsideOnlyTests')
     Assert-Plan 'Project:Class runs a project outside every solution when named' 'Outside.Tests:OutsideOnlyTests' `
         @('test Outside.Tests/Outside.Tests.csproj FullyQualifiedName~O.OutsideOnlyTests.|FullyQualifiedName~O.OutsideOnlyTests+')
+
+    # fast-test and verify read the classic "Passed!"/"Failed!" summary; the terminal logger prints
+    # "Test summary:" instead, so a run with it on reported NOTESTS for tests that ran.
+    $previous = $env:MSBUILDTERMINALLOGGER
+    $env:MSBUILDTERMINALLOGGER = 'on'
+    try {
+        . (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1')
+        $result = Invoke-Dotnet -Command @('msbuild', (Join-Path $scratch 'A.Tests/A.Tests.csproj'), '-nologo', '-getProperty:MSBUILDTERMINALLOGGER') -TimeoutSeconds 60
+        $value = ($result.Output | Where-Object { $_ } | Select-Object -Last 1)
+        if ($value -eq 'off') { Write-Host 'pass  dotnet runs with the terminal logger off even when the environment turns it on' }
+        else { Write-Host "FAIL  dotnet runs with the terminal logger off even when the environment turns it on`n  MSBUILDTERMINALLOGGER was: $value"; $failures++ }
+    }
+    finally { $env:MSBUILDTERMINALLOGGER = $previous }
+
+    # A NOTESTS result prints the filter and the tail of the output, so its cause shows without a rerun.
+    # The scratch copy's Invoke-Dotnet is swapped for a stub that exits 0 with no test summary.
+    Set-Content (Join-Path $scratch 'Tools/Invoke-Dotnet.ps1') 'function Invoke-Dotnet { param([string[]]$Command, [int]$TimeoutSeconds) @{ Output = @(''stub line 6569''); Exit = 0; TimedOut = $false } }'
+    $output = (& pwsh -NoProfile -File (Join-Path $scratch 'Tools/fast-test.ps1') 'UntrackedTests' -NoBuild 2>&1 6>&1 | ForEach-Object { "$_" }) -join "`n"
+    $name = 'NOTESTS prints the filter and the last lines of the output'
+    if ($output -match 'NOTESTS' -and $output -match 'filter: FullyQualifiedName~A\.UntrackedTests\.' -and $output -match 'stub line 6569') { Write-Host "pass  $name" }
+    else { Write-Host "FAIL  $name`n  output:`n    $($output -replace "`n", "`n    ")"; $failures++ }
 }
 finally { Remove-Item -Recurse -Force $scratch -ErrorAction SilentlyContinue }
 
