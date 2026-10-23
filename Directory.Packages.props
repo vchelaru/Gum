@@ -22,6 +22,7 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="StbImageSharp" Version="2.30.15" />
     <PackageVersion Include="xunit" Version="2.5.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
     <PackageVersion Include="Xunit.SkippableFact" Version="1.5.23" />

@@ -80,6 +80,7 @@
 		<Compile Include="..\..\RenderingLibrary\Content\ContentLoader.cs" Link="RenderingLibrary\ContentLoader.cs" />
 		<Compile Include="..\..\RenderingLibrary\Content\TextureEdgeBleed.cs" Link="RenderingLibrary\TextureEdgeBleed.cs" />
 		<Compile Include="..\..\RenderingLibrary\Content\TexturePremultiply.cs" Link="RenderingLibrary\TexturePremultiply.cs" />
+		<Compile Include="..\..\RenderingLibrary\Content\StbTextureDecoder.cs" Link="RenderingLibrary\StbTextureDecoder.cs" />
 		<Compile Include="..\..\RenderingLibrary\Content\LoaderManagerExtensionMethods.cs" Link="RenderingLibrary\LoaderManagerExtensionMethods.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
@@ -267,6 +268,8 @@
 		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" PrivateAssets="All" />
 
 		<PackageReference Include="TextCopy" Version="6.2.1" />
+		<!-- Browser texture decode in ContentLoader (#6522). KniGum is one build for every KNI platform, so desktop gets it too. -->
+		<PackageReference Include="StbImageSharp" Version="2.30.15" />
 	</ItemGroup>
 
   <ItemGroup>
