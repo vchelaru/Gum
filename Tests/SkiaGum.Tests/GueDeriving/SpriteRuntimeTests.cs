@@ -181,12 +181,14 @@ public class SpriteRuntimeTests
     {
         var sut = new SpriteRuntime();
         sut.Texture = new SKBitmap(10, 10);
-        
+
+#pragma warning disable CS0618 // Type or member is obsolete
         sut.SourceFile = "";
         sut.Texture.ShouldBeNull();
 
         sut.Texture = new SKBitmap(10, 10);
         sut.SourceFile = null;
+#pragma warning restore CS0618
         sut.Texture.ShouldBeNull();
     }
 
@@ -200,8 +202,10 @@ public class SpriteRuntimeTests
         try
         {
             var sut = new SpriteRuntime();
+#pragma warning disable CS0618 // Type or member is obsolete
             sut.SourceFile = "test_path.png";
-            
+#pragma warning restore CS0618
+
             mockLoader.LastLoadedName.ShouldBe("test_path.png");
             sut.Texture.ShouldBe(mockLoader.LastLoadedContent);
         }
@@ -423,5 +427,77 @@ public class SpriteRuntimeTests
 
         sut.AbsoluteWidth.ShouldBe(200);
         sut.AbsoluteHeight.ShouldBe(300);
+    }
+    // Issue #6510: SourceRectangle matches MonoGame's, typed as Skia's SKRectI.
+    [Fact]
+    public void SourceRectangle_Set_ShouldAssignTextureCoordinates()
+    {
+        SpriteRuntime sut = new();
+
+        sut.SourceRectangle = SKRectI.Create(3, 4, 20, 30);
+
+        sut.TextureLeft.ShouldBe(3);
+        sut.TextureTop.ShouldBe(4);
+        sut.TextureWidth.ShouldBe(20);
+        sut.TextureHeight.ShouldBe(30);
+    }
+
+    [Fact]
+    public void SourceRectangle_Get_ShouldReflectTextureCoordinates()
+    {
+        SpriteRuntime sut = new();
+        sut.TextureLeft = 5;
+        sut.TextureTop = 6;
+        sut.TextureWidth = 7;
+        sut.TextureHeight = 8;
+
+        SKRectI result = sut.SourceRectangle;
+
+        result.ShouldBe(SKRectI.Create(5, 6, 7, 8));
+    }
+
+    // Issue #6510: the obsolete SourceFile getter returns the path that was assigned.
+    [Fact]
+    public void SourceFile_Get_ShouldReturnAssignedPath()
+    {
+        MockContentLoader mockLoader = new();
+        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
+        LoaderManager.Self.ContentLoader = mockLoader;
+
+        try
+        {
+            SpriteRuntime sut = new();
+#pragma warning disable CS0618 // Type or member is obsolete
+            sut.SourceFile = "test_path.png";
+
+            sut.SourceFile.ShouldBe("test_path.png");
+#pragma warning restore CS0618
+        }
+        finally
+        {
+            LoaderManager.Self.ContentLoader = originalLoader;
+        }
+    }
+
+    [Fact]
+    public void SourceFile_Get_ShouldReturnPathAssignedThroughSourceFileName()
+    {
+        MockContentLoader mockLoader = new();
+        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
+        LoaderManager.Self.ContentLoader = mockLoader;
+
+        try
+        {
+            SpriteRuntime sut = new();
+            sut.SourceFileName = "other_path.png";
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            sut.SourceFile.ShouldBe("other_path.png");
+#pragma warning restore CS0618
+        }
+        finally
+        {
+            LoaderManager.Self.ContentLoader = originalLoader;
+        }
     }
 }

@@ -73,6 +73,76 @@ public class PolygonRuntime : InteractiveGue
     /// to the contained <see cref="Polygon"/>.
     /// </summary>
     protected override RenderableShapeBase ContainedRenderable => ContainedPolygon;
+
+    // A polygon is an outline on every backend (MonoGame's LinePolygon draws only lines), so these
+    // read and write StrokeColor rather than SkiaShapeRuntime's fill/stroke-agnostic slot.
+
+    /// <summary>
+    /// The red component of the polygon color (<see cref="SkiaShapeRuntime.StrokeColor"/>). Ranges from 0 to 255.
+    /// </summary>
+    public new int Red
+    {
+        get => StrokeColor.Red;
+        set
+        {
+            StrokeColor = StrokeColor.WithRed((byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// The green component of the polygon color (<see cref="SkiaShapeRuntime.StrokeColor"/>). Ranges from 0 to 255.
+    /// </summary>
+    public new int Green
+    {
+        get => StrokeColor.Green;
+        set
+        {
+            StrokeColor = StrokeColor.WithGreen((byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// The blue component of the polygon color (<see cref="SkiaShapeRuntime.StrokeColor"/>). Ranges from 0 to 255.
+    /// </summary>
+    public new int Blue
+    {
+        get => StrokeColor.Blue;
+        set
+        {
+            StrokeColor = StrokeColor.WithBlue((byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// The alpha (opacity) component of the polygon color (<see cref="SkiaShapeRuntime.StrokeColor"/>).
+    /// Ranges from 0 (fully transparent) to 255 (fully opaque).
+    /// </summary>
+    public new int Alpha
+    {
+        get => StrokeColor.Alpha;
+        set
+        {
+            StrokeColor = StrokeColor.WithAlpha((byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the color used to render the polygon outline. Same value as
+    /// <see cref="SkiaShapeRuntime.StrokeColor"/>.
+    /// </summary>
+    public new SKColor Color
+    {
+        get => StrokeColor;
+        set
+        {
+            StrokeColor = value;
+            NotifyPropertyChanged();
+        }
+    }
 #endif
 
 #if !SKIA

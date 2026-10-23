@@ -564,6 +564,54 @@ public class GumServiceTests
         child.GetAbsoluteBottom().ShouldBe(50);
     }
 
+    // Issue #6510: Renderer, CanvasWidth and CanvasHeight are public on the Skia GumService, as on MonoGame.
+    [Fact]
+    public void Renderer_ShouldBeTheSystemManagersRenderer()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+
+        RenderingLibrary.Graphics.Renderer renderer = GumService.Default.Renderer;
+
+        renderer.ShouldBeSameAs(SystemManagers.Default.Renderer);
+    }
+
+    [Fact]
+    public void CanvasWidthAndHeight_ShouldReadAndWriteTheGraphicalUiElementCanvas()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+
+        GumService.Default.CanvasWidth.ShouldBe(200);
+        GumService.Default.CanvasHeight.ShouldBe(100);
+
+        GumService.Default.CanvasWidth = 320;
+        GumService.Default.CanvasHeight = 240;
+
+        GraphicalUiElement.CanvasWidth.ShouldBe(320);
+        GraphicalUiElement.CanvasHeight.ShouldBe(240);
+    }
+
+    // Issue #6510: InitializeForTesting matches MonoGame's: marks the service initialized and makes it
+    // IGumService.Default without a canvas.
+    [Fact]
+    public void InitializeForTesting_ShouldMarkInitializedAndSetIGumServiceDefault()
+    {
+        IGumService? previousDefault = IGumService.Default;
+        GumService sut = new();
+        try
+        {
+            sut.InitializeForTesting();
+
+            sut.IsInitialized.ShouldBeTrue();
+            IGumService.Default.ShouldBeSameAs(sut);
+        }
+        finally
+        {
+            IGumService.Default = previousDefault;
+        }
+    }
+
     private static SKColor PixelAt(SKSurface surface, int x, int y)
     {
         using SKImage image = surface.Snapshot();

@@ -240,4 +240,43 @@ public class PolygonRuntimeTests
         sut.StrokeGapLength = 2;
         sut.StrokeGapLength.ShouldBe(2);
     }
+    // Issue #6510: Red/Green/Blue/Alpha/Color match MonoGame's PolygonRuntime, where a polygon is an
+    // outline, so they read and write the outline color (StrokeColor).
+    [Fact]
+    public void Color_Set_ShouldSetStrokeColor()
+    {
+        PolygonRuntime sut = new();
+
+        sut.Color = SKColors.CornflowerBlue;
+
+        sut.StrokeColor.ShouldBe(SKColors.CornflowerBlue);
+        sut.Color.ShouldBe(SKColors.CornflowerBlue);
+    }
+
+    [Fact]
+    public void Color_Get_ShouldReturnStrokeColor()
+    {
+        PolygonRuntime sut = new();
+
+        sut.StrokeColor = SKColors.Orange;
+
+        sut.Color.ShouldBe(SKColors.Orange);
+    }
+
+    [Fact]
+    public void RedGreenBlueAlpha_Set_ShouldSetStrokeColorChannels()
+    {
+        PolygonRuntime sut = new();
+
+        sut.Red = 10;
+        sut.Green = 20;
+        sut.Blue = 30;
+        sut.Alpha = 40;
+
+        sut.StrokeColor.ShouldBe(new SKColor(10, 20, 30, 40));
+        sut.Red.ShouldBe(10);
+        sut.Green.ShouldBe(20);
+        sut.Blue.ShouldBe(30);
+        sut.Alpha.ShouldBe(40);
+    }
 }
