@@ -84,45 +84,11 @@ The `AddChild` extension method in the `MonoGameGum` and `RaylibGum` namespaces 
 
 To migrate, call the instance method, or regenerate your code so the generated files no longer import the old namespace.
 
-### XNA Keys Overloads on Keyboard Are Obsolete
-
-In MonoGame, KNI and FNA projects, the key methods that take `Microsoft.Xna.Framework.Input.Keys` are now `[Obsolete]`:
-
-* `KeyDown`, `KeyPushed`, `KeyReleased`, `KeyTyped` and `IsKeyLetter` on `Keyboard`
-* `KeyDown`, `KeyPushed`, `KeyReleased` and `KeyTyped` on `IInputReceiverKeyboardMonoGame`
-* The `KeyDown`, `KeyPushed`, `KeyReleased` and `KeyTyped` extension methods in `XnaKeyboardExtensions`, which add the XNA overloads to `IInputReceiverKeyboard`
-
-Each one still works and reports `CS0618`. They become `[Obsolete(error: true)]` no earlier than March 2027 and are removed no earlier than July 2027. Every method has an overload that takes `Gum.Forms.Input.Keys`, the enum Forms already uses for `KeyCombo` and `KeyEventArgs.Key`.
-
-This affects you only if you pass an XNA `Keys` value to one of these methods. In a file with `using Microsoft.Xna.Framework.Input;`, a bare `Keys.Enter` picks the XNA overload.
-
-To migrate, pass `Gum.Forms.Input.Keys` instead. The enum mirrors the XNA values, so the names stay the same. `Keyboard.KeysTyped` and `KeyboardStateProcessor` still use XNA `Keys` and are not obsolete.
-
-The same change adds four members to `ICursor` with default implementations: `VisualPushed` (the same value as `WindowPushed`), `LastX`, `LastY` and `ClearInputValues()`. A class that implements `ICursor` keeps compiling without them.
-
-❌ Old:
-
-```csharp
-// Update
-if (GumUI.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
-{
-    SubmitForm();
-}
-```
-
-✅ New:
-
-```csharp
-// Update
-if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
-{
-    SubmitForm();
-}
-```
-
 ### ICursor Has FrameworkElement Members and TransformMatrix
 
 `ICursor` gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed` and a read-only `TransformMatrix`, so code that holds an `ICursor` can read what `Cursor` already offered. The `FrameworkElement` members return the control of the matching visual. `TransformMatrix` is a `System.Numerics.Matrix3x2` that defaults to the identity matrix. On MonoGame, KNI and FNA, the interface `TransformMatrix` is a 2D conversion of the XNA matrix, so Z and perspective are not part of it. `Cursor.TransformMatrix` keeps its type and setter (an XNA `Matrix` in those runtimes). A class that implements `ICursor` keeps compiling without these members.
+
+`ICursor` also gains `VisualPushed` (the same value as `WindowPushed`), `LastX`, `LastY` and `ClearInputValues()`, with default implementations, so a class that implements `ICursor` keeps compiling without them.
 
 ### IGumService Cursor Is Not Null Under a Custom Cursor
 
@@ -208,7 +174,6 @@ The obsolete shims that keep the old `MonoGameGum`, `SkiaGum` and `MonoGameAndGu
 | `MonoGameGum.GraphicalUiElementExtensionMethods.AddChild` | `GraphicalUiElement.AddChild` | October 20, 2026 | May 2027 | November 2027 |
 | `MonoGameGum.Renderables.RenderableCreator` | `Gum.Renderables.RenderableCreator` | October 20, 2026 | May 2027 | November 2027 |
 | `MonoGameAndGum.Renderables` and `MonoGameAndGum.Content` types | `Gum.Renderables` and `Gum.Content` | October 20, 2026 | May 2027 | November 2027 |
-| `Keyboard`, `IInputReceiverKeyboardMonoGame` and `XnaKeyboardExtensions` methods that take XNA `Keys` | The same methods taking `Gum.Forms.Input.Keys` | October 20, 2026 | March 2027 | July 2027 |
 | `OutputLibrary.MonoGameForms` | `OutputLibrary.GumForms` | October 20, 2026 | May 2027 | November 2027 |
 | `SkiaGum.Content.SkiaResourceManager` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | April 2027 | November 2027 |
 | `SkiaGum.Content.EmbeddedResourceContentLoader` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | April 2027 | November 2027 |
