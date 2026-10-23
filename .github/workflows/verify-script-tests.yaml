@@ -1,0 +1,24 @@
+name: Verify Script Tests
+
+# Tests which projects Tools/verify.ps1 builds for a changed file. No build, about 10 seconds.
+on:
+  pull_request:
+    paths:
+      - 'Tools/verify*.ps1'
+      - '.github/workflows/verify-script-tests.yaml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Verify-Script-Tests:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Test verify.ps1 project resolution
+        shell: pwsh
+        run: ./Tools/verify-tests.ps1
