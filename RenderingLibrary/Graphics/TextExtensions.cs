@@ -34,9 +34,7 @@ public static class TextExtensions
 
     public static int GetCharacterIndexAtPosition(this Text textInstance, float screenX, float screenY)
     {
-        int index = 0;
-        var leftOfText = textInstance.GetAbsoluteLeft();
-        var cursorOffset = screenX - leftOfText;
+        TextHitTesting.UnrotatePoint(textInstance, ref screenX, ref screenY);
 
         var lineHeight = textInstance.LineHeightInPixels * textInstance.LineHeightMultiplier;
         var topOfText = textInstance.GetAbsoluteTop();
@@ -44,36 +42,14 @@ public static class TextExtensions
         {
             topOfText = textInstance.GetAbsoluteCenterY() - (lineHeight * textInstance.WrappedText.Count - 1) / 2.0f;
         }
-        var cursorYOffset = screenY - topOfText;
 
-        var lineOn = (int)System.Math.Max(0, System.Math.Min((int)cursorYOffset / lineHeight, textInstance.WrappedText.Count - 1));
-
-        if (lineOn < textInstance.WrappedText.Count)
-        {
-            string lineText = textInstance.WrappedText[lineOn];
-            cursorOffset -= GetLineXOffsetForHorizontalAlignment(textInstance, lineText);
-            int indexInThisLine = GetIndex(textInstance, cursorOffset, lineText);
-
-            var isOnLastLine = lineOn == textInstance.WrappedText.Count - 1;
-            if (!isOnLastLine &&
-                indexInThisLine == lineText.Length &&
-                indexInThisLine > 0 &&
-                char.IsWhiteSpace(lineText[indexInThisLine - 1]))
-            {
-                index = indexInThisLine - 1;
-            }
-            else
-            {
-                index = indexInThisLine;
-            }
-        }
-
-        for (int line = 0; line < lineOn; line++)
-        {
-            index += textInstance.WrappedText[line].Length;
-        }
-
-        return index;
+        return TextHitTesting.GetIndexInWrappedLines(
+            textInstance.WrappedText,
+            screenX - textInstance.GetAbsoluteLeft(),
+            screenY - topOfText,
+            lineHeight,
+            lineText => GetLineXOffsetForHorizontalAlignment(textInstance, lineText),
+            (cursorOffset, lineText) => GetIndex(textInstance, cursorOffset, lineText));
     }
 
     static float GetLineXOffsetForHorizontalAlignment(Text textInstance, string stringToMeasure)

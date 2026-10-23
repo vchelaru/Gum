@@ -430,6 +430,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return 0;
         }
 
+        TextHitTesting.UnrotatePoint(this, ref screenX, ref screenY);
+
         var absoluteX = this.GetAbsoluteX();
         var absoluteY = this.GetAbsoluteY() + GetVerticalAlignmentOffset(textBlock);
 
