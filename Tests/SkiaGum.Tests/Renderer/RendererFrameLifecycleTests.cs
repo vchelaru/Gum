@@ -104,6 +104,40 @@ public class RendererFrameLifecycleTests
         PixelAt(surface, 10, 10).ShouldBe(SKColors.Lime);
     }
 
+    [Fact]
+    public void Draw_SecondLayerSpriteReferencingFirstLayerRenderTarget_ShowsBake()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+        ContainerRuntime renderTarget = new() { Width = 20, Height = 20, IsRenderTarget = true };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = 20,
+            Height = 20,
+            IsFilled = true,
+            FillColor = SKColors.Red,
+        });
+        GumService.Default.Root.Children.Add(renderTarget);
+        Layer secondLayer = SystemManagers.Default.Renderer.AddLayer();
+        SpriteRuntime sprite = new()
+        {
+            X = 30,
+            Y = 30,
+            Width = 20,
+            Height = 20,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            RenderTargetTextureSource = renderTarget,
+        };
+        sprite.AddToManagers(SystemManagers.Default, secondLayer);
+
+        GumService.Default.Draw();
+
+        SystemManagers.Default.Renderer.TryGetBakedRenderTargetFor(renderTarget).ShouldNotBeNull(
+            "because the second layer must not dispose the first layer's bake");
+        PixelAt(surface, 40, 40).ShouldBe(SKColors.Red);
+    }
+
     private static SKColor PixelAt(SKSurface surface, int x, int y)
     {
         using SKImage image = surface.Snapshot();

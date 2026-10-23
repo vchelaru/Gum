@@ -9,7 +9,9 @@ namespace RenderingLibrary.Graphics;
 /// <see cref="Begin(SKMatrix?, Renderer.GumBatchDrawMode)"/> and <see cref="End"/>, instead of
 /// drawing the whole scene. The Skia counterpart of MonoGame's GumBatch. Draws onto the canvas
 /// of the host's last <c>Draw(SKCanvas)</c> (<see cref="SystemManagers.Canvas"/>) unless a canvas
-/// is passed to Begin. It never clears the canvas.
+/// is passed to Begin. It never clears the canvas, but a full-scene Draw does when
+/// <see cref="Renderer.ClearsCanvas"/> is true (the Renderer's default; GumService.Initialize turns
+/// it off), so draw with GumBatch after Draw in a frame; GumBatch drawing before such a Draw is wiped.
 /// </summary>
 public class GumBatch
 {

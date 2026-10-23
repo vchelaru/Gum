@@ -265,6 +265,56 @@ public class GumBatchTests
             .ShouldBeFalse("because the first Begin of a new frame drops last frame's snapshots");
     }
 
+    [Fact]
+    public void UpdateThenGumBatchThenDraw_KeepsRenderTargetSurfaceAcrossFrames()
+    {
+        using SKSurface surface = CreateInitializedSurface(64);
+        ContainerRuntime renderTarget = new() { Width = 20, Height = 20, IsRenderTarget = true };
+        renderTarget.Children.Add(CreateRectangle(x: 0, y: 0, size: 20, SKColors.Red));
+        GumService.Default.Root.Children.Add(renderTarget);
+        GumBatch gumBatch = new();
+        List<SKSurface?> surfaces = new();
+
+        for (int frame = 0; frame < 3; frame++)
+        {
+            GumService.Default.Update(frame);
+            gumBatch.Begin();
+            gumBatch.Draw(CreateRectangle(x: 40, y: 40, size: 4, SKColors.Lime));
+            gumBatch.End();
+            GumService.Default.Draw();
+            surfaces.Add(SystemManagers.Default.Renderer.TryGetRenderTargetSurfaceFor(renderTarget));
+        }
+
+        surfaces[0].ShouldNotBeNull();
+        surfaces[1].ShouldBeSameAs(surfaces[0], "because a render target used every frame keeps its surface");
+        surfaces[2].ShouldBeSameAs(surfaces[0]);
+    }
+
+    [Fact]
+    public void GumBatchThenDraw_WithoutUpdate_StillSweepsRemovedRenderTarget()
+    {
+        using SKSurface surface = CreateInitializedSurface(64);
+        ContainerRuntime renderTarget = new() { Width = 20, Height = 20, IsRenderTarget = true };
+        renderTarget.Children.Add(CreateRectangle(x: 0, y: 0, size: 20, SKColors.Red));
+        GumService.Default.Root.Children.Add(renderTarget);
+        GumBatch gumBatch = new();
+
+        for (int frame = 0; frame < 3; frame++)
+        {
+            gumBatch.Begin();
+            gumBatch.End();
+            GumService.Default.Draw();
+            if (frame == 0)
+            {
+                SystemManagers.Default.Renderer.TryGetRenderTargetSurfaceFor(renderTarget).ShouldNotBeNull();
+                GumService.Default.Root.Children.Remove(renderTarget);
+            }
+        }
+
+        SystemManagers.Default.Renderer.TryGetRenderTargetSurfaceFor(renderTarget)
+            .ShouldBeNull("because a host that never calls Update still sweeps once per frame");
+    }
+
     private static SKSurface CreateInitializedSurface(int size)
     {
         SKSurface surface = SKSurface.Create(new SKImageInfo(size, size));

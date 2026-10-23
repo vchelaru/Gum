@@ -166,8 +166,18 @@ namespace RenderingLibrary.Graphics
         // full-scene Draw already did. Mirrors the XNA Renderer's host-frame latches.
         bool _hostFrameStarted;
 
+        // Set when a GumBatch Begin ran the frame work this frame, so the full-scene Draw that follows
+        // does not sweep again: a second sweep finds nothing marked used since the first and destroys
+        // every render-target surface. Draw consumes it, so a host that never calls Update still
+        // sweeps once per frame.
+        bool _batchStartedHostFrame;
+
         // Called once per host frame by GumService.Update.
-        internal void NotifyHostFrameAdvanced() => _hostFrameStarted = false;
+        internal void NotifyHostFrameAdvanced()
+        {
+            _hostFrameStarted = false;
+            _batchStartedHostFrame = false;
+        }
 
         // Once per full-scene Draw: drop last frame's snapshots, sweep offscreen surfaces whose owner
         // wasn't baked last frame (removed, hidden, or resized), then clear. Mirrors the
@@ -175,7 +185,14 @@ namespace RenderingLibrary.Graphics
         // keeps earlier layers of the same frame.
         private void BeginHostFrame(SystemManagers managers)
         {
-            StartHostFrameRenderTargets();
+            if (_batchStartedHostFrame)
+            {
+                _batchStartedHostFrame = false;
+            }
+            else
+            {
+                StartHostFrameRenderTargets();
+            }
 
             if (ClearsCanvas)
             {
@@ -302,6 +319,7 @@ namespace RenderingLibrary.Graphics
             if (!_hostFrameStarted)
             {
                 StartHostFrameRenderTargets();
+                _batchStartedHostFrame = true;
             }
             _cycleCanvas = canvas;
             ApplyCamera(canvas, MainLayer, matrix);
@@ -485,6 +503,10 @@ namespace RenderingLibrary.Graphics
             => _bakedImages.TryGetValue(ResolveRenderTargetCacheOwner(container), out SKImage? image)
                 ? image
                 : null;
+
+        // The cached offscreen surface for a render-target container, for tests.
+        internal SKSurface? TryGetRenderTargetSurfaceFor(IRenderableIpso container)
+            => _renderTargetService.TryGetExisting(ResolveRenderTargetCacheOwner(container))?.Surface;
 
         private void DisposeBakedImages()
         {
