@@ -147,6 +147,9 @@ public class Game1 : Game
         GraphicalUiElement layered = _currentScreenGue!.GetGraphicalUiElementByName("Layered")!;
         Layer layer = SystemManagers.Default.Renderer.AddLayer();
         layer.Name = "Zoomed-in Layer";
+        // MoveToLayer only moves top-level elements, so detach it from the screen first. The screen sits
+        // at the origin and fills the canvas, so the element keeps its position.
+        layered.Parent = null;
         layered.MoveToLayer(layer);
 
         layer.LayerCameraSettings = new LayerCameraSettings()
@@ -165,6 +168,9 @@ public class Game1 : Game
         };
 
         GraphicalUiElement layeredText = _currentScreenGue!.GetGraphicalUiElementByName("LayeredText")!;
+        // MoveToLayer only moves top-level elements, so detach it from the screen first. The screen sits
+        // at the origin and fills the canvas, so the element keeps its position.
+        layeredText.Parent = null;
         layeredText.MoveToLayer(layer);
     }
 
