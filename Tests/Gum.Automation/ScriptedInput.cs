@@ -109,7 +109,7 @@ public sealed class ScriptedKeyboard : Keyboard
     public void QueueText(string text) => _pendingText.Append(text);
 
     /// <inheritdoc/>
-    protected override string? GetTypedText()
+    protected override string GetTypedText()
     {
         string text = _pendingText.ToString();
         _pendingText.Clear();

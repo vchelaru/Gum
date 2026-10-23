@@ -233,10 +233,10 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     // Null until TrySubscribeToGameWindowInput succeeds; the handlers are subscribed just before it is
     // assigned, so they skip input that arrives in that window.
     StringBuilder? windowTextInputBuffer;
-    string processedStringFromWindow = string.Empty;
-    // Whether the last Activity had a typed-text source (window text events or a GetTypedText override).
-    // Without one, GetStringTyped derives characters from key presses.
-    bool hasTypedTextSource;
+    // This frame's typed text, set once per Activity from GetTypedText.
+    string typedTextThisFrame = string.Empty;
+    // Whether Enter (main or number pad) was typed this frame; see AppendNumPadEnter.
+    bool enterTypedThisFrame;
 
 
 #if !FNA && !ANDROID
@@ -283,47 +283,11 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     }
 #endif
 
-    public string GetStringTyped()
-    {
-        //if (InputManager.CurrentFrameInputSuspended)
-        //    return "";
-
-        ///////////////////////////////////////early out//////////////////////////////////
-        if (hasTypedTextSource)
-        {
-            return processedStringFromWindow;
-        }
-        //////////////////////////////////End Early Out//////////////////////////////////
-
-#if ANDROID
-        return processedString;
-#else
-
-        string returnString = "";
-
-        bool isCtrlPressed = IsCtrlDown;
-
-
-        for (int i = 0; i < NumberOfKeys; i++)
-        {
-            if (mKeysTyped[i])
-            {
-                // If the user pressed CTRL + some key combination then ignore that input so that 
-                // the letters aren't written.
-                Keys asKey = (Keys)i;
-
-
-                if (isCtrlPressed && (asKey == Keys.V || asKey == Keys.C || asKey == Keys.Z || asKey == Keys.A || asKey == Keys.X))
-                {
-                    continue;
-                }
-                returnString += KeyToStringAtCurrentState(i);
-            }
-        }
-
-        return returnString;
-#endif
-    }
+    /// <summary>
+    /// Returns the text typed this frame, as produced by <see cref="GetTypedText"/> during
+    /// <see cref="Activity(double)"/>.
+    /// </summary>
+    public string GetStringTyped() => typedTextThisFrame;
 
     /// <summary>
     /// Returns whether the specified XNA key is currently held down.
@@ -447,11 +411,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
             }
         }
 
-        // Check for any new keys found by the TextInput event and store them in processedStringFromWindow 
-        // which we will later handle in TextBox.HandleCharEntered() via Property GetStringTyped()
-        string? typedText = GetTypedText();
-        hasTypedTextSource = typedText != null;
-        processedStringFromWindow = typedText ?? string.Empty;
+        enterTypedThisFrame = false;
 
         // Gather all the keys from Keyboard.GetState()
         KeyboardStateProcessor.Update();
@@ -461,27 +421,58 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
         // Process any held down keys from Keyboard.GetState()
         HandleKeyStillDown(currentTime);
+
+        // After the key handling, so the key-press fallback in GetTypedText sees this frame's keys.
+        // TextBox reads the result through GetStringTyped.
+        typedTextThisFrame = AppendNumPadEnter(GetTypedText() ?? string.Empty);
     }
 
     /// <summary>
-    /// Returns the text typed since the previous frame, or null when this keyboard has no text source,
-    /// in which case <see cref="GetStringTyped"/> derives characters from key presses.
-    /// <see cref="Activity(double)"/> calls it once per frame. The default drains the game window's text
-    /// events; a subclass overrides it to replace the input source, for automation and tests.
+    /// Returns the text typed this frame. <see cref="Activity(double)"/> calls it once per frame, after this
+    /// frame's keys are read, and <see cref="GetStringTyped"/> returns the result. The default returns the
+    /// game window's text events when the keyboard is subscribed to them, and otherwise the characters of
+    /// this frame's typed keys, skipping Ctrl+V/C/Z/A/X. A subclass overrides it to replace the input source,
+    /// for automation and tests; an override returns the characters to deliver, such as "Hello", or an
+    /// empty string when nothing was typed. It never returns null.
     /// </summary>
-    protected virtual string? GetTypedText()
+    protected virtual string GetTypedText()
     {
         StringBuilder? buffer = windowTextInputBuffer;
-        if (buffer == null)
+        if (buffer != null)
         {
-            return null;
+            lock (buffer)
+            {
+                string text = buffer.ToString();
+                buffer.Clear();
+                return text;
+            }
         }
-        lock (buffer)
+
+#if ANDROID
+        return processedString;
+#else
+        string returnString = "";
+
+        bool isCtrlPressed = IsCtrlDown;
+
+        for (int i = 0; i < NumberOfKeys; i++)
         {
-            string text = buffer.ToString();
-            buffer.Clear();
-            return text;
+            if (mKeysTyped[i])
+            {
+                // If the user pressed CTRL + some key combination then ignore that input so that
+                // the letters aren't written.
+                Keys asKey = (Keys)i;
+
+                if (isCtrlPressed && (asKey == Keys.V || asKey == Keys.C || asKey == Keys.Z || asKey == Keys.A || asKey == Keys.X))
+                {
+                    continue;
+                }
+                returnString += KeyToStringAtCurrentState(i);
+            }
         }
+
+        return returnString;
+#endif
     }
 
     // Handles initial Key press
@@ -535,16 +526,22 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
     private void HandleNumPadEnter(int key)
     {
-        // The ENTER key (char 13 \r) is normally handled by TextInput
-        // However, when the Number Pad ENTER key is pressed, TextInput does not receive it.
-        // It is however detected during during Keyboard.GetKeys.
-        // But, we don't want the normal ENTER key to fire twice, so we check that first.
-        if ((key == 13 || key == 10)
-            && !processedStringFromWindow.Contains('\n')
-            && !processedStringFromWindow.Contains('\r'))
+        if (key == 13 || key == 10)
         {
-            processedStringFromWindow += '\n';
+            enterTypedThisFrame = true;
         }
+    }
+
+    // The ENTER key (char 13 \r) is normally handled by TextInput. However, when the Number Pad ENTER key
+    // is pressed, TextInput does not receive it. It is detected through the key state instead, so a newline
+    // is added unless the typed text already has one, which keeps the normal ENTER key from firing twice.
+    private string AppendNumPadEnter(string text)
+    {
+        if (enterTypedThisFrame && !text.Contains('\n') && !text.Contains('\r'))
+        {
+            return text + '\n';
+        }
+        return text;
     }
 
     private string KeyToStringAtCurrentState(int key)

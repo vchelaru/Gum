@@ -57,7 +57,7 @@ public class InputSourceSeamTests : BaseTestClass
     {
         public string NextText { get; set; } = "";
 
-        protected override string? GetTypedText()
+        protected override string GetTypedText()
         {
             string text = NextText;
             NextText = "";
@@ -120,5 +120,49 @@ public class InputSourceSeamTests : BaseTestClass
 
         textBox.Text.ShouldBe("ab");
         keyboard.KeyPushed(XnaKeys.Back).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GetTypedText_WithNoWindowOrOverride_BuildsTextFromThisFramesKeyPresses()
+    {
+        SourcedKeyboardState state = new SourcedKeyboardState();
+        Gum.Input.Keyboard keyboard = new Gum.Input.Keyboard { KeyboardStateProcessor = state };
+
+        state.Held = new[] { XnaKeys.H };
+        keyboard.Activity(1);
+        keyboard.GetStringTyped().ShouldBe("h");
+
+        state.Held = new[] { XnaKeys.LeftShift, XnaKeys.I };
+        keyboard.Activity(1.1);
+        keyboard.GetStringTyped().ShouldBe("I");
+    }
+
+    [Fact]
+    public void GetTypedText_WithNoWindowOrOverride_SkipsCtrlShortcuts()
+    {
+        SourcedKeyboardState state = new SourcedKeyboardState();
+        Gum.Input.Keyboard keyboard = new Gum.Input.Keyboard { KeyboardStateProcessor = state };
+
+        state.Held = new[] { XnaKeys.LeftControl };
+        keyboard.Activity(1);
+        state.Held = new[] { XnaKeys.LeftControl, XnaKeys.C };
+        keyboard.Activity(1.1);
+
+        keyboard.GetStringTyped().ShouldBe("");
+    }
+
+    [Fact]
+    public void GetTypedText_Overridden_IsWhatGetStringTypedReturns()
+    {
+        SourcedKeyboard keyboard = new SourcedKeyboard
+        {
+            KeyboardStateProcessor = new SourcedKeyboardState { Held = new[] { XnaKeys.Q } },
+            NextText = "Hello",
+        };
+
+        keyboard.Activity(1);
+
+        // The override replaces the key-press fallback, so the held Q adds nothing.
+        keyboard.GetStringTyped().ShouldBe("Hello");
     }
 }
