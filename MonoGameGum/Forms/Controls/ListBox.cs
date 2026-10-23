@@ -184,6 +184,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// In Single selection mode, this collection will contain at most one item.
     /// In Multiple and Extended modes, this collection can contain multiple items.
     /// Changes to this collection are synchronized with the IsSelected state of ListBoxItems.
+    /// Editing this collection never scrolls; call <see cref="ScrollIndexIntoView"/> to bring a row into view.
     /// </remarks>
     public System.Collections.IList SelectedItems
     {
