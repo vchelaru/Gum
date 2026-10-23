@@ -1488,40 +1488,20 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                                     scaleY = response.ScaleY.Value;
                                 }
 
-                                if(scaleX != 1)
+                                // The cell scales about the point its origins name; xOffset/yOffset move its top-left there.
+                                // At scale 1 the cell does not move, so the letter is only measured when scaled.
+                                if(scaleX != 1 || scaleY != 1)
                                 {
-                                    var scaleXOrigin = response.ScaleXOrigin ?? HorizontalAlignment.Center;
-                                    switch(scaleXOrigin)
-                                    {
-                                        case HorizontalAlignment.Left:
-                                            // do nothing
-                                            break;
-                                        case HorizontalAlignment.Center:
-                                            xOffset -= (fontScale * effectiveFont.MeasureString(lineByLineList[0]) * (scaleX - 1)) / 2.0f;
-                                            break;
-                                        case HorizontalAlignment.Right:
-                                            xOffset -= fontScale * effectiveFont.MeasureString(lineByLineList[0]) * (scaleX - 1);
-                                            break;
-                                    }
-                                }
-                                if(scaleY != 1)
-                                {
-                                    var scaleYOrigin = response.ScaleYOrigin ?? VerticalAlignment.Center;
-                                    switch(scaleYOrigin)
-                                    {
-                                        case VerticalAlignment.Top:
-                                            // do nothing
-                                            break;
-                                        case VerticalAlignment.Center:
-                                            yOffset -= (fontScale * effectiveFont.LineHeightInPixels * (scaleY - 1)) / 2.0f;
-                                            break;
-                                        case VerticalAlignment.Bottom:
-                                            yOffset -= fontScale * effectiveFont.LineHeightInPixels * (scaleY - 1);
-                                            break;
-                                        case VerticalAlignment.TextBaseline:
-                                            yOffset -= fontScale * effectiveFont.BaselineY * (scaleY - 1);
-                                            break;
-                                    }
+                                    float cellWidth = scaleX != 1 ? fontScale * effectiveFont.MeasureString(lineByLineList[0]) : 0;
+                                    var scaledTopLeft = LetterCellScale.GetScaledTopLeft(0, 0,
+                                        cellWidth,
+                                        fontScale * effectiveFont.LineHeightInPixels,
+                                        fontScale * effectiveFont.BaselineY,
+                                        scaleX, scaleY,
+                                        response.ScaleXOrigin ?? HorizontalAlignment.Center,
+                                        response.ScaleYOrigin ?? VerticalAlignment.Center);
+                                    xOffset += scaledTopLeft.X;
+                                    yOffset += scaledTopLeft.Y;
                                 }
 
                                 if(response.RotationDegrees != null)
