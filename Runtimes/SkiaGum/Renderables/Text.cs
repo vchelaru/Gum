@@ -24,12 +24,10 @@ namespace SkiaGum;
 /// the per-letter styling a <c>[Custom]</c> callback can apply. SkiaGum cannot reference that type
 /// directly (it lives in the MonoGame-coupled <c>RenderingLibrary.Graphics.Text</c> source file), so this
 /// is a local copy, matching the approach <c>Gum.Renderables.LetterCustomization</c> takes on
-/// Raylib. Only <see cref="XOffset"/>, <see cref="YOffset"/>, <see cref="Color"/> and
-/// <see cref="ReplacementCharacter"/> are honored on SkiaGum (issue #3692): they map directly onto a
-/// RichTextKit <c>Style</c> override (Color) plus a post-layout glyph nudge (<c>FontRun.MoveGlyphs</c>)
-/// for XOffset/YOffset. <see cref="ScaleX"/>/<see cref="ScaleY"/>/<see cref="RotationDegrees"/> would need
-/// a per-glyph transform RichTextKit does not expose and are not yet applied, matching the deferred scope
-/// documented on <see cref="Text.SupportedTags"/>.
+/// Raylib. Color is a RichTextKit <c>Style</c> override and XOffset/YOffset a post-layout glyph nudge
+/// (<c>FontRun.MoveGlyphs</c>). ScaleX/ScaleY/RotationDegrees change only how the letter is drawn, as on
+/// MonoGame: the letter is scaled about the cell point ScaleXOrigin/ScaleYOrigin name (Center by default)
+/// and turned about the scaled cell's top-left corner; layout and the next letter's position do not change.
 /// </summary>
 public struct LetterCustomization
 {
@@ -1004,7 +1002,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 }
 
                 canvas.SaveLayer(renderPaint);
-                paintBlock.Paint(canvas, new SKPoint(0, 0));
+                PaintTextBlock(canvas, paintBlock);
                 canvas.Restore();
                 if (Blend.HasValue)
                 {
@@ -1015,7 +1013,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
             else
             {
-                paintBlock.Paint(canvas, new SKPoint(0, 0));
+                PaintTextBlock(canvas, paintBlock);
             }
             canvas.Restore();
         }
@@ -1195,18 +1193,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // ReplacementCharacter substitution keeps a run's length at 1) -> the glyph offset a [Custom]
         // callback produced for that run (issue #3692). Applied once, after Alignment/MaxLines/MaxHeight
         // are set and the block has laid out, via FontRun.MoveGlyphs -- see the loop after the try below.
-        Dictionary<int, (float XOffset, float YOffset)>? glyphOffsetsByStart = null;
+        Dictionary<int, StyledTextRun>? customLettersByStart = null;
         try
         {
             textBlock.MaxWidth = forcedWidth ?? this.Width;
             int codePointIndex = 0;
             foreach (var run in runs)
             {
-                textBlock.AddText(run.Text, run.Style);
-                if (run.XOffset != 0 || run.YOffset != 0)
+                // A scaled or rotated letter is laid out like any other but invisibly; PaintTextBlock draws it.
+                textBlock.AddText(run.Text, run.Letter.HasDrawTransform
+                    ? run.Style.Modify(textColor: SKColor.Empty, haloColor: SKColor.Empty)
+                    : run.Style);
+                if (!run.Letter.IsIdentity)
                 {
-                    glyphOffsetsByStart ??= new();
-                    glyphOffsetsByStart[codePointIndex] = (run.XOffset, run.YOffset);
+                    customLettersByStart ??= new();
+                    customLettersByStart[codePointIndex] = run;
                 }
                 codePointIndex += run.Text.Length;
             }
@@ -1236,17 +1237,31 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // the ellipsis when the caller wants a hard cut instead.
             textBlock.EllipsisEnabled = IsTruncatingWithEllipsisOnLastLine;
 
-            if (glyphOffsetsByStart != null)
+            if (customLettersByStart != null)
             {
                 // Accessing FontRuns forces layout. Each [Custom] run is a single character
                 // (StyledSubstringSplitter never merges "Custom" variables across letters), so it cannot
                 // be split by line wrapping -- FontRun.Start reliably identifies the matching run.
+                List<TransformedLetter>? transformedLetters = null;
                 foreach (var fontRun in textBlock.FontRuns)
                 {
-                    if (glyphOffsetsByStart.TryGetValue(fontRun.Start, out var offset))
+                    if (!customLettersByStart.TryGetValue(fontRun.Start, out StyledTextRun run))
                     {
-                        fontRun.MoveGlyphs(offset.XOffset, offset.YOffset);
+                        continue;
                     }
+                    if (run.Letter.HasOffset)
+                    {
+                        fontRun.MoveGlyphs(run.Letter.XOffset, run.Letter.YOffset);
+                    }
+                    if (run.Letter.HasDrawTransform && fontRun.GlyphPositions.Length > 0)
+                    {
+                        transformedLetters ??= new();
+                        transformedLetters.Add(CreateTransformedLetter(fontRun, run));
+                    }
+                }
+                if (transformedLetters != null)
+                {
+                    _transformedLetters.AddOrUpdate(textBlock, transformedLetters);
                 }
             }
         }
@@ -1267,6 +1282,25 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
 
         return textBlock;
+    }
+
+    /// <summary>
+    /// The one-letter block and matrix that draw <paramref name="run"/>'s scaled or rotated letter where
+    /// <paramref name="fontRun"/> laid it out. The cell is the letter's advance by its run's line box, as
+    /// MonoGame's is the advance by the font's line height.
+    /// </summary>
+    private static TransformedLetter CreateTransformedLetter(FontRun fontRun, StyledTextRun run)
+    {
+        SKPoint glyph = fontRun.GlyphPositions[0];
+        float top = glyph.Y + fontRun.Ascent - fontRun.HalfLeading;
+        SKRect cell = new SKRect(glyph.X, top, glyph.X + fontRun.Width, top + fontRun.TextHeight);
+
+        var block = new TextBlock();
+        block.AddText(run.Text, run.Style);
+        SKPoint blockGlyph = block.FontRuns[0].GlyphPositions[0];
+
+        return new TransformedLetter(block, new SKPoint(glyph.X - blockGlyph.X, glyph.Y - blockGlyph.Y),
+            run.Letter.GetDrawMatrix(cell, glyph.Y));
     }
 
     /// <summary>
@@ -1310,27 +1344,139 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// A single run of text plus the RichTextKit <see cref="Style"/> it is drawn with. Produced by
     /// <see cref="GetStyledRuns"/> from BBCode markup (issue #3679) and fed to the TextBlock one
     /// <c>AddText</c> call per run so a line can carry mixed per-run color / size / weight / italic.
-    /// <see cref="XOffset"/>/<see cref="YOffset"/> come from a <c>[Custom]</c> callback (issue #3692) and
-    /// are applied as a post-layout glyph nudge in <see cref="GetTextBlock(string, float?, bool)"/>, since
-    /// RichTextKit's <see cref="Style"/> has no offset concept.
+    /// <see cref="Letter"/> comes from a <c>[Custom]</c> callback (issue #3692) and is applied in
+    /// <see cref="BuildTextBlockFromRuns"/>, since RichTextKit's <see cref="Style"/> has no offset or transform concept.
     /// </summary>
     internal readonly struct StyledTextRun
     {
         public readonly string Text;
         public readonly Style Style;
-        public readonly float XOffset;
-        public readonly float YOffset;
+        public readonly LetterDrawTransform Letter;
+        public float XOffset => Letter.XOffset;
+        public float YOffset => Letter.YOffset;
         /// <summary>True when the run sets its own size ([FontSize]/[FontScale]) or font ([Font]): its line is its own
         /// plain line height, which the multiplier never scales (#6475).</summary>
         public readonly bool IsHeightRun;
 
-        public StyledTextRun(string text, Style style, float xOffset = 0, float yOffset = 0, bool isHeightRun = false)
+        public StyledTextRun(string text, Style style, LetterDrawTransform? letter = null, bool isHeightRun = false)
         {
             Text = text;
             Style = style;
+            Letter = letter ?? LetterDrawTransform.Identity;
+            IsHeightRun = isHeightRun;
+        }
+    }
+
+    /// <summary>
+    /// What a <c>[Custom]</c> callback did to one letter: a glyph offset plus a draw-only scale and rotation.
+    /// </summary>
+    internal readonly struct LetterDrawTransform
+    {
+        public static readonly LetterDrawTransform Identity = new(0, 0, 1, 1, HorizontalAlignment.Center, VerticalAlignment.Center, 0);
+
+        public readonly float XOffset;
+        public readonly float YOffset;
+        public readonly float ScaleX;
+        public readonly float ScaleY;
+        public readonly HorizontalAlignment ScaleXOrigin;
+        public readonly VerticalAlignment ScaleYOrigin;
+        public readonly float RotationDegrees;
+
+        public LetterDrawTransform(float xOffset, float yOffset, float scaleX, float scaleY,
+            HorizontalAlignment scaleXOrigin, VerticalAlignment scaleYOrigin, float rotationDegrees)
+        {
             XOffset = xOffset;
             YOffset = yOffset;
-            IsHeightRun = isHeightRun;
+            ScaleX = scaleX;
+            ScaleY = scaleY;
+            ScaleXOrigin = scaleXOrigin;
+            ScaleYOrigin = scaleYOrigin;
+            RotationDegrees = rotationDegrees;
+        }
+
+        public bool HasOffset => XOffset != 0 || YOffset != 0;
+
+        /// <summary>True when the letter is drawn scaled or rotated, apart from the rest of its block.</summary>
+        public bool HasDrawTransform => ScaleX != 1 || ScaleY != 1 || RotationDegrees != 0;
+
+        public bool IsIdentity => !HasOffset && !HasDrawTransform;
+
+        /// <summary>This transform with every value the callback set replaced. The origins come from this response
+        /// only, as on MonoGame.</summary>
+        public LetterDrawTransform With(LetterCustomization response) => new(
+            response.XOffset ?? XOffset,
+            response.YOffset ?? YOffset,
+            response.ScaleX ?? ScaleX,
+            response.ScaleY ?? ScaleY,
+            response.ScaleXOrigin ?? HorizontalAlignment.Center,
+            response.ScaleYOrigin ?? VerticalAlignment.Center,
+            response.RotationDegrees ?? RotationDegrees);
+
+        /// <summary>
+        /// The matrix that draws a letter laid out in <paramref name="cell"/> the way MonoGame does: scaled about the
+        /// cell point the origins name, then turned (counterclockwise for positive degrees) about the scaled cell's
+        /// top-left corner. <paramref name="baseline"/> is the anchor for <see cref="VerticalAlignment.TextBaseline"/>.
+        /// </summary>
+        public SKMatrix GetDrawMatrix(SKRect cell, float baseline)
+        {
+            float anchorX = ScaleXOrigin switch
+            {
+                HorizontalAlignment.Left => cell.Left,
+                HorizontalAlignment.Right => cell.Right,
+                _ => cell.MidX,
+            };
+            float anchorY = ScaleYOrigin switch
+            {
+                VerticalAlignment.Top => cell.Top,
+                VerticalAlignment.Bottom => cell.Bottom,
+                VerticalAlignment.TextBaseline => baseline,
+                _ => cell.MidY,
+            };
+            float originX = anchorX + (cell.Left - anchorX) * ScaleX;
+            float originY = anchorY + (cell.Top - anchorY) * ScaleY;
+
+            SKMatrix matrix = SKMatrix.CreateTranslation(-cell.Left, -cell.Top);
+            matrix = matrix.PostConcat(SKMatrix.CreateScale(ScaleX, ScaleY));
+            // Gum rotation is counterclockwise; Skia's is clockwise.
+            matrix = matrix.PostConcat(SKMatrix.CreateRotationDegrees(-RotationDegrees));
+            return matrix.PostConcat(SKMatrix.CreateTranslation(originX, originY));
+        }
+    }
+
+    /// <summary>A scaled or rotated <c>[Custom]</c> letter: its own one-letter block, where to paint it, and the
+    /// matrix applied first.</summary>
+    private sealed class TransformedLetter
+    {
+        public readonly TextBlock Block;
+        public readonly SKPoint PaintOffset;
+        public readonly SKMatrix Matrix;
+
+        public TransformedLetter(TextBlock block, SKPoint paintOffset, SKMatrix matrix)
+        {
+            Block = block;
+            PaintOffset = paintOffset;
+            Matrix = matrix;
+        }
+    }
+
+    // The scaled or rotated letters of each block BuildTextBlockFromRuns made. The block lays them out invisibly so
+    // layout is unchanged. Keyed by block so the cached block and a MaxLettersToShow reveal block each carry their own.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TextBlock, List<TransformedLetter>> _transformedLetters = new();
+
+    /// <summary>Paints <paramref name="block"/>, then its scaled or rotated <c>[Custom]</c> letters.</summary>
+    private static void PaintTextBlock(SKCanvas canvas, TextBlock block)
+    {
+        block.Paint(canvas, new SKPoint(0, 0));
+        if (!_transformedLetters.TryGetValue(block, out List<TransformedLetter>? letters))
+        {
+            return;
+        }
+        foreach (TransformedLetter letter in letters)
+        {
+            canvas.Save();
+            canvas.Concat(letter.Matrix);
+            letter.Block.Paint(canvas, letter.PaintOffset);
+            canvas.Restore();
         }
     }
 
@@ -1358,8 +1504,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         foreach (var substring in substrings)
         {
-            var (style, text, xOffset, yOffset, isHeightRun) = BuildRunStyle(substring.Substring, substring.Variables);
-            runs.Add(new StyledTextRun(text, style, xOffset, yOffset, isHeightRun));
+            var (style, text, letter, isHeightRun) = BuildRunStyle(substring.Substring, substring.Variables);
+            runs.Add(new StyledTextRun(text, style, letter, isHeightRun));
         }
 
         AttachLineBreaksToPrecedingRun(runs);
@@ -1371,7 +1517,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// splitter puts the break after a line's last run at the start of the NEXT run, so a size-run line would
     /// be measured with the following (plain) run's metrics too and come out taller than on MonoGame and
     /// Raylib (#6459). This moves a run's leading line break onto the preceding run so each line is sized by its
-    /// own runs. A run carrying a glyph offset is left alone, since offsets are keyed by run start.
+    /// own runs. A run carrying a [Custom] letter transform is left alone, since transforms are keyed by run start.
     /// </summary>
     private static void AttachLineBreaksToPrecedingRun(List<StyledTextRun> runs)
     {
@@ -1379,8 +1525,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             StyledTextRun run = runs[i];
             StyledTextRun previous = runs[i - 1];
-            if (run.Text.Length == 0 || run.Text[0] != '\n'
-                || run.XOffset != 0 || run.YOffset != 0 || previous.XOffset != 0 || previous.YOffset != 0)
+            if (run.Text.Length == 0 || run.Text[0] != '\n' || !run.Letter.IsIdentity || !previous.Letter.IsIdentity)
             {
                 continue;
             }
@@ -1438,7 +1583,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
                 int take = System.Math.Min(available, remaining);
                 string text = run.Text.Substring(runOffset, take);
-                result.Add(new StyledTextRun(text, run.Style, run.XOffset, run.YOffset, run.IsHeightRun));
+                result.Add(new StyledTextRun(text, run.Style, run.Letter, run.IsHeightRun));
                 lineStyle = run.Style;
 
                 runOffset += take;
@@ -1660,7 +1805,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     position++;
                 }
 
-                lineRuns.Add(new StyledTextRun(run.Text.Substring(pieceStart, charIndex - pieceStart), run.Style, run.XOffset, run.YOffset, run.IsHeightRun));
+                lineRuns.Add(new StyledTextRun(run.Text.Substring(pieceStart, charIndex - pieceStart), run.Style, run.Letter, run.IsHeightRun));
             }
         }
 
@@ -1699,7 +1844,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             float runLineHeight = !canFit || !metrics.IsValid ? run.Style.LineHeight
                 : metrics == tallest ? tallestLineHeight
                 : System.Math.Min(metrics.LineHeightForTop(top), metrics.LineHeightForBottom(bottom));
-            result.Add(new StyledTextRun(run.Text, WithLineHeight(run.Style, runLineHeight), run.XOffset, run.YOffset, run.IsHeightRun));
+            result.Add(new StyledTextRun(run.Text, WithLineHeight(run.Style, runLineHeight), run.Letter, run.IsHeightRun));
         }
 
         lineRuns.Clear();
@@ -1728,7 +1873,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// applies after layout. A null or empty <paramref name="variables"/> reproduces <see cref="GetStyle"/>
     /// exactly.
     /// </summary>
-    private (Style Style, string Text, float XOffset, float YOffset, bool IsHeightRun) BuildRunStyle(string runText, List<InlineVariable>? variables)
+    private (Style Style, string Text, LetterDrawTransform Letter, bool IsHeightRun) BuildRunStyle(string runText, List<InlineVariable>? variables)
     {
         var color = this.Color;
         string? fontFamily = EffectiveFontFamily;
@@ -1737,8 +1882,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         bool italic = this.IsItalic;
         int weight = (int)(400 * BoldWeight);
         int outlineThickness = this.OutlineThickness;
-        float xOffset = 0;
-        float yOffset = 0;
+        LetterDrawTransform letter = LetterDrawTransform.Identity;
         string text = runText;
         bool isSizeRun = false;
         bool isFontRun = false;
@@ -1797,9 +1941,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                                 {
                                     var context = new LetterCustomization
                                     {
-                                        XOffset = xOffset,
-                                        YOffset = yOffset,
+                                        XOffset = letter.XOffset,
+                                        YOffset = letter.YOffset,
                                         Color = System.Drawing.Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue),
+                                        ScaleX = letter.ScaleX,
+                                        ScaleY = letter.ScaleY,
                                     };
                                     response = contextFunction(call.CharacterIndex, call.TextBlock, context);
                                 }
@@ -1808,14 +1954,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                                     response = function!(call.CharacterIndex, call.TextBlock);
                                 }
 
-                                if (response.XOffset != null)
-                                {
-                                    xOffset = response.XOffset.Value;
-                                }
-                                if (response.YOffset != null)
-                                {
-                                    yOffset = response.YOffset.Value;
-                                }
+                                letter = letter.With(response);
                                 if (response.Color != null)
                                 {
                                     var c = response.Color.Value;
@@ -1825,8 +1964,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                                 {
                                     text = response.ReplacementCharacter.Value.ToString();
                                 }
-                                // ScaleX/ScaleY/RotationDegrees are not applied on SkiaGum yet -- see
-                                // LetterCustomization's remarks.
                             }
                         }
                         break;
@@ -1864,7 +2001,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize)
             : GetLeadingCompensatedLineHeight(style, LineHeightMultiplier);
 
-        return (style, text, xOffset, yOffset, isSizeRun || isFontRun);
+        return (style, text, letter, isSizeRun || isFontRun);
     }
 
     /// <summary>
@@ -2059,7 +2196,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 + System.Math.Max(DropshadowBlurX, DropshadowBlurY);
         }
 
-        return new SKRect(-padding, -padding, textBlock.MeasuredWidth + padding, textBlock.MeasuredHeight + padding);
+        SKRect bounds = new SKRect(0, 0, textBlock.MeasuredWidth, textBlock.MeasuredHeight);
+        // A scaled or rotated [Custom] letter can draw outside the measured block.
+        if (_transformedLetters.TryGetValue(textBlock, out List<TransformedLetter>? letters))
+        {
+            foreach (TransformedLetter letter in letters)
+            {
+                SKRect letterRect = SKRect.Create(letter.PaintOffset.X, letter.PaintOffset.Y,
+                    letter.Block.MeasuredWidth, letter.Block.MeasuredHeight);
+                // The letter's outline scales with it.
+                letterRect.Inflate(OutlineThickness, OutlineThickness);
+                bounds.Union(letter.Matrix.MapRect(letterRect));
+            }
+        }
+        bounds.Inflate(padding, padding);
+        return bounds;
     }
 
     /// <summary>
