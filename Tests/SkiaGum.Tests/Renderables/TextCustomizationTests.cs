@@ -120,7 +120,7 @@ public class TextCustomizationTests
         runs.Single(r => r.Text == "X").Style.TextColor.ShouldBe(new SKColor(10, 10, 10, 255));
     }
 
-    private static (float Left, float Top, float Right, float Bottom) RenderInkBounds(string rawText, float fontSize = 40)
+    private static (float Left, float Top, float Right, float Bottom) RenderInkBounds(string rawText, float fontSize = 40, Gum.RenderingLibrary.Blend? blend = null)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 200));
         surface.Canvas.Clear(SKColors.Transparent);
@@ -130,6 +130,7 @@ public class TextCustomizationTests
         text.X = 80;
         text.Y = 80;
         text.RawText = rawText;
+        text.Blend = blend;
 
         text.Render(managers);
 
@@ -241,5 +242,34 @@ public class TextCustomizationTests
         customizedBlock.MeasuredHeight.ShouldBe(plainBlock.MeasuredHeight, tolerance: 0.01);
         customizedBlock.FontRuns.Last().GlyphPositions[0].X
             .ShouldBe(plainBlock.FontRuns[0].GlyphPositions[1].X, tolerance: 0.01);
+    }
+
+    [Fact]
+    public void Render_CustomTagScaleWithBlend_IsNotClippedToTheBlock()
+    {
+        Text.Customizations["TripleForBlend"] = (index, block) => new LetterCustomization
+        {
+            ScaleX = 3,
+            ScaleY = 3,
+        };
+
+        var unblended = RenderInkBounds("[Custom=TripleForBlend]I[/Custom]");
+        var blended = RenderInkBounds("[Custom=TripleForBlend]I[/Custom]", blend: Gum.RenderingLibrary.Blend.Normal);
+
+        blended.ShouldBe(unblended);
+    }
+
+    [Fact]
+    public void Render_CustomTagRotationWithBlend_IsNotClippedToTheBlock()
+    {
+        Text.Customizations["QuarterForBlend"] = (index, block) => new LetterCustomization
+        {
+            RotationDegrees = 90,
+        };
+
+        var unblended = RenderInkBounds("[Custom=QuarterForBlend]I[/Custom]");
+        var blended = RenderInkBounds("[Custom=QuarterForBlend]I[/Custom]", blend: Gum.RenderingLibrary.Blend.Normal);
+
+        blended.ShouldBe(unblended);
     }
 }

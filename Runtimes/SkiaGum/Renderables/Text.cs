@@ -2196,7 +2196,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 + System.Math.Max(DropshadowBlurX, DropshadowBlurY);
         }
 
-        return new SKRect(-padding, -padding, textBlock.MeasuredWidth + padding, textBlock.MeasuredHeight + padding);
+        SKRect bounds = new SKRect(0, 0, textBlock.MeasuredWidth, textBlock.MeasuredHeight);
+        // A scaled or rotated [Custom] letter can draw outside the measured block.
+        if (_transformedLetters.TryGetValue(textBlock, out List<TransformedLetter>? letters))
+        {
+            foreach (TransformedLetter letter in letters)
+            {
+                SKRect letterRect = SKRect.Create(letter.PaintOffset.X, letter.PaintOffset.Y,
+                    letter.Block.MeasuredWidth, letter.Block.MeasuredHeight);
+                // The letter's outline scales with it.
+                letterRect.Inflate(OutlineThickness, OutlineThickness);
+                bounds.Union(letter.Matrix.MapRect(letterRect));
+            }
+        }
+        bounds.Inflate(padding, padding);
+        return bounds;
     }
 
     /// <summary>
