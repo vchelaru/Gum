@@ -233,4 +233,31 @@ public class MenuItemDefaultSubmenuPopupTemplateTests : BaseTestClass
         file.itemsPopup!.Visual.Width.ShouldBe(4);
         file.itemsPopup.Visual.Height.ShouldBe(6);
     }
+
+    // Re-registering the V3 defaults after a theme (clear, then InitializeDefaults) puts back the V3 popup
+    // along with the V3 MenuItem visual.
+    [Fact]
+    public void InitializeDefaults_AfterThemeAndClear_ClearsThemePopup()
+    {
+        FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] = new VisualTemplate((_, c) => new MenuItemVisual(tryCreateFormsObject: c));
+        MenuItem.DefaultSubmenuPopupTemplate = NamedScrollViewerTemplate("ThemePopup");
+
+        FrameworkElement.DefaultFormsTemplates.Clear();
+        Gum.Forms.FormsUtilities.InitializeDefaults();
+
+        MenuItem.DefaultSubmenuPopupTemplate.ShouldBeNull();
+    }
+
+    // InitializeDefaults leaves a registered MenuItem visual in place, and the popup that goes with it.
+    [Fact]
+    public void InitializeDefaults_MenuItemTemplateAlreadyRegistered_KeepsDefaultSubmenuPopupTemplate()
+    {
+        FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] = new VisualTemplate((_, c) => new MenuItemVisual(tryCreateFormsObject: c));
+        VisualTemplate themePopup = NamedScrollViewerTemplate("ThemePopup");
+        MenuItem.DefaultSubmenuPopupTemplate = themePopup;
+
+        Gum.Forms.FormsUtilities.InitializeDefaults();
+
+        MenuItem.DefaultSubmenuPopupTemplate.ShouldBeSameAs(themePopup);
+    }
 }

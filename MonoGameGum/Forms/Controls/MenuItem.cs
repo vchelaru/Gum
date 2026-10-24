@@ -210,7 +210,9 @@ public class MenuItem : ItemsControl
     /// submenu popup can look different from other ScrollViewers. The popup sizes itself to its rows,
     /// keeping any padding on levels the template already sizes to their children.
     /// Generated code sets this to the project's MenuItemSubmenuPopup component, and each code-only
-    /// theme's Apply sets it to that theme's popup. Uninitializing Gum clears it.
+    /// theme's Apply sets it to that theme's popup. Applying a theme replaces this, as it replaces
+    /// <see cref="FrameworkElement.DefaultFormsTemplates"/>; set it after the theme to override.
+    /// Uninitializing Gum clears it.
     /// </summary>
     /// <remarks>
     /// The template's content must have the ScrollViewer structure. If it creates a Forms control, that
