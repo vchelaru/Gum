@@ -35,6 +35,11 @@ public class MenuVisual : BaseMenuVisual
         AddChild(_bottomSeparator);
 
         AddChild(InnerPanelInstance);
+
+        // The base's focus bar under the menu, styled like this theme's ListBox focus.
+        FocusedIndicatorColor = DarkProStyling.ActiveStyle.Colors.Accent;
+        FocusedIndicator.Height = 1f;
+        FocusedIndicator.Y = 1f;
     }
 
     private static RectangleRuntime CreateFill()
