@@ -216,8 +216,13 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         ComponentSave themeStyles = theme.Components.Single(c => c.Name == "Styles");
         ComponentSave themeIcon = theme.Components.Single(c => c.Name == "Elements/Icon");
         ComponentSave themeComboBox = theme.Components.Single(c => c.Name == "Controls/ComboBox");
+        // A second state the ComboBox selects on its arrow, read from the template so a recolor there keeps this test honest.
+        string selectedState = themeComboBox.AllStates.SelectMany(state => state.Variables)
+            .Where(v => v.Name == "IconInstance.ColorCategoryState")
+            .Select(v => (string)v.Value!)
+            .First(name => name != "Primary");
         string iconPath = Path.Combine(_projectDir, "Components", "Elements", "Icon.gucx");
-        WriteOlderTemplateFile(Path.Combine("Elements", "Icon.gucx"), iconPath, new List<string> { "Primary", "PrimaryLight" },
+        WriteOlderTemplateFile(Path.Combine("Elements", "Icon.gucx"), iconPath, new List<string> { "Primary", selectedState },
             customizedState: "Gray", customizedVariable: "IconSprite.Red", customizedValue: "7");
         string stylesPath = Path.Combine(_projectDir, "Components", "Styles.gucx");
         WriteOlderStyles(stylesPath, new List<string> { "Primary" });
@@ -228,9 +233,9 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         ComponentSave icon = Load(iconPath);
         StateSaveCategory colors = icon.Categories.Single(c => c.Name == "ColorCategory");
         colors.States.ShouldContain(s => s.Name == "Primary");
-        colors.States.Single(s => s.Name == "PrimaryLight").GetValue("IconSprite.Red")
+        colors.States.Single(s => s.Name == selectedState).GetValue("IconSprite.Red")
             .ShouldBe(themeIcon.Categories.Single(c => c.Name == "ColorCategory")
-                .States.Single(s => s.Name == "PrimaryLight").GetValue("IconSprite.Red"));
+                .States.Single(s => s.Name == selectedState).GetValue("IconSprite.Red"));
         StateSave gray = colors.States.Single(s => s.Name == "Gray");
         gray.GetValue("IconSprite.Red").ShouldBe(7);
         gray.Variables.Count(v => v.Name == "IconSprite.Red").ShouldBe(1);
