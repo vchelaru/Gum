@@ -205,7 +205,7 @@ public class ToolInputBackgroundTests : BaseTestClass
                     foreach (StateSave state in category.States)
                     {
                         visual.ApplyState(state);
-                        foreach (string sprite in DescribeSprites(visual, ""))
+                        foreach (string sprite in DescribeSprites(visual, "", visual.Visible))
                         {
                             lines.Add($"{prefix}{name} {category.Name}.{state.Name} {sprite}");
                         }
@@ -241,17 +241,18 @@ public class ToolInputBackgroundTests : BaseTestClass
 
     private static string SourceFile([System.Runtime.CompilerServices.CallerFilePath] string path = "") => path;
 
-    private static IEnumerable<string> DescribeSprites(GraphicalUiElement parent, string path)
+    private static IEnumerable<string> DescribeSprites(GraphicalUiElement parent, string path, bool parentVisible)
     {
         foreach (GraphicalUiElement child in parent.Children?.OfType<GraphicalUiElement>() ?? Enumerable.Empty<GraphicalUiElement>())
         {
             string childPath = path + "/" + child.Name;
+            bool visible = parentVisible && child.Visible;
             if (child.RenderableComponent is global::RenderingLibrary.Graphics.Sprite sprite)
             {
                 System.Drawing.Color c = sprite.Color;
-                yield return $"{childPath} {c.R},{c.G},{c.B},{c.A} visible={child.Visible}";
+                yield return $"{childPath} {c.R},{c.G},{c.B},{c.A} visible={visible}";
             }
-            foreach (string nested in DescribeSprites(child, childPath))
+            foreach (string nested in DescribeSprites(child, childPath, visible))
             {
                 yield return nested;
             }
