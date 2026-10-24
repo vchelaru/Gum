@@ -163,8 +163,14 @@ function Invoke-Timed {
     for ($i = 0; $i -lt $output.Count; $i++) {
         $line = $output[$i]
         if ($line -match '^(Passed|Failed)!' -or $line -match '^\s+Failed ') { Write-Host "  $($line.Trim())" }
+        # The whole message up to the stack trace: a Shouldly "because" text comes after the
+        # expected/actual lines, under "Additional Info:".
         if ($line -match '^\s+Error Message:') {
-            $output[($i + 1)..[Math]::Min($i + 3, $output.Count - 1)] | ForEach-Object { Write-Host "    $($_.Trim())" }
+            for ($j = $i + 1; $j -lt $output.Count; $j++) {
+                $messageLine = $output[$j]
+                if ($messageLine -match '^\s+(Stack Trace:|Standard Output Messages:|Failed |Passed |Skipped )' -or $messageLine -match '^(Passed|Failed)!') { break }
+                if ($messageLine.Trim()) { Write-Host "    $($messageLine.Trim())" }
+            }
         }
     }
     if ($status -ne 'ok') { $script:failed = $true }
