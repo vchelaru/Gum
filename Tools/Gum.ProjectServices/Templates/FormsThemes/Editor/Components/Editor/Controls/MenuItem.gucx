@@ -38,6 +38,9 @@
     <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
     </Variable>
+    <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -291,6 +294,9 @@
     <Name>MenuItemCategory</Name>
     <State>
       <Name>Enabled</Name>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">80</Value>
       </Variable>
@@ -335,6 +341,9 @@
     </State>
     <State>
       <Name>Highlighted</Name>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -379,6 +388,9 @@
     </State>
     <State>
       <Name>Selected</Name>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">60</Value>
       </Variable>
@@ -423,6 +435,9 @@
     </State>
     <State>
       <Name>Focused</Name>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">80</Value>
       </Variable>
@@ -467,6 +482,9 @@
     </State>
     <State>
       <Name>Disabled</Name>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">80</Value>
       </Variable>
