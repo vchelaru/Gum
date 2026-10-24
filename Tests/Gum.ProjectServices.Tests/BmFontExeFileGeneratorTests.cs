@@ -77,4 +77,23 @@ public class BmFontExeFileGeneratorTests : IDisposable
         File.ReadAllText(bmfcPath).ShouldBe("fontFile=" + Path.Combine("..", "Fonts", "Body.ttf"));
         bmfcSave.FontFile.ShouldBe(fontFile);
     }
+
+    // A font on another drive has no path relative to the .bmfc, so it stays absolute; bmfont still finds it.
+    [SkippableFact]
+    public void WriteBmfc_ShouldKeepFontFileAbsolute_WhenOnAnotherDrive()
+    {
+        Skip.IfNot(OperatingSystem.IsWindows(), "drive letters are Windows-only");
+        string templatePath = Path.Combine(_toolsDirectory, "template.bmfc");
+        Directory.CreateDirectory(_toolsDirectory);
+        File.WriteAllText(templatePath, "fontFile=FontFileVariable");
+        string bmfcPath = Path.Combine(_toolsDirectory, "FontCache", "Font15Body.bmfc");
+        Directory.CreateDirectory(Path.GetDirectoryName(bmfcPath)!);
+        char otherDrive = char.ToUpperInvariant(Path.GetPathRoot(bmfcPath)![0]) == 'Z' ? 'Y' : 'Z';
+        string fontFile = otherDrive + @":\Fonts\Body.ttf";
+        BmfcSave bmfcSave = new BmfcSave { FontName = "Body", FontSize = 15, FontFile = fontFile };
+
+        BmFontExeFileGenerator.WriteBmfc(bmfcSave, bmfcPath, templatePath);
+
+        File.ReadAllText(bmfcPath).ShouldBe("fontFile=" + fontFile);
+    }
 }

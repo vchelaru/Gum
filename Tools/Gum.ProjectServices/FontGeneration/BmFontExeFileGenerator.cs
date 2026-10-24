@@ -111,6 +111,7 @@ public class BmFontExeFileGenerator : IFontFileGenerator
         string? fontFile = bmfcSave.FontFile;
         if (!string.IsNullOrEmpty(fontFile) && Path.IsPathRooted(fontFile))
         {
+            // A font on another drive has no relative path, so GetRelativePath returns it absolute.
             string bmfcDirectory = Path.GetDirectoryName(Path.GetFullPath(bmfcPath))!;
             bmfcSave.FontFile = Path.GetRelativePath(bmfcDirectory, fontFile);
         }
