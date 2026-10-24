@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -190,16 +191,30 @@ public class GumxImportService : IGumxImportService
         foreach (var screen in selections.DirectScreens.Where(s => !skippedElements.Contains(s)))
             ImportScreenInMemory(screen, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
 
+        bool IsWritten(ElementSave element) =>
+            !skippedElements.Contains(element)
+            && !(conflictResolution == ConflictResolution.Skip
+                && conflictNameSet.Contains(nameMap.TryGetValue(element.Name, out var destName) ? destName : element.Name));
+
+        // 5b. A component kept by Skip still gains the instances the imported elements read through
+        // VariableReferences and it lacks, such as a Styles swatch a newer control uses (#6755).
+        // Everything it already has stays as it is, since the user may have changed it.
+        if (conflictResolution == ConflictResolution.Skip)
+        {
+            List<ElementSave> writtenElements = allCandidateElements.Where(IsWritten).ToList();
+            foreach (var component in selections.TransitiveComponents.Concat(selections.DirectComponents)
+                .Where(c => !skippedElements.Contains(c) && !IsWritten(c)))
+            {
+                AddMissingReferencedInstances(component, writtenElements, projectDir, nameMap);
+            }
+        }
+
         // 6. Write pre-fetched asset files to disk for imported elements
         var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
         await CopyCachedAssetsAsync(importedElements, assetCache, projectDir, result);
 
         // 7. Copy sibling .ganx (state animation) files for each imported element. A conflicting
         // element left alone by Skip keeps its own animations too.
-        bool IsWritten(ElementSave element) =>
-            !skippedElements.Contains(element)
-            && !(conflictResolution == ConflictResolution.Skip
-                && conflictNameSet.Contains(nameMap.TryGetValue(element.Name, out var destName) ? destName : element.Name));
         var allComponents = selections.TransitiveComponents.Cast<ElementSave>()
             .Concat(selections.DirectComponents)
             .Where(IsWritten);
@@ -608,6 +623,75 @@ public class GumxImportService : IGumxImportService
         {
             _importLogic.ImportComponent(clone, saveProject: false);
         }
+    }
+
+    /// <summary>
+    /// Adds to the destination copy of <paramref name="source"/> each instance that
+    /// <paramref name="readers"/> read through VariableReferences and the destination lacks, with its
+    /// default-state variables and any missing parent it is attached to. Existing instances and values
+    /// are never changed. Writes the file only when something was added.
+    /// </summary>
+    private void AddMissingReferencedInstances(
+        ComponentSave source,
+        IEnumerable<ElementSave> readers,
+        string projectDir,
+        Dictionary<string, string> nameMap)
+    {
+        string destName = nameMap.TryGetValue(source.Name, out var mapped) ? mapped : source.Name;
+        string destPath = Path.Combine(projectDir, "Components",
+            destName + "." + ComponentExtension(IsDestinationJsonFormat));
+        ComponentSave? destination = TryReadElement<ComponentSave>(destPath);
+        if (destination?.DefaultState == null || source.DefaultState == null) { return; }
+
+        // Readers still use the source names: the remap to a subfolder happens on their clones.
+        var reference = new Regex(@"(?<![\w/])Components/" + Regex.Escape(source.Name) + @"\.(\w+)\.");
+        var pending = new Queue<string>(readers
+            .SelectMany(element => element.AllStates)
+            .SelectMany(state => state.VariableLists)
+            .Where(list => list.GetRootName() == "VariableReferences")
+            .SelectMany(list => list.ValueAsIList.OfType<string>())
+            .SelectMany(line => reference.Matches(line).Select(match => match.Groups[1].Value)));
+
+        var toAdd = new List<InstanceSave>();
+        while (pending.Count > 0)
+        {
+            string name = pending.Dequeue();
+            if (destination.GetInstance(name) != null || toAdd.Any(i => i.Name == name)) { continue; }
+            if (source.GetInstance(name) is not { } instance) { continue; }
+
+            toAdd.Add(instance);
+            if (source.DefaultState.GetValue(name + ".Parent") is string parent && parent.Length > 0)
+            {
+                pending.Enqueue(parent.Split('.')[0]);
+            }
+        }
+        if (toAdd.Count == 0) { return; }
+
+        foreach (ComponentSave target in new[] { destination, _projectState.GumProjectSave?.Components
+            .FirstOrDefault(c => c.Name == destName) }.OfType<ComponentSave>())
+        {
+            if (target.DefaultState == null) { continue; }
+            foreach (InstanceSave instance in toAdd.Where(i => target.GetInstance(i.Name) == null))
+            {
+                InstanceSave added = instance.Clone();
+                added.ParentContainer = target;
+                if (added.BaseType != null && nameMap.TryGetValue(added.BaseType, out var newBase))
+                {
+                    added.BaseType = newBase;
+                }
+                target.Instances.Add(added);
+
+                string prefix = instance.Name + ".";
+                target.DefaultState.Variables.AddRange(source.DefaultState.Variables
+                    .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal))
+                    .Select(v => v.Clone()));
+                target.DefaultState.VariableLists.AddRange(source.DefaultState.VariableLists
+                    .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal))
+                    .Select(v => v.Clone()));
+            }
+        }
+
+        WriteElementToDisk(destination, destPath);
     }
 
     /// <summary>
