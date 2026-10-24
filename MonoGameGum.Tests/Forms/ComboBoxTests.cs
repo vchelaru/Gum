@@ -1,10 +1,13 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Gum.GueDeriving;
 using MonoGameGum.Tests.Input;
 using Moq;
@@ -236,11 +239,20 @@ public  class ComboBoxTests : BaseTestClass
     [Theory]
     [InlineData(-2)]
     [InlineData(3)]
-    public void SelectedIndex_OutOfRange_ShouldThrow(int index)
+    [InlineData(7)]
+    public void SelectedIndex_OutOfRange_ShouldKeepSelectionWithoutSelectionChanged(int index)
     {
         ComboBox comboBox = CreateComboBox("Apple", "Banana", "Cherry");
+        comboBox.SelectedIndex = 1;
+        int fireCount = 0;
+        comboBox.SelectionChanged += (_, _) => fireCount++;
 
-        Should.Throw<IndexOutOfRangeException>(() => comboBox.SelectedIndex = index);
+        comboBox.SelectedIndex = index;
+
+        comboBox.SelectedIndex.ShouldBe(1);
+        comboBox.SelectedObject.ShouldBe("Banana");
+        comboBox.Text.ShouldBe("Banana");
+        fireCount.ShouldBe(0);
     }
 
     [Fact]
@@ -1144,6 +1156,92 @@ public  class ComboBoxTests : BaseTestClass
         comboBox.ListBox.VerticalScrollBarValue.ShouldBe(scrollBefore);
         comboBox.SelectedIndex.ShouldBe(2);
         comboBox.IsDropDownOpen.ShouldBeTrue();
+    }
+
+    // #6736: a selection change that changes the ComboBox Text must re-lay out what depends on that
+    // text (the ComboBox sized to it, the sibling stacked after it), matching a full relayout.
+    [Theory]
+    [InlineData("select")]
+    [InlineData("deselect")]
+    public void SelectionChange_ChangingText_LayoutMatchesFullRelayout(string change)
+    {
+        ContainerRuntime stack = new();
+        stack.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        stack.WidthUnits = DimensionUnitType.RelativeToChildren;
+        stack.Width = 0;
+        Gum.GumService.Default.Root.Children!.Add(stack);
+        ComboBox comboBox = new();
+        ComboBoxVisual visual = (ComboBoxVisual)comboBox.Visual;
+        visual.TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+        visual.TextInstance.XOrigin = HorizontalAlignment.Left;
+        visual.TextInstance.X = 0;
+        visual.TextInstance.WidthUnits = DimensionUnitType.RelativeToChildren;
+        visual.TextInstance.Width = 0;
+        // No font loads headlessly, so a small in-memory one gives the text a measurable width.
+        BitmapFont font = new BitmapFont((Texture2D)null!,
+            "info face=\"Arial\" size=-18\n" +
+            "common lineHeight=20 base=20 scaleW=256 scaleH=256 pages=1\n" +
+            "page id=0 file=\"x.png\"\n" +
+            "chars count=3\n" +
+            "char id=65 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15\n" +
+            "char id=66 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15\n" +
+            "char id=67 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15\n");
+        font.SetFontPattern(256, 256);
+        visual.TextInstance.Typeface = font;
+        visual.WidthUnits = DimensionUnitType.RelativeToChildren;
+        visual.Width = 0;
+        stack.Children!.Add(comboBox.Visual);
+        ContainerRuntime sibling = new();
+        sibling.Width = 10;
+        stack.Children.Add(sibling);
+        comboBox.Items!.Add("A");
+        comboBox.Items.Add("ABCABC");
+        comboBox.SelectedIndex = 1;
+        stack.UpdateLayout();
+        float widthWithLongText = comboBox.Visual.AbsoluteWidth;
+
+        switch (change)
+        {
+            case "select": comboBox.SelectedIndex = 0; break;
+            case "deselect": comboBox.SelectedIndex = -1; break;
+        }
+        float comboWidth = comboBox.Visual.AbsoluteWidth;
+        float siblingX = sibling.AbsoluteLeft;
+        float stackWidth = stack.AbsoluteWidth;
+
+        stack.UpdateLayout();
+
+        comboBox.Visual.AbsoluteWidth.ShouldBeLessThan(widthWithLongText, "precondition: the width follows the text");
+        comboWidth.ShouldBe(comboBox.Visual.AbsoluteWidth);
+        siblingX.ShouldBe(sibling.AbsoluteLeft);
+        stackWidth.ShouldBe(stack.AbsoluteWidth);
+    }
+
+    // ComboBox text is data-driven and deliberately untranslated (gum-localization), on selection
+    // and on direct Text assignment.
+    [Fact]
+    public void Text_WithLocalizationService_StaysUntranslated()
+    {
+        Gum.Localization.LocalizationService localizationService = new();
+        localizationService.AddDatabase(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Hello" } } },
+            new List<string> { "English" });
+        localizationService.CurrentLanguage = 0;
+        CustomSetPropertyOnRenderable.LocalizationService = localizationService;
+        try
+        {
+            ComboBox comboBox = CreateComboBox("Greeting", "Other");
+
+            comboBox.SelectedIndex = 0;
+            comboBox.Text.ShouldBe("Greeting");
+
+            comboBox.Text = "Greeting";
+            comboBox.Text.ShouldBe("Greeting");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
     }
 
     [Fact]
