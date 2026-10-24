@@ -33,6 +33,20 @@ public class ItemsBulkChangeLayoutTests : BaseTestClass
         }
     }
 
+    private sealed class ThrowingItem
+    {
+        public bool Throws { get; set; }
+
+        public override string ToString()
+        {
+            if (Throws)
+            {
+                throw new System.InvalidOperationException("row creation failed");
+            }
+            return "Throwing";
+        }
+    }
+
     private static List<object> Strings(int count)
     {
         List<object> list = new List<object>();
@@ -188,5 +202,31 @@ public class ItemsBulkChangeLayoutTests : BaseTestClass
         {
             rows[i].GetAbsoluteTop().ShouldBe(rows[i - 1].GetAbsoluteBottom(), 0.01f);
         }
+    }
+
+    [Fact]
+    public void MenuItem_RowThrowsDuringOpen_PopupPanelIsNotLeftSuspended()
+    {
+        MenuItem file = CreateMenuItemInRoot();
+        ThrowingItem throwing = new ThrowingItem();
+        file.Items!.Add(throwing);
+        throwing.Throws = true;
+
+        Should.Throw<System.InvalidOperationException>(() => file.IsSelected = true);
+
+        file.itemsPopup!.InnerPanel.IsLayoutSuspended.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MenuItem_RowThrowsDuringRefresh_PopupPanelIsNotLeftSuspended()
+    {
+        MenuItem file = CreateMenuItemInRoot();
+        file.IsSelected = true;
+        ThrowingItem throwing = new ThrowingItem { Throws = true };
+
+        // A Replace reaches the open popup's refresh without the base control creating a row first.
+        Should.Throw<System.InvalidOperationException>(() => file.Items![0] = throwing);
+
+        file.itemsPopup!.InnerPanel.IsLayoutSuspended.ShouldBeFalse();
     }
 }

@@ -637,15 +637,21 @@ public class MenuItem : ItemsControl
             isPopupSizedByItems = visualTemplateVisual == null;
 
             bool suspendedPanel = SuspendPopupPanelLayout();
-            foreach (var item in Items)
+            try
             {
-                FrameworkElement row = CreatePopupRow(item);
-                popupRows.Add(row);
-                AttachPopupRow(row);
+                foreach (var item in Items)
+                {
+                    FrameworkElement row = CreatePopupRow(item);
+                    popupRows.Add(row);
+                    AttachPopupRow(row);
 
-                itemsPopup.InnerPanel.Children.Add(row.Visual);
+                    itemsPopup.InnerPanel.Children.Add(row.Visual);
+                }
             }
-            ResumePopupPanelLayout(suspendedPanel);
+            finally
+            {
+                ResumePopupPanelLayout(suspendedPanel);
+            }
 
 #if !FRB
             // The popup's size must be resolved before it is placed, because placing clamps it to the screen (#6686).
@@ -810,11 +816,44 @@ public class MenuItem : ItemsControl
 
         ScrollViewer popup = itemsPopup!;
         bool suspendedPanel = SuspendPopupPanelLayout();
+        try
+        {
+            ReconcilePopupRows(popup, Items);
+        }
+        finally
+        {
+            ResumePopupPanelLayout(suspendedPanel);
+        }
+
+#if !FRB
+        // The rows changed the popup's size, so it has to be sized and clamped again.
+        if (isPopupSizedByItems)
+        {
+            SizePopupToItems();
+        }
+
+        PlaceItemsPopup();
+#endif
+#if FRB
+        PlaceItemsPopup();
+        if (isPopupSizedByItems)
+        {
+            SizePopupToItems();
+        }
+
+        GuiManager.SortZAndLayerBased();
+        popup.RepositionToKeepInScreen();
+#endif
+    }
+
+    // Puts the open popup's rows in line with Items, keeping rows whose item is still there.
+    private void ReconcilePopupRows(ScrollViewer popup, System.Collections.IList currentItems)
+    {
         List<FrameworkElement> oldRows = new List<FrameworkElement>(popupRows);
         List<FrameworkElement> unclaimedRows = new List<FrameworkElement>(oldRows);
-        List<FrameworkElement> newRows = new List<FrameworkElement>(Items.Count);
+        List<FrameworkElement> newRows = new List<FrameworkElement>(currentItems.Count);
 
-        foreach (object item in Items)
+        foreach (object item in currentItems)
         {
             FrameworkElement? row = null;
             if (item is FrameworkElement asFrameworkElement)
@@ -896,28 +935,6 @@ public class MenuItem : ItemsControl
                 MenuItemsInternal.Add(menuItem);
             }
         }
-
-        ResumePopupPanelLayout(suspendedPanel);
-
-#if !FRB
-        // The rows changed the popup's size, so it has to be sized and clamped again.
-        if (isPopupSizedByItems)
-        {
-            SizePopupToItems();
-        }
-
-        PlaceItemsPopup();
-#endif
-#if FRB
-        PlaceItemsPopup();
-        if (isPopupSizedByItems)
-        {
-            SizePopupToItems();
-        }
-
-        GuiManager.SortZAndLayerBased();
-        popup.RepositionToKeepInScreen();
-#endif
     }
 
     /// <summary>
@@ -1199,7 +1216,7 @@ public class MenuItem : ItemsControl
         }
     }
 
-    ScrollViewer? itemsPopup;
+    internal ScrollViewer? itemsPopup;
 
     // This item's absolute rectangle when the popup was last placed; a change means the popup is stale.
     float _placedAbsoluteX;
