@@ -313,7 +313,9 @@ public partial class GraphicalUiElement
 
         var didCallUpdateLayout = false;
 
-        if (currentDirtyState != null)
+        // A hidden element's layout is resolved when it is shown. Laying it out here only climbs to its parent
+        // and leaves it dirty again, so every resume would re-lay out the parent of every hidden element (#6702).
+        if (currentDirtyState != null && !IsHiddenForResume())
         {
             didCallUpdateLayout = true;
             UpdateLayout(EffectiveDirtyStateParentUpdateType,
@@ -327,6 +329,10 @@ public partial class GraphicalUiElement
 
         return didCallUpdateLayout;
     }
+
+    private bool IsHiddenForResume() =>
+        !AreUpdatesAppliedWhenInvisible && mContainedObjectAsIVisible != null &&
+        ((IVisible)this).AbsoluteVisible == false && !IsRenderTarget && !this.IsInRenderTargetRecursively();
 
     private void ResumeChildrenIfDirty(bool skipSuspendedChildren)
     {
