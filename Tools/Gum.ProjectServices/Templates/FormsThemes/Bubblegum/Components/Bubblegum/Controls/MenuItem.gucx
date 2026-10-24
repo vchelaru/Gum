@@ -71,11 +71,17 @@
     <Variable Type="DimensionUnitType" Name="ContainerInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
+    <Variable Type="float" Name="ContainerInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
+    <Variable Type="float" Name="ContainerInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">6</Value>
+    </Variable>
     <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
       <Value xsi:type="xsd:string">SubItemContainerInstance</Value>
     </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">12</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
@@ -220,7 +226,7 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="float" Name="Width" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">24</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
