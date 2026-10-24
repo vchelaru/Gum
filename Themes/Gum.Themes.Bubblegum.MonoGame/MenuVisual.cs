@@ -33,11 +33,6 @@ public class MenuVisual : BaseMenuVisual
         AddChild(_bottomSeparator);
 
         AddChild(InnerPanelInstance);
-
-        // The base's focus bar under the menu, styled like this theme's ListBox focus.
-        FocusedIndicatorColor = BubblegumStyling.ActiveStyle.Colors.FocusRing;
-        FocusedIndicator.Height = 3f;
-        FocusedIndicator.Y = 2f;
     }
 
     private static RectangleRuntime CreateBottomSeparator()

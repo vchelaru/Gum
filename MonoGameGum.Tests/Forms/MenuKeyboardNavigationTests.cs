@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
@@ -513,17 +514,43 @@ public class MenuKeyboardNavigationTests : BaseTestClass
 
     #region Default visual states
 
+    // Like WPF, a focused Menu shows focus only through its highlighted top-level item (#6706).
     [Fact]
-    public void MenuVisual_DisabledStates_ShowFocusBarOnlyWhenFocused()
+    public void MenuVisual_Focus_ChangesNothingOnTheMenuItself_AndHighlightsFirstItem()
     {
         Bar bar = CreateBar();
         Gum.Forms.DefaultVisuals.V3.MenuVisual visual = (Gum.Forms.DefaultVisuals.V3.MenuVisual)bar.Menu.Visual;
+        visual.MenuCategory.States.Select(s => s.Name).ShouldBe(
+            new[] { "Enabled", "Disabled", "DisabledFocused", "Focused" }, ignoreOrder: true);
+        string unfocused = MenuChromeVisibility(visual);
+
+        bar.Menu.IsFocused = true;
+
+        MenuChromeVisibility(visual).ShouldBe(unfocused);
+        ShouldBeOnlyHighlighted(bar.File, bar.Edit, bar.Standalone);
 
         bar.Menu.Visual.SetProperty(Menu.MenuCategoryStateName, FrameworkElement.DisabledFocusedStateName);
-        visual.FocusedIndicator.Visible.ShouldBeTrue();
+        MenuChromeVisibility(visual).ShouldBe(unfocused);
+    }
 
-        bar.Menu.Visual.SetProperty(Menu.MenuCategoryStateName, FrameworkElement.DisabledStateName);
-        visual.FocusedIndicator.Visible.ShouldBeFalse();
+    // The visibility of every element of the menu's own chrome, leaving out its items.
+    private static string MenuChromeVisibility(GraphicalUiElement menuVisual)
+    {
+        List<string> parts = new();
+        void Walk(GraphicalUiElement element)
+        {
+            foreach (GraphicalUiElement child in element.Children!)
+            {
+                if ((child as InteractiveGue)?.FormsControlAsObject is MenuItem)
+                {
+                    continue;
+                }
+                parts.Add($"{child.Name}={child.Visible}");
+                Walk(child);
+            }
+        }
+        Walk(menuVisual);
+        return string.Join(", ", parts);
     }
 
     #endregion
