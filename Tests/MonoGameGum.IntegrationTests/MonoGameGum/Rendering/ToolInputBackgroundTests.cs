@@ -191,8 +191,7 @@ public class ToolInputBackgroundTests : BaseTestClass
     [Theory]
     [InlineData("FormsTemplate", "Controls/", "CheckBox,RadioButton,ButtonClose,MenuItem,ExpanderStandard,ButtonIcon")]
     [InlineData("FormsThemes/Editor", "Editor/Controls/", "CheckBox,RadioButton,ButtonClose,MenuItem,Expander,ButtonIcon")]
-    public void IconUsers_EveryState_MatchRecordedColors(string templateFolder, string prefix, string components,
-        [System.Runtime.CompilerServices.CallerFilePath] string sourceFile = "")
+    public void IconUsers_EveryState_MatchRecordedColors(string templateFolder, string prefix, string components)
     {
         List<string> lines = new();
         MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
@@ -215,7 +214,7 @@ public class ToolInputBackgroundTests : BaseTestClass
             }
         });
 
-        string referencePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(sourceFile)!, "IconUserColors.txt");
+        string referencePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(SourceFile())!, "IconUserColors.txt");
         string section = $"[{templateFolder}]";
         List<string> reference = System.IO.File.Exists(referencePath) ? System.IO.File.ReadAllLines(referencePath).ToList() : new();
         if (Environment.GetEnvironmentVariable("GUM_RECORD_ICON_USERS") == "1")
@@ -239,6 +238,8 @@ public class ToolInputBackgroundTests : BaseTestClass
         lines.Count.ShouldBeGreaterThan(0);
         lines.ShouldBe(expected);
     }
+
+    private static string SourceFile([System.Runtime.CompilerServices.CallerFilePath] string path = "") => path;
 
     private static IEnumerable<string> DescribeSprites(GraphicalUiElement parent, string path)
     {
