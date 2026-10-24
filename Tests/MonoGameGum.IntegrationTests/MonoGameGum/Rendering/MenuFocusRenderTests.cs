@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Input;
@@ -135,7 +136,30 @@ public class MenuFocusRenderTests : BaseTestClass
             () => tool.BarHeight.ShouldBe(codeOnly.BarHeight, 1f, $"{themeName}: menu bar height"));
     }
 
-    // A top-level item that is not highlighted or open paints the same pixels in both, enabled or disabled (#6731).
+    // The bar reads its fill from the Styles InputBackground swatch, so recoloring the swatch recolors the bar (#6732).
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/", "Styles")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/", "Editor/Styles")]
+    public void Tool_MenuBar_FollowsInputBackgroundSwatch(string templateFolder, string componentPrefix, string stylesName)
+    {
+        WithToolProject(templateFolder, mutateProject: null, () =>
+        {
+            GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+            StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState;
+            styles.SetValue("InputBackground.FillRed", 200, "int");
+            styles.SetValue("InputBackground.FillGreen", 10, "int");
+            styles.SetValue("InputBackground.FillBlue", 20, "int");
+            project.ApplyAllVariableReferences();
+
+            Menu menu = FromComponent<Menu>(componentPrefix + "Menu");
+
+            var background = (menu.Visual.GetGraphicalUiElementByName("Background")?.RenderableComponent as global::RenderingLibrary.Graphics.NineSlice).ShouldNotBeNull();
+            (background.Color.R, background.Color.G, background.Color.B).ShouldBe(((byte)200, (byte)10, (byte)20));
+        });
+    }
+
+    // A top-level item that is not highlighted or open paints the same pixels in both: enabled, disabled, or
+    // focused itself (MenuItem.UpdateState applies Focused when IsFocused is set) (#6731).
     [Theory]
     [MemberData(nameof(StandardAndEditorPairs))]
     public void Tool_RestingMenuItemRow_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
@@ -146,7 +170,7 @@ public class MenuFocusRenderTests : BaseTestClass
         tool.ShouldSatisfyAllConditions(
             () => ShouldBeClose(tool.RestingRowFill, codeOnly.RestingRowFill, $"{themeName}: enabled item fill", tolerance: 2),
             () => ShouldBeClose(tool.DisabledRowFill, codeOnly.DisabledRowFill, $"{themeName}: disabled item fill", tolerance: 2),
-            () => ShouldBeClose(tool.FocusedMenuRestingRowFill, codeOnly.FocusedMenuRestingRowFill, $"{themeName}: enabled item fill while the menu has focus", tolerance: 2));
+            () => ShouldBeClose(tool.FocusedRowFill, codeOnly.FocusedRowFill, $"{themeName}: focused item fill", tolerance: 2));
     }
 
     // Left out: Standard's popup is its ScrollViewer component, which fills with the DarkGray swatch
@@ -515,7 +539,7 @@ public class MenuFocusRenderTests : BaseTestClass
         XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner,
         XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, string? PopupVisualName, float PopupGrowthPerRow, float AddedRowHeight,
         XnaColor[] BarColumn, XnaColor[] FocusedItemColumn, int MenuBottom,
-        XnaColor BarFill, float BarHeight, XnaColor RestingRowFill, XnaColor DisabledRowFill, XnaColor FocusedMenuRestingRowFill);
+        XnaColor BarFill, float BarHeight, XnaColor RestingRowFill, XnaColor DisabledRowFill, XnaColor FocusedRowFill);
 
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
@@ -618,7 +642,6 @@ public class MenuFocusRenderTests : BaseTestClass
             menu.IsFocused = true;
             file.IsHighlighted.ShouldBeTrue(pngPrefix);
             XnaColor[] focused = Capture(game, background, $"{pngPrefix}-focused.png");
-            XnaColor focusedMenuRestingRowFill = focused[RowSampleIndex(editItem)];
             var headerText = (file.Visual.GetGraphicalUiElementByName("TextInstance")?.RenderableComponent as global::RenderingLibrary.Graphics.Text).ShouldNotBeNull(pngPrefix);
             XnaColor highlightedHeaderColor = new XnaColor(headerText.Red, headerText.Green, headerText.Blue);
 
@@ -714,12 +737,19 @@ public class MenuFocusRenderTests : BaseTestClass
             float growth = popup.GetAbsoluteHeight() - heightBefore;
             float addedRowHeight = closeItem.Visual.GetAbsoluteHeight();
 
+            // Last, since focusing an item takes focus from the menu.
+            editItem.IsFocused = true;
+            editItem.IsFocused.ShouldBeTrue(pngPrefix);
+            menu.Visual.UpdateLayout();
+            XnaColor[] itemFocused = Capture(game, background, $"{pngPrefix}-itemfocused.png");
+            XnaColor focusedRowFill = itemFocused[RowSampleIndex(editItem)];
+
             return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor, edge, corner,
                 open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner,
                 popupFill, popupBorder, rowTextColor, popupElementName, popup.Name, growth, addedRowHeight,
                 Column(unfocused, CaptureWidth - 8), Column(focused, (int)(file.Visual.AbsoluteLeft + file.Visual.GetAbsoluteWidth() / 2)),
                 (int)(menu.Visual.AbsoluteTop + menu.Visual.GetAbsoluteHeight()),
-                barFill, barHeight, restingRowFill, disabledRowFill, focusedMenuRestingRowFill);
+                barFill, barHeight, restingRowFill, disabledRowFill, focusedRowFill);
         }
         finally
         {

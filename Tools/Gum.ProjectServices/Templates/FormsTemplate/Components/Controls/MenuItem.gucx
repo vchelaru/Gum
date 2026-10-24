@@ -294,9 +294,6 @@
     <Name>MenuItemCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">80</Value>
       </Variable>
@@ -305,6 +302,9 @@
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
@@ -341,9 +341,6 @@
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">138</Value>
       </Variable>
@@ -352,6 +349,9 @@
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">140</Value>
+      </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
@@ -388,9 +388,6 @@
     </State>
     <State>
       <Name>Selected</Name>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">177</Value>
       </Variable>
@@ -399,6 +396,9 @@
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">6</Value>
+      </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
@@ -435,9 +435,6 @@
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">80</Value>
       </Variable>
@@ -446,6 +443,9 @@
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
@@ -482,9 +482,6 @@
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">80</Value>
       </Variable>
@@ -493,6 +490,9 @@
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>

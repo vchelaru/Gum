@@ -229,6 +229,24 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="int" Name="InputBackground.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackground.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackground.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="bool" Name="InputBackground.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="InputBackground.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="InputBackground.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="LightGray.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
     </Variable>
@@ -504,6 +522,7 @@
   <Instance Name="Colors" BaseType="Container" Locked="true" />
   <Instance Name="Black" BaseType="Rectangle" />
   <Instance Name="DarkGray" BaseType="Rectangle" />
+  <Instance Name="InputBackground" BaseType="Rectangle" />
   <Instance Name="Gray" BaseType="Rectangle" />
   <Instance Name="LightGray" BaseType="Rectangle" />
   <Instance Name="White" BaseType="Rectangle" />

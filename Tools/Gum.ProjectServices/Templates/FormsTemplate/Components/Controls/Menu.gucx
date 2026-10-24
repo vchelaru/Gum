@@ -137,6 +137,16 @@
     <Variable Type="PositionUnitType" Name="YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Styles.InputBackground.FillColor</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>MenuCategory</Name>
