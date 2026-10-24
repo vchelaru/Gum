@@ -168,6 +168,11 @@ public class MenuItem : ItemsControl
         if (isHighlighted)
         {
             HighlightGained?.Invoke(this, EventArgs.Empty);
+            // A row of a submenu shrunk to the canvas may be scrolled out of view (#6758).
+            if (ParentMenuItem?.itemsPopup is ScrollViewer popup && Visual.Parent == popup.InnerPanel)
+            {
+                popup.BringRowIntoView(Visual);
+            }
         }
         UpdateState(force: true);
     }

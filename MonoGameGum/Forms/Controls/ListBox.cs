@@ -1675,30 +1675,12 @@ public class ListBox : ItemsControl, IInputReceiver
 
             var viewTop = -InnerPanel.Y;
             var viewBottom = -InnerPanel.Y + ClipContainer.AbsoluteHeight;
-            var isAboveView = visualTop < viewTop;
-            var isBelowView = visualBottom > viewBottom;
 
             float amountToScroll = 0;
             switch (scrollIntoViewStyle)
             {
                 case ScrollIntoViewStyle.BringIntoView:
-                    if (isAboveView)
-                    {
-                        amountToScroll = visualTop - viewTop;
-                        if(verticalScrollBar != null)
-                        {
-                            verticalScrollBar.Value += amountToScroll;
-                        }
-                    }
-                    else if (isBelowView)
-                    {
-                        amountToScroll = visualBottom - viewBottom;
-                        if (verticalScrollBar != null)
-                        {
-                            verticalScrollBar.Value += amountToScroll;
-                        }
-                    }
-
+                    BringRowIntoView(visual.Visual);
                     break;
                 case ScrollIntoViewStyle.Top:
                     amountToScroll = visualTop - viewTop;

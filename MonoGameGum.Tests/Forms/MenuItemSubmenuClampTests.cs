@@ -1,10 +1,14 @@
+using System.Collections.Generic;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+using Gum.Input;
 using Gum.Wireframe;
+using Moq;
 using RenderingLibrary;
 using Shouldly;
 using Xunit;
+using Keys = Gum.Forms.Input.Keys;
 
 namespace MonoGameGum.Tests.Forms;
 
@@ -14,6 +18,52 @@ namespace MonoGameGum.Tests.Forms;
 /// </summary>
 public class MenuItemSubmenuClampTests : BaseTestClass
 {
+    private readonly Mock<ICursor> _cursor = new();
+
+    public MenuItemSubmenuClampTests()
+    {
+        // A still cursor away from every control unless a test moves it.
+        _cursor.SetupProperty(c => c.VisualOver);
+        _cursor.SetupProperty(c => c.WindowPushed);
+        _cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        MoveCursor(-1000, -1000);
+        Gum.Forms.FormsUtilities.SetCursor(_cursor.Object);
+    }
+
+    private void MoveCursor(float x, float y)
+    {
+        _cursor.Setup(c => c.X).Returns((int)x);
+        _cursor.Setup(c => c.Y).Returns((int)y);
+        _cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
+        _cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(y);
+    }
+
+    // Runs one frame of the real focus dispatch with only this key down (pushed, typed and held).
+    private static void Press(Keys key)
+    {
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(key)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(key)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyTyped(key)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<Keys> { key });
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+        try
+        {
+            Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        }
+        finally
+        {
+            FrameworkElement.KeyboardsForUiControl.Remove(keyboard.Object);
+        }
+    }
+
+    private static void ShouldBeInView(ScrollViewer popup, MenuItem row)
+    {
+        row.IsHighlighted.ShouldBeTrue($"{row.Header} should be highlighted");
+        GraphicalUiElement clip = (GraphicalUiElement)popup.InnerPanel.Parent!;
+        row.Visual.GetAbsoluteTop().ShouldBeGreaterThanOrEqualTo(clip.AbsoluteTop - 0.01f, row.Header);
+        row.Visual.GetAbsoluteBottom().ShouldBeLessThanOrEqualTo(clip.AbsoluteBottom + 0.01f, row.Header);
+    }
     private static MenuItem CreateMenu(float canvasWidth, float canvasHeight, float x = 0)
     {
         ResizeCanvas(canvasWidth, canvasHeight);
@@ -232,5 +282,59 @@ public class MenuItemSubmenuClampTests : BaseTestClass
         ShouldBeSizedToRows(popup);
         popup.Visual.AbsoluteHeight.ShouldBeLessThan(600);
         popup.VerticalScrollBarVisibility.ShouldBe(ScrollBarVisibility.Hidden);
+    }
+
+    [Fact]
+    public void Arrows_ShouldScrollHighlightedRowIntoView_WhenSubmenuIsShrunk()
+    {
+        MenuItem file = CreateMenu(800, 600);
+        AddRows(file, 200);
+        ((Menu)file.ParentFrameworkElement!).IsFocused = true;
+        Press(Keys.Down);
+        ScrollViewer popup = PopupOf(file);
+        IReadOnlyList<MenuItem> rows = file.OpenSubItems;
+        ShouldBeInView(popup, rows[0]);
+
+        // Up from the first row wraps to the last, far below the view.
+        Press(Keys.Up);
+        ShouldBeInView(popup, rows[^1]);
+
+        // Down from the last row wraps to the first, above the view.
+        Press(Keys.Down);
+        ShouldBeInView(popup, rows[0]);
+        popup.VerticalScrollBarValue.ShouldBe(0);
+
+        for (int i = 0; i < 40; i++)
+        {
+            Press(Keys.Down);
+        }
+        ShouldBeInView(popup, rows[40]);
+        popup.VerticalScrollBarValue.ShouldBeGreaterThan(0);
+
+        for (int i = 0; i < 40; i++)
+        {
+            Press(Keys.Up);
+        }
+        ShouldBeInView(popup, rows[0]);
+    }
+
+    [Fact]
+    public void MouseWheel_ShouldScrollShrunkSubmenu_WhenCursorIsOverIt()
+    {
+        MenuItem file = CreateMenu(800, 600);
+        AddRows(file, 200);
+        file.IsSelected = true;
+        ScrollViewer popup = PopupOf(file);
+        popup.VerticalScrollBarValue.ShouldBe(0);
+        float firstRowTop = popup.InnerPanel.Children![0].GetAbsoluteTop();
+
+        MoveCursor(popup.Visual.AbsoluteLeft + 5, popup.Visual.AbsoluteTop + 100);
+        _cursor.Setup(c => c.ScrollWheelChange).Returns(-1);
+        _cursor.Setup(c => c.ZVelocity).Returns(-1);
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        popup.VerticalScrollBarValue.ShouldBeGreaterThan(0);
+        popup.InnerPanel.Children![0].GetAbsoluteTop().ShouldBeLessThan(firstRowTop);
+        file.IsPopupVisible.ShouldBeTrue();
     }
 }
