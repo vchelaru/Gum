@@ -312,6 +312,91 @@ public class ItemsControlCollectionChangeTests : BaseTestClass
 
     #endregion
 
+    #region Layout outside InnerPanel after a bulk change
+
+    /// <summary>
+    /// A ListBox sized to its rows, stacked above a sibling in a parent that sizes to its children,
+    /// so a row change has to move work outside InnerPanel (the ListBox, the sibling, the parent).
+    /// </summary>
+    private static (ListBox listBox, ContainerRuntime parent, ContainerRuntime sibling) CreateContentSizedListBoxInStack(
+        RaisingCollection items)
+    {
+        ContainerRuntime parent = new();
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.Height = 0;
+        parent.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        Gum.GumService.Default.Root.Children!.Add(parent);
+
+        ListBox listBox = new();
+        for (GraphicalUiElement? element = listBox.InnerPanel; element != null; element = element.Parent as GraphicalUiElement)
+        {
+            element.Height = 0;
+            element.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            if (element == listBox.Visual)
+            {
+                break;
+            }
+        }
+        parent.Children!.Add(listBox.Visual);
+
+        ContainerRuntime sibling = new() { Height = 10, HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute };
+        parent.Children.Add(sibling);
+
+        listBox.Items = items;
+        return (listBox, parent, sibling);
+    }
+
+    public static IEnumerable<object[]> BulkChanges()
+    {
+        yield return new object[] { "Reset" };
+        yield return new object[] { "MultiRemove" };
+        yield return new object[] { "MultiInsert" };
+        yield return new object[] { "Replace" };
+        yield return new object[] { "MultiMove" };
+        yield return new object[] { "Add" };
+    }
+
+    [Theory]
+    [MemberData(nameof(BulkChanges))]
+    public void BulkChange_OnContentSizedListBoxInStack_LaysOutTheListBoxAndItsSiblings(string change)
+    {
+        RaisingCollection items = new(new object[] { "A", "B", "C" });
+        var (listBox, parent, sibling) = CreateContentSizedListBoxInStack(items);
+        float heightBefore = listBox.Visual.GetAbsoluteHeight();
+        heightBefore.ShouldBeGreaterThan(0);
+
+        switch (change)
+        {
+            case "Reset": items.SetAllAndReset(new object[] { "A", "B", "C", "D", "E" }); break;
+            case "MultiRemove": items.RemoveRange(0, 2); break;
+            case "MultiInsert": items.InsertRange(1, new object[] { "X", "Y" }); break;
+            case "Replace": items.ReplaceRange(0, new object[] { "X", "Y" }); break;
+            case "MultiMove": items.MoveRange(oldIndex: 0, count: 2, newIndex: 1); break;
+            case "Add": items.Add("D"); break;
+        }
+
+        float listBoxHeight = listBox.Visual.GetAbsoluteHeight();
+        float siblingTop = sibling.AbsoluteTop;
+        float parentHeight = parent.GetAbsoluteHeight();
+        float lastRowBottom = listBox.ListBoxItems[^1].Visual.AbsoluteBottom;
+
+        // What a full layout from scratch produces is the reference: deferred work left unflushed
+        // anywhere in the tree shows up as a difference.
+        parent.UpdateLayout();
+
+        listBox.Visual.GetAbsoluteHeight().ShouldBe(listBoxHeight);
+        sibling.AbsoluteTop.ShouldBe(siblingTop);
+        parent.GetAbsoluteHeight().ShouldBe(parentHeight);
+        listBox.ListBoxItems[^1].Visual.AbsoluteBottom.ShouldBe(lastRowBottom);
+        sibling.AbsoluteTop.ShouldBe(listBox.Visual.AbsoluteBottom);
+        if (change is "Reset" or "MultiRemove" or "MultiInsert" or "Add")
+        {
+            listBoxHeight.ShouldNotBe(heightBefore);
+        }
+    }
+
+    #endregion
+
     #region User SuspendLayout (#6712)
 
     [Fact]
