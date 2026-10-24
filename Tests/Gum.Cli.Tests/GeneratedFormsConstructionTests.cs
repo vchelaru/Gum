@@ -252,6 +252,51 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         }
     }
 
+    // #6744: a generated ComboBox whose component has no ListBoxInstance child builds its drop-down from
+    // the project's ListBox component on first use, once the gumx is loaded as GumService does. Reading
+    // ListBox builds it as opening does; this headless renderer has no layers to open a popup on.
+    [Theory]
+    [InlineData(OutputLibrary.GumForms, ObjectInstantiationType.FullyInCode)]
+    [InlineData(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName)]
+    public void Constructor_ComboBoxWithoutListBoxInstance_BuildsDropDownFromListBoxComponent(OutputLibrary outputLibrary, ObjectInstantiationType instantiationType)
+    {
+        Assembly generated = GenerateAndCompile(outputLibrary, instantiationType, editProject: RemoveComboBoxListBoxInstance);
+        LoadProjectForFindByName();
+
+        object comboBox = outputLibrary == OutputLibrary.GumForms
+            ? Construct(generated, "ComboBox")
+            : Get(Activator.CreateInstance(generated.GetTypes().Single(item => item.Name == "ComboBoxRuntime"), true, true), "FormsControl")!;
+        IList items = (IList)Get(comboBox, "Items")!;
+        items.Add("Apple");
+        items.Add("Banana");
+        comboBox.GetType().GetProperty("SelectedIndex")!.SetValue(comboBox, 1);
+
+        object listBox = Get(comboBox, "ListBox").ShouldNotBeNull();
+
+        Get(listBox, "Visual.ElementSave.Name").ShouldBe("Controls/ListBox");
+        ((ICollection)Get(listBox, "ListBoxItems")!).Count.ShouldBe(2);
+        Get(listBox, "SelectedIndex").ShouldBe(1);
+    }
+
+    // Codegen skips a component missing a behavior's required instance, so the project also drops
+    // ListBoxInstance from its ComboBoxBehavior.
+    private void RemoveComboBoxListBoxInstance(GumProjectSave project)
+    {
+        string behaviorName = Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.ComboBoxBehaviorName;
+        Gum.DataTypes.Behaviors.BehaviorSave behavior = project.Behaviors.Single(item => item.Name == behaviorName);
+        behavior.RequiredInstances.RemoveAll(instance => instance.Name == "ListBoxInstance");
+        behavior.Save(Path.Combine(TempDirectory, "Behaviors", behaviorName + ".behx"));
+
+        ComponentSave comboBox = project.Components.Single(item => item.Name == "Controls/ComboBox");
+        comboBox.Instances.RemoveAll(instance => instance.Name == "ListBoxInstance");
+        foreach (StateSave state in comboBox.AllStates)
+        {
+            state.Variables.RemoveAll(variable => variable.Name.StartsWith("ListBoxInstance.")
+                || (variable.Name == "DefaultChildContainer" && variable.Value as string == "ListBoxInstance"));
+            state.VariableLists.RemoveAll(variable => variable.Name.StartsWith("ListBoxInstance."));
+        }
+    }
+
     private static object Construct(Assembly generated, string typeName) =>
         Activator.CreateInstance(generated.GetTypes().Single(item => item.Name == typeName))!;
 
