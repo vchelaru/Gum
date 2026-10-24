@@ -6,24 +6,26 @@ This page describes how to publish Gum's NuGet packages and how to cut a new rel
 
 Pull requests always target `main`. When a release is ready to stabilize, a maintainer cuts a release branch from `main`, so feature work on `main` never has to stop for a release.
 
-1. Create the branch from `main`, named `release/<YYYY-MM>`:
+Releases ship at the start of a month. The branch is usually cut in the last days of the month before, so stabilization runs while feature work continues on `main`.
+
+1. Create the branch from `main`, named `release/<YYYY-MM>`. `<YYYY-MM>` is the month the release ships, not the month the branch is cut. For example, a release shipping on November 1, 2026 uses `release/2026-11`, even when the branch is cut in October:
 
     ```sh
     git fetch origin
-    git push origin origin/main:refs/heads/release/2026-10
+    git push origin origin/main:refs/heads/release/2026-11
     ```
-2. Tag the commit the branch was cut from, so `main`'s history shows where each release split off:
+2. Tag the commit the branch was cut from, so `main`'s history shows where each release split off. This tag uses the date the branch was cut:
 
     ```sh
-    git tag Branched_October_01_2026 origin/main
-    git push origin Branched_October_01_2026
+    git tag Branched_October_23_2026 origin/main
+    git push origin Branched_October_23_2026
     ```
 3. Fix bugs found during stabilization on `main` first, through a normal pull request. After it merges, cherry-pick the squashed commit onto the release branch. The `-x` flag records which `main` commit it came from:
 
     ```sh
-    git checkout --detach origin/release/2026-10
+    git checkout --detach origin/release/2026-11
     git cherry-pick -x <commit on main>
-    git push origin HEAD:refs/heads/release/2026-10
+    git push origin HEAD:refs/heads/release/2026-11
     ```
 
     Pushes to `release/*` run the same CI as `main`, so the cherry-pick is built and tested on the release branch.
