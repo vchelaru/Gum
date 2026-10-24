@@ -1187,7 +1187,7 @@ public  class ComboBoxTests : BaseTestClass
             "char id=66 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15\n" +
             "char id=67 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15\n");
         font.SetFontPattern(256, 256);
-        visual.TextInstance.BitmapFont = font;
+        visual.TextInstance.Typeface = font;
         visual.WidthUnits = DimensionUnitType.RelativeToChildren;
         visual.Width = 0;
         stack.Children!.Add(comboBox.Visual);
@@ -1198,23 +1198,23 @@ public  class ComboBoxTests : BaseTestClass
         comboBox.Items.Add("ABCABC");
         comboBox.SelectedIndex = 1;
         stack.UpdateLayout();
-        float widthWithLongText = comboBox.Visual.GetAbsoluteWidth();
+        float widthWithLongText = comboBox.Visual.AbsoluteWidth;
 
         switch (change)
         {
             case "select": comboBox.SelectedIndex = 0; break;
             case "deselect": comboBox.SelectedIndex = -1; break;
         }
-        float comboWidth = comboBox.Visual.GetAbsoluteWidth();
-        float siblingX = sibling.GetAbsoluteX();
-        float stackWidth = stack.GetAbsoluteWidth();
+        float comboWidth = comboBox.Visual.AbsoluteWidth;
+        float siblingX = sibling.AbsoluteLeft;
+        float stackWidth = stack.AbsoluteWidth;
 
         stack.UpdateLayout();
 
-        comboBox.Visual.GetAbsoluteWidth().ShouldBeLessThan(widthWithLongText, "precondition: the width follows the text");
-        comboWidth.ShouldBe(comboBox.Visual.GetAbsoluteWidth());
-        siblingX.ShouldBe(sibling.GetAbsoluteX());
-        stackWidth.ShouldBe(stack.GetAbsoluteWidth());
+        comboBox.Visual.AbsoluteWidth.ShouldBeLessThan(widthWithLongText, "precondition: the width follows the text");
+        comboWidth.ShouldBe(comboBox.Visual.AbsoluteWidth);
+        siblingX.ShouldBe(sibling.AbsoluteLeft);
+        stackWidth.ShouldBe(stack.AbsoluteWidth);
     }
 
     [Fact]
