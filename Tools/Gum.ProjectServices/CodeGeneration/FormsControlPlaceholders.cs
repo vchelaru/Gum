@@ -41,6 +41,13 @@ namespace Gum.Forms.Controls
         public string? Header { get; set; }
     }
 
+    public class Menu
+    {
+        // The real Menu keeps an obsolete static MenuCategoryState, which the generated
+        // MenuCategoryState property hides on purpose.
+        public static string MenuCategoryState => "MenuCategoryState";
+    }
+
     public class MenuItem
     {
         // The real MenuItem declares its state category name as a constant, which the
