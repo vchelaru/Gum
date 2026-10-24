@@ -699,26 +699,53 @@ public class GumxImportService : IGumxImportService
         EnqueueReferences(readerList.SelectMany(element => element.AllStates),
             list => list.GetRootName() == "VariableReferences", localOwner: null);
 
+        // Source elements by name, to walk instance paths and base types.
+        var sourceElements = new Dictionary<string, ElementSave>(StringComparer.Ordinal);
+        foreach (ElementSave element in readerList.Concat(keptComponents.Values))
+        {
+            sourceElements.TryAdd(element.Name, element);
+        }
+
+        // The kept component that defines the category, found on the type or up its base types.
+        ComponentSave? FindCategoryOwner(string? typeName, string categoryName)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            while (typeName != null && seen.Add(typeName) && sourceElements.TryGetValue(typeName, out var element))
+            {
+                if (element.Categories.Any(c => c.Name == categoryName))
+                {
+                    return keptComponents.TryGetValue(typeName, out var kept) ? kept : null;
+                }
+                typeName = element.BaseType;
+            }
+            return null;
+        }
+
         // Category states the readers select on a kept component ("Icon.ColorCategoryState = Primary"
-        // on an instance, or "ColorCategoryState" on a derived element) and it lacks (#6764). Each
-        // added state's own references are queued so the swatches it reads come back too.
+        // on an instance, a nested "Panel.Icon.ColorCategoryState", or "ColorCategoryState" on a derived
+        // element) and it lacks (#6764). Each added state's own references and the instances its
+        // variables set are queued, so the swatches it reads and the instances it sets come back too.
         var addedStates = new Dictionary<ComponentSave, List<(StateSaveCategory Category, StateSave State)>>();
         foreach (ElementSave reader in readerList)
         {
             foreach (VariableSave variable in reader.AllStates.SelectMany(state => state.Variables))
             {
-                string rootName = variable.GetRootName();
-                if (variable.Value is not string stateName || rootName.Length <= "State".Length
-                    || !rootName.EndsWith("State", StringComparison.Ordinal)) { continue; }
+                string[] parts = variable.Name.Split('.');
+                string leaf = parts[^1];
+                if (variable.Value is not string stateName || leaf.Length <= "State".Length
+                    || !leaf.EndsWith("State", StringComparison.Ordinal)) { continue; }
 
-                string? ownerName = variable.SourceObject == null
-                    ? reader.BaseType
-                    : reader.GetInstance(variable.SourceObject)?.BaseType;
-                if (ownerName == null || !keptComponents.TryGetValue(ownerName, out var owner)) { continue; }
-
-                string categoryName = rootName.Substring(0, rootName.Length - "State".Length);
-                if (owner.Categories.FirstOrDefault(c => c.Name == categoryName) is not { } category
-                    || category.States.FirstOrDefault(s => s.Name == stateName) is not { } state) { continue; }
+                string? typeName = reader.BaseType;
+                ElementSave? current = reader;
+                for (int i = 0; i < parts.Length - 1 && current != null; i++)
+                {
+                    typeName = current.GetInstance(parts[i])?.BaseType;
+                    current = typeName != null && sourceElements.TryGetValue(typeName, out var next) ? next : null;
+                }
+                string categoryName = leaf.Substring(0, leaf.Length - "State".Length);
+                if (FindCategoryOwner(typeName, categoryName) is not { } owner) { continue; }
+                StateSaveCategory category = owner.Categories.First(c => c.Name == categoryName);
+                if (category.States.FirstOrDefault(s => s.Name == stateName) is not { } state) { continue; }
                 if (GetDestination(owner) is not { } stateDestination) { continue; }
                 if (stateDestination.Categories.FirstOrDefault(c => c.Name == categoryName)?.States
                     .Any(s => s.Name == stateName) == true) { continue; }
@@ -730,6 +757,14 @@ public class GumxImportService : IGumxImportService
                 if (statesForOwner.Any(pair => pair.State == state)) { continue; }
                 statesForOwner.Add((category, state));
                 EnqueueReferences(new[] { state }, list => list.GetRootName() == "VariableReferences", localOwner: owner);
+                foreach (string? sourceObject in state.Variables.Select(v => v.SourceObject)
+                    .Concat(state.VariableLists.Select(l => VariableSave.GetSourceObject(l.Name))).Distinct())
+                {
+                    if (sourceObject != null)
+                    {
+                        pending.Enqueue((owner, new[] { sourceObject }));
+                    }
+                }
             }
         }
 

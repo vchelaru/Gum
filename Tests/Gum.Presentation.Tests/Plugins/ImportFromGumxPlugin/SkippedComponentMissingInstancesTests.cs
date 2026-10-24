@@ -306,6 +306,53 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         Load(DestinationPath("Palette")).Categories.Single().States.ShouldHaveSingleItem().Name.ShouldBe("Dark");
     }
 
+    // An added state that sets a value on an instance the kept component lacks brings that instance too.
+    [Fact]
+    public async Task SkippedComponent_GainsTheInstanceAnAddedStateSets()
+    {
+        ComponentSave palette = Component("Palette", Instance("Inner", "ColoredRectangle"));
+        palette.Categories.Add(Category(palette, "Theme", "Dark"));
+        Set(palette.Categories[0].States[0], "Inner.Width", 4f, "float");
+        ComponentSave button = Component("Button", Instance("Swatch", "Palette"));
+        Set(button.DefaultState!, "Swatch.ThemeState", "Dark", "Theme");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, button });
+
+        ComponentSave kept = Load(DestinationPath("Palette"));
+        kept.Instances.ShouldHaveSingleItem().Name.ShouldBe("Inner");
+        kept.Categories.Single().States.Single().GetValue("Inner.Width").ShouldBe(4f);
+    }
+
+    [Fact]
+    public async Task SkippedComponent_GainsTheStateANestedPathSelects()
+    {
+        ComponentSave palette = Component("Palette");
+        palette.Categories.Add(Category(palette, "Theme", "Dark"));
+        ComponentSave panel = Component("Panel", Instance("Inner", "Palette"));
+        ComponentSave button = Component("Button", Instance("Swatch", "Panel"));
+        Set(button.DefaultState!, "Swatch.Inner.ThemeState", "Dark", "Theme");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, panel, button });
+
+        Load(DestinationPath("Palette")).Categories.ShouldHaveSingleItem().States.ShouldHaveSingleItem().Name.ShouldBe("Dark");
+    }
+
+    // The instance's type derives from the kept component, which defines the category.
+    [Fact]
+    public async Task SkippedComponent_GainsTheStateAnInstanceOfADerivedTypeSelects()
+    {
+        ComponentSave palette = Component("Palette");
+        palette.Categories.Add(Category(palette, "Theme", "Dark"));
+        ComponentSave fancy = Component("FancyPalette");
+        fancy.BaseType = "Palette";
+        ComponentSave button = Component("Button", Instance("Swatch", "FancyPalette"));
+        Set(button.DefaultState!, "Swatch.ThemeState", "Dark", "Theme");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, fancy, button });
+
+        Load(DestinationPath("Palette")).Categories.ShouldHaveSingleItem().States.ShouldHaveSingleItem().Name.ShouldBe("Dark");
+    }
+
     private async Task ImportKeeping(ComponentSave[] userVersions, ComponentSave[] imported, ComponentSave? inMemory = null,
         Action<ComponentSave>? onRegister = null)
     {
