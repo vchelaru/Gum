@@ -107,18 +107,176 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         File.ReadAllText(stylesPath).ShouldBe(before);
     }
 
+    [Fact]
+    public async Task SkippedComponent_ThatIsNotStyles_GainsTheInstanceAnImportedElementReads()
+    {
+        ComponentSave palette = Component("Palette", Instance("Accent", "ColoredRectangle"));
+        Set(palette.DefaultState!, "Accent.Red", 9, "int");
+        ComponentSave button = Component("Button");
+        References(button.DefaultState!, owner: null, "Color = Components/Palette.Accent.Color");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, button });
+
+        ComponentSave kept = Load(DestinationPath("Palette"));
+        kept.Instances.ShouldHaveSingleItem().Name.ShouldBe("Accent");
+        kept.DefaultState!.GetValue("Accent.Red").ShouldBe(9);
+    }
+
+    [Fact]
+    public async Task SkippedComponent_KeepsAnExistingParentAsItIs_WhenAnAddedInstanceIsAttachedToIt()
+    {
+        ComponentSave palette = Component("Palette", Instance("Colors", "Container"), Instance("Accent", "ColoredRectangle"));
+        Set(palette.DefaultState!, "Colors.X", 0f, "float");
+        Set(palette.DefaultState!, "Accent.Parent", "Colors", "string");
+        ComponentSave button = Component("Button");
+        References(button.DefaultState!, owner: null, "Color = Components/Palette.Accent.Color");
+        ComponentSave userPalette = Component("Palette", Instance("Colors", "Container"));
+        Set(userPalette.DefaultState!, "Colors.X", 5f, "float");
+
+        await ImportKeeping(new[] { userPalette }, new[] { palette, button });
+
+        ComponentSave kept = Load(DestinationPath("Palette"));
+        kept.Instances.Select(i => i.Name).ShouldBe(new[] { "Colors", "Accent" });
+        kept.DefaultState!.GetValue("Colors.X").ShouldBe(5f);
+        kept.DefaultState!.Variables.Count(v => v.Name == "Colors.X").ShouldBe(1);
+        kept.DefaultState!.GetValue("Accent.Parent").ShouldBe("Colors");
+    }
+
+    [Fact]
+    public async Task SkippedComponent_AlsoGainsWhatAnAddedInstanceItselfReads()
+    {
+        ComponentSave palette = Component("Palette", Instance("Base", "ColoredRectangle"), Instance("Accent", "ColoredRectangle"),
+            Instance("Shade", "ColoredRectangle"));
+        References(palette.DefaultState!, owner: "Accent", "Color = Base.Color", "Alpha = Components/Palette.Shade.Alpha");
+        ComponentSave button = Component("Button");
+        References(button.DefaultState!, owner: null, "Color = Components/Palette.Accent.Color");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, button });
+
+        Load(DestinationPath("Palette")).Instances.Select(i => i.Name).OrderBy(n => n)
+            .ShouldBe(new[] { "Accent", "Base", "Shade" });
+    }
+
+    [Fact]
+    public async Task SkippedComponents_GainTheInstancesAReferenceReadsThroughSeveralLevels()
+    {
+        ComponentSave box = Component("Box", Instance("Deep", "ColoredRectangle"));
+        ComponentSave panel = Component("Panel", Instance("Inner", "Box"));
+        ComponentSave button = Component("Button");
+        References(button.DefaultState!, owner: null, "X = Components/Panel.Inner.Deep.X");
+
+        await ImportKeeping(new[] { Component("Box"), Component("Panel") }, new[] { box, panel, button });
+
+        Load(DestinationPath("Panel")).Instances.ShouldHaveSingleItem().Name.ShouldBe("Inner");
+        Load(DestinationPath("Box")).Instances.ShouldHaveSingleItem().Name.ShouldBe("Deep");
+    }
+
+    [Fact]
+    public async Task SkippedComponent_GainsTheAddedInstancesCategoryStateValues_InStatesItHas()
+    {
+        ComponentSave palette = Component("Palette", Instance("Accent", "ColoredRectangle"));
+        palette.Categories.Add(Category(palette, "Theme", "Dark"));
+        Set(palette.Categories[0].States[0], "Accent.Red", 9, "int");
+        ComponentSave button = Component("Button");
+        References(button.DefaultState!, owner: null, "Color = Components/Palette.Accent.Color");
+        ComponentSave userPalette = Component("Palette");
+        userPalette.Categories.Add(Category(userPalette, "Theme", "Dark"));
+        Set(userPalette.Categories[0].States[0], "Width", 3f, "float");
+
+        await ImportKeeping(new[] { userPalette }, new[] { palette, button });
+
+        StateSave dark = Load(DestinationPath("Palette")).Categories.Single().States.Single();
+        dark.GetValue("Accent.Red").ShouldBe(9);
+        dark.GetValue("Width").ShouldBe(3f);
+    }
+
+    // The per-element error check (GUM0009) runs as each element registers, so the kept component must
+    // already have what the element reads by then, in memory too.
+    [Fact]
+    public async Task SkippedComponent_HasTheAddedInstanceInMemory_BeforeTheReaderIsRegistered()
+    {
+        ComponentSave palette = Component("Palette", Instance("Accent", "ColoredRectangle"));
+        ComponentSave button = Component("Button");
+        References(button.DefaultState!, owner: null, "Color = Components/Palette.Accent.Color");
+        ComponentSave inMemoryPalette = Component("Palette");
+        bool? hadAccentAtRegistration = null;
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, button }, inMemory: inMemoryPalette,
+            onRegister: _ => hadAccentAtRegistration = inMemoryPalette.GetInstance("Accent") != null);
+
+        hadAccentAtRegistration.ShouldBe(true);
+    }
+
+    private async Task ImportKeeping(ComponentSave[] userVersions, ComponentSave[] imported, ComponentSave? inMemory = null,
+        Action<ComponentSave>? onRegister = null)
+    {
+        foreach (ComponentSave user in userVersions)
+        {
+            string path = DestinationPath(user.Name);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            user.Save(path, useCompactFormat: true);
+        }
+        GumProjectSave source = new GumProjectSave();
+        source.Components.AddRange(imported);
+        GumProjectSave destination = new GumProjectSave { FullFileName = Path.Combine(_projectDir, "Test.gumx"), Version = source.Version };
+        if (inMemory != null)
+        {
+            destination.Components.Add(inMemory);
+        }
+        string sourceDir = Path.Combine(_projectDir, "Source");
+        Directory.CreateDirectory(sourceDir);
+
+        ImportSelections selections = new()
+        {
+            DirectComponents = imported.ToList(),
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+        ImportResult result = await CreateService(destination, onRegister).ImportAsync(selections, source, sourceDir,
+            destinationSubfolder: "", conflictResolution: ConflictResolution.Skip);
+        result.ConflictingElements.ShouldBeEmpty();
+    }
+
+    private string DestinationPath(string componentName) =>
+        Path.Combine(_projectDir, "Components", componentName + ".gucx");
+
+    private static ComponentSave Component(string name, params InstanceSave[] instances)
+    {
+        ComponentSave component = new ComponentSave { Name = name, BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        foreach (InstanceSave instance in instances)
+        {
+            instance.ParentContainer = component;
+            component.Instances.Add(instance);
+        }
+        return component;
+    }
+
+    private static InstanceSave Instance(string name, string baseType) => new InstanceSave { Name = name, BaseType = baseType };
+
+    private static StateSaveCategory Category(ComponentSave owner, string name, string stateName) =>
+        new StateSaveCategory { Name = name, States = { new StateSave { Name = stateName, ParentContainer = owner } } };
+
+    private static void Set(StateSave state, string name, object value, string type) =>
+        state.Variables.Add(new VariableSave { Name = name, Value = value, Type = type, SetsValue = true });
+
+    private static void References(StateSave state, string? owner, params string[] lines)
+    {
+        VariableListSave<string> list = new VariableListSave<string>
+        {
+            Type = "string",
+            Name = owner == null ? "VariableReferences" : owner + ".VariableReferences",
+        };
+        list.Value.AddRange(lines);
+        state.VariableLists.Add(list);
+    }
+
     private async Task<ImportResult> Import(GumProjectSave theme, ComponentSave themeStyles, ComponentSave themeListBox)
     {
         GumProjectSave destination = new GumProjectSave { FullFileName = Path.Combine(_projectDir, "Test.gumx"), Version = theme.Version };
-        Mock<IProjectState> projectState = new();
-        projectState.Setup(x => x.GumProjectSave).Returns(destination);
-        projectState.Setup(x => x.ProjectDirectory).Returns(_projectDir + Path.DirectorySeparatorChar);
-        Mock<IImportLogic> importLogic = new();
-        importLogic.Setup(x => x.ImportComponent(It.IsAny<ComponentSave>(), It.IsAny<bool>()))
-            .Callback((ComponentSave component, bool _) => _registered.Add(component))
-            .Returns((ComponentSave component, bool _) => component);
-        GumxImportService service = new(importLogic.Object, projectState.Object, Mock.Of<IFileCommands>(),
-            new GumxSourceService(), new ImportVersionGate(), Mock.Of<IFileWatchIgnoreList>());
+        GumxImportService service = CreateService(destination, onRegister: null);
 
         ImportSelections selections = new()
         {
@@ -130,6 +288,23 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         };
         return await service.ImportAsync(selections, theme, _templateDir, destinationSubfolder: "",
             conflictResolution: ConflictResolution.Skip);
+    }
+
+    private GumxImportService CreateService(GumProjectSave destination, Action<ComponentSave>? onRegister)
+    {
+        Mock<IProjectState> projectState = new();
+        projectState.Setup(x => x.GumProjectSave).Returns(destination);
+        projectState.Setup(x => x.ProjectDirectory).Returns(_projectDir + Path.DirectorySeparatorChar);
+        Mock<IImportLogic> importLogic = new();
+        importLogic.Setup(x => x.ImportComponent(It.IsAny<ComponentSave>(), It.IsAny<bool>()))
+            .Callback((ComponentSave component, bool _) =>
+            {
+                onRegister?.Invoke(component);
+                _registered.Add(component);
+            })
+            .Returns((ComponentSave component, bool _) => component);
+        return new GumxImportService(importLogic.Object, projectState.Object, Mock.Of<IFileCommands>(),
+            new GumxSourceService(), new ImportVersionGate(), Mock.Of<IFileWatchIgnoreList>());
     }
 
     // The template's own Styles with the given swatches removed and Warning recolored by the user.

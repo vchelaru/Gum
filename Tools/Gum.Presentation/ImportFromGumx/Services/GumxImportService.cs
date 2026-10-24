@@ -171,6 +171,28 @@ public class GumxImportService : IGumxImportService
         foreach (var element in skippedElements)
             result.SkippedElements.Add(element.Name);
 
+        bool IsWritten(ElementSave element) =>
+            !skippedElements.Contains(element)
+            && !(conflictResolution == ConflictResolution.Skip
+                && conflictNameSet.Contains(nameMap.TryGetValue(element.Name, out var destName) ? destName : element.Name));
+
+        // A component kept by Skip still gains the instances the imported elements read through
+        // VariableReferences and it lacks, such as a Styles swatch a newer control uses (#6755).
+        // Everything it already has stays as it is, since the user may have changed it. This runs
+        // before anything registers, so each element's error check already sees the added instances.
+        if (conflictResolution == ConflictResolution.Skip)
+        {
+            Dictionary<string, ComponentSave> keptComponents = selections.TransitiveComponents
+                .Concat(selections.DirectComponents)
+                .Where(c => !skippedElements.Contains(c) && !IsWritten(c))
+                .GroupBy(c => c.Name)
+                .ToDictionary(g => g.Key, g => g.First());
+            if (keptComponents.Count > 0)
+            {
+                AddMissingReferencedInstances(keptComponents, allCandidateElements.Where(IsWritten), projectDir, nameMap);
+            }
+        }
+
         // 1. Standards (always overwritten by design — see GumxImportServiceTests on standards)
         foreach (var standard in selections.Standards.Where(s => !skippedElements.Contains(s)))
             await WriteAndImportStandardAsync(standard, source, sourceBase, projectDir);
@@ -190,24 +212,6 @@ public class GumxImportService : IGumxImportService
         // 5. Screens
         foreach (var screen in selections.DirectScreens.Where(s => !skippedElements.Contains(s)))
             ImportScreenInMemory(screen, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
-
-        bool IsWritten(ElementSave element) =>
-            !skippedElements.Contains(element)
-            && !(conflictResolution == ConflictResolution.Skip
-                && conflictNameSet.Contains(nameMap.TryGetValue(element.Name, out var destName) ? destName : element.Name));
-
-        // 5b. A component kept by Skip still gains the instances the imported elements read through
-        // VariableReferences and it lacks, such as a Styles swatch a newer control uses (#6755).
-        // Everything it already has stays as it is, since the user may have changed it.
-        if (conflictResolution == ConflictResolution.Skip)
-        {
-            List<ElementSave> writtenElements = allCandidateElements.Where(IsWritten).ToList();
-            foreach (var component in selections.TransitiveComponents.Concat(selections.DirectComponents)
-                .Where(c => !skippedElements.Contains(c) && !IsWritten(c)))
-            {
-                AddMissingReferencedInstances(component, writtenElements, projectDir, nameMap);
-            }
-        }
 
         // 6. Write pre-fetched asset files to disk for imported elements
         var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
@@ -625,73 +629,154 @@ public class GumxImportService : IGumxImportService
         }
     }
 
+    // "Components/Folder/Name.Instance.Variable": group 1 is the component's name, group 2 the path after it.
+    private static readonly Regex ComponentReferencePathRegex = new(@"(?<![\w./])Components/([\w/]+)((?:\.\w+)+)");
+
+    // "Instance.Variable" read from the line's own element.
+    private static readonly Regex LocalReferencePathRegex = new(@"(?<![\w./:])([A-Za-z_]\w*(?:\.\w+)+)");
+
     /// <summary>
-    /// Adds to the destination copy of <paramref name="source"/> each instance that
-    /// <paramref name="readers"/> read through VariableReferences and the destination lacks, with its
-    /// default-state variables and any missing parent it is attached to. Existing instances and values
-    /// are never changed. Writes the file only when something was added.
+    /// Adds to the destination copy of each kept component the instances that <paramref name="readers"/>
+    /// read through VariableReferences and it lacks. Each added instance brings its values from every
+    /// state the destination also has, the parent it is attached to, and whatever its own
+    /// VariableReferences read. A path through an instance of another kept component
+    /// (<c>Components/Panel.Inner.Deep.X</c>) adds what that component lacks too. Existing instances and
+    /// values are never changed; a reference to something the source lacks too is left for GUM0009.
     /// </summary>
     private void AddMissingReferencedInstances(
-        ComponentSave source,
+        Dictionary<string, ComponentSave> keptComponents,
         IEnumerable<ElementSave> readers,
         string projectDir,
         Dictionary<string, string> nameMap)
     {
-        string destName = nameMap.TryGetValue(source.Name, out var mapped) ? mapped : source.Name;
-        string destPath = Path.Combine(projectDir, "Components",
-            destName + "." + ComponentExtension(IsDestinationJsonFormat));
-        ComponentSave? destination = TryReadElement<ComponentSave>(destPath);
-        if (destination?.DefaultState == null || source.DefaultState == null) { return; }
+        var destinations = new Dictionary<ComponentSave, ComponentSave?>();
+        var added = new Dictionary<ComponentSave, List<InstanceSave>>();
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+        var pending = new Queue<(ComponentSave Owner, string[] Path)>();
 
-        // Readers still use the source names: the remap to a subfolder happens on their clones.
-        var reference = new Regex(@"(?<![\w/])Components/" + Regex.Escape(source.Name) + @"\.(\w+)\.");
-        var pending = new Queue<string>(readers
-            .SelectMany(element => element.AllStates)
-            .SelectMany(state => state.VariableLists)
-            .Where(list => list.GetRootName() == "VariableReferences")
-            .SelectMany(list => list.ValueAsIList.OfType<string>())
-            .SelectMany(line => reference.Matches(line).Select(match => match.Groups[1].Value)));
+        // Reader lines still use source names: the remap to a subfolder happens on their clones.
+        void EnqueueReferences(IEnumerable<StateSave> states, Func<VariableListSave, bool> isReferenceList, ComponentSave? localOwner)
+        {
+            foreach (string line in states
+                .SelectMany(state => state.VariableLists)
+                .Where(isReferenceList)
+                .SelectMany(list => list.ValueAsIList.OfType<string>()))
+            {
+                int equalsIndex = line.IndexOf('=');
+                if (equalsIndex < 0) { continue; }
+                string right = line.Substring(equalsIndex + 1);
 
-        var toAdd = new List<InstanceSave>();
+                foreach (Match match in ComponentReferencePathRegex.Matches(right))
+                {
+                    if (keptComponents.TryGetValue(match.Groups[1].Value, out var owner))
+                    {
+                        pending.Enqueue((owner, match.Groups[2].Value.Substring(1).Split('.')));
+                    }
+                }
+                if (localOwner != null)
+                {
+                    foreach (Match match in LocalReferencePathRegex.Matches(ComponentReferencePathRegex.Replace(right, " ")))
+                    {
+                        pending.Enqueue((localOwner, match.Groups[1].Value.Split('.')));
+                    }
+                }
+            }
+        }
+
+        EnqueueReferences(readers.SelectMany(element => element.AllStates),
+            list => list.GetRootName() == "VariableReferences", localOwner: null);
+
         while (pending.Count > 0)
         {
-            string name = pending.Dequeue();
-            if (destination.GetInstance(name) != null || toAdd.Any(i => i.Name == name)) { continue; }
-            if (source.GetInstance(name) is not { } instance) { continue; }
+            var (owner, path) = pending.Dequeue();
+            if (!visited.Add(owner.Name + "|" + string.Join(".", path))) { continue; }
+            if (owner.GetInstance(path[0]) is not { } instance) { continue; }
 
-            toAdd.Add(instance);
-            if (source.DefaultState.GetValue(name + ".Parent") is string parent && parent.Length > 0)
+            if (!destinations.TryGetValue(owner, out var destination))
             {
-                pending.Enqueue(parent.Split('.')[0]);
+                destination = TryReadElement<ComponentSave>(DestinationComponentPath(owner, projectDir, nameMap));
+                destinations[owner] = destination;
             }
-        }
-        if (toAdd.Count == 0) { return; }
+            if (destination == null) { continue; }
 
-        foreach (ComponentSave target in new[] { destination, _projectState.GumProjectSave?.Components
-            .FirstOrDefault(c => c.Name == destName) }.OfType<ComponentSave>())
-        {
-            if (target.DefaultState == null) { continue; }
-            foreach (InstanceSave instance in toAdd.Where(i => target.GetInstance(i.Name) == null))
+            if (!added.TryGetValue(owner, out var addedToOwner))
             {
-                InstanceSave added = instance.Clone();
-                added.ParentContainer = target;
-                if (added.BaseType != null && nameMap.TryGetValue(added.BaseType, out var newBase))
-                {
-                    added.BaseType = newBase;
-                }
-                target.Instances.Add(added);
-
+                added[owner] = addedToOwner = new List<InstanceSave>();
+            }
+            if (destination.GetInstance(instance.Name) == null && !addedToOwner.Contains(instance))
+            {
+                addedToOwner.Add(instance);
                 string prefix = instance.Name + ".";
-                target.DefaultState.Variables.AddRange(source.DefaultState.Variables
-                    .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal))
-                    .Select(v => v.Clone()));
-                target.DefaultState.VariableLists.AddRange(source.DefaultState.VariableLists
-                    .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal))
-                    .Select(v => v.Clone()));
+                if (owner.DefaultState?.Variables.FirstOrDefault(v => v.Name == prefix + "Parent")?.Value is string parent
+                    && parent.Length > 0)
+                {
+                    pending.Enqueue((owner, new[] { parent.Split('.')[0] }));
+                }
+                EnqueueReferences(owner.AllStates, list => list.Name == prefix + "VariableReferences", localOwner: owner);
+            }
+
+            // Inner.Deep.X: Deep lives in Inner's component, which may be kept too.
+            if (path.Length > 2 && instance.BaseType != null && keptComponents.TryGetValue(instance.BaseType, out var inner))
+            {
+                pending.Enqueue((inner, path.Skip(1).ToArray()));
             }
         }
 
-        WriteElementToDisk(destination, destPath);
+        foreach (var (owner, instances) in added.Where(pair => pair.Value.Count > 0))
+        {
+            ComponentSave destination = destinations[owner]!;
+            string destName = nameMap.TryGetValue(owner.Name, out var mapped) ? mapped : owner.Name;
+            ComponentSave? inMemory = _projectState.GumProjectSave?.Components.FirstOrDefault(c => c.Name == destName);
+            foreach (ComponentSave target in new[] { destination, inMemory }.OfType<ComponentSave>())
+            {
+                AddInstances(owner, instances, target, nameMap);
+            }
+            WriteElementToDisk(destination, DestinationComponentPath(owner, projectDir, nameMap));
+        }
+    }
+
+    private string DestinationComponentPath(ComponentSave source, string projectDir, Dictionary<string, string> nameMap)
+    {
+        string destName = nameMap.TryGetValue(source.Name, out var mapped) ? mapped : source.Name;
+        return Path.Combine(projectDir, "Components", destName + "." + ComponentExtension(IsDestinationJsonFormat));
+    }
+
+    // Copies each instance and its values into the target's matching states. A category or state the
+    // target lacks is not created.
+    private static void AddInstances(ComponentSave source, List<InstanceSave> instances, ComponentSave target,
+        Dictionary<string, string> nameMap)
+    {
+        var statePairs = new List<(StateSave From, StateSave? To)>();
+        statePairs.AddRange(source.States.Select(state => (state, target.States.FirstOrDefault(s => s.Name == state.Name))));
+        foreach (var category in source.Categories)
+        {
+            var targetCategory = target.Categories.FirstOrDefault(c => c.Name == category.Name);
+            statePairs.AddRange(category.States.Select(state =>
+                (state, targetCategory?.States.FirstOrDefault(s => s.Name == state.Name))));
+        }
+
+        foreach (InstanceSave instance in instances.Where(i => target.GetInstance(i.Name) == null))
+        {
+            InstanceSave copy = instance.Clone();
+            copy.ParentContainer = target;
+            if (copy.BaseType != null && nameMap.TryGetValue(copy.BaseType, out var newBase))
+            {
+                copy.BaseType = newBase;
+            }
+            target.Instances.Add(copy);
+
+            string prefix = instance.Name + ".";
+            foreach (var (from, to) in statePairs)
+            {
+                if (to == null) { continue; }
+                to.Variables.AddRange(from.Variables
+                    .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal) && to.Variables.All(t => t.Name != v.Name))
+                    .Select(v => v.Clone()));
+                to.VariableLists.AddRange(from.VariableLists
+                    .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal) && to.VariableLists.All(t => t.Name != v.Name))
+                    .Select(v => v.Clone()));
+            }
+        }
     }
 
     /// <summary>
