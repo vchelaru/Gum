@@ -54,6 +54,10 @@ Every `*Visual` seeds `BackgroundColor`/`ForegroundColor` from `Styling.ActiveSt
 
 Forms controls locate children by name (e.g., `"TextInstance"`, `"FocusIndicator"`, `"InnerPanel"`). If a visual omits an expected named child, the Forms control silently skips it (or throws under `FULL_DIAGNOSTICS`). When building custom visuals, match the names the Forms control looks up in its `ReactToVisualChanged`.
 
+## Every Visual of a Control Stays in Sync
+
+A V3 visual is one of several visuals for the same control. The others are each packaged theme's subclass (`Themes/Gum.Themes.*.MonoGame/<Control>Visual.cs`) and each in-tool Forms component (`Tools/Gum.ProjectServices/Templates/FormsTemplate/Components/Controls/<Control>.gucx` and `Templates/FormsThemes/<Theme>/.../<Control>.gucx`). A change that adds a state, a named child or a visible behavior to a V3 visual is carried into all of them in the same effort, so a code-only theme and its in-tool version always look and behave the same. If a change can't carry it, it files one issue that covers the rest. See **gum-theming** and **gum-forms-theme-import**.
+
 ## Key Files
 
 | Path | Purpose |
