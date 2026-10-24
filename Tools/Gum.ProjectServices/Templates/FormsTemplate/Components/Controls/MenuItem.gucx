@@ -38,6 +38,9 @@
     <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
     </Variable>
+    <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -300,6 +303,9 @@
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">70</Value>
       </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
@@ -343,6 +349,9 @@
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">140</Value>
+      </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
@@ -388,6 +397,9 @@
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">6</Value>
       </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
@@ -432,6 +444,9 @@
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">70</Value>
       </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
@@ -475,6 +490,9 @@
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="SubmenuIndicatorInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>

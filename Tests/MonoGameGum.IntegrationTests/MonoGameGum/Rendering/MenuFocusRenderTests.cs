@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Input;
@@ -110,14 +111,76 @@ public class MenuFocusRenderTests : BaseTestClass
             () => ShouldBeClose(tool.OpenCorner, codeOnly.OpenCorner, $"{themeName}: open item corner"));
     }
 
-    // Left out: Standard's tool rows draw their own background over the popup, a bluer gray than code-only,
-    // the same before and after #6720; Tool_SubmenuPopup_IsProjectComponent_SizedToRows covers its popup.
-    public static IEnumerable<object[]> SubmenuPopupPairs()
+    public static IEnumerable<object[]> StandardAndEditorPairs()
     {
-        HashSet<string> differingByDesign = new() { "standard" };
+        HashSet<string> themes = new() { "standard", "editor" };
         foreach (object[] pair in Pairs())
         {
-            if (!differingByDesign.Contains((string)pair[0]))
+            if (themes.Contains((string)pair[0]))
+            {
+                yield return pair;
+            }
+        }
+    }
+
+    // The menu bar draws the same fill at the same height in both (#6732).
+    [Theory]
+    [MemberData(nameof(StandardAndEditorPairs))]
+    public void Tool_MenuBar_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        tool.ShouldSatisfyAllConditions(
+            () => ShouldBeClose(tool.BarFill, codeOnly.BarFill, $"{themeName}: menu bar fill", tolerance: 2),
+            () => tool.BarHeight.ShouldBe(codeOnly.BarHeight, 1f, $"{themeName}: menu bar height"));
+    }
+
+    // The bar reads its fill from the Styles InputBackground swatch, so recoloring the swatch recolors the bar (#6732).
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/", "Styles")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/", "Editor/Styles")]
+    public void Tool_MenuBar_FollowsInputBackgroundSwatch(string templateFolder, string componentPrefix, string stylesName)
+    {
+        WithToolProject(templateFolder, mutateProject: null, () =>
+        {
+            GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+            StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState;
+            styles.SetValue("InputBackground.FillRed", 200, "int");
+            styles.SetValue("InputBackground.FillGreen", 10, "int");
+            styles.SetValue("InputBackground.FillBlue", 20, "int");
+            project.ApplyAllVariableReferences();
+
+            Menu menu = FromComponent<Menu>(componentPrefix + "Menu");
+
+            var background = (menu.Visual.GetGraphicalUiElementByName("Background")?.RenderableComponent as global::RenderingLibrary.Graphics.NineSlice).ShouldNotBeNull();
+            (background.Color.R, background.Color.G, background.Color.B).ShouldBe(((byte)200, (byte)10, (byte)20));
+        });
+    }
+
+    // A top-level item that is not highlighted or open paints the same pixels in both: enabled, disabled, or
+    // focused itself (MenuItem.UpdateState applies Focused when IsFocused is set) (#6731).
+    [Theory]
+    [MemberData(nameof(StandardAndEditorPairs))]
+    public void Tool_RestingMenuItemRow_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        tool.ShouldSatisfyAllConditions(
+            () => ShouldBeClose(tool.RestingRowFill, codeOnly.RestingRowFill, $"{themeName}: enabled item fill", tolerance: 2),
+            () => ShouldBeClose(tool.DisabledRowFill, codeOnly.DisabledRowFill, $"{themeName}: disabled item fill", tolerance: 2),
+            () => ShouldBeClose(tool.FocusedRowFill, codeOnly.FocusedRowFill, $"{themeName}: focused item fill", tolerance: 2));
+    }
+
+    // Left out: Standard's popup is its ScrollViewer component, which fills with the DarkGray swatch
+    // (70, 70, 80) where the V3 ScrollViewerVisual uses InputBackground (74, 74, 74).
+    public static IEnumerable<object[]> SubmenuPopupPairs()
+    {
+        HashSet<string> differing = new() { "standard" };
+        foreach (object[] pair in Pairs())
+        {
+            if (!differing.Contains((string)pair[0]))
             {
                 yield return pair;
             }
@@ -132,17 +195,8 @@ public class MenuFocusRenderTests : BaseTestClass
         MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
-        // Editor's tool rows draw their own background over the whole popup, so its fill sample is a row's.
-        bool rowsCoverPopup = themeName == "editor";
-
         tool.ShouldSatisfyAllConditions(
-            () =>
-            {
-                if (!rowsCoverPopup)
-                {
-                    ShouldBeClose(tool.PopupFill, codeOnly.PopupFill, $"{themeName}: submenu popup fill", tolerance: 2);
-                }
-            },
+            () => ShouldBeClose(tool.PopupFill, codeOnly.PopupFill, $"{themeName}: submenu popup fill", tolerance: 2),
             () => ShouldBeClose(tool.PopupBorder, codeOnly.PopupBorder, $"{themeName}: submenu popup border", tolerance: 2),
             () => ShouldBeClose(tool.PopupRowTextColor, codeOnly.PopupRowTextColor, $"{themeName}: non-highlighted submenu row text"));
     }
@@ -484,7 +538,8 @@ public class MenuFocusRenderTests : BaseTestClass
     private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge, XnaColor HighlightCorner, XnaColor OpenFill,
         XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner,
         XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, string? PopupVisualName, float PopupGrowthPerRow, float AddedRowHeight,
-        XnaColor[] BarColumn, XnaColor[] FocusedItemColumn, int MenuBottom);
+        XnaColor[] BarColumn, XnaColor[] FocusedItemColumn, int MenuBottom,
+        XnaColor BarFill, float BarHeight, XnaColor RestingRowFill, XnaColor DisabledRowFill, XnaColor FocusedRowFill);
 
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
@@ -565,12 +620,21 @@ public class MenuFocusRenderTests : BaseTestClass
             file.Items!.Add(Item("Open"));
             file.Items!.Add(saveItem);
             menu.Items!.Add(file);
-            menu.Items!.Add(Item("Edit"));
+            MenuItem editItem = Item("Edit");
+            menu.Items!.Add(editItem);
             menu.Items!.Add(Item("View"));
+            MenuItem helpItem = Item("Help");
+            helpItem.IsEnabled = false;
+            menu.Items!.Add(helpItem);
             menu.AddToRoot();
             menu.Visual.UpdateLayout();
 
             XnaColor[] unfocused = Capture(game, background, $"{pngPrefix}-unfocused.png");
+            // The bar right of its last item, and a resting item inside its padding, clear of the header.
+            float barHeight = menu.Visual.GetAbsoluteHeight();
+            XnaColor barFill = unfocused[(int)(barHeight / 2) * CaptureWidth + CaptureWidth - 4];
+            XnaColor restingRowFill = unfocused[RowSampleIndex(editItem)];
+            XnaColor disabledRowFill = unfocused[RowSampleIndex(helpItem)];
 
             // The menu sizes to its items, so its own fill sits behind them.
             menu.Visual.GetAbsoluteHeight().ShouldBeGreaterThanOrEqualTo(file.Visual.GetAbsoluteHeight(), pngPrefix);
@@ -673,11 +737,19 @@ public class MenuFocusRenderTests : BaseTestClass
             float growth = popup.GetAbsoluteHeight() - heightBefore;
             float addedRowHeight = closeItem.Visual.GetAbsoluteHeight();
 
+            // Last, since focusing an item takes focus from the menu.
+            editItem.IsFocused = true;
+            editItem.IsFocused.ShouldBeTrue(pngPrefix);
+            menu.Visual.UpdateLayout();
+            XnaColor[] itemFocused = Capture(game, background, $"{pngPrefix}-itemfocused.png");
+            XnaColor focusedRowFill = itemFocused[RowSampleIndex(editItem)];
+
             return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor, edge, corner,
                 open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner,
                 popupFill, popupBorder, rowTextColor, popupElementName, popup.Name, growth, addedRowHeight,
                 Column(unfocused, CaptureWidth - 8), Column(focused, (int)(file.Visual.AbsoluteLeft + file.Visual.GetAbsoluteWidth() / 2)),
-                (int)(menu.Visual.AbsoluteTop + menu.Visual.GetAbsoluteHeight()));
+                (int)(menu.Visual.AbsoluteTop + menu.Visual.GetAbsoluteHeight()),
+                barFill, barHeight, restingRowFill, disabledRowFill, focusedRowFill);
         }
         finally
         {
@@ -721,8 +793,8 @@ public class MenuFocusRenderTests : BaseTestClass
         differing.ShouldBeEmpty(because);
     }
 
-    // Left out: Standard's and Editor's menus draw no separator in either visual; their tool menu bars use a
-    // different fill from code-only (#6732).
+    // Left out: Standard's and Editor's menus draw no separator in either visual; their bars are pinned by
+    // Tool_MenuBar_MatchesCodeOnly (#6732).
     public static IEnumerable<object[]> SeparatorPairs()
     {
         HashSet<string> noSeparator = new() { "standard", "editor" };
@@ -758,6 +830,16 @@ public class MenuFocusRenderTests : BaseTestClass
 
         BottomEdgesShouldMatch(tool.FocusedItemColumn, tool.MenuBottom, codeOnly.FocusedItemColumn, codeOnly.MenuBottom,
             $"{themeName}: column under the highlighted item's center, focused");
+    }
+
+    // A pixel inside the item's padding at mid-height, or its top row when it has no padding.
+    private static int RowSampleIndex(MenuItem item)
+    {
+        GraphicalUiElement header = item.Visual.GetGraphicalUiElementByName("TextInstance").ShouldNotBeNull();
+        float inset = header.AbsoluteLeft - item.Visual.AbsoluteLeft;
+        int x = (int)(item.Visual.AbsoluteLeft + (inset >= 4 ? inset / 2 : 1));
+        int y = inset >= 4 ? (int)(item.Visual.AbsoluteTop + item.Visual.GetAbsoluteHeight() / 2) : (int)item.Visual.AbsoluteTop + 1;
+        return y * CaptureWidth + x;
     }
 
     // The V3-based code-only visuals tint a sprite; the themed tool templates use a Text named
