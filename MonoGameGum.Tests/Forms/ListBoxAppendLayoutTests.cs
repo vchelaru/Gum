@@ -52,4 +52,25 @@ public class ListBoxAppendLayoutTests : BaseTestClass
         hidden.AbsoluteLeft.ShouldBeGreaterThanOrEqualTo(rows[0].AbsoluteLeft);
         hidden.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(rows[0].AbsoluteTop);
     }
+
+    [Fact]
+    public void ItemsAdd_ShouldSizeHoverBackground_WhenShownAfterAppends()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        for (int i = 0; i < 30; i++)
+        {
+            listBox.Items!.Add("item " + i);
+        }
+        var row = listBox.InnerPanel.Children[5];
+        var background = row.Children.First(c => c.Name == "Background");
+        background.Visible.ShouldBeFalse();
+
+        background.Visible = true;
+
+        background.AbsoluteWidth.ShouldBe(row.AbsoluteWidth);
+        background.AbsoluteHeight.ShouldBe(row.AbsoluteHeight);
+        background.AbsoluteLeft.ShouldBe(row.AbsoluteLeft);
+        background.AbsoluteTop.ShouldBe(row.AbsoluteTop);
+    }
 }

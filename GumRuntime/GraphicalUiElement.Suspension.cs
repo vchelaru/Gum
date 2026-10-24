@@ -313,14 +313,24 @@ public partial class GraphicalUiElement
 
         var didCallUpdateLayout = false;
 
-        // A hidden element's layout is resolved when it is shown. Laying it out here only climbs to its parent
-        // and leaves it dirty again, so every resume would re-lay out the parent of every hidden element (#6702).
-        if (currentDirtyState != null && !IsHiddenForResume())
+        if (currentDirtyState != null)
         {
-            didCallUpdateLayout = true;
-            UpdateLayout(EffectiveDirtyStateParentUpdateType,
-                currentDirtyState.ChildrenUpdateDepth,
-                currentDirtyState.XOrY);
+            bool isHidden = IsHiddenForResume();
+            // A hidden element's own layout is resolved when it is shown. What its parent has to hear about (a
+            // change made to it while suspended) is passed on once; a record left by its parent visiting it while
+            // hidden asks nothing of the parent, so it is not passed on again on every resume (#6702).
+            if (!isHidden || currentDirtyState.ParentUpdateType != ParentUpdateType.None)
+            {
+                didCallUpdateLayout = true;
+                UpdateLayout(EffectiveDirtyStateParentUpdateType,
+                    currentDirtyState.ChildrenUpdateDepth,
+                    currentDirtyState.XOrY);
+                if (isHidden && currentDirtyState != null)
+                {
+                    // The parent has been told; what is left is this element's own layout for when it is shown.
+                    currentDirtyState.ParentUpdateType = ParentUpdateType.None;
+                }
+            }
         }
 
         ResumeChildrenIfDirty(skipSuspendedChildren);
