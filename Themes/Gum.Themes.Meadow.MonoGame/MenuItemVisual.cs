@@ -55,28 +55,6 @@ public class MenuItemVisual : BaseMenuItemVisual
         }
     }
 
-    /// <inheritdoc/>
-    public override object FormsControlAsObject
-    {
-        get => base.FormsControlAsObject;
-        set
-        {
-            base.FormsControlAsObject = value;
-            if (value is MenuItem menuItem)
-            {
-                menuItem.ScrollViewerVisualTemplate = MeadowSubmenuScrollTemplate;
-            }
-        }
-    }
-
-    private VisualTemplate MeadowSubmenuScrollTemplate => new VisualTemplate(() =>
-    {
-        ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
-        visual.HasEvents = true;
-        visual.MakeSizedToChildren();
-        return visual;
-    });
-
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(

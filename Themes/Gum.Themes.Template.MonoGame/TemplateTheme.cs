@@ -194,6 +194,16 @@ public static class TemplateTheme
 
     internal static void RegisterVisuals()
     {
+        // Every MenuItem's submenu popup (#6741). Set on each Apply so switching themes replaces it;
+        // a MenuItem's own ScrollViewerVisualTemplate still wins.
+        MenuItem.DefaultSubmenuPopupTemplate = new VisualTemplate(() =>
+        {
+            ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
+            visual.HasEvents = true;
+            visual.MakeSizedToChildren();
+            return visual;
+        });
+
         // ---- "Rich" Variants gallery (OPT-IN, not registered) ---------------
         // The Variants\ folder holds richly-decorated alternates of a subset of
         // these controls (pill button with a drop shadow, rounded/glowing

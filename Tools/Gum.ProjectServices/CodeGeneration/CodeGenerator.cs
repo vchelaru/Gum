@@ -2074,6 +2074,11 @@ public class CodeGenerator
                 builder.AppendLine(context.Tabs +
                     $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
             }
+            if (IsDefaultSubmenuPopupComponent(context))
+            {
+                builder.AppendLine(context.Tabs +
+                    "global::Gum.Forms.Controls.MenuItem.DefaultSubmenuPopupTemplate = template;");
+            }
 
             builder.AppendLine(context.Tabs +
                 $"ElementSaveExtensions.RegisterGueInstantiation(\"{context.Element.Name}\", () => ");
@@ -2126,6 +2131,12 @@ public class CodeGenerator
                         $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
                 }
             }
+            if (IsDefaultSubmenuPopupComponent(context))
+            {
+                builder.AppendLine(context.Tabs +
+                    "global::Gum.Forms.Controls.MenuItem.DefaultSubmenuPopupTemplate = " +
+                    $"new global::Gum.Forms.VisualTemplate((vm, createForms) => new {className}(fullInstantiation: true, tryCreateFormsObject: createForms));");
+            }
 
             context.TabCount--;
             builder.AppendLine(context.Tabs + "}");
@@ -2167,6 +2178,22 @@ public class CodeGenerator
         }
         BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
         return behavior?.DefaultImplementation == element.Name ? formsType : null;
+    }
+
+    // True for the MenuItemSubmenuPopupBehavior's default implementation, which generated code makes the
+    // popup of every MenuItem (#6741). Older runtimes have no MenuItem.DefaultSubmenuPopupTemplate.
+    private static bool IsDefaultSubmenuPopupComponent(CodeGenerationContext context)
+    {
+        if (context.ResolvedSyntaxVersion < 6)
+        {
+            return false;
+        }
+        GetGumFormsTypeFromBehaviors(context.Element, out _, out ElementBehaviorReference? behaviorReference);
+        if (behaviorReference?.BehaviorName != StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName)
+        {
+            return false;
+        }
+        return ObjectFinder.Self.GetBehavior(behaviorReference)?.DefaultImplementation == context.Element.Name;
     }
 
     // Behaviors whose component derives from a Forms type without being that type's default visual. A

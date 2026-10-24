@@ -153,6 +153,12 @@ public class FormsUtilities
         TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.V3.ListBoxItemVisual(tryCreateFormsObject: c));
 #if !SOKOL
         TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
+        // Installing the V3 MenuItem visual installs its popup too: a theme's popup goes with the theme's
+        // MenuItem visual, as when a theme is undone by clearing the templates and calling this (#6741).
+        if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(typeof(MenuItem)))
+        {
+            MenuItem.DefaultSubmenuPopupTemplate = null;
+        }
         TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
         TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
 #endif

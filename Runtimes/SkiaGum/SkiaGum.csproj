@@ -114,7 +114,6 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\V3\RadioButtonVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollBarVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />

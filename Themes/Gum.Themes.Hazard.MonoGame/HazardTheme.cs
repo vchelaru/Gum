@@ -167,6 +167,16 @@ public static class HazardTheme
 
     internal static void RegisterVisuals()
     {
+        // Every MenuItem's submenu popup (#6741). Set on each Apply so switching themes replaces it;
+        // a MenuItem's own ScrollViewerVisualTemplate still wins.
+        MenuItem.DefaultSubmenuPopupTemplate = new VisualTemplate(() =>
+        {
+            ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
+            visual.HasEvents = true;
+            visual.MakeSizedToChildren();
+            return visual;
+        });
+
         // ---- Styled by this theme -------------------------------------------
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
