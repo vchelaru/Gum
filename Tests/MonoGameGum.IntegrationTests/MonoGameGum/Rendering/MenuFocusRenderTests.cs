@@ -109,11 +109,13 @@ public class MenuFocusRenderTests : BaseTestClass
             () => ShouldBeClose(tool.OpenCorner, codeOnly.OpenCorner, $"{themeName}: open item corner"));
     }
 
-    // Retro95's and Editor's ScrollViewer components (which the tool popup now is) draw a different surface
-    // or border from their code-only submenu popups, so they are left out here pending a design decision.
+    // Left out: Editor's and Retro95's ScrollViewer components (which the tool popup now is) draw a different
+    // surface or border from their code-only submenu popups, pending a design decision. Standard's tool rows
+    // draw their own background over the popup, a bluer gray than code-only, the same before and after #6720;
+    // Tool_SubmenuPopup_IsProjectScrollViewer_SizedToRows covers its popup.
     public static IEnumerable<object[]> SubmenuPopupPairs()
     {
-        HashSet<string> differingByDesign = new() { "editor", "retro95" };
+        HashSet<string> differingByDesign = new() { "standard", "editor", "retro95" };
         foreach (object[] pair in Pairs())
         {
             if (!differingByDesign.Contains((string)pair[0]))
@@ -124,7 +126,6 @@ public class MenuFocusRenderTests : BaseTestClass
     }
 
     // The open submenu popup draws the theme's surface and border, and its rows' text, the same in both (#6720).
-    // Standard's ScrollViewer is a slightly bluer gray than the V3 popup, hence the wider tolerance.
     [Theory]
     [MemberData(nameof(SubmenuPopupPairs))]
     public void Tool_SubmenuPopup_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
@@ -133,8 +134,8 @@ public class MenuFocusRenderTests : BaseTestClass
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         tool.ShouldSatisfyAllConditions(
-            () => ShouldBeClose(tool.PopupFill, codeOnly.PopupFill, $"{themeName}: submenu popup fill", tolerance: 16),
-            () => ShouldBeClose(tool.PopupBorder, codeOnly.PopupBorder, $"{themeName}: submenu popup border", tolerance: 16),
+            () => ShouldBeClose(tool.PopupFill, codeOnly.PopupFill, $"{themeName}: submenu popup fill", tolerance: 2),
+            () => ShouldBeClose(tool.PopupBorder, codeOnly.PopupBorder, $"{themeName}: submenu popup border", tolerance: 2),
             () => ShouldBeClose(tool.PopupRowTextColor, codeOnly.PopupRowTextColor, $"{themeName}: non-highlighted submenu row text"));
     }
 
@@ -163,6 +164,106 @@ public class MenuFocusRenderTests : BaseTestClass
 
         tool.PopupVisualName.ShouldBe(userVisualName);
         tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, "popup height change when a row is added");
+    }
+
+    // A submenu opened from a submenu row is the project's ScrollViewer too, and grows by one row (#6720).
+    [Fact]
+    public void Tool_NestedSubmenuPopup_IsProjectScrollViewer_SizedToRows()
+    {
+        WithToolProject("FormsThemes/Bubblegum", mutateProject: null, () =>
+        {
+            (MenuItem _, MenuItem recent) = OpenNestedMenu("Bubblegum/Controls/");
+            ScrollViewer popup = recent.itemsPopup.ShouldNotBeNull();
+            popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Bubblegum/Controls/ScrollViewer");
+
+            float heightBefore = popup.Visual.GetAbsoluteHeight();
+            MenuItem added = FromComponent<MenuItem>("Bubblegum/Controls/MenuItem");
+            added.Header = "Third";
+            recent.Items!.Add(added);
+            (popup.Visual.GetAbsoluteHeight() - heightBefore).ShouldBe(added.Visual.GetAbsoluteHeight(), 1f);
+        });
+    }
+
+    // A tool project with no ScrollViewer component keeps the code-built V3 popup, still sized to its rows.
+    [Fact]
+    public void Tool_SubmenuPopup_NoScrollViewerComponent_FallsBackToV3_SizedToRows()
+    {
+        static void RemoveScrollViewerBehavior(string projectDir)
+        {
+            string path = Path.Combine(projectDir, "Components", "Bubblegum", "Controls", "ScrollViewer.gucx");
+            string text = File.ReadAllText(path);
+            string withoutBehavior = System.Text.RegularExpressions.Regex.Replace(text,
+                @"<ElementBehaviorReference>\s*<BehaviorName>ScrollViewerBehavior</BehaviorName>\s*</ElementBehaviorReference>", "");
+            withoutBehavior.ShouldNotBe(text);
+            File.WriteAllText(path, withoutBehavior);
+        }
+
+        WithToolProject("FormsThemes/Bubblegum", RemoveScrollViewerBehavior, () =>
+        {
+            (MenuItem file, MenuItem _) = OpenNestedMenu("Bubblegum/Controls/");
+            ScrollViewer popup = file.itemsPopup.ShouldNotBeNull();
+            popup.Visual.ShouldBeOfType<global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual>();
+
+            float heightBefore = popup.Visual.GetAbsoluteHeight();
+            MenuItem added = FromComponent<MenuItem>("Bubblegum/Controls/MenuItem");
+            added.Header = "Close";
+            file.Items!.Add(added);
+            (popup.Visual.GetAbsoluteHeight() - heightBefore).ShouldBe(added.Visual.GetAbsoluteHeight(), 1f);
+        });
+    }
+
+    // File > Recent > {First, Second}, with File's and Recent's popups open.
+    private static (MenuItem File, MenuItem Recent) OpenNestedMenu(string componentPrefix)
+    {
+        MenuItem Item(string header)
+        {
+            MenuItem item = FromComponent<MenuItem>(componentPrefix + "MenuItem");
+            item.Header = header;
+            return item;
+        }
+        Menu menu = FromComponent<Menu>(componentPrefix + "Menu");
+        MenuItem file = Item("File");
+        MenuItem recent = Item("Recent");
+        recent.Items!.Add(Item("First"));
+        recent.Items!.Add(Item("Second"));
+        file.Items!.Add(Item("New"));
+        file.Items!.Add(recent);
+        menu.Items!.Add(file);
+        menu.AddToRoot();
+        menu.Visual.UpdateLayout();
+        file.TryShowPopup();
+        recent.TryShowPopup();
+        recent.itemsPopup.ShouldNotBeNull("Recent's submenu opened");
+        return (file, recent);
+    }
+
+    private static void WithToolProject(string templateFolder, Action<string>? mutateProject, Action body)
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumMenuFocus_" + Guid.NewGuid().ToString("N"));
+        Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
+        V3Styling previousStyle = V3Styling.ActiveStyle;
+        var previousFontCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            string templates = FindTemplatesDirectory();
+            CopyDirectory(Path.Combine(templates, "FormsBehaviors"), Path.Combine(root, "FormsBehaviors"));
+            string projectDir = Path.Combine(root, templateFolder.Replace('/', Path.DirectorySeparatorChar));
+            CopyDirectory(Path.Combine(templates, templateFolder.Replace('/', Path.DirectorySeparatorChar)), projectDir);
+            mutateProject?.Invoke(projectDir);
+            using MenuLease game = new MenuLease(Path.Combine(projectDir, "GumProject.gumx"));
+            body();
+        }
+        finally
+        {
+            FrameworkElement.DefaultFormsTemplates.Clear();
+            foreach (KeyValuePair<Type, VisualTemplate> pair in previousTemplates)
+            {
+                FrameworkElement.DefaultFormsTemplates[pair.Key] = pair.Value;
+            }
+            V3Styling.ActiveStyle = previousStyle;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = previousFontCreator;
+            try { Directory.Delete(root, recursive: true); } catch { /* best effort */ }
+        }
     }
 
     // Code-only themes keep their own popup visual, under the item and sized to its rows.

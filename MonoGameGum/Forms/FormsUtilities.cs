@@ -169,9 +169,9 @@ public class FormsUtilities
         TryAdd(typeof(Window), (_, c) => new DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
 
-        // Kept separately so RegisterFromFileFormRuntimeDefaults can tell the code-built default
-        // apart from a template user code registered itself.
-        _defaultTooltipTemplate = new VisualTemplate((_, c) => new DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
+        // Kept separately as the fallback when a project's Tooltip component goes away; being a
+        // BuiltInVisualTemplate tells it apart from a template user code registered itself.
+        _defaultTooltipTemplate = new BuiltInVisualTemplate((_, c) => new DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
         if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(typeof(Tooltip)))
         {
             FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] = _defaultTooltipTemplate;
@@ -812,7 +812,7 @@ public class FormsUtilities
         }
 
         bool isUserTemplate = FrameworkElement.DefaultFormsTemplates.TryGetValue(typeof(Tooltip), out VisualTemplate? existing)
-            && !ReferenceEquals(existing, _defaultTooltipTemplate)
+            && existing is not BuiltInVisualTemplate
             && existing is not FromFileTooltipTemplate;
         if (isUserTemplate)
         {
