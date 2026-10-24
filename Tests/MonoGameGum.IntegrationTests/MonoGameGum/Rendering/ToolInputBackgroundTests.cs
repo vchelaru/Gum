@@ -56,41 +56,47 @@ public class ToolInputBackgroundTests : BaseTestClass
             ("FormsThemes/Editor", "Editor/Controls/", Gum.Themes.Editor.EditorTheme.Apply),
         })
         {
-            foreach (string state in ListBoxStates)
-            {
-                yield return new object[] { folder, prefix + "ListBox", "ListBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new ListBox()) };
-            }
-            foreach (string state in ComboBoxStates)
-            {
-                yield return new object[] { folder, prefix + "ComboBox", "ComboBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new ComboBox()) };
-            }
-            foreach (string state in TextBoxStates)
-            {
-                yield return new object[] { folder, prefix + "TextBox", "TextBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new TextBox()) };
-            }
+            yield return new object[] { folder, prefix + "ListBox", "ListBoxCategoryState", theme!, (Func<FrameworkElement>)(() => new ListBox()) };
+            yield return new object[] { folder, prefix + "ComboBox", "ComboBoxCategoryState", theme!, (Func<FrameworkElement>)(() => new ComboBox()) };
+            yield return new object[] { folder, prefix + "TextBox", "TextBoxCategoryState", theme!, (Func<FrameworkElement>)(() => new TextBox()) };
         }
     }
+
+    private static string[] StatesOf(string categoryState) => categoryState switch
+    {
+        "ListBoxCategoryState" => ListBoxStates,
+        "ComboBoxCategoryState" => ComboBoxStates,
+        _ => TextBoxStates,
+    };
 
     // Every state the control can reach. The V3 hover and disabled fills are a lighten/darken of the resting fill,
     // baked into *Light/*Dark swatches because static content can't compute them (#6746).
     [Theory]
     [MemberData(nameof(MatchingControlStates))]
-    public void ToolBackgroundInState_MatchesCodeOnly(string templateFolder, string componentName, string categoryState, string stateName,
+    public void ToolBackgroundInState_MatchesCodeOnly(string templateFolder, string componentName, string categoryState,
         Action? applyTheme, Func<FrameworkElement> createCodeOnly)
     {
+        string[] states = StatesOf(categoryState);
         // Coming from another state first: a state that leaves the fill unset would keep the previous state's fill.
-        string previousState = stateName == "Disabled" ? "Highlighted" : "Disabled";
-        void EnterState(FrameworkElement control)
+        void EnterState(FrameworkElement control, string stateName)
         {
-            control.Visual.SetProperty(categoryState, previousState);
+            control.Visual.SetProperty(categoryState, stateName == "Disabled" ? "Highlighted" : "Disabled");
             control.Visual.SetProperty(categoryState, stateName);
         }
 
-        BackgroundLook codeOnly = MeasureCodeOnly(applyTheme, createCodeOnly, EnterState);
-        BackgroundLook tool = MeasureTool(templateFolder, componentName, afterCreate: EnterState);
+        List<BackgroundLook> codeOnly = MeasureCodeOnly(applyTheme, createCodeOnly, EachState(states, EnterState, Measure));
+        List<BackgroundLook> tool = MeasureTool(templateFolder, componentName, EachState(states, EnterState, Measure));
 
-        tool.ShouldBe(codeOnly, $"{componentName} {stateName}");
+        for (int i = 0; i < states.Length; i++)
+        {
+            tool[i].ShouldBe(codeOnly[i], $"{componentName} {states[i]}");
+        }
     }
+
+    // One instance steps through every state, so each case loads its project and builds its control once.
+    private static Func<FrameworkElement, List<T>> EachState<T>(IEnumerable<string> states, Action<FrameworkElement, string> enter,
+        Func<FrameworkElement, T> measure) =>
+        control => states.Select(state => { enter(control, state); return measure(control); }).ToList();
 
     // Visual review only: with GUM_SCREENSHOT_DIR set, writes 6746-<codeonly|tool>.png, one row per control
     // (ListBox, ComboBox, TextBox) and one column per state, the Standard tool template beside V3.
@@ -150,39 +156,37 @@ public class ToolInputBackgroundTests : BaseTestClass
             ("FormsThemes/Editor", "Editor/Controls/", Gum.Themes.Editor.EditorTheme.Apply),
         })
         {
-            foreach (string state in ComboBoxStates)
-            {
-                yield return new object[] { folder, prefix + "ComboBox", "ComboBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new ComboBox()) };
-            }
-            foreach (string state in TextBoxStates)
-            {
-                yield return new object[] { folder, prefix + "TextBox", "TextBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new TextBox()) };
-            }
+            yield return new object[] { folder, prefix + "ComboBox", "ComboBoxCategoryState", theme!, (Func<FrameworkElement>)(() => new ComboBox()) };
+            yield return new object[] { folder, prefix + "TextBox", "TextBoxCategoryState", theme!, (Func<FrameworkElement>)(() => new TextBox()) };
         }
     }
 
     // The ComboBox dropdown arrow and focus underline, and the TextBox placeholder, per state against V3 (#6754).
     [Theory]
     [MemberData(nameof(IndicatorControlStates))]
-    public void ToolIndicatorsInState_MatchCodeOnly(string templateFolder, string componentName, string categoryState, string stateName,
+    public void ToolIndicatorsInState_MatchCodeOnly(string templateFolder, string componentName, string categoryState,
         Action? applyTheme, Func<FrameworkElement> createCodeOnly)
     {
+        string[] states = StatesOf(categoryState);
         // Coming from another state first: a state that leaves a value unset would keep the previous state's value.
-        string previousState = stateName == "Pushed" ? "Disabled" : "Pushed";
-        if (categoryState == "TextBoxCategoryState")
+        void EnterState(FrameworkElement control, string stateName)
         {
-            previousState = stateName == "Disabled" ? "Highlighted" : "Disabled";
-        }
-        void EnterState(FrameworkElement control)
-        {
+            string previousState = stateName == "Pushed" ? "Disabled" : "Pushed";
+            if (categoryState == "TextBoxCategoryState")
+            {
+                previousState = stateName == "Disabled" ? "Highlighted" : "Disabled";
+            }
             control.Visual.SetProperty(categoryState, previousState);
             control.Visual.SetProperty(categoryState, stateName);
         }
 
-        IndicatorLook codeOnly = MeasureCodeOnly(applyTheme, createCodeOnly, MeasureIndicators, EnterState);
-        IndicatorLook tool = MeasureTool(templateFolder, componentName, MeasureIndicators, afterCreate: EnterState);
+        List<IndicatorLook> codeOnly = MeasureCodeOnly(applyTheme, createCodeOnly, EachState(states, EnterState, MeasureIndicators));
+        List<IndicatorLook> tool = MeasureTool(templateFolder, componentName, EachState(states, EnterState, MeasureIndicators));
 
-        tool.ShouldBe(codeOnly, $"{componentName} {stateName}");
+        for (int i = 0; i < states.Length; i++)
+        {
+            tool[i].ShouldBe(codeOnly[i], $"{componentName} {states[i]}");
+        }
     }
 
     public static IEnumerable<object[]> ComboBoxArrowCases()
@@ -193,13 +197,10 @@ public class ToolInputBackgroundTests : BaseTestClass
             ("FormsThemes/Editor", "Editor/Controls/", Gum.Themes.Editor.EditorTheme.Apply),
         };
         // Narrow, V3 default, wide, tall.
-        (float Width, float Height)[] sizes = { (64, 24), (256, 24), (480, 24), (200, 64) };
+        const string sizes = "64x24,256x24,480x24,200x64";
         foreach ((string folder, string prefix, Action? theme) in themes)
         {
-            foreach ((float width, float height) in sizes)
-            {
-                yield return new object[] { folder, prefix + "ComboBox", theme!, width, height };
-            }
+            yield return new object[] { folder, prefix + "ComboBox", theme!, sizes };
         }
         // The other themes draw a text glyph; checked at the V3 default size only, to keep the run short.
         foreach ((string name, Action theme) in new (string, Action)[]
@@ -213,33 +214,36 @@ public class ToolInputBackgroundTests : BaseTestClass
             ("Retro95", Gum.Themes.Retro95.Retro95Theme.Apply),
         })
         {
-            yield return new object[] { "FormsThemes/" + name, name + "/Controls/ComboBox", theme, 256f, 24f };
+            yield return new object[] { "FormsThemes/" + name, name + "/Controls/ComboBox", theme, "256x24" };
         }
     }
 
     // The dropdown arrow's drawn rectangle (position, size and rotation) matches V3 at several sizes, in every state (#6763).
     [Theory]
     [MemberData(nameof(ComboBoxArrowCases))]
-    public void ToolComboBoxArrowRect_MatchesCodeOnly(string templateFolder, string componentName, Action? applyTheme,
-        float width, float height)
+    public void ToolComboBoxArrowRect_MatchesCodeOnly(string templateFolder, string componentName, Action? applyTheme, string sizes)
     {
-        foreach (string state in ComboBoxStates)
+        // Each case is "<width>x<height>|<state>"; one instance is resized and stepped through every state.
+        List<string> cases = sizes.Split(',').SelectMany(size => ComboBoxStates.Select(state => size + "|" + state)).ToList();
+        void Arrange(FrameworkElement control, string testCase)
         {
-            void Arrange(FrameworkElement control)
-            {
-                control.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-                control.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-                control.Visual.Width = width;
-                control.Visual.Height = height;
-                control.Visual.SetProperty("ComboBoxCategoryState", state == "Pushed" ? "Disabled" : "Pushed");
-                control.Visual.SetProperty("ComboBoxCategoryState", state);
-                control.Visual.UpdateLayout();
-            }
+            string[] parts = testCase.Split('|');
+            string[] size = parts[0].Split('x');
+            control.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            control.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            control.Visual.Width = float.Parse(size[0], System.Globalization.CultureInfo.InvariantCulture);
+            control.Visual.Height = float.Parse(size[1], System.Globalization.CultureInfo.InvariantCulture);
+            control.Visual.SetProperty("ComboBoxCategoryState", parts[1] == "Pushed" ? "Disabled" : "Pushed");
+            control.Visual.SetProperty("ComboBoxCategoryState", parts[1]);
+            control.Visual.UpdateLayout();
+        }
 
-            string codeOnly = MeasureCodeOnly(applyTheme, () => new ComboBox(), MeasureArrowRect, Arrange);
-            string tool = MeasureTool(templateFolder, componentName, MeasureArrowRect, afterCreate: Arrange);
+        List<string> codeOnly = MeasureCodeOnly(applyTheme, () => new ComboBox(), EachState(cases, Arrange, MeasureArrowRect));
+        List<string> tool = MeasureTool(templateFolder, componentName, EachState(cases, Arrange, MeasureArrowRect));
 
-            tool.ShouldBe(codeOnly, $"{componentName} {width}x{height} {state}");
+        for (int i = 0; i < cases.Count; i++)
+        {
+            tool[i].ShouldBe(codeOnly[i], $"{componentName} {cases[i]}");
         }
     }
 
@@ -449,21 +453,14 @@ public class ToolInputBackgroundTests : BaseTestClass
     {
         HashSet<string> expectedRecolored = new(recoloredStates.Split(','));
 
-        foreach (string state in ComboBoxStates)
-        {
-            IndicatorLook tool = MeasureTool(templateFolder, componentName, MeasureIndicators,
-                beforeCreate: () =>
-                {
-                    GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
-                    StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
-                    styles.SetValue(swatch + ".FillRed", 200, "int");
-                    styles.SetValue(swatch + ".FillGreen", 10, "int");
-                    styles.SetValue(swatch + ".FillBlue", 20, "int");
-                    project.ApplyAllVariableReferences();
-                },
-                afterCreate: control => control.Visual.SetProperty("ComboBoxCategoryState", state));
+        List<IndicatorLook> looks = MeasureTool(templateFolder, componentName,
+            EachState(ComboBoxStates, (control, state) => control.Visual.SetProperty("ComboBoxCategoryState", state), MeasureIndicators),
+            beforeCreate: () => RecolorSwatch(stylesName, swatch));
 
-            (tool.Arrow == "200,10,20").ShouldBe(expectedRecolored.Contains(state), $"{componentName} {state} with {swatch} recolored");
+        for (int i = 0; i < ComboBoxStates.Length; i++)
+        {
+            (looks[i].Arrow == "200,10,20").ShouldBe(expectedRecolored.Contains(ComboBoxStates[i]),
+                $"{componentName} {ComboBoxStates[i]} with {swatch} recolored");
         }
     }
 
@@ -481,23 +478,26 @@ public class ToolInputBackgroundTests : BaseTestClass
         HashSet<string> expectedRecolored = new(recoloredStates.Split(','));
         string[] states = categoryState == "ListBoxCategoryState" ? ListBoxStates : TextBoxStates;
 
-        foreach (string state in states)
-        {
-            BackgroundLook tool = MeasureTool(templateFolder, componentName,
-                beforeCreate: () =>
-                {
-                    GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
-                    StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
-                    styles.SetValue(swatch + ".FillRed", 200, "int");
-                    styles.SetValue(swatch + ".FillGreen", 10, "int");
-                    styles.SetValue(swatch + ".FillBlue", 20, "int");
-                    project.ApplyAllVariableReferences();
-                },
-                afterCreate: control => control.Visual.SetProperty(categoryState, state));
+        List<BackgroundLook> looks = MeasureTool(templateFolder, componentName,
+            EachState(states, (control, state) => control.Visual.SetProperty(categoryState, state), Measure),
+            beforeCreate: () => RecolorSwatch(stylesName, swatch));
 
-            bool isRecolored = (tool.R, tool.G, tool.B) == ((byte)200, (byte)10, (byte)20);
-            isRecolored.ShouldBe(expectedRecolored.Contains(state), $"{componentName} {state} with {swatch} recolored");
+        for (int i = 0; i < states.Length; i++)
+        {
+            bool isRecolored = (looks[i].R, looks[i].G, looks[i].B) == ((byte)200, (byte)10, (byte)20);
+            isRecolored.ShouldBe(expectedRecolored.Contains(states[i]), $"{componentName} {states[i]} with {swatch} recolored");
         }
+    }
+
+    // Sets the swatch in the loaded project's Styles to 200,10,20 and pushes it through the variable references.
+    private static void RecolorSwatch(string stylesName, string swatch)
+    {
+        GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+        StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
+        styles.SetValue(swatch + ".FillRed", 200, "int");
+        styles.SetValue(swatch + ".FillGreen", 10, "int");
+        styles.SetValue(swatch + ".FillBlue", 20, "int");
+        project.ApplyAllVariableReferences();
     }
 
     // Re-importing only the new ListBox into an older project keeps the project's own Styles (import is file-level
