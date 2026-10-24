@@ -186,8 +186,8 @@ public partial class GraphicalUiElement
     /// Runs <paramref name="change"/> with every layout deferred. Unless an outer caller is already
     /// deferring, it then runs the deferred work under <paramref name="flushRoot"/> and on every other
     /// element the change gave deferred work, ancestors first. A SuspendLayout a caller set stays in
-    /// place: work on that element or under it is left for its ResumeLayout. An element left without a
-    /// parent keeps its work for when it is added back.
+    /// place with its work left for its ResumeLayout. An element left without a parent keeps its work
+    /// for when it is added back.
     /// </summary>
     internal static void RunWithAllLayoutSuspended(Action change, GraphicalUiElement? flushRoot)
     {
@@ -220,7 +220,10 @@ public partial class GraphicalUiElement
         foreach (GraphicalUiElement element in deferred)
         {
             element.isListedAsGloballyDeferred = false;
-            if ((element.currentDirtyState != null || element.isFontDirty) && element.Parent != null)
+            // Layout left on a hidden element is resolved when it is shown, so only its font work runs here.
+            bool hasWork = element.isFontDirty ||
+                (element.currentDirtyState != null && ((IVisible)element).AbsoluteVisible);
+            if (hasWork && element.Parent != null)
             {
                 int depth = 0;
                 for (GraphicalUiElement? parent = element.Parent; parent != null; parent = parent.Parent)
@@ -243,21 +246,8 @@ public partial class GraphicalUiElement
             {
                 continue;
             }
-            GraphicalUiElement? suspendedAncestor = null;
-            for (GraphicalUiElement? parent = element.Parent; parent != null;
-                parent = parent.Parent)
-            {
-                if (parent.mIsLayoutSuspended)
-                {
-                    suspendedAncestor = parent;
-                }
-            }
-            if (suspendedAncestor != null)
-            {
-                // Left for the caller's ResumeLayout, as a flush from above would leave it.
-                suspendedAncestor.resumeDescendantsOnResume = true;
-                continue;
-            }
+            // A suspended element keeps its work, and a suspended ancestor stops the climb, so a
+            // SuspendLayout the caller set still holds its work for its ResumeLayout.
             element.ResumeDeferredLayoutKeepingSuspensions();
         }
     }
