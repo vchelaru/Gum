@@ -864,10 +864,12 @@ public class MenuFocusRenderTests : BaseTestClass
     }
 
     // Draws twice (the first draw settles lazy loads). Writes a PNG only when GUM_SCREENSHOT_DIR is set.
-    private static XnaColor[] Capture(MenuLease game, XnaColor background, string pngName)
+    private static XnaColor[] Capture(MenuLease game, XnaColor background, string pngName) =>
+        Capture(game.GraphicsDevice, background, pngName, CaptureWidth, CaptureHeight);
+
+    internal static XnaColor[] Capture(GraphicsDevice gd, XnaColor background, string pngName, int width, int height)
     {
-        GraphicsDevice gd = game.GraphicsDevice;
-        using RenderTarget2D capture = new RenderTarget2D(gd, CaptureWidth, CaptureHeight, false,
+        using RenderTarget2D capture = new RenderTarget2D(gd, width, height, false,
             SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         SystemManagers managers = SystemManagers.Default;
         for (int pass = 0; pass < 2; pass++)
@@ -878,7 +880,7 @@ public class MenuFocusRenderTests : BaseTestClass
         }
         gd.SetRenderTarget(null);
 
-        XnaColor[] pixels = new XnaColor[CaptureWidth * CaptureHeight];
+        XnaColor[] pixels = new XnaColor[width * height];
         capture.GetData(pixels);
 
         string? directory = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_DIR");
@@ -886,7 +888,7 @@ public class MenuFocusRenderTests : BaseTestClass
         {
             Directory.CreateDirectory(directory);
             using FileStream stream = File.Create(Path.Combine(directory, pngName));
-            capture.SaveAsPng(stream, CaptureWidth, CaptureHeight);
+            capture.SaveAsPng(stream, width, height);
         }
         return pixels;
     }
