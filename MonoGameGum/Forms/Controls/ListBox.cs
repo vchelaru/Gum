@@ -1857,10 +1857,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
 #else
-        var (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
-            ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
-
-        GraphicalUiElement targetRoot = listBoxParent.GetTopParent() == modalRoot ? modalRoot : popupRoot;
+        GraphicalUiElement targetRoot = GetPopupTargetRoot(listBoxParent);
 
         // A popup already drawn over every other one stays where it is: taking it out and adding it back
         // would lay out all of its rows twice (#6757).
@@ -1881,6 +1878,20 @@ public class ListBox : ItemsControl, IInputReceiver
 
 
     }
+
+#if !FRB
+    /// <summary>
+    /// The root a popup opened from <paramref name="listBoxParent"/> is parented under, and clamped to:
+    /// the modal root when the parent is in it, otherwise the popup root.
+    /// </summary>
+    internal static GraphicalUiElement GetPopupTargetRoot(GraphicalUiElement listBoxParent)
+    {
+        var (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
+            ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
+
+        return listBoxParent.GetTopParent() == modalRoot ? modalRoot : popupRoot;
+    }
+#endif
 
     private static Layer GetLayerToAddTo(GraphicalUiElement listBoxParent)
     {
