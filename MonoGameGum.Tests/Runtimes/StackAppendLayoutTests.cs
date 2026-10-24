@@ -190,8 +190,8 @@ public class StackAppendLayoutTests : BaseTestClass
     {
         actual.AbsoluteLeft.ShouldBe(expected.AbsoluteLeft, path);
         actual.AbsoluteTop.ShouldBe(expected.AbsoluteTop, path);
-        actual.GetAbsoluteWidth().ShouldBe(expected.GetAbsoluteWidth(), path);
-        actual.GetAbsoluteHeight().ShouldBe(expected.GetAbsoluteHeight(), path);
+        actual.AbsoluteWidth.ShouldBe(expected.AbsoluteWidth, path);
+        actual.AbsoluteHeight.ShouldBe(expected.AbsoluteHeight, path);
         actual.Children.Count.ShouldBe(expected.Children.Count, path);
         for (int i = 0; i < actual.Children.Count; i++)
         {
