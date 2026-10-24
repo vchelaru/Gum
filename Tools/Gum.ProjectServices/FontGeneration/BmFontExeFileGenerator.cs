@@ -52,10 +52,12 @@ public class BmFontExeFileGenerator : IFontFileGenerator
         string bmfcFileToSave = Path.ChangeExtension(outputFntPath, ".bmfc");
         System.Console.WriteLine("Saving: " + bmfcFileToSave);
 
-        bmfcSave.Save(bmfcFileToSave, BmfcTemplateLocation);
+        WriteBmfc(bmfcSave, bmfcFileToSave, BmfcTemplateLocation);
 
         ProcessStartInfo info = new ProcessStartInfo();
         info.FileName = BmFontExeLocation;
+        // The .bmfc names its font file relative to itself.
+        info.WorkingDirectory = Path.GetDirectoryName(Path.GetFullPath(bmfcFileToSave))!;
         info.Arguments = "-c \"" + bmfcFileToSave + "\"" + " -o \"" + outputFntPath + "\"";
         info.UseShellExecute = true;
 
@@ -97,6 +99,29 @@ public class BmFontExeFileGenerator : IFontFileGenerator
         }
 
         return toReturn;
+    }
+
+    /// <summary>
+    /// Saves <paramref name="bmfcSave"/> at <paramref name="bmfcPath"/> with its font file relative to the
+    /// .bmfc, so a FontCache that is committed or shipped carries no path of the machine that wrote it.
+    /// <paramref name="bmfcSave"/> itself keeps its absolute font file.
+    /// </summary>
+    internal static void WriteBmfc(BmfcSave bmfcSave, string bmfcPath, string bmfcTemplatePath)
+    {
+        string? fontFile = bmfcSave.FontFile;
+        if (!string.IsNullOrEmpty(fontFile) && Path.IsPathRooted(fontFile))
+        {
+            string bmfcDirectory = Path.GetDirectoryName(Path.GetFullPath(bmfcPath))!;
+            bmfcSave.FontFile = Path.GetRelativePath(bmfcDirectory, fontFile);
+        }
+        try
+        {
+            bmfcSave.Save(bmfcPath, bmfcTemplatePath);
+        }
+        finally
+        {
+            bmfcSave.FontFile = fontFile;
+        }
     }
 
     private const string BmFontResourceName = "Gum.ProjectServices.Libraries.bmfont.exe";

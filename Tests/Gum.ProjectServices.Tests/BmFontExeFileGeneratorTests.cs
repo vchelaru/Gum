@@ -59,4 +59,22 @@ public class BmFontExeFileGeneratorTests : IDisposable
 
         File.ReadAllText(outputPath).ShouldContain("face=Arial");
     }
+
+    // The .bmfc sits in the project's FontCache, so the machine's absolute path never goes into it (#6722).
+    [Fact]
+    public void WriteBmfc_ShouldWriteFontFileRelativeToTheBmfc()
+    {
+        string templatePath = Path.Combine(_toolsDirectory, "template.bmfc");
+        Directory.CreateDirectory(_toolsDirectory);
+        File.WriteAllText(templatePath, "fontFile=FontFileVariable");
+        string fontFile = Path.Combine(_toolsDirectory, "Project", "Fonts", "Body.ttf");
+        string bmfcPath = Path.Combine(_toolsDirectory, "Project", "FontCache", "Font15Body.bmfc");
+        Directory.CreateDirectory(Path.GetDirectoryName(bmfcPath)!);
+        BmfcSave bmfcSave = new BmfcSave { FontName = "Body", FontSize = 15, FontFile = fontFile };
+
+        BmFontExeFileGenerator.WriteBmfc(bmfcSave, bmfcPath, templatePath);
+
+        File.ReadAllText(bmfcPath).ShouldBe("fontFile=" + Path.Combine("..", "Fonts", "Body.ttf"));
+        bmfcSave.FontFile.ShouldBe(fontFile);
+    }
 }

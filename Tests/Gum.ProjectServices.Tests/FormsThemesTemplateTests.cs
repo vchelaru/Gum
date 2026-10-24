@@ -284,6 +284,35 @@ public class FormsThemesTemplateTests
         }
     }
 
+    // A cached font's .bmfc ships with the template, so its font file is relative to the cache, never
+    // the path of the machine that generated it, and it names no font family (#6722).
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void FontCacheBmfc_ShouldReferenceFontFileRelatively(string templateFolder)
+    {
+        string fontCacheDir = Path.Combine(GetTemplateDir(templateFolder), "FontCache");
+        if (!Directory.Exists(fontCacheDir))
+        {
+            return;
+        }
+
+        List<string> wrong = new();
+        foreach (string bmfc in Directory.GetFiles(fontCacheDir, "*.bmfc"))
+        {
+            foreach (string line in File.ReadAllLines(bmfc))
+            {
+                bool rootedFontFile = line.StartsWith("fontFile=") && Path.IsPathRooted(line.Substring("fontFile=".Length));
+                bool namedFont = line.StartsWith("fontName=") && line.Length > "fontName=".Length;
+                if (rootedFontFile || namedFont)
+                {
+                    wrong.Add($"{Path.GetFileName(bmfc)}: {line}");
+                }
+            }
+        }
+
+        wrong.ShouldBeEmpty();
+    }
+
     // GumFormsPlugin stages every file in a template folder into the release, so anything that is not
     // project content (an executable, a stray tool config with a personal path) ships to users (#5441).
     // FontCache holds generated fonts (.bmfc/.fnt/.png); everywhere else only project content is allowed.
