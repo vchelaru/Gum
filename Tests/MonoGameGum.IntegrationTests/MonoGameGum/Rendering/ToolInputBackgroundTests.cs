@@ -142,6 +142,49 @@ public class ToolInputBackgroundTests : BaseTestClass
         MeasureCodeOnly(applyTheme: () => Render(row => rows[row].Create(), "6746-codeonly.png"), create: () => new ListBox());
     }
 
+    public static IEnumerable<object[]> IndicatorControlStates()
+    {
+        foreach ((string folder, string prefix, Action? theme) in new (string, string, Action?)[]
+        {
+            ("FormsTemplate", "Controls/", null),
+            ("FormsThemes/Editor", "Editor/Controls/", Gum.Themes.Editor.EditorTheme.Apply),
+        })
+        {
+            foreach (string state in ComboBoxStates)
+            {
+                yield return new object[] { folder, prefix + "ComboBox", "ComboBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new ComboBox()) };
+            }
+            foreach (string state in TextBoxStates)
+            {
+                yield return new object[] { folder, prefix + "TextBox", "TextBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new TextBox()) };
+            }
+        }
+    }
+
+    // The ComboBox focus underline and the TextBox placeholder, per state against V3 (#6754).
+    [Theory]
+    [MemberData(nameof(IndicatorControlStates))]
+    public void ToolUnderlineAndPlaceholderInState_MatchCodeOnly(string templateFolder, string componentName, string categoryState, string stateName,
+        Action? applyTheme, Func<FrameworkElement> createCodeOnly)
+    {
+        // Coming from another state first: a state that leaves a value unset would keep the previous state's value.
+        string previousState = stateName == "Pushed" ? "Disabled" : "Pushed";
+        if (categoryState == "TextBoxCategoryState")
+        {
+            previousState = stateName == "Disabled" ? "Highlighted" : "Disabled";
+        }
+        void EnterState(FrameworkElement control)
+        {
+            control.Visual.SetProperty(categoryState, previousState);
+            control.Visual.SetProperty(categoryState, stateName);
+        }
+
+        IndicatorLook codeOnly = MeasureCodeOnly(applyTheme, createCodeOnly, MeasureIndicators, EnterState);
+        IndicatorLook tool = MeasureTool(templateFolder, componentName, MeasureIndicators, afterCreate: EnterState);
+
+        tool.ShouldBe(codeOnly, $"{componentName} {stateName}");
+    }
+
     // The fill comes from the Styles InputBackground swatch, so recoloring the swatch recolors the control.
     [Theory]
     [InlineData("FormsTemplate", "Controls/ScrollViewer", "Styles")]
@@ -245,9 +288,13 @@ public class ToolInputBackgroundTests : BaseTestClass
     }
 
     private static BackgroundLook MeasureTool(string templateFolder, string componentName, Action? beforeCreate = null,
-        Action<FrameworkElement>? afterCreate = null)
+        Action<FrameworkElement>? afterCreate = null) =>
+        MeasureTool(templateFolder, componentName, Measure, beforeCreate, afterCreate);
+
+    private static T MeasureTool<T>(string templateFolder, string componentName, Func<FrameworkElement, T> measure,
+        Action? beforeCreate = null, Action<FrameworkElement>? afterCreate = null) where T : class
     {
-        BackgroundLook? look = null;
+        T? look = null;
         MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
         {
             beforeCreate?.Invoke();
@@ -255,12 +302,16 @@ public class ToolInputBackgroundTests : BaseTestClass
             GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             FrameworkElement control = (visual as InteractiveGue)?.FormsControlAsObject.ShouldBeAssignableTo<FrameworkElement>(componentName)!;
             afterCreate?.Invoke(control);
-            look = Measure(control);
+            look = measure(control);
         });
         return look.ShouldNotBeNull();
     }
 
     private static BackgroundLook MeasureCodeOnly(Action? applyTheme, Func<FrameworkElement> create,
+        Action<FrameworkElement>? afterCreate = null) =>
+        MeasureCodeOnly(applyTheme, create, Measure, afterCreate);
+
+    private static T MeasureCodeOnly<T>(Action? applyTheme, Func<FrameworkElement> create, Func<FrameworkElement, T> measure,
         Action<FrameworkElement>? afterCreate = null)
     {
         Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
@@ -272,7 +323,7 @@ public class ToolInputBackgroundTests : BaseTestClass
             applyTheme?.Invoke();
             FrameworkElement control = create();
             afterCreate?.Invoke(control);
-            return Measure(control);
+            return measure(control);
         }
         finally
         {
@@ -284,6 +335,24 @@ public class ToolInputBackgroundTests : BaseTestClass
             V3Styling.ActiveStyle = previousStyle;
             CustomSetPropertyOnRenderable.InMemoryFontCreator = previousFontCreator;
         }
+    }
+
+    // The underline color counts only while it is visible.
+    private sealed record IndicatorLook(bool UnderlineVisible, string? Underline, string? Placeholder);
+
+    private static IndicatorLook MeasureIndicators(FrameworkElement control)
+    {
+        static string Rgb(System.Drawing.Color c) => $"{c.R},{c.G},{c.B}";
+
+        GraphicalUiElement visual = control.Visual;
+        GraphicalUiElement? underline = visual.GetGraphicalUiElementByName("FocusedIndicator");
+        GraphicalUiElement? placeholder = visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
+
+        bool underlineVisible = underline?.Visible == true;
+        return new IndicatorLook(
+            underlineVisible,
+            underlineVisible ? Rgb(((NineSlice)underline!.RenderableComponent).Color) : null,
+            placeholder == null ? null : Rgb(((global::RenderingLibrary.Graphics.Text)placeholder.RenderableComponent).Color));
     }
 
     private static BackgroundLook Measure(FrameworkElement control)

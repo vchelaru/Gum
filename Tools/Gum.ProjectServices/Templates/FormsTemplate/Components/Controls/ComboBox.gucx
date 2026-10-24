@@ -375,7 +375,7 @@
     <State>
       <Name>Pushed</Name>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
+        <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">PrimaryDark</Value>
