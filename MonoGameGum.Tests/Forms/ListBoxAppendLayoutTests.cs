@@ -21,7 +21,7 @@ public class ListBoxAppendLayoutTests : BaseTestClass
         int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
         for (int i = 0; i < 100; i++)
         {
-            listBox.Items.Add("item " + i);
+            listBox.Items!.Add("item " + i);
         }
         int calls = GraphicalUiElement.UpdateLayoutCallCount - callsBefore;
 
@@ -36,7 +36,7 @@ public class ListBoxAppendLayoutTests : BaseTestClass
         listBox.AddToRoot();
         for (int i = 0; i < 20; i++)
         {
-            listBox.Items.Add("item " + i);
+            listBox.Items!.Add("item " + i);
         }
 
         var rows = listBox.InnerPanel.Children.ToList();
