@@ -146,7 +146,18 @@ public partial class GraphicalUiElement
     /// <paramref name="firstAppendedIndex"/> on were appended while layout was suspended, and which was clean
     /// before (<paramref name="wasCleanBeforeAppend"/>): the children before them are not laid out again (#6702).
     /// </summary>
-    internal void ResumeDeferredLayoutAfterAppend(int firstAppendedIndex, bool wasCleanBeforeAppend)
+    internal void ResumeDeferredLayoutAfterAppend(int firstAppendedIndex, bool wasCleanBeforeAppend) =>
+        RunWithAppendHint(firstAppendedIndex, wasCleanBeforeAppend, ResumeDeferredLayoutKeepingSuspensions);
+
+    /// <summary>
+    /// <see cref="ResumeLayout(bool)"/> (not recursive) for a stack suspended with <see cref="SuspendLayout(bool)"/>
+    /// whose children from <paramref name="firstAppendedIndex"/> on were appended while it was suspended. Like
+    /// <see cref="ResumeDeferredLayoutAfterAppend"/>, the children before them are not laid out again (#6702).
+    /// </summary>
+    internal void ResumeLayoutAfterAppend(int firstAppendedIndex, bool wasCleanBeforeAppend) =>
+        RunWithAppendHint(firstAppendedIndex, wasCleanBeforeAppend, () => ResumeLayout());
+
+    private void RunWithAppendHint(int firstAppendedIndex, bool wasCleanBeforeAppend, System.Action layout)
     {
         bool useHint = wasCleanBeforeAppend && firstAppendedIndex > 0 && _firstAppendedIndex < 0 &&
             (ChildrenLayout == ChildrenLayout.TopToBottomStack || ChildrenLayout == ChildrenLayout.LeftToRightStack);
@@ -156,7 +167,7 @@ public partial class GraphicalUiElement
         }
         try
         {
-            ResumeDeferredLayoutKeepingSuspensions();
+            layout();
         }
         finally
         {
