@@ -287,7 +287,7 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Normal.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="float" Name="Normal.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -440,7 +440,7 @@
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
     <Variable Type="int" Name="Strong.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="float" Name="Strong.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>

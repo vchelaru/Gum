@@ -407,6 +407,78 @@ public class MenuFocusRenderTests : BaseTestClass
         ColorDistance(actual, expected).ShouldBeLessThanOrEqualTo(tolerance, $"{because}: tool {actual} vs code-only {expected}");
     }
 
+    // A tool project renders its text from the fonts in its FontCache, so a template that ships without
+    // them falls back to the default font (#6722). Same font and size means the same line height and the
+    // same width for each header, on a top-level row and on a submenu row.
+    [Theory]
+    [MemberData(nameof(Pairs))]
+    public void Tool_MenuItemFont_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        _ = background;
+        MenuFontMeasure codeOnly = MeasureMenuFont(gumxPath: null, applyTheme, componentPrefix: null);
+
+        string root = Path.Combine(Path.GetTempPath(), "GumMenuFont_" + Guid.NewGuid().ToString("N"));
+        MenuFontMeasure tool;
+        try
+        {
+            string templates = FindTemplatesDirectory();
+            CopyDirectory(Path.Combine(templates, "FormsBehaviors"), Path.Combine(root, "FormsBehaviors"));
+            string projectDir = Path.Combine(root, templateFolder.Replace('/', Path.DirectorySeparatorChar));
+            CopyDirectory(Path.Combine(templates, templateFolder.Replace('/', Path.DirectorySeparatorChar)), projectDir);
+            tool = MeasureMenuFont(Path.Combine(projectDir, "GumProject.gumx"), applyTheme: null, componentPrefix);
+        }
+        finally
+        {
+            try { Directory.Delete(root, recursive: true); } catch { /* best effort */ }
+        }
+
+        tool.TopLevelLineHeight.ShouldBe(codeOnly.TopLevelLineHeight, $"{themeName}: top-level row line height");
+        ((float)tool.TopLevelWidth).ShouldBe(codeOnly.TopLevelWidth, 1f, $"{themeName}: top-level row header width");
+        tool.SubmenuLineHeight.ShouldBe(codeOnly.SubmenuLineHeight, $"{themeName}: submenu row line height");
+        ((float)tool.SubmenuWidth).ShouldBe(codeOnly.SubmenuWidth, 1f, $"{themeName}: submenu row header width");
+    }
+
+    private sealed record MenuFontMeasure(int TopLevelLineHeight, int TopLevelWidth, int SubmenuLineHeight, int SubmenuWidth);
+
+    private static MenuFontMeasure MeasureMenuFont(string? gumxPath, Action? applyTheme, string? componentPrefix)
+    {
+        Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
+        V3Styling previousStyle = V3Styling.ActiveStyle;
+        var previousFontCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        using MenuLease game = new MenuLease(gumxPath);
+        try
+        {
+            applyTheme?.Invoke();
+            MenuItem Item(string header)
+            {
+                MenuItem item = componentPrefix == null ? new MenuItem() : FromComponent<MenuItem>(componentPrefix + "MenuItem");
+                item.Header = header;
+                return item;
+            }
+            Menu menu = componentPrefix == null ? new Menu() : FromComponent<Menu>(componentPrefix + "Menu");
+            MenuItem file = Item("File");
+            MenuItem newItem = Item("New");
+            file.Items!.Add(newItem);
+            menu.Items!.Add(file);
+
+            global::RenderingLibrary.Graphics.Text TextOf(MenuItem item) =>
+                (item.Visual.GetGraphicalUiElementByName("TextInstance")?.RenderableComponent as global::RenderingLibrary.Graphics.Text).ShouldNotBeNull();
+            var fileFont = TextOf(file).BitmapFont.ShouldNotBeNull();
+            var newFont = TextOf(newItem).BitmapFont.ShouldNotBeNull();
+            return new MenuFontMeasure(fileFont.LineHeightInPixels, fileFont.MeasureString("File"), newFont.LineHeightInPixels, newFont.MeasureString("New"));
+        }
+        finally
+        {
+            FrameworkElement.DefaultFormsTemplates.Clear();
+            foreach (KeyValuePair<Type, VisualTemplate> pair in previousTemplates)
+            {
+                FrameworkElement.DefaultFormsTemplates[pair.Key] = pair.Value;
+            }
+            V3Styling.ActiveStyle = previousStyle;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = previousFontCreator;
+        }
+    }
+
     // HighlightCorner is the highlighted item's pixel one in from its top-left corner, which a rounded
     // highlight leaves at the menu bar color.
     private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge, XnaColor HighlightCorner, XnaColor OpenFill,
