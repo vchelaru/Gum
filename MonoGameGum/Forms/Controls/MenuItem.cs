@@ -636,6 +636,7 @@ public class MenuItem : ItemsControl
             generatedPopupRows.Clear();
             isPopupSizedByItems = visualTemplateVisual == null;
 
+            bool suspendedPanel = SuspendPopupPanelLayout();
             foreach (var item in Items)
             {
                 FrameworkElement row = CreatePopupRow(item);
@@ -644,6 +645,7 @@ public class MenuItem : ItemsControl
 
                 itemsPopup.InnerPanel.Children.Add(row.Visual);
             }
+            ResumePopupPanelLayout(suspendedPanel);
 
 #if !FRB
             // The popup's size must be resolved before it is placed, because placing clamps it to the screen (#6686).
@@ -671,6 +673,27 @@ public class MenuItem : ItemsControl
             GuiManager.SortZAndLayerBased();
             itemsPopup.RepositionToKeepInScreen();
 #endif
+        }
+    }
+
+    // Suspends the popup panel so a bulk row change lays the rows out once on resume rather than once per
+    // row (#6705). Returns false, and leaves the panel alone, when it is already suspended by someone else.
+    private bool SuspendPopupPanelLayout()
+    {
+        GraphicalUiElement panel = itemsPopup!.InnerPanel;
+        if (panel.IsLayoutSuspended)
+        {
+            return false;
+        }
+        panel.SuspendLayout();
+        return true;
+    }
+
+    private void ResumePopupPanelLayout(bool suspendedPanel)
+    {
+        if (suspendedPanel)
+        {
+            itemsPopup!.InnerPanel.ResumeLayout();
         }
     }
 
@@ -786,6 +809,7 @@ public class MenuItem : ItemsControl
         }
 
         ScrollViewer popup = itemsPopup!;
+        bool suspendedPanel = SuspendPopupPanelLayout();
         List<FrameworkElement> oldRows = new List<FrameworkElement>(popupRows);
         List<FrameworkElement> unclaimedRows = new List<FrameworkElement>(oldRows);
         List<FrameworkElement> newRows = new List<FrameworkElement>(Items.Count);
@@ -872,6 +896,8 @@ public class MenuItem : ItemsControl
                 MenuItemsInternal.Add(menuItem);
             }
         }
+
+        ResumePopupPanelLayout(suspendedPanel);
 
 #if !FRB
         // The rows changed the popup's size, so it has to be sized and clamped again.
