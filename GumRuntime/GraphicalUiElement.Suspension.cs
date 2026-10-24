@@ -186,8 +186,7 @@ public partial class GraphicalUiElement
     /// Runs <paramref name="change"/> with every layout deferred. Unless an outer caller is already
     /// deferring, it then runs the deferred work under <paramref name="flushRoot"/> and on every other
     /// element the change gave deferred work, ancestors first. A SuspendLayout a caller set stays in
-    /// place with its work left for its ResumeLayout. An element left without a parent keeps its work
-    /// for when it is added back.
+    /// place with its work left for its ResumeLayout.
     /// </summary>
     internal static void RunWithAllLayoutSuspended(Action change, GraphicalUiElement? flushRoot)
     {
@@ -200,14 +199,24 @@ public partial class GraphicalUiElement
         List<GraphicalUiElement> deferred = new List<GraphicalUiElement>();
         IsAllLayoutSuspended = true;
         s_globallyDeferred = deferred;
+        bool completed = false;
         try
         {
             change();
+            completed = true;
         }
         finally
         {
             s_globallyDeferred = null;
             IsAllLayoutSuspended = false;
+            if (!completed)
+            {
+                // The flush below won't run, so the elements must be recordable by the next change.
+                foreach (GraphicalUiElement element in deferred)
+                {
+                    element.isListedAsGloballyDeferred = false;
+                }
+            }
         }
 
         flushRoot?.ResumeDeferredLayoutKeepingSuspensions();
@@ -223,7 +232,7 @@ public partial class GraphicalUiElement
             // Layout left on a hidden element is resolved when it is shown, so only its font work runs here.
             bool hasWork = element.isFontDirty ||
                 (element.currentDirtyState != null && ((IVisible)element).AbsoluteVisible);
-            if (hasWork && element.Parent != null)
+            if (hasWork)
             {
                 int depth = 0;
                 for (GraphicalUiElement? parent = element.Parent; parent != null; parent = parent.Parent)

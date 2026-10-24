@@ -605,6 +605,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.mLayer = null;
         // Skip-cache state and the controller belong to the source: the clone starts not idle and builds its own.
         newClone._isIdle = false;
+        // The source's place in a global-suspension flush list (#6736) is not the clone's.
+        newClone.isListedAsGloballyDeferred = false;
         newClone._subtreeEventsState = 0;
         newClone._invalidateSubtreeCachesAction = null;
 #if !FRB
