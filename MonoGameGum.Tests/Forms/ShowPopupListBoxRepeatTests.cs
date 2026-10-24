@@ -94,7 +94,7 @@ public class ShowPopupListBoxRepeatTests : BaseTestClass
         file.Items!.Add("New");
         file.IsSelected = true;
         ComboBox comboBox = new();
-        comboBox.Items.Add("a");
+        comboBox.Items!.Add("a");
         comboBox.AddToRoot();
 
         comboBox.IsDropDownOpen = true;
