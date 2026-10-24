@@ -113,7 +113,7 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="InnerPanelInstance.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="float" Name="InnerPanelInstance.StackSpacing" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>

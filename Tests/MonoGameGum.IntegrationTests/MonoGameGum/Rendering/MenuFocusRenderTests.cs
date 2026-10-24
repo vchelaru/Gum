@@ -63,7 +63,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(CodeOnlyThemes))]
     public void CodeOnly_Focus_ChangesOnlyTheFirstItem(string themeName, Action? applyTheme, XnaColor background)
     {
-        RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background);
+        RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
     }
 
     [Theory]
@@ -78,7 +78,7 @@ public class MenuFocusRenderTests : BaseTestClass
             string projectDir = Path.Combine(root, templateFolder.Replace('/', Path.DirectorySeparatorChar));
             CopyDirectory(Path.Combine(templates, templateFolder.Replace('/', Path.DirectorySeparatorChar)), projectDir);
 
-            RunScenario(themeName + "-tool", Path.Combine(projectDir, "GumProject.gumx"), () => UseProjectMenuComponents(componentPrefix), background);
+            RunScenario(themeName + "-tool", Path.Combine(projectDir, "GumProject.gumx"), applyTheme: null, background, componentPrefix);
         }
         finally
         {
@@ -86,32 +86,14 @@ public class MenuFocusRenderTests : BaseTestClass
         }
     }
 
-    // A from-file project registers its components' runtime types but leaves `new Menu()` on the code
-    // defaults, so point Menu and MenuItem at the template's own components the way the Tooltip
-    // template does.
-    private static void UseProjectMenuComponents(string componentPrefix)
+    // The same path as a Menu placed in a screen in the tool: the template's own component, instantiated.
+    private static T FromComponent<T>(string componentName) where T : FrameworkElement
     {
-        foreach ((Type controlType, string componentName) in new[]
-        {
-            (typeof(Menu), componentPrefix + "Menu"),
-            (typeof(MenuItem), componentPrefix + "MenuItem"),
-        })
-        {
-            ComponentSave component = ObjectFinder.Self.GetComponent(componentName).ShouldNotBeNull(componentName);
-            FrameworkElement.DefaultFormsTemplates[controlType] = new VisualTemplate((_, createForms) =>
-            {
-                InteractiveGue visual = new InteractiveGue();
-                component.SetGraphicalUiElement(visual, SystemManagers.Default);
-                if (createForms)
-                {
-                    visual.FormsControlAsObject = controlType == typeof(Menu) ? new Menu(visual) : new MenuItem(visual);
-                }
-                return visual;
-            });
-        }
+        ComponentSave component = ObjectFinder.Self.GetComponent(componentName).ShouldNotBeNull(componentName);
+        GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        return (visual as InteractiveGue)?.FormsControlAsObject.ShouldBeOfType<T>(componentName)!;
     }
-
-    private static void RunScenario(string pngPrefix, string? gumxPath, Action? applyTheme, XnaColor background)
+    private static void RunScenario(string pngPrefix, string? gumxPath, Action? applyTheme, XnaColor background, string? componentPrefix)
     {
         Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
         V3Styling previousStyle = V3Styling.ActiveStyle;
@@ -130,7 +112,13 @@ public class MenuFocusRenderTests : BaseTestClass
             cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(-1000);
             FormsUtilities.SetCursor(cursor.Object);
 
-            Menu menu = new Menu();
+            Menu menu = componentPrefix == null ? new Menu() : FromComponent<Menu>(componentPrefix + "Menu");
+            MenuItem Item(string header)
+            {
+                MenuItem item = componentPrefix == null ? new MenuItem() : FromComponent<MenuItem>(componentPrefix + "MenuItem");
+                item.Header = header;
+                return item;
+            }
             menu.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
             menu.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
             menu.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
@@ -139,16 +127,19 @@ public class MenuFocusRenderTests : BaseTestClass
             menu.Y = 0;
             menu.Width = CaptureWidth;
             menu.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            MenuItem file = new MenuItem { Header = "File" };
-            MenuItem newItem = new MenuItem { Header = "New" };
+            MenuItem file = Item("File");
+            MenuItem newItem = Item("New");
             file.Items.Add(newItem);
-            file.Items.Add(new MenuItem { Header = "Open" });
-            file.Items.Add(new MenuItem { Header = "Save" });
+            file.Items.Add(Item("Open"));
+            file.Items.Add(Item("Save"));
             menu.Items.Add(file);
-            menu.Items.Add(new MenuItem { Header = "Edit" });
-            menu.Items.Add(new MenuItem { Header = "View" });
+            menu.Items.Add(Item("Edit"));
+            menu.Items.Add(Item("View"));
             menu.AddToRoot();
             menu.Visual.UpdateLayout();
+
+            // The menu sizes to its items, so its own fill sits behind them.
+            menu.Visual.GetAbsoluteHeight().ShouldBeGreaterThanOrEqualTo(file.Visual.GetAbsoluteHeight(), pngPrefix);
 
             XnaColor[] unfocused = Capture(game, background, $"{pngPrefix}-unfocused.png");
 
