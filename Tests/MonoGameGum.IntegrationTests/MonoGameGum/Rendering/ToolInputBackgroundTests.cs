@@ -323,7 +323,7 @@ public class ToolInputBackgroundTests : BaseTestClass
             ?? iconInstance?.GetGraphicalUiElementByName("IconSprite")
             ?? iconInstance
             ?? FindGlyph(visual)).ShouldNotBeNull();
-        global::RenderingLibrary.Graphics.IRenderableIpso renderable = (global::RenderingLibrary.Graphics.IRenderableIpso)arrow.RenderableComponent;
+        global::RenderingLibrary.Graphics.IRenderableIpso renderable = (arrow.RenderableComponent as global::RenderingLibrary.Graphics.IRenderableIpso).ShouldNotBeNull();
         Microsoft.Xna.Framework.Matrix matrix = renderable.GetAbsoluteRotationMatrix();
         Microsoft.Xna.Framework.Vector2 topLeft = new(renderable.GetAbsoluteX() - visual.GetAbsoluteX(), renderable.GetAbsoluteY() - visual.GetAbsoluteY());
         Microsoft.Xna.Framework.Vector2[] corners =
