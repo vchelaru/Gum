@@ -324,8 +324,8 @@ public class ComboBox :
     // itself and hands them to the ListBox when it is built on the first open.
     VisualTemplate? _lazyDropDownTemplate;
     IList? _pendingItems;
-    // The selection is kept by position, as ListBox keeps it by row: replacing the selected item keeps
-    // the old object selected, and inserting or removing other items moves the index.
+    // The selection is kept by position, as ListBox keeps it by row: inserting or removing other items
+    // moves the index, and removing or replacing the selected item clears it.
     int _pendingSelectedIndex = -1;
     object? _pendingSelectedObject;
 
@@ -342,8 +342,8 @@ public class ComboBox :
         }
     }
 
-    // Mirrors how ListBox updates its selection when Items changes: removing the selected item or
-    // resetting the collection clears the selection, other changes shift it.
+    // Mirrors how ListBox updates its selection when Items changes: removing or replacing the selected
+    // item, or resetting the collection, clears the selection; other changes shift it.
     private void HandlePendingItemsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         if (_pendingSelectedIndex < 0)
@@ -379,6 +379,14 @@ public class ComboBox :
                 {
                     if (e.OldStartingIndex < _pendingSelectedIndex) _pendingSelectedIndex--;
                     if (e.NewStartingIndex <= _pendingSelectedIndex) _pendingSelectedIndex++;
+                }
+                break;
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
+                int replacedCount = e.OldItems?.Count ?? 1;
+                if (e.OldStartingIndex < 0 ||
+                    (e.OldStartingIndex <= _pendingSelectedIndex && _pendingSelectedIndex < e.OldStartingIndex + replacedCount))
+                {
+                    SetPendingSelection(-1);
                 }
                 break;
             case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:

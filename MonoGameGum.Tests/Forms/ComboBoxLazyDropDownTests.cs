@@ -314,6 +314,10 @@ public class ComboBoxLazyDropDownTests : BaseTestClass
         ShouldMatchTheChildPath(c => { c.Items!.Clear(); c.IsDropDownOpen = true; return $"listBox={c.ListBox.SelectedIndex}"; });
 
     [Fact]
+    public void Lazy_ReplacingTheSelectedItemThenOpening_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items![1] = "Blueberry"; c.IsDropDownOpen = true; return $"listBox={c.ListBox.SelectedIndex}/{c.ListBox.SelectedObject ?? "null"}"; });
+
+    [Fact]
     public void Lazy_ItemsAddedToASwappedCollection_AreShownOnOpen()
     {
         RegisterCountingTemplate();
