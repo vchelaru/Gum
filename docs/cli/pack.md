@@ -36,7 +36,7 @@ By default the pixels use straight alpha. Pack with `--premultiplied-alpha` when
 If the bundle's alpha mode does not match the game, Gum converts each texture when it loads and writes a warning once per bundle. The warning says whether to repack with or without `--premultiplied-alpha`. The game draws correctly either way, but repacking skips the conversion.
 
 {% hint style="info" %}
-Raw textures and `--premultiplied-alpha` are available in November 2026, or now if building Gum from source. Before this, `gumcli pack` stored PNG files as they are on disk.
+**Shipping December 2026:** Raw textures and `--premultiplied-alpha` ship in the December release, or now if building Gum from source. Before this, `gumcli pack` stored PNG files as they are on disk.
 {% endhint %}
 
 ## Examples
