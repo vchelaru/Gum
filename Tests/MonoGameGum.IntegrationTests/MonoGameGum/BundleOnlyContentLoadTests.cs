@@ -146,9 +146,10 @@ public class BundleOnlyContentLoadTests : BaseTestClass
         Renderer.UsePremultipliedAlpha = runtimeUsesPremultipliedAlpha;
         try
         {
-            Texture2D first = LoaderManager.Self.LoadContent<Texture2D>("Sprites/a.png");
+            Texture2D? first = LoaderManager.Self.LoadContent<Texture2D>("Sprites/a.png");
             LoaderManager.Self.LoadContent<Texture2D>("Sprites/b.png");
 
+            first.ShouldNotBeNull();
             first.Width.ShouldBe(2);
             first.Height.ShouldBe(1);
             byte[] uploaded = new byte[8];
