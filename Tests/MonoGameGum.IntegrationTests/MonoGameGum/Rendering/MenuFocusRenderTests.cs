@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
@@ -202,6 +203,63 @@ public class MenuFocusRenderTests : BaseTestClass
             file.itemsPopup.ShouldBeNull("before opening");
             file.TryShowPopup();
             file.itemsPopup.ShouldNotBeNull("after opening").Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+        });
+    }
+
+    // A submenu opened from a submenu row uses the MenuItemSubmenuPopupBehavior component too, and grows by
+    // one row (#6720).
+    [Fact]
+    public void Tool_NestedSubmenuPopup_IsSubmenuPopupComponent_SizedToRows()
+    {
+        WithToolProject("FormsThemes/Retro95", mutateProject: null, () =>
+        {
+            (MenuItem _, MenuItem recent) = OpenNestedMenu("Retro95/Controls/");
+            ScrollViewer popup = recent.itemsPopup.ShouldNotBeNull();
+            popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+
+            float heightBefore = popup.Visual.GetAbsoluteHeight();
+            MenuItem added = FromComponent<MenuItem>("Retro95/Controls/MenuItem");
+            added.Header = "Third";
+            recent.Items!.Add(added);
+            (popup.Visual.GetAbsoluteHeight() - heightBefore).ShouldBe(added.Visual.GetAbsoluteHeight(), 1f);
+        });
+    }
+
+    // The submenu-popup component is resolved by name when a submenu opens, so one removed from the project
+    // after load (a hot reload) falls back to the project's ScrollViewer component (#6720).
+    [Fact]
+    public void Tool_SubmenuPopup_ComponentRemovedAfterLoad_FallsBackToScrollViewerComponent()
+    {
+        WithToolProject("FormsThemes/Retro95", mutateProject: null, () =>
+        {
+            GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+            ComponentSave popupComponent = project.Components.Single(item => item.Name == "Retro95/Controls/MenuItemSubmenuPopup");
+            project.Components.Remove(popupComponent);
+            ObjectFinder.Self.GetComponent("Retro95/Controls/MenuItemSubmenuPopup").ShouldBeNull("removed component still found");
+
+            (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/Controls/");
+
+            file.itemsPopup.ShouldNotBeNull().Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/ScrollViewer");
+        });
+    }
+
+    // A project whose gumx references MenuItemSubmenuPopupBehavior while its .behx file is missing still
+    // loads, and its submenu still uses the component that has the behavior (#6720).
+    [Fact]
+    public void Tool_SubmenuPopup_BehaviorFileMissing_LoadsAndUsesComponent()
+    {
+        static void DeleteBehaviorFile(string projectDir)
+        {
+            string behavior = Path.Combine(projectDir, "..", "..", "FormsBehaviors", "MenuItemSubmenuPopupBehavior.behx");
+            File.Exists(behavior).ShouldBeTrue(behavior);
+            File.Delete(behavior);
+        }
+
+        WithToolProject("FormsThemes/Retro95", DeleteBehaviorFile, () =>
+        {
+            (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/Controls/");
+
+            file.itemsPopup.ShouldNotBeNull().Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
         });
     }
 

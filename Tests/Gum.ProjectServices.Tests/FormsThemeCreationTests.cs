@@ -95,6 +95,27 @@ public class FormsThemeCreationTests : IDisposable
         File.Exists(Path.Combine(_tempDirectory, "preview.png")).ShouldBeFalse();
     }
 
+    // Retro95's submenu popup component and its behavior come along into a new project (#6720).
+    [Fact]
+    public void CreateFromTheme_Retro95_IncludesSubmenuPopupBehaviorAndComponent()
+    {
+        string themeDirectory = new FormsThemeLocator(new[] { FindThemesRoot() }).FindThemeDirectory("Retro95")!;
+        string projectPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        StandardElementsManager.Self.Initialize();
+
+        new FormsTemplateCreator().CreateFromTheme(projectPath, themeDirectory);
+
+        ProjectLoadResult result = new ProjectLoader().Load(projectPath);
+        result.Success.ShouldBeTrue();
+        result.LoadErrors.ShouldBeEmpty();
+        GumProjectSave project = result.Project!;
+        BehaviorSave behavior = project.Behaviors.Single(item => item.Name == StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName);
+        behavior.IsSourceFileMissing.ShouldBeFalse();
+        behavior.DefaultImplementation.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+        ComponentSave component = project.Components.Single(item => item.Name == "Retro95/Controls/MenuItemSubmenuPopup");
+        component.Behaviors.ShouldContain(item => item.BehaviorName == StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName);
+    }
+
     [Fact]
     public void CreateFromTheme_JsonPath_ProducesJsonProject()
     {
