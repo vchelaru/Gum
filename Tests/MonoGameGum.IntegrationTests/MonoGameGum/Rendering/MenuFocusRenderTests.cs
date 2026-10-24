@@ -109,13 +109,11 @@ public class MenuFocusRenderTests : BaseTestClass
             () => ShouldBeClose(tool.OpenCorner, codeOnly.OpenCorner, $"{themeName}: open item corner"));
     }
 
-    // Left out: Editor's and Retro95's ScrollViewer components (which the tool popup now is) draw a different
-    // surface or border from their code-only submenu popups, pending a design decision. Standard's tool rows
-    // draw their own background over the popup, a bluer gray than code-only, the same before and after #6720;
-    // Tool_SubmenuPopup_IsProjectScrollViewer_SizedToRows covers its popup.
+    // Left out: Standard's tool rows draw their own background over the popup, a bluer gray than code-only,
+    // the same before and after #6720; Tool_SubmenuPopup_IsProjectComponent_SizedToRows covers its popup.
     public static IEnumerable<object[]> SubmenuPopupPairs()
     {
-        HashSet<string> differingByDesign = new() { "standard", "editor", "retro95" };
+        HashSet<string> differingByDesign = new() { "standard" };
         foreach (object[] pair in Pairs())
         {
             if (!differingByDesign.Contains((string)pair[0]))
@@ -133,37 +131,78 @@ public class MenuFocusRenderTests : BaseTestClass
         MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
+        // Editor's tool rows draw their own background over the whole popup, so its fill sample is a row's.
+        bool rowsCoverPopup = themeName == "editor";
+
         tool.ShouldSatisfyAllConditions(
-            () => ShouldBeClose(tool.PopupFill, codeOnly.PopupFill, $"{themeName}: submenu popup fill", tolerance: 2),
+            () =>
+            {
+                if (!rowsCoverPopup)
+                {
+                    ShouldBeClose(tool.PopupFill, codeOnly.PopupFill, $"{themeName}: submenu popup fill", tolerance: 2);
+                }
+            },
             () => ShouldBeClose(tool.PopupBorder, codeOnly.PopupBorder, $"{themeName}: submenu popup border", tolerance: 2),
             () => ShouldBeClose(tool.PopupRowTextColor, codeOnly.PopupRowTextColor, $"{themeName}: non-highlighted submenu row text"));
     }
 
-    // In a tool project the submenu popup is the project's ScrollViewer component (the ScrollViewerBehavior's
-    // DefaultImplementation), and it still sits under its item and sizes itself to its rows (#6720).
+    // In a tool project the submenu popup is the project's MenuItemSubmenuPopupBehavior component when it has
+    // one (Retro95, Editor), else its ScrollViewer component (the ScrollViewerBehavior's DefaultImplementation).
+    // Either way it sits under its item and sizes itself to its rows (#6720).
     [Theory]
     [MemberData(nameof(ToolTemplates))]
-    public void Tool_SubmenuPopup_IsProjectScrollViewer_SizedToRows(string themeName, string templateFolder, string componentPrefix, XnaColor background)
+    public void Tool_SubmenuPopup_IsProjectComponent_SizedToRows(string themeName, string templateFolder, string componentPrefix, XnaColor background)
     {
+        HashSet<string> withSubmenuPopupComponent = new() { "editor", "retro95" };
+        string expectedComponent = componentPrefix + (withSubmenuPopupComponent.Contains(themeName) ? "MenuItemSubmenuPopup" : "ScrollViewer");
+
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
-        tool.PopupElementName.ShouldBe(componentPrefix + "ScrollViewer", themeName);
+        tool.PopupElementName.ShouldBe(expectedComponent, themeName);
         tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, $"{themeName}: popup height change when a row is added");
     }
 
-    // Like the Tooltip, a ScrollViewer template that user code registered wins over the project's component (#6720).
-    [Fact]
-    public void Tool_SubmenuPopup_UserScrollViewerTemplate_WinsOverProjectComponent()
+    // Like the Tooltip, a ScrollViewer template that user code registered wins over the project's components,
+    // the ScrollViewer one (Bubblegum) and the MenuItemSubmenuPopupBehavior one (Retro95) (#6720).
+    [Theory]
+    [InlineData("bubblegum", "FormsThemes/Bubblegum", "Bubblegum/Controls/", 255, 240, 249)]
+    [InlineData("retro95", "FormsThemes/Retro95", "Retro95/Controls/", 192, 192, 192)]
+    public void Tool_SubmenuPopup_UserScrollViewerTemplate_WinsOverProjectComponent(string themeName, string templateFolder, string componentPrefix, int red, int green, int blue)
     {
         const string userVisualName = "UserScrollViewer";
         void RegisterUserTemplate() =>
             FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] = new VisualTemplate((_, createForms) =>
                 new global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: createForms) { Name = userVisualName });
 
-        MenuMeasure tool = RunTool("bubblegum", "FormsThemes/Bubblegum", "Bubblegum/Controls/", new XnaColor(255, 240, 249), RegisterUserTemplate);
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, new XnaColor(red, green, blue), RegisterUserTemplate);
 
-        tool.PopupVisualName.ShouldBe(userVisualName);
+        tool.PopupVisualName.ShouldBe(userVisualName, themeName);
         tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, "popup height change when a row is added");
+    }
+
+    // A MenuItem builds no popup visual until its submenu opens (#6720).
+    [Fact]
+    public void Tool_SubmenuPopup_NotCreatedUntilOpened()
+    {
+        WithToolProject("FormsThemes/Retro95", mutateProject: null, () =>
+        {
+            MenuItem Item(string header)
+            {
+                MenuItem item = FromComponent<MenuItem>("Retro95/Controls/MenuItem");
+                item.Header = header;
+                return item;
+            }
+            Menu menu = FromComponent<Menu>("Retro95/Controls/Menu");
+            MenuItem file = Item("File");
+            file.Items!.Add(Item("New"));
+            menu.Items!.Add(file);
+            menu.AddToRoot();
+            menu.Visual.UpdateLayout();
+
+            file.itemsPopup.ShouldBeNull("before opening");
+            file.TryShowPopup();
+            file.itemsPopup.ShouldNotBeNull("after opening").Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+        });
     }
 
     // A submenu opened from a submenu row is the project's ScrollViewer too, and grows by one row (#6720).

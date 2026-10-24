@@ -78,6 +78,7 @@
   <ComponentReference Name="Editor/Controls/ListBoxItem" />
   <ComponentReference Name="Editor/Controls/Menu" />
   <ComponentReference Name="Editor/Controls/MenuItem" />
+  <ComponentReference Name="Editor/Controls/MenuItemSubmenuPopup" />
   <ComponentReference Name="Editor/Controls/Panel" />
   <ComponentReference Name="Editor/Controls/PasswordBox" />
   <ComponentReference Name="Editor/Controls/RadioButton" />
@@ -127,6 +128,7 @@
   <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="Editor/Controls/ListBoxItem" />
   <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="Editor/Controls/Menu" />
   <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="Editor/Controls/MenuItem" />
+  <BehaviorReference Name="MenuItemSubmenuPopupBehavior" SourcePath="../../FormsBehaviors/MenuItemSubmenuPopupBehavior.behx" DefaultImplementationOverride="Editor/Controls/MenuItemSubmenuPopup" />
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Editor/Controls/PasswordBox" />

@@ -582,6 +582,7 @@ public class FormsUtilities
         // disposed (issue #4626).
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
         _defaultTooltipTemplate = null;
+        MenuItem.FromFileSubmenuPopupTemplate = null;
     }
 
     /// <summary>
@@ -594,6 +595,7 @@ public class FormsUtilities
         string? fromFileNamespace = typeof(DefaultFromFileButtonRuntime).Namespace;
         ElementSaveExtensions.UnregisterGueInstantiationTypes(type => type.Namespace == fromFileNamespace);
         ElementSaveExtensions.InitialStateAppliedNotifier = null;
+        MenuItem.FromFileSubmenuPopupTemplate = null;
     }
 
     private static VisualTemplate? _processWideDefaultTooltipTemplate;
@@ -793,6 +795,35 @@ public class FormsUtilities
         }
 
         RegisterFromFileTooltipTemplate(ObjectFinder.Self.GumProjectSave);
+        RegisterFromFileSubmenuPopupTemplate(ObjectFinder.Self.GumProjectSave);
+    }
+
+    // A MenuItem shows its sub-items in the project's MenuItemSubmenuPopupBehavior component, picked by the
+    // same rule as the Tooltip's (#6720). The visual is built only when a submenu opens, from the component
+    // resolved by name then, so a hot reload's project is what gets built. MenuItem wraps the bare
+    // InteractiveGue in a ScrollViewer and decides precedence against the other popup sources.
+    private static void RegisterFromFileSubmenuPopupTemplate(GumProjectSave project)
+    {
+        ComponentSave? popupComponent = DefaultImplementationLookup.Find(project, StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName);
+        if (popupComponent == null)
+        {
+            MenuItem.FromFileSubmenuPopupTemplate = null;
+            return;
+        }
+
+        string componentName = popupComponent.Name;
+        MenuItem.FromFileSubmenuPopupTemplate = new VisualTemplate((_, _) =>
+        {
+            ComponentSave? component = ObjectFinder.Self.GetComponent(componentName);
+            if (component == null)
+            {
+                // The component was removed since registration: MenuItem falls back to its other sources.
+                return null!;
+            }
+            InteractiveGue visual = new InteractiveGue();
+            component.SetGraphicalUiElement(visual, SystemManagers.Default);
+            return visual;
+        });
     }
 
     // Tooltips are the one Forms control the framework instantiates on its own (FrameworkElement.ToolTip
