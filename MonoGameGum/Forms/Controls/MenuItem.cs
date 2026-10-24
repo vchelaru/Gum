@@ -890,14 +890,20 @@ public class MenuItem : ItemsControl
         }
 
         ScrollViewer popup = itemsPopup!;
+        // Rows appended at the end leave the rows before them as they are (#6702).
+        bool wasCleanBeforeAppend = popup.InnerPanel.IsCleanForAppend;
         bool suspendedPanel = SuspendPopupPanelLayout();
+        int firstAppendedIndex = -1;
         try
         {
-            ReconcilePopupRows(popup, Items);
+            firstAppendedIndex = ReconcilePopupRows(popup, Items);
         }
         finally
         {
-            ResumePopupPanelLayout(suspendedPanel);
+            if (suspendedPanel)
+            {
+                popup.InnerPanel.ResumeLayoutAfterAppend(firstAppendedIndex, wasCleanBeforeAppend);
+            }
         }
 
 #if !FRB
@@ -922,7 +928,9 @@ public class MenuItem : ItemsControl
     }
 
     // Puts the open popup's rows in line with Items, keeping rows whose item is still there.
-    private void ReconcilePopupRows(ScrollViewer popup, System.Collections.IList currentItems)
+    // Returns the index of the first appended row when the change only appended rows after the
+    // existing ones, otherwise -1.
+    private int ReconcilePopupRows(ScrollViewer popup, System.Collections.IList currentItems)
     {
         List<FrameworkElement> oldRows = new List<FrameworkElement>(popupRows);
         List<FrameworkElement> unclaimedRows = new List<FrameworkElement>(oldRows);
@@ -973,6 +981,8 @@ public class MenuItem : ItemsControl
             removed.Visual.Parent = null;
         }
 
+        bool isAppendOnly = unclaimedRows.Count == 0 && newRows.Count > oldRows.Count;
+
         for (int i = 0; i < newRows.Count; i++)
         {
             FrameworkElement row = newRows[i];
@@ -985,6 +995,11 @@ public class MenuItem : ItemsControl
             if (popup.InnerPanel.Children.Count > i && popup.InnerPanel.Children[i] == visual)
             {
                 continue;
+            }
+
+            if (i < oldRows.Count)
+            {
+                isAppendOnly = false;
             }
 
             // A row that moved is moved within the panel rather than detached, which would close its own submenu.
@@ -1010,6 +1025,8 @@ public class MenuItem : ItemsControl
                 MenuItemsInternal.Add(menuItem);
             }
         }
+
+        return isAppendOnly ? oldRows.Count : -1;
     }
 
     /// <summary>
@@ -1023,9 +1040,17 @@ public class MenuItem : ItemsControl
         // let's suppress layout for performance reasons, and to prevent issues with scrollbars:
         var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
         GraphicalUiElement.IsAllLayoutSuspended = true;
+        // When every value below is already set (an open popup whose rows changed), the row change
+        // already resized the popup, so laying it out again would only repeat that for every row (#6757).
+        bool changed = false;
 
         try
         {
+            changed = popup.HorizontalScrollBarVisibility != ScrollBarVisibility.Hidden ||
+                popup.VerticalScrollBarVisibility != ScrollBarVisibility.Hidden ||
+                popup.VerticalSizeMode != SizeMode.Auto ||
+                popup.HorizontalSizeMode != SizeMode.Auto;
+
             popup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
             popup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
 
@@ -1041,11 +1066,13 @@ public class MenuItem : ItemsControl
             {
                 if (parentForSizing.WidthUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren)
                 {
+                    changed = true;
                     parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                     parentForSizing.Width = 0;
                 }
                 if (parentForSizing.HeightUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren)
                 {
+                    changed = true;
                     parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                     parentForSizing.Height = 0;
                 }
@@ -1062,7 +1089,7 @@ public class MenuItem : ItemsControl
             GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
         }
 
-        if (!wasSuppressed)
+        if (!wasSuppressed && changed)
         {
             popup.Visual.UpdateLayout();
         }
