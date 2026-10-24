@@ -54,6 +54,7 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         List<string> listBoxSwatches = ReadSwatchNames(themeListBox);
         listBoxSwatches.ShouldContain("DarkGray");
         listBoxSwatches.ShouldContain("Warning");
+        listBoxSwatches.ShouldContain("InputBackgroundDark");
 
         // The older project: its Styles lacks every swatch the ListBox reads except Warning, which the user recolored.
         string stylesPath = Path.Combine(_projectDir, "Components", "Styles.gucx");
@@ -83,9 +84,12 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         listBox.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
         ObjectFinder.Self.GumProjectSave = project;
         styles.DefaultState!.SetValue("DarkGray.FillRed", 201, "int");
+        styles.DefaultState!.SetValue("InputBackgroundDark.FillRed", 202, "int");
         project.ApplyAllVariableReferences();
 
         listBox.DefaultState!.GetValue("Background.Red").ShouldBe(201);
+        listBox.Categories.SelectMany(c => c.States).Single(s => s.Name == "Disabled")
+            .GetValue("Background.Red").ShouldBe(202);
     }
 
     [Fact]
