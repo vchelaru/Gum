@@ -201,6 +201,20 @@ public class ToolInputBackgroundTests : BaseTestClass
                 yield return new object[] { folder, prefix + "ComboBox", theme!, width, height };
             }
         }
+        // The other themes draw a text glyph; checked at the V3 default size only, to keep the run short.
+        foreach ((string name, Action theme) in new (string, Action)[]
+        {
+            ("Bubblegum", Gum.Themes.Bubblegum.BubblegumTheme.Apply),
+            ("DarkPro", Gum.Themes.DarkPro.DarkProTheme.Apply),
+            ("ForestGlade", Gum.Themes.ForestGlade.ForestGladeTheme.Apply),
+            ("Hazard", Gum.Themes.Hazard.HazardTheme.Apply),
+            ("Meadow", Gum.Themes.Meadow.MeadowTheme.Apply),
+            ("Neon", Gum.Themes.Neon.NeonTheme.Apply),
+            ("Retro95", Gum.Themes.Retro95.Retro95Theme.Apply),
+        })
+        {
+            yield return new object[] { "FormsThemes/" + name, name + "/Controls/ComboBox", theme, 256f, 24f };
+        }
     }
 
     // The dropdown arrow's drawn rectangle (position, size and rotation) matches V3 at several sizes, in every state (#6763).
@@ -280,12 +294,35 @@ public class ToolInputBackgroundTests : BaseTestClass
         }
     }
 
+    // The code-only themes name their dropdown text glyph "<Theme>...Glyph".
+    private static GraphicalUiElement? FindGlyph(GraphicalUiElement parent)
+    {
+        foreach (GraphicalUiElement child in parent.Children?.OfType<GraphicalUiElement>() ?? Enumerable.Empty<GraphicalUiElement>())
+        {
+            if (child.Name?.EndsWith("Glyph") == true)
+            {
+                return child;
+            }
+            GraphicalUiElement? nested = FindGlyph(child);
+            if (nested != null)
+            {
+                return nested;
+            }
+        }
+        return null;
+    }
+
     // The arrow's drawn quad as its axis-aligned bounds relative to the control, plus its rotation, rounded to 0.1 px.
+    // The arrow is the V3 DropdownIndicator, a theme's *Glyph text, the Standard/Editor IconInstance sprite, or a
+    // themed template's IconInstance text.
     private static string MeasureArrowRect(FrameworkElement control)
     {
         GraphicalUiElement visual = control.Visual;
+        GraphicalUiElement? iconInstance = visual.GetGraphicalUiElementByName("IconInstance");
         GraphicalUiElement arrow = (visual.GetGraphicalUiElementByName("DropdownIndicator")
-            ?? visual.GetGraphicalUiElementByName("IconInstance")?.GetGraphicalUiElementByName("IconSprite")).ShouldNotBeNull();
+            ?? iconInstance?.GetGraphicalUiElementByName("IconSprite")
+            ?? iconInstance
+            ?? FindGlyph(visual)).ShouldNotBeNull();
         global::RenderingLibrary.Graphics.IRenderableIpso renderable = (global::RenderingLibrary.Graphics.IRenderableIpso)arrow.RenderableComponent;
         Microsoft.Xna.Framework.Matrix matrix = renderable.GetAbsoluteRotationMatrix();
         Microsoft.Xna.Framework.Vector2 topLeft = new(renderable.GetAbsoluteX() - visual.GetAbsoluteX(), renderable.GetAbsoluteY() - visual.GetAbsoluteY());
