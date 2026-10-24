@@ -34,7 +34,7 @@ public class MenuItemSubmenuAppendLayoutTests : BaseTestClass
         return (container, file);
     }
 
-    private static ScrollViewer PopupOf(MenuItem owner)
+    internal static ScrollViewer PopupOf(MenuItem owner)
     {
         foreach (GraphicalUiElement popup in FrameworkElement.PopupRoot.Children!)
         {
@@ -83,6 +83,33 @@ public class MenuItemSubmenuAppendLayoutTests : BaseTestClass
 
         // About 131 at every row count; it was 1,364 at 100 rows when sizing and placing the popup laid
         // out every row again (#6757), and 2,964 before that on the full re-layout (#6702).
+        calls.ShouldBeLessThan(200);
+    }
+
+    [Theory]
+    [InlineData(50)]
+    [InlineData(100)]
+    [InlineData(200)]
+    public void ItemsAdd_ShouldLayOutOnlyTheAppendedRows_WhenNestedSubmenuIsOpen(int rowCount)
+    {
+        (_, MenuItem file) = Create();
+        MenuItem recent = new() { Header = "Recent" };
+        recent.Items!.Add("one.gumx");
+        file.Items!.Add(recent);
+        file.IsSelected = true;
+        recent.IsSelected = true;
+        for (int i = 1; i < rowCount; i++)
+        {
+            file.Items.Add(new MenuItem { Header = "Item " + i });
+        }
+        recent.IsPopupVisible.ShouldBeTrue();
+
+        int before = GraphicalUiElement.UpdateLayoutCallCount;
+        file.Items.Add(new MenuItem { Header = "Last" });
+        int calls = GraphicalUiElement.UpdateLayoutCallCount - before;
+
+        // About 133 at every row count; it was 985 at 100 rows when the open nested submenu following the
+        // popup made it take the popup out and add it back, laying out every row again (#6762).
         calls.ShouldBeLessThan(200);
     }
 
