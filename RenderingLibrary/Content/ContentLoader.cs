@@ -162,8 +162,31 @@ public sealed class ContentLoader : IContentLoader
     /// when the pixels already went through <see cref="ProcessLoadedPixels"/>.
     /// </summary>
     private static Texture2D CreateTextureFromStream(GraphicsDevice device, System.IO.Stream stream,
-        out bool isProcessedOnLoad)
+        string name, out bool isProcessedOnLoad)
     {
+        if (!stream.CanSeek)
+        {
+            var buffered = new System.IO.MemoryStream();
+            stream.CopyTo(buffered);
+            buffered.Position = 0;
+            stream = buffered;
+        }
+
+        byte[]? rawTexture = ReadIfRawTexture(stream);
+        if (rawTexture != null)
+        {
+            // A gumcli-packed texture (#6514): already decoded, so convert the alpha mode if the
+            // package's differs and upload, with no image decode and no GetData readback.
+            Gum.Bundle.GumRawTextureHeader header = Gum.Bundle.GumRawTexture.PrepareForRuntime(rawTexture, name,
+                (stream as Gum.Bundle.GumBundleEntryStream)?.PackagePath,
+                Graphics.Renderer.UsePremultipliedAlpha,
+                Graphics.Renderer.BleedTransparentTextureEdgesOnLoad);
+            var rawTexture2D = new Texture2D(device, header.Width, header.Height, false, SurfaceFormat.Color);
+            rawTexture2D.SetData(0, null, rawTexture, Gum.Bundle.GumRawTexture.HeaderLength, (int)header.PixelByteCount);
+            isProcessedOnLoad = true;
+            return rawTexture2D;
+        }
+
 #if KNI && !FRB
         if (OperatingSystem.IsBrowser())
         {
@@ -182,6 +205,36 @@ public sealed class ContentLoader : IContentLoader
 #endif
         isProcessedOnLoad = false;
         return Texture2D.FromStream(device, stream);
+    }
+
+    /// <summary>
+    /// Returns the whole stream when it holds a raw package texture, otherwise null with the stream
+    /// rewound. <paramref name="stream"/> must be seekable.
+    /// </summary>
+    private static byte[]? ReadIfRawTexture(System.IO.Stream stream)
+    {
+        long start = stream.Position;
+        byte[] prefix = new byte[4];
+        int read = 0;
+        while (read < prefix.Length)
+        {
+            int n = stream.Read(prefix, read, prefix.Length - read);
+            if (n <= 0)
+            {
+                break;
+            }
+            read += n;
+        }
+        stream.Position = start;
+
+        if (!Gum.Bundle.GumRawTexture.IsRawTexture(prefix.AsSpan(0, read)))
+        {
+            return null;
+        }
+
+        var all = new System.IO.MemoryStream();
+        stream.CopyTo(all);
+        return all.ToArray();
     }
 
     public static string StandardizeCaseSensitive(string fileName)
@@ -211,7 +264,7 @@ public sealed class ContentLoader : IContentLoader
         using (var stream = GetUrlStream(fileName))
         {
             // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
-            texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isProcessedOnLoad);
+            texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, fileNameStandardized, out isProcessedOnLoad);
 
             texture.Name = fileNameStandardized;
         }
@@ -359,7 +412,7 @@ public sealed class ContentLoader : IContentLoader
                 using var stream = FileManager.GetStreamForFile(fileNameStandardized);
 
                 // Headless (no device): FromStream throws, which the catch below handles.
-                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isProcessedOnLoad);
+                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, fileNameStandardized, out isProcessedOnLoad);
 
                 texture.Name = fileNameStandardized;
 

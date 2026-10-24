@@ -127,6 +127,19 @@ public static class PackCommand
                 Console.Error.WriteLine($"missing: {relativePath}");
                 return 1;
             }
+
+            if (IsPng(relativePath))
+            {
+                try
+                {
+                    bytes = ToRawTexture(bytes, PackageUsesPremultipliedAlpha);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"error: could not decode PNG {relativePath}: {ex.Message}");
+                    return 1;
+                }
+            }
             entries.Add((relativePath, bytes));
             uncompressedBytes += bytes.Length;
         }
@@ -148,6 +161,35 @@ public static class PackCommand
         Console.WriteLine($"Ratio:           {ratio:F1}%");
 
         return 0;
+    }
+
+    // The alpha mode packed textures are stored in. Gum projects have no alpha-mode setting yet, so
+    // this matches the runtime default (Renderer.UsePremultipliedAlpha = false). A premultiplied
+    // runtime converts straight packages on load and warns once (#6514).
+    private const bool PackageUsesPremultipliedAlpha = false;
+
+    private static bool IsPng(string relativePath) =>
+        string.Equals(Path.GetExtension(relativePath), ".png", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Decodes a PNG to straight RGBA with StbImageSharp (the decoder behind MonoGame's and KNI's
+    /// Texture2D.FromStream, so the pixels match a loose-file load) and stores it as a raw texture,
+    /// premultiplied or with the transparent-edge bleed baked, so the runtime uploads it as-is.
+    /// </summary>
+    private static byte[] ToRawTexture(byte[] png, bool premultiply)
+    {
+        StbImageSharp.ImageResult image =
+            StbImageSharp.ImageResult.FromMemory(png, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
+        byte[] rgba = image.Data;
+        if (premultiply)
+        {
+            global::RenderingLibrary.Content.RgbaPixels.Premultiply(rgba);
+        }
+        else
+        {
+            global::RenderingLibrary.Content.RgbaPixels.BleedTransparentEdges(rgba, image.Width, image.Height);
+        }
+        return GumRawTexture.Encode(image.Width, image.Height, rgba, premultiply);
     }
 
     private static bool TryParseInclusion(string includeFlags, out GumBundleInclusion inclusion, out string? error)

@@ -22,9 +22,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleReader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleWriter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumProjectDependencyWalker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumRawTexture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\IGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\LooseFileGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\WalkResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Content\RgbaPixels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Collections\GraphicalUiElementCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\GueDeriving\RenderableRegistry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Localization\LocalizationRuntimeState.cs" />

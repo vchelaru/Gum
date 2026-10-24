@@ -128,7 +128,7 @@ public class PackCommandTests : BaseTestClass
         bytes[1].ShouldBe((byte)0x55);
         bytes[2].ShouldBe((byte)0x4D);
         bytes[3].ShouldBe((byte)0x50);
-        bytes[4].ShouldBe((byte)0x01);
+        bytes[4].ShouldBe(GumBundleFormat.CurrentVersion);
     }
 
     [Fact]
@@ -318,6 +318,70 @@ public class PackCommandTests : BaseTestClass
         localization.Translate("T_Hello").ShouldBe("Hola");
     }
 
+    // 3x2 straight RGBA texels: (10,20,30,0) (200,100,50,1) (255,100,3,127) / (255,255,255,128) (255,200,1,254) (9,8,7,255).
+    private const string AlphaRampPngBase64 =
+        "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAI0lEQVR4nGPgEpFjOJFixPg/hbme4f///w3/TzD+4+Rg/w8AeQgK2zFeG9AAAAAASUVORK5CYII=";
+
+    [Fact]
+    public void Pack_stores_png_as_raw_straight_pixels_with_edge_bleed_baked()
+    {
+        string projectPath = CreateProjectWithSpriteAndFont("RawPng");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        byte[] entry = ReadBundleEntries(outputPath)["Textures/bg.png"];
+        GumRawTexture.IsRawTexture(entry).ShouldBeTrue();
+        GumRawTextureHeader header = GumRawTexture.ReadHeader(entry);
+        header.Width.ShouldBe(3);
+        header.Height.ShouldBe(2);
+        header.PixelFormat.ShouldBe(GumRawTexturePixelFormat.Rgba8);
+        header.IsPremultiplied.ShouldBeFalse();
+        // The transparent texel takes the average of its three visible neighbors; the rest stay straight.
+        entry.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[]
+        {
+            236, 185, 102, 0,  200, 100, 50, 1,  255, 100, 3, 127,
+            255, 255, 255, 128,  255, 200, 1, 254,  9, 8, 7, 255,
+        });
+    }
+
+    [Fact]
+    public void Pack_stores_jpeg_bytes_unchanged()
+    {
+        string projectPath = CreateCleanProject("Jpeg");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        WriteSpriteHolderComponent(projectDir, sourceFileRelative: "Textures/photo.jpg");
+        Directory.CreateDirectory(Path.Combine(projectDir, "Textures"));
+        byte[] jpeg = { 0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3, 0xFF, 0xD9 };
+        File.WriteAllBytes(Path.Combine(projectDir, "Textures", "photo.jpg"), jpeg);
+        AppendComponentReference(projectPath, "SpriteHolder");
+        string outputPath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        ReadBundleEntries(outputPath)["Textures/photo.jpg"].ShouldBe(jpeg);
+    }
+
+    [Fact]
+    public void Pack_exits_1_and_names_the_file_when_a_png_cannot_be_decoded()
+    {
+        string projectPath = CreateCleanProject("BadPng");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        WriteSpriteHolderComponent(projectDir, sourceFileRelative: "Textures/bad.png");
+        Directory.CreateDirectory(Path.Combine(projectDir, "Textures"));
+        File.WriteAllBytes(Path.Combine(projectDir, "Textures", "bad.png"), new byte[] { 0x89, 0x50, 0x4E, 0x47 });
+        AppendComponentReference(projectPath, "SpriteHolder");
+        string outputPath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("Textures/bad.png");
+        File.Exists(outputPath).ShouldBeFalse();
+    }
+
     [Fact]
     public void Pack_writes_output_to_default_path_when_no_dash_o()
     {
@@ -377,7 +441,7 @@ public class PackCommandTests : BaseTestClass
 
         string textureDir = Path.Combine(projectDir, "Textures");
         Directory.CreateDirectory(textureDir);
-        File.WriteAllBytes(Path.Combine(textureDir, "bg.png"), new byte[] { 0x89, 0x50, 0x4E, 0x47 });
+        File.WriteAllBytes(Path.Combine(textureDir, "bg.png"), Convert.FromBase64String(AlphaRampPngBase64));
 
         AppendComponentReference(filePath, "SpriteHolder");
         return filePath;
