@@ -2068,17 +2068,11 @@ public class CodeGenerator
                 $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
                 $"[typeof({className})] = template;");
 
-            var element = context.Element;
-            GetGumFormsTypeFromBehaviors(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
+            string? formsType = GetDefaultFormsTemplateType(context.Element);
             if (formsType != null)
             {
-                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference!);
-                if (behavior?.DefaultImplementation == element.Name)
-                {
-                    // This is the default, so let's register it:
-                    builder.AppendLine(context.Tabs +
-                        $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
-                }
+                builder.AppendLine(context.Tabs +
+                    $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
             }
 
             builder.AppendLine(context.Tabs +
@@ -2115,27 +2109,21 @@ public class CodeGenerator
 
             builder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(\"{context.Element.Name}\", typeof({className}));");
 
-            var element = context.Element;
-            GetGumFormsTypeFromBehaviors(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
+            string? formsType = GetDefaultFormsTemplateType(context.Element);
             if (formsType != null)
             {
-                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference!);
-                if (behavior?.DefaultImplementation == element.Name)
+                // DefaultFormsComponents is obsolete and reflects the constructor (not trim-safe), so
+                // syntax version 1+ gets a template that calls the same (bool, bool) constructor directly.
+                if (context.ResolvedSyntaxVersion >= 1)
                 {
-                    // This is the default, so register it. DefaultFormsComponents is obsolete and
-                    // reflects the constructor (not trim-safe), so syntax version 1+ gets a template
-                    // that calls the same (bool, bool) constructor directly.
-                    if (context.ResolvedSyntaxVersion >= 1)
-                    {
-                        builder.AppendLine(context.Tabs +
-                            $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = " +
-                            $"new global::Gum.Forms.VisualTemplate((vm, createForms) => new {className}(fullInstantiation: true, tryCreateFormsObject: createForms));");
-                    }
-                    else
-                    {
-                        builder.AppendLine(context.Tabs +
-                            $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
-                    }
+                    builder.AppendLine(context.Tabs +
+                        $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = " +
+                        $"new global::Gum.Forms.VisualTemplate((vm, createForms) => new {className}(fullInstantiation: true, tryCreateFormsObject: createForms));");
+                }
+                else
+                {
+                    builder.AppendLine(context.Tabs +
+                        $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
                 }
             }
 
@@ -2168,6 +2156,27 @@ public class CodeGenerator
         }
     }
 
+    // The Forms type an element registers itself as the default template for: the type its behavior maps to,
+    // when the element is that behavior's default implementation. Null when it registers nothing.
+    private static string? GetDefaultFormsTemplateType(ElementSave element)
+    {
+        GetGumFormsTypeFromBehaviors(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
+        if (formsType == null || BehaviorsWithoutDefaultFormsTemplate.Contains(behaviorReference!.BehaviorName!))
+        {
+            return null;
+        }
+        BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
+        return behavior?.DefaultImplementation == element.Name ? formsType : null;
+    }
+
+    // Behaviors whose component derives from a Forms type without being that type's default visual. A
+    // MenuItemSubmenuPopup is ScrollViewer-backed, but registering it for typeof(ScrollViewer) would replace
+    // the project's ScrollViewer component for every ScrollViewer (#6730).
+    static readonly HashSet<string> BehaviorsWithoutDefaultFormsTemplate = new HashSet<string>
+    {
+        StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName,
+    };
+
     static Dictionary<string, string> BehaviorGumFormsTypes = new Dictionary<string, string>()
     {
         { StandardFormsBehaviorNames.ButtonBehaviorName, "global::Gum.Forms.Controls.Button" },
@@ -2181,6 +2190,7 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.ListBoxItemBehaviorName, "global::Gum.Forms.Controls.ListBoxItem" },
         { StandardFormsBehaviorNames.MenuBehaviorName, "global::Gum.Forms.Controls.Menu" },
         { StandardFormsBehaviorNames.MenuItemBehaviorName, "global::Gum.Forms.Controls.MenuItem" },
+        { StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName, "global::Gum.Forms.Controls.ScrollViewer" },
         { StandardFormsBehaviorNames.PanelBehaviorName, "global::Gum.Forms.Controls.Panel" },
         { StandardFormsBehaviorNames.PasswordBoxBehaviorName, "global::Gum.Forms.Controls.PasswordBox" },
         { StandardFormsBehaviorNames.RadioButtonBehaviorName, "global::Gum.Forms.Controls.RadioButton" },
