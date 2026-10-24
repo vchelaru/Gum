@@ -211,6 +211,47 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         AddComponent(project, "Elements/SubmenuPopupHolder", "Container", ("PopupInstance", popup.Name));
     }
 
+    // #6741: a generated Retro95 project makes its MenuItemSubmenuPopup component the submenu popup of
+    // every MenuItem, for Gum Forms and legacy MonoGame output.
+    [Theory]
+    [InlineData(OutputLibrary.GumForms, ObjectInstantiationType.FullyInCode)]
+    [InlineData(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName)]
+    public void ModuleInitializer_Retro95_DefaultSubmenuPopupTemplateBuildsMenuItemSubmenuPopup(OutputLibrary outputLibrary, ObjectInstantiationType instantiationType)
+    {
+        Assembly generated = GenerateAndCompile(outputLibrary, instantiationType, theme: "Retro95");
+        LoadProjectForFindByName();
+        Type frameworkElementType = GumCommon.GetType("Gum.Forms.Controls.FrameworkElement", throwOnError: true)!;
+        Type menuItemType = GumCommon.GetType("Gum.Forms.Controls.MenuItem", throwOnError: true)!;
+        Type scrollViewerType = GumCommon.GetType("Gum.Forms.Controls.ScrollViewer", throwOnError: true)!;
+        PropertyInfo templateProperty = menuItemType.GetProperty("DefaultSubmenuPopupTemplate", BindingFlags.Public | BindingFlags.Static)!;
+        IDictionary templates = (IDictionary)frameworkElementType.GetProperty("DefaultFormsTemplates")!.GetValue(null)!;
+        Dictionary<object, object?> previousTemplates = templates.Keys.Cast<object>().ToDictionary(key => key, key => templates[key]);
+        try
+        {
+            System.Runtime.CompilerServices.RuntimeHelpers.RunModuleConstructor(generated.ManifestModule.ModuleHandle);
+
+            object template = templateProperty.GetValue(null).ShouldNotBeNull("DefaultSubmenuPopupTemplate after module init");
+            object visual = template.GetType().GetMethod("CreateContent")!.Invoke(template, new object?[] { null, true })!;
+
+            object formsControl = Get(visual, "FormsControlAsObject").ShouldNotBeNull();
+            Get(visual, "ElementSave.Name").ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+            formsControl.ShouldBeAssignableTo(scrollViewerType);
+            // Gum Forms output generates the control class; legacy MonoGame output generates the visual class.
+            Type generatedType = outputLibrary == OutputLibrary.GumForms ? formsControl.GetType() : visual.GetType();
+            generatedType.Assembly.ShouldBeSameAs(generated);
+            generatedType.Name.ShouldStartWith("MenuItemSubmenuPopup");
+        }
+        finally
+        {
+            templateProperty.SetValue(null, null);
+            templates.Clear();
+            foreach (KeyValuePair<object, object?> pair in previousTemplates)
+            {
+                templates[pair.Key] = pair.Value;
+            }
+        }
+    }
+
     private static object Construct(Assembly generated, string typeName) =>
         Activator.CreateInstance(generated.GetTypes().Single(item => item.Name == typeName))!;
 
@@ -628,9 +669,10 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         bool obsoleteUseIsError = false,
         Action<GumProjectSave>? editProject = null,
         Action<CodeOutputProjectSettings>? editSettings = null,
-        Action? afterCodegen = null)
+        Action? afterCodegen = null,
+        string? theme = null)
     {
-        Generate(outputLibrary, instantiationType, editProject, editSettings);
+        Generate(outputLibrary, instantiationType, editProject, editSettings, theme);
         afterCodegen?.Invoke();
 
         Assembly generated = Compile(Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories), obsoleteUseIsError);
@@ -642,11 +684,21 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         OutputLibrary outputLibrary,
         ObjectInstantiationType instantiationType,
         Action<GumProjectSave>? editProject,
-        Action<CodeOutputProjectSettings>? editSettings = null)
+        Action<CodeOutputProjectSettings>? editSettings = null,
+        string? theme = null)
     {
         string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
-        new FormsTemplateCreator().Create(gumxPath);
-        AddDerivedComponents(gumxPath, editProject);
+        if (theme == null)
+        {
+            new FormsTemplateCreator().Create(gumxPath);
+            AddDerivedComponents(gumxPath, editProject);
+        }
+        else
+        {
+            string themeDirectory = FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory())
+                .FindThemeDirectory(theme).ShouldNotBeNull(theme);
+            new FormsTemplateCreator().CreateFromTheme(gumxPath, themeDirectory);
+        }
         File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup>" +
             "<PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.4\" />" +

@@ -181,6 +181,36 @@ public class MenuFocusRenderTests : BaseTestClass
         tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, "popup height change when a row is added");
     }
 
+    // MenuItem.DefaultSubmenuPopupTemplate, which generated code sets, wins over the project's
+    // MenuItemSubmenuPopupBehavior component and a registered ScrollViewer template (#6741).
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Tool_SubmenuPopup_DefaultSubmenuPopupTemplate_WinsOverProjectComponent(bool alsoRegisterScrollViewerTemplate)
+    {
+        WithToolProject("FormsThemes/Retro95", mutateProject: null, () =>
+        {
+            try
+            {
+                if (alsoRegisterScrollViewerTemplate)
+                {
+                    FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] = new VisualTemplate((_, createForms) =>
+                        new global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: createForms) { Name = "UserScrollViewer" });
+                }
+                MenuItem.DefaultSubmenuPopupTemplate = new VisualTemplate((_, createForms) =>
+                    new global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: createForms) { Name = "DefaultSubmenuPopup" });
+
+                (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/Controls/");
+
+                file.itemsPopup.ShouldNotBeNull().Visual.Name.ShouldBe("DefaultSubmenuPopup");
+            }
+            finally
+            {
+                MenuItem.DefaultSubmenuPopupTemplate = null;
+            }
+        });
+    }
+
     // A MenuItem builds no popup visual until its submenu opens (#6720).
     [Fact]
     public void Tool_SubmenuPopup_NotCreatedUntilOpened()
@@ -217,11 +247,11 @@ public class MenuFocusRenderTests : BaseTestClass
             ScrollViewer popup = recent.itemsPopup.ShouldNotBeNull();
             popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
 
-            float heightBefore = popup.Visual.GetAbsoluteHeight();
+            float heightBefore = popup.Visual.AbsoluteHeight;
             MenuItem added = FromComponent<MenuItem>("Retro95/Controls/MenuItem");
             added.Header = "Third";
             recent.Items!.Add(added);
-            (popup.Visual.GetAbsoluteHeight() - heightBefore).ShouldBe(added.Visual.GetAbsoluteHeight(), 1f);
+            (popup.Visual.AbsoluteHeight - heightBefore).ShouldBe(added.Visual.AbsoluteHeight, 1f);
         });
     }
 
@@ -273,11 +303,11 @@ public class MenuFocusRenderTests : BaseTestClass
             ScrollViewer popup = recent.itemsPopup.ShouldNotBeNull();
             popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Bubblegum/Controls/ScrollViewer");
 
-            float heightBefore = popup.Visual.GetAbsoluteHeight();
+            float heightBefore = popup.Visual.AbsoluteHeight;
             MenuItem added = FromComponent<MenuItem>("Bubblegum/Controls/MenuItem");
             added.Header = "Third";
             recent.Items!.Add(added);
-            (popup.Visual.GetAbsoluteHeight() - heightBefore).ShouldBe(added.Visual.GetAbsoluteHeight(), 1f);
+            (popup.Visual.AbsoluteHeight - heightBefore).ShouldBe(added.Visual.AbsoluteHeight, 1f);
         });
     }
 
@@ -301,11 +331,11 @@ public class MenuFocusRenderTests : BaseTestClass
             ScrollViewer popup = file.itemsPopup.ShouldNotBeNull();
             popup.Visual.ShouldBeOfType<global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual>();
 
-            float heightBefore = popup.Visual.GetAbsoluteHeight();
+            float heightBefore = popup.Visual.AbsoluteHeight;
             MenuItem added = FromComponent<MenuItem>("Bubblegum/Controls/MenuItem");
             added.Header = "Close";
             file.Items!.Add(added);
-            (popup.Visual.GetAbsoluteHeight() - heightBefore).ShouldBe(added.Visual.GetAbsoluteHeight(), 1f);
+            (popup.Visual.AbsoluteHeight - heightBefore).ShouldBe(added.Visual.AbsoluteHeight, 1f);
         });
     }
 

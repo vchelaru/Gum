@@ -38,12 +38,12 @@ public class CodeGeneratorMenuItemSubmenuPopupTests : BaseTestClass
             syntaxVersionDetectionService: detection.Object);
     }
 
-    private string GenerateDefaultSubmenuPopup(OutputLibrary outputLibrary)
+    private string GenerateDefaultSubmenuPopup(OutputLibrary outputLibrary, int syntaxVersion = 4, bool isDefaultImplementation = true)
     {
         Project.Behaviors.Add(new BehaviorSave
         {
             Name = StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName,
-            DefaultImplementation = "Controls/MenuItemSubmenuPopup"
+            DefaultImplementation = isDefaultImplementation ? "Controls/MenuItemSubmenuPopup" : "Controls/OtherPopup"
         });
 
         ComponentSave popup = new ComponentSave { Name = "Controls/MenuItemSubmenuPopup", BaseType = "Container" };
@@ -58,7 +58,7 @@ public class CodeGeneratorMenuItemSubmenuPopupTests : BaseTestClass
             RootNamespace = "MyGame",
         };
 
-        return CreateCodeGenerator(syntaxVersion: 4).GetGeneratedCodeForElement(popup, new CodeOutputElementSettings(), settings);
+        return CreateCodeGenerator(syntaxVersion).GetGeneratedCodeForElement(popup, new CodeOutputElementSettings(), settings);
     }
 
     [Fact]
@@ -86,5 +86,44 @@ public class CodeGeneratorMenuItemSubmenuPopupTests : BaseTestClass
 
         // The project's ScrollViewer component stays the visual for every other ScrollViewer.
         code.ShouldNotContain("[typeof(global::Gum.Forms.Controls.ScrollViewer)]");
+    }
+
+    // #6741: generated code makes the theme's submenu-popup component the popup of every MenuItem.
+    [Fact]
+    public void GetGeneratedCodeForElement_GumFormsSyntax6_SetsDefaultSubmenuPopupTemplate()
+    {
+        string code = GenerateDefaultSubmenuPopup(OutputLibrary.GumForms, syntaxVersion: 6);
+
+        code.ShouldContain("global::Gum.Forms.Controls.MenuItem.DefaultSubmenuPopupTemplate = template;");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_MonoGameSyntax6_SetsDefaultSubmenuPopupTemplate()
+    {
+        string code = GenerateDefaultSubmenuPopup(OutputLibrary.MonoGame, syntaxVersion: 6);
+
+        code.ShouldContain("global::Gum.Forms.Controls.MenuItem.DefaultSubmenuPopupTemplate = " +
+            "new global::Gum.Forms.VisualTemplate((vm, createForms) => new MenuItemSubmenuPopupRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));");
+    }
+
+    // Older runtimes have no MenuItem.DefaultSubmenuPopupTemplate.
+    [Theory]
+    [InlineData(OutputLibrary.GumForms)]
+    [InlineData(OutputLibrary.MonoGame)]
+    public void GetGeneratedCodeForElement_Syntax5_DoesNotSetDefaultSubmenuPopupTemplate(OutputLibrary outputLibrary)
+    {
+        string code = GenerateDefaultSubmenuPopup(outputLibrary, syntaxVersion: 5);
+
+        code.ShouldNotContain("DefaultSubmenuPopupTemplate");
+    }
+
+    [Theory]
+    [InlineData(OutputLibrary.GumForms)]
+    [InlineData(OutputLibrary.MonoGame)]
+    public void GetGeneratedCodeForElement_NotTheBehaviorsDefaultImplementation_DoesNotSetDefaultSubmenuPopupTemplate(OutputLibrary outputLibrary)
+    {
+        string code = GenerateDefaultSubmenuPopup(outputLibrary, syntaxVersion: 6, isDefaultImplementation: false);
+
+        code.ShouldNotContain("DefaultSubmenuPopupTemplate");
     }
 }

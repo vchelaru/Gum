@@ -199,6 +199,29 @@ public class MenuItem : ItemsControl
 
     public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
 
+    /// <summary>
+    /// The template every MenuItem builds its submenu popup from when the item has no
+    /// <see cref="ScrollViewerVisualTemplate"/>. Null by default. When set, it wins over the
+    /// ScrollViewer template registered in <see cref="FrameworkElement.DefaultFormsTemplates"/>, so the
+    /// submenu popup can look different from other ScrollViewers. The popup sizes itself to its rows.
+    /// Generated code sets this to the project's MenuItemSubmenuPopup component.
+    /// </summary>
+    /// <remarks>
+    /// The template's content must have the ScrollViewer structure. If it creates a Forms control, that
+    /// control must be a <see cref="ScrollViewer"/>; otherwise the popup wraps the visual in one.
+    /// </remarks>
+#if FRB
+    public static VisualTemplate? DefaultSubmenuPopupTemplate { get; set; }
+#else
+    public static VisualTemplate? DefaultSubmenuPopupTemplate
+    {
+        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.DefaultSubmenuPopupTemplate : _processWideDefaultSubmenuPopupTemplate; }
+        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.DefaultSubmenuPopupTemplate = value; } else { _processWideDefaultSubmenuPopupTemplate = value; } }
+    }
+
+    private static VisualTemplate? _processWideDefaultSubmenuPopupTemplate;
+#endif
+
     // The sub-item container removed from the Visual in UpdateMenuItems. Kept so its CollectionChanged
     // can be unhooked, and so it can be put back (with its original parent and position) when the Visual
     // is replaced, leaving that Visual intact if it is assigned again.
@@ -605,6 +628,7 @@ public class MenuItem : ItemsControl
             var visualTemplateVisual = ScrollViewerVisualTemplate?.CreateContent(null) as InteractiveGue;
             // A popup with no template sizes itself to its rows, including one built from the project's component.
             isPopupSizedByItems = visualTemplateVisual == null;
+            visualTemplateVisual ??= DefaultSubmenuPopupTemplate?.CreateContent(null, createFormsInternally: true) as InteractiveGue;
 #if !FRB
             visualTemplateVisual ??= CreateProjectScrollViewerVisual();
 #endif
@@ -722,6 +746,8 @@ public class MenuItem : ItemsControl
 
     // Set by FormsUtilities when a from-file project has a MenuItemSubmenuPopupBehavior component (#6720).
     // Its CreateContent returns a bare visual (no Forms control), or null if the component went away.
+    // Separate from DefaultSubmenuPopupTemplate because it loses to a user-registered ScrollViewer
+    // template, while DefaultSubmenuPopupTemplate wins over one.
     internal static VisualTemplate? FromFileSubmenuPopupTemplate
     {
         get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.FromFileSubmenuPopupTemplate : _processWideFromFileSubmenuPopupTemplate; }
