@@ -66,10 +66,10 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         {
             styles.Instances.ShouldContain(i => i.Name == swatch, swatch);
         }
-        styles.DefaultState.GetValue("DarkGray.FillRed").ShouldBe(themeStyles.DefaultState.GetValue("DarkGray.FillRed"));
-        styles.DefaultState.GetValue("DarkGray.Parent").ShouldBe("Colors");
-        styles.DefaultState.GetValue("Warning.FillRed").ShouldBe(int.Parse(WarningUserRed));
-        styles.DefaultState.Variables.Count(v => v.Name == "Warning.FillRed").ShouldBe(1);
+        styles.DefaultState!.GetValue("DarkGray.FillRed").ShouldBe(themeStyles.DefaultState!.GetValue("DarkGray.FillRed"));
+        styles.DefaultState!.GetValue("DarkGray.Parent").ShouldBe("Colors");
+        styles.DefaultState!.GetValue("Warning.FillRed").ShouldBe(int.Parse(WarningUserRed));
+        styles.DefaultState!.Variables.Count(v => v.Name == "Warning.FillRed").ShouldBe(1);
 
         // Recoloring a restored swatch recolors the control that reads it.
         // The theme stands in for the rest of the project, with the imported Styles and ListBox in it.
@@ -82,10 +82,10 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         styles.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
         listBox.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
         ObjectFinder.Self.GumProjectSave = project;
-        styles.DefaultState.SetValue("DarkGray.FillRed", 201, "int");
+        styles.DefaultState!.SetValue("DarkGray.FillRed", 201, "int");
         project.ApplyAllVariableReferences();
 
-        listBox.DefaultState.GetValue("Background.Red").ShouldBe(201);
+        listBox.DefaultState!.GetValue("Background.Red").ShouldBe(201);
     }
 
     [Fact]
