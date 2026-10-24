@@ -63,13 +63,16 @@ public class MenuItemSubmenuAppendLayoutTests : BaseTestClass
         return rects;
     }
 
-    [Fact]
-    public void ItemsAdd_ShouldLayOutOnlyTheAppendedRows_WhenSubmenuIsOpen()
+    [Theory]
+    [InlineData(50)]
+    [InlineData(100)]
+    [InlineData(200)]
+    public void ItemsAdd_ShouldLayOutOnlyTheAppendedRows_WhenSubmenuIsOpen(int rowCount)
     {
         (_, MenuItem file) = Create();
         file.Items!.Add(new MenuItem { Header = "Item 0" });
         file.IsSelected = true;
-        for (int i = 1; i < 100; i++)
+        for (int i = 1; i < rowCount; i++)
         {
             file.Items.Add(new MenuItem { Header = "Item " + i });
         }
@@ -78,9 +81,9 @@ public class MenuItemSubmenuAppendLayoutTests : BaseTestClass
         file.Items.Add(new MenuItem { Header = "Last" });
         int calls = GraphicalUiElement.UpdateLayoutCallCount - before;
 
-        // About 2,964 on the full re-layout of every row; the popup's sizing and placing still cost
-        // about 12 layouts per row.
-        calls.ShouldBeLessThan(2000);
+        // About 131 at every row count; it was 1,364 at 100 rows when sizing and placing the popup laid
+        // out every row again (#6757), and 2,964 before that on the full re-layout (#6702).
+        calls.ShouldBeLessThan(200);
     }
 
     [Fact]
