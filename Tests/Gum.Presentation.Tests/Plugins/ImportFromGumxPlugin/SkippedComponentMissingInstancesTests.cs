@@ -52,7 +52,7 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         ComponentSave themeStyles = theme.Components.Single(c => c.Name == "Styles");
         ComponentSave themeListBox = theme.Components.Single(c => c.Name == "Controls/ListBox");
         List<string> listBoxSwatches = ReadSwatchNames(themeListBox);
-        listBoxSwatches.ShouldContain("DarkGray");
+        listBoxSwatches.ShouldContain("InputBackground");
         listBoxSwatches.ShouldContain("Warning");
         listBoxSwatches.ShouldContain("InputBackgroundDark");
 
@@ -67,8 +67,8 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         {
             styles.Instances.ShouldContain(i => i.Name == swatch, swatch);
         }
-        styles.DefaultState!.GetValue("DarkGray.FillRed").ShouldBe(themeStyles.DefaultState!.GetValue("DarkGray.FillRed"));
-        styles.DefaultState!.GetValue("DarkGray.Parent").ShouldBe("Colors");
+        styles.DefaultState!.GetValue("InputBackground.FillRed").ShouldBe(themeStyles.DefaultState!.GetValue("InputBackground.FillRed"));
+        styles.DefaultState!.GetValue("InputBackground.Parent").ShouldBe("Colors");
         styles.DefaultState!.GetValue("Warning.FillRed").ShouldBe(int.Parse(WarningUserRed));
         styles.DefaultState!.Variables.Count(v => v.Name == "Warning.FillRed").ShouldBe(1);
 
@@ -83,7 +83,7 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         styles.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
         listBox.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
         ObjectFinder.Self.GumProjectSave = project;
-        styles.DefaultState!.SetValue("DarkGray.FillRed", 201, "int");
+        styles.DefaultState!.SetValue("InputBackground.FillRed", 201, "int");
         styles.DefaultState!.SetValue("InputBackgroundDark.FillRed", 202, "int");
         project.ApplyAllVariableReferences();
 
