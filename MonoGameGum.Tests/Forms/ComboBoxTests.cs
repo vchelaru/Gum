@@ -1240,8 +1240,8 @@ public  class ComboBoxTests : BaseTestClass
         {
             case "select": comboBox.SelectedIndex = 0; break;
             case "deselect": comboBox.SelectedIndex = -1; break;
-            case "clear": comboBox.Items.Clear(); break;
-            case "replace": comboBox.Items[1] = "B"; break;
+            case "clear": comboBox.Items!.Clear(); break;
+            case "replace": comboBox.Items![1] = "B"; break;
             case "assign": comboBox.Items = new ObservableCollection<object> { "A" }; break;
         }
         float comboWidth = comboBox.Visual.AbsoluteWidth;
