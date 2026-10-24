@@ -342,10 +342,8 @@ public class ListBox : ItemsControl, IInputReceiver
                 // Clear all selections
                 SelectSingleRowAndScrollIntoView(null);
             }
-            else
-            {
-                throw new IndexOutOfRangeException();
-            }
+            // Any other index is out of range and ignored, keeping the selection, as WPF's Selector
+            // does for an index past the end (#6737). WPF throws below -1; Gum ignores that too.
         }
     }
 

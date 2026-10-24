@@ -297,6 +297,19 @@ public class ComboBoxLazyDropDownTests : BaseTestClass
     public void Lazy_InsertingBeforeTheSelectedItem_MatchesTheChildPath() =>
         ShouldMatchTheChildPath(c => { c.Items!.Insert(0, "Zero"); return ""; });
 
+    // #6737: an out-of-range SelectedIndex is ignored on both paths, keeping Banana selected.
+    [Theory]
+    [InlineData(3)]
+    [InlineData(7)]
+    [InlineData(-2)]
+    public void Lazy_OutOfRangeSelectedIndex_IsIgnoredLikeTheChildPath(int index)
+    {
+        (string child, string lazy) = RunOnBoth(c => { c.SelectedIndex = index; return ""; });
+
+        child.ShouldBe("idx=1 obj=Banana text=Banana events=[] ");
+        lazy.ShouldBe(child);
+    }
+
     [Fact]
     public void Lazy_RemovingAnItemBeforeTheSelectedItem_MatchesTheChildPath() =>
         ShouldMatchTheChildPath(c => { c.Items!.RemoveAt(0); return ""; });

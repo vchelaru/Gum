@@ -148,7 +148,7 @@ public class ComboBox :
         {
             if (value != Text)
             {
-                coreTextObject.RawText = value;
+                SetDisplayedText(value);
 
                 PushValueToViewModel();
             }
@@ -315,7 +315,11 @@ public class ComboBox :
             else
             {
                 IList? items = Items;
-                SetPendingSelection(items != null && value >= 0 && value < items.Count ? value : -1);
+                // Like ListBox (#6737): -1 clears the selection and any other out-of-range index is ignored.
+                if (value == -1 || (items != null && value >= 0 && value < items.Count))
+                {
+                    SetPendingSelection(value);
+                }
             }
         }
     }
@@ -1035,13 +1039,17 @@ public class ComboBox :
                 ?.GetProperty(DisplayMemberPath)
                 ?.GetValue(o, null) as string;
 
-            coreTextObject.RawText = display?.ToString();
+            SetDisplayedText(display?.ToString());
         }
         else
         {
-            coreTextObject.RawText = o?.ToString();
+            SetDisplayedText(o?.ToString());
         }
     }
+
+    // Through the TextInstance's SetProperty, like Label, so layout that depends on the text (a
+    // ComboBox sized to it, a sibling stacked after it) follows the change (#6736).
+    private void SetDisplayedText(string? value) => textComponent.SetProperty("Text", value);
 
     private void HandleListBoxItemPushed(object? sender, EventArgs args)
     {
