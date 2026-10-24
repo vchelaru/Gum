@@ -185,38 +185,76 @@ public class ToolInputBackgroundTests : BaseTestClass
         tool.ShouldBe(codeOnly, $"{componentName} {stateName}");
     }
 
-    // Visual review only: with GUM_SCREENSHOT_DIR set, writes 6754-iconusers-<theme>.png, a row of other Icon users,
-    // to compare before and after the ComboBox arrow's Icon ColorCategory states were added (#6754).
+    // Adding Icon ColorCategory states for the ComboBox arrow leaves every other Icon user unchanged: each sprite's
+    // color and visibility in every state matches IconUserColors.txt, recorded from the templates before #6754.
+    // Set GUM_RECORD_ICON_USERS=1 to rewrite the reference.
     [Theory]
-    [InlineData("FormsTemplate", "Controls/", "standard", "CheckBox,RadioButton,ButtonClose,MenuItem,ExpanderStandard,ButtonIcon")]
-    [InlineData("FormsThemes/Editor", "Editor/Controls/", "editor", "CheckBox,RadioButton,ButtonClose,MenuItem,Expander")]
-    public void IconUsers_Screenshot(string templateFolder, string prefix, string themeName, string components)
+    [InlineData("FormsTemplate", "Controls/", "CheckBox,RadioButton,ButtonClose,MenuItem,ExpanderStandard,ButtonIcon")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/", "CheckBox,RadioButton,ButtonClose,MenuItem,Expander,ButtonIcon")]
+    public void IconUsers_EveryState_MatchRecordedColors(string templateFolder, string prefix, string components,
+        [System.Runtime.CompilerServices.CallerFilePath] string sourceFile = "")
     {
-        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GUM_SCREENSHOT_DIR")))
+        List<string> lines = new();
+        MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
         {
+            foreach (string name in components.Split(','))
+            {
+                ComponentSave component = ObjectFinder.Self.GetComponent(prefix + name).ShouldNotBeNull(prefix + name);
+                GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+                foreach (StateSaveCategory category in component.Categories)
+                {
+                    foreach (StateSave state in category.States)
+                    {
+                        visual.ApplyState(state);
+                        foreach (string sprite in DescribeSprites(visual, ""))
+                        {
+                            lines.Add($"{prefix}{name} {category.Name}.{state.Name} {sprite}");
+                        }
+                    }
+                }
+            }
+        });
+
+        string referencePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(sourceFile)!, "IconUserColors.txt");
+        string section = $"[{templateFolder}]";
+        List<string> reference = System.IO.File.Exists(referencePath) ? System.IO.File.ReadAllLines(referencePath).ToList() : new();
+        if (Environment.GetEnvironmentVariable("GUM_RECORD_ICON_USERS") == "1")
+        {
+            int at = reference.IndexOf(section);
+            if (at >= 0)
+            {
+                int next = reference.FindIndex(at + 1, l => l.StartsWith("["));
+                reference.RemoveRange(at, (next < 0 ? reference.Count : next) - at);
+            }
+            reference.Add(section);
+            reference.AddRange(lines);
+            System.IO.File.WriteAllLines(referencePath, reference);
             return;
         }
 
-        MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
+        int sectionStart = reference.IndexOf(section);
+        sectionStart.ShouldBeGreaterThanOrEqualTo(0, referencePath);
+        int sectionEnd = reference.FindIndex(sectionStart + 1, l => l.StartsWith("["));
+        List<string> expected = reference.Skip(sectionStart + 1).Take((sectionEnd < 0 ? reference.Count : sectionEnd) - sectionStart - 1).ToList();
+        lines.Count.ShouldBeGreaterThan(0);
+        lines.ShouldBe(expected);
+    }
+
+    private static IEnumerable<string> DescribeSprites(GraphicalUiElement parent, string path)
+    {
+        foreach (GraphicalUiElement child in parent.Children?.OfType<GraphicalUiElement>() ?? Enumerable.Empty<GraphicalUiElement>())
         {
-            List<GraphicalUiElement> added = new();
-            string[] names = components.Split(',');
-            for (int i = 0; i < names.Length; i++)
+            string childPath = path + "/" + child.Name;
+            if (child.RenderableComponent is global::RenderingLibrary.Graphics.Sprite sprite)
             {
-                GraphicalUiElement visual = ObjectFinder.Self.GetComponent(prefix + names[i]).ShouldNotBeNull(names[i])
-                    .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-                visual.X = 8 + i * 136;
-                visual.Y = 8;
-                visual.AddToManagers(SystemManagers.Default, null);
-                added.Add(visual);
+                System.Drawing.Color c = sprite.Color;
+                yield return $"{childPath} {c.R},{c.G},{c.B},{c.A} visible={child.Visible}";
             }
-            MenuFocusRenderTests.Capture(SystemManagers.Default.Renderer.GraphicsDevice!, Microsoft.Xna.Framework.Color.Black,
-                $"6754-iconusers-{themeName}.png", 832, 96);
-            foreach (GraphicalUiElement visual in added)
+            foreach (string nested in DescribeSprites(child, childPath))
             {
-                visual.RemoveFromManagers();
+                yield return nested;
             }
-        });
+        }
     }
 
     // The fill comes from the Styles InputBackground swatch, so recoloring the swatch recolors the control.
