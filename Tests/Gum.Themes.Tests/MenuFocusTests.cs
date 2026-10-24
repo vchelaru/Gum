@@ -38,8 +38,8 @@ public class MenuFocusTests
             Menu menu = new();
             MenuItem file = new() { Header = "File" };
             MenuItem edit = new() { Header = "Edit" };
-            menu.Items.Add(file);
-            menu.Items.Add(edit);
+            menu.Items!.Add(file);
+            menu.Items!.Add(edit);
             string unfocused = MenuChromeVisibility(menu.Visual);
 
             menu.IsFocused = true;

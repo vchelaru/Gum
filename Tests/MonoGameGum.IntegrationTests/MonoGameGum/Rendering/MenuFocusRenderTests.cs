@@ -167,12 +167,12 @@ public class MenuFocusRenderTests : BaseTestClass
             menu.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
             MenuItem file = Item("File");
             MenuItem newItem = Item("New");
-            file.Items.Add(newItem);
-            file.Items.Add(Item("Open"));
-            file.Items.Add(Item("Save"));
-            menu.Items.Add(file);
-            menu.Items.Add(Item("Edit"));
-            menu.Items.Add(Item("View"));
+            file.Items!.Add(newItem);
+            file.Items!.Add(Item("Open"));
+            file.Items!.Add(Item("Save"));
+            menu.Items!.Add(file);
+            menu.Items!.Add(Item("Edit"));
+            menu.Items!.Add(Item("View"));
             menu.AddToRoot();
             menu.Visual.UpdateLayout();
 
@@ -181,11 +181,10 @@ public class MenuFocusRenderTests : BaseTestClass
             // The menu sizes to its items, so its own fill sits behind them.
             menu.Visual.GetAbsoluteHeight().ShouldBeGreaterThanOrEqualTo(file.Visual.GetAbsoluteHeight(), pngPrefix);
 
-
             menu.IsFocused = true;
             file.IsHighlighted.ShouldBeTrue(pngPrefix);
             XnaColor[] focused = Capture(game, background, $"{pngPrefix}-focused.png");
-            var headerText = (global::RenderingLibrary.Graphics.Text)file.Visual.GetGraphicalUiElementByName("TextInstance")!.RenderableComponent;
+            var headerText = (file.Visual.GetGraphicalUiElementByName("TextInstance")?.RenderableComponent as global::RenderingLibrary.Graphics.Text).ShouldNotBeNull(pngPrefix);
             XnaColor highlightedHeaderColor = new XnaColor(headerText.Red, headerText.Green, headerText.Blue);
 
             int left = (int)file.Visual.AbsoluteLeft - 2;
