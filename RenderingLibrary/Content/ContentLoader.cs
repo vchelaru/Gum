@@ -178,7 +178,7 @@ public sealed class ContentLoader : IContentLoader
         if (rawTexture != null)
         {
             var rawTexture2D = new Texture2D(device, header.Width, header.Height, false, SurfaceFormat.Color);
-            rawTexture2D.SetData(0, null, rawTexture, Gum.Bundle.GumRawTexture.HeaderLength, (int)header.PixelByteCount);
+            rawTexture2D.SetData(rawTexture);
             isProcessedOnLoad = true;
             return rawTexture2D;
         }

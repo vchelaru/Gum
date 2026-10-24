@@ -125,6 +125,14 @@ public static class GumRawTexture
     /// </summary>
     public static GumRawTextureHeader ReadHeader(ReadOnlySpan<byte> data)
     {
+        GumRawTextureHeader header = ParseHeader(data);
+        ValidatePixelByteCount(header, data.Length - HeaderLength);
+        return header;
+    }
+
+    // Validates the HeaderLength bytes at the start of data; the pixels after them are not checked.
+    private static GumRawTextureHeader ParseHeader(ReadOnlySpan<byte> data)
+    {
         if (!IsRawTexture(data))
         {
             throw new GumBundleFormatException("Texture data does not begin with the raw texture magic bytes.");
@@ -155,16 +163,18 @@ public static class GumRawTexture
             throw new GumBundleFormatException($"Raw texture size {width}x{height} is not valid.");
         }
 
-        GumRawTextureHeader header = new GumRawTextureHeader(width, height, pixelFormat,
+        return new GumRawTextureHeader(width, height, pixelFormat,
             isPremultiplied: (data[6] & PremultipliedFlag) != 0);
-        long available = data.Length - HeaderLength;
+    }
+
+    private static void ValidatePixelByteCount(GumRawTextureHeader header, long available)
+    {
         if (available != header.PixelByteCount)
         {
             string problem = available < header.PixelByteCount ? "truncated" : "longer than its size";
             throw new GumBundleFormatException(
-                $"Raw texture pixel data is {problem}: a {width}x{height} texture needs {header.PixelByteCount} bytes, got {available}.");
+                $"Raw texture pixel data is {problem}: a {header.Width}x{header.Height} texture needs {header.PixelByteCount} bytes, got {available}.");
         }
-        return header;
     }
 
     /// <summary>
@@ -192,12 +202,20 @@ public static class GumRawTexture
         }
 
         GumRawTextureHeader header = ReadHeader(entry);
+        ConvertPixels(entry.AsSpan(HeaderLength), header, entryName, packageName,
+            runtimeUsesPremultipliedAlpha, runtimeAlphaReason, bleedTransparentEdges);
+        return header;
+    }
+
+    // Converts pixels, in place, from the package's alpha mode to the runtime's; see PrepareForRuntime.
+    private static void ConvertPixels(Span<byte> pixels, GumRawTextureHeader header, string entryName,
+        string? packageName, bool runtimeUsesPremultipliedAlpha, string runtimeAlphaReason, bool bleedTransparentEdges)
+    {
         if (header.IsPremultiplied == runtimeUsesPremultipliedAlpha)
         {
-            return header;
+            return;
         }
 
-        Span<byte> pixels = entry.AsSpan(HeaderLength);
         if (runtimeUsesPremultipliedAlpha)
         {
             RgbaPixels.Premultiply(pixels);
@@ -212,7 +230,6 @@ public static class GumRawTexture
         }
 
         WarnOnce(packageName ?? entryName, header.IsPremultiplied, runtimeAlphaReason, entryName);
-        return header;
     }
 
     /// <summary>
@@ -233,10 +250,11 @@ public static class GumRawTexture
 
     /// <summary>
     /// The texture loaders' shared entry point. When <paramref name="stream"/> holds a raw texture,
-    /// reads all of it, converts it with <see cref="PrepareForRuntime"/> (naming the package it came
-    /// from in the warning) and returns the whole entry, header included, with the pixels starting at
-    /// <see cref="HeaderLength"/>. Otherwise returns null with the stream rewound, so the caller
-    /// decodes it as an encoded image.
+    /// reads its header, then its pixels into an array of exactly
+    /// <see cref="GumRawTextureHeader.PixelByteCount"/> bytes, converts them in place as
+    /// <see cref="PrepareForRuntime"/> does (naming the package it came from in the warning) and
+    /// returns that array, so every runtime uploads from index 0. Otherwise returns null with the
+    /// stream rewound, so the caller decodes it as an encoded image.
     /// </summary>
     /// <param name="stream">A seekable stream; see <see cref="EnsureSeekable"/>.</param>
     /// <param name="entryName">The texture's path, named in the warning.</param>
@@ -256,16 +274,7 @@ public static class GumRawTexture
         header = default;
         long start = stream.Position;
         byte[] prefix = new byte[MagicBytes.Length];
-        int read = 0;
-        while (read < prefix.Length)
-        {
-            int n = stream.Read(prefix, read, prefix.Length - read);
-            if (n <= 0)
-            {
-                break;
-            }
-            read += n;
-        }
+        int read = ReadFully(stream, prefix);
         stream.Position = start;
 
         if (!IsRawTexture(prefix.AsSpan(0, read)))
@@ -273,12 +282,39 @@ public static class GumRawTexture
             return null;
         }
 
-        MemoryStream all = new MemoryStream();
-        stream.CopyTo(all);
-        byte[] entry = all.ToArray();
-        header = PrepareForRuntime(entry, entryName, (stream as GumBundleEntryStream)?.PackagePath,
+        byte[] headerBytes = new byte[HeaderLength];
+        int headerRead = ReadFully(stream, headerBytes);
+        header = ParseHeader(headerBytes.AsSpan(0, headerRead));
+        if (header.PixelByteCount > int.MaxValue)
+        {
+            throw new GumBundleFormatException($"Raw texture size {header.Width}x{header.Height} is too large to load.");
+        }
+
+        byte[] pixels = new byte[header.PixelByteCount];
+        int pixelsRead = ReadFully(stream, pixels);
+        // A byte past the pixels means the entry is longer than its header says.
+        bool hasTrailingByte = pixelsRead == pixels.Length && stream.ReadByte() >= 0;
+        ValidatePixelByteCount(header, hasTrailingByte ? pixelsRead + 1L : pixelsRead);
+
+        ConvertPixels(pixels, header, entryName, (stream as GumBundleEntryStream)?.PackagePath,
             runtimeUsesPremultipliedAlpha, runtimeAlphaReason, bleedTransparentEdges);
-        return entry;
+        return pixels;
+    }
+
+    // Reads until buffer is full or the stream ends; returns how many bytes arrived.
+    private static int ReadFully(Stream stream, byte[] buffer)
+    {
+        int read = 0;
+        while (read < buffer.Length)
+        {
+            int n = stream.Read(buffer, read, buffer.Length - read);
+            if (n <= 0)
+            {
+                break;
+            }
+            read += n;
+        }
+        return read;
     }
 
     private static void WarnOnce(string source, bool packageIsPremultiplied, string runtimeAlphaReason, string entryName)

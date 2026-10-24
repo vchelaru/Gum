@@ -223,21 +223,38 @@ public class GumRawTextureTests : IDisposable
     }
 
     [Fact]
-    public void ReadForRuntime_ShouldReturnTheConvertedEntry_FromANonSeekableStream()
+    public void ReadForRuntime_ShouldReturnOnlyTheConvertedPixels_FromANonSeekableStream()
     {
-        byte[] entry = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 255, 128, 0, 128 }, isPremultiplied: false);
+        byte[] entry = GumRawTexture.Encode(width: 2, height: 1, new byte[] { 255, 128, 0, 128, 9, 8, 7, 255 }, isPremultiplied: false);
         using NonSeekableStream stream = new NonSeekableStream(entry);
 
-        byte[]? result = GumRawTexture.ReadForRuntime(GumRawTexture.EnsureSeekable(stream), "a.png",
+        byte[]? pixels = GumRawTexture.ReadForRuntime(GumRawTexture.EnsureSeekable(stream), "a.png",
             runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false,
             out GumRawTextureHeader header);
 
-        result.ShouldNotBeNull();
-        header.Width.ShouldBe(1);
-        result.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[] { 128, 64, 0, 128 });
+        pixels.ShouldBe(new byte[] { 128, 64, 0, 128, 9, 8, 7, 255 });
+        header.Width.ShouldBe(2);
+        header.Height.ShouldBe(1);
+        header.IsPremultiplied.ShouldBeFalse();
         _warnings.Count.ShouldBe(1);
         Should.Throw<ArgumentException>(() => GumRawTexture.ReadForRuntime(stream, "a.png",
             runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false, out _));
+    }
+
+    [Theory]
+    [InlineData(-1, "truncated")]
+    [InlineData(1, "longer than its size")]
+    public void ReadForRuntime_ShouldThrow_WhenPixelDataLengthDoesNotMatchSize(int extraBytes, string expectedMessage)
+    {
+        byte[] entry = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 1, 2, 3, 4 }, isPremultiplied: false);
+        byte[] resized = new byte[entry.Length + extraBytes];
+        Array.Copy(entry, resized, Math.Min(entry.Length, resized.Length));
+        using System.IO.MemoryStream stream = new System.IO.MemoryStream(resized);
+
+        GumBundleFormatException exception = Should.Throw<GumBundleFormatException>(() => GumRawTexture.ReadForRuntime(stream, "a.png",
+            runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false, out _));
+
+        exception.Message.ShouldContain(expectedMessage);
     }
 
     private sealed class NonSeekableStream : System.IO.MemoryStream

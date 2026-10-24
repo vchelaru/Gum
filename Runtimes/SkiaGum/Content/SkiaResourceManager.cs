@@ -220,8 +220,7 @@ public static class SkiaResourceManager
         }
 
         SKBitmap bitmap = new SKBitmap(new SKImageInfo(header.Width, header.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
-        System.Runtime.InteropServices.Marshal.Copy(rawTexture, global::Gum.Bundle.GumRawTexture.HeaderLength,
-            bitmap.GetPixels(), (int)header.PixelByteCount);
+        System.Runtime.InteropServices.Marshal.Copy(rawTexture, 0, bitmap.GetPixels(), rawTexture.Length);
         return bitmap;
     }
 

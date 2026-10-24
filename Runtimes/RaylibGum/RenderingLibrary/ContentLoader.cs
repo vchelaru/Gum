@@ -299,8 +299,7 @@ public sealed class ContentLoader : IContentLoader
                 out Gum.Bundle.GumRawTextureHeader header);
             if (rawTexture != null)
             {
-                Texture2D rawTexture2D = UploadRgbaTexture(rawTexture, Gum.Bundle.GumRawTexture.HeaderLength,
-                    header.Width, header.Height);
+                Texture2D rawTexture2D = UploadRgbaTexture(rawTexture, header.Width, header.Height);
                 TextureFilterApplier(rawTexture2D, DefaultTextureFilter);
                 return rawTexture2D;
             }
@@ -445,7 +444,7 @@ public sealed class ContentLoader : IContentLoader
 
         BitmapFontAtlasMerger.Layout layout = BitmapFontAtlasMerger.ComputeLayout(pageWidths, pageHeights);
         byte[] atlasPixels = BitmapFontAtlasMerger.MergeRgba(pagePixels, pageWidths, pageHeights, layout);
-        Texture2D atlasTexture = UploadRgbaTexture(atlasPixels, 0, layout.Width, layout.Height);
+        Texture2D atlasTexture = UploadRgbaTexture(atlasPixels, layout.Width, layout.Height);
         return BuildFont(parsedFontFile, atlasTexture, layout.PageYOffsets);
     }
 
@@ -466,7 +465,7 @@ public sealed class ContentLoader : IContentLoader
             {
                 width = header.Width;
                 height = header.Height;
-                return rawTexture.AsSpan(Gum.Bundle.GumRawTexture.HeaderLength).ToArray();
+                return rawTexture;
             }
 
             using var memoryStream = new MemoryStream();
@@ -494,10 +493,10 @@ public sealed class ContentLoader : IContentLoader
         }
     }
 
-    // Uploads width * height RGBA texels starting at pixels[offset].
-    private static unsafe Texture2D UploadRgbaTexture(byte[] pixels, int offset, int width, int height)
+    // Uploads width * height RGBA texels.
+    private static unsafe Texture2D UploadRgbaTexture(byte[] pixels, int width, int height)
     {
-        fixed (byte* pixelPointer = &pixels[offset])
+        fixed (byte* pixelPointer = pixels)
         {
             Image image = new Image
             {
