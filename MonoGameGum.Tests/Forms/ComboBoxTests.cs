@@ -1470,4 +1470,22 @@ public  class ComboBoxTests : BaseTestClass
 
         selectionChangedCount.ShouldBe(0);
     }
+
+    [Fact]
+    public void ItemsReplace_OfSelectedItem_ClearsSelectionAndText()
+    {
+        ComboBox comboBox = new();
+        comboBox.AddToRoot();
+        ObservableCollection<object> items = new(new object[] { "A", "B", "C" });
+        comboBox.Items = items;
+        comboBox.SelectedObject = "B";
+        comboBox.Text.ShouldBe("B");
+
+        items[1] = "X";
+
+        comboBox.SelectedObject.ShouldBeNull();
+        comboBox.SelectedIndex.ShouldBe(-1);
+        comboBox.Text.ShouldBeNullOrEmpty();
+        comboBox.ListBox.ListBoxItems.Select(row => row.DataObject).ShouldBe(new object[] { "A", "X", "C" });
+    }
 }

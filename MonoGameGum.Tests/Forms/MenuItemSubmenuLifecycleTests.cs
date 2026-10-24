@@ -454,4 +454,21 @@ public class MenuItemSubmenuLifecycleTests : BaseTestClass
     }
 
     #endregion
+
+    [Fact]
+    public void MenuItemsReplace_OfOpenTopLevelItem_ClosesItsSubmenu()
+    {
+        Menu menu = new();
+        Gum.GumService.Default.Root.Children!.Add(menu.Visual);
+        MenuItem file = new() { Header = "File" };
+        menu.Items!.Add(file);
+        file.Items!.Add(new MenuItem { Header = "A" });
+        file.IsSelected = true;
+        file.IsPopupVisible.ShouldBeTrue();
+
+        menu.Items[0] = new MenuItem { Header = "Edit" };
+
+        file.IsPopupVisible.ShouldBeFalse();
+        file.Visual.Parent.ShouldBeNull();
+    }
 }

@@ -166,6 +166,26 @@ public partial class GraphicalUiElement
         }
     }
 
+    /// <summary>
+    /// Runs the layout and font work deferred on this element and its descendants while
+    /// <see cref="IsAllLayoutSuspended"/> was set, without ending any <see cref="SuspendLayout"/>
+    /// a caller set on them. A suspended element keeps its pending work, and its descendants' work,
+    /// for its own <see cref="ResumeLayout"/>.
+    /// </summary>
+    internal void ResumeDeferredLayoutKeepingSuspensions()
+    {
+        if (IsAllLayoutSuspended)
+        {
+            return;
+        }
+        if (mIsLayoutSuspended)
+        {
+            resumeDescendantsOnResume = true;
+            return;
+        }
+        ResumeLayoutUpdateIfDirtyRecursive(skipSuspendedChildren: true);
+    }
+
     private void ClearLayoutSuspensionRecursive()
     {
         mIsLayoutSuspended = false;

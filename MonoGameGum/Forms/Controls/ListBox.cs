@@ -1412,7 +1412,9 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         if(_suppressCollectionChangedToBase == false)
         {
-            _isAddingFromItemsCollection = e.Action == NotifyCollectionChangedAction.Add;
+            // Every row the panel gains while Items changes (Add, Replace, Reset rebuild) was made for an
+            // item already in Items, so none of them is added back to Items as a self-backed row.
+            _isAddingFromItemsCollection = true;
             try
             {
                 base.HandleItemsCollectionChanged(sender, e);

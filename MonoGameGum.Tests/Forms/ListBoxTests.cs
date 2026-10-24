@@ -2741,4 +2741,21 @@ public class ListBoxTests : BaseTestClass
 
         wasRaised.ShouldBeTrue();
     }
+
+    [Fact]
+    public void ItemsReplace_OfSelectedItem_LeavesNoSelectedIndexOrRow()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        ObservableCollection<object> items = new(new object[] { "A", "B", "C" });
+        listBox.Items = items;
+        listBox.SelectedObject = "B";
+
+        items[1] = "X";
+
+        listBox.SelectedIndex.ShouldBe(-1);
+        listBox.ListBoxItems.Any(row => row.IsSelected).ShouldBeFalse();
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.Items.Count.ShouldBe(3);
+    }
 }
