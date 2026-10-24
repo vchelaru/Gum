@@ -190,13 +190,16 @@ public partial class GraphicalUiElement
                         null);
                 }
 
-                if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid() || GetIfParentWidthHeightDependOnChildren()))
+                // A hidden or suspended element skips its own layout, so its climb never reaches the parent,
+                // which still has to re-measure for the changed contribution (#6749). Update the parent directly.
+                // A visible element that is not suspended already reached Ratio siblings through the climb above.
+                // #3066: gate the climb on the parent's size delta so a toggle that doesn't change the item's
+                // size doesn't relayout every sibling in a stacking parent.
+                if ((!absoluteVisible || mIsLayoutSuspended) &&
+                    (GetIfParentStacks() || GetIfParentIsAutoGrid() || GetIfParentWidthHeightDependOnChildren() ||
+                        (mIsLayoutSuspended && GetIfParentHasRatioChildren())))
                 {
-                    // This updates the parent right away. #3066: gate the climb on the parent's size
-                    // delta so hiding a descendant that doesn't change the item's size doesn't relayout
-                    // every sibling in a stacking parent.
                     Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null, gateClimbOnSizeChange: true);
-
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
                 ReportTypedPropertyChanged("Visible", value);

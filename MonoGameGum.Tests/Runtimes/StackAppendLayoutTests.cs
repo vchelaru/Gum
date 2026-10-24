@@ -138,6 +138,85 @@ public class StackAppendLayoutTests : BaseTestClass
         ratio.AbsoluteWidth.ShouldBe(300);
     }
 
+    [Fact]
+    public void Show_ShouldRestoreRatioSibling_WhenChildWasAppendedWhileHidden()
+    {
+        // Append probe seed 121, cut down (#6749): hiding the stack collapses its content-sized parent, so the
+        // Ratio sibling takes the whole root; showing it must grow the parent back and shrink the Ratio sibling.
+        ContainerRuntime root = new() { Width = 400, Height = 400, WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute, ChildrenLayout = ChildrenLayout.LeftToRightStack };
+        ContainerRuntime ratio = new() { Width = 1, WidthUnits = DimensionUnitType.Ratio, Height = 50, HeightUnits = DimensionUnitType.Absolute };
+        ContainerRuntime parent = new() { Width = 0, WidthUnits = DimensionUnitType.RelativeToChildren, Height = 0, HeightUnits = DimensionUnitType.RelativeToChildren };
+        ContainerRuntime stack = new() { Width = 180, Height = 150, WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute, ChildrenLayout = ChildrenLayout.TopToBottomStack };
+        root.AddChild(ratio);
+        root.AddChild(parent);
+        parent.AddChild(stack);
+        parent.AbsoluteLeft.ShouldBe(220);
+
+        stack.Visible = false;
+        stack.AddChild(new ContainerRuntime { Width = 10, Height = 10, WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute });
+        stack.Visible = true;
+
+        ratio.AbsoluteWidth.ShouldBe(220);
+        parent.AbsoluteLeft.ShouldBe(220);
+        parent.AbsoluteWidth.ShouldBe(180);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Show_ShouldLayOutContentSizedParent_WhenShownChildIsStillSuspended(bool appendWhileHidden)
+    {
+        // Append probe seeds 16, 121, 153, 165, 200 and 201, cut down (#6749): a recursive suspend and a
+        // non-recursive resume leave the stack suspended. Hiding it lays out its parent at once; showing it
+        // has to as well, or the parent stays collapsed while the stack draws.
+        ContainerRuntime root = new() { Width = 400, Height = 400, WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute, ChildrenLayout = ChildrenLayout.LeftToRightStack };
+        ContainerRuntime ratio = new() { Width = 1, WidthUnits = DimensionUnitType.Ratio, Height = 50, HeightUnits = DimensionUnitType.Absolute };
+        ContainerRuntime parent = new() { Width = 0, WidthUnits = DimensionUnitType.RelativeToChildren, Height = 0, HeightUnits = DimensionUnitType.RelativeToChildren };
+        ContainerRuntime stack = new() { Width = 180, Height = 150, WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute, ChildrenLayout = ChildrenLayout.TopToBottomStack };
+        root.AddChild(ratio);
+        root.AddChild(parent);
+        parent.AddChild(stack);
+        parent.SuspendLayout(recursive: true);
+        parent.ResumeLayout(recursive: false);
+
+        stack.Visible = false;
+        parent.AbsoluteWidth.ShouldBe(0);
+        ratio.AbsoluteWidth.ShouldBe(400);
+        if (appendWhileHidden)
+        {
+            stack.AddChild(new ContainerRuntime { Width = 10, Height = 10, WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute });
+        }
+        stack.Visible = true;
+
+        parent.AbsoluteWidth.ShouldBe(180);
+        parent.AbsoluteHeight.ShouldBe(150);
+        ratio.AbsoluteWidth.ShouldBe(220);
+        parent.AbsoluteLeft.ShouldBe(220);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Visible_ShouldResizeRatioSibling_WhenToggledChildIsSuspended(bool show)
+    {
+        // Same class as above in a parent that does not stack or size from its children: only a Ratio
+        // sibling reads the toggled child, so the parent has to lay out while the child stays suspended.
+        ContainerRuntime root = new() { Width = 300, Height = 200, WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute };
+        ContainerRuntime ratio = new() { Width = 1, WidthUnits = DimensionUnitType.Ratio, Height = 12, HeightUnits = DimensionUnitType.Absolute };
+        ContainerRuntime fixedWidth = new() { Width = 55, WidthUnits = DimensionUnitType.Absolute, Height = 4, HeightUnits = DimensionUnitType.Absolute };
+        root.AddChild(ratio);
+        root.AddChild(fixedWidth);
+        if (show)
+        {
+            fixedWidth.Visible = false;
+        }
+        fixedWidth.SuspendLayout();
+
+        fixedWidth.Visible = show;
+
+        ratio.AbsoluteWidth.ShouldBe(show ? 245 : 300);
+    }
+
     public static IEnumerable<object[]> Scenarios()
     {
         foreach (bool fixedSize in new[] { true, false })
