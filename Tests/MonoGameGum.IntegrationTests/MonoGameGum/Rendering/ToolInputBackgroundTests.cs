@@ -165,6 +165,85 @@ public class ToolInputBackgroundTests : BaseTestClass
         (tool.R, tool.G, tool.B).ShouldBe(((byte)200, (byte)10, (byte)20), componentName);
     }
 
+    // Each per-state swatch recolors exactly the states that read it, and no others (#6746).
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/ListBox", "Styles", "InputBackgroundDark", "ListBoxCategoryState", "Disabled,DisabledFocused")]
+    [InlineData("FormsTemplate", "Controls/TextBox", "Styles", "InputBackgroundDark", "TextBoxCategoryState", "Disabled")]
+    [InlineData("FormsTemplate", "Controls/TextBox", "Styles", "InputBackgroundLight", "TextBoxCategoryState", "Highlighted")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ListBox", "Editor/Styles", "PanelBackgroundDark", "ListBoxCategoryState", "Disabled,DisabledFocused")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/TextBox", "Editor/Styles", "RecessedBackgroundDark", "TextBoxCategoryState", "Disabled")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/TextBox", "Editor/Styles", "RecessedBackgroundLight", "TextBoxCategoryState", "Highlighted")]
+    public void ToolBackground_StateSwatch_RecolorsOnlyItsStates(string templateFolder, string componentName, string stylesName,
+        string swatch, string categoryState, string recoloredStates)
+    {
+        HashSet<string> expectedRecolored = new(recoloredStates.Split(','));
+        string[] states = categoryState == "ListBoxCategoryState" ? ListBoxStates : TextBoxStates;
+
+        foreach (string state in states)
+        {
+            BackgroundLook tool = MeasureTool(templateFolder, componentName,
+                beforeCreate: () =>
+                {
+                    GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+                    StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
+                    styles.SetValue(swatch + ".FillRed", 200, "int");
+                    styles.SetValue(swatch + ".FillGreen", 10, "int");
+                    styles.SetValue(swatch + ".FillBlue", 20, "int");
+                    project.ApplyAllVariableReferences();
+                },
+                afterCreate: control => control.Visual.SetProperty(categoryState, state));
+
+            bool isRecolored = (tool.R, tool.G, tool.B) == ((byte)200, (byte)10, (byte)20);
+            isRecolored.ShouldBe(expectedRecolored.Contains(state), $"{componentName} {state} with {swatch} recolored");
+        }
+    }
+
+    // Re-importing only the new ListBox into an older project keeps the project's own Styles (import is file-level
+    // Skip/Overwrite), which has no InputBackgroundDark swatch. The state keeps its saved fill and nothing reports
+    // the missing swatch; only recoloring that state waits until the swatch exists (#6746).
+    [Fact]
+    public void ToolListBox_StylesWithoutDarkSwatch_KeepsSavedDisabledFill()
+    {
+        BackgroundLook? look = null;
+        List<string> errors = new();
+        void OnError(string message) => errors.Add(message);
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += OnError;
+        try
+        {
+            MenuFocusRenderTests.WithToolProject("FormsTemplate", mutateProject: RemoveSwatch, () =>
+            {
+                GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+                project.Components.Single(c => c.Name == "Styles").Instances.ShouldNotContain(i => i.Name == "InputBackgroundDark");
+                project.ApplyAllVariableReferences();
+                ComponentSave component = ObjectFinder.Self.GetComponent("Controls/ListBox").ShouldNotBeNull();
+                GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+                FrameworkElement control = (FrameworkElement)((InteractiveGue)visual).FormsControlAsObject!;
+                control.Visual.SetProperty("ListBoxCategoryState", "Disabled");
+                look = Measure(control);
+            });
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= OnError;
+        }
+
+        BackgroundLook result = look.ShouldNotBeNull();
+        (result.R, result.G, result.B).ShouldBe(((byte)48, (byte)48, (byte)48));
+        errors.ShouldNotContain(e => e.Contains("InputBackgroundDark"));
+
+        static void RemoveSwatch(string projectDirectory)
+        {
+            string stylesPath = System.IO.Path.Combine(projectDirectory, "Components", "Styles.gucx");
+            System.Xml.Linq.XDocument document = System.Xml.Linq.XDocument.Load(stylesPath);
+            foreach (System.Xml.Linq.XElement element in document.Descendants()
+                .Where(e => ((string?)e.Attribute("Name"))?.StartsWith("InputBackgroundDark") == true).ToList())
+            {
+                element.Remove();
+            }
+            document.Save(stylesPath);
+        }
+    }
+
     private static BackgroundLook MeasureTool(string templateFolder, string componentName, Action? beforeCreate = null,
         Action<FrameworkElement>? afterCreate = null)
     {
