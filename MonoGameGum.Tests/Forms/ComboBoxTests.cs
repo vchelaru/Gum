@@ -1198,19 +1198,23 @@ public  class ComboBoxTests : BaseTestClass
     }
 
     // #6736 keeps #6712's rule: layout a user suspended stays pending through a bulk change until
-    // the user's ResumeLayout.
-    [Fact]
-    public void BulkItemsChange_UnderUserSuspendedAncestor_WaitsForResumeLayout()
+    // the user's ResumeLayout, for the suspended element and for what is under it.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void BulkItemsChange_UnderUserSuspension_WaitsForResumeLayout(bool recursive)
     {
         (ContainerRuntime stack, ComboBox comboBox, ContainerRuntime sibling) = CreateTextSizedComboBoxInStack();
         stack.UpdateLayout();
+        float comboWidthBefore = comboBox.Visual.AbsoluteWidth;
         float siblingXBefore = sibling.AbsoluteLeft;
-        stack.SuspendLayout(recursive: true);
+        comboBox.Visual.SuspendLayout(recursive);
 
         comboBox.Items!.Clear();
 
+        comboBox.Visual.AbsoluteWidth.ShouldBe(comboWidthBefore);
         sibling.AbsoluteLeft.ShouldBe(siblingXBefore);
-        stack.ResumeLayout(recursive: true);
+        comboBox.Visual.ResumeLayout(recursive);
         float siblingXAfterResume = sibling.AbsoluteLeft;
         stack.UpdateLayout();
         siblingXAfterResume.ShouldBeLessThan(siblingXBefore);
