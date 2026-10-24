@@ -173,23 +173,10 @@ public class MenuFocusRenderTests : BaseTestClass
             () => ShouldBeClose(tool.FocusedRowFill, codeOnly.FocusedRowFill, $"{themeName}: focused item fill", tolerance: 2));
     }
 
-    // Left out: Standard's popup is its ScrollViewer component, which fills with the DarkGray swatch
-    // (70, 70, 80) where the V3 ScrollViewerVisual uses InputBackground (74, 74, 74).
-    public static IEnumerable<object[]> SubmenuPopupPairs()
-    {
-        HashSet<string> differing = new() { "standard" };
-        foreach (object[] pair in Pairs())
-        {
-            if (!differing.Contains((string)pair[0]))
-            {
-                yield return pair;
-            }
-        }
-    }
-
-    // The open submenu popup draws the theme's surface and border, and its rows' text, the same in both (#6720).
+    // The open submenu popup draws the theme's surface and border, and its rows' text, the same in both
+    // (#6720). Standard's popup is its ScrollViewer component (#6740).
     [Theory]
-    [MemberData(nameof(SubmenuPopupPairs))]
+    [MemberData(nameof(Pairs))]
     public void Tool_SubmenuPopup_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
         MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
@@ -388,7 +375,7 @@ public class MenuFocusRenderTests : BaseTestClass
         return (file, recent);
     }
 
-    private static void WithToolProject(string templateFolder, Action<string>? mutateProject, Action body)
+    internal static void WithToolProject(string templateFolder, Action<string>? mutateProject, Action body)
     {
         string root = Path.Combine(Path.GetTempPath(), "GumMenuFocus_" + Guid.NewGuid().ToString("N"));
         Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
@@ -938,7 +925,7 @@ public class MenuFocusRenderTests : BaseTestClass
     }
 
     // Gum on the V3 defaults, or on a tool project when a .gumx is given, plus the shape renderer.
-    private sealed class MenuLease : SharedGameLease
+    internal sealed class MenuLease : SharedGameLease
     {
         public MenuLease(string? gumxPath)
         {
