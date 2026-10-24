@@ -41,6 +41,41 @@ public class MenuVisual : InteractiveGue
     public ContainerRuntime InnerPanelInstance { get; private set; }
 
     /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
+    public NineSliceRuntime FocusedIndicator { get; private set; }
+
+    public class MenuCategoryStates
+    {
+        public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
+        public StateSave Disabled { get; set; } = new StateSave() { Name = FrameworkElement.DisabledStateName };
+        public StateSave DisabledFocused { get; set; } = new StateSave() { Name = FrameworkElement.DisabledFocusedStateName };
+        public StateSave Focused { get; set; } = new StateSave() { Name = FrameworkElement.FocusedStateName };
+    }
+
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new MenuCategoryStates States;
+
+    Color _focusedIndicatorColor;
+
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus. Setting this value
+    /// immediately updates the visual.
+    /// </summary>
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (!value.Equals(_focusedIndicatorColor))
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
+            }
+        }
+    }
+
+    /// <summary>
     /// The state category used by the Forms control to apply visual states.
     /// </summary>
     public StateSaveCategory MenuCategory { get; private set; }
@@ -118,11 +153,40 @@ public class MenuVisual : InteractiveGue
         InnerPanelInstance.StackSpacing = 2;
         this.AddChild(InnerPanelInstance);
 
+        FocusedIndicator = new NineSliceRuntime();
+        FocusedIndicator.Name = "FocusedIndicator";
+        FocusedIndicator.X = 0f;
+        FocusedIndicator.XUnits = GeneralUnitType.PixelsFromMiddle;
+        FocusedIndicator.Y = 2f;
+        FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
+        FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+        FocusedIndicator.YOrigin = VerticalAlignment.Top;
+        FocusedIndicator.Width = 0f;
+        FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        FocusedIndicator.Height = 2f;
+        FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        FocusedIndicator.Texture = uiSpriteSheetTexture;
+        FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
+        FocusedIndicator.Visible = false;
+        this.AddChild(FocusedIndicator);
+
         MenuCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-        MenuCategory.Name = Menu.MenuCategoryStateName;
+        // SetProperty("MenuCategoryState", ...) applies a state from the category named "MenuCategory".
+        MenuCategory.Name = "MenuCategory";
         this.AddCategory(MenuCategory);
 
+        States = new MenuCategoryStates();
+        MenuCategory.States.Add(States.Enabled);
+        States.Enabled.Apply = () => FocusedIndicator.Visible = false;
+        MenuCategory.States.Add(States.Disabled);
+        States.Disabled.Apply = () => FocusedIndicator.Visible = false;
+        MenuCategory.States.Add(States.DisabledFocused);
+        States.DisabledFocused.Apply = () => FocusedIndicator.Visible = true;
+        MenuCategory.States.Add(States.Focused);
+        States.Focused.Apply = () => FocusedIndicator.Visible = true;
+
         BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
         if (tryCreateFormsObject)
         {

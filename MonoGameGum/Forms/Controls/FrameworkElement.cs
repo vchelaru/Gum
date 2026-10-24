@@ -35,6 +35,7 @@ using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 // Duck-typed alias (same trick as GamepadButton/Buttons above) so gamepad-handling method
 // bodies can be written once instead of duplicated per platform under #if FRB.
 using GamePadForNavigation = FlatRedBall.Input.Xbox360GamePad;
+using RepositionDirections = FlatRedBall.Math.Geometry.RepositionDirections;
 namespace FlatRedBall.Forms.Controls;
 #else
 // Non-FRB branch. These Forms control files compile exactly once — into GumCommon
@@ -1346,6 +1347,42 @@ public class FrameworkElement : INotifyPropertyChanged
         return (Controls.GamepadNavigationMode.TabOrder, null);
     }
 #endif
+
+    /// <summary>
+    /// Reads one direction from the gamepad's D-pad or left stick, repeating while held, for controls that
+    /// move through their own items (ListBox, Menu). When several are held, Left wins over Up, Up over
+    /// Right, and Right over Down.
+    /// </summary>
+    internal static RepositionDirections? GetRepeatedGamepadDirection(GamePadForNavigation gamepad)
+    {
+        RepositionDirections? direction = null;
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down))
+        {
+            direction = RepositionDirections.Down;
+        }
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
+        {
+            direction = RepositionDirections.Right;
+        }
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up))
+        {
+            direction = RepositionDirections.Up;
+        }
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
+        {
+            direction = RepositionDirections.Left;
+        }
+
+        return direction;
+    }
 
     protected void HandleGamepadNavigation(GamePadForNavigation gamepad)
     {

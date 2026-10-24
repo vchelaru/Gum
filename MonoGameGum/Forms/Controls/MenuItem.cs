@@ -129,6 +129,12 @@ public class MenuItem : ItemsControl
             {
                 isHighlighted = value;
 
+                if (isHighlighted)
+                {
+                    // Mouse hover and keyboard navigation share one highlight per level.
+                    HighlightGained?.Invoke(this, EventArgs.Empty);
+                }
+
                 if(SelectOnHighlight && isHighlighted)
                 {
                     IsSelected = true;
@@ -139,6 +145,45 @@ public class MenuItem : ItemsControl
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Raised when this item becomes highlighted, by the cursor or by keyboard/gamepad navigation, so the
+    /// owner can clear the highlight of this item's siblings.
+    /// </summary>
+    internal event EventHandler? HighlightGained;
+
+    /// <summary>
+    /// Sets the highlight from keyboard or gamepad navigation. Unlike <see cref="IsHighlighted"/>, this
+    /// never opens the submenu (SelectOnHighlight is for hover switching only), and it shows the
+    /// Highlighted state even though the cursor did not move.
+    /// </summary>
+    internal void SetHighlightFromNavigation(bool value)
+    {
+        if (isHighlighted == value)
+        {
+            return;
+        }
+        isHighlighted = value;
+        if (isHighlighted)
+        {
+            HighlightGained?.Invoke(this, EventArgs.Empty);
+        }
+        UpdateState(force: true);
+    }
+
+    /// <summary>
+    /// The MenuItems in the open submenu, in display order. Empty while the submenu is closed.
+    /// </summary>
+    internal IReadOnlyList<MenuItem> OpenSubItems => MenuItemsInternal;
+
+    /// <summary>
+    /// Activates this item from keyboard or gamepad input: selects it and raises <see cref="Clicked"/>.
+    /// </summary>
+    internal void ActivateFromNavigation()
+    {
+        IsSelected = true;
+        Clicked?.Invoke(this, EventArgs.Empty);
     }
 
     MenuItem? _parentMenuItem;
@@ -167,9 +212,9 @@ public class MenuItem : ItemsControl
 
     public event EventHandler? Selected;
     /// <summary>
-    /// Event raised when the item is activated by a cursor or touch. With a mouse, this
-    /// fires on push, matching WPF menu behavior; with touch, it fires on release. Unlike
-    /// ButtonBase.Click, this is not raised by keyboard or gamepad activation.
+    /// Event raised when the item is activated. With a mouse, this fires on push, matching
+    /// WPF menu behavior; with touch, it fires on release; with a keyboard or gamepad, it fires
+    /// when the focused Menu activates the highlighted item (Enter or the A button).
     /// </summary>
     public event EventHandler? Clicked;
 
@@ -667,6 +712,30 @@ public class MenuItem : ItemsControl
             MenuItemsInternal.Add(menuItem);
             menuItem.ParentMenuItem = this;
             menuItem.Selected += HandleSubItemSelected;
+            menuItem.HighlightGained += HandleSubItemHighlightGained;
+        }
+    }
+
+    private void HandleSubItemHighlightGained(object? sender, EventArgs e)
+    {
+        foreach (MenuItem item in MenuItemsInternal)
+        {
+            if (item != sender)
+            {
+                item.SetHighlightFromNavigation(false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Clears the highlight of every row in this item's open submenu and in the submenus open below it.
+    /// </summary>
+    internal void ClearSubItemHighlightsRecursively()
+    {
+        foreach (MenuItem item in MenuItemsInternal)
+        {
+            item.ClearSubItemHighlightsRecursively();
+            item.SetHighlightFromNavigation(false);
         }
     }
 
@@ -676,6 +745,7 @@ public class MenuItem : ItemsControl
         if (row is MenuItem menuItem)
         {
             menuItem.Selected -= HandleSubItemSelected;
+            menuItem.HighlightGained -= HandleSubItemHighlightGained;
             menuItem.ParentMenuItem = null;
         }
     }
@@ -686,6 +756,7 @@ public class MenuItem : ItemsControl
         foreach (MenuItem menuItem in MenuItemsInternal)
         {
             menuItem.Selected -= HandleSubItemSelected;
+            menuItem.HighlightGained -= HandleSubItemHighlightGained;
         }
         popupRows.Clear();
         generatedPopupRows.Clear();

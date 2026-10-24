@@ -1944,32 +1944,7 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             var gamepad = xboxGamepads[i];
 
-            RepositionDirections? direction = null;
-
-            if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down))
-            {
-                direction = RepositionDirections.Down;
-            }
-            
-            if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
-            {
-                direction = RepositionDirections.Right;
-            }
-
-            if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up))
-            {
-                direction = RepositionDirections.Up;
-            }
-
-            if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
-            {
-                direction = RepositionDirections.Left;
-            }
-
+            RepositionDirections? direction = GetRepeatedGamepadDirection(gamepad);
 
             var pressedButton = (LoseListItemFocusOnPrimaryInput && gamepad.ButtonPushed(GamepadButton.A)) ||
                 gamepad.ButtonPushed(GamepadButton.B);

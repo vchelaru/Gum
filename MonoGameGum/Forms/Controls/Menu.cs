@@ -16,11 +16,15 @@ using FlatRedBall.Input;
 using FlatRedBall.Math.Geometry;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
+using RepositionDirections = FlatRedBall.Math.Geometry.RepositionDirections;
 namespace FlatRedBall.Forms.Controls;
 #endif
 
 
 #if !FRB
+using Gum.Input;
+using GamepadButton = Gum.Input.GamepadButton;
 namespace Gum.Forms.Controls;
 
 #endif
@@ -109,10 +113,30 @@ public class Menu : ItemsControl
             menuItem.BindingContext = o;
         }
 
-        menuItem.Selected -= HandleItemSelected;
-        menuItem.Selected += HandleItemSelected;
+        SubscribeToItem(menuItem);
 
         return menuItem;
+    }
+
+    // An item can be subscribed more than once (a re-added item, such as after a Visual swap, is still
+    // subscribed from before), so unsubscribe first to keep a single subscription.
+    private void SubscribeToItem(MenuItem menuItem)
+    {
+        menuItem.Selected -= HandleItemSelected;
+        menuItem.Selected += HandleItemSelected;
+        menuItem.HighlightGained -= HandleTopLevelHighlightGained;
+        menuItem.HighlightGained += HandleTopLevelHighlightGained;
+    }
+
+    private void HandleTopLevelHighlightGained(object? sender, EventArgs e)
+    {
+        foreach (MenuItem item in MenuItemsInternal)
+        {
+            if (item != sender)
+            {
+                item.SetHighlightFromNavigation(false);
+            }
+        }
     }
 
     private void HandleItemSelected(object? sender, EventArgs e)
@@ -236,6 +260,337 @@ public class Menu : ItemsControl
         }
     }
 
+    #region Keyboard and Gamepad Navigation
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Gaining focus highlights the first top-level item. Losing focus (Tab away, another control
+    /// focused) closes every open submenu.
+    /// </remarks>
+    public override bool IsFocused
+    {
+        get => base.IsFocused;
+        set
+        {
+            bool wasFocused = base.IsFocused;
+            base.IsFocused = value;
+
+            if (base.IsFocused && !wasFocused)
+            {
+                if (GetCurrentTopLevelItem() == null)
+                {
+                    StepToNavigable(MenuItemsInternal, null, 1)?.SetHighlightFromNavigation(true);
+                }
+            }
+            else if (!base.IsFocused && wasFocused)
+            {
+                CloseAllSubmenus();
+                foreach (MenuItem item in MenuItemsInternal)
+                {
+                    item.SetHighlightFromNavigation(false);
+                }
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public override void OnFocusUpdatePreview(RoutedEventArgs args)
+    {
+        // While a submenu is open, Escape closes one level in OnFocusUpdate. The base preview would
+        // consume it first.
+        if (GetDeepestOpenItem() == null)
+        {
+            base.OnFocusUpdatePreview(args);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override void OnFocusUpdate()
+    {
+        var gamepads = FrameworkElement.GamePadsForUiControl;
+        for (int i = 0; i < gamepads.Count && IsFocused; i++)
+        {
+            var gamepad = gamepads[i];
+            RepositionDirections? direction = GetRepeatedGamepadDirection(gamepad);
+
+            if (direction == RepositionDirections.Up && GetDeepestOpenItem() == null)
+            {
+                // Nothing is open, so Up has no use in the menu bar. It moves focus to the previous
+                // control, the only way out of the menu for a gamepad.
+                HandleTab(TabDirection.Up, this, loop: true);
+                continue;
+            }
+
+            HandleNavigation(direction,
+                confirm: gamepad.ButtonPushed(GamepadButton.A),
+                back: gamepad.ButtonPushed(GamepadButton.B),
+                home: false,
+                end: false);
+        }
+
+#if !FRB
+        if (IsFocused && KeyboardsForUiControl.Count > 0)
+        {
+            // Read every keyboard first and navigate once: ClickCombos already looks at all keyboards, so
+            // navigating per keyboard would apply one Enter several times.
+            RepositionDirections? direction = null;
+            bool back = false;
+            bool home = false;
+            bool end = false;
+            foreach (var keyboard in KeyboardsForUiControl)
+            {
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Down))
+                {
+                    direction = RepositionDirections.Down;
+                }
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Right))
+                {
+                    direction = RepositionDirections.Right;
+                }
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Up))
+                {
+                    direction = RepositionDirections.Up;
+                }
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Left))
+                {
+                    direction = RepositionDirections.Left;
+                }
+                back |= keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape);
+                home |= keyboard.KeyTyped(Gum.Forms.Input.Keys.Home);
+                end |= keyboard.KeyTyped(Gum.Forms.Input.Keys.End);
+            }
+
+            bool confirm = false;
+            foreach (var keyCombo in FrameworkElement.ClickCombos)
+            {
+                if (keyCombo.IsComboPushed())
+                {
+                    confirm = true;
+                    break;
+                }
+            }
+
+            HandleNavigation(direction, confirm, back, home, end);
+        }
+
+        if (IsFocused)
+        {
+            base.HandleKeyboardFocusUpdate();
+        }
+#endif
+
+        RaiseFocusUpdate();
+    }
+
+    private void HandleNavigation(RepositionDirections? direction, bool confirm, bool back, bool home, bool end)
+    {
+        MenuItem? open = GetDeepestOpenItem();
+
+        if (open == null)
+        {
+            MenuItem? current = GetCurrentTopLevelItem();
+            if (direction == RepositionDirections.Left)
+            {
+                StepToNavigable(MenuItemsInternal, current, -1)?.SetHighlightFromNavigation(true);
+            }
+            else if (direction == RepositionDirections.Right)
+            {
+                StepToNavigable(MenuItemsInternal, current, 1)?.SetHighlightFromNavigation(true);
+            }
+            else if (current != null && (confirm || direction == RepositionDirections.Down))
+            {
+                if (current.Items?.Count > 0)
+                {
+                    OpenSubmenu(current);
+                }
+                else if (confirm)
+                {
+                    Activate(current);
+                }
+            }
+            return;
+        }
+
+        IReadOnlyList<MenuItem> rows = open.OpenSubItems;
+        MenuItem? highlighted = rows.FirstOrDefault(item => item.IsHighlighted);
+        bool isTopLevelSubmenu = MenuItemsInternal.Contains(open);
+
+        if (back)
+        {
+            CloseSubmenu(open);
+        }
+        else if (home)
+        {
+            StepToNavigable(rows, null, 1)?.SetHighlightFromNavigation(true);
+        }
+        else if (end)
+        {
+            StepToNavigable(rows, null, -1)?.SetHighlightFromNavigation(true);
+        }
+        else if (direction == RepositionDirections.Down)
+        {
+            StepToNavigable(rows, highlighted, 1)?.SetHighlightFromNavigation(true);
+        }
+        else if (direction == RepositionDirections.Up)
+        {
+            StepToNavigable(rows, highlighted, -1)?.SetHighlightFromNavigation(true);
+        }
+        else if (direction == RepositionDirections.Right)
+        {
+            if (highlighted?.Items?.Count > 0)
+            {
+                OpenSubmenu(highlighted);
+            }
+            else if (isTopLevelSubmenu)
+            {
+                MoveToNeighborTopLevelItem(open, 1);
+            }
+        }
+        else if (direction == RepositionDirections.Left)
+        {
+            if (isTopLevelSubmenu)
+            {
+                MoveToNeighborTopLevelItem(open, -1);
+            }
+            else
+            {
+                CloseSubmenu(open);
+            }
+        }
+        else if (confirm && highlighted != null)
+        {
+            if (highlighted.Items?.Count > 0)
+            {
+                OpenSubmenu(highlighted);
+            }
+            else
+            {
+                Activate(highlighted);
+            }
+        }
+    }
+
+    // The top-level item that is open, or else the highlighted one.
+    private MenuItem? GetCurrentTopLevelItem() =>
+        MenuItemsInternal.FirstOrDefault(item => item.IsSelected) ??
+        MenuItemsInternal.FirstOrDefault(item => item.IsHighlighted);
+
+    // The item whose submenu is the innermost one open, or null when no submenu is open.
+    private MenuItem? GetDeepestOpenItem()
+    {
+        MenuItem? open = MenuItemsInternal.FirstOrDefault(item => item.IsSelected && item.IsPopupVisible);
+        while (open != null)
+        {
+            MenuItem? child = open.OpenSubItems.FirstOrDefault(item => item.IsSelected && item.IsPopupVisible);
+            if (child == null)
+            {
+                break;
+            }
+            open = child;
+        }
+        return open;
+    }
+
+    // The next enabled, visible item from current in the given direction, wrapping. With a null current,
+    // the first such item (step 1) or the last (step -1).
+    private static MenuItem? StepToNavigable(IReadOnlyList<MenuItem> items, MenuItem? current, int step)
+    {
+        int count = items.Count;
+        int start = -1;
+        for (int i = 0; i < count && current != null; i++)
+        {
+            if (items[i] == current)
+            {
+                start = i;
+                break;
+            }
+        }
+        if (start == -1)
+        {
+            start = step > 0 ? -1 : count;
+        }
+
+        for (int offset = 1; offset <= count; offset++)
+        {
+            int index = ((start + step * offset) % count + count) % count;
+            MenuItem candidate = items[index];
+            if (candidate.IsEnabled && candidate.Visual.Visible)
+            {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private static void OpenSubmenu(MenuItem item)
+    {
+        item.SetHighlightFromNavigation(true);
+        item.IsSelected = true;
+        StepToNavigable(item.OpenSubItems, null, 1)?.SetHighlightFromNavigation(true);
+    }
+
+    // Closes the submenu of open, which stays highlighted.
+    private void CloseSubmenu(MenuItem open)
+    {
+        open.ClearSubItemHighlightsRecursively();
+        open.SetHighlightFromNavigation(true);
+        open.IsSelected = false;
+
+        if (MenuItemsInternal.Contains(open))
+        {
+            // The menu bar is closed, so hovering must no longer open items.
+            foreach (MenuItem item in MenuItemsInternal)
+            {
+                item.SetSelectOnHighlightRecursively(false);
+            }
+        }
+    }
+
+    private void MoveToNeighborTopLevelItem(MenuItem open, int step)
+    {
+        MenuItem? neighbor = StepToNavigable(MenuItemsInternal, open, step);
+        if (neighbor == null || neighbor == open)
+        {
+            return;
+        }
+
+        if (neighbor.Items?.Count > 0)
+        {
+            open.ClearSubItemHighlightsRecursively();
+            // Selecting the neighbor deselects (and closes) the open item.
+            OpenSubmenu(neighbor);
+        }
+        else
+        {
+            CloseSubmenu(open);
+            neighbor.SetHighlightFromNavigation(true);
+        }
+    }
+
+    // Activates a leaf, then closes the whole menu with its top-level item highlighted and focus on the Menu.
+    private void Activate(MenuItem item)
+    {
+        MenuItem? topLevelItem = GetCurrentTopLevelItem();
+
+        item.ActivateFromNavigation();
+
+        CloseAllSubmenus();
+        topLevelItem?.SetHighlightFromNavigation(true);
+        IsFocused = true;
+    }
+
+    private void CloseAllSubmenus()
+    {
+        foreach (MenuItem item in MenuItemsInternal)
+        {
+            item.ClearSubItemHighlightsRecursively();
+            item.SetSelectOnHighlightRecursively(false);
+            item.IsSelected = false;
+        }
+    }
+
+    #endregion
+
     #region Collection Changed
 
     /// <inheritdoc/>
@@ -250,8 +605,7 @@ public class Menu : ItemsControl
         AdoptVisualAuthoredItem(menuItem, rowIndex);
 
         MenuItemsInternal.Insert(rowIndex, menuItem);
-        menuItem.Selected -= HandleItemSelected;
-        menuItem.Selected += HandleItemSelected;
+        SubscribeToItem(menuItem);
     }
 
     protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)
@@ -259,10 +613,7 @@ public class Menu : ItemsControl
         if (newItem is MenuItem menuItem)
         {
             MenuItemsInternal.Insert(newItemIndex, menuItem);
-
-            // A re-added item (such as after a Visual swap) is still subscribed from before.
-            menuItem.Selected -= HandleItemSelected;
-            menuItem.Selected += HandleItemSelected;
+            SubscribeToItem(menuItem);
         }
     }
 

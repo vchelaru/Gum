@@ -1134,7 +1134,7 @@ public class ScrollViewer :
         IsFocused = false;
     }
 
-    public void OnFocusUpdatePreview(RoutedEventArgs args)
+    public virtual void OnFocusUpdatePreview(RoutedEventArgs args)
     {
         // todo - check for ESC and return handled, steal focus from children
 #if !FRB
