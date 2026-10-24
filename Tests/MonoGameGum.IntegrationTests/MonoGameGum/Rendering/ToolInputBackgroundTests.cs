@@ -185,6 +185,123 @@ public class ToolInputBackgroundTests : BaseTestClass
         tool.ShouldBe(codeOnly, $"{componentName} {stateName}");
     }
 
+    public static IEnumerable<object[]> ComboBoxArrowCases()
+    {
+        (string Folder, string Prefix, Action? Theme)[] themes =
+        {
+            ("FormsTemplate", "Controls/", null),
+            ("FormsThemes/Editor", "Editor/Controls/", Gum.Themes.Editor.EditorTheme.Apply),
+        };
+        // Narrow, V3 default, wide, tall.
+        (float Width, float Height)[] sizes = { (64, 24), (256, 24), (480, 24), (200, 64) };
+        foreach ((string folder, string prefix, Action? theme) in themes)
+        {
+            foreach ((float width, float height) in sizes)
+            {
+                yield return new object[] { folder, prefix + "ComboBox", theme!, width, height };
+            }
+        }
+    }
+
+    // The dropdown arrow's drawn rectangle (position, size and rotation) matches V3 at several sizes, in every state (#6763).
+    [Theory]
+    [MemberData(nameof(ComboBoxArrowCases))]
+    public void ToolComboBoxArrowRect_MatchesCodeOnly(string templateFolder, string componentName, Action? applyTheme,
+        float width, float height)
+    {
+        foreach (string state in ComboBoxStates)
+        {
+            void Arrange(FrameworkElement control)
+            {
+                control.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                control.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                control.Visual.Width = width;
+                control.Visual.Height = height;
+                control.Visual.SetProperty("ComboBoxCategoryState", state == "Pushed" ? "Disabled" : "Pushed");
+                control.Visual.SetProperty("ComboBoxCategoryState", state);
+                control.Visual.UpdateLayout();
+            }
+
+            string codeOnly = MeasureCodeOnly(applyTheme, () => new ComboBox(), MeasureArrowRect, Arrange);
+            string tool = MeasureTool(templateFolder, componentName, MeasureArrowRect, afterCreate: Arrange);
+
+            tool.ShouldBe(codeOnly, $"{componentName} {width}x{height} {state}");
+        }
+    }
+
+    // Visual review only: with GUM_SCREENSHOT_DIR set, writes 6763-<standard|editor>-<tool|codeonly>.png, one ComboBox
+    // per arrow test size, the tool template beside its code-only visual.
+    [Fact]
+    public void ComboBoxArrowSizes_Screenshot()
+    {
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GUM_SCREENSHOT_DIR")))
+        {
+            return;
+        }
+
+        (float Width, float Height)[] sizes = { (64, 24), (256, 24), (480, 24), (200, 64) };
+
+        void Render(Func<FrameworkElement> create, string pngName)
+        {
+            List<GraphicalUiElement> added = new();
+            float y = 8;
+            foreach ((float width, float height) in sizes)
+            {
+                FrameworkElement control = create();
+                control.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                control.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                control.Visual.Width = width;
+                control.Visual.Height = height;
+                control.Visual.X = 8;
+                control.Visual.Y = y;
+                control.Visual.AddToManagers(SystemManagers.Default, null);
+                added.Add(control.Visual);
+                y += height + 12;
+            }
+            MenuFocusRenderTests.Capture(SystemManagers.Default.Renderer.GraphicsDevice!, Microsoft.Xna.Framework.Color.Black, pngName, 504, (int)y);
+            foreach (GraphicalUiElement visual in added)
+            {
+                visual.RemoveFromManagers();
+            }
+        }
+
+        foreach ((string folder, string component, Action? theme, string name) in new (string, string, Action?, string)[]
+        {
+            ("FormsTemplate", "Controls/ComboBox", null, "standard"),
+            ("FormsThemes/Editor", "Editor/Controls/ComboBox", Gum.Themes.Editor.EditorTheme.Apply, "editor"),
+        })
+        {
+            MenuFocusRenderTests.WithToolProject(folder, mutateProject: null, () =>
+                Render(() => (FrameworkElement)((InteractiveGue)ObjectFinder.Self.GetComponent(component)!
+                    .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false)).FormsControlAsObject!, $"6763-{name}-tool.png"));
+
+            MeasureCodeOnly(applyTheme: () => { theme?.Invoke(); Render(() => new ComboBox(), $"6763-{name}-codeonly.png"); },
+                create: () => new ComboBox());
+        }
+    }
+
+    // The arrow's drawn quad as its axis-aligned bounds relative to the control, plus its rotation, rounded to 0.1 px.
+    private static string MeasureArrowRect(FrameworkElement control)
+    {
+        GraphicalUiElement visual = control.Visual;
+        GraphicalUiElement arrow = (visual.GetGraphicalUiElementByName("DropdownIndicator")
+            ?? visual.GetGraphicalUiElementByName("IconInstance")?.GetGraphicalUiElementByName("IconSprite")).ShouldNotBeNull();
+        global::RenderingLibrary.Graphics.IRenderableIpso renderable = (global::RenderingLibrary.Graphics.IRenderableIpso)arrow.RenderableComponent;
+        Microsoft.Xna.Framework.Matrix matrix = renderable.GetAbsoluteRotationMatrix();
+        Microsoft.Xna.Framework.Vector2 topLeft = new(renderable.GetAbsoluteX() - visual.GetAbsoluteX(), renderable.GetAbsoluteY() - visual.GetAbsoluteY());
+        Microsoft.Xna.Framework.Vector2[] corners =
+        {
+            topLeft,
+            topLeft + Microsoft.Xna.Framework.Vector2.Transform(new Microsoft.Xna.Framework.Vector2(renderable.Width, 0), matrix),
+            topLeft + Microsoft.Xna.Framework.Vector2.Transform(new Microsoft.Xna.Framework.Vector2(0, renderable.Height), matrix),
+            topLeft + Microsoft.Xna.Framework.Vector2.Transform(new Microsoft.Xna.Framework.Vector2(renderable.Width, renderable.Height), matrix),
+        };
+        static string R(float v) => MathF.Round(v, 1).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+        float rotation = ((renderable.GetAbsoluteRotation() % 360) + 360) % 360;
+        return $"x {R(corners.Min(c => c.X))}..{R(corners.Max(c => c.X))} y {R(corners.Min(c => c.Y))}..{R(corners.Max(c => c.Y))} " +
+            $"rot {R(rotation)} visible {arrow.Visible}";
+    }
+
     // Adding Icon ColorCategory states for the ComboBox arrow leaves every other Icon user unchanged: each sprite's
     // color and visibility in every state matches IconUserColors.txt, recorded from the templates before #6754.
     // Set GUM_RECORD_ICON_USERS=1 to rewrite the reference.
