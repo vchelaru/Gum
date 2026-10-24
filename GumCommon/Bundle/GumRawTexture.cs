@@ -67,10 +67,16 @@ public static class GumRawTexture
     private static readonly HashSet<string> WarnedPackages = new HashSet<string>(StringComparer.Ordinal);
 
     /// <summary>
-    /// Where the one-time alpha-mismatch warning goes. Gum has no runtime warning channel, so it is
-    /// written to <see cref="System.Diagnostics.Trace"/>; tests replace it.
+    /// Where the one-time alpha-mismatch warning goes. Gum has no runtime warning channel, so every
+    /// runtime writes it to both the console and <see cref="System.Diagnostics.Trace"/>; tests replace it.
     /// </summary>
-    internal static Action<string> ReportWarning { get; set; } = message => System.Diagnostics.Trace.WriteLine(message);
+    internal static Action<string> ReportWarning { get; set; } = WriteToConsoleAndTrace;
+
+    private static void WriteToConsoleAndTrace(string message)
+    {
+        Console.WriteLine(message);
+        System.Diagnostics.Trace.WriteLine(message);
+    }
 
     /// <summary>Forgets which packages were already warned about.</summary>
     internal static void ResetWarnings()
@@ -172,13 +178,13 @@ public static class GumRawTexture
     /// <param name="entryName">The entry's path, used when <paramref name="packageName"/> is null.</param>
     /// <param name="packageName">The package the entry came from, named in the warning.</param>
     /// <param name="runtimeUsesPremultipliedAlpha">The runtime's alpha mode.</param>
-    /// <param name="bleedTransparentEdges">Whether the runtime bleeds edges of straight textures.</param>
-    /// <param name="warnOnMismatch">
-    /// False for a runtime whose users cannot avoid the conversion by repacking (Skia is always
-    /// premultiplied while gumcli packs straight alpha), so the warning would only be noise.
+    /// <param name="runtimeAlphaReason">
+    /// Why the runtime uses its alpha mode, finishing "but ..." in the warning, such as
+    /// "Renderer.UsePremultipliedAlpha is true" or "raylib draws straight alpha".
     /// </param>
+    /// <param name="bleedTransparentEdges">Whether the runtime bleeds edges of straight textures.</param>
     public static GumRawTextureHeader PrepareForRuntime(byte[] entry, string entryName, string? packageName,
-        bool runtimeUsesPremultipliedAlpha, bool bleedTransparentEdges, bool warnOnMismatch = true)
+        bool runtimeUsesPremultipliedAlpha, string runtimeAlphaReason, bool bleedTransparentEdges)
     {
         if (entry == null)
         {
@@ -205,10 +211,7 @@ public static class GumRawTexture
             }
         }
 
-        if (warnOnMismatch)
-        {
-            WarnOnce(packageName ?? entryName, header.IsPremultiplied, entryName);
-        }
+        WarnOnce(packageName ?? entryName, header.IsPremultiplied, runtimeAlphaReason, entryName);
         return header;
     }
 
@@ -238,12 +241,12 @@ public static class GumRawTexture
     /// <param name="stream">A seekable stream; see <see cref="EnsureSeekable"/>.</param>
     /// <param name="entryName">The texture's path, named in the warning.</param>
     /// <param name="runtimeUsesPremultipliedAlpha">The runtime's alpha mode.</param>
+    /// <param name="runtimeAlphaReason">See <see cref="PrepareForRuntime"/>.</param>
     /// <param name="bleedTransparentEdges">Whether the runtime bleeds edges of straight textures.</param>
-    /// <param name="warnOnMismatch">See <see cref="PrepareForRuntime"/>.</param>
     /// <param name="header">The validated header, or default when the stream is not a raw texture.</param>
     /// <exception cref="GumBundleFormatException">The stream holds a corrupt raw texture.</exception>
     public static byte[]? ReadForRuntime(Stream stream, string entryName, bool runtimeUsesPremultipliedAlpha,
-        bool bleedTransparentEdges, bool warnOnMismatch, out GumRawTextureHeader header)
+        string runtimeAlphaReason, bool bleedTransparentEdges, out GumRawTextureHeader header)
     {
         if (!stream.CanSeek)
         {
@@ -274,11 +277,11 @@ public static class GumRawTexture
         stream.CopyTo(all);
         byte[] entry = all.ToArray();
         header = PrepareForRuntime(entry, entryName, (stream as GumBundleEntryStream)?.PackagePath,
-            runtimeUsesPremultipliedAlpha, bleedTransparentEdges, warnOnMismatch);
+            runtimeUsesPremultipliedAlpha, runtimeAlphaReason, bleedTransparentEdges);
         return entry;
     }
 
-    private static void WarnOnce(string source, bool packageIsPremultiplied, string entryName)
+    private static void WarnOnce(string source, bool packageIsPremultiplied, string runtimeAlphaReason, string entryName)
     {
         string key = source + (packageIsPremultiplied ? "|premultiplied" : "|straight");
         lock (WarnedPackages)
@@ -290,10 +293,12 @@ public static class GumRawTexture
         }
 
         string packageMode = packageIsPremultiplied ? "premultiplied" : "straight";
-        string runtimeMode = packageIsPremultiplied ? "straight" : "premultiplied";
+        string repack = packageIsPremultiplied
+            ? "'gumcli pack' without --premultiplied-alpha"
+            : "'gumcli pack --premultiplied-alpha'";
         ReportWarning(
-            $"Gum package '{source}' stores {packageMode}-alpha textures, but the runtime uses {runtimeMode} alpha " +
-            $"(Renderer.UsePremultipliedAlpha), so each texture is converted when it loads (first: '{entryName}'). " +
-            "Repack the package with the project's alpha mode to skip the conversion.");
+            $"Gum package '{source}' stores {packageMode}-alpha textures, but {runtimeAlphaReason}, " +
+            $"so each texture is converted when it loads (first: '{entryName}'). " +
+            $"Repack it with {repack} to skip the conversion.");
     }
 }

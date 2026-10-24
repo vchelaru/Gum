@@ -49,9 +49,10 @@ public class RawTextureLoadTests : BaseTestClass
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void RawTextureEntry_ShouldLoadAsPremultipliedAlpha_WithoutWarning(bool packageIsPremultiplied)
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public void RawTextureEntry_ShouldLoadAsPremultipliedAlpha_AndWarnForAStraightPackage(
+        bool packageIsPremultiplied, bool expectWarning)
     {
         byte[] storedPixels = packageIsPremultiplied
             ? new byte[] { 128, 64, 0, 128, 0, 0, 0, 0 }
@@ -70,7 +71,12 @@ public class RawTextureLoadTests : BaseTestClass
         loaded.ColorType.ShouldBe(SKColorType.Rgba8888);
         loaded.AlphaType.ShouldBe(SKAlphaType.Premul);
         loaded.Bytes.ShouldBe(expectedPixels);
-        _warnings.ShouldBeEmpty();
+        _warnings.Count.ShouldBe(expectWarning ? 1 : 0);
+        if (expectWarning)
+        {
+            _warnings[0].ShouldContain("SkiaGum draws premultiplied alpha");
+            _warnings[0].ShouldContain("Repack it with 'gumcli pack --premultiplied-alpha'");
+        }
     }
 
     [Fact]

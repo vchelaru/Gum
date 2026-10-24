@@ -347,6 +347,28 @@ public class PackCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Pack_with_premultiplied_alpha_stores_png_as_raw_premultiplied_pixels()
+    {
+        string projectPath = CreateProjectWithSpriteAndFont("RawPngPremultiplied");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--premultiplied-alpha");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        byte[] entry = ReadBundleEntries(outputPath)["Textures/bg.png"];
+        GumRawTextureHeader header = GumRawTexture.ReadHeader(entry);
+        header.Width.ShouldBe(3);
+        header.Height.ShouldBe(2);
+        header.IsPremultiplied.ShouldBeTrue();
+        // Each color channel is multiplied by alpha (rounded to nearest); the transparent texel is all zero.
+        entry.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[]
+        {
+            0, 0, 0, 0,  1, 0, 0, 1,  127, 50, 1, 127,
+            128, 128, 128, 128,  254, 199, 1, 254,  9, 8, 7, 255,
+        });
+    }
+
+    [Fact]
     public void Pack_stores_jpeg_bytes_unchanged()
     {
         string projectPath = CreateCleanProject("Jpeg");

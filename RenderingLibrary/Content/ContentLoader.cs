@@ -170,8 +170,10 @@ public sealed class ContentLoader : IContentLoader
         // package's differs and upload, with no image decode and no GetData readback.
         byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(stream, name,
             Graphics.Renderer.UsePremultipliedAlpha,
+            Graphics.Renderer.UsePremultipliedAlpha
+                ? "Renderer.UsePremultipliedAlpha is true"
+                : "Renderer.UsePremultipliedAlpha is false",
             Graphics.Renderer.BleedTransparentTextureEdgesOnLoad,
-            warnOnMismatch: true,
             out Gum.Bundle.GumRawTextureHeader header);
         if (rawTexture != null)
         {

@@ -294,7 +294,8 @@ public sealed class ContentLoader : IContentLoader
             // A gumcli-packed texture (#6514) is already decoded. Raylib draws straight alpha and never
             // bleeds the edges of loose PNGs, so a premultiplied package is unpremultiplied unbled.
             byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(seekable, fileName,
-                runtimeUsesPremultipliedAlpha: false, bleedTransparentEdges: false, warnOnMismatch: true,
+                runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "raylib draws straight alpha",
+                bleedTransparentEdges: false,
                 out Gum.Bundle.GumRawTextureHeader header);
             if (rawTexture != null)
             {
@@ -458,7 +459,8 @@ public sealed class ContentLoader : IContentLoader
             Stream seekable = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
             // A gumcli-packed font page (#6514), converted the same way as LoadTextureFromFile.
             byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(seekable, pagePath,
-                runtimeUsesPremultipliedAlpha: false, bleedTransparentEdges: false, warnOnMismatch: true,
+                runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "raylib draws straight alpha",
+                bleedTransparentEdges: false,
                 out Gum.Bundle.GumRawTextureHeader header);
             if (rawTexture != null)
             {

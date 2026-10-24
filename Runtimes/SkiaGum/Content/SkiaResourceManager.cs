@@ -204,14 +204,15 @@ public static class SkiaResourceManager
 
     /// <summary>
     /// Decodes an encoded image, or wraps a gumcli-packed raw texture (#6514) without decoding.
-    /// Skia draws premultiplied alpha, so a straight package is premultiplied here. That conversion
-    /// does not warn: gumcli always packs straight alpha, so repacking could not avoid it.
+    /// Skia draws premultiplied alpha, so a straight package is premultiplied here, with the same
+    /// one-time warning as the other runtimes (repacking with --premultiplied-alpha avoids it).
     /// </summary>
     private static SKBitmap? Decode(Stream stream, string resourceName)
     {
         Stream seekable = global::Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
         byte[]? rawTexture = global::Gum.Bundle.GumRawTexture.ReadForRuntime(seekable, resourceName,
-            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false, warnOnMismatch: false,
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "SkiaGum draws premultiplied alpha",
+            bleedTransparentEdges: false,
             out global::Gum.Bundle.GumRawTextureHeader header);
         if (rawTexture == null)
         {

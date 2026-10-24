@@ -107,9 +107,9 @@ public class GumRawTextureTests : IDisposable
         byte[] premultiplied = GumRawTexture.Encode(width: 2, height: 1, rgba, isPremultiplied: true);
 
         GumRawTexture.PrepareForRuntime(straight, "a.png", "Game.gumpkg",
-            runtimeUsesPremultipliedAlpha: false, bleedTransparentEdges: true);
+            runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: true);
         GumRawTexture.PrepareForRuntime(premultiplied, "a.png", "Game.gumpkg",
-            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: true);
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: true);
 
         straight.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(rgba);
         premultiplied.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(rgba);
@@ -124,15 +124,19 @@ public class GumRawTextureTests : IDisposable
         byte[] second = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 200, 100, 0, 255 }, isPremultiplied: false);
 
         GumRawTexture.PrepareForRuntime(first, "Sprites/a.png", "Game.gumpkg",
-            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: true);
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "Renderer.UsePremultipliedAlpha is true",
+            bleedTransparentEdges: true);
         GumRawTexture.PrepareForRuntime(second, "Sprites/b.png", "Game.gumpkg",
-            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: true);
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "Renderer.UsePremultipliedAlpha is true",
+            bleedTransparentEdges: true);
 
         first.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[] { 128, 128, 128, 128, 0, 0, 0, 0 });
-        _warnings.Count.ShouldBe(1);
-        _warnings[0].ShouldContain("Game.gumpkg");
-        _warnings[0].ShouldContain("straight");
-        _warnings[0].ShouldContain("Repack");
+        _warnings.ShouldBe(new[]
+        {
+            "Gum package 'Game.gumpkg' stores straight-alpha textures, but Renderer.UsePremultipliedAlpha is true, " +
+            "so each texture is converted when it loads (first: 'Sprites/a.png'). " +
+            "Repack it with 'gumcli pack --premultiplied-alpha' to skip the conversion.",
+        });
     }
 
     [Fact]
@@ -144,16 +148,53 @@ public class GumRawTextureTests : IDisposable
         byte[] second = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 9, 8, 7, 255 }, isPremultiplied: true);
 
         GumRawTexture.PrepareForRuntime(first, "Sprites/a.png", "Game.gumpkg",
-            runtimeUsesPremultipliedAlpha: false, bleedTransparentEdges: true);
+            runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "Renderer.UsePremultipliedAlpha is false",
+            bleedTransparentEdges: true);
         GumRawTexture.PrepareForRuntime(second, "Sprites/b.png", "Game.gumpkg",
-            runtimeUsesPremultipliedAlpha: false, bleedTransparentEdges: true);
+            runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "Renderer.UsePremultipliedAlpha is false",
+            bleedTransparentEdges: true);
 
         first.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[] { 255, 128, 0, 128, 255, 128, 0, 0 });
         second.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[] { 9, 8, 7, 255 });
-        _warnings.Count.ShouldBe(1);
-        _warnings[0].ShouldContain("Game.gumpkg");
-        _warnings[0].ShouldContain("premultiplied");
-        _warnings[0].ShouldContain("Repack");
+        _warnings.ShouldBe(new[]
+        {
+            "Gum package 'Game.gumpkg' stores premultiplied-alpha textures, but Renderer.UsePremultipliedAlpha is false, " +
+            "so each texture is converted when it loads (first: 'Sprites/a.png'). " +
+            "Repack it with 'gumcli pack' without --premultiplied-alpha to skip the conversion.",
+        });
+    }
+
+    [Fact]
+    public void PrepareForRuntime_ShouldWriteTheWarningOnceToConsoleAndTrace_ByDefault()
+    {
+        byte[] first = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 1, 1, 1, 128 }, isPremultiplied: false);
+        byte[] second = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 1, 1, 1, 128 }, isPremultiplied: false);
+        System.IO.StringWriter console = new System.IO.StringWriter();
+        System.IO.TextWriter previousConsole = Console.Out;
+        System.IO.StringWriter trace = new System.IO.StringWriter();
+        System.Diagnostics.TextWriterTraceListener listener = new System.Diagnostics.TextWriterTraceListener(trace);
+        GumRawTexture.ReportWarning = _previousReportWarning;
+        Console.SetOut(console);
+        System.Diagnostics.Trace.Listeners.Add(listener);
+        try
+        {
+            GumRawTexture.PrepareForRuntime(first, "Sprites/a.png", "Default.gumpkg",
+                runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false);
+            GumRawTexture.PrepareForRuntime(second, "Sprites/b.png", "Default.gumpkg",
+                runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false);
+            listener.Flush();
+        }
+        finally
+        {
+            System.Diagnostics.Trace.Listeners.Remove(listener);
+            Console.SetOut(previousConsole);
+        }
+
+        string expected = "Gum package 'Default.gumpkg' stores straight-alpha textures, but the test runtime, " +
+            "so each texture is converted when it loads (first: 'Sprites/a.png'). " +
+            "Repack it with 'gumcli pack --premultiplied-alpha' to skip the conversion." + Environment.NewLine;
+        console.ToString().ShouldBe(expected);
+        trace.ToString().ShouldBe(expected);
     }
 
     [Fact]
@@ -162,22 +203,10 @@ public class GumRawTextureTests : IDisposable
         byte[] fromA = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 1, 1, 1, 255 }, isPremultiplied: false);
         byte[] fromB = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 1, 1, 1, 255 }, isPremultiplied: false);
 
-        GumRawTexture.PrepareForRuntime(fromA, "a.png", "A.gumpkg", runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false);
-        GumRawTexture.PrepareForRuntime(fromB, "a.png", "B.gumpkg", runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false);
+        GumRawTexture.PrepareForRuntime(fromA, "a.png", "A.gumpkg", runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false);
+        GumRawTexture.PrepareForRuntime(fromB, "a.png", "B.gumpkg", runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false);
 
         _warnings.Count.ShouldBe(2);
-    }
-
-    [Fact]
-    public void PrepareForRuntime_ShouldConvertWithoutWarning_WhenWarnOnMismatchIsFalse()
-    {
-        byte[] entry = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 255, 128, 0, 128 }, isPremultiplied: false);
-
-        GumRawTexture.PrepareForRuntime(entry, "a.png", "Game.gumpkg",
-            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false, warnOnMismatch: false);
-
-        entry.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[] { 128, 64, 0, 128 });
-        _warnings.ShouldBeEmpty();
     }
 
     [Fact]
@@ -187,7 +216,7 @@ public class GumRawTextureTests : IDisposable
         using System.IO.MemoryStream stream = new System.IO.MemoryStream(png);
 
         byte[]? result = GumRawTexture.ReadForRuntime(stream, "a.png",
-            runtimeUsesPremultipliedAlpha: false, bleedTransparentEdges: false, warnOnMismatch: true, out _);
+            runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false, out _);
 
         result.ShouldBeNull();
         stream.Position.ShouldBe(0);
@@ -200,7 +229,7 @@ public class GumRawTextureTests : IDisposable
         using NonSeekableStream stream = new NonSeekableStream(entry);
 
         byte[]? result = GumRawTexture.ReadForRuntime(GumRawTexture.EnsureSeekable(stream), "a.png",
-            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false, warnOnMismatch: true,
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false,
             out GumRawTextureHeader header);
 
         result.ShouldNotBeNull();
@@ -208,7 +237,7 @@ public class GumRawTextureTests : IDisposable
         result.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[] { 128, 64, 0, 128 });
         _warnings.Count.ShouldBe(1);
         Should.Throw<ArgumentException>(() => GumRawTexture.ReadForRuntime(stream, "a.png",
-            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false, warnOnMismatch: true, out _));
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "the test runtime", bleedTransparentEdges: false, out _));
     }
 
     private sealed class NonSeekableStream : System.IO.MemoryStream

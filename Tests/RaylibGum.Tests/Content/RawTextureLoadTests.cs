@@ -5,6 +5,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using ToolsUtilities;
 using Xunit;
@@ -75,33 +76,42 @@ public class RawTextureLoadTests : BaseTestClass
         if (expectWarning)
         {
             _warnings[0].ShouldContain("Bundled.gumpkg");
+            _warnings[0].ShouldContain("raylib draws straight alpha");
+            _warnings[0].ShouldContain("Repack it with 'gumcli pack' without --premultiplied-alpha");
+            _warnings[0].ShouldNotContain("Renderer.UsePremultipliedAlpha");
         }
     }
 
+    // A one-page font loads its page as a texture (covered above); two pages go through the atlas merge.
     [Fact]
-    public void RawFontPageEntry_ShouldLoadIntoTheFontAtlas()
+    public void RawFontPageEntries_ShouldMergeIntoTheFontAtlas()
     {
         string fnt =
             "info face=\"Bundled\" size=-14 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
-            "common lineHeight=16 base=12 scaleW=4 scaleH=2 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
-            "page id=0 file=\"FontPage.png\"\n" +
-            "chars count=1\n" +
-            "char id=65 x=0 y=0 width=2 height=2 xoffset=0 yoffset=0 xadvance=3 page=0 chnl=15\n";
-        byte[] pagePixels = new byte[4 * 2 * 4];
-        Array.Fill(pagePixels, (byte)255);
+            "common lineHeight=16 base=12 scaleW=4 scaleH=2 pages=2 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+            "page id=0 file=\"FontPage_0.png\"\n" +
+            "page id=1 file=\"FontPage_1.png\"\n" +
+            "chars count=2\n" +
+            "char id=65 x=0 y=0 width=2 height=2 xoffset=0 yoffset=0 xadvance=3 page=0 chnl=15\n" +
+            "char id=66 x=0 y=0 width=2 height=2 xoffset=0 yoffset=0 xadvance=3 page=1 chnl=15\n";
+        byte[] firstPagePixels = new byte[4 * 2 * 4];
+        Array.Fill(firstPagePixels, (byte)255);
+        byte[] secondPagePixels = new byte[4 * 2 * 4];
+        Array.Fill(secondPagePixels, (byte)7);
         InstallBundle(new List<(string, byte[])>
         {
             ("Bundled.gumx", Encoding.UTF8.GetBytes("<GumProjectSave />")),
             ("Fonts/Bundled.fnt", Encoding.UTF8.GetBytes(fnt)),
-            ("Fonts/FontPage.png", GumRawTexture.Encode(width: 4, height: 2, pagePixels, isPremultiplied: false)),
+            ("Fonts/FontPage_0.png", GumRawTexture.Encode(width: 4, height: 2, firstPagePixels, isPremultiplied: false)),
+            ("Fonts/FontPage_1.png", GumRawTexture.Encode(width: 4, height: 2, secondPagePixels, isPremultiplied: false)),
         });
 
         Font font = LoaderManager.Self.LoadContent<Font>(Path.Combine(_projectDirectory, "Fonts", "Bundled.fnt"));
 
-        font.GlyphCount.ShouldBe(1);
+        font.GlyphCount.ShouldBe(2);
         font.Texture.Width.ShouldBe(4);
-        font.Texture.Height.ShouldBe(2);
-        ReadPixels(font.Texture).ShouldBe(pagePixels);
+        font.Texture.Height.ShouldBe(4);
+        ReadPixels(font.Texture).ShouldBe(firstPagePixels.Concat(secondPagePixels).ToArray());
     }
 
     [Fact]

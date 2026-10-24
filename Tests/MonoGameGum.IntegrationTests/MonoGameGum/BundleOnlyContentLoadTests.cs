@@ -159,6 +159,12 @@ public class BundleOnlyContentLoadTests : BaseTestClass
             if (expectWarning)
             {
                 warnings[0].ShouldContain("Bundled.gumpkg");
+                warnings[0].ShouldContain(runtimeUsesPremultipliedAlpha
+                    ? "Renderer.UsePremultipliedAlpha is true"
+                    : "Renderer.UsePremultipliedAlpha is false");
+                warnings[0].ShouldContain(runtimeUsesPremultipliedAlpha
+                    ? "Repack it with 'gumcli pack --premultiplied-alpha'"
+                    : "Repack it with 'gumcli pack' without --premultiplied-alpha");
             }
         }
         finally

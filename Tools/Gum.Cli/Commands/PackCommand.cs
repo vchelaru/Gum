@@ -35,11 +35,17 @@ public static class PackCommand
             getDefaultValue: () => "core,fontcache,external",
             description: "Comma-separated categories to include. Valid values: core, fontcache, external.");
 
+        var premultipliedAlphaOption = new Option<bool>(
+            aliases: new[] { "--premultiplied-alpha" },
+            description: "Store PNG textures with premultiplied alpha, for games that set Renderer.UsePremultipliedAlpha " +
+                "to true and for SkiaGum. Off by default (straight alpha).");
+
         var command = new Command("pack", "Pack a Gum project into a .gumpkg bundle.")
         {
             projectArgument,
             outputOption,
-            includeOption
+            includeOption,
+            premultipliedAlphaOption
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -47,13 +53,14 @@ public static class PackCommand
             string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
             string? outputPath = context.ParseResult.GetValueForOption(outputOption);
             string includeFlags = context.ParseResult.GetValueForOption(includeOption) ?? "core,fontcache,external";
-            context.ExitCode = Execute(projectPath, outputPath, includeFlags);
+            bool premultipliedAlpha = context.ParseResult.GetValueForOption(premultipliedAlphaOption);
+            context.ExitCode = Execute(projectPath, outputPath, includeFlags, premultipliedAlpha);
         });
 
         return command;
     }
 
-    private static int Execute(string projectPath, string? outputPath, string includeFlags)
+    private static int Execute(string projectPath, string? outputPath, string includeFlags, bool premultipliedAlpha)
     {
         string fullPath = Path.GetFullPath(projectPath);
 
@@ -132,7 +139,7 @@ public static class PackCommand
             {
                 try
                 {
-                    bytes = ToRawTexture(bytes, PackageUsesPremultipliedAlpha);
+                    bytes = ToRawTexture(bytes, premultipliedAlpha);
                 }
                 catch (Exception ex)
                 {
@@ -162,11 +169,6 @@ public static class PackCommand
 
         return 0;
     }
-
-    // The alpha mode packed textures are stored in. Gum projects have no alpha-mode setting yet, so
-    // this matches the runtime default (Renderer.UsePremultipliedAlpha = false). A premultiplied
-    // runtime converts straight packages on load and warns once (#6514).
-    private const bool PackageUsesPremultipliedAlpha = false;
 
     private static bool IsPng(string relativePath) =>
         string.Equals(Path.GetExtension(relativePath), ".png", StringComparison.OrdinalIgnoreCase);
