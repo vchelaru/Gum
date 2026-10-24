@@ -133,7 +133,7 @@
       <Value xsi:type="xsd:float">24</Value>
     </Variable>
     <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+      <Value xsi:type="xsd:string">TextPrimary</Value>
     </Variable>
     <Variable Type="bool" Name="IconInstance.ExposeChildrenEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -352,7 +352,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+        <Value xsi:type="xsd:string">TextPrimary</Value>
       </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -383,7 +383,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+        <Value xsi:type="xsd:string">TextPrimaryDisabled</Value>
       </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -414,7 +414,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+        <Value xsi:type="xsd:string">TextPrimaryHighlighted</Value>
       </Variable>
       <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">150</Value>
@@ -464,7 +464,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryDark</Value>
+        <Value xsi:type="xsd:string">TextPrimaryPushed</Value>
       </Variable>
       <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -514,7 +514,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+        <Value xsi:type="xsd:string">TextPrimaryHighlighted</Value>
       </Variable>
       <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">150</Value>
@@ -564,7 +564,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+        <Value xsi:type="xsd:string">TextPrimary</Value>
       </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -595,7 +595,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+        <Value xsi:type="xsd:string">TextPrimaryDisabled</Value>
       </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>

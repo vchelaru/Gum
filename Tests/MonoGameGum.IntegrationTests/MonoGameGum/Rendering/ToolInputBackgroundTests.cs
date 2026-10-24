@@ -161,10 +161,10 @@ public class ToolInputBackgroundTests : BaseTestClass
         }
     }
 
-    // The ComboBox focus underline and the TextBox placeholder, per state against V3 (#6754).
+    // The ComboBox dropdown arrow and focus underline, and the TextBox placeholder, per state against V3 (#6754).
     [Theory]
     [MemberData(nameof(IndicatorControlStates))]
-    public void ToolUnderlineAndPlaceholderInState_MatchCodeOnly(string templateFolder, string componentName, string categoryState, string stateName,
+    public void ToolIndicatorsInState_MatchCodeOnly(string templateFolder, string componentName, string categoryState, string stateName,
         Action? applyTheme, Func<FrameworkElement> createCodeOnly)
     {
         // Coming from another state first: a state that leaves a value unset would keep the previous state's value.
@@ -183,6 +183,40 @@ public class ToolInputBackgroundTests : BaseTestClass
         IndicatorLook tool = MeasureTool(templateFolder, componentName, MeasureIndicators, afterCreate: EnterState);
 
         tool.ShouldBe(codeOnly, $"{componentName} {stateName}");
+    }
+
+    // Visual review only: with GUM_SCREENSHOT_DIR set, writes 6754-iconusers-<theme>.png, a row of other Icon users,
+    // to compare before and after the ComboBox arrow's Icon ColorCategory states were added (#6754).
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/", "standard", "CheckBox,RadioButton,ButtonClose,MenuItem,ExpanderStandard,ButtonIcon")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/", "editor", "CheckBox,RadioButton,ButtonClose,MenuItem,Expander")]
+    public void IconUsers_Screenshot(string templateFolder, string prefix, string themeName, string components)
+    {
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GUM_SCREENSHOT_DIR")))
+        {
+            return;
+        }
+
+        MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
+        {
+            List<GraphicalUiElement> added = new();
+            string[] names = components.Split(',');
+            for (int i = 0; i < names.Length; i++)
+            {
+                GraphicalUiElement visual = ObjectFinder.Self.GetComponent(prefix + names[i]).ShouldNotBeNull(names[i])
+                    .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+                visual.X = 8 + i * 136;
+                visual.Y = 8;
+                visual.AddToManagers(SystemManagers.Default, null);
+                added.Add(visual);
+            }
+            MenuFocusRenderTests.Capture(SystemManagers.Default.Renderer.GraphicsDevice!, Microsoft.Xna.Framework.Color.Black,
+                $"6754-iconusers-{themeName}.png", 832, 96);
+            foreach (GraphicalUiElement visual in added)
+            {
+                visual.RemoveFromManagers();
+            }
+        });
     }
 
     // The fill comes from the Styles InputBackground swatch, so recoloring the swatch recolors the control.
@@ -206,6 +240,37 @@ public class ToolInputBackgroundTests : BaseTestClass
         });
 
         (tool.R, tool.G, tool.B).ShouldBe(((byte)200, (byte)10, (byte)20), componentName);
+    }
+
+    // Each arrow swatch recolors the ComboBox arrow in exactly the states that read it (#6754).
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles", "PrimaryDisabled", "Disabled,DisabledFocused")]
+    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles", "PrimaryHighlighted", "Highlighted,HighlightedFocused")]
+    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles", "PrimaryPushed", "Pushed")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ComboBox", "Editor/Styles", "TextPrimaryDisabled", "Disabled,DisabledFocused")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ComboBox", "Editor/Styles", "TextPrimaryHighlighted", "Highlighted,HighlightedFocused")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ComboBox", "Editor/Styles", "TextPrimaryPushed", "Pushed")]
+    public void ToolComboBoxArrow_StateSwatch_RecolorsOnlyItsStates(string templateFolder, string componentName, string stylesName,
+        string swatch, string recoloredStates)
+    {
+        HashSet<string> expectedRecolored = new(recoloredStates.Split(','));
+
+        foreach (string state in ComboBoxStates)
+        {
+            IndicatorLook tool = MeasureTool(templateFolder, componentName, MeasureIndicators,
+                beforeCreate: () =>
+                {
+                    GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+                    StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
+                    styles.SetValue(swatch + ".FillRed", 200, "int");
+                    styles.SetValue(swatch + ".FillGreen", 10, "int");
+                    styles.SetValue(swatch + ".FillBlue", 20, "int");
+                    project.ApplyAllVariableReferences();
+                },
+                afterCreate: control => control.Visual.SetProperty("ComboBoxCategoryState", state));
+
+            (tool.Arrow == "200,10,20").ShouldBe(expectedRecolored.Contains(state), $"{componentName} {state} with {swatch} recolored");
+        }
     }
 
     // Each per-state swatch recolors exactly the states that read it, and no others (#6746).
@@ -337,19 +402,23 @@ public class ToolInputBackgroundTests : BaseTestClass
         }
     }
 
-    // The underline color counts only while it is visible.
-    private sealed record IndicatorLook(bool UnderlineVisible, string? Underline, string? Placeholder);
+    // Arrow is the V3 DropdownIndicator sprite or the tool's IconInstance sprite; the underline color counts only
+    // while it is visible.
+    private sealed record IndicatorLook(string? Arrow, bool UnderlineVisible, string? Underline, string? Placeholder);
 
     private static IndicatorLook MeasureIndicators(FrameworkElement control)
     {
         static string Rgb(System.Drawing.Color c) => $"{c.R},{c.G},{c.B}";
 
         GraphicalUiElement visual = control.Visual;
+        GraphicalUiElement? arrow = visual.GetGraphicalUiElementByName("DropdownIndicator")
+            ?? visual.GetGraphicalUiElementByName("IconInstance")?.GetGraphicalUiElementByName("IconSprite");
         GraphicalUiElement? underline = visual.GetGraphicalUiElementByName("FocusedIndicator");
         GraphicalUiElement? placeholder = visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
 
         bool underlineVisible = underline?.Visible == true;
         return new IndicatorLook(
+            arrow == null ? null : Rgb(((global::RenderingLibrary.Graphics.Sprite)arrow.RenderableComponent).Color),
             underlineVisible,
             underlineVisible ? Rgb(((NineSlice)underline!.RenderableComponent).Color) : null,
             placeholder == null ? null : Rgb(((global::RenderingLibrary.Graphics.Text)placeholder.RenderableComponent).Color));

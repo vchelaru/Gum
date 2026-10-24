@@ -322,7 +322,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+        <Value xsi:type="xsd:string">PrimaryDisabled</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
@@ -350,7 +350,7 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+        <Value xsi:type="xsd:string">PrimaryHighlighted</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">193</Value>
@@ -378,7 +378,7 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryDark</Value>
+        <Value xsi:type="xsd:string">PrimaryPushed</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">137</Value>
@@ -406,7 +406,7 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+        <Value xsi:type="xsd:string">PrimaryHighlighted</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -434,7 +434,7 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+        <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -462,7 +462,7 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+        <Value xsi:type="xsd:string">PrimaryDisabled</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>

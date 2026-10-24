@@ -589,6 +589,60 @@
     <Variable Type="float" Name="TextPrimary.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="int" Name="TextPrimaryDisabled.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">116</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryDisabled.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">116</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryDisabled.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">116</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryDisabled.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimaryDisabled.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryDisabled.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryHighlighted.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">191</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryHighlighted.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">191</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryHighlighted.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">191</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryHighlighted.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimaryHighlighted.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryHighlighted.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryPushed.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">153</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryPushed.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">153</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryPushed.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">153</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryPushed.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimaryPushed.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryPushed.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="ChildrenLayout" Name="TextStyles.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -717,6 +771,9 @@
   <Instance Name="Danger" BaseType="Rectangle" />
   <Instance Name="Accent" BaseType="Rectangle" />
   <Instance Name="TextPrimary" BaseType="Rectangle" />
+  <Instance Name="TextPrimaryDisabled" BaseType="Rectangle" />
+  <Instance Name="TextPrimaryHighlighted" BaseType="Rectangle" />
+  <Instance Name="TextPrimaryPushed" BaseType="Rectangle" />
   <Instance Name="TextMuted" BaseType="Rectangle" />
   <Instance Name="BorderHover" BaseType="Rectangle" />
   <Instance Name="BorderPushed" BaseType="Rectangle" />
