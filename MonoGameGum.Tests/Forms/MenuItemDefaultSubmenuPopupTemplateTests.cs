@@ -64,6 +64,39 @@ public class MenuItemDefaultSubmenuPopupTemplateTests : BaseTestClass
         return file;
     }
 
+    // Teardown clears it with DefaultFormsTemplates, so it does not survive into the next Initialize.
+    [Fact]
+    public void ReleaseFormsAndProject_DefaultSubmenuPopupTemplateSet_ClearsIt()
+    {
+        MenuItem.DefaultSubmenuPopupTemplate = NamedScrollViewerTemplate("SubmenuPopup");
+        // Teardown skips null roots; detach them so the rest of the test class keeps its environment.
+        var popupRoot = FrameworkElement.PopupRoot;
+        var modalRoot = FrameworkElement.ModalRoot;
+        var cursor = FrameworkElement.MainCursor;
+        var keyboard = FrameworkElement.MainKeyboard;
+        var keyboards = System.Linq.Enumerable.ToList(FrameworkElement.KeyboardsForUiControl);
+        var gamePads = System.Linq.Enumerable.ToList(FrameworkElement.GamePadsForUiControl);
+        var project = Gum.Managers.ObjectFinder.Self.GumProjectSave;
+        FrameworkElement.PopupRoot = null!;
+        FrameworkElement.ModalRoot = null!;
+        try
+        {
+            Gum.GumServiceTeardown.ReleaseFormsAndProject(isLastService: false);
+
+            MenuItem.DefaultSubmenuPopupTemplate.ShouldBeNull();
+        }
+        finally
+        {
+            FrameworkElement.PopupRoot = popupRoot;
+            FrameworkElement.ModalRoot = modalRoot;
+            FrameworkElement.MainCursor = cursor;
+            FrameworkElement.MainKeyboard = keyboard;
+            FrameworkElement.KeyboardsForUiControl.AddRange(keyboards);
+            FrameworkElement.GamePadsForUiControl.AddRange(gamePads);
+            Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
+        }
+    }
+
     [Fact]
     public void DefaultSubmenuPopupTemplate_NotSet_IsNull()
     {
