@@ -779,6 +779,27 @@ public partial class LayoutRandomTreeSweepTests : BaseTestClass
         differences.Count.ShouldBe(0, string.Join(", ", differences.Take(20)));
     }
 
+    [Fact]
+    public void Seed673_AppendToStackOfUnsettledSiblings_ShouldReportTheSameEventsWhetherOrNotRepeatedChildLayoutsAreSkipped()
+    {
+        // An ill-formed tree whose stack children change size every time they are laid out. An append to that
+        // stack must lay them out again (#6702), as laying every child out every time does, so the events match.
+        GraphicalUiElement.SkipRepeatedChildLayouts = false;
+        CaseResult everyTime;
+        try
+        {
+            everyTime = RunCase(673, wellFormed: false);
+        }
+        finally
+        {
+            GraphicalUiElement.SkipRepeatedChildLayouts = true;
+        }
+        CaseResult skipping = RunCase(673, wellFormed: false);
+
+        string.Join("|", skipping.Events).ShouldBe(string.Join("|", everyTime.Events));
+        Fingerprint(skipping).ShouldBe(Fingerprint(everyTime));
+    }
+
     private static Node Spec(ChildrenLayout layout, DimensionUnitType widthUnits, float width, DimensionUnitType heightUnits, float height,
         params Node[] children)
     {

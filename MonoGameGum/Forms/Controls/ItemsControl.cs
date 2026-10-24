@@ -119,27 +119,12 @@ public class ItemsControl : ScrollViewer
 
     /// <summary>
     /// Runs a bulk change with every layout deferred, then (unless an outer caller is already deferring)
-    /// runs the deferred work under <paramref name="flushRoot"/>. A SuspendLayout the user set on the
-    /// control's visual or its children stays in place, with its work left for the user's ResumeLayout.
+    /// runs the deferred work under <paramref name="flushRoot"/> and on any other element the change
+    /// dirtied, such as a ComboBox's text. A SuspendLayout the user set stays in place, with its work
+    /// left for the user's ResumeLayout.
     /// </summary>
-    private static void RunWithAllLayoutSuspended(Action change, GraphicalUiElement? flushRoot)
-    {
-        bool wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;
-        GraphicalUiElement.IsAllLayoutSuspended = true;
-        try
-        {
-            change();
-        }
-        finally
-        {
-            GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
-        }
-
-        if (!wasSuspended)
-        {
-            flushRoot?.ResumeDeferredLayoutKeepingSuspensions();
-        }
-    }
+    private static void RunWithAllLayoutSuspended(Action change, GraphicalUiElement? flushRoot) =>
+        GraphicalUiElement.RunWithAllLayoutSuspended(change, flushRoot);
 
     private void ForceUpdateToItems()
     {

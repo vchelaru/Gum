@@ -103,6 +103,8 @@ public class EditorTemplateTests
         // PrimaryDark/PrimaryLight are the V3 shading of Primary (Adjust -15 / +15), baked in because
         // static content can't compute them. The Standard swatches the code theme leaves on their V3
         // defaults (Black ... Danger) are unchanged.
+        // InputBackground is V3 Styling.Colors.InputBackground, which the code theme also leaves on its default;
+        // the menu bar reads it (#6732).
         Dictionary<string, (int R, int G, int B)> expected = new()
         {
             ["TextPrimary"] = (180, 180, 180),
@@ -127,7 +129,7 @@ public class EditorTemplateTests
             .ToList();
         swatches.ShouldBe(new[]
         {
-            "Black", "DarkGray", "Gray", "LightGray", "White", "PrimaryDark", "Primary", "PrimaryLight",
+            "Black", "DarkGray", "InputBackground", "Gray", "LightGray", "White", "PrimaryDark", "Primary", "PrimaryLight",
             "Success", "Warning", "Danger", "Accent", "TextPrimary", "TextMuted", "BorderHover",
             "BorderPushed", "Selection", "PanelBackground", "RecessedBackground"
         }, ignoreOrder: true);

@@ -483,7 +483,27 @@ public partial class GraphicalUiElement
                 // Runs for every removal path (Parent = null, RemoveChild, Children.Remove/Clear).
                 // A suspended parent only records the layout as dirty.
                 oldParent?.UpdateLayoutAfterChildRemoved();
-                UpdateLayout();
+
+                // An append to a stack cannot change the children before it (#6702).
+                var stackAppendedTo = value != null && value._appendedChild == null && value.currentDirtyState == null &&
+                    (value.ChildrenLayout == ChildrenLayout.TopToBottomStack || value.ChildrenLayout == ChildrenLayout.LeftToRightStack) &&
+                    value.Children.Count > 1 && value.Children[value.Children.Count - 1] == this
+                    ? value : null;
+                if (stackAppendedTo != null)
+                {
+                    stackAppendedTo._appendedChild = this;
+                }
+                try
+                {
+                    UpdateLayout();
+                }
+                finally
+                {
+                    if (stackAppendedTo != null)
+                    {
+                        stackAppendedTo._appendedChild = null;
+                    }
+                }
                 ParentChanged?.Invoke(this, new ParentChangedEventArgs()
                 {
                     OldValue = oldParent,
