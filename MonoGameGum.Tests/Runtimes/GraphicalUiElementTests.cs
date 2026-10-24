@@ -2147,7 +2147,6 @@ public class GraphicalUiElementTests : BaseTestClass
         "mContainedObjectAsIVisible",
         "_childrenWrapper",
         "_parent",
-        "_appendedChild",
         "mWhatContainsThis",
         "mWhatThisContains",
         "mManagers",

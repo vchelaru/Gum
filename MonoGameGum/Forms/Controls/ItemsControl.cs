@@ -1012,6 +1012,8 @@ public class ItemsControl : ScrollViewer
 
         var shouldSuppressLayout = newItems.Count > 0 && InnerPanel != null;
         var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+        // Items added at the end leave the rows before them as they are (#6702).
+        var isCleanAppend = InnerPanel != null && index == InnerPanel.Children.Count && InnerPanel.IsCleanForAppend;
         if (shouldSuppressLayout)
         {
             GraphicalUiElement.IsAllLayoutSuspended = true;
@@ -1091,7 +1093,7 @@ public class ItemsControl : ScrollViewer
                 // would have stale font state until first open, with no path
                 // to realize the font even at open time. See
                 // ListBoxTests.ItemsAddedWhileInvisible_ShouldHaveFontsResolved.
-                InnerPanel?.ResumeDeferredLayoutKeepingSuspensions();
+                InnerPanel?.ResumeDeferredLayoutAfterAppend(index - newItems.Count, isCleanAppend);
             }
         }
     }

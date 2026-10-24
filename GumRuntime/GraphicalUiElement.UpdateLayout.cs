@@ -126,10 +126,48 @@ public partial class GraphicalUiElement
     // input) has to be laid out again.
     private bool _lastLayoutChangedNothing;
 
-    // Set on a stack while the layout for a child appended at its end runs. The other children were laid out
-    // before the append and an appended child cannot change them, so they are placed again (or laid out, if
-    // what they read from this stack changed) instead of being laid out again every time (#6702).
-    private GraphicalUiElement? _appendedChild;
+    // Set on a stack while the layout for children appended at its end runs: the index of the first appended
+    // child, or -1. The children before it were laid out before the append and appended children cannot change
+    // them, so they are placed again (or laid out, if what they read from this stack changed) instead of being
+    // laid out again every time (#6702).
+    private int _firstAppendedIndex = -1;
+
+    private bool IsBeforeAppendedChildren(GraphicalUiElement child) =>
+        _firstAppendedIndex >= 0 && child._cachedSiblingIndex >= 0 && child._cachedSiblingIndex < _firstAppendedIndex &&
+        child._cachedSiblingIndex < Children.Count && Children[child._cachedSiblingIndex] == child;
+
+    // Whether children appended to this stack now leave the ones before them as they are.
+    private bool CanSkipChildrenBeforeAppend() =>
+        _firstAppendedIndex < 0 && currentDirtyState == null &&
+        (ChildrenLayout == ChildrenLayout.TopToBottomStack || ChildrenLayout == ChildrenLayout.LeftToRightStack);
+
+    /// <summary>
+    /// <see cref="ResumeDeferredLayoutKeepingSuspensions"/> for a stack whose children from
+    /// <paramref name="firstAppendedIndex"/> on were appended while layout was suspended, and which was clean
+    /// before (<paramref name="wasCleanBeforeAppend"/>): the children before them are not laid out again (#6702).
+    /// </summary>
+    internal void ResumeDeferredLayoutAfterAppend(int firstAppendedIndex, bool wasCleanBeforeAppend)
+    {
+        bool useHint = wasCleanBeforeAppend && firstAppendedIndex > 0 && _firstAppendedIndex < 0 &&
+            (ChildrenLayout == ChildrenLayout.TopToBottomStack || ChildrenLayout == ChildrenLayout.LeftToRightStack);
+        if (useHint)
+        {
+            _firstAppendedIndex = firstAppendedIndex;
+        }
+        try
+        {
+            ResumeDeferredLayoutKeepingSuspensions();
+        }
+        finally
+        {
+            if (useHint)
+            {
+                _firstAppendedIndex = -1;
+            }
+        }
+    }
+
+    internal bool IsCleanForAppend => CanSkipChildrenBeforeAppend();
 
     #endregion
 

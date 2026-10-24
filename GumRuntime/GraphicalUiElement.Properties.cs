@@ -485,13 +485,12 @@ public partial class GraphicalUiElement
                 oldParent?.UpdateLayoutAfterChildRemoved();
 
                 // An append to a stack cannot change the children before it (#6702).
-                var stackAppendedTo = value != null && value._appendedChild == null && value.currentDirtyState == null &&
-                    (value.ChildrenLayout == ChildrenLayout.TopToBottomStack || value.ChildrenLayout == ChildrenLayout.LeftToRightStack) &&
+                var stackAppendedTo = value != null && value.CanSkipChildrenBeforeAppend() &&
                     value.Children.Count > 1 && value.Children[value.Children.Count - 1] == this
                     ? value : null;
                 if (stackAppendedTo != null)
                 {
-                    stackAppendedTo._appendedChild = this;
+                    stackAppendedTo._firstAppendedIndex = stackAppendedTo.Children.Count - 1;
                 }
                 try
                 {
@@ -501,7 +500,7 @@ public partial class GraphicalUiElement
                 {
                     if (stackAppendedTo != null)
                     {
-                        stackAppendedTo._appendedChild = null;
+                        stackAppendedTo._firstAppendedIndex = -1;
                     }
                 }
                 ParentChanged?.Invoke(this, new ParentChangedEventArgs()

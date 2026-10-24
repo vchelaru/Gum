@@ -114,8 +114,28 @@ public class StackAppendLayoutTests : BaseTestClass
 
         clone.ShouldNotBeNull();
         typeof(GraphicalUiElement)
-            .GetField("_appendedChild", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .GetValue(clone).ShouldBeNull();
+            .GetField("_firstAppendedIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .GetValue(clone).ShouldBe(-1);
+    }
+
+    [Fact]
+    public void ResumeLayout_ShouldResizeRatioSibling_WhenSiblingWasResizedThenHiddenWhileSuspended()
+    {
+        // Sweep seed 323, cut down: the hidden sibling's resize while suspended is the only record that the
+        // parent has to lay out again, so resuming it cannot skip that because the sibling is hidden.
+        ContainerRuntime root = new() { Width = 300, Height = 200, WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute };
+        ContainerRuntime ratio = new() { Width = 1, WidthUnits = DimensionUnitType.Ratio, Height = 12, HeightUnits = DimensionUnitType.Absolute };
+        ContainerRuntime fixedWidth = new() { Width = 55, WidthUnits = DimensionUnitType.Absolute, Height = 4, HeightUnits = DimensionUnitType.Absolute };
+        root.AddChild(ratio);
+        root.AddChild(fixedWidth);
+        ratio.AbsoluteWidth.ShouldBe(245);
+
+        root.SuspendLayout(recursive: true);
+        fixedWidth.Visible = false;
+        fixedWidth.Width = 60;
+        root.ResumeLayout(recursive: true);
+
+        ratio.AbsoluteWidth.ShouldBe(300);
     }
 
     public static IEnumerable<object[]> Scenarios()

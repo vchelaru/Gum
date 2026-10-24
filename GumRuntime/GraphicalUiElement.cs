@@ -626,7 +626,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.statesInStack = new HashSet<StateSave>();
         newClone.StackedRowOrColumnDimensions = null;
         // Layout bookkeeping of the source's own layouts, not the clone's.
-        newClone._appendedChild = null;
+        newClone._firstAppendedIndex = -1;
         newClone._lastLaidOutSession = 0;
         newClone._lastLayoutChangedNothing = false;
         newClone._pendingCustomVariables = _pendingCustomVariables == null
