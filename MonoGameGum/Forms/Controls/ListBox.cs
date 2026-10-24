@@ -1818,7 +1818,9 @@ public class ListBox : ItemsControl, IInputReceiver
         // resets the binding on the ListBox which 
         // we don't want!
         //popup.Visual.RemoveFromManagers();
+#if FRB
         popup.Visual.Parent = null;
+#endif
         var layerToAddListBoxTo = GetLayerToAddTo(listBoxParent);
 
 #if FRB
@@ -1858,16 +1860,17 @@ public class ListBox : ItemsControl, IInputReceiver
         var (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
             ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
 
-        GraphicalUiElement targetRoot;
-        if (listBoxParent.GetTopParent() == modalRoot)
+        GraphicalUiElement targetRoot = listBoxParent.GetTopParent() == modalRoot ? modalRoot : popupRoot;
+
+        // A popup already drawn over every other one stays where it is: taking it out and adding it back
+        // would lay out all of its rows twice (#6757).
+        var targetChildren = targetRoot.Children;
+        bool isAlreadyOnTop = popup.Visual.Parent == targetRoot && targetChildren.Count > 0 &&
+            targetChildren[targetChildren.Count - 1] == popup.Visual;
+        if (!isAlreadyOnTop)
         {
-            targetRoot = modalRoot;
-            modalRoot.Children.Add(popup.Visual);
-        }
-        else
-        {
-            targetRoot = popupRoot;
-            popupRoot.Children.Add(popup.Visual);
+            popup.Visual.Parent = null;
+            targetChildren.Add(popup.Visual);
         }
 
         // Reposition after resolving and parenting to the target root, so the clamp reflects

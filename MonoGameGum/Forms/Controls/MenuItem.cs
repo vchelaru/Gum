@@ -1040,9 +1040,17 @@ public class MenuItem : ItemsControl
         // let's suppress layout for performance reasons, and to prevent issues with scrollbars:
         var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
         GraphicalUiElement.IsAllLayoutSuspended = true;
+        // When every value below is already set (an open popup whose rows changed), the row change
+        // already resized the popup, so laying it out again would only repeat that for every row (#6757).
+        bool changed = false;
 
         try
         {
+            changed = popup.HorizontalScrollBarVisibility != ScrollBarVisibility.Hidden ||
+                popup.VerticalScrollBarVisibility != ScrollBarVisibility.Hidden ||
+                popup.VerticalSizeMode != SizeMode.Auto ||
+                popup.HorizontalSizeMode != SizeMode.Auto;
+
             popup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
             popup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
 
@@ -1058,11 +1066,13 @@ public class MenuItem : ItemsControl
             {
                 if (parentForSizing.WidthUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren)
                 {
+                    changed = true;
                     parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                     parentForSizing.Width = 0;
                 }
                 if (parentForSizing.HeightUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren)
                 {
+                    changed = true;
                     parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                     parentForSizing.Height = 0;
                 }
@@ -1079,7 +1089,7 @@ public class MenuItem : ItemsControl
             GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
         }
 
-        if (!wasSuppressed)
+        if (!wasSuppressed && changed)
         {
             popup.Visual.UpdateLayout();
         }
