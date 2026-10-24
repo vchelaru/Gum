@@ -181,7 +181,7 @@ public class FormsUtilities
         {
             if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
             {
-                FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(factory);
+                FrameworkElement.DefaultFormsTemplates[formsType] = new BuiltInVisualTemplate(factory);
             }
         }
 

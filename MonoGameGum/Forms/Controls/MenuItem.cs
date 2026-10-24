@@ -719,10 +719,18 @@ public class MenuItem : ItemsControl
 
 #if !FRB
     // In a from-file project, a MenuItem with no ScrollViewerVisualTemplate builds its popup from the
-    // project's ScrollViewer component, picked by the same rule as the Tooltip (#6720). Null when no
-    // project is loaded or it has no ScrollViewer component, which keeps the code-built ScrollViewer.
+    // project's ScrollViewer component, picked by the same rule as the Tooltip (#6720). As with the
+    // Tooltip, a ScrollViewer template user code registered wins over the component. Null when that
+    // happens, when no project is loaded, or when it has no ScrollViewer component: the popup is then a
+    // plain ScrollViewer from DefaultFormsTemplates.
     private static InteractiveGue? CreateProjectScrollViewerVisual()
     {
+        bool isUserTemplate = DefaultFormsTemplates.TryGetValue(typeof(ScrollViewer), out VisualTemplate? existing)
+            && existing is not BuiltInVisualTemplate;
+        if (isUserTemplate)
+        {
+            return null;
+        }
         global::Gum.DataTypes.ComponentSave? component = DefaultImplementationLookup.Find(
             global::Gum.Managers.ObjectFinder.Self.GumProjectSave,
             global::Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.ScrollViewerBehaviorName);

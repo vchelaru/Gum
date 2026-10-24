@@ -150,6 +150,21 @@ public class MenuFocusRenderTests : BaseTestClass
         tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, $"{themeName}: popup height change when a row is added");
     }
 
+    // Like the Tooltip, a ScrollViewer template that user code registered wins over the project's component (#6720).
+    [Fact]
+    public void Tool_SubmenuPopup_UserScrollViewerTemplate_WinsOverProjectComponent()
+    {
+        const string userVisualName = "UserScrollViewer";
+        void RegisterUserTemplate() =>
+            FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] = new VisualTemplate((_, createForms) =>
+                new global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: createForms) { Name = userVisualName });
+
+        MenuMeasure tool = RunTool("bubblegum", "FormsThemes/Bubblegum", "Bubblegum/Controls/", new XnaColor(255, 240, 249), RegisterUserTemplate);
+
+        tool.PopupVisualName.ShouldBe(userVisualName);
+        tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, "popup height change when a row is added");
+    }
+
     // Code-only themes keep their own popup visual, under the item and sized to its rows.
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
@@ -198,7 +213,7 @@ public class MenuFocusRenderTests : BaseTestClass
     // highlight leaves at the menu bar color.
     private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge, XnaColor HighlightCorner, XnaColor OpenFill,
         XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner,
-        XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, float PopupGrowthPerRow, float AddedRowHeight);
+        XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, string? PopupVisualName, float PopupGrowthPerRow, float AddedRowHeight);
 
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
@@ -214,7 +229,7 @@ public class MenuFocusRenderTests : BaseTestClass
         RunTool(themeName, templateFolder, componentPrefix, background);
     }
 
-    private static MenuMeasure RunTool(string themeName, string templateFolder, string componentPrefix, XnaColor background)
+    private static MenuMeasure RunTool(string themeName, string templateFolder, string componentPrefix, XnaColor background, Action? afterInitialize = null)
     {
         string root = Path.Combine(Path.GetTempPath(), "GumMenuFocus_" + Guid.NewGuid().ToString("N"));
         try
@@ -224,7 +239,7 @@ public class MenuFocusRenderTests : BaseTestClass
             string projectDir = Path.Combine(root, templateFolder.Replace('/', Path.DirectorySeparatorChar));
             CopyDirectory(Path.Combine(templates, templateFolder.Replace('/', Path.DirectorySeparatorChar)), projectDir);
 
-            return RunScenario(themeName + "-tool", Path.Combine(projectDir, "GumProject.gumx"), applyTheme: null, background, componentPrefix);
+            return RunScenario(themeName + "-tool", Path.Combine(projectDir, "GumProject.gumx"), afterInitialize, background, componentPrefix);
         }
         finally
         {
@@ -389,7 +404,7 @@ public class MenuFocusRenderTests : BaseTestClass
 
             return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor, edge, corner,
                 open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner,
-                popupFill, popupBorder, rowTextColor, popupElementName, growth, addedRowHeight);
+                popupFill, popupBorder, rowTextColor, popupElementName, popup.Name, growth, addedRowHeight);
         }
         finally
         {
