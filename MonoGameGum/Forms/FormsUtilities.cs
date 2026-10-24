@@ -583,6 +583,7 @@ public class FormsUtilities
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
         _defaultTooltipTemplate = null;
         MenuItem.FromFileSubmenuPopupTemplate = null;
+        ComboBox.FromFileDropDownTemplate = null;
     }
 
     /// <summary>
@@ -596,6 +597,7 @@ public class FormsUtilities
         ElementSaveExtensions.UnregisterGueInstantiationTypes(type => type.Namespace == fromFileNamespace);
         ElementSaveExtensions.InitialStateAppliedNotifier = null;
         MenuItem.FromFileSubmenuPopupTemplate = null;
+        ComboBox.FromFileDropDownTemplate = null;
     }
 
     private static VisualTemplate? _processWideDefaultTooltipTemplate;
@@ -795,29 +797,36 @@ public class FormsUtilities
         }
 
         RegisterFromFileTooltipTemplate(ObjectFinder.Self.GumProjectSave);
-        RegisterFromFileSubmenuPopupTemplate(ObjectFinder.Self.GumProjectSave);
+        RegisterFromFilePopupTemplates(ObjectFinder.Self.GumProjectSave);
     }
 
-    // A MenuItem shows its sub-items in the project's MenuItemSubmenuPopupBehavior component, picked by the
-    // same rule as the Tooltip's (#6720). The visual is built only when a submenu opens, from the component
-    // resolved by name then, so a hot reload's project is what gets built. MenuItem wraps the bare
-    // InteractiveGue in a ScrollViewer and decides precedence against the other popup sources.
-    private static void RegisterFromFileSubmenuPopupTemplate(GumProjectSave project)
+    // A MenuItem shows its sub-items in the project's MenuItemSubmenuPopupBehavior component (#6720), and a
+    // ComboBox with no ListBoxInstance child shows its drop-down in the project's ListBox component (#6728).
+    // Each is picked by the same rule as the Tooltip's; the control decides precedence against its other sources.
+    private static void RegisterFromFilePopupTemplates(GumProjectSave project)
     {
-        ComponentSave? popupComponent = DefaultImplementationLookup.Find(project, StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName);
+        MenuItem.FromFileSubmenuPopupTemplate = CreateLazyFromFileComponentTemplate(project, StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName);
+        ComboBox.FromFileDropDownTemplate = CreateLazyFromFileComponentTemplate(project, StandardFormsBehaviorNames.ListBoxBehaviorName);
+    }
+
+    // A template for the component that implements the behavior (its DefaultImplementation, else the first
+    // one), or null when the project has none. The visual is built only when the control first asks for it,
+    // from the component resolved by name then, so a hot reload's project is what gets built. CreateContent
+    // returns a bare InteractiveGue (no Forms control), or null if the component was removed since.
+    private static VisualTemplate? CreateLazyFromFileComponentTemplate(GumProjectSave project, string behaviorName)
+    {
+        ComponentSave? popupComponent = DefaultImplementationLookup.Find(project, behaviorName);
         if (popupComponent == null)
         {
-            MenuItem.FromFileSubmenuPopupTemplate = null;
-            return;
+            return null;
         }
 
         string componentName = popupComponent.Name;
-        MenuItem.FromFileSubmenuPopupTemplate = new VisualTemplate((_, _) =>
+        return new VisualTemplate((_, _) =>
         {
             ComponentSave? component = ObjectFinder.Self.GetComponent(componentName);
             if (component == null)
             {
-                // The component was removed since registration: MenuItem falls back to its other sources.
                 return null!;
             }
             InteractiveGue visual = new InteractiveGue();

@@ -59,7 +59,11 @@ public class ComboBox :
     /// <exception cref="ArgumentNullException">The assigned value is null.</exception>
     public ListBox ListBox
     {
-        get => listBox;
+        get
+        {
+            EnsureListBox();
+            return listBox;
+        }
         [UnconditionalSuppressMessage("Trimming", "IL2026",
             Justification = "Only forwards a DisplayMemberPath the caller already set, and that " +
                 "setter carries the RequiresUnreferencedCode warning at the caller.")]
@@ -100,13 +104,25 @@ public class ComboBox :
         }
     }
 
+#if !FRB
+    private static VisualTemplate? _processWideFromFileDropDownTemplate;
+
+    // Set by FormsUtilities when a from-file project has a ListBoxBehavior component (#6728). A ComboBox
+    // whose visual has no ListBoxInstance child builds its drop-down from it on the first open.
+    internal static VisualTemplate? FromFileDropDownTemplate
+    {
+        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.FromFileComboBoxDropDownTemplate : _processWideFromFileDropDownTemplate; }
+        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.FromFileComboBoxDropDownTemplate = value; } else { _processWideFromFileDropDownTemplate = value; } }
+    }
+#endif
+
     // The list box whose events this combo box is currently subscribed to, so the subscription
     // can move when the list box is replaced.
     ListBox? _subscribedListBox;
 
     private void SubscribeToListBox()
     {
-        if (_subscribedListBox != listBox)
+        if (listBox != null && _subscribedListBox != listBox)
         {
             if (_subscribedListBox != null)
             {
@@ -154,7 +170,10 @@ public class ComboBox :
             _displayMemberPath = value;
 
             // The drop-down rows show the same member as the text box.
-            listBox.DisplayMemberPath = value ?? string.Empty;
+            if (listBox != null)
+            {
+                listBox.DisplayMemberPath = value ?? string.Empty;
+            }
 
             UpdateToObject(SelectedObject);
         }
@@ -163,12 +182,23 @@ public class ComboBox :
     public IList? Items
 
     {
-        get => listBox.Items;
+        get => listBox != null ? listBox.Items : _pendingItems;
         set
         {
             if (value != Items)
             {
-                listBox.Items = value;
+                if (listBox != null)
+                {
+                    listBox.Items = value;
+                }
+                else
+                {
+                    _pendingItems = value;
+                    if (_pendingSelectedObject != null && value?.Contains(_pendingSelectedObject) != true)
+                    {
+                        SetPendingSelection(null);
+                    }
+                }
 
                 PushValueToViewModel();
             }
@@ -184,7 +214,7 @@ public class ComboBox :
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type? ListBoxItemGumType
     {
-        get { return listBox.ListBoxItemGumType; }
+        get { EnsureListBox(); return listBox.ListBoxItemGumType; }
         [UnconditionalSuppressMessage("Trimming", "IL2114",
             Justification = ItemsControl.PreservedNotCalledJustification)]
         set
@@ -195,6 +225,7 @@ public class ComboBox :
                 throw new Exception("Visual must be set before assigning the ListBoxItemType");
             }
 #endif
+            EnsureListBox();
             listBox.ListBoxItemGumType = value;
         }
     }
@@ -207,7 +238,7 @@ public class ComboBox :
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type ListBoxItemFormsType
     {
-        get { return listBox.ListBoxItemFormsType; }
+        get { EnsureListBox(); return listBox.ListBoxItemFormsType; }
         [UnconditionalSuppressMessage("Trimming", "IL2114",
             Justification = ItemsControl.PreservedNotCalledJustification)]
         set
@@ -218,6 +249,7 @@ public class ComboBox :
                 throw new Exception("Visual must be set before assigning the ListBoxItemType");
             }
 #endif
+            EnsureListBox();
             listBox.ListBoxItemFormsType = value;
         }
     }
@@ -232,8 +264,8 @@ public class ComboBox :
     /// </summary>
     public FrameworkElementTemplate? FrameworkElementTemplate
     {
-        get => listBox.FrameworkElementTemplate;
-        set => listBox.FrameworkElementTemplate = value;
+        get => ListBox.FrameworkElementTemplate;
+        set => ListBox.FrameworkElementTemplate = value;
     }
 
     /// <summary>
@@ -246,19 +278,110 @@ public class ComboBox :
     /// </summary>
     public VisualTemplate? VisualTemplate
     {
-        get => listBox.VisualTemplate;
-        set => listBox.VisualTemplate = value;
+        get => ListBox.VisualTemplate;
+        set => ListBox.VisualTemplate = value;
     }
 
     public object? SelectedObject
     {
-        get => listBox.SelectedObject;
-        set => listBox.SelectedObject = value;
+        get => listBox != null ? listBox.SelectedObject : _pendingSelectedObject;
+        set
+        {
+            if (listBox != null)
+            {
+                listBox.SelectedObject = value;
+            }
+            else
+            {
+                SetPendingSelection(value != null && Items?.Contains(value) == true ? value : null);
+            }
+        }
     }
     public int SelectedIndex
     {
-        get => listBox.SelectedIndex;
-        set => listBox.SelectedIndex = value;
+        get
+        {
+            if (listBox != null)
+            {
+                return listBox.SelectedIndex;
+            }
+            return _pendingSelectedObject == null ? -1 : (Items?.IndexOf(_pendingSelectedObject) ?? -1);
+        }
+        set
+        {
+            if (listBox != null)
+            {
+                listBox.SelectedIndex = value;
+            }
+            else
+            {
+                IList? items = Items;
+                SetPendingSelection(items != null && value >= 0 && value < items.Count ? items[value] : null);
+            }
+        }
+    }
+
+    // While a lazy drop-down is not built yet (#6728), the ComboBox holds the items and the selection
+    // itself and hands them to the ListBox when it is built on the first open.
+    VisualTemplate? _lazyDropDownTemplate;
+    IList? _pendingItems = new System.Collections.ObjectModel.ObservableCollection<object>();
+    object? _pendingSelectedObject;
+
+    private void SetPendingSelection(object? selected)
+    {
+        if (Equals(selected, _pendingSelectedObject))
+        {
+            return;
+        }
+        SelectionChangedEventArgs args = new SelectionChangedEventArgs();
+        if (_pendingSelectedObject != null)
+        {
+            args.RemovedItems.Add(_pendingSelectedObject);
+        }
+        if (selected != null)
+        {
+            args.AddedItems.Add(selected);
+        }
+        _pendingSelectedObject = selected;
+        RaiseSelectionChanged(selected, args);
+    }
+
+    // Builds the drop-down from the lazy template the first time it is needed. Does nothing when the
+    // ListBox already exists (a ListBoxInstance child, an assigned ListBox, or an earlier build).
+    private void EnsureListBox()
+    {
+        if (listBox != null || _lazyDropDownTemplate == null)
+        {
+            return;
+        }
+
+        InteractiveGue dropDownVisual = _lazyDropDownTemplate.CreateContent(null) as InteractiveGue
+            ?? throw new InvalidOperationException(
+                $"The combo box {Visual.Name} has no ListBoxInstance and the project's ListBox component could not be built");
+        ListBox built = dropDownVisual.FormsControlAsObject as ListBox ?? new ListBox(dropDownVisual);
+
+        // Placed like a ListBoxInstance child: below the ComboBox, at its width.
+        dropDownVisual.Name = "ListBoxInstance";
+        dropDownVisual.XUnits = GeneralUnitType.PixelsFromSmall;
+        dropDownVisual.YUnits = GeneralUnitType.PixelsFromLarge;
+        dropDownVisual.X = 0;
+        dropDownVisual.Y = 0;
+        dropDownVisual.WidthUnits = DimensionUnitType.RelativeToParent;
+        dropDownVisual.Width = 0;
+        Visual.RaiseChildrenEventsOutsideOfBounds = true;
+
+        built.IsVisible = false;
+        if (!string.IsNullOrEmpty(_displayMemberPath))
+        {
+            built.DisplayMemberPath = _displayMemberPath;
+        }
+        built.Items = _pendingItems;
+        built.SelectedObject = _pendingSelectedObject;
+        _pendingItems = null;
+        _pendingSelectedObject = null;
+
+        listBox = built;
+        SubscribeToListBox();
     }
 
     public List<Keys> IgnoredKeys => throw new NotImplementedException();
@@ -291,7 +414,7 @@ public class ComboBox :
 
     public bool IsDropDownOpen
     {
-        get => listBox.IsVisible;
+        get => listBox != null && listBox.IsVisible;
         set
         {
             if (value && IsDropDownOpen == false)
@@ -393,13 +516,28 @@ public class ComboBox :
 
     protected override void RefreshInternalVisualReferences()
     {
-        var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue
-            ?? throw new Exception("Gum object must have an object called \"ListBoxInstance\"");
+        var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue;
+        VisualTemplate? lazyDropDownTemplate = null;
+#if !FRB
+        lazyDropDownTemplate = listBoxInstance == null ? FromFileDropDownTemplate : null;
+#endif
+        if (listBoxInstance == null && lazyDropDownTemplate == null)
+        {
+            throw new Exception("Gum object must have an object called \"ListBoxInstance\"");
+        }
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance")
             ?? throw new Exception("Gum object must have an object called \"TextInstance\"");
 
         coreTextObject = textComponent.RenderableComponent as global::RenderingLibrary.Graphics.IText
             ?? throw new Exception("The combo box's \"TextInstance\" must be a text object");
+
+        if (listBoxInstance == null)
+        {
+            // A from-file ComboBox with no ListBoxInstance child: the drop-down is built on the first open.
+            _lazyDropDownTemplate = lazyDropDownTemplate;
+            Text = null;
+            return;
+        }
 
         // remove it because it's gotta be a "popup"
 
@@ -475,6 +613,8 @@ public class ComboBox :
 
     private void ShowListBoxInstance()
     {
+        EnsureListBox();
+
         _hadFocusOnListBoxOpened = IsFocused;
 
 #if !FRB
@@ -720,7 +860,7 @@ public class ComboBox :
         StopWatchingAncestors();
 #endif
 
-        if (listBox.IsVisible)
+        if (listBox != null && listBox.IsVisible)
         {
             // The ComboBox may already be out of the tree (its Visual has no managers), but the popup is
             // in the popup layer, which does.
@@ -786,22 +926,21 @@ public class ComboBox :
             listBox.ScrollIndexIntoView(listBox.SelectedIndex);
         }
 
+        RaiseSelectionChanged(listBox.SelectedObject, args);
+    }
+
+    private void RaiseSelectionChanged(object? selectedObject, SelectionChangedEventArgs args)
+    {
         // If we bind the Text, then don't set this here, the binding will take care of it
         if (!IsDataBound(nameof(Text)))
         {
-            UpdateToObject(listBox.SelectedObject);
+            UpdateToObject(selectedObject);
         }
-
-        // Why do we hide the list box here? We don't want to do it if
-        // the user uses the arrow keys to change a selection do we?
-        //HideListBox();
 
         PushValueToViewModel(nameof(SelectedObject));
         PushValueToViewModel(nameof(SelectedIndex));
 
         SelectionChanged?.Invoke(this, args);
-
-
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2075",
