@@ -162,8 +162,27 @@ public sealed class ContentLoader : IContentLoader
     /// when the pixels already went through <see cref="ProcessLoadedPixels"/>.
     /// </summary>
     private static Texture2D CreateTextureFromStream(GraphicsDevice device, System.IO.Stream stream,
-        out bool isProcessedOnLoad)
+        string name, out bool isProcessedOnLoad)
     {
+        stream = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+
+        // A gumcli-packed texture (#6514): already decoded, so convert the alpha mode if the
+        // package's differs and upload, with no image decode and no GetData readback.
+        byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(stream, name,
+            Graphics.Renderer.UsePremultipliedAlpha,
+            Graphics.Renderer.UsePremultipliedAlpha
+                ? "Renderer.UsePremultipliedAlpha is true"
+                : "Renderer.UsePremultipliedAlpha is false",
+            Graphics.Renderer.BleedTransparentTextureEdgesOnLoad,
+            out Gum.Bundle.GumRawTextureHeader header);
+        if (rawTexture != null)
+        {
+            var rawTexture2D = new Texture2D(device, header.Width, header.Height, false, SurfaceFormat.Color);
+            rawTexture2D.SetData(rawTexture);
+            isProcessedOnLoad = true;
+            return rawTexture2D;
+        }
+
 #if KNI && !FRB
         if (OperatingSystem.IsBrowser())
         {
@@ -211,7 +230,7 @@ public sealed class ContentLoader : IContentLoader
         using (var stream = GetUrlStream(fileName))
         {
             // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
-            texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isProcessedOnLoad);
+            texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, fileNameStandardized, out isProcessedOnLoad);
 
             texture.Name = fileNameStandardized;
         }
@@ -359,7 +378,7 @@ public sealed class ContentLoader : IContentLoader
                 using var stream = FileManager.GetStreamForFile(fileNameStandardized);
 
                 // Headless (no device): FromStream throws, which the catch below handles.
-                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isProcessedOnLoad);
+                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, fileNameStandardized, out isProcessedOnLoad);
 
                 texture.Name = fileNameStandardized;
 

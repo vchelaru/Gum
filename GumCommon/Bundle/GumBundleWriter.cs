@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-#if NET7_0_OR_GREATER
-using System.Formats.Tar;
-#endif
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -10,22 +7,21 @@ using System.Linq;
 namespace Gum.Bundle;
 
 /// <summary>
-/// Writes a set of (path, content) entries as a `.gumpkg` bundle: header + brotli(tar(entries)).
-/// Output is deterministic given identical inputs (sorted entries, fixed timestamps/uid/gid/mode).
+/// Writes a set of (path, content) entries as a `.gumpkg` bundle: header + a zip archive with one
+/// Deflate-compressed entry per file. Output is deterministic given identical inputs (sorted entries,
+/// fixed timestamps).
 /// </summary>
 public static class GumBundleWriter
 {
+    // Earliest timestamp a zip entry can store; fixed so identical input gives identical bytes.
+    private static readonly DateTimeOffset EntryTimestamp = new DateTimeOffset(1980, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
     /// <summary>
     /// Writes the supplied entries to <paramref name="output"/> as a complete bundle stream.
     /// Entries are sorted lexicographically (ordinal) before writing.
     /// </summary>
     public static void Write(Stream output, IEnumerable<(string path, byte[] content)> entries)
     {
-#if !NET7_0_OR_GREATER
-        throw new NotSupportedException(
-            "GumBundleWriter.Write requires .NET 7 or later (System.Formats.Tar). " +
-            "On older targets, .gumpkg bundle creation is not available.");
-#else
         if (output == null)
         {
             throw new ArgumentNullException(nameof(output));
@@ -35,42 +31,26 @@ public static class GumBundleWriter
             throw new ArgumentNullException(nameof(entries));
         }
 
-        output.Write(GumBundleFormat.MagicBytes, 0, GumBundleFormat.MagicBytes.Length);
-        output.WriteByte(GumBundleFormat.CurrentVersion);
-
         List<(string path, byte[] content)> sorted = entries
             .OrderBy(e => e.path, StringComparer.Ordinal)
             .ToList();
 
-        // leaveOpen so the caller still owns `output` after we dispose the brotli/tar wrappers.
-        using (BrotliStream brotli = new BrotliStream(output, CompressionLevel.Optimal, leaveOpen: true))
+        // The zip is built separately so its offsets start at 0, independent of the header.
+        MemoryStream payload = new MemoryStream();
+        using (ZipArchive zip = new ZipArchive(payload, ZipArchiveMode.Create, leaveOpen: true))
         {
-            using (TarWriter tar = new TarWriter(brotli, TarEntryFormat.Ustar, leaveOpen: true))
+            foreach ((string path, byte[] content) in sorted)
             {
-                foreach ((string path, byte[] content) in sorted)
-                {
-                    UstarTarEntry entry = new UstarTarEntry(TarEntryType.RegularFile, path)
-                    {
-                        // Fixed metadata so two writes of identical input produce byte-identical output.
-                        ModificationTime = DateTimeOffset.UnixEpoch,
-                        Mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead,
-                        Uid = 0,
-                        Gid = 0,
-                    };
-                    entry.DataStream = new MemoryStream(content, writable: false);
-                    tar.WriteEntry(entry);
-                }
-            }
-
-            if (sorted.Count == 0)
-            {
-                // TarWriter does not emit the end-of-archive marker (two 512-byte zero blocks)
-                // when no entries were written. Emit it ourselves so the reader can distinguish
-                // an intentionally empty archive from a truncated one.
-                byte[] endOfArchive = new byte[1024];
-                brotli.Write(endOfArchive, 0, endOfArchive.Length);
+                ZipArchiveEntry entry = zip.CreateEntry(path, CompressionLevel.Optimal);
+                entry.LastWriteTime = EntryTimestamp;
+                using Stream entryStream = entry.Open();
+                entryStream.Write(content, 0, content.Length);
             }
         }
-#endif
+
+        output.Write(GumBundleFormat.MagicBytes, 0, GumBundleFormat.MagicBytes.Length);
+        output.WriteByte(GumBundleFormat.CurrentVersion);
+        payload.Position = 0;
+        payload.CopyTo(output);
     }
 }

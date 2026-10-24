@@ -35,11 +35,17 @@ public static class PackCommand
             getDefaultValue: () => "core,fontcache,external",
             description: "Comma-separated categories to include. Valid values: core, fontcache, external.");
 
+        var premultipliedAlphaOption = new Option<bool>(
+            aliases: new[] { "--premultiplied-alpha" },
+            description: "Store PNG textures with premultiplied alpha, for games that set Renderer.UsePremultipliedAlpha " +
+                "to true and for SkiaGum. Off by default (straight alpha).");
+
         var command = new Command("pack", "Pack a Gum project into a .gumpkg bundle.")
         {
             projectArgument,
             outputOption,
-            includeOption
+            includeOption,
+            premultipliedAlphaOption
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -47,13 +53,14 @@ public static class PackCommand
             string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
             string? outputPath = context.ParseResult.GetValueForOption(outputOption);
             string includeFlags = context.ParseResult.GetValueForOption(includeOption) ?? "core,fontcache,external";
-            context.ExitCode = Execute(projectPath, outputPath, includeFlags);
+            bool premultipliedAlpha = context.ParseResult.GetValueForOption(premultipliedAlphaOption);
+            context.ExitCode = Execute(projectPath, outputPath, includeFlags, premultipliedAlpha);
         });
 
         return command;
     }
 
-    private static int Execute(string projectPath, string? outputPath, string includeFlags)
+    private static int Execute(string projectPath, string? outputPath, string includeFlags, bool premultipliedAlpha)
     {
         string fullPath = Path.GetFullPath(projectPath);
 
@@ -127,6 +134,19 @@ public static class PackCommand
                 Console.Error.WriteLine($"missing: {relativePath}");
                 return 1;
             }
+
+            if (IsPng(relativePath))
+            {
+                try
+                {
+                    bytes = ToRawTexture(bytes, premultipliedAlpha);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"error: could not decode PNG {relativePath}: {ex.Message}");
+                    return 1;
+                }
+            }
             entries.Add((relativePath, bytes));
             uncompressedBytes += bytes.Length;
         }
@@ -148,6 +168,30 @@ public static class PackCommand
         Console.WriteLine($"Ratio:           {ratio:F1}%");
 
         return 0;
+    }
+
+    private static bool IsPng(string relativePath) =>
+        string.Equals(Path.GetExtension(relativePath), ".png", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Decodes a PNG to straight RGBA with StbImageSharp (the decoder behind MonoGame's and KNI's
+    /// Texture2D.FromStream, so the pixels match a loose-file load) and stores it as a raw texture,
+    /// premultiplied or with the transparent-edge bleed baked, so the runtime uploads it as-is.
+    /// </summary>
+    private static byte[] ToRawTexture(byte[] png, bool premultiply)
+    {
+        StbImageSharp.ImageResult image =
+            StbImageSharp.ImageResult.FromMemory(png, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
+        byte[] rgba = image.Data;
+        if (premultiply)
+        {
+            global::RenderingLibrary.Content.RgbaPixels.Premultiply(rgba);
+        }
+        else
+        {
+            global::RenderingLibrary.Content.RgbaPixels.BleedTransparentEdges(rgba, image.Width, image.Height);
+        }
+        return GumRawTexture.Encode(image.Width, image.Height, rgba, premultiply);
     }
 
     private static bool TryParseInclusion(string includeFlags, out GumBundleInclusion inclusion, out string? error)

@@ -162,7 +162,7 @@ public static class SkiaResourceManager
             if (stream != null)
             {
                 // Don't cache a failed decode, so a later call (e.g. a retried download) can succeed.
-                skBitmapCache[resourceName] = SKBitmap.Decode(stream)
+                skBitmapCache[resourceName] = Decode(stream, resourceName)
                     ?? throw new InvalidDataException($"Could not decode an image for {resourceName}.");
             }
             else
@@ -197,7 +197,31 @@ public static class SkiaResourceManager
     {
         using var stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
             resourceName, ResourceAssembly);
-        skBitmapCache[resourceName] = SKBitmap.Decode(stream);
+        // A file that does not decode has always been cached as null here (the stream overload throws
+        // instead); kept as-is.
+        skBitmapCache[resourceName] = Decode(stream, resourceName)!;
+    }
+
+    /// <summary>
+    /// Decodes an encoded image, or wraps a gumcli-packed raw texture (#6514) without decoding.
+    /// Skia draws premultiplied alpha, so a straight package is premultiplied here, with the same
+    /// one-time warning as the other runtimes (repacking with --premultiplied-alpha avoids it).
+    /// </summary>
+    private static SKBitmap? Decode(Stream stream, string resourceName)
+    {
+        Stream seekable = global::Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+        byte[]? rawTexture = global::Gum.Bundle.GumRawTexture.ReadForRuntime(seekable, resourceName,
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "SkiaGum draws premultiplied alpha",
+            bleedTransparentEdges: false,
+            out global::Gum.Bundle.GumRawTextureHeader header);
+        if (rawTexture == null)
+        {
+            return SKBitmap.Decode(seekable);
+        }
+
+        SKBitmap bitmap = new SKBitmap(new SKImageInfo(header.Width, header.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+        System.Runtime.InteropServices.Marshal.Copy(rawTexture, 0, bitmap.GetPixels(), rawTexture.Length);
+        return bitmap;
     }
 
     /// <summary>

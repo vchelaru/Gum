@@ -1,10 +1,10 @@
 # pack
 
 ```
-gumcli pack <project.gumj> [-o <path>] [--include <categories>]
+gumcli pack <project.gumj> [-o <path>] [--include <categories>] [--premultiplied-alpha]
 ```
 
-Loads a `.gumj` or `.gumx` project, walks its dependencies, and writes a single-file `.gumpkg` bundle (tar + brotli) containing the requested file categories. Use this when you want to ship a single file with your game instead of a folder of loose project and element files plus textures and fonts.
+Loads a `.gumj` or `.gumx` project, walks its dependencies, and writes a single-file `.gumpkg` bundle (a zip archive with one Deflate-compressed entry per file) containing the requested file categories. Use this when you want to ship a single file with your game instead of a folder of loose project and element files plus textures and fonts.
 
 {% hint style="info" %}
 The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging format produced by `gumcli pack` — there is no "Save as bundle" option in the editor.
@@ -18,9 +18,25 @@ The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging 
   - `core` — the project file plus all screen, component, standard element, and behavior files referenced by the project
   - `fontcache` — generated bitmap font files under `FontCache/` (`.fnt` + `.png` pages)
   - `external` — files referenced by the project but outside Core/FontCache, such as sprite source `.png` textures, `CustomFontFile` paths, and a `Font` value that points at a project-relative `.ttf` file rather than a system font family name (e.g. `Fonts/MyFont.ttf` vs. `Arial`)
+- `--premultiplied-alpha`: stores PNG textures with premultiplied alpha instead of straight alpha. Off by default. See [Textures](pack.md#textures).
 
 {% hint style="info" %}
 **Shipping September 2026:** Packing a `.ttf` referenced through the `Font` property (not just `CustomFontFile`) will ship in the September release, or now if building Gum from source. Before this, only `CustomFontFile` paths were bundled as external font files.
+{% endhint %}
+
+## Textures
+
+`gumcli pack` stores each PNG as raw pixels rather than as a PNG file, so the game uploads it without decoding it first. Textures load faster, which matters most on the web. JPEG files go into the bundle unchanged.
+
+By default the pixels use straight alpha. Pack with `--premultiplied-alpha` when your game draws with premultiplied alpha:
+
+* Your game sets `Renderer.UsePremultipliedAlpha = true` (MonoGame, KNI, and FNA).
+* Your game draws with SkiaGum, which always uses premultiplied alpha.
+
+If the bundle's alpha mode does not match the game, Gum converts each texture when it loads and writes a warning once per bundle. The warning says whether to repack with or without `--premultiplied-alpha`. The game draws correctly either way, but repacking skips the conversion.
+
+{% hint style="info" %}
+**Shipping December 2026:** Raw textures and `--premultiplied-alpha` ship in the December release, or now if building Gum from source. Before this, `gumcli pack` stored PNG files as they are on disk.
 {% endhint %}
 
 ## Examples
@@ -41,6 +57,12 @@ Omit the font cache (e.g. when your build pipeline regenerates bitmap fonts via 
 
 ```
 gumcli pack GumProject/GumProject.gumj --include core,external
+```
+
+Pack for a game that draws with premultiplied alpha:
+
+```
+gumcli pack GumProject/GumProject.gumj --premultiplied-alpha
 ```
 
 ## Output
@@ -75,7 +97,7 @@ A bundle keeps the file name of the project it holds. Gum reads a `.gumpkg` by l
 {% endhint %}
 
 {% hint style="info" %}
-Bundle loading is available on MonoGame, KNI, FNA, and raylib. SkiaGum and Silk.NET load loose project files only, so pass them a `.gumj` or `.gumx` path.
+Bundle loading is available on MonoGame, KNI, FNA, raylib, and SkiaGum.
 {% endhint %}
 
 That includes a `.ttf` the project references through `Font` or `CustomFontFile`. Runtime font generation (KernSmith on MonoGame, KNI, FNA, and raylib) reads the font out of the bundle, so a project that rasterizes its fonts at runtime runs from a `.gumpkg` alone with no loose files and no `FontCache/` folder.

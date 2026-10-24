@@ -289,9 +289,23 @@ public sealed class ContentLoader : IContentLoader
 
         byte[] fileData;
         using (var stream = FileManager.GetStreamForFile(fileName))
-        using (var memoryStream = new MemoryStream())
         {
-            stream.CopyTo(memoryStream);
+            Stream seekable = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+            // A gumcli-packed texture (#6514) is already decoded. Raylib draws straight alpha and never
+            // bleeds the edges of loose PNGs, so a premultiplied package is unpremultiplied unbled.
+            byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(seekable, fileName,
+                runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "raylib draws straight alpha",
+                bleedTransparentEdges: false,
+                out Gum.Bundle.GumRawTextureHeader header);
+            if (rawTexture != null)
+            {
+                Texture2D rawTexture2D = UploadRgbaTexture(rawTexture, header.Width, header.Height);
+                TextureFilterApplier(rawTexture2D, DefaultTextureFilter);
+                return rawTexture2D;
+            }
+
+            using var memoryStream = new MemoryStream();
+            seekable.CopyTo(memoryStream);
             fileData = memoryStream.ToArray();
         }
 
@@ -440,9 +454,22 @@ public sealed class ContentLoader : IContentLoader
     {
         byte[] fileData;
         using (var stream = FileManager.GetStreamForFile(pagePath))
-        using (var memoryStream = new MemoryStream())
         {
-            stream.CopyTo(memoryStream);
+            Stream seekable = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+            // A gumcli-packed font page (#6514), converted the same way as LoadTextureFromFile.
+            byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(seekable, pagePath,
+                runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "raylib draws straight alpha",
+                bleedTransparentEdges: false,
+                out Gum.Bundle.GumRawTextureHeader header);
+            if (rawTexture != null)
+            {
+                width = header.Width;
+                height = header.Height;
+                return rawTexture;
+            }
+
+            using var memoryStream = new MemoryStream();
+            seekable.CopyTo(memoryStream);
             fileData = memoryStream.ToArray();
         }
 
@@ -466,6 +493,7 @@ public sealed class ContentLoader : IContentLoader
         }
     }
 
+    // Uploads width * height RGBA texels.
     private static unsafe Texture2D UploadRgbaTexture(byte[] pixels, int width, int height)
     {
         fixed (byte* pixelPointer = pixels)
