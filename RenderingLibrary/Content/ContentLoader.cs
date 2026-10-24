@@ -409,10 +409,9 @@ public sealed class ContentLoader : IContentLoader
 #endif
     }
 
-    // GetStreamForFile wraps every failure in an IOException, so look at the cause too.
+    // GetStreamForFile wraps every failure in an IOException, so the cause is the inner exception.
     private static bool IsMissingFileException(Exception exception) =>
-        exception is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException
-        || exception.InnerException is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException;
+        exception.InnerException is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException;
 
 #if XNALIKE && !FRB
     /// <summary>

@@ -80,6 +80,33 @@ public class ContentLoaderTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadContent_WithContentManager_DirectoryMissing_FallsBackToContentManager()
+    {
+        ContentLoader contentLoader = new ContentLoader
+        {
+            XnaContentManager = new ContentManager(new GameServiceContainer(), "Content")
+        };
+
+        Should.Throw<ContentLoadException>(() =>
+            contentLoader.LoadContent<Texture2D>("missing_dir_6717/missing_6717.png"));
+    }
+
+    [Fact]
+    public void LoadContent_WithContentManager_StreamHookThrowsFileNotFound_FallsBackToContentManager()
+    {
+        FileManager.CustomGetStreamFromFile = path => path.EndsWith("hookmissing_6717.png")
+            ? throw new FileNotFoundException("not in bundle 6717", path)
+            : null!;
+        ContentLoader contentLoader = new ContentLoader
+        {
+            XnaContentManager = new ContentManager(new GameServiceContainer(), "Content")
+        };
+
+        Should.Throw<ContentLoadException>(() =>
+            contentLoader.LoadContent<Texture2D>("hookmissing_6717.png"));
+    }
+
+    [Fact]
     public void TryLoadContent_WithContentManager_TextureCreationFails_ReturnsNull()
     {
         FileManager.CustomGetStreamFromFile = path => path.EndsWith("trycorrupt_6717.png")
