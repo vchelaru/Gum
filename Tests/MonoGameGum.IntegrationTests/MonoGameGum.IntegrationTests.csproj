@@ -37,6 +37,15 @@
 		<!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
 		     generation -> MonoGame Texture2D upload -> BitmapFont), mirroring RaylibGum.Tests. -->
 		<ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
+		<!-- The packaged code-only themes, so a test can render each theme's visuals (ThemedMenuFocusRenderTests). -->
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Bubblegum.MonoGame\Gum.Themes.Bubblegum.MonoGame.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.MonoGame\Gum.Themes.DarkPro.MonoGame.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.ForestGlade.MonoGame\Gum.Themes.ForestGlade.MonoGame.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Hazard.MonoGame\Gum.Themes.Hazard.MonoGame.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Meadow.MonoGame\Gum.Themes.Meadow.MonoGame.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Neon.MonoGame\Gum.Themes.Neon.MonoGame.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Retro95.MonoGame\Gum.Themes.Retro95.MonoGame.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Template.MonoGame\Gum.Themes.Template.MonoGame.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
