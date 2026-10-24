@@ -603,6 +603,11 @@ public class MenuItem : ItemsControl
             timeOpened = MainCursor.LastPrimaryPushTime;
 
             var visualTemplateVisual = ScrollViewerVisualTemplate?.CreateContent(null) as InteractiveGue;
+            // A popup with no template sizes itself to its rows, including one built from the project's component.
+            isPopupSizedByItems = visualTemplateVisual == null;
+#if !FRB
+            visualTemplateVisual ??= CreateProjectScrollViewerVisual();
+#endif
 
             if(visualTemplateVisual == null)
             {
@@ -634,7 +639,6 @@ public class MenuItem : ItemsControl
             MenuItemsInternal.Clear();
             popupRows.Clear();
             generatedPopupRows.Clear();
-            isPopupSizedByItems = visualTemplateVisual == null;
 
             bool suspendedPanel = SuspendPopupPanelLayout();
             try
@@ -709,9 +713,24 @@ public class MenuItem : ItemsControl
     // The rows this item created for data objects in Items (as opposed to controls supplied in Items).
     readonly HashSet<MenuItem> generatedPopupRows = new HashSet<MenuItem>();
 
-    // True when the popup is a plain ScrollViewer that sizes itself to its rows, false when a
+    // True when the popup sizes itself to its rows (no ScrollViewerVisualTemplate), false when a
     // ScrollViewerVisualTemplate supplied it.
     bool isPopupSizedByItems;
+
+#if !FRB
+    // In a from-file project, a MenuItem with no ScrollViewerVisualTemplate builds its popup from the
+    // project's ScrollViewer component, picked by the same rule as the Tooltip (#6720). Null when no
+    // project is loaded or it has no ScrollViewer component, which keeps the code-built ScrollViewer.
+    private static InteractiveGue? CreateProjectScrollViewerVisual()
+    {
+        global::Gum.DataTypes.ComponentSave? component = DefaultImplementationLookup.Find(
+            global::Gum.Managers.ObjectFinder.Self.GumProjectSave,
+            global::Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.ScrollViewerBehaviorName);
+        return component == null
+            ? null
+            : global::GumRuntime.ElementSaveExtensions.ToGraphicalUiElement(component, ISystemManagers.Default, addToManagers: false) as InteractiveGue;
+    }
+#endif
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Automatic per-item BindingContext assignment when populating sub-items from a " +

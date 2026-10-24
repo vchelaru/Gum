@@ -805,12 +805,7 @@ public class FormsUtilities
     // (DefaultFromFileTooltipRuntime), which would create a second, orphaned Tooltip of its own.
     private static void RegisterFromFileTooltipTemplate(GumProjectSave project)
     {
-        List<ComponentSave> tooltipComponents = project.Components.Where(component =>
-            component.Behaviors.Any(behavior => behavior.BehaviorName == StandardFormsBehaviorNames.TooltipBehaviorName)).ToList();
-        string? defaultImplementation = project.Behaviors
-            .FirstOrDefault(behavior => behavior.Name == StandardFormsBehaviorNames.TooltipBehaviorName)?.DefaultImplementation;
-        ComponentSave? tooltipComponent = tooltipComponents.FirstOrDefault(component => component.Name == defaultImplementation)
-            ?? tooltipComponents.FirstOrDefault();
+        ComponentSave? tooltipComponent = DefaultImplementationLookup.Find(project, StandardFormsBehaviorNames.TooltipBehaviorName);
         if (tooltipComponent == null)
         {
             return;

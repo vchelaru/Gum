@@ -109,6 +109,58 @@ public class MenuFocusRenderTests : BaseTestClass
             () => ShouldBeClose(tool.OpenCorner, codeOnly.OpenCorner, $"{themeName}: open item corner"));
     }
 
+    // Retro95's and Editor's ScrollViewer components (which the tool popup now is) draw a different surface
+    // or border from their code-only submenu popups, so they are left out here pending a design decision.
+    public static IEnumerable<object[]> SubmenuPopupPairs()
+    {
+        HashSet<string> differingByDesign = new() { "editor", "retro95" };
+        foreach (object[] pair in Pairs())
+        {
+            if (!differingByDesign.Contains((string)pair[0]))
+            {
+                yield return pair;
+            }
+        }
+    }
+
+    // The open submenu popup draws the theme's surface and border, and its rows' text, the same in both (#6720).
+    // Standard's ScrollViewer is a slightly bluer gray than the V3 popup, hence the wider tolerance.
+    [Theory]
+    [MemberData(nameof(SubmenuPopupPairs))]
+    public void Tool_SubmenuPopup_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        tool.ShouldSatisfyAllConditions(
+            () => ShouldBeClose(tool.PopupFill, codeOnly.PopupFill, $"{themeName}: submenu popup fill", tolerance: 16),
+            () => ShouldBeClose(tool.PopupBorder, codeOnly.PopupBorder, $"{themeName}: submenu popup border", tolerance: 16),
+            () => ShouldBeClose(tool.PopupRowTextColor, codeOnly.PopupRowTextColor, $"{themeName}: non-highlighted submenu row text"));
+    }
+
+    // In a tool project the submenu popup is the project's ScrollViewer component (the ScrollViewerBehavior's
+    // DefaultImplementation), and it still sits under its item and sizes itself to its rows (#6720).
+    [Theory]
+    [MemberData(nameof(ToolTemplates))]
+    public void Tool_SubmenuPopup_IsProjectScrollViewer_SizedToRows(string themeName, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        tool.PopupElementName.ShouldBe(componentPrefix + "ScrollViewer", themeName);
+        tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, $"{themeName}: popup height change when a row is added");
+    }
+
+    // Code-only themes keep their own popup visual, under the item and sized to its rows.
+    [Theory]
+    [MemberData(nameof(CodeOnlyThemes))]
+    public void CodeOnly_SubmenuPopup_SizedToRows(string themeName, Action? applyTheme, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+
+        codeOnly.PopupElementName.ShouldBeNull(themeName);
+        codeOnly.PopupGrowthPerRow.ShouldBe(codeOnly.AddedRowHeight, 1f, $"{themeName}: popup height change when a row is added");
+    }
+
     // In these themes the highlight fill alone is close to the menu bar color, so the highlight also
     // draws an edge (#6715).
     public static IEnumerable<object[]> OutlinedHighlightPairs()
@@ -137,15 +189,16 @@ public class MenuFocusRenderTests : BaseTestClass
     private static int ColorDistance(XnaColor a, XnaColor b) =>
         Math.Abs(a.R - b.R) + Math.Abs(a.G - b.G) + Math.Abs(a.B - b.B);
 
-    private static void ShouldBeClose(XnaColor actual, XnaColor expected, string because)
+    private static void ShouldBeClose(XnaColor actual, XnaColor expected, string because, int tolerance = 12)
     {
-        ColorDistance(actual, expected).ShouldBeLessThanOrEqualTo(12, $"{because}: tool {actual} vs code-only {expected}");
+        ColorDistance(actual, expected).ShouldBeLessThanOrEqualTo(tolerance, $"{because}: tool {actual} vs code-only {expected}");
     }
 
     // HighlightCorner is the highlighted item's pixel one in from its top-left corner, which a rounded
     // highlight leaves at the menu bar color.
     private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge, XnaColor HighlightCorner, XnaColor OpenFill,
-        XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner);
+        XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner,
+        XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, float PopupGrowthPerRow, float AddedRowHeight);
 
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
@@ -221,9 +274,10 @@ public class MenuFocusRenderTests : BaseTestClass
             menu.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
             MenuItem file = Item("File");
             MenuItem newItem = Item("New");
+            MenuItem saveItem = Item("Save");
             file.Items!.Add(newItem);
             file.Items!.Add(Item("Open"));
-            file.Items!.Add(Item("Save"));
+            file.Items!.Add(saveItem);
             menu.Items!.Add(file);
             menu.Items!.Add(Item("Edit"));
             menu.Items!.Add(Item("View"));
@@ -303,8 +357,39 @@ public class MenuFocusRenderTests : BaseTestClass
             XnaColor edge = focused[edgeY * CaptureWidth + (int)file.Visual.AbsoluteLeft];
             XnaColor corner = focused[((int)file.Visual.AbsoluteTop + 1) * CaptureWidth + (int)file.Visual.AbsoluteLeft + 1];
             XnaColor openCorner = open[((int)file.Visual.AbsoluteTop + 1) * CaptureWidth + (int)file.Visual.AbsoluteLeft + 1];
+
+            // The popup: its fill inside the last row's padding (the row draws nothing while not highlighted),
+            // its border as the left-edge pixel least like the fill (a dashed border has gaps), and that row's text color.
+            GraphicalUiElement popup = file.itemsPopup.ShouldNotBeNull(pngPrefix).Visual;
+            popup.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(file.Visual.AbsoluteTop + file.Visual.GetAbsoluteHeight() - 1, $"{pngPrefix}: popup sits under its item");
+            popup.AbsoluteLeft.ShouldBe(file.Visual.AbsoluteLeft, 2f, $"{pngPrefix}: popup lines up with its item");
+            GraphicalUiElement saveText = saveItem.Visual.GetGraphicalUiElementByName("TextInstance").ShouldNotBeNull(pngPrefix);
+            int fillX = (int)((saveItem.Visual.AbsoluteLeft + saveText.AbsoluteLeft) / 2);
+            int fillY = (int)(saveItem.Visual.AbsoluteTop + saveItem.Visual.GetAbsoluteHeight() / 2);
+            XnaColor popupFill = open[fillY * CaptureWidth + fillX];
+            XnaColor popupBorder = popupFill;
+            int borderBottom = Math.Min((int)(popup.AbsoluteTop + popup.GetAbsoluteHeight()) - 10, CaptureHeight - 1);
+            for (int y = (int)popup.AbsoluteTop + 10; y <= borderBottom; y++)
+            {
+                XnaColor candidate = open[y * CaptureWidth + (int)popup.AbsoluteLeft];
+                if (ColorDistance(candidate, popupFill) > ColorDistance(popupBorder, popupFill))
+                {
+                    popupBorder = candidate;
+                }
+            }
+            var saveRenderable = (saveText.RenderableComponent as global::RenderingLibrary.Graphics.Text).ShouldNotBeNull(pngPrefix);
+            XnaColor rowTextColor = new XnaColor(saveRenderable.Red, saveRenderable.Green, saveRenderable.Blue);
+            string? popupElementName = popup.ElementSave?.Name;
+
+            float heightBefore = popup.GetAbsoluteHeight();
+            MenuItem closeItem = Item("Close");
+            file.Items!.Add(closeItem);
+            float growth = popup.GetAbsoluteHeight() - heightBefore;
+            float addedRowHeight = closeItem.Visual.GetAbsoluteHeight();
+
             return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor, edge, corner,
-                open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner);
+                open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner,
+                popupFill, popupBorder, rowTextColor, popupElementName, growth, addedRowHeight);
         }
         finally
         {
