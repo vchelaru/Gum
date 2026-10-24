@@ -202,7 +202,7 @@ public class ToolInputBackgroundTests : BaseTestClass
         {
             yield return new object[] { folder, prefix + "ComboBox", theme!, sizes };
         }
-        // The other themes draw a text glyph; checked at the V3 default size only, to keep the run short.
+        // The other themes draw a text glyph; checked at narrow, default and tall sizes.
         foreach ((string name, Action theme) in new (string, Action)[]
         {
             ("Bubblegum", Gum.Themes.Bubblegum.BubblegumTheme.Apply),
@@ -214,7 +214,7 @@ public class ToolInputBackgroundTests : BaseTestClass
             ("Retro95", Gum.Themes.Retro95.Retro95Theme.Apply),
         })
         {
-            yield return new object[] { "FormsThemes/" + name, name + "/Controls/ComboBox", theme, "256x24" };
+            yield return new object[] { "FormsThemes/" + name, name + "/Controls/ComboBox", theme, "64x24,256x24,200x64" };
         }
     }
 
@@ -454,7 +454,7 @@ public class ToolInputBackgroundTests : BaseTestClass
         HashSet<string> expectedRecolored = new(recoloredStates.Split(','));
 
         List<IndicatorLook> looks = MeasureTool(templateFolder, componentName,
-            EachState(ComboBoxStates, (control, state) => control.Visual.SetProperty("ComboBoxCategoryState", state), MeasureIndicators),
+            EachState(ComboBoxStates, EnterFromUnrecolored("ComboBoxCategoryState", ComboBoxStates, expectedRecolored), MeasureIndicators),
             beforeCreate: () => RecolorSwatch(stylesName, swatch));
 
         for (int i = 0; i < ComboBoxStates.Length; i++)
@@ -479,7 +479,7 @@ public class ToolInputBackgroundTests : BaseTestClass
         string[] states = categoryState == "ListBoxCategoryState" ? ListBoxStates : TextBoxStates;
 
         List<BackgroundLook> looks = MeasureTool(templateFolder, componentName,
-            EachState(states, (control, state) => control.Visual.SetProperty(categoryState, state), Measure),
+            EachState(states, EnterFromUnrecolored(categoryState, states, expectedRecolored), Measure),
             beforeCreate: () => RecolorSwatch(stylesName, swatch));
 
         for (int i = 0; i < states.Length; i++)
@@ -488,6 +488,15 @@ public class ToolInputBackgroundTests : BaseTestClass
             isRecolored.ShouldBe(expectedRecolored.Contains(states[i]), $"{componentName} {states[i]} with {swatch} recolored");
         }
     }
+
+    // Enters each state from a state the swatch leaves alone, so a state that forgot its swatch reference keeps a
+    // color other than the swatch's and fails, even when the state before it in the list was recolored.
+    private static Action<FrameworkElement, string> EnterFromUnrecolored(string categoryState, string[] states, HashSet<string> recolored) =>
+        (control, state) =>
+        {
+            control.Visual.SetProperty(categoryState, states.First(other => other != state && !recolored.Contains(other)));
+            control.Visual.SetProperty(categoryState, state);
+        };
 
     // Sets the swatch in the loaded project's Styles to 200,10,20 and pushes it through the variable references.
     private static void RecolorSwatch(string stylesName, string swatch)
