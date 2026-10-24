@@ -128,7 +128,7 @@ public class ToolInputBackgroundTests : BaseTestClass
                     added.Add(control.Visual);
                 }
             }
-            MenuFocusRenderTests.Capture(SystemManagers.Default.Renderer.GraphicsDevice, Microsoft.Xna.Framework.Color.Black, pngName, 688, 232);
+            MenuFocusRenderTests.Capture(SystemManagers.Default.Renderer.GraphicsDevice!, Microsoft.Xna.Framework.Color.Black, pngName, 688, 232);
             foreach (GraphicalUiElement visual in added)
             {
                 visual.RemoveFromManagers();
@@ -155,7 +155,7 @@ public class ToolInputBackgroundTests : BaseTestClass
         BackgroundLook tool = MeasureTool(templateFolder, componentName, beforeCreate: () =>
         {
             GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
-            StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState;
+            StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
             styles.SetValue("InputBackground.FillRed", 200, "int");
             styles.SetValue("InputBackground.FillGreen", 10, "int");
             styles.SetValue("InputBackground.FillBlue", 20, "int");
