@@ -376,7 +376,7 @@ public partial class GraphicalUiElement
             // Every layout of a child from here goes through this, so a repeat visit can be cut down to placing it.
             void LayOutChild(GraphicalUiElement child, int depth, XOrY? xOrY)
             {
-                if (_appendedChild != null && child != _appendedChild && child.IsUnchangedSinceItsLastLayout())
+                if (IsBeforeAppendedChildren(child) && child.IsUnchangedSinceItsLastLayout())
                 {
                     // Its last layout is as good as one in this session: nothing changed in it since.
                     child._settledSession = s_session;

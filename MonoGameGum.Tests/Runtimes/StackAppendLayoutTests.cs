@@ -114,8 +114,8 @@ public class StackAppendLayoutTests : BaseTestClass
 
         clone.ShouldNotBeNull();
         typeof(GraphicalUiElement)
-            .GetField("_appendedChild", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .GetValue(clone).ShouldBeNull();
+            .GetField("_firstAppendedIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .GetValue(clone).ShouldBe(-1);
     }
 
     public static IEnumerable<object[]> Scenarios()
