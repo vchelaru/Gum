@@ -1799,8 +1799,8 @@ public class ListBox : ItemsControl, IInputReceiver
     public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize = true) =>
         ShowPopupListBox(popup, listBoxParent, forceAbsoluteSize, ownFollowers: null);
 
-    /// <param name="ownFollowers">Popups that belong on top of this one, in draw order (a MenuItem's open
-    /// nested submenus). When exactly these follow the popup in its root, it is already in place.</param>
+    // ownFollowers: popups that belong on top of this one, in draw order (a MenuItem's open nested
+    // submenus). When exactly these follow the popup in its root, it is already in place.
     internal static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize,
         IReadOnlyList<GraphicalUiElement>? ownFollowers)
     {
