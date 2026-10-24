@@ -187,6 +187,7 @@
     <Variable Type="PositionUnitType" Name="InnerPanelInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
+    <Variable Type="MenuCategory" Name="MenuCategoryState" SetsValue="true" />
     <Variable Type="float?" Name="MinHeight" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
     </Variable>
