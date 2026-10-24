@@ -242,4 +242,93 @@ public class ComboBoxLazyDropDownTests : BaseTestClass
 
         ComboBox.FromFileDropDownTemplate.ShouldBeNull();
     }
+
+    #region Parity with the ListBoxInstance path while closed
+
+    private static string Snapshot(ComboBox comboBox) =>
+        $"idx={comboBox.SelectedIndex} obj={comboBox.SelectedObject ?? "null"} text={(string.IsNullOrEmpty(comboBox.Text) ? "null" : comboBox.Text)}";
+
+    // Runs the same steps on a ListBoxInstance-child ComboBox and on a closed lazy one, both with
+    // ["Apple","Banana","Cherry"] and Banana selected, and returns what each ends up showing.
+    private (string child, string lazy) RunOnBoth(System.Func<ComboBox, string> steps)
+    {
+        RegisterCountingTemplate();
+        List<string> results = new();
+        foreach (bool lazy in new[] { false, true })
+        {
+            ComboBox comboBox = lazy ? CreateComboBoxWithoutListBoxInstance("Apple", "Banana", "Cherry") : new ComboBox();
+            if (!lazy)
+            {
+                foreach (string item in new[] { "Apple", "Banana", "Cherry" })
+                {
+                    comboBox.Items!.Add(item);
+                }
+                comboBox.AddToRoot();
+            }
+            comboBox.SelectedIndex = 1;
+            List<string> events = new();
+            comboBox.SelectionChanged += (_, args) =>
+                events.Add($"+{string.Join(",", args.AddedItems.Cast<object>())}-{string.Join(",", args.RemovedItems.Cast<object>())}");
+            string extra = steps(comboBox);
+            results.Add($"{Snapshot(comboBox)} events=[{string.Join(" ", events)}] {extra}");
+        }
+        return (results[0], results[1]);
+    }
+
+    private void ShouldMatchTheChildPath(System.Func<ComboBox, string> steps)
+    {
+        (string child, string lazy) = RunOnBoth(steps);
+        lazy.ShouldBe(child);
+    }
+
+    [Fact]
+    public void Lazy_RemovingTheSelectedItem_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items!.RemoveAt(1); return ""; });
+
+    [Fact]
+    public void Lazy_ClearingItems_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items!.Clear(); return ""; });
+
+    [Fact]
+    public void Lazy_ReplacingTheSelectedItem_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items![1] = "Blueberry"; return ""; });
+
+    [Fact]
+    public void Lazy_InsertingBeforeTheSelectedItem_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items!.Insert(0, "Zero"); return ""; });
+
+    [Fact]
+    public void Lazy_RemovingAnItemBeforeTheSelectedItem_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items!.RemoveAt(0); return ""; });
+
+    [Fact]
+    public void Lazy_SwappingItemsForOnesThatContainTheSelection_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items = new ObservableCollection<object> { "Banana", "Kiwi" }; return ""; });
+
+    [Fact]
+    public void Lazy_RemovingTheSelectedItemThenOpening_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items!.RemoveAt(1); c.IsDropDownOpen = true; return $"listBox={c.ListBox.SelectedIndex}"; });
+
+    [Fact]
+    public void Lazy_ClearingItemsThenOpening_MatchesTheChildPath() =>
+        ShouldMatchTheChildPath(c => { c.Items!.Clear(); c.IsDropDownOpen = true; return $"listBox={c.ListBox.SelectedIndex}"; });
+
+    [Fact]
+    public void Lazy_ItemsAddedToASwappedCollection_AreShownOnOpen()
+    {
+        RegisterCountingTemplate();
+        ComboBox comboBox = CreateComboBoxWithoutListBoxInstance("Apple");
+        ObservableCollection<object> swapped = new() { "Kiwi" };
+        comboBox.Items = swapped;
+        swapped.Add("Lime");
+        comboBox.SelectedIndex = 1;
+
+        comboBox.IsDropDownOpen = true;
+
+        comboBox.ListBox.ListBoxItems.Count.ShouldBe(2);
+        comboBox.ListBox.SelectedIndex.ShouldBe(1);
+        comboBox.Text.ShouldBe("Lime");
+    }
+
+    #endregion
 }

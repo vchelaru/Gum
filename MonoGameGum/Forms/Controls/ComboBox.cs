@@ -193,11 +193,9 @@ public class ComboBox :
                 }
                 else
                 {
-                    _pendingItems = value;
-                    if (_pendingSelectedObject != null && value?.Contains(_pendingSelectedObject) != true)
-                    {
-                        SetPendingSelection(null);
-                    }
+                    // Like ListBox: swapping Items drops the selection, even when the new items contain it.
+                    SetPendingItems(value);
+                    SetPendingSelection(-1);
                 }
 
                 PushValueToViewModel();
@@ -293,7 +291,8 @@ public class ComboBox :
             }
             else
             {
-                SetPendingSelection(value != null && Items?.Contains(value) == true ? value : null);
+                // Like ListBox: an object that is not in Items clears the selection.
+                SetPendingSelection(value == null ? -1 : (Items?.IndexOf(value) ?? -1));
             }
         }
     }
@@ -305,7 +304,7 @@ public class ComboBox :
             {
                 return listBox.SelectedIndex;
             }
-            return _pendingSelectedObject == null ? -1 : (Items?.IndexOf(_pendingSelectedObject) ?? -1);
+            return _pendingSelectedIndex;
         }
         set
         {
@@ -316,7 +315,7 @@ public class ComboBox :
             else
             {
                 IList? items = Items;
-                SetPendingSelection(items != null && value >= 0 && value < items.Count ? items[value] : null);
+                SetPendingSelection(items != null && value >= 0 && value < items.Count ? value : -1);
             }
         }
     }
@@ -324,24 +323,87 @@ public class ComboBox :
     // While a lazy drop-down is not built yet (#6728), the ComboBox holds the items and the selection
     // itself and hands them to the ListBox when it is built on the first open.
     VisualTemplate? _lazyDropDownTemplate;
-    IList? _pendingItems = new System.Collections.ObjectModel.ObservableCollection<object>();
+    IList? _pendingItems;
+    // The selection is kept by position, as ListBox keeps it by row: replacing the selected item keeps
+    // the old object selected, and inserting or removing other items moves the index.
+    int _pendingSelectedIndex = -1;
     object? _pendingSelectedObject;
 
-    private void SetPendingSelection(object? selected)
+    private void SetPendingItems(IList? items)
     {
-        if (Equals(selected, _pendingSelectedObject))
+        if (_pendingItems is System.Collections.Specialized.INotifyCollectionChanged oldItems)
+        {
+            oldItems.CollectionChanged -= HandlePendingItemsChanged;
+        }
+        _pendingItems = items;
+        if (_pendingItems is System.Collections.Specialized.INotifyCollectionChanged newItems)
+        {
+            newItems.CollectionChanged += HandlePendingItemsChanged;
+        }
+    }
+
+    // Mirrors how ListBox updates its selection when Items changes: removing the selected item or
+    // resetting the collection clears the selection, other changes shift it.
+    private void HandlePendingItemsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (_pendingSelectedIndex < 0)
         {
             return;
         }
+        switch (e.Action)
+        {
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                if (e.NewStartingIndex >= 0 && e.NewStartingIndex <= _pendingSelectedIndex)
+                {
+                    _pendingSelectedIndex += e.NewItems?.Count ?? 1;
+                }
+                break;
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                int removedCount = e.OldItems?.Count ?? 1;
+                if (e.OldStartingIndex < 0 ||
+                    (e.OldStartingIndex <= _pendingSelectedIndex && _pendingSelectedIndex < e.OldStartingIndex + removedCount))
+                {
+                    SetPendingSelection(-1);
+                }
+                else if (e.OldStartingIndex < _pendingSelectedIndex)
+                {
+                    _pendingSelectedIndex -= removedCount;
+                }
+                break;
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
+                if (e.OldStartingIndex == _pendingSelectedIndex)
+                {
+                    _pendingSelectedIndex = e.NewStartingIndex;
+                }
+                else
+                {
+                    if (e.OldStartingIndex < _pendingSelectedIndex) _pendingSelectedIndex--;
+                    if (e.NewStartingIndex <= _pendingSelectedIndex) _pendingSelectedIndex++;
+                }
+                break;
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                SetPendingSelection(-1);
+                break;
+        }
+    }
+
+    private void SetPendingSelection(int index)
+    {
+        if (index == _pendingSelectedIndex)
+        {
+            return;
+        }
+        object? selected = index >= 0 ? _pendingItems![index] : null;
         SelectionChangedEventArgs args = new SelectionChangedEventArgs();
-        if (_pendingSelectedObject != null)
+        if (_pendingSelectedIndex >= 0)
         {
             args.RemovedItems.Add(_pendingSelectedObject);
         }
-        if (selected != null)
+        if (index >= 0)
         {
             args.AddedItems.Add(selected);
         }
+        _pendingSelectedIndex = index;
         _pendingSelectedObject = selected;
         RaiseSelectionChanged(selected, args);
     }
@@ -378,10 +440,13 @@ public class ComboBox :
         {
             built.DisplayMemberPath = _displayMemberPath;
         }
-        built.Items = _pendingItems;
-        built.SelectedObject = _pendingSelectedObject;
-        _pendingItems = null;
+        IList? items = _pendingItems;
+        int selectedIndex = _pendingSelectedIndex;
+        SetPendingItems(null);
+        _pendingSelectedIndex = -1;
         _pendingSelectedObject = null;
+        built.Items = items;
+        built.SelectedIndex = selectedIndex;
 
         listBox = built;
         SubscribeToListBox();
@@ -538,6 +603,10 @@ public class ComboBox :
         {
             // A from-file ComboBox with no ListBoxInstance child: the drop-down is built on the first open.
             _lazyDropDownTemplate = lazyDropDownTemplate;
+            if (listBox == null && _pendingItems == null)
+            {
+                SetPendingItems(new System.Collections.ObjectModel.ObservableCollection<object>());
+            }
             Text = null;
             return;
         }
