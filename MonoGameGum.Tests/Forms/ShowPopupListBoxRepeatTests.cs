@@ -109,4 +109,81 @@ public class ShowPopupListBoxRepeatTests : BaseTestClass
         ((InteractiveGue)children[^1]).FormsControlAsObject.ShouldBeOfType<ScrollViewer>();
         children.Count(c => c == comboBox.ListBox!.Visual).ShouldBe(1);
     }
+
+    private static (MenuItem file, MenuItem recent) CreateMenuWithNestedSubmenu(float x)
+    {
+        Menu menu = new();
+        menu.AddToRoot();
+        menu.X = x;
+        MenuItem file = new() { Header = "File" };
+        menu.Items!.Add(file);
+        MenuItem recent = new() { Header = "Recent" };
+        recent.Items!.Add("one.gumx");
+        file.Items!.Add(recent);
+        file.Items.Add("New");
+        return (file, recent);
+    }
+
+    private static ComboBox CreateComboBox()
+    {
+        ComboBox comboBox = new();
+        comboBox.Items!.Add("a");
+        comboBox.AddToRoot();
+        return comboBox;
+    }
+
+    [Fact]
+    public void ItemsAdd_ShouldKeepNestedSubmenuOverParentAndBothOverEarlierPopup_WhenNestedSubmenuIsOpen()
+    {
+        ComboBox comboBox = CreateComboBox();
+        comboBox.IsDropDownOpen = true;
+        (MenuItem file, MenuItem recent) = CreateMenuWithNestedSubmenu(x: 0);
+        file.IsSelected = true;
+        recent.IsSelected = true;
+
+        file.Items!.Add("Open");
+
+        var children = FrameworkElement.PopupRoot.Children!;
+        GraphicalUiElement filePopup = MenuItemSubmenuAppendLayoutTests.PopupOf(file).Visual;
+        GraphicalUiElement recentPopup = MenuItemSubmenuAppendLayoutTests.PopupOf(recent).Visual;
+        children[^1].ShouldBeSameAs(recentPopup);
+        children[^2].ShouldBeSameAs(filePopup);
+        children.IndexOf(comboBox.ListBox!.Visual).ShouldBeLessThan(children.IndexOf(filePopup));
+        children.Count(c => c == filePopup).ShouldBe(1);
+        children.Count(c => c == recentPopup).ShouldBe(1);
+    }
+
+    [Fact]
+    public void ItemsAdd_ShouldMoveParentAndNestedSubmenuOverDropDown_WhenDropDownOpenedAfterNestedSubmenu()
+    {
+        (MenuItem file, MenuItem recent) = CreateMenuWithNestedSubmenu(x: 0);
+        file.IsSelected = true;
+        recent.IsSelected = true;
+        ComboBox comboBox = CreateComboBox();
+        comboBox.IsDropDownOpen = true;
+
+        file.Items!.Add("Open");
+
+        var children = FrameworkElement.PopupRoot.Children!;
+        children[^1].ShouldBeSameAs(MenuItemSubmenuAppendLayoutTests.PopupOf(recent).Visual);
+        children[^2].ShouldBeSameAs(MenuItemSubmenuAppendLayoutTests.PopupOf(file).Visual);
+        children.Count(c => c == comboBox.ListBox!.Visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void ItemsAdd_ShouldClampWidenedParentToScreen_WhenNestedSubmenuIsOpen()
+    {
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
+        (MenuItem file, MenuItem recent) = CreateMenuWithNestedSubmenu(x: 700);
+        file.IsSelected = true;
+        recent.IsSelected = true;
+
+        file.Items!.Add("A much wider header than every other row in this submenu");
+
+        ScrollViewer filePopup = MenuItemSubmenuAppendLayoutTests.PopupOf(file);
+        filePopup.Visual.AbsoluteWidth.ShouldBeGreaterThan(100);
+        filePopup.Visual.AbsoluteRight.ShouldBe(800, 0.01f);
+        recent.IsPopupVisible.ShouldBeTrue();
+    }
 }

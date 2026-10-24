@@ -1115,7 +1115,11 @@ public class MenuItem : ItemsControl
             }
         }
 
+#if FRB
         ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false);
+#else
+        ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false, GetOpenNestedPopups());
+#endif
 
         _placedAbsoluteX = Visual.AbsoluteX;
         _placedAbsoluteY = Visual.AbsoluteY;
@@ -1123,7 +1127,7 @@ public class MenuItem : ItemsControl
         _placedAbsoluteHeight = Visual.AbsoluteHeight;
 
 #if !FRB
-        // Placing moved this popup to the end of the popup root, which would draw it over any
+        // Placing may have moved this popup to the end of the popup root, which would draw it over any
         // submenu already open from one of its items. Placing those again puts them back on top, in
         // order, and also moves them with this popup (#6688).
         foreach (MenuItem item in MenuItemsInternal)
@@ -1137,6 +1141,36 @@ public class MenuItem : ItemsControl
     }
 
 #if !FRB
+    private readonly List<GraphicalUiElement> _openNestedPopups = new();
+
+    /// <summary>
+    /// The popups of the open submenu chain below this item's popup (child, grandchild, ...), in the
+    /// order they draw over it. Null when none is open.
+    /// </summary>
+    private List<GraphicalUiElement>? GetOpenNestedPopups()
+    {
+        _openNestedPopups.Clear();
+        MenuItem? current = this;
+        while (current != null)
+        {
+            MenuItem? openChild = null;
+            foreach (MenuItem item in current.MenuItemsInternal)
+            {
+                if (item.IsPopupVisible)
+                {
+                    openChild = item;
+                    break;
+                }
+            }
+            if (openChild != null)
+            {
+                _openNestedPopups.Add(openChild.itemsPopup!.Visual);
+            }
+            current = openChild;
+        }
+        return _openNestedPopups.Count > 0 ? _openNestedPopups : null;
+    }
+
     // Only an open submenu needs the per-frame check; a closed MenuItem must not stop its ancestors
     // from going idle. TryShowPopup and the close paths invalidate the idle caches.
     bool Gum.Wireframe.IUpdateEveryFrame.IsActivityNeeded => IsPopupVisible;
