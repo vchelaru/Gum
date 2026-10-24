@@ -1158,12 +1158,9 @@ public  class ComboBoxTests : BaseTestClass
         comboBox.IsDropDownOpen.ShouldBeTrue();
     }
 
-    // #6736: a selection change that changes the ComboBox Text must re-lay out what depends on that
-    // text (the ComboBox sized to it, the sibling stacked after it), matching a full relayout.
-    [Theory]
-    [InlineData("select")]
-    [InlineData("deselect")]
-    public void SelectionChange_ChangingText_LayoutMatchesFullRelayout(string change)
+    // A ComboBox sized to its text (an in-memory font with 10-pixel A, B and C) in a left-to-right
+    // stack with a 10-wide sibling after it, holding "A" and "ABCABC" with "ABCABC" selected.
+    private static (ContainerRuntime stack, ComboBox comboBox, ContainerRuntime sibling) CreateTextSizedComboBoxInStack()
     {
         ContainerRuntime stack = new();
         stack.ChildrenLayout = ChildrenLayout.LeftToRightStack;
@@ -1197,6 +1194,41 @@ public  class ComboBoxTests : BaseTestClass
         comboBox.Items!.Add("A");
         comboBox.Items.Add("ABCABC");
         comboBox.SelectedIndex = 1;
+        return (stack, comboBox, sibling);
+    }
+
+    // #6736 keeps #6712's rule: layout a user suspended stays pending through a bulk change until
+    // the user's ResumeLayout.
+    [Fact]
+    public void BulkItemsChange_UnderUserSuspendedAncestor_WaitsForResumeLayout()
+    {
+        (ContainerRuntime stack, ComboBox comboBox, ContainerRuntime sibling) = CreateTextSizedComboBoxInStack();
+        stack.UpdateLayout();
+        float siblingXBefore = sibling.AbsoluteLeft;
+        stack.SuspendLayout(recursive: true);
+
+        comboBox.Items!.Clear();
+
+        sibling.AbsoluteLeft.ShouldBe(siblingXBefore);
+        stack.ResumeLayout(recursive: true);
+        float siblingXAfterResume = sibling.AbsoluteLeft;
+        stack.UpdateLayout();
+        siblingXAfterResume.ShouldBeLessThan(siblingXBefore);
+        siblingXAfterResume.ShouldBe(sibling.AbsoluteLeft);
+    }
+
+    // #6736: a selection change that changes the ComboBox Text must re-lay out what depends on that
+    // text (the ComboBox sized to it, the sibling stacked after it), matching a full relayout. The
+    // bulk Items changes set the text while all layout is suspended, outside the ListBox's tree.
+    [Theory]
+    [InlineData("select")]
+    [InlineData("deselect")]
+    [InlineData("clear")]
+    [InlineData("replace")]
+    [InlineData("assign")]
+    public void SelectionChange_ChangingText_LayoutMatchesFullRelayout(string change)
+    {
+        (ContainerRuntime stack, ComboBox comboBox, ContainerRuntime sibling) = CreateTextSizedComboBoxInStack();
         stack.UpdateLayout();
         float widthWithLongText = comboBox.Visual.AbsoluteWidth;
 
@@ -1204,6 +1236,9 @@ public  class ComboBoxTests : BaseTestClass
         {
             case "select": comboBox.SelectedIndex = 0; break;
             case "deselect": comboBox.SelectedIndex = -1; break;
+            case "clear": comboBox.Items.Clear(); break;
+            case "replace": comboBox.Items[1] = "B"; break;
+            case "assign": comboBox.Items = new ObservableCollection<object> { "A" }; break;
         }
         float comboWidth = comboBox.Visual.AbsoluteWidth;
         float siblingX = sibling.AbsoluteLeft;

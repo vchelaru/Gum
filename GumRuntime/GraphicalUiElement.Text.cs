@@ -193,6 +193,7 @@ public partial class GraphicalUiElement
             if (mContainedObjectAsIpso is IText)
             {
                 isFontDirty = true;
+                RecordGlobalDeferral();
             }
             return;
         }
