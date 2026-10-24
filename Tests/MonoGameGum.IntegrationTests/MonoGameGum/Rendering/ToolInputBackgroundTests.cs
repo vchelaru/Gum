@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
@@ -55,11 +57,32 @@ public class ToolInputBackgroundTests : BaseTestClass
         (tool.R, tool.G, tool.B).ShouldBe(((byte)70, (byte)70, (byte)80), componentName);
     }
 
-    private static BackgroundLook MeasureTool(string templateFolder, string componentName)
+    // The fill comes from the Styles InputBackground swatch, so recoloring the swatch recolors the control.
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/ScrollViewer", "Styles")]
+    [InlineData("FormsTemplate", "Controls/ItemsControl", "Styles")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ItemsControl", "Editor/Styles")]
+    public void ToolBackground_FollowsInputBackgroundSwatch(string templateFolder, string componentName, string stylesName)
+    {
+        BackgroundLook tool = MeasureTool(templateFolder, componentName, beforeCreate: () =>
+        {
+            GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+            StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState;
+            styles.SetValue("InputBackground.FillRed", 200, "int");
+            styles.SetValue("InputBackground.FillGreen", 10, "int");
+            styles.SetValue("InputBackground.FillBlue", 20, "int");
+            project.ApplyAllVariableReferences();
+        });
+
+        (tool.R, tool.G, tool.B).ShouldBe(((byte)200, (byte)10, (byte)20), componentName);
+    }
+
+    private static BackgroundLook MeasureTool(string templateFolder, string componentName, Action? beforeCreate = null)
     {
         BackgroundLook? look = null;
         MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
         {
+            beforeCreate?.Invoke();
             ComponentSave component = ObjectFinder.Self.GetComponent(componentName).ShouldNotBeNull(componentName);
             GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             look = Measure((visual as InteractiveGue)?.FormsControlAsObject.ShouldBeAssignableTo<FrameworkElement>(componentName)!);
