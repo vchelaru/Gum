@@ -718,11 +718,21 @@ public class MenuItem : ItemsControl
     bool isPopupSizedByItems;
 
 #if !FRB
+    private static VisualTemplate? _processWideFromFileSubmenuPopupTemplate;
+
+    // Set by FormsUtilities when a from-file project has a MenuItemSubmenuPopupBehavior component (#6720).
+    // Its CreateContent returns a bare visual (no Forms control), or null if the component went away.
+    internal static VisualTemplate? FromFileSubmenuPopupTemplate
+    {
+        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.FromFileSubmenuPopupTemplate : _processWideFromFileSubmenuPopupTemplate; }
+        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.FromFileSubmenuPopupTemplate = value; } else { _processWideFromFileSubmenuPopupTemplate = value; } }
+    }
+
     // In a from-file project, a MenuItem with no ScrollViewerVisualTemplate builds its popup from the
-    // project's ScrollViewer component, picked by the same rule as the Tooltip (#6720). As with the
-    // Tooltip, a ScrollViewer template user code registered wins over the component. Null when that
-    // happens, when no project is loaded, or when it has no ScrollViewer component: the popup is then a
-    // plain ScrollViewer from DefaultFormsTemplates.
+    // project's MenuItemSubmenuPopupBehavior component, else from its ScrollViewer component, each picked
+    // by the same rule as the Tooltip (#6720). As with the Tooltip, a ScrollViewer template user code
+    // registered wins over both. Null when that happens, when no project is loaded, or when it has neither
+    // component: the popup is then a plain ScrollViewer from DefaultFormsTemplates.
     private static InteractiveGue? CreateProjectScrollViewerVisual()
     {
         bool isUserTemplate = DefaultFormsTemplates.TryGetValue(typeof(ScrollViewer), out VisualTemplate? existing)
@@ -730,6 +740,10 @@ public class MenuItem : ItemsControl
         if (isUserTemplate)
         {
             return null;
+        }
+        if (FromFileSubmenuPopupTemplate?.CreateContent(null) is InteractiveGue submenuPopupVisual)
+        {
+            return submenuPopupVisual;
         }
         global::Gum.DataTypes.ComponentSave? component = DefaultImplementationLookup.Find(
             global::Gum.Managers.ObjectFinder.Self.GumProjectSave,

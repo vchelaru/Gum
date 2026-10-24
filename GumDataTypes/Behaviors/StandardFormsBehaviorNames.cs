@@ -15,6 +15,11 @@ public static class StandardFormsBehaviorNames
     public const string ListBoxItemBehaviorName = "ListBoxItemBehavior";
     public const string MenuBehaviorName = "MenuBehavior";
     public const string MenuItemBehaviorName = "MenuItemBehavior";
+    /// <summary>
+    /// Marks a component as the popup a MenuItem shows its sub-items in. The component has the
+    /// ScrollViewer structure (it holds the rows and scrolls); see MenuItem's ScrollViewerVisualTemplate.
+    /// </summary>
+    public const string MenuItemSubmenuPopupBehaviorName = "MenuItemSubmenuPopupBehavior";
     public const string PanelBehaviorName = "PanelBehavior";
     public const string PasswordBoxBehaviorName = "PasswordBoxBehavior";
     public const string RadioButtonBehaviorName = "RadioButtonBehavior";
@@ -40,6 +45,7 @@ public static class StandardFormsBehaviorNames
         ListBoxItemBehaviorName,
         MenuBehaviorName,
         MenuItemBehaviorName,
+        MenuItemSubmenuPopupBehaviorName,
         PanelBehaviorName,
         PasswordBoxBehaviorName,
         RadioButtonBehaviorName,

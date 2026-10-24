@@ -70,6 +70,7 @@
   <ComponentReference Name="Retro95/Controls/ListBoxItem" />
   <ComponentReference Name="Retro95/Controls/Menu" />
   <ComponentReference Name="Retro95/Controls/MenuItem" />
+  <ComponentReference Name="Retro95/Controls/MenuItemSubmenuPopup" />
   <ComponentReference Name="Retro95/Controls/Panel" />
   <ComponentReference Name="Retro95/Controls/PasswordBox" />
   <ComponentReference Name="Retro95/Controls/RadioButton" />
@@ -109,6 +110,7 @@
   <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="Retro95/Controls/ListBoxItem" />
   <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="Retro95/Controls/Menu" />
   <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="Retro95/Controls/MenuItem" />
+  <BehaviorReference Name="MenuItemSubmenuPopupBehavior" SourcePath="../../FormsBehaviors/MenuItemSubmenuPopupBehavior.behx" DefaultImplementationOverride="Retro95/Controls/MenuItemSubmenuPopup" />
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Retro95/Controls/PasswordBox" />
