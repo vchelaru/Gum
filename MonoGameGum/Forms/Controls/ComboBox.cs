@@ -1047,9 +1047,10 @@ public class ComboBox :
         }
     }
 
-    // Through the TextInstance's SetProperty, like Label, so layout that depends on the text (a
-    // ComboBox sized to it, a sibling stacked after it) follows the change (#6736).
-    private void SetDisplayedText(string? value) => textComponent.SetProperty("Text", value);
+    // Through the TextInstance's SetProperty so layout that depends on the text (a ComboBox sized to
+    // it, a sibling stacked after it) follows the change (#6736). TextNoTranslate because ComboBox
+    // text is data-driven and never localized.
+    private void SetDisplayedText(string? value) => textComponent.SetProperty("TextNoTranslate", value);
 
     private void HandleListBoxItemPushed(object? sender, EventArgs args)
     {

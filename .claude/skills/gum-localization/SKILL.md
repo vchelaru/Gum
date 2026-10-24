@@ -113,7 +113,7 @@ Internally, all no-translate methods call `SetProperty("TextNoTranslate", value)
 
 ### Data-Driven Controls — Intentionally No Localization
 
-**ComboBox** — `Text` property sets `coreTextObject.RawText` directly (bypasses `SetProperty` entirely). This is because ComboBox text comes from `SelectedItem.ToString()`, which is data-driven.
+**ComboBox** — `Text` and the selected item's text go through `SetProperty("TextNoTranslate", value)`, which skips translation but still re-lays out text-dependent layout. This is because ComboBox text comes from `SelectedItem.ToString()`, which is data-driven.
 
 **ListBoxItem** — `UpdateToObject(object o)` sets `coreText.RawText = o?.ToString()` directly. Same reason: items come from a data collection.
 

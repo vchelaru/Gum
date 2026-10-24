@@ -1217,6 +1217,33 @@ public  class ComboBoxTests : BaseTestClass
         stackWidth.ShouldBe(stack.AbsoluteWidth);
     }
 
+    // ComboBox text is data-driven and deliberately untranslated (gum-localization), on selection
+    // and on direct Text assignment.
+    [Fact]
+    public void Text_WithLocalizationService_StaysUntranslated()
+    {
+        Gum.Localization.LocalizationService localizationService = new();
+        localizationService.AddDatabase(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Hello" } } },
+            new List<string> { "English" });
+        localizationService.CurrentLanguage = 0;
+        CustomSetPropertyOnRenderable.LocalizationService = localizationService;
+        try
+        {
+            ComboBox comboBox = CreateComboBox("Greeting", "Other");
+
+            comboBox.SelectedIndex = 0;
+            comboBox.Text.ShouldBe("Greeting");
+
+            comboBox.Text = "Greeting";
+            comboBox.Text.ShouldBe("Greeting");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
+
     [Fact]
     public void Activity_ComboBoxClosed_DoesNotKeepAncestorsFromGoingIdle()
     {
