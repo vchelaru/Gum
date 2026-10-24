@@ -483,7 +483,8 @@ public class MenuFocusRenderTests : BaseTestClass
     // highlight leaves at the menu bar color.
     private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge, XnaColor HighlightCorner, XnaColor OpenFill,
         XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner,
-        XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, string? PopupVisualName, float PopupGrowthPerRow, float AddedRowHeight);
+        XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, string? PopupVisualName, float PopupGrowthPerRow, float AddedRowHeight,
+        XnaColor[] BarColumn, XnaColor[] FocusedItemColumn, int MenuBottom);
 
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
@@ -674,7 +675,9 @@ public class MenuFocusRenderTests : BaseTestClass
 
             return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor, edge, corner,
                 open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner,
-                popupFill, popupBorder, rowTextColor, popupElementName, popup.Name, growth, addedRowHeight);
+                popupFill, popupBorder, rowTextColor, popupElementName, popup.Name, growth, addedRowHeight,
+                Column(unfocused, CaptureWidth - 8), Column(focused, (int)(file.Visual.AbsoluteLeft + file.Visual.GetAbsoluteWidth() / 2)),
+                (int)(menu.Visual.AbsoluteTop + menu.Visual.GetAbsoluteHeight()));
         }
         finally
         {
@@ -686,6 +689,75 @@ public class MenuFocusRenderTests : BaseTestClass
             V3Styling.ActiveStyle = previousStyle;
             CustomSetPropertyOnRenderable.InMemoryFontCreator = previousFontCreator;
         }
+    }
+
+    private const int SeparatorBandHeight = 48;
+
+    // The top SeparatorBandHeight pixels of one column of a capture.
+    private static XnaColor[] Column(XnaColor[] pixels, int x)
+    {
+        XnaColor[] column = new XnaColor[SeparatorBandHeight];
+        for (int y = 0; y < SeparatorBandHeight; y++)
+        {
+            column[y] = pixels[y * CaptureWidth + x];
+        }
+        return column;
+    }
+
+    // Compares the rows from a few above each menu's own bottom edge to a few below it, so a difference
+    // in item height (font, padding) does not count, only the separator's thickness, color and gap.
+    private static void BottomEdgesShouldMatch(XnaColor[] tool, int toolBottom, XnaColor[] codeOnly, int codeOnlyBottom, string because)
+    {
+        List<string> differing = new();
+        for (int offset = -4; offset < 3; offset++)
+        {
+            XnaColor toolPixel = tool[toolBottom + offset];
+            XnaColor codeOnlyPixel = codeOnly[codeOnlyBottom + offset];
+            if (ColorDistance(toolPixel, codeOnlyPixel) > 12)
+            {
+                differing.Add($"{offset} from the menu bottom: tool {toolPixel} vs code-only {codeOnlyPixel}");
+            }
+        }
+        differing.ShouldBeEmpty(because);
+    }
+
+    // Left out: Standard's and Editor's menus draw no separator in either visual; their tool menu bars use a
+    // different fill from code-only (#6732).
+    public static IEnumerable<object[]> SeparatorPairs()
+    {
+        HashSet<string> noSeparator = new() { "standard", "editor" };
+        foreach (object[] pair in Pairs())
+        {
+            if (!noSeparator.Contains((string)pair[0]))
+            {
+                yield return pair;
+            }
+        }
+    }
+
+    // The menu bar's bottom separator has the same thickness and color, and sits the same distance under
+    // the bar fill, beside the items (#6713).
+    [Theory]
+    [MemberData(nameof(SeparatorPairs))]
+    public void Tool_MenuBottomSeparator_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        BottomEdgesShouldMatch(tool.BarColumn, tool.MenuBottom, codeOnly.BarColumn, codeOnly.MenuBottom,
+            $"{themeName}: menu bar column right of the items, unfocused");
+    }
+
+    // And under the highlighted first item of a focused menu (#6713).
+    [Theory]
+    [MemberData(nameof(SeparatorPairs))]
+    public void Tool_MenuBottomSeparator_UnderHighlightedItem_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        BottomEdgesShouldMatch(tool.FocusedItemColumn, tool.MenuBottom, codeOnly.FocusedItemColumn, codeOnly.MenuBottom,
+            $"{themeName}: column under the highlighted item's center, focused");
     }
 
     // The V3-based code-only visuals tint a sprite; the themed tool templates use a Text named

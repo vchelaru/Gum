@@ -62,7 +62,7 @@
       <Value xsi:type="xsd:int">232</Value>
     </Variable>
     <Variable Type="float" Name="BottomSeparator.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="BottomSeparator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -101,7 +101,7 @@
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
     </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
