@@ -118,6 +118,14 @@ public partial class GraphicalUiElement
     private long _settledSession = -1;
     private int _settledAxis;
 
+    // The session of this element's last layout that got past the early outs; 0 if it was never laid out.
+    private long _lastLaidOutSession;
+
+    // Set on a stack while the layout for a child appended at its end runs. The other children were laid out
+    // before the append and an appended child cannot change them, so they are placed again (or laid out, if
+    // what they read from this stack changed) instead of being laid out again every time (#6702).
+    private GraphicalUiElement? _appendedChild;
+
     #endregion
 
     /// <summary>
@@ -301,11 +309,14 @@ public partial class GraphicalUiElement
             out bool isParentFlippedHorizontally);
 
         _settledSession = -1;
+        // Kept for every layout, not only tracked ones: an append to a stack treats the siblings as settled from
+        // their last layout, whatever session it was in (#6702).
+        _lastLaidOutSession = s_session;
+        _settledParentWidth = parentWidth;
+        _settledParentHeight = parentHeight;
         if (mayBeLaidOutAgain)
         {
             _layoutRan = true;
-            _settledParentWidth = parentWidth;
-            _settledParentHeight = parentHeight;
         }
         float widthAtPlacement = 0;
         float heightAtPlacement = 0;
@@ -647,10 +658,7 @@ public partial class GraphicalUiElement
         }
         if (this.mContainedObjectAsIpso != null)
         {
-            if (mayBeLaidOutAgain)
-            {
-                _placedAtFinalSize = widthAtPlacement == mContainedObjectAsIpso.Width && heightAtPlacement == mContainedObjectAsIpso.Height;
-            }
+            _placedAtFinalSize = widthAtPlacement == mContainedObjectAsIpso.Width && heightAtPlacement == mContainedObjectAsIpso.Height;
 
             if (widthBeforeLayout != mContainedObjectAsIpso.Width ||
                 heightBeforeLayout != mContainedObjectAsIpso.Height)
