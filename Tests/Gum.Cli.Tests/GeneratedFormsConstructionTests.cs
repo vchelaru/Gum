@@ -163,6 +163,54 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         ((ICollection)Get(visual, "Children")!).Count.ShouldBe(3);
     }
 
+    // #6730: an instance of a MenuItemSubmenuPopupBehavior component is a ScrollViewer-backed Forms control.
+    [Fact]
+    public void Constructor_GumFormsSubmenuPopupInstance_IsScrollViewer()
+    {
+        Assembly generated = GenerateAndCompile(editProject: AddSubmenuPopupHolder);
+
+        object holder = Construct(generated, "SubmenuPopupHolder");
+
+        Type scrollViewerType = GumCommon.GetType("Gum.Forms.Controls.ScrollViewer", throwOnError: true)!;
+        holder.GetType().GetProperty("PopupInstance")!.PropertyType.IsSubclassOf(scrollViewerType).ShouldBeTrue();
+        Get(holder, "PopupInstance").ShouldBeAssignableTo(scrollViewerType);
+    }
+
+    [Fact]
+    public void Constructor_LegacyMonoGameFindByNameSubmenuPopupInstance_HasScrollViewerFormsControl()
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddSubmenuPopupHolder);
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == "SubmenuPopupHolderRuntime");
+
+        object holder = Activator.CreateInstance(type, true, true)!;
+
+        Type scrollViewerType = GumCommon.GetType("Gum.Forms.Controls.ScrollViewer", throwOnError: true)!;
+        Get(holder, "PopupInstance.FormsControl").ShouldBeAssignableTo(scrollViewerType);
+    }
+
+    // A MenuItemSubmenuPopup shaped like the Retro95 one (the ScrollViewer structure on a Container), held
+    // as an instance by another component.
+    private void AddSubmenuPopupHolder(GumProjectSave project)
+    {
+        string behaviorName = Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName;
+        new Gum.DataTypes.Behaviors.BehaviorSave { Name = behaviorName, DefaultImplementation = "Controls/MenuItemSubmenuPopup" }
+            .Save(Path.Combine(TempDirectory, "Behaviors", behaviorName + ".behx"));
+        project.BehaviorReferences.Add(new Gum.DataTypes.Behaviors.BehaviorReference { Name = behaviorName });
+
+        ComponentSave popup = project.Components.Single(item => item.Name == "Controls/ScrollViewer").Clone();
+        popup.Name = "Controls/MenuItemSubmenuPopup";
+        popup.Behaviors.Clear();
+        popup.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
+        {
+            BehaviorName = behaviorName,
+        });
+        project.Components.Add(popup);
+        project.ComponentReferences.Add(new ElementReference { Name = popup.Name, ElementType = ElementType.Component });
+
+        AddComponent(project, "Elements/SubmenuPopupHolder", "Container", ("PopupInstance", popup.Name));
+    }
+
     private static object Construct(Assembly generated, string typeName) =>
         Activator.CreateInstance(generated.GetTypes().Single(item => item.Name == typeName))!;
 
