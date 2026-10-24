@@ -197,14 +197,20 @@ public class MenuItem : ItemsControl
         }
     }
 
+    /// <summary>
+    /// The template this item builds its submenu popup from. Null by default; when set, it overrides
+    /// <see cref="DefaultSubmenuPopupTemplate"/> for this item only.
+    /// </summary>
     public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
 
     /// <summary>
     /// The template every MenuItem builds its submenu popup from when the item has no
     /// <see cref="ScrollViewerVisualTemplate"/>. Null by default. When set, it wins over the
     /// ScrollViewer template registered in <see cref="FrameworkElement.DefaultFormsTemplates"/>, so the
-    /// submenu popup can look different from other ScrollViewers. The popup sizes itself to its rows.
-    /// Generated code sets this to the project's MenuItemSubmenuPopup component.
+    /// submenu popup can look different from other ScrollViewers. The popup sizes itself to its rows,
+    /// keeping any padding on levels the template already sizes to their children.
+    /// Generated code sets this to the project's MenuItemSubmenuPopup component, and each code-only
+    /// theme's Apply sets it to that theme's popup. Uninitializing Gum clears it.
     /// </summary>
     /// <remarks>
     /// The template's content must have the ScrollViewer structure. If it creates a Forms control, that
@@ -1027,12 +1033,20 @@ public class MenuItem : ItemsControl
             // We can't make assumptions about the structure of the popup, so we have to just recursively
             // climb up from the inner panel and size it according to its children.
             var parentForSizing = popup.InnerPanel;
+            // A level already sized to its children keeps its padding (a theme's popup that sizes
+            // itself, #6741).
             while(parentForSizing != null)
             {
-                parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                parentForSizing.Width = 0;
-                parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                parentForSizing.Height = 0;
+                if (parentForSizing.WidthUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+                {
+                    parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                    parentForSizing.Width = 0;
+                }
+                if (parentForSizing.HeightUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+                {
+                    parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                    parentForSizing.Height = 0;
+                }
 
                 if (parentForSizing == popup.Visual)
                 {

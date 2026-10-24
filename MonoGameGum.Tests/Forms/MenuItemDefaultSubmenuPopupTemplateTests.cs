@@ -36,9 +36,8 @@ public class MenuItemDefaultSubmenuPopupTemplateTests : BaseTestClass
     private static VisualTemplate NamedScrollViewerTemplate(string name) =>
         new VisualTemplate((_, createForms) => new ScrollViewerVisual(tryCreateFormsObject: createForms) { Name = name });
 
-    // File (New, Open), with File's submenu open. The V3 MenuItem visual gives each item its own
-    // ScrollViewerVisualTemplate; clearing it makes File behave like an item from a project component.
-    private static MenuItem OpenFileMenu(bool keepV3ItemTemplate = false)
+    // File (New, Open), with File's submenu open.
+    private static MenuItem OpenFileMenu()
     {
         ContainerRuntime container = new ContainerRuntime();
         container.Width = 400;
@@ -53,10 +52,6 @@ public class MenuItemDefaultSubmenuPopupTemplateTests : BaseTestClass
         menu.Items!.Add(file);
         file.Items!.Add(new MenuItem { Header = "New" });
         file.Items.Add(new MenuItem { Header = "Open" });
-        if (!keepV3ItemTemplate)
-        {
-            file.ScrollViewerVisualTemplate = null;
-        }
         menu.Visual.UpdateLayout();
 
         file.TryShowPopup();
@@ -103,35 +98,35 @@ public class MenuItemDefaultSubmenuPopupTemplateTests : BaseTestClass
         MenuItem.DefaultSubmenuPopupTemplate.ShouldBeNull();
     }
 
-    // A code-only project that sets nothing keeps the V3 MenuItem visual's own popup.
+    // A code-only project that sets nothing gets the registered (V3) ScrollViewer, sized to its rows.
     [Fact]
-    public void OpenSubmenu_CodeOnlyNothingSet_UsesV3ItemTemplate()
+    public void OpenSubmenu_CodeOnlyNothingSet_UsesV3ScrollViewerSizedToRows()
     {
-        MenuItem file = OpenFileMenu(keepV3ItemTemplate: true);
+        MenuItem file = OpenFileMenu();
+        ScrollViewer popup = file.itemsPopup!;
+        float heightBefore = popup.Visual.AbsoluteHeight;
 
-        file.itemsPopup!.Visual.ShouldBeOfType<ScrollViewerVisualSizedToChildren>();
+        MenuItem added = new MenuItem { Header = "Close" };
+        file.Items!.Add(added);
+
+        popup.Visual.ShouldBeOfType<ScrollViewerVisual>();
+        (popup.Visual.AbsoluteHeight - heightBefore).ShouldBe(added.Visual.AbsoluteHeight, 1f);
     }
 
-    // The V3 MenuItem visual's template is a per-item ScrollViewerVisualTemplate, so it wins.
     [Fact]
-    public void OpenSubmenu_CodeOnlyDefaultSubmenuPopupTemplateSet_V3ItemTemplateWins()
+    public void OpenSubmenu_CodeOnlyDefaultSubmenuPopupTemplateSet_UsesIt()
     {
         MenuItem.DefaultSubmenuPopupTemplate = NamedScrollViewerTemplate("SubmenuPopup");
 
-        MenuItem file = OpenFileMenu(keepV3ItemTemplate: true);
-
-        file.itemsPopup!.Visual.ShouldBeOfType<ScrollViewerVisualSizedToChildren>();
-    }
-
-    // An item with no template of its own and nothing registered gets the code default ScrollViewer.
-    [Fact]
-    public void OpenSubmenu_NoItemTemplateNothingSet_UsesCodeDefaultScrollViewerVisual()
-    {
-        Type expectedVisualType = new ScrollViewer().Visual.GetType();
-
         MenuItem file = OpenFileMenu();
 
-        file.itemsPopup!.Visual.GetType().ShouldBe(expectedVisualType);
+        file.itemsPopup!.Visual.Name.ShouldBe("SubmenuPopup");
+    }
+
+    [Fact]
+    public void V3MenuItem_ScrollViewerVisualTemplate_IsNull()
+    {
+        new MenuItem().ScrollViewerVisualTemplate.ShouldBeNull();
     }
 
     [Fact]
@@ -217,5 +212,25 @@ public class MenuItemDefaultSubmenuPopupTemplateTests : BaseTestClass
         file.Items!.Add(added);
 
         (popup.Visual.AbsoluteHeight - heightBefore).ShouldBe(added.Visual.AbsoluteHeight, 1f);
+    }
+
+    // A popup level the template already sizes to its children keeps its padding (a theme popup, #6741).
+    [Fact]
+    public void OpenSubmenu_DefaultSubmenuPopupTemplateSizedToChildrenWithPadding_KeepsPadding()
+    {
+        MenuItem.DefaultSubmenuPopupTemplate = new VisualTemplate(() =>
+        {
+            ScrollViewerVisual visual = new ScrollViewerVisual(tryCreateFormsObject: false);
+            visual.WidthUnits = DimensionUnitType.RelativeToChildren;
+            visual.Width = 4;
+            visual.HeightUnits = DimensionUnitType.RelativeToChildren;
+            visual.Height = 6;
+            return visual;
+        });
+
+        MenuItem file = OpenFileMenu();
+
+        file.itemsPopup!.Visual.Width.ShouldBe(4);
+        file.itemsPopup.Visual.Height.ShouldBe(6);
     }
 }

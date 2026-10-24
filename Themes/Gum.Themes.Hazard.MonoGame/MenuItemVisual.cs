@@ -69,31 +69,6 @@ public class MenuItemVisual : BaseMenuItemVisual
         }
     }
 
-    /// <summary>
-    /// Overrides V3's submenu-popup template assignment so the popup uses a
-    /// Hazard ScrollViewerVisual instead of the V3 internal one.
-    /// </summary>
-    public override object FormsControlAsObject
-    {
-        get => base.FormsControlAsObject;
-        set
-        {
-            base.FormsControlAsObject = value;
-            if (value is MenuItem menuItem)
-            {
-                menuItem.ScrollViewerVisualTemplate = SubmenuScrollViewerTemplate;
-            }
-        }
-    }
-
-    private VisualTemplate SubmenuScrollViewerTemplate => new VisualTemplate(() =>
-    {
-        ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
-        visual.HasEvents = true;
-        visual.MakeSizedToChildren();
-        return visual;
-    });
-
     private void WireStates()
     {
         // Background.Visible is repurposed here as "should the fill paint" —
