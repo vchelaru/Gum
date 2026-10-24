@@ -83,21 +83,24 @@ public class MenuItemVisual : BaseMenuItemVisual
             fill: new Color(0, 0, 0, 0), text: MeadowStyling.ActiveStyle.Colors.TealDark);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: MeadowStyling.ActiveStyle.Colors.HoverOption, text: MeadowStyling.ActiveStyle.Colors.TealDark);
+            fill: MeadowStyling.ActiveStyle.Colors.HoverOption, text: MeadowStyling.ActiveStyle.Colors.TealDark, outlined: true);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: MeadowStyling.ActiveStyle.Colors.SelectedRow, text: MeadowStyling.ActiveStyle.Colors.SelectedRowText);
+            fill: MeadowStyling.ActiveStyle.Colors.SelectedRow, text: MeadowStyling.ActiveStyle.Colors.SelectedRowText, outlined: true);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: MeadowStyling.ActiveStyle.Colors.HoverOption, text: MeadowStyling.ActiveStyle.Colors.TealDark);
+            fill: MeadowStyling.ActiveStyle.Colors.HoverOption, text: MeadowStyling.ActiveStyle.Colors.TealDark, outlined: true);
 
         States.Disabled.Apply = () => ApplyPalette(
             fill: new Color(0, 0, 0, 0), text: MeadowStyling.ActiveStyle.Colors.DisabledInk);
     }
 
-    private void ApplyPalette(Color fill, Color text)
+    private void ApplyPalette(Color fill, Color text, bool outlined = false)
     {
         _fill.FillColor = fill;
+        // The fill alone is close to the menu bar color, so a highlighted item also draws an accent edge.
+        _fill.StrokeColor = MeadowStyling.ActiveStyle.Colors.Accent;
+        _fill.StrokeWidth = outlined ? 1 : 0;
         TextInstance.Color = text;
         SubmenuIndicatorIcon.Color = text;
     }

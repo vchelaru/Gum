@@ -26,6 +26,15 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
+    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">26</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">200</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">244</Value>
+    </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -251,6 +260,16 @@
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
       <Name>TextInstance.VariableReferences</Name>
       <Category>References</Category>
       <IsFile>false</IsFile>
@@ -289,6 +308,9 @@
       </Variable>
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">40</Value>
@@ -342,6 +364,9 @@
       </Variable>
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">30</Value>
+      </Variable>
+      <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">59</Value>
@@ -406,6 +431,9 @@
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">244</Value>
       </Variable>
+      <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">12</Value>
       </Variable>
@@ -469,6 +497,9 @@
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">30</Value>
       </Variable>
+      <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">40</Value>
       </Variable>
@@ -531,6 +562,9 @@
       </Variable>
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">26</Value>
