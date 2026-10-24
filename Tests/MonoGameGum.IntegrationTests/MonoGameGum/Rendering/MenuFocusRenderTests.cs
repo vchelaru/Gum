@@ -96,7 +96,17 @@ public class MenuFocusRenderTests : BaseTestClass
         MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
-        ShouldBeClose(tool.OpenFill, codeOnly.OpenFill, $"{themeName}: open item fill");
+        tool.ShouldSatisfyAllConditions(
+            () => ShouldBeClose(tool.OpenFill, codeOnly.OpenFill, $"{themeName}: open item fill"),
+            () => ShouldBeClose(tool.OpenHeaderColor, codeOnly.OpenHeaderColor, $"{themeName}: open item header color"),
+            () =>
+            {
+                if (tool.OpenIndicatorColor is XnaColor toolIndicator)
+                {
+                    ShouldBeClose(toolIndicator, codeOnly.OpenIndicatorColor!.Value, $"{themeName}: open item submenu indicator color");
+                }
+            },
+            () => ShouldBeClose(tool.OpenCorner, codeOnly.OpenCorner, $"{themeName}: open item corner"));
     }
 
     // In these themes the highlight fill alone is close to the menu bar color, so the highlight also
@@ -134,7 +144,8 @@ public class MenuFocusRenderTests : BaseTestClass
 
     // HighlightCorner is the highlighted item's pixel one in from its top-left corner, which a rounded
     // highlight leaves at the menu bar color.
-    private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge, XnaColor HighlightCorner, XnaColor OpenFill);
+    private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge, XnaColor HighlightCorner, XnaColor OpenFill,
+        XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner);
 
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
@@ -279,6 +290,8 @@ public class MenuFocusRenderTests : BaseTestClass
             file.IsPopupVisible.ShouldBeTrue(pngPrefix);
             newItem.IsHighlighted.ShouldBeTrue(pngPrefix);
             XnaColor[] open = Capture(game, background, $"{pngPrefix}-open.png");
+            XnaColor openHeaderColor = new XnaColor(headerText.Red, headerText.Green, headerText.Blue);
+            XnaColor? openIndicatorColor = IndicatorColor(file.Visual);
 
             GraphicalUiElement header = file.Visual.GetGraphicalUiElementByName("TextInstance").ShouldNotBeNull(pngPrefix);
             // Inside the padding at mid-height, clear of the header and of any rounded corner; with no padding,
@@ -289,8 +302,9 @@ public class MenuFocusRenderTests : BaseTestClass
             int edgeY = (int)(file.Visual.AbsoluteTop + file.Visual.GetAbsoluteHeight() / 2);
             XnaColor edge = focused[edgeY * CaptureWidth + (int)file.Visual.AbsoluteLeft];
             XnaColor corner = focused[((int)file.Visual.AbsoluteTop + 1) * CaptureWidth + (int)file.Visual.AbsoluteLeft + 1];
+            XnaColor openCorner = open[((int)file.Visual.AbsoluteTop + 1) * CaptureWidth + (int)file.Visual.AbsoluteLeft + 1];
             return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor, edge, corner,
-                open[sampleY * CaptureWidth + sampleX]);
+                open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner);
         }
         finally
         {
@@ -302,6 +316,21 @@ public class MenuFocusRenderTests : BaseTestClass
             V3Styling.ActiveStyle = previousStyle;
             CustomSetPropertyOnRenderable.InMemoryFontCreator = previousFontCreator;
         }
+    }
+
+    // The V3-based code-only visuals tint a sprite; the themed tool templates use a Text named
+    // SubmenuIndicatorInstance. Null for a tool template whose indicator is an Icon component (Standard, Editor).
+    private static XnaColor? IndicatorColor(GraphicalUiElement visual)
+    {
+        if (visual is global::Gum.Forms.DefaultVisuals.V3.MenuItemVisual v3)
+        {
+            return v3.SubmenuIndicatorIcon.Color;
+        }
+        if (visual.GetGraphicalUiElementByName("SubmenuIndicatorInstance")?.RenderableComponent is global::RenderingLibrary.Graphics.Text text)
+        {
+            return new XnaColor(text.Red, text.Green, text.Blue);
+        }
+        return null;
     }
 
     // Runs one frame of the real focus dispatch with only this key down (pushed, typed and held).
