@@ -169,6 +169,56 @@ public class GumRawTextureTests : IDisposable
     }
 
     [Fact]
+    public void PrepareForRuntime_ShouldConvertWithoutWarning_WhenWarnOnMismatchIsFalse()
+    {
+        byte[] entry = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 255, 128, 0, 128 }, isPremultiplied: false);
+
+        GumRawTexture.PrepareForRuntime(entry, "a.png", "Game.gumpkg",
+            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false, warnOnMismatch: false);
+
+        entry.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[] { 128, 64, 0, 128 });
+        _warnings.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ReadForRuntime_ShouldReturnNullAndRewind_ForAnEncodedImage()
+    {
+        byte[] png = { 0x89, 0x50, 0x4E, 0x47, 1, 2, 3 };
+        using System.IO.MemoryStream stream = new System.IO.MemoryStream(png);
+
+        byte[]? result = GumRawTexture.ReadForRuntime(stream, "a.png",
+            runtimeUsesPremultipliedAlpha: false, bleedTransparentEdges: false, warnOnMismatch: true, out _);
+
+        result.ShouldBeNull();
+        stream.Position.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ReadForRuntime_ShouldReturnTheConvertedEntry_FromANonSeekableStream()
+    {
+        byte[] entry = GumRawTexture.Encode(width: 1, height: 1, new byte[] { 255, 128, 0, 128 }, isPremultiplied: false);
+        using NonSeekableStream stream = new NonSeekableStream(entry);
+
+        byte[]? result = GumRawTexture.ReadForRuntime(GumRawTexture.EnsureSeekable(stream), "a.png",
+            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false, warnOnMismatch: true,
+            out GumRawTextureHeader header);
+
+        result.ShouldNotBeNull();
+        header.Width.ShouldBe(1);
+        result.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[] { 128, 64, 0, 128 });
+        _warnings.Count.ShouldBe(1);
+        Should.Throw<ArgumentException>(() => GumRawTexture.ReadForRuntime(stream, "a.png",
+            runtimeUsesPremultipliedAlpha: true, bleedTransparentEdges: false, warnOnMismatch: true, out _));
+    }
+
+    private sealed class NonSeekableStream : System.IO.MemoryStream
+    {
+        public NonSeekableStream(byte[] buffer) : base(buffer) { }
+
+        public override bool CanSeek => false;
+    }
+
+    [Fact]
     public void Unpremultiply_ShouldRoundToNearest_AndLeaveTransparentAndOpaqueTexelsAlone()
     {
         byte[] rgba = { 1, 0, 0, 1, 127, 50, 1, 127, 9, 8, 7, 255, 5, 5, 5, 0 };

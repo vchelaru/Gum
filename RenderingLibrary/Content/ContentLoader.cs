@@ -164,23 +164,17 @@ public sealed class ContentLoader : IContentLoader
     private static Texture2D CreateTextureFromStream(GraphicsDevice device, System.IO.Stream stream,
         string name, out bool isProcessedOnLoad)
     {
-        if (!stream.CanSeek)
-        {
-            var buffered = new System.IO.MemoryStream();
-            stream.CopyTo(buffered);
-            buffered.Position = 0;
-            stream = buffered;
-        }
+        stream = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
 
-        byte[]? rawTexture = ReadIfRawTexture(stream);
+        // A gumcli-packed texture (#6514): already decoded, so convert the alpha mode if the
+        // package's differs and upload, with no image decode and no GetData readback.
+        byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(stream, name,
+            Graphics.Renderer.UsePremultipliedAlpha,
+            Graphics.Renderer.BleedTransparentTextureEdgesOnLoad,
+            warnOnMismatch: true,
+            out Gum.Bundle.GumRawTextureHeader header);
         if (rawTexture != null)
         {
-            // A gumcli-packed texture (#6514): already decoded, so convert the alpha mode if the
-            // package's differs and upload, with no image decode and no GetData readback.
-            Gum.Bundle.GumRawTextureHeader header = Gum.Bundle.GumRawTexture.PrepareForRuntime(rawTexture, name,
-                (stream as Gum.Bundle.GumBundleEntryStream)?.PackagePath,
-                Graphics.Renderer.UsePremultipliedAlpha,
-                Graphics.Renderer.BleedTransparentTextureEdgesOnLoad);
             var rawTexture2D = new Texture2D(device, header.Width, header.Height, false, SurfaceFormat.Color);
             rawTexture2D.SetData(0, null, rawTexture, Gum.Bundle.GumRawTexture.HeaderLength, (int)header.PixelByteCount);
             isProcessedOnLoad = true;
@@ -205,36 +199,6 @@ public sealed class ContentLoader : IContentLoader
 #endif
         isProcessedOnLoad = false;
         return Texture2D.FromStream(device, stream);
-    }
-
-    /// <summary>
-    /// Returns the whole stream when it holds a raw package texture, otherwise null with the stream
-    /// rewound. <paramref name="stream"/> must be seekable.
-    /// </summary>
-    private static byte[]? ReadIfRawTexture(System.IO.Stream stream)
-    {
-        long start = stream.Position;
-        byte[] prefix = new byte[4];
-        int read = 0;
-        while (read < prefix.Length)
-        {
-            int n = stream.Read(prefix, read, prefix.Length - read);
-            if (n <= 0)
-            {
-                break;
-            }
-            read += n;
-        }
-        stream.Position = start;
-
-        if (!Gum.Bundle.GumRawTexture.IsRawTexture(prefix.AsSpan(0, read)))
-        {
-            return null;
-        }
-
-        var all = new System.IO.MemoryStream();
-        stream.CopyTo(all);
-        return all.ToArray();
     }
 
     public static string StandardizeCaseSensitive(string fileName)

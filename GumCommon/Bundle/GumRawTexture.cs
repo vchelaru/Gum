@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.IO;
 using RenderingLibrary.Content;
 
 namespace Gum.Bundle;
@@ -172,8 +173,12 @@ public static class GumRawTexture
     /// <param name="packageName">The package the entry came from, named in the warning.</param>
     /// <param name="runtimeUsesPremultipliedAlpha">The runtime's alpha mode.</param>
     /// <param name="bleedTransparentEdges">Whether the runtime bleeds edges of straight textures.</param>
+    /// <param name="warnOnMismatch">
+    /// False for a runtime whose users cannot avoid the conversion by repacking (Skia is always
+    /// premultiplied while gumcli packs straight alpha), so the warning would only be noise.
+    /// </param>
     public static GumRawTextureHeader PrepareForRuntime(byte[] entry, string entryName, string? packageName,
-        bool runtimeUsesPremultipliedAlpha, bool bleedTransparentEdges)
+        bool runtimeUsesPremultipliedAlpha, bool bleedTransparentEdges, bool warnOnMismatch = true)
     {
         if (entry == null)
         {
@@ -200,8 +205,77 @@ public static class GumRawTexture
             }
         }
 
-        WarnOnce(packageName ?? entryName, header.IsPremultiplied, entryName);
+        if (warnOnMismatch)
+        {
+            WarnOnce(packageName ?? entryName, header.IsPremultiplied, entryName);
+        }
         return header;
+    }
+
+    /// <summary>
+    /// Returns <paramref name="stream"/> when it can seek, otherwise a seekable in-memory copy of the
+    /// rest of it, so a loader can sniff it with <see cref="ReadForRuntime"/> and still decode it.
+    /// </summary>
+    public static Stream EnsureSeekable(Stream stream)
+    {
+        if (stream.CanSeek)
+        {
+            return stream;
+        }
+        MemoryStream buffered = new MemoryStream();
+        stream.CopyTo(buffered);
+        buffered.Position = 0;
+        return buffered;
+    }
+
+    /// <summary>
+    /// The texture loaders' shared entry point. When <paramref name="stream"/> holds a raw texture,
+    /// reads all of it, converts it with <see cref="PrepareForRuntime"/> (naming the package it came
+    /// from in the warning) and returns the whole entry, header included, with the pixels starting at
+    /// <see cref="HeaderLength"/>. Otherwise returns null with the stream rewound, so the caller
+    /// decodes it as an encoded image.
+    /// </summary>
+    /// <param name="stream">A seekable stream; see <see cref="EnsureSeekable"/>.</param>
+    /// <param name="entryName">The texture's path, named in the warning.</param>
+    /// <param name="runtimeUsesPremultipliedAlpha">The runtime's alpha mode.</param>
+    /// <param name="bleedTransparentEdges">Whether the runtime bleeds edges of straight textures.</param>
+    /// <param name="warnOnMismatch">See <see cref="PrepareForRuntime"/>.</param>
+    /// <param name="header">The validated header, or default when the stream is not a raw texture.</param>
+    /// <exception cref="GumBundleFormatException">The stream holds a corrupt raw texture.</exception>
+    public static byte[]? ReadForRuntime(Stream stream, string entryName, bool runtimeUsesPremultipliedAlpha,
+        bool bleedTransparentEdges, bool warnOnMismatch, out GumRawTextureHeader header)
+    {
+        if (!stream.CanSeek)
+        {
+            throw new ArgumentException("The stream must be seekable; wrap it with EnsureSeekable.", nameof(stream));
+        }
+
+        header = default;
+        long start = stream.Position;
+        byte[] prefix = new byte[MagicBytes.Length];
+        int read = 0;
+        while (read < prefix.Length)
+        {
+            int n = stream.Read(prefix, read, prefix.Length - read);
+            if (n <= 0)
+            {
+                break;
+            }
+            read += n;
+        }
+        stream.Position = start;
+
+        if (!IsRawTexture(prefix.AsSpan(0, read)))
+        {
+            return null;
+        }
+
+        MemoryStream all = new MemoryStream();
+        stream.CopyTo(all);
+        byte[] entry = all.ToArray();
+        header = PrepareForRuntime(entry, entryName, (stream as GumBundleEntryStream)?.PackagePath,
+            runtimeUsesPremultipliedAlpha, bleedTransparentEdges, warnOnMismatch);
+        return entry;
     }
 
     private static void WarnOnce(string source, bool packageIsPremultiplied, string entryName)
