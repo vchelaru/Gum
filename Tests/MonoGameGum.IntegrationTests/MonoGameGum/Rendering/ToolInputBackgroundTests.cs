@@ -44,30 +44,118 @@ public class ToolInputBackgroundTests : BaseTestClass
         tool.ShouldBe(codeOnly, componentName);
     }
 
-    // Kept as they are: these Standard controls tint with DarkGray where V3 uses InputBackground, and their
-    // states derive lighter/darker fills the templates don't carry yet.
-    [Theory]
-    [InlineData("Controls/ListBox")]
-    [InlineData("Controls/ComboBox")]
-    [InlineData("Controls/TextBox")]
-    public void StandardToolBackground_StaysDarkGray(string componentName)
-    {
-        BackgroundLook tool = MeasureTool("FormsTemplate", componentName);
+    private static readonly string[] ListBoxStates = { "Enabled", "Disabled", "Focused", "DisabledFocused" };
+    private static readonly string[] ComboBoxStates = { "Enabled", "Disabled", "DisabledFocused", "Focused", "Highlighted", "HighlightedFocused", "Pushed" };
+    private static readonly string[] TextBoxStates = { "Enabled", "Disabled", "Highlighted", "Focused" };
 
-        (tool.R, tool.G, tool.B).ShouldBe(((byte)70, (byte)70, (byte)80), componentName);
+    public static IEnumerable<object[]> MatchingControlStates()
+    {
+        foreach ((string folder, string prefix, Action? theme) in new (string, string, Action?)[]
+        {
+            ("FormsTemplate", "Controls/", null),
+            ("FormsThemes/Editor", "Editor/Controls/", Gum.Themes.Editor.EditorTheme.Apply),
+        })
+        {
+            foreach (string state in ListBoxStates)
+            {
+                yield return new object[] { folder, prefix + "ListBox", "ListBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new ListBox()) };
+            }
+            foreach (string state in ComboBoxStates)
+            {
+                yield return new object[] { folder, prefix + "ComboBox", "ComboBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new ComboBox()) };
+            }
+            foreach (string state in TextBoxStates)
+            {
+                yield return new object[] { folder, prefix + "TextBox", "TextBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new TextBox()) };
+            }
+        }
+    }
+
+    // Every state the control can reach. The V3 hover and disabled fills are a lighten/darken of the resting fill,
+    // baked into *Light/*Dark swatches because static content can't compute them (#6746).
+    [Theory]
+    [MemberData(nameof(MatchingControlStates))]
+    public void ToolBackgroundInState_MatchesCodeOnly(string templateFolder, string componentName, string categoryState, string stateName,
+        Action? applyTheme, Func<FrameworkElement> createCodeOnly)
+    {
+        // Coming from another state first: a state that leaves the fill unset would keep the previous state's fill.
+        string previousState = stateName == "Disabled" ? "Highlighted" : "Disabled";
+        void EnterState(FrameworkElement control)
+        {
+            control.Visual.SetProperty(categoryState, previousState);
+            control.Visual.SetProperty(categoryState, stateName);
+        }
+
+        BackgroundLook codeOnly = MeasureCodeOnly(applyTheme, createCodeOnly, EnterState);
+        BackgroundLook tool = MeasureTool(templateFolder, componentName, afterCreate: EnterState);
+
+        tool.ShouldBe(codeOnly, $"{componentName} {stateName}");
+    }
+
+    // Visual review only: with GUM_SCREENSHOT_DIR set, writes 6746-<codeonly|tool>.png, one row per control
+    // (ListBox, ComboBox, TextBox) and one column per state, the Standard tool template beside V3.
+    [Fact]
+    public void StandardInputStates_Screenshot()
+    {
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GUM_SCREENSHOT_DIR")))
+        {
+            return;
+        }
+
+        (string Component, string CategoryState, string[] States, Func<FrameworkElement> Create)[] rows =
+        {
+            ("Controls/ListBox", "ListBoxCategoryState", ListBoxStates, () => new ListBox()),
+            ("Controls/ComboBox", "ComboBoxCategoryState", ComboBoxStates, () => new ComboBox()),
+            ("Controls/TextBox", "TextBoxCategoryState", TextBoxStates, () => new TextBox()),
+        };
+
+        void Render(Func<int, FrameworkElement> createRow, string pngName)
+        {
+            List<GraphicalUiElement> added = new();
+            for (int row = 0; row < rows.Length; row++)
+            {
+                for (int column = 0; column < rows[row].States.Length; column++)
+                {
+                    FrameworkElement control = createRow(row);
+                    control.Visual.SetProperty(rows[row].CategoryState, rows[row].States[column]);
+                    control.Visual.X = 8 + column * 96;
+                    control.Visual.Y = 8 + row * 72;
+                    control.Visual.Width = 88;
+                    control.Visual.Height = 64;
+                    control.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                    control.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                    control.Visual.AddToManagers(SystemManagers.Default, null);
+                    added.Add(control.Visual);
+                }
+            }
+            MenuFocusRenderTests.Capture(SystemManagers.Default.Renderer.GraphicsDevice!, Microsoft.Xna.Framework.Color.Black, pngName, 688, 232);
+            foreach (GraphicalUiElement visual in added)
+            {
+                visual.RemoveFromManagers();
+            }
+        }
+
+        MenuFocusRenderTests.WithToolProject("FormsTemplate", mutateProject: null, () =>
+            Render(row => (FrameworkElement)((InteractiveGue)ObjectFinder.Self.GetComponent(rows[row].Component)!
+                .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false)).FormsControlAsObject!, "6746-tool.png"));
+
+        MeasureCodeOnly(applyTheme: () => Render(row => rows[row].Create(), "6746-codeonly.png"), create: () => new ListBox());
     }
 
     // The fill comes from the Styles InputBackground swatch, so recoloring the swatch recolors the control.
     [Theory]
     [InlineData("FormsTemplate", "Controls/ScrollViewer", "Styles")]
     [InlineData("FormsTemplate", "Controls/ItemsControl", "Styles")]
+    [InlineData("FormsTemplate", "Controls/ListBox", "Styles")]
+    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles")]
+    [InlineData("FormsTemplate", "Controls/TextBox", "Styles")]
     [InlineData("FormsThemes/Editor", "Editor/Controls/ItemsControl", "Editor/Styles")]
     public void ToolBackground_FollowsInputBackgroundSwatch(string templateFolder, string componentName, string stylesName)
     {
         BackgroundLook tool = MeasureTool(templateFolder, componentName, beforeCreate: () =>
         {
             GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
-            StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState;
+            StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
             styles.SetValue("InputBackground.FillRed", 200, "int");
             styles.SetValue("InputBackground.FillGreen", 10, "int");
             styles.SetValue("InputBackground.FillBlue", 20, "int");
@@ -77,7 +165,87 @@ public class ToolInputBackgroundTests : BaseTestClass
         (tool.R, tool.G, tool.B).ShouldBe(((byte)200, (byte)10, (byte)20), componentName);
     }
 
-    private static BackgroundLook MeasureTool(string templateFolder, string componentName, Action? beforeCreate = null)
+    // Each per-state swatch recolors exactly the states that read it, and no others (#6746).
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/ListBox", "Styles", "InputBackgroundDark", "ListBoxCategoryState", "Disabled,DisabledFocused")]
+    [InlineData("FormsTemplate", "Controls/TextBox", "Styles", "InputBackgroundDark", "TextBoxCategoryState", "Disabled")]
+    [InlineData("FormsTemplate", "Controls/TextBox", "Styles", "InputBackgroundLight", "TextBoxCategoryState", "Highlighted")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ListBox", "Editor/Styles", "PanelBackgroundDark", "ListBoxCategoryState", "Disabled,DisabledFocused")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/TextBox", "Editor/Styles", "RecessedBackgroundDark", "TextBoxCategoryState", "Disabled")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/TextBox", "Editor/Styles", "RecessedBackgroundLight", "TextBoxCategoryState", "Highlighted")]
+    public void ToolBackground_StateSwatch_RecolorsOnlyItsStates(string templateFolder, string componentName, string stylesName,
+        string swatch, string categoryState, string recoloredStates)
+    {
+        HashSet<string> expectedRecolored = new(recoloredStates.Split(','));
+        string[] states = categoryState == "ListBoxCategoryState" ? ListBoxStates : TextBoxStates;
+
+        foreach (string state in states)
+        {
+            BackgroundLook tool = MeasureTool(templateFolder, componentName,
+                beforeCreate: () =>
+                {
+                    GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+                    StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
+                    styles.SetValue(swatch + ".FillRed", 200, "int");
+                    styles.SetValue(swatch + ".FillGreen", 10, "int");
+                    styles.SetValue(swatch + ".FillBlue", 20, "int");
+                    project.ApplyAllVariableReferences();
+                },
+                afterCreate: control => control.Visual.SetProperty(categoryState, state));
+
+            bool isRecolored = (tool.R, tool.G, tool.B) == ((byte)200, (byte)10, (byte)20);
+            isRecolored.ShouldBe(expectedRecolored.Contains(state), $"{componentName} {state} with {swatch} recolored");
+        }
+    }
+
+    // Re-importing only the new ListBox into an older project keeps the project's own Styles (import is file-level
+    // Skip/Overwrite), which has no InputBackgroundDark swatch. The state keeps its saved fill and nothing reports
+    // the missing swatch; only recoloring that state waits until the swatch exists (#6746).
+    [Fact]
+    public void ToolListBox_StylesWithoutDarkSwatch_KeepsSavedDisabledFill()
+    {
+        BackgroundLook? look = null;
+        List<string> errors = new();
+        void OnError(string message) => errors.Add(message);
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += OnError;
+        try
+        {
+            MenuFocusRenderTests.WithToolProject("FormsTemplate", mutateProject: RemoveSwatch, () =>
+            {
+                GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+                project.Components.Single(c => c.Name == "Styles").Instances.ShouldNotContain(i => i.Name == "InputBackgroundDark");
+                project.ApplyAllVariableReferences();
+                ComponentSave component = ObjectFinder.Self.GetComponent("Controls/ListBox").ShouldNotBeNull();
+                GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+                FrameworkElement control = (FrameworkElement)((InteractiveGue)visual).FormsControlAsObject!;
+                control.Visual.SetProperty("ListBoxCategoryState", "Disabled");
+                look = Measure(control);
+            });
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= OnError;
+        }
+
+        BackgroundLook result = look.ShouldNotBeNull();
+        (result.R, result.G, result.B).ShouldBe(((byte)48, (byte)48, (byte)48));
+        errors.ShouldNotContain(e => e.Contains("InputBackgroundDark"));
+
+        static void RemoveSwatch(string projectDirectory)
+        {
+            string stylesPath = System.IO.Path.Combine(projectDirectory, "Components", "Styles.gucx");
+            System.Xml.Linq.XDocument document = System.Xml.Linq.XDocument.Load(stylesPath);
+            foreach (System.Xml.Linq.XElement element in document.Descendants()
+                .Where(e => ((string?)e.Attribute("Name"))?.StartsWith("InputBackgroundDark") == true).ToList())
+            {
+                element.Remove();
+            }
+            document.Save(stylesPath);
+        }
+    }
+
+    private static BackgroundLook MeasureTool(string templateFolder, string componentName, Action? beforeCreate = null,
+        Action<FrameworkElement>? afterCreate = null)
     {
         BackgroundLook? look = null;
         MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
@@ -85,12 +253,15 @@ public class ToolInputBackgroundTests : BaseTestClass
             beforeCreate?.Invoke();
             ComponentSave component = ObjectFinder.Self.GetComponent(componentName).ShouldNotBeNull(componentName);
             GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-            look = Measure((visual as InteractiveGue)?.FormsControlAsObject.ShouldBeAssignableTo<FrameworkElement>(componentName)!);
+            FrameworkElement control = (visual as InteractiveGue)?.FormsControlAsObject.ShouldBeAssignableTo<FrameworkElement>(componentName)!;
+            afterCreate?.Invoke(control);
+            look = Measure(control);
         });
         return look.ShouldNotBeNull();
     }
 
-    private static BackgroundLook MeasureCodeOnly(Action? applyTheme, Func<FrameworkElement> create)
+    private static BackgroundLook MeasureCodeOnly(Action? applyTheme, Func<FrameworkElement> create,
+        Action<FrameworkElement>? afterCreate = null)
     {
         Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
         V3Styling previousStyle = V3Styling.ActiveStyle;
@@ -99,7 +270,9 @@ public class ToolInputBackgroundTests : BaseTestClass
         {
             using MenuFocusRenderTests.MenuLease game = new(gumxPath: null);
             applyTheme?.Invoke();
-            return Measure(create());
+            FrameworkElement control = create();
+            afterCreate?.Invoke(control);
+            return Measure(control);
         }
         finally
         {
