@@ -109,6 +109,174 @@ public class MenuFocusRenderTests : BaseTestClass
             () => ShouldBeClose(tool.OpenCorner, codeOnly.OpenCorner, $"{themeName}: open item corner"));
     }
 
+    // Left out: Editor's and Retro95's ScrollViewer components (which the tool popup now is) draw a different
+    // surface or border from their code-only submenu popups, pending a design decision. Standard's tool rows
+    // draw their own background over the popup, a bluer gray than code-only, the same before and after #6720;
+    // Tool_SubmenuPopup_IsProjectScrollViewer_SizedToRows covers its popup.
+    public static IEnumerable<object[]> SubmenuPopupPairs()
+    {
+        HashSet<string> differingByDesign = new() { "standard", "editor", "retro95" };
+        foreach (object[] pair in Pairs())
+        {
+            if (!differingByDesign.Contains((string)pair[0]))
+            {
+                yield return pair;
+            }
+        }
+    }
+
+    // The open submenu popup draws the theme's surface and border, and its rows' text, the same in both (#6720).
+    [Theory]
+    [MemberData(nameof(SubmenuPopupPairs))]
+    public void Tool_SubmenuPopup_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        tool.ShouldSatisfyAllConditions(
+            () => ShouldBeClose(tool.PopupFill, codeOnly.PopupFill, $"{themeName}: submenu popup fill", tolerance: 2),
+            () => ShouldBeClose(tool.PopupBorder, codeOnly.PopupBorder, $"{themeName}: submenu popup border", tolerance: 2),
+            () => ShouldBeClose(tool.PopupRowTextColor, codeOnly.PopupRowTextColor, $"{themeName}: non-highlighted submenu row text"));
+    }
+
+    // In a tool project the submenu popup is the project's ScrollViewer component (the ScrollViewerBehavior's
+    // DefaultImplementation), and it still sits under its item and sizes itself to its rows (#6720).
+    [Theory]
+    [MemberData(nameof(ToolTemplates))]
+    public void Tool_SubmenuPopup_IsProjectScrollViewer_SizedToRows(string themeName, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        tool.PopupElementName.ShouldBe(componentPrefix + "ScrollViewer", themeName);
+        tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, $"{themeName}: popup height change when a row is added");
+    }
+
+    // Like the Tooltip, a ScrollViewer template that user code registered wins over the project's component (#6720).
+    [Fact]
+    public void Tool_SubmenuPopup_UserScrollViewerTemplate_WinsOverProjectComponent()
+    {
+        const string userVisualName = "UserScrollViewer";
+        void RegisterUserTemplate() =>
+            FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] = new VisualTemplate((_, createForms) =>
+                new global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: createForms) { Name = userVisualName });
+
+        MenuMeasure tool = RunTool("bubblegum", "FormsThemes/Bubblegum", "Bubblegum/Controls/", new XnaColor(255, 240, 249), RegisterUserTemplate);
+
+        tool.PopupVisualName.ShouldBe(userVisualName);
+        tool.PopupGrowthPerRow.ShouldBe(tool.AddedRowHeight, 1f, "popup height change when a row is added");
+    }
+
+    // A submenu opened from a submenu row is the project's ScrollViewer too, and grows by one row (#6720).
+    [Fact]
+    public void Tool_NestedSubmenuPopup_IsProjectScrollViewer_SizedToRows()
+    {
+        WithToolProject("FormsThemes/Bubblegum", mutateProject: null, () =>
+        {
+            (MenuItem _, MenuItem recent) = OpenNestedMenu("Bubblegum/Controls/");
+            ScrollViewer popup = recent.itemsPopup.ShouldNotBeNull();
+            popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Bubblegum/Controls/ScrollViewer");
+
+            float heightBefore = popup.Visual.GetAbsoluteHeight();
+            MenuItem added = FromComponent<MenuItem>("Bubblegum/Controls/MenuItem");
+            added.Header = "Third";
+            recent.Items!.Add(added);
+            (popup.Visual.GetAbsoluteHeight() - heightBefore).ShouldBe(added.Visual.GetAbsoluteHeight(), 1f);
+        });
+    }
+
+    // A tool project with no ScrollViewer component keeps the code-built V3 popup, still sized to its rows.
+    [Fact]
+    public void Tool_SubmenuPopup_NoScrollViewerComponent_FallsBackToV3_SizedToRows()
+    {
+        static void RemoveScrollViewerBehavior(string projectDir)
+        {
+            string path = Path.Combine(projectDir, "Components", "Bubblegum", "Controls", "ScrollViewer.gucx");
+            string text = File.ReadAllText(path);
+            string withoutBehavior = System.Text.RegularExpressions.Regex.Replace(text,
+                @"<ElementBehaviorReference>\s*<BehaviorName>ScrollViewerBehavior</BehaviorName>\s*</ElementBehaviorReference>", "");
+            withoutBehavior.ShouldNotBe(text);
+            File.WriteAllText(path, withoutBehavior);
+        }
+
+        WithToolProject("FormsThemes/Bubblegum", RemoveScrollViewerBehavior, () =>
+        {
+            (MenuItem file, MenuItem _) = OpenNestedMenu("Bubblegum/Controls/");
+            ScrollViewer popup = file.itemsPopup.ShouldNotBeNull();
+            popup.Visual.ShouldBeOfType<global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual>();
+
+            float heightBefore = popup.Visual.GetAbsoluteHeight();
+            MenuItem added = FromComponent<MenuItem>("Bubblegum/Controls/MenuItem");
+            added.Header = "Close";
+            file.Items!.Add(added);
+            (popup.Visual.GetAbsoluteHeight() - heightBefore).ShouldBe(added.Visual.GetAbsoluteHeight(), 1f);
+        });
+    }
+
+    // File > Recent > {First, Second}, with File's and Recent's popups open.
+    private static (MenuItem File, MenuItem Recent) OpenNestedMenu(string componentPrefix)
+    {
+        MenuItem Item(string header)
+        {
+            MenuItem item = FromComponent<MenuItem>(componentPrefix + "MenuItem");
+            item.Header = header;
+            return item;
+        }
+        Menu menu = FromComponent<Menu>(componentPrefix + "Menu");
+        MenuItem file = Item("File");
+        MenuItem recent = Item("Recent");
+        recent.Items!.Add(Item("First"));
+        recent.Items!.Add(Item("Second"));
+        file.Items!.Add(Item("New"));
+        file.Items!.Add(recent);
+        menu.Items!.Add(file);
+        menu.AddToRoot();
+        menu.Visual.UpdateLayout();
+        file.TryShowPopup();
+        recent.TryShowPopup();
+        recent.itemsPopup.ShouldNotBeNull("Recent's submenu opened");
+        return (file, recent);
+    }
+
+    private static void WithToolProject(string templateFolder, Action<string>? mutateProject, Action body)
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumMenuFocus_" + Guid.NewGuid().ToString("N"));
+        Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
+        V3Styling previousStyle = V3Styling.ActiveStyle;
+        var previousFontCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            string templates = FindTemplatesDirectory();
+            CopyDirectory(Path.Combine(templates, "FormsBehaviors"), Path.Combine(root, "FormsBehaviors"));
+            string projectDir = Path.Combine(root, templateFolder.Replace('/', Path.DirectorySeparatorChar));
+            CopyDirectory(Path.Combine(templates, templateFolder.Replace('/', Path.DirectorySeparatorChar)), projectDir);
+            mutateProject?.Invoke(projectDir);
+            using MenuLease game = new MenuLease(Path.Combine(projectDir, "GumProject.gumx"));
+            body();
+        }
+        finally
+        {
+            FrameworkElement.DefaultFormsTemplates.Clear();
+            foreach (KeyValuePair<Type, VisualTemplate> pair in previousTemplates)
+            {
+                FrameworkElement.DefaultFormsTemplates[pair.Key] = pair.Value;
+            }
+            V3Styling.ActiveStyle = previousStyle;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = previousFontCreator;
+            try { Directory.Delete(root, recursive: true); } catch { /* best effort */ }
+        }
+    }
+
+    // Code-only themes keep their own popup visual, under the item and sized to its rows.
+    [Theory]
+    [MemberData(nameof(CodeOnlyThemes))]
+    public void CodeOnly_SubmenuPopup_SizedToRows(string themeName, Action? applyTheme, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+
+        codeOnly.PopupElementName.ShouldBeNull(themeName);
+        codeOnly.PopupGrowthPerRow.ShouldBe(codeOnly.AddedRowHeight, 1f, $"{themeName}: popup height change when a row is added");
+    }
+
     // In these themes the highlight fill alone is close to the menu bar color, so the highlight also
     // draws an edge (#6715).
     public static IEnumerable<object[]> OutlinedHighlightPairs()
@@ -137,15 +305,16 @@ public class MenuFocusRenderTests : BaseTestClass
     private static int ColorDistance(XnaColor a, XnaColor b) =>
         Math.Abs(a.R - b.R) + Math.Abs(a.G - b.G) + Math.Abs(a.B - b.B);
 
-    private static void ShouldBeClose(XnaColor actual, XnaColor expected, string because)
+    private static void ShouldBeClose(XnaColor actual, XnaColor expected, string because, int tolerance = 12)
     {
-        ColorDistance(actual, expected).ShouldBeLessThanOrEqualTo(12, $"{because}: tool {actual} vs code-only {expected}");
+        ColorDistance(actual, expected).ShouldBeLessThanOrEqualTo(tolerance, $"{because}: tool {actual} vs code-only {expected}");
     }
 
     // HighlightCorner is the highlighted item's pixel one in from its top-left corner, which a rounded
     // highlight leaves at the menu bar color.
     private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge, XnaColor HighlightCorner, XnaColor OpenFill,
-        XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner);
+        XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner,
+        XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, string? PopupVisualName, float PopupGrowthPerRow, float AddedRowHeight);
 
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
@@ -161,7 +330,7 @@ public class MenuFocusRenderTests : BaseTestClass
         RunTool(themeName, templateFolder, componentPrefix, background);
     }
 
-    private static MenuMeasure RunTool(string themeName, string templateFolder, string componentPrefix, XnaColor background)
+    private static MenuMeasure RunTool(string themeName, string templateFolder, string componentPrefix, XnaColor background, Action? afterInitialize = null)
     {
         string root = Path.Combine(Path.GetTempPath(), "GumMenuFocus_" + Guid.NewGuid().ToString("N"));
         try
@@ -171,7 +340,7 @@ public class MenuFocusRenderTests : BaseTestClass
             string projectDir = Path.Combine(root, templateFolder.Replace('/', Path.DirectorySeparatorChar));
             CopyDirectory(Path.Combine(templates, templateFolder.Replace('/', Path.DirectorySeparatorChar)), projectDir);
 
-            return RunScenario(themeName + "-tool", Path.Combine(projectDir, "GumProject.gumx"), applyTheme: null, background, componentPrefix);
+            return RunScenario(themeName + "-tool", Path.Combine(projectDir, "GumProject.gumx"), afterInitialize, background, componentPrefix);
         }
         finally
         {
@@ -221,9 +390,10 @@ public class MenuFocusRenderTests : BaseTestClass
             menu.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
             MenuItem file = Item("File");
             MenuItem newItem = Item("New");
+            MenuItem saveItem = Item("Save");
             file.Items!.Add(newItem);
             file.Items!.Add(Item("Open"));
-            file.Items!.Add(Item("Save"));
+            file.Items!.Add(saveItem);
             menu.Items!.Add(file);
             menu.Items!.Add(Item("Edit"));
             menu.Items!.Add(Item("View"));
@@ -303,8 +473,39 @@ public class MenuFocusRenderTests : BaseTestClass
             XnaColor edge = focused[edgeY * CaptureWidth + (int)file.Visual.AbsoluteLeft];
             XnaColor corner = focused[((int)file.Visual.AbsoluteTop + 1) * CaptureWidth + (int)file.Visual.AbsoluteLeft + 1];
             XnaColor openCorner = open[((int)file.Visual.AbsoluteTop + 1) * CaptureWidth + (int)file.Visual.AbsoluteLeft + 1];
+
+            // The popup: its fill inside the last row's padding (the row draws nothing while not highlighted),
+            // its border as the left-edge pixel least like the fill (a dashed border has gaps), and that row's text color.
+            GraphicalUiElement popup = file.itemsPopup.ShouldNotBeNull(pngPrefix).Visual;
+            popup.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(file.Visual.AbsoluteTop + file.Visual.GetAbsoluteHeight() - 1, $"{pngPrefix}: popup sits under its item");
+            popup.AbsoluteLeft.ShouldBe(file.Visual.AbsoluteLeft, 2f, $"{pngPrefix}: popup lines up with its item");
+            GraphicalUiElement saveText = saveItem.Visual.GetGraphicalUiElementByName("TextInstance").ShouldNotBeNull(pngPrefix);
+            int fillX = (int)((saveItem.Visual.AbsoluteLeft + saveText.AbsoluteLeft) / 2);
+            int fillY = (int)(saveItem.Visual.AbsoluteTop + saveItem.Visual.GetAbsoluteHeight() / 2);
+            XnaColor popupFill = open[fillY * CaptureWidth + fillX];
+            XnaColor popupBorder = popupFill;
+            int borderBottom = Math.Min((int)(popup.AbsoluteTop + popup.GetAbsoluteHeight()) - 10, CaptureHeight - 1);
+            for (int y = (int)popup.AbsoluteTop + 10; y <= borderBottom; y++)
+            {
+                XnaColor candidate = open[y * CaptureWidth + (int)popup.AbsoluteLeft];
+                if (ColorDistance(candidate, popupFill) > ColorDistance(popupBorder, popupFill))
+                {
+                    popupBorder = candidate;
+                }
+            }
+            var saveRenderable = (saveText.RenderableComponent as global::RenderingLibrary.Graphics.Text).ShouldNotBeNull(pngPrefix);
+            XnaColor rowTextColor = new XnaColor(saveRenderable.Red, saveRenderable.Green, saveRenderable.Blue);
+            string? popupElementName = popup.ElementSave?.Name;
+
+            float heightBefore = popup.GetAbsoluteHeight();
+            MenuItem closeItem = Item("Close");
+            file.Items!.Add(closeItem);
+            float growth = popup.GetAbsoluteHeight() - heightBefore;
+            float addedRowHeight = closeItem.Visual.GetAbsoluteHeight();
+
             return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor, edge, corner,
-                open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner);
+                open[sampleY * CaptureWidth + sampleX], openHeaderColor, openIndicatorColor, openCorner,
+                popupFill, popupBorder, rowTextColor, popupElementName, popup.Name, growth, addedRowHeight);
         }
         finally
         {
