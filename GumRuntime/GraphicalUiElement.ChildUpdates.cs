@@ -376,6 +376,17 @@ public partial class GraphicalUiElement
             // Every layout of a child from here goes through this, so a repeat visit can be cut down to placing it.
             void LayOutChild(GraphicalUiElement child, int depth, XOrY? xOrY)
             {
+                if (_appendedChild != null && child != _appendedChild && child.IsUnchangedSinceItsLastLayout())
+                {
+                    // Its last layout is as good as one in this session: nothing changed in it since.
+                    child._settledSession = s_session;
+                    child._settledAxis = GetAxisCode(null);
+                    if (child.TryPlaceInsteadOfLayingOutAgain(xOrY))
+                    {
+                        return;
+                    }
+                }
+
                 // A depth-limited visit may need the full-depth relayout below, which reads what the visit recorded.
                 if (!trackVisits && depth >= FullUpdateDepth / 2)
                 {
@@ -505,6 +516,15 @@ public partial class GraphicalUiElement
             }
         }
     }
+
+    /// <summary>
+    /// Whether this element's last layout, in an earlier session, still holds: it ran, changed nothing, placed
+    /// this at its final size, and nothing has been skipped and recorded as dirty since. A change to this element
+    /// or below lays it out (or records it dirty), so an element with no record is as its last layout left it.
+    /// </summary>
+    private bool IsUnchangedSinceItsLastLayout() =>
+        _lastLaidOutSession != 0 && _lastLaidOutSession != s_session && _lastLayoutChangedNothing && _placedAtFinalSize &&
+        currentDirtyState == null && !mIsLayoutSuspended && Visible && mContainedObjectAsIpso != null;
 
     private static int GetAxisCode(XOrY? xOrY) => xOrY.HasValue ? (int)xOrY.Value : -1;
 
