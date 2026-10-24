@@ -348,6 +348,9 @@ public class ComboBox :
 
     // Builds the drop-down from the lazy template the first time it is needed. Does nothing when the
     // ListBox already exists (a ListBoxInstance child, an assigned ListBox, or an earlier build).
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Only forwards a DisplayMemberPath the caller already set, and that " +
+            "setter carries the RequiresUnreferencedCode warning at the caller.")]
     private void EnsureListBox()
     {
         if (listBox != null || _lazyDropDownTemplate == null)

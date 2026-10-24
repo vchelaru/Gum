@@ -161,7 +161,7 @@ public class ComboBoxLazyDropDownTests : BaseTestClass
 
         comboBox.ListBox.Visual.AbsoluteLeft.ShouldBe(comboBox.Visual.AbsoluteLeft);
         comboBox.ListBox.Visual.AbsoluteTop.ShouldBe(comboBox.Visual.AbsoluteBottom);
-        comboBox.ListBox.Visual.GetAbsoluteWidth().ShouldBe(comboBox.Visual.GetAbsoluteWidth());
+        comboBox.ListBox.Visual.AbsoluteWidth.ShouldBe(comboBox.Visual.AbsoluteWidth);
     }
 
     [Fact]
