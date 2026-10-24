@@ -84,21 +84,24 @@ public class MenuItemVisual : BaseMenuItemVisual
             fill: new Color(0, 0, 0, 0), text: BubblegumStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: BubblegumStyling.ActiveStyle.Colors.HoverOption, text: BubblegumStyling.ActiveStyle.Colors.Text);
+            fill: BubblegumStyling.ActiveStyle.Colors.HoverOption, text: BubblegumStyling.ActiveStyle.Colors.Text, outlined: true);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: BubblegumStyling.ActiveStyle.Colors.SelectedRow, text: BubblegumStyling.ActiveStyle.Colors.SelectedRowText);
+            fill: BubblegumStyling.ActiveStyle.Colors.SelectedRow, text: BubblegumStyling.ActiveStyle.Colors.SelectedRowText, outlined: true);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: BubblegumStyling.ActiveStyle.Colors.HoverOption, text: BubblegumStyling.ActiveStyle.Colors.Text);
+            fill: BubblegumStyling.ActiveStyle.Colors.HoverOption, text: BubblegumStyling.ActiveStyle.Colors.Text, outlined: true);
 
         States.Disabled.Apply = () => ApplyPalette(
             fill: new Color(0, 0, 0, 0), text: BubblegumStyling.ActiveStyle.Colors.Disabled);
     }
 
-    private void ApplyPalette(Color fill, Color text)
+    private void ApplyPalette(Color fill, Color text, bool outlined = false)
     {
         _fill.FillColor = fill;
+        // The fill alone is close to the menu bar color, so a highlighted item also draws an accent edge.
+        _fill.StrokeColor = BubblegumStyling.ActiveStyle.Colors.Accent;
+        _fill.StrokeWidth = outlined ? 1 : 0;
         TextInstance.Color = text;
         SubmenuIndicatorIcon.Color = text;
     }

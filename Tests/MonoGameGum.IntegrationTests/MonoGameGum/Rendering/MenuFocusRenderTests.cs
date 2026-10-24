@@ -84,15 +84,43 @@ public class MenuFocusRenderTests : BaseTestClass
         tool.HeaderInset.ShouldBe(codeOnly.HeaderInset, 1f, $"{themeName}: space before the header");
         ShouldBeClose(tool.HighlightFill, codeOnly.HighlightFill, $"{themeName}: highlighted item fill");
         ShouldBeClose(tool.HighlightedHeaderColor, codeOnly.HighlightedHeaderColor, $"{themeName}: highlighted item header color");
+        ShouldBeClose(tool.HighlightEdge, codeOnly.HighlightEdge, $"{themeName}: highlighted item edge");
     }
+
+    // In these themes the highlight fill alone is close to the menu bar color, so the highlight also
+    // draws an edge (#6715).
+    public static IEnumerable<object[]> OutlinedHighlightPairs()
+    {
+        HashSet<string> outlined = new() { "bubblegum", "darkpro", "hazard", "meadow", "neon" };
+        foreach (object[] pair in Pairs())
+        {
+            if (outlined.Contains((string)pair[0]))
+            {
+                yield return pair;
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(OutlinedHighlightPairs))]
+    public void HighlightedMenuItem_HasEdgeDistinctFromFill(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
+
+        ColorDistance(codeOnly.HighlightEdge, codeOnly.HighlightFill).ShouldBeGreaterThan(60, $"{themeName} code-only: edge {codeOnly.HighlightEdge} vs fill {codeOnly.HighlightFill}");
+        ColorDistance(tool.HighlightEdge, tool.HighlightFill).ShouldBeGreaterThan(60, $"{themeName} tool: edge {tool.HighlightEdge} vs fill {tool.HighlightFill}");
+    }
+
+    private static int ColorDistance(XnaColor a, XnaColor b) =>
+        Math.Abs(a.R - b.R) + Math.Abs(a.G - b.G) + Math.Abs(a.B - b.B);
 
     private static void ShouldBeClose(XnaColor actual, XnaColor expected, string because)
     {
-        int distance = Math.Abs(actual.R - expected.R) + Math.Abs(actual.G - expected.G) + Math.Abs(actual.B - expected.B);
-        distance.ShouldBeLessThanOrEqualTo(12, $"{because}: tool {actual} vs code-only {expected}");
+        ColorDistance(actual, expected).ShouldBeLessThanOrEqualTo(12, $"{because}: tool {actual} vs code-only {expected}");
     }
 
-    private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor);
+    private sealed record MenuMeasure(float HeaderInset, XnaColor HighlightFill, XnaColor HighlightedHeaderColor, XnaColor HighlightEdge);
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
     public void CodeOnly_Focus_ChangesOnlyTheFirstItem(string themeName, Action? applyTheme, XnaColor background)
@@ -205,6 +233,33 @@ public class MenuFocusRenderTests : BaseTestClass
             }
             changedOutsideFile.ShouldBeEmpty($"{pngPrefix}: focusing the menu changed pixels outside its first item");
 
+            // A menu bar's bottom separator stays visible under the highlighted item (#6715).
+            GraphicalUiElement? separator = null;
+            foreach (GraphicalUiElement child in menu.Visual.Children)
+            {
+                if (child.Name != null && child.Name.Contains("Separator") && child.Visible)
+                {
+                    separator = child;
+                }
+            }
+            if (separator != null)
+            {
+                int separatorTop = (int)separator.AbsoluteTop;
+                int separatorBottom = (int)(separator.AbsoluteTop + separator.GetAbsoluteHeight());
+                List<string> changedSeparator = new();
+                for (int y = separatorTop; y < separatorBottom; y++)
+                {
+                    for (int x = (int)file.Visual.AbsoluteLeft; x < (int)(file.Visual.AbsoluteLeft + file.Visual.GetAbsoluteWidth()); x++)
+                    {
+                        if (unfocused[y * CaptureWidth + x] != focused[y * CaptureWidth + x] && changedSeparator.Count < 5)
+                        {
+                            changedSeparator.Add($"({x}, {y})");
+                        }
+                    }
+                }
+                changedSeparator.ShouldBeEmpty($"{pngPrefix}: the highlighted item covers the menu's bottom separator");
+            }
+
             Press(Keys.Down);
             file.IsPopupVisible.ShouldBeTrue(pngPrefix);
             newItem.IsHighlighted.ShouldBeTrue(pngPrefix);
@@ -216,7 +271,9 @@ public class MenuFocusRenderTests : BaseTestClass
             float inset = header.AbsoluteLeft - file.Visual.AbsoluteLeft;
             int sampleX = (int)(file.Visual.AbsoluteLeft + (inset >= 4 ? inset / 2 : 1));
             int sampleY = inset >= 4 ? (int)(file.Visual.AbsoluteTop + file.Visual.GetAbsoluteHeight() / 2) : (int)file.Visual.AbsoluteTop + 1;
-            return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor);
+            int edgeY = (int)(file.Visual.AbsoluteTop + file.Visual.GetAbsoluteHeight() / 2);
+            XnaColor edge = focused[edgeY * CaptureWidth + (int)file.Visual.AbsoluteLeft];
+            return new MenuMeasure(inset, focused[sampleY * CaptureWidth + sampleX], highlightedHeaderColor, edge);
         }
         finally
         {

@@ -29,6 +29,11 @@ public class MenuVisual : BaseMenuVisual
         _bottomSeparator = CreateBottomSeparator();
         AddChild(_bottomSeparator);
 
+        // The items sit above the separator instead of over it, so a highlighted item leaves it visible.
+        InnerPanelInstance.Y = 0;
+        InnerPanelInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+        InnerPanelInstance.YOrigin = VerticalAlignment.Top;
+        Height = SeparatorHeight;
         AddChild(InnerPanelInstance);
     }
 
