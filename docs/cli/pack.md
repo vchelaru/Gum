@@ -4,7 +4,7 @@
 gumcli pack <project.gumj> [-o <path>] [--include <categories>]
 ```
 
-Loads a `.gumj` or `.gumx` project, walks its dependencies, and writes a single-file `.gumpkg` bundle (tar + brotli) containing the requested file categories. Use this when you want to ship a single file with your game instead of a folder of loose project and element files plus textures and fonts.
+Loads a `.gumj` or `.gumx` project, walks its dependencies, and writes a single-file `.gumpkg` bundle (a zip archive with one Deflate-compressed entry per file) containing the requested file categories. Use this when you want to ship a single file with your game instead of a folder of loose project and element files plus textures and fonts.
 
 {% hint style="info" %}
 The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging format produced by `gumcli pack` — there is no "Save as bundle" option in the editor.
