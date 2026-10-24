@@ -50,6 +50,74 @@ public class StackAppendLayoutTests : BaseTestClass
         calls.ShouldBeLessThan(RowCount * 20);
     }
 
+    [Fact]
+    public void Append_ShouldLayOutLinearly_WhenStackIsInsideContentSizedParent()
+    {
+        ContainerRuntime outer = new();
+        outer.WidthUnits = DimensionUnitType.RelativeToChildren;
+        outer.HeightUnits = DimensionUnitType.RelativeToChildren;
+        outer.Width = 0;
+        outer.Height = 0;
+        ContainerRuntime stack = CreateStack(fixedSize: false, wraps: false);
+        outer.AddChild(stack);
+
+        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+        for (int i = 0; i < RowCount; i++)
+        {
+            stack.AddChild(CreateRow(RowKind.RelativeToParentWidth, i));
+        }
+        int calls = GraphicalUiElement.UpdateLayoutCallCount - callsBefore;
+
+        calls.ShouldBeLessThan(RowCount * 20);
+    }
+
+    [Fact]
+    public void ChildrenAdd_ShouldLayOutLinearly()
+    {
+        ContainerRuntime stack = CreateStack(fixedSize: false, wraps: false);
+
+        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+        for (int i = 0; i < RowCount; i++)
+        {
+            stack.Children.Add(CreateRow(RowKind.Absolute, i));
+        }
+        int calls = GraphicalUiElement.UpdateLayoutCallCount - callsBefore;
+
+        calls.ShouldBeLessThan(RowCount * 20);
+    }
+
+    [Fact]
+    public void ChildrenInsertAtEnd_ShouldLayOutLinearly()
+    {
+        ContainerRuntime stack = CreateStack(fixedSize: false, wraps: false);
+
+        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+        for (int i = 0; i < RowCount; i++)
+        {
+            stack.Children.Insert(stack.Children.Count, CreateRow(RowKind.Absolute, i));
+        }
+        int calls = GraphicalUiElement.UpdateLayoutCallCount - callsBefore;
+
+        calls.ShouldBeLessThan(RowCount * 20);
+    }
+
+    [Fact]
+    public void Clone_ShouldNotKeepTheAppendInProgress_WhenCloningDuringTheAppendLayout()
+    {
+        ContainerRuntime stack = CreateStack(fixedSize: true, wraps: false);
+        stack.AddChild(CreateRow(RowKind.Absolute, 0));
+        GraphicalUiElement? clone = null;
+        ContainerRuntime appended = CreateRow(RowKind.Absolute, 1);
+        appended.PositionChanged += (_, _) => clone ??= stack.Clone();
+
+        stack.AddChild(appended);
+
+        clone.ShouldNotBeNull();
+        typeof(GraphicalUiElement)
+            .GetField("_appendedChild", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .GetValue(clone).ShouldBeNull();
+    }
+
     public static IEnumerable<object[]> Scenarios()
     {
         foreach (bool fixedSize in new[] { true, false })
