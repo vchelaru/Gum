@@ -418,10 +418,10 @@ public class ToolInputBackgroundTests : BaseTestClass
 
         bool underlineVisible = underline?.Visible == true;
         return new IndicatorLook(
-            arrow == null ? null : Rgb(((global::RenderingLibrary.Graphics.Sprite)arrow.RenderableComponent).Color),
+            arrow == null ? null : Rgb(arrow.RenderableComponent.ShouldBeOfType<global::RenderingLibrary.Graphics.Sprite>().Color),
             underlineVisible,
-            underlineVisible ? Rgb(((NineSlice)underline!.RenderableComponent).Color) : null,
-            placeholder == null ? null : Rgb(((global::RenderingLibrary.Graphics.Text)placeholder.RenderableComponent).Color));
+            underlineVisible ? Rgb(underline!.RenderableComponent.ShouldBeOfType<NineSlice>().Color) : null,
+            placeholder == null ? null : Rgb(placeholder.RenderableComponent.ShouldBeOfType<global::RenderingLibrary.Graphics.Text>().Color));
     }
 
     private static BackgroundLook Measure(FrameworkElement control)
