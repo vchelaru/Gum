@@ -36,11 +36,11 @@ public class CodeGenerationSettingsViewModelTests
     }
 
     [Fact]
-    public void BuildCategories_HasOnlyTheProjectWideCategory()
+    public void BuildCategories_HasTheProjectWideSections()
     {
         List<MemberCategory> categories = _sut.BuildCategories();
 
-        categories.Select(category => category.Name).ShouldBe(new[] { "Project-Wide Code Generation" });
+        categories.Select(category => category.Name).ShouldBe(new[] { "Output", "Locations", "Namespaces and usings" });
     }
 
     [Fact]

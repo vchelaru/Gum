@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings page mocks</title>
+<style>
+:root{--bg:#1e1e1e;--panel:#2a2a2a;--bar:#3b3b3b;--field:#171717;--line:#3f3f3f;--text:#ececec;--mute:#a0a0a0;--accent:#3d9bd6;--sel:#1a5f9e;--warn:#e0a63b;--ok:#5aa97b}
+*{box-sizing:border-box}
+body{margin:0;background:#111;color:var(--text);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:24px}
+h1{font-size:15px;margin:28px 0 4px;color:#fff;font-weight:600}
+p.note{margin:0 0 12px;color:var(--mute);max-width:860px}
+.win{width:900px;max-width:100%;background:var(--panel);border:1px solid #444;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.title{text-align:center;padding:6px;border-bottom:1px solid #1a1a1a;font-weight:600}
+.body{display:flex;min-height:520px}
+.side{width:200px;padding:10px;background:#242424;border-right:1px solid #1a1a1a}
+.side .s{color:var(--mute);margin:10px 0 4px}.side .i{padding:3px 10px;border-radius:3px}.side .i.on{background:var(--sel)}
+.main{flex:1;padding:14px 16px;background:var(--panel)}
+.main h2{margin:0;font-size:19px;font-weight:400}.sub{color:var(--mute);margin:2px 0 12px}
+.sec{background:var(--bar);padding:5px 10px;margin:14px 0 0;font-weight:600;display:flex;align-items:center;gap:8px}
+.sec:before{content:"⌄";color:#ddd}
+.sec .count{margin-left:auto;font-weight:400;color:var(--mute);font-size:12px}
+.row{display:grid;grid-template-columns:190px 1fr;gap:12px;padding:8px 10px 2px;border-bottom:1px solid #303030;align-items:start}
+.row>label{padding-top:5px;color:var(--text)}
+.field{display:flex;gap:4px}
+.in{flex:1;background:var(--field);border:1px solid #2e2e2e;border-radius:3px;padding:4px 8px;min-height:26px;color:var(--text)}
+.in.ph{color:#777}.in.ro{color:var(--mute);background:#202020}
+.btn{background:#2f7fb0;border-radius:3px;padding:4px 9px;color:#fff;min-width:28px;text-align:center}
+.hint{color:var(--mute);font-size:12px;padding:3px 0 7px}
+.row .col{display:flex;flex-direction:column}
+.chev:after{content:"⌄";float:right;color:#bbb}
+.chk{display:flex;gap:8px;align-items:center;padding-top:4px}
+.box{width:14px;height:14px;border:1px solid #888;border-radius:2px;background:#171717;display:inline-block;text-align:center;font-size:11px;line-height:12px}
+.box.on{background:var(--accent);border-color:var(--accent);color:#000}
+.resolve{margin:10px 10px 0;padding:8px 10px;background:#202020;border:1px solid #333;border-radius:4px;font-family:Consolas,monospace;font-size:12px;color:#cfcfcf}
+.resolve b{color:var(--mute);font-weight:400;font-family:"Segoe UI",sans-serif;display:inline-block;width:110px}
+.resolve .g{color:#8cc4e8}.resolve .c{color:#9bd3a8}
+.call{margin:6px 0 8px;padding:6px 10px;border-left:3px solid var(--warn);background:#2e2a1f;color:#e8d9b0;font-size:12px}
+.chip{display:inline-block;background:#333;border-radius:10px;padding:1px 8px;color:var(--mute);font-size:11px;margin-left:6px}
+.footer{padding:10px 16px;text-align:right;border-top:1px solid #1a1a1a}.footer .btn{display:inline-block;padding:5px 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;max-width:1000px}
+.card{background:var(--panel);border:1px solid #444;border-radius:8px;padding:12px}
+.card h3{margin:0 0 2px;font-size:13px}.card .why{color:var(--mute);font-size:12px;margin-bottom:8px}
+.tag{font-size:11px;color:var(--accent)}
+.new{outline:1px dashed var(--ok);outline-offset:1px;position:relative}
+.new:after{content:"new";position:absolute;right:-1px;top:-9px;background:var(--ok);color:#000;font-size:10px;padding:0 5px;border-radius:2px}
+ul.rules{max-width:860px;color:#d6d6d6;padding-left:18px}ul.rules li{margin:3px 0}
+</style></head><body>
+
+<h1>Mock A: Code generation page, redesigned</h1>
+<p class="note">Same collapsible section bars the Canvas, Fonts and Project General pages already use. Every row has a hint. Labels sit in one wider column so they stay on one line. A live "resolves to" box shows where files will really land. Green dashed outline = new.</p>
+
+<div class="win">
+ <div class="title">Settings</div>
+ <div class="body">
+  <div class="side"><div style="background:#171717;padding:4px 8px;color:#777;border-radius:3px">Search</div>
+   <div class="s">Application</div><div class="i">General</div><div class="i">Appearance</div><div class="i">Keyboard shortcuts</div><div class="i">Plugins</div>
+   <div class="s">Project</div><div class="i">General</div><div class="i">Canvas</div><div class="i">Fonts</div><div class="i">Localization</div><div class="i on">Code generation</div></div>
+  <div class="main">
+   <h2>Code generation</h2><div class="sub">Saved in MyGame.gumx.</div>
+
+   <div class="sec">Output</div>
+   <div class="row"><label>Output library</label><div class="col"><div class="in chev">Gum Forms (recommended)</div><div class="hint">Works on every runtime. The other options are legacy.</div></div></div>
+   <div class="row"><label>Object instantiation</label><div class="col"><div class="in chev">Fully in code</div><div class="hint">Gum creates every control in the generated file.</div>
+     <div class="call">Full code generation with Gum Forms is experimental.</div></div></div>
+   <div class="row"><label>Syntax version</label><div class="col"><div class="in ro">6 <span class="chip">detected from MyGame.csproj</span></div><div class="hint">Set by the Gum package your project references. Read only.</div></div></div>
+
+   <div class="sec">Locations</div>
+   <div class="row"><label>Code project root</label><div class="col"><div class="field"><div class="in">../MyGame</div><div class="btn">…</div><div class="btn">↗</div></div><div class="hint">Folder holding your .csproj. Relative to the .gumx.</div></div></div>
+   <div class="row"><label>Generated code folder</label><div class="col"><div class="field"><div class="in">Gum/Generated</div><div class="btn">…</div><div class="btn">↗</div></div><div class="hint">Files named *.Generated.cs. Gum rewrites these; don't edit them.</div></div></div>
+   <div class="row new"><label>Custom code folder</label><div class="col"><div class="field"><div class="in">Gum/Custom</div><div class="btn">…</div><div class="btn">↗</div></div><div class="hint">Files you edit (the .cs stubs). Leave empty to keep them next to the generated files.</div></div></div>
+   <div class="row"><label>Folder prefix</label><div class="col"><div class="in ph">e.g. Gum/</div><div class="hint">Added before Screens and Components, in both folders.</div></div></div>
+   <div class="resolve">
+     <div><b>Screens →</b><span class="g">MyGame/Gum/Generated/Screens/Title.Generated.cs</span></div>
+     <div><b></b><span class="c">MyGame/Gum/Custom/Screens/Title.cs</span></div>
+     <div><b>Components →</b><span class="g">MyGame/Gum/Generated/Components/Menu/Row.Generated.cs</span></div>
+     <div><b></b><span class="c">MyGame/Gum/Custom/Components/Menu/Row.cs</span></div>
+   </div>
+   <div class="hint" style="padding:6px 10px 0">Changing a folder moves existing files. Your custom .cs files only move after you confirm.</div>
+
+   <div class="sec">Namespaces and usings</div>
+   <div class="row"><label>Root namespace</label><div class="col"><div class="in">MyGame.Gum</div><div class="hint">Both halves of each class share one namespace, whatever folder they sit in.</div></div></div>
+   <div class="row"><label>Append folder to namespace</label><div class="col"><div class="chk"><span class="box on">✓</span>Components/Menu → MyGame.Gum.Components.Menu</div></div></div>
+   <div class="row"><label>Default screen base</label><div class="col"><div class="in ph">FrameworkElement</div><div class="hint">Base class for screens that don't set one.</div></div></div>
+   <div class="row"><label>Project-wide usings <span class="chip">12</span></label><div class="col"><div class="in" style="min-height:62px;font-family:Consolas,monospace;font-size:12px">using Gum.Converters;<br>using Gum.DataTypes;<br>using Gum.Managers;</div><div class="hint">Added to every generated file. One per line.</div></div></div>
+  </div>
+ </div>
+ <div class="footer"><span class="btn">Close</span></div>
+</div>
+
+<h1>Mock B: the design language these pages need</h1>
+<p class="note">Row kinds taken from every Settings page today (General, Appearance, Shortcuts, Plugins, Project General, Canvas, Fonts, Localization, Code generation). Same grid, same hint slot, same section bar.</p>
+
+<div class="grid">
+ <div class="card"><h3>Toggle <span class="tag">General, Canvas, Localization</span></h3><div class="why">Label is the checkbox text. Optional description under it, not tiny.</div>
+  <div class="chk"><span class="box on">✓</span>Auto save</div><div class="hint" style="padding-left:22px">Save the project whenever something changes.</div></div>
+
+ <div class="card"><h3>Text / number <span class="tag">Canvas, Namespace, Spacing</span></h3><div class="why">Label column fixed; field fills; unit or hint under.</div>
+  <div class="row" style="border:0;padding:0"><label>Canvas width</label><div class="col"><div class="in">800</div><div class="hint">Pixels.</div></div></div></div>
+
+ <div class="card"><h3>Choice <span class="tag">Output library, Texture filter, Theme</span></h3><div class="why">Dropdown. Hint says what the current choice does.</div>
+  <div class="row" style="border:0;padding:0"><label>Texture filter</label><div class="col"><div class="in chev">Point</div><div class="hint">Point keeps pixel art sharp; Linear smooths it.</div></div></div></div>
+
+ <div class="card"><h3>Path <span class="tag">Code root, Single pixel texture</span></h3><div class="why">Field plus browse and reveal. Hint names what it is relative to.</div>
+  <div class="row" style="border:0;padding:0"><label>Texture file</label><div class="col"><div class="field"><div class="in ph">none</div><div class="btn">…</div><div class="btn">↗</div></div><div class="hint">Relative to the .gumx.</div></div></div></div>
+
+ <div class="card"><h3>Optional value <span class="tag">Single pixel texture left/top/right/bottom</span></h3><div class="why">Today: four rows, each with its own "Is Null". Instead one "Use custom bounds" toggle that reveals them in a single row.</div>
+  <div class="chk"><span class="box">&nbsp;</span>Use custom texture bounds</div>
+  <div class="field" style="margin:6px 0 2px;opacity:.5"><div class="in">Left</div><div class="in">Top</div><div class="in">Right</div><div class="in">Bottom</div></div></div>
+
+ <div class="card"><h3>Color <span class="tag">Appearance</span></h3><div class="why">Swatch + dropdown stays; add a per-row reset when changed, replace the one big "Reset all".</div>
+  <div class="row" style="border:0;padding:0"><label>Accent color</label><div class="col"><div class="field" style="align-items:center"><span style="width:34px;height:24px;background:#5aa97b;border-radius:3px;display:inline-block"></span><span class="in" style="flex:0 0 28px">⌄</span><span style="color:var(--accent);margin-left:8px">Reset</span></div></div></div></div>
+
+ <div class="card"><h3>Read-only fact <span class="tag">Syntax version, "Saved in …"</span></h3><div class="why">Muted field and a chip saying where the value came from.</div>
+  <div class="row" style="border:0;padding:0"><label>Syntax version</label><div class="col"><div class="in ro">6 <span class="chip">from MyGame.csproj</span></div></div></div></div>
+
+ <div class="card"><h3>List with Add <span class="tag">Localization files, Font ranges</span></h3><div class="why">Bordered list, empty state text, Add button right-aligned in the section bar.</div>
+  <div class="sec" style="margin:0">Localization files <span class="count" style="color:#fff"><span class="btn" style="padding:1px 8px">Add…</span></span></div>
+  <div class="in ph" style="border-radius:0;padding:10px">No files yet. Add a .csv or .resx.</div></div>
+
+ <div class="card"><h3>Warning callout <span class="tag">Instantiation type</span></h3><div class="why">Amber side bar replaces the tiny grey text, so a real caveat doesn't read as a hint.</div>
+  <div class="call">Full code generation with Gum Forms is experimental.</div></div>
+</div>
+
+<h1>Rules in one place</h1>
+<ul class="rules">
+ <li>Every page: title, one line saying where it's saved, then collapsible section bars. No flat lists.</li>
+ <li>Sections group by what the user is thinking about (Output, Locations, Namespaces), not by how the settings file is laid out.</li>
+ <li>One label column ~190px, so labels stay on one line. Long labels get shortened, with the full name in the hint.</li>
+ <li>Every row has a one-line hint. Hints say what it does or what it's relative to, never repeat the label.</li>
+ <li>Anything a user could get wrong about (file moves, experimental) is a callout, not a hint.</li>
+ <li>Values Gum works out itself are read-only with a chip naming the source.</li>
+</ul>
+</body></html>

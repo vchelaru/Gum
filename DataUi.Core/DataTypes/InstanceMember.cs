@@ -386,6 +386,24 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        bool isDetailTextWarning;
+        /// <summary>
+        /// Whether <see cref="DetailText"/> is a warning the user could get wrong by ignoring (a file move,
+        /// an experimental mode), which the view draws as a callout instead of a muted hint.
+        /// </summary>
+        public bool IsDetailTextWarning
+        {
+            get => isDetailTextWarning;
+            set
+            {
+                if (isDetailTextWarning != value)
+                {
+                    isDetailTextWarning = value;
+                    OnPropertyChanged(nameof(IsDetailTextWarning));
+                }
+            }
+        }
+
         DetailTextLink? detailLink;
         /// <summary>The part of <see cref="DetailText"/> shown as a clickable link, or null.</summary>
         public DetailTextLink? DetailLink

@@ -16,7 +16,7 @@ The Gum tool auto-detects the syntax version from your project:
 - **Version not readable:** If a MonoGame, KNI, FNA, or SkiaSharp runtime is referenced but its version cannot be read (for example, the NuGet package has not been restored yet), the tool uses version 0 and generates code with the legacy namespaces. Restore the package and generate again.
 - **Manual override:** If auto-detection does not work for your setup, you can set the `SyntaxVersion` field in your `ProjectCodeSettings.codsj` file to an explicit number instead of `"*"` (auto-detect).
 
-The detected version is displayed in the Code tab under "Project-Wide Code Generation."
+The detected version is displayed as Syntax Version in the Output section of the Code generation page in Edit > Settings...
 
 ## Version Table
 

@@ -57,6 +57,12 @@ To set up code generation, either click the **Auto Setup Code Generation** butto
 * For MonoGame/KNI/FNA projects, see the [tutorial on setting up code generation](../../code/getting-started/tutorials/gum-project-forms-tutorial/gum-screens.md).
 * For FlatRedBall projects, code generation is automatically handled by the FlatRedBall Editor.
 
+The project-wide options are on the **Code generation** page of **Edit > Settings...** (under Project). The page groups them into three sections: **Output** (Output Library, Object Instantiation Type, Syntax Version), **Locations** (Code Project Root, Generated Code Folder, Custom Code Folder, Generated Code Folder Prefix) and **Namespaces and usings** (Root Namespace, Append Folder to Namespace, Default Screen Base, Project-wide Using Statements). Projects using a legacy output library (Xamarin, WPF, Maui) also get a collapsed section for the options only those use. Every option has a one-line hint under it.
+
+<figure><img src="../../.gitbook/assets/settings-code-generation.png" alt=""><figcaption><p>The Code generation page of the Settings window</p></figcaption></figure>
+
+The **Resolves to** box under the folder options shows where a Screen and a Component will be written for the current folders, relative to the Code Project Root, so you can check a change before generating. **Syntax Version** is read-only; its hint says where the version was detected from.
+
 See the sections below for information about each code generation option.
 
 ### Code Project Root

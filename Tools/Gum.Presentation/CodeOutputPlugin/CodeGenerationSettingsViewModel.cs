@@ -25,7 +25,7 @@ public class CodeGenerationSettingsViewModel
     public event Action? Reloaded;
 
     /// <summary>The rows the page shows: the project-wide category.</summary>
-    public List<MemberCategory> BuildCategories() => new List<MemberCategory> { _members.BuildProjectCategory() };
+    public List<MemberCategory> BuildCategories() => _members.BuildProjectSections();
 
     /// <summary>Asks the view to rebuild its rows, as when the page is opened.</summary>
     public void Reload() => Reloaded?.Invoke();

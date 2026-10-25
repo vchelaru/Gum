@@ -31,6 +31,14 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         // hit-tests only where something is drawn. Text boxes give up their own edit flyout, which
         // would otherwise open in the row menu's place.
         Background = Brushes.Transparent;
+        // The warning callout color depends on the theme, which is known only once the row is on screen.
+        ActualThemeVariantChanged += (_, _) =>
+        {
+            if (InstanceMember?.IsDetailTextWarning == true)
+            {
+                Refresh();
+            }
+        };
         DataUiContextMenus.Attach(this, this);
         Styles.Add(new Style(x => x.OfType<TextBox>()) { Setters = { new Setter(ContextFlyoutProperty, null) } });
         AddHandler(PointerMovedEvent, HandleHintPointerMoved);
@@ -100,6 +108,7 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     {
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsDetailTextWarning) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailAction))
         {
@@ -238,11 +247,30 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         textBlock.Bind(TextBlock.FontSizeProperty, textBlock.GetResourceObservable("Frb.FontSize.Caption"));
     }
 
+    // A warning reads as a callout: amber, full strength, medium weight. The muted hint look is the default.
+    private void ApplyHintSeverity(TextBlock hint, bool isWarning)
+    {
+        if (isWarning)
+        {
+            bool isLight = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+            hint.Foreground = new SolidColorBrush(Color.Parse(isLight ? "#9A5B00" : "#F0B040"));
+            hint.Opacity = 1;
+            hint.FontWeight = FontWeight.Medium;
+        }
+        else
+        {
+            hint.ClearValue(TextBlock.ForegroundProperty);
+            hint.Opacity = 0.8;
+            hint.ClearValue(TextBlock.FontWeightProperty);
+        }
+    }
+
     /// <summary>Shows the member's detail text in <paramref name="hint"/>, hiding it when empty.</summary>
     protected void RefreshHint(TextBlock hint)
     {
         string? detailText = InstanceMember?.DetailText;
         string? displayed = detailText;
+        ApplyHintSeverity(hint, InstanceMember?.IsDetailTextWarning == true);
         List<HintLink> links = new List<HintLink>();
 
         if (detailText != null)

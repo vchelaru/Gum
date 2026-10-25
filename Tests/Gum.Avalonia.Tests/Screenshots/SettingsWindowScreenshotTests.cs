@@ -54,6 +54,17 @@ public class SettingsWindowScreenshotTests
     });
 
     [SkippableFact]
+    public void CodeGeneration_Light() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Light);
+
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+        window.Save("settings-project-code-generation-light");
+    });
+
+    [SkippableFact]
     public void Search_NarrowsThePageList() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
