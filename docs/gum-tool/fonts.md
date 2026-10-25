@@ -26,9 +26,11 @@ Ranges can be modified to add or remove characters from a .fnt file. The format 
 
 Changing a range immediately refreshes the page. Note that all fonts are re-created so this operation can take some time.
 
-The following animation shows the Ā character being included and excluded from the default range, causing it to appear and disappear in the displayed text.
+The following images show the same Text with the default range `32-126,160-255`, which has no Ā character, and with `32-126,160-255,256-383` added, which includes it.
 
-![](<../.gitbook/assets/14_16 04 36.gif>)
+<figure><img src="../.gitbook/assets/25_08 10 01.png" alt=""><figcaption><p>Range 32-126,160-255: the Ā character is missing</p></figcaption></figure>
+
+<figure><img src="../.gitbook/assets/25_08 10 02.png" alt=""><figcaption><p>Range 32-126,160-255,256-383: the Ā character is displayed</p></figcaption></figure>
 
 Note that expanding the character set results in larger font PNG files which can impact the size and performance of games using the Gum files.
 
