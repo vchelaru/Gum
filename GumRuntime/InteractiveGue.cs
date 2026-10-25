@@ -444,7 +444,7 @@ public partial class InteractiveGue : GraphicalUiElement
         bool handledByThis = false;
 
         var asInteractive = currentItem as InteractiveGue;
-        bool isOver = isKnownToBeOver || (asInteractive?.HasCursorOver(cursor, layer) ?? HasCursorOver(cursor, currentItem, layer));
+        bool isOver = isKnownToBeOver || HasCursorOverForWalk(cursor, currentItem, layer);
 
         // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
         if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
@@ -489,7 +489,7 @@ public partial class InteractiveGue : GraphicalUiElement
                 {
                     var child = currentItem.ContainedElements[i] as GraphicalUiElement;
 
-                    if (child != null && HasCursorOver(cursor, child, layer))
+                    if (child != null && HasCursorOverForWalk(cursor, child, layer, callOverride: false))
                     {
                         // hasCursorOver is only true when child is non-null.
                         handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child!, layer);
@@ -517,15 +517,7 @@ public partial class InteractiveGue : GraphicalUiElement
                     }
 
                     // If the child either has events or exposes children events, then give it a chance to handle this activity.
-                    bool hasCursorOver = false;
-                    if(child is InteractiveGue interactiveGue)
-                    {
-                        hasCursorOver = interactiveGue.HasCursorOver(cursor, layer);
-                    }
-                    else
-                    {
-                        hasCursorOver = HasCursorOver(cursor, child, layer);
-                    }
+                    bool hasCursorOver = HasCursorOverForWalk(cursor, child, layer);
                     if (hasCursorOver)
                     {
                         // The child was just tested, so the recursion does not test it again.
@@ -745,7 +737,7 @@ public partial class InteractiveGue : GraphicalUiElement
 
         if (!toReturn && IsOutsideOfBoundsHitTestingEnabled)
         {
-            toReturn = IsOverChildren(this, cursor, layer);
+            toReturn = IsOverChildren(this, cursor, layer, ReferenceEquals(s_walkTarget, this));
         }
 
         return toReturn;
@@ -762,10 +754,35 @@ public partial class InteractiveGue : GraphicalUiElement
 
         if (!toReturn && (asInteractive?.RaiseChildrenEventsOutsideOfBounds == true || thisInstance.Tag is ScreenSave))
         {
-            toReturn = IsOverChildren(thisInstance, cursor, layer);
+            toReturn = IsOverChildren(thisInstance, cursor, layer, ReferenceEquals(s_walkTarget, thisInstance));
         }
 
         return toReturn;
+    }
+
+    // The element the cursor walk is currently asking "is the cursor over this" about. The walk only needs
+    // the children that can react to the cursor, so IsOverChildren skips those with no events under them.
+    // It is the element rather than a flag so that a HasCursorOver call on any other element, such as one
+    // made by an override or a handler, keeps reporting the cursor over any child.
+    [ThreadStatic]
+    static GraphicalUiElement? s_walkTarget;
+
+    // The cursor walk's question "is the cursor over this element", which skips event-less children (#6777).
+    // Goes through the virtual HasCursorOver so overrides still apply.
+    private static bool HasCursorOverForWalk(ICursor cursor, GraphicalUiElement element, Layer? layer, bool callOverride = true)
+    {
+        GraphicalUiElement? previous = s_walkTarget;
+        s_walkTarget = element;
+        try
+        {
+            return callOverride && element is InteractiveGue interactive
+                ? interactive.HasCursorOver(cursor, layer)
+                : HasCursorOver(cursor, element, layer);
+        }
+        finally
+        {
+            s_walkTarget = previous;
+        }
     }
 
     // The cursor's world position for the cursor walk in progress on this thread, if any.
@@ -879,7 +896,10 @@ public partial class InteractiveGue : GraphicalUiElement
         return toReturn;
     }
 
-    protected static bool IsOverChildren(GraphicalUiElement thisInstance, ICursor cursor, Layer? layer)
+    protected static bool IsOverChildren(GraphicalUiElement thisInstance, ICursor cursor, Layer? layer) =>
+        IsOverChildren(thisInstance, cursor, layer, skipChildrenWithoutEvents: false);
+
+    private static bool IsOverChildren(GraphicalUiElement thisInstance, ICursor cursor, Layer? layer, bool skipChildrenWithoutEvents)
     {
         bool toReturn = false;
         if (thisInstance.Children == null)
@@ -887,7 +907,13 @@ public partial class InteractiveGue : GraphicalUiElement
             // It's a screen
             foreach (var child in thisInstance.ContainedElements)
             {
-                if (HasCursorOver(cursor, child, layer))
+                if (skipChildrenWithoutEvents && !SubtreeHasEvents(child))
+                {
+                    continue;
+                }
+                if (skipChildrenWithoutEvents
+                    ? HasCursorOverForWalk(cursor, child, layer, callOverride: false)
+                    : HasCursorOver(cursor, child, layer))
                 {
                     toReturn = true;
                     break;
@@ -900,7 +926,20 @@ public partial class InteractiveGue : GraphicalUiElement
             {
                 var child = thisInstance.Children[i] as GraphicalUiElement;
 
-                if(child is InteractiveGue asInteractiveGue)
+                if (skipChildrenWithoutEvents && child != null && !SubtreeHasEvents(child))
+                {
+                    continue;
+                }
+
+                if (skipChildrenWithoutEvents && child != null)
+                {
+                    if (HasCursorOverForWalk(cursor, child, layer))
+                    {
+                        toReturn = true;
+                        break;
+                    }
+                }
+                else if(child is InteractiveGue asInteractiveGue)
                 {
                     if(asInteractiveGue.HasCursorOver(cursor, layer))
                     {
