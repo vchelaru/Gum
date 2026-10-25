@@ -1261,9 +1261,6 @@ public  class ComboBoxTests : BaseTestClass
 
     // ComboBox text is data-driven and deliberately untranslated (gum-localization), on selection
     // and on direct Text assignment.
-#if !SKIA_LINKED_TESTS // uses the MonoGame CustomSetPropertyOnRenderable seam
-#endif
-
     [Fact]
     public void Text_WithLocalizationService_StaysUntranslated()
     {

@@ -148,4 +148,32 @@ public class TextBoxCaretPlacementSkiaTests : SkiaFormsTestBase
             .Count(child => child.Name == "SelectionInstance" && child.Visible)
             .ShouldBe(2);
     }
+
+    [Fact]
+    public void Caret_ShouldBeVisibleWhenNotFocused_OnlyIfIsCaretVisibleWhenNotFocused()
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: false);
+        textBox.IsFocused = false;
+        VisualOf(textBox).CaretInstance.Visible.ShouldBeFalse();
+
+        textBox.IsCaretVisibleWhenNotFocused = true;
+
+        VisualOf(textBox).CaretInstance.Visible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Caret_ShouldBeHiddenWhenReadOnly_UnlessIsCaretVisibleWhenReadOnly()
+    {
+        TextBox textBox = CreateTextBox(VerticalAlignment.Top, multiLine: false);
+        textBox.IsFocused = false;
+        textBox.IsReadOnly = true;
+        textBox.IsFocused = true;
+        VisualOf(textBox).CaretInstance.Visible.ShouldBeFalse();
+
+        textBox.IsCaretVisibleWhenReadOnly = true;
+        textBox.IsFocused = false;
+        textBox.IsFocused = true;
+
+        VisualOf(textBox).CaretInstance.Visible.ShouldBeTrue();
+    }
 }
