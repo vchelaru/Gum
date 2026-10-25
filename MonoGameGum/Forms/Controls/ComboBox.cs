@@ -510,12 +510,9 @@ public class ComboBox :
 
     bool _hadFocusOnListBoxOpened;
 
-    // The ComboBox visual's absolute rectangle the popup was last placed against, so an open
-    // drop-down can be placed again when the ComboBox moves or resizes (including through an ancestor).
-    float _placedAbsoluteX;
-    float _placedAbsoluteY;
-    float _placedAbsoluteWidth;
-    float _placedAbsoluteHeight;
+    // What the popup was last placed against, so an open drop-down can be placed again when the
+    // ComboBox moves or resizes (including through an ancestor) or the canvas is resized.
+    PopupPlacement _popupPlacement;
 
     #endregion
 
@@ -781,6 +778,12 @@ public class ComboBox :
         var width = listBoxVisual.AbsoluteWidth;
         var height = listBoxVisual.AbsoluteHeight;
 
+#if !FRB
+        // A drop-down taller than the root it opens in is shrunk to that root's height and scrolls;
+        // ShowPopupListBox then moves it to the root's top, as it does any popup that does not fit (#6769).
+        height = System.Math.Min(height, ListBox.GetPopupTargetRoot(this.Visual).AbsoluteHeight);
+#endif
+
         // Now that we have the values, detach it:
         this.Visual.Children.Remove(listBoxVisual);
         listBox.X = x;
@@ -793,10 +796,7 @@ public class ComboBox :
 
         // Recorded last, with the list box detached: this is the state later frames compare against,
         // and a ComboBox sized to its children has a different rect while the list box is attached.
-        _placedAbsoluteX = Visual.AbsoluteX;
-        _placedAbsoluteY = Visual.AbsoluteY;
-        _placedAbsoluteWidth = Visual.AbsoluteWidth;
-        _placedAbsoluteHeight = Visual.AbsoluteHeight;
+        _popupPlacement.Record(Visual, listBoxVisual);
     }
 
     private void RestoreListBoxLayoutValues()
@@ -814,8 +814,9 @@ public class ComboBox :
 
 #if !FRB
     /// <summary>
-    /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle changes
-    /// (canvas resize, UI scale, or this control or an ancestor moving). Does nothing when closed.
+    /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle or the
+    /// size of the root the drop-down is in changes (canvas resize, UI scale, or this control or an
+    /// ancestor moving). Does nothing when closed.
     /// </summary>
     // Only an open drop-down needs the per-frame check; a closed ComboBox must not stop its ancestors
     // from going idle. ShowListBoxInstance invalidates the idle caches when the drop-down opens.
@@ -828,10 +829,7 @@ public class ComboBox :
             return;
         }
 
-        if (Visual.AbsoluteX != _placedAbsoluteX ||
-            Visual.AbsoluteY != _placedAbsoluteY ||
-            Visual.AbsoluteWidth != _placedAbsoluteWidth ||
-            Visual.AbsoluteHeight != _placedAbsoluteHeight)
+        if (_popupPlacement.DidBoundsChange(listBox.Visual) || _popupPlacement.DidOwnerChange(Visual))
         {
             PlaceListBoxRelativeToComboBox();
         }
