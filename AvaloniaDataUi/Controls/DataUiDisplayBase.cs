@@ -115,6 +115,7 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.FirstGridLength) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsSpaciousRow) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsDetailTextWarning) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailAction))
@@ -254,6 +255,111 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         textBlock.Bind(TextBlock.FontSizeProperty, textBlock.GetResourceObservable("Frb.FontSize.Caption"));
     }
 
+    private bool _isRowStyled;
+    private bool _isHintStyled;
+    private Border? _hintHost;
+
+    /// <inheritdoc/>
+    protected override void OnAttachedToVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        ApplyRowStyle();
+    }
+
+    // The roomier Settings look, for a member that opts in: padding and a divider around the row, and
+    // taller fields. Rows that do not opt in are never touched.
+    private void ApplyRowStyle()
+    {
+        if (InstanceMember?.IsSpaciousRow == true)
+        {
+            _isRowStyled = true;
+            Padding = new Thickness(0, 8, 0, 6);
+            BorderThickness = new Thickness(0, 0, 0, 1);
+            BorderBrush = new SolidColorBrush(Color.Parse("#30808080"));
+            foreach (Control field in global::Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(this).OfType<Control>()
+                .Where(control => control is TextBox || control is ComboBox))
+            {
+                field.MinHeight = 26;
+            }
+        }
+        else if (_isRowStyled)
+        {
+            _isRowStyled = false;
+            ClearValue(PaddingProperty);
+            ClearValue(BorderThicknessProperty);
+            ClearValue(BorderBrushProperty);
+        }
+    }
+
+    // A spacious row's hint is bigger, quieter and lined up with the field; a warning is a card with an
+    // amber bar on its left. Other rows keep the compact hint.
+    private void ApplyHintStyle(TextBlock hint)
+    {
+        if (InstanceMember?.IsSpaciousRow != true)
+        {
+            if (_isHintStyled)
+            {
+                _isHintStyled = false;
+                SetHintHost(hint, isWarning: false, 0);
+                hint.ClearValue(TextBlock.MarginProperty);
+                BindCaptionFontSize(hint);
+            }
+            ApplyHintSeverity(hint, InstanceMember?.IsDetailTextWarning == true);
+            return;
+        }
+
+        bool isWarning = InstanceMember.IsDetailTextWarning;
+        double left = InstanceMember.FirstGridLength;
+        if (!_isHintStyled)
+        {
+            _isHintStyled = true;
+            hint.Bind(TextBlock.FontSizeProperty, hint.GetResourceObservable("ControlContentThemeFontSize"));
+        }
+        hint.ClearValue(TextBlock.ForegroundProperty);
+        hint.ClearValue(TextBlock.FontWeightProperty);
+        hint.Opacity = isWarning ? 1 : 0.65;
+        hint.Margin = isWarning ? new Thickness(0) : new Thickness(left, 3, 4, 0);
+        SetHintHost(hint, isWarning, left);
+    }
+
+    private void SetHintHost(TextBlock hint, bool isWarning, double left)
+    {
+        bool isLight = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+        if (isWarning)
+        {
+            if (_hintHost == null && hint.Parent is Panel panel)
+            {
+                _hintHost = new Border { BorderThickness = new Thickness(3, 0, 0, 0), Padding = new Thickness(10, 6) };
+                int index = panel.Children.IndexOf(hint);
+                Grid.SetRow(_hintHost, Grid.GetRow(hint));
+                Grid.SetColumn(_hintHost, Grid.GetColumn(hint));
+                Grid.SetRowSpan(_hintHost, Grid.GetRowSpan(hint));
+                Grid.SetColumnSpan(_hintHost, Grid.GetColumnSpan(hint));
+                panel.Children.RemoveAt(index);
+                _hintHost.Child = hint;
+                panel.Children.Insert(index, _hintHost);
+            }
+            if (_hintHost != null)
+            {
+                _hintHost.Margin = new Thickness(left, 6, 4, 0);
+                _hintHost.BorderBrush = new SolidColorBrush(Color.Parse(isLight ? "#C77700" : "#E0A030"));
+                _hintHost.Background = new SolidColorBrush(Color.Parse(isLight ? "#18C77700" : "#22E0A030"));
+            }
+        }
+        else if (_hintHost != null && _hintHost.Parent is Panel hostPanel)
+        {
+            int index = hostPanel.Children.IndexOf(_hintHost);
+            Grid.SetRow(hint, Grid.GetRow(_hintHost));
+            Grid.SetColumn(hint, Grid.GetColumn(_hintHost));
+            Grid.SetRowSpan(hint, Grid.GetRowSpan(_hintHost));
+            Grid.SetColumnSpan(hint, Grid.GetColumnSpan(_hintHost));
+            _hintHost.Child = null;
+            hostPanel.Children.RemoveAt(index);
+            hostPanel.Children.Insert(index, hint);
+            _hintHost = null;
+        }
+    }
+
     // A warning reads as a callout: amber, full strength, medium weight. The muted hint look is the default.
     private void ApplyHintSeverity(TextBlock hint, bool isWarning)
     {
@@ -277,7 +383,8 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     {
         string? detailText = InstanceMember?.DetailText;
         string? displayed = detailText;
-        ApplyHintSeverity(hint, InstanceMember?.IsDetailTextWarning == true);
+        ApplyRowStyle();
+        ApplyHintStyle(hint);
         List<HintLink> links = new List<HintLink>();
 
         if (detailText != null)
@@ -339,6 +446,10 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             hint.Inlines.Add(new Run(displayed!.Substring(position)));
         }
         hint.IsVisible = !string.IsNullOrEmpty(displayed);
+        if (_hintHost != null)
+        {
+            _hintHost.IsVisible = hint.IsVisible;
+        }
     }
 
 }

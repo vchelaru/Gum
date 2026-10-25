@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using System;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -94,11 +96,7 @@ public class SettingsWindowScreenshotTests
 
         // The legacy rows exist only for a legacy library, which the project does not use by default.
         CodeGenerationSettingsPageView page = window.Find<CodeGenerationSettingsPageView>();
-        CodeGenerationSettingsViewModel pageModel = (CodeGenerationSettingsViewModel)page.DataContext!;
-        CodeOutputSettingsMembers members = (CodeOutputSettingsMembers)typeof(CodeGenerationSettingsViewModel)
-            .GetField("_members", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(pageModel)!;
-        members.ProjectSettings!.OutputLibrary = OutputLibrary.Maui;
-        pageModel.Reload();
+        EditSettings(page, settings => settings.OutputLibrary = OutputLibrary.Maui);
 
         ScrollToEnd(window);
         window.Save("settings-project-code-generation-legacy-collapsed");
@@ -107,11 +105,54 @@ public class SettingsWindowScreenshotTests
         window.Save("settings-project-code-generation-legacy-expanded");
     });
 
+    [SkippableFact]
+    public void CodeGeneration_WithFolders_ShowsWhereFilesResolve() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+
+        EditSettings(window.Find<CodeGenerationSettingsPageView>(), settings =>
+        {
+            settings.CodeProjectRoot = "../MyGame/";
+            settings.GeneratedCodeFolder = "Gum/Generated";
+            settings.CustomCodeFolder = "Gum/Custom";
+            settings.RootNamespace = "MyGame.Gum";
+        });
+        ScrollToResolves(window);
+        window.Save("settings-project-code-generation-resolves");
+    });
+
+    private static void EditSettings(CodeGenerationSettingsPageView page, Action<CodeOutputProjectSettings> edit)
+    {
+        CodeGenerationSettingsViewModel pageModel = (CodeGenerationSettingsViewModel)page.DataContext!;
+        CodeOutputSettingsMembers members = (CodeOutputSettingsMembers)typeof(CodeGenerationSettingsViewModel)
+            .GetField("_members", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(pageModel)!;
+        edit(members.ProjectSettings!);
+        pageModel.Reload();
+    }
+
+    private static void ScrollToResolves(ScreenshotWindow window)
+    {
+        CodeGenerationSettingsPageView page = window.Find<CodeGenerationSettingsPageView>();
+        ScrollViewer scroller = page.GetVisualAncestors().OfType<ScrollViewer>().First();
+        Dispatcher.UIThread.RunJobs();
+        scroller.Offset = new Vector(0, 300);
+        Dispatcher.UIThread.RunJobs();
+    }
+
     private static void ScrollToEnd(ScreenshotWindow window)
     {
         CodeGenerationSettingsPageView page = window.Find<CodeGenerationSettingsPageView>();
-        page.GetVisualAncestors().OfType<ScrollViewer>().First().ScrollToEnd();
-        Dispatcher.UIThread.RunJobs();
+        ScrollViewer scroller = page.GetVisualAncestors().OfType<ScrollViewer>().First();
+        // Spacing is applied after the first layout pass, so the extent grows once more before the end is final.
+        for (int pass = 0; pass < 3; pass++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            window.Window.UpdateLayout();
+            scroller.ScrollToEnd();
+        }
     }
 
     [SkippableFact]

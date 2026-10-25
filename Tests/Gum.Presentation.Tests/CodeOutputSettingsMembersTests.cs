@@ -55,7 +55,7 @@ public class CodeOutputSettingsMembersTests
         categories[0].Members.Select(member => member.Name).ShouldBe(new[]
         {
             "Output Library", "Object Instantiation Type", "Syntax Version",
-            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Resolves to",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix",
             "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Project-wide Using Statements",
         });
         categories[1].Members.Select(member => member.Name).ShouldBe(new[]
@@ -112,6 +112,7 @@ public class CodeOutputSettingsMembersTests
             member.DetailText!.ShouldNotContain("\n", customMessage: member.Name + " hint is not one line");
             member.DetailText.ShouldNotBe(member.Name);
             member.FirstGridLength.ShouldBe(190, member.Name);
+            member.IsSpaciousRow.ShouldBeTrue(member.Name);
         }
     }
 
@@ -147,10 +148,10 @@ public class CodeOutputSettingsMembersTests
 
         text.Split('\n').ShouldBe(new[]
         {
-            "Screen generated  Gen/GumScreens/MyScreen.Generated.cs",
-            "Screen custom     Mine/GumScreens/MyScreen.cs",
-            "Component generated  Gen/GumComponents/MyComponent.Generated.cs",
-            "Component custom     Mine/GumComponents/MyComponent.cs",
+            "Screen     Gen/GumScreens/MyScreen.Generated.cs",
+            "           Mine/GumScreens/MyScreen.cs",
+            "Component  Gen/GumComponents/MyComponent.Generated.cs",
+            "           Mine/GumComponents/MyComponent.cs",
         });
         members.Single(member => member.Name == "Custom Code Folder").SetValue("", SetPropertyCommitType.Full);
         changes.ShouldBeGreaterThan(0);
@@ -166,7 +167,7 @@ public class CodeOutputSettingsMembersTests
             .SelectMany(member => new[] { member.Name, member.DetailText ?? "" });
 
         terms.ShouldContain("Custom Code Folder");
-        terms.ShouldContain(term => term.Contains("your own") && term.Contains(".cs"));
+        terms.ShouldContain(term => term.Contains("own .cs"));
     }
 
     [Fact]
@@ -180,7 +181,7 @@ public class CodeOutputSettingsMembersTests
         category.Members.Select(member => member.Name).ShouldBe(new[]
         {
             "Output Library", "Object Instantiation Type", "Syntax Version",
-            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Resolves to",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix",
             "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Project-wide Using Statements",
         });
     }

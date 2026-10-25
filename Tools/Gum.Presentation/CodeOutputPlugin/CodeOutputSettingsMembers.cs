@@ -90,7 +90,11 @@ public class CodeOutputSettingsMembers
         {
             foreach (InstanceMember member in section.Members)
             {
-                projectCategory.Members.Add(member);
+                // The WPF grid has no displayer for the paths box.
+                if (member.PreferredDisplayer != typeof(StandardDisplayers.CodeFilePaths))
+                {
+                    projectCategory.Members.Add(member);
+                }
             }
         }
         return projectCategory;
@@ -143,6 +147,7 @@ public class CodeOutputSettingsMembers
             foreach (InstanceMember member in section.Members)
             {
                 member.FirstGridLength = ProjectLabelColumnWidth;
+                member.IsSpaciousRow = true;
             }
             MarkReadOnlyWhileSettingsAreUnreadable(section);
         }
@@ -218,7 +223,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateCodeProjectRootMember()
     {
         InstanceMember member = new InstanceMember("Code Project Root", this);
-        member.DetailText = "The folder code is written under, usually your game's .csproj folder; relative to the .gumx";
+        member.DetailText = "Folder holding your .csproj; relative to the .gumx";
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -279,11 +284,11 @@ public class CodeOutputSettingsMembers
     }
 
     private InstanceMember CreateGeneratedCodeFolderMember() => CreateCodeSubfolderMember(
-        "Generated Code Folder", "Where the .Generated.cs files go, relative to the Code Project Root; Gum rewrites them, never edit them",
+        "Generated Code Folder", "Files named *.Generated.cs; Gum rewrites these, so don't edit them",
         settings => settings.GeneratedCodeFolder, (settings, value) => settings.GeneratedCodeFolder = value);
 
     private InstanceMember CreateCustomCodeFolderMember() => CreateCodeSubfolderMember(
-        "Custom Code Folder", "Where your own .cs files go, relative to the Code Project Root; empty keeps them beside the generated files",
+        "Custom Code Folder", "Your own .cs files; empty keeps them beside the generated ones",
         settings => settings.CustomCodeFolder, (settings, value) => settings.CustomCodeFolder = value);
 
     // A folder relative to the Code Project Root, with a text field and a browse button.
@@ -343,7 +348,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateGeneratedCodeFolderPrefixMember()
     {
         InstanceMember member = new InstanceMember("Generated Code Folder Prefix", this);
-        member.DetailText = "Put in front of the Screens and Components folders in both folders: GumCodeGen/ nests them, Gum renames them GumScreens";
+        member.DetailText = "Put before Screens and Components in both folders, such as Gum/";
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -574,10 +579,10 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateResolvedLocationsMember()
     {
         InstanceMember member = new InstanceMember("Resolves to", this);
-        member.DetailText = "Where a Screen and a Component land with the folders above, relative to the Code Project Root";
+        member.DetailText = "Where a Screen and a Component land, relative to the Code Project Root";
         member.CustomGetEvent += (owner) => ProjectSettings == null ? string.Empty : CodeLocationPreview.Describe(ProjectSettings);
         member.CustomGetTypeEvent += (owner) => typeof(string);
-        member.PreferredDisplayer = typeof(StandardDisplayers.MultiLineTextBox);
+        member.PreferredDisplayer = typeof(StandardDisplayers.CodeFilePaths);
         member.IsReadOnly = true;
         _resolvedLocationsMember = member;
         return member;

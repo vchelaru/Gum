@@ -386,6 +386,24 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        bool isSpaciousRow;
+        /// <summary>
+        /// Opts the row into the roomier Settings look: padding and a divider around the row, taller fields,
+        /// a larger hint aligned with the field, and a callout for a warning. Off for every other grid.
+        /// </summary>
+        public bool IsSpaciousRow
+        {
+            get => isSpaciousRow;
+            set
+            {
+                if (isSpaciousRow != value)
+                {
+                    isSpaciousRow = value;
+                    OnPropertyChanged(nameof(IsSpaciousRow));
+                }
+            }
+        }
+
         bool isDetailTextWarning;
         /// <summary>
         /// Whether <see cref="DetailText"/> is a warning the user could get wrong by ignoring (a file move,

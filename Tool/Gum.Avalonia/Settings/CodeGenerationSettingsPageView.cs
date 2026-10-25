@@ -4,6 +4,8 @@ using Avalonia;
 using Avalonia.VisualTree;
 using CodeOutputPlugin;
 using Avalonia.Reactive;
+using Avalonia.Threading;
+using System.Linq;
 using System;
 using WpfDataUi.DataTypes;
 
@@ -23,7 +25,7 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
     /// <summary>Builds the view.</summary>
     public CodeGenerationSettingsPageView()
     {
-        Grid = new DataUiGrid { HideLoneCategoryHeader = true };
+        Grid = new DataUiGrid { HideLoneCategoryHeader = true, AlternatesRowBackgrounds = false };
         Children.Add(Grid);
 
         DataContextChanged += (_, _) => HandleDataContextChanged();
@@ -91,6 +93,18 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
         {
             Grid.SetCategories(_viewModel.BuildCategories());
             ScaleLabelColumns();
+            Dispatcher.UIThread.Post(SpaceSectionBars);
+        }
+    }
+
+    // The section bars sit closer together in the shared grid; on this page each one starts a new group.
+    private void SpaceSectionBars()
+    {
+        bool isFirst = true;
+        foreach (DataUiCategoryView view in Grid.GetVisualDescendants().OfType<DataUiCategoryView>())
+        {
+            view.Margin = new Thickness(0, isFirst ? 4 : 14, 0, 2);
+            isFirst = false;
         }
     }
 
