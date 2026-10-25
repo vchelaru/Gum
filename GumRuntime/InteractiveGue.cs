@@ -737,7 +737,7 @@ public partial class InteractiveGue : GraphicalUiElement
 
         if (!toReturn && IsOutsideOfBoundsHitTestingEnabled)
         {
-            toReturn = IsOverChildren(this, cursor, layer, s_hitTestForWalk);
+            toReturn = IsOverChildren(this, cursor, layer, ReferenceEquals(s_walkTarget, this));
         }
 
         return toReturn;
@@ -754,24 +754,25 @@ public partial class InteractiveGue : GraphicalUiElement
 
         if (!toReturn && (asInteractive?.RaiseChildrenEventsOutsideOfBounds == true || thisInstance.Tag is ScreenSave))
         {
-            toReturn = IsOverChildren(thisInstance, cursor, layer, s_hitTestForWalk);
+            toReturn = IsOverChildren(thisInstance, cursor, layer, ReferenceEquals(s_walkTarget, thisInstance));
         }
 
         return toReturn;
     }
 
-    // True while the cursor walk is asking whether the cursor is over an element. The walk only needs the
-    // children that can react to the cursor, so IsOverChildren skips those with no events under them. A
-    // HasCursorOver call from anywhere else keeps reporting the cursor over any child.
+    // The element the cursor walk is currently asking "is the cursor over this" about. The walk only needs
+    // the children that can react to the cursor, so IsOverChildren skips those with no events under them.
+    // It is the element rather than a flag so that a HasCursorOver call on any other element, such as one
+    // made by an override or a handler, keeps reporting the cursor over any child.
     [ThreadStatic]
-    static bool s_hitTestForWalk;
+    static GraphicalUiElement? s_walkTarget;
 
     // The cursor walk's question "is the cursor over this element", which skips event-less children (#6777).
     // Goes through the virtual HasCursorOver so overrides still apply.
     private static bool HasCursorOverForWalk(ICursor cursor, GraphicalUiElement element, Layer? layer, bool callOverride = true)
     {
-        bool previous = s_hitTestForWalk;
-        s_hitTestForWalk = true;
+        GraphicalUiElement? previous = s_walkTarget;
+        s_walkTarget = element;
         try
         {
             return callOverride && element is InteractiveGue interactive
@@ -780,7 +781,7 @@ public partial class InteractiveGue : GraphicalUiElement
         }
         finally
         {
-            s_hitTestForWalk = previous;
+            s_walkTarget = previous;
         }
     }
 
@@ -910,7 +911,9 @@ public partial class InteractiveGue : GraphicalUiElement
                 {
                     continue;
                 }
-                if (HasCursorOver(cursor, child, layer))
+                if (skipChildrenWithoutEvents
+                    ? HasCursorOverForWalk(cursor, child, layer, callOverride: false)
+                    : HasCursorOver(cursor, child, layer))
                 {
                     toReturn = true;
                     break;
@@ -928,7 +931,15 @@ public partial class InteractiveGue : GraphicalUiElement
                     continue;
                 }
 
-                if(child is InteractiveGue asInteractiveGue)
+                if (skipChildrenWithoutEvents && child != null)
+                {
+                    if (HasCursorOverForWalk(cursor, child, layer))
+                    {
+                        toReturn = true;
+                        break;
+                    }
+                }
+                else if(child is InteractiveGue asInteractiveGue)
                 {
                     if(asInteractiveGue.HasCursorOver(cursor, layer))
                     {

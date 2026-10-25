@@ -1366,5 +1366,35 @@ public class CursorHitTestIdleCostTests : BaseTestClass
         TotalCalls(noEvents).ShouldBe(0);
     }
 
+    // Asks another element whether the cursor is over it from inside its own override.
+    private sealed class AsksAnotherInteractive : InteractiveGue
+    {
+        public InteractiveGue? Other;
+        public bool? OtherAnswer;
+
+        public AsksAnotherInteractive() : base(new InvisibleRenderable())
+        {
+        }
+
+        public override bool HasCursorOver(ICursor cursor, Layer? layer = null)
+        {
+            OtherAnswer = Other?.HasCursorOver(cursor);
+            return base.HasCursorOver(cursor, layer);
+        }
+    }
+
+    [Fact]
+    public void HasCursorOver_ShouldReportTrueOverAnEventlessChild_WhenCalledFromInsideAnotherElementsOverrideDuringAWalk()
+    {
+        (CountingInteractive other, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot(rootHasEvents: true);
+        AsksAnotherInteractive asker = new() { HasEvents = true };
+        asker.Other = other;
+        Mock<ICursor> cursor = CreateCursor(205, 5);
+
+        Walk(new List<GraphicalUiElement> { asker }, cursor);
+
+        asker.OtherAnswer.ShouldBe(true, "only the element the walk is testing skips children without events");
+    }
+
     #endregion
 }
