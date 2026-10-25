@@ -133,7 +133,7 @@ public class TextRuntimeOversampledFontSharingTests : BaseTestClass
         first.Text = "C";
 
         Text secondText = GetText(second);
-        secondText.BitmapFont.HasCharacter('C').ShouldBeTrue();
+        secondText.BitmapFont!.HasCharacter('C').ShouldBeTrue();
         creator.CountRequestsAt(40f).ShouldBe(1);
     }
 
