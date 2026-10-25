@@ -20,18 +20,17 @@ namespace SkiaGum.Tests.Forms.Linked;
 public class SkiaFormsTestBase : IDisposable
 {
     private static readonly SKSurface Surface = SKSurface.Create(new SKImageInfo(800, 600));
-    private static bool _isInitialized;
 
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
     private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
 
     public SkiaFormsTestBase()
     {
-        if (!_isInitialized)
-        {
-            GumService.Default.Initialize(Surface.Canvas, 800, 600);
-            _isInitialized = true;
-        }
+        // Initialized for every test, like the other Skia Forms tests: the default visuals hold the
+        // embedded sprite sheet bitmap from the active style, and another test class that disposes
+        // the texture cache leaves a once-initialized style pointing at a disposed bitmap, which
+        // crashes the host the next time a NineSlice takes it as its Texture.
+        GumService.Default.Initialize(Surface.Canvas, 800, 600);
 
         GraphicalUiElement.IsAllLayoutSuspended = false;
         GraphicalUiElement.SuppressFontRegeneration = false;
