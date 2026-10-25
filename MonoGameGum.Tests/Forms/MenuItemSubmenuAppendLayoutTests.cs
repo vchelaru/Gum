@@ -175,7 +175,7 @@ public class MenuItemSubmenuAppendLayoutTests : BaseTestClass
     }
 
     [Fact]
-    public void ItemsAdd_ShouldKeepPopupOnScreenTopAndRowsStacked_WhenAppendsMakeItTallerThanTheCanvas()
+    public void ItemsAdd_ShouldShrinkPopupToCanvasAndKeepRowsStacked_WhenAppendsMakeItTallerThanTheCanvas()
     {
         (_, MenuItem file) = Create();
         file.Items!.Add("Start");
@@ -186,14 +186,14 @@ public class MenuItemSubmenuAppendLayoutTests : BaseTestClass
         }
 
         ScrollViewer popup = PopupOf(file);
-        // A popup taller than the canvas is not shrunk; it is kept from going above the top.
-        popup.Visual.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(0);
+        // A popup taller than the canvas is moved to the top and shrunk to the canvas height (#6758).
+        popup.Visual.AbsoluteTop.ShouldBe(0, 0.01f);
+        popup.Visual.AbsoluteHeight.ShouldBe(GraphicalUiElement.CanvasHeight, 0.01f);
         List<GraphicalUiElement> rows = new(popup.InnerPanel.Children!);
         for (int i = 1; i < rows.Count; i++)
         {
             rows[i].GetAbsoluteTop().ShouldBe(rows[i - 1].GetAbsoluteBottom(), 0.01f);
         }
         popup.InnerPanel.AbsoluteHeight.ShouldBe(rows[^1].GetAbsoluteBottom() - rows[0].GetAbsoluteTop(), 0.01f);
-        popup.Visual.AbsoluteHeight.ShouldBeGreaterThanOrEqualTo(popup.InnerPanel.AbsoluteHeight);
     }
 }

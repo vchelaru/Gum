@@ -702,6 +702,34 @@ public class ScrollViewer :
 
     #region Scroll Methods
 
+    /// <summary>
+    /// Scrolls vertically by the least amount that shows all of <paramref name="row"/>, a direct child of
+    /// <see cref="InnerPanel"/>. Does nothing when the row is already fully in view.
+    /// </summary>
+    internal void BringRowIntoView(GraphicalUiElement row)
+    {
+        if (verticalScrollBar == null || innerPanel == null || clipContainer == null)
+        {
+            return;
+        }
+
+        var rowAsIpso = (global::RenderingLibrary.IPositionedSizedObject)row;
+        var rowTop = rowAsIpso.Y;
+        var rowBottom = rowAsIpso.Y + rowAsIpso.Height;
+
+        var viewTop = -innerPanel.Y;
+        var viewBottom = -innerPanel.Y + clipContainer.AbsoluteHeight;
+
+        if (rowTop < viewTop)
+        {
+            verticalScrollBar.Value += rowTop - viewTop;
+        }
+        else if (rowBottom > viewBottom)
+        {
+            verticalScrollBar.Value += rowBottom - viewBottom;
+        }
+    }
+
     private void HandleMouseWheelScroll(object? sender, RoutedEventArgs args)
     {
         if(verticalScrollBar != null)
