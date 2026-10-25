@@ -19,6 +19,7 @@ public class LabelTests : BaseTestClass
         sut.Visual.HasEvents.ShouldBeFalse();
     }
 
+#if !SKIA_LINKED_TESTS // uses the MonoGame core Text; Skia twin in LabelSkiaTests
     [Fact]
     public void Text_ShouldParseBbCodeTags()
     {
@@ -34,7 +35,7 @@ public class LabelTests : BaseTestClass
         rawText.InlineVariables.Count.ShouldBe(4, "because the font starts default and changes 4 times with tags: bold, not bold, italic, not italic");
         rawText.RawText.ShouldBe("This is bold and italic text.");
     }
-
+#endif
 
     [Fact]
     public void Constructor_ShouldAcceptTextRuntimeVisual()
