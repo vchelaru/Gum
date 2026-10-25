@@ -131,6 +131,12 @@ internal sealed class CodeTabHarness : IDisposable
     {
         _driver.Layout();
         InstanceMember member = Member(memberName);
+        // A row in a collapsed section (the Legacy one) has no editor until the user opens the section.
+        foreach (MemberCategory category in Grids.SelectMany(grid => grid.Categories).Where(category => category.Members.Contains(member)))
+        {
+            category.IsExpanded = true;
+        }
+        _driver.Layout();
         SingleDataUiContainer row = Grids.SelectMany(grid => grid.LiveContainers).FirstOrDefault(container => container.Member == member)
             ?? throw new InvalidOperationException($"The {memberName} row has no live editor.");
         row.BringIntoView();
