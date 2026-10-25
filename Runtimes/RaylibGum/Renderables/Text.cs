@@ -483,21 +483,11 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     internal void SetOversampledDisplayFont(Font oversampledFont)
     {
+        // A superseded oversampled font is not unloaded here: other texts can share it, so TextRuntime's
+        // shared-font map unloads it once no text uses it (#4364, #6814).
         if (MeasurementFont == null)
         {
             MeasurementFont = Font;
-        }
-        else if (_font.BaseSize != 0
-            && _font.Texture.Id != MeasurementFont.Value.Texture.Id
-            && _font.Texture.Id != oversampledFont.Texture.Id)
-        {
-            // Issue #4364: MeasurementFont is already pinned, so _font here is a previously generated
-            // oversampled font being superseded by another re-rasterize (e.g. mid continuous zoom
-            // gesture) -- it isn't cached or referenced anywhere else, so its GPU atlas must be unloaded
-            // here or it leaks VRAM on every swap. ManagedFont also unloads its drop-shadow companion
-            // (if any) and clears its line-metrics registry entry, mirroring the cleanup a cached font
-            // gets elsewhere (see RaylibFontShadowRegistry/RaylibFontMetricsRegistry).
-            new ManagedFont(_font).Dispose();
         }
 
         if (_font.Texture.Id != oversampledFont.Texture.Id || _font.BaseSize != oversampledFont.BaseSize)
@@ -1323,7 +1313,15 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     private float GetLineAdvance(int lineIndex, int startOfLineIndex, string line)
     {
-        return StyledLineHeight(EffectiveFontScale, GetTallestSizeRunScale(lineIndex, startOfLineIndex, line));
+        float tallestSizeRunScale = GetTallestSizeRunScale(lineIndex, startOfLineIndex, line);
+        if (_measurementFont != null)
+        {
+            // Issue #6814: while oversampled, the live font's line height drawn at exactly 1/ratio
+            // differs from the pinned font's by rounding, and that difference adds up with every line.
+            // Step by the pinned font's line height instead, matching the measured box.
+            return TextLineHeight.Compute(MeasurementLineHeightInPixels, MeasurementFontScale, LineHeightMultiplier, tallestSizeRunScale);
+        }
+        return StyledLineHeight(EffectiveFontScale, tallestSizeRunScale);
     }
 
     /// <summary>

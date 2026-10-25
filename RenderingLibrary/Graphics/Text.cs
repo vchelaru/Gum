@@ -685,17 +685,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     internal void SetOversampledDisplayFont(BitmapFont oversampledFont)
     {
+        // A superseded oversampled font is not disposed here: other texts can share it, so TextRuntime's
+        // shared-font map disposes it once no text uses it (#4364, #6814).
         if (MeasurementFont == null)
         {
             MeasurementFont = mBitmapFont;
-        }
-        else if (mBitmapFont != null && mBitmapFont != MeasurementFont && mBitmapFont != oversampledFont)
-        {
-            // Issue #4364: MeasurementFont is already pinned, so mBitmapFont here is a previously
-            // generated oversampled font being superseded by another re-rasterize (e.g. mid continuous
-            // zoom gesture) -- it isn't shared/cached anywhere else, so it must be disposed here or its
-            // GPU textures leak on every swap.
-            mBitmapFont.Dispose();
         }
 
         if (mBitmapFont != oversampledFont)
@@ -1313,7 +1307,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                             absoluteTop + DropshadowOffsetY * EffectiveFontScale,
                             this.GetAbsoluteRotation(),
                             EffectiveFontScale, EffectiveFontScale, maxLettersToShow,
-                            OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                            OverrideTextRenderingPositionMode, lineHeightMultiplier: DrawLineHeightMultiplier,
                             overlapDirection: OverlapDirection);
                     }
 
@@ -1325,7 +1319,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         absoluteTop,
                         this.GetAbsoluteRotation(),
                         EffectiveFontScale, EffectiveFontScale, maxLettersToShow,
-                        OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                        OverrideTextRenderingPositionMode, lineHeightMultiplier: DrawLineHeightMultiplier,
                         overlapDirection: OverlapDirection);
                 }
             }
@@ -1662,6 +1656,44 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return mTempForRendering;
     }
 
+    // Issue #6814: while oversampled, the display font draws at exactly 1/ratio, so its drawn width can
+    // differ from the pinned measurement font's by the hinting difference between the two raster sizes.
+    // Aligning on what is actually drawn keeps centered and right-aligned text placed correctly. Text
+    // with inline styling keeps the measured width, since its runs are measured per style.
+    private float GetDrawnWidthForAlignment()
+    {
+        if (mMeasurementFont == null || mBitmapFont == null || InlineVariables.Count > 0)
+        {
+            return WrappedTextWidth;
+        }
+
+        mBitmapFont.GetRequiredWidthAndHeight(WrappedText, out int drawnWidth, out _);
+        return drawnWidth * EffectiveFontScale;
+    }
+
+    // Issue #6814: the line-height multiplier handed to DrawTextLines. While oversampled, the display
+    // font's line height drawn at exactly 1/ratio differs from the pinned font's by rounding, and that
+    // difference adds up with every line. Scaling the multiplier steps lines by the pinned font's line
+    // height instead, matching the measured box; the glyphs themselves still draw 1:1.
+    private float DrawLineHeightMultiplier
+    {
+        get
+        {
+            if (mMeasurementFont == null || mBitmapFont == null)
+            {
+                return LineHeightMultiplier;
+            }
+
+            float drawnLineHeight = mBitmapFont.LineHeightInPixels * EffectiveFontScale;
+            if (drawnLineHeight <= 0)
+            {
+                return LineHeightMultiplier;
+            }
+
+            return LineHeightMultiplier * mMeasurementFont.LineHeightInPixels * MeasurementFontScale / drawnLineHeight;
+        }
+    }
+
     [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mTempForRendering))]
     private void UpdateIpsoForRendering()
     {
@@ -1688,7 +1720,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         // match EffectiveWidth/EffectiveHeight's own idea of this Text's size -- exactly the same
         // quantity WrappedTextWidth/WrappedTextHeight already compute correctly, so reuse those
         // instead of re-deriving it here with the wrong scale.
-        mTempForRendering.Width = WrappedTextWidth;
+        mTempForRendering.Width = GetDrawnWidthForAlignment();
         mTempForRendering.Height = WrappedTextHeight;
         //mTempForRendering.Parent = this.Parent;
 

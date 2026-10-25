@@ -248,13 +248,11 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
         tempForRendering.Height.ShouldBe(text.WrappedTextHeight, tolerance: 0.001f);
     }
 
-    // Issue #4364: SetOversampledDisplayFont pins the outgoing NATIVE font as MeasurementFont on the
-    // FIRST swap, but a continuous zoom gesture calls it again on every hysteresis-gated frame after
-    // that -- and every one of those later swaps used to drop the PREVIOUSLY oversampled font with no
-    // disposal. That font isn't shared/cached anywhere (KernSmithFontCreator builds it fresh via
-    // `new BitmapFont(textures, ...)`), so its GPU textures leaked on every re-rasterize past the first.
+    // Issue #6814: oversampled fonts are shared between texts, so the superseded one may still be drawn
+    // by another text. TextRuntime's shared-font map disposes it once no text uses it (#4364); Text
+    // itself never does, and never disposes the pinned measurement font.
     [Fact]
-    public void SetOversampledDisplayFont_WhenReplacingAPreviouslyOversampledFont_DisposesTheSupersededFont()
+    public void SetOversampledDisplayFont_WhenReplacingAPreviouslyOversampledFont_LeavesBothFontsUndisposed()
     {
         BitmapFont baseFont = new BitmapFont((Texture2D)null!, basicBMFontFileData);
         baseFont.SetFontPattern(256, 256);
@@ -273,9 +271,8 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
         text.SetOversampledDisplayFont(firstOversampledFont);
         text.SetOversampledDisplayFont(secondOversampledFont);
 
-        firstOversampledFont.IsDisposed.ShouldBeTrue(
-            "because the superseded oversampled font isn't shared or cached anywhere else, so it must " +
-            "be disposed when replaced or its GPU textures leak (issue #4364)");
+        firstOversampledFont.IsDisposed.ShouldBeFalse(
+            "because another text may share the superseded font, so only TextRuntime's shared-font map disposes it");
         baseFont.IsDisposed.ShouldBeFalse(
             "because the pinned MeasurementFont is still actively used for layout measurement and must never be disposed while active");
     }
