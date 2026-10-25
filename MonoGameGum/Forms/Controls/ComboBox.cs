@@ -769,6 +769,9 @@ public class ComboBox :
         // it has when attached to the ComboBox so the layout engine resolves them again.
         listBoxVisual.Parent = null;
         RestoreListBoxLayoutValues();
+#if !FRB
+        RestoreShrunkLevels();
+#endif
 
         // Adding this to the Visual will force a layout....
         this.Visual.Children.Add(listBoxVisual);
@@ -781,7 +784,12 @@ public class ComboBox :
 #if !FRB
         // A drop-down taller than the root it opens in is shrunk to that root's height and scrolls;
         // ShowPopupListBox then moves it to the root's top, as it does any popup that does not fit (#6769).
-        height = System.Math.Min(height, ListBox.GetPopupTargetRoot(this.Visual).AbsoluteHeight);
+        float availableHeight = ListBox.GetPopupTargetRoot(this.Visual).AbsoluteHeight;
+        if (height > availableHeight)
+        {
+            FillShrunkLevels();
+            height = availableHeight;
+        }
 #endif
 
         // Now that we have the values, detach it:
@@ -813,6 +821,51 @@ public class ComboBox :
     }
 
 #if !FRB
+    // The levels between the list box and its rows that are sized to their children (a theme's
+    // FitChildren drop-down) with their own values, while the drop-down is shrunk and they fill instead.
+    readonly List<(GraphicalUiElement level, DimensionUnitType heightUnits, float height)> _shrunkLevels = new();
+
+    /// <summary>
+    /// Makes every level between the list box and its rows that is sized to its children fill its parent
+    /// instead, keeping the margin it has now, so the levels follow the shrunk list box and clip the rows
+    /// to it. Expects the list box laid out at its natural size.
+    /// </summary>
+    private void FillShrunkLevels()
+    {
+        var level = listBox.InnerPanel.Parent as GraphicalUiElement;
+        while (level != null && level != listBox.Visual && level.Parent is GraphicalUiElement parent)
+        {
+            if (level.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                _shrunkLevels.Add((level, level.HeightUnits, level.Height));
+            }
+            level = parent;
+        }
+
+        // Every margin is measured before any level changes, since each change lays the others out again.
+        var margins = new float[_shrunkLevels.Count];
+        for (int i = 0; i < _shrunkLevels.Count; i++)
+        {
+            GraphicalUiElement shrunkLevel = _shrunkLevels[i].level;
+            margins[i] = shrunkLevel.AbsoluteHeight - ((GraphicalUiElement)shrunkLevel.Parent!).AbsoluteHeight;
+        }
+        for (int i = 0; i < _shrunkLevels.Count; i++)
+        {
+            _shrunkLevels[i].level.HeightUnits = DimensionUnitType.RelativeToParent;
+            _shrunkLevels[i].level.Height = margins[i];
+        }
+    }
+
+    private void RestoreShrunkLevels()
+    {
+        foreach (var (level, heightUnits, height) in _shrunkLevels)
+        {
+            level.HeightUnits = heightUnits;
+            level.Height = height;
+        }
+        _shrunkLevels.Clear();
+    }
+
     /// <summary>
     /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle or the
     /// size of the root the drop-down is in changes (canvas resize, UI scale, or this control or an

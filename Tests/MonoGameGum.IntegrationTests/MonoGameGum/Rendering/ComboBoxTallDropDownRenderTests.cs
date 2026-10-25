@@ -30,7 +30,7 @@ public class ComboBoxTallDropDownRenderTests : BaseTestClass
         WithCanvas(() =>
         {
             using MenuFocusRenderTests.MenuLease game = new(gumxPath: null);
-            DrawTallDropDown(new ComboBox(), "6769-codeonly.png");
+            DrawTallDropDown(new ComboBox(), "6769-codeonly.png", dropDownHeight: Height * 2);
         });
     }
 
@@ -41,7 +41,8 @@ public class ComboBoxTallDropDownRenderTests : BaseTestClass
         {
             InteractiveGue visual = (InteractiveGue)ObjectFinder.Self.GetComponent("Controls/ComboBox")!
                 .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-            DrawTallDropDown((ComboBox)visual.FormsControlAsObject!, "6769-fromfile.png");
+            // The theme's drop-down sizes itself to its rows (FitChildren, up to about 256), taller than the canvas.
+            DrawTallDropDown((ComboBox)visual.FormsControlAsObject!, "6769-fromfile.png", dropDownHeight: null);
         }));
     }
 
@@ -60,7 +61,7 @@ public class ComboBoxTallDropDownRenderTests : BaseTestClass
         }
     }
 
-    private static void DrawTallDropDown(ComboBox comboBox, string pngName)
+    private static void DrawTallDropDown(ComboBox comboBox, string pngName, float? dropDownHeight)
     {
         GraphicalUiElement.CanvasWidth = Width;
         GraphicalUiElement.CanvasHeight = Height;
@@ -79,9 +80,11 @@ public class ComboBoxTallDropDownRenderTests : BaseTestClass
         comboBox.AddToRoot();
         comboBox.X = 16;
         comboBox.Y = 16;
-        // Taller than the canvas, as a theme's drop-down can be on a small screen.
-        comboBox.ListBox.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        comboBox.ListBox.Visual.Height = Height * 2;
+        if (dropDownHeight != null)
+        {
+            comboBox.ListBox.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            comboBox.ListBox.Visual.Height = dropDownHeight.Value;
+        }
         for (int i = 0; i < 40; i++)
         {
             comboBox.Items!.Add("Item " + i);
@@ -93,5 +96,11 @@ public class ComboBoxTallDropDownRenderTests : BaseTestClass
 
         popup.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(0);
         popup.AbsoluteBottom.ShouldBeLessThanOrEqualTo(Height + 0.01f);
+        popup.AbsoluteHeight.ShouldBe(Height, 0.01f);
+        // The rows are clipped inside the shrunk drop-down, starting with the first row at the top.
+        GraphicalUiElement clip = (GraphicalUiElement)comboBox.ListBox.InnerPanel.Parent!;
+        clip.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(popup.AbsoluteTop - 0.01f);
+        clip.AbsoluteBottom.ShouldBeLessThanOrEqualTo(popup.AbsoluteBottom + 0.01f);
+        comboBox.ListBox.ListBoxItems[0].Visual.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(clip.AbsoluteTop - 0.01f);
     }
 }
