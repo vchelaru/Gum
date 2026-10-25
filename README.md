@@ -63,7 +63,7 @@ https://docs.flatredball.com/gum/
   </picture>
 </a>
 
-Click the chart to compare Gum with other MonoGame UI libraries and download the data.
+[Open the interactive chart](https://kaltinril.github.io/gum_stats/) to compare Gum with other MonoGame UI libraries, switch to a log scale, and download the data. It is built and updated daily by [kaltinril/gum_stats](https://github.com/kaltinril/gum_stats).
 
 ### Contributors
 
