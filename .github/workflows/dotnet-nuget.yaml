@@ -125,7 +125,8 @@ jobs:
       if: github.event.inputs.publish_to_nuget == 'true'
       shell: pwsh
       run: |
-        Get-ChildItem "./nupkgs/*.nupkg" | ForEach-Object {
+        # Remove in December 2026 when Gum.KniSkia ships (#6380).
+        & Tools/Get-PublishablePackages.ps1 | ForEach-Object {
           Write-Host "Publishing $($_.Name)..."
           dotnet nuget push $_.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
         }
@@ -135,7 +136,8 @@ jobs:
       if: github.event.inputs.publish_to_github == 'true'
       shell: pwsh
       run: |
-        Get-ChildItem "./nupkgs/*.nupkg" | ForEach-Object {
+        # Remove in December 2026 when Gum.KniSkia ships (#6380).
+        & Tools/Get-PublishablePackages.ps1 | ForEach-Object {
           Write-Host "Publishing $($_.Name)..."
           dotnet nuget push $_.FullName --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
         }
