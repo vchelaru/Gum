@@ -4164,7 +4164,10 @@ public class CodeGenerator
         stringBuilder.AppendLine(indent + "        XmlSerializer serializer = GumFileSerializer.GetCompactSerializer(typeof(List<StandardElementSave>));");
         stringBuilder.AppendLine(indent + "        string xml = @\"" + escapedXml + "\";");
         stringBuilder.AppendLine(indent + "        using StringReader reader = new StringReader(xml);");
-        stringBuilder.AppendLine(indent + "        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(reader);");
+        // Deserialize(TextReader) trips CA5369 even in generated files; an XmlReader (DTD processing
+        // prohibited by default) is what the analyzer asks for.
+        stringBuilder.AppendLine(indent + "        using System.Xml.XmlReader xmlReader = System.Xml.XmlReader.Create(reader);");
+        stringBuilder.AppendLine(indent + "        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(xmlReader);");
         stringBuilder.AppendLine(indent + "        foreach (StandardElementSave standard in standards)");
         stringBuilder.AppendLine(indent + "        {");
         stringBuilder.AppendLine(indent + "            standard.Initialize(defaultState: null, tolerateMissingDefaultStates: true);");
