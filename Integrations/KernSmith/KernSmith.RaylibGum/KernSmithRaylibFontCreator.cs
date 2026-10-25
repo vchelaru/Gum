@@ -51,20 +51,25 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator, IGrowableRaylibFon
         public readonly int LineHeight;
         public readonly int BaselineY;
 
-        public GrowableFontState(Raylib_cs.Font font, int lineHeight, int baselineY)
+        public GrowableFontState(Raylib_cs.Font font, int lineHeight, int baselineY, BmFontModel model)
         {
             CanonicalFont = font;
             GlyphCapacity = font.GlyphCount;
             LineHeight = lineHeight;
             BaselineY = baselineY;
+            Model = model;
         }
+
+        public readonly BmFontModel Model;
+
+        // Created lazily on the first TryAddGlyphs call, so fonts that never grow don't pay for one.
+        public BmFontIncrementalSession? Session;
     }
 
-    // Keyed by BmfcSave.FontCacheFileName, the same identity TryCreateFont already names its textures
-    // after -- mirrors KernSmith.MonoGameGum's KernSmithFontCreator._growableModels/_activeSessions.
-    private readonly Dictionary<string, BmFontModel> _growableModels = new();
-    private readonly Dictionary<string, GrowableFontState> _growableFonts = new();
-    private readonly Dictionary<string, BmFontIncrementalSession> _activeSessions = new();
+    // Keyed by the font's texture id, not BmfcSave.FontCacheFileName: a native font and an oversampled
+    // font at the same raster size share a cache name but are separate atlases (#6811). Every texture a
+    // font has had stays registered, because older struct copies of it still carry the old id.
+    private readonly Dictionary<uint, GrowableFontState> _growableFonts = new();
 
     // Atlas ceiling handed to KernSmith. KernSmith sizes each page to the smallest power-of-two
     // that fits, UP TO this max — so a generous ceiling collapses the whole glyph set onto one page
@@ -212,8 +217,8 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator, IGrowableRaylibFon
         if (!string.IsNullOrEmpty(bmfcSave.FontFile) && !bmfcSave.HasDropshadow && result.Pages.Count == 1)
         {
             RaylibFontMetricsRegistry.TryGet(font, out RaylibFontMetricsRegistry.FontLineMetrics metrics);
-            _growableModels[bmfcSave.FontCacheFileName] = result.Model;
-            _growableFonts[bmfcSave.FontCacheFileName] = new GrowableFontState(font, metrics.LineHeight, metrics.BaselineY);
+            // Overwrites any entry for a texture id raylib has reused after an unload.
+            _growableFonts[font.Texture.Id] = new GrowableFontState(font, metrics.LineHeight, metrics.BaselineY, result.Model);
         }
 
         return font;
@@ -222,24 +227,19 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator, IGrowableRaylibFon
     /// <inheritdoc/>
     public IReadOnlyList<char>? TryAddGlyphs(ref Raylib_cs.Font font, BmfcSave bmfcSave, string characters)
     {
-        string key = bmfcSave.FontCacheFileName;
-        if (!_growableModels.TryGetValue(key, out BmFontModel? model)
-            || !_growableFonts.TryGetValue(key, out GrowableFontState? state))
+        if (!_growableFonts.TryGetValue(font.Texture.Id, out GrowableFontState? state))
         {
             return null;
         }
 
-        if (!_activeSessions.TryGetValue(key, out BmFontIncrementalSession? session))
-        {
-            session = GumFontGenerator.ResumeIncremental(bmfcSave, model, backend: _backend);
-            _activeSessions[key] = session;
-        }
+        state.Session ??= GumFontGenerator.ResumeIncremental(bmfcSave, state.Model, backend: _backend);
 
-        GlyphAdditionResult result = session.AddGlyphs(characters);
+        GlyphAdditionResult result = state.Session.AddGlyphs(characters);
 
         if (result.Added.Count > 0)
         {
             ApplyGrowth(state, result);
+            _growableFonts[state.CanonicalFont.Texture.Id] = state;
         }
 
         font = state.CanonicalFont;
