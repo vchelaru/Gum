@@ -752,4 +752,275 @@ public class CursorHitTestIdleCostTests : BaseTestClass
     }
 
     #endregion
+
+    #region Hidden elements (#6767)
+
+    // A screen-like root: tagged with a ScreenSave so its children are hit-tested outside its bounds.
+    private static (CountingInteractive Screen, List<CountingInteractive> Children) CreateScreen(float x)
+    {
+        CountingInteractive screen = CreateBox(x, 0, 10, hasEvents: false);
+        screen.Tag = new ScreenSave();
+        List<CountingInteractive> children = new();
+        for (int i = 0; i < 8; i++)
+        {
+            CountingInteractive child = CreateBox(i * 12, 0, 10, hasEvents: true);
+            screen.AddChild(child);
+            children.Add(child);
+        }
+        return (screen, children);
+    }
+
+    private static void SetButtons(Mock<ICursor> cursor, bool push, bool down, bool click)
+    {
+        cursor.Setup(c => c.PrimaryPush).Returns(push);
+        cursor.Setup(c => c.PrimaryDown).Returns(down);
+        cursor.Setup(c => c.PrimaryClick).Returns(click);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldTestNothing_WhenEveryRootIsAHiddenScreen()
+    {
+        List<GraphicalUiElement> roots = new();
+        List<CountingInteractive> tested = new();
+        for (int i = 0; i < 25; i++)
+        {
+            (CountingInteractive screen, List<CountingInteractive> children) = CreateScreen(0);
+            screen.Visible = false;
+            roots.Add(screen);
+            tested.Add(screen);
+            tested.AddRange(children);
+        }
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+
+        TotalCalls(tested).ShouldBe(0);
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldNotTestAHiddenChildWithEvents()
+    {
+        CountingInteractive parent = CreateBox(0, 0, 100, hasEvents: false);
+        CountingInteractive hidden = CreateBox(0, 0, 10, hasEvents: true);
+        CountingInteractive visible = CreateBox(50, 0, 10, hasEvents: true);
+        parent.AddChild(visible);
+        parent.AddChild(hidden);
+        hidden.Visible = false;
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+
+        Walk(new List<GraphicalUiElement> { parent }, cursor);
+
+        hidden.HasCursorOverCalls.ShouldBe(0);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldNotTestARoot_WhenItIsHiddenAfterBeingWalked()
+    {
+        (CountingInteractive screen, List<CountingInteractive> children) = CreateScreen(0);
+        List<GraphicalUiElement> roots = new() { screen };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        Walk(roots, cursor);
+        cursor.Object.VisualOver.ShouldBe(children[0]);
+        screen.HasCursorOverCalls = 0;
+        foreach (CountingInteractive child in children)
+        {
+            child.HasCursorOverCalls = 0;
+        }
+
+        screen.Visible = false;
+        Walk(roots, cursor);
+
+        screen.HasCursorOverCalls.ShouldBe(0);
+        TotalCalls(children).ShouldBe(0);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenAHiddenRootIsShownAgain()
+    {
+        (CountingInteractive screen, List<CountingInteractive> children) = CreateScreen(0);
+        int clicks = 0;
+        children[0].Click += (_, _) => clicks++;
+        List<GraphicalUiElement> roots = new() { screen };
+        Mock<ICursor> cursor = CreateCursor(5, 5, click: true);
+        Walk(roots, cursor);
+        clicks.ShouldBe(1);
+
+        screen.Visible = false;
+        Walk(roots, cursor);
+        clicks.ShouldBe(1, "a hidden root is not clicked");
+
+        screen.Visible = true;
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(2);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldClickALowerRoot_WhenAHiddenRootCoversIt()
+    {
+        CountingInteractive lower = CreateBox(0, 0, 10, hasEvents: true);
+        int clicks = 0;
+        lower.Click += (_, _) => clicks++;
+        CountingInteractive upper = CreateBox(0, 0, 10, hasEvents: true);
+        upper.Visible = false;
+        List<GraphicalUiElement> roots = new() { lower, upper };
+        Mock<ICursor> cursor = CreateCursor(5, 5, click: true);
+
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+        cursor.Object.VisualOver.ShouldBe(lower);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseRollOff_WhenTheHoveredElementsRootIsHidden()
+    {
+        (CountingInteractive screen, List<CountingInteractive> children) = CreateScreen(0);
+        int rollOffs = 0;
+        children[0].RollOff += (_, _) => rollOffs++;
+        List<GraphicalUiElement> roots = new() { screen };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        Walk(roots, cursor);
+        cursor.Object.VisualOver.ShouldBe(children[0]);
+
+        screen.Visible = false;
+        Walk(roots, cursor);
+
+        rollOffs.ShouldBe(1);
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseRollOff_WhenTheHoveredElementIsHidden()
+    {
+        (CountingInteractive screen, List<CountingInteractive> children) = CreateScreen(0);
+        int rollOffs = 0;
+        children[0].RollOff += (_, _) => rollOffs++;
+        List<GraphicalUiElement> roots = new() { screen };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        Walk(roots, cursor);
+
+        children[0].Visible = false;
+        Walk(roots, cursor);
+
+        rollOffs.ShouldBe(1);
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseRollOffNextFrame_WhenAClickHandlerHidesItsRoot()
+    {
+        (CountingInteractive screen, List<CountingInteractive> children) = CreateScreen(0);
+        int clicks = 0;
+        int rollOffs = 0;
+        int removedAsPushed = 0;
+        children[0].Click += (_, _) =>
+        {
+            clicks++;
+            screen.Visible = false;
+        };
+        children[0].RollOff += (_, _) => rollOffs++;
+        children[0].RemovedAsPushed += (_, _) => removedAsPushed++;
+        List<GraphicalUiElement> roots = new() { screen };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        SetButtons(cursor, push: true, down: true, click: false);
+        Walk(roots, cursor);
+
+        SetButtons(cursor, push: false, down: false, click: true);
+        Walk(roots, cursor);
+        clicks.ShouldBe(1);
+        removedAsPushed.ShouldBe(1);
+        rollOffs.ShouldBe(0, "the element was over when the frame began");
+
+        SetButtons(cursor, push: false, down: false, click: false);
+        Walk(roots, cursor);
+
+        rollOffs.ShouldBe(1);
+        cursor.Object.VisualOver.ShouldBeNull();
+        cursor.Object.WindowPushed.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldKeepDraggingThenRemoveAsPushed_WhenThePushedElementsRootIsHidden()
+    {
+        (CountingInteractive screen, List<CountingInteractive> children) = CreateScreen(0);
+        int dragging = 0;
+        int clicks = 0;
+        int removedAsPushed = 0;
+        int rollOffs = 0;
+        children[0].Dragging += (_, _) => dragging++;
+        children[0].Click += (_, _) => clicks++;
+        children[0].RemovedAsPushed += (_, _) => removedAsPushed++;
+        children[0].RollOff += (_, _) => rollOffs++;
+        List<GraphicalUiElement> roots = new() { screen };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        SetButtons(cursor, push: true, down: true, click: false);
+        Walk(roots, cursor);
+        cursor.Object.WindowPushed.ShouldBe(children[0]);
+        dragging.ShouldBe(1);
+
+        screen.Visible = false;
+        SetButtons(cursor, push: false, down: true, click: false);
+        Walk(roots, cursor);
+        dragging.ShouldBe(2, "the push is held, so the pushed element keeps dragging");
+        cursor.Object.WindowPushed.ShouldBe(children[0]);
+        removedAsPushed.ShouldBe(0);
+        rollOffs.ShouldBe(1);
+
+        SetButtons(cursor, push: false, down: false, click: true);
+        Walk(roots, cursor);
+
+        removedAsPushed.ShouldBe(1);
+        clicks.ShouldBe(0, "a hidden element is not clicked");
+        cursor.Object.WindowPushed.ShouldBeNull();
+        dragging.ShouldBe(2);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseRemovedAsPushed_WhenAPushHandlerHidesTheElement()
+    {
+        CountingInteractive box = CreateBox(0, 0, 10, hasEvents: true);
+        int removedAsPushed = 0;
+        int clicks = 0;
+        box.Push += (_, _) => box.Visible = false;
+        box.Click += (_, _) => clicks++;
+        box.RemovedAsPushed += (_, _) => removedAsPushed++;
+        List<GraphicalUiElement> roots = new() { box };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        SetButtons(cursor, push: true, down: true, click: false);
+        Walk(roots, cursor);
+        cursor.Object.WindowPushed.ShouldBe(box);
+
+        SetButtons(cursor, push: false, down: false, click: true);
+        Walk(roots, cursor);
+
+        removedAsPushed.ShouldBe(1);
+        clicks.ShouldBe(0);
+        cursor.Object.WindowPushed.ShouldBeNull();
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseRollOnAgain_WhenAHiddenHoveredRootIsShown()
+    {
+        (CountingInteractive screen, List<CountingInteractive> children) = CreateScreen(0);
+        int rollOns = 0;
+        children[0].RollOn += (_, _) => rollOns++;
+        List<GraphicalUiElement> roots = new() { screen };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        Walk(roots, cursor);
+        rollOns.ShouldBe(1);
+
+        screen.Visible = false;
+        Walk(roots, cursor);
+        screen.Visible = true;
+        Walk(roots, cursor);
+
+        rollOns.ShouldBe(2);
+        cursor.Object.VisualOver.ShouldBe(children[0]);
+    }
+
+    #endregion
 }
