@@ -56,7 +56,14 @@ https://docs.flatredball.com/gum/
 
 ### Star History
 
-[![Star History Chart](https://star-history.dera.page/svg?repos=vchelaru/gum&type=Date)](https://star-history.dera.page/#vchelaru/gum&Date)
+<a href="https://kaltinril.github.io/gum_stats/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://kaltinril.github.io/gum_stats/stars-dark.svg">
+    <img src="https://kaltinril.github.io/gum_stats/stars-light.svg" alt="Gum GitHub stars over time">
+  </picture>
+</a>
+
+Click the chart to compare Gum with other MonoGame UI libraries and download the data.
 
 ### Contributors
 
