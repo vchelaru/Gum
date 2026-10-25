@@ -54,13 +54,120 @@ public class CodeOutputSettingsMembersTests
         categories.Select(category => category.Name).ShouldBe(new[] { "Project-Wide Code Generation", "Element Code Generation" });
         categories[0].Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
-            "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Syntax Version",
+            "Output Library", "Object Instantiation Type", "Syntax Version",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix",
+            "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Project-wide Using Statements",
         });
         categories[1].Members.Select(member => member.Name).ShouldBe(new[]
         {
             "Generation Behavior", "Using Statements", "Namespace", "Generated File Name", "Localize Element",
         });
+    }
+
+    [Fact]
+    public void BuildProjectSections_GroupsRowsByIntent()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms };
+
+        List<MemberCategory> sections = _sut.BuildProjectSections();
+
+        sections.Select(section => section.Name).ShouldBe(new[] { "Output", "Locations", "Namespaces and usings" });
+        sections[0].Members.Select(member => member.Name).ShouldBe(new[] { "Output Library", "Object Instantiation Type", "Syntax Version" });
+        sections[1].Members.Select(member => member.Name).ShouldBe(new[]
+        {
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Resolves to",
+        });
+        sections[2].Members.Select(member => member.Name).ShouldBe(new[]
+        {
+            "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Project-wide Using Statements",
+        });
+    }
+
+    [Fact]
+    public void BuildProjectSections_PutsLegacyOnlyRowsInACollapsedFourthSection()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.XamarinForms };
+
+        List<MemberCategory> sections = _sut.BuildProjectSections();
+
+        MemberCategory legacy = sections.Last();
+        sections.Count.ShouldBe(4);
+        legacy.Name.ShouldStartWith("Legacy");
+        legacy.IsExpanded.ShouldBeFalse();
+        legacy.Members.Select(member => member.Name).ShouldContain("Adjust Pixel Values for Density");
+        sections.Take(3).SelectMany(section => section.Members).Select(member => member.Name)
+            .ShouldNotContain("Adjust Pixel Values for Density");
+    }
+
+    [Theory]
+    [InlineData(OutputLibrary.GumForms)]
+    [InlineData(OutputLibrary.XamarinForms)]
+    public void BuildProjectSections_GivesEveryRowAOneLineHintAndTheWideLabelColumn(OutputLibrary library)
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = library };
+
+        foreach (InstanceMember member in _sut.BuildProjectSections().SelectMany(section => section.Members))
+        {
+            member.DetailText.ShouldNotBeNullOrWhiteSpace(member.Name + " has no hint");
+            member.DetailText!.ShouldNotContain("\n", customMessage: member.Name + " hint is not one line");
+            member.DetailText.ShouldNotBe(member.Name);
+            member.FirstGridLength.ShouldBe(202, member.Name);
+            member.IsSpaciousRow.ShouldBeTrue(member.Name);
+        }
+    }
+
+    [Fact]
+    public void ObjectInstantiationType_ShowsTheExperimentalNoteAsAWarning_OnlyForFullyInCodeGumForms()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.GumForms, ObjectInstantiationType = ObjectInstantiationType.FullyInCode,
+        };
+        _sut.BuildProjectSections().SelectMany(section => section.Members)
+            .Single(member => member.Name == "Object Instantiation Type").WarningText.ShouldNotBeNullOrEmpty();
+
+        _sut.ProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
+        _sut.BuildProjectSections().SelectMany(section => section.Members)
+            .Single(member => member.Name == "Object Instantiation Type").WarningText.ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void ResolvesTo_ShowsBothFoldersForAScreenAndAComponent_AndFollowsAnEdit()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.GumForms, CodeProjectRoot = "Code/", GeneratedCodeFolder = "Gen", CustomCodeFolder = "Mine",
+            GeneratedCodeFolderPrefix = "Gum",
+        };
+        List<InstanceMember> members = _sut.BuildProjectSections().SelectMany(section => section.Members).ToList();
+        InstanceMember resolves = members.Single(member => member.Name == "Resolves to");
+        int changes = 0;
+        resolves.PropertyChanged += (_, args) => { if (args.PropertyName == "Value") { changes++; } };
+
+        string text = (string)resolves.Value!;
+
+        text.Split('\n').ShouldBe(new[]
+        {
+            "Screens →     Gen/GumScreens/MyScreen.Generated.cs",
+            "              Mine/GumScreens/MyScreen.cs",
+            "Components →  Gen/GumComponents/MyComponent.Generated.cs",
+            "              Mine/GumComponents/MyComponent.cs",
+        });
+        members.Single(member => member.Name == "Custom Code Folder").SetValue("", SetPropertyCommitType.Full);
+        changes.ShouldBeGreaterThan(0);
+        ((string)resolves.Value!).ShouldContain("Gen/GumScreens/MyScreen.cs");
+    }
+
+    [Fact]
+    public void ProjectRows_ExposeLabelAndHintAsSearchTerms()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms };
+
+        IEnumerable<string> terms = _sut.BuildProjectSections().SelectMany(section => section.Members)
+            .SelectMany(member => new[] { member.Name, member.DetailText ?? "" });
+
+        terms.ShouldContain("Custom Code Folder");
+        terms.ShouldContain(term => term.Contains("Files you edit"));
     }
 
     [Fact]
@@ -73,8 +180,9 @@ public class CodeOutputSettingsMembersTests
         category.Name.ShouldBe("Project-Wide Code Generation");
         category.Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
-            "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Syntax Version",
+            "Output Library", "Object Instantiation Type", "Syntax Version",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix",
+            "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Project-wide Using Statements",
         });
     }
 

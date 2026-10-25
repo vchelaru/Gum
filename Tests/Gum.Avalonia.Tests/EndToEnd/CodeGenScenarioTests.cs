@@ -48,7 +48,7 @@ public class CodeGenScenarioTests
         File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "ProjectCodeSettings.codsj")).ShouldContain("\"CodeProjectRoot\": \"Code");
         code.Project.Dialogs.Messages.Last().ShouldContain("Card.Generated.cs");
 
-        code.PickComboItem("Object Instantiation Type", "Fully in Code (no loaded Gum Project)");
+        code.PickComboItem("Object Instantiation Type", "Fully in Code");
         // The Gum Forms files are left at paths SkiaSharp names differently, so the tool offers to
         // migrate them; this scenario is about generation, so it declines.
         code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
@@ -325,7 +325,7 @@ public class CodeGenScenarioTests
         code.Project.AddInstance(menu, "Greeting", "Label");
         code.Tree.SaveAll();
         code.Select(menu);
-        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.SetUpManualGeneration(instantiation: "Fully in Code");
         code.ClickGenerate();
         File.ReadAllText(code.CodeFile("Screens/Menu.Generated.cs")).ShouldNotContain("Greeting.ApplyLocalization();");
 
@@ -404,7 +404,7 @@ public class CodeGenScenarioTests
         ComponentSave card = code.Project.AddComponent("Card");
         code.Tree.SaveAll();
         code.Select(card);
-        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.SetUpManualGeneration(instantiation: "Fully in Code");
         code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
         string file = code.CodeFile("Components/Card.Generated.cs");
 

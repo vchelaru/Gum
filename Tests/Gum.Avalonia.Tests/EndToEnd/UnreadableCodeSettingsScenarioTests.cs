@@ -178,7 +178,7 @@ public class UnreadableCodeSettingsScenarioTests
         ComponentSave card = code.Project.AddComponent("Card");
         code.Tree.SaveAll();
         code.Select(card);
-        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.SetUpManualGeneration(instantiation: "Fully in Code");
         code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
         if (Directory.Exists(code.CodeFolder))
         {
@@ -208,7 +208,7 @@ public class UnreadableCodeSettingsScenarioTests
         code.Tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Components/Style.Width");
         code.Tree.SaveAll();
         // Button follows Style, so a Style edit reaches it through the reference.
-        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.SetUpManualGeneration(instantiation: "Fully in Code");
         code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
         string buttonCode = code.CodeFile("Components/Button.Generated.cs");
         // The tool's startup sends a reference-driven change to the plugins; the test host does not wire it.
@@ -246,7 +246,7 @@ public class UnreadableCodeSettingsScenarioTests
         code.Select(button);
         code.Tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Components/Style.Width");
         code.Tree.SaveAll();
-        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.SetUpManualGeneration(instantiation: "Fully in Code");
         code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
         DeleteCodeFolder(code);
         code.Select(style);
@@ -331,7 +331,7 @@ public class UnreadableCodeSettingsScenarioTests
         code.Select(button);
         code.Tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Components/Style.Width");
         code.Tree.SaveAll();
-        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.SetUpManualGeneration(instantiation: "Fully in Code");
         code.PickComboItem("Generation Behavior", "GenerateAutomaticallyOnPropertyChange");
         return (style, button, code.CodeFile("Components/Button.Generated.cs"), File.ReadAllText(SettingsFile(code)));
     }
@@ -378,7 +378,7 @@ public class UnreadableCodeSettingsScenarioTests
         ComponentSave card = code.Project.AddComponent("Card");
         code.Tree.SaveAll();
         code.Select(card);
-        code.SetUpManualGeneration(instantiation: "Fully in Code (no loaded Gum Project)");
+        code.SetUpManualGeneration(instantiation: "Fully in Code");
         code.ViewModel.InheritanceLocation = Gum.ProjectServices.CodeGeneration.InheritanceLocation.InCustomCode;
         code.ClickGenerate();
         string customFile = code.CodeFile("Components/Card.cs");

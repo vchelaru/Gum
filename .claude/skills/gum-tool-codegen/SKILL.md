@@ -36,6 +36,8 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 **Project-level:** `ProjectCodeSettings.codsj` alongside the `.gumx`. Managed by `CodeOutputProjectSettingsManager`. Key settings: `OutputLibrary`, `CodeProjectRoot`, `GeneratedCodeFolder`, `GeneratedCodeFolderPrefix`, `CustomCodeFolder` (optional, relative to `CodeProjectRoot`; empty keeps the custom `.cs` beside the `.Generated.cs`), `RootNamespace`, `ObjectInstantiationType`, `InheritanceLocation`, `AppendFolderToNamespace`. Syntax and C# version detection read the csproj from `CodeProjectCsprojLocator.FindCsproj`: `CsprojPath` when set (no fallback if missing), else the csproj in `CodeProjectRoot`.
 
+**Settings page:** `CodeOutputSettingsMembers.BuildProjectSections` builds the Code generation page as Output / Locations / Namespaces and usings sections (plus a collapsed Legacy one). Every row needs a one-line `DetailText` hint (label + hint are its search terms), a warning is `IsDetailTextWarning`, and the 190px label column is set per member (`FirstGridLength`), never on the shared `DataUiGrid`. Design language: `Direction/settings-design/README.md`.
+
 **Element-level:** `ElementName.codsj` alongside the `.gucx`/`.gusx`. Managed by `CodeOutputElementSettingsManager`. Key settings: `GenerationBehavior`, namespace override, custom output path.
 
 ## Key Enums

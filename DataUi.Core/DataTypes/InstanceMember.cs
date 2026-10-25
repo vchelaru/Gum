@@ -386,6 +386,57 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        bool isSpaciousRow;
+        /// <summary>
+        /// Opts the row into the roomier Settings look: padding and a divider around the row, taller fields,
+        /// a larger hint aligned with the field, and a callout for a warning. Off for every other grid.
+        /// </summary>
+        public bool IsSpaciousRow
+        {
+            get => isSpaciousRow;
+            set
+            {
+                if (isSpaciousRow != value)
+                {
+                    isSpaciousRow = value;
+                    OnPropertyChanged(nameof(IsSpaciousRow));
+                }
+            }
+        }
+
+        string? warningText;
+        /// <summary>
+        /// A caveat the user could get wrong by ignoring (a file move, an experimental mode), which a spacious
+        /// row draws as a callout under its hint instead of a muted line. Null or empty shows none.
+        /// </summary>
+        public string? WarningText
+        {
+            get => warningText;
+            set
+            {
+                if (warningText != value)
+                {
+                    warningText = value;
+                    OnPropertyChanged(nameof(WarningText));
+                }
+            }
+        }
+
+        string? chipText;
+        /// <summary>A short note drawn as a small chip beside a read-only value, such as where it was detected from.</summary>
+        public string? ChipText
+        {
+            get => chipText;
+            set
+            {
+                if (chipText != value)
+                {
+                    chipText = value;
+                    OnPropertyChanged(nameof(ChipText));
+                }
+            }
+        }
+
         DetailTextLink? detailLink;
         /// <summary>The part of <see cref="DetailText"/> shown as a clickable link, or null.</summary>
         public DetailTextLink? DetailLink
