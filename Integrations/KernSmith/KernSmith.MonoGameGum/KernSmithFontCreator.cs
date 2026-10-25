@@ -7,6 +7,7 @@ using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ToolsUtilities;
 
 namespace KernSmith.Gum;
@@ -20,16 +21,24 @@ public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator, 
     private readonly GraphicsDevice _graphicsDevice;
     private readonly RasterizerBackend? _backend;
 
-    // Growth bookkeeping (issue #4535 Phase 2), keyed by BmfcSave.FontCacheFileName -- the same
-    // identity TryCreateFont already names its textures after. Populated by TryCreateFont so
-    // TryAddGlyphs can resume growth against the exact font this creator generated. A font with no
-    // FontFile (a system font) never gets an entry: incremental sessions require font file bytes.
-    private readonly Dictionary<string, BmFontModel> _growableModels = new();
+    // Growth bookkeeping (issue #4535 Phase 2), keyed by the font object itself. Populated by
+    // TryCreateFont so TryAddGlyphs can resume growth against the exact font this creator generated.
+    // Not keyed by BmfcSave.FontCacheFileName: a native font and an oversampled font at the same raster
+    // size share a cache name but are separate atlases (#6811). A font with no FontFile (a system font)
+    // never gets an entry: incremental sessions require font file bytes.
+    private readonly ConditionalWeakTable<BitmapFont, GrowthState> _growthStates = new();
 
-    // Sessions are created lazily on first TryAddGlyphs call per font identity, not eagerly in
-    // TryCreateFont -- matches KernSmith's documented usage (create on first miss, keep for the
-    // rest of the run) and avoids paying a session's rasterizer/parse cost for fonts that never grow.
-    private readonly Dictionary<string, BmFontIncrementalSession> _activeSessions = new();
+    private sealed class GrowthState
+    {
+        public GrowthState(BmFontModel model) => Model = model;
+
+        public BmFontModel Model { get; }
+
+        // Created lazily on the first TryAddGlyphs call, not eagerly in TryCreateFont -- matches
+        // KernSmith's documented usage (create on first miss, keep for the rest of the run) and avoids
+        // paying a session's rasterizer/parse cost for fonts that never grow.
+        public BmFontIncrementalSession? Session { get; set; }
+    }
 
     /// <summary>
     /// Initializes a new instance of <see cref="KernSmithFontCreator"/>.
@@ -185,7 +194,7 @@ public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator, 
         // nothing growable to remember for them.
         if (!string.IsNullOrEmpty(bmfcSave.FontFile) && !bmfcSave.HasDropshadow)
         {
-            _growableModels[bmfcSave.FontCacheFileName] = result.Model;
+            _growthStates.Add(bitmapFont, new GrowthState(result.Model));
         }
 
         return bitmapFont;
@@ -209,19 +218,14 @@ public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator, 
     /// </returns>
     public GlyphAdditionResult? TryAddGlyphs(BitmapFont font, BmfcSave bmfcSave, string characters)
     {
-        string key = bmfcSave.FontCacheFileName;
-        if (!_growableModels.TryGetValue(key, out BmFontModel? model))
+        if (!_growthStates.TryGetValue(font, out GrowthState? state))
         {
             return null;
         }
 
-        if (!_activeSessions.TryGetValue(key, out BmFontIncrementalSession? session))
-        {
-            session = GumFontGenerator.ResumeIncremental(bmfcSave, model, backend: _backend);
-            _activeSessions[key] = session;
-        }
+        state.Session ??= GumFontGenerator.ResumeIncremental(bmfcSave, state.Model, backend: _backend);
 
-        GlyphAdditionResult result = session.AddGlyphs(characters);
+        GlyphAdditionResult result = state.Session.AddGlyphs(characters);
 
         if (result.Added.Count > 0)
         {

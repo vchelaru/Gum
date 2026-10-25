@@ -1,4 +1,6 @@
 using KernSmith.Gum;
+using RaylibGum.Helpers;
+using System;
 using RenderingLibrary;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
@@ -113,5 +115,27 @@ public class KernSmithRaylibFontCreatorTests : BaseTestClass
 
         font.ShouldNotBeNull();
         RaylibFontShadowRegistry.TryGet(font!.Value.Texture.Id, out _).ShouldBeFalse();
+    }
+
+    // Issue #6811: two fonts can share a FontCacheFileName (a native font and an oversampled one at the
+    // same raster size, which differ only in atlas size). Growing one must not touch the other's growth state.
+    [Fact]
+    public void TryAddGlyphs_TwoFontsWithTheSameCacheName_GrowIndependently()
+    {
+        KernSmithRaylibFontCreator creator = new KernSmithRaylibFontCreator();
+        string fontPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "Orbitron-Black.ttf");
+        BmfcSave nativeSave = new BmfcSave { FontFile = fontPath, FontSize = 40, Ranges = "65", OutputWidth = 512, OutputHeight = 512 };
+        BmfcSave oversampledSave = new BmfcSave { FontFile = fontPath, FontSize = 40, Ranges = "65", OutputWidth = 4096, OutputHeight = 4096 };
+        nativeSave.FontCacheFileName.ShouldBe(oversampledSave.FontCacheFileName);
+        Raylib_cs.Font nativeFont = creator.TryCreateFont(nativeSave)!.Value;
+        Raylib_cs.Font oversampledFont = creator.TryCreateFont(oversampledSave)!.Value;
+        uint nativeTextureId = nativeFont.Texture.Id;
+
+        creator.TryAddGlyphs(ref oversampledFont, oversampledSave, "B");
+        creator.TryAddGlyphs(ref nativeFont, nativeSave, "B");
+
+        nativeFont.Texture.Id.ShouldBe(nativeTextureId, "because growing a font must not swap in another font");
+        nativeFont.HasCharacter('B').ShouldBeTrue();
+        oversampledFont.HasCharacter('B').ShouldBeTrue();
     }
 }
