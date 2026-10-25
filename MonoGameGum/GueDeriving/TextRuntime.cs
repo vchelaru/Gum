@@ -769,10 +769,10 @@ public class TextRuntime : InteractiveGue
         bmfcSave.OutputHeight = MaxInMemoryFontAtlasSize;
 
 #if XNALIKE
-        BitmapFont? font;
+        BitmapFont? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
         try
         {
-            font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+            font ??= CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
         }
         catch (Exception ex)
         {
@@ -794,6 +794,7 @@ public class TextRuntime : InteractiveGue
         // nothing about characters grown in at runtime, so replay this Text's own growth history into
         // it before it becomes live, or continuous zooming would silently drop them on every regenerate.
         ReplayGrownCharacters(font, bmfcSave);
+        UseSharedOversampledFont(bmfcSave.FontCacheFileName, font);
 
         // Issue #4309: pins the OUTGOING (native) font as the measurement source, if nothing is pinned
         // yet, before swapping in this new (oversampled) display font -- see Text.SetOversampledDisplayFont.
@@ -823,10 +824,10 @@ public class TextRuntime : InteractiveGue
         // Raylib parity for #4317 (issue #4330): same shape as the XNALIKE branch above, but against
         // Raylib_cs.Font (a live GPU-resident font, not a BitmapFont) -- see IRaylibFontCreator and
         // Text.SetOversampledDisplayFont/MeasureLinesWidth (Runtimes/RaylibGum/Renderables/Text.cs).
-        Raylib_cs.Font? font;
+        Raylib_cs.Font? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
         try
         {
-            font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+            font ??= CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
         }
         catch (Exception ex)
         {
@@ -847,6 +848,7 @@ public class TextRuntime : InteractiveGue
         Font replayedFont = font.Value;
         ReplayGrownCharacters(ref replayedFont, bmfcSave);
         font = replayedFont;
+        UseSharedOversampledFont(bmfcSave.FontCacheFileName, replayedFont);
 
         ContainedText.SetOversampledDisplayFont(font.Value);
 
@@ -965,7 +967,90 @@ public class TextRuntime : InteractiveGue
     /// stale (issue #4317). <see cref="Text.OversampleCompensationScale"/> itself is reset by the
     /// caller directly, since it lives on the renderable that caller already has a reference to.
     /// </summary>
-    internal void ResetAutomaticOversamplingState() => _lastAutoOversampleRatio = 1f;
+    internal void ResetAutomaticOversamplingState()
+    {
+        _lastAutoOversampleRatio = 1f;
+        // The caller is about to put this text back on its native font.
+        ReleaseSharedOversampledFont();
+    }
+
+    sealed class SharedOversampledFont
+    {
+        public string Key = null!;
+        public object? Creator;
+#if XNALIKE
+        public BitmapFont Font = null!;
+#else
+        public Raylib_cs.Font Font;
+#endif
+        public int UserCount;
+    }
+
+    // Issue #6810: oversampled fonts in use, keyed by BmfcSave.FontCacheFileName, so texts asking for the
+    // same font at the same raster size share one generation instead of each building its own. A font
+    // leaves the map when the last text using it moves to another raster size or back to its native
+    // font, so continuous zooming does not keep every size alive. Leaving the map never disposes the
+    // font: oversampled fonts were never disposed before sharing either.
+    static readonly Dictionary<string, SharedOversampledFont> _sharedOversampledFonts = new(StringComparer.OrdinalIgnoreCase);
+
+    SharedOversampledFont? _sharedOversampledFont;
+
+#if XNALIKE
+    static BitmapFont? FindSharedOversampledFont(string key)
+#else
+    static Raylib_cs.Font? FindSharedOversampledFont(string key)
+#endif
+    {
+        // A font made by a creator that has since been replaced is not reused.
+        if (_sharedOversampledFonts.TryGetValue(key, out SharedOversampledFont? shared)
+            && shared.Creator == CustomSetPropertyOnRenderableType.InMemoryFontCreator)
+        {
+            return shared.Font;
+        }
+        return null;
+    }
+
+#if XNALIKE
+    void UseSharedOversampledFont(string key, BitmapFont font)
+#else
+    void UseSharedOversampledFont(string key, Raylib_cs.Font font)
+#endif
+    {
+        object? creator = CustomSetPropertyOnRenderableType.InMemoryFontCreator;
+        if (!_sharedOversampledFonts.TryGetValue(key, out SharedOversampledFont? shared) || shared.Creator != creator)
+        {
+            shared = new SharedOversampledFont { Key = key, Creator = creator };
+            _sharedOversampledFonts[key] = shared;
+        }
+        // On Raylib, growth hands back an updated copy of the font, so keep the latest one.
+        shared.Font = font;
+
+        if (_sharedOversampledFont == shared)
+        {
+            return;
+        }
+        ReleaseSharedOversampledFont();
+        shared.UserCount++;
+        _sharedOversampledFont = shared;
+    }
+
+    void ReleaseSharedOversampledFont()
+    {
+        SharedOversampledFont? shared = _sharedOversampledFont;
+        if (shared == null)
+        {
+            return;
+        }
+        _sharedOversampledFont = null;
+        shared.UserCount--;
+        // The map may already hold a newer entry under this key, made after the creator changed.
+        if (shared.UserCount <= 0
+            && _sharedOversampledFonts.TryGetValue(shared.Key, out SharedOversampledFont? current)
+            && current == shared)
+        {
+            _sharedOversampledFonts.Remove(shared.Key);
+        }
+    }
 #endif
 #endif
 
