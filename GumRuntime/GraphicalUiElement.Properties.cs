@@ -190,13 +190,16 @@ public partial class GraphicalUiElement
                         null);
                 }
 
-                if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid() || GetIfParentWidthHeightDependOnChildren()))
+                // A hidden or suspended element skips its own layout, so its climb never reaches the parent,
+                // which still has to re-measure for the changed contribution (#6749). Update the parent directly.
+                // A visible element that is not suspended already reached Ratio siblings through the climb above.
+                // #3066: gate the climb on the parent's size delta so a toggle that doesn't change the item's
+                // size doesn't relayout every sibling in a stacking parent.
+                if ((!absoluteVisible || mIsLayoutSuspended) &&
+                    (GetIfParentStacks() || GetIfParentIsAutoGrid() || GetIfParentWidthHeightDependOnChildren() ||
+                        (mIsLayoutSuspended && GetIfParentHasRatioChildren())))
                 {
-                    // This updates the parent right away. #3066: gate the climb on the parent's size
-                    // delta so hiding a descendant that doesn't change the item's size doesn't relayout
-                    // every sibling in a stacking parent.
                     Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null, gateClimbOnSizeChange: true);
-
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
                 ReportTypedPropertyChanged("Visible", value);
@@ -483,7 +486,26 @@ public partial class GraphicalUiElement
                 // Runs for every removal path (Parent = null, RemoveChild, Children.Remove/Clear).
                 // A suspended parent only records the layout as dirty.
                 oldParent?.UpdateLayoutAfterChildRemoved();
-                UpdateLayout();
+
+                // An append to a stack cannot change the children before it (#6702).
+                var stackAppendedTo = value != null && value.CanSkipChildrenBeforeAppend() &&
+                    value.Children.Count > 1 && value.Children[value.Children.Count - 1] == this
+                    ? value : null;
+                if (stackAppendedTo != null)
+                {
+                    stackAppendedTo._firstAppendedIndex = stackAppendedTo.Children.Count - 1;
+                }
+                try
+                {
+                    UpdateLayout();
+                }
+                finally
+                {
+                    if (stackAppendedTo != null)
+                    {
+                        stackAppendedTo._firstAppendedIndex = -1;
+                    }
+                }
                 ParentChanged?.Invoke(this, new ParentChangedEventArgs()
                 {
                     OldValue = oldParent,

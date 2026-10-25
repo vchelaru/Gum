@@ -150,6 +150,19 @@ public static class Retro95Theme
 
     internal static void RegisterVisuals()
     {
+        // Every MenuItem's submenu popup (#6741). Set on each Apply so switching themes replaces it;
+        // a MenuItem's own ScrollViewerVisualTemplate still wins.
+        // Use the dedicated menu-popup visual (raised + gray surface) rather than
+        // the regular ScrollViewerVisual (inset + white) — the inset-white look is
+        // right for a content scroll area but wrong for a Win95 drop-down menu.
+        MenuItem.DefaultSubmenuPopupTemplate = new VisualTemplate(() =>
+        {
+            Retro95MenuPopupVisual visual = new Retro95MenuPopupVisual(fullInstantiation: true, tryCreateFormsObject: false);
+            visual.HasEvents = true;
+            visual.MakeSizedToChildren();
+            return visual;
+        });
+
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
         FrameworkElement.DefaultFormsTemplates[typeof(Thumb)] =

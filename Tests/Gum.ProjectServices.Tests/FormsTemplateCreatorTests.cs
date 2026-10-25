@@ -255,7 +255,8 @@ public class FormsTemplateCreatorTests : IDisposable
             StateSaveCategory? category = component.Categories.FirstOrDefault(c => c.Name == "ColorCategory");
             category.ShouldNotBeNull($"{elementName} should own a local ColorCategory backing ColorCategoryState");
             category!.States.Select(s => s.Name).ShouldContain("Primary");
-            category.States.Count.ShouldBe(12);
+            // Icon also carries the ComboBox arrow's V3 shades (PrimaryDisabled/Highlighted/Pushed, #6754).
+            category.States.Count.ShouldBe(elementName == "Elements/Icon" ? 15 : 12, elementName);
         }
     }
 

@@ -48,6 +48,7 @@ public static class GumServiceTeardown
         FrameworkElement.MainKeyboard = null!;
 
         FrameworkElement.DefaultFormsTemplates.Clear();
+        MenuItem.DefaultSubmenuPopupTemplate = null;
         if (isLastService)
         {
 #pragma warning disable CS0618 // obsolete types and members still load from older projects

@@ -86,6 +86,19 @@ try {
     $name = 'NOTESTS prints the filter and the last lines of the output'
     if ($output -match 'NOTESTS' -and $output -match 'filter: FullyQualifiedName~A\.UntrackedTests\.' -and $output -match 'stub line 6569') { Write-Host "pass  $name" }
     else { Write-Host "FAIL  $name`n  output:`n    $($output -replace "`n", "`n    ")"; $failures++ }
+
+    # A failed test prints its whole message, including a Shouldly "because" past the expected/actual
+    # lines, but not its stack trace.
+    $failedRun = @(
+        '  Failed A.UntrackedTests.Fails [42 ms]', '  Error Message:', '   Shouldly.ShouldAssertException : 2', '    should be', '3',
+        '    but was', '2', '', '    Additional Info:', '    because 6724', '  Stack Trace:', '     at stack frame 6724',
+        'Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1')
+    Set-Content (Join-Path $scratch 'Tools/Invoke-Dotnet.ps1') ('function Invoke-Dotnet { param([string[]]$Command, [int]$TimeoutSeconds) @{ Output = @(' +
+        (($failedRun | ForEach-Object { "'$_'" }) -join ',') + '); Exit = 1; TimedOut = $false } }')
+    $output = (& pwsh -NoProfile -File (Join-Path $scratch 'Tools/fast-test.ps1') 'UntrackedTests' -NoBuild 2>&1 6>&1 | ForEach-Object { "$_" }) -join "`n"
+    $name = 'a failed test prints its whole message, including the because text, without the stack trace'
+    if ($output -match 'because 6724' -and $output -match 'Additional Info:' -and $output -notmatch 'stack frame 6724') { Write-Host "pass  $name" }
+    else { Write-Host "FAIL  $name`n  output:`n    $($output -replace "`n", "`n    ")"; $failures++ }
 }
 finally { Remove-Item -Recurse -Force $scratch -ErrorAction SilentlyContinue }
 

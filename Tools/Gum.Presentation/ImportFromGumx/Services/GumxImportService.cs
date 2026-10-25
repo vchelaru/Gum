@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -170,6 +171,29 @@ public class GumxImportService : IGumxImportService
         foreach (var element in skippedElements)
             result.SkippedElements.Add(element.Name);
 
+        bool IsWritten(ElementSave element) =>
+            !skippedElements.Contains(element)
+            && !(conflictResolution == ConflictResolution.Skip
+                && conflictNameSet.Contains(nameMap.TryGetValue(element.Name, out var destName) ? destName : element.Name));
+
+        // A component kept by Skip still gains the instances the imported elements read through
+        // VariableReferences and it lacks, such as a Styles swatch a newer control uses (#6755), and the
+        // category states they select on its instances, such as a new Icon color (#6764).
+        // Everything it already has stays as it is, since the user may have changed it. This runs
+        // before anything registers, so each element's error check already sees the added instances.
+        if (conflictResolution == ConflictResolution.Skip)
+        {
+            Dictionary<string, ComponentSave> keptComponents = selections.TransitiveComponents
+                .Concat(selections.DirectComponents)
+                .Where(c => !skippedElements.Contains(c) && !IsWritten(c))
+                .GroupBy(c => c.Name)
+                .ToDictionary(g => g.Key, g => g.First());
+            if (keptComponents.Count > 0)
+            {
+                AddMissingReferencedInstances(keptComponents, allCandidateElements.Where(IsWritten), projectDir, nameMap);
+            }
+        }
+
         // 1. Standards (always overwritten by design — see GumxImportServiceTests on standards)
         foreach (var standard in selections.Standards.Where(s => !skippedElements.Contains(s)))
             await WriteAndImportStandardAsync(standard, source, sourceBase, projectDir);
@@ -196,10 +220,6 @@ public class GumxImportService : IGumxImportService
 
         // 7. Copy sibling .ganx (state animation) files for each imported element. A conflicting
         // element left alone by Skip keeps its own animations too.
-        bool IsWritten(ElementSave element) =>
-            !skippedElements.Contains(element)
-            && !(conflictResolution == ConflictResolution.Skip
-                && conflictNameSet.Contains(nameMap.TryGetValue(element.Name, out var destName) ? destName : element.Name));
         var allComponents = selections.TransitiveComponents.Cast<ElementSave>()
             .Concat(selections.DirectComponents)
             .Where(IsWritten);
@@ -607,6 +627,263 @@ public class GumxImportService : IGumxImportService
         else
         {
             _importLogic.ImportComponent(clone, saveProject: false);
+        }
+    }
+
+    // "Components/Folder/Name.Instance.Variable": group 1 is the component's name, group 2 the path after it.
+    private static readonly Regex ComponentReferencePathRegex = new(@"(?<![\w./])Components/([\w/]+)((?:\.\w+)+)");
+
+    // "Instance.Variable" read from the line's own element.
+    private static readonly Regex LocalReferencePathRegex = new(@"(?<![\w./:])([A-Za-z_]\w*(?:\.\w+)+)");
+
+    /// <summary>
+    /// Adds to the destination copy of each kept component the instances that <paramref name="readers"/>
+    /// read through VariableReferences and it lacks. Each added instance brings its values from every
+    /// state the destination also has, the parent it is attached to, and whatever its own
+    /// VariableReferences read. A path through an instance of another kept component
+    /// (<c>Components/Panel.Inner.Deep.X</c>) adds what that component lacks too. Existing instances and
+    /// values are never changed; a reference to something the source lacks too is left for GUM0009.
+    /// Category states the readers select on a kept component and it lacks are added the same way.
+    /// </summary>
+    private void AddMissingReferencedInstances(
+        Dictionary<string, ComponentSave> keptComponents,
+        IEnumerable<ElementSave> readers,
+        string projectDir,
+        Dictionary<string, string> nameMap)
+    {
+        var destinations = new Dictionary<ComponentSave, ComponentSave?>();
+        var added = new Dictionary<ComponentSave, List<InstanceSave>>();
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+        var pending = new Queue<(ComponentSave Owner, string[] Path)>();
+
+        // Reader lines still use source names: the remap to a subfolder happens on their clones.
+        void EnqueueReferences(IEnumerable<StateSave> states, Func<VariableListSave, bool> isReferenceList, ComponentSave? localOwner)
+        {
+            foreach (string line in states
+                .SelectMany(state => state.VariableLists)
+                .Where(isReferenceList)
+                .SelectMany(list => list.ValueAsIList.OfType<string>()))
+            {
+                int equalsIndex = line.IndexOf('=');
+                if (equalsIndex < 0) { continue; }
+                string right = line.Substring(equalsIndex + 1);
+
+                foreach (Match match in ComponentReferencePathRegex.Matches(right))
+                {
+                    if (keptComponents.TryGetValue(match.Groups[1].Value, out var owner))
+                    {
+                        pending.Enqueue((owner, match.Groups[2].Value.Substring(1).Split('.')));
+                    }
+                }
+                if (localOwner != null)
+                {
+                    foreach (Match match in LocalReferencePathRegex.Matches(ComponentReferencePathRegex.Replace(right, " ")))
+                    {
+                        pending.Enqueue((localOwner, match.Groups[1].Value.Split('.')));
+                    }
+                }
+            }
+        }
+
+        ComponentSave? GetDestination(ComponentSave owner)
+        {
+            if (!destinations.TryGetValue(owner, out var destination))
+            {
+                destination = TryReadElement<ComponentSave>(DestinationComponentPath(owner, projectDir, nameMap));
+                destinations[owner] = destination;
+            }
+            return destination;
+        }
+
+        List<ElementSave> readerList = readers.ToList();
+        EnqueueReferences(readerList.SelectMany(element => element.AllStates),
+            list => list.GetRootName() == "VariableReferences", localOwner: null);
+
+        // Source elements by name, to walk instance paths and base types.
+        var sourceElements = new Dictionary<string, ElementSave>(StringComparer.Ordinal);
+        foreach (ElementSave element in readerList.Concat(keptComponents.Values))
+        {
+            sourceElements.TryAdd(element.Name, element);
+        }
+
+        // The kept component that defines the category, found on the type or up its base types.
+        ComponentSave? FindCategoryOwner(string? typeName, string categoryName)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            while (typeName != null && seen.Add(typeName) && sourceElements.TryGetValue(typeName, out var element))
+            {
+                if (element.Categories.Any(c => c.Name == categoryName))
+                {
+                    return keptComponents.TryGetValue(typeName, out var kept) ? kept : null;
+                }
+                typeName = element.BaseType;
+            }
+            return null;
+        }
+
+        // Category states the readers select on a kept component ("Icon.ColorCategoryState = Primary"
+        // on an instance, a nested "Panel.Icon.ColorCategoryState", or "ColorCategoryState" on a derived
+        // element) and it lacks (#6764). Each added state's own references and the instances its
+        // variables set are queued, so the swatches it reads and the instances it sets come back too.
+        var addedStates = new Dictionary<ComponentSave, List<(StateSaveCategory Category, StateSave State)>>();
+        foreach (ElementSave reader in readerList)
+        {
+            foreach (VariableSave variable in reader.AllStates.SelectMany(state => state.Variables))
+            {
+                string[] parts = variable.Name.Split('.');
+                string leaf = parts[^1];
+                if (variable.Value is not string stateName || leaf.Length <= "State".Length
+                    || !leaf.EndsWith("State", StringComparison.Ordinal)) { continue; }
+
+                string? typeName = reader.BaseType;
+                ElementSave? current = reader;
+                for (int i = 0; i < parts.Length - 1 && current != null; i++)
+                {
+                    typeName = current.GetInstance(parts[i])?.BaseType;
+                    current = typeName != null && sourceElements.TryGetValue(typeName, out var next) ? next : null;
+                }
+                string categoryName = leaf.Substring(0, leaf.Length - "State".Length);
+                if (FindCategoryOwner(typeName, categoryName) is not { } owner) { continue; }
+                StateSaveCategory category = owner.Categories.First(c => c.Name == categoryName);
+                if (category.States.FirstOrDefault(s => s.Name == stateName) is not { } state) { continue; }
+                if (GetDestination(owner) is not { } stateDestination) { continue; }
+                if (stateDestination.Categories.FirstOrDefault(c => c.Name == categoryName)?.States
+                    .Any(s => s.Name == stateName) == true) { continue; }
+
+                if (!addedStates.TryGetValue(owner, out var statesForOwner))
+                {
+                    addedStates[owner] = statesForOwner = new List<(StateSaveCategory, StateSave)>();
+                }
+                if (statesForOwner.Any(pair => pair.State == state)) { continue; }
+                statesForOwner.Add((category, state));
+                EnqueueReferences(new[] { state }, list => list.GetRootName() == "VariableReferences", localOwner: owner);
+                foreach (string? sourceObject in state.Variables.Select(v => v.SourceObject)
+                    .Concat(state.VariableLists.Select(l => VariableSave.GetSourceObject(l.Name))).Distinct())
+                {
+                    if (sourceObject != null)
+                    {
+                        pending.Enqueue((owner, new[] { sourceObject }));
+                    }
+                }
+            }
+        }
+
+        while (pending.Count > 0)
+        {
+            var (owner, path) = pending.Dequeue();
+            if (!visited.Add(owner.Name + "|" + string.Join(".", path))) { continue; }
+            if (owner.GetInstance(path[0]) is not { } instance) { continue; }
+
+            if (GetDestination(owner) is not { } destination) { continue; }
+
+            if (!added.TryGetValue(owner, out var addedToOwner))
+            {
+                added[owner] = addedToOwner = new List<InstanceSave>();
+            }
+            if (destination.GetInstance(instance.Name) == null && !addedToOwner.Contains(instance))
+            {
+                addedToOwner.Add(instance);
+                string prefix = instance.Name + ".";
+                if (owner.DefaultState?.Variables.FirstOrDefault(v => v.Name == prefix + "Parent")?.Value is string parent
+                    && parent.Length > 0)
+                {
+                    pending.Enqueue((owner, new[] { parent.Split('.')[0] }));
+                }
+                EnqueueReferences(owner.AllStates, list => list.Name == prefix + "VariableReferences", localOwner: owner);
+            }
+
+            // Inner.Deep.X: Deep lives in Inner's component, which may be kept too.
+            if (path.Length > 2 && instance.BaseType != null && keptComponents.TryGetValue(instance.BaseType, out var inner))
+            {
+                pending.Enqueue((inner, path.Skip(1).ToArray()));
+            }
+        }
+
+        var changedOwners = added.Where(pair => pair.Value.Count > 0).Select(pair => pair.Key)
+            .Concat(addedStates.Keys)
+            .Distinct();
+        foreach (ComponentSave owner in changedOwners)
+        {
+            ComponentSave destination = destinations[owner]!;
+            string destName = nameMap.TryGetValue(owner.Name, out var mapped) ? mapped : owner.Name;
+            ComponentSave? inMemory = _projectState.GumProjectSave?.Components.FirstOrDefault(c => c.Name == destName);
+            foreach (ComponentSave target in new[] { destination, inMemory }.OfType<ComponentSave>())
+            {
+                // States first, so an instance added below also gets its values in them.
+                if (addedStates.TryGetValue(owner, out var states))
+                {
+                    AddCategoryStates(states, target);
+                }
+                if (added.TryGetValue(owner, out var instances))
+                {
+                    AddInstances(owner, instances, target, nameMap);
+                }
+            }
+            WriteElementToDisk(destination, DestinationComponentPath(owner, projectDir, nameMap));
+        }
+    }
+
+    // Copies each state into the target's category of the same name, creating the category when the
+    // target lacks it. A category the target lacks gets only these states, not the source's others.
+    private static void AddCategoryStates(List<(StateSaveCategory Category, StateSave State)> states, ComponentSave target)
+    {
+        foreach (var (category, state) in states)
+        {
+            StateSaveCategory? targetCategory = target.Categories.FirstOrDefault(c => c.Name == category.Name);
+            if (targetCategory == null)
+            {
+                targetCategory = new StateSaveCategory { Name = category.Name };
+                target.Categories.Add(targetCategory);
+            }
+            if (targetCategory.States.Any(s => s.Name == state.Name)) { continue; }
+
+            StateSave copy = state.Clone();
+            copy.ParentContainer = target;
+            targetCategory.States.Add(copy);
+        }
+    }
+
+    private string DestinationComponentPath(ComponentSave source, string projectDir, Dictionary<string, string> nameMap)
+    {
+        string destName = nameMap.TryGetValue(source.Name, out var mapped) ? mapped : source.Name;
+        return Path.Combine(projectDir, "Components", destName + "." + ComponentExtension(IsDestinationJsonFormat));
+    }
+
+    // Copies each instance and its values into the target's matching states. A category or state the
+    // target lacks is not created.
+    private static void AddInstances(ComponentSave source, List<InstanceSave> instances, ComponentSave target,
+        Dictionary<string, string> nameMap)
+    {
+        var statePairs = new List<(StateSave From, StateSave? To)>();
+        statePairs.AddRange(source.States.Select(state => (state, target.States.FirstOrDefault(s => s.Name == state.Name))));
+        foreach (var category in source.Categories)
+        {
+            var targetCategory = target.Categories.FirstOrDefault(c => c.Name == category.Name);
+            statePairs.AddRange(category.States.Select(state =>
+                (state, targetCategory?.States.FirstOrDefault(s => s.Name == state.Name))));
+        }
+
+        foreach (InstanceSave instance in instances.Where(i => target.GetInstance(i.Name) == null))
+        {
+            InstanceSave copy = instance.Clone();
+            copy.ParentContainer = target;
+            if (copy.BaseType != null && nameMap.TryGetValue(copy.BaseType, out var newBase))
+            {
+                copy.BaseType = newBase;
+            }
+            target.Instances.Add(copy);
+
+            string prefix = instance.Name + ".";
+            foreach (var (from, to) in statePairs)
+            {
+                if (to == null) { continue; }
+                to.Variables.AddRange(from.Variables
+                    .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal) && to.Variables.All(t => t.Name != v.Name))
+                    .Select(v => v.Clone()));
+                to.VariableLists.AddRange(from.VariableLists
+                    .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal) && to.VariableLists.All(t => t.Name != v.Name))
+                    .Select(v => v.Clone()));
+            }
         }
     }
 

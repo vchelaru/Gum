@@ -62,7 +62,7 @@
       <Value xsi:type="xsd:int">232</Value>
     </Variable>
     <Variable Type="float" Name="BottomSeparator.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="BottomSeparator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -101,7 +101,7 @@
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
     </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
@@ -113,7 +113,7 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="InnerPanelInstance.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="float" Name="InnerPanelInstance.StackSpacing" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -137,11 +137,12 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="VerticalAlignment" Name="InnerPanelInstance.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="PositionUnitType" Name="InnerPanelInstance.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">7</Value>
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <Variable Type="MenuCategory" Name="MenuCategoryState" SetsValue="true" />
     <Variable Type="float?" Name="MinHeight" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
     </Variable>
@@ -193,6 +194,21 @@
       </Value>
     </VariableList>
   </State>
+  <Category>
+    <Name>MenuCategory</Name>
+    <State>
+      <Name>Enabled</Name>
+    </State>
+    <State>
+      <Name>Disabled</Name>
+    </State>
+    <State>
+      <Name>Focused</Name>
+    </State>
+    <State>
+      <Name>DisabledFocused</Name>
+    </State>
+  </Category>
   <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="BottomSeparator" BaseType="Rectangle" />
   <Instance Name="InnerPanelInstance" BaseType="Container" />
@@ -202,6 +218,7 @@
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>
+    <string>MenuCategoryState</string>
     <string>ContainedType</string>
     <string>ChildrenLayout</string>
     <string>ClipsChildren</string>

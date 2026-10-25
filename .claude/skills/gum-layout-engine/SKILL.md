@@ -279,7 +279,8 @@ A visibility toggle is not one code path:
 - Becoming **invisible**: the `Visible` setter updates the parent *directly*
   (when the parent stacks / auto-grids / depends on children), separately from
   `UpdateLayout`'s climb.
-- Becoming **visible**: flows through `UpdateLayout`'s normal (originating) climb.
+- Becoming **visible**: flows through `UpdateLayout`'s normal (originating) climb, unless the element is still suspended; then the setter updates the parent directly, as it does on hide (a Ratio sibling counts here too).
+  The parent's layout skips its still-suspended children, so after a recursive suspend and a non-recursive resume, suspended siblings of the shown element keep stale positions until their own `ResumeLayout`.
 
 Both rely on the parent re-measuring — see the contribution-vs-size trap above
 for why the parent, not the toggled element, is the source of truth.

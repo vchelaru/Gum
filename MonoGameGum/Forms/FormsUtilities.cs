@@ -153,6 +153,12 @@ public class FormsUtilities
         TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.V3.ListBoxItemVisual(tryCreateFormsObject: c));
 #if !SOKOL
         TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
+        // Installing the V3 MenuItem visual installs its popup too: a theme's popup goes with the theme's
+        // MenuItem visual, as when a theme is undone by clearing the templates and calling this (#6741).
+        if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(typeof(MenuItem)))
+        {
+            MenuItem.DefaultSubmenuPopupTemplate = null;
+        }
         TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
         TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
 #endif
@@ -169,9 +175,9 @@ public class FormsUtilities
         TryAdd(typeof(Window), (_, c) => new DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
 
-        // Kept separately so RegisterFromFileFormRuntimeDefaults can tell the code-built default
-        // apart from a template user code registered itself.
-        _defaultTooltipTemplate = new VisualTemplate((_, c) => new DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
+        // Kept separately as the fallback when a project's Tooltip component goes away; being a
+        // BuiltInVisualTemplate tells it apart from a template user code registered itself.
+        _defaultTooltipTemplate = new BuiltInVisualTemplate((_, c) => new DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
         if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(typeof(Tooltip)))
         {
             FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] = _defaultTooltipTemplate;
@@ -181,7 +187,7 @@ public class FormsUtilities
         {
             if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
             {
-                FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(factory);
+                FrameworkElement.DefaultFormsTemplates[formsType] = new BuiltInVisualTemplate(factory);
             }
         }
 
@@ -582,6 +588,8 @@ public class FormsUtilities
         // disposed (issue #4626).
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
         _defaultTooltipTemplate = null;
+        MenuItem.FromFileSubmenuPopupTemplate = null;
+        ComboBox.FromFileDropDownTemplate = null;
     }
 
     /// <summary>
@@ -594,6 +602,8 @@ public class FormsUtilities
         string? fromFileNamespace = typeof(DefaultFromFileButtonRuntime).Namespace;
         ElementSaveExtensions.UnregisterGueInstantiationTypes(type => type.Namespace == fromFileNamespace);
         ElementSaveExtensions.InitialStateAppliedNotifier = null;
+        MenuItem.FromFileSubmenuPopupTemplate = null;
+        ComboBox.FromFileDropDownTemplate = null;
     }
 
     private static VisualTemplate? _processWideDefaultTooltipTemplate;
@@ -793,6 +803,42 @@ public class FormsUtilities
         }
 
         RegisterFromFileTooltipTemplate(ObjectFinder.Self.GumProjectSave);
+        RegisterFromFilePopupTemplates(ObjectFinder.Self.GumProjectSave);
+    }
+
+    // A MenuItem shows its sub-items in the project's MenuItemSubmenuPopupBehavior component (#6720), and a
+    // ComboBox with no ListBoxInstance child shows its drop-down in the project's ListBox component (#6728).
+    // Each is picked by the same rule as the Tooltip's; the control decides precedence against its other sources.
+    private static void RegisterFromFilePopupTemplates(GumProjectSave project)
+    {
+        MenuItem.FromFileSubmenuPopupTemplate = CreateLazyFromFileComponentTemplate(project, StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName);
+        ComboBox.FromFileDropDownTemplate = CreateLazyFromFileComponentTemplate(project, StandardFormsBehaviorNames.ListBoxBehaviorName);
+    }
+
+    // A template for the component that implements the behavior (its DefaultImplementation, else the first
+    // one), or null when the project has none. The visual is built only when the control first asks for it,
+    // from the component resolved by name then, so a hot reload's project is what gets built. CreateContent
+    // returns a bare InteractiveGue (no Forms control), or null if the component was removed since.
+    private static VisualTemplate? CreateLazyFromFileComponentTemplate(GumProjectSave project, string behaviorName)
+    {
+        ComponentSave? popupComponent = DefaultImplementationLookup.Find(project, behaviorName);
+        if (popupComponent == null)
+        {
+            return null;
+        }
+
+        string componentName = popupComponent.Name;
+        return new VisualTemplate((_, _) =>
+        {
+            ComponentSave? component = ObjectFinder.Self.GetComponent(componentName);
+            if (component == null)
+            {
+                return null!;
+            }
+            InteractiveGue visual = new InteractiveGue();
+            component.SetGraphicalUiElement(visual, SystemManagers.Default);
+            return visual;
+        });
     }
 
     // Tooltips are the one Forms control the framework instantiates on its own (FrameworkElement.ToolTip
@@ -805,19 +851,14 @@ public class FormsUtilities
     // (DefaultFromFileTooltipRuntime), which would create a second, orphaned Tooltip of its own.
     private static void RegisterFromFileTooltipTemplate(GumProjectSave project)
     {
-        List<ComponentSave> tooltipComponents = project.Components.Where(component =>
-            component.Behaviors.Any(behavior => behavior.BehaviorName == StandardFormsBehaviorNames.TooltipBehaviorName)).ToList();
-        string? defaultImplementation = project.Behaviors
-            .FirstOrDefault(behavior => behavior.Name == StandardFormsBehaviorNames.TooltipBehaviorName)?.DefaultImplementation;
-        ComponentSave? tooltipComponent = tooltipComponents.FirstOrDefault(component => component.Name == defaultImplementation)
-            ?? tooltipComponents.FirstOrDefault();
+        ComponentSave? tooltipComponent = DefaultImplementationLookup.Find(project, StandardFormsBehaviorNames.TooltipBehaviorName);
         if (tooltipComponent == null)
         {
             return;
         }
 
         bool isUserTemplate = FrameworkElement.DefaultFormsTemplates.TryGetValue(typeof(Tooltip), out VisualTemplate? existing)
-            && !ReferenceEquals(existing, _defaultTooltipTemplate)
+            && existing is not BuiltInVisualTemplate
             && existing is not FromFileTooltipTemplate;
         if (isUserTemplate)
         {

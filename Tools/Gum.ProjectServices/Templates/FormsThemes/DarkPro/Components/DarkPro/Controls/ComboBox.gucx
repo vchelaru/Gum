@@ -207,7 +207,7 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="IconInstance.X" SetsValue="true">
-      <Value xsi:type="xsd:float">-12</Value>
+      <Value xsi:type="xsd:float">-10</Value>
     </Variable>
     <Variable Type="HorizontalAlignment" Name="IconInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>

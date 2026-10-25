@@ -103,6 +103,11 @@ public class EditorTemplateTests
         // PrimaryDark/PrimaryLight are the V3 shading of Primary (Adjust -15 / +15), baked in because
         // static content can't compute them. The Standard swatches the code theme leaves on their V3
         // defaults (Black ... Danger) are unchanged.
+        // InputBackground is V3 Styling.Colors.InputBackground, which the code theme also leaves on its default;
+        // the menu bar reads it (#6732).
+        // PanelBackgroundDark and RecessedBackgroundDark/Light are the V3 disabled/hover shading (Adjust -35 / +20)
+        // the code theme's ListBox and TextBox apply to those fills (#6746).
+        // TextPrimaryDisabled/Highlighted/Pushed are the V3 ComboBox arrow shading of TextPrimary (#6754).
         Dictionary<string, (int R, int G, int B)> expected = new()
         {
             ["TextPrimary"] = (180, 180, 180),
@@ -116,6 +121,12 @@ public class EditorTemplateTests
             ["Selection"] = (0, 92, 128),
             ["PanelBackground"] = (27, 27, 27),
             ["RecessedBackground"] = (10, 10, 10),
+            ["PanelBackgroundDark"] = (17, 17, 17),
+            ["RecessedBackgroundDark"] = (6, 6, 6),
+            ["RecessedBackgroundLight"] = (59, 59, 59),
+            ["TextPrimaryDisabled"] = (116, 116, 116),
+            ["TextPrimaryHighlighted"] = (191, 191, 191),
+            ["TextPrimaryPushed"] = (153, 153, 153),
         };
 
         GumProjectSave project = LoadEditor();
@@ -127,9 +138,11 @@ public class EditorTemplateTests
             .ToList();
         swatches.ShouldBe(new[]
         {
-            "Black", "DarkGray", "Gray", "LightGray", "White", "PrimaryDark", "Primary", "PrimaryLight",
+            "Black", "DarkGray", "InputBackground", "Gray", "LightGray", "White", "PrimaryDark", "Primary", "PrimaryLight",
             "Success", "Warning", "Danger", "Accent", "TextPrimary", "TextMuted", "BorderHover",
-            "BorderPushed", "Selection", "PanelBackground", "RecessedBackground"
+            "BorderPushed", "Selection", "PanelBackground", "RecessedBackground",
+            "PanelBackgroundDark", "RecessedBackgroundDark", "RecessedBackgroundLight",
+            "TextPrimaryDisabled", "TextPrimaryHighlighted", "TextPrimaryPushed"
         }, ignoreOrder: true);
 
         foreach ((string name, (int r, int g, int b)) in expected)
@@ -249,9 +262,17 @@ public class EditorTemplateTests
         GumProjectSave project = LoadEditor();
         ComponentSave textBox = GetControl(project, "TextBox");
 
+        // Disabled and Highlighted are the code theme's darken/lighten of RecessedBackground (#6746).
+        Dictionary<string, string> backgroundSwatch = new()
+        {
+            ["Enabled"] = "RecessedBackground",
+            ["Disabled"] = "RecessedBackgroundDark",
+            ["Highlighted"] = "RecessedBackgroundLight",
+            ["Focused"] = "RecessedBackground",
+        };
         foreach (StateSave state in CategoryStates(textBox, "TextBoxCategory"))
         {
-            GetStyleReference(state, "Background", "Color").ShouldBe("Components/Editor/Styles.RecessedBackground.FillColor", state.Name);
+            GetStyleReference(state, "Background", "Color").ShouldBe($"Components/Editor/Styles.{backgroundSwatch[state.Name]}.FillColor", state.Name);
             GetStyleReference(state, "PlaceholderTextInstance", "Color").ShouldBe("Components/Editor/Styles.TextMuted.FillColor", state.Name);
         }
 

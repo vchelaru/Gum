@@ -103,6 +103,16 @@ public static class EditorTheme
         TryAdd(typeof(ScrollViewer), (_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Slider), (_, c) => new SliderVisual(tryCreateFormsObject: c));
 
+        // Every MenuItem's submenu popup (#6741): the stock V3 one, sized to its rows. Set on each Apply so
+        // switching from another theme replaces that theme's popup.
+        MenuItem.DefaultSubmenuPopupTemplate = new VisualTemplate(() =>
+        {
+            Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual visual = new Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
+            visual.HasEvents = true;
+            visual.MakeSizedToChildren();
+            return visual;
+        });
+
         // Controls Editor does not restyle are pinned to their stock V3 visuals so that
         // EditorTheme.Apply fully specifies the template set. FrameworkElement.DefaultFormsTemplates
         // is global static state; without re-registering these, re-applying a theme at runtime

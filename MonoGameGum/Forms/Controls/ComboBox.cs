@@ -59,7 +59,11 @@ public class ComboBox :
     /// <exception cref="ArgumentNullException">The assigned value is null.</exception>
     public ListBox ListBox
     {
-        get => listBox;
+        get
+        {
+            EnsureListBox();
+            return listBox;
+        }
         [UnconditionalSuppressMessage("Trimming", "IL2026",
             Justification = "Only forwards a DisplayMemberPath the caller already set, and that " +
                 "setter carries the RequiresUnreferencedCode warning at the caller.")]
@@ -100,13 +104,25 @@ public class ComboBox :
         }
     }
 
+#if !FRB
+    private static VisualTemplate? _processWideFromFileDropDownTemplate;
+
+    // Set by FormsUtilities when a from-file project has a ListBoxBehavior component (#6728). A ComboBox
+    // whose visual has no ListBoxInstance child builds its drop-down from it on the first open.
+    internal static VisualTemplate? FromFileDropDownTemplate
+    {
+        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.FromFileComboBoxDropDownTemplate : _processWideFromFileDropDownTemplate; }
+        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.FromFileComboBoxDropDownTemplate = value; } else { _processWideFromFileDropDownTemplate = value; } }
+    }
+#endif
+
     // The list box whose events this combo box is currently subscribed to, so the subscription
     // can move when the list box is replaced.
     ListBox? _subscribedListBox;
 
     private void SubscribeToListBox()
     {
-        if (_subscribedListBox != listBox)
+        if (listBox != null && _subscribedListBox != listBox)
         {
             if (_subscribedListBox != null)
             {
@@ -132,7 +148,7 @@ public class ComboBox :
         {
             if (value != Text)
             {
-                coreTextObject.RawText = value;
+                SetDisplayedText(value);
 
                 PushValueToViewModel();
             }
@@ -154,7 +170,10 @@ public class ComboBox :
             _displayMemberPath = value;
 
             // The drop-down rows show the same member as the text box.
-            listBox.DisplayMemberPath = value ?? string.Empty;
+            if (listBox != null)
+            {
+                listBox.DisplayMemberPath = value ?? string.Empty;
+            }
 
             UpdateToObject(SelectedObject);
         }
@@ -163,12 +182,21 @@ public class ComboBox :
     public IList? Items
 
     {
-        get => listBox.Items;
+        get => listBox != null ? listBox.Items : _pendingItems;
         set
         {
             if (value != Items)
             {
-                listBox.Items = value;
+                if (listBox != null)
+                {
+                    listBox.Items = value;
+                }
+                else
+                {
+                    // Like ListBox: swapping Items drops the selection, even when the new items contain it.
+                    SetPendingItems(value);
+                    SetPendingSelection(-1);
+                }
 
                 PushValueToViewModel();
             }
@@ -184,7 +212,7 @@ public class ComboBox :
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type? ListBoxItemGumType
     {
-        get { return listBox.ListBoxItemGumType; }
+        get { EnsureListBox(); return listBox.ListBoxItemGumType; }
         [UnconditionalSuppressMessage("Trimming", "IL2114",
             Justification = ItemsControl.PreservedNotCalledJustification)]
         set
@@ -195,6 +223,7 @@ public class ComboBox :
                 throw new Exception("Visual must be set before assigning the ListBoxItemType");
             }
 #endif
+            EnsureListBox();
             listBox.ListBoxItemGumType = value;
         }
     }
@@ -207,7 +236,7 @@ public class ComboBox :
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type ListBoxItemFormsType
     {
-        get { return listBox.ListBoxItemFormsType; }
+        get { EnsureListBox(); return listBox.ListBoxItemFormsType; }
         [UnconditionalSuppressMessage("Trimming", "IL2114",
             Justification = ItemsControl.PreservedNotCalledJustification)]
         set
@@ -218,6 +247,7 @@ public class ComboBox :
                 throw new Exception("Visual must be set before assigning the ListBoxItemType");
             }
 #endif
+            EnsureListBox();
             listBox.ListBoxItemFormsType = value;
         }
     }
@@ -232,8 +262,8 @@ public class ComboBox :
     /// </summary>
     public FrameworkElementTemplate? FrameworkElementTemplate
     {
-        get => listBox.FrameworkElementTemplate;
-        set => listBox.FrameworkElementTemplate = value;
+        get => ListBox.FrameworkElementTemplate;
+        set => ListBox.FrameworkElementTemplate = value;
     }
 
     /// <summary>
@@ -246,19 +276,192 @@ public class ComboBox :
     /// </summary>
     public VisualTemplate? VisualTemplate
     {
-        get => listBox.VisualTemplate;
-        set => listBox.VisualTemplate = value;
+        get => ListBox.VisualTemplate;
+        set => ListBox.VisualTemplate = value;
     }
 
     public object? SelectedObject
     {
-        get => listBox.SelectedObject;
-        set => listBox.SelectedObject = value;
+        get => listBox != null ? listBox.SelectedObject : _pendingSelectedObject;
+        set
+        {
+            if (listBox != null)
+            {
+                listBox.SelectedObject = value;
+            }
+            else
+            {
+                // Like ListBox: an object that is not in Items clears the selection.
+                SetPendingSelection(value == null ? -1 : (Items?.IndexOf(value) ?? -1));
+            }
+        }
     }
     public int SelectedIndex
     {
-        get => listBox.SelectedIndex;
-        set => listBox.SelectedIndex = value;
+        get
+        {
+            if (listBox != null)
+            {
+                return listBox.SelectedIndex;
+            }
+            return _pendingSelectedIndex;
+        }
+        set
+        {
+            if (listBox != null)
+            {
+                listBox.SelectedIndex = value;
+            }
+            else
+            {
+                IList? items = Items;
+                // Like ListBox (#6737): -1 clears the selection and any other out-of-range index is ignored.
+                if (value == -1 || (items != null && value >= 0 && value < items.Count))
+                {
+                    SetPendingSelection(value);
+                }
+            }
+        }
+    }
+
+    // While a lazy drop-down is not built yet (#6728), the ComboBox holds the items and the selection
+    // itself and hands them to the ListBox when it is built on the first open.
+    VisualTemplate? _lazyDropDownTemplate;
+    IList? _pendingItems;
+    // The selection is kept by position, as ListBox keeps it by row: inserting or removing other items
+    // moves the index, and removing or replacing the selected item clears it.
+    int _pendingSelectedIndex = -1;
+    object? _pendingSelectedObject;
+
+    private void SetPendingItems(IList? items)
+    {
+        if (_pendingItems is System.Collections.Specialized.INotifyCollectionChanged oldItems)
+        {
+            oldItems.CollectionChanged -= HandlePendingItemsChanged;
+        }
+        _pendingItems = items;
+        if (_pendingItems is System.Collections.Specialized.INotifyCollectionChanged newItems)
+        {
+            newItems.CollectionChanged += HandlePendingItemsChanged;
+        }
+    }
+
+    // Mirrors how ListBox updates its selection when Items changes: removing or replacing the selected
+    // item, or resetting the collection, clears the selection; other changes shift it.
+    private void HandlePendingItemsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (_pendingSelectedIndex < 0)
+        {
+            return;
+        }
+        switch (e.Action)
+        {
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                if (e.NewStartingIndex >= 0 && e.NewStartingIndex <= _pendingSelectedIndex)
+                {
+                    _pendingSelectedIndex += e.NewItems?.Count ?? 1;
+                }
+                break;
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                int removedCount = e.OldItems?.Count ?? 1;
+                if (e.OldStartingIndex < 0 ||
+                    (e.OldStartingIndex <= _pendingSelectedIndex && _pendingSelectedIndex < e.OldStartingIndex + removedCount))
+                {
+                    SetPendingSelection(-1);
+                }
+                else if (e.OldStartingIndex < _pendingSelectedIndex)
+                {
+                    _pendingSelectedIndex -= removedCount;
+                }
+                break;
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
+                if (e.OldStartingIndex == _pendingSelectedIndex)
+                {
+                    _pendingSelectedIndex = e.NewStartingIndex;
+                }
+                else
+                {
+                    if (e.OldStartingIndex < _pendingSelectedIndex) _pendingSelectedIndex--;
+                    if (e.NewStartingIndex <= _pendingSelectedIndex) _pendingSelectedIndex++;
+                }
+                break;
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
+                int replacedCount = e.OldItems?.Count ?? 1;
+                if (e.OldStartingIndex < 0 ||
+                    (e.OldStartingIndex <= _pendingSelectedIndex && _pendingSelectedIndex < e.OldStartingIndex + replacedCount))
+                {
+                    SetPendingSelection(-1);
+                }
+                break;
+            case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                SetPendingSelection(-1);
+                break;
+        }
+    }
+
+    private void SetPendingSelection(int index)
+    {
+        if (index == _pendingSelectedIndex)
+        {
+            return;
+        }
+        object? selected = index >= 0 ? _pendingItems![index] : null;
+        SelectionChangedEventArgs args = new SelectionChangedEventArgs();
+        if (_pendingSelectedIndex >= 0)
+        {
+            args.RemovedItems.Add(_pendingSelectedObject);
+        }
+        if (index >= 0)
+        {
+            args.AddedItems.Add(selected);
+        }
+        _pendingSelectedIndex = index;
+        _pendingSelectedObject = selected;
+        RaiseSelectionChanged(selected, args);
+    }
+
+    // Builds the drop-down from the lazy template the first time it is needed. Does nothing when the
+    // ListBox already exists (a ListBoxInstance child, an assigned ListBox, or an earlier build).
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Only forwards a DisplayMemberPath the caller already set, and that " +
+            "setter carries the RequiresUnreferencedCode warning at the caller.")]
+    private void EnsureListBox()
+    {
+        if (listBox != null || _lazyDropDownTemplate == null)
+        {
+            return;
+        }
+
+        InteractiveGue dropDownVisual = _lazyDropDownTemplate.CreateContent(null) as InteractiveGue
+            ?? throw new InvalidOperationException(
+                $"The combo box {Visual.Name} has no ListBoxInstance and the project's ListBox component could not be built");
+        ListBox built = dropDownVisual.FormsControlAsObject as ListBox ?? new ListBox(dropDownVisual);
+
+        // Placed like a ListBoxInstance child: below the ComboBox, at its width.
+        dropDownVisual.Name = "ListBoxInstance";
+        dropDownVisual.XUnits = GeneralUnitType.PixelsFromSmall;
+        dropDownVisual.YUnits = GeneralUnitType.PixelsFromLarge;
+        dropDownVisual.X = 0;
+        dropDownVisual.Y = 0;
+        dropDownVisual.WidthUnits = DimensionUnitType.RelativeToParent;
+        dropDownVisual.Width = 0;
+        Visual.RaiseChildrenEventsOutsideOfBounds = true;
+
+        built.IsVisible = false;
+        if (!string.IsNullOrEmpty(_displayMemberPath))
+        {
+            built.DisplayMemberPath = _displayMemberPath;
+        }
+        IList? items = _pendingItems;
+        int selectedIndex = _pendingSelectedIndex;
+        SetPendingItems(null);
+        _pendingSelectedIndex = -1;
+        _pendingSelectedObject = null;
+        built.Items = items;
+        built.SelectedIndex = selectedIndex;
+
+        listBox = built;
+        SubscribeToListBox();
     }
 
     public List<Keys> IgnoredKeys => throw new NotImplementedException();
@@ -291,7 +494,7 @@ public class ComboBox :
 
     public bool IsDropDownOpen
     {
-        get => listBox.IsVisible;
+        get => listBox != null && listBox.IsVisible;
         set
         {
             if (value && IsDropDownOpen == false)
@@ -307,12 +510,9 @@ public class ComboBox :
 
     bool _hadFocusOnListBoxOpened;
 
-    // The ComboBox visual's absolute rectangle the popup was last placed against, so an open
-    // drop-down can be placed again when the ComboBox moves or resizes (including through an ancestor).
-    float _placedAbsoluteX;
-    float _placedAbsoluteY;
-    float _placedAbsoluteWidth;
-    float _placedAbsoluteHeight;
+    // What the popup was last placed against, so an open drop-down can be placed again when the
+    // ComboBox moves or resizes (including through an ancestor) or the canvas is resized.
+    PopupPlacement _popupPlacement;
 
     #endregion
 
@@ -393,13 +593,32 @@ public class ComboBox :
 
     protected override void RefreshInternalVisualReferences()
     {
-        var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue
-            ?? throw new Exception("Gum object must have an object called \"ListBoxInstance\"");
+        var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue;
+        VisualTemplate? lazyDropDownTemplate = null;
+#if !FRB
+        lazyDropDownTemplate = listBoxInstance == null ? FromFileDropDownTemplate : null;
+#endif
+        if (listBoxInstance == null && lazyDropDownTemplate == null)
+        {
+            throw new Exception("Gum object must have an object called \"ListBoxInstance\"");
+        }
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance")
             ?? throw new Exception("Gum object must have an object called \"TextInstance\"");
 
         coreTextObject = textComponent.RenderableComponent as global::RenderingLibrary.Graphics.IText
             ?? throw new Exception("The combo box's \"TextInstance\" must be a text object");
+
+        if (listBoxInstance == null)
+        {
+            // A from-file ComboBox with no ListBoxInstance child: the drop-down is built on the first open.
+            _lazyDropDownTemplate = lazyDropDownTemplate;
+            if (listBox == null && _pendingItems == null)
+            {
+                SetPendingItems(new System.Collections.ObjectModel.ObservableCollection<object>());
+            }
+            Text = null;
+            return;
+        }
 
         // remove it because it's gotta be a "popup"
 
@@ -475,6 +694,8 @@ public class ComboBox :
 
     private void ShowListBoxInstance()
     {
+        EnsureListBox();
+
         _hadFocusOnListBoxOpened = IsFocused;
 
 #if !FRB
@@ -548,6 +769,9 @@ public class ComboBox :
         // it has when attached to the ComboBox so the layout engine resolves them again.
         listBoxVisual.Parent = null;
         RestoreListBoxLayoutValues();
+#if !FRB
+        RestoreShrunkLevels();
+#endif
 
         // Adding this to the Visual will force a layout....
         this.Visual.Children.Add(listBoxVisual);
@@ -556,6 +780,17 @@ public class ComboBox :
         var y = listBoxVisual.AbsoluteY;
         var width = listBoxVisual.AbsoluteWidth;
         var height = listBoxVisual.AbsoluteHeight;
+
+#if !FRB
+        // A drop-down taller than the root it opens in is shrunk to that root's height and scrolls;
+        // ShowPopupListBox then moves it to the root's top, as it does any popup that does not fit (#6769).
+        float availableHeight = ListBox.GetPopupTargetRoot(this.Visual).AbsoluteHeight;
+        if (height > availableHeight)
+        {
+            FillShrunkLevels();
+            height = availableHeight;
+        }
+#endif
 
         // Now that we have the values, detach it:
         this.Visual.Children.Remove(listBoxVisual);
@@ -569,10 +804,7 @@ public class ComboBox :
 
         // Recorded last, with the list box detached: this is the state later frames compare against,
         // and a ComboBox sized to its children has a different rect while the list box is attached.
-        _placedAbsoluteX = Visual.AbsoluteX;
-        _placedAbsoluteY = Visual.AbsoluteY;
-        _placedAbsoluteWidth = Visual.AbsoluteWidth;
-        _placedAbsoluteHeight = Visual.AbsoluteHeight;
+        _popupPlacement.Record(Visual, listBoxVisual);
     }
 
     private void RestoreListBoxLayoutValues()
@@ -589,9 +821,55 @@ public class ComboBox :
     }
 
 #if !FRB
+    // The levels between the list box and its rows that are sized to their children (a theme's
+    // FitChildren drop-down) with their own values, while the drop-down is shrunk and they fill instead.
+    readonly List<(GraphicalUiElement level, DimensionUnitType heightUnits, float height)> _shrunkLevels = new();
+
     /// <summary>
-    /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle changes
-    /// (canvas resize, UI scale, or this control or an ancestor moving). Does nothing when closed.
+    /// Makes every level between the list box and its rows that is sized to its children fill its parent
+    /// instead, keeping the margin it has now, so the levels follow the shrunk list box and clip the rows
+    /// to it. Expects the list box laid out at its natural size.
+    /// </summary>
+    private void FillShrunkLevels()
+    {
+        var level = listBox.InnerPanel.Parent as GraphicalUiElement;
+        while (level != null && level != listBox.Visual && level.Parent is GraphicalUiElement parent)
+        {
+            if (level.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                _shrunkLevels.Add((level, level.HeightUnits, level.Height));
+            }
+            level = parent;
+        }
+
+        // Every margin is measured before any level changes, since each change lays the others out again.
+        var margins = new float[_shrunkLevels.Count];
+        for (int i = 0; i < _shrunkLevels.Count; i++)
+        {
+            GraphicalUiElement shrunkLevel = _shrunkLevels[i].level;
+            margins[i] = shrunkLevel.AbsoluteHeight - ((GraphicalUiElement)shrunkLevel.Parent!).AbsoluteHeight;
+        }
+        for (int i = 0; i < _shrunkLevels.Count; i++)
+        {
+            _shrunkLevels[i].level.HeightUnits = DimensionUnitType.RelativeToParent;
+            _shrunkLevels[i].level.Height = margins[i];
+        }
+    }
+
+    private void RestoreShrunkLevels()
+    {
+        foreach (var (level, heightUnits, height) in _shrunkLevels)
+        {
+            level.HeightUnits = heightUnits;
+            level.Height = height;
+        }
+        _shrunkLevels.Clear();
+    }
+
+    /// <summary>
+    /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle or the
+    /// size of the root the drop-down is in changes (canvas resize, UI scale, or this control or an
+    /// ancestor moving). Does nothing when closed.
     /// </summary>
     // Only an open drop-down needs the per-frame check; a closed ComboBox must not stop its ancestors
     // from going idle. ShowListBoxInstance invalidates the idle caches when the drop-down opens.
@@ -604,10 +882,7 @@ public class ComboBox :
             return;
         }
 
-        if (Visual.AbsoluteX != _placedAbsoluteX ||
-            Visual.AbsoluteY != _placedAbsoluteY ||
-            Visual.AbsoluteWidth != _placedAbsoluteWidth ||
-            Visual.AbsoluteHeight != _placedAbsoluteHeight)
+        if (_popupPlacement.DidBoundsChange(listBox.Visual) || _popupPlacement.DidOwnerChange(Visual))
         {
             PlaceListBoxRelativeToComboBox();
         }
@@ -720,7 +995,7 @@ public class ComboBox :
         StopWatchingAncestors();
 #endif
 
-        if (listBox.IsVisible)
+        if (listBox != null && listBox.IsVisible)
         {
             // The ComboBox may already be out of the tree (its Visual has no managers), but the popup is
             // in the popup layer, which does.
@@ -730,6 +1005,9 @@ public class ComboBox :
             listBox.IsVisible = false;
 
 #if !FRB
+            // A drop-down closed while shrunk gives its levels back their own layout values (#6769).
+            RestoreShrunkLevels();
+
             if (deferRemovingPopup && global::RenderingLibrary.IGumService.Default != null)
             {
                 // Put the layout values back now so opening again before the removal runs saves the
@@ -786,22 +1064,21 @@ public class ComboBox :
             listBox.ScrollIndexIntoView(listBox.SelectedIndex);
         }
 
+        RaiseSelectionChanged(listBox.SelectedObject, args);
+    }
+
+    private void RaiseSelectionChanged(object? selectedObject, SelectionChangedEventArgs args)
+    {
         // If we bind the Text, then don't set this here, the binding will take care of it
         if (!IsDataBound(nameof(Text)))
         {
-            UpdateToObject(listBox.SelectedObject);
+            UpdateToObject(selectedObject);
         }
-
-        // Why do we hide the list box here? We don't want to do it if
-        // the user uses the arrow keys to change a selection do we?
-        //HideListBox();
 
         PushValueToViewModel(nameof(SelectedObject));
         PushValueToViewModel(nameof(SelectedIndex));
 
         SelectionChanged?.Invoke(this, args);
-
-
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2075",
@@ -816,13 +1093,18 @@ public class ComboBox :
                 ?.GetProperty(DisplayMemberPath)
                 ?.GetValue(o, null) as string;
 
-            coreTextObject.RawText = display?.ToString();
+            SetDisplayedText(display?.ToString());
         }
         else
         {
-            coreTextObject.RawText = o?.ToString();
+            SetDisplayedText(o?.ToString());
         }
     }
+
+    // Through the TextInstance's SetProperty so layout that depends on the text (a ComboBox sized to
+    // it, a sibling stacked after it) follows the change (#6736). TextNoTranslate because ComboBox
+    // text is data-driven and never localized.
+    private void SetDisplayedText(string? value) => textComponent.SetProperty("TextNoTranslate", value);
 
     private void HandleListBoxItemPushed(object? sender, EventArgs args)
     {

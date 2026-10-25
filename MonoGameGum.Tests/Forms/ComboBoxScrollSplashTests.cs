@@ -115,11 +115,11 @@ public class ComboBoxScrollSplashTests : BaseTestClass
     }
 
     [Fact]
-    public void Open_SelectedIndexOutOfRangeWhileClosed_ShouldThrowAndLeaveTopShown()
+    public void Open_SelectedIndexOutOfRangeWhileClosed_ShouldBeIgnoredAndLeaveTopShown()
     {
         ComboBox comboBox = CreateComboBox(ManyItems);
 
-        Should.Throw<IndexOutOfRangeException>(() => comboBox.SelectedIndex = ManyItems);
+        comboBox.SelectedIndex = ManyItems;
         OpenScrollable(comboBox);
 
         comboBox.SelectedIndex.ShouldBe(-1);

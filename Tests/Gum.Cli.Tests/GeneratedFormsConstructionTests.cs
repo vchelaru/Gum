@@ -163,6 +163,140 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         ((ICollection)Get(visual, "Children")!).Count.ShouldBe(3);
     }
 
+    // #6730: an instance of a MenuItemSubmenuPopupBehavior component is a ScrollViewer-backed Forms control.
+    [Fact]
+    public void Constructor_GumFormsSubmenuPopupInstance_IsScrollViewer()
+    {
+        Assembly generated = GenerateAndCompile(editProject: AddSubmenuPopupHolder);
+
+        object holder = Construct(generated, "SubmenuPopupHolder");
+
+        Type scrollViewerType = GumCommon.GetType("Gum.Forms.Controls.ScrollViewer", throwOnError: true)!;
+        holder.GetType().GetProperty("PopupInstance")!.PropertyType.IsSubclassOf(scrollViewerType).ShouldBeTrue();
+        Get(holder, "PopupInstance").ShouldBeAssignableTo(scrollViewerType);
+    }
+
+    [Fact]
+    public void Constructor_LegacyMonoGameFindByNameSubmenuPopupInstance_HasScrollViewerFormsControl()
+    {
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, editProject: AddSubmenuPopupHolder);
+        LoadProjectForFindByName();
+        Type type = generated.GetTypes().Single(item => item.Name == "SubmenuPopupHolderRuntime");
+
+        object holder = Activator.CreateInstance(type, true, true)!;
+
+        Type scrollViewerType = GumCommon.GetType("Gum.Forms.Controls.ScrollViewer", throwOnError: true)!;
+        Get(holder, "PopupInstance.FormsControl").ShouldBeAssignableTo(scrollViewerType);
+    }
+
+    // A MenuItemSubmenuPopup shaped like the Retro95 one (the ScrollViewer structure on a Container), held
+    // as an instance by another component.
+    private void AddSubmenuPopupHolder(GumProjectSave project)
+    {
+        string behaviorName = Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName;
+        new Gum.DataTypes.Behaviors.BehaviorSave { Name = behaviorName, DefaultImplementation = "Controls/MenuItemSubmenuPopup" }
+            .Save(Path.Combine(TempDirectory, "Behaviors", behaviorName + ".behx"));
+        project.BehaviorReferences.Add(new Gum.DataTypes.Behaviors.BehaviorReference { Name = behaviorName });
+
+        ComponentSave popup = project.Components.Single(item => item.Name == "Controls/ScrollViewer").Clone();
+        popup.Name = "Controls/MenuItemSubmenuPopup";
+        popup.Behaviors.Clear();
+        popup.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
+        {
+            BehaviorName = behaviorName,
+        });
+        project.Components.Add(popup);
+        project.ComponentReferences.Add(new ElementReference { Name = popup.Name, ElementType = ElementType.Component });
+
+        AddComponent(project, "Elements/SubmenuPopupHolder", "Container", ("PopupInstance", popup.Name));
+    }
+
+    // #6741: a generated Retro95 project makes its MenuItemSubmenuPopup component the submenu popup of
+    // every MenuItem, for Gum Forms and legacy MonoGame output.
+    [Theory]
+    [InlineData(OutputLibrary.GumForms, ObjectInstantiationType.FullyInCode)]
+    [InlineData(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName)]
+    public void ModuleInitializer_Retro95_DefaultSubmenuPopupTemplateBuildsMenuItemSubmenuPopup(OutputLibrary outputLibrary, ObjectInstantiationType instantiationType)
+    {
+        Assembly generated = GenerateAndCompile(outputLibrary, instantiationType, theme: "Retro95");
+        LoadProjectForFindByName();
+        Type frameworkElementType = GumCommon.GetType("Gum.Forms.Controls.FrameworkElement", throwOnError: true)!;
+        Type menuItemType = GumCommon.GetType("Gum.Forms.Controls.MenuItem", throwOnError: true)!;
+        Type scrollViewerType = GumCommon.GetType("Gum.Forms.Controls.ScrollViewer", throwOnError: true)!;
+        PropertyInfo templateProperty = menuItemType.GetProperty("DefaultSubmenuPopupTemplate", BindingFlags.Public | BindingFlags.Static)!;
+        IDictionary templates = (IDictionary)frameworkElementType.GetProperty("DefaultFormsTemplates")!.GetValue(null)!;
+        Dictionary<object, object?> previousTemplates = templates.Keys.Cast<object>().ToDictionary(key => key, key => templates[key]);
+        try
+        {
+            System.Runtime.CompilerServices.RuntimeHelpers.RunModuleConstructor(generated.ManifestModule.ModuleHandle);
+
+            object template = templateProperty.GetValue(null).ShouldNotBeNull("DefaultSubmenuPopupTemplate after module init");
+            object visual = template.GetType().GetMethod("CreateContent")!.Invoke(template, new object?[] { null, true })!;
+
+            object formsControl = Get(visual, "FormsControlAsObject").ShouldNotBeNull();
+            Get(visual, "ElementSave.Name").ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+            formsControl.ShouldBeAssignableTo(scrollViewerType);
+            // Gum Forms output generates the control class; legacy MonoGame output generates the visual class.
+            Type generatedType = outputLibrary == OutputLibrary.GumForms ? formsControl.GetType() : visual.GetType();
+            generatedType.Assembly.ShouldBeSameAs(generated);
+            generatedType.Name.ShouldStartWith("MenuItemSubmenuPopup");
+        }
+        finally
+        {
+            templateProperty.SetValue(null, null);
+            templates.Clear();
+            foreach (KeyValuePair<object, object?> pair in previousTemplates)
+            {
+                templates[pair.Key] = pair.Value;
+            }
+        }
+    }
+
+    // #6744: a generated ComboBox whose component has no ListBoxInstance child builds its drop-down from
+    // the project's ListBox component on first use, once the gumx is loaded as GumService does. Reading
+    // ListBox builds it as opening does; this headless renderer has no layers to open a popup on.
+    [Theory]
+    [InlineData(OutputLibrary.GumForms, ObjectInstantiationType.FullyInCode)]
+    [InlineData(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName)]
+    public void Constructor_ComboBoxWithoutListBoxInstance_BuildsDropDownFromListBoxComponent(OutputLibrary outputLibrary, ObjectInstantiationType instantiationType)
+    {
+        Assembly generated = GenerateAndCompile(outputLibrary, instantiationType, editProject: RemoveComboBoxListBoxInstance);
+        LoadProjectForFindByName();
+
+        object comboBox = outputLibrary == OutputLibrary.GumForms
+            ? Construct(generated, "ComboBox")
+            : Get(Activator.CreateInstance(generated.GetTypes().Single(item => item.Name == "ComboBoxRuntime"), true, true), "FormsControl")!;
+        IList items = (IList)Get(comboBox, "Items")!;
+        items.Add("Apple");
+        items.Add("Banana");
+        comboBox.GetType().GetProperty("SelectedIndex")!.SetValue(comboBox, 1);
+
+        object listBox = Get(comboBox, "ListBox").ShouldNotBeNull();
+
+        Get(listBox, "Visual.ElementSave.Name").ShouldBe("Controls/ListBox");
+        ((ICollection)Get(listBox, "ListBoxItems")!).Count.ShouldBe(2);
+        Get(listBox, "SelectedIndex").ShouldBe(1);
+    }
+
+    // Codegen skips a component missing a behavior's required instance, so the project also drops
+    // ListBoxInstance from its ComboBoxBehavior.
+    private void RemoveComboBoxListBoxInstance(GumProjectSave project)
+    {
+        string behaviorName = Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.ComboBoxBehaviorName;
+        Gum.DataTypes.Behaviors.BehaviorSave behavior = project.Behaviors.Single(item => item.Name == behaviorName);
+        behavior.RequiredInstances.RemoveAll(instance => instance.Name == "ListBoxInstance");
+        behavior.Save(Path.Combine(TempDirectory, "Behaviors", behaviorName + ".behx"));
+
+        ComponentSave comboBox = project.Components.Single(item => item.Name == "Controls/ComboBox");
+        comboBox.Instances.RemoveAll(instance => instance.Name == "ListBoxInstance");
+        foreach (StateSave state in comboBox.AllStates)
+        {
+            state.Variables.RemoveAll(variable => variable.Name.StartsWith("ListBoxInstance.")
+                || (variable.Name == "DefaultChildContainer" && variable.Value as string == "ListBoxInstance"));
+            state.VariableLists.RemoveAll(variable => variable.Name.StartsWith("ListBoxInstance."));
+        }
+    }
+
     private static object Construct(Assembly generated, string typeName) =>
         Activator.CreateInstance(generated.GetTypes().Single(item => item.Name == typeName))!;
 
@@ -580,9 +714,10 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         bool obsoleteUseIsError = false,
         Action<GumProjectSave>? editProject = null,
         Action<CodeOutputProjectSettings>? editSettings = null,
-        Action? afterCodegen = null)
+        Action? afterCodegen = null,
+        string? theme = null)
     {
-        Generate(outputLibrary, instantiationType, editProject, editSettings);
+        Generate(outputLibrary, instantiationType, editProject, editSettings, theme);
         afterCodegen?.Invoke();
 
         Assembly generated = Compile(Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories), obsoleteUseIsError);
@@ -594,11 +729,21 @@ public class GeneratedFormsConstructionTests : BaseTestClass
         OutputLibrary outputLibrary,
         ObjectInstantiationType instantiationType,
         Action<GumProjectSave>? editProject,
-        Action<CodeOutputProjectSettings>? editSettings = null)
+        Action<CodeOutputProjectSettings>? editSettings = null,
+        string? theme = null)
     {
         string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
-        new FormsTemplateCreator().Create(gumxPath);
-        AddDerivedComponents(gumxPath, editProject);
+        if (theme == null)
+        {
+            new FormsTemplateCreator().Create(gumxPath);
+            AddDerivedComponents(gumxPath, editProject);
+        }
+        else
+        {
+            string themeDirectory = FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory())
+                .FindThemeDirectory(theme).ShouldNotBeNull(theme);
+            new FormsTemplateCreator().CreateFromTheme(gumxPath, themeDirectory);
+        }
         File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup>" +
             "<PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.4\" />" +

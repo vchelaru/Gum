@@ -309,25 +309,6 @@ public class MenuItemVisual : InteractiveGue
     }
 
     /// <summary>
-    /// Sets the FormsControlAsObject and configures the MenuItem's scroll viewer visual template.
-    /// </summary>
-    public override object? FormsControlAsObject
-    {
-        get => base.FormsControlAsObject;
-        set
-        {
-            base.FormsControlAsObject = value;
-            if(value is MenuItem menuItem)
-            {
-                menuItem.ScrollViewerVisualTemplate = DefaultScrollVisualTemplate;
-            }
-        }
-    }
-
-    Gum.Forms.VisualTemplate DefaultScrollVisualTemplate => new (() =>
-                new ScrollViewerVisualSizedToChildren(fullInstantiation: true, tryCreateFormsObject: false));
-
-    /// <summary>
     /// Returns the strongly-typed MenuItem Forms control backing this visual.
     /// </summary>
     public MenuItem FormsControl => (MenuItem)FormsControlAsObject!;

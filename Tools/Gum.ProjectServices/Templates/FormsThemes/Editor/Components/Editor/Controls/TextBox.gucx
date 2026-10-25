@@ -283,7 +283,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="PlaceholderTextInstance.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="PlaceholderTextInstance.Green" SetsValue="true">
       <Value xsi:type="xsd:int">88</Value>
@@ -417,7 +417,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
@@ -649,13 +649,13 @@
     <State>
       <Name>Disabled</Name>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="Background.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -688,7 +688,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Editor/Styles.RecessedBackground.FillColor</string>
+          <string>Color = Components/Editor/Styles.RecessedBackgroundDark.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -715,13 +715,13 @@
     <State>
       <Name>Highlighted</Name>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">59</Value>
       </Variable>
       <Variable Type="int" Name="Background.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">59</Value>
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">59</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -763,7 +763,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Editor/Styles.RecessedBackground.FillColor</string>
+          <string>Color = Components/Editor/Styles.RecessedBackgroundLight.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">

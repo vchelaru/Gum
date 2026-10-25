@@ -53,30 +53,6 @@ public class MenuItemVisual : BaseMenuItemVisual
         }
     }
 
-    public override object FormsControlAsObject
-    {
-        get => base.FormsControlAsObject;
-        set
-        {
-            base.FormsControlAsObject = value;
-            if (value is MenuItem menuItem)
-            {
-                menuItem.ScrollViewerVisualTemplate = Retro95SubmenuScrollTemplate;
-            }
-        }
-    }
-
-    // Use the dedicated menu-popup visual (raised + gray surface) rather than
-    // the regular ScrollViewerVisual (inset + white) — the inset-white look is
-    // right for a content scroll area but wrong for a Win95 drop-down menu.
-    private VisualTemplate Retro95SubmenuScrollTemplate => new VisualTemplate(() =>
-    {
-        Retro95MenuPopupVisual visual = new Retro95MenuPopupVisual(fullInstantiation: true, tryCreateFormsObject: false);
-        visual.HasEvents = true;
-        visual.MakeSizedToChildren();
-        return visual;
-    });
-
     private void WireStates()
     {
         States.Enabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Styling.ActiveStyle.Colors.Text);

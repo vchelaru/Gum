@@ -605,6 +605,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.mLayer = null;
         // Skip-cache state and the controller belong to the source: the clone starts not idle and builds its own.
         newClone._isIdle = false;
+        // The source's place in a global-suspension flush list (#6736) is not the clone's.
+        newClone.isListedAsGloballyDeferred = false;
         newClone._subtreeEventsState = 0;
         newClone._invalidateSubtreeCachesAction = null;
 #if !FRB
@@ -623,6 +625,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.fullyUpdatedChildren = new HashSet<GraphicalUiElement>();
         newClone.statesInStack = new HashSet<StateSave>();
         newClone.StackedRowOrColumnDimensions = null;
+        // Layout bookkeeping of the source's own layouts, not the clone's.
+        newClone._firstAppendedIndex = -1;
+        newClone._lastLaidOutSession = 0;
+        newClone._lastLayoutChangedNothing = false;
         newClone._pendingCustomVariables = _pendingCustomVariables == null
             ? null
             : new Dictionary<string, object?>(_pendingCustomVariables);

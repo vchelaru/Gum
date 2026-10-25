@@ -19,7 +19,7 @@ namespace Gum.Themes.ForestGlade;
 /// Forest Glade-styled MenuItem visual. Transparent at rest, sun-pale tint
 /// on hover, accent-dim band when the submenu is open (Selected). Submenu
 /// popup uses the Forest Glade <see cref="ScrollViewerVisual"/> via the
-/// <c>ScrollViewerVisualTemplate</c> hook.
+/// <c>MenuItem.DefaultSubmenuPopupTemplate</c>, which the theme sets.
 /// </summary>
 public class MenuItemVisual : BaseMenuItemVisual
 {
@@ -53,28 +53,6 @@ public class MenuItemVisual : BaseMenuItemVisual
             FormsControlAsObject = new MenuItem(this);
         }
     }
-
-    /// <inheritdoc/>
-    public override object FormsControlAsObject
-    {
-        get => base.FormsControlAsObject;
-        set
-        {
-            base.FormsControlAsObject = value;
-            if (value is MenuItem menuItem)
-            {
-                menuItem.ScrollViewerVisualTemplate = ForestGladeSubmenuScrollTemplate;
-            }
-        }
-    }
-
-    private VisualTemplate ForestGladeSubmenuScrollTemplate => new VisualTemplate(() =>
-    {
-        ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
-        visual.HasEvents = true;
-        visual.MakeSizedToChildren();
-        return visual;
-    });
 
     private void WireStates()
     {

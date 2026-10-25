@@ -973,7 +973,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextAccent.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextAccent.Green" SetsValue="true">
       <Value xsi:type="xsd:int">222</Value>
@@ -1024,7 +1024,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextBlack.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextBlack.Green" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -1081,7 +1081,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextDarkGray.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextDarkGray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
@@ -1183,7 +1183,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextGray.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextGray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
@@ -1387,7 +1387,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextLightGray.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextLightGray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
@@ -1438,7 +1438,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextNormal.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextNormal.Green" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
@@ -1489,7 +1489,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimary.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimary.Green" SetsValue="true">
       <Value xsi:type="xsd:int">222</Value>
@@ -1540,7 +1540,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimaryDark.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimaryDark.Green" SetsValue="true">
       <Value xsi:type="xsd:int">51</Value>
@@ -1591,7 +1591,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimaryLight.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimaryLight.Green" SetsValue="true">
       <Value xsi:type="xsd:int">89</Value>
@@ -1693,7 +1693,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextStrong.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextStrong.Green" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
@@ -1763,7 +1763,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextSuccess.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextSuccess.Green" SetsValue="true">
       <Value xsi:type="xsd:int">167</Value>
@@ -1916,7 +1916,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextWarning.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextWarning.Green" SetsValue="true">
       <Value xsi:type="xsd:int">171</Value>
@@ -1967,7 +1967,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextWarning1.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextWarning1.Green" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
@@ -2018,7 +2018,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextWhite.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextWhite.Green" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>

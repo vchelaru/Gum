@@ -168,6 +168,11 @@ public class MenuItem : ItemsControl
         if (isHighlighted)
         {
             HighlightGained?.Invoke(this, EventArgs.Empty);
+            // A row of a submenu shrunk to the canvas may be scrolled out of view (#6758).
+            if (ParentMenuItem?.itemsPopup is ScrollViewer popup && Visual.Parent == popup.InnerPanel)
+            {
+                popup.BringRowIntoView(Visual);
+            }
         }
         UpdateState(force: true);
     }
@@ -197,7 +202,38 @@ public class MenuItem : ItemsControl
         }
     }
 
+    /// <summary>
+    /// The template this item builds its submenu popup from. Null by default; when set, it overrides
+    /// <see cref="DefaultSubmenuPopupTemplate"/> for this item only.
+    /// </summary>
     public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
+
+    /// <summary>
+    /// The template every MenuItem builds its submenu popup from when the item has no
+    /// <see cref="ScrollViewerVisualTemplate"/>. Null by default. When set, it wins over the
+    /// ScrollViewer template registered in <see cref="FrameworkElement.DefaultFormsTemplates"/>, so the
+    /// submenu popup can look different from other ScrollViewers. The popup sizes itself to its rows,
+    /// keeping any padding on levels the template already sizes to their children.
+    /// Generated code sets this to the project's MenuItemSubmenuPopup component, and each code-only
+    /// theme's Apply sets it to that theme's popup. Applying a theme replaces this, as it replaces
+    /// <see cref="FrameworkElement.DefaultFormsTemplates"/>; set it after the theme to override.
+    /// Uninitializing Gum clears it.
+    /// </summary>
+    /// <remarks>
+    /// The template's content must have the ScrollViewer structure. If it creates a Forms control, that
+    /// control must be a <see cref="ScrollViewer"/>; otherwise the popup wraps the visual in one.
+    /// </remarks>
+#if FRB
+    public static VisualTemplate? DefaultSubmenuPopupTemplate { get; set; }
+#else
+    public static VisualTemplate? DefaultSubmenuPopupTemplate
+    {
+        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.DefaultSubmenuPopupTemplate : _processWideDefaultSubmenuPopupTemplate; }
+        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.DefaultSubmenuPopupTemplate = value; } else { _processWideDefaultSubmenuPopupTemplate = value; } }
+    }
+
+    private static VisualTemplate? _processWideDefaultSubmenuPopupTemplate;
+#endif
 
     // The sub-item container removed from the Visual in UpdateMenuItems. Kept so its CollectionChanged
     // can be unhooked, and so it can be put back (with its original parent and position) when the Visual
@@ -603,6 +639,15 @@ public class MenuItem : ItemsControl
             timeOpened = MainCursor.LastPrimaryPushTime;
 
             var visualTemplateVisual = ScrollViewerVisualTemplate?.CreateContent(null) as InteractiveGue;
+            // A popup with no template sizes itself to its rows, including one built from the project's component.
+            isPopupSizedByItems = visualTemplateVisual == null;
+#if !FRB
+            isPopupShrunkToCanvas = false;
+#endif
+            visualTemplateVisual ??= DefaultSubmenuPopupTemplate?.CreateContent(null, createFormsInternally: true) as InteractiveGue;
+#if !FRB
+            visualTemplateVisual ??= CreateProjectScrollViewerVisual();
+#endif
 
             if(visualTemplateVisual == null)
             {
@@ -634,15 +679,22 @@ public class MenuItem : ItemsControl
             MenuItemsInternal.Clear();
             popupRows.Clear();
             generatedPopupRows.Clear();
-            isPopupSizedByItems = visualTemplateVisual == null;
 
-            foreach (var item in Items)
+            bool suspendedPanel = SuspendPopupPanelLayout();
+            try
             {
-                FrameworkElement row = CreatePopupRow(item);
-                popupRows.Add(row);
-                AttachPopupRow(row);
+                foreach (var item in Items)
+                {
+                    FrameworkElement row = CreatePopupRow(item);
+                    popupRows.Add(row);
+                    AttachPopupRow(row);
 
-                itemsPopup.InnerPanel.Children.Add(row.Visual);
+                    itemsPopup.InnerPanel.Children.Add(row.Visual);
+                }
+            }
+            finally
+            {
+                ResumePopupPanelLayout(suspendedPanel);
             }
 
 #if !FRB
@@ -650,6 +702,7 @@ public class MenuItem : ItemsControl
             if (isPopupSizedByItems)
             {
                 SizePopupToItems();
+                FitPopupToCanvas();
             }
 #endif
 
@@ -674,15 +727,75 @@ public class MenuItem : ItemsControl
         }
     }
 
+    // Suspends the popup panel so a bulk row change lays the rows out once on resume rather than once per
+    // row (#6705). Returns false, and leaves the panel alone, when it is already suspended by someone else.
+    private bool SuspendPopupPanelLayout()
+    {
+        GraphicalUiElement panel = itemsPopup!.InnerPanel;
+        if (panel.IsLayoutSuspended)
+        {
+            return false;
+        }
+        panel.SuspendLayout();
+        return true;
+    }
+
+    private void ResumePopupPanelLayout(bool suspendedPanel)
+    {
+        if (suspendedPanel)
+        {
+            itemsPopup!.InnerPanel.ResumeLayout();
+        }
+    }
+
     // The row controls in the open popup, in Items order, including controls that are not MenuItems.
     readonly List<FrameworkElement> popupRows = new List<FrameworkElement>();
 
     // The rows this item created for data objects in Items (as opposed to controls supplied in Items).
     readonly HashSet<MenuItem> generatedPopupRows = new HashSet<MenuItem>();
 
-    // True when the popup is a plain ScrollViewer that sizes itself to its rows, false when a
+    // True when the popup sizes itself to its rows (no ScrollViewerVisualTemplate), false when a
     // ScrollViewerVisualTemplate supplied it.
     bool isPopupSizedByItems;
+
+#if !FRB
+    private static VisualTemplate? _processWideFromFileSubmenuPopupTemplate;
+
+    // Set by FormsUtilities when a from-file project has a MenuItemSubmenuPopupBehavior component (#6720).
+    // Its CreateContent returns a bare visual (no Forms control), or null if the component went away.
+    // Separate from DefaultSubmenuPopupTemplate because it loses to a user-registered ScrollViewer
+    // template, while DefaultSubmenuPopupTemplate wins over one.
+    internal static VisualTemplate? FromFileSubmenuPopupTemplate
+    {
+        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.FromFileSubmenuPopupTemplate : _processWideFromFileSubmenuPopupTemplate; }
+        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.FromFileSubmenuPopupTemplate = value; } else { _processWideFromFileSubmenuPopupTemplate = value; } }
+    }
+
+    // In a from-file project, a MenuItem with no ScrollViewerVisualTemplate builds its popup from the
+    // project's MenuItemSubmenuPopupBehavior component, else from its ScrollViewer component, each picked
+    // by the same rule as the Tooltip (#6720). As with the Tooltip, a ScrollViewer template user code
+    // registered wins over both. Null when that happens, when no project is loaded, or when it has neither
+    // component: the popup is then a plain ScrollViewer from DefaultFormsTemplates.
+    private static InteractiveGue? CreateProjectScrollViewerVisual()
+    {
+        bool isUserTemplate = DefaultFormsTemplates.TryGetValue(typeof(ScrollViewer), out VisualTemplate? existing)
+            && existing is not BuiltInVisualTemplate;
+        if (isUserTemplate)
+        {
+            return null;
+        }
+        if (FromFileSubmenuPopupTemplate?.CreateContent(null) is InteractiveGue submenuPopupVisual)
+        {
+            return submenuPopupVisual;
+        }
+        global::Gum.DataTypes.ComponentSave? component = DefaultImplementationLookup.Find(
+            global::Gum.Managers.ObjectFinder.Self.GumProjectSave,
+            global::Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.ScrollViewerBehaviorName);
+        return component == null
+            ? null
+            : global::GumRuntime.ElementSaveExtensions.ToGraphicalUiElement(component, ISystemManagers.Default, addToManagers: false) as InteractiveGue;
+    }
+#endif
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Automatic per-item BindingContext assignment when populating sub-items from a " +
@@ -786,11 +899,54 @@ public class MenuItem : ItemsControl
         }
 
         ScrollViewer popup = itemsPopup!;
+        // Rows appended at the end leave the rows before them as they are (#6702).
+        bool wasCleanBeforeAppend = popup.InnerPanel.IsCleanForAppend;
+        bool suspendedPanel = SuspendPopupPanelLayout();
+        int firstAppendedIndex = -1;
+        try
+        {
+            firstAppendedIndex = ReconcilePopupRows(popup, Items);
+        }
+        finally
+        {
+            if (suspendedPanel)
+            {
+                popup.InnerPanel.ResumeLayoutAfterAppend(firstAppendedIndex, wasCleanBeforeAppend);
+            }
+        }
+
+#if !FRB
+        // The rows changed the popup's size, so it has to be sized and clamped again.
+        if (isPopupSizedByItems)
+        {
+            SizePopupToItems();
+            FitPopupToCanvas();
+        }
+
+        PlaceItemsPopup();
+#endif
+#if FRB
+        PlaceItemsPopup();
+        if (isPopupSizedByItems)
+        {
+            SizePopupToItems();
+        }
+
+        GuiManager.SortZAndLayerBased();
+        popup.RepositionToKeepInScreen();
+#endif
+    }
+
+    // Puts the open popup's rows in line with Items, keeping rows whose item is still there.
+    // Returns the index of the first appended row when the change only appended rows after the
+    // existing ones, otherwise -1.
+    private int ReconcilePopupRows(ScrollViewer popup, System.Collections.IList currentItems)
+    {
         List<FrameworkElement> oldRows = new List<FrameworkElement>(popupRows);
         List<FrameworkElement> unclaimedRows = new List<FrameworkElement>(oldRows);
-        List<FrameworkElement> newRows = new List<FrameworkElement>(Items.Count);
+        List<FrameworkElement> newRows = new List<FrameworkElement>(currentItems.Count);
 
-        foreach (object item in Items)
+        foreach (object item in currentItems)
         {
             FrameworkElement? row = null;
             if (item is FrameworkElement asFrameworkElement)
@@ -835,6 +991,8 @@ public class MenuItem : ItemsControl
             removed.Visual.Parent = null;
         }
 
+        bool isAppendOnly = unclaimedRows.Count == 0 && newRows.Count > oldRows.Count;
+
         for (int i = 0; i < newRows.Count; i++)
         {
             FrameworkElement row = newRows[i];
@@ -847,6 +1005,11 @@ public class MenuItem : ItemsControl
             if (popup.InnerPanel.Children.Count > i && popup.InnerPanel.Children[i] == visual)
             {
                 continue;
+            }
+
+            if (i < oldRows.Count)
+            {
+                isAppendOnly = false;
             }
 
             // A row that moved is moved within the panel rather than detached, which would close its own submenu.
@@ -873,25 +1036,7 @@ public class MenuItem : ItemsControl
             }
         }
 
-#if !FRB
-        // The rows changed the popup's size, so it has to be sized and clamped again.
-        if (isPopupSizedByItems)
-        {
-            SizePopupToItems();
-        }
-
-        PlaceItemsPopup();
-#endif
-#if FRB
-        PlaceItemsPopup();
-        if (isPopupSizedByItems)
-        {
-            SizePopupToItems();
-        }
-
-        GuiManager.SortZAndLayerBased();
-        popup.RepositionToKeepInScreen();
-#endif
+        return isAppendOnly ? oldRows.Count : -1;
     }
 
     /// <summary>
@@ -901,13 +1046,29 @@ public class MenuItem : ItemsControl
     private void SizePopupToItems()
     {
         ScrollViewer popup = itemsPopup!;
+#if !FRB
+        // A popup shrunk to the canvas keeps that layout until FitPopupToCanvas finds its rows fit again.
+        if (isPopupShrunkToCanvas)
+        {
+            return;
+        }
+        SavePopupPreSizingValues(popup);
+#endif
 
         // let's suppress layout for performance reasons, and to prevent issues with scrollbars:
         var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
         GraphicalUiElement.IsAllLayoutSuspended = true;
+        // When every value below is already set (an open popup whose rows changed), the row change
+        // already resized the popup, so laying it out again would only repeat that for every row (#6757).
+        bool changed = false;
 
         try
         {
+            changed = popup.HorizontalScrollBarVisibility != ScrollBarVisibility.Hidden ||
+                popup.VerticalScrollBarVisibility != ScrollBarVisibility.Hidden ||
+                popup.VerticalSizeMode != SizeMode.Auto ||
+                popup.HorizontalSizeMode != SizeMode.Auto;
+
             popup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
             popup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
 
@@ -917,12 +1078,22 @@ public class MenuItem : ItemsControl
             // We can't make assumptions about the structure of the popup, so we have to just recursively
             // climb up from the inner panel and size it according to its children.
             var parentForSizing = popup.InnerPanel;
+            // A level already sized to its children keeps its padding (a theme's popup that sizes
+            // itself, #6741).
             while(parentForSizing != null)
             {
-                parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                parentForSizing.Width = 0;
-                parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                parentForSizing.Height = 0;
+                if (parentForSizing.WidthUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+                {
+                    changed = true;
+                    parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                    parentForSizing.Width = 0;
+                }
+                if (parentForSizing.HeightUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+                {
+                    changed = true;
+                    parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                    parentForSizing.Height = 0;
+                }
 
                 if (parentForSizing == popup.Visual)
                 {
@@ -936,7 +1107,7 @@ public class MenuItem : ItemsControl
             GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
         }
 
-        if (!wasSuppressed)
+        if (!wasSuppressed && changed)
         {
             popup.Visual.UpdateLayout();
         }
@@ -962,15 +1133,16 @@ public class MenuItem : ItemsControl
             }
         }
 
+#if FRB
         ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false);
+#else
+        ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false, GetOpenNestedPopups());
+#endif
 
-        _placedAbsoluteX = Visual.AbsoluteX;
-        _placedAbsoluteY = Visual.AbsoluteY;
-        _placedAbsoluteWidth = Visual.AbsoluteWidth;
-        _placedAbsoluteHeight = Visual.AbsoluteHeight;
+        _popupPlacement.Record(Visual, popupVisual);
 
 #if !FRB
-        // Placing moved this popup to the end of the popup root, which would draw it over any
+        // Placing may have moved this popup to the end of the popup root, which would draw it over any
         // submenu already open from one of its items. Placing those again puts them back on top, in
         // order, and also moves them with this popup (#6688).
         foreach (MenuItem item in MenuItemsInternal)
@@ -984,6 +1156,36 @@ public class MenuItem : ItemsControl
     }
 
 #if !FRB
+    private readonly List<GraphicalUiElement> _openNestedPopups = new();
+
+    /// <summary>
+    /// The popups of the open submenu chain below this item's popup (child, grandchild, ...), in the
+    /// order they draw over it. Null when none is open.
+    /// </summary>
+    private List<GraphicalUiElement>? GetOpenNestedPopups()
+    {
+        _openNestedPopups.Clear();
+        MenuItem? current = this;
+        while (current != null)
+        {
+            MenuItem? openChild = null;
+            foreach (MenuItem item in current.MenuItemsInternal)
+            {
+                if (item.IsPopupVisible)
+                {
+                    openChild = item;
+                    break;
+                }
+            }
+            if (openChild != null)
+            {
+                _openNestedPopups.Add(openChild.itemsPopup!.Visual);
+            }
+            current = openChild;
+        }
+        return _openNestedPopups.Count > 0 ? _openNestedPopups : null;
+    }
+
     // Only an open submenu needs the per-frame check; a closed MenuItem must not stop its ancestors
     // from going idle. TryShowPopup and the close paths invalidate the idle caches.
     bool Gum.Wireframe.IUpdateEveryFrame.IsActivityNeeded => IsPopupVisible;
@@ -999,12 +1201,112 @@ public class MenuItem : ItemsControl
             return;
         }
 
-        if (Visual.AbsoluteX != _placedAbsoluteX ||
-            Visual.AbsoluteY != _placedAbsoluteY ||
-            Visual.AbsoluteWidth != _placedAbsoluteWidth ||
-            Visual.AbsoluteHeight != _placedAbsoluteHeight)
+        bool didBoundsChange = _popupPlacement.DidBoundsChange(itemsPopup!.Visual);
+
+        if (didBoundsChange && isPopupSizedByItems)
+        {
+            FitPopupToCanvas();
+        }
+
+        if (didBoundsChange || _popupPlacement.DidOwnerChange(Visual))
         {
             PlaceItemsPopup();
+        }
+    }
+
+    /// <summary>
+    /// Shrinks a popup sized by its rows to the height of the root it opens in when it is taller than
+    /// that root, and lets it scroll. Placing then moves it to the top of the root, as it does any popup
+    /// that does not fit. Once the rows fit again, the popup sizes itself to them as before (#6758).
+    /// </summary>
+    private void FitPopupToCanvas()
+    {
+        ScrollViewer popup = itemsPopup!;
+        float availableHeight = ListBox.GetPopupTargetRoot(this.Visual).AbsoluteHeight;
+
+        float naturalHeight = isPopupShrunkToCanvas
+            ? popup.InnerPanel.AbsoluteHeight + shrunkPopupChromeHeight
+            : popup.Visual.AbsoluteHeight;
+
+        if (naturalHeight > availableHeight)
+        {
+            ShrinkPopupToHeight(popup, availableHeight);
+        }
+        else if (isPopupShrunkToCanvas)
+        {
+            popup.VerticalScrollBarValue = 0;
+            isPopupShrunkToCanvas = false;
+            RestorePopupPreSizingValues();
+            SizePopupToItems();
+        }
+    }
+
+    private void ShrinkPopupToHeight(ScrollViewer popup, float height)
+    {
+        GraphicalUiElement popupVisual = popup.Visual;
+        GraphicalUiElement innerPanel = popup.InnerPanel;
+
+        if (!isPopupShrunkToCanvas)
+        {
+            // What the popup adds around its rows, measured while it still sizes itself to them.
+            shrunkPopupChromeWidth = popupVisual.AbsoluteWidth - innerPanel.AbsoluteWidth;
+            shrunkPopupChromeHeight = popupVisual.AbsoluteHeight - innerPanel.AbsoluteHeight;
+            isPopupShrunkToCanvas = true;
+
+            // The levels between the popup and its rows go back to the layout they had before sizing,
+            // so they fill the popup and clip the rows to it.
+            RestorePopupPreSizingValues();
+            popup.VerticalSizeMode = SizeMode.Fixed;
+            popup.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+
+            popupVisual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            popupVisual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            popupVisual.Width = innerPanel.AbsoluteWidth + shrunkPopupChromeWidth;
+            popupVisual.Height = height;
+            popup.UpdateVerticalScrollBarValues();
+
+            // The scroll bar takes width from the rows; the popup is widened by what they lost.
+            shrunkPopupScrollBarWidth = innerPanel.Parent is GraphicalUiElement clip
+                ? System.Math.Max(0, innerPanel.AbsoluteWidth - clip.AbsoluteWidth)
+                : 0;
+        }
+
+        // Each value is set once, so a later call with unchanged rows lays nothing out.
+        popupVisual.Width = innerPanel.AbsoluteWidth + shrunkPopupChromeWidth + shrunkPopupScrollBarWidth;
+        popupVisual.Height = height;
+        popup.UpdateVerticalScrollBarValues();
+    }
+
+    // Records the layout values SizePopupToItems is about to change, on every level from the one holding
+    // InnerPanel up to the popup, once per popup.
+    private void SavePopupPreSizingValues(ScrollViewer popup)
+    {
+        if (popupPreSizingValuesOwner == popup)
+        {
+            return;
+        }
+        popupPreSizingValuesOwner = popup;
+        popupPreSizingValues.Clear();
+        var level = popup.InnerPanel.Parent as GraphicalUiElement;
+        while (level != null)
+        {
+            popupPreSizingValues.Add((level, level.WidthUnits, level.Width, level.HeightUnits, level.Height));
+            if (level == popup.Visual)
+            {
+                break;
+            }
+            level = level.Parent as GraphicalUiElement;
+        }
+    }
+
+    private void RestorePopupPreSizingValues()
+    {
+        foreach (var (level, widthUnits, width, heightUnits, height) in popupPreSizingValues)
+        {
+            level.WidthUnits = widthUnits;
+            level.Width = width;
+            level.HeightUnits = heightUnits;
+            level.Height = height;
         }
     }
 #endif
@@ -1173,13 +1475,22 @@ public class MenuItem : ItemsControl
         }
     }
 
-    ScrollViewer? itemsPopup;
+    internal ScrollViewer? itemsPopup;
 
-    // This item's absolute rectangle when the popup was last placed; a change means the popup is stale.
-    float _placedAbsoluteX;
-    float _placedAbsoluteY;
-    float _placedAbsoluteWidth;
-    float _placedAbsoluteHeight;
+    // This item's absolute rectangle and the popup root's size when the popup was last placed; a change
+    // in either means the popup is stale.
+    PopupPlacement _popupPlacement;
+
+#if !FRB
+    // A popup sized by its rows but taller than its root is shrunk to the root and scrolls (#6758).
+    bool isPopupShrunkToCanvas;
+    float shrunkPopupChromeWidth;
+    float shrunkPopupChromeHeight;
+    float shrunkPopupScrollBarWidth;
+    ScrollViewer? popupPreSizingValuesOwner;
+    readonly List<(GraphicalUiElement level, global::Gum.DataTypes.DimensionUnitType widthUnits, float width,
+        global::Gum.DataTypes.DimensionUnitType heightUnits, float height)> popupPreSizingValues = new();
+#endif
 
     public bool IsPopupVisible => itemsPopup?.IsVisible == true;
 

@@ -245,4 +245,25 @@ public class LayoutVisibilityOrderFormsTests : BaseTestClass
             },
             panel => labels.Select(label => (GraphicalUiElement)label.Visual));
     }
+
+    [Fact]
+    public void ListBox_ItemsMovedAndReplacedWhileParentHidden_RowsStackOnShow()
+    {
+        ContainerRuntime parent = new();
+        Gum.GumService.Default.Root.Children!.Add(parent);
+        ListBox listBox = new();
+        parent.Children!.Add(listBox.Visual);
+        parent.Visible = false;
+        System.Collections.ObjectModel.ObservableCollection<object> items = new(new object[] { "A", "B", "C" });
+        listBox.Items = items;
+
+        items.Move(0, 2);
+        items[1] = "X";
+        parent.Visible = true;
+
+        var rows = listBox.ListBoxItems;
+        rows.Select(row => row.DataObject).ShouldBe(new object[] { "B", "X", "A" });
+        rows[1].Visual.AbsoluteTop.ShouldBeGreaterThan(rows[0].Visual.AbsoluteTop);
+        rows[2].Visual.AbsoluteTop.ShouldBeGreaterThan(rows[1].Visual.AbsoluteTop);
+    }
 }

@@ -233,6 +233,30 @@ public class ListBoxTests : BaseTestClass
         fireCount.ShouldBe(3);
     }
 
+    // Like WPF's Selector, an index past the end is ignored (#6737); below -1 is ignored too, where
+    // WPF throws, so out-of-range input never crashes.
+    [Theory]
+    [InlineData(3)]
+    [InlineData(7)]
+    [InlineData(-2)]
+    public void SelectedIndex_set_OutOfRange_ShouldKeepSelectionWithoutSelectionChanged(int index)
+    {
+        ListBox listBox = new();
+        listBox.Items!.Add("Apple");
+        listBox.Items!.Add("Banana");
+        listBox.Items!.Add("Cherry");
+        listBox.SelectedIndex = 1;
+        int fireCount = 0;
+        listBox.SelectionChanged += (_, _) => fireCount++;
+
+        listBox.SelectedIndex = index;
+
+        listBox.SelectedIndex.ShouldBe(1);
+        listBox.SelectedObject.ShouldBe("Banana");
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+        fireCount.ShouldBe(0);
+    }
+
     [Fact]
     public void SelectedObject_set_ShouldFireSelectionChangedOncePerAssignment()
     {
@@ -2740,5 +2764,22 @@ public class ListBoxTests : BaseTestClass
         listBox.OnFocusUpdate();
 
         wasRaised.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ItemsReplace_OfSelectedItem_LeavesNoSelectedIndexOrRow()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        ObservableCollection<object> items = new(new object[] { "A", "B", "C" });
+        listBox.Items = items;
+        listBox.SelectedObject = "B";
+
+        items[1] = "X";
+
+        listBox.SelectedIndex.ShouldBe(-1);
+        listBox.ListBoxItems.Any(row => row.IsSelected).ShouldBeFalse();
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.Items.Count.ShouldBe(3);
     }
 }

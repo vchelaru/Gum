@@ -84,16 +84,22 @@ public class ItemsControl : ScrollViewer
         {
             if (items != value)
             {
-                var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
-                GraphicalUiElement.IsAllLayoutSuspended = true;
-
-                try
+                RunWithAllLayoutSuspended(() =>
                 {
                     if (items != null)
                     {
                         ClearVisualsInternal();
-                        HandleItemsCollectionChanged(this,
-                            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                        // The old collection is going away, so this Reset must not rebuild its rows.
+                        _isReplacingItemsCollection = true;
+                        try
+                        {
+                            HandleItemsCollectionChanged(this,
+                                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                        }
+                        finally
+                        {
+                            _isReplacingItemsCollection = false;
+                        }
                     }
 
                     if (items is INotifyCollectionChanged notifyCollectionChanged)
@@ -104,19 +110,21 @@ public class ItemsControl : ScrollViewer
                     _isItemsAssigned = true;
                     _visualAuthoredItems.Clear();
                     ForceUpdateToItems();
-                }
-                finally
-                {
-                    GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-                }
-
-                if (!wasSuppressed)
-                {
-                    Visual.ResumeLayout(recursive: true);
-                }
+                }, Visual);
             }
         }
     }
+
+    private bool _isReplacingItemsCollection;
+
+    /// <summary>
+    /// Runs a bulk change with every layout deferred, then (unless an outer caller is already deferring)
+    /// runs the deferred work under <paramref name="flushRoot"/> and on any other element the change
+    /// dirtied, such as a ComboBox's text. A SuspendLayout the user set stays in place, with its work
+    /// left for the user's ResumeLayout.
+    /// </summary>
+    private static void RunWithAllLayoutSuspended(Action change, GraphicalUiElement? flushRoot) =>
+        GraphicalUiElement.RunWithAllLayoutSuspended(change, flushRoot);
 
     private void ForceUpdateToItems()
     {
@@ -143,10 +151,7 @@ public class ItemsControl : ScrollViewer
             if(value != _frameworkElementTemplate)
             {
                 _frameworkElementTemplate = value;
-                var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
-                GraphicalUiElement.IsAllLayoutSuspended = true;
-
-                try
+                RunWithAllLayoutSuspended(() =>
                 {
                     ClearVisualsInternal();
 
@@ -157,16 +162,7 @@ public class ItemsControl : ScrollViewer
                             items, startingIndex: 0);
                         HandleItemsCollectionChanged(this, args);
                     }
-                }
-                finally
-                {
-                    GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-                }
-
-                if (!wasSuppressed)
-                {
-                    Visual.ResumeLayout(recursive: true);
-                }
+                }, Visual);
             }
         }
     }
@@ -460,25 +456,10 @@ public class ItemsControl : ScrollViewer
 
     private void AddItemsToInnerPanel(List<object> itemsToAdd)
     {
-        bool wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
-        GraphicalUiElement.IsAllLayoutSuspended = true;
-
-        try
-        {
-            // Appended after anything the Visual authored.
-            HandleItemsCollectionChanged(this,
-                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
-                    itemsToAdd, startingIndex: InnerPanel.Children.Count));
-        }
-        finally
-        {
-            GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-        }
-
-        if (!wasSuppressed)
-        {
-            Visual.ResumeLayout(recursive: true);
-        }
+        // Appended after anything the Visual authored.
+        RunWithAllLayoutSuspended(() => HandleItemsCollectionChanged(this,
+            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                itemsToAdd, startingIndex: InnerPanel.Children.Count)), Visual);
     }
 
     #endregion
@@ -946,180 +927,62 @@ public class ItemsControl : ScrollViewer
 
     #region Event Handler methods
 
-    [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "Automatic per-item BindingContext assignment when populating from a bound " +
-            "collection. Any by-name VM member resolution happens in the item template's own bindings, " +
-            "which already carry this warning at the SetBinding call that created them.")]
     protected virtual void HandleItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add when e.NewItems != null:
-                {
-                    // e.NewStartingIndex is an Items-space index. A decoration occupies an
-                    // InnerPanel.Children slot without an Items slot, so translate to the matching
-                    // panel slot (the position of the i-th item visual, skipping decorations) so a
-                    // new item added after a decoration lands in the correct place. See issue #3305.
-                    int index = _decorations.Count > 0
-                        ? GetPanelIndexForItemIndex(e.NewStartingIndex)
-                        : e.NewStartingIndex;
-
-                    var shouldSuppressLayout = e.NewItems.Count > 0 && InnerPanel != null;
-                    var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
-                    if (shouldSuppressLayout)
-                    {
-                        GraphicalUiElement.IsAllLayoutSuspended = true;
-                    }
-
-                    try
-                    {
-                        foreach (var item in e.NewItems)
-                        {
-                            GraphicalUiElement? newVisual = null;
-                            if (item is FrameworkElement existingItemFrameworkElement)
-                            {
-                                newVisual = existingItemFrameworkElement.Visual;
-                            }
-                            else if(item is GraphicalUiElement existingItemGue)
-                            {
-                                newVisual = existingItemGue;
-                            }
-                            else if(this.VisualTemplate != null)
-                            {
-                                // August 19, 2025
-                                // Not sure if this
-                                // should set createFormsInternally
-                                // to true. ItemsControls probably want
-                                // this true, but ListBoxes probably don't
-                                // since they want to force a ListBoxItem. For
-                                // now let's make it false, and revisit later.
-                                newVisual = VisualTemplate.CreateContent(item, createFormsInternally:false);
-
-                                // the visual template should respect the item (BindingContext), but just in case it doesn't:
-                                if(newVisual is InteractiveGue interactivegue)
-                                {
-                                    interactivegue.BindingContext = item;
-                                }
-
-                                HandleCreatedItemVisual(newVisual, item);
-                            }
-                            else
-                            {
-                                newVisual = CreateNewItemFrameworkElement(item).Visual;
-
-                            }
-
-                            if (newVisual.Parent != InnerPanel)
-                            {
-                                InnerPanel?.Children.Insert(index, newVisual);
-                                newVisual.Parent = InnerPanel;
-                            }
-                            // handled by the panel being updated:
-                            //HandleCollectionNewItemCreated(newItem, index);
-
-                            index++;
-                        }
-                    }
-                    finally
-                    {
-                        if (shouldSuppressLayout)
-                        {
-                            GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-                        }
-                    }
-                    if (shouldSuppressLayout)
-                    {
-                        if (!wasSuppressed)
-                        {
-                            // Resume regardless of IsVisible. ResumeLayout(recursive: true)
-                            // calls UpdateFontRecursive which is what realizes any
-                            // IsFontDirty=true TextRuntime children. The dirty flag is set
-                            // during item creation because IsAllLayoutSuspended above
-                            // deferred the font load — if we skip the resume when the
-                            // ItemsControl happens to be invisible, those deferred loads
-                            // never get processed and the items render with the renderer's
-                            // fallback font when the control is later shown.
-                            //
-                            // Concrete repro: a ComboBox's dropdown ListBox is created with
-                            // Visible=false. Items added to it before the dropdown is opened
-                            // would have stale font state until first open, with no path
-                            // to realize the font even at open time. See
-                            // ListBoxTests.ItemsAddedWhileInvisible_ShouldHaveFontsResolved.
-                            InnerPanel?.ResumeLayout(recursive: true);
-                        }
-                    }
-                }
-
+                InsertItemVisuals(e.NewItems, e.NewStartingIndex);
                 break;
             case NotifyCollectionChangedAction.Move:
-                var oldIndex = e.OldStartingIndex;
-                var newIndex = e.NewStartingIndex;
-
-                // need to move the item to the new index:
-                if (InnerPanel != null)
                 {
-                    IsMovingInnerPanelChildInternally = true;
-                    try
+                    var oldIndex = e.OldStartingIndex;
+                    var newIndex = e.NewStartingIndex;
+                    int count = e.OldItems?.Count ?? 1;
+
+                    // A block move (custom collections only; ObservableCollection moves one item) is the
+                    // same as moving its items one at a time, which keeps each row and its selection.
+                    if (newIndex > oldIndex)
                     {
-                        if (_decorations.Count > 0)
+                        for (int i = 0; i < count; i++)
                         {
-                            // Indices are Items-space; move only the corresponding item visual among
-                            // the item visuals, leaving decorations to be repositioned by the reconcile
-                            // pass below so they follow their anchor item. See issue #3305.
-                            MoveItemVisual(oldIndex, newIndex);
-                        }
-                        else if (oldIndex < InnerPanel.Children.Count)
-                        {
-                            InnerPanel.Children.Move(oldIndex, newIndex);
+                            MoveItemVisualAndRow(oldIndex, newIndex + count - 1);
                         }
                     }
-                    finally
+                    else if (newIndex < oldIndex)
                     {
-                        IsMovingInnerPanelChildInternally = false;
+                        for (int i = 0; i < count; i++)
+                        {
+                            MoveItemVisualAndRow(oldIndex + i, newIndex + i);
+                        }
                     }
                 }
-
-                HandleCollectionItemMoved(e.OldStartingIndex, e.NewStartingIndex);
-
                 break;
             case NotifyCollectionChangedAction.Remove:
-                {
-                    // e.OldStartingIndex is an Items-space index; translate to the panel slot of the
-                    // removed item's visual so a decoration occupying an earlier slot can't shift the
-                    // removal onto the wrong child. See issue #3305.
-                    var index = _decorations.Count > 0
-                        ? GetPanelIndexForItemIndex(e.OldStartingIndex)
-                        : e.OldStartingIndex;
-
-                    if (!_isSyncingVisualAuthoredItems && InnerPanel != null && index >= 0 && index < InnerPanel.Children.Count)
-                    {
-                        var listItem = InnerPanel.Children[index];
-                        listItem.Parent = null;
-                    }
-
-                    if (e.OldItems != null)
-                    {
-                        for (int i = 0; i < e.OldItems.Count; i++)
-                        {
-                            object? removed = e.OldItems[i];
-                            _visualAuthoredItems.RemoveAll(authored => ReferenceEquals(authored, removed));
-                        }
-                    }
-
-                    //HandleCollectionItemRemoved(index);
-                }
+                RemoveItemVisuals(e.OldItems, e.OldStartingIndex);
                 break;
             case NotifyCollectionChangedAction.Replace:
+                // The old items' rows go and rows for the new items take their place.
+                RunWithAllLayoutSuspended(() =>
                 {
-                    //var index = e.NewStartingIndex;
-
-                    //var listItem = InnerPanel.Children[index];
-                    //HandleCollectionReplace(index);
-
-                }
+                    RemoveItemVisuals(e.OldItems, e.OldStartingIndex);
+                    if (e.NewItems != null)
+                    {
+                        InsertItemVisuals(e.NewItems, e.NewStartingIndex);
+                    }
+                }, InnerPanel);
                 break;
             case NotifyCollectionChangedAction.Reset:
-                ClearVisualsInternal();
+                // A Reset can leave items in the collection (a sort, or a bulk replace), so rows are
+                // rebuilt from what Items holds now. Clear() resets to an empty collection.
+                RunWithAllLayoutSuspended(() =>
+                {
+                    ClearVisualsInternal();
+                    if (!_isReplacingItemsCollection && items?.Count > 0)
+                    {
+                        InsertItemVisuals(items, 0);
+                    }
+                }, InnerPanel);
                 break;
         }
 
@@ -1131,6 +994,189 @@ public class ItemsControl : ScrollViewer
         }
 
         ItemsCollectionChanged?.Invoke(sender, e);
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic per-item BindingContext assignment when populating from a bound " +
+            "collection. Any by-name VM member resolution happens in the item template's own bindings, " +
+            "which already carry this warning at the SetBinding call that created them.")]
+    private void InsertItemVisuals(IList newItems, int itemIndex)
+    {
+        // itemIndex is an Items-space index. A decoration occupies an
+        // InnerPanel.Children slot without an Items slot, so translate to the matching
+        // panel slot (the position of the i-th item visual, skipping decorations) so a
+        // new item added after a decoration lands in the correct place. See issue #3305.
+        int index = _decorations.Count > 0
+            ? GetPanelIndexForItemIndex(itemIndex)
+            : itemIndex;
+
+        var shouldSuppressLayout = newItems.Count > 0 && InnerPanel != null;
+        var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+        // Items added at the end leave the rows before them as they are (#6702).
+        var isCleanAppend = InnerPanel != null && index == InnerPanel.Children.Count && InnerPanel.IsCleanForAppend;
+        if (shouldSuppressLayout)
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+        }
+
+        try
+        {
+            foreach (var item in newItems)
+            {
+                GraphicalUiElement? newVisual = null;
+                if (item is FrameworkElement existingItemFrameworkElement)
+                {
+                    newVisual = existingItemFrameworkElement.Visual;
+                }
+                else if(item is GraphicalUiElement existingItemGue)
+                {
+                    newVisual = existingItemGue;
+                }
+                else if(this.VisualTemplate != null)
+                {
+                    // August 19, 2025
+                    // Not sure if this
+                    // should set createFormsInternally
+                    // to true. ItemsControls probably want
+                    // this true, but ListBoxes probably don't
+                    // since they want to force a ListBoxItem. For
+                    // now let's make it false, and revisit later.
+                    newVisual = VisualTemplate.CreateContent(item, createFormsInternally:false);
+
+                    // the visual template should respect the item (BindingContext), but just in case it doesn't:
+                    if(newVisual is InteractiveGue interactivegue)
+                    {
+                        interactivegue.BindingContext = item;
+                    }
+
+                    HandleCreatedItemVisual(newVisual, item);
+                }
+                else
+                {
+                    newVisual = CreateNewItemFrameworkElement(item).Visual;
+
+                }
+
+                if (newVisual.Parent != InnerPanel)
+                {
+                    InnerPanel?.Children.Insert(index, newVisual);
+                    newVisual.Parent = InnerPanel;
+                }
+                // handled by the panel being updated:
+                //HandleCollectionNewItemCreated(newItem, index);
+
+                index++;
+            }
+        }
+        finally
+        {
+            if (shouldSuppressLayout)
+            {
+                GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+            }
+        }
+        if (shouldSuppressLayout)
+        {
+            if (!wasSuppressed)
+            {
+                // Resume regardless of IsVisible. ResumeLayout(recursive: true)
+                // calls UpdateFontRecursive which is what realizes any
+                // IsFontDirty=true TextRuntime children. The dirty flag is set
+                // during item creation because IsAllLayoutSuspended above
+                // deferred the font load — if we skip the resume when the
+                // ItemsControl happens to be invisible, those deferred loads
+                // never get processed and the items render with the renderer's
+                // fallback font when the control is later shown.
+                //
+                // Concrete repro: a ComboBox's dropdown ListBox is created with
+                // Visible=false. Items added to it before the dropdown is opened
+                // would have stale font state until first open, with no path
+                // to realize the font even at open time. See
+                // ListBoxTests.ItemsAddedWhileInvisible_ShouldHaveFontsResolved.
+                InnerPanel?.ResumeDeferredLayoutAfterAppend(index - newItems.Count, isCleanAppend);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Detaches the visuals of the <paramref name="oldItems"/> that were removed from Items starting at
+    /// <paramref name="itemIndex"/> (Items space; their visuals are still in the panel).
+    /// </summary>
+    private void RemoveItemVisuals(IList? oldItems, int itemIndex)
+    {
+        int count = oldItems?.Count ?? 1;
+
+        if (!_isSyncingVisualAuthoredItems && InnerPanel != null && itemIndex >= 0 && count > 0)
+        {
+            // The removed items are consecutive in Items, so their visuals are the next count item
+            // visuals from the first one, skipping decorations (#3305). They are collected before any
+            // is detached, since detaching shifts the panel indices.
+            var children = InnerPanel.Children;
+            int panelIndex = _decorations.Count > 0 ? GetPanelIndexForItemIndex(itemIndex) : itemIndex;
+            if (count == 1)
+            {
+                if (panelIndex < children.Count)
+                {
+                    children[panelIndex].Parent = null;
+                }
+            }
+            else
+            {
+                var toDetach = new List<GraphicalUiElement>(count);
+                for (int p = panelIndex; p < children.Count && toDetach.Count < count; p++)
+                {
+                    if (!IsDecoration(children[p]))
+                    {
+                        toDetach.Add(children[p]);
+                    }
+                }
+
+                RunWithAllLayoutSuspended(() =>
+                {
+                    foreach (var visual in toDetach)
+                    {
+                        visual.Parent = null;
+                    }
+                }, InnerPanel);
+            }
+        }
+
+        if (oldItems != null)
+        {
+            for (int i = 0; i < oldItems.Count; i++)
+            {
+                object? removed = oldItems[i];
+                _visualAuthoredItems.RemoveAll(authored => ReferenceEquals(authored, removed));
+            }
+        }
+    }
+
+    private void MoveItemVisualAndRow(int oldIndex, int newIndex)
+    {
+        if (InnerPanel != null)
+        {
+            IsMovingInnerPanelChildInternally = true;
+            try
+            {
+                if (_decorations.Count > 0)
+                {
+                    // Indices are Items-space; move only the corresponding item visual among
+                    // the item visuals, leaving decorations to be repositioned by the reconcile
+                    // pass so they follow their anchor item. See issue #3305.
+                    MoveItemVisual(oldIndex, newIndex);
+                }
+                else if (oldIndex < InnerPanel.Children.Count)
+                {
+                    InnerPanel.Children.Move(oldIndex, newIndex);
+                }
+            }
+            finally
+            {
+                IsMovingInnerPanelChildInternally = false;
+            }
+        }
+
+        HandleCollectionItemMoved(oldIndex, newIndex);
     }
 
     protected virtual void HandleCreatedItemVisual(GraphicalUiElement newVisual, object item)
@@ -1180,11 +1226,6 @@ public class ItemsControl : ScrollViewer
         if (InnerPanel != null)
         {
             InnerPanel.Children!.Clear();
-
-            for (int i = InnerPanel.Children.Count - 1; i > -1; i--)
-            {
-                InnerPanel.Children[i].Parent = null;
-            }
         }
     }
 

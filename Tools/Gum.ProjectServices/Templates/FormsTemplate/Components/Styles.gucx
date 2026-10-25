@@ -229,6 +229,60 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="int" Name="InputBackground.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackground.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackground.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="bool" Name="InputBackground.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="InputBackground.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="InputBackground.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackgroundDark.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackgroundDark.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackgroundDark.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="bool" Name="InputBackgroundDark.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="InputBackgroundDark.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="InputBackgroundDark.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackgroundLight.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">110</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackgroundLight.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">110</Value>
+    </Variable>
+    <Variable Type="int" Name="InputBackgroundLight.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">110</Value>
+    </Variable>
+    <Variable Type="bool" Name="InputBackgroundLight.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="InputBackgroundLight.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="InputBackgroundLight.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="LightGray.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
     </Variable>
@@ -304,6 +358,42 @@
     <Variable Type="float" Name="PrimaryDark.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="int" Name="PrimaryDisabled.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryDisabled.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryDisabled.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="bool" Name="PrimaryDisabled.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="PrimaryDisabled.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="PrimaryDisabled.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryHighlighted.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">188</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryHighlighted.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">173</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryHighlighted.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">43</Value>
+    </Variable>
+    <Variable Type="bool" Name="PrimaryHighlighted.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="PrimaryHighlighted.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="PrimaryHighlighted.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="PrimaryLight.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">193</Value>
     </Variable>
@@ -320,6 +410,24 @@
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
     <Variable Type="float" Name="PrimaryLight.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryPushed.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">150</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryPushed.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">135</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryPushed.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="bool" Name="PrimaryPushed.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="PrimaryPushed.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="PrimaryPushed.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Small.FontSize" SetsValue="true">
@@ -504,12 +612,18 @@
   <Instance Name="Colors" BaseType="Container" Locked="true" />
   <Instance Name="Black" BaseType="Rectangle" />
   <Instance Name="DarkGray" BaseType="Rectangle" />
+  <Instance Name="InputBackground" BaseType="Rectangle" />
+  <Instance Name="InputBackgroundDark" BaseType="Rectangle" />
+  <Instance Name="InputBackgroundLight" BaseType="Rectangle" />
   <Instance Name="Gray" BaseType="Rectangle" />
   <Instance Name="LightGray" BaseType="Rectangle" />
   <Instance Name="White" BaseType="Rectangle" />
   <Instance Name="PrimaryDark" BaseType="Rectangle" />
   <Instance Name="Primary" BaseType="Rectangle" />
   <Instance Name="PrimaryLight" BaseType="Rectangle" />
+  <Instance Name="PrimaryDisabled" BaseType="Rectangle" />
+  <Instance Name="PrimaryHighlighted" BaseType="Rectangle" />
+  <Instance Name="PrimaryPushed" BaseType="Rectangle" />
   <Instance Name="Success" BaseType="Rectangle" />
   <Instance Name="Warning" BaseType="Rectangle" />
   <Instance Name="Danger" BaseType="Rectangle" />

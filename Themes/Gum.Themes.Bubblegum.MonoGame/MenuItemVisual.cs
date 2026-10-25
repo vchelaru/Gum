@@ -19,7 +19,7 @@ namespace Gum.Themes.Bubblegum;
 /// Bubblegum-styled MenuItem visual. Transparent at rest, HoverOption tint on
 /// hover, AccentLight band when the submenu is open (Selected). Submenu popup
 /// uses the Bubblegum <see cref="ScrollViewerVisual"/> via the
-/// <c>ScrollViewerVisualTemplate</c> hook.
+/// <c>MenuItem.DefaultSubmenuPopupTemplate</c>, which the theme sets.
 /// </summary>
 public class MenuItemVisual : BaseMenuItemVisual
 {
@@ -56,49 +56,30 @@ public class MenuItemVisual : BaseMenuItemVisual
         }
     }
 
-    /// <inheritdoc/>
-    public override object FormsControlAsObject
-    {
-        get => base.FormsControlAsObject;
-        set
-        {
-            base.FormsControlAsObject = value;
-            if (value is MenuItem menuItem)
-            {
-                menuItem.ScrollViewerVisualTemplate = BubblegumSubmenuScrollTemplate;
-            }
-        }
-    }
-
-    private VisualTemplate BubblegumSubmenuScrollTemplate => new VisualTemplate(() =>
-    {
-        ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
-        visual.HasEvents = true;
-        visual.MakeSizedToChildren();
-        return visual;
-    });
-
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
             fill: new Color(0, 0, 0, 0), text: BubblegumStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: BubblegumStyling.ActiveStyle.Colors.HoverOption, text: BubblegumStyling.ActiveStyle.Colors.Text);
+            fill: BubblegumStyling.ActiveStyle.Colors.HoverOption, text: BubblegumStyling.ActiveStyle.Colors.Text, outlined: true);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: BubblegumStyling.ActiveStyle.Colors.SelectedRow, text: BubblegumStyling.ActiveStyle.Colors.SelectedRowText);
+            fill: BubblegumStyling.ActiveStyle.Colors.SelectedRow, text: BubblegumStyling.ActiveStyle.Colors.SelectedRowText, outlined: true);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: BubblegumStyling.ActiveStyle.Colors.HoverOption, text: BubblegumStyling.ActiveStyle.Colors.Text);
+            fill: BubblegumStyling.ActiveStyle.Colors.HoverOption, text: BubblegumStyling.ActiveStyle.Colors.Text, outlined: true);
 
         States.Disabled.Apply = () => ApplyPalette(
             fill: new Color(0, 0, 0, 0), text: BubblegumStyling.ActiveStyle.Colors.Disabled);
     }
 
-    private void ApplyPalette(Color fill, Color text)
+    private void ApplyPalette(Color fill, Color text, bool outlined = false)
     {
         _fill.FillColor = fill;
+        // The fill alone is close to the menu bar color, so a highlighted item also draws an accent edge.
+        _fill.StrokeColor = BubblegumStyling.ActiveStyle.Colors.Accent;
+        _fill.StrokeWidth = outlined ? 1 : 0;
         TextInstance.Color = text;
         SubmenuIndicatorIcon.Color = text;
     }

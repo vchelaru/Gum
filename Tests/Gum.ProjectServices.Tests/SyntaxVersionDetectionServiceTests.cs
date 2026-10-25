@@ -665,7 +665,7 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         SyntaxVersionResult result = sut.Detect(settings, gameDir);
 
         result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
-        result.Version.ShouldBe(5);
+        result.Version.ShouldBe(6);
     }
 
     [Fact]
@@ -737,7 +737,7 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         SyntaxVersionResult result = sut.Detect(settings, gameDir);
 
         result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
-        result.Version.ShouldBe(5);
+        result.Version.ShouldBe(6);
     }
 
     [Fact]
@@ -773,13 +773,13 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     // moves one makes that output stale (CI's Codegen Drift Check): rerun
     // Tests/GenerateAllCodeGenProjects.bat, commit the diff, then update the pin here.
     [Theory]
-    [InlineData("CodeGen_Maui_FullCodegen/Content/GumProject", 5)]
-    [InlineData("CodeGen_MonoGame_ByReference/Content/GumProject", 5)]
-    [InlineData("CodeGen_MonoGameForms_ByReference/Content/GumProject", 5)]
-    [InlineData("CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject", 5)]
-    [InlineData("CodeGen_MonoGameForms_FullCodegen/Content", 5)]
-    [InlineData("CodeGen_Raylib_ByReference/Content/GumProject", 5)]
-    [InlineData("CodeGen_Skia_ByReference/Content/GumProject", 5)]
+    [InlineData("CodeGen_Maui_FullCodegen/Content/GumProject", 6)]
+    [InlineData("CodeGen_MonoGame_ByReference/Content/GumProject", 6)]
+    [InlineData("CodeGen_MonoGameForms_ByReference/Content/GumProject", 6)]
+    [InlineData("CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject", 6)]
+    [InlineData("CodeGen_MonoGameForms_FullCodegen/Content", 6)]
+    [InlineData("CodeGen_Raylib_ByReference/Content/GumProject", 6)]
+    [InlineData("CodeGen_Skia_ByReference/Content/GumProject", 6)]
     public void Detect_CodeGenHarnessProject_MatchesTheVersionItsOutputWasGeneratedAt(string gumProjectRelativePath, int expectedVersion)
     {
         string gumProjectDir = Path.Combine(FindRepoRoot(), "Tests", gumProjectRelativePath);
@@ -1012,7 +1012,7 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         SyntaxVersionResult result = sut.Detect(settings, gameDir);
 
         result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
-        result.Version.ShouldBe(5);
+        result.Version.ShouldBe(6);
     }
 
     [Theory]

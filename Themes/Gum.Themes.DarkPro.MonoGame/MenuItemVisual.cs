@@ -70,31 +70,6 @@ public class MenuItemVisual : BaseMenuItemVisual
         }
     }
 
-    /// <summary>
-    /// Overrides V3's submenu-popup template assignment so the popup uses a
-    /// Dark Pro ScrollViewerVisual instead of the V3 internal one.
-    /// </summary>
-    public override object FormsControlAsObject
-    {
-        get => base.FormsControlAsObject;
-        set
-        {
-            base.FormsControlAsObject = value;
-            if (value is MenuItem menuItem)
-            {
-                menuItem.ScrollViewerVisualTemplate = DarkProSubmenuScrollTemplate;
-            }
-        }
-    }
-
-    private VisualTemplate DarkProSubmenuScrollTemplate => new VisualTemplate(() =>
-    {
-        ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
-        visual.HasEvents = true;
-        visual.MakeSizedToChildren();
-        return visual;
-    });
-
     private void WireStates()
     {
         // Background.Visible is repurposed here as "should the fill paint" —
@@ -105,21 +80,24 @@ public class MenuItemVisual : BaseMenuItemVisual
             fill: new Color(0, 0, 0, 0), text: DarkProStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: DarkProStyling.ActiveStyle.Colors.Surface2, text: DarkProStyling.ActiveStyle.Colors.Text);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, text: DarkProStyling.ActiveStyle.Colors.Text, outlined: true);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: DarkProStyling.ActiveStyle.Colors.AccentDark, text: DarkProStyling.ActiveStyle.Colors.Text);
+            fill: DarkProStyling.ActiveStyle.Colors.AccentDark, text: DarkProStyling.ActiveStyle.Colors.Text, outlined: true);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: DarkProStyling.ActiveStyle.Colors.Surface2, text: DarkProStyling.ActiveStyle.Colors.Text);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, text: DarkProStyling.ActiveStyle.Colors.Text, outlined: true);
 
         States.Disabled.Apply = () => ApplyPalette(
             fill: new Color(0, 0, 0, 0), text: DarkProStyling.ActiveStyle.Colors.DisabledText);
     }
 
-    private void ApplyPalette(Color fill, Color text)
+    private void ApplyPalette(Color fill, Color text, bool outlined = false)
     {
         _fill.FillColor = fill;
+        // The fill alone is close to the menu bar color, so a highlighted item also draws an accent edge.
+        _fill.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
+        _fill.StrokeWidth = outlined ? 1 : 0;
         TextInstance.Color = text;
         SubmenuIndicatorIcon.Color = text;
     }

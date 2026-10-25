@@ -30,6 +30,12 @@ internal sealed partial class GumContext
 
     internal VisualTemplate? DefaultTooltipTemplate { get; set; }
 
+    internal VisualTemplate? FromFileSubmenuPopupTemplate { get; set; }
+
+    internal VisualTemplate? DefaultSubmenuPopupTemplate { get; set; }
+
+    internal VisualTemplate? FromFileComboBoxDropDownTemplate { get; set; }
+
     // InteractiveGue: the focus slot, the last pushed visual and the "on the next push/click" queues.
     internal IInputReceiver? CurrentInputReceiver { get; set; }
 

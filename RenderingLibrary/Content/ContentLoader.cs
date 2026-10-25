@@ -369,22 +369,18 @@ public sealed class ContentLoader : IContentLoader
 
         else
         {
-            // This file could be a reference from a .fnt file (with extension), 
+            // This file could be a reference from a .fnt file (with extension),
             // but the file could be a content pipeline file. If so, we need to tolerate
-            // missing streams if we have an XnaContentManager, and if so we should try to 
-            // load from there.
+            // missing streams if we have an XnaContentManager, and if so we should try to
+            // load from there. Only a missing file falls back: any other failure (a corrupt
+            // image, a backend limitation, a failing stream hook) is the real error and is
+            // rethrown, rather than hidden behind the ContentManager's ContentLoadException.
+            System.IO.Stream stream;
             try
             {
-                using var stream = FileManager.GetStreamForFile(fileNameStandardized);
-
-                // Headless (no device): FromStream throws, which the catch below handles.
-                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, fileNameStandardized, out isProcessedOnLoad);
-
-                texture.Name = fileNameStandardized;
-
-                toReturn = texture;
+                stream = FileManager.GetStreamForFile(fileNameStandardized);
             }
-            catch(Exception)
+            catch(Exception exception) when (IsMissingFileException(exception))
             {
 #if XNALIKE && !FRB
                 if (XnaContentManager != null)
@@ -398,17 +394,21 @@ public sealed class ContentLoader : IContentLoader
                         // Since we asked with extension, include the extension:
                         asTexture2D.Name = fileNameStandardized;
                     }
-
+                    return toReturn;
                 }
-                else
-                {
-                    throw;
-                }
-#else
-                throw;      
 #endif
+                throw;
             }
 
+            using (stream)
+            {
+                // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
+                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, fileNameStandardized, out isProcessedOnLoad);
+
+                texture.Name = fileNameStandardized;
+
+                toReturn = texture;
+            }
         }
 
         return toReturn;
@@ -427,6 +427,10 @@ public sealed class ContentLoader : IContentLoader
         }
 #endif
     }
+
+    // GetStreamForFile wraps every failure in an IOException, so the cause is the inner exception.
+    private static bool IsMissingFileException(Exception exception) =>
+        exception.InnerException is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException;
 
 #if XNALIKE && !FRB
     /// <summary>

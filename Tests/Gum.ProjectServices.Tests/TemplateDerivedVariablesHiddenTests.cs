@@ -162,6 +162,7 @@ public class TemplateDerivedVariablesHiddenTests
         ["ScrollBar"] = AllStructureVariables,
         ["ScrollBarButton"] = AllStructureVariables,
         ["ScrollBarThumb"] = AllStructureVariables,
+        ["MenuItemSubmenuPopup"] = AllStructureVariables,
         ["ScrollViewer"] = AllStructureVariables,
         ["SettingsView"] = AllStructureVariables,
         ["Slider"] = AllStructureVariables,

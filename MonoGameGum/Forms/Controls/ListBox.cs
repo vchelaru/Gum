@@ -342,10 +342,8 @@ public class ListBox : ItemsControl, IInputReceiver
                 // Clear all selections
                 SelectSingleRowAndScrollIntoView(null);
             }
-            else
-            {
-                throw new IndexOutOfRangeException();
-            }
+            // Any other index is out of range and ignored, keeping the selection, as WPF's Selector
+            // does for an index past the end (#6737). WPF throws below -1; Gum ignores that too.
         }
     }
 
@@ -1412,7 +1410,9 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         if(_suppressCollectionChangedToBase == false)
         {
-            _isAddingFromItemsCollection = e.Action == NotifyCollectionChangedAction.Add;
+            // Every row the panel gains while Items changes (Add, Replace, Reset rebuild) was made for an
+            // item already in Items, so none of them is added back to Items as a self-backed row.
+            _isAddingFromItemsCollection = true;
             try
             {
                 base.HandleItemsCollectionChanged(sender, e);
@@ -1675,30 +1675,12 @@ public class ListBox : ItemsControl, IInputReceiver
 
             var viewTop = -InnerPanel.Y;
             var viewBottom = -InnerPanel.Y + ClipContainer.AbsoluteHeight;
-            var isAboveView = visualTop < viewTop;
-            var isBelowView = visualBottom > viewBottom;
 
             float amountToScroll = 0;
             switch (scrollIntoViewStyle)
             {
                 case ScrollIntoViewStyle.BringIntoView:
-                    if (isAboveView)
-                    {
-                        amountToScroll = visualTop - viewTop;
-                        if(verticalScrollBar != null)
-                        {
-                            verticalScrollBar.Value += amountToScroll;
-                        }
-                    }
-                    else if (isBelowView)
-                    {
-                        amountToScroll = visualBottom - viewBottom;
-                        if (verticalScrollBar != null)
-                        {
-                            verticalScrollBar.Value += amountToScroll;
-                        }
-                    }
-
+                    BringRowIntoView(visual.Visual);
                     break;
                 case ScrollIntoViewStyle.Top:
                     amountToScroll = visualTop - viewTop;
@@ -1796,7 +1778,13 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <param name="popup">The popup to show, for example a dropdown from a ComboBox or MenuItem</param>
     /// <param name="listBoxParent">The parent visual, which would be something like the ComboBox.Visual</param>
     /// <param name="forceAbsoluteSize">Whether to force the popup to have absolute WidthUnits and HeightUnits.</param>
-    public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize = true)
+    public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize = true) =>
+        ShowPopupListBox(popup, listBoxParent, forceAbsoluteSize, ownFollowers: null);
+
+    // ownFollowers: popups that belong on top of this one, in draw order (a MenuItem's open nested
+    // submenus). When exactly these follow the popup in its root, it is already in place.
+    internal static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize,
+        IReadOnlyList<GraphicalUiElement>? ownFollowers)
     {
         popup.IsVisible = true;
         // this thing is going to be in front of everything:
@@ -1818,7 +1806,9 @@ public class ListBox : ItemsControl, IInputReceiver
         // resets the binding on the ListBox which 
         // we don't want!
         //popup.Visual.RemoveFromManagers();
+#if FRB
         popup.Visual.Parent = null;
+#endif
         var layerToAddListBoxTo = GetLayerToAddTo(listBoxParent);
 
 #if FRB
@@ -1855,19 +1845,15 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
 #else
-        var (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
-            ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
+        GraphicalUiElement targetRoot = GetPopupTargetRoot(listBoxParent);
 
-        GraphicalUiElement targetRoot;
-        if (listBoxParent.GetTopParent() == modalRoot)
+        // A popup already drawn over every other one, apart from its own followers, stays where it is:
+        // taking it out and adding it back would lay out all of its rows twice (#6757, #6762).
+        var targetChildren = targetRoot.Children;
+        if (!IsAlreadyOnTop(popup.Visual, targetRoot, ownFollowers))
         {
-            targetRoot = modalRoot;
-            modalRoot.Children.Add(popup.Visual);
-        }
-        else
-        {
-            targetRoot = popupRoot;
-            popupRoot.Children.Add(popup.Visual);
+            popup.Visual.Parent = null;
+            targetChildren.Add(popup.Visual);
         }
 
         // Reposition after resolving and parenting to the target root, so the clamp reflects
@@ -1878,6 +1864,44 @@ public class ListBox : ItemsControl, IInputReceiver
 
 
     }
+
+#if !FRB
+    /// <summary>
+    /// The root a popup opened from <paramref name="listBoxParent"/> is parented under, and clamped to:
+    /// the modal root when the parent is in it, otherwise the popup root.
+    /// </summary>
+    internal static GraphicalUiElement GetPopupTargetRoot(GraphicalUiElement listBoxParent)
+    {
+        var (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
+            ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
+
+        return listBoxParent.GetTopParent() == modalRoot ? modalRoot : popupRoot;
+    }
+
+    private static bool IsAlreadyOnTop(GraphicalUiElement popupVisual, GraphicalUiElement targetRoot,
+        IReadOnlyList<GraphicalUiElement>? ownFollowers)
+    {
+        if (popupVisual.Parent != targetRoot)
+        {
+            return false;
+        }
+        var children = targetRoot.Children;
+        int followerCount = ownFollowers?.Count ?? 0;
+        int popupIndex = children.Count - 1 - followerCount;
+        if (popupIndex < 0 || children[popupIndex] != popupVisual)
+        {
+            return false;
+        }
+        for (int i = 0; i < followerCount; i++)
+        {
+            if (children[popupIndex + 1 + i] != ownFollowers![i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+#endif
 
     private static Layer GetLayerToAddTo(GraphicalUiElement listBoxParent)
     {
@@ -2353,4 +2377,52 @@ public class ListBox : ItemsControl, IInputReceiver
 
 
 #endregion
+}
+
+/// <summary>
+/// What an open popup was last placed against: its owner's absolute rectangle and the size of the root
+/// it is parented under. A change in either means the popup must be placed again (the owner or an
+/// ancestor moved or resized, or the canvas was resized). Shared by ComboBox and MenuItem. Under FRB
+/// only the owner is tracked: a root resize does not re-place a popup there.
+/// </summary>
+internal struct PopupPlacement
+{
+    float _ownerX;
+    float _ownerY;
+    float _ownerWidth;
+    float _ownerHeight;
+#if !FRB
+    float _boundsWidth;
+    float _boundsHeight;
+#endif
+
+    /// <summary>Records the current state; call after the popup has been placed and parented.</summary>
+    public void Record(global::Gum.Wireframe.GraphicalUiElement owner, global::Gum.Wireframe.GraphicalUiElement popup)
+    {
+#if !FRB
+        if (popup.Parent is global::Gum.Wireframe.GraphicalUiElement boundsRoot)
+        {
+            _boundsWidth = boundsRoot.AbsoluteWidth;
+            _boundsHeight = boundsRoot.AbsoluteHeight;
+        }
+#endif
+        _ownerX = owner.AbsoluteX;
+        _ownerY = owner.AbsoluteY;
+        _ownerWidth = owner.AbsoluteWidth;
+        _ownerHeight = owner.AbsoluteHeight;
+    }
+
+#if !FRB
+    /// <summary>Whether the root the popup is parented under changed size since it was placed.</summary>
+    public readonly bool DidBoundsChange(global::Gum.Wireframe.GraphicalUiElement popup) =>
+        popup.Parent is global::Gum.Wireframe.GraphicalUiElement boundsRoot &&
+        (boundsRoot.AbsoluteWidth != _boundsWidth || boundsRoot.AbsoluteHeight != _boundsHeight);
+#endif
+
+    /// <summary>Whether the owner's absolute rectangle changed since the popup was placed.</summary>
+    public readonly bool DidOwnerChange(global::Gum.Wireframe.GraphicalUiElement owner) =>
+        owner.AbsoluteX != _ownerX ||
+        owner.AbsoluteY != _ownerY ||
+        owner.AbsoluteWidth != _ownerWidth ||
+        owner.AbsoluteHeight != _ownerHeight;
 }

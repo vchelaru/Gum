@@ -175,7 +175,8 @@ public class LayoutSuspensionExceptionSafetyTests : BaseTestClass
         // The guarded block only runs when no ScrollViewerVisualTemplate produced a popup visual.
         // Hiding the scroll bars re-applies the "NoScrollBar" state, which is where the throw
         // is injected (armed once the items are added to the popup, so construction is unaffected;
-        // the popup is sized before it is parented, #6686).
+        // the popup is sized before it is parented, #6686). It fires only under the global suspension,
+        // because the popup panel's own layout after the row fill (#6705) applies the state too.
         VisualTemplate originalTemplate = FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)];
         bool injectionEnabled = true;
         bool? suspendedAtThrow = null;
@@ -190,7 +191,7 @@ public class LayoutSuspensionExceptionSafetyTests : BaseTestClass
             Action? originalApply = noScrollBar.Apply;
             noScrollBar.Apply = () =>
             {
-                if (armed && injectionEnabled)
+                if (armed && injectionEnabled && GraphicalUiElement.IsAllLayoutSuspended)
                 {
                     suspendedAtThrow = GraphicalUiElement.IsAllLayoutSuspended;
                     throw new InvalidOperationException(ThrowMessage);

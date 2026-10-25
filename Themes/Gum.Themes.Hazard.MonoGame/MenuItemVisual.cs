@@ -69,31 +69,6 @@ public class MenuItemVisual : BaseMenuItemVisual
         }
     }
 
-    /// <summary>
-    /// Overrides V3's submenu-popup template assignment so the popup uses a
-    /// Hazard ScrollViewerVisual instead of the V3 internal one.
-    /// </summary>
-    public override object FormsControlAsObject
-    {
-        get => base.FormsControlAsObject;
-        set
-        {
-            base.FormsControlAsObject = value;
-            if (value is MenuItem menuItem)
-            {
-                menuItem.ScrollViewerVisualTemplate = SubmenuScrollViewerTemplate;
-            }
-        }
-    }
-
-    private VisualTemplate SubmenuScrollViewerTemplate => new VisualTemplate(() =>
-    {
-        ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
-        visual.HasEvents = true;
-        visual.MakeSizedToChildren();
-        return visual;
-    });
-
     private void WireStates()
     {
         // Background.Visible is repurposed here as "should the fill paint" —
@@ -104,21 +79,24 @@ public class MenuItemVisual : BaseMenuItemVisual
             fill: new Color(0, 0, 0, 0), text: HazardStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: HazardStyling.ActiveStyle.Colors.Surface2, text: HazardStyling.ActiveStyle.Colors.TextBright);
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, text: HazardStyling.ActiveStyle.Colors.TextBright, outlined: true);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: HazardStyling.ActiveStyle.Colors.Selection, text: HazardStyling.ActiveStyle.Colors.PressedText);
+            fill: HazardStyling.ActiveStyle.Colors.Selection, text: HazardStyling.ActiveStyle.Colors.PressedText, outlined: true);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: HazardStyling.ActiveStyle.Colors.Surface2, text: HazardStyling.ActiveStyle.Colors.TextBright);
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, text: HazardStyling.ActiveStyle.Colors.TextBright, outlined: true);
 
         States.Disabled.Apply = () => ApplyPalette(
             fill: new Color(0, 0, 0, 0), text: HazardStyling.ActiveStyle.Colors.DisabledText);
     }
 
-    private void ApplyPalette(Color fill, Color text)
+    private void ApplyPalette(Color fill, Color text, bool outlined = false)
     {
         _fill.FillColor = fill;
+        // The fill alone is close to the menu bar color, so a highlighted item also draws an accent edge.
+        _fill.StrokeColor = HazardStyling.ActiveStyle.Colors.Accent;
+        _fill.StrokeWidth = outlined ? 1 : 0;
         TextInstance.Color = text;
         SubmenuIndicatorIcon.Color = text;
     }
