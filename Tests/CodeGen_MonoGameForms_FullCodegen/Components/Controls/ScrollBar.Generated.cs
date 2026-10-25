@@ -46,13 +46,6 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
         set
         {
             _scrollBarCategoryState = value;
-            var appliedDynamically = false;
-            if(!appliedDynamically)
-            {
-                switch (value)
-                {
-                }
-            }
         }
     }
     public ButtonIcon UpButtonInstance { get; protected set; }

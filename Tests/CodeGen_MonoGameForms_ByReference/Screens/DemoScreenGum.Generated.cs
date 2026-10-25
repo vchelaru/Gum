@@ -2,28 +2,29 @@
 using CodeGenProject.Components;
 using CodeGenProject.Components.Controls;
 using CodeGenProject.Components.Elements;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Screens;
 partial class DemoScreenGum : global::Gum.Forms.Controls.FrameworkElement
 {
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
     [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
     public static void RegisterRuntimeType()
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("DemoScreenGum");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named DemoScreenGum - did you forget to load a Gum project?");
-#endif
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("DemoScreenGum") ?? throw new System.InvalidOperationException("Could not find an element named DemoScreenGum - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new DemoScreenGum(visual);
             visual.Width = 0;
@@ -127,7 +128,6 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public DialogBox DialogBoxInstance { get; protected set; }
     public WindowStandard WindowStandardInstance { get; protected set; }
     public Label LabelInstance1 { get; protected set; }
-    // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
     public Spaced_Component Spaced_Component_Instance { get; protected set; }
     public _123Component _123Instance { get; protected set; }
 
@@ -143,67 +143,67 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        DemoSettingsMenu = this.Visual?.GetGraphicalUiElementByName("DemoSettingsMenu") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        MenuTitle = this.Visual?.GetGraphicalUiElementByName("MenuTitle") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        MenuTitle1 = this.Visual?.GetGraphicalUiElementByName("MenuTitle1") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        MenuItems = this.Visual?.GetGraphicalUiElementByName("MenuItems") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        TitleText = this.Visual?.GetGraphicalUiElementByName("TitleText") as global::MonoGameGum.GueDeriving.TextRuntime;
-        TitleText1 = this.Visual?.GetGraphicalUiElementByName("TitleText1") as global::MonoGameGum.GueDeriving.TextRuntime;
-        ButtonCloseInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonClose>(this.Visual,"ButtonCloseInstance1");
-        DividerInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DividerHorizontal>(this.Visual,"DividerInstance");
-        DividerInstance4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DividerHorizontal>(this.Visual,"DividerInstance4");
-        ResolutionLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"ResolutionLabel");
-        ResolutionBox = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBox>(this.Visual,"ResolutionBox");
-        DetectResolutionsButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"DetectResolutionsButton");
-        ShowDialogButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"ShowDialogButton");
-        ShowToastButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"ShowToastButton");
-        FullScreenCheckbox = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<CheckBox>(this.Visual,"FullScreenCheckbox");
-        DividerInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DividerHorizontal>(this.Visual,"DividerInstance1");
-        MusicLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"MusicLabel");
-        MusicSlider = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Slider>(this.Visual,"MusicSlider");
-        SoundLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"SoundLabel");
-        SoundSlider = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Slider>(this.Visual,"SoundSlider");
-        DividerInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DividerHorizontal>(this.Visual,"DividerInstance2");
-        ControlLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"ControlLabel");
-        RadioButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<RadioButton>(this.Visual,"RadioButtonInstance");
-        RadioButtonInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<RadioButton>(this.Visual,"RadioButtonInstance1");
-        RadioButtonInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<RadioButton>(this.Visual,"RadioButtonInstance2");
-        DividerInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DividerHorizontal>(this.Visual,"DividerInstance3");
-        DifficultyLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"DifficultyLabel");
-        Background1 = this.Visual?.GetGraphicalUiElementByName("Background1") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        ComboBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ComboBox>(this.Visual,"ComboBoxInstance");
-        ButtonContainer = this.Visual?.GetGraphicalUiElementByName("ButtonContainer") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        ButtonConfirmInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonConfirm>(this.Visual,"ButtonConfirmInstance");
-        WindowOkButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonConfirm>(this.Visual,"WindowOkButton");
-        ButtonDenyInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonDeny>(this.Visual,"ButtonDenyInstance");
-        DemoDialog = this.Visual?.GetGraphicalUiElementByName("DemoDialog") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        MarginContainer = this.Visual?.GetGraphicalUiElementByName("MarginContainer") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
-        TextBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TextBox>(this.Visual,"TextBoxInstance");
-        TextBoxInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PasswordBox>(this.Visual,"TextBoxInstance1");
-        MultiLineTextBox = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TextBox>(this.Visual,"MultiLineTextBox");
-        DemoHud = this.Visual?.GetGraphicalUiElementByName("DemoHud") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        TitleText2 = this.Visual?.GetGraphicalUiElementByName("TitleText2") as global::MonoGameGum.GueDeriving.TextRuntime;
-        MenuTitle2 = this.Visual?.GetGraphicalUiElementByName("MenuTitle2") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        PercentBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBar>(this.Visual,"PercentBarInstance");
-        HitpointsBar1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBar>(this.Visual,"HitpointsBar1");
-        HitpointsBar2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBar>(this.Visual,"HitpointsBar2");
-        HitpointsBar3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBar>(this.Visual,"HitpointsBar3");
-        PercentBarInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBar>(this.Visual,"PercentBarInstance1");
-        PercentBarInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBar>(this.Visual,"PercentBarInstance2");
-        DividerInstance5 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DividerHorizontal>(this.Visual,"DividerInstance5");
-        ButtonCloseInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonClose>(this.Visual,"ButtonCloseInstance2");
-        PercentBarInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBar>(this.Visual,"PercentBarInstance3");
-        PercentBarInstance4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBar>(this.Visual,"PercentBarInstance4");
-        PercentBarInstance5 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PercentBarIcon>(this.Visual,"PercentBarInstance5");
-        ContainerInstance = this.Visual?.GetGraphicalUiElementByName("ContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        TreeViewInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TreeView>(this.Visual,"TreeViewInstance");
-        DialogBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DialogBox>(this.Visual,"DialogBoxInstance");
-        WindowStandardInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<WindowStandard>(this.Visual,"WindowStandardInstance");
-        LabelInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance1");
-        Spaced_Component_Instance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Spaced_Component>(this.Visual,"Spaced Component Instance");
-        _123Instance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<_123Component>(this.Visual,"123Instance");
+        DemoSettingsMenu = this.Visual?.GetGraphicalUiElementByName("DemoSettingsMenu") as global::Gum.GueDeriving.ContainerRuntime;
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        MenuTitle = this.Visual?.GetGraphicalUiElementByName("MenuTitle") as global::Gum.GueDeriving.ContainerRuntime;
+        MenuTitle1 = this.Visual?.GetGraphicalUiElementByName("MenuTitle1") as global::Gum.GueDeriving.ContainerRuntime;
+        MenuItems = this.Visual?.GetGraphicalUiElementByName("MenuItems") as global::Gum.GueDeriving.ContainerRuntime;
+        TitleText = this.Visual?.GetGraphicalUiElementByName("TitleText") as global::Gum.GueDeriving.TextRuntime;
+        TitleText1 = this.Visual?.GetGraphicalUiElementByName("TitleText1") as global::Gum.GueDeriving.TextRuntime;
+        ButtonCloseInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonClose>(this.Visual,"ButtonCloseInstance1");
+        DividerInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<DividerHorizontal>(this.Visual,"DividerInstance");
+        DividerInstance4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<DividerHorizontal>(this.Visual,"DividerInstance4");
+        ResolutionLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"ResolutionLabel");
+        ResolutionBox = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ListBox>(this.Visual,"ResolutionBox");
+        DetectResolutionsButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonStandard>(this.Visual,"DetectResolutionsButton");
+        ShowDialogButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonStandard>(this.Visual,"ShowDialogButton");
+        ShowToastButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonStandard>(this.Visual,"ShowToastButton");
+        FullScreenCheckbox = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<CheckBox>(this.Visual,"FullScreenCheckbox");
+        DividerInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<DividerHorizontal>(this.Visual,"DividerInstance1");
+        MusicLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"MusicLabel");
+        MusicSlider = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Slider>(this.Visual,"MusicSlider");
+        SoundLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"SoundLabel");
+        SoundSlider = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Slider>(this.Visual,"SoundSlider");
+        DividerInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<DividerHorizontal>(this.Visual,"DividerInstance2");
+        ControlLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"ControlLabel");
+        RadioButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<RadioButton>(this.Visual,"RadioButtonInstance");
+        RadioButtonInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<RadioButton>(this.Visual,"RadioButtonInstance1");
+        RadioButtonInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<RadioButton>(this.Visual,"RadioButtonInstance2");
+        DividerInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<DividerHorizontal>(this.Visual,"DividerInstance3");
+        DifficultyLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"DifficultyLabel");
+        Background1 = this.Visual?.GetGraphicalUiElementByName("Background1") as global::Gum.GueDeriving.NineSliceRuntime;
+        ComboBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ComboBox>(this.Visual,"ComboBoxInstance");
+        ButtonContainer = this.Visual?.GetGraphicalUiElementByName("ButtonContainer") as global::Gum.GueDeriving.ContainerRuntime;
+        ButtonConfirmInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonConfirm>(this.Visual,"ButtonConfirmInstance");
+        WindowOkButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonConfirm>(this.Visual,"WindowOkButton");
+        ButtonDenyInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonDeny>(this.Visual,"ButtonDenyInstance");
+        DemoDialog = this.Visual?.GetGraphicalUiElementByName("DemoDialog") as global::Gum.GueDeriving.ContainerRuntime;
+        MarginContainer = this.Visual?.GetGraphicalUiElementByName("MarginContainer") as global::Gum.GueDeriving.ContainerRuntime;
+        LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"LabelInstance");
+        TextBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TextBox>(this.Visual,"TextBoxInstance");
+        TextBoxInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PasswordBox>(this.Visual,"TextBoxInstance1");
+        MultiLineTextBox = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TextBox>(this.Visual,"MultiLineTextBox");
+        DemoHud = this.Visual?.GetGraphicalUiElementByName("DemoHud") as global::Gum.GueDeriving.NineSliceRuntime;
+        TitleText2 = this.Visual?.GetGraphicalUiElementByName("TitleText2") as global::Gum.GueDeriving.TextRuntime;
+        MenuTitle2 = this.Visual?.GetGraphicalUiElementByName("MenuTitle2") as global::Gum.GueDeriving.ContainerRuntime;
+        PercentBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBar>(this.Visual,"PercentBarInstance");
+        HitpointsBar1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBar>(this.Visual,"HitpointsBar1");
+        HitpointsBar2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBar>(this.Visual,"HitpointsBar2");
+        HitpointsBar3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBar>(this.Visual,"HitpointsBar3");
+        PercentBarInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBar>(this.Visual,"PercentBarInstance1");
+        PercentBarInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBar>(this.Visual,"PercentBarInstance2");
+        DividerInstance5 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<DividerHorizontal>(this.Visual,"DividerInstance5");
+        ButtonCloseInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonClose>(this.Visual,"ButtonCloseInstance2");
+        PercentBarInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBar>(this.Visual,"PercentBarInstance3");
+        PercentBarInstance4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBar>(this.Visual,"PercentBarInstance4");
+        PercentBarInstance5 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PercentBarIcon>(this.Visual,"PercentBarInstance5");
+        ContainerInstance = this.Visual?.GetGraphicalUiElementByName("ContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        TreeViewInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TreeView>(this.Visual,"TreeViewInstance");
+        DialogBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<DialogBox>(this.Visual,"DialogBoxInstance");
+        WindowStandardInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<WindowStandard>(this.Visual,"WindowStandardInstance");
+        LabelInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"LabelInstance1");
+        Spaced_Component_Instance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Spaced_Component>(this.Visual,"Spaced Component Instance");
+        _123Instance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<_123Component>(this.Visual,"123Instance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
