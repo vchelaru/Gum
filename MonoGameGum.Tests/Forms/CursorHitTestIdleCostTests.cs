@@ -1112,4 +1112,259 @@ public class CursorHitTestIdleCostTests : BaseTestClass
     }
 
     #endregion
+
+    #region Outside of bounds
+
+    // A container 10x10 at the origin that raises its children's events outside its bounds. Its children sit
+    // outside it: the first is the only one with events, the rest have none under them.
+    private static (CountingInteractive Root, CountingInteractive WithEvents, List<CountingInteractive> NoEvents) CreateOutsideBoundsRoot(
+        bool rootHasEvents = false, int eventlessCount = 40)
+    {
+        CountingInteractive root = CreateBox(0, 0, 10, rootHasEvents);
+        root.RaiseChildrenEventsOutsideOfBounds = true;
+        CountingInteractive withEvents = CreateBox(100, 0, 10, hasEvents: true);
+        root.AddChild(withEvents);
+        List<CountingInteractive> noEvents = new();
+        for (int i = 0; i < eventlessCount; i++)
+        {
+            CountingInteractive child = CreateBox(200 + i * 12, 0, 10, hasEvents: false);
+            root.AddChild(child);
+            noEvents.Add(child);
+        }
+        return (root, withEvents, noEvents);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldNotTestChildrenWithoutEvents_WhenCursorIsOutsideAnOutsideBoundsRoot()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        Mock<ICursor> cursor = CreateCursor(5000, 5000);
+
+        Walk(new List<GraphicalUiElement> { root }, cursor);
+
+        TotalCalls(noEvents).ShouldBe(0);
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldClickChildWithEvents_WhenItIsOutsideTheRootsBounds()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        int clicks = 0;
+        withEvents.Click += (_, _) => clicks++;
+        Mock<ICursor> cursor = CreateCursor(105, 5, click: true);
+
+        Walk(new List<GraphicalUiElement> { root }, cursor);
+
+        clicks.ShouldBe(1);
+        cursor.Object.VisualOver.ShouldBe(withEvents);
+        TotalCalls(noEvents).ShouldBe(0);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldNotTakeTheCursorForTheRoot_WhenOnlyAChildWithoutEventsIsUnderIt()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot(rootHasEvents: true);
+        Mock<ICursor> cursor = CreateCursor(205, 5);
+
+        Walk(new List<GraphicalUiElement> { root }, cursor);
+
+        cursor.Object.VisualOver.ShouldBeNull("a child with no events is not a hit target, so it does not extend the root's hit area");
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldHitADescendantWithEvents_WhenItIsUnderAnEventlessChildOutsideTheBounds()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot(rootHasEvents: true);
+        withEvents.HasEvents = false;
+        CountingInteractive grandchild = CreateBox(0, 0, 10, hasEvents: true);
+        withEvents.AddChild(grandchild);
+        Mock<ICursor> cursor = CreateCursor(105, 5);
+
+        Walk(new List<GraphicalUiElement> { root }, cursor);
+
+        cursor.Object.VisualOver.ShouldBe(grandchild);
+    }
+
+    [Fact]
+    public void HasCursorOver_ShouldStillReportTrue_WhenCursorIsOverAChildWithoutEventsOutsideTheBounds()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot(rootHasEvents: true);
+        Mock<ICursor> cursor = CreateCursor(205, 5);
+
+        root.HasCursorOver(cursor.Object).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HasCursorOver_ShouldStillReportTrue_WhenCalledAfterAWalk()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot(rootHasEvents: true);
+        Mock<ICursor> cursor = CreateCursor(205, 5);
+        Walk(new List<GraphicalUiElement> { root }, cursor);
+
+        root.HasCursorOver(cursor.Object).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldClick_WhenAChildOutsideTheBoundsGainsEventsAfterBeingSkipped()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        Mock<ICursor> cursor = CreateCursor(205, 5, click: true);
+        List<GraphicalUiElement> roots = new() { root };
+        Walk(roots, cursor);
+        int clicks = 0;
+        noEvents[0].Click += (_, _) => clicks++;
+
+        noEvents[0].HasEvents = true;
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldClick_WhenADescendantWithEventsIsAddedUnderAnEventlessChildOutsideTheBounds()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        Mock<ICursor> cursor = CreateCursor(205, 5, click: true);
+        List<GraphicalUiElement> roots = new() { root };
+        Walk(roots, cursor);
+        int clicks = 0;
+        CountingInteractive late = CreateBox(0, 0, 10, hasEvents: true);
+        late.Click += (_, _) => clicks++;
+
+        noEvents[0].AddChild(late);
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+
+        noEvents[0].RemoveChild(late);
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1, "removing the descendant makes the child eventless again");
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldClick_WhenAHiddenChildWithEventsOutsideTheBoundsIsShown()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        int clicks = 0;
+        withEvents.Click += (_, _) => clicks++;
+        withEvents.Visible = false;
+        Mock<ICursor> cursor = CreateCursor(105, 5, click: true);
+        List<GraphicalUiElement> roots = new() { root };
+        Walk(roots, cursor);
+        clicks.ShouldBe(0);
+
+        withEvents.Visible = true;
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseRollOff_WhenTheHoveredChildOutsideTheBoundsIsHidden()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        int rollOffs = 0;
+        withEvents.RollOff += (_, _) => rollOffs++;
+        Mock<ICursor> cursor = CreateCursor(105, 5);
+        List<GraphicalUiElement> roots = new() { root };
+        Walk(roots, cursor);
+        cursor.Object.VisualOver.ShouldBe(withEvents);
+
+        withEvents.Visible = false;
+        Walk(roots, cursor);
+
+        rollOffs.ShouldBe(1);
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldKeepDraggingThenRemoveAsPushed_WhenThePushedChildOutsideTheBoundsIsHidden()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        int dragging = 0;
+        int clicks = 0;
+        int removedAsPushed = 0;
+        withEvents.Dragging += (_, _) => dragging++;
+        withEvents.Click += (_, _) => clicks++;
+        withEvents.RemovedAsPushed += (_, _) => removedAsPushed++;
+        List<GraphicalUiElement> roots = new() { root };
+        Mock<ICursor> cursor = CreateCursor(105, 5);
+        SetButtons(cursor, push: true, down: true, click: false);
+        Walk(roots, cursor);
+        cursor.Object.WindowPushed.ShouldBe(withEvents);
+
+        withEvents.Visible = false;
+        SetButtons(cursor, push: false, down: true, click: false);
+        Walk(roots, cursor);
+        dragging.ShouldBe(2);
+
+        SetButtons(cursor, push: false, down: false, click: true);
+        Walk(roots, cursor);
+
+        removedAsPushed.ShouldBe(1);
+        clicks.ShouldBe(0);
+        cursor.Object.WindowPushed.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldNotTestOrClickAHiddenOutsideBoundsRoot()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        int clicks = 0;
+        withEvents.Click += (_, _) => clicks++;
+        root.Visible = false;
+        Mock<ICursor> cursor = CreateCursor(105, 5, click: true);
+
+        Walk(new List<GraphicalUiElement> { root }, cursor);
+
+        clicks.ShouldBe(0);
+        withEvents.HasCursorOverCalls.ShouldBe(0);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldClickALowerRoot_WhenAnOutsideBoundsRootAboveItHasNothingUnderTheCursor()
+    {
+        (CountingInteractive upper, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        CountingInteractive lower = CreateBox(205, 0, 10, hasEvents: true);
+        int clicks = 0;
+        lower.Click += (_, _) => clicks++;
+        Mock<ICursor> cursor = CreateCursor(205, 5, click: true);
+
+        Walk(new List<GraphicalUiElement> { lower, upper }, cursor);
+
+        clicks.ShouldBe(1);
+        cursor.Object.VisualOver.ShouldBe(lower);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldNotTestEventlessChildren_WhenANestedOutsideBoundsContainerIsTested()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot();
+        CountingInteractive nested = CreateBox(1000, 0, 10, hasEvents: false);
+        nested.RaiseChildrenEventsOutsideOfBounds = true;
+        CountingInteractive nestedTarget = CreateBox(300, 0, 10, hasEvents: true);
+        nested.AddChild(nestedTarget);
+        List<CountingInteractive> nestedEventless = new();
+        for (int i = 0; i < 20; i++)
+        {
+            CountingInteractive child = CreateBox(400 + i * 12, 0, 10, hasEvents: false);
+            nested.AddChild(child);
+            nestedEventless.Add(child);
+        }
+        root.AddChild(nested);
+        int clicks = 0;
+        nestedTarget.Click += (_, _) => clicks++;
+        Mock<ICursor> cursor = CreateCursor(1305, 5, click: true);
+
+        Walk(new List<GraphicalUiElement> { root }, cursor);
+
+        clicks.ShouldBe(1);
+        TotalCalls(nestedEventless).ShouldBe(0);
+        TotalCalls(noEvents).ShouldBe(0);
+    }
+
+    #endregion
 }
