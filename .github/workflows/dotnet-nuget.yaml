@@ -18,11 +18,11 @@ on:
         required: false
         default: false
         type: boolean
-      version:
+      version_suffix:
         description: |
-          Package version to publish.
-          Stable release:  2026.4.23.1
-          Pre-release:     2026.4.23.1-preview.1
+          Version after the date; the workflow prepends today's UTC date (yyyy.M.d).
+          Stable release:  1                -> 2026.4.23.1
+          Pre-release:     1-preview.1      -> 2026.4.23.1-preview.1
           Leave empty to use the version currently in each .csproj file.
           The Unity package needs three-part SemVer, so 2026.4.23.1-preview.1 becomes
           2026.4.23-preview.1.1 there. Empty publishes Unity as <today>-preview.<run number>.
@@ -36,9 +36,36 @@ env:
   SOLUTION_FILE: 'AllLibraries.sln' # Specify which solution to build
 
 jobs:
+  # The date comes from the runner, never from typing, so a mistyped year can't be published.
+  # Computed once so both publish jobs get the same version even across midnight.
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - name: Compute version
+        id: ver
+        shell: pwsh
+        env:
+          SUFFIX: ${{ github.event.inputs.version_suffix }}
+        run: |
+          $suffix = "$env:SUFFIX".Trim()
+          if ($suffix -eq '') {
+            "version=" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+          if ($suffix -notmatch '^\d+(-[0-9A-Za-z.-]+)?$') {
+            Write-Error "version_suffix '$suffix' must look like '1' or '1-preview.1' (no date; the workflow adds it)."
+            exit 1
+          }
+          $version = (Get-Date).ToUniversalTime().ToString('yyyy.M.d') + ".$suffix"
+          Write-Host "Package version: $version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+
   build-and-publish:
+    needs: version
     runs-on: windows-latest
-    
+
     steps:
     # See build-and-test.yaml for why we init submodules manually
     # instead of using actions/checkout's `submodules: recursive`.
@@ -74,7 +101,7 @@ jobs:
       id: ver
       shell: pwsh
       run: |
-        $v = '${{ github.event.inputs.version }}'.Trim()
+        $v = '${{ needs.version.outputs.version }}'
         if ($v -ne '') {
           echo "flag=-p:Version=$v" >> $env:GITHUB_OUTPUT
         } else {
@@ -147,6 +174,7 @@ jobs:
   # Windows because the package ships the win-x64 HarfBuzz native.
   publish-unity:
     if: github.event.inputs.publish_unity == 'true'
+    needs: version
     runs-on: windows-latest
     permissions:
       contents: write
@@ -168,7 +196,7 @@ jobs:
         id: unityver
         shell: pwsh
         run: |
-          $v = '${{ github.event.inputs.version }}'.Trim()
+          $v = '${{ needs.version.outputs.version }}'
           if ($v -match '^(\d+)\.(\d+)\.(\d+)\.(\d+)(?:-(.+))?$') {
             $base = "$($Matches[1]).$($Matches[2]).$($Matches[3])"
             if ($Matches[5]) { $unity = "$base-$($Matches[5]).$($Matches[4])" } else { $unity = $base }
