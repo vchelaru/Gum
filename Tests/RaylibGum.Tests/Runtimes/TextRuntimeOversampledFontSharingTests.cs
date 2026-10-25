@@ -29,8 +29,8 @@ public class TextRuntimeOversampledFontSharingTests : BaseTestClass
             second.RegenerateOversampledFont(2f).ShouldBeTrue();
 
             creator.RequestsAt40.ShouldBe(1);
-            ((Text)second.RenderableComponent).Font.Texture.Id
-                .ShouldBe(((Text)first.RenderableComponent).Font.Texture.Id);
+            GetText(second).Font.Texture.Id
+                .ShouldBe(GetText(first).Font.Texture.Id);
         }
         finally
         {
@@ -38,6 +38,8 @@ public class TextRuntimeOversampledFontSharingTests : BaseTestClass
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
         }
     }
+
+    private static Text GetText(TextRuntime textRuntime) => (Text)textRuntime.RenderableComponent!;
 
     private sealed class CountingFontCreator : IRaylibFontCreator
     {

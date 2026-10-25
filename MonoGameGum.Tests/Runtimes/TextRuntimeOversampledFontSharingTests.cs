@@ -43,7 +43,7 @@ public class TextRuntimeOversampledFontSharingTests : BaseTestClass
         second.RegenerateOversampledFont(2f).ShouldBeTrue();
 
         creator.CountRequestsAt(40f).ShouldBe(1);
-        ((Text)second.RenderableComponent).BitmapFont.ShouldBeSameAs(((Text)first.RenderableComponent).BitmapFont);
+        GetText(second).BitmapFont.ShouldBeSameAs(GetText(first).BitmapFont);
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class TextRuntimeOversampledFontSharingTests : BaseTestClass
 
         creator.CountRequestsAt(40f).ShouldBe(1);
         creator.CountRequestsAt(42f).ShouldBe(1);
-        ((Text)second.RenderableComponent).BitmapFont.ShouldNotBeSameAs(((Text)first.RenderableComponent).BitmapFont);
+        GetText(second).BitmapFont.ShouldNotBeSameAs(GetText(first).BitmapFont);
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class TextRuntimeOversampledFontSharingTests : BaseTestClass
         second.RegenerateOversampledFont(2f);
 
         newCreator.CountRequestsAt(40f).ShouldBe(1);
-        ((Text)second.RenderableComponent).BitmapFont.ShouldNotBeSameAs(((Text)first.RenderableComponent).BitmapFont);
+        GetText(second).BitmapFont.ShouldNotBeSameAs(GetText(first).BitmapFont);
     }
 
     [Fact]
@@ -132,10 +132,12 @@ public class TextRuntimeOversampledFontSharingTests : BaseTestClass
 
         first.Text = "C";
 
-        Text secondText = (Text)second.RenderableComponent;
+        Text secondText = GetText(second);
         secondText.BitmapFont.HasCharacter('C').ShouldBeTrue();
         creator.CountRequestsAt(40f).ShouldBe(1);
     }
+
+    private static Text GetText(TextRuntime textRuntime) => (Text)textRuntime.RenderableComponent!;
 
     private static TextRuntime CreateText(float fontSize)
     {
