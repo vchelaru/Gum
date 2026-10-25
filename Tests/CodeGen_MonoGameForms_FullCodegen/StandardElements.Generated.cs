@@ -2955,7 +2955,8 @@ internal static class StandardElementsCodeGenRegistration
   </StandardElementSave>
 </ArrayOfStandardElementSave>";
         using StringReader reader = new StringReader(xml);
-        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(reader);
+        using System.Xml.XmlReader xmlReader = System.Xml.XmlReader.Create(reader);
+        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(xmlReader);
         foreach (StandardElementSave standard in standards)
         {
             standard.Initialize(defaultState: null, tolerateMissingDefaultStates: true);

@@ -97,6 +97,22 @@ public class CodeGeneratorStandardElementsFallbackTests : BaseTestClass
     }
 
     [Fact]
+    public void GenerateStandardElementsFallbackCode_Deserialization_ReadsThroughXmlReader()
+    {
+        // CA5369: XmlSerializer.Deserialize(TextReader) is flagged even in generated files.
+        GumProjectSave project = Project;
+        AddNineSliceWithColorCategory(project);
+
+        string? code = CreateCodeGenerator().GenerateStandardElementsFallbackCode(
+            project,
+            new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGame, RootNamespace = "MyGame" });
+
+        code.ShouldNotBeNull();
+        code.ShouldContain("serializer.Deserialize(xmlReader)");
+        code.ShouldNotContain("serializer.Deserialize(reader)");
+    }
+
+    [Fact]
     public void GenerateStandardElementsFallbackCode_EmbeddedXml_DeserializesBackToEquivalentStandardElement()
     {
         GumProjectSave project = Project;

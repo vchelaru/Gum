@@ -4164,7 +4164,10 @@ public class CodeGenerator
         stringBuilder.AppendLine(indent + "        XmlSerializer serializer = GumFileSerializer.GetCompactSerializer(typeof(List<StandardElementSave>));");
         stringBuilder.AppendLine(indent + "        string xml = @\"" + escapedXml + "\";");
         stringBuilder.AppendLine(indent + "        using StringReader reader = new StringReader(xml);");
-        stringBuilder.AppendLine(indent + "        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(reader);");
+        // Deserialize(TextReader) trips CA5369 even in generated files; an XmlReader (DTD processing
+        // prohibited by default) is what the analyzer asks for.
+        stringBuilder.AppendLine(indent + "        using System.Xml.XmlReader xmlReader = System.Xml.XmlReader.Create(reader);");
+        stringBuilder.AppendLine(indent + "        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(xmlReader);");
         stringBuilder.AppendLine(indent + "        foreach (StandardElementSave standard in standards)");
         stringBuilder.AppendLine(indent + "        {");
         stringBuilder.AppendLine(indent + "            standard.Initialize(defaultState: null, tolerateMissingDefaultStates: true);");
@@ -4421,6 +4424,12 @@ public class CodeGenerator
         string categoryName = _codeGenerationNameVerifier.ToCSharpName(category.Name);
         string enumDeclarator = categoryName + "?"; // Enum types need to be nullable because there could be no category set
 
+        // The state property deliberately replaces a same-named member on the base Forms
+        // control (MenuItem declares a MenuItemCategoryState constant), so say so explicitly.
+        string possibleNew = GetIfNameHidesFormsBaseMember($"{categoryName}State", element, codeProjectSettings)
+            ? "new "
+            : string.Empty;
+
         if (codeProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
 
@@ -4448,16 +4457,7 @@ public class CodeGenerator
                 context.TabCount = tabCount;
                 context.CodeOutputProjectSettings = codeProjectSettings;
 
-                AddAssignFromElement(context, stringBuilder);
-
-                stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
-                stringBuilder.AppendLine(context.Tabs + "{");
-                context.TabCount++;
-
-                CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
-
-                context.TabCount--;
-                stringBuilder.AppendLine(context.Tabs + "}");
+                AddStateApplication(context, stringBuilder, category);
 
                 // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
                 // Update November 29, 2022
@@ -4509,7 +4509,7 @@ public class CodeGenerator
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"private {enumDeclarator} _{categoryFieldName}State;");
 
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {enumDeclarator} {categoryName}State");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleNew}{enumDeclarator} {categoryName}State");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
@@ -4524,16 +4524,7 @@ public class CodeGenerator
                 context.CodeOutputProjectSettings = codeProjectSettings;
                 context.ResolvedSyntaxVersion = resolvedSyntaxVersion;
 
-                AddAssignFromElement(context, stringBuilder);
-
-                stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
-                stringBuilder.AppendLine(context.Tabs + "{");
-                context.TabCount++;
-
-                CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
-
-                context.TabCount--;
-                stringBuilder.AppendLine(context.Tabs + "}");
+                AddStateApplication(context, stringBuilder, category);
 
 
                 context.TabCount--;
@@ -4559,11 +4550,6 @@ public class CodeGenerator
             stringBuilder.AppendLine(ToTabs(tabCount) + $"{categoryName}? {fieldName};");
 
 
-            // The state property deliberately replaces a same-named member on the base Forms
-            // control (MenuItem declares a MenuItemCategoryState constant), so say so explicitly.
-            string possibleNew = GetIfNameHidesFormsBaseMember(propertyName, element, codeProjectSettings)
-                ? "new "
-                : string.Empty;
             stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleNew}{categoryName}? {propertyName}");
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -4628,6 +4614,36 @@ public class CodeGenerator
         }
 
         return tabCount;
+    }
+
+    /// <summary>
+    /// Writes the body of a state property setter that applies the state's variables. A category
+    /// without states has nothing to switch on (an empty switch is CS1522), so only the dynamic
+    /// state lookup is written, and only when it applies.
+    /// </summary>
+    private void AddStateApplication(CodeGenerationContext context, StringBuilder stringBuilder, StateSaveCategory category)
+    {
+        bool hasStates = category.States.Count > 0;
+        if (!hasStates && !context.CodeOutputProjectSettings.GenerateGumDataTypes)
+        {
+            return;
+        }
+
+        AddAssignFromElement(context, stringBuilder);
+
+        if (!hasStates)
+        {
+            return;
+        }
+
+        stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
+        stringBuilder.AppendLine(context.Tabs + "{");
+        context.TabCount++;
+
+        CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
+
+        context.TabCount--;
+        stringBuilder.AppendLine(context.Tabs + "}");
     }
 
     private static void AddAssignFromElement(CodeGenerationContext context, StringBuilder stringBuilder)
