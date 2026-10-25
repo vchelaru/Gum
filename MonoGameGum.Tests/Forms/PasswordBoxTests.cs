@@ -157,7 +157,7 @@ public class PasswordBoxTests : BaseTestClass
 
         passwordBox.Password = "secret";
 
-        string displayed = ((TextBoxBaseVisual)passwordBox.Visual).TextInstance.Text;
+        string? displayed = ((TextBoxBaseVisual)passwordBox.Visual).TextInstance.Text;
         displayed.ShouldBe("******");
     }
 
