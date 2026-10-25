@@ -510,12 +510,9 @@ public class ComboBox :
 
     bool _hadFocusOnListBoxOpened;
 
-    // The ComboBox visual's absolute rectangle the popup was last placed against, so an open
-    // drop-down can be placed again when the ComboBox moves or resizes (including through an ancestor).
-    float _placedAbsoluteX;
-    float _placedAbsoluteY;
-    float _placedAbsoluteWidth;
-    float _placedAbsoluteHeight;
+    // What the popup was last placed against, so an open drop-down can be placed again when the
+    // ComboBox moves or resizes (including through an ancestor) or the canvas is resized.
+    PopupPlacement _popupPlacement;
 
     #endregion
 
@@ -772,6 +769,9 @@ public class ComboBox :
         // it has when attached to the ComboBox so the layout engine resolves them again.
         listBoxVisual.Parent = null;
         RestoreListBoxLayoutValues();
+#if !FRB
+        RestoreShrunkLevels();
+#endif
 
         // Adding this to the Visual will force a layout....
         this.Visual.Children.Add(listBoxVisual);
@@ -780,6 +780,17 @@ public class ComboBox :
         var y = listBoxVisual.AbsoluteY;
         var width = listBoxVisual.AbsoluteWidth;
         var height = listBoxVisual.AbsoluteHeight;
+
+#if !FRB
+        // A drop-down taller than the root it opens in is shrunk to that root's height and scrolls;
+        // ShowPopupListBox then moves it to the root's top, as it does any popup that does not fit (#6769).
+        float availableHeight = ListBox.GetPopupTargetRoot(this.Visual).AbsoluteHeight;
+        if (height > availableHeight)
+        {
+            FillShrunkLevels();
+            height = availableHeight;
+        }
+#endif
 
         // Now that we have the values, detach it:
         this.Visual.Children.Remove(listBoxVisual);
@@ -793,10 +804,7 @@ public class ComboBox :
 
         // Recorded last, with the list box detached: this is the state later frames compare against,
         // and a ComboBox sized to its children has a different rect while the list box is attached.
-        _placedAbsoluteX = Visual.AbsoluteX;
-        _placedAbsoluteY = Visual.AbsoluteY;
-        _placedAbsoluteWidth = Visual.AbsoluteWidth;
-        _placedAbsoluteHeight = Visual.AbsoluteHeight;
+        _popupPlacement.Record(Visual, listBoxVisual);
     }
 
     private void RestoreListBoxLayoutValues()
@@ -813,9 +821,55 @@ public class ComboBox :
     }
 
 #if !FRB
+    // The levels between the list box and its rows that are sized to their children (a theme's
+    // FitChildren drop-down) with their own values, while the drop-down is shrunk and they fill instead.
+    readonly List<(GraphicalUiElement level, DimensionUnitType heightUnits, float height)> _shrunkLevels = new();
+
     /// <summary>
-    /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle changes
-    /// (canvas resize, UI scale, or this control or an ancestor moving). Does nothing when closed.
+    /// Makes every level between the list box and its rows that is sized to its children fill its parent
+    /// instead, keeping the margin it has now, so the levels follow the shrunk list box and clip the rows
+    /// to it. Expects the list box laid out at its natural size.
+    /// </summary>
+    private void FillShrunkLevels()
+    {
+        var level = listBox.InnerPanel.Parent as GraphicalUiElement;
+        while (level != null && level != listBox.Visual && level.Parent is GraphicalUiElement parent)
+        {
+            if (level.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                _shrunkLevels.Add((level, level.HeightUnits, level.Height));
+            }
+            level = parent;
+        }
+
+        // Every margin is measured before any level changes, since each change lays the others out again.
+        var margins = new float[_shrunkLevels.Count];
+        for (int i = 0; i < _shrunkLevels.Count; i++)
+        {
+            GraphicalUiElement shrunkLevel = _shrunkLevels[i].level;
+            margins[i] = shrunkLevel.AbsoluteHeight - ((GraphicalUiElement)shrunkLevel.Parent!).AbsoluteHeight;
+        }
+        for (int i = 0; i < _shrunkLevels.Count; i++)
+        {
+            _shrunkLevels[i].level.HeightUnits = DimensionUnitType.RelativeToParent;
+            _shrunkLevels[i].level.Height = margins[i];
+        }
+    }
+
+    private void RestoreShrunkLevels()
+    {
+        foreach (var (level, heightUnits, height) in _shrunkLevels)
+        {
+            level.HeightUnits = heightUnits;
+            level.Height = height;
+        }
+        _shrunkLevels.Clear();
+    }
+
+    /// <summary>
+    /// While the drop-down is open, places it again whenever this ComboBox's absolute rectangle or the
+    /// size of the root the drop-down is in changes (canvas resize, UI scale, or this control or an
+    /// ancestor moving). Does nothing when closed.
     /// </summary>
     // Only an open drop-down needs the per-frame check; a closed ComboBox must not stop its ancestors
     // from going idle. ShowListBoxInstance invalidates the idle caches when the drop-down opens.
@@ -828,10 +882,7 @@ public class ComboBox :
             return;
         }
 
-        if (Visual.AbsoluteX != _placedAbsoluteX ||
-            Visual.AbsoluteY != _placedAbsoluteY ||
-            Visual.AbsoluteWidth != _placedAbsoluteWidth ||
-            Visual.AbsoluteHeight != _placedAbsoluteHeight)
+        if (_popupPlacement.DidBoundsChange(listBox.Visual) || _popupPlacement.DidOwnerChange(Visual))
         {
             PlaceListBoxRelativeToComboBox();
         }
@@ -954,6 +1005,9 @@ public class ComboBox :
             listBox.IsVisible = false;
 
 #if !FRB
+            // A drop-down closed while shrunk gives its levels back their own layout values (#6769).
+            RestoreShrunkLevels();
+
             if (deferRemovingPopup && global::RenderingLibrary.IGumService.Default != null)
             {
                 // Put the layout values back now so opening again before the removal runs saves the

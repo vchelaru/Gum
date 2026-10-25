@@ -1139,17 +1139,7 @@ public class MenuItem : ItemsControl
         ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false, GetOpenNestedPopups());
 #endif
 
-#if !FRB
-        if (popupVisual.Parent is GraphicalUiElement boundsRoot)
-        {
-            _placedBoundsWidth = boundsRoot.AbsoluteWidth;
-            _placedBoundsHeight = boundsRoot.AbsoluteHeight;
-        }
-#endif
-        _placedAbsoluteX = Visual.AbsoluteX;
-        _placedAbsoluteY = Visual.AbsoluteY;
-        _placedAbsoluteWidth = Visual.AbsoluteWidth;
-        _placedAbsoluteHeight = Visual.AbsoluteHeight;
+        _popupPlacement.Record(Visual, popupVisual);
 
 #if !FRB
         // Placing may have moved this popup to the end of the popup root, which would draw it over any
@@ -1211,19 +1201,14 @@ public class MenuItem : ItemsControl
             return;
         }
 
-        bool didBoundsChange = itemsPopup!.Visual.Parent is GraphicalUiElement boundsRoot &&
-            (boundsRoot.AbsoluteWidth != _placedBoundsWidth || boundsRoot.AbsoluteHeight != _placedBoundsHeight);
+        bool didBoundsChange = _popupPlacement.DidBoundsChange(itemsPopup!.Visual);
 
         if (didBoundsChange && isPopupSizedByItems)
         {
             FitPopupToCanvas();
         }
 
-        if (didBoundsChange ||
-            Visual.AbsoluteX != _placedAbsoluteX ||
-            Visual.AbsoluteY != _placedAbsoluteY ||
-            Visual.AbsoluteWidth != _placedAbsoluteWidth ||
-            Visual.AbsoluteHeight != _placedAbsoluteHeight)
+        if (didBoundsChange || _popupPlacement.DidOwnerChange(Visual))
         {
             PlaceItemsPopup();
         }
@@ -1492,17 +1477,11 @@ public class MenuItem : ItemsControl
 
     internal ScrollViewer? itemsPopup;
 
-    // This item's absolute rectangle when the popup was last placed; a change means the popup is stale.
-    float _placedAbsoluteX;
-    float _placedAbsoluteY;
-    float _placedAbsoluteWidth;
-    float _placedAbsoluteHeight;
+    // This item's absolute rectangle and the popup root's size when the popup was last placed; a change
+    // in either means the popup is stale.
+    PopupPlacement _popupPlacement;
 
 #if !FRB
-    // The size of the root the popup was last placed in; a change (canvas resize) means it is stale.
-    float _placedBoundsWidth;
-    float _placedBoundsHeight;
-
     // A popup sized by its rows but taller than its root is shrunk to the root and scrolls (#6758).
     bool isPopupShrunkToCanvas;
     float shrunkPopupChromeWidth;
