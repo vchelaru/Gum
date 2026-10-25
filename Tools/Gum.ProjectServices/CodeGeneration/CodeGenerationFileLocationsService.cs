@@ -22,6 +22,9 @@ public class CodeGenerationFileLocationsService
         _projectDirectoryProvider = projectDirectoryProvider;
     }
 
+    /// <summary>The Gum project directory relative paths resolve against, or null when no project is loaded.</summary>
+    public string? ProjectDirectory => _projectDirectoryProvider.ProjectDirectory;
+
     /// <summary>
     /// Gets the generated (.Generated.cs) file path for an element.
     /// </summary>
@@ -114,7 +117,14 @@ public class CodeGenerationFileLocationsService
             ? GetCodeOutputFolder(codeOutputProjectSettings)
             : ResolveSubfolder(codeOutputProjectSettings, codeOutputProjectSettings.CustomCodeFolder);
 
-    private string? ResolveSubfolder(CodeOutputProjectSettings codeOutputProjectSettings, string subfolder)
+    private string? ResolveSubfolder(CodeOutputProjectSettings codeOutputProjectSettings, string subfolder) =>
+        ResolveFolder(_projectDirectoryProvider.ProjectDirectory, codeOutputProjectSettings, subfolder);
+
+    /// <summary>
+    /// <paramref name="subfolder"/> under the Code Project Root, absolute with a trailing separator, resolved
+    /// against <paramref name="projectDirectory"/> when relative. Null when the root isn't configured.
+    /// </summary>
+    public static string? ResolveFolder(string? projectDirectory, CodeOutputProjectSettings codeOutputProjectSettings, string subfolder)
     {
         string folder = codeOutputProjectSettings.CodeProjectRoot;
         if (string.IsNullOrEmpty(folder))
@@ -124,7 +134,7 @@ public class CodeGenerationFileLocationsService
 
         if (FileManager.IsRelative(folder))
         {
-            folder = _projectDirectoryProvider.ProjectDirectory + folder;
+            folder = projectDirectory + folder;
         }
 
         if (!string.IsNullOrEmpty(subfolder))

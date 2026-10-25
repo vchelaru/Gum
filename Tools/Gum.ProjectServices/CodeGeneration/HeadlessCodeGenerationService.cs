@@ -20,6 +20,9 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
     private readonly ICodeGenLogger _logger;
     private readonly ICodeFileWriter _fileWriter;
 
+    /// <summary>Keeps the generated folder's <c>.editorconfig</c> in step with the settings; run at the end of every batch.</summary>
+    public GeneratedFolderEditorConfig EditorConfig { get; }
+
     // fileWriter writes the generated files; null writes each once through DirectCodeFileWriter.
     public HeadlessCodeGenerationService(
         CodeGenerator codeGenerator,
@@ -35,6 +38,7 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
         _elementSettingsManager = elementSettingsManager;
         _logger = logger;
         _fileWriter = fileWriter ?? new DirectCodeFileWriter(logger);
+        EditorConfig = new GeneratedFolderEditorConfig(fileLocationsService, logger, _fileWriter);
     }
 
     /// <inheritdoc/>
@@ -130,6 +134,8 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
             {
                 GenerateStandardElementsFallbackFile(project, projectSettings);
             }
+
+            EditorConfig.Sync(projectSettings);
         }
         finally
         {

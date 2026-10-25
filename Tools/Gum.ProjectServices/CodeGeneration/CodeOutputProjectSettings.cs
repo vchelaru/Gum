@@ -111,6 +111,16 @@ using System.Linq;
     public bool ShouldSerializeCustomCodeFolder() => !string.IsNullOrEmpty(CustomCodeFolder);
 
     /// <summary>
+    /// When true, Gum writes an <c>.editorconfig</c> marking the generated code folder as generated code
+    /// (see <see cref="GeneratedFolderEditorConfig"/>). Off by default, and only applies when the generated
+    /// folder is separate from the custom code folder and the project root (#6776).
+    /// </summary>
+    public bool MarkGeneratedCodeFolder { get; set; }
+
+    /// <summary>Leaves the field out of the .codsj while false, like <see cref="ShouldSerializeCustomCodeFolder"/>.</summary>
+    public bool ShouldSerializeMarkGeneratedCodeFolder() => MarkGeneratedCodeFolder;
+
+    /// <summary>
     /// Optional text put in front of the <c>Screens</c> and <c>Components</c> folder names, under the
     /// generated code folder. A prefix ending in a slash (<c>GumCodeGen/</c>) makes a folder that holds
     /// both (<c>GumCodeGen/Screens</c>); one without (<c>Gum</c>) renames them (<c>GumScreens</c>,

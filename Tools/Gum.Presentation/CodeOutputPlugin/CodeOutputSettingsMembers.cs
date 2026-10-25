@@ -50,6 +50,7 @@ public class CodeOutputSettingsMembers
         { "Code Project Root", "Code project root" },
         { "Generated Code Folder", "Generated code folder" },
         { "Custom Code Folder", "Custom code folder" },
+        { "Mark Generated Folder", "Mark generated folder" },
         { "Generated Code Folder Prefix", "Folder prefix" },
         { "Root Namespace", "Root namespace" },
         { "Append Folder to Namespace", "Append folder to namespace" },
@@ -58,6 +59,7 @@ public class CodeOutputSettingsMembers
     };
 
     private InstanceMember? _resolvedLocationsMember;
+    private string? _markUnavailableReason;
     private readonly IProjectState _projectState;
     private readonly SyntaxVersionDetectionService _syntaxVersionDetectionService;
     private readonly CodeWindowViewModel _viewModel;
@@ -72,6 +74,7 @@ public class CodeOutputSettingsMembers
         _syntaxVersionDetectionService = syntaxVersionDetectionService;
         _viewModel = viewModel;
         SettingsChanged += (_, _) => _resolvedLocationsMember?.SimulateValueChanged();
+        SettingsChanged += (_, _) => RebuildIfMarkAvailabilityChanged();
     }
 
     /// <summary>The loaded project's code generation settings the project rows edit.</summary>
@@ -144,6 +147,7 @@ public class CodeOutputSettingsMembers
         locations.Members.Add(CreateGeneratedCodeFolderMember());
         locations.Members.Add(CreateCustomCodeFolderMember());
         locations.Members.Add(CreateGeneratedCodeFolderPrefixMember());
+        locations.Members.Add(CreateMarkGeneratedFolderMember());
         locations.Members.Add(CreateResolvedLocationsMember());
 
         MemberCategory namespaces = new MemberCategory("Namespaces and usings");
@@ -311,6 +315,45 @@ public class CodeOutputSettingsMembers
             && _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
 
         return member;
+    }
+
+    private const string MarkGeneratedFolderHint = "Adds an .editorconfig with generated_code = true to the generated folder.";
+
+    // The row is off while the generated folder is shared with custom files or the project root, and
+    // the hint says why; the rows are rebuilt when an edit changes that.
+    private InstanceMember CreateMarkGeneratedFolderMember()
+    {
+        InstanceMember member = new InstanceMember("Mark Generated Folder", this);
+        _markUnavailableReason = GetMarkUnavailableReason();
+        member.DetailText = _markUnavailableReason ?? MarkGeneratedFolderHint;
+        member.ToggleText = "Write an .editorconfig";
+        member.IsReadOnly = _markUnavailableReason != null;
+
+        member.CustomSetPropertyEvent += (owner, args) =>
+        {
+            if (ProjectSettings != null)
+            {
+                ProjectSettings.MarkGeneratedCodeFolder = (bool)args.Value!;
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        };
+
+        member.CustomGetEvent += (owner) => ProjectSettings?.MarkGeneratedCodeFolder ?? false;
+        member.CustomGetTypeEvent += (owner) => typeof(bool);
+
+        return member;
+    }
+
+    private string? GetMarkUnavailableReason() => ProjectSettings == null
+        ? null
+        : GeneratedFolderEditorConfig.GetUnavailableReason(ProjectSettings, _projectState.ProjectDirectory);
+
+    private void RebuildIfMarkAvailabilityChanged()
+    {
+        if (GetMarkUnavailableReason() != _markUnavailableReason)
+        {
+            RebuildRequested?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private InstanceMember CreateGeneratedCodeFolderMember() => CreateCodeSubfolderMember(

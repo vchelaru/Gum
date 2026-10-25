@@ -328,6 +328,59 @@ public class CodegenCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Codegen_WritesNoEditorConfig_WhenMarkGeneratedCodeFolderIsOff()
+    {
+        string gumxPath = CreateProjectWithScreen("TestScreen", "", customCodeFolder: "Mine", generatedCodeFolder: "Gen");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        Directory.GetFiles(TempDirectory, ".editorconfig", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Codegen_WritesAnEditorConfigIntoTheGeneratedFolder_WhenMarkGeneratedCodeFolderIsOn()
+    {
+        string gumxPath = CreateProjectWithScreen("TestScreen", "", customCodeFolder: "Mine", generatedCodeFolder: "Gen", markGeneratedCodeFolder: true);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.ReadAllText(Path.Combine(TempDirectory, "Gen", ".editorconfig")).ShouldContain("generated_code = true");
+        File.Exists(Path.Combine(TempDirectory, "Mine", ".editorconfig")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Codegen_LeavesAForeignEditorConfigAlone_AndSaysSo()
+    {
+        string gumxPath = CreateProjectWithScreen("TestScreen", "", customCodeFolder: "Mine", generatedCodeFolder: "Gen", markGeneratedCodeFolder: true);
+        string existing = Path.Combine(TempDirectory, "Gen", ".editorconfig");
+        Directory.CreateDirectory(Path.GetDirectoryName(existing)!);
+        File.WriteAllText(existing, "root = true\n");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.ReadAllText(existing).ShouldBe("root = true\n");
+        result.StandardOutput.ShouldContain("not written by Gum");
+    }
+
+    [Fact]
+    public void Codegen_WithPrune_KeepsTheEditorConfigGumWrote_AndAnyOtherEditorConfig()
+    {
+        string gumxPath = CreateProjectWithScreen("TestScreen", "", customCodeFolder: "Mine", generatedCodeFolder: "Gen", markGeneratedCodeFolder: true);
+        string other = Path.Combine(TempDirectory, "Mine", ".editorconfig");
+        Directory.CreateDirectory(Path.GetDirectoryName(other)!);
+        File.WriteAllText(other, "root = true\n");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.Exists(Path.Combine(TempDirectory, "Gen", ".editorconfig")).ShouldBeTrue();
+        File.ReadAllText(other).ShouldBe("root = true\n");
+    }
+
+    [Fact]
     public void Codegen_CustomCodeFolder_KeepsAFileTheUserAlreadyMovedThere_AndWritesNoDuplicate()
     {
         string gumxPath = CreateProjectWithScreen("TestScreen", "", customCodeFolder: "Mine", generatedCodeFolder: "Gen");
@@ -773,7 +826,7 @@ public class CodegenCommandTests : BaseTestClass
     }
 
     private string CreateProjectWithScreen(string screenName, string generatedCodeFolderPrefix,
-        string customCodeFolder = "", string generatedCodeFolder = "")
+        string customCodeFolder = "", string generatedCodeFolder = "", bool markGeneratedCodeFolder = false)
     {
         string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
@@ -796,6 +849,7 @@ public class CodegenCommandTests : BaseTestClass
               "CodeProjectRoot": "./",
               "GeneratedCodeFolder": "{{generatedCodeFolder}}",
               "CustomCodeFolder": "{{customCodeFolder}}",
+              "MarkGeneratedCodeFolder": {{markGeneratedCodeFolder.ToString().ToLowerInvariant()}},
               "GeneratedCodeFolderPrefix": "{{generatedCodeFolderPrefix}}",
               "RootNamespace": "TestNamespace",
               "OutputLibrary": 5,

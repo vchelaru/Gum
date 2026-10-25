@@ -57,7 +57,7 @@ To set up code generation, either click the **Auto Setup Code Generation** butto
 * For MonoGame/KNI/FNA projects, see the [tutorial on setting up code generation](../../code/getting-started/tutorials/gum-project-forms-tutorial/gum-screens.md).
 * For FlatRedBall projects, code generation is automatically handled by the FlatRedBall Editor.
 
-The project-wide options are on the **Code generation** page of **Edit > Settings...** (under Project). The page groups them into three sections: **Output** (Output Library, Object Instantiation Type, Syntax Version), **Locations** (Code Project Root, Generated Code Folder, Custom Code Folder, Generated Code Folder Prefix) and **Namespaces and usings** (Root Namespace, Append Folder to Namespace, Default Screen Base, Project-wide Using Statements). Projects using a legacy output library (Xamarin, WPF, Maui) also get a collapsed section for the options only those use. Every option has a one-line hint under it.
+The project-wide options are on the **Code generation** page of **Edit > Settings...** (under Project). The page groups them into three sections: **Output** (Output Library, Object Instantiation Type, Syntax Version), **Locations** (Code Project Root, Generated Code Folder, Custom Code Folder, Mark Generated Folder, Generated Code Folder Prefix) and **Namespaces and usings** (Root Namespace, Append Folder to Namespace, Default Screen Base, Project-wide Using Statements). Projects using a legacy output library (Xamarin, WPF, Maui) also get a collapsed section for the options only those use. Every option has a one-line hint under it.
 
 <figure><img src="../../.gitbook/assets/settings-code-generation.png" alt=""><figcaption><p>The Code generation page of the Settings window</p></figcaption></figure>
 
@@ -97,6 +97,12 @@ An optional folder, relative to the Code Project Root, for your own code files (
 The Screens, Components and Gum folder layout is mirrored under both folders, so `Components/Buttons/IconButton` is `<Generated Code Folder>/Components/Buttons/IconButton.Generated.cs` and `<Custom Code Folder>/Components/Buttons/IconButton.cs`. The Generated Code Folder Prefix applies to both. Namespaces are not affected, so both halves of the class stay in the same namespace.
 
 Changing this offers to move your existing custom files, and a copy of every file is kept so the move can be undone with **Content > Restore Last Code File Migration**. Custom files only move after you confirm. If you already moved a custom file by hand into the folder, Gum finds it there and does not create a second one.
+
+### Mark Generated Folder
+
+Off by default. When on, Gum writes an `.editorconfig` into the Generated Code Folder containing `generated_code = true` for `*.cs`, so tools that read that setting can treat the folder as generated code. It is only available when the Generated Code Folder is its own folder: it must be set, differ from the Code Project Root and the Custom Code Folder, and not contain the Custom Code Folder (otherwise the file would also mark your own code). The row says which condition is missing.
+
+Gum only manages a file that starts with its own `# Written by Gum.` comment. If the folder already has another `.editorconfig`, Gum leaves it as it is and says so in the Output tab (or in the `gumcli codegen` output); add the line yourself if you want it. Turning the option off, or changing the Generated Code Folder, removes the file Gum wrote, unless you edited it.
 
 ### Generated Code Folder Prefix
 

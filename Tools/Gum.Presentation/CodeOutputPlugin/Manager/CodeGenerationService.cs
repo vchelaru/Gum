@@ -46,6 +46,9 @@ public class CodeGenerationService
             logger, new RetryingCodeFileWriter(retryService, logger));
     }
 
+    /// <summary>Writes and removes the generated folder's <c>.editorconfig</c>.</summary>
+    public GeneratedFolderEditorConfig EditorConfig => _headlessCodeGenerationService.EditorConfig;
+
     private class GuiCommandsCodeGenLogger : ICodeGenLogger
     {
         private readonly IGuiCommands _guiCommands;
@@ -236,6 +239,8 @@ public class CodeGenerationService
                 }
             }
 
+
+            EditorConfig.Sync(codeOutputProjectSettings);
 
             if (showPopups)
             {

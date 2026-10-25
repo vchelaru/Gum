@@ -16,13 +16,15 @@ public class CodeFileLocationWatcher
     private readonly IMessenger _messenger;
     private readonly CodeFileLocationChange _locationChange;
     private readonly CustomCodeHeaderChange _headerChange;
+    private readonly GeneratedFolderEditorConfig _editorConfig;
     private CodeOutputProjectSettings _lastChecked = new CodeOutputProjectSettings();
 
-    public CodeFileLocationWatcher(IMessenger messenger, CodeFileLocationChange locationChange, CustomCodeHeaderChange headerChange)
+    public CodeFileLocationWatcher(IMessenger messenger, CodeFileLocationChange locationChange, CustomCodeHeaderChange headerChange, GeneratedFolderEditorConfig editorConfig)
     {
         _messenger = messenger;
         _locationChange = locationChange;
         _headerChange = headerChange;
+        _editorConfig = editorConfig;
     }
 
     /// <summary>
@@ -42,6 +44,9 @@ public class CodeFileLocationWatcher
         {
             _messenger.Send(new CodeFileLocationsChangedMessage(previous, settings, description));
         }
+
+        // Files already written follow the edit even when the user declines the migration prompt.
+        _editorConfig.Sync(settings, previous);
 
         string? headerDescription = _headerChange.Describe(previous, settings);
         if (headerDescription != null)

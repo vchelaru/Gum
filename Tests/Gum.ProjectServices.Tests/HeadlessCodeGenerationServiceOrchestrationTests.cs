@@ -127,6 +127,37 @@ public class HeadlessCodeGenerationServiceOrchestrationTests : BaseTestClass
         File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.cs")).ShouldBeFalse();
     }
 
+
+    [Fact]
+    public void GenerateCodeForElements_WritesNoEditorConfig_WhenTheOptionIsOff()
+    {
+        AddComponent("Button");
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.GeneratedCodeFolder = "Gen/";
+        settings.CustomCodeFolder = "Mine/";
+
+        CreateService().GenerateCodeForElements(Project, settings);
+
+        File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.Generated.cs")).ShouldBeTrue();
+        Directory.GetFiles(_tempDirectory, ".editorconfig", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GenerateCodeForElements_WritesTheEditorConfigIntoTheGeneratedFolder_WhenTheOptionIsOn()
+    {
+        AddComponent("Button");
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.GeneratedCodeFolder = "Gen/";
+        settings.CustomCodeFolder = "Mine/";
+        settings.MarkGeneratedCodeFolder = true;
+
+        CreateService().GenerateCodeForElements(Project, settings);
+
+        File.ReadAllText(Path.Combine(_tempDirectory, "Gen", ".editorconfig")).ShouldBe(GeneratedFolderEditorConfig.Contents);
+        File.Exists(Path.Combine(_tempDirectory, "Mine", ".editorconfig")).ShouldBeFalse();
+    }
     [Fact]
     public void GenerateCodeForElements_WithNoSubset_GeneratesScreensThenComponentsAndWritesFallbackFile()
     {
