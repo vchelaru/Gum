@@ -42,6 +42,22 @@
 		<Compile Include="..\Shared\GraphicalUiElementStateAssert.cs" Link="Shared\GraphicalUiElementStateAssert.cs" />
 	</ItemGroup>
 
+	<!-- Forms tests linked from MonoGameGum.Tests: same source runs against shared Skia code (#6511). -->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\GamepadNavigationModeTests.cs" Link="Forms\Linked\GamepadNavigationModeTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\ControllerSpatialNavigationTests.cs" Link="Forms\Linked\ControllerSpatialNavigationTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\SpatialNavigationServiceTests.cs" Link="Forms\Linked\SpatialNavigationServiceTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\FocusTabNavigationTests.cs" Link="Forms\Linked\FocusTabNavigationTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\KeyComboTests.cs" Link="Forms\Linked\KeyComboTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\KeyboardDirectionalNavigationTests.cs" Link="Forms\Linked\KeyboardDirectionalNavigationTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\CheckBoxTests.cs" Link="Forms\Linked\CheckBoxTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\ScrollBarTests.cs" Link="Forms\Linked\ScrollBarTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\PanelTests.cs" Link="Forms\Linked\PanelTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\GridTests.cs" Link="Forms\Linked\GridTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\PasswordBoxTests.cs" Link="Forms\Linked\PasswordBoxTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\WindowTests.cs" Link="Forms\Linked\WindowTests.cs" />
+	</ItemGroup>
+
 	<!-- Golden-image baselines for GoldenImages/*Tests.cs (pixel-diff regression tests). -->
 	<ItemGroup>
 		<None Include="GoldenImages\Baselines\**\*.png">
