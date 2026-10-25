@@ -46,6 +46,64 @@ public class ComboBoxTallDropDownRenderTests : BaseTestClass
         }));
     }
 
+    [Fact]
+    public void CanvasGrowsWhileOpen_ShouldMatchAFreshOpen_WithFromFileTheme()
+    {
+        WithCanvas(() => MenuFocusRenderTests.WithToolProject("FormsTemplate", mutateProject: null, () =>
+        {
+            InteractiveGue visual = (InteractiveGue)ObjectFinder.Self.GetComponent("Controls/ComboBox")!
+                .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+            ComboBox comboBox = (ComboBox)visual.FormsControlAsObject!;
+            comboBox.AddToRoot();
+            comboBox.X = 16;
+            comboBox.Y = 16;
+            for (int i = 0; i < 40; i++)
+            {
+                comboBox.Items!.Add("Item " + i);
+            }
+
+            Resize(Width, 600);
+            comboBox.IsDropDownOpen = true;
+            var fresh = Snapshot(comboBox);
+            comboBox.IsDropDownOpen = false;
+
+            comboBox.IsDropDownOpen = true;
+            Resize(Width, Height);
+            Gum.GumService.Default.Root.AnimateSelf(0.016);
+            comboBox.ListBox.Visual.AbsoluteHeight.ShouldBe(Height, 0.01f);
+            Resize(Width, 600);
+            Gum.GumService.Default.Root.AnimateSelf(0.016);
+
+            var grown = Snapshot(comboBox);
+            grown.Levels.ShouldBe(fresh.Levels);
+            grown.Top.ShouldBe(fresh.Top, 0.01f);
+            grown.PopupHeight.ShouldBe(fresh.PopupHeight, 0.01f);
+            grown.ClipHeight.ShouldBe(fresh.ClipHeight, 0.01f);
+        }));
+    }
+
+    private static void Resize(float width, float height)
+    {
+        GraphicalUiElement.CanvasWidth = width;
+        GraphicalUiElement.CanvasHeight = height;
+        Gum.GumService.Default.Root.UpdateLayout();
+        FormsUtilities.SetDimensionsToCanvas(FrameworkElement.PopupRoot);
+        FrameworkElement.PopupRoot.UpdateLayout();
+    }
+
+    // The layout values of every level between the drop-down and its rows, and the drop-down's geometry.
+    private static (string Levels, float Top, float PopupHeight, float ClipHeight) Snapshot(ComboBox comboBox)
+    {
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        GraphicalUiElement clip = (GraphicalUiElement)comboBox.ListBox.InnerPanel.Parent!;
+        System.Text.StringBuilder levels = new();
+        for (GraphicalUiElement? level = clip; level != null && level != popup; level = level.Parent as GraphicalUiElement)
+        {
+            levels.Append($"{level.Name}:{level.HeightUnits}:{level.Height};");
+        }
+        return (levels.ToString(), popup.AbsoluteTop, popup.AbsoluteHeight, clip.AbsoluteHeight);
+    }
+
     private static void WithCanvas(Action body)
     {
         float previousCanvasWidth = GraphicalUiElement.CanvasWidth;
