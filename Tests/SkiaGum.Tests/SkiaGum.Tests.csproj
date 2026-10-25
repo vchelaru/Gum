@@ -55,6 +55,7 @@
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\PanelTests.cs" Link="Forms\Linked\PanelTests.cs" />
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\GridTests.cs" Link="Forms\Linked\GridTests.cs" />
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\PasswordBoxTests.cs" Link="Forms\Linked\PasswordBoxTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\WindowTests.cs" Link="Forms\Linked\WindowTests.cs" />
 	</ItemGroup>
 
 	<!-- Golden-image baselines for GoldenImages/*Tests.cs (pixel-diff regression tests). -->

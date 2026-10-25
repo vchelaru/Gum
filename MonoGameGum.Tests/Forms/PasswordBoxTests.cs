@@ -1,6 +1,7 @@
 ﻿using Gum.Mvvm;
 using Gum.Forms.Controls;
 using Gum.Forms.Data;
+using Gum.Forms.DefaultVisuals.V3;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -147,5 +148,27 @@ public class PasswordBoxTests : BaseTestClass
         passwordBox.CaretIndex.ShouldBe(4);
         passwordBox.SelectionStart.ShouldBe(1);
         passwordBox.SelectionLength.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Password_ShouldDisplayMaskCharacters_NotPlainText()
+    {
+        PasswordBox passwordBox = new();
+
+        passwordBox.Password = "secret";
+
+        string displayed = ((TextBoxBaseVisual)passwordBox.Visual).TextInstance.Text;
+        displayed.ShouldBe("******");
+    }
+
+    [Fact]
+    public void PasswordChar_ShouldChangeMaskCharacter()
+    {
+        PasswordBox passwordBox = new();
+        passwordBox.Password = "abc";
+
+        passwordBox.PasswordChar = '#';
+
+        ((TextBoxBaseVisual)passwordBox.Visual).TextInstance.Text.ShouldBe("###");
     }
 }

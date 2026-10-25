@@ -228,4 +228,46 @@ public class TextBoxTests : SkiaFormsTestBase
 
         VisualOf(textBox).TextInstance.X.ShouldBeLessThan(0f);
     }
+
+    [Fact]
+    public void Wrap_WithoutAcceptsReturn_ShouldWrapLongText()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = false;
+        textBox.Width = 100;
+        textBox.Height = 200;
+
+        textBox.Text = WrappingText;
+
+        CoreText(textBox).WrappedText.Count.ShouldBeGreaterThan(1);
+    }
+
+    [Fact]
+    public void NoWrap_WithoutAcceptsReturn_ShouldKeepSingleLine()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.NoWrap;
+        textBox.AcceptsReturn = false;
+        textBox.Width = 100;
+
+        textBox.Text = WrappingText;
+
+        CoreText(textBox).WrappedText.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Caret_ShouldBeVisible_OnlyWhenFocusedWithoutSelection()
+    {
+        TextBox textBox = new();
+        textBox.Text = "hello world";
+        VisualOf(textBox).CaretInstance.Visible.ShouldBeFalse();
+
+        textBox.IsFocused = true;
+        VisualOf(textBox).CaretInstance.Visible.ShouldBeTrue();
+
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 5;
+        VisualOf(textBox).CaretInstance.Visible.ShouldBeFalse();
+    }
 }

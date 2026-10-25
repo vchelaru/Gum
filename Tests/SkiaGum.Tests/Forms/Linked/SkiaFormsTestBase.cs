@@ -35,8 +35,7 @@ public class SkiaFormsTestBase : IDisposable
 
         GraphicalUiElement.IsAllLayoutSuspended = false;
         GraphicalUiElement.SuppressFontRegeneration = false;
-        GraphicalUiElement.CanvasWidth = 800;
-        GraphicalUiElement.CanvasHeight = 600;
+        ResetCanvasAndRoots();
 
         Mock<ICursor> cursor = new();
         cursor.Setup(x => x.PrimaryClick).Returns(true);
@@ -45,6 +44,34 @@ public class SkiaFormsTestBase : IDisposable
         cursor.SetupProperty(x => x.WindowPushed);
         cursor.Setup(x => x.LastInputDevice).Returns(InputDevice.Mouse);
         cursor.Setup(x => x.PrimaryPush).Returns(true);
+    }
+
+    // Update sizes the roots to the canvas, so a test (in this or another class) that leaves them
+    // resized would lay out every later test's controls against the wrong size.
+    private static void ResetCanvasAndRoots()
+    {
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
+
+        GumService service = GumService.Default;
+        service.Root.X = 0;
+        service.Root.Y = 0;
+        service.Root.Width = 0;
+        service.Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        service.Root.Height = 0;
+        service.Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        service.Root.UpdateLayout();
+
+        foreach (InteractiveGue root in new InteractiveGue[] { service.PopupRoot, service.ModalRoot })
+        {
+            root.X = 0;
+            root.Y = 0;
+            root.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            root.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            root.Width = GraphicalUiElement.CanvasWidth;
+            root.Height = GraphicalUiElement.CanvasHeight;
+            root.UpdateLayout();
+        }
     }
 
     public virtual void Dispose()
@@ -81,5 +108,6 @@ public class SkiaFormsTestBase : IDisposable
         _fileManagerState.Restore();
         _graphicalUiElementState.Restore();
         ObjectFinderState.Reset();
+        ResetCanvasAndRoots();
     }
 }
