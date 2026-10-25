@@ -2,7 +2,11 @@ using Gum.Forms.Controls;
 using MonoGameGum.Tests.Input;
 using Shouldly;
 using Xunit;
+#if SKIA_LINKED_TESTS
+using XnaButtons = SkiaGum.Tests.Forms.Linked.PadButtons;
+#else
 using XnaButtons = Microsoft.Xna.Framework.Input.Buttons;
+#endif
 
 namespace MonoGameGum.Tests.Forms;
 
@@ -35,6 +39,9 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
         listBox.ListBoxItems[1].IsFocused = true;
 
         Gum.Input.GamePad gamepad = new();
+#if SKIA_LINKED_TESTS
+        SkiaGum.Tests.Forms.Linked.SkiaPadHelper.Apply(gamepad, buttons, leftStickX, leftStickY);
+#else
         gamepad.Activity(
             new Microsoft.Xna.Framework.Input.GamePadState(
                 new Microsoft.Xna.Framework.Vector2(leftStickX, leftStickY),
@@ -42,6 +49,7 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
                 0, 0,
                 buttons),
             0);
+#endif
         FrameworkElement.GamePadsForUiControl.Add(gamepad);
 
         listBox.OnFocusUpdate();
@@ -64,6 +72,9 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
         listBox.ListBoxItems[1].IsFocused = true;
 
         Gum.Input.GamePad gamepad = new();
+#if SKIA_LINKED_TESTS
+        SkiaGum.Tests.Forms.Linked.SkiaPadHelper.Apply(gamepad, XnaButtons.DPadLeft | XnaButtons.DPadDown, 0, 0);
+#else
         gamepad.Activity(
             new Microsoft.Xna.Framework.Input.GamePadState(
                 Microsoft.Xna.Framework.Vector2.Zero,
@@ -71,6 +82,7 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
                 0, 0,
                 XnaButtons.DPadLeft | XnaButtons.DPadDown),
             0);
+#endif
         FrameworkElement.GamePadsForUiControl.Add(gamepad);
 
         listBox.OnFocusUpdate();

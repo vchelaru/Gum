@@ -1,4 +1,4 @@
-using Gum.Forms.Controls;
+﻿using Gum.Forms.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.DefaultVisuals.V3;
@@ -9,7 +9,11 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Linq;
 using Xunit;
+#if SKIA_LINKED_TESTS
+using Text = SkiaGum.Text;
+#else
 using Text = RenderingLibrary.Graphics.Text;
+#endif
 
 namespace MonoGameGum.Tests.Forms;
 

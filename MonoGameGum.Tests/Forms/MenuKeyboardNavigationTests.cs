@@ -12,7 +12,11 @@ using RenderingLibrary;
 using Shouldly;
 using Xunit;
 using Keys = Gum.Forms.Input.Keys;
+#if SKIA_LINKED_TESTS
+using XnaButtons = SkiaGum.Tests.Forms.Linked.PadButtons;
+#else
 using XnaButtons = Microsoft.Xna.Framework.Input.Buttons;
+#endif
 
 namespace MonoGameGum.Tests.Forms;
 
@@ -118,7 +122,7 @@ public class MenuKeyboardNavigationTests : BaseTestClass
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
         try
         {
-            Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+            RunFrame();
         }
         finally
         {
@@ -126,11 +130,23 @@ public class MenuKeyboardNavigationTests : BaseTestClass
         }
     }
 
+    private static void RunFrame()
+    {
+#if SKIA_LINKED_TESTS
+        SkiaGum.Tests.Forms.Linked.SkiaPadHelper.RunFrame();
+#else
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+#endif
+    }
+
     // Runs one frame of the real focus dispatch with a gamepad that has just pressed the given buttons
     // and holds the left stick at the given position.
     private static void PressGamepad(XnaButtons buttons, float leftStickX = 0, float leftStickY = 0)
     {
         Gum.Input.GamePad gamepad = new();
+#if SKIA_LINKED_TESTS
+        SkiaGum.Tests.Forms.Linked.SkiaPadHelper.Apply(gamepad, buttons, leftStickX, leftStickY);
+#else
         gamepad.Activity(
             new Microsoft.Xna.Framework.Input.GamePadState(
                 new Microsoft.Xna.Framework.Vector2(leftStickX, leftStickY),
@@ -138,10 +154,11 @@ public class MenuKeyboardNavigationTests : BaseTestClass
                 0, 0,
                 buttons),
             0);
+#endif
         FrameworkElement.GamePadsForUiControl.Add(gamepad);
         try
         {
-            Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+            RunFrame();
         }
         finally
         {
@@ -477,15 +494,15 @@ public class MenuKeyboardNavigationTests : BaseTestClass
         cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
         cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(y);
         Gum.Forms.FormsUtilities.SetCursor(cursor.Object);
-        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        RunFrame();
 
         isPush = true;
         isDown = true;
-        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        RunFrame();
         isPush = false;
         isDown = false;
         isClick = true;
-        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        RunFrame();
 
         bar.File.IsPopupVisible.ShouldBeFalse();
         bar.File.IsSelected.ShouldBeFalse();

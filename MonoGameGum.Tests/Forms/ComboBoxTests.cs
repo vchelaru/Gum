@@ -6,8 +6,10 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Mvvm;
 using Gum.Wireframe;
+#if !SKIA_LINKED_TESTS
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+#endif
 using Gum.GueDeriving;
 using MonoGameGum.Tests.Input;
 using Moq;
@@ -67,7 +69,7 @@ public  class ComboBoxTests : BaseTestClass
         cursor.Setup(x => x.VisualOver).Returns(comboBox.Visual);
         Gum.Forms.FormsUtilities.SetCursor(cursor.Object);
 
-        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        RunFrame();
 
         comboBox.IsDropDownOpen.ShouldBe(true);
 
@@ -75,7 +77,7 @@ public  class ComboBoxTests : BaseTestClass
         cursor.Setup(x => x.X).Returns((int)(GraphicalUiElement.CanvasWidth-1));
         cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns((int)(GraphicalUiElement.CanvasWidth - 1));
         cursor.Setup(x => x.VisualOver).Returns((InteractiveGue?)null);
-        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        RunFrame();
 
         comboBox.IsDropDownOpen.ShouldBe(false);
 
@@ -1132,6 +1134,7 @@ public  class ComboBoxTests : BaseTestClass
         popup.X.ShouldBe(popupX);
     }
 
+#if !SKIA_LINKED_TESTS // builds a MonoGame BitmapFont
     [Fact]
     public void Activity_ComboBoxMoved_OpenDropDownKeepsScrollAndSelection()
     {
@@ -1258,6 +1261,9 @@ public  class ComboBoxTests : BaseTestClass
 
     // ComboBox text is data-driven and deliberately untranslated (gum-localization), on selection
     // and on direct Text assignment.
+#if !SKIA_LINKED_TESTS // uses the MonoGame CustomSetPropertyOnRenderable seam
+#endif
+
     [Fact]
     public void Text_WithLocalizationService_StaysUntranslated()
     {
@@ -1282,6 +1288,7 @@ public  class ComboBoxTests : BaseTestClass
             CustomSetPropertyOnRenderable.LocalizationService = null;
         }
     }
+#endif
 
     [Fact]
     public void Activity_ComboBoxClosed_DoesNotKeepAncestorsFromGoingIdle()
@@ -1446,16 +1453,29 @@ public  class ComboBoxTests : BaseTestClass
 
         for (int i = 0; i < frames; i++)
         {
-            Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+            RunFrame();
         }
     }
 
     private static void PushOn(GraphicalUiElement visualOver, int frames = 1) =>
         PushOn(visualOver as InteractiveGue, frames);
 
+    private static void RunFrame()
+    {
+#if SKIA_LINKED_TESTS
+        SkiaGum.Tests.Forms.Linked.SkiaPadHelper.RunFrame();
+#else
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+#endif
+    }
+
     private static void PressDPad(bool down)
     {
         Gum.Input.GamePad gamepad = new();
+#if SKIA_LINKED_TESTS
+        SkiaGum.Tests.Forms.Linked.SkiaPadHelper.Apply(
+            gamepad, down ? SkiaGum.Tests.Forms.Linked.PadButtons.DPadDown : 0);
+#else
         gamepad.Activity(
             new Microsoft.Xna.Framework.Input.GamePadState(
                 new Microsoft.Xna.Framework.Input.GamePadThumbSticks(
@@ -1471,6 +1491,7 @@ public  class ComboBoxTests : BaseTestClass
                     leftValue: Microsoft.Xna.Framework.Input.ButtonState.Released,
                     rightValue: Microsoft.Xna.Framework.Input.ButtonState.Released)),
             0);
+#endif
         FrameworkElement.GamePadsForUiControl.Add(gamepad);
     }
 
