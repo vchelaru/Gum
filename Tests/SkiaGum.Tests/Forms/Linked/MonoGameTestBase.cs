@@ -16,3 +16,15 @@ namespace Gum.Input
     {
     }
 }
+
+// Namespaces the linked files import but, on Skia, use nothing from. Declaring them lets the unused
+// `using` directives compile; a test that really needs an XNA type still fails to compile and stays unlinked.
+namespace Microsoft.Xna.Framework.Input
+{
+    internal static class UnusedNamespaceAnchor { }
+}
+
+namespace MonoGameGum.Tests.Input
+{
+    internal static class UnusedNamespaceAnchor { }
+}

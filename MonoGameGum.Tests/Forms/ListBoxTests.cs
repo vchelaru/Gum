@@ -1984,6 +1984,7 @@ public class ListBoxTests : BaseTestClass
         listBox.SelectedIndex.ShouldBe(1);
     }
 
+#if !SKIA_LINKED_TESTS // uses Microsoft.Xna GamePadState; Skia twin in GamepadLinkedGapTests
     [Fact]
     public void ListBox_RightStickDeflection_ScrollsAtTopLevelFocus()
     {
@@ -2025,6 +2026,7 @@ public class ListBoxTests : BaseTestClass
 
         listBox.VerticalScrollBarValue.ShouldBe(400, tolerance: 0.01);
     }
+#endif
 
     [Fact]
     public void ListBox_EnterPressedAtTopLevelFocus_DropsFocusIntoItems()
