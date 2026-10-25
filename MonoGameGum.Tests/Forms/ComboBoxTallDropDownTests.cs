@@ -20,18 +20,50 @@ namespace MonoGameGum.Tests.Forms;
 /// </summary>
 public class ComboBoxTallDropDownTests : BaseTestClass
 {
+    private readonly Mock<ICursor> _cursor = new();
+    private bool _isPush;
+    private bool _isDown;
+    private bool _isClick;
+    private double _pushTime;
+
     public ComboBoxTallDropDownTests()
     {
-        // A still cursor away from every control.
-        Mock<ICursor> cursor = new();
-        cursor.SetupProperty(c => c.VisualOver);
-        cursor.SetupProperty(c => c.WindowPushed);
-        cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
-        cursor.Setup(c => c.X).Returns(-1000);
-        cursor.Setup(c => c.Y).Returns(-1000);
-        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(-1000);
-        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(-1000);
-        FormsUtilities.SetCursor(cursor.Object);
+        // A still cursor away from every control unless a test moves it.
+        _cursor.SetupProperty(c => c.VisualOver);
+        _cursor.SetupProperty(c => c.WindowPushed);
+        _cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        _cursor.Setup(c => c.PrimaryPush).Returns(() => _isPush);
+        _cursor.Setup(c => c.PrimaryDown).Returns(() => _isDown);
+        _cursor.Setup(c => c.PrimaryClick).Returns(() => _isClick);
+        _cursor.Setup(c => c.LastPrimaryPushTime).Returns(() => _pushTime);
+        MoveCursor(-1000, -1000);
+        FormsUtilities.SetCursor(_cursor.Object);
+    }
+
+    private void MoveCursor(float x, float y)
+    {
+        _cursor.Setup(c => c.X).Returns((int)x);
+        _cursor.Setup(c => c.Y).Returns((int)y);
+        _cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
+        _cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(y);
+    }
+
+    private static void Frame() => Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+    // One primary push and release over the center of the visual, through the real hit test.
+    private void ClickOn(GraphicalUiElement visual)
+    {
+        MoveCursor(visual.GetAbsoluteX() + visual.AbsoluteWidth / 2, visual.GetAbsoluteY() + visual.AbsoluteHeight / 2);
+        _pushTime += 1;
+        _isPush = true;
+        _isDown = true;
+        Frame();
+        _isPush = false;
+        _isDown = false;
+        _isClick = true;
+        Frame();
+        _isClick = false;
+        Frame();
     }
 
     public override void Dispose()
@@ -274,5 +306,42 @@ public class ComboBoxTallDropDownTests : BaseTestClass
 
         comboBox.ListBox.SelectedIndex.ShouldBe(25);
         ShouldBeInView(comboBox.ListBox, 25);
+    }
+
+    [Fact]
+    public void Click_ShouldSelectScrolledRowAndClose_WhenDropDownIsShrunk()
+    {
+        ResizeCanvas(800, 200);
+        ComboBox comboBox = CreateComboBox(y: 20, dropDownHeight: 300, rows: 30);
+        comboBox.IsDropDownOpen = true;
+        comboBox.ListBox.VerticalScrollBarValue = float.MaxValue;
+        ShouldBeInView(comboBox.ListBox, 28);
+
+        ClickOn(comboBox.ListBox.ListBoxItems[28].Visual);
+
+        comboBox.SelectedIndex.ShouldBe(28);
+        comboBox.SelectedObject.ShouldBe("Item 28");
+        comboBox.Text.ShouldBe("Item 28");
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MouseWheel_ShouldScrollShrunkDropDown_WhenCursorIsOverIt()
+    {
+        ResizeCanvas(800, 200);
+        ComboBox comboBox = CreateComboBox(y: 20, dropDownHeight: 300, rows: 30);
+        comboBox.IsDropDownOpen = true;
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        comboBox.ListBox.VerticalScrollBarValue.ShouldBe(0);
+        float firstRowTop = comboBox.ListBox.ListBoxItems[0].Visual.GetAbsoluteTop();
+
+        MoveCursor(popup.AbsoluteLeft + 5, popup.AbsoluteTop + 100);
+        _cursor.Setup(c => c.ScrollWheelChange).Returns(-1);
+        _cursor.Setup(c => c.ZVelocity).Returns(-1);
+        Frame();
+
+        comboBox.ListBox.VerticalScrollBarValue.ShouldBeGreaterThan(0);
+        comboBox.ListBox.ListBoxItems[0].Visual.GetAbsoluteTop().ShouldBeLessThan(firstRowTop);
+        comboBox.IsDropDownOpen.ShouldBeTrue();
     }
 }

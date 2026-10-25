@@ -82,6 +82,30 @@ public class ComboBoxTallDropDownRenderTests : BaseTestClass
         }));
     }
 
+    [Fact]
+    public void Close_ShouldRestoreThemeLevels_AfterBeingShrunk()
+    {
+        WithCanvas(() => MenuFocusRenderTests.WithToolProject("FormsTemplate", mutateProject: null, () =>
+        {
+            InteractiveGue visual = (InteractiveGue)ObjectFinder.Self.GetComponent("Controls/ComboBox")!
+                .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+            ComboBox comboBox = (ComboBox)visual.FormsControlAsObject!;
+            comboBox.AddToRoot();
+            for (int i = 0; i < 40; i++)
+            {
+                comboBox.Items!.Add("Item " + i);
+            }
+            Resize(Width, Height);
+            string authoredLevels = Snapshot(comboBox).Levels;
+
+            comboBox.IsDropDownOpen = true;
+            comboBox.ListBox.Visual.AbsoluteHeight.ShouldBe(Height, 0.01f);
+            comboBox.IsDropDownOpen = false;
+
+            Snapshot(comboBox).Levels.ShouldBe(authoredLevels);
+        }));
+    }
+
     private static void Resize(float width, float height)
     {
         GraphicalUiElement.CanvasWidth = width;
