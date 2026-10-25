@@ -37,6 +37,27 @@ public class CodeFileLocationWatcherTests
     }
 
     [Fact]
+    public void CheckAfterEdit_SendsALocationChange_ButNoHeaderChange_WhenOnlyTheCustomCodeFolderChanges()
+    {
+        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
+        List<CodeFileLocationsChangedMessage> locations = new List<CodeFileLocationsChangedMessage>();
+        List<CustomCodeHeadersChangedMessage> headers = new List<CustomCodeHeadersChangedMessage>();
+        messenger.Register<CodeFileLocationsChangedMessage>(this, (_, message) => locations.Add(message));
+        messenger.Register<CustomCodeHeadersChangedMessage>(this, (_, message) => headers.Add(message));
+        CodeFileLocationWatcher watcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms, RootNamespace = "Game" };
+        watcher.Reset(settings);
+
+        settings.CustomCodeFolder = "Mine/";
+        watcher.CheckAfterEdit(settings);
+
+        CodeFileLocationsChangedMessage message = locations.ShouldHaveSingleItem();
+        message.Previous.CustomCodeFolder.ShouldBe(string.Empty);
+        message.Description.ShouldBe("Custom Code Folder from (none) to Mine/");
+        headers.ShouldBeEmpty("a custom folder moves files; namespaces are unaffected");
+    }
+
+    [Fact]
     public void CheckAfterEdit_SendsALocationChange_ButNoHeaderChange_WhenOnlyThePrefixChanges()
     {
         WeakReferenceMessenger messenger = new WeakReferenceMessenger();

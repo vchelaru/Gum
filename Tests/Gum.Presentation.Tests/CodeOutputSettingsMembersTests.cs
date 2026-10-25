@@ -54,7 +54,7 @@ public class CodeOutputSettingsMembersTests
         categories.Select(category => category.Name).ShouldBe(new[] { "Project-Wide Code Generation", "Element Code Generation" });
         categories[0].Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Code Project Root", "Generated Code Folder", "Generated Code Folder Prefix", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
             "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Syntax Version",
         });
         categories[1].Members.Select(member => member.Name).ShouldBe(new[]
@@ -73,7 +73,7 @@ public class CodeOutputSettingsMembersTests
         category.Name.ShouldBe("Project-Wide Code Generation");
         category.Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Code Project Root", "Generated Code Folder", "Generated Code Folder Prefix", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
             "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Syntax Version",
         });
     }
@@ -187,6 +187,22 @@ public class CodeOutputSettingsMembersTests
         _sut.ProjectSettings.GeneratedCodeFolder.ShouldBe("Gum/Generated");
         _sut.ProjectSettings.CodeProjectRoot.ShouldBe("Code/", "the .csproj folder stays the syntax-detection root");
         Member("Generated Code Folder").Value.ShouldBe("Gum/Generated");
+        changes.ShouldBe(1);
+    }
+
+    [Fact]
+    public void CustomCodeFolder_IsStoredRelativeToTheCodeRoot_AndReportsTheChange()
+    {
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumProject") + Path.DirectorySeparatorChar;
+        _projectState.Setup(p => p.ProjectDirectory).Returns(projectDirectory);
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/" };
+        int changes = 0;
+        _sut.SettingsChanged += (_, _) => changes++;
+
+        Member("Custom Code Folder").SetValue(Path.Combine(projectDirectory, "Code", "Mine"), SetPropertyCommitType.Full);
+
+        _sut.ProjectSettings.CustomCodeFolder.ShouldBe("Mine");
+        _sut.ProjectSettings.GeneratedCodeFolder.ShouldBe(string.Empty);
         changes.ShouldBe(1);
     }
 

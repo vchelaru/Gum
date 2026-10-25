@@ -84,6 +84,14 @@ If an absolute path is entered, it is saved to a relative path so that generatio
 
 Since the path is saved as relative to your project file location, this path will break if you move your Gum project to a new location. Be sure to update this if you are moving your project file.
 
+### Custom Code Folder
+
+An optional folder, relative to the Code Project Root, for your own code files (`Button.cs`). The generated files (`Button.Generated.cs`) stay in the Generated Code Folder, so tools that skip generated folders, such as analyzers, diffs and refactorings, can ignore them. Leave it empty to keep each custom file beside its generated file.
+
+The Screens, Components and Gum folder layout is mirrored under both folders, so `Components/Buttons/IconButton` is `<Generated Code Folder>/Components/Buttons/IconButton.Generated.cs` and `<Custom Code Folder>/Components/Buttons/IconButton.cs`. The Generated Code Folder Prefix applies to both. Namespaces are not affected, so both halves of the class stay in the same namespace.
+
+Changing this offers to move your existing custom files, and a copy of every file is kept so the move can be undone with **Content > Restore Last Code File Migration**. Custom files only move after you confirm. If you already moved a custom file by hand into the folder, Gum finds it there and does not create a second one.
+
 ### Generated Code Folder Prefix
 
 Text put in front of the Components and Screens folder names. Leave it empty to use `Components` and `Screens`.

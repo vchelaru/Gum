@@ -76,11 +76,15 @@ A per-element `GeneratedFileName` setting overrides this entirely. When set, tha
 (resolved against the Gum project directory if relative), and the folder convention above does not
 apply.
 
-### Custom file path is derived, never stored
+### Custom file path is derived
 
-The custom file's path is always computed from the generated file's: take the generated path and
-replace the `.Generated.cs` suffix with `.cs`. There is no separate setting. Anything that changes
-where the generated file lands moves the custom file with it.
+With `CustomCodeFolder` empty (the default), the custom file's path is the generated file's with the
+`.Generated.cs` suffix replaced by `.cs`. When `CustomCodeFolder` is set, the same
+`<prefix>/Screens|Components/<Gum folders>/<Class>.cs` layout is built under that folder instead
+(relative to `CodeProjectRoot`, or absolute). A per-element `GeneratedFileName` override puts the custom
+file beside the overridden generated file regardless. `CodeGenerationFileLocationsService.GetCustomCodeFileName`
+is the one place this is computed; callers never string-replace the generated path. The namespace is
+unchanged by the folder, so both halves keep one namespace.
 
 ### Namespace derivation
 
@@ -111,6 +115,7 @@ Two `.codsj` files (JSON despite the extension) drive everything.
 | `OutputLibrary` | Which runtime to target. Drives almost every shape decision below. |
 | `CodeProjectRoot` | Output folder, relative to the `.gumx`. |
 | `GeneratedCodeFolder` | Optional subfolder of `CodeProjectRoot` that generated code goes in. |
+| `CustomCodeFolder` | Optional subfolder of `CodeProjectRoot` for the custom `.cs` files; empty keeps them beside the generated ones. |
 | `GeneratedCodeFolderPrefix` | Optional text in front of the `Screens` / `Components` folder names (`GumCodeGen/` or `Gum`). |
 | `RootNamespace` | Namespace root. Empty means no namespace is emitted. |
 | `AppendFolderToNamespace` | Append the element's Gum folder path to its namespace. |

@@ -45,6 +45,20 @@ public class CodeFileBackupServiceTests : IDisposable
     }
 
     [Fact]
+    public void Restore_PutsBackAFileInAFolderOutsideTheProject_ThatNoLongerExists()
+    {
+        // A Custom Code Folder can sit anywhere; undoing a move out of it must recreate the folder.
+        FilePath file = WriteFile("Outside/Components/Button.cs", "user code");
+        CodeFileBackupService service = CreateService();
+        CodeFileBackup backup = service.Create(_projectFile, new[] { file });
+        Directory.Delete(Path.Combine(_tempDirectory, "Outside"), recursive: true);
+
+        service.Restore(backup).Restored.ShouldBe(new[] { file });
+
+        File.ReadAllText(Path.Combine(_tempDirectory, "Outside", "Components", "Button.cs")).ShouldBe("user code");
+    }
+
+    [Fact]
     public void Restore_LeavesAFileChangedSinceTheBackup_AndReportsIt()
     {
         FilePath custom = WriteFile("Game/Components/ButtonRuntime.cs", "original");

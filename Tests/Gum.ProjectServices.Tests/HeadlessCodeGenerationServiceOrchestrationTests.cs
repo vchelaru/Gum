@@ -81,6 +81,53 @@ public class HeadlessCodeGenerationServiceOrchestrationTests : BaseTestClass
         };
 
     [Fact]
+    public void GenerateCodeForElement_WritesCustomStubBesideGeneratedFile_WhenCustomFolderIsEmpty()
+    {
+        ComponentSave button = AddComponent("Button");
+
+        CodeOutputProjectSettings forms = CreateProjectSettings();
+        forms.OutputLibrary = OutputLibrary.GumForms;
+        CreateService().GenerateCodeForElement(button, new CodeOutputElementSettings(), forms, checkForMissing: false);
+
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Button.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Button.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GenerateCodeForElement_WritesCustomStubToCustomFolder_AndGeneratedFileToGeneratedFolder()
+    {
+        ComponentSave button = AddComponent("Button");
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.GeneratedCodeFolder = "Gen/";
+        settings.CustomCodeFolder = "Mine/";
+
+        CreateService().GenerateCodeForElement(button, new CodeOutputElementSettings(), settings, checkForMissing: false);
+
+        File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Mine", "Components", "Button.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.cs")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GenerateCodeForElement_DoesNotCreateADuplicateStub_WhenTheUserAlreadyMovedTheCustomFile()
+    {
+        ComponentSave button = AddComponent("Button");
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.GeneratedCodeFolder = "Gen/";
+        settings.CustomCodeFolder = "Mine/";
+        string mine = Path.Combine(_tempDirectory, "Mine", "Components", "Button.cs");
+        Directory.CreateDirectory(Path.GetDirectoryName(mine)!);
+        File.WriteAllText(mine, "// user code");
+
+        CreateService().GenerateCodeForElement(button, new CodeOutputElementSettings(), settings, checkForMissing: false);
+
+        File.ReadAllText(mine).ShouldBe("// user code");
+        File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.cs")).ShouldBeFalse();
+    }
+
+    [Fact]
     public void GenerateCodeForElements_WithNoSubset_GeneratesScreensThenComponentsAndWritesFallbackFile()
     {
         AddScreen("MainMenu");

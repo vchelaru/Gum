@@ -80,6 +80,7 @@ public class CodeOutputSettingsMembers
         MemberCategory projectCategory = new MemberCategory("Project-Wide Code Generation");
         projectCategory.Members.Add(CreateCodeProjectRootMember());
         projectCategory.Members.Add(CreateGeneratedCodeFolderMember());
+        projectCategory.Members.Add(CreateCustomCodeFolderMember());
         projectCategory.Members.Add(CreateGeneratedCodeFolderPrefixMember());
         projectCategory.Members.Add(CreateOutputLibrarySelectionMember());
         projectCategory.Members.Add(CreateObjectInstantiationTypeMember());
@@ -234,10 +235,20 @@ public class CodeOutputSettingsMembers
         return member;
     }
 
-    private InstanceMember CreateGeneratedCodeFolderMember()
+    private InstanceMember CreateGeneratedCodeFolderMember() => CreateCodeSubfolderMember(
+        "Generated Code Folder", "Optional folder under the Code Project Root for generated code",
+        settings => settings.GeneratedCodeFolder, (settings, value) => settings.GeneratedCodeFolder = value);
+
+    private InstanceMember CreateCustomCodeFolderMember() => CreateCodeSubfolderMember(
+        "Custom Code Folder", "Optional folder under the Code Project Root for your own code files; empty keeps them beside the generated files",
+        settings => settings.CustomCodeFolder, (settings, value) => settings.CustomCodeFolder = value);
+
+    // A folder relative to the Code Project Root, with a text field and a browse button.
+    private InstanceMember CreateCodeSubfolderMember(string label, string detail,
+        Func<CodeOutputProjectSettings, string> get, Action<CodeOutputProjectSettings, string> set)
     {
-        InstanceMember member = new InstanceMember("Generated Code Folder", this);
-        member.DetailText = "Optional folder under the Code Project Root for generated code";
+        InstanceMember member = new InstanceMember(label, this);
+        member.DetailText = detail;
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -250,12 +261,12 @@ public class CodeOutputSettingsMembers
                     // Kept relative, like Code Project Root, so the .codsj works on every machine.
                     valueToSet = FileManager.MakeRelative(valueToSet, codeProjectRoot, preserveCase: true);
                 }
-                ProjectSettings.GeneratedCodeFolder = valueToSet;
+                set(ProjectSettings, valueToSet);
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
         };
 
-        member.CustomGetEvent += (owner) => ProjectSettings?.GeneratedCodeFolder;
+        member.CustomGetEvent += (owner) => ProjectSettings == null ? null : get(ProjectSettings);
         member.CustomGetTypeEvent += (owner) => typeof(string);
         UseFolderPicker(member);
         // The value is relative to the Code Project Root, not the project folder the picker

@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
@@ -205,6 +205,102 @@ public class CodeGenerationFileLocationsServiceTests : BaseTestClass
 
         empty.ShouldNotContain("GeneratedCodeFolderPrefix");
         JsonConvert.DeserializeObject<CodeOutputProjectSettings>(set)!.GeneratedCodeFolderPrefix.ShouldBe("Gum");
+    }
+
+    [Fact]
+    public void GetCustomCodeFileName_ShouldSitBesideGeneratedFile_WhenCustomCodeFolderIsEmpty()
+    {
+        ComponentSave component = CreateComponent("Buttons/IconButton");
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
+        {
+            CodeProjectRoot = "Code/", GeneratedCodeFolder = "Gen", GeneratedCodeFolderPrefix = "Gum", OutputLibrary = OutputLibrary.GumForms
+        };
+        CodeGenerationFileLocationsService service = CreateService();
+
+        FilePath? generated = service.GetGeneratedFileName(component, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
+        FilePath? custom = service.GetCustomCodeFileName(component, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
+
+        custom!.FullPath.ShouldBe(generated!.FullPath.Replace(".Generated.cs", ".cs"));
+    }
+
+    [Fact]
+    public void GetCustomCodeFileName_ShouldUseCustomCodeFolder_MirroringGumFolders()
+    {
+        ComponentSave component = CreateComponent("Buttons/IconButton");
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
+        {
+            CodeProjectRoot = "Code/", GeneratedCodeFolder = "Gen", CustomCodeFolder = "Mine", OutputLibrary = OutputLibrary.GumForms
+        };
+        CodeGenerationFileLocationsService service = CreateService();
+
+        FilePath? generated = service.GetGeneratedFileName(component, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
+        FilePath? custom = service.GetCustomCodeFileName(component, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
+
+        generated.ShouldBe(new FilePath(Path.Combine(_projectDirectory, "Code", "Gen", "Components", "Buttons", "IconButton.Generated.cs")));
+        custom.ShouldBe(new FilePath(Path.Combine(_projectDirectory, "Code", "Mine", "Components", "Buttons", "IconButton.cs")));
+    }
+
+    [Fact]
+    public void GetCustomCodeFileName_ShouldApplyPrefixToCustomCodeFolder()
+    {
+        ScreenSave screen = CreateScreen("MainMenu");
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
+        {
+            CodeProjectRoot = "Code/", CustomCodeFolder = "Mine/", GeneratedCodeFolderPrefix = "Gum", OutputLibrary = OutputLibrary.GumForms
+        };
+
+        FilePath? custom = CreateService().GetCustomCodeFileName(screen, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
+
+        custom.ShouldBe(new FilePath(Path.Combine(_projectDirectory, "Code", "Mine", "GumScreens", "MainMenu.cs")));
+    }
+
+    [Fact]
+    public void GetCustomCodeFileName_ShouldAcceptAbsoluteCustomCodeFolder()
+    {
+        string absolute = Path.Combine(Path.GetTempPath(), "GumAbsoluteCustom") + Path.DirectorySeparatorChar;
+        ScreenSave screen = CreateScreen("MainMenu");
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
+        {
+            CodeProjectRoot = "Code/", CustomCodeFolder = absolute, OutputLibrary = OutputLibrary.GumForms
+        };
+
+        FilePath? custom = CreateService().GetCustomCodeFileName(screen, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
+
+        custom.ShouldBe(new FilePath(Path.Combine(absolute, "Screens", "MainMenu.cs")));
+    }
+
+    [Fact]
+    public void GetCustomCodeFileName_ShouldSitBesideElementGeneratedFileName_WhenOverridden()
+    {
+        ScreenSave screen = CreateScreen("MainMenu");
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
+        {
+            CodeProjectRoot = "Code/", CustomCodeFolder = "Mine/", OutputLibrary = OutputLibrary.GumForms
+        };
+        CodeOutputElementSettings elementSettings = new CodeOutputElementSettings { GeneratedFileName = "Elsewhere/Menu.Generated.cs" };
+
+        FilePath? custom = CreateService().GetCustomCodeFileName(screen, elementSettings, projectSettings, VisualApi.Gum);
+
+        custom.ShouldBe(new FilePath(Path.Combine(_projectDirectory, "Elsewhere", "Menu.cs")));
+    }
+
+    [Fact]
+    public void GetCustomCodeFileName_ShouldReturnNull_WhenOnlyCustomCodeFolderIsSet()
+    {
+        ScreenSave screen = CreateScreen("MainMenu");
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings { CustomCodeFolder = "Mine" };
+
+        CreateService().GetCustomCodeFileName(screen, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum).ShouldBeNull();
+    }
+
+    [Fact]
+    public void Serialize_ShouldOmitCustomCodeFolder_WhenEmpty()
+    {
+        string empty = JsonConvert.SerializeObject(new CodeOutputProjectSettings());
+        string set = JsonConvert.SerializeObject(new CodeOutputProjectSettings { CustomCodeFolder = "Mine/" });
+
+        empty.ShouldNotContain("CustomCodeFolder");
+        JsonConvert.DeserializeObject<CodeOutputProjectSettings>(set)!.CustomCodeFolder.ShouldBe("Mine/");
     }
 
     private CodeGenerationFileLocationsService CreateService()
