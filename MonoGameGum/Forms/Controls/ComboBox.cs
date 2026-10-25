@@ -1005,6 +1005,9 @@ public class ComboBox :
             listBox.IsVisible = false;
 
 #if !FRB
+            // A drop-down closed while shrunk gives its levels back their own layout values (#6769).
+            RestoreShrunkLevels();
+
             if (deferRemovingPopup && global::RenderingLibrary.IGumService.Default != null)
             {
                 // Put the layout values back now so opening again before the removal runs saves the

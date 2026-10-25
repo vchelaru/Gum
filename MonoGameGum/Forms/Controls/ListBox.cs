@@ -2382,7 +2382,8 @@ public class ListBox : ItemsControl, IInputReceiver
 /// <summary>
 /// What an open popup was last placed against: its owner's absolute rectangle and the size of the root
 /// it is parented under. A change in either means the popup must be placed again (the owner or an
-/// ancestor moved or resized, or the canvas was resized). Shared by ComboBox and MenuItem.
+/// ancestor moved or resized, or the canvas was resized). Shared by ComboBox and MenuItem. Under FRB
+/// only the owner is tracked: a root resize does not re-place a popup there.
 /// </summary>
 internal struct PopupPlacement
 {
@@ -2390,27 +2391,33 @@ internal struct PopupPlacement
     float _ownerY;
     float _ownerWidth;
     float _ownerHeight;
+#if !FRB
     float _boundsWidth;
     float _boundsHeight;
+#endif
 
     /// <summary>Records the current state; call after the popup has been placed and parented.</summary>
     public void Record(global::Gum.Wireframe.GraphicalUiElement owner, global::Gum.Wireframe.GraphicalUiElement popup)
     {
+#if !FRB
         if (popup.Parent is global::Gum.Wireframe.GraphicalUiElement boundsRoot)
         {
             _boundsWidth = boundsRoot.AbsoluteWidth;
             _boundsHeight = boundsRoot.AbsoluteHeight;
         }
+#endif
         _ownerX = owner.AbsoluteX;
         _ownerY = owner.AbsoluteY;
         _ownerWidth = owner.AbsoluteWidth;
         _ownerHeight = owner.AbsoluteHeight;
     }
 
+#if !FRB
     /// <summary>Whether the root the popup is parented under changed size since it was placed.</summary>
     public readonly bool DidBoundsChange(global::Gum.Wireframe.GraphicalUiElement popup) =>
         popup.Parent is global::Gum.Wireframe.GraphicalUiElement boundsRoot &&
         (boundsRoot.AbsoluteWidth != _boundsWidth || boundsRoot.AbsoluteHeight != _boundsHeight);
+#endif
 
     /// <summary>Whether the owner's absolute rectangle changed since the popup was placed.</summary>
     public readonly bool DidOwnerChange(global::Gum.Wireframe.GraphicalUiElement owner) =>
