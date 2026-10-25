@@ -19,7 +19,7 @@ namespace CodeOutputPlugin;
 /// </summary>
 public class CodeOutputSettingsMembers
 {
-    private const string FullyInCode = "Fully in Code (no loaded Gum Project)";
+    private const string FullyInCode = "Fully in Code";
     private const string ReferenceGum = "Reference loaded Gum Project";
 
     // Also read by CodeFileLocationChange, so the migration prompt names a library as this row does.
@@ -39,7 +39,7 @@ public class CodeOutputSettingsMembers
     /// Width of the label column of the project rows: wide enough that every label stays on one line.
     /// Set per member, so no other property grid changes.
     /// </summary>
-    internal const double ProjectLabelColumnWidth = 190;
+    public const double ProjectLabelColumnWidth = 190;
 
     private InstanceMember? _resolvedLocationsMember;
     private readonly IProjectState _projectState;
@@ -551,13 +551,12 @@ public class CodeOutputSettingsMembers
             SyntaxVersionResult result = _syntaxVersionDetectionService.Detect(
                 ProjectSettings, _projectState.ProjectDirectory);
 
-            return result.Description;
+            member.ToolTipText = result.Description;
+            return $"{result.Version}  ({DescribeSyntaxSource(result.Source)})";
         };
         member.CustomGetTypeEvent += (owner) => typeof(string);
         member.IsReadOnly = true;
-        member.DetailText = ProjectSettings == null
-            ? "Read-only"
-            : DescribeSyntaxSource(_syntaxVersionDetectionService.Detect(ProjectSettings, _projectState.ProjectDirectory).Source);
+        member.DetailText = "Read-only; the Gum runtime version the generated code is written for";
 
         return member;
     }
@@ -565,11 +564,11 @@ public class CodeOutputSettingsMembers
     // Read-only, so the hint says where the number came from rather than what it does.
     private static string DescribeSyntaxSource(SyntaxVersionSource source) => source switch
     {
-        SyntaxVersionSource.ManualOverride => "Read-only; set in ProjectCodeSettings.codsj",
-        SyntaxVersionSource.NuGetPackage => "Read-only; detected from the Gum NuGet package in your .csproj",
-        SyntaxVersionSource.ProjectReference => "Read-only; detected from the Gum project your .csproj references",
-        SyntaxVersionSource.AssemblyReference => "Read-only; detected from the Gum assembly your .csproj references",
-        _ => "Read-only; could not be detected, so the default is used",
+        SyntaxVersionSource.ManualOverride => "set in .codsj",
+        SyntaxVersionSource.NuGetPackage => "NuGet package",
+        SyntaxVersionSource.ProjectReference => "project reference",
+        SyntaxVersionSource.AssemblyReference => "assembly reference",
+        _ => "not detected, default",
     };
 
     private InstanceMember CreateResolvedLocationsMember()

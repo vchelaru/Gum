@@ -3,6 +3,9 @@ using AvaloniaDataUi;
 using Avalonia;
 using Avalonia.VisualTree;
 using CodeOutputPlugin;
+using Avalonia.Reactive;
+using System;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Avalonia.Settings;
 
@@ -12,6 +15,8 @@ namespace Gum.Avalonia.Settings;
 /// </summary>
 public sealed class CodeGenerationSettingsPageView : DockPanel
 {
+    private const double DefaultFontSize = 12;
+    private double _fontSize = DefaultFontSize;
     private CodeGenerationSettingsViewModel? _viewModel;
     private bool _isListening;
 
@@ -22,6 +27,14 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
         Children.Add(Grid);
 
         DataContextChanged += (_, _) => HandleDataContextChanged();
+
+        // The label column is sized for the default font; a larger font (zoom) widens it in proportion
+        // so labels stay on one line.
+        this.GetResourceObservable("ControlContentThemeFontSize").Subscribe(new AnonymousObserver<object?>(size =>
+        {
+            _fontSize = size is double fontSize && fontSize > 0 ? fontSize : DefaultFontSize;
+            ScaleLabelColumns();
+        }));
     }
 
     /// <summary>The property grid.</summary>
@@ -77,6 +90,19 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
         if (_viewModel != null)
         {
             Grid.SetCategories(_viewModel.BuildCategories());
+            ScaleLabelColumns();
+        }
+    }
+
+    private void ScaleLabelColumns()
+    {
+        double width = Math.Round(CodeOutputSettingsMembers.ProjectLabelColumnWidth * _fontSize / DefaultFontSize);
+        foreach (MemberCategory category in Grid.Categories)
+        {
+            foreach (InstanceMember member in category.Members)
+            {
+                member.FirstGridLength = width;
+            }
         }
     }
 }

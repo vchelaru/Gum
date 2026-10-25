@@ -106,8 +106,15 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     /// <summary>Refreshes on value and detail-text changes.</summary>
     protected virtual void HandleMemberPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.FirstGridLength))
+        {
+            // A page that sizes its label column to the font changes it after the row is built.
+            OnInstanceMemberChanged();
+        }
+
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.FirstGridLength) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsDetailTextWarning) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailAction))

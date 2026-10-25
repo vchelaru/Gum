@@ -105,7 +105,7 @@ public class SettingsDialogViewTests
 
         pageScroller.ScrollToEnd();
         Layout(window);
-        TextBlock lastRow = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Syntax Version");
+        TextBlock lastRow = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Project-wide Using Statements");
         double lastRowBottom = lastRow.TranslatePoint(new Point(0, lastRow.Bounds.Height), pageScroller)!.Value.Y;
         lastRowBottom.ShouldBeLessThanOrEqualTo(pageScroller.Bounds.Height, "scrolling to the end reaches the last row");
         window.Close();
