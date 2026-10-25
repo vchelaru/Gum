@@ -1397,4 +1397,109 @@ public class CursorHitTestIdleCostTests : BaseTestClass
     }
 
     #endregion
+
+    #region Verify 6788 walk keying
+
+    private sealed class ThrowingInteractive : InteractiveGue
+    {
+        public bool Throw;
+        public ThrowingInteractive() : base(new InvisibleRenderable()) { }
+        public override bool HasCursorOver(ICursor cursor, Layer? layer = null)
+        {
+            if (Throw) throw new System.InvalidOperationException("boom");
+            return base.HasCursorOver(cursor, layer);
+        }
+    }
+
+    private sealed class MutatingInteractive : InteractiveGue
+    {
+        public System.Action? OnTest;
+        public MutatingInteractive() : base(new InvisibleRenderable()) { }
+        public override bool HasCursorOver(ICursor cursor, Layer? layer = null)
+        {
+            OnTest?.Invoke();
+            OnTest = null;
+            return base.HasCursorOver(cursor, layer);
+        }
+    }
+
+    [Fact]
+    public void Verify_ThreeLevelsDeep_SkipsEventlessSiblingsAtEachLevel_AndFindsDeepTarget()
+    {
+        CountingInteractive a = CreateBox(0, 0, 10, false); a.RaiseChildrenEventsOutsideOfBounds = true;
+        CountingInteractive b = CreateBox(100, 0, 10, false); b.RaiseChildrenEventsOutsideOfBounds = true;
+        CountingInteractive c = CreateBox(100, 0, 10, false); c.RaiseChildrenEventsOutsideOfBounds = true;
+        CountingInteractive target = CreateBox(100, 0, 10, true);
+        List<CountingInteractive> dead = new();
+        foreach (CountingInteractive parent in new[] { a, b, c })
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                CountingInteractive d = CreateBox(1000 + i * 12, 0, 10, false);
+                parent.AddChild(d); dead.Add(d);
+            }
+        }
+        a.AddChild(b); b.AddChild(c); c.AddChild(target);
+        int clicks = 0;
+        target.Click += (_, _) => clicks++;
+        Mock<ICursor> cursor = CreateCursor(305, 5, click: true);
+        Walk(new List<GraphicalUiElement> { a }, cursor);
+        clicks.ShouldBe(1);
+        TotalCalls(dead).ShouldBe(0);
+    }
+
+    [Fact]
+    public void Verify_ExceptionInOverride_DoesNotLeakWalkTarget()
+    {
+        ThrowingInteractive thrower = new() { HasEvents = true };
+        thrower.WidthUnits = DimensionUnitType.Absolute; thrower.HeightUnits = DimensionUnitType.Absolute;
+        thrower.Width = 10; thrower.Height = 10; thrower.RaiseChildrenEventsOutsideOfBounds = true;
+        CountingInteractive eventless = CreateBox(200, 0, 10, false);
+        thrower.AddChild(eventless);
+        thrower.Throw = true;
+        Mock<ICursor> cursor = CreateCursor(205, 5);
+        Should.Throw<System.Exception>(() => Walk(new List<GraphicalUiElement> { thrower }, cursor));
+        // outside the walk, thrower must report over an eventless child (target restored to null)
+        thrower.Throw = false;
+        thrower.HasCursorOver(cursor.Object).ShouldBeTrue();
+        // next frame walk still skips eventless child
+        eventless.HasCursorOverCalls = 0;
+        Walk(new List<GraphicalUiElement> { thrower }, cursor);
+        eventless.HasCursorOverCalls.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Verify_TargetRemovedMidWalkInsideOverride_DoesNotThrow()
+    {
+        (CountingInteractive root, CountingInteractive withEvents, List<CountingInteractive> noEvents) = CreateOutsideBoundsRoot(eventlessCount: 3);
+        MutatingInteractive m = new() { HasEvents = true };
+        m.WidthUnits = DimensionUnitType.Absolute; m.HeightUnits = DimensionUnitType.Absolute;
+        m.Width = 10; m.Height = 10; m.X = 500; m.RaiseChildrenEventsOutsideOfBounds = true;
+        CountingInteractive far = CreateBox(900, 0, 10, true);
+        m.AddChild(far);
+        root.AddChild(m);
+        m.OnTest = () => m.Parent = null;
+        Mock<ICursor> cursor = CreateCursor(905, 5);
+        Should.NotThrow(() => Walk(new List<GraphicalUiElement> { root }, cursor));
+        // subsequent frame consistent
+        Should.NotThrow(() => Walk(new List<GraphicalUiElement> { root }, cursor));
+        root.HasCursorOver(CreateCursor(205, 5).Object).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Verify_TwoRoots_DoNotCrossContaminate()
+    {
+        (CountingInteractive r1, _, List<CountingInteractive> dead1) = CreateOutsideBoundsRoot(eventlessCount: 5);
+        (CountingInteractive r2, CountingInteractive t2, List<CountingInteractive> dead2) = CreateOutsideBoundsRoot(eventlessCount: 5);
+        int clicks = 0;
+        t2.Click += (_, _) => clicks++;
+        Mock<ICursor> cursor = CreateCursor(105, 5, click: true);
+        Walk(new List<GraphicalUiElement> { r1, r2 }, cursor);
+        TotalCalls(dead1).ShouldBe(0);
+        TotalCalls(dead2).ShouldBe(0);
+        clicks.ShouldBe(1);
+        r1.HasCursorOver(CreateCursor(205, 5).Object).ShouldBeTrue();
+    }
+
+    #endregion
 }
