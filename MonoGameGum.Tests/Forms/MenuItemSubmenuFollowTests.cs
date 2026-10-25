@@ -287,25 +287,27 @@ public class MenuItemSubmenuFollowTests : BaseTestClass
         (ContainerRuntime container, MenuItem file) = CreateMenu();
         file.IsSelected = true;
         MenuItem recent = OpenRecent(file);
-        int popupRootChanges = 0;
-        FrameworkElement.PopupRoot.Children!.CollectionChanged += (_, _) => popupRootChanges++;
+        // Placing a popup sets its position, which lays it out; a popup already on top is no longer
+        // taken out of the popup root and added back (#6762), so layouts are what show a placement.
+        int before = GraphicalUiElement.UpdateLayoutCallCount;
 
         Tick();
         Tick();
         Tick();
 
-        popupRootChanges.ShouldBe(0);
+        (GraphicalUiElement.UpdateLayoutCallCount - before).ShouldBe(0);
 
         container.X += 25;
         container.UpdateLayout();
+        before = GraphicalUiElement.UpdateLayoutCallCount;
         Tick();
-        popupRootChanges.ShouldBeGreaterThan(0);
-        int afterMove = popupRootChanges;
+        (GraphicalUiElement.UpdateLayoutCallCount - before).ShouldBeGreaterThan(0);
+        before = GraphicalUiElement.UpdateLayoutCallCount;
 
         Tick();
         Tick();
 
-        popupRootChanges.ShouldBe(afterMove);
+        (GraphicalUiElement.UpdateLayoutCallCount - before).ShouldBe(0);
         ShouldBeBeside(recent);
     }
 

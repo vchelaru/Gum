@@ -207,6 +207,157 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         hadAccentAtRegistration.ShouldBe(true);
     }
 
+    // An older project keeps its Icon and Styles: its Icon lacks the ColorCategory states the new ComboBox
+    // selects on its arrow, and its Styles lacks the swatch one of those states reads (#6764).
+    [Fact]
+    public async Task SkippedIcon_GainsTheColorStatesTheImportedComboBoxSelects_AndKeepsTheUsersOwn()
+    {
+        GumProjectSave theme = (await new GumxSourceService().LoadProjectAsync(Path.Combine(_templateDir, "GumProject.gumx"))).ShouldNotBeNull();
+        ComponentSave themeStyles = theme.Components.Single(c => c.Name == "Styles");
+        ComponentSave themeIcon = theme.Components.Single(c => c.Name == "Elements/Icon");
+        ComponentSave themeComboBox = theme.Components.Single(c => c.Name == "Controls/ComboBox");
+        // A second state the ComboBox selects on its arrow, read from the template so a recolor there keeps this test honest.
+        string selectedState = themeComboBox.AllStates.SelectMany(state => state.Variables)
+            .Where(v => v.Name == "IconInstance.ColorCategoryState")
+            .Select(v => (string)v.Value!)
+            .First(name => name != "Primary");
+        string iconPath = Path.Combine(_projectDir, "Components", "Elements", "Icon.gucx");
+        WriteOlderTemplateFile(Path.Combine("Elements", "Icon.gucx"), iconPath, new List<string> { "Primary", selectedState },
+            customizedState: "Gray", customizedVariable: "IconSprite.Red", customizedValue: "7");
+        string stylesPath = Path.Combine(_projectDir, "Components", "Styles.gucx");
+        WriteOlderStyles(stylesPath, new List<string> { "Primary" });
+
+        ImportResult result = await Import(theme, themeStyles, themeIcon, themeComboBox);
+
+        result.ConflictingElements.ShouldBeEmpty();
+        ComponentSave icon = Load(iconPath);
+        StateSaveCategory colors = icon.Categories.Single(c => c.Name == "ColorCategory");
+        colors.States.ShouldContain(s => s.Name == "Primary");
+        colors.States.Single(s => s.Name == selectedState).GetValue("IconSprite.Red")
+            .ShouldBe(themeIcon.Categories.Single(c => c.Name == "ColorCategory")
+                .States.Single(s => s.Name == selectedState).GetValue("IconSprite.Red"));
+        StateSave gray = colors.States.Single(s => s.Name == "Gray");
+        gray.GetValue("IconSprite.Red").ShouldBe(7);
+        gray.Variables.Count(v => v.Name == "IconSprite.Red").ShouldBe(1);
+        // Only Icon's Primary state reads Styles.Primary, so the swatch comes back through the added state.
+        ComponentSave styles = Load(stylesPath);
+        styles.Instances.ShouldContain(i => i.Name == "Primary");
+
+        // Recoloring the restored swatch recolors the arrow state that reads it.
+        GumProjectSave project = theme;
+        project.Components.Remove(themeStyles);
+        project.Components.Remove(themeIcon);
+        project.Components.Add(styles);
+        project.Components.Add(icon);
+        styles.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
+        icon.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
+        ObjectFinder.Self.GumProjectSave = project;
+        styles.DefaultState!.SetValue("Primary.FillRed", 201, "int");
+        project.ApplyAllVariableReferences();
+
+        icon.Categories.Single(c => c.Name == "ColorCategory").States.Single(s => s.Name == "Primary")
+            .GetValue("IconSprite.Red").ShouldBe(201);
+    }
+
+    [Fact]
+    public async Task SkippedIcon_IsLeftAsItIs_WhenItHasEveryStateTheImportSelects()
+    {
+        GumProjectSave theme = (await new GumxSourceService().LoadProjectAsync(Path.Combine(_templateDir, "GumProject.gumx"))).ShouldNotBeNull();
+        string iconPath = Path.Combine(_projectDir, "Components", "Elements", "Icon.gucx");
+        WriteOlderTemplateFile(Path.Combine("Elements", "Icon.gucx"), iconPath, new List<string>());
+        string before = File.ReadAllText(iconPath);
+
+        await Import(theme, theme.Components.Single(c => c.Name == "Elements/Icon"),
+            theme.Components.Single(c => c.Name == "Controls/ComboBox"));
+
+        File.ReadAllText(iconPath).ShouldBe(before);
+    }
+
+    // A kept component that lacks the whole category gains it, with only the states the import selects.
+    [Fact]
+    public async Task SkippedComponent_GainsTheMissingCategory_WithOnlyTheSelectedStates()
+    {
+        ComponentSave palette = Component("Palette");
+        StateSaveCategory theme = Category(palette, "Theme", "Dark");
+        theme.States.Add(new StateSave { Name = "Light", ParentContainer = palette });
+        palette.Categories.Add(theme);
+        Set(theme.States[0], "Width", 9f, "float");
+        ComponentSave button = Component("Button", Instance("Swatch", "Palette"));
+        Set(button.DefaultState!, "Swatch.ThemeState", "Dark", "Theme");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, button });
+
+        StateSaveCategory kept = Load(DestinationPath("Palette")).Categories.ShouldHaveSingleItem();
+        kept.Name.ShouldBe("Theme");
+        StateSave dark = kept.States.ShouldHaveSingleItem();
+        dark.Name.ShouldBe("Dark");
+        dark.GetValue("Width").ShouldBe(9f);
+    }
+
+    // A derived element selects its base's category state without an instance prefix.
+    [Fact]
+    public async Task SkippedComponent_GainsTheStateADerivedElementSelects()
+    {
+        ComponentSave palette = Component("Palette");
+        palette.Categories.Add(Category(palette, "Theme", "Dark"));
+        ComponentSave button = Component("Button");
+        button.BaseType = "Palette";
+        Set(button.DefaultState!, "ThemeState", "Dark", "Theme");
+        ComponentSave userPalette = Component("Palette");
+        userPalette.Categories.Add(new StateSaveCategory { Name = "Theme" });
+
+        await ImportKeeping(new[] { userPalette }, new[] { palette, button });
+
+        Load(DestinationPath("Palette")).Categories.Single().States.ShouldHaveSingleItem().Name.ShouldBe("Dark");
+    }
+
+    // An added state that sets a value on an instance the kept component lacks brings that instance too.
+    [Fact]
+    public async Task SkippedComponent_GainsTheInstanceAnAddedStateSets()
+    {
+        ComponentSave palette = Component("Palette", Instance("Inner", "ColoredRectangle"));
+        palette.Categories.Add(Category(palette, "Theme", "Dark"));
+        Set(palette.Categories[0].States[0], "Inner.Width", 4f, "float");
+        ComponentSave button = Component("Button", Instance("Swatch", "Palette"));
+        Set(button.DefaultState!, "Swatch.ThemeState", "Dark", "Theme");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, button });
+
+        ComponentSave kept = Load(DestinationPath("Palette"));
+        kept.Instances.ShouldHaveSingleItem().Name.ShouldBe("Inner");
+        kept.Categories.Single().States.Single().GetValue("Inner.Width").ShouldBe(4f);
+    }
+
+    [Fact]
+    public async Task SkippedComponent_GainsTheStateANestedPathSelects()
+    {
+        ComponentSave palette = Component("Palette");
+        palette.Categories.Add(Category(palette, "Theme", "Dark"));
+        ComponentSave panel = Component("Panel", Instance("Inner", "Palette"));
+        ComponentSave button = Component("Button", Instance("Swatch", "Panel"));
+        Set(button.DefaultState!, "Swatch.Inner.ThemeState", "Dark", "Theme");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, panel, button });
+
+        Load(DestinationPath("Palette")).Categories.ShouldHaveSingleItem().States.ShouldHaveSingleItem().Name.ShouldBe("Dark");
+    }
+
+    // The instance's type derives from the kept component, which defines the category.
+    [Fact]
+    public async Task SkippedComponent_GainsTheStateAnInstanceOfADerivedTypeSelects()
+    {
+        ComponentSave palette = Component("Palette");
+        palette.Categories.Add(Category(palette, "Theme", "Dark"));
+        ComponentSave fancy = Component("FancyPalette");
+        fancy.BaseType = "Palette";
+        ComponentSave button = Component("Button", Instance("Swatch", "FancyPalette"));
+        Set(button.DefaultState!, "Swatch.ThemeState", "Dark", "Theme");
+
+        await ImportKeeping(new[] { Component("Palette") }, new[] { palette, fancy, button });
+
+        Load(DestinationPath("Palette")).Categories.ShouldHaveSingleItem().States.ShouldHaveSingleItem().Name.ShouldBe("Dark");
+    }
+
     private async Task ImportKeeping(ComponentSave[] userVersions, ComponentSave[] imported, ComponentSave? inMemory = null,
         Action<ComponentSave>? onRegister = null)
     {
@@ -273,14 +424,14 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
         state.VariableLists.Add(list);
     }
 
-    private async Task<ImportResult> Import(GumProjectSave theme, ComponentSave themeStyles, ComponentSave themeListBox)
+    private async Task<ImportResult> Import(GumProjectSave theme, params ComponentSave[] components)
     {
         GumProjectSave destination = new GumProjectSave { FullFileName = Path.Combine(_projectDir, "Test.gumx"), Version = theme.Version };
         GumxImportService service = CreateService(destination, onRegister: null);
 
         ImportSelections selections = new()
         {
-            DirectComponents = new() { themeStyles, themeListBox },
+            DirectComponents = components.ToList(),
             TransitiveComponents = new(),
             DirectScreens = new(),
             Behaviors = new(),
@@ -308,23 +459,30 @@ public class SkippedComponentMissingInstancesTests : BaseTestClass
     }
 
     // The template's own Styles with the given swatches removed and Warning recolored by the user.
-    private void WriteOlderStyles(string stylesPath, List<string> removedSwatches)
+    private void WriteOlderStyles(string stylesPath, List<string> removedSwatches) =>
+        WriteOlderTemplateFile("Styles.gucx", stylesPath, removedSwatches,
+            customizedState: "Default", customizedVariable: "Warning.FillRed", customizedValue: WarningUserRed);
+
+    // A template component with the named instances or states removed, and optionally one value changed by the user.
+    private void WriteOlderTemplateFile(string templateFile, string destinationPath, List<string> removedNames,
+        string? customizedState = null, string? customizedVariable = null, string? customizedValue = null)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(stylesPath)!);
-        XDocument document = XDocument.Load(Path.Combine(_templateDir, "Components", "Styles.gucx"));
+        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+        XDocument document = XDocument.Load(Path.Combine(_templateDir, "Components", templateFile));
         foreach (XElement element in document.Descendants().ToList())
         {
             string? name = (string?)element.Attribute("Name") ?? element.Element("Name")?.Value;
-            if (name != null && removedSwatches.Any(s => name == s || name.StartsWith(s + ".", StringComparison.Ordinal)))
+            if (name != null && removedNames.Any(s => name == s || name.StartsWith(s + ".", StringComparison.Ordinal)))
             {
                 element.Remove();
             }
-            else if (name == "Warning.FillRed")
+            else if (customizedVariable != null && name == customizedVariable
+                && element.Parent?.Element("Name")?.Value == customizedState)
             {
-                element.Elements().Single(e => e.Name.LocalName == "Value").Value = WarningUserRed;
+                element.Elements().Single(e => e.Name.LocalName == "Value").Value = customizedValue!;
             }
         }
-        document.Save(stylesPath);
+        document.Save(destinationPath);
     }
 
     private static List<string> ReadSwatchNames(ComponentSave component) =>

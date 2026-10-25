@@ -107,6 +107,7 @@ public class EditorTemplateTests
         // the menu bar reads it (#6732).
         // PanelBackgroundDark and RecessedBackgroundDark/Light are the V3 disabled/hover shading (Adjust -35 / +20)
         // the code theme's ListBox and TextBox apply to those fills (#6746).
+        // TextPrimaryDisabled/Highlighted/Pushed are the V3 ComboBox arrow shading of TextPrimary (#6754).
         Dictionary<string, (int R, int G, int B)> expected = new()
         {
             ["TextPrimary"] = (180, 180, 180),
@@ -123,6 +124,9 @@ public class EditorTemplateTests
             ["PanelBackgroundDark"] = (17, 17, 17),
             ["RecessedBackgroundDark"] = (6, 6, 6),
             ["RecessedBackgroundLight"] = (59, 59, 59),
+            ["TextPrimaryDisabled"] = (116, 116, 116),
+            ["TextPrimaryHighlighted"] = (191, 191, 191),
+            ["TextPrimaryPushed"] = (153, 153, 153),
         };
 
         GumProjectSave project = LoadEditor();
@@ -137,7 +141,8 @@ public class EditorTemplateTests
             "Black", "DarkGray", "InputBackground", "Gray", "LightGray", "White", "PrimaryDark", "Primary", "PrimaryLight",
             "Success", "Warning", "Danger", "Accent", "TextPrimary", "TextMuted", "BorderHover",
             "BorderPushed", "Selection", "PanelBackground", "RecessedBackground",
-            "PanelBackgroundDark", "RecessedBackgroundDark", "RecessedBackgroundLight"
+            "PanelBackgroundDark", "RecessedBackgroundDark", "RecessedBackgroundLight",
+            "TextPrimaryDisabled", "TextPrimaryHighlighted", "TextPrimaryPushed"
         }, ignoreOrder: true);
 
         foreach ((string name, (int r, int g, int b)) in expected)

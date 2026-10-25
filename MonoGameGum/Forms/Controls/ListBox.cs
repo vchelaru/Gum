@@ -1778,7 +1778,13 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <param name="popup">The popup to show, for example a dropdown from a ComboBox or MenuItem</param>
     /// <param name="listBoxParent">The parent visual, which would be something like the ComboBox.Visual</param>
     /// <param name="forceAbsoluteSize">Whether to force the popup to have absolute WidthUnits and HeightUnits.</param>
-    public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize = true)
+    public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize = true) =>
+        ShowPopupListBox(popup, listBoxParent, forceAbsoluteSize, ownFollowers: null);
+
+    // ownFollowers: popups that belong on top of this one, in draw order (a MenuItem's open nested
+    // submenus). When exactly these follow the popup in its root, it is already in place.
+    internal static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize,
+        IReadOnlyList<GraphicalUiElement>? ownFollowers)
     {
         popup.IsVisible = true;
         // this thing is going to be in front of everything:
@@ -1841,12 +1847,10 @@ public class ListBox : ItemsControl, IInputReceiver
 #else
         GraphicalUiElement targetRoot = GetPopupTargetRoot(listBoxParent);
 
-        // A popup already drawn over every other one stays where it is: taking it out and adding it back
-        // would lay out all of its rows twice (#6757).
+        // A popup already drawn over every other one, apart from its own followers, stays where it is:
+        // taking it out and adding it back would lay out all of its rows twice (#6757, #6762).
         var targetChildren = targetRoot.Children;
-        bool isAlreadyOnTop = popup.Visual.Parent == targetRoot && targetChildren.Count > 0 &&
-            targetChildren[targetChildren.Count - 1] == popup.Visual;
-        if (!isAlreadyOnTop)
+        if (!IsAlreadyOnTop(popup.Visual, targetRoot, ownFollowers))
         {
             popup.Visual.Parent = null;
             targetChildren.Add(popup.Visual);
@@ -1872,6 +1876,30 @@ public class ListBox : ItemsControl, IInputReceiver
             ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
 
         return listBoxParent.GetTopParent() == modalRoot ? modalRoot : popupRoot;
+    }
+
+    private static bool IsAlreadyOnTop(GraphicalUiElement popupVisual, GraphicalUiElement targetRoot,
+        IReadOnlyList<GraphicalUiElement>? ownFollowers)
+    {
+        if (popupVisual.Parent != targetRoot)
+        {
+            return false;
+        }
+        var children = targetRoot.Children;
+        int followerCount = ownFollowers?.Count ?? 0;
+        int popupIndex = children.Count - 1 - followerCount;
+        if (popupIndex < 0 || children[popupIndex] != popupVisual)
+        {
+            return false;
+        }
+        for (int i = 0; i < followerCount; i++)
+        {
+            if (children[popupIndex + 1 + i] != ownFollowers![i])
+            {
+                return false;
+            }
+        }
+        return true;
     }
 #endif
 

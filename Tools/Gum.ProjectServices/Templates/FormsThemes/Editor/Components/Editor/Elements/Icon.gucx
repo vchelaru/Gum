@@ -1658,6 +1658,72 @@
         </Value>
       </VariableList>
     </State>
+    <State>
+      <Name>TextPrimaryDisabled</Name>
+      <Variable Type="int" Name="IconSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">116</Value>
+      </Variable>
+      <Variable Type="int" Name="IconSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">116</Value>
+      </Variable>
+      <Variable Type="int" Name="IconSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">116</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>IconSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.TextPrimaryDisabled.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>TextPrimaryHighlighted</Name>
+      <Variable Type="int" Name="IconSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">191</Value>
+      </Variable>
+      <Variable Type="int" Name="IconSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">191</Value>
+      </Variable>
+      <Variable Type="int" Name="IconSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">191</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>IconSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.TextPrimaryHighlighted.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>TextPrimaryPushed</Name>
+      <Variable Type="int" Name="IconSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">153</Value>
+      </Variable>
+      <Variable Type="int" Name="IconSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">153</Value>
+      </Variable>
+      <Variable Type="int" Name="IconSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">153</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>IconSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.TextPrimaryPushed.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
   </Category>
   <Instance Name="IconSprite" BaseType="Sprite" />
   <Behaviors />

@@ -142,6 +142,123 @@ public class ToolInputBackgroundTests : BaseTestClass
         MeasureCodeOnly(applyTheme: () => Render(row => rows[row].Create(), "6746-codeonly.png"), create: () => new ListBox());
     }
 
+    public static IEnumerable<object[]> IndicatorControlStates()
+    {
+        foreach ((string folder, string prefix, Action? theme) in new (string, string, Action?)[]
+        {
+            ("FormsTemplate", "Controls/", null),
+            ("FormsThemes/Editor", "Editor/Controls/", Gum.Themes.Editor.EditorTheme.Apply),
+        })
+        {
+            foreach (string state in ComboBoxStates)
+            {
+                yield return new object[] { folder, prefix + "ComboBox", "ComboBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new ComboBox()) };
+            }
+            foreach (string state in TextBoxStates)
+            {
+                yield return new object[] { folder, prefix + "TextBox", "TextBoxCategoryState", state, theme!, (Func<FrameworkElement>)(() => new TextBox()) };
+            }
+        }
+    }
+
+    // The ComboBox dropdown arrow and focus underline, and the TextBox placeholder, per state against V3 (#6754).
+    [Theory]
+    [MemberData(nameof(IndicatorControlStates))]
+    public void ToolIndicatorsInState_MatchCodeOnly(string templateFolder, string componentName, string categoryState, string stateName,
+        Action? applyTheme, Func<FrameworkElement> createCodeOnly)
+    {
+        // Coming from another state first: a state that leaves a value unset would keep the previous state's value.
+        string previousState = stateName == "Pushed" ? "Disabled" : "Pushed";
+        if (categoryState == "TextBoxCategoryState")
+        {
+            previousState = stateName == "Disabled" ? "Highlighted" : "Disabled";
+        }
+        void EnterState(FrameworkElement control)
+        {
+            control.Visual.SetProperty(categoryState, previousState);
+            control.Visual.SetProperty(categoryState, stateName);
+        }
+
+        IndicatorLook codeOnly = MeasureCodeOnly(applyTheme, createCodeOnly, MeasureIndicators, EnterState);
+        IndicatorLook tool = MeasureTool(templateFolder, componentName, MeasureIndicators, afterCreate: EnterState);
+
+        tool.ShouldBe(codeOnly, $"{componentName} {stateName}");
+    }
+
+    // Adding Icon ColorCategory states for the ComboBox arrow leaves every other Icon user unchanged: each sprite's
+    // color and visibility in every state matches IconUserColors.txt, recorded from the templates before #6754.
+    // Set GUM_RECORD_ICON_USERS=1 to rewrite the reference.
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/", "CheckBox,RadioButton,ButtonClose,MenuItem,ExpanderStandard,ButtonIcon")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/", "CheckBox,RadioButton,ButtonClose,MenuItem,Expander,ButtonIcon")]
+    public void IconUsers_EveryState_MatchRecordedColors(string templateFolder, string prefix, string components)
+    {
+        List<string> lines = new();
+        MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
+        {
+            foreach (string name in components.Split(','))
+            {
+                ComponentSave component = ObjectFinder.Self.GetComponent(prefix + name).ShouldNotBeNull(prefix + name);
+                GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+                foreach (StateSaveCategory category in component.Categories)
+                {
+                    foreach (StateSave state in category.States)
+                    {
+                        visual.ApplyState(state);
+                        foreach (string sprite in DescribeSprites(visual, "", visual.Visible))
+                        {
+                            lines.Add($"{prefix}{name} {category.Name}.{state.Name} {sprite}");
+                        }
+                    }
+                }
+            }
+        });
+
+        string referencePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(SourceFile())!, "IconUserColors.txt");
+        string section = $"[{templateFolder}]";
+        List<string> reference = System.IO.File.Exists(referencePath) ? System.IO.File.ReadAllLines(referencePath).ToList() : new();
+        if (Environment.GetEnvironmentVariable("GUM_RECORD_ICON_USERS") == "1")
+        {
+            int at = reference.IndexOf(section);
+            if (at >= 0)
+            {
+                int next = reference.FindIndex(at + 1, l => l.StartsWith("["));
+                reference.RemoveRange(at, (next < 0 ? reference.Count : next) - at);
+            }
+            reference.Add(section);
+            reference.AddRange(lines);
+            System.IO.File.WriteAllLines(referencePath, reference);
+            return;
+        }
+
+        int sectionStart = reference.IndexOf(section);
+        sectionStart.ShouldBeGreaterThanOrEqualTo(0, referencePath);
+        int sectionEnd = reference.FindIndex(sectionStart + 1, l => l.StartsWith("["));
+        List<string> expected = reference.Skip(sectionStart + 1).Take((sectionEnd < 0 ? reference.Count : sectionEnd) - sectionStart - 1).ToList();
+        lines.Count.ShouldBeGreaterThan(0);
+        lines.ShouldBe(expected);
+    }
+
+    private static string SourceFile([System.Runtime.CompilerServices.CallerFilePath] string path = "") => path;
+
+    private static IEnumerable<string> DescribeSprites(GraphicalUiElement parent, string path, bool parentVisible)
+    {
+        foreach (GraphicalUiElement child in parent.Children?.OfType<GraphicalUiElement>() ?? Enumerable.Empty<GraphicalUiElement>())
+        {
+            string childPath = path + "/" + child.Name;
+            bool visible = parentVisible && child.Visible;
+            if (child.RenderableComponent is global::RenderingLibrary.Graphics.Sprite sprite)
+            {
+                System.Drawing.Color c = sprite.Color;
+                yield return $"{childPath} {c.R},{c.G},{c.B},{c.A} visible={visible}";
+            }
+            foreach (string nested in DescribeSprites(child, childPath, visible))
+            {
+                yield return nested;
+            }
+        }
+    }
+
     // The fill comes from the Styles InputBackground swatch, so recoloring the swatch recolors the control.
     [Theory]
     [InlineData("FormsTemplate", "Controls/ScrollViewer", "Styles")]
@@ -163,6 +280,37 @@ public class ToolInputBackgroundTests : BaseTestClass
         });
 
         (tool.R, tool.G, tool.B).ShouldBe(((byte)200, (byte)10, (byte)20), componentName);
+    }
+
+    // Each arrow swatch recolors the ComboBox arrow in exactly the states that read it (#6754).
+    [Theory]
+    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles", "PrimaryDisabled", "Disabled,DisabledFocused")]
+    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles", "PrimaryHighlighted", "Highlighted,HighlightedFocused")]
+    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles", "PrimaryPushed", "Pushed")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ComboBox", "Editor/Styles", "TextPrimaryDisabled", "Disabled,DisabledFocused")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ComboBox", "Editor/Styles", "TextPrimaryHighlighted", "Highlighted,HighlightedFocused")]
+    [InlineData("FormsThemes/Editor", "Editor/Controls/ComboBox", "Editor/Styles", "TextPrimaryPushed", "Pushed")]
+    public void ToolComboBoxArrow_StateSwatch_RecolorsOnlyItsStates(string templateFolder, string componentName, string stylesName,
+        string swatch, string recoloredStates)
+    {
+        HashSet<string> expectedRecolored = new(recoloredStates.Split(','));
+
+        foreach (string state in ComboBoxStates)
+        {
+            IndicatorLook tool = MeasureTool(templateFolder, componentName, MeasureIndicators,
+                beforeCreate: () =>
+                {
+                    GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
+                    StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
+                    styles.SetValue(swatch + ".FillRed", 200, "int");
+                    styles.SetValue(swatch + ".FillGreen", 10, "int");
+                    styles.SetValue(swatch + ".FillBlue", 20, "int");
+                    project.ApplyAllVariableReferences();
+                },
+                afterCreate: control => control.Visual.SetProperty("ComboBoxCategoryState", state));
+
+            (tool.Arrow == "200,10,20").ShouldBe(expectedRecolored.Contains(state), $"{componentName} {state} with {swatch} recolored");
+        }
     }
 
     // Each per-state swatch recolors exactly the states that read it, and no others (#6746).
@@ -245,9 +393,13 @@ public class ToolInputBackgroundTests : BaseTestClass
     }
 
     private static BackgroundLook MeasureTool(string templateFolder, string componentName, Action? beforeCreate = null,
-        Action<FrameworkElement>? afterCreate = null)
+        Action<FrameworkElement>? afterCreate = null) =>
+        MeasureTool(templateFolder, componentName, Measure, beforeCreate, afterCreate);
+
+    private static T MeasureTool<T>(string templateFolder, string componentName, Func<FrameworkElement, T> measure,
+        Action? beforeCreate = null, Action<FrameworkElement>? afterCreate = null) where T : class
     {
-        BackgroundLook? look = null;
+        T? look = null;
         MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
         {
             beforeCreate?.Invoke();
@@ -255,12 +407,16 @@ public class ToolInputBackgroundTests : BaseTestClass
             GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             FrameworkElement control = (visual as InteractiveGue)?.FormsControlAsObject.ShouldBeAssignableTo<FrameworkElement>(componentName)!;
             afterCreate?.Invoke(control);
-            look = Measure(control);
+            look = measure(control);
         });
         return look.ShouldNotBeNull();
     }
 
     private static BackgroundLook MeasureCodeOnly(Action? applyTheme, Func<FrameworkElement> create,
+        Action<FrameworkElement>? afterCreate = null) =>
+        MeasureCodeOnly(applyTheme, create, Measure, afterCreate);
+
+    private static T MeasureCodeOnly<T>(Action? applyTheme, Func<FrameworkElement> create, Func<FrameworkElement, T> measure,
         Action<FrameworkElement>? afterCreate = null)
     {
         Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
@@ -272,7 +428,7 @@ public class ToolInputBackgroundTests : BaseTestClass
             applyTheme?.Invoke();
             FrameworkElement control = create();
             afterCreate?.Invoke(control);
-            return Measure(control);
+            return measure(control);
         }
         finally
         {
@@ -284,6 +440,28 @@ public class ToolInputBackgroundTests : BaseTestClass
             V3Styling.ActiveStyle = previousStyle;
             CustomSetPropertyOnRenderable.InMemoryFontCreator = previousFontCreator;
         }
+    }
+
+    // Arrow is the V3 DropdownIndicator sprite or the tool's IconInstance sprite; the underline color counts only
+    // while it is visible.
+    private sealed record IndicatorLook(string? Arrow, bool UnderlineVisible, string? Underline, string? Placeholder);
+
+    private static IndicatorLook MeasureIndicators(FrameworkElement control)
+    {
+        static string Rgb(System.Drawing.Color c) => $"{c.R},{c.G},{c.B}";
+
+        GraphicalUiElement visual = control.Visual;
+        GraphicalUiElement? arrow = visual.GetGraphicalUiElementByName("DropdownIndicator")
+            ?? visual.GetGraphicalUiElementByName("IconInstance")?.GetGraphicalUiElementByName("IconSprite");
+        GraphicalUiElement? underline = visual.GetGraphicalUiElementByName("FocusedIndicator");
+        GraphicalUiElement? placeholder = visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
+
+        bool underlineVisible = underline?.Visible == true;
+        return new IndicatorLook(
+            arrow == null ? null : Rgb(arrow.RenderableComponent.ShouldBeOfType<global::RenderingLibrary.Graphics.Sprite>().Color),
+            underlineVisible,
+            underlineVisible ? Rgb(underline!.RenderableComponent.ShouldBeOfType<NineSlice>().Color) : null,
+            placeholder == null ? null : Rgb(placeholder.RenderableComponent.ShouldBeOfType<global::RenderingLibrary.Graphics.Text>().Color));
     }
 
     private static BackgroundLook Measure(FrameworkElement control)
