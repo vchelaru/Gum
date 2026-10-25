@@ -49,15 +49,15 @@ To set up code generation for your project:
 3.  Click the **Auto Setup Code Generation** button\\
 
     <figure><img src="../../../../.gitbook/assets/10_05 34 13.png" alt=""><figcaption></figcaption></figure>
-4. Gum locates your .csproj file and sets up default values.
+4. Gum locates your .csproj file and sets up default values. To review or change them, click **Edit project settings...** to open the **Code generation** page of **Edit > Settings...**.
 
 <figure><img src="../../../../.gitbook/assets/29_15 00 30.png" alt=""><figcaption><p>Code tab in Gum</p></figcaption></figure>
 
 {% hint style="warning" %}
-If you do not see the Auto Setup Code Generation button, that means you saved your Gum project in a location that is not relative to your game's .csproj. Be sure to save Gum projects in a subfolder of where your .csproj is located, usually in a folder in side the Content folder.
+If you do not see the **Auto** button, or Gum says it found no project file, your Gum project is saved in a location that is not inside the folder containing your game's .csproj. Save Gum projects in a subfolder of where your .csproj is located, usually in a folder inside the Content folder.
 {% endhint %}
 
-Once you have set this up, you can click the Generate Code button to generate code for your TitleScreen.
+Once you have set this up, you can click the **Generate** button to generate code for your TitleScreen.
 
 Note that Gum also generates code for all components referenced by your project, so it also generates ButtonStandard. If asked, click **Yes** to generate all necessary components.
 
@@ -71,6 +71,8 @@ Note that each screen and component generates two .cs files:
 
 1. YourComponentOrScreenName.cs - this is called _custom code_ and is where you can write code safely
 2. YourComponentOrScreenName.Generated.cs - this is called _generated code_ and is written by Gum. This code will be re-generated when you make changes in Gum, so if you write any code here it will be lost on re-generation.
+
+By default both files sit side by side. To keep them in separate folders, set the Generated Code Folder and Custom Code Folder, as described in the [Code tab](../../../../gum-tool/code-tab/README.md#folder-layout) page.
 
 ### Troubleshooting Code Generation
 
@@ -86,14 +88,14 @@ You can also verify that your screens and components classes match the names in 
 
 If Gum has generated your code incorrectly, you can take the following steps to reset code generation:
 
-1. Locate the Screens and Components folder in your code project and delete them. This will delete all generated and custom code. Be careful - you may want to create a backup if you have any custom code that you would like to preserve.
-2. Open the Code Project Root folder and look for a .codsj file. Delete this file.
+1. Locate the Screens and Components folders in your code project (inside the Generated Code Folder and Custom Code Folder if you set them) and delete them. This will delete all generated and custom code. Be careful - you may want to create a backup if you have any custom code that you would like to preserve.
+2. Look for `ProjectCodeSettings.codsj` next to your Gum project file. Delete this file.
 3. Close and re-open Gum
 4. Select one of your screens or components
 5. Click on the Code tab
-6. Click the "Auto" button
-7. Click the toggle icon to generate all code
-8. Click the Generate button
+6. Click the **Auto** button
+7. Click the **All** button next to **Generate**
+8. Click the **Generate** button
 
 ## Showing a Gum Screen in Your Game
 

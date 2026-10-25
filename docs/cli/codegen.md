@@ -37,6 +37,9 @@ Generated code for 11 element(s).
 
 ## Notes
 
+- `codegen` uses the same settings as the Gum tool, read from `ProjectCodeSettings.codsj`: the Output Library, Code Project Root, Generated Code Folder, Custom Code Folder, Folder Prefix and namespace options. Edit them on the **Code generation** page of **Edit > Settings...** in the tool, or in the file. See the [Code tab](../gum-tool/code-tab/README.md) for what each does.
+- When **Mark Generated Folder** is on, `codegen` writes the `.editorconfig` into the Generated Code Folder, and reports it if an existing `.editorconfig` that Gum did not write is left alone.
+- Unlike the tool, `codegen` never asks before writing. It does not move files after a folder setting changes; run it with `--prune` to remove generated files left at the old location.
 - Requires `ProjectCodeSettings.codsj` with `CodeProjectRoot` configured. If the file is missing, `codegen` attempts auto-detection first and writes it before continuing. Exit code 2 only if auto-detection also fails — in that case, run [`codegen-init`](codegen-init.md) first.
 - Only Screens and Components are generated. StandardElements are excluded.
 - Elements marked `NeverGenerate` in their per-element settings are silently skipped.
