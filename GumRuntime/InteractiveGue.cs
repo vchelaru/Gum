@@ -406,9 +406,16 @@ public partial class InteractiveGue : GraphicalUiElement
     #endregion
 
     // Whether this element or anything visible under it can react to the cursor (has HasEvents set).
-    // Cached on the element until something under it changes.
+    // Cached on the element until something under it changes. A hidden element cannot be hit, so it and its
+    // subtree are skipped. Visibility is read on every call rather than cached, because hiding does not
+    // invalidate. Off events (RollOff, RemovedAsPushed, Dragging) come from comparing the cursor state before
+    // and after the walk, so skipping a hidden subtree does not change them.
     internal static bool SubtreeHasEvents(GraphicalUiElement element)
     {
+        if (element.IsHiddenForCaches)
+        {
+            return false;
+        }
         if (element._subtreeEventsState == 0)
         {
             bool hasEvents = (element as InteractiveGue)?.HasEvents == true;
@@ -418,8 +425,8 @@ public partial class InteractiveGue : GraphicalUiElement
                 for (int i = 0; i < children.Count; i++)
                 {
                     GraphicalUiElement child = children[i];
-                    // A hidden child is skipped by the cursor walk. Showing it invalidates this.
-                    if (!child.IsHiddenForCaches && SubtreeHasEvents(child))
+                    // A hidden child counts as having no events. Showing it invalidates this.
+                    if (SubtreeHasEvents(child))
                     {
                         hasEvents = true;
                         break;
