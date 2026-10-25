@@ -8,7 +8,6 @@ using Gum.PropertyGridHelpers;
 using WpfDataUi.DataTypes;
 using System.Collections.ObjectModel;
 using Gum.Plugins.VariableGrid;
-using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.DataTypes.Behaviors;
 using System.ComponentModel;
 using Gum.Plugins.InternalPlugins.VariableGrid;
