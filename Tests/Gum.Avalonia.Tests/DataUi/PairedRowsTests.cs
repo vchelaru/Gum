@@ -123,6 +123,29 @@ public class PairedRowsTests
     }
 
     [AvaloniaFact]
+    public void WarningDetailText_IsDrawnAsACallout_WhilePlainDetailTextKeepsTheMutedHint()
+    {
+        (DataUiGrid grid, Window window, DataUiCategoryView _) = ShowGrid("X", "Y");
+        InstanceMember x = Container(grid, "X").Member!;
+        InstanceMember y = Container(grid, "Y").Member!;
+        x.DetailText = "Plain hint";
+        y.DetailText = "Careful";
+        y.IsDetailTextWarning = true;
+        window.UpdateLayout();
+
+        TextBlock plain = Container(grid, "X").GetVisualDescendantsOfType<TextBlock>().Single(text => text.IsVisible && text.Text == "Plain hint");
+        TextBlock warning = Container(grid, "Y").GetVisualDescendantsOfType<TextBlock>().Single(text => text.IsVisible && text.Text == "Careful");
+        warning.Foreground.ShouldBeOfType<global::Avalonia.Media.SolidColorBrush>();
+        warning.Opacity.ShouldBe(1);
+        plain.Opacity.ShouldBeLessThan(1);
+
+        y.IsDetailTextWarning = false;
+        window.UpdateLayout();
+        warning.Opacity.ShouldBeLessThan(1, "turning the warning off restores the muted hint");
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void PanelTooNarrowForBothCells_StacksThePairIntoTwoRows_WithUsableFields()
     {
         (DataUiGrid grid, Window window, DataUiCategoryView _) = ShowGrid("X", "Y");

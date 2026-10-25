@@ -1,4 +1,12 @@
+using Avalonia.Controls;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using CodeOutputPlugin;
+using Gum.Avalonia.Settings;
+using Gum.ProjectServices.CodeGeneration;
+using System.Linq;
+using System.Reflection;
 using Gum.Avalonia.Tests.EndToEnd;
 using Gum.Avalonia.Tests.Harness;
 using Gum.SettingsWindow;
@@ -63,6 +71,48 @@ public class SettingsWindowScreenshotTests
         viewModel.SelectPage(SettingsPageIds.CodeGeneration);
         window.Save("settings-project-code-generation-light");
     });
+
+    [SkippableFact]
+    public void CodeGeneration_ScrolledToTheEnd_Dark() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+        ScrollToEnd(window);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-code-generation-end");
+    });
+
+    [SkippableFact]
+    public void CodeGeneration_LegacyLibrary_ShowsTheCollapsedAndExpandedLegacySection() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+
+        // The legacy rows exist only for a legacy library, which the project does not use by default.
+        CodeGenerationSettingsPageView page = window.Find<CodeGenerationSettingsPageView>();
+        CodeGenerationSettingsViewModel pageModel = (CodeGenerationSettingsViewModel)page.DataContext!;
+        CodeOutputSettingsMembers members = (CodeOutputSettingsMembers)typeof(CodeGenerationSettingsViewModel)
+            .GetField("_members", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(pageModel)!;
+        members.ProjectSettings!.OutputLibrary = OutputLibrary.Maui;
+        pageModel.Reload();
+
+        ScrollToEnd(window);
+        window.Save("settings-project-code-generation-legacy-collapsed");
+        page.Grid.Categories.Last().IsExpanded = true;
+        ScrollToEnd(window);
+        window.Save("settings-project-code-generation-legacy-expanded");
+    });
+
+    private static void ScrollToEnd(ScreenshotWindow window)
+    {
+        CodeGenerationSettingsPageView page = window.Find<CodeGenerationSettingsPageView>();
+        page.GetVisualAncestors().OfType<ScrollViewer>().First().ScrollToEnd();
+        Dispatcher.UIThread.RunJobs();
+    }
 
     [SkippableFact]
     public void Search_NarrowsThePageList() => PrScreenshot.Run(() =>
