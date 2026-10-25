@@ -800,26 +800,11 @@ public class TextRuntime : InteractiveGue
         // yet, before swapping in this new (oversampled) display font -- see Text.SetOversampledDisplayFont.
         ContainedText.SetOversampledDisplayFont(font);
 
-        // Issue #4309 (render-side gap found via manual test): a naive FontSize/rasterFontSize ratio
-        // assumes the oversampled font's glyphs are an exact linear scale of the pinned/native font's --
-        // they're not, since hinting isn't linear across raster sizes. That leaves a visible gap (or
-        // overflow) between the drawn text and its own box, even though the box's SIZE is now correctly
-        // stable. Deriving the compensation from the ACTUAL measured width ratio between the two fonts,
-        // for this Text's own wrapped content, makes the drawn text fill exactly the pinned box instead
-        // of only approximately fitting it.
-        BitmapFont? pinnedFont = ContainedText.MeasurementFont;
-        if (pinnedFont != null)
-        {
-            pinnedFont.GetRequiredWidthAndHeight(ContainedText.WrappedText, out int pinnedWidth, out _);
-            font.GetRequiredWidthAndHeight(ContainedText.WrappedText, out int oversampledWidth, out _);
-            ContainedText.OversampleCompensationScale = oversampledWidth > 0
-                ? (float)pinnedWidth / oversampledWidth
-                : FontSize / rasterFontSize;
-        }
-        else
-        {
-            ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
-        }
+        // Issue #6814: exactly the inverse of the raster ratio, so each atlas pixel lands on one screen
+        // pixel. Fitting the drawn width to the pinned box instead (#4309) resamples every glyph, because
+        // hinting rounds advances differently at each raster size. The drawn text can then differ from
+        // the box by that rounding; Text aligns on the drawn width so it stays centered or right-aligned.
+        ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
 #else
         // Raylib parity for #4317 (issue #4330): same shape as the XNALIKE branch above, but against
         // Raylib_cs.Font (a live GPU-resident font, not a BitmapFont) -- see IRaylibFontCreator and
@@ -852,19 +837,8 @@ public class TextRuntime : InteractiveGue
 
         ContainedText.SetOversampledDisplayFont(font.Value);
 
-        Raylib_cs.Font? pinnedFont = ContainedText.MeasurementFont;
-        if (pinnedFont != null)
-        {
-            var pinnedWidth = Gum.Renderables.Text.MeasureLinesWidth(pinnedFont.Value, ContainedText.WrappedText);
-            var oversampledWidth = Gum.Renderables.Text.MeasureLinesWidth(font.Value, ContainedText.WrappedText);
-            ContainedText.OversampleCompensationScale = oversampledWidth > 0
-                ? pinnedWidth / oversampledWidth
-                : FontSize / rasterFontSize;
-        }
-        else
-        {
-            ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
-        }
+        // See the XNALIKE branch above (#6814). Raylib already aligns each line on its drawn width.
+        ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
 #endif
 
         // BitmapFont/OversampleCompensationScale are renderable-level properties -- assigning them
@@ -970,8 +944,9 @@ public class TextRuntime : InteractiveGue
     internal void ResetAutomaticOversamplingState()
     {
         _lastAutoOversampleRatio = 1f;
-        // The caller is about to put this text back on its native font.
-        ReleaseSharedOversampledFont();
+        // The caller is about to put this text back on its native font. The font is not disposed here,
+        // since this runs before the native font replaces it on the renderable.
+        ReleaseSharedOversampledFont(disposeWhenUnused: false);
     }
 
     sealed class SharedOversampledFont
@@ -989,8 +964,9 @@ public class TextRuntime : InteractiveGue
     // Issue #6810: oversampled fonts in use, keyed by BmfcSave.FontCacheFileName, so texts asking for the
     // same font at the same raster size share one generation instead of each building its own. A font
     // leaves the map when the last text using it moves to another raster size or back to its native
-    // font, so continuous zooming does not keep every size alive. Leaving the map never disposes the
-    // font: oversampled fonts were never disposed before sharing either.
+    // font, so continuous zooming does not keep every size alive. The map owns disposal (#6814): a font
+    // is disposed when the last text using it moves to another oversampled font (#4364), never while
+    // another text still draws it.
     static readonly Dictionary<string, SharedOversampledFont> _sharedOversampledFonts = new(StringComparer.OrdinalIgnoreCase);
 
     SharedOversampledFont? _sharedOversampledFont;
@@ -1029,12 +1005,12 @@ public class TextRuntime : InteractiveGue
         {
             return;
         }
-        ReleaseSharedOversampledFont();
+        ReleaseSharedOversampledFont(disposeWhenUnused: true);
         shared.UserCount++;
         _sharedOversampledFont = shared;
     }
 
-    void ReleaseSharedOversampledFont()
+    void ReleaseSharedOversampledFont(bool disposeWhenUnused)
     {
         SharedOversampledFont? shared = _sharedOversampledFont;
         if (shared == null)
@@ -1043,12 +1019,23 @@ public class TextRuntime : InteractiveGue
         }
         _sharedOversampledFont = null;
         shared.UserCount--;
+        if (shared.UserCount > 0)
+        {
+            return;
+        }
         // The map may already hold a newer entry under this key, made after the creator changed.
-        if (shared.UserCount <= 0
-            && _sharedOversampledFonts.TryGetValue(shared.Key, out SharedOversampledFont? current)
-            && current == shared)
+        if (_sharedOversampledFonts.TryGetValue(shared.Key, out SharedOversampledFont? current) && current == shared)
         {
             _sharedOversampledFonts.Remove(shared.Key);
+        }
+        if (disposeWhenUnused)
+        {
+#if XNALIKE
+            shared.Font.Dispose();
+#else
+            // ManagedFont also unloads the drop-shadow companion and clears the line-metrics entry.
+            new ManagedFont(shared.Font).Dispose();
+#endif
         }
     }
 #endif

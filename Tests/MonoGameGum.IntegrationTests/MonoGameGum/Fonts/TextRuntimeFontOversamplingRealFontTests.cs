@@ -110,8 +110,6 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
         }
     }
 
-    // Reproduces the exact manual-test finding: FontScale 2, zoomed to ~2.93x. Confirms the drawn text
-    // exactly fills its own pinned box with the real KernSmith rasterizer, not just a synthetic fake.
     // Issue #4349: same continuous-zoom sweep as above, but against a plain system-installed font
     // family (no BmfcSave.FontFile) rather than an explicit .ttf -- the common case for a game that
     // just sets Font = "Arial".
@@ -171,7 +169,7 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
     }
 
     [Fact]
-    public void RegenerateOversampledFont_RealFont_FontScale2AtNonRoundZoom_DrawnTextExactlyFillsPinnedBox()
+    public void RegenerateOversampledFont_RealFont_FontScale2AtNonRoundZoom_DrawsAtExactlyTheInverseRatio()
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -198,11 +196,11 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
 
             textRuntime.UpdateAutomaticFontOversampling(2.93f);
 
-            float drawnWidth = text.BitmapFont.MeasureString("Stack Ag 12pt") * ((IText)text).FontScale;
-
-            drawnWidth.ShouldBe(pinnedWidth, tolerance: 0.01f,
-                "because the drawn text must exactly fill its own box at this zoom level -- reproduces " +
-                "the manual-test gap found at FontScale 2, zoom~2.93 with the real KernSmith rasterizer");
+            // Issue #6814: the oversampled atlas draws at exactly 1/ratio (times the caller's FontScale),
+            // so each atlas pixel covers FontScale screen pixels, never a fraction more or less.
+            ((IText)text).FontScale.ShouldBe(2f / 2.93f, tolerance: 0.00001f);
+            text.WrappedTextWidth.ShouldBe(pinnedWidth, tolerance: 0.01f,
+                "because the layout box stays measured by the pinned native font");
         }
         finally
         {
@@ -295,6 +293,53 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
             TextRuntime.UseFontOversampling = savedUseFontOversampling;
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
         }
+    }
+
+    // Issue #6814: texts with identical requests share one oversampled font (#6810), so moving one text
+    // to another size must not dispose the font the other text still draws. The last text to leave
+    // disposes it, keeping #4364's leak fix.
+    [Fact]
+    public void RegenerateOversampledFont_SharedFont_IsDisposedOnlyWhenTheLastTextLeavesIt()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(game.GraphicsDevice);
+            TextRuntime.UseFontOversampling = true;
+            TextRuntime first = CreateTestFontText(game);
+            TextRuntime second = CreateTestFontText(game);
+            first.RegenerateOversampledFont(2.5f).ShouldBeTrue();
+            second.RegenerateOversampledFont(2.5f).ShouldBeTrue();
+            Texture2D sharedTexture = ((Text)second.RenderableComponent).BitmapFont!.Texture!;
+
+            first.RegenerateOversampledFont(3.5f).ShouldBeTrue();
+
+            sharedTexture.IsDisposed.ShouldBeFalse("because the second text still draws the shared font");
+
+            second.RegenerateOversampledFont(3.5f).ShouldBeTrue();
+
+            sharedTexture.IsDisposed.ShouldBeTrue("because no text uses the font any more");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    private static TextRuntime CreateTestFontText(MinimalGame game)
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.UseCustomFont = true;
+        textRuntime.CustomFontFile = TestFontPath;
+        textRuntime.FontSize = 12;
+        textRuntime.Text = "Stack Ag 12pt";
+        game.GumService.Root.Children.Add(textRuntime);
+        return textRuntime;
     }
 
     private static IEnumerable<float> BuildContinuousZoomSequence()
