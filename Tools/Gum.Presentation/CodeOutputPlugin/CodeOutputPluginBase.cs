@@ -232,7 +232,7 @@ public abstract class CodeOutputPluginBase : PluginBase
             },
             Keywords = new[] { "namespace", "usings" },
             SearchTerms = () => page.BuildCategories().SelectMany(category => category.Members)
-                .SelectMany(member => new[] { member.Name, member.DetailText ?? string.Empty }).Where(term => term.Length > 0),
+                .SelectMany(member => new[] { member.DisplayName, member.DetailText ?? string.Empty }).Where(term => term.Length > 0),
         });
     }
 

@@ -123,25 +123,29 @@ public class PairedRowsTests
     }
 
     [AvaloniaFact]
-    public void WarningDetailText_IsDrawnAsACallout_WhilePlainDetailTextKeepsTheMutedHint()
+    public void WarningText_IsDrawnAsACalloutUnderTheHint_OnlyForASpaciousRow()
     {
         (DataUiGrid grid, Window window, DataUiCategoryView _) = ShowGrid("X", "Y");
         InstanceMember x = Container(grid, "X").Member!;
         InstanceMember y = Container(grid, "Y").Member!;
         x.DetailText = "Plain hint";
-        y.DetailText = "Careful";
-        y.IsDetailTextWarning = true;
+        x.WarningText = "Ignored without the spacious look";
+        y.IsSpaciousRow = true;
+        y.DetailText = "Spacious hint";
+        y.WarningText = "Careful";
         window.UpdateLayout();
 
-        TextBlock plain = Container(grid, "X").GetVisualDescendantsOfType<TextBlock>().Single(text => text.IsVisible && text.Text == "Plain hint");
-        TextBlock warning = Container(grid, "Y").GetVisualDescendantsOfType<TextBlock>().Single(text => text.IsVisible && text.Text == "Careful");
-        warning.Foreground.ShouldBeOfType<global::Avalonia.Media.SolidColorBrush>();
-        warning.Opacity.ShouldBe(1);
-        plain.Opacity.ShouldBeLessThan(1);
+        Container(grid, "X").GetVisualDescendantsOfType<TextBlock>().Any(text => text.Text == "Ignored without the spacious look").ShouldBeFalse();
+        TextBlock hint = Container(grid, "Y").GetVisualDescendantsOfType<TextBlock>().Single(text => text.IsVisible && text.Text == "Spacious hint");
+        TextBlock callout = Container(grid, "Y").GetVisualDescendantsOfType<TextBlock>().Single(text => text.IsVisible && text.Text == "Careful");
+        Border bar = callout.GetVisualAncestors().OfType<Border>().First(border => border.BorderThickness.Left == 3);
+        bar.BorderBrush.ShouldBeOfType<global::Avalonia.Media.SolidColorBrush>();
+        callout.TranslatePoint(new Point(0, 0), window)!.Value.Y
+            .ShouldBeGreaterThan(hint.TranslatePoint(new Point(0, hint.Bounds.Height), window)!.Value.Y, "the callout sits under the hint");
 
-        y.IsDetailTextWarning = false;
+        y.WarningText = null;
         window.UpdateLayout();
-        warning.Opacity.ShouldBeLessThan(1, "turning the warning off restores the muted hint");
+        Container(grid, "Y").GetVisualDescendantsOfType<TextBlock>().Any(text => text.Text == "Careful").ShouldBeFalse("clearing the warning removes the callout");
         window.Close();
     }
 

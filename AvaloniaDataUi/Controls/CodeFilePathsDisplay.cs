@@ -30,16 +30,16 @@ public class CodeFilePathsDisplay : DataUiDisplayBase
             TextWrapping = TextWrapping.NoWrap,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
-        _lines.Bind(TextBlock.FontSizeProperty, _lines.GetResourceObservable("Frb.FontSize.Caption"));
+        _lines.Bind(TextBlock.FontSizeProperty, _lines.GetResourceObservable("ControlContentThemeFontSize"));
         _box = new Border
         {
             Child = _lines,
-            Padding = new Thickness(10, 7),
-            CornerRadius = new CornerRadius(3),
+            Padding = new Thickness(10, 8),
+            CornerRadius = new CornerRadius(4),
             BorderThickness = new Thickness(1),
             BorderBrush = new SolidColorBrush(Color.Parse("#40808080")),
             Background = new SolidColorBrush(Color.Parse("#20000000")),
-            Margin = new Thickness(0, 0, 4, 0),
+            Margin = new Thickness(0, 2, 0, 0),
         };
         _hint = CreateHintTextBlock();
 
@@ -60,9 +60,10 @@ public class CodeFilePathsDisplay : DataUiDisplayBase
         }
 
         _text = InstanceMember.Value as string ?? string.Empty;
-        _box.Margin = new Thickness(InstanceMember.FirstGridLength, 0, 4, 0);
         RenderLines();
         RefreshHint(_hint);
+        // The note under the box starts at the box edge, not at the field column.
+        _hint.Margin = new Thickness(0, 6, 0, 0);
     }
 
     /// <inheritdoc/>
@@ -93,16 +94,21 @@ public class CodeFilePathsDisplay : DataUiDisplayBase
         {
             string line = lines[i];
             bool isPath = line.Contains('/');
-            Run run = new Run(i == lines.Length - 1 ? line : line + "\n");
+            string newline = i == lines.Length - 1 ? string.Empty : "\n";
+            IBrush muted = new SolidColorBrush(Color.Parse("#99808080"));
             if (!isPath)
             {
-                run.Foreground = new SolidColorBrush(Color.Parse("#99808080"));
+                _lines.Inlines.Add(new Run(line + newline) { Foreground = muted });
+                continue;
             }
-            else
+
+            // "Screens ->  path": the kind is muted, the path takes the generated or custom color.
+            int pathStart = line.TrimEnd().LastIndexOf(' ') + 1;
+            _lines.Inlines.Add(new Run(line.Substring(0, pathStart)) { Foreground = muted });
+            _lines.Inlines.Add(new Run(line.Substring(pathStart) + newline)
             {
-                run.Foreground = line.TrimEnd().EndsWith(".Generated.cs") ? generated : custom;
-            }
-            _lines.Inlines.Add(run);
+                Foreground = line.TrimEnd().EndsWith(".Generated.cs") ? generated : custom,
+            });
         }
     }
 }

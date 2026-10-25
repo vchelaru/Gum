@@ -404,20 +404,35 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        bool isDetailTextWarning;
+        string? warningText;
         /// <summary>
-        /// Whether <see cref="DetailText"/> is a warning the user could get wrong by ignoring (a file move,
-        /// an experimental mode), which the view draws as a callout instead of a muted hint.
+        /// A caveat the user could get wrong by ignoring (a file move, an experimental mode), which a spacious
+        /// row draws as a callout under its hint instead of a muted line. Null or empty shows none.
         /// </summary>
-        public bool IsDetailTextWarning
+        public string? WarningText
         {
-            get => isDetailTextWarning;
+            get => warningText;
             set
             {
-                if (isDetailTextWarning != value)
+                if (warningText != value)
                 {
-                    isDetailTextWarning = value;
-                    OnPropertyChanged(nameof(IsDetailTextWarning));
+                    warningText = value;
+                    OnPropertyChanged(nameof(WarningText));
+                }
+            }
+        }
+
+        string? chipText;
+        /// <summary>A short note drawn as a small chip beside a read-only value, such as where it was detected from.</summary>
+        public string? ChipText
+        {
+            get => chipText;
+            set
+            {
+                if (chipText != value)
+                {
+                    chipText = value;
+                    OnPropertyChanged(nameof(ChipText));
                 }
             }
         }

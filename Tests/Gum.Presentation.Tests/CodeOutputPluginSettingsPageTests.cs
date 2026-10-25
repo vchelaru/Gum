@@ -104,7 +104,7 @@ public class CodeOutputPluginSettingsPageTests : BaseTestClass
     {
         SettingsPage page = _registry.Pages.ShouldHaveSingleItem();
 
-        page.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Output Library");
+        page.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Output library");
     }
 
     [Fact]

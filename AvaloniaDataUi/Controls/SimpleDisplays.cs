@@ -39,6 +39,9 @@ public class CheckBoxDisplay : DataUiDisplayBase
 {
     private readonly CheckBox _checkBox;
     private readonly TextBlock _hint;
+    private readonly StackPanel _panel;
+    private Grid? _spaciousGrid;
+    private TextBlock? _spaciousLabel;
 
     /// <summary>Builds the displayer.</summary>
     public CheckBoxDisplay()
@@ -47,10 +50,30 @@ public class CheckBoxDisplay : DataUiDisplayBase
         _checkBox.IsCheckedChanged += HandleCheckedChanged;
         _hint = CreateHintTextBlock();
 
-        StackPanel panel = new StackPanel();
-        panel.Children.Add(_checkBox);
-        panel.Children.Add(_hint);
-        Content = panel;
+        _panel = new StackPanel();
+        _panel.Children.Add(_checkBox);
+        _panel.Children.Add(_hint);
+        Content = _panel;
+    }
+
+    // A spacious row names the setting in the label column and describes it beside the box, so the row
+    // reads as one line: "Append folder to namespace [x] Components/Menu becomes ...".
+    private void ApplySpaciousLayout()
+    {
+        if (_spaciousGrid == null)
+        {
+            _spaciousLabel = new TextBlock { VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            _spaciousGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("100,*") };
+            Grid.SetColumn(_checkBox, 1);
+            _panel.Children.Remove(_checkBox);
+            _spaciousGrid.Children.Add(_spaciousLabel);
+            _spaciousGrid.Children.Add(_checkBox);
+            _checkBox.Margin = new Thickness(0, 4, 0, 4);
+            Content = _spaciousGrid;
+        }
+        DataUiRowLayout.ConfigureLabelColumn(_spaciousGrid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
+        _spaciousLabel!.Text = InstanceMember?.DisplayName;
+        _checkBox.Content = string.IsNullOrEmpty(InstanceMember?.DetailText) ? InstanceMember?.DisplayName : InstanceMember!.DetailText;
     }
 
     /// <summary>The check box, for tests.</summary>
@@ -60,6 +83,10 @@ public class CheckBoxDisplay : DataUiDisplayBase
     protected override void OnInstanceMemberChanged()
     {
         _checkBox.ClearValue(ForegroundProperty);
+        if (IsSpacious)
+        {
+            ApplySpaciousLayout();
+        }
     }
 
     /// <inheritdoc/>
@@ -80,7 +107,14 @@ public class CheckBoxDisplay : DataUiDisplayBase
                 _checkBox.IsChecked = false;
             }
         }
-        _checkBox.Content = InstanceMember.DisplayName;
+        if (IsSpacious)
+        {
+            ApplySpaciousLayout();
+        }
+        else
+        {
+            _checkBox.Content = InstanceMember.DisplayName;
+        }
         RefreshHint(_hint);
         RefreshForeground();
         RefreshIsEnabled();

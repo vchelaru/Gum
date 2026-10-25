@@ -39,7 +39,23 @@ public class CodeOutputSettingsMembers
     /// Width of the label column of the project rows: wide enough that every label stays on one line.
     /// Set per member, so no other property grid changes.
     /// </summary>
-    public const double ProjectLabelColumnWidth = 190;
+    public const double ProjectLabelColumnWidth = 202;
+
+    // The label each project row shows; the member name stays the stable key tests and callers use.
+    private static readonly Dictionary<string, string> ProjectLabels = new Dictionary<string, string>
+    {
+        { "Output Library", "Output library" },
+        { "Object Instantiation Type", "Object instantiation" },
+        { "Syntax Version", "Syntax version" },
+        { "Code Project Root", "Code project root" },
+        { "Generated Code Folder", "Generated code folder" },
+        { "Custom Code Folder", "Custom code folder" },
+        { "Generated Code Folder Prefix", "Folder prefix" },
+        { "Root Namespace", "Root namespace" },
+        { "Append Folder to Namespace", "Append folder to namespace" },
+        { "Default Screen Base", "Default screen base" },
+        { "Project-wide Using Statements", "Project-wide usings" },
+    };
 
     private InstanceMember? _resolvedLocationsMember;
     private readonly IProjectState _projectState;
@@ -90,11 +106,21 @@ public class CodeOutputSettingsMembers
         {
             foreach (InstanceMember member in section.Members)
             {
-                // The WPF grid has no displayer for the paths box.
-                if (member.PreferredDisplayer != typeof(StandardDisplayers.CodeFilePaths))
+                // The WPF grid has no displayer for the paths box, and shows a warning or chip as plain hint text.
+                if (member.PreferredDisplayer == typeof(StandardDisplayers.CodeFilePaths))
                 {
-                    projectCategory.Members.Add(member);
+                    continue;
                 }
+                if (member.PreferredDisplayer == typeof(StandardDisplayers.ReadOnlyValueWithChip))
+                {
+                    member.PreferredDisplayer = null;
+                    member.DetailText = $"{member.DetailText} ({member.ChipText})";
+                }
+                if (!string.IsNullOrEmpty(member.WarningText))
+                {
+                    member.DetailText = member.WarningText;
+                }
+                projectCategory.Members.Add(member);
             }
         }
         return projectCategory;
@@ -146,6 +172,10 @@ public class CodeOutputSettingsMembers
         {
             foreach (InstanceMember member in section.Members)
             {
+                if (ProjectLabels.TryGetValue(member.Name, out string? label))
+                {
+                    member.DisplayName = label;
+                }
                 member.FirstGridLength = ProjectLabelColumnWidth;
                 member.IsSpaciousRow = true;
             }
@@ -223,7 +253,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateCodeProjectRootMember()
     {
         InstanceMember member = new InstanceMember("Code Project Root", this);
-        member.DetailText = "Folder holding your .csproj; relative to the .gumx";
+        member.DetailText = "Folder holding your .csproj. Relative to the .gumx.";
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -284,11 +314,11 @@ public class CodeOutputSettingsMembers
     }
 
     private InstanceMember CreateGeneratedCodeFolderMember() => CreateCodeSubfolderMember(
-        "Generated Code Folder", "Files named *.Generated.cs; Gum rewrites these, so don't edit them",
+        "Generated Code Folder", "Files named *.Generated.cs. Gum rewrites these; don't edit them.",
         settings => settings.GeneratedCodeFolder, (settings, value) => settings.GeneratedCodeFolder = value);
 
     private InstanceMember CreateCustomCodeFolderMember() => CreateCodeSubfolderMember(
-        "Custom Code Folder", "Your own .cs files; empty keeps them beside the generated ones",
+        "Custom Code Folder", "Files you edit. Leave empty to keep them next to the generated files.",
         settings => settings.CustomCodeFolder, (settings, value) => settings.CustomCodeFolder = value);
 
     // A folder relative to the Code Project Root, with a text field and a browse button.
@@ -348,7 +378,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateGeneratedCodeFolderPrefixMember()
     {
         InstanceMember member = new InstanceMember("Generated Code Folder Prefix", this);
-        member.DetailText = "Put before Screens and Components in both folders, such as Gum/";
+        member.DetailText = "Added before Screens and Components, in both folders.";
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -368,7 +398,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateOutputLibrarySelectionMember()
     {
         InstanceMember member = new InstanceMember("Output Library", this);
-        member.DetailText = "Which runtime the generated code targets; Gum Forms works on every runtime";
+        member.DetailText = "Works on every runtime. The other options are legacy.";
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -406,7 +436,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateProjectUsingStatementsMember()
     {
         InstanceMember member = new InstanceMember("Project-wide Using Statements", this);
-        member.DetailText = "Added at the top of every generated and custom file";
+        member.DetailText = "Added to every generated file. One per line.";
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -427,7 +457,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateRootNamespaceMember()
     {
         InstanceMember member = new InstanceMember("Root Namespace", this);
-        member.DetailText = "Namespace of every generated class; empty writes no namespace";
+        member.DetailText = "Both halves of a class share it, whatever folder they sit in.";
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -447,7 +477,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateAppendFolderToNamespaceMember()
     {
         InstanceMember member = new InstanceMember("Append Folder to Namespace", this);
-        member.DetailText = "Adds the element's Gum folder to its namespace, such as MyGame.Components.Buttons";
+        member.DetailText = "Components/Menu → MyGame.Components.Menu";
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
@@ -467,7 +497,7 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateDefaultScreenBaseMember()
     {
         InstanceMember member = new InstanceMember("Default Screen Base", this);
-        member.DetailText = "Base class for generated screens; empty picks the default for the Output Library";
+        member.DetailText = "Base class for screens that don't set one.";
         member.CustomSetPropertyEvent += (owner, args) =>
         {
             if (ProjectSettings != null)
@@ -557,11 +587,17 @@ public class CodeOutputSettingsMembers
                 ProjectSettings, _projectState.ProjectDirectory);
 
             member.ToolTipText = result.Description;
-            return $"{result.Version}  ({DescribeSyntaxSource(result.Source)})";
+            member.ChipText = DescribeSyntaxSource(result.Source);
+            return result.Version.ToString();
         };
         member.CustomGetTypeEvent += (owner) => typeof(string);
         member.IsReadOnly = true;
-        member.DetailText = "Read-only; the Gum runtime version the generated code is written for";
+        member.PreferredDisplayer = typeof(StandardDisplayers.ReadOnlyValueWithChip);
+        member.DetailText = "Set by the Gum runtime your project references. Read only.";
+        if (ProjectSettings != null)
+        {
+            member.ChipText = DescribeSyntaxSource(_syntaxVersionDetectionService.Detect(ProjectSettings, _projectState.ProjectDirectory).Source);
+        }
 
         return member;
     }
@@ -573,13 +609,13 @@ public class CodeOutputSettingsMembers
         SyntaxVersionSource.NuGetPackage => "NuGet package",
         SyntaxVersionSource.ProjectReference => "project reference",
         SyntaxVersionSource.AssemblyReference => "assembly reference",
-        _ => "not detected, default",
+        _ => "not detected",
     };
 
     private InstanceMember CreateResolvedLocationsMember()
     {
         InstanceMember member = new InstanceMember("Resolves to", this);
-        member.DetailText = "Where a Screen and a Component land, relative to the Code Project Root";
+        member.DetailText = "Changing a folder moves existing files. Your custom .cs files only move after you confirm.";
         member.CustomGetEvent += (owner) => ProjectSettings == null ? string.Empty : CodeLocationPreview.Describe(ProjectSettings);
         member.CustomGetTypeEvent += (owner) => typeof(string);
         member.PreferredDisplayer = typeof(StandardDisplayers.CodeFilePaths);
@@ -630,34 +666,25 @@ public class CodeOutputSettingsMembers
 
         void RefreshDetailText()
         {
-            string detailText = "Fully in Code builds the UI from C#; Reference loaded Gum Project looks it up in a loaded .gumx";
-            bool isWarning = false;
+            bool isFullyInCode = ProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode;
+            member.DetailText = isFullyInCode
+                ? "Gum creates every control in the generated file."
+                : "Generated code looks controls up in a loaded Gum project.";
 
-            if (ProjectSettings?.OutputLibrary == OutputLibrary.GumForms)
+            string warning = string.Empty;
+            if (isFullyInCode && ProjectSettings?.OutputLibrary == OutputLibrary.GumForms)
             {
-                if (ProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
-                {
-                    detailText = "Warning: Fully in Code is experimental with Gum Forms";
-                    isWarning = true;
-                }
+                warning = "Full code generation with Gum Forms is experimental.";
             }
-            else if (ProjectSettings?.OutputLibrary == OutputLibrary.Raylib)
+            else if (isFullyInCode && ProjectSettings?.OutputLibrary == OutputLibrary.Raylib)
             {
-                if (ProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
-                {
-                    detailText = "Raylib code generation only supports \"Reference loaded Gum Project\" (Fully in Code is not yet supported)";
-                }
+                warning = "Raylib code generation only supports \"Reference loaded Gum Project\" (Fully in Code is not yet supported)";
             }
-            else if (ProjectSettings?.OutputLibrary == OutputLibrary.Silk)
+            else if (isFullyInCode && ProjectSettings?.OutputLibrary == OutputLibrary.Silk)
             {
-                if (ProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
-                {
-                    detailText = "Silk.NET code generation only supports \"Reference loaded Gum Project\" (Fully in Code is not yet supported)";
-                }
+                warning = "Silk.NET code generation only supports \"Reference loaded Gum Project\" (Fully in Code is not yet supported)";
             }
-
-            member.DetailText = detailText;
-            member.IsDetailTextWarning = isWarning;
+            member.WarningText = warning;
         }
 
         return member;

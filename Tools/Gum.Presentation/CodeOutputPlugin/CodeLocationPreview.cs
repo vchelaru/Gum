@@ -13,7 +13,7 @@ namespace CodeOutputPlugin;
 /// </summary>
 public static class CodeLocationPreview
 {
-    private const int KindColumnWidth = 11;
+    private const int KindColumnWidth = 14;
 
     /// <summary>One line per file: the element kind, which half of the class it is, and its path.</summary>
     public static string Describe(CodeOutputProjectSettings settings)
@@ -32,7 +32,7 @@ public static class CodeLocationPreview
     private static void AddElement(List<string> lines, ElementSave element, string name, CodeOutputProjectSettings settings)
     {
         string subfolder = CodeGenerationFileLocationsService.GetElementCodeSubfolder(element, settings);
-        string kind = element is ScreenSave ? "Screen" : "Component";
+        string kind = element is ScreenSave ? "Screens →" : "Components →";
 
         // The kind is named on the first line only; both halves of the class share it.
         lines.Add($"{kind.PadRight(KindColumnWidth)}{Join(settings.GeneratedCodeFolder, subfolder, name + ".Generated.cs")}");

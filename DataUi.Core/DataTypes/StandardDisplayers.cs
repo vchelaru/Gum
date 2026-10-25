@@ -17,6 +17,12 @@ public static class StandardDisplayers
     /// </summary>
     public sealed class CodeFilePaths { private CodeFilePaths() { } }
 
+    /// <summary>
+    /// A read-only value in a muted field with a small chip beside it (<see cref="InstanceMember.ChipText"/>),
+    /// such as a detected version and where it came from. Avalonia head only.
+    /// </summary>
+    public sealed class ReadOnlyValueWithChip { private ReadOnlyValueWithChip() { } }
+
     /// <summary>Multi-line text.</summary>
     public sealed class MultiLineTextBox { private MultiLineTextBox() { } }
 

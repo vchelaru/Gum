@@ -3,6 +3,7 @@ using AvaloniaDataUi;
 using Avalonia;
 using Avalonia.VisualTree;
 using CodeOutputPlugin;
+using Avalonia.Media;
 using Avalonia.Reactive;
 using Avalonia.Threading;
 using System.Linq;
@@ -37,6 +38,7 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
             _fontSize = size is double fontSize && fontSize > 0 ? fontSize : DefaultFontSize;
             ScaleLabelColumns();
         }));
+        this.GetObservable(BoundsProperty).Subscribe(new AnonymousObserver<Rect>(_ => ScaleLabelColumns()));
     }
 
     /// <summary>The property grid.</summary>
@@ -104,6 +106,11 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
         foreach (DataUiCategoryView view in Grid.GetVisualDescendants().OfType<DataUiCategoryView>())
         {
             view.Margin = new Thickness(0, isFirst ? 4 : 14, 0, 2);
+            view.Header.Padding = new Thickness(0, 2);
+            foreach (TextBlock name in view.Header.GetVisualDescendants().OfType<TextBlock>())
+            {
+                name.FontWeight = FontWeight.SemiBold;
+            }
             isFirst = false;
         }
     }
@@ -111,6 +118,15 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
     private void ScaleLabelColumns()
     {
         double width = Math.Round(CodeOutputSettingsMembers.ProjectLabelColumnWidth * _fontSize / DefaultFontSize);
+        // At a large zoom the label column must not take the page: keep room for the field.
+        if (Bounds.Width > 0)
+        {
+            width = Math.Min(width, Math.Max(CodeOutputSettingsMembers.ProjectLabelColumnWidth, Math.Round(Bounds.Width * 0.38)));
+        }
+        if (Grid.Categories.SelectMany(category => category.Members).FirstOrDefault()?.FirstGridLength == width)
+        {
+            return;
+        }
         foreach (MemberCategory category in Grid.Categories)
         {
             foreach (InstanceMember member in category.Members)

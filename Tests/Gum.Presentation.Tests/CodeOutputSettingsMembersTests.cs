@@ -111,7 +111,7 @@ public class CodeOutputSettingsMembersTests
             member.DetailText.ShouldNotBeNullOrWhiteSpace(member.Name + " has no hint");
             member.DetailText!.ShouldNotContain("\n", customMessage: member.Name + " hint is not one line");
             member.DetailText.ShouldNotBe(member.Name);
-            member.FirstGridLength.ShouldBe(190, member.Name);
+            member.FirstGridLength.ShouldBe(202, member.Name);
             member.IsSpaciousRow.ShouldBeTrue(member.Name);
         }
     }
@@ -124,11 +124,11 @@ public class CodeOutputSettingsMembersTests
             OutputLibrary = OutputLibrary.GumForms, ObjectInstantiationType = ObjectInstantiationType.FullyInCode,
         };
         _sut.BuildProjectSections().SelectMany(section => section.Members)
-            .Single(member => member.Name == "Object Instantiation Type").IsDetailTextWarning.ShouldBeTrue();
+            .Single(member => member.Name == "Object Instantiation Type").WarningText.ShouldNotBeNullOrEmpty();
 
         _sut.ProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
         _sut.BuildProjectSections().SelectMany(section => section.Members)
-            .Single(member => member.Name == "Object Instantiation Type").IsDetailTextWarning.ShouldBeFalse();
+            .Single(member => member.Name == "Object Instantiation Type").WarningText.ShouldBeNullOrEmpty();
     }
 
     [Fact]
@@ -148,10 +148,10 @@ public class CodeOutputSettingsMembersTests
 
         text.Split('\n').ShouldBe(new[]
         {
-            "Screen     Gen/GumScreens/MyScreen.Generated.cs",
-            "           Mine/GumScreens/MyScreen.cs",
-            "Component  Gen/GumComponents/MyComponent.Generated.cs",
-            "           Mine/GumComponents/MyComponent.cs",
+            "Screens →     Gen/GumScreens/MyScreen.Generated.cs",
+            "              Mine/GumScreens/MyScreen.cs",
+            "Components →  Gen/GumComponents/MyComponent.Generated.cs",
+            "              Mine/GumComponents/MyComponent.cs",
         });
         members.Single(member => member.Name == "Custom Code Folder").SetValue("", SetPropertyCommitType.Full);
         changes.ShouldBeGreaterThan(0);
@@ -167,7 +167,7 @@ public class CodeOutputSettingsMembersTests
             .SelectMany(member => new[] { member.Name, member.DetailText ?? "" });
 
         terms.ShouldContain("Custom Code Folder");
-        terms.ShouldContain(term => term.Contains("own .cs"));
+        terms.ShouldContain(term => term.Contains("Files you edit"));
     }
 
     [Fact]
