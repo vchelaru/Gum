@@ -372,4 +372,40 @@ public class SimpleEditorTests
 
         ((global::Avalonia.Controls.Control)display.Content!).IsEnabled.ShouldBeFalse();
     }
+
+    [AvaloniaFact]
+    public void SpaciousCheckBox_ShowsAnUnderscoreInTheToggleText_InsteadOfTakingItAsAnAccessKey()
+    {
+        EditorFixture fixture = new EditorFixture();
+        InstanceMember member = fixture.Member(nameof(EditorFixture.Flag));
+        member.IsSpaciousRow = true;
+        member.ToggleText = "Sets generated_code = true.";
+
+        CheckBoxDisplay display = new CheckBoxDisplay { InstanceMember = member };
+        display.Refresh();
+
+        // Avalonia reads a lone underscore in a check box's text as an access key and hides it; "__" shows one.
+        display.CheckBox.Content.ShouldBe("Sets generated__code = true.");
+    }
+
+    [AvaloniaFact]
+    public void SpaciousCheckBox_PutsTheHintUnderTheBox_AndInsetsTheLabelLikeOtherRows()
+    {
+        EditorFixture fixture = new EditorFixture();
+        InstanceMember member = fixture.Member(nameof(EditorFixture.Flag));
+        member.IsSpaciousRow = true;
+        member.FirstGridLength = 202;
+        member.DetailText = "Describes the toggle.";
+
+        CheckBoxDisplay display = new CheckBoxDisplay { InstanceMember = member };
+        display.Refresh();
+
+        Grid grid = (Grid)display.Content!;
+        TextBlock label = grid.Children.OfType<TextBlock>().First(text => text.Text == member.DisplayName);
+        TextBlock hint = grid.Children.OfType<TextBlock>().First(text => text.Text == "Describes the toggle.");
+        Grid.GetRow(display.CheckBox).ShouldBe(0);
+        Grid.GetRow(hint).ShouldBe(1);
+        label.Margin.Left.ShouldBe(4, "the same inset as the other spacious labels");
+        display.CheckBox.Content.ShouldBeNull("the label column names the setting; the box has no text of its own unless ToggleText is set");
+    }
 }

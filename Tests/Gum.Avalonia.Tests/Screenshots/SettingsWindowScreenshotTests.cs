@@ -124,6 +124,32 @@ public class SettingsWindowScreenshotTests
         window.Save("settings-project-code-generation-resolves");
     });
 
+    [SkippableTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CodeGeneration_MarkGeneratedFolderRow_ShowsEnabledAndDisabled(bool dark) => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, dark ? ThemeVariant.Dark : ThemeVariant.Light);
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+        string theme = dark ? "dark" : "light";
+
+        EditSettings(window.Find<CodeGenerationSettingsPageView>(), settings =>
+        {
+            settings.CodeProjectRoot = "../MyGame/";
+            settings.GeneratedCodeFolder = "Gum/Generated";
+            settings.CustomCodeFolder = "Gum/Custom";
+            settings.MarkGeneratedCodeFolder = true;
+        });
+        ScrollToResolves(window);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-mark-generated-folder-enabled-" + theme);
+
+        EditSettings(window.Find<CodeGenerationSettingsPageView>(), settings => settings.CustomCodeFolder = string.Empty);
+        ScrollToResolves(window);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-mark-generated-folder-disabled-" + theme);
+    });
+
     private static void EditSettings(CodeGenerationSettingsPageView page, Action<CodeOutputProjectSettings> edit)
     {
         CodeGenerationSettingsViewModel pageModel = (CodeGenerationSettingsViewModel)page.DataContext!;

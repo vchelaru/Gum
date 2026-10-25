@@ -55,7 +55,7 @@ public class CodeOutputSettingsMembersTests
         categories[0].Members.Select(member => member.Name).ShouldBe(new[]
         {
             "Output Library", "Object Instantiation Type", "Syntax Version",
-            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Mark Generated Folder",
             "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Project-wide Using Statements",
         });
         categories[1].Members.Select(member => member.Name).ShouldBe(new[]
@@ -75,7 +75,7 @@ public class CodeOutputSettingsMembersTests
         sections[0].Members.Select(member => member.Name).ShouldBe(new[] { "Output Library", "Object Instantiation Type", "Syntax Version" });
         sections[1].Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Resolves to",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Mark Generated Folder", "Resolves to",
         });
         sections[2].Members.Select(member => member.Name).ShouldBe(new[]
         {
@@ -181,7 +181,7 @@ public class CodeOutputSettingsMembersTests
         category.Members.Select(member => member.Name).ShouldBe(new[]
         {
             "Output Library", "Object Instantiation Type", "Syntax Version",
-            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix",
+            "Code Project Root", "Generated Code Folder", "Custom Code Folder", "Generated Code Folder Prefix", "Mark Generated Folder",
             "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Project-wide Using Statements",
         });
     }
@@ -296,6 +296,68 @@ public class CodeOutputSettingsMembersTests
         _sut.ProjectSettings.CodeProjectRoot.ShouldBe("Code/", "the .csproj folder stays the syntax-detection root");
         Member("Generated Code Folder").Value.ShouldBe("Gum/Generated");
         changes.ShouldBe(1);
+    }
+
+    [Fact]
+    public void MarkGeneratedFolder_IsAnOffToggleInLocations_WithAHint()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/", GeneratedCodeFolder = "Gen", CustomCodeFolder = "Mine" };
+
+        MemberCategory locations = _sut.BuildProjectSections().First(section => section.Name == "Locations");
+        InstanceMember member = locations.Members.First(m => m.Name == "Mark Generated Folder");
+
+        member.DisplayName.ShouldBe("Mark generated folder");
+        member.Value.ShouldBe(false);
+        member.IsReadOnly.ShouldBeFalse();
+        member.IsSpaciousRow.ShouldBeTrue();
+        member.ToggleText.ShouldBe("Write an .editorconfig");
+        member.DetailText.ShouldBe("Adds an .editorconfig with generated_code = true to the generated folder.");
+    }
+
+    [Fact]
+    public void MarkGeneratedFolder_WritesTheSetting_AndReportsTheChange()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/", GeneratedCodeFolder = "Gen", CustomCodeFolder = "Mine" };
+        int changes = 0;
+        _sut.SettingsChanged += (_, _) => changes++;
+
+        Member("Mark Generated Folder").SetValue(true, SetPropertyCommitType.Full);
+
+        _sut.ProjectSettings.MarkGeneratedCodeFolder.ShouldBeTrue();
+        changes.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData("", "Mine")]
+    [InlineData("Gen", "")]
+    [InlineData("Gen", "Gen/Sub")]
+    public void MarkGeneratedFolder_IsDisabled_AndSaysWhy_WhenTheGeneratedFolderIsNotItsOwn(string generated, string custom)
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/", GeneratedCodeFolder = generated, CustomCodeFolder = custom };
+
+        InstanceMember member = Member("Mark Generated Folder");
+
+        member.IsReadOnly.ShouldBeTrue();
+        member.DetailText.ShouldNotBe("Adds an .editorconfig with generated_code = true to the generated folder.");
+        member.DetailText.ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void EditingAFolder_AsksForARebuild_OnlyWhenItChangesWhetherMarkingIsAvailable()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/", GeneratedCodeFolder = "Gen", CustomCodeFolder = "Mine" };
+        List<MemberCategory> sections = _sut.BuildProjectSections();
+        InstanceMember rootNamespace = sections.SelectMany(section => section.Members).First(member => member.Name == "Root Namespace");
+        int rebuilds = 0;
+        _sut.RebuildRequested += (_, _) => rebuilds++;
+
+        _sut.ProjectSettings.GeneratedCodeFolder = "Gen2";
+        rootNamespace.SetValue("Game", SetPropertyCommitType.Full);
+        rebuilds.ShouldBe(0);
+
+        _sut.ProjectSettings.CustomCodeFolder = "";
+        rootNamespace.SetValue("Game2", SetPropertyCommitType.Full);
+        rebuilds.ShouldBe(1);
     }
 
     [Fact]

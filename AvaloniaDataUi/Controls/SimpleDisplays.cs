@@ -56,24 +56,33 @@ public class CheckBoxDisplay : DataUiDisplayBase
         Content = _panel;
     }
 
-    // A spacious row names the setting in the label column and describes it beside the box, so the row
-    // reads as one line: "Append folder to namespace [x] Components/Menu becomes ...".
+    // A spacious row names the setting in the label column, puts the box beside it with an optional short
+    // caption (InstanceMember.ToggleText), and describes it under the box like every other spacious row.
     private void ApplySpaciousLayout()
     {
         if (_spaciousGrid == null)
         {
-            _spaciousLabel = new TextBlock { VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-            _spaciousGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("100,*") };
+            // The same 4px inset the other spacious labels have, so the label column lines up.
+            _spaciousLabel = new TextBlock { Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            _spaciousGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("100,*"),
+                RowDefinitions = new RowDefinitions("Auto,Auto"),
+            };
+            _panel.Children.Clear();
             Grid.SetColumn(_checkBox, 1);
-            _panel.Children.Remove(_checkBox);
+            Grid.SetRow(_hint, 1);
+            Grid.SetColumnSpan(_hint, 2);
             _spaciousGrid.Children.Add(_spaciousLabel);
             _spaciousGrid.Children.Add(_checkBox);
+            _spaciousGrid.Children.Add(_hint);
             _checkBox.Margin = new Thickness(0, 4, 0, 4);
             Content = _spaciousGrid;
         }
         DataUiRowLayout.ConfigureLabelColumn(_spaciousGrid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
         _spaciousLabel!.Text = InstanceMember?.DisplayName;
-        _checkBox.Content = string.IsNullOrEmpty(InstanceMember?.DetailText) ? InstanceMember?.DisplayName : InstanceMember!.DetailText;
+        // The text goes through an access-key parser, where "_" marks the key and "__" is a literal underscore.
+        _checkBox.Content = string.IsNullOrEmpty(InstanceMember?.ToggleText) ? null : InstanceMember!.ToggleText!.Replace("_", "__");
     }
 
     /// <summary>The check box, for tests.</summary>

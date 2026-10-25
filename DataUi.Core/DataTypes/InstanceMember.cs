@@ -422,6 +422,21 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        string? toggleText;
+        /// <summary>The short caption beside a spacious toggle's box ("Write an .editorconfig"); the label column names the setting and <see cref="DetailText"/> goes under it. Null shows the box alone.</summary>
+        public string? ToggleText
+        {
+            get => toggleText;
+            set
+            {
+                if (toggleText != value)
+                {
+                    toggleText = value;
+                    OnPropertyChanged(nameof(ToggleText));
+                }
+            }
+        }
+
         string? chipText;
         /// <summary>A short note drawn as a small chip beside a read-only value, such as where it was detected from.</summary>
         public string? ChipText

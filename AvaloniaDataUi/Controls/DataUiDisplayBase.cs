@@ -124,6 +124,7 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsSpaciousRow) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.WarningText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.ChipText) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.ToggleText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailAction))
         {

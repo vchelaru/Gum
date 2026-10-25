@@ -314,6 +314,21 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         orphans.ShouldBeEmpty();
     }
 
+
+    [Fact]
+    public void Scan_ShouldNotFlagTheEditorConfigGumWrote_InTheGeneratedFolder()
+    {
+        GumProjectSave project = Project;
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gum/Generated/";
+        projectSettings.CustomCodeFolder = "Mine/";
+        projectSettings.MarkGeneratedCodeFolder = true;
+        WriteFile("Gum/Generated/.editorconfig", GeneratedFolderEditorConfig.Contents);
+
+        OrphanCodeFileScanResult result = CreateService().Scan(project, projectSettings);
+
+        result.Orphans.ShouldBeEmpty();
+    }
     [Fact]
     public void Scan_ShouldNotFlagStandardElementsFallbackFile()
     {

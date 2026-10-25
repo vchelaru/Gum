@@ -137,7 +137,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         _messenger = messenger;
         _codeOutputFileCommands = fileCommands;
-        _locationWatcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
+        _locationWatcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange(), _codeGenerationService.EditorConfig);
 
         var codeGenLogger = new ToolCodeGenLogger(outputManager);
         _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(
