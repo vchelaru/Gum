@@ -1022,5 +1022,94 @@ public class CursorHitTestIdleCostTests : BaseTestClass
         cursor.Object.VisualOver.ShouldBe(children[0]);
     }
 
+    [Fact]
+    public void DoUiActivityRecursively_ShouldClickALowerSibling_WhenAHiddenParentsVisibleChildrenCoverIt()
+    {
+        CountingInteractive root = CreateBox(0, 0, 100, hasEvents: false);
+        CountingInteractive lower = CreateBox(0, 0, 10, hasEvents: true);
+        CountingInteractive panel = CreateBox(0, 0, 10, hasEvents: false);
+        CountingInteractive inner = CreateBox(0, 0, 10, hasEvents: true);
+        int lowerClicks = 0;
+        int innerClicks = 0;
+        lower.Click += (_, _) => lowerClicks++;
+        inner.Click += (_, _) => innerClicks++;
+        root.AddChild(lower);
+        root.AddChild(panel);
+        panel.AddChild(inner);
+        panel.Visible = false;
+        List<GraphicalUiElement> roots = new() { root };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        SetButtons(cursor, push: true, down: true, click: false);
+        Walk(roots, cursor);
+
+        SetButtons(cursor, push: false, down: false, click: true);
+        Walk(roots, cursor);
+
+        lowerClicks.ShouldBe(1);
+        innerClicks.ShouldBe(0);
+        cursor.Object.VisualOver.ShouldBe(lower);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldNotClickAFormsButton_WhenItsScreenIsHiddenWhilePushed()
+    {
+        CountingInteractive screen = CreateBox(0, 0, 200, hasEvents: false);
+        screen.Tag = new ScreenSave();
+        Button button = new();
+        button.Visual.X = 0;
+        button.Visual.Y = 0;
+        screen.AddChild(button.Visual);
+        int clicks = 0;
+        button.Click += (_, _) => clicks++;
+        List<GraphicalUiElement> roots = new() { screen };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        FrameworkElement.MainCursor = cursor.Object;
+        Walk(roots, cursor);
+        SetButtons(cursor, push: true, down: true, click: false);
+        Walk(roots, cursor);
+        cursor.Object.WindowPushed.ShouldBe(button.Visual);
+
+        screen.Visible = false;
+        SetButtons(cursor, push: false, down: true, click: false);
+        Walk(roots, cursor);
+        SetButtons(cursor, push: false, down: false, click: true);
+        Walk(roots, cursor);
+        SetButtons(cursor, push: false, down: false, click: false);
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(0);
+        cursor.Object.WindowPushed.ShouldBeNull();
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
+    // Reports the cursor over itself no matter its visibility.
+    private sealed class AlwaysOverInteractive : InteractiveGue
+    {
+        public AlwaysOverInteractive() : base(new InvisibleRenderable())
+        {
+        }
+
+        public override bool HasCursorOver(ICursor cursor, Layer? layer = null) => true;
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldNotConsultAHiddenElementsHasCursorOverOverride()
+    {
+        AlwaysOverInteractive root = new() { HasEvents = true };
+        root.Visible = false;
+        int clicks = 0;
+        root.Click += (_, _) => clicks++;
+        List<GraphicalUiElement> roots = new() { root };
+        Mock<ICursor> cursor = CreateCursor(5, 5);
+        SetButtons(cursor, push: true, down: true, click: false);
+        Walk(roots, cursor);
+
+        SetButtons(cursor, push: false, down: false, click: true);
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(0, "a hidden element takes no part in the cursor walk, even with a custom hit test");
+        cursor.Object.VisualOver.ShouldBeNull();
+    }
+
     #endregion
 }
