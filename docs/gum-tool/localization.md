@@ -10,8 +10,8 @@ Both CSV and RESX formats are supported. Choose the format that best fits your p
 
 To add a localization file:
 
-1. Click on Edit -> Properties
-2. Click the Add button
+1. Select **Edit** -> **Settings...** and click **Localization** under **Project**
+2. Click the **Add...** button
 3. Select a CSV or .RESX - see below for details on each file type
 4. If your project uses multiple .RESX files per language, repeat the process by adding additional .RESX files
 
@@ -50,7 +50,7 @@ After selecting the localization file, a **Language** dropdown appears. The drop
 
 Gum supports loading multiple base RESX files into a single project. This is useful if your localization is organized across several files — for example when using [ResX Resource Manager](https://github.com/dotnet/ResXResourceManager), where strings may be split across `Strings.resx`, `Buttons.resx`, `Errors.resx`, etc., each with its own language satellites.
 
-Use the list editor in Project Properties to add, remove, and reorder RESX files. Each entry is a base file; its satellites are auto-discovered as described above.
+Use the **Localization Files** list on the **Localization** page of the Settings window to add, remove, and reorder RESX files. Each entry is a base file; its satellites are auto-discovered as described above.
 
 When multiple RESX files are loaded:
 
@@ -72,4 +72,4 @@ Localized text appears in Gum based on the selected ID. You can change the Langu
 
 ## Localization and Font Ranges
 
-Localized games may need an extended font range. If using the Gum tool, see the [Font Settings](fonts.md#character-ranges) page for information on font ranges.
+Localized games may need an extended font range. If using the Gum tool, see the [Fonts](fonts.md#character-ranges) page for information on font ranges.
