@@ -20,7 +20,7 @@ The canvas can be adjusted by selecting from the dropdown in the Editor tab.
 
 ### Project Default
 
-The Project Default guides uses the value as set through the Project Properties tab. For more information see the [Project Properties page](project-properties.md#canvas-width-height).
+The Project Default guides uses the value as set on the **Canvas** page of the Settings window. For more information see the [Project Settings page](project-properties.md#canvas-widthheight).
 
 ### Customizing Canvas Size Dropdown
 

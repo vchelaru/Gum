@@ -438,7 +438,7 @@ Width = global::Localization.CurrentLanguage == 2 ? 220 : 160
 
 The `global::` prefix is required, and the name is case sensitive. Because the value is a number, it is most often compared in a ternary expression as shown above.
 
-Changing the **Language** in the project properties updates the preview in the tool. See [Localization](../../localization.md) for adding a localization file and selecting a language.
+Changing the **Language** on the **Localization** page of the Settings window updates the preview in the tool. See [Localization](../../localization.md) for adding a localization file and selecting a language.
 
 {% hint style="info" %}
 At runtime, a reference which reads the current language needs `Gum.Expressions`. It updates when the language changes. See [Runtime Variable References](../../../code/styling/runtime-variable-references.md).

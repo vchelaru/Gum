@@ -52,4 +52,4 @@ Some of Gum's features live in plugin projects, which copy themselves into the t
 
 ### A feature added by a plugin is missing
 
-If a menu item or tab that comes from a plugin is missing, build the whole solution. To see which plugins loaded, select **Plugins** > **Manage Plugins**. The dialog also lists any plugin that was found but could not be loaded, along with the reason.
+If a menu item or tab that comes from a plugin is missing, build the whole solution. To see which plugins loaded, select **Edit** > **Settings...** and click **Plugins**. The page also lists any plugin that was found but could not be loaded, along with the reason.

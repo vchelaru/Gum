@@ -7,7 +7,7 @@ This page discusses how to write plugins for Gum. Plugins are a useful way to mo
 Gum runs on Avalonia and ships for Windows, macOS, and Linux, so a plugin is a plain .NET class library with no UI framework dependency. Plugins talk to the tool through the services and contracts in the `Gum.Presentation` project: menu entries, tabs, dialogs, and the plugin events.
 
 {% hint style="warning" %}
-**Plugins written for the older WPF tool do not load.** Gum used to be a WPF application, and plugins built against it referenced WPF types (`WpfPluginBase`, `AddMenuItem` returning a `MenuItem`, tabs handed over as a WPF `UserControl`). The current tool contains no WPF or Windows Forms, so it skips any plugin assembly that references them and lists it in the **Plugins** dialog as not supported, with the referenced assembly named in the Output tab. See [Migrating a WPF plugin](#migrating-a-wpf-plugin) below.
+**Plugins written for the older WPF tool do not load.** Gum used to be a WPF application, and plugins built against it referenced WPF types (`WpfPluginBase`, `AddMenuItem` returning a `MenuItem`, tabs handed over as a WPF `UserControl`). The current tool contains no WPF or Windows Forms, so it skips any plugin assembly that references them and lists it on the **Plugins** page of the Settings window as not supported, with the referenced assembly named in the Output tab. See [Migrating a WPF plugin](#migrating-a-wpf-plugin) below.
 {% endhint %}
 
 ## Setup
@@ -103,7 +103,7 @@ For a downloaded release, the folder is `Plugins/MyPluginProject/` beside `Gum.e
 To verify that your plugin is working correctly:
 
 1. Run Gum
-2. Click Plugins -> "Manage Plugins"
+2. Select **Edit** -> **Settings...** and click **Plugins** under **Application**
 
 ![](<../../.gitbook/assets/MyPluginName (1).png>)
 
@@ -147,7 +147,7 @@ The last WPF release, [September 2, 2026](https://github.com/vchelaru/Gum/releas
 
 Make sure your project references `Tools/Gum.Presentation/Gum.Presentation.csproj` and targets the same .NET version as Gum (currently `net10.0`).
 
-### The plugin does not appear in Manage Plugins
+### The plugin does not appear on the Plugins page
 
 * Check that the .dll is in its own folder under `Plugins` next to the executable, not directly in `Plugins`.
 * Check the Output tab after startup. A plugin that references WPF or Windows Forms is reported there and skipped; so is a plugin whose dependencies are a different version of a Gum assembly than the one the tool loaded.
