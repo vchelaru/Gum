@@ -144,6 +144,33 @@ public class CodeFileDeleteServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleConfirmDelete_WithACustomFolder_RecyclesAnUntouchedStubInTheCustomFolder_EvenWhenCheckboxUnchecked()
+    {
+        ComponentSave component = GivenComponent("MyComponent");
+        FilePath stub = GivenFile("Code/Mine/Components/MyComponent.cs", StubCustomCode);
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gen";
+        projectSettings.CustomCodeFolder = "Mine";
+
+        _service.HandleConfirmDelete(new object[] { component }, deleteEditedCustomCode: false, projectSettings);
+
+        _fileCommands.Verify(x => x.MoveToRecycleBin(stub), Times.Once);
+    }
+
+    [Fact]
+    public void HandleConfirmDelete_WithACustomFolder_RecyclesTheCustomFileInTheCustomFolder_WhenCheckboxChecked()
+    {
+        ComponentSave component = GivenComponent("MyComponent");
+        FilePath customFile = GivenFile("Code/Mine/Components/MyComponent.cs", EditedCustomCode);
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings();
+        projectSettings.CustomCodeFolder = "Mine";
+
+        _service.HandleConfirmDelete(new object[] { component }, deleteEditedCustomCode: true, projectSettings);
+
+        _fileCommands.Verify(x => x.MoveToRecycleBin(customFile), Times.Once);
+    }
+
+    [Fact]
     public void HandleConfirmDelete_RecyclesUntouchedStub_EvenWhenCheckboxUnchecked()
     {
         ComponentSave component = GivenComponent("MyComponent");

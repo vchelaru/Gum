@@ -89,6 +89,40 @@ public class CodeFileMigrationPlannerTests : BaseTestClass
         move.Destination.ShouldBe(newCustom);
     }
 
+    [Fact]
+    public void CreatePlan_MovesCustomCodeToTheCustomFolder_AndRemovesTheOldGeneratedFile()
+    {
+        GumProjectSave project = CreateProject(CreateComponent("Controls/ButtonClose"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.CustomCodeFolder = "Mine/";
+        FilePath oldCustom = WriteFile("Components/Controls/ButtonClose.cs", EditedCustomCode);
+
+        CodeFileMigrationPlan plan = CreatePlanner(project).CreatePlan(project, projectSettings,
+            new[] { Custom(oldCustom, "Controls/ButtonClose") });
+
+        CodeFileMigrationStep move = plan.Steps.Single();
+        move.Action.ShouldBe(CodeFileMigrationAction.MoveCustomCode);
+        move.Destination.ShouldBe(new FilePath(Path.Combine(_tempDirectory, "Mine", "Components", "Controls", "ButtonClose.cs")));
+    }
+
+    [Fact]
+    public void CreatePlan_SkipsAsConflict_WhenCustomFolderAlreadyHoldsRealCode()
+    {
+        // The user already moved their file: the old copy must not overwrite it.
+        GumProjectSave project = CreateProject(CreateComponent("Controls/ButtonClose"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.CustomCodeFolder = "Mine/";
+        FilePath oldCustom = WriteFile("Components/Controls/ButtonClose.cs", EditedCustomCode);
+        WriteFile("Mine/Components/Controls/ButtonClose.cs", EditedCustomCode);
+
+        CodeFileMigrationPlan plan = CreatePlanner(project).CreatePlan(project, projectSettings,
+            new[] { Custom(oldCustom, "Controls/ButtonClose") });
+
+        CodeFileMigrationStep step = plan.Steps.Single();
+        step.Action.ShouldBe(CodeFileMigrationAction.SkipConflict);
+        step.Destination.ShouldBe(new FilePath(Path.Combine(_tempDirectory, "Mine", "Components", "Controls", "ButtonClose.cs")));
+    }
+
     [Theory]
     [InlineData("GumCodeGen/", "GumCodeGen/Components/Controls")]
     [InlineData("Gum", "GumComponents/Controls")]

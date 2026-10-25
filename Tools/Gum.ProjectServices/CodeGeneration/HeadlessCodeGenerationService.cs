@@ -74,8 +74,8 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
         _logger.PrintOutput($"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}");
 
         // Write custom code file if it doesn't exist
-        var fullPath = generatedFileName.FullPath;
-        var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
+        string customCodeFileName = _fileLocationsService.GetCustomCodeFileName(
+            element, elementSettings, projectSettings, visualApi)!.FullPath;
         if (!System.IO.File.Exists(customCodeFileName))
         {
             var customCodeContents = _customCodeGenerator.GetCustomCodeForElement(

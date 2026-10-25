@@ -221,8 +221,8 @@ public class CodeGenerationService
 
             if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
             {
-                var fullPath = generatedFileName.FullPath;
-                var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
+                string customCodeFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(
+                    selectedElement, elementSettings, codeOutputProjectSettings, visualApi)!.FullPath;
 
                 if (!System.IO.File.Exists(customCodeFileName))
                 {

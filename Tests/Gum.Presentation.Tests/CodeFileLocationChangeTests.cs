@@ -37,6 +37,15 @@ public class CodeFileLocationChangeTests
     }
 
     [Fact]
+    public void Describe_NamesAChangedCustomCodeFolder()
+    {
+        CodeOutputProjectSettings before = new CodeOutputProjectSettings();
+        CodeOutputProjectSettings after = new CodeOutputProjectSettings { CustomCodeFolder = "Mine/" };
+
+        new CodeFileLocationChange().Describe(before, after).ShouldBe("Custom Code Folder from (none) to Mine/");
+    }
+
+    [Fact]
     public void Describe_ReturnsNull_WhenNoSettingThatMovesFilesChanged()
     {
         // The namespace changes what is inside the files, not where they are.
