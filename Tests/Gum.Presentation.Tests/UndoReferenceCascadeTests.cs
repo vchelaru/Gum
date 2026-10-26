@@ -405,36 +405,38 @@ public class UndoReferenceCascadeTests : BaseTestClass
     }
 
     [Fact]
-    public void UndoRedo_OfResettingAFeedingVariable_ShouldMatchTheEditItUndoes()
+    public void UndoRedo_OfResettingAFeedingVariable_ShouldGiveFollowersTheRestoredValue()
     {
-        // Make Default on the source variable removes its stored value.
-        Arrange();
-        using (_undo.RequestLock())
+        // Make Default on the source variable removes its stored value. Followers start unmaterialized,
+        // so only the cascade can give them the restored value on undo.
+        Arrange(materialized: false);
+        void Reset()
         {
-            _comp.DefaultState.Variables.RemoveAll(item => item.Name == "Source.Width");
-            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("Source"), "Width", _comp.DefaultState,
-                "Source.Width", trySave: true);
+            using (_undo.RequestLock())
+            {
+                _comp.DefaultState.Variables.RemoveAll(item => item.Name == "Source.Width");
+                _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("Source"), "Width", _comp.DefaultState,
+                    "Source.Width", trySave: true);
+            }
         }
-        float? f1AfterEdit = Width(_comp, "F1");
-        float? oAfterEdit = Width(_other, "O");
+        Reset();
 
         _undo.PerformUndo();
         ShouldHaveWidths(50);
         _undo.PerformRedo();
         Width(_comp, "Source").ShouldBeNull();
-        Width(_comp, "F1").ShouldBe(f1AfterEdit);
-        Width(_other, "O").ShouldBe(oAfterEdit);
+        _undo.PerformUndo();
+        ShouldHaveWidths(50);
         MemoryShouldEqualDisk();
     }
 
     [Fact]
     public void UndoRedo_OnAScreenEditingAComponentInstance_ShouldFollowTheInstancesReadingIt()
     {
-        Arrange();
+        Arrange(materialized: false);
         _selectedElement = _screen;
         _selectedStateSave = _screen.DefaultState;
         _undo.RecordState();
-        Width(_screen, "S2").ShouldBe(40);
 
         using (_undo.RequestLock())
         {
