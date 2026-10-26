@@ -476,6 +476,10 @@ Rows that read each other in a loop, such as `A.Width = B.Width + 1` with `B.Wid
 
 Rows in a loop are not evaluated, in the tool or in a game: they keep their stored values, so nothing freezes and applying references again changes nothing. To resolve it, remove one of the rows. A loop through a categorized state of another element is not reported.
 
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Variable References in the Property Grid
 
 As shown above, Variable References can be used to assign one variable to another. If a variable is referenced, then the variable cannot be manually assigned. The Variable Reference takes priority. For example, if an object references the Red, Green, and Blue variables, then those values cannot be manually set on the object. The values appear disabled and text indicates why they are read-only.
