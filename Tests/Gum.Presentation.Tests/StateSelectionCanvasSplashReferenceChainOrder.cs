@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Wireframe;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Shouldly;
 using static Gum.Presentation.Tests.StateSelectionCanvasHarness;
@@ -31,5 +32,17 @@ public partial class StateSelectionCanvasSplashTests
         });
 
         ShowWidth(panel, alt).ShouldBe(101f);
+    }
+
+    /// <summary>A chain read through an unset middle row: setting the tail moves the middle and the head.</summary>
+    [Fact]
+    public void RefreshAll_SelectedStateSetsTailOfChain_MiddleAndHeadFollow()
+    {
+        ComponentSave chain = BuildChain(rowA: true, rowB: true);
+        StateSave state = AddCategoryState(chain, "Cat", "S", s => SetNumber(s, "C.Width", 33f));
+
+        GraphicalUiElement root = Show(chain, state);
+
+        (WidthOfChild(root, "A"), WidthOfChild(root, "B"), WidthOfChild(root, "C")).ShouldBe((33f, 33f, 33f));
     }
 }
