@@ -14,12 +14,13 @@ Images load through a Sprite or NineSlice `SourceFile`, or by assigning a textur
 | --- | --- | --- |
 | MonoGame | `.bmp`, `.gif`, `.jpg`, `.jpeg`, `.png`, `.tif`, `.dds`, content pipeline assets (name without extension) | Yes |
 | FNA | `.gif`, `.png`, `.jpg`, `.jpeg`, `.tga`, `.qoi`, content pipeline assets (name without extension) | Yes |
+| KNI | The formats of the platform head's decoder: System.Drawing on DesktopGL, WIC on WindowsDX, StbImageSharp on BlazorGL, BitmapFactory on Android. Content pipeline assets (name without extension). | Yes |
 | raylib | `.png`, `.gif`, `.bmp` | No |
 | SkiaGum | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.webp` | Yes |
 
 An animated `.gif` shows its first frame. SkiaGum hands the file to SkiaSharp without checking the extension, so it loads any format SkiaSharp decodes, including `.webp`. On raylib, Gum picks the decoder from the file extension, so keep the extension in line with the file's real format.
 
-MonoGame and FNA load an image by name from the content pipeline when an `XnaContentManager` is assigned and the name has no extension.
+MonoGame, KNI, and FNA load an image by name from the content pipeline when an `XnaContentManager` is assigned and the name has no extension.
 
 ## Fonts
 
