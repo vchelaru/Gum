@@ -529,6 +529,54 @@ public class ExternalChangeScenarioTests
         VariableGridHarness.StoredValue(ElementReference.DeserializeElement<T>(file, GumProjectSave.NativeVersion), variableName);
 
     /// <summary>Exactly one message was shown; on failure, names every message and the file watcher's queue.</summary>
+    // The ignore window hides the tool's own write from the watcher. A different write to the same file
+    // inside that window is an outside edit and must still reach the reload (#6866).
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    [Trait("Feature", "FILE-013")]
+    public void AnOutsideEditShortlyAfterAToolSave_IsNotIgnored(bool savedByProjectSave)
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Button");
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
+        IFileWatchIgnoreList ignoreList = TestAppBuilder.Services.GetRequiredService<IFileWatchIgnoreList>();
+        FilePath buttonFile = new FilePath(Path.Combine(tree.Project.ProjectFolder, "Components", "Button.gucx"));
+
+        bool autoSave = projectManager.AutoSave;
+        try
+        {
+            projectManager.AutoSave = true;
+            if (savedByProjectSave)
+            {
+                tree.SaveAll();
+            }
+            else
+            {
+                tree.Grid.TypeAndEnter("Width", "80");
+            }
+
+            // The tool's own write is still ignored, including events that arrive after it finished.
+            ignoreList.TryGetIgnoreFileChange(buttonFile).ShouldBeTrue();
+
+            string toolBytes = File.ReadAllText(buttonFile.FullPath);
+            File.WriteAllText(buttonFile.FullPath, toolBytes + "<!-- outside -->");
+
+            ignoreList.TryGetIgnoreFileChange(buttonFile).ShouldBeFalse();
+
+            // The same bytes again are the tool's file; leave it as the tool wrote it for the oracles.
+            File.WriteAllText(buttonFile.FullPath, toolBytes);
+            ignoreList.TryGetIgnoreFileChange(buttonFile).ShouldBeTrue();
+        }
+        finally
+        {
+            projectManager.AutoSave = autoSave;
+        }
+
+        tree.AssertOracles();
+    }
+
     private static void ShouldHaveShownOnePrompt(ProjectTreeHarness tree)
     {
         IFileWatchManager fileWatch = TestAppBuilder.Services.GetRequiredService<IFileWatchManager>();

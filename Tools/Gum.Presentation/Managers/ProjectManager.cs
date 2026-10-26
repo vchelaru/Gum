@@ -668,6 +668,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         }
     }
 
+    private static IEnumerable<ElementSave> GetAllElements(GumProjectSave project) =>
+        project.Screens.Cast<ElementSave>().Concat(project.Components).Concat(project.StandardElements);
+
     // GumProjectSave.Save skips a missing-source element, so its edits are still only in memory.
     private void MarkSavedIfWritten(ElementSave element)
     {
@@ -706,28 +709,12 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
                     if (saveContainedElements)
                     {
-                        foreach (var screenSave in project.Screens)
+                        foreach (ElementSave element in GetAllElements(project))
                         {
-                            _pluginManager.BeforeSavingElementSave(screenSave);
-                            if (_fileCommands.Value.GetFullPathXmlFile(screenSave, screenSave.Name) is { } screenSavePath)
+                            _pluginManager.BeforeSavingElementSave(element);
+                            if (_fileCommands.Value.GetFullPathXmlFile(element, element.Name) is { } elementPath)
                             {
-                                _fileWatchManager.Value.IgnoreNextChangeUntil(screenSavePath);
-                            }
-                        }
-                        foreach (var componentSave in project.Components)
-                        {
-                            _pluginManager.BeforeSavingElementSave(componentSave);
-                            if (_fileCommands.Value.GetFullPathXmlFile(componentSave, componentSave.Name) is { } componentSavePath)
-                            {
-                                _fileWatchManager.Value.IgnoreNextChangeUntil(componentSavePath);
-                            }
-                        }
-                        foreach (var standardElementSave in project.StandardElements)
-                        {
-                            _pluginManager.BeforeSavingElementSave(standardElementSave);
-                            if (_fileCommands.Value.GetFullPathXmlFile(standardElementSave, standardElementSave.Name) is { } standardElementSavePath)
-                            {
-                                _fileWatchManager.Value.IgnoreNextChangeUntil(standardElementSavePath);
+                                _fileWatchManager.Value.IgnoreNextChangeUntil(elementPath);
                             }
                         }
                     }
@@ -737,22 +724,19 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     _retryService.TryMultipleTimes(() => project.Save(project.FullFileName, saveContainedElements));
                     succeeded = true;
 
+                    // Let an outside edit that lands inside the ignore window still reload.
+                    _fileWatchManager.Value.RecordWrittenContent(projectFileName);
+
                     if (succeeded && saveContainedElements)
                     {
-                        foreach (var screenSave in project.Screens)
+                        foreach (ElementSave element in GetAllElements(project))
                         {
-                            MarkSavedIfWritten(screenSave);
-                            _pluginManager.AfterSavingElementSave(screenSave);
-                        }
-                        foreach (var componentSave in project.Components)
-                        {
-                            MarkSavedIfWritten(componentSave);
-                            _pluginManager.AfterSavingElementSave(componentSave);
-                        }
-                        foreach (var standardElementSave in project.StandardElements)
-                        {
-                            MarkSavedIfWritten(standardElementSave);
-                            _pluginManager.AfterSavingElementSave(standardElementSave);
+                            if (_fileCommands.Value.GetFullPathXmlFile(element, element.Name) is { } elementPath)
+                            {
+                                _fileWatchManager.Value.RecordWrittenContent(elementPath);
+                            }
+                            MarkSavedIfWritten(element);
+                            _pluginManager.AfterSavingElementSave(element);
                         }
                     }
                     _unsavedChangesTracker.MarkSaved(project);
