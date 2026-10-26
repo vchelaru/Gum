@@ -1586,7 +1586,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         Project.FontRangeEntries.Single().Ranges = "32-126,160-255";
         ComponentSave component = AddComponentWithTextFont("PriceLabel", "Arial");
         // 'é' (233) is in range; '€' (8364) and 'Ω' (937) are not.
-        component.DefaultState.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Café €5 Ω€", Type = "string", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Café €5 Ω€", Type = "string", SetsValue = true });
 
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
@@ -1627,7 +1627,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         Project.FontRangeEntries.Single().Ranges = "32-126";
         Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = font, Ranges = "32-126,8364" });
         ComponentSave component = AddComponentWithTextFont("Label", font);
-        component.DefaultState.Variables.Add(new VariableSave { Name = "MyText.Text", Value = text, Type = "string", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = text, Type = "string", SetsValue = true });
 
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
@@ -1639,9 +1639,9 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     {
         Project.FontRangeEntries.Single().Ranges = "32-126";
         ComponentSave component = AddComponentWithTextFont("Label", "Arial");
-        component.DefaultState.Variables.Add(new VariableSave { Name = "MyText.UseCustomFont", Value = true, Type = "bool", SetsValue = true });
-        component.DefaultState.Variables.Add(new VariableSave { Name = "MyText.CustomFontFile", Value = "Fonts/Baked.fnt", Type = "string", SetsValue = true });
-        component.DefaultState.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "€", Type = "string", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.UseCustomFont", Value = true, Type = "bool", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.CustomFontFile", Value = "Fonts/Baked.fnt", Type = "string", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "€", Type = "string", SetsValue = true });
 
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
