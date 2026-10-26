@@ -2,10 +2,10 @@
 
 ### Introduction
 
-Gum loads `.png`, `.jpg`, `.jpeg`, `.bmp` and `.gif` files on its own. To load another format, such as WebP, add an image decoder. A decoder turns the file's bytes into pixels, and Gum turns those pixels into a texture, so the same decoder works on MonoGame, KNI, FNA, raylib and SkiaGum.
+Gum loads the image formats listed on [Source File](../../gum-tool/gum-elements/sprite/source-file.md) on its own. To load another format, such as WebP, add an image decoder. A decoder turns the file's bytes into pixels and Gum turns those pixels into a texture, so one decoder works on every runtime.
 
 {% hint style="info" %}
-Available in the next release, or now if building Gum from source.
+Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 ### Writing a Decoder
@@ -58,7 +58,7 @@ public class WebPDecoder : RenderingLibrary.Content.IImageDecoder
 
 `SupportedExtensions` is optional. The Gum tool uses it to accept `.webp` as a Sprite's Source File. Decoders without it still run on every file.
 
-Animated WebP and GIF files load their first frame only.
+This decoder loads the first frame of an animated WebP file.
 
 ### Registering a Decoder
 
@@ -70,7 +70,7 @@ RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Add(new WebPDecoder())
 GumUI.Initialize(this, "GumProject/GumProject.gumx");
 ```
 
-Gum asks decoders in the order they were added. Use `Insert(0, decoder)` to ask a decoder first.
+Gum asks decoders in the order they were added, and `Insert(0, decoder)` puts a decoder first.
 
 A decoded texture goes into Gum's texture cache under its file name, so each file is decoded once. Files loaded through a MonoGame `ContentManager` (XNB files) never reach decoders.
 
