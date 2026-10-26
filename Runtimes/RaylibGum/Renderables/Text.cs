@@ -465,7 +465,14 @@ public class Text : IVisible, IRenderableIpso,
     /// when unset (matches today's unchanged behavior, since compensation defaults to 1 with no active
     /// oversampling).
     /// </summary>
-    private float MeasurementFontScale => _measurementFont != null ? FontScale : EffectiveFontScale;
+    private float MeasurementFontScale => _measurementFont != null ? NominalFontScale : EffectiveFontScale;
+
+    /// <summary>
+    /// The scale this text draws at without <see cref="OversampleCompensationScale"/>. Oversampling
+    /// rasterizes at FontSize times this times the zoom so each atlas pixel lands on one screen pixel.
+    /// Raylib text does not apply GlobalFontScale, so this is <see cref="FontScale"/> alone.
+    /// </summary>
+    internal float NominalFontScale => FontScale;
 
     // Issue #4370 (MonoGame parity): word-wrap must convert a Width constraint using the UNcompensated
     // scale, since wrap decisions measure words against EffectiveMeasurementFont (native units). Already

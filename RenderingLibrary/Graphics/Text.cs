@@ -258,6 +258,13 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     private float EffectiveFontScale => ComposeFontScale(mFontScale);
 
     /// <summary>
+    /// The scale this text draws at without <see cref="OversampleCompensationScale"/>:
+    /// <see cref="FontScale"/> composed with <see cref="SystemManagers.GlobalFontScale"/>. Oversampling
+    /// rasterizes at FontSize times this times the zoom so each atlas pixel lands on one screen pixel.
+    /// </summary>
+    internal float NominalFontScale => mFontScale * SystemManagers.GlobalFontScale;
+
+    /// <summary>
     /// The scale to apply to a layout-facing size readback (<see cref="WrappedTextWidth"/>/
     /// <see cref="WrappedTextHeight"/>/<see cref="EffectiveWidth"/>/<see cref="EffectiveHeight"/>),
     /// as opposed to <see cref="EffectiveFontScale"/>'s render-facing scale (issue #4309). When
@@ -270,7 +277,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// unchanged behavior.
     /// </summary>
     private float MeasurementFontScale => mMeasurementFont != null
-        ? mFontScale * SystemManagers.GlobalFontScale
+        ? NominalFontScale
         : EffectiveFontScale;
 
     float IText.FontScale => EffectiveFontScale;
