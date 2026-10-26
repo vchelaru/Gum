@@ -375,12 +375,15 @@ namespace Gum.Graphics.Animation
                     var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
                     frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(fileName);
                 }
-                catch (System.IO.FileNotFoundException)
+                catch (System.Exception exception)
                 {
+                    // The loaders report a texture they cannot load with different exception types (a missing
+                    // file is an IOException on raylib, an undecodable image an InvalidOperationException on
+                    // MonoGame), so every failure is handled alike, as Sprite and NineSlice SourceFile do (#6890).
                     if (Wireframe.GraphicalUiElement.MissingFileBehavior == Wireframe.MissingFileBehavior.ThrowException)
                     {
                         string message = $"Error loading texture in animation :\n{animationFrameSave.TextureName}";
-                        throw new System.IO.FileNotFoundException(message);
+                        throw new System.IO.FileNotFoundException(message, exception);
                     }
                     frame.Texture = null;
                 }
