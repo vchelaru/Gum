@@ -5,7 +5,7 @@
 Gum loads `.png`, `.jpg`, `.jpeg`, `.bmp` and `.gif` files on its own. To load another format, such as WebP, add an image decoder. A decoder turns the file's bytes into pixels, and Gum turns those pixels into a texture, so the same decoder works on MonoGame, KNI, FNA, raylib and SkiaGum.
 
 {% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
+Available in the next release, or now if building Gum from source.
 {% endhint %}
 
 ### Writing a Decoder
@@ -75,10 +75,6 @@ Gum asks decoders in the order they were added. Use `Insert(0, decoder)` to ask 
 A decoded texture goes into Gum's texture cache under its file name, so each file is decoded once. Files loaded through a MonoGame `ContentManager` (XNB files) never reach decoders.
 
 If no decoder handles a file whose format Gum does not load, the load fails with a message naming the extension and `LoaderManager.Self.ImageDecoders`.
-
-### KNI on the Web
-
-KNI's Blazor (web) target runs in WebAssembly, where native libraries such as libwebp cannot run. A decoder for this target must be written entirely in C#.
 
 ### Premultiplied Alpha
 
