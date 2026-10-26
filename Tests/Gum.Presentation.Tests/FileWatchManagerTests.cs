@@ -411,7 +411,7 @@ public class FileWatchManagerTests : IDisposable
         ignoreListMock.Setup(i => i.TryGetIgnoreFileChange(It.IsAny<FilePath>())).Returns(true);
         var failure = new InvalidOperationException("reaction failed");
         guiCommandsMock.Setup(g => g.PrintOutput(It.Is<string>(s => s.StartsWith("File change skipped")))).Throws(failure);
-        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Texture.png");
+        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Comp.gucx");
 
         Should.NotThrow(() => sut.HandleFileSystemChange(null, args));
 
