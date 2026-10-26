@@ -18,7 +18,6 @@ The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging 
   - `core`: the project file plus all screen, component, standard element, and behavior files referenced by the project
   - `fontcache`: generated bitmap font files under `FontCache/` (`.fnt` + `.png` pages)
   - `external`: files referenced by the project but outside Core/FontCache, such as sprite source `.png` textures, `CustomFontFile` paths, and a `Font` value that points at a project-relative `.ttf` file rather than a system font family name (e.g. `Fonts/MyFont.ttf` vs. `Arial`)
-
 - `--shake`: Leave out every Screen and Component that nothing in the project reaches, along with the files only they use. Off by default. See [Leaving Out Unused Elements](pack.md#leaving-out-unused-elements).
 - `--keep <names>`: With `--shake`, element names to keep, comma-separated or repeated.
 - `--roots <file>`: With `--shake`, a text file of element names to keep, one per line. A line starting with `#` is a comment.
