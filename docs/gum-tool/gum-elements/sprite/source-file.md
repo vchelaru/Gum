@@ -11,7 +11,7 @@ The Source File property determines the file that is used by the Sprite. Sprite 
 * .achx and .achj files (AnimationChains)
 * Images from URLs
 
-Gum rejects any other extension, including .tga. To use one of those images, save it in one of the supported formats first.
+Gum rejects any other extension, including .tga. To use one of those images, save it in one of the supported formats first. Each runtime loads its own subset of these files; see [Supported Files](../../../code/files-and-fonts/supported-files.md) for what each runtime loads.
 
 <figure><img src="../../../.gitbook/assets/image (93).png" alt=""><figcaption><p>Sprite displaying the FlatRedBall logo</p></figcaption></figure>
 
