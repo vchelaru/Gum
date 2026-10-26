@@ -988,6 +988,7 @@ public partial class GraphicalUiElement
                         if (state != null)
                         {
                             ApplyState(state);
+                            RecordAppliedCategoryState(nameWithoutState, valueAsString);
                             toReturn = true;
                         }
                     }
@@ -1092,6 +1093,34 @@ public partial class GraphicalUiElement
             if (state != null)
             {
                 ApplyState(state);
+                RecordAppliedCategoryState(categoryName, stateName);
+            }
+        }
+    }
+
+    private void RecordAppliedCategoryState(string categoryName, string stateName)
+    {
+        _appliedCategoryStates ??= new Dictionary<string, string>();
+        _appliedCategoryStates[categoryName] = stateName;
+    }
+
+    /// <summary>
+    /// Re-applies, on this element and its descendants, the state last applied in each category.
+    /// States are looked up by name in the current categories, so a state the edited file changed
+    /// applies its new values, and a state or category that no longer exists is skipped.
+    /// </summary>
+    internal void ReapplyAppliedCategoryStatesRecursive()
+    {
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].ReapplyAppliedCategoryStatesRecursive();
+        }
+
+        if (_appliedCategoryStates != null)
+        {
+            foreach (KeyValuePair<string, string> applied in _appliedCategoryStates.ToArray())
+            {
+                ApplyState(applied.Key, applied.Value);
             }
         }
     }
