@@ -434,7 +434,7 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
         double longMilliseconds = MedianMilliseconds(() => longer.ApplyAllVariableReferences());
 
         // Linear is about 4 (measured 4.2); quadratic is 16.
-        (longMilliseconds / Math.Max(shortMilliseconds, 1)).ShouldBeLessThan(9);
+        (longMilliseconds / Math.Max(shortMilliseconds, 1)).ShouldBeLessThan(8);
     }
 
     [Fact]
