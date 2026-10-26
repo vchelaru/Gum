@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.ToolStates;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Undo;
 using Moq;
 using Shouldly;
@@ -35,7 +36,8 @@ public class RebaseStoredValuesTests : BaseTestClass
         projectProvider.Setup(x => x.GumProjectSave).Returns(new GumProjectSave());
         _undoManager = new UndoManager(selectedState.Object, new Mock<IUndoRenameLogic>().Object,
             new Mock<IGuiCommands>().Object, new Mock<IFileCommands>().Object, new Mock<IMessenger>().Object,
-            new Mock<IUndoPluginNotifier>().Object, new Mock<IAnimationUndoProvider>().Object, projectProvider.Object);
+            new Mock<IUndoPluginNotifier>().Object, new Mock<IAnimationUndoProvider>().Object, projectProvider.Object,
+            new Lazy<IVariableReferenceLogic>(() => new Mock<IVariableReferenceLogic>().Object));
     }
 
     private static void AddRow(ComponentSave element)

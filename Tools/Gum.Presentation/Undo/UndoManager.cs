@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Logic;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -61,7 +62,8 @@ public class UndoManager : IUndoManager
         IMessenger messenger,
         IUndoPluginNotifier pluginNotifier,
         IAnimationUndoProvider animationUndoProvider,
-        IReferenceFinderProjectProvider projectProvider)
+        IReferenceFinderProjectProvider projectProvider,
+        Lazy<IVariableReferenceLogic> variableReferenceLogic)
     {
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
@@ -69,7 +71,7 @@ public class UndoManager : IUndoManager
         bool AreUndoLocksActive() => UndoLocks.Count > 0;
 
         _elementStrategy = new ElementUndoStrategy(selectedState, renameLogic, guiCommands, fileCommands,
-            messenger, pluginNotifier, animationUndoProvider, projectProvider, AreUndoLocksActive, InvokeUndosChanged);
+            messenger, pluginNotifier, animationUndoProvider, projectProvider, variableReferenceLogic, AreUndoLocksActive, InvokeUndosChanged);
         _behaviorStrategy = new BehaviorUndoStrategy(selectedState, guiCommands, fileCommands,
             messenger, pluginNotifier, AreUndoLocksActive, InvokeUndosChanged);
 

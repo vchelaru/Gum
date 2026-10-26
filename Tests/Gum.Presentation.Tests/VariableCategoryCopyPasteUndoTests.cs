@@ -7,6 +7,7 @@ using Gum.Logic;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Undo;
 using Moq;
 using Shouldly;
@@ -83,7 +84,8 @@ public class VariableCategoryCopyPasteUndoTests : BaseTestClass
             new Mock<IMessenger>().Object,
             new Mock<IUndoPluginNotifier>().Object,
             new NoAnimationUndoProvider(),
-            new Mock<IReferenceFinderProjectProvider>().Object);
+            new Mock<IReferenceFinderProjectProvider>().Object,
+            new Lazy<IVariableReferenceLogic>(() => new Mock<IVariableReferenceLogic>().Object));
     }
 
     /// <summary>

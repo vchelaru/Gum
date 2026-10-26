@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
@@ -31,6 +32,7 @@ public class ElementUndoStrategy : IUndoStrategy
     private readonly IUndoPluginNotifier _pluginNotifier;
     private readonly IAnimationUndoProvider _animationUndoProvider;
     private readonly IReferenceFinderProjectProvider _projectProvider;
+    private readonly Lazy<IVariableReferenceLogic> _variableReferenceLogic;
     private readonly Func<bool> _areUndoLocksActive;
     private readonly Action<UndoOperation> _raiseUndosChanged;
 
@@ -80,6 +82,7 @@ public class ElementUndoStrategy : IUndoStrategy
         IUndoPluginNotifier pluginNotifier,
         IAnimationUndoProvider animationUndoProvider,
         IReferenceFinderProjectProvider projectProvider,
+        Lazy<IVariableReferenceLogic> variableReferenceLogic,
         Func<bool> areUndoLocksActive,
         Action<UndoOperation> raiseUndosChanged)
     {
@@ -91,6 +94,7 @@ public class ElementUndoStrategy : IUndoStrategy
         _pluginNotifier = pluginNotifier;
         _animationUndoProvider = animationUndoProvider;
         _projectProvider = projectProvider;
+        _variableReferenceLogic = variableReferenceLogic;
         _areUndoLocksActive = areUndoLocksActive;
         _raiseUndosChanged = raiseUndosChanged;
         _pendingCrossElementChanges = new List<CrossElementVariableChange>();
@@ -553,6 +557,12 @@ public class ElementUndoStrategy : IUndoStrategy
         bool shouldRefreshBehaviorView,
         AddedAndRemovedInstances? addedAndRemovedInstances)
     {
+        // An undo or redo has the same effect on the rest of the app as typing the value: whatever the
+        // snapshot held for a variable a reference row feeds, the row's followers re-read their sources
+        // (#6868). Before the baseline, so the next edit starts from the cascaded values, and with no undo
+        // lock held, so no history entry is added.
+        _variableReferenceLogic.Value.ReapplyReferences(toApplyTo);
+
         CaptureBaseline();
 
         _raiseUndosChanged(UndoOperation.Undo);

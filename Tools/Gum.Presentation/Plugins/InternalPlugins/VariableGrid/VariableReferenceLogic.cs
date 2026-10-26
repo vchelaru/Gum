@@ -586,6 +586,22 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         new System.Text.RegularExpressions.Regex(@"\bIndex\b");
 
     /// <inheritdoc/>
+    public StoredValueChange[] ReapplyReferences(ElementSave element)
+    {
+        GraphicalUiElement? liveRoot = _wireframeObjectManager.GetRepresentation(element);
+        foreach (StateSave state in element.AllStates)
+        {
+            if (state.VariableLists.Any(list => list.GetRootName() == "VariableReferences" && list.ValueAsIList?.Count > 0))
+            {
+                ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot);
+                BehaviorToolOnlyReferencesApplier.Apply(element, state);
+            }
+        }
+
+        return ApplyReferencesToElement(element, trySave: true);
+    }
+
+    /// <inheritdoc/>
     public StoredValueChange[] ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
         GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
