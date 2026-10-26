@@ -41,6 +41,22 @@ public class ResaveCommandTests : BaseTestClass
         File.ReadAllText(standardFile).ShouldBe(savedContent);
     }
 
+    [Fact]
+    public void Resave_ShouldRewriteBehaviorFiles()
+    {
+        string filePath = Path.Combine(TempDirectory, "MyProject", "MyProject.gumx");
+        CliTestHelper.Run("new", filePath);
+        string behaviorFile = Directory.GetFiles(Path.Combine(TempDirectory, "MyProject", "Behaviors"), "*.behx").First();
+        CliTestHelper.Run("resave", filePath).ExitCode.ShouldBe(0);
+        string savedContent = File.ReadAllText(behaviorFile);
+        File.WriteAllText(behaviorFile, savedContent + "<!-- not part of the saved format -->");
+
+        CliTestHelper result = CliTestHelper.Run("resave", filePath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.ReadAllText(behaviorFile).ShouldBe(savedContent);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

@@ -2,8 +2,11 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.ProjectServices;
+using ToolsUtilities;
 
 namespace Gum.Cli.Commands;
 
@@ -97,6 +100,7 @@ public static class ResaveCommand
         try
         {
             project.Save(fullPath, saveElements: true);
+            SaveBehaviors(project, fullPath);
         }
         catch (Exception ex)
         {
@@ -106,5 +110,23 @@ public static class ResaveCommand
 
         Console.WriteLine($"Saved {fullPath}");
         return 0;
+    }
+
+    // GumProjectSave.Save does not write behaviors (the tool saves them one at a time), so resave does it.
+    private static void SaveBehaviors(GumProjectSave project, string fullPath)
+    {
+        string directory = FileManager.GetDirectory(fullPath);
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(fullPath);
+        bool useCompact = project.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
+
+        foreach (BehaviorSave behavior in project.Behaviors)
+        {
+            if (behavior.IsSourceFileMissing) continue;
+
+            BehaviorReference? reference = project.BehaviorReferences.FirstOrDefault(item => item.Name == behavior.Name);
+            if (reference == null) continue;
+
+            behavior.Save(directory + reference.GetRelativeFilePath(isJsonFormat), useCompact);
+        }
     }
 }
