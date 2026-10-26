@@ -157,33 +157,25 @@ public sealed class ContentLoader : IContentLoader
         }
     }
 
+#if !FRB
     /// <summary>
     /// The load-time fix-up for pixels an <see cref="IImageDecoder"/> produced. Straight pixels get
     /// <see cref="ProcessLoadedPixels"/>. Premultiplied pixels are left alone when the renderer is
-    /// premultiplied, otherwise un-premultiplied (then edge-bled when that is on).
+    /// premultiplied, otherwise converted to straight alpha (then edge-bled when that is on).
     /// </summary>
     /// <returns>True when the pixels were un-premultiplied, which the caller reports as a warning.</returns>
-    internal static bool PrepareDecodedPixels(Span<byte> rgba, int width, int height, bool isPremultiplied,
-        bool usePremultipliedAlpha, bool bleedTransparentEdges)
+    internal static bool PrepareDecodedPixels(DecodedImage image, bool usePremultipliedAlpha, bool bleedTransparentEdges)
     {
-        if (!isPremultiplied)
-        {
-            ProcessLoadedPixels(rgba, width, height, usePremultipliedAlpha, bleedTransparentEdges);
-            return false;
-        }
-
-        if (usePremultipliedAlpha)
+        if (image.IsPremultiplied && usePremultipliedAlpha)
         {
             return false;
         }
 
-        TexturePremultiply.UnpremultiplyRgba(rgba);
-        if (bleedTransparentEdges)
-        {
-            TextureEdgeBleed.BleedRgba(rgba, width, height);
-        }
-        return true;
+        bool unpremultiplied = image.ConvertToStraightAlpha();
+        ProcessLoadedPixels(image.Rgba, image.Width, image.Height, usePremultipliedAlpha, bleedTransparentEdges);
+        return unpremultiplied;
     }
+#endif
 
     /// <summary>
     /// Creates a texture from an encoded image stream: the registered
@@ -202,13 +194,9 @@ public sealed class ContentLoader : IContentLoader
             DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(fileName, ref stream);
             if (decoded != null)
             {
-                bool unpremultiplied = PrepareDecodedPixels(decoded.Rgba, decoded.Width, decoded.Height,
-                    decoded.IsPremultiplied, usePremultipliedAlpha, bleedTransparentEdges);
-                if (unpremultiplied)
+                if (PrepareDecodedPixels(decoded, usePremultipliedAlpha, bleedTransparentEdges))
                 {
-                    System.Diagnostics.Trace.TraceWarning(
-                        $"Gum: {fileName} was decoded as premultiplied alpha but Renderer.UsePremultipliedAlpha " +
-                        "is false, so it was un-premultiplied on load, which loses precision at low alpha.");
+                    System.Diagnostics.Trace.TraceWarning(DecodedImage.GetUnpremultipliedWarning(fileName));
                 }
                 isProcessedOnLoad = true;
                 return CreateTextureFromRgba(device, decoded.Rgba, decoded.Width, decoded.Height);

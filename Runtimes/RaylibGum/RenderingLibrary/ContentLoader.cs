@@ -295,6 +295,24 @@ public sealed class ContentLoader : IContentLoader
             fileData = memoryStream.ToArray();
         }
 
+        DecodedImage? decoded;
+        Stream decoderStream = new MemoryStream(fileData, writable: false);
+        using (decoderStream)
+        {
+            decoded = LoaderManager.Self.ImageDecoders.TryDecode(fileName, ref decoderStream);
+        }
+        if (decoded != null)
+        {
+            // raylib draws straight alpha, so a premultiplied decode is converted back.
+            if (decoded.ConvertToStraightAlpha())
+            {
+                System.Diagnostics.Trace.TraceWarning(DecodedImage.GetUnpremultipliedWarning(fileName));
+            }
+            Texture2D decodedTexture = UploadRgbaTexture(decoded.Rgba, decoded.Width, decoded.Height);
+            TextureFilterApplier(decodedTexture, DefaultTextureFilter);
+            return decodedTexture;
+        }
+
         Image image = LoadImageFromMemory(fileType, fileData);
         // LoadTextureFromImage uploads to the GPU; the CPU-side Image is no longer needed after.
         var toReturn = LoadTextureFromImage(image);

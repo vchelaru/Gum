@@ -181,37 +181,49 @@ public class ImageDecoderTests : BaseTestClass
     [Fact]
     public void PrepareDecodedPixels_Straight_PremultipliesWhenRendererIsPremultiplied()
     {
-        byte[] rgba = { 200, 100, 50, 128 };
+        DecodedImage image = new DecodedImage(new byte[] { 200, 100, 50, 128 }, 1, 1);
 
-        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(rgba, 1, 1, isPremultiplied: false,
+        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(image,
             usePremultipliedAlpha: true, bleedTransparentEdges: false);
 
-        rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
+        image.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
         unpremultiplied.ShouldBeFalse();
     }
 
     [Fact]
     public void PrepareDecodedPixels_Premultiplied_SkipsPremultiplyWhenRendererIsPremultiplied()
     {
-        byte[] rgba = { 100, 50, 25, 128 };
+        DecodedImage image = new DecodedImage(new byte[] { 100, 50, 25, 128 }, 1, 1, isPremultiplied: true);
 
-        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(rgba, 1, 1, isPremultiplied: true,
+        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(image,
             usePremultipliedAlpha: true, bleedTransparentEdges: true);
 
-        rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
+        image.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
         unpremultiplied.ShouldBeFalse();
     }
 
     [Fact]
     public void PrepareDecodedPixels_Premultiplied_UnpremultipliesWhenRendererIsStraight()
     {
-        byte[] rgba = { 100, 50, 25, 128, 0, 0, 0, 0, 9, 8, 7, 255 };
+        DecodedImage image = new DecodedImage(
+            new byte[] { 100, 50, 25, 128, 0, 0, 0, 0, 9, 8, 7, 255 }, 3, 1, isPremultiplied: true);
 
-        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(rgba, 3, 1, isPremultiplied: true,
+        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(image,
             usePremultipliedAlpha: false, bleedTransparentEdges: false);
 
-        rgba.ShouldBe(new byte[] { 199, 100, 50, 128, 0, 0, 0, 0, 9, 8, 7, 255 });
+        image.Rgba.ShouldBe(new byte[] { 199, 100, 50, 128, 0, 0, 0, 0, 9, 8, 7, 255 });
+        image.IsPremultiplied.ShouldBeFalse();
         unpremultiplied.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ConvertToStraightAlpha_Straight_LeavesPixels()
+    {
+        DecodedImage image = new DecodedImage(new byte[] { 100, 50, 25, 128 }, 1, 1);
+
+        image.ConvertToStraightAlpha().ShouldBeFalse();
+
+        image.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
     }
 
     private sealed class FakeDecoder : IImageDecoder
