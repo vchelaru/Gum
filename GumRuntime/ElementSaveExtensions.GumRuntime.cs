@@ -579,25 +579,34 @@ namespace GumRuntime
             // An element that reads another is applied after it. Elements in a cycle keep project order.
             List<ElementSave> sorted = ReferenceDependencies.OrderByDependency(allElements);
 
-            foreach (var element in sorted)
+            // The rows do not change during the pass, so loops through other elements are looked up once.
+            VariableReferenceGraph.BeginBatch();
+            try
             {
-                foreach (var state in element.AllStates)
+                foreach (var element in sorted)
                 {
-                    bool hasVariableReferences = false;
-                    foreach (var variableList in state.VariableLists)
+                    foreach (var state in element.AllStates)
                     {
-                        if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                        bool hasVariableReferences = false;
+                        foreach (var variableList in state.VariableLists)
                         {
-                            hasVariableReferences = true;
-                            break;
+                            if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                            {
+                                hasVariableReferences = true;
+                                break;
+                            }
+                        }
+
+                        if (hasVariableReferences)
+                        {
+                            element.ApplyVariableReferences(state);
                         }
                     }
-
-                    if (hasVariableReferences)
-                    {
-                        element.ApplyVariableReferences(state);
-                    }
                 }
+            }
+            finally
+            {
+                VariableReferenceGraph.EndBatch();
             }
         }
 

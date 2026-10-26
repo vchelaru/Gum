@@ -761,7 +761,7 @@ public sealed class VariableReferenceGraph
         bool movedAny = false;
         foreach (ReferenceRow row in ordered)
         {
-            if (loopRows.Contains(row.WrittenName))
+            if (loopRows.Contains(LoopKey(row)))
             {
                 moved.Add(row);
                 movedAny = true;
@@ -780,6 +780,10 @@ public sealed class VariableReferenceGraph
         cyclic = moved.ToArray();
     }
 
+    // A row is told apart by the instance it writes through and its text, not by the variable it writes:
+    // another row writing the same variable (an override in a state or a derived element) is a different row.
+    private static string LoopKey(ReferenceRow row) => row.SourceObject + "|" + row.Line;
+
     // Every default-state row of the project that is in a loop through two or more elements, found once
     // with one pass over all rows (Tarjan), and kept until a row anywhere changes.
     private sealed class CrossLoopIndex
@@ -791,7 +795,47 @@ public sealed class VariableReferenceGraph
     }
 
     private static CrossLoopIndex? _crossLoopIndex;
+    private static CrossLoopIndex? _batchIndex;
+    private static int _batchDepth;
     private static readonly object CrossLoopLock = new object();
+
+    /// <summary>
+    /// Holds the project's loop index fixed until <see cref="EndBatch"/>, so a pass that applies every
+    /// element (rows are not edited during it) checks the index once instead of once per element.
+    /// </summary>
+    internal static void BeginBatch()
+    {
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        lock (CrossLoopLock)
+        {
+            if (_batchDepth++ == 0 && project != null)
+            {
+                _batchIndex = GetIndexLocked(project);
+            }
+        }
+    }
+
+    internal static void EndBatch()
+    {
+        lock (CrossLoopLock)
+        {
+            if (--_batchDepth == 0)
+            {
+                _batchIndex = null;
+            }
+        }
+    }
+
+    private static CrossLoopIndex GetIndexLocked(GumProjectSave project)
+    {
+        CrossLoopIndex? index = _crossLoopIndex;
+        if (index == null || !IsCurrent(index, project))
+        {
+            index = BuildCrossLoopIndex(project);
+            _crossLoopIndex = index;
+        }
+        return index;
+    }
 
     private static HashSet<string>? GetCrossLoopRows(ElementSave element)
     {
@@ -803,12 +847,9 @@ public sealed class VariableReferenceGraph
 
         lock (CrossLoopLock)
         {
-            CrossLoopIndex? index = _crossLoopIndex;
-            if (index == null || !IsCurrent(index, project))
-            {
-                index = BuildCrossLoopIndex(project);
-                _crossLoopIndex = index;
-            }
+            CrossLoopIndex index = _batchIndex != null && ReferenceEquals(_batchIndex.Project, project)
+                ? _batchIndex
+                : GetIndexLocked(project);
             return index.LoopRows.TryGetValue(element, out HashSet<string>? rows) ? rows : null;
         }
     }
@@ -858,55 +899,58 @@ public sealed class VariableReferenceGraph
             LoopRows = new Dictionary<ElementSave, HashSet<string>>()
         };
 
-        // One node per (element, written variable).
+        // One node per row (an element's rows, told apart by LoopKey), with the nodes writing each variable.
         Dictionary<string, int> elementByQualifiedName = new Dictionary<string, int>();
-        List<Dictionary<string, int>> nodeByName = new List<Dictionary<string, int>>();
+        List<Dictionary<string, List<int>>> writers = new List<Dictionary<string, List<int>>>();
         List<int> nodeElement = new List<int>();
-        List<string> nodeName = new List<string>();
+        List<string> nodeKey = new List<string>();
         List<ReferenceRow> nodeRows = new List<ReferenceRow>();
-        List<int> nodeOfRow = new List<int>();
         for (int e = 0; e < elementCount; e++)
         {
             ElementSave element = ProjectElementAt(project, e);
             index.Elements[e] = element;
             index.Graphs[e] = GetFor(element);
             elementByQualifiedName[ElementReference.GetQualifiedName(element, element.Name)] = e;
-            Dictionary<string, int> names = new Dictionary<string, int>();
-            nodeByName.Add(names);
+            Dictionary<string, List<int>> writersOfElement = new Dictionary<string, List<int>>();
+            writers.Add(writersOfElement);
+            HashSet<string> keys = new HashSet<string>();
             foreach (IReadOnlyList<ReferenceRow> rows in new[] { index.Graphs[e].OrderedRows, index.Graphs[e].CyclicRows })
             {
                 foreach (ReferenceRow row in rows)
                 {
-                    if (!names.TryGetValue(row.WrittenName, out int node))
+                    string key = LoopKey(row);
+                    if (!keys.Add(key))
                     {
-                        node = nodeElement.Count;
-                        names[row.WrittenName] = node;
-                        nodeElement.Add(e);
-                        nodeName.Add(row.WrittenName);
+                        continue;
                     }
+                    int node = nodeElement.Count;
+                    nodeElement.Add(e);
+                    nodeKey.Add(key);
                     nodeRows.Add(row);
-                    nodeOfRow.Add(node);
+                    if (!writersOfElement.TryGetValue(row.WrittenName, out List<int>? list))
+                    {
+                        list = new List<int>();
+                        writersOfElement[row.WrittenName] = list;
+                    }
+                    list.Add(node);
                 }
             }
         }
 
         // A row reads the rows writing the variables it names: in its own element, or in another.
-        List<HashSet<int>> edges = new List<HashSet<int>>();
-        for (int n = 0; n < nodeElement.Count; n++)
-        {
-            edges.Add(new HashSet<int>());
-        }
+        List<HashSet<int>> edges = new List<HashSet<int>>(nodeRows.Count);
         bool anyCrossEdge = false;
-        for (int r = 0; r < nodeRows.Count; r++)
+        for (int node = 0; node < nodeRows.Count; node++)
         {
-            ReferenceRow row = nodeRows[r];
-            int node = nodeOfRow[r];
+            HashSet<int> targets = new HashSet<int>();
+            edges.Add(targets);
+            ReferenceRow row = nodeRows[node];
             int element = nodeElement[node];
             foreach (string read in row.Reads)
             {
-                if (nodeByName[element].TryGetValue(read, out int target))
+                if (writers[element].TryGetValue(read, out List<int>? found))
                 {
-                    edges[node].Add(target);
+                    targets.UnionWith(found);
                 }
             }
             if (row.ElementReads.Count == 0)
@@ -922,9 +966,9 @@ public sealed class VariableReferenceGraph
             {
                 string variablePath = match.Groups[2].Value.TrimStart('.');
                 if (variablePath.Length > 0 && elementByQualifiedName.TryGetValue(match.Groups[1].Value, out int otherElement)
-                    && otherElement != element && nodeByName[otherElement].TryGetValue(variablePath, out int target))
+                    && otherElement != element && writers[otherElement].TryGetValue(variablePath, out List<int>? found))
                 {
-                    edges[node].Add(target);
+                    targets.UnionWith(found);
                     anyCrossEdge = true;
                 }
             }
@@ -932,13 +976,13 @@ public sealed class VariableReferenceGraph
 
         if (anyCrossEdge)
         {
-            MarkLoops(index, edges, nodeElement, nodeName);
+            MarkLoops(index, edges, nodeElement, nodeKey);
         }
         return index;
     }
 
     // Iterative Tarjan: a chain thousands of elements long must not overflow the stack.
-    private static void MarkLoops(CrossLoopIndex index, List<HashSet<int>> edges, List<int> nodeElement, List<string> nodeName)
+    private static void MarkLoops(CrossLoopIndex index, List<HashSet<int>> edges, List<int> nodeElement, List<string> nodeKey)
     {
         int count = edges.Count;
         int[] order = new int[count];
@@ -1022,7 +1066,7 @@ public sealed class VariableReferenceGraph
                         names = new HashSet<string>();
                         index.LoopRows[element] = names;
                     }
-                    names.Add(nodeName[item]);
+                    names.Add(nodeKey[item]);
                 }
             }
         }
