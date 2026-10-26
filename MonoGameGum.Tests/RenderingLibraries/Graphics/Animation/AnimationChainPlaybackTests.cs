@@ -67,6 +67,28 @@ public class AnimationChainPlaybackTests
         FrameAt(logic, cycleTime).ShouldBe(expectedFrame);
     }
 
+    [Theory]
+    [InlineData(false, 0)]
+    [InlineData(true, 2)]
+    public void CurrentChainName_Set_ShouldApplyTheFrameShownAtTimeZero(bool reverse, int expectedFrame)
+    {
+        AnimationChain chain = new() { Name = "c", IsReversed = reverse };
+        chain.Add(new AnimationFrame { FrameLength = 1f });
+        chain.Add(new AnimationFrame { FrameLength = 1f });
+        chain.Add(new AnimationFrame { FrameLength = 1f });
+        List<int> applied = new();
+        AnimationChainLogic logic = new()
+        {
+            AnimationChains = new AnimationChainList { chain },
+            ApplyFrame = frame => applied.Add(chain.IndexOf(frame)),
+        };
+
+        logic.CurrentChainName = "c";
+
+        logic.CurrentFrameIndex.ShouldBe(expectedFrame);
+        applied.ShouldBe(new[] { expectedFrame });
+    }
+
     [Fact]
     public void TimeIntoAnimation_ExactBoundary_ShouldEnterTheNextFrameInPlaybackOrder()
     {
@@ -92,9 +114,6 @@ public class AnimationChainPlaybackTests
     public void AnimateSelf_ShouldApplyFrameOnlyWhenTheShownFrameChanges(bool pingPong, bool reverse, int[] expectedApplied)
     {
         AnimationChainLogic logic = Play(pingPong, reverse, 0.5f, 0.5f);
-        // Selecting a chain keeps frame index 0, which a Reverse chain does not show at time 0;
-        // seeking the time first makes the shown frame and the index agree.
-        logic.TimeIntoAnimation = 0;
         AnimationChain chain = logic.CurrentChain!;
         List<int> applied = new();
         logic.ApplyFrame = frame => applied.Add(chain.IndexOf(frame));

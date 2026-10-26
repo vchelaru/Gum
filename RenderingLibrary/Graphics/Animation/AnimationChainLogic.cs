@@ -44,14 +44,23 @@ public class AnimationChainLogic
         get => CurrentChain?.Name;
         set
         {
+            // Matches FlatRedBall: the chain already playing keeps playing, and a different chain
+            // restarts at time 0, showing the frame there (the last frame of a Reverse chain).
+            if (value == _desiredChainName && CurrentChain?.Name == value)
+            {
+                return;
+            }
             _desiredChainName = value;
             _currentChainIndex = -1;
+            _timeIntoAnimation = 0;
+            _currentFrameIndex = 0;
             if (_chains != null && _chains.Count > 0)
             {
                 RefreshCurrentChainToDesiredName();
                 if (CurrentChain != null)
                 {
                     _isLooping = CurrentChain.Loop;
+                    UpdateFrameBasedOffOfTimeIntoAnimation();
                 }
                 UpdateToCurrentAnimationFrame();
             }
