@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This page lists the file types Gum loads at runtime. Each table has a row per runtime. MonoGame, KNI, and FNA share one set of loaders, so they share a row.
+This page lists the file types Gum loads at runtime. Each table has a row per runtime. Where MonoGame, KNI, and FNA share Gum's loaders, they share a row.
 
 Gum resolves relative paths against `FileManager.RelativeDirectory`, which is covered on the [File Loading](file-loading.md) page.
 
@@ -12,13 +12,14 @@ Images load through a Sprite or NineSlice `SourceFile`, or by assigning a textur
 
 | Runtime | Image files | Loaded from a URL |
 | --- | --- | --- |
-| MonoGame, KNI, FNA | `.png`, `.jpg`, `.gif`, `.bmp`, content pipeline assets (name without extension) | Yes |
-| raylib | `.png`, `.jpg`, `.gif`, `.bmp` | No |
-| SkiaGum | `.png`, `.jpg`, `.gif`, `.bmp`, `.webp` | Yes |
+| MonoGame | `.bmp`, `.gif`, `.jpg`, `.jpeg`, `.png`, `.tif`, `.dds`, content pipeline assets (name without extension) | Yes |
+| FNA | `.gif`, `.png`, `.jpg`, `.jpeg`, `.tga`, `.qoi`, content pipeline assets (name without extension) | Yes |
+| raylib | `.png`, `.gif`, `.bmp` | No |
+| SkiaGum | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.webp` | Yes |
 
 An animated `.gif` shows its first frame. SkiaGum hands the file to SkiaSharp without checking the extension, so it loads any format SkiaSharp decodes, including `.webp`. On raylib, Gum picks the decoder from the file extension, so keep the extension in line with the file's real format.
 
-MonoGame, KNI, and FNA load an image by name from the content pipeline when an `XnaContentManager` is assigned and the name has no extension.
+MonoGame and FNA load an image by name from the content pipeline when an `XnaContentManager` is assigned and the name has no extension.
 
 ## Fonts
 
@@ -39,7 +40,7 @@ Setting a Text `Font` (or `CustomFontFile`) to a path ending in one of these ext
 | --- | --- |
 | MonoGame, KNI, FNA | `.ttf`, `.otf`, `.ttc`, `.woff` |
 | raylib | `.ttf`, `.otf`, `.ttc` |
-| SkiaGum | `.ttf`, `.otf`, `.ttc` |
+| SkiaGum | `.ttf`, `.otf`, `.ttc`, `.woff` |
 
 See [Fonts](fonts.md) for choosing a strategy and [Font Strategies](font-strategies.md) for the code.
 
@@ -53,7 +54,7 @@ Pass a project path to `GumService.Initialize` to load it on any runtime. Gum re
 | Screens | `.gusx` | `.gusj` |
 | Components | `.gucx` | `.gucj` |
 | Standard elements | `.gutx` | `.gutj` |
-| Behaviors | `.behx` | |
+| Behaviors | `.behx` | `.behj` |
 
 A `.gumpkg` bundle, produced by [`gumcli pack`](../../cli/pack.md), loads in place of the loose project on MonoGame, KNI, FNA, raylib, and SkiaGum. See [File Loading](file-loading.md) for details.
 
