@@ -247,6 +247,10 @@ public class FileWatchManager : IFileWatchManager
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
+        else
+        {
+            PrintSkipped("rename of a file type Gum does not react to", fileName);
+        }
     }
 
     private void ReactToDelete(FileSystemEventArgs e, bool isOnIgnoreList)
@@ -260,6 +264,10 @@ public class FileWatchManager : IFileWatchManager
         if (IsElementFileExtension(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
+        }
+        else
+        {
+            PrintSkipped("delete of a file type Gum does not react to", fileName);
         }
     }
 
@@ -283,25 +291,39 @@ public class FileWatchManager : IFileWatchManager
         var isGum = extension is "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj"
             or "gucx" or "gucj" or "ganx" or "ganj" or "behx" or "behj";
 
-        // for some reason if we include created here, we'll get double-adds for XML files like screens...
         if (e.ChangeType != WatcherChangeTypes.Created || !isGum)
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
-        // ...except when the Created file is the reappearance of an element we previously flagged
-        // missing (issue #3367). A restore (e.g. Explorer's undo-delete) fires only a Created - no
-        // Change - so without this the red "!" / GUM0004 would never clear. Limiting it to flagged
-        // elements keeps normal saves (which Gum ignore-lists anyway) on the suppressed path.
-        else if (_fileChangeReactionLogic.IsReappearanceOfMissingSourceElement(fileName))
+        // A Created for a Gum file the project holds is an edit like any other: macOS reports an atomic
+        // swap over the target (TextEdit's safe save) as Created with no Changed and no Renamed, and a
+        // delete-then-create save ends in a Created too. A repeat of the same path (Created plus Changed
+        // for one save) collapses in the queue, so it reloads once. The ignore list is checked first,
+        // so Gum's own saves still reload nothing.
+        else if (isOnIgnoreList || _fileChangeReactionLogic.IsKnownToProject(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
+        }
+        // A Created for a Gum file nothing has loaded (a new file dropped into the folder) has
+        // nothing to reload.
+        else
+        {
+            PrintSkipped("Created event for a Gum file the project does not contain", fileName);
+        }
+    }
+
+    private void PrintSkipped(string reason, FilePath fileName)
+    {
+        if (PrintFileChangesToOutput)
+        {
+            _guiCommands.PrintOutput($"File change skipped ({reason}): {fileName}");
         }
     }
 
     private void HandleFileSystemChange(FilePath fileName, bool isOnIgnoreList)
     {
         bool wasIgnored = isOnIgnoreList;
-        string? skipReason = wasIgnored ? "on ignore list" : null;
+        string? skipReason = wasIgnored ? "Gum saved this file itself" : null;
 
         if(!wasIgnored && IsTransientTempFile(fileName))
         {
@@ -338,10 +360,7 @@ public class FileWatchManager : IFileWatchManager
 
         if (wasIgnored)
         {
-            if (PrintFileChangesToOutput)
-            {
-                _guiCommands.PrintOutput($"File change skipped ({skipReason}): {fileName}");
-            }
+            PrintSkipped(skipReason!, fileName);
         }
         else
         {

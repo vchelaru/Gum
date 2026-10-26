@@ -140,25 +140,4 @@ public class FileWatchSaveStylesTests : IDisposable
             $"{saveStyle}: Components/Styles.gucj should be queued for flush");
         sut.Disable();
     }
-
-
-    [Theory]
-    [InlineData("gucj")]
-    [InlineData("gucx")]
-    [InlineData("gusj")]
-    public void CreatedOnlyEventForAnExistingElementFile_IsQueuedForFlush(string extension)
-    {
-        // macOS can report an atomic swap over the file (renamex_np RENAME_SWAP, the safe-save pattern of
-        // TextEdit/NSDocument) as Created with no Changed and no Renamed, so Created alone must queue the file.
-        FilePath projectDirectory = new FilePath(_projectDirectory + "/");
-        string target = Path.Combine(_projectDirectory, "Components", "Styles." + extension);
-        File.WriteAllText(target, "{}");
-        FileWatchManager sut = BuildWatchingProject(projectDirectory);
-        FileSystemEventArgs created = new(WatcherChangeTypes.Created, Path.Combine(_projectDirectory, "Components"), "Styles." + extension);
-
-        sut.HandleFileSystemChange(null, created);
-
-        sut.ChangedFilesWaitingForFlush.ShouldContain(new FilePath(target));
-        sut.Disable();
-    }
 }

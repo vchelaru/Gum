@@ -195,15 +195,57 @@ namespace Gum.Managers
         }
 
         /// <summary>
-        /// True when <paramref name="file"/> is the reappearance on disk of an element whose source
-        /// we previously flagged missing (issue #3367) - a loaded element maps to this path and is
-        /// currently <see cref="ElementSave.IsSourceFileMissing"/>. The file watcher uses this to
-        /// process the lone Created event a restore fires (normally suppressed for Gum XML files, to
-        /// avoid double reloads on save) so the element reloads from disk and the flag clears.
+        /// True when <paramref name="file"/> is a Gum file the open project already contains: a loaded
+        /// element's file (or its animation sidecar), a loaded behavior, or the project file itself.
+        /// A watcher event for such a file is a real edit even when it arrives as Created alone, which
+        /// is how macOS reports an atomic swap over the file. A Gum file nothing has loaded (a brand-new
+        /// file dropped into the folder) is not known, and a Created for it is not a reload.
         /// </summary>
-        public bool IsReappearanceOfMissingSourceElement(FilePath file)
-            => IsReappearanceOfMissingSourceElement(file, _fileCommands.ProjectDirectory);
+        public bool IsKnownToProject(FilePath file)
+        {
+            string extension = file.Extension;
+            FilePath projectDirectory = _fileCommands.ProjectDirectory;
 
+            if (IsElementExtension(extension))
+            {
+                string? elementName = GetElementNameForElementFile(file, projectDirectory);
+                return elementName != null && ObjectFinder.Self.GetElementSave(elementName) != null;
+            }
+
+            if (extension == GumProjectSave.ProjectExtension || extension == GumProjectSave.ProjectJsonExtension)
+            {
+                return _projectState.GumProjectSave?.FullFileName is { } projectFileName && file == projectFileName;
+            }
+
+            if (extension == BehaviorReference.Extension || extension == BehaviorReference.JsonExtension)
+            {
+                return _projectState.GumProjectSave?.Behaviors.Any(behavior =>
+                    string.Equals(behavior?.Name, file.CaseSensitiveNoPathNoExtension, StringComparison.OrdinalIgnoreCase)) == true;
+            }
+
+            if (extension == "ganx" || extension == "ganj")
+            {
+                // "<Element>Animations.ganx" sits beside the element it animates.
+                const string sidecarSuffix = "Animations";
+                string withoutExtension = file.RemoveExtension().FullPath;
+                if (!withoutExtension.EndsWith(sidecarSuffix, StringComparison.Ordinal))
+                {
+                    return false;
+                }
+                string elementExtension = extension == "ganj" ? GumProjectSave.ComponentJsonExtension : GumProjectSave.ComponentExtension;
+                FilePath elementFile = new FilePath(withoutExtension.Substring(0, withoutExtension.Length - sidecarSuffix.Length) + "." + elementExtension);
+                string? elementName = GetElementNameForElementFile(elementFile, projectDirectory);
+                return elementName != null && ObjectFinder.Self.GetElementSave(elementName) != null;
+            }
+
+            return false;
+        }
+
+
+        /// <summary>
+        /// True when <paramref name="file"/> maps to a loaded element currently flagged
+        /// <see cref="ElementSave.IsSourceFileMissing"/>, i.e. its file has reappeared.
+        /// </summary>
         public static bool IsReappearanceOfMissingSourceElement(FilePath file, FilePath projectDirectory)
         {
             var elementName = GetElementNameForElementFile(file, projectDirectory);

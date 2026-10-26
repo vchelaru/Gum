@@ -27,10 +27,10 @@ Posted reaction (UI thread)
     - Verifies file's directory is being watched
     - Adds to ChangedFilesWaitingForFlush, records LastFileChange
     ↓
-PeriodicUiTimer (2s interval, GumStartupSequence.cs)
-    - Calls FileWatchManager.Flush() every 2 seconds
+PeriodicUiTimer (500ms interval, GumStartupSequence.cs)
+    - Calls FileWatchManager.Flush() every 500ms
     ↓
-Flush() early-outs if TimeToNextFlush > 0 (waits 2s after last change)
+Flush() early-outs if TimeToNextFlush > 0 (waits 500ms after last change)
     ↓
 FileChangeReactionLogic.ReactToFileChanged(file) per queued file
     ↓
@@ -46,7 +46,7 @@ A second `PeriodicUiTimer` at 200ms drives the File Watch debug panel UI only �
 2. Adding the gum project's own directory
 3. Adding localization and font-character-file directories if configured
 
-**Deduplication**: If directory A is already a root of directory B, B is not added separately. Subdirectories of a watched root are covered automatically (`IncludeSubdirectories = true`).
+**Deduplication**: the project directory is added last, so a final pass in `GetFileWatchRootDirectories` removes every root nested under another; each folder gets one watcher, and subdirectories are covered by `IncludeSubdirectories = true`. A nested root left in the set would raise a copy of every event.
 
 `RefreshRootDirectory()` is called on project load and whenever a variable that `IsFile == true` changes value.
 
@@ -108,13 +108,15 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 
 ## Non-Obvious Behaviors
 
-**Double-event prevention for Gum XML files**: When `FileSystemWatcher` fires a `Created` event for `.gumx`/`.gusx`/`.gutx`/`.gucx`/`.ganx`/`.behx` files, it is ignored. These formats trigger both `Changed` and `Created` on save; only `Changed` is processed to avoid duplicates. Non-Gum files (e.g., PNG) _do_ process `Created`.
+**Created for Gum files**: a `Created` for a Gum file (`.gumx`/`.gusx`/`.gutx`/`.gucx`/`.ganx`/`.behx` and their JSON siblings) queues only when the project already contains that file (`FileChangeReactionLogic.IsKnownToProject`: a loaded element or its `*Animations` sidecar, a behavior, the project file) or Gum's ignore list holds it. macOS reports an atomic swap over the target (`renamex_np` with `RENAME_SWAP`, the safe-save pattern of NSDocument apps such as TextEdit) as `Created` with no `Changed` and no `Renamed`, so dropping every Created loses real edits. A repeat event for the same path collapses in the queue, so Created plus Changed reloads once. A Created for a file nothing has loaded (a new file dropped in) is skipped. Non-Gum files (e.g., PNG) always process `Created`.
+
+**Every dropped event can print a reason**: with "Print file changes to output" on (File Watch tab), each ignored or skipped event prints `File change skipped (<reason>): <path>` (own save, temp file, directory, directory not watched, unknown Created, unreacted rename or delete). A save that prints nothing never reached the manager, so look at the OS events first.
 
 **Renames are routed for every reacted-to extension**: `ReactToRename` forwards renames for the extensions in its list (images, Gum files, `.csv`, `.resx`, `.codsj`, ...). Many editors (Vim, JetBrains, some VS Code modes) save by writing a temp file and renaming it over the target, so a type missing from that list silently misses external edits.
 
 **Delete only reacts for element files**: `ReactToDelete` queues a deleted element file like a change, so the flush can flag the element's source as missing. Other deletes are ignored.
 
-**Flush debounce is cumulative**: `TimeToNextFlush = (LastFileChange + 2s) - Now`. Every new file change resets `LastFileChange`, pushing the flush window out by another 2 seconds. Rapid successive changes delay flushing until things settle.
+**Flush debounce is cumulative**: `TimeToNextFlush = (LastFileChange + 500ms) - Now`. Every new file change resets `LastFileChange`, pushing the flush window out by another 500ms. Rapid successive changes delay flushing until things settle.
 
 **Watcher callbacks only check the ignore list, then post to the UI thread**: `HandleFileSystemChange`/`HandleRename`/`HandleFileSystemDelete` run on a watcher thread and hand their work to the UI thread through `IDispatcher`. New callback code goes inside the posted reaction; anything else runs off the UI thread against UI-owned state.
 
@@ -131,7 +133,7 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 | `Tools/Gum.Presentation/Managers/FileChangeReactionLogic.cs` | Dispatches flushed files to reload handlers |
 | `Tools/Gum.Presentation/FileWatchPlugin/MainFileWatchPlugin.cs` | Plugin entry point (shared by both heads); owns tab/menu-item wiring only |
 | `Tools/Gum.Presentation/Services/PeriodicUiTimer.cs` | UI-thread-safe periodic timer used for both flush and display |
-| `Tools/Gum.Presentation/Startup/GumStartupSequence.cs` | Creates the 2s flush timer and calls `fileWatchManager.Flush()` |
+| `Tools/Gum.Presentation/Startup/GumStartupSequence.cs` | Creates the 500ms flush timer and calls `fileWatchManager.Flush()` |
 | `Tools/Gum.Presentation/Commands/FileCommands.cs` | Calls `IgnoreNextChangeUntil` before saving elements |
 | `Tools/Gum.Presentation/Managers/ProjectManager.cs` | Calls `IgnoreNextChangeUntil` before saving project |
 | `Tools/Gum.Presentation/Services/Fonts/FontManager.cs` | Calls `IgnoreNextChangeUntil` before generating fonts |
