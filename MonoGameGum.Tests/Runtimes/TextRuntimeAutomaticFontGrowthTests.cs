@@ -271,6 +271,41 @@ public class TextRuntimeAutomaticFontGrowthTests : BaseTestClass
         }
     }
 
+    // Issue #6816: a character grown into the oversampled display font must be baked at that font's
+    // own raster size, which includes FontScale.
+    [Fact]
+    public void Text_WhenOversampledWithFontScale_GrowsTheDisplayFontAtItsScaledRasterSize()
+    {
+        bool savedOversampling = TextRuntime.UseFontOversampling;
+        bool savedGrowth = TextRuntime.UseAutomaticFontGrowth;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            TextRuntime.UseAutomaticFontGrowth = true;
+            GrowableStubFontCreator creator = new();
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "StubFont";
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 2f;
+            textRuntime.UpdateAutomaticFontOversampling(1.5f).ShouldBeTrue(); // raster = 20 * 2 * 1.5 = 60px
+
+            textRuntime.Text = "D";
+
+            // The display font grows after the measurement font, so it is the last call.
+            creator.LastBmfcSave.ShouldNotBeNull();
+            creator.LastBmfcSave!.FontSize.ShouldBe(60f, tolerance: 0.0001f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedOversampling;
+            TextRuntime.UseAutomaticFontGrowth = savedGrowth;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     private const string BaseFontData =
 @"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
 common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4

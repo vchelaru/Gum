@@ -196,9 +196,9 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
 
             textRuntime.UpdateAutomaticFontOversampling(2.93f);
 
-            // Issue #6814: the oversampled atlas draws at exactly 1/ratio (times the caller's FontScale),
-            // so each atlas pixel covers FontScale screen pixels, never a fraction more or less.
-            ((IText)text).FontScale.ShouldBe(2f / 2.93f, tolerance: 0.00001f);
+            // Issues #6814 and #6816: the raster includes FontScale, so the atlas draws at exactly 1/zoom
+            // and each atlas pixel covers one screen pixel, never a fraction more or less.
+            ((IText)text).FontScale.ShouldBe(1f / 2.93f, tolerance: 0.00001f);
             text.WrappedTextWidth.ShouldBe(pinnedWidth, tolerance: 0.01f,
                 "because the layout box stays measured by the pinned native font");
         }
