@@ -323,6 +323,16 @@ public sealed class ContentLoader : IContentLoader
         }
 
         Image image = LoadImageFromMemory(fileType, fileData);
+        if (image.Width <= 0 || image.Height <= 0)
+        {
+            // raylib returns an empty image for a format its native build leaves out (the stock native has
+            // no JPEG decoder, #6847). Treated exactly like a missing file, so callers' MissingFileBehavior
+            // applies, and no 0x0 texture is ever created or cached.
+            UnloadImage(image);
+            throw new FileNotFoundException(
+                $"Could not load '{fileName}': raylib could not decode its format ({fileType}). " +
+                "The stock raylib native does not include this format; use PNG instead.", fileName);
+        }
         // LoadTextureFromImage uploads to the GPU; the CPU-side Image is no longer needed after.
         var toReturn = LoadTextureFromImage(image);
         // Apply the project's texture filter (issue #3199). raylib defaults new textures to point
