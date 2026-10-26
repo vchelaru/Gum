@@ -250,6 +250,12 @@ public sealed class VariableReferenceGraph
             return cached;
         }
 
+        HashSet<string>? loopRows = GetCrossLoopRows(element);
+        if (loopRows == null || loopRows.Count == 0)
+        {
+            return cached;
+        }
+
         List<StateSave> states = new List<StateSave>();
         List<ElementSave> baseElements = ObjectFinder.Self.GetBaseElements(element);
         for (int i = baseElements.Count - 1; i >= 0; i--)
@@ -744,54 +750,288 @@ public sealed class VariableReferenceGraph
     // from the ordered rows to the cyclic rows, so every apply path leaves them at their stored values.
     private static void MoveCrossElementLoopRows(ElementSave element, ref ReferenceRow[] ordered, ref ReferenceRow[] cyclic)
     {
-        HashSet<ReferenceRow>? inLoop = null;
-        foreach (ReferenceRow row in ordered)
-        {
-            if (row.ElementReads.Count == 0)
-            {
-                continue;
-            }
-            List<KeyValuePair<ElementSave, ReferenceRow>>? loop = FindCrossElementLoop(element, row);
-            if (loop == null)
-            {
-                continue;
-            }
-            inLoop ??= new HashSet<ReferenceRow>();
-            foreach (KeyValuePair<ElementSave, ReferenceRow> step in loop)
-            {
-                if (step.Key == element)
-                {
-                    foreach (ReferenceRow candidate in ordered)
-                    {
-                        if (candidate.WrittenName == step.Value.WrittenName)
-                        {
-                            inLoop.Add(candidate);
-                        }
-                    }
-                }
-            }
-        }
-
-        if (inLoop == null)
+        HashSet<string>? loopRows = GetCrossLoopRows(element);
+        if (loopRows == null || loopRows.Count == 0)
         {
             return;
         }
 
         List<ReferenceRow> remaining = new List<ReferenceRow>();
         List<ReferenceRow> moved = new List<ReferenceRow>(cyclic);
+        bool movedAny = false;
         foreach (ReferenceRow row in ordered)
         {
-            (inLoop.Contains(row) ? moved : remaining).Add(row);
+            if (loopRows.Contains(row.WrittenName))
+            {
+                moved.Add(row);
+                movedAny = true;
+            }
+            else
+            {
+                remaining.Add(row);
+            }
+        }
+        if (!movedAny)
+        {
+            return;
         }
         moved.Sort((first, second) => first.AuthoredIndex.CompareTo(second.AuthoredIndex));
         ordered = remaining.ToArray();
         cyclic = moved.ToArray();
     }
 
+    // Every default-state row of the project that is in a loop through two or more elements, found once
+    // with one pass over all rows (Tarjan), and kept until a row anywhere changes.
+    private sealed class CrossLoopIndex
+    {
+        public GumProjectSave Project = null!;
+        public ElementSave[] Elements = null!;
+        public VariableReferenceGraph[] Graphs = null!;
+        public Dictionary<ElementSave, HashSet<string>> LoopRows = null!;
+    }
+
+    private static CrossLoopIndex? _crossLoopIndex;
+    private static readonly object CrossLoopLock = new object();
+
+    private static HashSet<string>? GetCrossLoopRows(ElementSave element)
+    {
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        if (project == null)
+        {
+            return null;
+        }
+
+        lock (CrossLoopLock)
+        {
+            CrossLoopIndex? index = _crossLoopIndex;
+            if (index == null || !IsCurrent(index, project))
+            {
+                index = BuildCrossLoopIndex(project);
+                _crossLoopIndex = index;
+            }
+            return index.LoopRows.TryGetValue(element, out HashSet<string>? rows) ? rows : null;
+        }
+    }
+
+    private static int ProjectElementCount(GumProjectSave project) =>
+        project.Screens.Count + project.Components.Count + project.StandardElements.Count;
+
+    private static ElementSave ProjectElementAt(GumProjectSave project, int index)
+    {
+        if (index < project.Screens.Count)
+        {
+            return project.Screens[index];
+        }
+        index -= project.Screens.Count;
+        if (index < project.Components.Count)
+        {
+            return project.Components[index];
+        }
+        return project.StandardElements[index - project.Components.Count];
+    }
+
+    private static bool IsCurrent(CrossLoopIndex index, GumProjectSave project)
+    {
+        if (!ReferenceEquals(index.Project, project) || index.Elements.Length != ProjectElementCount(project))
+        {
+            return false;
+        }
+        for (int i = 0; i < index.Elements.Length; i++)
+        {
+            ElementSave element = ProjectElementAt(project, i);
+            if (!ReferenceEquals(index.Elements[i], element) || !ReferenceEquals(GetFor(element), index.Graphs[i]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static CrossLoopIndex BuildCrossLoopIndex(GumProjectSave project)
+    {
+        int elementCount = ProjectElementCount(project);
+        CrossLoopIndex index = new CrossLoopIndex
+        {
+            Project = project,
+            Elements = new ElementSave[elementCount],
+            Graphs = new VariableReferenceGraph[elementCount],
+            LoopRows = new Dictionary<ElementSave, HashSet<string>>()
+        };
+
+        // One node per (element, written variable).
+        Dictionary<string, int> elementByQualifiedName = new Dictionary<string, int>();
+        List<Dictionary<string, int>> nodeByName = new List<Dictionary<string, int>>();
+        List<int> nodeElement = new List<int>();
+        List<string> nodeName = new List<string>();
+        List<ReferenceRow> nodeRows = new List<ReferenceRow>();
+        List<int> nodeOfRow = new List<int>();
+        for (int e = 0; e < elementCount; e++)
+        {
+            ElementSave element = ProjectElementAt(project, e);
+            index.Elements[e] = element;
+            index.Graphs[e] = GetFor(element);
+            elementByQualifiedName[ElementReference.GetQualifiedName(element, element.Name)] = e;
+            Dictionary<string, int> names = new Dictionary<string, int>();
+            nodeByName.Add(names);
+            foreach (IReadOnlyList<ReferenceRow> rows in new[] { index.Graphs[e].OrderedRows, index.Graphs[e].CyclicRows })
+            {
+                foreach (ReferenceRow row in rows)
+                {
+                    if (!names.TryGetValue(row.WrittenName, out int node))
+                    {
+                        node = nodeElement.Count;
+                        names[row.WrittenName] = node;
+                        nodeElement.Add(e);
+                        nodeName.Add(row.WrittenName);
+                    }
+                    nodeRows.Add(row);
+                    nodeOfRow.Add(node);
+                }
+            }
+        }
+
+        // A row reads the rows writing the variables it names: in its own element, or in another.
+        List<HashSet<int>> edges = new List<HashSet<int>>();
+        for (int n = 0; n < nodeElement.Count; n++)
+        {
+            edges.Add(new HashSet<int>());
+        }
+        bool anyCrossEdge = false;
+        for (int r = 0; r < nodeRows.Count; r++)
+        {
+            ReferenceRow row = nodeRows[r];
+            int node = nodeOfRow[r];
+            int element = nodeElement[node];
+            foreach (string read in row.Reads)
+            {
+                if (nodeByName[element].TryGetValue(read, out int target))
+                {
+                    edges[node].Add(target);
+                }
+            }
+            if (row.ElementReads.Count == 0)
+            {
+                continue;
+            }
+            int equalsIndex = row.Line.IndexOf('=');
+            if (equalsIndex < 0)
+            {
+                continue;
+            }
+            foreach (Match match in QualifiedReadRegex.Matches(row.Line.Substring(equalsIndex + 1)))
+            {
+                string variablePath = match.Groups[2].Value.TrimStart('.');
+                if (variablePath.Length > 0 && elementByQualifiedName.TryGetValue(match.Groups[1].Value, out int otherElement)
+                    && otherElement != element && nodeByName[otherElement].TryGetValue(variablePath, out int target))
+                {
+                    edges[node].Add(target);
+                    anyCrossEdge = true;
+                }
+            }
+        }
+
+        if (anyCrossEdge)
+        {
+            MarkLoops(index, edges, nodeElement, nodeName);
+        }
+        return index;
+    }
+
+    // Iterative Tarjan: a chain thousands of elements long must not overflow the stack.
+    private static void MarkLoops(CrossLoopIndex index, List<HashSet<int>> edges, List<int> nodeElement, List<string> nodeName)
+    {
+        int count = edges.Count;
+        int[] order = new int[count];
+        int[] low = new int[count];
+        bool[] onStack = new bool[count];
+        int next = 1;
+        Stack<int> stack = new Stack<int>();
+        Stack<(int Node, IEnumerator<int> Targets)> work = new Stack<(int, IEnumerator<int>)>();
+
+        for (int root = 0; root < count; root++)
+        {
+            if (order[root] != 0)
+            {
+                continue;
+            }
+            order[root] = low[root] = next++;
+            stack.Push(root);
+            onStack[root] = true;
+            work.Push((root, edges[root].GetEnumerator()));
+
+            while (work.Count > 0)
+            {
+                (int node, IEnumerator<int> targets) = work.Peek();
+                if (targets.MoveNext())
+                {
+                    int target = targets.Current;
+                    if (order[target] == 0)
+                    {
+                        order[target] = low[target] = next++;
+                        stack.Push(target);
+                        onStack[target] = true;
+                        work.Push((target, edges[target].GetEnumerator()));
+                    }
+                    else if (onStack[target])
+                    {
+                        low[node] = Math.Min(low[node], order[target]);
+                    }
+                    continue;
+                }
+
+                work.Pop();
+                if (work.Count > 0)
+                {
+                    int parent = work.Peek().Node;
+                    low[parent] = Math.Min(low[parent], low[node]);
+                }
+                if (low[node] != order[node])
+                {
+                    continue;
+                }
+
+                List<int> component = new List<int>();
+                int member;
+                do
+                {
+                    member = stack.Pop();
+                    onStack[member] = false;
+                    component.Add(member);
+                }
+                while (member != node);
+
+                // A loop within one element is already in that element's cyclic rows.
+                bool spansElements = false;
+                foreach (int item in component)
+                {
+                    if (nodeElement[item] != nodeElement[component[0]])
+                    {
+                        spansElements = true;
+                        break;
+                    }
+                }
+                if (!spansElements)
+                {
+                    continue;
+                }
+                foreach (int item in component)
+                {
+                    ElementSave element = index.Elements[nodeElement[item]];
+                    if (!index.LoopRows.TryGetValue(element, out HashSet<string>? names))
+                    {
+                        names = new HashSet<string>();
+                        index.LoopRows[element] = names;
+                    }
+                    names.Add(nodeName[item]);
+                }
+            }
+        }
+    }
+
     /// <summary>
-    /// The rows of a loop that leads from <paramref name="start"/> through other elements' default-state
-    /// rows back to a row of <paramref name="owner"/> writing the same variable, each with the element
-    /// that holds it, or null when there is none.
+    /// The rows of a loop that leads from <paramref name="start"/> through other elements' rows back to a
+    /// row of <paramref name="owner"/> writing the same variable, each with the element that holds it, or
+    /// null when there is none. For naming the loop; finding the rows to skip is done once per project.
     /// </summary>
     public static List<KeyValuePair<ElementSave, ReferenceRow>>? FindCrossElementLoop(ElementSave owner, ReferenceRow start)
     {
@@ -832,14 +1072,10 @@ public sealed class VariableReferenceGraph
         {
             if (!rowsByElement.TryGetValue(read.Key, out ReferenceRow[]? rows))
             {
-                rows = NoRows;
-                if (read.Key.DefaultState != null)
-                {
-                    VariableReferenceGraph graph = Create(read.Key, new[] { read.Key.DefaultState }, false);
-                    List<ReferenceRow> all = new List<ReferenceRow>(graph.OrderedRows);
-                    all.AddRange(graph.CyclicRows);
-                    rows = all.ToArray();
-                }
+                VariableReferenceGraph graph = GetFor(read.Key);
+                List<ReferenceRow> all = new List<ReferenceRow>(graph.OrderedRows);
+                all.AddRange(graph.CyclicRows);
+                rows = all.ToArray();
                 rowsByElement[read.Key] = rows;
             }
 
