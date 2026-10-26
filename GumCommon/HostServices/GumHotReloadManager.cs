@@ -319,6 +319,12 @@ public class GumHotReloadManager : IGumHotReloadManager
         GumProjectSave newProject,
         ISystemManagers systemManagers)
     {
+        // A file the tool did not save together with the files that read it (a text-editor edit of one
+        // swatch) leaves the readers holding the value they were saved with. A reference sets the final
+        // value, so the rows are evaluated in dependency order against the new project first, the way
+        // a tool save does, and a reference that reads another reference sees the end of the chain (#6853).
+        newProject.ApplyAllVariableReferences();
+
         Dictionary<string, ElementSave> byName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
         foreach (ElementSave element in newProject.AllElements)
         {
