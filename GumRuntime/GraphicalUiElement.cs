@@ -644,6 +644,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.mExposedVariables = new Dictionary<string, string>(mExposedVariables);
         newClone.mStates = new Dictionary<string, StateSave>(mStates);
         newClone.mCategories = new Dictionary<string, StateSaveCategory>(mCategories);
+        newClone._appliedCategoryStates = _appliedCategoryStates == null
+            ? null
+            : new Dictionary<string, string>(_appliedCategoryStates);
 #if !FRB
         newClone.Animations = Animations == null ? null : new List<AnimationRuntime>(Animations);
 #endif
