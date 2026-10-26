@@ -56,7 +56,9 @@ public class TextRuntimeMissingCharacterReportTests : BaseTestClass
     }
 
     [Fact]
-    public void Text_WhenFontLacksCharacter_MeasuresItAsQuestionMark()
+    // Pin, not a change: raylib's own glyph lookup already falls back to '?', which matches the
+    // placeholder BitmapFont draws on MonoGame/KNI/FNA.
+    public void RaylibNativeFallback_WhenFontLacksCharacter_MeasuresItAsQuestionMark()
     {
         bool savedGrowth = TextRuntime.UseAutomaticFontGrowth;
         IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;

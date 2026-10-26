@@ -1648,6 +1648,28 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         errors.ShouldNotContain(e => e.Code == "GUM0012");
     }
 
+    [Fact]
+    public void GetErrorsFor_ShouldWarnOncePerText_WhenSeveralStatesHaveCharactersOutsideRange()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        ComponentSave component = AddComponentWithTextFont("Banner", "Arial");
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "€", Type = "string", SetsValue = true });
+        StateSaveCategory category = new StateSaveCategory { Name = "Language" };
+        StateSave greek = new StateSave { Name = "Greek", ParentContainer = component };
+        greek.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Ω€", Type = "string", SetsValue = true });
+        StateSave english = new StateSave { Name = "English", ParentContainer = component };
+        english.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Hi", Type = "string", SetsValue = true });
+        category.States.Add(greek);
+        category.States.Add(english);
+        component.Categories.Add(category);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0012");
+        error.Message.ShouldContain("8364,937");
+    }
+
     #endregion
 
     private ComponentSave AddComponentWithTextFont(string componentName, string font)
