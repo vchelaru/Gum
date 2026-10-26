@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using RenderingLibrary.Content;
 
 namespace Gum.Managers;
 
@@ -8,13 +11,18 @@ namespace Gum.Managers;
 /// </summary>
 public static class ImageFileExtensions
 {
-    /// <summary>
-    /// Every supported image extension.
-    /// </summary>
-    public static IReadOnlyList<string> All { get; } = new[] { "png", "jpg", "jpeg", "bmp", "gif" };
+    private static readonly string[] BuiltIn = { "png", "jpg", "jpeg", "bmp", "gif" };
 
     /// <summary>
-    /// Whether <paramref name="extension"/> (lowercase, without the leading dot) is a supported image extension.
+    /// Every supported image extension: the built-in ones plus those declared by decoders a plugin
+    /// registered in <see cref="LoaderManager.ImageDecoders"/>.
     /// </summary>
-    public static bool Contains(string extension) => ((ICollection<string>)All).Contains(extension);
+    public static IReadOnlyList<string> All =>
+        BuiltIn.Concat(LoaderManager.Self.ImageDecoders.DeclaredExtensions).Distinct().ToArray();
+
+    /// <summary>
+    /// Whether <paramref name="extension"/> (without the leading dot, any case) is a supported image extension.
+    /// </summary>
+    public static bool Contains(string extension) =>
+        All.Contains(extension, StringComparer.OrdinalIgnoreCase);
 }
