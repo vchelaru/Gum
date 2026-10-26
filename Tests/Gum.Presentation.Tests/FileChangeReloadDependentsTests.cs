@@ -20,6 +20,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Gum.Logic.FileWatch;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Logic;
+using Gum.Undo;
+using MonoGameGum.Tests;
 using ToolsUtilities;
 using Xunit;
 
@@ -46,6 +50,7 @@ public class FileChangeReloadDependentsTests : BaseTestClass
     private readonly Mock<IWireframeObjectManager> _wireframe = new();
     private readonly Mock<IGuiCommands> _guiCommands = new();
     private readonly Mock<IPluginManager> _pluginManager = new();
+    private Gum.Undo.IUndoManager _undo = new Mock<Gum.Undo.IUndoManager>().Object;
 
     public FileChangeReloadDependentsTests()
     {
@@ -113,7 +118,7 @@ public class FileChangeReloadDependentsTests : BaseTestClass
             new Mock<IDialogService>().Object,
             new UnsavedChangesTracker(),
             _referenceLogic,
-            new Mock<Gum.Undo.IUndoManager>().Object);
+            _undo);
     }
 
     private static string QualifiedName(ElementSave element) => ElementReference.GetQualifiedName(element, element.Name);
@@ -380,5 +385,179 @@ public class FileChangeReloadDependentsTests : BaseTestClass
         _referenceLogic.ApplyReferencesToElement(ObjectFinder.Self.GetElementSave("Styles")!, trySave: false).ShouldBeEmpty();
         VerifySaved("Theme", Times.Once());
         VerifySaved("Styles", Times.Never());
+    }
+
+    private enum SweepStep { Edit, AddRow, Reload, Undo, Redo }
+
+    /// <summary>
+    /// Seeded sequences of in-tool edits, a reference row added in-tool, outside reloads of the source, undo and
+    /// redo on a reader (direct or through a middle element). Memory must equal disk after every step, the value
+    /// a reference produced must be the source's whenever it was not restored from a snapshot, and an element
+    /// that reads nothing keeps its own undo history intact.
+    /// </summary>
+    [Fact]
+    public void ReloadUndoSweep_ShouldKeepMemoryAndDiskEqual_AndLeaveNonReadersAlone()
+    {
+        int cases = SweepScale.Cases(300);
+        for (int index = 0; index < cases; index++)
+        {
+            RunSweepCase(new Random(1000 + index), index);
+        }
+    }
+
+    private void RunSweepCase(Random random, int caseIndex)
+    {
+        bool viaTheme = random.Next(2) == 0;
+        bool rowFromStart = random.Next(2) == 0;
+        string description = $"case {caseIndex} viaTheme={viaTheme} rowFromStart={rowFromStart}";
+
+        ElementSave styles = BuildSource(isScreen: false, "Styles", fillRed: 21);
+        ElementSave? theme = viaTheme ? BuildTheme("Theme", styles) : null;
+        ElementSave reader = BuildReader(isScreen: false, ReaderComponent, theme ?? styles);
+        ElementSave other = BuildSource(isScreen: false, "Other", fillRed: 21);
+        // A reader that starts without its row has neither the row nor the value it produces.
+        if (!rowFromStart)
+        {
+            reader.DefaultState.VariableLists.Clear();
+            reader.DefaultState.Variables.RemoveAll(v => v.Name == "Background.Red");
+        }
+        Arrange(theme == null ? new[] { styles, reader, other } : new[] { styles, theme, reader, other });
+
+        ElementSave selected = ObjectFinder.Self.GetElementSave(ReaderComponent)!;
+        ElementSave otherElement = ObjectFinder.Self.GetElementSave("Other")!;
+        _selectedState.Setup(s => s.SelectedElement).Returns(() => selected);
+        _selectedState.Setup(s => s.SelectedStateSave).Returns(() => selected.DefaultState);
+        Mock<IReferenceFinderProjectProvider> projectProvider = new();
+        projectProvider.Setup(p => p.GumProjectSave).Returns(_project);
+        _fileCommands.Invocations.Clear();
+        void SaveToDisk(ElementSave? element) => element?.Save(FileOf(element), useCompactFormat: true);
+        _fileCommands.Setup(f => f.TryAutoSaveElement(It.IsAny<ElementSave>())).Callback<ElementSave?>(SaveToDisk);
+        _fileCommands.Setup(f => f.TryAutoSaveCurrentElement()).Callback(() => SaveToDisk(selected));
+        UndoManager undoManager = new(_selectedState.Object, new Mock<IUndoRenameLogic>().Object, _guiCommands.Object,
+            _fileCommands.Object, new Mock<IMessenger>().Object, new Mock<IUndoPluginNotifier>().Object,
+            new Mock<IAnimationUndoProvider>().Object, projectProvider.Object);
+        _undo = undoManager;
+        RebuildReactionLogic();
+
+        // Other reads nothing; its own history holds the value it started with.
+        using (undoManager.RequestLock(otherElement))
+        {
+            otherElement.DefaultState.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 80f, SetsValue = true });
+        }
+        undoManager.RecordState();
+
+        int sourceValue = 21;
+        List<SweepStep> recorded = new();
+        int position = -1;
+        bool restoredFromSnapshot = false;
+        string steps = "";
+        for (int step = 0; step < 8; step++)
+        {
+            SweepStep action = (SweepStep)random.Next(5);
+            ElementSave current = selected;
+            bool hasRow = current.DefaultState.VariableLists.Count > 0;
+            switch (action)
+            {
+                case SweepStep.Edit:
+                    using (undoManager.RequestLock())
+                    {
+                        current.DefaultState.Variables.RemoveAll(v => v.Name == "Width");
+                        current.DefaultState.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = (float)(100 + step), SetsValue = true });
+                    }
+                    SaveToDisk(current);
+                    Record(SweepStep.Edit);
+                    break;
+                case SweepStep.AddRow:
+                    if (hasRow)
+                    {
+                        continue;
+                    }
+                    using (undoManager.RequestLock())
+                    {
+                        current.DefaultState.VariableLists.Add(new VariableListSave<string>
+                        {
+                            Name = "Background.VariableReferences",
+                            Type = "string",
+                            Value = new List<string> { "Red = " + QualifiedName(theme ?? styles) + ".Primary.FillRed" },
+                        });
+                        current.DefaultState.Variables.Add(new VariableSave { Name = "Background.Red", Type = "int", Value = sourceValue, SetsValue = true });
+                    }
+                    SaveToDisk(current);
+                    Record(SweepStep.AddRow);
+                    restoredFromSnapshot = false;
+                    break;
+                case SweepStep.Reload:
+                    sourceValue = 22 + step * 10 + random.Next(9);
+                    EditFillRedOnDisk(styles, sourceValue);
+                    Reload(styles);
+                    restoredFromSnapshot = false;
+                    break;
+                case SweepStep.Undo:
+                    if (position < 0)
+                    {
+                        continue;
+                    }
+                    undoManager.PerformUndo();
+                    restoredFromSnapshot |= recorded[position] == SweepStep.AddRow;
+                    position--;
+                    break;
+                case SweepStep.Redo:
+                    if (position + 1 >= recorded.Count)
+                    {
+                        continue;
+                    }
+                    undoManager.PerformRedo();
+                    position++;
+                    restoredFromSnapshot |= recorded[position] == SweepStep.AddRow;
+                    break;
+            }
+            steps += action + " ";
+            AssertMemoryEqualsDisk(selected, description + ": " + steps);
+            if (theme != null)
+            {
+                AssertMemoryEqualsDisk(ObjectFinder.Self.GetElementSave("Theme")!, description + ": " + steps);
+            }
+            object? red = selected.DefaultState.Variables.FirstOrDefault(v => v.Name == "Background.Red")?.Value;
+            if (selected.DefaultState.VariableLists.Count > 0 && !restoredFromSnapshot)
+            {
+                red.ShouldBe(sourceValue, description + ": " + steps);
+            }
+
+            void Record(SweepStep kind)
+            {
+                recorded.RemoveRange(position + 1, recorded.Count - position - 1);
+                recorded.Add(kind);
+                position = recorded.Count - 1;
+            }
+        }
+
+        // The element that reads nothing still undoes to its own value.
+        selected = otherElement;
+        undoManager.RecordState();
+        undoManager.PerformUndo();
+        otherElement.DefaultState.Variables.Any(v => v.Name == "Width").ShouldBeFalse(description + ": " + steps);
+        otherElement.DefaultState.Variables.First(v => v.Name == "Primary.FillRed").Value.ShouldBe(21, description + ": " + steps);
+    }
+
+    private void RebuildReactionLogic()
+    {
+        Mock<IProjectState> projectState = new();
+        projectState.Setup(p => p.GumProjectSave).Returns(_project);
+        _reaction = new FileChangeReactionLogic(
+            _selectedState.Object, new Mock<IWireframeCommands>().Object, _guiCommands.Object, _fileCommands.Object,
+            new Mock<IOutputManager>().Object, _wireframe.Object, projectState.Object,
+            new Mock<IStandardElementsManagerGumTool>().Object, _pluginManager.Object, new Mock<IDialogService>().Object,
+            new UnsavedChangesTracker(), _referenceLogic, _undo);
+    }
+
+    private void AssertMemoryEqualsDisk(ElementSave element, string context)
+    {
+        ComponentSave onDisk = ElementReference.DeserializeElement<ComponentSave>(FileOf(element), GumProjectSave.NativeVersion);
+        foreach (string name in new[] { "Width", "Background.Red", "Primary.FillRed" })
+        {
+            onDisk.DefaultState.Variables.FirstOrDefault(v => v.Name == name)?.Value
+                .ShouldBe(element.DefaultState.Variables.FirstOrDefault(v => v.Name == name)?.Value, context + " " + name);
+        }
+        onDisk.DefaultState.VariableLists.Count.ShouldBe(element.DefaultState.VariableLists.Count, context + " rows");
     }
 }

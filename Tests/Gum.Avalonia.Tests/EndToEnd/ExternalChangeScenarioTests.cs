@@ -1,5 +1,6 @@
 using Avalonia.Headless.XUnit;
 using Gum.Avalonia.Tests.VariableGrid;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Dialogs;
@@ -456,6 +457,65 @@ public class ExternalChangeScenarioTests
             VariableGridHarness.StoredValue(undone, "Width").ShouldBeNull();
             VariableGridHarness.StoredValue(undone, "Background.Red").ShouldBe(200);
             ReadFillRed<ComponentSave>(buttonFile, "Background.Red").ShouldBe(200);
+        }
+        finally
+        {
+            projectManager.AutoSave = autoSave;
+        }
+
+        tree.AssertOracles();
+    }
+
+    // A reference row added in-tool (and so undoable), then an outside reload: undoing the row removes the
+    // row and the value it produced, as it does without the reload.
+    [AvaloniaFact]
+    [Trait("Feature", "FILE-013")]
+    [Trait("Feature", "VARREF-001")]
+    public void UndoingAReferenceRowAddedBeforeAnOutsideReload_RemovesTheRowAndItsValue()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness("Harness.gumj");
+        ComponentSave styles = tree.Project.AddComponent("Styles");
+        tree.Project.AddInstance(styles, "Primary", "Rectangle");
+        styles.DefaultState.SetValue("Primary.FillRed", 21, "int");
+        ComponentSave button = tree.Project.AddComponent("ButtonStandard");
+        tree.Project.AddInstance(button, "Background", "NineSlice");
+        IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
+        FileChangeReactionLogic fileChanges = TestAppBuilder.Services.GetRequiredService<FileChangeReactionLogic>();
+        string stylesFile = Path.Combine(tree.Project.ProjectFolder, "Components", "Styles.gucj");
+        string buttonFile = Path.Combine(tree.Project.ProjectFolder, "Components", "ButtonStandard.gucj");
+
+        bool autoSave = projectManager.AutoSave;
+        try
+        {
+            projectManager.AutoSave = true;
+            tree.SaveAll();
+            tree.Click(tree.NodeFor(button));
+            using (tree.Project.UndoManager.RequestLock())
+            {
+                button.DefaultState.SetValue("Background.Red", 21, "int");
+                button.DefaultState.VariableLists.Add(new VariableListSave<string>
+                {
+                    Name = "Background.VariableReferences",
+                    Type = "string",
+                    Value = new List<string> { "Red = Components/Styles.Primary.FillRed" },
+                });
+            }
+            TestAppBuilder.Services.GetRequiredService<IFileCommands>().TryAutoSaveElement(button);
+
+            File.WriteAllText(stylesFile, Regex.Replace(File.ReadAllText(stylesFile),
+                @"(""Name"": ""Primary\.FillRed"",\s*""Type"": ""int"",\s*""SetsValue"": true,\s*""ValueAsInt"": )\d+", "${1}200"));
+            fileChanges.ReactToFileChanged(new FilePath(stylesFile));
+            tree.ThrowIfCrashed();
+            VariableGridHarness.StoredValue(Component(tree, "ButtonStandard"), "Background.Red").ShouldBe(200);
+
+            tree.Undo();
+
+            ComponentSave undone = Component(tree, "ButtonStandard");
+            undone.DefaultState.VariableLists.ShouldBeEmpty();
+            VariableGridHarness.StoredValue(undone, "Background.Red").ShouldBeNull();
+            ComponentSave onDisk = ElementReference.DeserializeElement<ComponentSave>(buttonFile, GumProjectSave.NativeVersion);
+            onDisk.DefaultState.VariableLists.ShouldBeEmpty();
+            VariableGridHarness.StoredValue(onDisk, "Background.Red").ShouldBeNull();
         }
         finally
         {

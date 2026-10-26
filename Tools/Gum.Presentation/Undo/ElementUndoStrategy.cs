@@ -1171,6 +1171,13 @@ public class ElementUndoStrategy : IUndoStrategy
             return;
         }
 
+        // A snapshot from before the reference row existed has no row to give the variable a value, and
+        // restoring it must take the variable away again.
+        if (!HasReferenceRowFor(state, change.VariableName))
+        {
+            return;
+        }
+
         VariableSave? variable = state.Variables.FirstOrDefault(item => item.Name == change.VariableName);
         if (variable == null)
         {
@@ -1179,6 +1186,18 @@ public class ElementUndoStrategy : IUndoStrategy
         }
         variable.Value = change.Value;
         variable.SetsValue = true;
+    }
+
+    // The row list of a variable's owner: "Background.Red" is fed by "Background.VariableReferences",
+    // "Width" by "VariableReferences".
+    private static bool HasReferenceRowFor(StateSave state, string variableName)
+    {
+        int dot = variableName.IndexOf('.');
+        string owner = dot < 0 ? string.Empty : variableName.Substring(0, dot);
+        return state.VariableLists.Any(list =>
+            list.GetRootName() == "VariableReferences" &&
+            (list.SourceObject ?? string.Empty) == owner &&
+            list.ValueAsIList?.Count > 0);
     }
 
     public void Clear()
