@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
+using RenderingLibrary.Content;
 using SkiaSharp;
 using SkiaSharp.Skottie;
 using Svg.Skia;
@@ -162,7 +163,7 @@ public static class SkiaResourceManager
             if (stream != null)
             {
                 // Don't cache a failed decode, so a later call (e.g. a retried download) can succeed.
-                skBitmapCache[resourceName] = SKBitmap.Decode(stream)
+                skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream)
                     ?? throw new InvalidDataException($"Could not decode an image for {resourceName}.");
             }
             else
@@ -197,7 +198,39 @@ public static class SkiaResourceManager
     {
         using var stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
             resourceName, ResourceAssembly);
-        skBitmapCache[resourceName] = SKBitmap.Decode(stream);
+        skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream);
+    }
+
+    /// <summary>
+    /// Decodes <paramref name="stream"/> with the registered <see cref="LoaderManager.ImageDecoders"/>
+    /// first, then <see cref="SKBitmap.Decode(Stream)"/>. Returns null when Skia cannot decode it.
+    /// </summary>
+    private static SKBitmap? DecodeBitmap(string resourceName, Stream stream)
+    {
+        Stream original = stream;
+        try
+        {
+            DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(resourceName, ref stream);
+            return decoded != null ? ToBitmap(decoded) : SKBitmap.Decode(stream);
+        }
+        finally
+        {
+            // TryDecode replaces a non-seekable stream with an in-memory copy; the caller disposes the original.
+            if (!ReferenceEquals(stream, original))
+            {
+                stream.Dispose();
+            }
+        }
+    }
+
+    // Skia draws either alpha type, so the decoder's flag is passed through instead of converting.
+    internal static SKBitmap ToBitmap(DecodedImage decoded)
+    {
+        var info = new SKImageInfo(decoded.Width, decoded.Height, SKColorType.Rgba8888,
+            decoded.IsPremultiplied ? SKAlphaType.Premul : SKAlphaType.Unpremul);
+        var bitmap = new SKBitmap(info);
+        System.Runtime.InteropServices.Marshal.Copy(decoded.Rgba, 0, bitmap.GetPixels(), decoded.Rgba.Length);
+        return bitmap;
     }
 
     /// <summary>
