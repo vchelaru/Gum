@@ -20,6 +20,8 @@ namespace Gum.Wireframe;
 
 public partial class WireframeObjectManager : IWireframeObjectManager
 {
+    private readonly SelectedStateReferenceMerger _selectedStateReferenceMerger = new SelectedStateReferenceMerger();
+
     #region Properties
 
     public List<GraphicalUiElement> AllIpsos { get; private set; } = new List<GraphicalUiElement>();
@@ -249,6 +251,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     /// The state variable references are evaluated against. A state other than the default (such as a
     /// categorized state) inherits everything it doesn't set from the default state, references
     /// included, so those are evaluated against the default state with the selected state's values on top.
+    /// The selected state wins for what it sets (#6851), see <see cref="SelectedStateReferenceMerger"/>.
     /// </summary>
     private StateSave? GetStateForReferences(ElementSave elementSave)
     {
@@ -260,9 +263,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             return selected ?? defaultState;
         }
 
-        StateSave selectedOverDefault = defaultState.Clone();
-        selectedOverDefault.MergeIntoThis(selected);
-        return selectedOverDefault;
+        return _selectedStateReferenceMerger.Merge(defaultState, selected);
     }
 
     /// <summary>
