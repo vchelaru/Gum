@@ -152,6 +152,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
         errors.AddRange(GetUnresolvableVariableReferenceErrorsFor(element));
         errors.AddRange(GetCircularVariableReferenceErrorsFor(element));
+        errors.AddRange(GetCrossElementCircularVariableReferenceErrorsFor(element));
         errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
         errors.AddRange(GetTextOutsideFontRangeErrorsFor(element, project));
 
@@ -351,9 +352,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     /// <summary>
     /// Flags rows of one state that read each other in a loop (<c>A = B + 1</c> and <c>B = A + 1</c>, or a
-    /// row reading its own result). A cycle has no order to evaluate in, so its rows keep their stored
-    /// values when a variable changes and run once, in written order, when the element is applied.
-    /// A cycle between rows of two elements is not detected.
+    /// row reading its own result). A cycle has no order to evaluate in, so its rows are skipped and keep
+    /// their stored values. A loop through other elements is <see cref="GetCrossElementCircularVariableReferenceErrorsFor"/>.
     /// </summary>
     private static List<ErrorResult> GetCircularVariableReferenceErrorsFor(ElementSave element)
     {
@@ -388,9 +388,52 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     ElementName = element.Name,
                     Code = "GUM0013",
                     Severity = ErrorSeverity.Warning,
-                    Message = $"{state.Name}: Circular variable reference: {path}. These rows keep their stored values when a variable changes."
+                    Message = $"{state.Name}: Circular variable reference: {path}. These rows are not evaluated and keep their stored values."
                 });
             }
+        }
+        return errors;
+    }
+
+    /// <summary>
+    /// Flags a loop that runs through the default-state rows of two or more elements
+    /// (<c>Panel.A</c> reads <c>Other.B</c>, which reads <c>Panel.A</c>). Reported on every element
+    /// that holds a row in the loop, naming each variable in it. A loop through a categorized state of
+    /// another element is not detected.
+    /// </summary>
+    private static List<ErrorResult> GetCrossElementCircularVariableReferenceErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+        if (element.DefaultState == null)
+        {
+            return errors;
+        }
+
+        var reported = new HashSet<ReferenceRow>();
+        foreach (var start in VariableReferenceGraph.GetForState(element, element.DefaultState).CyclicRows)
+        {
+            if (reported.Contains(start) || start.ElementReads.Count == 0)
+            {
+                continue;
+            }
+            var loop = VariableReferenceGraph.FindCrossElementLoop(element, start);
+            if (loop == null)
+            {
+                continue;
+            }
+            foreach (var step in loop)
+            {
+                reported.Add(step.Value);
+            }
+            var names = loop.Select(step => ElementReference.GetQualifiedName(step.Key, step.Key.Name) + "." + step.Value.WrittenName).ToList();
+            names.Add(names[0]);
+            errors.Add(new ErrorResult
+            {
+                ElementName = element.Name,
+                Code = "GUM0013",
+                Severity = ErrorSeverity.Warning,
+                Message = $"Default: Circular variable reference: {string.Join(" -> ", names)}. These rows are not evaluated and keep their stored values."
+            });
         }
         return errors;
     }

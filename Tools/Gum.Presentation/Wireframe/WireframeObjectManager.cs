@@ -250,7 +250,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     /// <summary>
     /// Evaluates the state's reference rows on the live <paramref name="root"/> in dependency order, so a
     /// row that reads another row's result sees it whatever order the rows are written in (#6856). Rows
-    /// in a cycle run last in written order, the same result the ElementSave path gives. Results are
+    /// in a cycle are skipped and keep their stored values (#6871). Results are
     /// written to a copy of the state, where later rows read them; the project's data is not changed.
     /// </summary>
     private static void ApplyReferencesInDependencyOrder(ElementSave elementSave, GraphicalUiElement root, StateSave state, StateSave? selectedState)
@@ -285,7 +285,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             ? SelectedStateReferenceMerger.GetVariablesSetBy(selectedState)
             : new HashSet<string>();
 
-        List<ReferenceRow> rows = graph.OrderedRows.Concat(graph.CyclicRows)
+        List<ReferenceRow> rows = graph.OrderedRows
             .Where(row => row.IsLiveEvaluable &&
                 (ownRows.Contains(row.WrittenName + "=" + row.Line) || !setBySelected.Contains(row.WrittenName)))
             .ToList();

@@ -5,6 +5,7 @@ using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace GumRuntime;
 
@@ -103,7 +104,6 @@ public sealed class VariableReferenceGraph
     private readonly ReferenceRow[] _cyclicRows;
     private readonly ReferenceRow[] _loadOrderRows;
     private readonly ReferenceRow[] _liveRows;
-    private readonly ReferenceRow[] _applyAllRows;
     private readonly bool _hasChains;
     private readonly HashSet<string> _scratch = new HashSet<string>();
 
@@ -124,9 +124,7 @@ public sealed class VariableReferenceGraph
         _baseType = baseType;
         _sourceListCounts = new int[sourceStates.Length];
 
-        List<ReferenceRow> loadOrder = new List<ReferenceRow>(ordered);
-        loadOrder.AddRange(cyclic);
-        _loadOrderRows = loadOrder.ToArray();
+        _loadOrderRows = ordered;
 
         List<ReferenceRow> live = new List<ReferenceRow>(ordered.Length);
         foreach (ReferenceRow row in ordered)
@@ -137,22 +135,10 @@ public sealed class VariableReferenceGraph
             }
         }
         _liveRows = live.ToArray();
-
-        // A cycle has no order, so it runs once after the ordered rows, in written order (the rule the
-        // tool's canvas and ElementSave path follow), and is never run again live.
-        List<ReferenceRow> applyAll = new List<ReferenceRow>(live);
-        foreach (ReferenceRow row in cyclic)
-        {
-            if (row.IsLiveEvaluable)
-            {
-                applyAll.Add(row);
-            }
-        }
-        _applyAllRows = applyAll.ToArray();
     }
 
     /// <summary>True when the element has at least one reference row.</summary>
-    public bool HasRows => _loadOrderRows.Length > 0;
+    public bool HasRows => _loadOrderRows.Length > 0 || _cyclicRows.Length > 0;
 
     /// <summary>True when some row reads a variable another row writes.</summary>
     public bool HasChains => _hasChains;
@@ -168,14 +154,14 @@ public sealed class VariableReferenceGraph
     public IReadOnlyList<ReferenceRow> OrderedRows => _orderedRows;
 
     /// <summary>
-    /// Rows that depend on themselves, directly or through other rows. A cycle is skipped when
-    /// re-evaluating live, since there is no order to evaluate it in.
+    /// Rows that depend on themselves, directly or through other rows. A cycle is never evaluated, at
+    /// creation or live, since there is no order to evaluate it in: its rows keep their stored values.
     /// </summary>
     public IReadOnlyList<ReferenceRow> CyclicRows => _cyclicRows;
 
     /// <summary>
-    /// The order to apply every row when the element is created: dependency order, with cyclic rows
-    /// last in the order they were written.
+    /// The order to apply the rows when the element is created: dependency order. Cyclic rows are left
+    /// out, so they keep their stored values.
     /// </summary>
     internal IReadOnlyList<ReferenceRow> LoadOrderRows => _loadOrderRows;
 
@@ -229,7 +215,9 @@ public sealed class VariableReferenceGraph
             states.Add(element.DefaultState);
         }
 
-        VariableReferenceGraph graph = Create(element, states);
+        // Live evaluation never re-runs a loop through other elements as a unit; the apply paths find it
+        // with GetForApply, so a change to another element cannot leave this cached graph stale.
+        VariableReferenceGraph graph = Create(element, states, false);
         _cache.Remove(element);
         _cache.Add(element, graph);
         return graph;
@@ -245,10 +233,47 @@ public sealed class VariableReferenceGraph
     }
 
     /// <summary>
+    /// The graph to apply the rows of <paramref name="state"/> with: like <see cref="GetFor(ElementSave)"/>
+    /// for the default state and <see cref="GetForState"/> otherwise, with rows in a loop through other
+    /// elements (<c>Panel.A</c> reads <c>Other.B</c>, which reads <c>Panel.A</c>) in <see cref="CyclicRows"/>.
+    /// </summary>
+    internal static VariableReferenceGraph GetForApply(ElementSave element, StateSave state)
+    {
+        if (state != element.DefaultState)
+        {
+            return GetForState(element, state);
+        }
+
+        VariableReferenceGraph cached = GetFor(element);
+        if (!cached.HasElementReads)
+        {
+            return cached;
+        }
+
+        List<StateSave> states = new List<StateSave>();
+        List<ElementSave> baseElements = ObjectFinder.Self.GetBaseElements(element);
+        for (int i = baseElements.Count - 1; i >= 0; i--)
+        {
+            if (baseElements[i].DefaultState != null)
+            {
+                states.Add(baseElements[i].DefaultState!);
+            }
+        }
+        states.Add(state);
+        return Create(element, states, true);
+    }
+
+    /// <summary>True when some row reads another element.</summary>
+    internal bool HasElementReads { get; private set; }
+
+    /// <summary>
     /// Builds a graph from the rows on <paramref name="states"/>, in the order given. Prefer
     /// <see cref="GetFor(ElementSave)"/>, which caches.
     /// </summary>
-    public static VariableReferenceGraph Create(ElementSave element, IReadOnlyList<StateSave> states)
+    public static VariableReferenceGraph Create(ElementSave element, IReadOnlyList<StateSave> states) =>
+        Create(element, states, true);
+
+    private static VariableReferenceGraph Create(ElementSave element, IReadOnlyList<StateSave> states, bool findCrossElementLoops)
     {
         List<ReferenceRow> rows = new List<ReferenceRow>();
         IEnumerable<string> instanceNames = ElementSaveExtensions.GetReferencableInstanceNames(element);
@@ -329,6 +354,12 @@ public sealed class VariableReferenceGraph
 
         Order(rows, out ReferenceRow[] ordered, out ReferenceRow[] cyclic, out bool hasChains);
 
+        bool hasElementReads = rows.Exists(row => row.ElementReads.Count > 0);
+        if (findCrossElementLoops && hasElementReads)
+        {
+            MoveCrossElementLoopRows(element, ref ordered, ref cyclic);
+        }
+
         StateSave[] sourceStates = new StateSave[states.Count];
         for (int i = 0; i < states.Count; i++)
         {
@@ -337,6 +368,7 @@ public sealed class VariableReferenceGraph
 
         VariableReferenceGraph graph = new VariableReferenceGraph(ordered, cyclic, sourceStates, element.BaseType, hasChains);
         graph.HasInheritedRows = hasInheritedRows;
+        graph.HasElementReads = hasElementReads;
         graph.RecordSources();
         return graph;
     }
@@ -404,15 +436,39 @@ public sealed class VariableReferenceGraph
 
     /// <summary>
     /// Evaluates every row in dependency order onto <paramref name="liveRoot"/>, so a row reading another
-    /// row's result sees it whatever order the rows are written in. Rows in a cycle run last, once, in
-    /// written order. Rows are read from the element's authored values. The authored data is not changed.
+    /// row's result sees it whatever order the rows are written in. Rows in a cycle are skipped. Rows are
+    /// read from the element's authored values. The authored data is not changed.
     /// </summary>
     /// <param name="element">The element the graph was built for.</param>
     /// <param name="liveRoot">The visual for <paramref name="element"/>.</param>
     public void ApplyAll(ElementSave element, GraphicalUiElement liveRoot)
     {
         StateSave evaluationState = new StateSave { Name = "References", ParentContainer = element };
-        Evaluate(_applyAllRows, evaluationState, liveRoot);
+        IReadOnlyList<ReferenceRow> rows = _liveRows;
+        if (HasElementReads && element.DefaultState != null)
+        {
+            // A loop through other elements is not evaluated, like a loop within this one.
+            IReadOnlyList<ReferenceRow> crossLoops = GetForApply(element, element.DefaultState).CyclicRows;
+            List<ReferenceRow> withoutLoops = new List<ReferenceRow>(_liveRows.Length);
+            foreach (ReferenceRow row in _liveRows)
+            {
+                bool inLoop = false;
+                foreach (ReferenceRow loopRow in crossLoops)
+                {
+                    if (loopRow.WrittenName == row.WrittenName && loopRow.Line == row.Line)
+                    {
+                        inLoop = true;
+                        break;
+                    }
+                }
+                if (!inLoop)
+                {
+                    withoutLoops.Add(row);
+                }
+            }
+            rows = withoutLoops;
+        }
+        Evaluate(rows, evaluationState, liveRoot);
     }
 
     /// <summary>
@@ -677,6 +733,138 @@ public sealed class VariableReferenceGraph
 
         ordered = orderedList.ToArray();
         cyclic = cyclicList.ToArray();
+    }
+
+    // A variable path read from another element, such as "Components/Other.B.Width": group 1 the element,
+    // group 2 the variable path after it.
+    private static readonly Regex QualifiedReadRegex = new Regex(
+        @"(?<![\w.])(?:global::)?((?:Components|Screens|Standards)/[\w/]+)((?:\.\w+)*)", RegexOptions.Compiled);
+
+    // Rows of a loop through other elements are not ordered by Order, which sees one element. They move
+    // from the ordered rows to the cyclic rows, so every apply path leaves them at their stored values.
+    private static void MoveCrossElementLoopRows(ElementSave element, ref ReferenceRow[] ordered, ref ReferenceRow[] cyclic)
+    {
+        HashSet<ReferenceRow>? inLoop = null;
+        foreach (ReferenceRow row in ordered)
+        {
+            if (row.ElementReads.Count == 0)
+            {
+                continue;
+            }
+            List<KeyValuePair<ElementSave, ReferenceRow>>? loop = FindCrossElementLoop(element, row);
+            if (loop == null)
+            {
+                continue;
+            }
+            inLoop ??= new HashSet<ReferenceRow>();
+            foreach (KeyValuePair<ElementSave, ReferenceRow> step in loop)
+            {
+                if (step.Key == element)
+                {
+                    foreach (ReferenceRow candidate in ordered)
+                    {
+                        if (candidate.WrittenName == step.Value.WrittenName)
+                        {
+                            inLoop.Add(candidate);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (inLoop == null)
+        {
+            return;
+        }
+
+        List<ReferenceRow> remaining = new List<ReferenceRow>();
+        List<ReferenceRow> moved = new List<ReferenceRow>(cyclic);
+        foreach (ReferenceRow row in ordered)
+        {
+            (inLoop.Contains(row) ? moved : remaining).Add(row);
+        }
+        moved.Sort((first, second) => first.AuthoredIndex.CompareTo(second.AuthoredIndex));
+        ordered = remaining.ToArray();
+        cyclic = moved.ToArray();
+    }
+
+    /// <summary>
+    /// The rows of a loop that leads from <paramref name="start"/> through other elements' default-state
+    /// rows back to a row of <paramref name="owner"/> writing the same variable, each with the element
+    /// that holds it, or null when there is none.
+    /// </summary>
+    public static List<KeyValuePair<ElementSave, ReferenceRow>>? FindCrossElementLoop(ElementSave owner, ReferenceRow start)
+    {
+        Dictionary<ElementSave, ReferenceRow[]> rowsByElement = new Dictionary<ElementSave, ReferenceRow[]>();
+        List<KeyValuePair<ElementSave, ReferenceRow>> path = new List<KeyValuePair<ElementSave, ReferenceRow>>();
+        HashSet<ReferenceRow> visited = new HashSet<ReferenceRow>();
+        return SearchLoop(owner, start, owner, start, path, visited, rowsByElement) ? path : null;
+    }
+
+    private static bool SearchLoop(ElementSave startOwner, ReferenceRow start, ElementSave owner, ReferenceRow current,
+        List<KeyValuePair<ElementSave, ReferenceRow>> path, HashSet<ReferenceRow> visited,
+        Dictionary<ElementSave, ReferenceRow[]> rowsByElement)
+    {
+        path.Add(new KeyValuePair<ElementSave, ReferenceRow>(owner, current));
+        visited.Add(current);
+
+        List<KeyValuePair<ElementSave, string>> reads = new List<KeyValuePair<ElementSave, string>>();
+        foreach (string read in current.Reads)
+        {
+            reads.Add(new KeyValuePair<ElementSave, string>(owner, read));
+        }
+        int equalsIndex = current.Line.IndexOf('=');
+        if (equalsIndex >= 0)
+        {
+            foreach (Match match in QualifiedReadRegex.Matches(current.Line.Substring(equalsIndex + 1)))
+            {
+                string qualified = match.Groups[1].Value;
+                ElementSave? referenced = ObjectFinder.Self.GetElementSave(qualified.Substring(qualified.IndexOf('/') + 1));
+                string variablePath = match.Groups[2].Value.TrimStart('.');
+                if (referenced != null && referenced != owner && variablePath.Length > 0)
+                {
+                    reads.Add(new KeyValuePair<ElementSave, string>(referenced, variablePath));
+                }
+            }
+        }
+
+        foreach (KeyValuePair<ElementSave, string> read in reads)
+        {
+            if (!rowsByElement.TryGetValue(read.Key, out ReferenceRow[]? rows))
+            {
+                rows = NoRows;
+                if (read.Key.DefaultState != null)
+                {
+                    VariableReferenceGraph graph = Create(read.Key, new[] { read.Key.DefaultState }, false);
+                    List<ReferenceRow> all = new List<ReferenceRow>(graph.OrderedRows);
+                    all.AddRange(graph.CyclicRows);
+                    rows = all.ToArray();
+                }
+                rowsByElement[read.Key] = rows;
+            }
+
+            foreach (ReferenceRow next in rows)
+            {
+                if (next.WrittenName != read.Value)
+                {
+                    continue;
+                }
+                if (read.Key == startOwner && next.WrittenName == start.WrittenName)
+                {
+                    if (path.Exists(step => step.Key != startOwner))
+                    {
+                        return true;
+                    }
+                }
+                else if (!visited.Contains(next) && SearchLoop(startOwner, start, read.Key, next, path, visited, rowsByElement))
+                {
+                    return true;
+                }
+            }
+        }
+
+        path.RemoveAt(path.Count - 1);
+        return false;
     }
 
     // The tool writes same-element references qualified with the element's own name, as in

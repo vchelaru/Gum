@@ -123,7 +123,7 @@ When a variable changes, `DoVariableReferenceReaction` finds all elements that r
 
 ## Circular References
 
-A loop of rows runs once per apply, in written order (canvas and `ApplyVariableReferences` agree), never forever; each apply reads the stored values, so repeated hard-value applies of a loop drift. GUM0013 in `HeadlessErrorChecker` names the loop in the Errors tab and `gumcli check`; a loop across two elements is not detected.
+Rows in a loop are skipped by the canvas and by `ApplyVariableReferences` and keep their stored values, so repeated applies change nothing. GUM0013 in `HeadlessErrorChecker` names the loop on each element holding a row in it (Errors tab, `gumcli check`), including loops across two elements' default states.
 
 ## Validation
 

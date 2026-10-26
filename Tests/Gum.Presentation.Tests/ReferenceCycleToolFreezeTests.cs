@@ -13,6 +13,7 @@ using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Gum.Presentation.Tests;
@@ -165,5 +166,31 @@ public class ReferenceCycleToolFreezeTests : BaseTestClass
         Guard(scenario, "HeadlessErrorChecker.GetAllErrors", () =>
             new HeadlessErrorChecker(new DefaultTypeResolver()).GetAllErrors(project));
         Guard(scenario, "ReapplySiblingDependentReferences", () => _logic.ReapplySiblingDependentReferences(panel));
+    }
+
+    [Theory]
+    [InlineData("TwoCycle")]
+    [InlineData("ThreeCycle")]
+    [InlineData("SelfReference")]
+    public void ApplyingRepeatedly_ACycle_NeverChangesTheStoredValues(string scenario)
+    {
+        GumProjectSave project = CreateProject();
+        string[] names = scenario == "ThreeCycle" ? new[] { "A", "B", "C" } : scenario == "TwoCycle" ? new[] { "A", "B" } : new[] { "A" };
+        ComponentSave panel = AddPanel(project, "Panel", names);
+        for (int i = 0; i < names.Length; i++)
+        {
+            string next = names.Length == 1 ? names[0] : names[(i + 1) % names.Length];
+            AddRows(panel.DefaultState, names[i], $"Width = {next}.Width + 1");
+        }
+        string Snapshot() => string.Join(",", names.Select(name => panel.DefaultState.GetValue(name + ".Width")));
+        string before = Snapshot();
+
+        for (int i = 0; i < 5; i++)
+        {
+            panel.ApplyVariableReferences(panel.DefaultState);
+            project.ApplyAllVariableReferences();
+            _logic.ApplyReferencesToElement(panel, trySave: false);
+            Snapshot().ShouldBe(before, $"pass {i}");
+        }
     }
 }

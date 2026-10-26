@@ -266,13 +266,13 @@ public partial class StateSelectionCanvasSplashTests
     }
 
     /// <summary>
-    /// A cycle terminates with the result the ElementSave path gives: rows in the cycle run last, in written
-    /// order, each writing its result where the next reads it.
+    /// A cycle terminates: its rows are skipped and keep their stored values, the same result the ElementSave
+    /// path gives, so applying again changes nothing (#6871).
     /// </summary>
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void RefreshAll_RowsReadEachOther_TerminatesWithTheElementSaveResult(bool inSelectedState)
+    public void RefreshAll_RowsReadEachOther_KeepTheirStoredValues(bool inSelectedState)
     {
         ComponentSave chain = BuildRowlessChain();
         BuildProject(chain);
@@ -283,8 +283,34 @@ public partial class StateSelectionCanvasSplashTests
         (float a, float b) = OracleWidths(chain, selected, "A", "B");
         GraphicalUiElement root = Show(chain, selected);
 
-        (a, b).ShouldBe((121f, 122f), "the ElementSave path: A = 120 + 1, then B = 121 + 1");
+        (a, b).ShouldBe((10f, 120f), "the stored values; a cycle is not evaluated");
         (WidthOfChild(root, "A"), WidthOfChild(root, "B")).ShouldBe((a, b));
+    }
+
+    [Theory]
+    [InlineData("ThreeRowCycle")]
+    [InlineData("SelfRead")]
+    public void RefreshAll_ThreeRowCycleOrARowReadingItself_TerminatesAndKeepsTheStoredValues(string shape)
+    {
+        ComponentSave chain = BuildRowlessChain();
+        BuildProject(chain);
+        if (shape == "ThreeRowCycle")
+        {
+            AddReference(chain.DefaultState!, "A", "Width = B.Width + 1");
+            AddReference(chain.DefaultState!, "B", "Width = C.Width + 1");
+            AddReference(chain.DefaultState!, "C", "Width = A.Width + 1");
+        }
+        else
+        {
+            AddReference(chain.DefaultState!, "A", "Width = A.Width + 1");
+        }
+
+        GraphicalUiElement? root = null;
+        System.Threading.Tasks.Task shown = System.Threading.Tasks.Task.Run(() => root = Show(chain, chain.DefaultState!));
+        shown.Wait(5000).ShouldBeTrue("RefreshAll froze (#6871)");
+        shown.GetAwaiter().GetResult();
+
+        (WidthOfChild(root!, "A"), WidthOfChild(root!, "B"), WidthOfChild(root!, "C")).ShouldBe((10f, 120f, 30f));
     }
 
     /// <summary>What the ElementSave path (dependency order, each result written where the next row reads it) gives for the state shown.</summary>

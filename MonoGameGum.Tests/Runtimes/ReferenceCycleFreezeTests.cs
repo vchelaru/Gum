@@ -6,6 +6,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using Shouldly;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -272,6 +273,8 @@ public class ReferenceCycleFreezeTests : BaseTestClass
         {
             Guard(label, "ApplyState", () => panel.ApplyState(scene.StateCategory!, scene.StateName!));
             Guard(label, "ApplyState again", () => panel.ApplyState(scene.StateCategory!, scene.StateName!));
+            StateSave state = scene.Project.Components[0].Categories[0].States[0];
+            Guard(label, "ApplyState(StateSave)", () => panel.ApplyState(state));
         }
 
         Guard(label, "RefreshStyles", () => root!.RefreshStyles());
@@ -279,35 +282,33 @@ public class ReferenceCycleFreezeTests : BaseTestClass
         Guard(label, "create again after ApplyAll", () => root = scene.Screen.ToGraphicalUiElement());
     }
 
-    // The rule for a cycle: its rows run once, in written order, each result visible to the next row, and
-    // a later change to a variable they read does not run them again. The tool's canvas and ElementSave
-    // path already do this; creation must give the same numbers.
+    // The rule for a cycle: its rows are skipped and keep their stored values, on every path, so applying
+    // again changes nothing.
     [Fact]
-    public void Creation_TwoRowsReadingEachOther_GivesWhatTheToolShows()
+    public void Creation_TwoRowsReadingEachOther_KeepTheStoredValues()
     {
         GumExpressionService.Initialize();
         Scene scene = TwoCycle();
 
         GraphicalUiElement panel = scene.Screen.ToGraphicalUiElement().GetGraphicalUiElementByName("P")!;
 
-        // A = 10 + 1, then B = 11 + 1.
-        panel.GetGraphicalUiElementByName("A")!.Width.ShouldBe(11f);
-        panel.GetGraphicalUiElementByName("B")!.Width.ShouldBe(12f);
+        panel.GetGraphicalUiElementByName("A")!.Width.ShouldBe(10f);
+        panel.GetGraphicalUiElementByName("B")!.Width.ShouldBe(10f);
     }
 
     [Fact]
-    public void Creation_RowReadingItsOwnResult_EvaluatesOnce()
+    public void Creation_RowReadingItsOwnResult_KeepsTheStoredValue()
     {
         GumExpressionService.Initialize();
         Scene scene = SelfReference();
 
         GraphicalUiElement panel = scene.Screen.ToGraphicalUiElement().GetGraphicalUiElementByName("P")!;
 
-        panel.GetGraphicalUiElementByName("A")!.Width.ShouldBe(11f);
+        panel.GetGraphicalUiElementByName("A")!.Width.ShouldBe(10f);
     }
 
     [Fact]
-    public void ChangingAVariableTheCycleReads_DoesNotRunTheCycleAgain()
+    public void ChangingAVariableTheCycleReads_DoesNotRunTheCycle()
     {
         GumExpressionService.Initialize();
         Scene scene = TwoCycle();
@@ -318,7 +319,35 @@ public class ReferenceCycleFreezeTests : BaseTestClass
         a.Width = 100f;
 
         a.Width.ShouldBe(100f);
-        b.Width.ShouldBe(12f);
+        b.Width.ShouldBe(10f);
+    }
+
+    [Theory]
+    [InlineData("TwoCycle", false)]
+    [InlineData("TwoCycle", true)]
+    [InlineData("ThreeCycle", false)]
+    [InlineData("ThreeCycle", true)]
+    [InlineData("SelfReference", true)]
+    public void ApplyingRepeatedly_ACycle_NeverChangesTheStoredValuesOrTheVisuals(string scenarioName, bool useExpressions)
+    {
+        if (useExpressions)
+        {
+            GumExpressionService.Initialize();
+        }
+        Scene scene = Build(scenarioName);
+        ComponentSave panelComponent = scene.Project.Components[0];
+        string Snapshot(GraphicalUiElement panel) =>
+            string.Join(",", scene.SourceNames.Select(name => name + "=" + panelComponent.DefaultState.GetValue(name + ".Width") + "/" + panel.GetGraphicalUiElementByName(name)!.Width));
+
+        GraphicalUiElement root = scene.Screen.ToGraphicalUiElement();
+        string first = Snapshot(root.GetGraphicalUiElementByName("P")!);
+        for (int i = 0; i < 5; i++)
+        {
+            scene.Project.ApplyAllVariableReferences();
+            root.RefreshStyles();
+            root = scene.Screen.ToGraphicalUiElement();
+            Snapshot(root.GetGraphicalUiElementByName("P")!).ShouldBe(first, $"pass {i}");
+        }
     }
 
     [Fact]
@@ -335,5 +364,33 @@ public class ReferenceCycleFreezeTests : BaseTestClass
 
         p.GetGraphicalUiElementByName("B")!.Width.ShouldBe(11f);
         p.GetGraphicalUiElementByName("C")!.Width.ShouldBe(12f);
+    }
+
+    [Theory]
+    [InlineData("TwoCycle")]
+    [InlineData("ThreeCycle")]
+    [InlineData("SelfReference")]
+    [InlineData("ElementLevelCycle")]
+    [InlineData("CrossComponentCycle")]
+    public void HotReload_ACycle_NeverFreezesAndNeverChangesTheValues(string scenarioName)
+    {
+        GumExpressionService.Initialize();
+        Scene scene = Build(scenarioName);
+        GraphicalUiElement root = scene.Screen.ToGraphicalUiElement();
+        string Snapshot() => string.Join(",", scene.SourceNames.Select(name =>
+            root.GetGraphicalUiElementByName(scene.PanelName)!.GetGraphicalUiElementByName(name)!.Width));
+        string first = Snapshot();
+
+        for (int i = 0; i < 4; i++)
+        {
+            Scene reloaded = Build(scenarioName);
+            Guard(scenarioName, "ApplyAllVariableReferences before reload", () => reloaded.Project.ApplyAllVariableReferences());
+            Guard(scenarioName, "ApplyDiff", () =>
+            {
+                ObjectFinder.Self.GumProjectSave = reloaded.Project;
+                global::Gum.GumHotReloadManager.ApplyDiff(new[] { root }, reloaded.Project, RenderingLibrary.SystemManagers.Default);
+            });
+            Snapshot().ShouldBe(first, $"reload {i}");
+        }
     }
 }

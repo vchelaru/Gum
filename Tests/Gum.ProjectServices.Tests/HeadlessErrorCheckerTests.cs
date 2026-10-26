@@ -1886,6 +1886,47 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldReportGum0013OnEveryElementHoldingARow_WhenRowsLoopAcrossTwoElements()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+        ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.A.Width + 1"));
+
+        foreach (ComponentSave holder in new[] { panel, other })
+        {
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(holder, Project);
+
+            ErrorResult error = errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem();
+            error.ElementName.ShouldBe(holder.Name);
+            error.Message.ShouldContain("Components/Panel.A.Width");
+            error.Message.ShouldContain("Components/Other.B.Width");
+        }
+        _sut.GetAllErrors(Project).Count(item => item.Code == "GUM0013").ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013_WhenALoopMixesRowsOfTheSameElementAndAnotherElement()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel",
+            ("A", "Width = Components/Other.B.Width + 1"), ("C", "Width = A.Width + 1"));
+        AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.C.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(panel, Project);
+
+        errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem()
+            .Message.ShouldContain("Components/Other.B.Width");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0013_WhenRowsChainAcrossElementsWithoutLooping()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+        ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = 5"));
+
+        _sut.GetErrorsFor(panel, Project).Where(item => item.Code == "GUM0013").ShouldBeEmpty();
+        _sut.GetErrorsFor(other, Project).Where(item => item.Code == "GUM0013").ShouldBeEmpty();
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldNotReportGum0013_WhenRowsFormAChain()
     {
         ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = C.Width + 1"));

@@ -41,6 +41,35 @@ public class ErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldReportCircularReference_OnEachElementOfALoopAcrossElements()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave panel = AddComponentWithRow(project, "Panel", "A", "Width = Components/Other.B.Width + 1");
+        ComponentSave other = AddComponentWithRow(project, "Other", "B", "Width = Components/Panel.A.Width + 1");
+
+        foreach (ComponentSave holder in new[] { panel, other })
+        {
+            ErrorViewModel[] errors = _sut.GetErrorsFor(holder, project);
+
+            ErrorViewModel error = errors.Where(item => item.Message.Contains("Circular variable reference")).ShouldHaveSingleItem();
+            error.ElementName.ShouldBe(holder.Name);
+        }
+    }
+
+    private static ComponentSave AddComponentWithRow(GumProjectSave project, string name, string instance, string row)
+    {
+        ComponentSave component = new ComponentSave { Name = name };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Instances.Add(new InstanceSave { Name = instance, BaseType = "Container", ParentContainer = component });
+        VariableListSave<string> list = new VariableListSave<string> { Name = instance + ".VariableReferences", Type = "string" };
+        list.Value.Add(row);
+        component.DefaultState.VariableLists.Add(list);
+        project.Components.Add(component);
+        return component;
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldReportError_WhenComponentInstanceHasInvalidBaseType()
     {
         GumProjectSave project = new GumProjectSave();

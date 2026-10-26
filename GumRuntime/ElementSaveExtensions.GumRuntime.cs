@@ -827,6 +827,7 @@ namespace GumRuntime
         /// <param name="stateSave">The current state, such as the argument graphicalElement's default state</param>
         public static void ApplyVariableReferences(this GraphicalUiElement graphicalElement, StateSave stateSave)
         {
+            HashSet<string>? cyclicRows = GetCyclicRowKeys(stateSave);
             foreach (var variableList in stateSave.VariableLists)
             {
                 if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
@@ -838,6 +839,10 @@ namespace GumRuntime
                         {
                             foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
                             {
+                                if (cyclicRows?.Contains(CyclicRowKey(null, expandedReferenceString)) == true)
+                                {
+                                    continue;
+                                }
                                 ApplyVariableReferencesOnSpecificOwner(graphicalElement, expandedReferenceString, stateSave, graphicalElement);
                             }
                         }
@@ -866,6 +871,10 @@ namespace GumRuntime
                             {
                                 foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
                                 {
+                                    if (cyclicRows?.Contains(CyclicRowKey(variableList.SourceObject, expandedReferenceString)) == true)
+                                    {
+                                        continue;
+                                    }
                                     ApplyVariableReferencesOnSpecificOwner(instance, expandedReferenceString, stateSave, graphicalElement);
                                 }
                             }
@@ -874,6 +883,29 @@ namespace GumRuntime
                 }
             }
         }
+
+        // Rows that read each other keep their stored values (#6871); null when the state has no loop.
+        private static HashSet<string>? GetCyclicRowKeys(StateSave stateSave)
+        {
+            ElementSave? element = stateSave.ParentContainer;
+            if (element == null)
+            {
+                return null;
+            }
+            VariableReferenceGraph graph = VariableReferenceGraph.GetForApply(element, stateSave);
+            if (graph.CyclicRows.Count == 0)
+            {
+                return null;
+            }
+            HashSet<string> keys = new HashSet<string>();
+            foreach (ReferenceRow row in graph.CyclicRows)
+            {
+                keys.Add(CyclicRowKey(row.SourceObject, row.Line));
+            }
+            return keys;
+        }
+
+        private static string CyclicRowKey(string? sourceObject, string line) => sourceObject + "|" + line;
 
         static char[] equalsArray = new char[] { '=' };
 
