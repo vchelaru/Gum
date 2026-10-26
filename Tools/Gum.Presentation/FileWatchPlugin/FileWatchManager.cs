@@ -238,10 +238,11 @@ public class FileWatchManager : IFileWatchManager
         // Renamed event rather than a Changed event, so we forward renames for
         // every extension we know how to react to.
         var extension = fileName.Extension;
-        if(extension is "png" or "csv" or "resx"
+        if(ImageFileExtensions.Contains(extension)
+            || extension is "csv" or "resx"
             or "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj" or "gucx" or "gucj"
             or "ganx" or "ganj" or "behx" or "behj" or "fnt"
-            or "achx" or "achj" or "gif" or "tga" or "bmp"
+            or "achx" or "achj"
             or "codsj")
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);

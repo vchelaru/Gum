@@ -60,7 +60,7 @@ namespace Gum.Managers
         {
             var extension = file.Extension;
 
-            if(extension == "png" || extension == "gif" || extension == "tga" || extension == "bmp")
+            if(ImageFileExtensions.Contains(extension))
             {
                 ReactToImageFileChanged(file);
             }
