@@ -5,6 +5,7 @@ using Gum.DataTypes.Variables;
 using Gum.Expressions;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
 using MonoGameGum.Tests;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
@@ -38,6 +39,7 @@ public class UndoReferenceCascadeTests : BaseTestClass
     private readonly Mock<IFileCommands> _fileCommands = new();
     private readonly VariableReferenceLogic _logic;
     private readonly UndoManager _undo;
+    private readonly RenameLogic _rename;
     private ElementSave _selectedElement;
     private StateSave _selectedStateSave;
     private bool _autoSave = true;
@@ -64,6 +66,20 @@ public class UndoReferenceCascadeTests : BaseTestClass
             new Mock<IDispatcher>().Object, wireframe.Object);
 
         Mock<IReferenceFinderProjectProvider> projectProvider = new();
+        projectProvider.Setup(x => x.GumProjectSave).Returns(() => ObjectFinder.Self.GumProjectSave);
+        Mock<INameVerifier> nameVerifier = new();
+        string? whyNot;
+        nameVerifier.Setup(x => x.IsInstanceNameValid(It.IsAny<string>(), It.IsAny<InstanceSave?>(), It.IsAny<IInstanceContainer>(), out whyNot))
+            .Returns(true);
+        nameVerifier.Setup(x => x.IsStateNameValid(It.IsAny<string>(), It.IsAny<StateSaveCategory?>(), It.IsAny<StateSave>(), out whyNot))
+            .Returns(true);
+        Mock<IRenameProjectProvider> renameProjectProvider = new();
+        renameProjectProvider.Setup(x => x.GumProjectSave).Returns(() => ObjectFinder.Self.GumProjectSave);
+        _rename = new RenameLogic(_selectedState.Object, nameVerifier.Object, new Mock<IDialogService>().Object,
+            new Mock<IGuiCommands>().Object, _fileCommands.Object, new Mock<IDeleteLogic>().Object,
+            renameProjectProvider.Object, new Mock<IRenamePluginNotifier>().Object,
+            new Mock<IStandardElementsManagerGumTool>().Object, new ReferenceFinder(projectProvider.Object),
+            new Lazy<IUndoManager>(() => _undo));
         _undo = CreateUndoManager(projectProvider.Object);
     }
 
@@ -74,7 +90,7 @@ public class UndoReferenceCascadeTests : BaseTestClass
     }
 
     private UndoManager CreateUndoManager(IReferenceFinderProjectProvider projectProvider) => new UndoManager(
-        _selectedState.Object, new Mock<IUndoRenameLogic>().Object, new Mock<IGuiCommands>().Object,
+        _selectedState.Object, _rename, new Mock<IGuiCommands>().Object,
         _fileCommands.Object, new Mock<IMessenger>().Object, new Mock<IUndoPluginNotifier>().Object,
         new Mock<IAnimationUndoProvider>().Object, projectProvider, new Lazy<IVariableReferenceLogic>(() => _logic));
 
@@ -453,6 +469,112 @@ public class UndoReferenceCascadeTests : BaseTestClass
         Width(_screen, "S2").ShouldBe(70);
         HistoryCount.ShouldBe(1);
     }
+
+    [Fact]
+    public void UndoRedo_OfADefaultStateEdit_ShouldAlsoRereadRowsInACategorizedState()
+    {
+        // The reference sets the final value, so undo and redo re-read the rows of every state that reads the
+        // restored source. Typing the edit leaves a categorized state's follower stale; that path is tracked
+        // in #6886, and this pins the undo side.
+        Arrange();
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        StateSave alt = new StateSave { Name = "Alt", ParentContainer = _comp };
+        category.States.Add(alt);
+        _comp.Categories.Add(category);
+        AddRow(alt, "F1", "Width = Source.Width");
+        SetWidth(alt, "F1", 50);
+        _undo.RecordState();
+        StateSave Alt() => _comp.Categories.Single().States.Single();
+
+        EditSourceWidth(55);
+
+        _undo.PerformUndo();
+        Width(_comp, "F1", Alt()).ShouldBe(50);
+        _undo.PerformRedo();
+        Width(_comp, "F1", Alt()).ShouldBe(55, "the categorized follower follows the reference");
+    }
+
+    [Fact]
+    public void Redo_OfResettingAFeedingVariable_ShouldLeaveFollowersWithTheirSnapshotValues()
+    {
+        // Characterization. A typed reset leaves followers at their current values (the null source is not
+        // propagated); redo restores the snapshot's values for the edited element. Tracked in #6884, which
+        // needs a maintainer decision on what a null source means.
+        Arrange(materialized: false);
+        using (_undo.RequestLock())
+        {
+            _comp.DefaultState.Variables.RemoveAll(item => item.Name == "Source.Width");
+            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("Source"), "Width", _comp.DefaultState,
+                "Source.Width", trySave: true);
+        }
+        _undo.PerformUndo();
+
+        _undo.PerformRedo();
+
+        Width(_comp, "Source").ShouldBeNull();
+        Width(_comp, "F1").ShouldBeNull();
+        Width(_other, "O").ShouldBe(50, "another element is not part of the snapshot");
+    }
+
+    [Fact]
+    public void UndoRedo_OfRenamingAnInstanceAnotherElementReads_ShouldKeepRowsAndValuesCorrect()
+    {
+        Arrange();
+        EditSourceWidth(55);
+        InstanceSave source = _comp.GetInstance("Source")!;
+        const string RenamedOtherRow = "Width = Components/Comp.Src.Width";
+
+        source.Name = "Src";
+        _rename.HandleRename(_comp, source, "Source", NameChangeAction.Rename, askAboutRename: false)
+            .Succeeded.ShouldBeTrue();
+        Rows(_other, "O").ShouldBe(new[] { RenamedOtherRow });
+
+        _undo.PerformUndo();
+        Rows(_other, "O").ShouldBe(new[] { OtherRow });
+        _comp.GetInstance("Source").ShouldNotBeNull();
+        ShouldHaveWidths(55);
+
+        _undo.PerformRedo();
+        Rows(_other, "O").ShouldBe(new[] { RenamedOtherRow });
+        Width(_comp, "Src").ShouldBe(55);
+        Width(_comp, "F1").ShouldBe(55);
+        Width(_other, "O").ShouldBe(55);
+
+        _undo.PerformUndo();
+        _undo.PerformUndo();
+        Rows(_other, "O").ShouldBe(new[] { OtherRow });
+        ShouldHaveWidths(50);
+        MemoryShouldEqualDisk();
+    }
+
+    [Fact]
+    public void UndoRedo_OfRenamingAStateAnInstanceElsewhereUses_ShouldKeepTheInstancesVariableAndFollowers()
+    {
+        Arrange();
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        category.States.Add(new StateSave { Name = "Alt", ParentContainer = _comp });
+        _comp.Categories.Add(category);
+        _screen.DefaultState.Variables.Add(new VariableSave { Name = "C1.CatState", Type = "string", Value = "Alt", SetsValue = true });
+        _undo.RecordState();
+
+        using (_undo.RequestLock())
+        {
+            _rename.RenameState(category.States[0], category, "Alt2");
+        }
+        StateValue().ShouldBe("Alt2");
+
+        _undo.PerformUndo();
+        StateValue().ShouldBe("Alt");
+        _comp.Categories.Single().States.Single().Name.ShouldBe("Alt");
+        _undo.PerformRedo();
+        StateValue().ShouldBe("Alt2");
+        Width(_screen, "S2").ShouldBe(40);
+
+        string? StateValue() => _screen.DefaultState.Variables.First(item => item.Name == "C1.CatState").Value as string;
+    }
+
+    private static string[] Rows(ElementSave element, string owner) =>
+        element.DefaultState.GetVariableListSave(owner + ".VariableReferences")!.ValueAsIList.Cast<string>().ToArray();
 
     [Fact]
     public void UndoRedo_OfAVariableNoRowReads_ShouldRestoreItAndAddOneEntry()
