@@ -7,7 +7,7 @@ namespace AvaloniaDataUi.Controls;
 
 /// <summary>
 /// A left-button drag on a handle control that holds the pointer capture while it runs. The drag
-/// ends exactly once, on release or when the capture is lost (Alt+Tab, another window or control
+/// ends exactly once, on release, when its row is pointed at another member, or when the capture is lost (Alt+Tab, another window or control
 /// taking the pointer), so an editor never keeps dragging on hover or skips its final commit.
 /// Every drag or scrub editor in the Variables tab uses this rather than wiring capture itself.
 /// </summary>
@@ -72,8 +72,5 @@ public static class CapturedPointerDrag
             }
         };
         handle.PointerCaptureLost += (_, _) => End();
-        // A row rebuilt mid-drag (another element selected with the button held) detaches the handle
-        // without a release or a capture loss reaching it.
-        handle.DetachedFromVisualTree += (_, _) => End();
     }
 }

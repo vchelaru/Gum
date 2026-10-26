@@ -112,6 +112,28 @@ public class DragEndsOnSelectionChangeScenarioTests
     }
 
     [AvaloniaFact]
+    public void LabelScrub_OnAMultiSelection_SelectingAnotherInstanceMidDrag_CommitsEveryInstanceOnce()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        Scene scene = Build(grid, "Sprite", "X");
+        InstanceSave third = grid.Project.AddInstance(scene.Button, "Third", "Sprite");
+        grid.Select(scene.Source, scene.Other);
+        grid.Settle();
+        scene.HistoryBeforeDrag = grid.UndoManager.CurrentElementHistory!.Actions.Count;
+        object? before = VariableGridHarness.StoredValue(scene.Button, "Source.X");
+        Point start = grid.Input.CenterOf(grid.Editor<TextBoxDisplay>("X").LabelHost);
+
+        grid.Input.PressLeftAt(start);
+        grid.Input.MoveWithLeftHeld(start + new Point(10, 0));
+        grid.Select(third);
+        grid.Settle();
+
+        AssertEndedCommitted(scene, "X", before);
+        VariableGridHarness.StoredValue(grid.SelectedState.SelectedElement!, "Other.X")
+            .ShouldBe(VariableGridHarness.StoredValue(grid.SelectedState.SelectedElement!, "Source.X"));
+    }
+
+    [AvaloniaFact]
     public void AngleDial_SelectingAnotherInstanceMidDrag_CommitsTheDrag()
     {
         using VariableGridHarness grid = new VariableGridHarness();
