@@ -96,6 +96,21 @@ public class SetVariableLogicTests : BaseTestClass
         result.ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData("image.jpeg")]
+    [InlineData("image.bmp")]
+    [InlineData("image.gif")]
+    public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenExtensionIsLoadableImage(string fileName)
+    {
+        ComponentSave element = new ComponentSave();
+        InstanceSave instance = new InstanceSave();
+
+        string result = _setVariableLogic.GetWhySourcefileIsInvalid(
+            fileName, element, instance, "SourceFile");
+
+        result.ShouldBeNull();
+    }
+
     [Fact]
     public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenExtensionIsAchj()
     {

@@ -241,6 +241,28 @@ public class FileWatchManagerTests : IDisposable
             "a rename onto a .gucj file should be treated like any other recognized Gum file change");
     }
 
+    [Theory]
+    [InlineData("Photo.jpg")]
+    [InlineData("Photo.jpeg")]
+    public void EnableWithDirectories_ShouldReactToJpegRenamedIntoWatchedDirectory(string fileName)
+    {
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        FileWatchManager sut = BuildSut(
+            out _,
+            out _,
+            out _,
+            watchedDirectory);
+
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+
+        string tempName = Path.Combine(_tempDirectory, fileName + ".tmp");
+        File.WriteAllText(tempName, "");
+        FilePath renamedFile = new FilePath(Path.Combine(_tempDirectory, fileName));
+        File.Move(tempName, renamedFile.FullPath);
+
+        PollUntil(() => sut.ChangedFilesWaitingForFlush.Contains(renamedFile)).ShouldBeTrue();
+    }
+
     [Fact]
     public void EnableWithDirectories_ThenFlush_ShouldReactToProjectCodeSettingsRenamedIntoWatchedDirectory()
     {

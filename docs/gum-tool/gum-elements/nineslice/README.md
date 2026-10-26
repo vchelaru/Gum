@@ -22,6 +22,8 @@ This is achieved by splitting the texture into 1/3 sections wide and tall. The f
 
 The simplest way to assign a texture to a NineSlice is to use a single file. Setting the _SourceFile_ to a single PNG will result in the NineSlice using that one texture, where each section of the NineSlice displays 1/3 of the width of the file and 1/3 of the height of the file.
 
+NineSlice Source Files support the same formats as Sprite. For the list, see the [Sprite Source File](../sprite/source-file.md) page.
+
 A NineSlice's **Texture Address** property can be used to change the portion of the source texture that it uses. More info can be found in the Texture Address subpage.
 
 Alternatively, nine files can be used to specify each section of the NineSlice independently. To use nine individual files, each file must be given a specific suffix.

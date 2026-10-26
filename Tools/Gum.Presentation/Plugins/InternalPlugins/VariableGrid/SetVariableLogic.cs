@@ -842,10 +842,7 @@ public class SetVariableLogic : ISetVariableLogic
         string? whyInvalid = null;
 
         var extension = FileManager.GetExtension(value);
-        bool isValidExtension = extension == "gif" ||
-            extension == "jpg" ||
-            extension == "png" ||
-            extension == "bmp" ||
+        bool isValidExtension = ImageFileExtensions.Contains(extension) ||
             extension == "achx" ||
             extension == "achj";
 
