@@ -224,7 +224,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     var stateForReferences = GetStateForReferences(elementSave);
                     if (stateForReferences != null)
                     {
-                        RootGue.ApplyVariableReferences(stateForReferences);
+                        ApplyReferencesInDependencyOrder(elementSave, RootGue, stateForReferences, _selectedState.SelectedStateSave);
                     }
 
                     gueManager.Add(RootGue);
@@ -245,6 +245,51 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         }
         ElementShowing = elementSave;
 
+    }
+
+    /// <summary>
+    /// Evaluates the state's reference rows on the live <paramref name="root"/> in dependency order, so a
+    /// row that reads another row's result sees it whatever order the rows are written in (#6856). Rows
+    /// in a cycle run last in written order, the same result the ElementSave path gives. Results are
+    /// written to a copy of the state, where later rows read them; the project's data is not changed.
+    /// </summary>
+    private static void ApplyReferencesInDependencyOrder(ElementSave elementSave, GraphicalUiElement root, StateSave state, StateSave? selectedState)
+    {
+        List<StateSave> states = new List<StateSave>();
+        List<ElementSave> baseElements = ObjectFinder.Self.GetBaseElements(elementSave);
+        for (int i = baseElements.Count - 1; i >= 0; i--)
+        {
+            if (baseElements[i].DefaultState != null)
+            {
+                states.Add(baseElements[i].DefaultState!);
+            }
+        }
+        states.Add(state);
+
+        VariableReferenceGraph graph = VariableReferenceGraph.Create(elementSave, states);
+        if (!graph.HasRows)
+        {
+            return;
+        }
+
+        // Rows a base component owns stay in the graph so a row reading their result is ordered after them,
+        // as when the element was created. Unlike the element's own rows, the merger has not dropped the
+        // ones the selected state overrides, so they are dropped here.
+        HashSet<string> ownRows = new HashSet<string>();
+        VariableReferenceGraph ownGraph = VariableReferenceGraph.GetForState(elementSave, state);
+        foreach (ReferenceRow row in ownGraph.OrderedRows.Concat(ownGraph.CyclicRows))
+        {
+            ownRows.Add(row.WrittenName + "=" + row.Line);
+        }
+        HashSet<string> setBySelected = selectedState != null && selectedState != elementSave.DefaultState
+            ? SelectedStateReferenceMerger.GetVariablesSetBy(selectedState)
+            : new HashSet<string>();
+
+        List<ReferenceRow> rows = graph.OrderedRows.Concat(graph.CyclicRows)
+            .Where(row => row.IsLiveEvaluable &&
+                (ownRows.Contains(row.WrittenName + "=" + row.Line) || !setBySelected.Contains(row.WrittenName)))
+            .ToList();
+        VariableReferenceGraph.Evaluate(rows, state.Clone(), root);
     }
 
     /// <summary>

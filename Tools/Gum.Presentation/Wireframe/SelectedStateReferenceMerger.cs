@@ -96,7 +96,7 @@ public class SelectedStateReferenceMerger
         }
     }
 
-    private static HashSet<string> GetVariablesSetBy(StateSave state)
+    internal static HashSet<string> GetVariablesSetBy(StateSave state)
     {
         HashSet<string> names = new HashSet<string>();
 

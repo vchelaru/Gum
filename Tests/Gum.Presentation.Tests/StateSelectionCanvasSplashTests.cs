@@ -387,7 +387,7 @@ public partial class StateSelectionCanvasSplashTests : BaseTestClass
     /// <summary>
     /// Oracle over default rows (A = B, B = C) and which of A, B and C the selected state sets: a variable the
     /// state sets always keeps the state's value, and a variable with no row and no set keeps the default.
-    /// A variable that only follows a row is not asserted: a chain of rows evaluates in written order (#6856).
+    /// A variable that only follows a row is asserted too (#6856).
     /// Cases where the state sets both ends of a row are skipped (both-ends branch).
     /// </summary>
     [Fact]
@@ -426,14 +426,8 @@ public partial class StateSelectionCanvasSplashTests : BaseTestClass
             GraphicalUiElement root = Show(chain, state);
 
             string tag = $"case {i}: rowA={rowA} rowB={rowB} setA={setA} setB={setB} setC={setC}";
-            if (setA || !rowA)
-            {
-                WidthOfChild(root, "A").ShouldBe(expectedA, tag);
-            }
-            if (setB || !rowB)
-            {
-                WidthOfChild(root, "B").ShouldBe(expectedB, tag);
-            }
+            WidthOfChild(root, "A").ShouldBe(expectedA, tag);
+            WidthOfChild(root, "B").ShouldBe(expectedB, tag);
             WidthOfChild(root, "C").ShouldBe(expectedC, tag);
         }
     }
