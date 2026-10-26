@@ -425,7 +425,14 @@ public class AnimationChainLogic
         {
             if (_chains[i].Name == _desiredChainName)
             {
+                bool isNewlyResolved = _currentChainIndex != i;
                 _currentChainIndex = i;
+                if (isNewlyResolved)
+                {
+                    // A chain resolved after its name was set shows the frame at the current time,
+                    // as a restart does (the last frame of a Reverse chain at time 0).
+                    UpdateFrameBasedOffOfTimeIntoAnimation();
+                }
                 break;
             }
         }
