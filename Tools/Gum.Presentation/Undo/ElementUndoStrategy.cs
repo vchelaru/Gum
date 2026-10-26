@@ -1128,6 +1128,78 @@ public class ElementUndoStrategy : IUndoStrategy
         return new AddedAndRemovedInstances(added, removed);
     }
 
+    /// <summary>
+    /// Writes each change into every snapshot taken of its element (the baseline, the targeted baseline and
+    /// both sides of every history action), so applying one later restores the new value.
+    /// </summary>
+    public void RebaseStoredValues(IReadOnlyList<StoredValueChange> changes)
+    {
+        foreach (StoredValueChange change in changes)
+        {
+            if (recordedSnapshot != null && _baselineElement == change.Element)
+            {
+                Rebase(recordedSnapshot.Element, change);
+            }
+            if (_targetedBaselines.TryGetValue(change.Element, out UndoSnapshot? targeted))
+            {
+                Rebase(targeted.Element, change);
+            }
+            if (mUndos.TryGetValue(change.Element, out ElementHistory? history))
+            {
+                foreach (HistoryAction action in history.Actions)
+                {
+                    Rebase(action.UndoState.Element, change);
+                    if (action.RedoState != null)
+                    {
+                        Rebase(action.RedoState.Element, change);
+                    }
+                }
+            }
+        }
+    }
+
+    // A snapshot's States and Categories are null when its action did not change them, so there is
+    // nothing stale to fix there.
+    private static void Rebase(ElementSave snapshotElement, StoredValueChange change)
+    {
+        IEnumerable<StateSave>? states = change.CategoryName == null
+            ? snapshotElement.States
+            : snapshotElement.Categories?.FirstOrDefault(item => item.Name == change.CategoryName)?.States;
+        StateSave? state = states?.FirstOrDefault(item => item.Name == change.StateName);
+        if (state == null)
+        {
+            return;
+        }
+
+        // A snapshot from before the reference row existed has no row to give the variable a value, and
+        // restoring it must take the variable away again.
+        if (!HasReferenceRowFor(state, change.VariableName))
+        {
+            return;
+        }
+
+        VariableSave? variable = state.Variables.FirstOrDefault(item => item.Name == change.VariableName);
+        if (variable == null)
+        {
+            variable = new VariableSave { Name = change.VariableName, Type = change.VariableType ?? "float" };
+            state.Variables.Add(variable);
+        }
+        variable.Value = change.Value;
+        variable.SetsValue = true;
+    }
+
+    // The row list of a variable's owner: "Background.Red" is fed by "Background.VariableReferences",
+    // "Width" by "VariableReferences".
+    private static bool HasReferenceRowFor(StateSave state, string variableName)
+    {
+        int dot = variableName.IndexOf('.');
+        string owner = dot < 0 ? string.Empty : variableName.Substring(0, dot);
+        return state.VariableLists.Any(list =>
+            list.GetRootName() == "VariableReferences" &&
+            (list.SourceObject ?? string.Empty) == owner &&
+            list.ValueAsIList?.Count > 0);
+    }
+
     public void Clear()
     {
         mUndos.Clear();

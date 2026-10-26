@@ -113,6 +113,10 @@ public class UndoManager : IUndoManager
         => _elementStrategy.ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges);
 
     /// <inheritdoc/>
+    public void RebaseStoredValues(IReadOnlyList<StoredValueChange> changes)
+        => _elementStrategy.RebaseStoredValues(changes);
+
+    /// <inheritdoc/>
     public void RecordCrossElementVariableChanges(IEnumerable<CrossElementVariableChange> changes)
         => _elementStrategy.RecordCrossElementVariableChanges(changes);
 

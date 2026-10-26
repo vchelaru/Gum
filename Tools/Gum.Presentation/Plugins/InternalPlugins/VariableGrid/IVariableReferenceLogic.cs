@@ -1,4 +1,6 @@
 using Gum.DataTypes;
+using Gum.Undo;
+using System.Collections.Generic;
 using Gum.DataTypes.Variables;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -16,7 +18,9 @@ public interface IVariableReferenceLogic
     /// Re-evaluates every variable reference in other elements that reads <paramref name="element"/>,
     /// so their stored values follow it, and optionally auto-saves the elements that hold them.
     /// </summary>
-    void ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true);
+    /// <returns>The values that changed, so a caller can refresh what shows them and keep undo snapshots current;
+    /// empty when nothing changed.</returns>
+    StoredValueChange[] ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true);
 
     /// <summary>
     /// Re-applies the rows of <paramref name="element"/> that read a sibling-dependent name

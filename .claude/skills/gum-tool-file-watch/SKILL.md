@@ -88,7 +88,7 @@ The ignore list (`FileWatchIgnoreList`) is time-based only.
 | `png`, `gif`, `tga`, `bmp` | Refresh wireframe if referenced by selected element |
 | `achx` | Reload animation chain if referenced by selected element |
 | `fnt` | Reload font (also looks up page PNGs) |
-| `gusx`, `gutx`, `gucx` | Reload element from disk, refresh tree + wireframe |
+| `gusx`, `gutx`, `gucx` (and JSON siblings) | Reload element from disk, refresh tree + wireframe, then re-apply the references that read it (see below) |
 | `gumx` | Reload entire project |
 | `ganx` | Print warning — Gum does not support runtime reload of animation collections |
 | `behx` | Reload behavior definition |
@@ -115,6 +115,8 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 **Renames are routed for every reacted-to extension**: `ReactToRename` forwards renames for the extensions in its list (images, Gum files, `.csv`, `.resx`, `.codsj`, ...). Many editors (Vim, JetBrains, some VS Code modes) save by writing a temp file and renaming it over the target, so a type missing from that list silently misses external edits.
 
 **Delete only reacts for element files**: `ReactToDelete` queues a deleted element file like a change, so the flush can flag the element's source as missing. Other deletes are ignored.
+
+**A reloaded element updates the elements that read it, after the whole flush is reloaded**: `ReactToElementSaveChanged` calls `IVariableReferenceLogic.ApplyReferencesToElement(element, trySave: true)`, the cascade an in-tool edit runs, so readers get new materialized values, are saved (Auto Save on) and the canvas and Variables tab refresh. `FileWatchManager.Flush` wraps its loop in `FileChangeReactionLogic.DeferDependentUpdates()`, so a reader that is itself in the batch is reloaded before any save of it; saving it first would overwrite the external edit still waiting in the queue. The reloaded element is never saved by this path. Readers keep their object and undo history, so `IUndoManager.RebaseStoredValues` writes the changed values into every snapshot of them; otherwise a later Ctrl+Z restores the replaced value and saves it.
 
 **Flush debounce is cumulative**: `TimeToNextFlush = (LastFileChange + 500ms) - Now`. Every new file change resets `LastFileChange`, pushing the flush window out by another 500ms. Rapid successive changes delay flushing until things settle.
 

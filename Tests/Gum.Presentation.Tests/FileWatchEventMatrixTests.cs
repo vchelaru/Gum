@@ -76,7 +76,9 @@ public class FileWatchEventMatrixTests : BaseTestClass
             new Mock<ISelectedState>().Object, new Mock<IWireframeCommands>().Object, _guiCommands.Object,
             fileCommands.Object, new Mock<IOutputManager>().Object, new Mock<IWireframeObjectManager>().Object,
             projectState.Object, new Mock<IStandardElementsManagerGumTool>().Object, _pluginManager.Object,
-            new Mock<Gum.Services.Dialogs.IDialogService>().Object, new UnsavedChangesTracker());
+            new Mock<Gum.Services.Dialogs.IDialogService>().Object, new UnsavedChangesTracker(),
+            new Mock<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceLogic>().Object,
+            new Mock<Gum.Undo.IUndoManager>().Object);
 
         _sut = new FileWatchManager(_guiCommands.Object, projectManager.Object, reaction, _ignoreList.Object,
             new SynchronousDispatcher(), new FileSystemWatcherFactory());
