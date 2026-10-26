@@ -57,6 +57,28 @@ public class ResaveCommandTests : BaseTestClass
         File.ReadAllText(behaviorFile).ShouldBe(savedContent);
     }
 
+    [Fact]
+    public void Resave_BehaviorLinkedFromSharedPath_ShouldLeaveSharedFileUntouched()
+    {
+        string formsPath = Path.Combine(TempDirectory, "Forms", "Forms.gumx");
+        CliTestHelper.Run("new", formsPath);
+        string sharedFile = Path.Combine(TempDirectory, "Shared", "ButtonBehavior.behx");
+        Directory.CreateDirectory(Path.GetDirectoryName(sharedFile)!);
+        string sourceBehavior = Directory.GetFiles(Path.Combine(TempDirectory, "Forms", "Behaviors"), "*.behx").First();
+        File.WriteAllText(sharedFile, File.ReadAllText(sourceBehavior) + "<!-- not part of the saved format -->");
+        string linkedPath = Path.Combine(TempDirectory, "Linked", "Linked.gumx");
+        CliTestHelper.Run("new", linkedPath, "--template", "empty");
+        string project = File.ReadAllText(linkedPath);
+        string reference = "<BehaviorReference Name=\"ButtonBehavior\" SourcePath=\"../Shared/ButtonBehavior.behx\" />";
+        File.WriteAllText(linkedPath, project.Replace("</GumProjectSave>", reference + "</GumProjectSave>"));
+        string sharedBefore = File.ReadAllText(sharedFile);
+
+        CliTestHelper result = CliTestHelper.Run("resave", linkedPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.ReadAllText(sharedFile).ShouldBe(sharedBefore);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

@@ -124,7 +124,8 @@ public static class ResaveCommand
             if (behavior.IsSourceFileMissing) continue;
 
             BehaviorReference? reference = project.BehaviorReferences.FirstOrDefault(item => item.Name == behavior.Name);
-            if (reference == null) continue;
+            // A linked behavior lives outside the project (shared by other projects), so it isn't this project's to rewrite.
+            if (reference == null || !string.IsNullOrEmpty(reference.SourcePath)) continue;
 
             behavior.Save(directory + reference.GetRelativeFilePath(isJsonFormat), useCompact);
         }
