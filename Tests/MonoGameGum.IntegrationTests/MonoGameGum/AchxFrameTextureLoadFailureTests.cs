@@ -3,8 +3,8 @@ using Gum.Graphics.Animation;
 using Gum.Wireframe;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.IO;
-using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.IntegrationTests.MonoGameGum;
@@ -13,8 +13,9 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// A frame texture that cannot be loaded from an .achx (missing, an image no decoder reads, a corrupt
 /// PNG) behaves one way on every runtime (#6890), through the real MonoGame loader and a real
 /// GraphicsDevice. With <see cref="MissingFileBehavior.ConsumeSilently"/> the frame stays with no
-/// texture and the rest of the file loads. With <see cref="MissingFileBehavior.ThrowException"/> a
-/// FileNotFoundException naming the texture is thrown.
+/// texture, the rest of the file loads and PropertyAssignmentError names the texture. With
+/// <see cref="MissingFileBehavior.ThrowException"/> loading throws a FileNotFoundException naming the
+/// first texture that failed.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
 public class AchxFrameTextureLoadFailureTests : BaseTestClass
@@ -27,23 +28,18 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         base.Dispose();
     }
 
-    public static TheoryData<string, string> FailingFrames => new()
-    {
-        { "missing.png", "missing" },
-        { "photo.jpg", "undecodable" },
-        { "broken.png", "corrupt" },
-    };
+    public static TheoryData<string> FailingFrames => new() { "missing.png", "photo.jpg", "broken.png" };
 
     [Theory]
     [MemberData(nameof(FailingFrames))]
-    public void SpriteSourceFile_FrameTextureFailsToLoad_ConsumeSilentlyKeepsFrameWithoutTexture(string textureName, string kind)
+    public void SpriteSourceFile_FrameTextureFailsToLoad_ConsumeSilentlyKeepsFrameWithoutTextureAndRaisesError(string textureName)
     {
         using Game game = new();
         game.RunOneFrame();
-        WriteAchxWithFrame(textureName, kind);
+        WriteAchx(null, textureName);
 
         AnimationChainList? chains = null;
-        WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
         {
             SpriteRuntime sprite = new() { SourceFileName = _directory + "a.achx" };
             chains = sprite.AnimationChains;
@@ -52,37 +48,42 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         chains.ShouldNotBeNull();
         chains.Count.ShouldBe(1);
         chains[0][0].Texture.ShouldBeNull();
+        errors.Count.ShouldBe(1);
+        errors[0].ShouldContain(textureName);
     }
 
-    // A NineSlice cannot show a frame with no texture, so on MonoGame it throws whatever ConsumeSilently says.
-    // That is a separate gap (#6897); this pins that a missing, undecodable and corrupt texture fail alike.
+    // A NineSlice treats a frame without a texture like a Sprite does: it draws nothing for that frame
+    // and playback goes on, instead of throwing from Update (#6897).
     [Theory]
     [MemberData(nameof(FailingFrames))]
-    public void NineSliceSourceFile_FrameTextureFailsToLoad_AllFailuresThrowTheSameError(string textureName, string kind)
+    public void NineSliceSourceFile_FrameTextureFailsToLoad_ConsumeSilentlyPlaysBlankFrameWithoutThrowing(string textureName)
     {
         using Game game = new();
         game.RunOneFrame();
-        WriteAchxWithFrame(textureName, kind);
+        WriteAchx(CreatePng(game), "ok.png", textureName);
 
-        InvalidOperationException thrown = null!;
-        WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
+        NineSliceRuntime? nineSlice = null;
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
         {
-            thrown = Should.Throw<InvalidOperationException>(() => new NineSliceRuntime { SourceFileName = _directory + "a.achx" });
+            nineSlice = new NineSliceRuntime { SourceFileName = _directory + "a.achx" };
+            nineSlice.CurrentChainName = "Idle";
+            nineSlice.Animate = true;
+            nineSlice.AnimateSelf(0.15);
+            nineSlice.AnimateSelf(0.15);
         });
 
-        thrown.Message.ShouldContain("null texture");
+        nineSlice!.AnimationChains![0][1].Texture.ShouldBeNull();
+        errors.Count.ShouldBe(1);
+        errors[0].ShouldContain(textureName);
     }
 
-    // The missing texture is left out: the desktop loader returns null for a missing file, which
-    // AnimationFrame does not check, so a missing frame texture ignores ThrowException (#6896).
     [Theory]
-    [InlineData("photo.jpg", "undecodable")]
-    [InlineData("broken.png", "corrupt")]
-    public void SpriteSourceFile_FrameTextureFailsToLoad_ThrowExceptionThrowsFileNotFoundNamingTexture(string textureName, string kind)
+    [MemberData(nameof(FailingFrames))]
+    public void SpriteSourceFile_FrameTextureFailsToLoad_ThrowExceptionThrowsFileNotFoundNamingTexture(string textureName)
     {
         using Game game = new();
         game.RunOneFrame();
-        WriteAchxWithFrame(textureName, kind);
+        WriteAchx(null, textureName);
 
         Exception thrown = null!;
         WithMissingFileBehavior(MissingFileBehavior.ThrowException, () =>
@@ -93,15 +94,51 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         FindFileNotFound(thrown, textureName).ShouldNotBeNull();
     }
 
-    [Fact]
-    public void SpriteSourceFile_FrameTextureIsValid_LoadsTexture()
+    // The error surfaces when the file loads, not later in Update.
+    [Theory]
+    [MemberData(nameof(FailingFrames))]
+    public void NineSliceSourceFile_FrameTextureFailsToLoad_ThrowExceptionThrowsAtLoadNamingTexture(string textureName)
     {
         using Game game = new();
         game.RunOneFrame();
-        WriteAchxWithFrame("ok.png", "valid", validPngBytes: CreatePng(game));
+        WriteAchx(CreatePng(game), "ok.png", textureName);
+
+        Exception thrown = null!;
+        WithMissingFileBehavior(MissingFileBehavior.ThrowException, () =>
+        {
+            thrown = Should.Throw<Exception>(() => new NineSliceRuntime { SourceFileName = _directory + "a.achx" });
+        });
+
+        FindFileNotFound(thrown, textureName).ShouldNotBeNull();
+    }
+
+    // The user flow: a file with a good, a missing and a corrupt frame fails on the first bad one.
+    [Fact]
+    public void SpriteSourceFile_GoodMissingAndBrokenFrames_ThrowExceptionFailsOnTheFirstBadFrame()
+    {
+        using Game game = new();
+        game.RunOneFrame();
+        WriteAchx(CreatePng(game), "ok.png", "missing.png", "broken.png");
+
+        Exception thrown = null!;
+        WithMissingFileBehavior(MissingFileBehavior.ThrowException, () =>
+        {
+            thrown = Should.Throw<Exception>(() => new SpriteRuntime { SourceFileName = _directory + "a.achx" });
+        });
+
+        FindFileNotFound(thrown, "missing.png").ShouldNotBeNull();
+        FindFileNotFound(thrown, "broken.png").ShouldBeNull();
+    }
+
+    [Fact]
+    public void SpriteSourceFile_FrameTextureIsValid_LoadsTextureAndRaisesNoError()
+    {
+        using Game game = new();
+        game.RunOneFrame();
+        WriteAchx(CreatePng(game), "ok.png");
 
         AnimationChainList? chains = null;
-        WithMissingFileBehavior(MissingFileBehavior.ThrowException, () =>
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ThrowException, () =>
         {
             SpriteRuntime sprite = new() { SourceFileName = _directory + "a.achx" };
             chains = sprite.AnimationChains;
@@ -109,6 +146,7 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
 
         chains.ShouldNotBeNull();
         chains[0][0].Texture.ShouldNotBeNull();
+        errors.ShouldBeEmpty();
     }
 
     private static Exception? FindFileNotFound(Exception? exception, string textureName)
@@ -124,30 +162,42 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         return null;
     }
 
-    private static void WithMissingFileBehavior(MissingFileBehavior behavior, Action action)
+    private static List<string> WithMissingFileBehavior(MissingFileBehavior behavior, Action action)
     {
         MissingFileBehavior saved = GraphicalUiElement.MissingFileBehavior;
         GraphicalUiElement.MissingFileBehavior = behavior;
+        List<string> errors = new();
+        Action<string> handler = errors.Add;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
         try
         {
             action();
         }
         finally
         {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
             GraphicalUiElement.MissingFileBehavior = saved;
         }
+        return errors;
     }
 
-    private void WriteAchxWithFrame(string textureName, string kind, byte[]? validPngBytes = null)
+    // ok.png is a valid image, missing.png has no file, anything else holds bytes no decoder reads.
+    private void WriteAchx(byte[]? validPng, params string[] textureNames)
     {
         Directory.CreateDirectory(_directory);
-        if (kind == "undecodable" || kind == "corrupt")
+        string frames = "";
+        foreach (string textureName in textureNames)
         {
-            File.WriteAllBytes(_directory + textureName, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
-        }
-        else if (validPngBytes != null)
-        {
-            File.WriteAllBytes(_directory + textureName, validPngBytes);
+            if (textureName == "ok.png")
+            {
+                File.WriteAllBytes(_directory + textureName, validPng!);
+            }
+            else if (textureName != "missing.png")
+            {
+                File.WriteAllBytes(_directory + textureName, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+            }
+            frames += $"<Frame><TextureName>{textureName}</TextureName><FrameLength>0.1</FrameLength>" +
+                "<LeftCoordinate>0</LeftCoordinate><RightCoordinate>1</RightCoordinate><TopCoordinate>0</TopCoordinate><BottomCoordinate>1</BottomCoordinate></Frame>";
         }
         File.WriteAllText(_directory + "a.achx",
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -155,8 +205,7 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
             "  <FileRelativeTextures>true</FileRelativeTextures>\n" +
             "  <TimeMeasurementUnit>Second</TimeMeasurementUnit>\n" +
             "  <CoordinateType>UV</CoordinateType>\n" +
-            $"  <AnimationChain><Name>Idle</Name><Frame><TextureName>{textureName}</TextureName><FrameLength>0.1</FrameLength>" +
-            "<LeftCoordinate>0</LeftCoordinate><RightCoordinate>1</RightCoordinate><TopCoordinate>0</TopCoordinate><BottomCoordinate>1</BottomCoordinate></Frame></AnimationChain>\n" +
+            $"  <AnimationChain><Name>Idle</Name>{frames}</AnimationChain>\n" +
             "</AnimationChainArraySave>\n");
     }
 

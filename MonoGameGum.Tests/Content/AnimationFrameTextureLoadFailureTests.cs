@@ -4,6 +4,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Content;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
@@ -55,17 +56,61 @@ public class AnimationFrameTextureLoadFailureTests : BaseTestClass
         thrown.InnerException.ShouldBeSameAs(loaderFailure);
     }
 
-    // The loader returns null for a missing file on desktop MonoGame, and AnimationFrame does not check
-    // for it, so a missing frame texture there ignores ThrowException (#6896).
+    // The desktop MonoGame loader returns null for a missing file instead of throwing (#6896).
     [Fact]
-    public void ToAnimationFrame_LoaderReturnsNull_ThrowExceptionDoesNotThrow()
+    public void ToAnimationFrame_LoaderReturnsNull_ThrowExceptionThrowsFileNotFoundNamingTexture()
     {
         LoaderManager.Self.ContentLoader = new ThrowingContentLoader(failure: null);
         GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
 
-        AnimationFrame frame = CreateSave("frame.png").ToAnimationFrame(loadTexture: true);
+        FileNotFoundException thrown = Should.Throw<FileNotFoundException>(() =>
+            CreateSave("frame.png").ToAnimationFrame(loadTexture: true));
 
-        frame.Texture.ShouldBeNull();
+        thrown.Message.ShouldContain("frame.png");
+    }
+
+    [Fact]
+    public void ToAnimationFrame_LoaderReturnsNull_ConsumeSilentlyLeavesFrameWithoutTextureAndRaisesError()
+    {
+        LoaderManager.Self.ContentLoader = new ThrowingContentLoader(failure: null);
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        List<string> errors = new();
+        Action<string> handler = errors.Add;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+        try
+        {
+            AnimationFrame frame = CreateSave("frame.png").ToAnimationFrame(loadTexture: true);
+
+            frame.Texture.ShouldBeNull();
+            errors.Count.ShouldBe(1);
+            errors[0].ShouldContain("frame.png");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(LoaderFailures))]
+    public void ToAnimationFrame_LoaderThrows_ConsumeSilentlyRaisesOneErrorNamingTexture(string failure)
+    {
+        LoaderManager.Self.ContentLoader = new ThrowingContentLoader(CreateFailure(failure));
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        List<string> errors = new();
+        Action<string> handler = errors.Add;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+        try
+        {
+            CreateSave("frame.png").ToAnimationFrame(loadTexture: true);
+
+            errors.Count.ShouldBe(1);
+            errors[0].ShouldContain("frame.png");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+        }
     }
 
     [Fact]
