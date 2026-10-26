@@ -1,3 +1,4 @@
+﻿using Gum.Graphics.Animation;
 using System;
 using System.IO;
 using Gum.Content.AnimationChain;
@@ -293,6 +294,92 @@ public class AnimationChainListSaveAchjTests
         });
     }
 
+    [Fact]
+    public void FromFile_AchxExtension_PingPongAndReverse_Parse()
+    {
+        WithTempFile(".achx", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <AnimationChainArraySave>
+          <AnimationChain>
+            <Name>Bounce</Name>
+            <PingPong>true</PingPong>
+            <Reverse>true</Reverse>
+          </AnimationChain>
+        </AnimationChainArraySave>
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].PingPong.ShouldBeTrue();
+            save.AnimationChains[0].Reverse.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchxExtension_ChainOmitsPingPongAndReverse_DefaultsToFalse()
+    {
+        WithTempFile(".achx", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <AnimationChainArraySave>
+          <AnimationChain>
+            <Name>Walk</Name>
+          </AnimationChain>
+        </AnimationChainArraySave>
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].PingPong.ShouldBeFalse();
+            save.AnimationChains[0].Reverse.ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchjExtension_PingPongAndReverse_Parse()
+    {
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            { "name": "Bounce", "pingPong": true, "reverse": true, "frames": [] }
+          ]
+        }
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].PingPong.ShouldBeTrue();
+            save.AnimationChains[0].Reverse.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchjExtension_ChainOmitsPingPongAndReverse_DefaultsToFalse()
+    {
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            { "name": "Walk", "frames": [] }
+          ]
+        }
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].PingPong.ShouldBeFalse();
+            save.AnimationChains[0].Reverse.ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void ToAnimationChain_ShouldCarryPingPongAndReverse()
+    {
+        AnimationChainSave save = new() { Name = "Bounce", PingPong = true, Reverse = true };
+
+        Gum.Graphics.Animation.AnimationChain chain = save.ToAnimationChain(TimeMeasurementUnit.Second);
+
+        chain.PingPong.ShouldBeTrue();
+        chain.IsReversed.ShouldBeTrue();
+    }
     [Fact]
     public void FromFile_AchxExtension_StillParsesAsXml()
     {

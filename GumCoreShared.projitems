@@ -131,6 +131,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\KeyframeCurve.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\KeyframeEvaluator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\PlaybackTimeline.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BatchOrchestrator.cs" />

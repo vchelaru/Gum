@@ -126,6 +126,10 @@ Screenshot/GIF needed: an animated GIF showing a `SpriteRuntime` playing back an
 
 If you need lower-level control — for example, driving animation outside of `GumService.Default.Update` — see the [AnimateSelf](../gum-code-reference/graphicaluielement/animateself.md) page.
 
+### PingPong and Reverse
+
+A chain in an `.achx`/`.achj` file can set `PingPong` and `Reverse` (`pingPong`/`reverse` in `.achj`). Reverse plays the chain last frame to first. PingPong plays it forward then backward, so one cycle is twice the chain's length, and the end frames show for double their length across the turnaround. With both, the backward half plays first. `AnimationChainCycled` is raised once per full cycle, and a non-looping PingPong chain stops after one full cycle. Frame changes are only reported when the shown frame changes, so the turnaround raises nothing.
+
 ### Looping and End of Chain Events
 
 A chain loops by default. `IsAnimationChainLooping` controls whether it starts over after its last frame. Each chain in an `.achx` file can set its own default, which applies when you set `CurrentChainName`.
