@@ -13,6 +13,12 @@ public sealed class GumElementAttribute : Attribute
     /// <summary>The element's name, including its folder, as <c>ObjectFinder.GetElementSave</c> takes it.</summary>
     public string ElementName { get; }
 
+    /// <summary>
+    /// The Forms control type this class is the default visual for, when it registers one, such as
+    /// <c>Button</c>. Game code that creates that control uses this element.
+    /// </summary>
+    public Type? FormsType { get; set; }
+
     /// <summary>Initializes a new <see cref="GumElementAttribute"/>.</summary>
     public GumElementAttribute(string elementName)
     {

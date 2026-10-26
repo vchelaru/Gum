@@ -10,7 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/CheckBox")]
+[global::Gum.DataTypes.GumElement("Controls/CheckBox", FormsType = typeof(global::Gum.Forms.Controls.CheckBox))]
 partial class CheckBox : global::Gum.Forms.Controls.CheckBox
 {
     #if UNITY_5_3_OR_NEWER

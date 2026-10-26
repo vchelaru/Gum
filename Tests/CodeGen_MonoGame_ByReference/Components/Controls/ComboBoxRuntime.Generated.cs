@@ -11,7 +11,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/ComboBox")]
+[global::Gum.DataTypes.GumElement("Controls/ComboBox", FormsType = typeof(global::Gum.Forms.Controls.ComboBox))]
 partial class ComboBoxRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER

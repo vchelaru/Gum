@@ -365,6 +365,63 @@ public class PackCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Pack_reads_GumElementRoot_attributes_from_a_compiled_assembly_and_ignores_lookalikes()
+    {
+        string projectPath = CreateShakeProject("ShakeCompiled", "CompiledRoot", "Decoy");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        const string source = """
+            [assembly: Gum.DataTypes.GumElementRoot("CompiledRoot")]
+            [assembly: Other.GumElementRoot("Decoy")]
+            [assembly: System.Reflection.AssemblyDescription("Decoy")]
+            namespace Other
+            {
+                [System.AttributeUsage(System.AttributeTargets.Assembly)]
+                public sealed class GumElementRootAttribute : System.Attribute { public GumElementRootAttribute(string name) { } }
+            }
+            """;
+        string assemblyPath = Path.Combine(projectDir, "Game.dll");
+        using FileStream assemblyStream = File.Create(assemblyPath);
+        Microsoft.CodeAnalysis.Emit.EmitResult emit = Microsoft.CodeAnalysis.CSharp.CSharpCompilation.Create(
+                "Game",
+                new[] { Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(source) },
+                new[]
+                {
+                    Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                    Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(Path.Combine(Path.GetDirectoryName(typeof(object).Assembly.Location)!, "System.Runtime.dll")),
+                    Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(typeof(GumElementRootAttribute).Assembly.Location),
+                },
+                new Microsoft.CodeAnalysis.CSharp.CSharpCompilationOptions(Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary))
+            .Emit(assemblyStream);
+        emit.Success.ShouldBeTrue(string.Join(Environment.NewLine, emit.Diagnostics));
+        assemblyStream.Dispose();
+        string bundlePath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath,
+            "--shake", "--keep", "FromKeep,FromRootsFile", "--roots-assembly", assemblyPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(bundlePath);
+        entries.Keys.ShouldContain("Components/CompiledRoot.gucx");
+        entries.Keys.ShouldNotContain("Components/Decoy.gucx");
+    }
+
+    [Theory]
+    [InlineData("--keep", "Kept")]
+    [InlineData("--roots", "roots.txt")]
+    [InlineData("--roots-assembly", "Game.dll")]
+    public void Pack_without_shake_exits_with_2_when_a_root_option_is_given(string option, string value)
+    {
+        string projectPath = CreateShakeProject("RootsWithoutShake" + option.Replace("-", ""));
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, option, value);
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("only apply with --shake");
+        File.Exists(outputPath).ShouldBeFalse();
+    }
+
+    [Fact]
     public void Pack_with_shake_exits_with_2_when_a_root_names_no_element()
     {
         string projectPath = CreateShakeProject("ShakeMisspelled");

@@ -10,7 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/RadioButton")]
+[global::Gum.DataTypes.GumElement("Controls/RadioButton", FormsType = typeof(global::Gum.Forms.Controls.RadioButton))]
 partial class RadioButtonRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER

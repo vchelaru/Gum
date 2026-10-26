@@ -10,7 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/ScrollViewer")]
+[global::Gum.DataTypes.GumElement("Controls/ScrollViewer", FormsType = typeof(global::Gum.Forms.Controls.ScrollViewer))]
 partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
 {
     #if UNITY_5_3_OR_NEWER

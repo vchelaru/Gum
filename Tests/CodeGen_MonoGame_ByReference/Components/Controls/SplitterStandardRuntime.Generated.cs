@@ -9,7 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/SplitterStandard")]
+[global::Gum.DataTypes.GumElement("Controls/SplitterStandard", FormsType = typeof(global::Gum.Forms.Controls.Splitter))]
 partial class SplitterStandardRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER

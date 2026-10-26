@@ -10,7 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/ListBox")]
+[global::Gum.DataTypes.GumElement("Controls/ListBox", FormsType = typeof(global::Gum.Forms.Controls.ListBox))]
 partial class ListBoxRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER

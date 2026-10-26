@@ -10,7 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/TextBox")]
+[global::Gum.DataTypes.GumElement("Controls/TextBox", FormsType = typeof(global::Gum.Forms.Controls.TextBox))]
 partial class TextBox : global::Gum.Forms.Controls.TextBox
 {
     #if UNITY_5_3_OR_NEWER

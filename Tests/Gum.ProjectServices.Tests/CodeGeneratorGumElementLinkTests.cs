@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
@@ -65,6 +66,30 @@ public class CodeGeneratorGumElementLinkTests : BaseTestClass
         code.ShouldContain("[global::Gum.DataTypes.GumElement(\"Cards/CardGum\")]");
         code.ShouldContain("ObjectFinder.Self.GetRequiredElementSave(\"Cards/CardGum\")");
         code.ShouldNotContain("GetElementSave(\"Cards/CardGum\")");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_SyntaxVersion7_RecordsTheFormsTypeItRegistersFor()
+    {
+        Project.Behaviors.Add(new BehaviorSave
+        {
+            Name = StandardFormsBehaviorNames.ButtonBehaviorName,
+            DefaultImplementation = "Controls/ButtonStandard",
+        });
+        ComponentSave button = new ComponentSave { Name = "Controls/ButtonStandard", BaseType = "Container" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = StandardFormsBehaviorNames.ButtonBehaviorName });
+        Project.Components.Add(button);
+        ObjectFinder.Self.GumProjectSave = Project;
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.GumForms,
+            RootNamespace = "MyGame",
+        };
+
+        string code = CreateCodeGenerator(syntaxVersion: 7).GetGeneratedCodeForElement(button, new CodeOutputElementSettings(), settings);
+
+        code.ShouldContain("[global::Gum.DataTypes.GumElement(\"Controls/ButtonStandard\", FormsType = typeof(global::Gum.Forms.Controls.Button))]");
     }
 
     [Fact]

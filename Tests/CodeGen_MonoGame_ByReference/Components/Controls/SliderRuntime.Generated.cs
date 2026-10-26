@@ -10,7 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/Slider")]
+[global::Gum.DataTypes.GumElement("Controls/Slider", FormsType = typeof(global::Gum.Forms.Controls.Slider))]
 partial class SliderRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER

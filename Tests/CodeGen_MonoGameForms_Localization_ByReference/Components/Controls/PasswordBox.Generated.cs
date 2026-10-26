@@ -9,7 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/PasswordBox")]
+[global::Gum.DataTypes.GumElement("Controls/PasswordBox", FormsType = typeof(global::Gum.Forms.Controls.PasswordBox))]
 partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
 {
     #if UNITY_5_3_OR_NEWER

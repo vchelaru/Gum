@@ -14,7 +14,8 @@ namespace Gum.Analyzers;
 /// Records the Gum elements a game's own code uses as <c>[assembly: GumElementRoot("...")]</c>, so
 /// <c>gumcli pack --shake --roots-assembly</c> keeps elements that only code creates. An element is used
 /// when hand-written code names a class carrying <c>[GumElement]</c> (creation, typeof, generic
-/// argument, cast, is/as, member access, declaration) or passes a string literal to an ObjectFinder
+/// argument, cast, is/as, member access, declaration), names a Forms control such as <c>Button</c> that a
+/// generated class is registered for (<c>GumElement.FormsType</c>), or passes a string literal to an ObjectFinder
 /// element lookup. Gum's generated files (<c>*.Generated.cs</c>) do not count: they reference every
 /// element. A non-literal name passed to a lookup cannot be rooted and raises GUM004 in a game that sets
 /// <c>&lt;GumShake&gt;true&lt;/GumShake&gt;</c>.
@@ -26,6 +27,7 @@ public sealed class GumElementRootGenerator : IIncrementalGenerator
 
     private const string GumShakePropertyKey = "build_property.GumShake";
     private const string GumElementAttributeName = "Gum.DataTypes.GumElementAttribute";
+    private const string FrameworkElementTypeName = "Gum.Forms.Controls.FrameworkElement";
     private const string GumElementRootAttributeName = "Gum.DataTypes.GumElementRootAttribute";
 
     private static readonly HashSet<string> LookupMethodNames = new HashSet<string>(StringComparer.Ordinal)
@@ -41,24 +43,30 @@ public sealed class GumElementRootGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    // A root found in one syntax node: an element name, or a location for GUM004.
+    // What one syntax node uses: an element by name, a Forms control type (which reaches the element
+    // registered for it), or a lookup whose name is not a literal (a location for GUM004).
     private readonly struct Use : IEquatable<Use>
     {
-        public Use(string? elementName, Location? dynamicLookup, string? methodName)
+        public Use(string? elementName, Location? dynamicLookup, string? methodName, string? formsType = null)
         {
             ElementName = elementName;
             DynamicLookup = dynamicLookup;
             MethodName = methodName;
+            FormsType = formsType;
         }
 
         public string? ElementName { get; }
         public Location? DynamicLookup { get; }
         public string? MethodName { get; }
+        public string? FormsType { get; }
+
+        public bool IsEmpty => ElementName == null && DynamicLookup == null && FormsType == null;
 
         public bool Equals(Use other) =>
-            ElementName == other.ElementName && MethodName == other.MethodName && Equals(DynamicLookup, other.DynamicLookup);
+            ElementName == other.ElementName && MethodName == other.MethodName && FormsType == other.FormsType
+            && Equals(DynamicLookup, other.DynamicLookup);
         public override bool Equals(object? obj) => obj is Use other && Equals(other);
-        public override int GetHashCode() => (ElementName ?? MethodName ?? string.Empty).GetHashCode();
+        public override int GetHashCode() => (ElementName ?? FormsType ?? MethodName ?? string.Empty).GetHashCode();
     }
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -66,7 +74,14 @@ public sealed class GumElementRootGenerator : IIncrementalGenerator
         IncrementalValuesProvider<Use> uses = context.SyntaxProvider.CreateSyntaxProvider(
                 predicate: static (node, _) => node is SimpleNameSyntax || node is InvocationExpressionSyntax,
                 transform: static (syntaxContext, cancellationToken) => GetUse(syntaxContext, cancellationToken))
-            .Where(static use => use.ElementName != null || use.DynamicLookup != null);
+            .Where(static use => !use.IsEmpty);
+
+        // Each generated class registered as the default visual for a Forms type: (Forms type, element name).
+        IncrementalValuesProvider<(string FormsType, string ElementName)> registrations = context.SyntaxProvider
+            .ForAttributeWithMetadataName(GumElementAttributeName,
+                predicate: static (node, _) => node is ClassDeclarationSyntax,
+                transform: static (attributeContext, _) => GetRegistration(attributeContext))
+            .Where(static registration => registration.FormsType.Length > 0);
 
         IncrementalValueProvider<bool> runtimeSupportsRoots = context.CompilationProvider
             .Select(static (compilation, _) => compilation.GetTypeByMetadataName(GumElementRootAttributeName) != null);
@@ -78,9 +93,9 @@ public sealed class GumElementRootGenerator : IIncrementalGenerator
                 options.GlobalOptions.TryGetValue(GumShakePropertyKey, out string? value)
                 && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase));
 
-        context.RegisterSourceOutput(uses.Collect().Combine(runtimeSupportsRoots).Combine(gameShakes), static (sourceContext, input) =>
+        context.RegisterSourceOutput(uses.Collect().Combine(registrations.Collect()).Combine(runtimeSupportsRoots).Combine(gameShakes), static (sourceContext, input) =>
         {
-            ((ImmutableArray<Use> allUses, bool supportsRoots), bool shakes) = input;
+            (((ImmutableArray<Use> allUses, ImmutableArray<(string FormsType, string ElementName)> allRegistrations), bool supportsRoots), bool shakes) = input;
             if (!supportsRoots)
             {
                 return;
@@ -94,9 +109,14 @@ public sealed class GumElementRootGenerator : IIncrementalGenerator
                 }
             }
 
+            HashSet<string> usedFormsTypes = new HashSet<string>(
+                allUses.Where(use => use.FormsType != null).Select(use => use.FormsType!), StringComparer.Ordinal);
             List<string> names = allUses
                 .Where(use => use.ElementName != null)
                 .Select(use => use.ElementName!)
+                .Concat(allRegistrations
+                    .Where(registration => usedFormsTypes.Contains(registration.FormsType))
+                    .Select(registration => registration.ElementName))
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(name => name, StringComparer.Ordinal)
                 .ToList();
@@ -148,7 +168,35 @@ public sealed class GumElementRootGenerator : IIncrementalGenerator
                 return new Use(elementName, null, null);
             }
         }
+
+        // A Forms control such as Button builds its visual from the element generated code registered for it.
+        for (INamedTypeSymbol? baseType = type; baseType != null; baseType = baseType.BaseType)
+        {
+            if (baseType.ToDisplayString() == FrameworkElementTypeName)
+            {
+                return new Use(null, null, null, formsType: type.ToDisplayString());
+            }
+        }
         return default;
+    }
+
+    private static (string FormsType, string ElementName) GetRegistration(GeneratorAttributeSyntaxContext attributeContext)
+    {
+        foreach (AttributeData attribute in attributeContext.Attributes)
+        {
+            if (attribute.ConstructorArguments.Length == 1
+                && attribute.ConstructorArguments[0].Value is string elementName)
+            {
+                foreach (KeyValuePair<string, TypedConstant> namedArgument in attribute.NamedArguments)
+                {
+                    if (namedArgument.Key == "FormsType" && namedArgument.Value.Value is INamedTypeSymbol formsType)
+                    {
+                        return (formsType.ToDisplayString(), elementName);
+                    }
+                }
+            }
+        }
+        return (string.Empty, string.Empty);
     }
 
     private static Use GetLookupUse(InvocationExpressionSyntax invocation, SemanticModel model, CancellationToken cancellationToken)

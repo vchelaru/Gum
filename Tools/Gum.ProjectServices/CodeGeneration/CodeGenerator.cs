@@ -770,7 +770,11 @@ public class CodeGenerator
 
         if (EmitsGumElementLink(context))
         {
-            context.StringBuilder.AppendLine(context.Tabs + $"[global::Gum.DataTypes.GumElement(\"{context.Element.Name}\")]");
+            // The Forms type this class registers as the default visual for, so game code that creates that
+            // control (new Button()) roots this element too.
+            string? formsType = GetDefaultFormsTemplateType(context.Element);
+            string formsTypeArgument = formsType == null ? "" : $", FormsType = typeof({formsType})";
+            context.StringBuilder.AppendLine(context.Tabs + $"[global::Gum.DataTypes.GumElement(\"{context.Element.Name}\"{formsTypeArgument})]");
         }
         context.StringBuilder.AppendLine(context.Tabs + header);
     }

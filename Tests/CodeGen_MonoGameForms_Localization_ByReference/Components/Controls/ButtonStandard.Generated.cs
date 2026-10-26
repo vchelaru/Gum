@@ -9,7 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/ButtonStandard")]
+[global::Gum.DataTypes.GumElement("Controls/ButtonStandard", FormsType = typeof(global::Gum.Forms.Controls.Button))]
 partial class ButtonStandard : global::Gum.Forms.Controls.Button
 {
     #if UNITY_5_3_OR_NEWER

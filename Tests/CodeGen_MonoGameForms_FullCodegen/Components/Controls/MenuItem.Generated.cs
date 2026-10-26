@@ -9,7 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/MenuItem")]
+[global::Gum.DataTypes.GumElement("Controls/MenuItem", FormsType = typeof(global::Gum.Forms.Controls.MenuItem))]
 partial class MenuItem : global::Gum.Forms.Controls.MenuItem
 {
     #if UNITY_5_3_OR_NEWER

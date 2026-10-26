@@ -10,7 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/ScrollBar")]
+[global::Gum.DataTypes.GumElement("Controls/ScrollBar", FormsType = typeof(global::Gum.Forms.Controls.ScrollBar))]
 partial class ScrollBarRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER

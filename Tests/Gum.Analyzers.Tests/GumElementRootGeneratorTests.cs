@@ -20,9 +20,15 @@ public class GumElementRootGeneratorTests
 namespace Gum.DataTypes
 {
     [System.AttributeUsage(System.AttributeTargets.Class)]
-    public sealed class GumElementAttribute : System.Attribute { public GumElementAttribute(string elementName) { } }
+    public sealed class GumElementAttribute : System.Attribute { public GumElementAttribute(string elementName) { } public System.Type FormsType { get; set; } }
     [System.AttributeUsage(System.AttributeTargets.Assembly, AllowMultiple = true)]
     public sealed class GumElementRootAttribute : System.Attribute { public GumElementRootAttribute(string elementName) { } }
+}
+namespace Gum.Forms.Controls
+{
+    public class FrameworkElement { }
+    public class Button : FrameworkElement { }
+    public class CheckBox : FrameworkElement { }
 }
 namespace Gum.Managers
 {
@@ -81,6 +87,23 @@ class Game
 
         generated.ShouldContain("[assembly: global::Gum.DataTypes.GumElementRoot(\"Cards/CardGum\")]");
         diagnostics.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Generator_roots_the_component_registered_for_a_Forms_type_the_game_code_creates()
+    {
+        const string generatedForms = @"
+[Gum.DataTypes.GumElement(""Controls/ButtonStandard"", FormsType = typeof(Gum.Forms.Controls.Button))]
+partial class ButtonStandard : Gum.Forms.Controls.Button { }
+[Gum.DataTypes.GumElement(""Controls/CheckBox"", FormsType = typeof(Gum.Forms.Controls.CheckBox))]
+partial class CheckBoxRuntime : Gum.Forms.Controls.CheckBox { }";
+        const string gameCode = "class Game { object button = new Gum.Forms.Controls.Button(); }";
+
+        (string generated, ImmutableArray<Diagnostic> _) = Run(gumShake: null,
+            (GumTypes, "GumTypes.cs"), (generatedForms, "Components/Controls/Forms.Generated.cs"), (gameCode, "Game.cs"));
+
+        generated.ShouldContain("[assembly: global::Gum.DataTypes.GumElementRoot(\"Controls/ButtonStandard\")]");
+        generated.ShouldNotContain("Controls/CheckBox");
     }
 
     [Fact]

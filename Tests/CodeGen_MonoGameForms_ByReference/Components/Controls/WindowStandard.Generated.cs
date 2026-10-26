@@ -10,7 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/WindowStandard")]
+[global::Gum.DataTypes.GumElement("Controls/WindowStandard", FormsType = typeof(global::Gum.Forms.Window))]
 partial class WindowStandard : global::Gum.Forms.Window
 {
     #if UNITY_5_3_OR_NEWER
