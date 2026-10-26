@@ -70,6 +70,8 @@ public class InMemoryFontCreatorPropertyAssignmentErrorTests : BaseTestClass
             CustomSetPropertyOnRenderable.InMemoryFontCreator = new ThrowingFontCreator();
 
             TextRuntime textRuntime = new();
+            // Only characters the stub font has, so the missing-character report (#6818) stays out of it.
+            textRuntime.Text = "ABC";
             textRuntime.Font = baseFontName;
             // The Font assignment above already triggered a resolution at the TextRuntime's default
             // FontSize (not yet 20), which the creator throws on -- reset before the FontSize
@@ -244,6 +246,8 @@ public class InMemoryFontCreatorPropertyAssignmentErrorTests : BaseTestClass
             CustomSetPropertyOnRenderable.InMemoryFontCreator = new ThrowingFontCreator();
 
             TextRuntime textRuntime = new();
+            // Only characters the stub font has, so the missing-character report (#6818) stays out of it.
+            textRuntime.Text = "ABC";
             textRuntime.Font = fontName;
             // The Font assignment above already triggered a resolution at the TextRuntime's default
             // FontSize (not yet 14), which the creator throws on -- reset before the FontSize

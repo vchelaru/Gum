@@ -1074,19 +1074,86 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     void CheckAndGrowFont()
     {
-        if (!UseAutomaticFontGrowth)
-        {
-            return;
-        }
-
-#if XNALIKE
-        if (CustomSetPropertyOnRenderableType.InMemoryFontCreator is not IGrowableFontCreator growCreator)
+        if (!UseAutomaticFontGrowth && !ReportMissingCharacters)
         {
             return;
         }
 
         string? text = ContainedText.RawText;
         if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
+        if (UseAutomaticFontGrowth)
+        {
+            GrowFontIfNeeded(text);
+        }
+
+        if (ReportMissingCharacters)
+        {
+#if XNALIKE
+            // A Text with no font of its own draws with the default font.
+            BitmapFont? font = ContainedText.MeasurementFont ?? ContainedText.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
+            // A font with no characters at all failed to load, which is reported where it loads.
+            string missing = font?.GetCharacterInfo(' ') == null ? string.Empty : font.GetMissingCharacters(text);
+#else
+            Font font = ContainedText.MeasurementFont ?? ContainedText.Font;
+            string missing = font.GlyphCount == 0 ? string.Empty : font.GetMissingCharacters(text);
+#endif
+            ReportMissingCharactersOnce(missing);
+        }
+    }
+
+    // Font identity (as the report names it) mapped to the characters already reported for it, shared
+    // by every Text so a missing character is reported once per font rather than once per Text.
+    static readonly Dictionary<string, HashSet<char>> _reportedMissingCharacters = new();
+
+    void ReportMissingCharactersOnce(string missing)
+    {
+        if (missing.Length == 0)
+        {
+            return;
+        }
+
+        string? fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
+        string fontIdentity = (UseCustomFont ? CustomFontFile : fontFilePath ?? Font) ?? "(default)";
+        string key = $"{fontIdentity}|{FontSize}|{IsBold}|{IsItalic}|{OutlineThickness}|{UseFontSmoothing}";
+        if (!_reportedMissingCharacters.TryGetValue(key, out HashSet<char>? reported))
+        {
+            reported = new HashSet<char>();
+            _reportedMissingCharacters[key] = reported;
+        }
+
+        List<char> toReport = new();
+        foreach (char c in missing)
+        {
+            // Line breaks and tabs are layout, not glyphs, and a failed growth was already reported.
+            if (!char.IsControl(c) && !_failedGrowthCharacters.Contains(c) && reported.Add(c))
+            {
+                toReport.Add(c);
+            }
+        }
+        if (toReport.Count == 0)
+        {
+            return;
+        }
+
+        string characters = string.Join(", ", toReport.Select(c => $"'{c}' (U+{(int)c:X4})"));
+        string codes = string.Join(",", toReport.Select(c => ((int)c).ToString()));
+        bool isPregeneratedFile = UseCustomFont && CustomFontFile?.EndsWith(".fnt", StringComparison.OrdinalIgnoreCase) == true;
+        string fix = isPregeneratedFile
+            ? $"Regenerate '{CustomFontFile}' with code point(s) {codes}."
+            : $"Add {codes} to FontRanges.";
+        CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+            $"Text '{Name ?? "(unnamed)"}' uses {characters}, which font '{fontIdentity}' at size {FontSize} " +
+            $"does not have, so they draw as blank space. {fix}");
+    }
+
+#if XNALIKE
+    void GrowFontIfNeeded(string text)
+    {
+        if (CustomSetPropertyOnRenderableType.InMemoryFontCreator is not IGrowableFontCreator growCreator)
         {
             return;
         }
@@ -1110,14 +1177,11 @@ public class TextRuntime : InteractiveGue
         {
             GrowIfNeeded(growCreator, displayFont, FontSize * _lastAutoOversampleRatio, text);
         }
+    }
 #else
+    void GrowFontIfNeeded(string text)
+    {
         if (CustomSetPropertyOnRenderableType.InMemoryFontCreator is not IGrowableRaylibFontCreator growCreator)
-        {
-            return;
-        }
-
-        string? text = ContainedText.RawText;
-        if (string.IsNullOrEmpty(text))
         {
             return;
         }
@@ -1153,8 +1217,8 @@ public class TextRuntime : InteractiveGue
                 ContainedText.Font = displayFont;
             }
         }
-#endif
     }
+#endif
 
 #if XNALIKE
     void GrowIfNeeded(IGrowableFontCreator growCreator, BitmapFont font, float fontSize, string text)
@@ -1652,6 +1716,17 @@ public class TextRuntime : InteractiveGue
     /// <c>RaylibGum.Renderables.IGrowableRaylibFontCreator</c> on Raylib (issue #4546).
     /// </summary>
     public static bool UseAutomaticFontGrowth = false;
+
+    /// <summary>
+    /// Whether a Text reports characters its font has no glyph for (issue #6818). Such a character
+    /// draws as blank space, so without the report a narrow font range fails silently. Each report
+    /// goes through <c>CustomSetPropertyOnRenderable.PropertyAssignmentError</c> (and
+    /// <see cref="System.Console.Error"/>), once per font and character for the whole process, and
+    /// names the Text, the font, its size and the code points to add to the font ranges. Characters
+    /// <see cref="UseAutomaticFontGrowth"/> adds are never reported. Not used by SkiaGum, which draws
+    /// from the whole typeface.
+    /// </summary>
+    public static bool ReportMissingCharacters = true;
 
     /// <summary>
     /// The page width/height, in pixels, used as the growth ceiling for a font <see cref="UseAutomaticFontGrowth"/>
