@@ -40,6 +40,7 @@ public class GumxImportSkippedItemsTests : IDisposable
 
     public enum Failure
     {
+        None,
         BehaviorSourcePathTargetMissing,
         BehaviorFileMalformed,
         ComponentFileMissing,
@@ -94,6 +95,83 @@ public class GumxImportSkippedItemsTests : IDisposable
     }
 
     [Fact]
+    public async Task ImportAsync_ItemOutsideTheCallersScope_IsIgnored()
+    {
+        string sourcePath = WriteSourceProject(Path.Combine(_root, "Source"), Failure.StandardFileMissing);
+        GumxSourceService sourceService = new GumxSourceService();
+        GumProjectSave source = (await sourceService.LoadProjectAsync(sourcePath))!;
+        GumxImportService sut = CreateService(Path.Combine(_root, "Project"), source.Version, Failure.StandardFileMissing);
+        Directory.CreateDirectory(Path.Combine(_root, "Project"));
+
+        ImportSelections withoutStandards = new ImportSelections
+        {
+            DirectComponents = source.Components.ToList(),
+            ReportSourceProblem = problem => problem.Kind != ImportFromGumxPlugin.ViewModels.ElementItemType.Standard,
+        };
+        ImportResult result = await sut.ImportAsync(withoutStandards, source, sourceService.GetSourceBase(sourcePath), string.Empty);
+
+        result.SkippedElements.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ImportAsync_FailureAfterTheFirstWrite_ThrowsNamingWhatWasAlreadyWritten()
+    {
+        string projectDirectory = Path.Combine(_root, "Project");
+        Directory.CreateDirectory(projectDirectory);
+        string sourcePath = WriteSourceProject(Path.Combine(_root, "Source"), Failure.None);
+        GumxSourceService sourceService = new GumxSourceService();
+        GumProjectSave source = (await sourceService.LoadProjectAsync(sourcePath))!;
+        Mock<IFileCommands> fileCommands = new();
+        fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Throws(new IOException("No space left on device"));
+        GumxImportService sut = CreateService(projectDirectory, source.Version, Failure.None, fileCommands.Object);
+
+        ImportSelections everything = new ImportSelections
+        {
+            DirectComponents = source.Components.ToList(),
+            Behaviors = source.Behaviors.ToList(),
+            Standards = source.StandardElements.ToList(),
+        };
+        ImportFailedException failure = await Should.ThrowAsync<ImportFailedException>(() =>
+            sut.ImportAsync(everything, source, sourceService.GetSourceBase(sourcePath), string.Empty));
+
+        failure.Message.ShouldContain("No space left on device");
+        failure.WrittenFiles.ShouldContain(Path.Combine(projectDirectory, "Standards", "Circle.gutx"));
+        failure.WrittenFiles.ShouldContain(Path.Combine(projectDirectory, "Behaviors", "GoodBehavior.behx"));
+        File.Exists(Path.Combine(projectDirectory, "Standards", "Circle.gutx")).ShouldBeTrue();
+    }
+
+    // What a behavior's SourcePath may point at, as it works today. Nothing contains it to the theme folder.
+    [Theory]
+    [InlineData("../Shared/B.behx", "Theme/Shared/B.behx", false)]
+    [InlineData("../../Outside/B.behx", "Outside/B.behx", false)]
+    [InlineData("..\\Shared\\B.behx", "Theme/Shared/B.behx", false)]
+    [InlineData("<absolute>", "Elsewhere/B.behx", true)]
+    public async Task ImportAsync_BehaviorSourcePath_IsFollowedWhereverItPoints(string sourcePath, string fileUnderRoot, bool isAbsolute)
+    {
+        string sourceDirectory = Path.Combine(_root, "Theme", "Sub");
+        string projectDirectory = Path.Combine(_root, "Project");
+        Directory.CreateDirectory(sourceDirectory);
+        Directory.CreateDirectory(projectDirectory);
+        string behaviorFile = Path.Combine(_root, fileUnderRoot);
+        Directory.CreateDirectory(Path.GetDirectoryName(behaviorFile)!);
+        new BehaviorSave { Name = "B" }.Save(behaviorFile, useCompactFormat: true);
+        GumProjectSave source = new GumProjectSave
+        {
+            FullFileName = Path.Combine(sourceDirectory, "Source.gumx"),
+            Version = (int)GumProjectSave.GumxVersions.AttributeVersion,
+        };
+        source.Behaviors.Add(new BehaviorSave { Name = "B" });
+        source.BehaviorReferences.Add(new BehaviorReference { Name = "B", SourcePath = isAbsolute ? behaviorFile : sourcePath });
+        GumxImportService sut = CreateService(projectDirectory, source.Version, Failure.None);
+
+        ImportResult result = await sut.ImportAsync(
+            new ImportSelections { Behaviors = source.Behaviors.ToList() }, source, sourceDirectory, string.Empty);
+
+        result.SkippedElements.ShouldBeEmpty();
+        File.Exists(Path.Combine(projectDirectory, "Behaviors", "B.behx")).ShouldBeTrue();
+    }
+
+    [Fact]
     public void DescribeSkipped_PutsEachItemOnItsOwnLineWithItsReason()
     {
         ImportResult result = new ImportResult();
@@ -109,7 +187,7 @@ public class GumxImportSkippedItemsTests : IDisposable
         });
     }
 
-    private GumxImportService CreateService(string projectDirectory, int version, Failure failure)
+    private GumxImportService CreateService(string projectDirectory, int version, Failure failure, IFileCommands? fileCommands = null)
     {
         GumProjectSave project = new GumProjectSave
         {
@@ -141,7 +219,7 @@ public class GumxImportSkippedItemsTests : IDisposable
             .Returns(new BehaviorSave());
 
         return new GumxImportService(
-            importLogic.Object, projectState.Object, new Mock<IFileCommands>().Object,
+            importLogic.Object, projectState.Object, fileCommands ?? new Mock<IFileCommands>().Object,
             new GumxSourceService(), new ImportVersionGate(), new Mock<IFileWatchIgnoreList>().Object);
     }
 
@@ -182,6 +260,10 @@ public class GumxImportSkippedItemsTests : IDisposable
                 break;
             case Failure.ScreenFileMissing:
                 AddScreen(project, "BadScreen");
+                break;
+            case Failure.None:
+                project.StandardElements.Add(new StandardElementSave { Name = "Circle" });
+                project.StandardElementReferences.Add(new ElementReference { Name = "Circle", ElementType = ElementType.Standard });
                 break;
             case Failure.StandardFileMissing:
                 project.StandardElements.Add(new StandardElementSave { Name = "Circle" });

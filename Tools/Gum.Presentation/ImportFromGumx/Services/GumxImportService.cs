@@ -139,139 +139,150 @@ public class GumxImportService : IGumxImportService
         var conflictNameSet = new HashSet<string>(conflicts, StringComparer.Ordinal);
         selections = selections.WithoutUnchanged(unchanged);
 
-        beforeImport?.Invoke();
-
-        // Pre-fetch all assets for all candidate elements in parallel, so we can gate each
-        // element's import on whether its required assets are actually available.
-        var allCandidateElements = selections.Standards.Cast<ElementSave>()
-            .Concat(selections.TransitiveComponents)
-            .Concat(selections.DirectComponents)
-            .Concat(selections.DirectScreens)
-            .ToList();
-
-        var assetsByElement = allCandidateElements.ToDictionary(
-            e => e,
-            e => CollectReferencedAssetPaths(new[] { e }));
-
-        var allAssetPaths = assetsByElement.Values
-            .SelectMany(p => p)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var fetchTasks = allAssetPaths
-            .Select(async p => (path: p, bytes: await _sourceService.FetchBinaryAsync(p.Replace('\\', '/'), sourceBase)))
-            .ToList();
-        var assetCache = (await Task.WhenAll(fetchTasks))
-            .ToDictionary(t => t.path, t => t.bytes, StringComparer.OrdinalIgnoreCase);
-
-        // Whatever the source lists but did not load is reported here; an empty stand-in for a missing
-        // file is never written as if it were the real element.
-        foreach (var (problemName, problemReason) in GumxSourceProblems.Find(source))
-            result.AddSkipped(problemName, problemReason);
-
-        var skippedElements = allCandidateElements
-            .Where(e => e.IsSourceFileMissing
-                || assetsByElement[e].Any(p => assetCache.TryGetValue(p, out var b) ? b == null : false))
-            .ToHashSet();
-
-        foreach (var element in skippedElements.Where(e => !e.IsSourceFileMissing))
+        try
         {
-            var missingAssets = assetsByElement[element]
-                .Where(p => assetCache.TryGetValue(p, out var b) && b == null);
-            result.AddSkipped(element.Name, "file(s) it uses not found: " + string.Join(", ", missingAssets));
-        }
+            beforeImport?.Invoke();
 
-        bool IsWritten(ElementSave element) =>
-            !skippedElements.Contains(element)
-            && !(conflictResolution == ConflictResolution.Skip
-                && conflictNameSet.Contains(nameMap.TryGetValue(element.Name, out var destName) ? destName : element.Name));
-
-        // A component kept by Skip still gains the instances the imported elements read through
-        // VariableReferences and it lacks, such as a Styles swatch a newer control uses (#6755), and the
-        // category states they select on its instances, such as a new Icon color (#6764).
-        // Everything it already has stays as it is, since the user may have changed it. This runs
-        // before anything registers, so each element's error check already sees the added instances.
-        if (conflictResolution == ConflictResolution.Skip)
-        {
-            Dictionary<string, ComponentSave> keptComponents = selections.TransitiveComponents
+            // Pre-fetch all assets for all candidate elements in parallel, so we can gate each
+            // element's import on whether its required assets are actually available.
+            var allCandidateElements = selections.Standards.Cast<ElementSave>()
+                .Concat(selections.TransitiveComponents)
                 .Concat(selections.DirectComponents)
-                .Where(c => !skippedElements.Contains(c) && !IsWritten(c))
-                .GroupBy(c => c.Name)
-                .ToDictionary(g => g.Key, g => g.First());
-            if (keptComponents.Count > 0)
+                .Concat(selections.DirectScreens)
+                .ToList();
+
+            var assetsByElement = allCandidateElements.ToDictionary(
+                e => e,
+                e => CollectReferencedAssetPaths(new[] { e }));
+
+            var allAssetPaths = assetsByElement.Values
+                .SelectMany(p => p)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var fetchTasks = allAssetPaths
+                .Select(async p => (path: p, bytes: await _sourceService.FetchBinaryAsync(p.Replace('\\', '/'), sourceBase)))
+                .ToList();
+            var assetCache = (await Task.WhenAll(fetchTasks))
+                .ToDictionary(t => t.path, t => t.bytes, StringComparer.OrdinalIgnoreCase);
+
+            // Whatever the source lists but did not load is reported here; an empty stand-in for a missing
+            // file is never written as if it were the real element.
+            foreach (SourceProblem problem in GumxSourceProblems.Find(source)
+                .Where(problem => selections.ReportSourceProblem?.Invoke(problem) ?? true))
+                result.AddSkipped(problem.Name, problem.Reason);
+
+            var skippedElements = allCandidateElements
+                .Where(e => e.IsSourceFileMissing
+                    || assetsByElement[e].Any(p => assetCache.TryGetValue(p, out var b) ? b == null : false))
+                .ToHashSet();
+
+            foreach (var element in skippedElements.Where(e => !e.IsSourceFileMissing))
             {
-                AddMissingReferencedInstances(keptComponents, allCandidateElements.Where(IsWritten), projectDir, nameMap);
+                var missingAssets = assetsByElement[element]
+                    .Where(p => assetCache.TryGetValue(p, out var b) && b == null);
+                result.AddSkipped(element.Name, "file(s) it uses not found: " + string.Join(", ", missingAssets));
             }
-        }
 
-        // 1. Standards (always overwritten by design — see GumxImportServiceTests on standards)
-        foreach (var standard in selections.Standards.Where(s => !skippedElements.Contains(s)))
-        {
-            string? failure = await WriteAndImportStandardAsync(standard, source, sourceBase, projectDir);
-            if (failure != null) result.AddSkipped("Standards/" + standard.Name, failure);
-        }
+            bool IsWritten(ElementSave element) =>
+                !skippedElements.Contains(element)
+                && !(conflictResolution == ConflictResolution.Skip
+                    && conflictNameSet.Contains(nameMap.TryGetValue(element.Name, out var destName) ? destName : element.Name));
 
-        // 2. Transitive components — topological order (already sorted by GumxDependencyResolver)
-        foreach (var component in selections.TransitiveComponents.Where(c => !skippedElements.Contains(c)))
-        {
-            if (!ImportComponentInMemory(component, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution))
-                result.AddSkipped(component.Name, ProjectRefusedReason);
-        }
+            // A component kept by Skip still gains the instances the imported elements read through
+            // VariableReferences and it lacks, such as a Styles swatch a newer control uses (#6755), and the
+            // category states they select on its instances, such as a new Icon color (#6764).
+            // Everything it already has stays as it is, since the user may have changed it. This runs
+            // before anything registers, so each element's error check already sees the added instances.
+            if (conflictResolution == ConflictResolution.Skip)
+            {
+                Dictionary<string, ComponentSave> keptComponents = selections.TransitiveComponents
+                    .Concat(selections.DirectComponents)
+                    .Where(c => !skippedElements.Contains(c) && !IsWritten(c))
+                    .GroupBy(c => c.Name)
+                    .ToDictionary(g => g.Key, g => g.First());
+                if (keptComponents.Count > 0)
+                {
+                    AddMissingReferencedInstances(keptComponents, allCandidateElements.Where(IsWritten), projectDir, nameMap, result);
+                }
+            }
 
-        // 3. Behaviors (no asset dependencies)
-        foreach (var behavior in selections.Behaviors.Where(b => !b.IsSourceFileMissing))
-        {
-            string? failure = await WriteAndImportBehaviorAsync(behavior, source, sourceBase, projectDir, conflictNameSet, conflictResolution);
-            if (failure != null) result.AddSkipped("Behaviors/" + behavior.Name, failure);
-        }
+            // 1. Standards (always overwritten by design — see GumxImportServiceTests on standards)
+            foreach (var standard in selections.Standards.Where(s => !skippedElements.Contains(s)))
+            {
+                string? failure = await WriteAndImportStandardAsync(standard, source, sourceBase, projectDir, result);
+                if (failure != null) result.AddSkipped("Standards/" + standard.Name, failure);
+            }
 
-        // 4. Direct components
-        foreach (var component in selections.DirectComponents.Where(c => !skippedElements.Contains(c)))
-        {
-            if (!ImportComponentInMemory(component, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution))
-                result.AddSkipped(component.Name, ProjectRefusedReason);
-        }
+            // 2. Transitive components — topological order (already sorted by GumxDependencyResolver)
+            foreach (var component in selections.TransitiveComponents.Where(c => !skippedElements.Contains(c)))
+            {
+                if (!ImportComponentInMemory(component, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution, result))
+                    result.AddSkipped(component.Name, ProjectRefusedReason);
+            }
 
-        // 5. Screens
-        foreach (var screen in selections.DirectScreens.Where(s => !skippedElements.Contains(s)))
-        {
-            if (!ImportScreenInMemory(screen, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution))
-                result.AddSkipped(screen.Name, ProjectRefusedReason);
-        }
+            // 3. Behaviors (no asset dependencies)
+            foreach (var behavior in selections.Behaviors.Where(b => !b.IsSourceFileMissing))
+            {
+                string? failure = await WriteAndImportBehaviorAsync(behavior, source, sourceBase, projectDir, conflictNameSet, conflictResolution, result);
+                if (failure != null) result.AddSkipped("Behaviors/" + behavior.Name, failure);
+            }
 
-        // 6. Write pre-fetched asset files to disk for imported elements
-        var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
-        await CopyCachedAssetsAsync(importedElements, assetCache, projectDir, result);
+            // 4. Direct components
+            foreach (var component in selections.DirectComponents.Where(c => !skippedElements.Contains(c)))
+            {
+                if (!ImportComponentInMemory(component, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution, result))
+                    result.AddSkipped(component.Name, ProjectRefusedReason);
+            }
 
-        // 7. Copy sibling .ganx (state animation) files for each imported element. A conflicting
-        // element left alone by Skip keeps its own animations too.
-        var allComponents = selections.TransitiveComponents.Cast<ElementSave>()
-            .Concat(selections.DirectComponents)
-            .Where(IsWritten);
-        await CopyGanxFilesAsync(allComponents, "Components", nameMap, sourceBase, projectDir, result);
-        await CopyGanxFilesAsync(
-            selections.DirectScreens.Cast<ElementSave>().Where(IsWritten),
-            "Screens", nameMap, sourceBase, projectDir, result);
-        // A standard's animations are replaced whole along with its element file (#5238, #5340),
-        // including by none when the source has none. Standards are never renamed, so no name map.
-        if (replaceStandardAnimations)
-        {
+            // 5. Screens
+            foreach (var screen in selections.DirectScreens.Where(s => !skippedElements.Contains(s)))
+            {
+                if (!ImportScreenInMemory(screen, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution, result))
+                    result.AddSkipped(screen.Name, ProjectRefusedReason);
+            }
+
+            // 6. Write pre-fetched asset files to disk for imported elements
+            var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
+            await CopyCachedAssetsAsync(importedElements, assetCache, projectDir, result);
+
+            // 7. Copy sibling .ganx (state animation) files for each imported element. A conflicting
+            // element left alone by Skip keeps its own animations too.
+            var allComponents = selections.TransitiveComponents.Cast<ElementSave>()
+                .Concat(selections.DirectComponents)
+                .Where(IsWritten);
+            await CopyGanxFilesAsync(allComponents, "Components", nameMap, sourceBase, projectDir, result);
             await CopyGanxFilesAsync(
-                selections.Standards.Cast<ElementSave>().Where(s => !skippedElements.Contains(s)),
-                "Standards", new Dictionary<string, string>(), sourceBase, projectDir, result,
-                removeWhenSourceHasNone: true);
-        }
+                selections.DirectScreens.Cast<ElementSave>().Where(IsWritten),
+                "Screens", nameMap, sourceBase, projectDir, result);
+            // A standard's animations are replaced whole along with its element file (#5238, #5340),
+            // including by none when the source has none. Standards are never renamed, so no name map.
+            if (replaceStandardAnimations)
+            {
+                await CopyGanxFilesAsync(
+                    selections.Standards.Cast<ElementSave>().Where(s => !skippedElements.Contains(s)),
+                    "Standards", new Dictionary<string, string>(), sourceBase, projectDir, result,
+                    removeWhenSourceHasNone: true);
+            }
 
-        // 8. Save project then reload (standards take effect only after reload)
-        string? fileName = _projectState.GumProjectSave?.FullFileName;
-        bool wasSaved = _fileCommands.TryAutoSaveProject();
-        if (wasSaved && fileName is not null)
-        {
-            await _fileCommands.LoadProjectAsync(fileName);
+            // 8. Save project then reload (standards take effect only after reload)
+            string? fileName = _projectState.GumProjectSave?.FullFileName;
+            bool wasSaved = _fileCommands.TryAutoSaveProject();
+            if (wasSaved && fileName is not null)
+            {
+                await _fileCommands.LoadProjectAsync(fileName);
+            }
+            else
+            {
+                result.NeedsManualSave = true;
+            }
+
         }
-        else
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            result.NeedsManualSave = true;
+            // The import writes in place (the project's own save and the registration of each
+            // element are not stageable), so a failure leaves the files written so far.
+            throw new ImportFailedException(exception, result.WrittenFiles);
         }
 
         return result;
@@ -341,6 +352,7 @@ public class GumxImportService : IGumxImportService
                 MuteFileWatcher(destPath);
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
                 await File.WriteAllBytesAsync(destPath, bytes);
+                result.WrittenFiles.Add(destPath);
                 result.CopiedAssets.Add(relativePath);
             }
         }
@@ -397,6 +409,7 @@ public class GumxImportService : IGumxImportService
             MuteFileWatcher(destPath);
             Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
             animations.Save(destPath);
+            result.WrittenFiles.Add(destPath);
         }
     }
 
@@ -616,7 +629,8 @@ public class GumxImportService : IGumxImportService
         StandardElementSave standard,
         GumProjectSave source,
         string sourceBase,
-        string projectDir)
+        string projectDir,
+        ImportResult result)
     {
         // Source extension follows the SOURCE project's format, destination the destination's -
         // the two are independent, so this is a re-serialize rather than a copy (issue #4595).
@@ -626,7 +640,7 @@ public class GumxImportService : IGumxImportService
             standard.Name + "." + StandardExtension(IsDestinationJsonFormat));
 
         // Standards are not imported via IImportLogic - they are loaded on project reload.
-        return await CopySourceFileAsync(relativeSrc, sourceBase, destPath,
+        return await CopySourceFileAsync(relativeSrc, sourceBase, destPath, result,
             text => DeserializeElementText<StandardElementSave>(relativeSrc, text),
             standardFile => standardFile.Save(destPath, UseCompact));
     }
@@ -644,7 +658,8 @@ public class GumxImportService : IGumxImportService
         Dictionary<string, string> nameMap,
         Dictionary<string, string> qualifiedNameMap,
         HashSet<string> conflictNameSet,
-        ConflictResolution conflictResolution)
+        ConflictResolution conflictResolution,
+        ImportResult result)
     {
         string sourceName = sourceComponent.Name;
         string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
@@ -660,11 +675,14 @@ public class GumxImportService : IGumxImportService
             // and write the file directly. The post-import save+reload picks up the new content.
             string destPath = Path.Combine(projectDir, "Components",
                 destName + "." + ComponentExtension(IsDestinationJsonFormat));
-            WriteElementToDisk(clone, destPath);
+            WriteElementToDisk(clone, destPath, result);
             return true;
         }
 
-        return _importLogic.ImportComponent(clone, saveProject: false) != null;
+        if (_importLogic.ImportComponent(clone, saveProject: false) == null) return false;
+        result.WrittenFiles.Add(Path.Combine(projectDir, "Components",
+            destName + "." + ComponentExtension(IsDestinationJsonFormat)));
+        return true;
     }
 
     // "Components/Folder/Name.Instance.Variable": group 1 is the component's name, group 2 the path after it.
@@ -686,7 +704,8 @@ public class GumxImportService : IGumxImportService
         Dictionary<string, ComponentSave> keptComponents,
         IEnumerable<ElementSave> readers,
         string projectDir,
-        Dictionary<string, string> nameMap)
+        Dictionary<string, string> nameMap,
+        ImportResult result)
     {
         var destinations = new Dictionary<ComponentSave, ComponentSave?>();
         var added = new Dictionary<ComponentSave, List<InstanceSave>>();
@@ -856,7 +875,7 @@ public class GumxImportService : IGumxImportService
                     AddInstances(owner, instances, target, nameMap);
                 }
             }
-            WriteElementToDisk(destination, DestinationComponentPath(owner, projectDir, nameMap));
+            WriteElementToDisk(destination, DestinationComponentPath(owner, projectDir, nameMap), result);
         }
     }
 
@@ -934,7 +953,8 @@ public class GumxImportService : IGumxImportService
         Dictionary<string, string> nameMap,
         Dictionary<string, string> qualifiedNameMap,
         HashSet<string> conflictNameSet,
-        ConflictResolution conflictResolution)
+        ConflictResolution conflictResolution,
+        ImportResult result)
     {
         string sourceName = sourceScreen.Name;
         string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
@@ -948,11 +968,14 @@ public class GumxImportService : IGumxImportService
         {
             string destPath = Path.Combine(projectDir, "Screens",
                 destName + "." + ScreenExtension(IsDestinationJsonFormat));
-            WriteElementToDisk(clone, destPath);
+            WriteElementToDisk(clone, destPath, result);
             return true;
         }
 
-        return _importLogic.ImportScreen(clone, saveProject: false) != null;
+        if (_importLogic.ImportScreen(clone, saveProject: false) == null) return false;
+        result.WrittenFiles.Add(Path.Combine(projectDir, "Screens",
+            destName + "." + ScreenExtension(IsDestinationJsonFormat)));
+        return true;
     }
 
     /// <summary>
@@ -1064,13 +1087,14 @@ public class GumxImportService : IGumxImportService
     /// Writes a cloned element to a specific destination path (used for Overwrite conflicts
     /// where IImportLogic registration is skipped because the element is already in the project).
     /// </summary>
-    private void WriteElementToDisk(ElementSave element, string destPath)
+    private void WriteElementToDisk(ElementSave element, string destPath, ImportResult result)
     {
         MuteFileWatcher(destPath);
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
         bool useCompact = _projectState.GumProjectSave?.Version
             >= (int)GumProjectSave.GumxVersions.AttributeVersion;
         element.Save(destPath, useCompact);
+        result.WrittenFiles.Add(destPath);
     }
 
     /// <returns>Null when the behavior is in, or why it is not.</returns>
@@ -1080,7 +1104,8 @@ public class GumxImportService : IGumxImportService
         string sourceBase,
         string projectDir,
         HashSet<string> conflictNameSet,
-        ConflictResolution conflictResolution)
+        ConflictResolution conflictResolution,
+        ImportResult result)
     {
         bool isConflict = conflictNameSet.Contains(behavior.Name);
         if (isConflict && conflictResolution == ConflictResolution.Skip) { return null; }
@@ -1095,7 +1120,7 @@ public class GumxImportService : IGumxImportService
         string destPath = Path.Combine(projectDir, "Behaviors",
             behavior.Name + "." + BehaviorExtension(IsDestinationJsonFormat));
 
-        string? failure = await CopySourceFileAsync(relativeSrc, sourceBase, destPath,
+        string? failure = await CopySourceFileAsync(relativeSrc, sourceBase, destPath, result,
             text => string.Equals(FileManager.GetExtension(relativeSrc), BehaviorReference.JsonExtension,
                 StringComparison.OrdinalIgnoreCase)
                 ? GumJsonFileSerializer.DeserializeBehavior(text)
@@ -1117,7 +1142,8 @@ public class GumxImportService : IGumxImportService
     /// </summary>
     /// <returns>Null when the file was written, or why it was not (nothing is written then).</returns>
     private async Task<string?> CopySourceFileAsync<T>(
-        string relativeSourcePath, string sourceBase, string destPath, Func<string, T?> deserialize, Action<T> save)
+        string relativeSourcePath, string sourceBase, string destPath, ImportResult result,
+        Func<string, T?> deserialize, Action<T> save)
         where T : class
     {
         string? content = await _sourceService.FetchElementTextAsync(relativeSourcePath, sourceBase);
@@ -1137,6 +1163,7 @@ public class GumxImportService : IGumxImportService
         MuteFileWatcher(destPath);
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
         save(parsed);
+        result.WrittenFiles.Add(destPath);
         return null;
     }
 
