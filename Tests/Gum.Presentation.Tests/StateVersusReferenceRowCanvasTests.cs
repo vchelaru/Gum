@@ -78,6 +78,42 @@ public class StateVersusReferenceRowCanvasTests : BaseTestClass
         (background.Red, background.Green, background.Blue).ShouldBe(DarkGray);
     }
 
+    /// <summary>
+    /// In the game, changing the referenced source after the state was applied makes the row re-drive
+    /// the variable over the state's plain value (the width becomes the source's 80). The canvas drops the
+    /// default row for a variable the selected state sets, so it keeps 200 and disagrees with the game.
+    /// </summary>
+    [Fact]
+    public void RefreshAll_ReferencedWidthEditedWhileLargeSelected_MatchesTheGame()
+    {
+        ComponentSave panel = BuildPanelWithSizeCategory();
+        StateSave large = panel.Categories[0].States.Single(s => s.Name == "Large");
+        CanvasSession session = new CanvasSession(panel, large);
+        panel.DefaultState!.GetVariableSave("Reference.Width")!.Value = 80f;
+
+        session.Refresh();
+
+        session.Root!.GetGraphicalUiElementByName("Background")!.Width.ShouldBe(80f);
+    }
+
+    /// <summary>The Color counterpart of the width case above: the game re-drives the color from the changed source.</summary>
+    [Fact]
+    public void RefreshAll_ReferencedColorEditedWhileDarkSelected_MatchesTheGame()
+    {
+        ComponentSave swatch = BuildSwatch();
+        StateSave dark = swatch.Categories[0].States.Single(s => s.Name == "Dark");
+        CanvasSession session = new CanvasSession(swatch, dark);
+        StateSave defaultState = swatch.DefaultState!;
+        defaultState.GetVariableSave("Source.Red")!.Value = 200;
+        defaultState.GetVariableSave("Source.Green")!.Value = 100;
+        defaultState.GetVariableSave("Source.Blue")!.Value = 50;
+
+        session.Refresh();
+
+        RecordingRenderable background = BackgroundOf(session.Root!);
+        (background.Red, background.Green, background.Blue).ShouldBe((200, 100, 50));
+    }
+
     // Default: Background (Container child, teal) follows Source's color through "Color = Source.Color";
     // Dark sets Background to dark gray by value and has no row.
     private static ComponentSave BuildSwatch()
