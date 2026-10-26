@@ -23,11 +23,13 @@ public class ImageDecoderTests : BaseTestClass
     public ImageDecoderTests()
     {
         ContentLoader.TextureFilterApplier = (texture, _) => _uploaded.Add(texture);
+        ContentLoader.DecodedPixelsUploaded = pixels => _uploadedPixels.Add((byte[])pixels.Clone());
     }
 
     public override void Dispose()
     {
         ContentLoader.TextureFilterApplier = _savedApplier;
+        ContentLoader.DecodedPixelsUploaded = _savedUploadObserver;
         LoaderManager.Self.ImageDecoders.Clear();
         base.Dispose();
     }
