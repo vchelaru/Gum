@@ -1836,6 +1836,149 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
     #endregion
 
+    #region GUM0013 — Circular variable reference
+
+    private ComponentSave AddComponentWithRowsOnInstances(string name, params (string Instance, string Line)[] rows)
+    {
+        ComponentSave component = new ComponentSave { Name = name, BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        foreach ((string instance, string line) in rows)
+        {
+            if (component.GetInstance(instance) == null)
+            {
+                component.Instances.Add(new InstanceSave { Name = instance, BaseType = "Container", ParentContainer = component });
+            }
+            VariableListSave<string> references = new VariableListSave<string>
+            {
+                Name = instance + ".VariableReferences",
+                Type = "string"
+            };
+            references.Value.Add(line);
+            state.VariableLists.Add(references);
+        }
+        Project.Components.Add(component);
+        return component;
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013NamingTheLoop_WhenTwoRowsReadEachOther()
+    {
+        ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem();
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+        error.ElementName.ShouldBe("Panel");
+        error.Message.ShouldContain("Circular variable reference: Panel.A.Width -> Panel.B.Width -> Panel.A.Width");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013_WhenARowReadsItsOwnResult()
+    {
+        ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = A.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem()
+            .Message.ShouldContain("Circular variable reference: Panel.A.Width -> Panel.A.Width");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013OnEveryElementHoldingARow_WhenRowsLoopAcrossTwoElements()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+        ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.A.Width + 1"));
+
+        foreach (ComponentSave holder in new[] { panel, other })
+        {
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(holder, Project);
+
+            ErrorResult error = errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem();
+            error.ElementName.ShouldBe(holder.Name);
+            error.Message.ShouldContain("Components/Panel.A.Width");
+            error.Message.ShouldContain("Components/Other.B.Width");
+        }
+        _sut.GetAllErrors(Project).Count(item => item.Code == "GUM0013").ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013_WhenALoopMixesRowsOfTheSameElementAndAnotherElement()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel",
+            ("A", "Width = Components/Other.B.Width + 1"), ("C", "Width = A.Width + 1"));
+        AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.C.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(panel, Project);
+
+        errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem()
+            .Message.ShouldContain("Components/Other.B.Width");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0013_WhenRowsChainAcrossElementsWithoutLooping()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+        ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = 5"));
+
+        _sut.GetErrorsFor(panel, Project).Where(item => item.Code == "GUM0013").ShouldBeEmpty();
+        _sut.GetErrorsFor(other, Project).Where(item => item.Code == "GUM0013").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0002_WhenTheRowsAreInALoop()
+    {
+        // The stored 10 differs from what A = B + 1 would give, but a row in a loop sets nothing.
+        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType, liveRoot) => 11f;
+        try
+        {
+            ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1"));
+            component.DefaultState!.Variables.Add(new VariableSave { Name = "A.Width", Type = "float", Value = 10f, SetsValue = true });
+            component.DefaultState.Variables.Add(new VariableSave { Name = "B.Width", Type = "float", Value = 10f, SetsValue = true });
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            errors.Where(item => item.Code == "GUM0002").ShouldBeEmpty();
+            errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem();
+        }
+        finally
+        {
+            ElementSaveExtensions.CustomEvaluateExpression = null;
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0002_WhenTheRowsLoopAcrossTwoElements()
+    {
+        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType, liveRoot) => 11f;
+        try
+        {
+            ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+            ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.A.Width + 1"));
+            panel.DefaultState!.Variables.Add(new VariableSave { Name = "A.Width", Type = "float", Value = 10f, SetsValue = true });
+            other.DefaultState!.Variables.Add(new VariableSave { Name = "B.Width", Type = "float", Value = 10f, SetsValue = true });
+
+            _sut.GetErrorsFor(panel, Project).Where(item => item.Code == "GUM0002").ShouldBeEmpty();
+        }
+        finally
+        {
+            ElementSaveExtensions.CustomEvaluateExpression = null;
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0013_WhenRowsFormAChain()
+    {
+        ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = C.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0013").ShouldBeEmpty();
+    }
+
+    #endregion
+
     #region GUM0009 — Variable reference reads from something the project does not have
 
     [Theory]

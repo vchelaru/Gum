@@ -102,6 +102,29 @@ public class ElementSaveDisplayerCompositeReferenceTests : BaseTestClass
     }
 
     [Fact]
+    public void GetCategories_RowsReadingEachOther_FinishesAndStillNamesTheReference()
+    {
+        InstanceSave first = new InstanceSave { Name = "A", BaseType = "Container", ParentContainer = _screen };
+        InstanceSave second = new InstanceSave { Name = "B", BaseType = "Container", ParentContainer = _screen };
+        _screen.Instances.Add(first);
+        _screen.Instances.Add(second);
+        foreach ((string instance, string row) in new[] { ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1") })
+        {
+            VariableListSave<string> references = new VariableListSave<string> { Type = "string", Name = instance + ".VariableReferences" };
+            references.Value.Add(row);
+            _screenDefaultState.VariableLists.Add(references);
+        }
+
+        List<VariableGridEntry>? members = null;
+        System.Threading.Tasks.Task built = System.Threading.Tasks.Task.Run(() =>
+            members = _displayer.GetCategories(_screen, first, _screenDefaultState, null).SelectMany(category => category.Members).ToList());
+        built.Wait(5000).ShouldBeTrue("the Variables grid froze on a circular reference (#6871)");
+        built.GetAwaiter().GetResult();
+
+        members!.First(member => member.RootVariableName == "Width").DetailText.ShouldBe("Set by B.Width + 1");
+    }
+
+    [Fact]
     public void GetCategories_ShouldAttachSourceLink_WhenRowIsSetByReference()
     {
         InstanceSave instance = new InstanceSave

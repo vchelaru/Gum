@@ -362,7 +362,7 @@ public class FileChangeReloadDependentsTests : BaseTestClass
     }
 
     [Fact]
-    public void ReactToFileChanged_WhenTwoElementsReadEachOther_ShouldTerminateAtWhatTheToolCascadeGives()
+    public void ReactToFileChanged_WhenTwoElementsReadEachOther_ShouldTerminateAndSkipTheLoop()
     {
         ElementSave styles = BuildSource(isScreen: false, "Styles", fillRed: 21);
         ElementSave theme = BuildTheme("Theme", styles);
@@ -378,9 +378,9 @@ public class FileChangeReloadDependentsTests : BaseTestClass
         Task reload = Task.Run(() => Reload(styles));
         reload.Wait(TimeSpan.FromSeconds(20)).ShouldBeTrue("the reload should not cascade forever");
 
-        // The reloaded value stands and its reader follows it, as after an in-tool edit of Styles.
+        // The reloaded value stands. The rows of a loop are skipped (#6871), so the reader keeps its stored value.
         GetValue("Styles", "Primary.FillRed").ShouldBe(200);
-        GetValue("Theme", "Primary.FillRed").ShouldBe(200);
+        GetValue("Theme", "Primary.FillRed").ShouldBe(21);
         // Nothing is left to change, and nothing was saved more than once.
         _referenceLogic.ApplyReferencesToElement(ObjectFinder.Self.GetElementSave("Styles")!, trySave: false).ShouldBeEmpty();
         VerifySaved("Theme", Times.Once());

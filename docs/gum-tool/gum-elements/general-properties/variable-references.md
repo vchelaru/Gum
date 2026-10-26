@@ -470,6 +470,16 @@ Gum reports a **GUM0009** warning in the [Errors tab](../../editor-tab.md) for e
 
 Renaming an element in Gum updates the references to it, so this usually happens after editing files outside of Gum or importing only part of another project.
 
+## Circular References (GUM0013)
+
+Rows that read each other in a loop, such as `A.Width = B.Width + 1` with `B.Width = A.Width + 1`, a row that reads its own result, or a loop through rows of two elements (`Panel.A` reads `Other.B`, which reads `Panel.A`), have no order to evaluate in. Gum reports a **GUM0013** warning in the [Errors tab](../../editor-tab.md) and in `gumcli check`, on every element that holds a row in the loop, naming the loop (`Panel.A.Width -> Panel.B.Width -> Panel.A.Width`).
+
+Rows in a loop are not evaluated, in the tool or in a game: they keep their stored values, so nothing freezes and applying references again changes nothing. To resolve it, remove one of the rows. A loop through a categorized state of another element is not reported.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Variable References in the Property Grid
 
 As shown above, Variable References can be used to assign one variable to another. If a variable is referenced, then the variable cannot be manually assigned. The Variable Reference takes priority. For example, if an object references the Red, Green, and Blue variables, then those values cannot be manually set on the object. The values appear disabled and text indicates why they are read-only.

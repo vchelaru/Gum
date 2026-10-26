@@ -151,6 +151,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
         errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
         errors.AddRange(GetUnresolvableVariableReferenceErrorsFor(element));
+        errors.AddRange(GetCircularVariableReferenceErrorsFor(element));
+        errors.AddRange(GetCrossElementCircularVariableReferenceErrorsFor(element));
         errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
         errors.AddRange(GetTextOutsideFontRangeErrorsFor(element, project));
 
@@ -175,8 +177,21 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         return errors;
     }
 
+    // A row in a loop is skipped, so it sets nothing and cannot disagree with a stored value (GUM0013
+    // reports the loop).
+    private static HashSet<string> GetLoopRowKeys(ElementSave element, StateSave state)
+    {
+        var keys = new HashSet<string>();
+        foreach (var row in VariableReferenceGraph.GetForApply(element, state).CyclicRows)
+        {
+            keys.Add(row.SourceObject + "|" + row.Line);
+        }
+        return keys;
+    }
+
     private static void CheckLocalReferenceConflicts(ElementSave element, StateSave state, List<ErrorResult> errors)
     {
+        HashSet<string>? loopRows = null;
         foreach (var variableList in state.VariableLists)
         {
             if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList.Count == 0)
@@ -192,6 +207,11 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 // channels first, the same way ApplyVariableReferences does at apply time.
                 foreach (string expandedReferenceString in ElementSaveExtensions.ExpandCompositeReferenceLine(referenceString, channelOwner))
                 {
+                    loopRows ??= GetLoopRowKeys(element, state);
+                    if (loopRows.Contains(sourceObject + "|" + expandedReferenceString))
+                    {
+                        continue;
+                    }
                     if (TryParseReference(expandedReferenceString, sourceObject, out string qualifiedLeft, out string right))
                     {
                         EmitConflictIfPresent(element, state, state, qualifiedLeft, right, sourceObject, expandedReferenceString, errors);
@@ -343,6 +363,134 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         value is float || value is double || value is int || value is long || value is decimal;
 
     private static string FormatValue(object? value) => value?.ToString() ?? "(null)";
+
+    #endregion
+
+    #region GUM0013 — Circular variable reference
+
+    /// <summary>
+    /// Flags rows of one state that read each other in a loop (<c>A = B + 1</c> and <c>B = A + 1</c>, or a
+    /// row reading its own result). A cycle has no order to evaluate in, so its rows are skipped and keep
+    /// their stored values. A loop through other elements is <see cref="GetCrossElementCircularVariableReferenceErrorsFor"/>.
+    /// </summary>
+    private static List<ErrorResult> GetCircularVariableReferenceErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+        foreach (var state in element.AllStates)
+        {
+            if (!state.VariableLists.Any(list => list.GetRootName() == "VariableReferences"))
+            {
+                continue;
+            }
+
+            var cyclic = VariableReferenceGraph.GetForState(element, state).CyclicRows;
+            var reported = new HashSet<ReferenceRow>();
+            foreach (var start in cyclic)
+            {
+                if (reported.Contains(start))
+                {
+                    continue;
+                }
+                var loop = FindCycleThrough(start, cyclic);
+                if (loop == null)
+                {
+                    continue;
+                }
+                foreach (var row in loop)
+                {
+                    reported.Add(row);
+                }
+                var path = string.Join(" -> ", loop.Concat(new[] { loop[0] }).Select(row => element.Name + "." + row.WrittenName));
+                errors.Add(new ErrorResult
+                {
+                    ElementName = element.Name,
+                    Code = "GUM0013",
+                    Severity = ErrorSeverity.Warning,
+                    Message = $"{state.Name}: Circular variable reference: {path}. These rows are not evaluated and keep their stored values."
+                });
+            }
+        }
+        return errors;
+    }
+
+    /// <summary>
+    /// Flags a loop that runs through the default-state rows of two or more elements
+    /// (<c>Panel.A</c> reads <c>Other.B</c>, which reads <c>Panel.A</c>). Reported on every element
+    /// that holds a row in the loop, naming each variable in it. A loop through a categorized state of
+    /// another element is not detected.
+    /// </summary>
+    private static List<ErrorResult> GetCrossElementCircularVariableReferenceErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+        if (element.DefaultState == null)
+        {
+            return errors;
+        }
+
+        var reported = new HashSet<ReferenceRow>();
+        foreach (var start in VariableReferenceGraph.GetForState(element, element.DefaultState).CyclicRows)
+        {
+            if (reported.Contains(start) || start.ElementReads.Count == 0)
+            {
+                continue;
+            }
+            var loop = VariableReferenceGraph.FindCrossElementLoop(element, start);
+            if (loop == null)
+            {
+                continue;
+            }
+            foreach (var step in loop)
+            {
+                reported.Add(step.Value);
+            }
+            var names = loop.Select(step => ElementReference.GetQualifiedName(step.Key, step.Key.Name) + "." + step.Value.WrittenName).ToList();
+            names.Add(names[0]);
+            errors.Add(new ErrorResult
+            {
+                ElementName = element.Name,
+                Code = "GUM0013",
+                Severity = ErrorSeverity.Warning,
+                Message = $"Default: Circular variable reference: {string.Join(" -> ", names)}. These rows are not evaluated and keep their stored values."
+            });
+        }
+        return errors;
+    }
+
+    // The rows of a loop that contains `start`, each reading the variable the next one writes, or null
+    // when `start` only leads into a loop.
+    private static List<ReferenceRow>? FindCycleThrough(ReferenceRow start, IReadOnlyList<ReferenceRow> rows)
+    {
+        var path = new List<ReferenceRow>();
+        var visited = new HashSet<ReferenceRow>();
+        return Search(start);
+
+        List<ReferenceRow>? Search(ReferenceRow current)
+        {
+            path.Add(current);
+            visited.Add(current);
+            foreach (var next in rows)
+            {
+                if (!current.Reads.Contains(next.WrittenName))
+                {
+                    continue;
+                }
+                if (next == start)
+                {
+                    return new List<ReferenceRow>(path);
+                }
+                if (!visited.Contains(next))
+                {
+                    var found = Search(next);
+                    if (found != null)
+                    {
+                        return found;
+                    }
+                }
+            }
+            path.RemoveAt(path.Count - 1);
+            return null;
+        }
+    }
 
     #endregion
 
