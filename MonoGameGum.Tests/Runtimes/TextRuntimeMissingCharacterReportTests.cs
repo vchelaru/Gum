@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -63,12 +64,12 @@ public class TextRuntimeMissingCharacterReportTests : BaseTestClass
     }
 
     [Fact]
-    public void Text_WhenReportingIsTurnedOff_ReportsNothing()
+    public void Text_WhenBehaviorIsConsumeSilently_ReportsNothing()
     {
-        bool saved = TextRuntime.ReportMissingCharacters;
+        MissingCharacterBehavior saved = TextRuntime.MissingCharacterBehavior;
         try
         {
-            TextRuntime.ReportMissingCharacters = false;
+            TextRuntime.MissingCharacterBehavior = MissingCharacterBehavior.ConsumeSilently;
             RunWithStubCreator(growth: false, messages =>
             {
                 TextRuntime textRuntime = NewText("ReportFontC");
@@ -81,7 +82,36 @@ public class TextRuntimeMissingCharacterReportTests : BaseTestClass
         }
         finally
         {
-            TextRuntime.ReportMissingCharacters = saved;
+            TextRuntime.MissingCharacterBehavior = saved;
+        }
+    }
+
+    [Fact]
+    public void Text_WhenBehaviorIsThrowException_ThrowsEveryTimeInsteadOfReporting()
+    {
+        MissingCharacterBehavior saved = TextRuntime.MissingCharacterBehavior;
+        try
+        {
+            RunWithStubCreator(growth: false, messages =>
+            {
+                TextRuntime textRuntime = NewText("ReportFontF");
+                textRuntime.Text = "A";
+                textRuntime.Name = "ScoreLabel";
+                TextRuntime.MissingCharacterBehavior = MissingCharacterBehavior.ThrowException;
+                messages.Clear();
+
+                InvalidOperationException first = Should.Throw<InvalidOperationException>(() => textRuntime.Text = "É");
+                first.Message.ShouldContain("ScoreLabel");
+                first.Message.ShouldContain("U+00C9");
+                Should.Throw<InvalidOperationException>(() => textRuntime.Text = "AÉ",
+                    "because throwing is not deduplicated the way reports are");
+                Should.NotThrow(() => textRuntime.Text = "AB");
+                messages.ShouldBeEmpty();
+            });
+        }
+        finally
+        {
+            TextRuntime.MissingCharacterBehavior = saved;
         }
     }
 

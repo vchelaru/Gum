@@ -1074,7 +1074,7 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     void CheckAndGrowFont()
     {
-        if (!UseAutomaticFontGrowth && !ReportMissingCharacters)
+        if (!UseAutomaticFontGrowth && MissingCharacterBehavior == MissingCharacterBehavior.ConsumeSilently)
         {
             return;
         }
@@ -1090,7 +1090,7 @@ public class TextRuntime : InteractiveGue
             GrowFontIfNeeded(text);
         }
 
-        if (ReportMissingCharacters)
+        if (MissingCharacterBehavior != MissingCharacterBehavior.ConsumeSilently)
         {
 #if XNALIKE
             // A Text with no font of its own draws with the default font.
@@ -1101,7 +1101,7 @@ public class TextRuntime : InteractiveGue
             Font font = ContainedText.MeasurementFont ?? ContainedText.Font;
             string missing = font.GlyphCount == 0 ? string.Empty : font.GetMissingCharacters(text);
 #endif
-            ReportMissingCharactersOnce(missing);
+            HandleMissingCharacters(missing);
         }
     }
 
@@ -1109,7 +1109,7 @@ public class TextRuntime : InteractiveGue
     // by every Text so a missing character is reported once per font rather than once per Text.
     static readonly Dictionary<string, HashSet<char>> _reportedMissingCharacters = new();
 
-    void ReportMissingCharactersOnce(string missing)
+    void HandleMissingCharacters(string missing)
     {
         if (missing.Length == 0)
         {
@@ -1125,11 +1125,17 @@ public class TextRuntime : InteractiveGue
             _reportedMissingCharacters[key] = reported;
         }
 
+        bool shouldThrow = MissingCharacterBehavior == MissingCharacterBehavior.ThrowException;
         List<char> toReport = new();
         foreach (char c in missing)
         {
-            // Line breaks and tabs are layout, not glyphs, and a failed growth was already reported.
-            if (!char.IsControl(c) && !_failedGrowthCharacters.Contains(c) && reported.Add(c))
+            // Line breaks and tabs are layout, not glyphs.
+            if (char.IsControl(c))
+            {
+                continue;
+            }
+            // Throwing happens every time. A report happens once, and a failed growth was already reported.
+            if (shouldThrow || (!_failedGrowthCharacters.Contains(c) && reported.Add(c)))
             {
                 toReport.Add(c);
             }
@@ -1145,9 +1151,13 @@ public class TextRuntime : InteractiveGue
         string fix = isPregeneratedFile
             ? $"Regenerate '{CustomFontFile}' with code point(s) {codes}."
             : $"Add {codes} to FontRanges.";
-        CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
-            $"Text '{Name ?? "(unnamed)"}' uses {characters}, which font '{fontIdentity}' at size {FontSize} " +
-            $"does not have, so they draw as blank space. {fix}");
+        string message = $"Text '{Name ?? "(unnamed)"}' uses {characters}, which font '{fontIdentity}' at size {FontSize} " +
+            $"does not have, so they draw as blank space. {fix}";
+        if (shouldThrow)
+        {
+            throw new InvalidOperationException(message);
+        }
+        CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(message);
     }
 
 #if XNALIKE
@@ -1718,15 +1728,15 @@ public class TextRuntime : InteractiveGue
     public static bool UseAutomaticFontGrowth = false;
 
     /// <summary>
-    /// Whether a Text reports characters its font has no glyph for (issue #6818). Such a character
-    /// draws as blank space, so without the report a narrow font range fails silently. Each report
-    /// goes through <c>CustomSetPropertyOnRenderable.PropertyAssignmentError</c> (and
-    /// <see cref="System.Console.Error"/>), once per font and character for the whole process, and
-    /// names the Text, the font, its size and the code points to add to the font ranges. Characters
-    /// <see cref="UseAutomaticFontGrowth"/> adds are never reported. Not used by SkiaGum, which draws
-    /// from the whole typeface.
+    /// What a Text does when its font has no glyph for a character it shows (issue #6818). Such a
+    /// character draws as blank space, so without a report a narrow font range fails silently. The
+    /// message names the Text, the font, its size and the code points to add to the font ranges.
+    /// Characters <see cref="UseAutomaticFontGrowth"/> adds never count as missing. Separate from
+    /// <c>GraphicalUiElement.MissingFileBehavior</c>, which games set to throw: a missing file is an
+    /// authoring mistake, but a missing character can come from runtime text such as a player name.
+    /// Not used by SkiaGum, which draws from the whole typeface.
     /// </summary>
-    public static bool ReportMissingCharacters = true;
+    public static MissingCharacterBehavior MissingCharacterBehavior = MissingCharacterBehavior.Report;
 
     /// <summary>
     /// The page width/height, in pixels, used as the growth ceiling for a font <see cref="UseAutomaticFontGrowth"/>
@@ -1864,4 +1874,24 @@ public class TextRuntime : InteractiveGue
     /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
     /// <returns>The index in the WrappedText</returns>
     public int GetCharacterIndexAtPosition(float screenX, float screenY) => ContainedText.GetCharacterIndexAtPosition(screenX, screenY);
+}
+
+/// <summary>
+/// What a Text does with a character its font has no glyph for. See
+/// <see cref="TextRuntime.MissingCharacterBehavior"/>.
+/// </summary>
+public enum MissingCharacterBehavior
+{
+    /// <summary>The character draws as blank space and nothing is reported.</summary>
+    ConsumeSilently,
+    /// <summary>
+    /// Raises <c>CustomSetPropertyOnRenderable.PropertyAssignmentError</c> (also written to
+    /// <see cref="System.Console.Error"/>) once per font and character for the whole process.
+    /// </summary>
+    Report,
+    /// <summary>
+    /// Throws an <see cref="System.InvalidOperationException"/> every time a Text wraps text holding
+    /// the character. Meant for debug builds and tests that should fail on a font range gap.
+    /// </summary>
+    ThrowException
 }
