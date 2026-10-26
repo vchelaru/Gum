@@ -76,13 +76,13 @@
   <ComponentReference Name="Retro95/Controls/RadioButton" />
   <ComponentReference Name="Retro95/Controls/ScrollBar" />
   <ComponentReference Name="Retro95/Controls/ScrollBarButton" />
+  <ComponentReference Name="Retro95/Controls/ScrollBarThumb" />
   <ComponentReference Name="Retro95/Controls/ScrollViewer" />
   <ComponentReference Name="Retro95/Controls/Slider" />
   <ComponentReference Name="Retro95/Controls/SliderThumb" />
   <ComponentReference Name="Retro95/Controls/Splitter" />
   <ComponentReference Name="Retro95/Controls/StackPanel" />
   <ComponentReference Name="Retro95/Controls/TextBox" />
-  <ComponentReference Name="Retro95/Controls/ScrollBarThumb" />
   <ComponentReference Name="Retro95/Controls/Toast" />
   <ComponentReference Name="Retro95/Controls/UserControl" />
   <ComponentReference Name="Retro95/Controls/Window" />

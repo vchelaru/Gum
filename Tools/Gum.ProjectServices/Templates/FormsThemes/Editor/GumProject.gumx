@@ -85,14 +85,14 @@
   <ComponentReference Name="Editor/Controls/RadioButton" />
   <ComponentReference Name="Editor/Controls/ScrollBar" />
   <ComponentReference Name="Editor/Controls/ScrollBarButton" />
+  <ComponentReference Name="Editor/Controls/ScrollBarThumb" />
   <ComponentReference Name="Editor/Controls/ScrollViewer" />
   <ComponentReference Name="Editor/Controls/SettingsView" />
   <ComponentReference Name="Editor/Controls/Slider" />
+  <ComponentReference Name="Editor/Controls/SliderThumb" />
   <ComponentReference Name="Editor/Controls/Splitter" />
   <ComponentReference Name="Editor/Controls/StackPanel" />
   <ComponentReference Name="Editor/Controls/TextBox" />
-  <ComponentReference Name="Editor/Controls/ScrollBarThumb" />
-  <ComponentReference Name="Editor/Controls/SliderThumb" />
   <ComponentReference Name="Editor/Controls/Toast" />
   <ComponentReference Name="Editor/Controls/TreeView" />
   <ComponentReference Name="Editor/Controls/TreeViewItem" />

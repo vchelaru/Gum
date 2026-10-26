@@ -83,14 +83,14 @@
   <ComponentReference Name="Controls/RadioButton" />
   <ComponentReference Name="Controls/ScrollBar" />
   <ComponentReference Name="Controls/ScrollBarButton" />
+  <ComponentReference Name="Controls/ScrollBarThumb" />
   <ComponentReference Name="Controls/ScrollViewer" />
   <ComponentReference Name="Controls/SettingsView" />
   <ComponentReference Name="Controls/Slider" />
+  <ComponentReference Name="Controls/SliderThumb" />
   <ComponentReference Name="Controls/SplitterStandard" />
   <ComponentReference Name="Controls/StackPanel" />
   <ComponentReference Name="Controls/TextBox" />
-  <ComponentReference Name="Controls/ScrollBarThumb" />
-  <ComponentReference Name="Controls/SliderThumb" />
   <ComponentReference Name="Controls/Toast" />
   <ComponentReference Name="Controls/TreeView" />
   <ComponentReference Name="Controls/TreeViewItem" />
