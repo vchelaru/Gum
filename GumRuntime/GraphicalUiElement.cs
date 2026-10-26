@@ -280,6 +280,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     // This needs to be made public so that individual Forms objects can be customized:
     public Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> Categories => mCategories;
 
+    // The state last applied in each category through SetProperty("<Category>State", name) or
+    // ApplyState(category, name). A hot reload re-applies the new default state, which overwrites
+    // what a categorical state set; this is how it puts the visual back into that state (#6855).
+    // Null until a categorical state is applied, so a visual that never uses one pays nothing.
+    Dictionary<string, string>? _appliedCategoryStates;
+
     // the row or column index when anobject is sorted.
     // This is used by the stacking logic to properly sort objects
     public int StackedRowOrColumnIndex { get; set; } = -1;

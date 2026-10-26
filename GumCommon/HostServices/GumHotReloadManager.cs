@@ -325,10 +325,68 @@ public class GumHotReloadManager : IGumHotReloadManager
             byName[element.Name] = element;
         }
 
-        foreach (GraphicalUiElement root in roots.ToList())
+        List<GraphicalUiElement> rootList = roots.ToList();
+
+        // The same three passes RefreshStyles runs, so a control keeps what it holds in code and the
+        // state it is in: save before anything is re-applied, restore after everything is (#6855).
+        foreach (GraphicalUiElement root in rootList)
+        {
+            root.SaveFormsRuntimePropertiesRecursive();
+        }
+
+        foreach (GraphicalUiElement root in rootList)
         {
             ApplyDiffRecursive(root, byName, systemManagers);
         }
+
+        // Re-applying a default state overwrites what a categorical state set, so each visual goes
+        // back into the state it was in: first the ones code drove by name, then the Forms controls,
+        // which work out their own state (disabled, hovered, checked) and restore what code assigned.
+        foreach (GraphicalUiElement root in rootList)
+        {
+            root.ReapplyAppliedCategoryStatesRecursive();
+        }
+
+        foreach (GraphicalUiElement root in rootList)
+        {
+            root.RestoreFormsRuntimePropertiesRecursive();
+        }
+    }
+
+    /// <summary>
+    /// Points the visual's state and category dictionaries at the new element's save objects. A
+    /// visual keeps the instances it was created with, so without this a state applied after the
+    /// reload (a mouse over, then off) would use the values from before the edit. Entries that came
+    /// from an element of the replaced project and are gone from the new file are removed; entries
+    /// added in code, which belong to no project element, are kept.
+    /// </summary>
+    private static void RefreshStatesAndCategories(
+        GraphicalUiElement element,
+        ElementSave newEs,
+        Dictionary<string, ElementSave> byName)
+    {
+        bool IsFromReplacedElement(ElementSave? owner) =>
+            owner != null
+            && !(byName.TryGetValue(owner.Name, out ElementSave? current) && ReferenceEquals(current, owner));
+
+        foreach (KeyValuePair<string, StateSaveCategory> category in element.Categories.ToList())
+        {
+            if (IsFromReplacedElement(category.Value.States.FirstOrDefault()?.ParentContainer))
+            {
+                element.Categories.Remove(category.Key);
+            }
+        }
+
+        foreach (KeyValuePair<string, StateSave> state in element.States.ToList())
+        {
+            if (IsFromReplacedElement(state.Value.ParentContainer))
+            {
+                element.States.Remove(state.Key);
+            }
+        }
+
+        // Resolves base types through ObjectFinder, which a reload has already pointed at the new project.
+        element.AddStatesAndCategoriesRecursivelyToGue(newEs);
     }
 
     private static void ApplyDiffRecursive(
@@ -343,6 +401,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             ElementSave? oldEs = element.ElementSave;
             element.ElementSave = newEs;
+            RefreshStatesAndCategories(element, newEs, byName);
 
             DiffDesignTimeChildren(element, newEs, systemManagers);
 

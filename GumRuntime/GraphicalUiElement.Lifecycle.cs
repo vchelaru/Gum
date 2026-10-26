@@ -126,7 +126,7 @@ public partial class GraphicalUiElement
         }
     }
 
-    private void SaveFormsRuntimePropertiesRecursive()
+    internal void SaveFormsRuntimePropertiesRecursive()
     {
         if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
         {
@@ -138,7 +138,7 @@ public partial class GraphicalUiElement
         }
     }
 
-    private void RestoreFormsRuntimePropertiesRecursive()
+    internal void RestoreFormsRuntimePropertiesRecursive()
     {
         if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
         {
