@@ -56,6 +56,13 @@ public interface IUndoManager
     /// <see cref="RequestLock()"/> that brackets the edit; the changes attach to the action recorded
     /// when the lock is released. Ignored when no lock is held. See ADR 0016.
     /// </summary>
+    /// <summary>
+    /// Brings every undo and redo snapshot of the changed elements up to date with values written outside
+    /// an undoable edit (a reference re-evaluated after a reload from disk). The history stays; undoing an
+    /// earlier edit no longer restores the replaced value. No history entry is added.
+    /// </summary>
+    void RebaseStoredValues(IReadOnlyList<StoredValueChange> changes);
+
     void RecordCrossElementVariableChanges(IEnumerable<CrossElementVariableChange> changes);
 
     void PerformUndo();

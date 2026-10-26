@@ -81,7 +81,8 @@ public class FileChangeReactionLogicTests : BaseTestClass
             pluginManagerMock.Object,
             dialogService,
             unsavedChangesTracker,
-            new Mock<IVariableReferenceLogic>().Object);
+            new Mock<IVariableReferenceLogic>().Object,
+            new Mock<Gum.Undo.IUndoManager>().Object);
     }
 
     [Fact]

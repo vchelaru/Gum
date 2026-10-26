@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Undo;
 using ToolsUtilities;
 using System.Diagnostics.CodeAnalysis;
 
@@ -585,12 +586,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         new System.Text.RegularExpressions.Regex(@"\bIndex\b");
 
     /// <inheritdoc/>
-    public bool ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
+    public StoredValueChange[] ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
         GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
         if (project == null)
         {
-            return false;
+            return Array.Empty<StoredValueChange>();
         }
 
         // Every state that reads this element or an element downstream of it, whichever of its values
@@ -603,13 +604,14 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         HashSet<string> changedElementNames = new HashSet<string> { ObjectFinder.Self.GetQualifiedElementName(element) };
         HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+        List<StoredValueChange> changes = new List<StoredValueChange>();
 
         // The edited element can read itself through its qualified name.
-        ApplyStatesReading(element, changedElementNames, elementsToSave, isFullCommit);
+        ApplyStatesReading(element, changedElementNames, elementsToSave, changes, isFullCommit);
         List<ElementSave> dependents = ReferenceDependencies.GetDependentsInOrder(allElements, element);
         foreach (ElementSave dependent in dependents)
         {
-            ApplyStatesReading(dependent, changedElementNames, elementsToSave, isFullCommit);
+            ApplyStatesReading(dependent, changedElementNames, elementsToSave, changes, isFullCommit);
             changedElementNames.Add(ObjectFinder.Self.GetQualifiedElementName(dependent));
         }
 
@@ -621,19 +623,34 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             }
         }
 
-        return dependents.Count > 0;
+        return changes.ToArray();
     }
 
     private void ApplyStatesReading(ElementSave owner, HashSet<string> elementNames, HashSet<ElementSave> elementsToSave,
-        bool isFullCommit)
+        List<StoredValueChange> changes, bool isFullCommit)
     {
         foreach (StateSave state in owner.AllStates)
         {
             if (ReferenceDependencies.StateReadsAny(state, elementNames))
             {
+                Dictionary<string, object?> before = new Dictionary<string, object?>();
+                foreach (VariableSave variable in state.Variables)
+                {
+                    before[variable.Name] = variable.Value;
+                }
+
                 ElementSaveExtensions.ApplyVariableReferences(owner, state,
                     _wireframeObjectManager.GetRepresentation(owner), isFullCommit);
                 elementsToSave.Add(owner);
+
+                string? categoryName = owner.Categories.FirstOrDefault(item => item.States.Contains(state))?.Name;
+                foreach (VariableSave variable in state.Variables)
+                {
+                    if (!before.TryGetValue(variable.Name, out object? oldValue) || !Equals(oldValue, variable.Value))
+                    {
+                        changes.Add(new StoredValueChange(owner, categoryName, state.Name, variable.Name, variable.Type, variable.Value));
+                    }
+                }
             }
         }
     }

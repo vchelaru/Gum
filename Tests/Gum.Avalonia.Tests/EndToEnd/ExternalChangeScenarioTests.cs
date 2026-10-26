@@ -373,6 +373,101 @@ public class ExternalChangeScenarioTests
         tree.AssertOracles();
     }
 
+    // A reader keeps its undo history across an outside edit of the element it reads. Undoing an
+    // in-tool edit made before the reload must not bring back the value the reload replaced.
+    [AvaloniaTheory]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [Trait("Feature", "FILE-013")]
+    [Trait("Feature", "VARREF-001")]
+    public void UndoingAnEditMadeBeforeAnOutsideReload_KeepsTheValueTheReloadGaveTheReaders(bool viaTheme, bool readerSelectedDuringReload)
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness("Harness.gumj");
+        ComponentSave styles = tree.Project.AddComponent("Styles");
+        tree.Project.AddInstance(styles, "Primary", "Rectangle");
+        styles.DefaultState.SetValue("Primary.FillRed", 21, "int");
+        ComponentSave? theme = null;
+        if (viaTheme)
+        {
+            theme = tree.Project.AddComponent("Theme");
+            tree.Project.AddInstance(theme, "Primary", "Rectangle");
+            theme.DefaultState.SetValue("Primary.FillRed", 21, "int");
+            theme.DefaultState.VariableLists.Add(new VariableListSave<string>
+            {
+                Name = "Primary.VariableReferences",
+                Type = "string",
+                Value = new List<string> { "FillRed = Components/Styles.Primary.FillRed" },
+            });
+        }
+        ComponentSave button = tree.Project.AddComponent("ButtonStandard");
+        tree.Project.AddInstance(button, "Background", "NineSlice");
+        button.DefaultState.SetValue("Background.Red", 21, "int");
+        button.DefaultState.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = "Background.VariableReferences",
+            Type = "string",
+            Value = new List<string> { "Red = Components/" + (viaTheme ? "Theme" : "Styles") + ".Primary.FillRed" },
+        });
+        IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
+        FileChangeReactionLogic fileChanges = TestAppBuilder.Services.GetRequiredService<FileChangeReactionLogic>();
+        string stylesFile = Path.Combine(tree.Project.ProjectFolder, "Components", "Styles.gucj");
+        string themeFile = Path.Combine(tree.Project.ProjectFolder, "Components", "Theme.gucj");
+        string buttonFile = Path.Combine(tree.Project.ProjectFolder, "Components", "ButtonStandard.gucj");
+
+        bool autoSave = projectManager.AutoSave;
+        try
+        {
+            projectManager.AutoSave = true;
+            tree.SaveAll();
+
+            // An in-tool edit of each reader gives it an undo history that holds the old value.
+            if (theme != null)
+            {
+                tree.Click(tree.NodeFor(theme));
+                tree.Grid.TypeAndEnter("Width", "60");
+            }
+            tree.Click(tree.NodeFor(button));
+            tree.Grid.TypeAndEnter("Width", "80");
+            if (!readerSelectedDuringReload)
+            {
+                tree.Click(tree.NodeFor(styles));
+            }
+
+            File.WriteAllText(stylesFile, Regex.Replace(File.ReadAllText(stylesFile),
+                @"(""Name"": ""Primary\.FillRed"",\s*""Type"": ""int"",\s*""SetsValue"": true,\s*""ValueAsInt"": )\d+", "${1}200"));
+            fileChanges.ReactToFileChanged(new FilePath(stylesFile));
+            tree.ThrowIfCrashed();
+
+            if (theme != null)
+            {
+                tree.Click(tree.NodeFor(Component(tree, "Theme")));
+                tree.Undo();
+                VariableGridHarness.StoredValue(Component(tree, "Theme"), "Width").ShouldBeNull();
+                VariableGridHarness.StoredValue(Component(tree, "Theme"), "Primary.FillRed").ShouldBe(200);
+                ReadFillRed<ComponentSave>(themeFile, "Primary.FillRed").ShouldBe(200);
+            }
+            tree.Click(tree.NodeFor(Component(tree, "ButtonStandard")));
+            tree.Undo();
+
+            // The edit undid, and the value the reload gave the reader stayed, in memory and on disk.
+            ComponentSave undone = Component(tree, "ButtonStandard");
+            VariableGridHarness.StoredValue(undone, "Width").ShouldBeNull();
+            VariableGridHarness.StoredValue(undone, "Background.Red").ShouldBe(200);
+            ReadFillRed<ComponentSave>(buttonFile, "Background.Red").ShouldBe(200);
+        }
+        finally
+        {
+            projectManager.AutoSave = autoSave;
+        }
+
+        tree.AssertOracles();
+    }
+
+    private static object? ReadFillRed<T>(string file, string variableName) where T : ElementSave, new() =>
+        VariableGridHarness.StoredValue(ElementReference.DeserializeElement<T>(file, GumProjectSave.NativeVersion), variableName);
+
     /// <summary>Exactly one message was shown; on failure, names every message and the file watcher's queue.</summary>
     private static void ShouldHaveShownOnePrompt(ProjectTreeHarness tree)
     {

@@ -17,6 +17,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using Gum.Logic.FileWatch;
 using ToolsUtilities;
 using Xunit;
 
@@ -42,6 +45,7 @@ public class FileChangeReloadDependentsTests : BaseTestClass
     private readonly Mock<ISelectedState> _selectedState = new();
     private readonly Mock<IWireframeObjectManager> _wireframe = new();
     private readonly Mock<IGuiCommands> _guiCommands = new();
+    private readonly Mock<IPluginManager> _pluginManager = new();
 
     public FileChangeReloadDependentsTests()
     {
@@ -105,10 +109,11 @@ public class FileChangeReloadDependentsTests : BaseTestClass
             _wireframe.Object,
             projectState.Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
-            new Mock<IPluginManager>().Object,
+            _pluginManager.Object,
             new Mock<IDialogService>().Object,
             new UnsavedChangesTracker(),
-            _referenceLogic);
+            _referenceLogic,
+            new Mock<Gum.Undo.IUndoManager>().Object);
     }
 
     private static string QualifiedName(ElementSave element) => ElementReference.GetQualifiedName(element, element.Name);
@@ -160,13 +165,15 @@ public class FileChangeReloadDependentsTests : BaseTestClass
         ? Path.Combine(_tempDirectory, "Screens", element.Name + ".gusj")
         : Path.Combine(_tempDirectory, "Components", element.Name + ".gucj");
 
-    private void EditFillRedOnDisk(ElementSave element, int newValue)
+    private void EditFillRedOnDisk(ElementSave element, int newValue) => EditIntOnDisk(element, "Primary.FillRed", newValue);
+
+    private void EditIntOnDisk(ElementSave element, string variableName, int newValue)
     {
         string file = FileOf(element);
         string text = File.ReadAllText(file);
-        Regex fillRed = new(@"(""Name"": ""Primary\.FillRed"",\s*""Type"": ""int"",\s*""SetsValue"": true,\s*""ValueAsInt"": )\d+");
-        fillRed.IsMatch(text).ShouldBeTrue("the saved file should hold Primary.FillRed as an int");
-        File.WriteAllText(file, fillRed.Replace(text, "${1}" + newValue));
+        Regex variable = new(@"(""Name"": """ + Regex.Escape(variableName) + @""",\s*""Type"": ""int"",\s*""SetsValue"": true,\s*""ValueAsInt"": )\d+");
+        variable.IsMatch(text).ShouldBeTrue("the saved file should hold " + variableName + " as an int");
+        File.WriteAllText(file, variable.Replace(text, "${1}" + newValue));
     }
 
     private void Reload(ElementSave element) => _reaction.ReactToFileChanged(new FilePath(FileOf(element)));
@@ -267,8 +274,10 @@ public class FileChangeReloadDependentsTests : BaseTestClass
         _fileCommands.Verify(f => f.TryAutoSaveElement(It.IsAny<ElementSave>()), Times.Never());
     }
 
-    [Fact]
-    public void DeferDependentUpdates_WhenTheReaderIsAlsoReloaded_ShouldNotSaveItBeforeItsOwnReload()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DeferDependentUpdates_WhenTheReaderIsAlsoReloaded_ShouldNotSaveItBeforeItsOwnReload(bool readerFirst)
     {
         // A git checkout changes Theme and Styles together. Updating the readers of Theme before Styles is
         // reloaded would write Theme's old copy of the Styles value over the file git just wrote.
@@ -281,8 +290,8 @@ public class FileChangeReloadDependentsTests : BaseTestClass
 
         using (_reaction.DeferDependentUpdates())
         {
-            Reload(theme);
-            Reload(styles);
+            Reload(readerFirst ? theme : styles);
+            Reload(readerFirst ? styles : theme);
 
             _fileCommands.Verify(f => f.TryAutoSaveElement(It.IsAny<ElementSave>()), Times.Never());
         }
@@ -290,5 +299,86 @@ public class FileChangeReloadDependentsTests : BaseTestClass
         // The reference sets the final value, not the 7 an editor wrote into Theme's own scalar.
         GetValue("Theme", "Primary.FillRed").ShouldBe(200);
         GetValue(ReaderComponent, "Background.Red").ShouldBe(200);
+    }
+
+    private sealed class SynchronousDispatcher : IDispatcher
+    {
+        public void Invoke(Action action) => action();
+        public void Post(Action action) => action();
+    }
+
+    [Fact]
+    public void Flush_WithTheSourceAndAReaderChanged_ShouldReloadBothBeforeSavingAnyReader()
+    {
+        // The queue is a ConcurrentDictionary, so the order the two files are processed in is not
+        // controllable; without the deferral every order saves a reader after only one of them reloaded.
+        ElementSave styles = BuildSource(isScreen: false, "Styles", fillRed: 21);
+        ElementSave theme = BuildTheme("Theme", styles);
+        theme.DefaultState.Variables.Add(new VariableSave { Name = "Primary.FillGreen", Type = "int", Value = 1, SetsValue = true });
+        ElementSave reader = BuildReader(isScreen: false, ReaderComponent, theme);
+        Arrange(styles, theme, reader);
+        EditFillRedOnDisk(styles, 200);
+        EditIntOnDisk(theme, "Primary.FillGreen", 99);
+
+        int reloaded = 0;
+        _pluginManager.Setup(p => p.ElementReloaded(It.IsAny<ElementSave>())).Callback<ElementSave>(_ => reloaded++);
+        List<int> reloadedAtEachSave = new();
+        _fileCommands.Setup(f => f.TryAutoSaveElement(It.IsAny<ElementSave>())).Callback<ElementSave?>(_ => reloadedAtEachSave.Add(reloaded));
+
+        Mock<IFileWatchIgnoreList> ignoreList = new();
+        ignoreList.Setup(i => i.TryGetIgnoreFileChange(It.IsAny<FilePath>())).Returns(false);
+        Mock<IProjectManager> projectManager = new();
+        projectManager.Setup(p => p.GumProjectSave).Returns(_project);
+        FileWatchManager watch = new(_guiCommands.Object, projectManager.Object, _reaction, ignoreList.Object,
+            new SynchronousDispatcher(), new FileSystemWatcherFactory());
+        try
+        {
+            watch.EnableWithDirectories(new HashSet<FilePath> { new FilePath(_tempDirectory + "/") });
+            foreach (ElementSave changed in new[] { styles, theme })
+            {
+                watch.HandleFileSystemChange(null, new FileSystemEventArgs(WatcherChangeTypes.Changed,
+                    Path.GetDirectoryName(FileOf(changed))!, Path.GetFileName(FileOf(changed))));
+            }
+            Thread.Sleep(700);
+
+            watch.Flush();
+        }
+        finally
+        {
+            watch.Disable();
+        }
+
+        reloaded.ShouldBe(2);
+        reloadedAtEachSave.ShouldNotBeEmpty();
+        reloadedAtEachSave.ShouldAllBe(count => count == 2);
+        GetValue("Theme", "Primary.FillRed").ShouldBe(200);
+        GetValue("Theme", "Primary.FillGreen").ShouldBe(99);
+        GetValue(ReaderComponent, "Background.Red").ShouldBe(200);
+    }
+
+    [Fact]
+    public void ReactToFileChanged_WhenTwoElementsReadEachOther_ShouldTerminateAtWhatTheToolCascadeGives()
+    {
+        ElementSave styles = BuildSource(isScreen: false, "Styles", fillRed: 21);
+        ElementSave theme = BuildTheme("Theme", styles);
+        styles.DefaultState.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = "Primary.VariableReferences",
+            Type = "string",
+            Value = new List<string> { "FillRed = Components/Theme.Primary.FillRed" },
+        });
+        Arrange(styles, theme);
+        EditFillRedOnDisk(styles, 200);
+
+        Task reload = Task.Run(() => Reload(styles));
+        reload.Wait(TimeSpan.FromSeconds(20)).ShouldBeTrue("the reload should not cascade forever");
+
+        // The reloaded value stands and its reader follows it, as after an in-tool edit of Styles.
+        GetValue("Styles", "Primary.FillRed").ShouldBe(200);
+        GetValue("Theme", "Primary.FillRed").ShouldBe(200);
+        // Nothing is left to change, and nothing was saved more than once.
+        _referenceLogic.ApplyReferencesToElement(ObjectFinder.Self.GetElementSave("Styles")!, trySave: false).ShouldBeEmpty();
+        VerifySaved("Theme", Times.Once());
+        VerifySaved("Styles", Times.Never());
     }
 }

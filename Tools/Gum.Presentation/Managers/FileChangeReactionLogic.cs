@@ -6,6 +6,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using System;
@@ -30,6 +31,7 @@ namespace Gum.Managers
         private readonly IDialogService _dialogService;
         private readonly IUnsavedChangesTracker _unsavedChangesTracker;
         private readonly IVariableReferenceLogic _variableReferenceLogic;
+        private readonly IUndoManager _undoManager;
 
         /// <summary>
         /// Names of the elements reloaded while a <see cref="DeferDependentUpdates"/> scope is open;
@@ -49,9 +51,11 @@ namespace Gum.Managers
             IPluginManager pluginManager,
             IDialogService dialogService,
             IUnsavedChangesTracker unsavedChangesTracker,
-            IVariableReferenceLogic variableReferenceLogic)
+            IVariableReferenceLogic variableReferenceLogic,
+            IUndoManager undoManager)
         {
             _variableReferenceLogic = variableReferenceLogic;
+            _undoManager = undoManager;
             _dialogService = dialogService;
             _unsavedChangesTracker = unsavedChangesTracker;
             _selectedState = selectedState;
@@ -108,19 +112,23 @@ namespace Gum.Managers
         /// and are saved when Auto Save is on. Elements are looked up by name because a reload replaces the object.
         /// The reloaded elements themselves are not saved, so the watcher has nothing new to see.
         /// </summary>
-        /// <returns>True when some reader was re-evaluated.</returns>
+        /// <returns>True when some reader's stored value changed.</returns>
         private bool UpdateDependentsOf(IEnumerable<string> reloaded)
         {
-            bool updated = false;
+            List<StoredValueChange> changes = new List<StoredValueChange>();
             foreach (string elementName in reloaded.Distinct())
             {
                 ElementSave? element = ObjectFinder.Self.GetElementSave(elementName);
                 if (element != null)
                 {
-                    updated |= _variableReferenceLogic.ApplyReferencesToElement(element, trySave: true);
+                    changes.AddRange(_variableReferenceLogic.ApplyReferencesToElement(element, trySave: true));
                 }
             }
-            return updated;
+
+            // The readers keep their undo history, whose snapshots hold the values just replaced.
+            // The outside edit is not an undoable action, so the snapshots take the new values instead.
+            _undoManager.RebaseStoredValues(changes);
+            return changes.Count > 0;
         }
 
         private void RefreshCanvasAndVariables()
