@@ -59,7 +59,7 @@ public class TextControlCharacterTests : BaseTestClass
         Gum.GumService.Default.Root.Children!.Add(runtime);
         Gum.GumService.Default.Root.UpdateLayout();
         float direct = ((Text)runtime.RenderableComponent!).MeasureString(content);
-        float layout = runtime.GetAbsoluteWidth();
+        float layout = runtime.AbsoluteWidth;
         Gum.GumService.Default.Root.Children.Remove(runtime);
         return (direct, layout);
     }

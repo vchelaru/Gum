@@ -41,10 +41,10 @@ public class TextControlCharacterGapTests : BaseTestClass
     {
         (TextRuntime r1, Text t1) = Make("ab\r\ncd");
         List<string> crlf = t1.WrappedText.ToList();
-        float crlfWidth = r1.GetAbsoluteWidth();
+        float crlfWidth = r1.AbsoluteWidth;
         (TextRuntime r2, Text t2) = Make("ab\ncd");
         List<string> lf = t2.WrappedText.ToList();
-        float lfWidth = r2.GetAbsoluteWidth();
+        float lfWidth = r2.AbsoluteWidth;
         Remove(r1); Remove(r2);
 
         crlf.Count.ShouldBe(lf.Count);
@@ -57,7 +57,7 @@ public class TextControlCharacterGapTests : BaseTestClass
         (TextRuntime r, Text t) = Make("a\tb");
         float left = 0f;
         // Just left of the end of the line: caret after 'b' is index 3 in the ORIGINAL string, not 6.
-        int atEnd = t.GetCharacterIndexAtPosition(left + r.GetAbsoluteWidth() + 5, 0f + 2);
+        int atEnd = t.GetCharacterIndexAtPosition(left + r.AbsoluteWidth + 5, 0f + 2);
         // Inside the tab's blank span: caret must be index 1 or 2, never past the tab's 4 columns.
         float afterA = t.MeasureString("a");
         int inTab = t.GetCharacterIndexAtPosition(left + afterA + 4, 0f + 2);
@@ -71,9 +71,9 @@ public class TextControlCharacterGapTests : BaseTestClass
     public void Measure_StyledRunWithTab_MatchesFourSpaces()
     {
         (TextRuntime r1, Text t1) = Make("[Color=Red]a\tb[/Color]");
-        float tab = r1.GetAbsoluteWidth();
+        float tab = r1.AbsoluteWidth;
         (TextRuntime r2, Text t2) = Make("[Color=Red]a    b[/Color]");
-        float spaces = r2.GetAbsoluteWidth();
+        float spaces = r2.AbsoluteWidth;
         Remove(r1); Remove(r2);
 
         tab.ShouldBe(spaces, 0.01f);
