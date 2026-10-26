@@ -44,7 +44,11 @@ public class WebPDecoder : RenderingLibrary.Content.IImageDecoder
             ?? throw new System.IO.InvalidDataException($"Could not decode {fileName}");
         var info = new SkiaSharp.SKImageInfo(codec.Info.Width, codec.Info.Height,
             SkiaSharp.SKColorType.Rgba8888, SkiaSharp.SKAlphaType.Unpremul);
-        codec.GetPixels(info, out byte[] rgba);
+        SkiaSharp.SKCodecResult result = codec.GetPixels(info, out byte[] rgba);
+        if (result != SkiaSharp.SKCodecResult.Success)
+        {
+            throw new System.IO.InvalidDataException($"Could not decode {fileName}: {result}");
+        }
 
         image = new RenderingLibrary.Content.DecodedImage(rgba, info.Width, info.Height);
         return true;
