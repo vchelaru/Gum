@@ -1,47 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>Hazard/Controls/Thumb</Name>
+  <Name>Controls/SliderThumb</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
     </Variable>
-    <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
-      <Value xsi:type="xsd:int">160</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">26</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.DropshadowBlurX" SetsValue="true">
-      <Value xsi:type="xsd:float">12</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.DropshadowBlurY" SetsValue="true">
-      <Value xsi:type="xsd:float">12</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.DropshadowGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">200</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.DropshadowOffsetX" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.DropshadowOffsetY" SetsValue="true">
-      <Value xsi:type="xsd:float">3</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
-      <Value xsi:type="xsd:int">244</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">26</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">200</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">244</Value>
-    </Variable>
-    <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
+    <Variable Type="bool" Name="Background.ExposeChildrenEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -49,11 +19,26 @@
     <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+    <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+    <Variable IsFile="true" Type="string" Name="Background.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Background.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -80,44 +65,51 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
-    <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">25</Value>
     </Variable>
-    <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">4</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
-    </Variable>
-    <Variable Type="bool" Name="FocusedIndicator.IsFilled" SetsValue="true">
+    <Variable Type="bool" Name="FocusedIndicator.ExposeChildrenEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.StrokeAlpha" SetsValue="true">
-      <Value xsi:type="xsd:int">90</Value>
+    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">171</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">26</Value>
+    <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">200</Value>
+    <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">244</Value>
+    <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
+    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
     </Variable>
-    <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">3</Value>
+    <Variable IsFile="true" Type="string" Name="FocusedIndicator.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="FocusedIndicator.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">4</Value>
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-    </Variable>
-    <Variable Type="float" Name="FocusedIndicator.X" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="HorizontalAlignment" Name="FocusedIndicator.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
@@ -126,13 +118,13 @@
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">2</Value>
     </Variable>
     <Variable Type="VerticalAlignment" Name="FocusedIndicator.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="PositionUnitType" Name="FocusedIndicator.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">7</Value>
+      <Value xsi:type="xsd:int">5</Value>
     </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
@@ -142,16 +134,22 @@
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">8</Value>
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Fonts/SairaCondensed-SemiBold.ttf</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">15</Value>
+      <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">10</Value>
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
@@ -165,14 +163,26 @@
     <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
+    <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">10</Value>
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Text" SetsValue="true">
       <Value xsi:type="xsd:string">Click Me</Value>
     </Variable>
+    <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="VerticalAlignment" Name="TextInstance.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -197,26 +207,12 @@
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
-      <Name>TextInstance.VariableReferences</Name>
-      <Category>References</Category>
-      <IsFile>false</IsFile>
-      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value>
-        <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
-        <string>Font = Components/Hazard/Styles.Strong.Font</string>
-        <string>FontSize = Components/Hazard/Styles.Strong.FontSize</string>
-        <string>IsBold = Components/Hazard/Styles.Strong.IsBold</string>
-      </Value>
-    </VariableList>
-    <VariableList xsi:type="VariableListSaveOfString">
-      <Type>string</Type>
       <Name>Background.VariableReferences</Name>
       <Category>References</Category>
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
-        <string>DropshadowColor = Components/Hazard/Styles.Accent.FillColor</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -226,7 +222,25 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
+        <string>Color = Components/Styles.Warning.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Styles.White.FillColor</string>
+        <string>Font = Components/Styles.Strong.Font</string>
+        <string>FontSize = Components/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Styles.Strong.IsBold</string>
+        <string>IsItalic = Components/Styles.Strong.IsItalic</string>
+        <string>UseCustomFont = Components/Styles.Strong.UseCustomFont</string>
+        <string>CustomFontFile = Components/Styles.Strong.CustomFontFile</string>
+        <string>FontScale = Components/Styles.Strong.FontScale</string>
+        <string>LineHeightMultiplier = Components/Styles.Strong.LineHeightMultiplier</string>
       </Value>
     </VariableList>
   </State>
@@ -234,29 +248,26 @@
     <Name>ButtonCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">26</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">200</Value>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">244</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">8</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -265,7 +276,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
+          <string>Color = Components/Styles.Primary.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -275,35 +286,32 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
+          <string>Color = Components/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">7</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">14</Value>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">8</Value>
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -312,7 +320,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -322,35 +330,32 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
+          <string>Color = Components/Styles.Gray.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">60</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">208</Value>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">245</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">8</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -359,7 +364,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Hazard/Styles.AccentHover.FillColor</string>
+          <string>Color = Components/Styles.PrimaryLight.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -369,35 +374,32 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
+          <string>Color = Components/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Pushed</Name>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">12</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">137</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">163</Value>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">120</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">201</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">8</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -406,7 +408,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Hazard/Styles.AccentPressed.FillColor</string>
+          <string>Color = Components/Styles.PrimaryDark.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -416,35 +418,32 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
+          <string>Color = Components/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>HighlightedFocused</Name>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">60</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">208</Value>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">245</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">8</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -453,7 +452,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Hazard/Styles.AccentHover.FillColor</string>
+          <string>Color = Components/Styles.PrimaryLight.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -463,35 +462,32 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
+          <string>Color = Components/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">26</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">200</Value>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">244</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">8</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -500,7 +496,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
+          <string>Color = Components/Styles.Primary.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -510,35 +506,32 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
+          <string>Color = Components/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>DisabledFocused</Name>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">7</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">14</Value>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">8</Value>
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">10</Value>
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -547,7 +540,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -557,14 +550,14 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
+          <string>Color = Components/Styles.Gray.FillColor</string>
         </Value>
       </VariableList>
     </State>
   </Category>
-  <Instance Name="Background" BaseType="Rectangle" />
+  <Instance Name="Background" BaseType="NineSlice" />
   <Instance Name="TextInstance" BaseType="Text" />
-  <Instance Name="FocusedIndicator" BaseType="Rectangle" />
+  <Instance Name="FocusedIndicator" BaseType="NineSlice" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ButtonBehavior</BehaviorName>

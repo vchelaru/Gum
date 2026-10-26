@@ -83,9 +83,9 @@ The thumb visuals (SliderThumbVisual, ScrollBarThumbVisual) are the explicit exc
 
 A control with a Pushed state (Button) shouldn't switch border color families between hover and press — gray→blue→gray flickers visibly through a hover-press-release motion. Use the accent for hover too. A control without Pushed (TextBox, ComboBox closed) is fine using a softer hover color and reserving the accent for sustained focus.
 
-## Slider thumb is a Button
+## Slider and scroll bar thumbs fall back to the Button template
 
-`V3.SliderVisual` creates the thumb as `new Button()`, so its visual is whatever `DefaultFormsTemplates[typeof(Button)]` resolves to — your theme's Button, which is the wrong shape for a thumb in most designs. Fix: pass `tryCreateFormsObject:false` to the base, detach `ThumbInstance.Parent`, add your own thumb visual named `"ThumbInstance"` to `TrackInstance`, then create the Forms `Slider` yourself at the end of the ctor. `RangeBase.ReactToVisualChanged` looks up `"ThumbInstance"` by name and wraps it in a Button — your thumb just needs `"ButtonCategory"` state callbacks (use `Button.ButtonCategoryName`) and `HasEvents = true`.
+`V3.SliderVisual` creates its thumb as `new SliderThumb()` and `V3.ScrollBarVisual` as `new ScrollBarThumb()`. Template lookup walks base types, so each resolves through its own type, then `typeof(Thumb)` (both bars), then `typeof(Button)`. With nothing registered, the thumb is your theme's Button, the wrong shape for a thumb in most designs. Register a `ButtonVisual`-based template for `SliderThumb` or `ScrollBarThumb` to restyle one bar's thumb. To build the slider thumb inside a `SliderVisual` subclass instead: pass `tryCreateFormsObject:false` to the base, detach `ThumbInstance.Parent`, add your own thumb visual named `"ThumbInstance"` to `TrackInstance`, then create the Forms `Slider` yourself at the end of the ctor. `RangeBase.ReactToVisualChanged` looks up `"ThumbInstance"` by name and wraps it in a Button — your thumb just needs `"ButtonCategory"` state callbacks (use `Button.ButtonCategoryName`) and `HasEvents = true`.
 
 ## Value-driven visuals
 

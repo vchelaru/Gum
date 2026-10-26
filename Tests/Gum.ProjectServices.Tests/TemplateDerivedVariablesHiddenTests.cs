@@ -170,7 +170,6 @@ public class TemplateDerivedVariablesHiddenTests
         ["Splitter"] = AllStructureVariables,
         ["SplitterStandard"] = AllStructureVariables,
         ["TextBox"] = AllStructureVariables,
-        ["Thumb"] = AllStructureVariables,
         ["Toast"] = AllStructureVariables,
         ["TreeView"] = AllStructureVariables,
         ["TreeViewItem"] = AllStructureVariables,

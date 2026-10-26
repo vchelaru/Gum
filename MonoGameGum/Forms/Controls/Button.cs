@@ -170,3 +170,25 @@ public class ScrollBarButton : Button
 
     public ScrollBarButton(InteractiveGue visual) : base(visual) { }
 }
+
+/// <summary>
+/// The thumb of a <see cref="Slider"/>. Until a template is registered for <c>typeof(SliderThumb)</c>,
+/// it uses the <see cref="Thumb"/> template, then the <see cref="Button"/> template.
+/// </summary>
+public class SliderThumb : Thumb
+{
+    public SliderThumb() : base() { }
+
+    public SliderThumb(InteractiveGue visual) : base(visual) { }
+}
+
+/// <summary>
+/// The thumb of a <see cref="ScrollBar"/>. Until a template is registered for <c>typeof(ScrollBarThumb)</c>,
+/// it uses the <see cref="Thumb"/> template, then the <see cref="Button"/> template.
+/// </summary>
+public class ScrollBarThumb : Thumb
+{
+    public ScrollBarThumb() : base() { }
+
+    public ScrollBarThumb(InteractiveGue visual) : base(visual) { }
+}

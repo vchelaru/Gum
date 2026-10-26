@@ -89,7 +89,8 @@
   <ComponentReference Name="Controls/SplitterStandard" />
   <ComponentReference Name="Controls/StackPanel" />
   <ComponentReference Name="Controls/TextBox" />
-  <ComponentReference Name="Controls/Thumb" />
+  <ComponentReference Name="Controls/ScrollBarThumb" />
+  <ComponentReference Name="Controls/SliderThumb" />
   <ComponentReference Name="Controls/Toast" />
   <ComponentReference Name="Controls/TreeView" />
   <ComponentReference Name="Controls/TreeViewItem" />
