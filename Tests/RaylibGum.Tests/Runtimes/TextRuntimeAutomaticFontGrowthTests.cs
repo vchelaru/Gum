@@ -238,6 +238,42 @@ public class TextRuntimeAutomaticFontGrowthTests : BaseTestClass
         }
     }
 
+    // Issue #6816: a character grown into the oversampled display font must be baked at that font's
+    // own raster size, which includes FontScale.
+    [Fact]
+    public void Text_WhenOversampledWithFontScale_GrowsTheDisplayFontAtItsScaledRasterSize()
+    {
+        bool savedOversampling = TextRuntime.UseFontOversampling;
+        bool savedGrowth = TextRuntime.UseAutomaticFontGrowth;
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            TextRuntime.UseAutomaticFontGrowth = true;
+            SpyGrowableRaylibFontCreator creator = new();
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = FixtureFontPath;
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 2f;
+            textRuntime.UpdateAutomaticFontOversampling(1.5f).ShouldBeTrue(); // raster = 20 * 2 * 1.5 = 60px
+
+            // U+2026 is in Orbitron-Black.ttf but outside the default Ranges, so it forces growth.
+            textRuntime.Text = "…";
+
+            // The display font grows after the measurement font, so it is the last call.
+            creator.LastBmfcSave.ShouldNotBeNull();
+            creator.LastBmfcSave!.FontSize.ShouldBe(60f, tolerance: 0.0001f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedOversampling;
+            TextRuntime.UseAutomaticFontGrowth = savedGrowth;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     // Wraps the real KernSmithRaylibFontCreator (not a synthetic fake, per this file's own header
     // comment) so tests can observe/count TryAddGlyphs calls the way MonoGame's stub fakes do.
     private sealed class SpyGrowableRaylibFontCreator : IRaylibFontCreator, IGrowableRaylibFontCreator

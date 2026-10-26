@@ -32,7 +32,7 @@ The layer matters here. A layer with `LayerCameraSettings.IsInScreenSpace = true
 
 ## Manual Control
 
-`RegenerateOversampledFont(oversampleRatio)` is the method the automatic path calls. You can call it yourself to pick a size, such as during a cut scene that zooms without touching `Camera.Zoom`. It returns `false` and does nothing if `UseFontOversampling` is off, if no `IInMemoryFontCreator` is set, or if `oversampleRatio` is zero or less.
+`RegenerateOversampledFont(oversampleRatio)` builds the font again at a size you pick, such as during a cut scene that zooms without touching `Camera.Zoom`. The ratio is relative to the drawn size of the text (`FontSize` times `FontScale`), so passing the zoom keeps each pixel of the font on one pixel of the screen. Inline `[FontScale]` runs still look enlarged, because a text has only one font size. It returns `false` and does nothing if `UseFontOversampling` is off, if no `IInMemoryFontCreator` is set, or if `oversampleRatio` is zero or less.
 
 The automatic path debounces continuous zooming: it only rebuilds a font's atlas once the requested size has moved `TextRuntime.OversamplingRegenerateThresholdPixels` (1 pixel by default) from what was last rasterized. That 1px absolute threshold is a bigger fraction of a small `FontSize` than a large one, so small text can stay noticeably blurry for longer while zooming. Lower the threshold (down to `0` to regenerate on any change) if you want small text to re-crisp sooner, at the cost of rebuilding the atlas more often.
 

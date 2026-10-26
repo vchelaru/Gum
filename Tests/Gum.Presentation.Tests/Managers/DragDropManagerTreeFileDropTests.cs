@@ -54,6 +54,18 @@ public class DragDropManagerTreeFileDropTests
     }
 
     [Theory]
+    [InlineData("images/Photo.jpg", true)]
+    [InlineData("images/Photo.jpeg", true)]
+    [InlineData("images/Photo.JPEG", true)]
+    [InlineData("images/Icon.tga", false)]
+    public void IsValidExtensionForFileDrop_AcceptsOnlyLoadableImageFormats(string file, bool expected)
+    {
+        DragDropManager manager = CreateManager(Mock.Of<IPluginManager>(), Mock.Of<IImportLogic>());
+
+        manager.IsValidExtensionForFileDrop(file).ShouldBe(expected);
+    }
+
+    [Theory]
     [InlineData("fonts/MyFont.woff2")]
     [InlineData("fonts/MyFont.txt")]
     public void IsValidExtensionForFileDrop_RejectsFontFormatsKernSmithCannotRead(string file)
