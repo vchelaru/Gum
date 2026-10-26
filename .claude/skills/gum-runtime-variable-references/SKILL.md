@@ -77,6 +77,10 @@ Rows on a component or screen that read a variable re-evaluate when it changes: 
 
 All three work in a game that calls `GumExpressionService.Initialize()`. The `GraphicalUiElement` overload of `ApplyVariableReferencesOnSpecificOwner` rewrites `@` through `ResolveOwnerPrefix`, and `Index` reads the element's own instance order when no live tree is passed. Without Gum.Expressions, `@Width` still resolves as a plain lookup, but `%`, `Index` and every other operator need it (see `gum-tool-variable-references`).
 
+## Circular references (#6871)
+
+Rows that read each other (or their own result) never freeze or overflow on any path (`ReferenceCycleFreezeTests`, `ReferenceCycleToolFreezeTests`). One rule, shared by the tool, creation and `ApplyAllVariableReferences`: cyclic rows run once after the ordered rows, in written order, each result visible to the next (`VariableReferenceGraph.ApplyAll`, `LoadOrderRows`), and a later change to a variable they read never runs them again. The tool reports the loop as GUM0013 (`HeadlessErrorChecker`); the runtime reports nothing.
+
 ## One analysis of which rows read what
 
 `VariableReferenceGraph.ScanReads` is the only place that decides what a row reads. `ReferenceDependencies` builds on it for cross-element questions, and `ApplyAllVariableReferences`, `ObjectFinder.GetElementReferencesToThis` and the tool's `VariableReferenceLogic.ApplyReferencesToElement` all call it. Match references through it, not by string prefix. `ApplyVariableReferences(ElementSave, StateSave)` runs a state's rows in `VariableReferenceGraph.LoadOrderRows` order, so written order does not matter.

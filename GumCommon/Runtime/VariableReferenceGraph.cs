@@ -103,6 +103,7 @@ public sealed class VariableReferenceGraph
     private readonly ReferenceRow[] _cyclicRows;
     private readonly ReferenceRow[] _loadOrderRows;
     private readonly ReferenceRow[] _liveRows;
+    private readonly ReferenceRow[] _applyAllRows;
     private readonly bool _hasChains;
     private readonly HashSet<string> _scratch = new HashSet<string>();
 
@@ -136,6 +137,18 @@ public sealed class VariableReferenceGraph
             }
         }
         _liveRows = live.ToArray();
+
+        // A cycle has no order, so it runs once after the ordered rows, in written order (the rule the
+        // tool's canvas and ElementSave path follow), and is never run again live.
+        List<ReferenceRow> applyAll = new List<ReferenceRow>(live);
+        foreach (ReferenceRow row in cyclic)
+        {
+            if (row.IsLiveEvaluable)
+            {
+                applyAll.Add(row);
+            }
+        }
+        _applyAllRows = applyAll.ToArray();
     }
 
     /// <summary>True when the element has at least one reference row.</summary>
@@ -391,15 +404,15 @@ public sealed class VariableReferenceGraph
 
     /// <summary>
     /// Evaluates every row in dependency order onto <paramref name="liveRoot"/>, so a row reading another
-    /// row's result sees it whatever order the rows are written in. Rows are read from the element's
-    /// authored values. The authored data is not changed.
+    /// row's result sees it whatever order the rows are written in. Rows in a cycle run last, once, in
+    /// written order. Rows are read from the element's authored values. The authored data is not changed.
     /// </summary>
     /// <param name="element">The element the graph was built for.</param>
     /// <param name="liveRoot">The visual for <paramref name="element"/>.</param>
     public void ApplyAll(ElementSave element, GraphicalUiElement liveRoot)
     {
         StateSave evaluationState = new StateSave { Name = "References", ParentContainer = element };
-        Evaluate(_liveRows, evaluationState, liveRoot);
+        Evaluate(_applyAllRows, evaluationState, liveRoot);
     }
 
     /// <summary>

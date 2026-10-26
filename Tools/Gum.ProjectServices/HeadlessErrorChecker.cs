@@ -151,6 +151,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
         errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
         errors.AddRange(GetUnresolvableVariableReferenceErrorsFor(element));
+        errors.AddRange(GetCircularVariableReferenceErrorsFor(element));
         errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
         errors.AddRange(GetTextOutsideFontRangeErrorsFor(element, project));
 
@@ -343,6 +344,92 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         value is float || value is double || value is int || value is long || value is decimal;
 
     private static string FormatValue(object? value) => value?.ToString() ?? "(null)";
+
+    #endregion
+
+    #region GUM0013 — Circular variable reference
+
+    /// <summary>
+    /// Flags rows of one state that read each other in a loop (<c>A = B + 1</c> and <c>B = A + 1</c>, or a
+    /// row reading its own result). A cycle has no order to evaluate in, so its rows keep their stored
+    /// values when a variable changes and run once, in written order, when the element is applied.
+    /// A cycle between rows of two elements is not detected.
+    /// </summary>
+    private static List<ErrorResult> GetCircularVariableReferenceErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+        foreach (var state in element.AllStates)
+        {
+            if (!state.VariableLists.Any(list => list.GetRootName() == "VariableReferences"))
+            {
+                continue;
+            }
+
+            var cyclic = VariableReferenceGraph.GetForState(element, state).CyclicRows;
+            var reported = new HashSet<ReferenceRow>();
+            foreach (var start in cyclic)
+            {
+                if (reported.Contains(start))
+                {
+                    continue;
+                }
+                var loop = FindCycleThrough(start, cyclic);
+                if (loop == null)
+                {
+                    continue;
+                }
+                foreach (var row in loop)
+                {
+                    reported.Add(row);
+                }
+                var path = string.Join(" -> ", loop.Concat(new[] { loop[0] }).Select(row => element.Name + "." + row.WrittenName));
+                errors.Add(new ErrorResult
+                {
+                    ElementName = element.Name,
+                    Code = "GUM0013",
+                    Severity = ErrorSeverity.Warning,
+                    Message = $"{state.Name}: Circular variable reference: {path}. These rows keep their stored values when a variable changes."
+                });
+            }
+        }
+        return errors;
+    }
+
+    // The rows of a loop that contains `start`, each reading the variable the next one writes, or null
+    // when `start` only leads into a loop.
+    private static List<ReferenceRow>? FindCycleThrough(ReferenceRow start, IReadOnlyList<ReferenceRow> rows)
+    {
+        var path = new List<ReferenceRow>();
+        var visited = new HashSet<ReferenceRow>();
+        return Search(start);
+
+        List<ReferenceRow>? Search(ReferenceRow current)
+        {
+            path.Add(current);
+            visited.Add(current);
+            foreach (var next in rows)
+            {
+                if (!current.Reads.Contains(next.WrittenName))
+                {
+                    continue;
+                }
+                if (next == start)
+                {
+                    return new List<ReferenceRow>(path);
+                }
+                if (!visited.Contains(next))
+                {
+                    var found = Search(next);
+                    if (found != null)
+                    {
+                        return found;
+                    }
+                }
+            }
+            path.RemoveAt(path.Count - 1);
+            return null;
+        }
+    }
 
     #endregion
 

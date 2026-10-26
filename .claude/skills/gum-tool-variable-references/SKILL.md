@@ -121,6 +121,10 @@ When a variable changes, `DoVariableReferenceReaction` finds all elements that r
 
 `DoVariableReferenceReactionOnInstanceVariableSet` handles a subtler case: when an instance's base element has variable references internally, and the changed variable tunnels through. It walks the reference graph to find which inner-instance variables need updating and writes the values directly into the container's state.
 
+## Circular References
+
+A loop of rows runs once per apply, in written order (canvas and `ApplyVariableReferences` agree), never forever; each apply reads the stored values, so repeated hard-value applies of a loop drift. GUM0013 in `HeadlessErrorChecker` names the loop in the Errors tab and `gumcli check`; a loop across two elements is not detected.
+
 ## Validation
 
 `GetIndividualFailures` checks each line for:
