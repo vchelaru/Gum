@@ -23,13 +23,15 @@ public interface IVariableReferenceLogic
     StoredValueChange[] ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true);
 
     /// <summary>
-    /// Re-reads every reference row on every state of <paramref name="element"/>, then runs the cascade into the
-    /// elements that read it (saving them when Auto Save is on). What an undo or redo runs after restoring a
-    /// snapshot, so the result matches typing the restored value. Does not save <paramref name="element"/> itself
-    /// unless something else reads it.
+    /// After an undo or redo restored <paramref name="element"/>, does what typing the restored values would
+    /// have done: the rows that read a variable the restore changed (and rows it added) are re-read in
+    /// dependency order, then the cascade runs into the elements that read <paramref name="element"/>. A
+    /// restored variable's own row is left alone, so a value the user typed over a stale reference stays.
     /// </summary>
+    /// <param name="element">The element after the restore.</param>
+    /// <param name="before">A copy of the element taken just before the restore.</param>
     /// <returns>The values that changed in other elements.</returns>
-    StoredValueChange[] ReapplyReferences(ElementSave element);
+    StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before);
 
     /// <summary>
     /// Re-applies the rows of <paramref name="element"/> that read a sibling-dependent name

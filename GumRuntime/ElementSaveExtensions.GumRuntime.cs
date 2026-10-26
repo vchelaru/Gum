@@ -789,14 +789,21 @@ namespace GumRuntime
         // edit from an intermediate one produced while the user is still dragging.
         // notifyChanges: false skips VariableChangedThroughReference, for callers that apply
         // references only to read the result and restore the state afterwards (#5736).
+        // onlyRows: when given, only the rows with the same owner and text are applied (still in dependency order); the tool uses it
+        // to re-read just the rows a restored undo snapshot affects.
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave, GraphicalUiElement? liveRoot = null,
-            bool isFullCommit = true, bool notifyChanges = true)
+            bool isFullCommit = true, bool notifyChanges = true, ICollection<ReferenceRow>? onlyRows = null)
         {
             // Rows run in dependency order, so a row that reads another row's result sees it whatever
             // order they are written in. Rows in a cycle run last, in written order.
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, stateSave);
             foreach (ReferenceRow row in graph.LoadOrderRows)
             {
+                // Matched by text because a graph built per state creates its own row objects.
+                if (onlyRows != null && !onlyRows.Any(item => item.Line == row.Line && item.SourceObject == row.SourceObject))
+                {
+                    continue;
+                }
                 // this applies the variable and returns info about the application:
                 var result = ApplyVariableReferencesOnSpecificOwner(row.Instance, row.Line, stateSave, liveRoot);
                 // In the gum tool, we need to check if the applicatoin actually changed the value

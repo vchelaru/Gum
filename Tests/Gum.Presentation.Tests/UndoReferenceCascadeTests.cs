@@ -32,6 +32,7 @@ public class UndoReferenceCascadeTests : BaseTestClass
 
     private readonly ComponentSave _comp = NewComponent("Comp");
     private readonly ComponentSave _other = NewComponent("Other");
+    private readonly ScreenSave _screen = NewScreen("Scr");
     private readonly Dictionary<string, ComponentSave> _disk = new();
     private readonly Mock<ISelectedState> _selectedState = new();
     private readonly Mock<IFileCommands> _fileCommands = new();
@@ -82,6 +83,13 @@ public class UndoReferenceCascadeTests : BaseTestClass
         ComponentSave component = new ComponentSave { Name = name };
         component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
         return component;
+    }
+
+    private static ScreenSave NewScreen(string name)
+    {
+        ScreenSave screen = new ScreenSave { Name = name };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        return screen;
     }
 
     private static InstanceSave NewInstance(ElementSave parent, string name, float width)
@@ -145,12 +153,20 @@ public class UndoReferenceCascadeTests : BaseTestClass
         AddRow(_comp.DefaultState, "F1", "Width = Source.Width");
         AddRow(_comp.DefaultState, "F2", "Width = F1.Width + 1");
         AddRow(_other.DefaultState, "O", OtherRow);
+        // A screen with an instance of Comp, and a rectangle reading that instance's Width.
+        InstanceSave componentInstance = NewInstance(_screen, "C1", 0);
+        componentInstance.BaseType = "Comp";
+        NewInstance(_screen, "S2", 0);
+        SetWidth(_screen.DefaultState, "C1", 40);
+        AddRow(_screen.DefaultState, "S2", "Width = C1.Width");
 
         GumProjectSave project = new GumProjectSave();
         project.Components.Add(_comp);
         project.Components.Add(_other);
         project.ComponentReferences.Add(new ElementReference { Name = "Comp", ElementType = ElementType.Component });
         project.ComponentReferences.Add(new ElementReference { Name = "Other", ElementType = ElementType.Component });
+        project.Screens.Add(_screen);
+        project.ScreenReferences.Add(new ElementReference { Name = "Scr", ElementType = ElementType.Screen });
         ObjectFinder.Self.GumProjectSave = project;
         project.Initialize();
 
@@ -158,6 +174,7 @@ public class UndoReferenceCascadeTests : BaseTestClass
         {
             ElementSaveExtensions.ApplyVariableReferences(_comp, _comp.DefaultState, null);
             ElementSaveExtensions.ApplyVariableReferences(_other, _other.DefaultState, null);
+            ElementSaveExtensions.ApplyVariableReferences(_screen, _screen.DefaultState, null);
         }
         _disk["Comp"] = FileManager.CloneSaveObject(_comp);
         _disk["Other"] = FileManager.CloneSaveObject(_other);
@@ -364,6 +381,78 @@ public class UndoReferenceCascadeTests : BaseTestClass
     }
 
     [Fact]
+    public void UndoRedo_OfApplyingAReference_ShouldKeepTheTypedValueAnUndoRestores()
+    {
+        // The value a user typed over a stale reference is what the undo restores. Its own row is not
+        // re-read, since a typed edit of a variable updates what reads it, not the row that feeds it.
+        Arrange();
+        SetWidth(_comp.DefaultState, "F1", 10);
+        _undo.RecordState();
+        using (_undo.RequestLock())
+        {
+            // The Apply reference button re-evaluates F1's row.
+            ElementSaveExtensions.ApplyVariableReferences(_comp, _comp.DefaultState, null);
+        }
+        Width(_comp, "F1").ShouldBe(50);
+
+        _undo.PerformUndo();
+        Width(_comp, "F1").ShouldBe(10);
+        _undo.PerformRedo();
+        Width(_comp, "F1").ShouldBe(50);
+        _undo.PerformUndo();
+        Width(_comp, "F1").ShouldBe(10);
+        HistoryCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void UndoRedo_OfResettingAFeedingVariable_ShouldMatchTheEditItUndoes()
+    {
+        // Make Default on the source variable removes its stored value.
+        Arrange();
+        using (_undo.RequestLock())
+        {
+            _comp.DefaultState.Variables.RemoveAll(item => item.Name == "Source.Width");
+            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("Source"), "Width", _comp.DefaultState,
+                "Source.Width", trySave: true);
+        }
+        float? f1AfterEdit = Width(_comp, "F1");
+        float? oAfterEdit = Width(_other, "O");
+
+        _undo.PerformUndo();
+        ShouldHaveWidths(50);
+        _undo.PerformRedo();
+        Width(_comp, "Source").ShouldBeNull();
+        Width(_comp, "F1").ShouldBe(f1AfterEdit);
+        Width(_other, "O").ShouldBe(oAfterEdit);
+        MemoryShouldEqualDisk();
+    }
+
+    [Fact]
+    public void UndoRedo_OnAScreenEditingAComponentInstance_ShouldFollowTheInstancesReadingIt()
+    {
+        Arrange();
+        _selectedElement = _screen;
+        _selectedStateSave = _screen.DefaultState;
+        _undo.RecordState();
+        Width(_screen, "S2").ShouldBe(40);
+
+        using (_undo.RequestLock())
+        {
+            SetWidth(_screen.DefaultState, "C1", 70);
+            _logic.DoVariableReferenceReaction(_screen, _screen.GetInstance("C1"), "Width", _screen.DefaultState,
+                "C1.Width", trySave: true);
+        }
+        Width(_screen, "S2").ShouldBe(70);
+
+        _undo.PerformUndo();
+        Width(_screen, "C1").ShouldBe(40);
+        Width(_screen, "S2").ShouldBe(40);
+        _undo.PerformRedo();
+        Width(_screen, "S2").ShouldBe(70);
+        HistoryCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void UndoRedo_OfAVariableNoRowReads_ShouldRestoreItAndAddOneEntry()
     {
         // Characterization: plain undo/redo of a non-referenced variable.
@@ -424,13 +513,22 @@ public class UndoReferenceCascadeTests : BaseTestClass
         float source = 50;
         List<float> applied = new List<float>();
         int cursor = 0;
+        List<string> trace = new List<string>();
         for (int step = 0; step < 8; step++)
         {
             int action = random.Next(3);
-            string where = $"case {caseIndex} step {step} action {action}";
+            string where = $"case {caseIndex} step {step} action {action}, so far: {string.Join(", ", trace)}, cursor {cursor}, applied [{string.Join(",", applied)}], history {HistoryCount}";
+            trace.Add(action == 0 ? "edit" : action == 1 ? "undo" : "redo");
             if (action == 0)
             {
+                // An edit to the value the source already holds records nothing and keeps the redo history,
+                // which the model below (an edit drops it) does not describe.
                 float value = random.Next(1, 200);
+                if (value == source)
+                {
+                    value++;
+                }
+                trace[trace.Count - 1] = "edit " + value;
                 EditSourceWidth(value);
                 applied.RemoveRange(cursor, applied.Count - cursor);
                 applied.Add(value);

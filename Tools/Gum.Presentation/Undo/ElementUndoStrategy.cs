@@ -505,6 +505,7 @@ public class ElementUndoStrategy : IUndoStrategy
 
         if (toApplyTo != null)
         {
+            ElementSave beforeRestore = CloneWithFixedEnumerations(toApplyTo);
             addedAndRemovedInstances = ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true,
                 out bool shouldRefreshWireframe,
                 out bool shouldRefreshStateTreeView,
@@ -547,7 +548,7 @@ public class ElementUndoStrategy : IUndoStrategy
             elementHistory.UndoIndex = newIndex;
             DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView,
                 shouldRefreshBehaviorView,
-                addedAndRemovedInstances);
+                addedAndRemovedInstances, beforeRestore);
         }
     }
 
@@ -555,13 +556,14 @@ public class ElementUndoStrategy : IUndoStrategy
         bool shouldRefreshWireframe,
         bool shouldRefreshStateTreeView,
         bool shouldRefreshBehaviorView,
-        AddedAndRemovedInstances? addedAndRemovedInstances)
+        AddedAndRemovedInstances? addedAndRemovedInstances,
+        ElementSave beforeRestore)
     {
         // An undo or redo has the same effect on the rest of the app as typing the value: whatever the
         // snapshot held for a variable a reference row feeds, the row's followers re-read their sources
         // (#6868). Before the baseline, so the next edit starts from the cascaded values, and with no undo
         // lock held, so no history entry is added.
-        _variableReferenceLogic.Value.ReapplyReferences(toApplyTo);
+        _variableReferenceLogic.Value.ReapplyReferences(toApplyTo, beforeRestore);
 
         CaptureBaseline();
 
@@ -652,6 +654,7 @@ public class ElementUndoStrategy : IUndoStrategy
 
         if (toApplyTo != null)
         {
+            ElementSave beforeRestore = CloneWithFixedEnumerations(toApplyTo);
             addedAndRemoved = ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true,
                 out bool shouldRefreshWireframe,
                 out bool shouldRefreshStateTreeView,
@@ -679,7 +682,7 @@ public class ElementUndoStrategy : IUndoStrategy
             DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe,
                 shouldRefreshStateTreeView,
                 shouldRefreshBehaviorView,
-                addedAndRemoved);
+                addedAndRemoved, beforeRestore);
 
         }
 

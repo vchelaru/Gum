@@ -586,14 +586,34 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         new System.Text.RegularExpressions.Regex(@"\bIndex\b");
 
     /// <inheritdoc/>
-    public StoredValueChange[] ReapplyReferences(ElementSave element)
+    public StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before)
     {
+        RestoredChanges restored = RestoredChanges.Find(element, before);
+        if (restored.IsEmpty)
+        {
+            return Array.Empty<StoredValueChange>();
+        }
+
         GraphicalUiElement? liveRoot = _wireframeObjectManager.GetRepresentation(element);
         foreach (StateSave state in element.AllStates)
         {
-            if (state.VariableLists.Any(list => list.GetRootName() == "VariableReferences" && list.ValueAsIList?.Count > 0))
+            VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
+            if (!graph.HasRows)
             {
-                ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot);
+                continue;
+            }
+
+            HashSet<string> names = new HashSet<string>(restored.VariableNames);
+            List<ReferenceRow> rows = graph.OrderedRows.Concat(graph.CyclicRows)
+                .Where(row => restored.AddedRows.Contains(RestoredChanges.RowKey(row.SourceObject, row.Line)))
+                .ToList();
+            names.UnionWith(rows.Select(row => row.WrittenName));
+            List<ReferenceRow> affected = new List<ReferenceRow>();
+            graph.FindAffectedRows(names, affected, includeLiveLayoutRows: false);
+            HashSet<ReferenceRow> toApply = new HashSet<ReferenceRow>(rows.Concat(affected));
+            if (toApply.Count > 0)
+            {
+                ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot, onlyRows: toApply);
                 BehaviorToolOnlyReferencesApplier.Apply(element, state);
             }
         }
