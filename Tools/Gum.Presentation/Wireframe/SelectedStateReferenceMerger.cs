@@ -25,6 +25,7 @@ public class SelectedStateReferenceMerger
         merged.MergeIntoThis(selectedState);
 
         HashSet<string> setBySelected = GetVariablesSetBy(selectedState);
+        AddInnerVariablesOfExposedNames(defaultState, setBySelected);
 
         for (int i = merged.VariableLists.Count - 1; i >= 0; i--)
         {
@@ -78,6 +79,21 @@ public class SelectedStateReferenceMerger
         }
 
         return merged;
+    }
+
+    /// <summary>
+    /// A state that sets an exposed name (<c>BackgroundWidth</c>) sets the inner variable it exposes
+    /// (<c>Background.Width</c>), which is the name a reference row writes.
+    /// </summary>
+    private static void AddInnerVariablesOfExposedNames(StateSave defaultState, HashSet<string> setBySelected)
+    {
+        foreach (VariableSave variable in defaultState.Variables)
+        {
+            if (!string.IsNullOrEmpty(variable.ExposedAsName) && setBySelected.Contains(variable.ExposedAsName!))
+            {
+                setBySelected.Add(variable.Name);
+            }
+        }
     }
 
     private static HashSet<string> GetVariablesSetBy(StateSave state)
