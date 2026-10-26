@@ -51,6 +51,11 @@ public static class PackCommand
             getDefaultValue: () => Array.Empty<string>(),
             description: "With --shake: element names to keep, comma-separated or repeated.");
 
+        var rootsAssemblyOption = new Option<string[]>(
+            aliases: new[] { "--roots-assembly" },
+            getDefaultValue: () => Array.Empty<string>(),
+            description: "With --shake: a built game assembly whose [assembly: GumElementRoot] attributes (written by the Gum.Analyzers generator) name elements to keep.");
+
         var command = new Command("pack", "Pack a Gum project into a .gumpkg bundle.")
         {
             projectArgument,
@@ -58,7 +63,8 @@ public static class PackCommand
             includeOption,
             shakeOption,
             rootsOption,
-            keepOption
+            keepOption,
+            rootsAssemblyOption
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -69,14 +75,15 @@ public static class PackCommand
             ShakeOptions shake = new ShakeOptions(
                 context.ParseResult.GetValueForOption(shakeOption),
                 context.ParseResult.GetValueForOption(rootsOption) ?? Array.Empty<string>(),
-                context.ParseResult.GetValueForOption(keepOption) ?? Array.Empty<string>());
+                context.ParseResult.GetValueForOption(keepOption) ?? Array.Empty<string>(),
+                context.ParseResult.GetValueForOption(rootsAssemblyOption) ?? Array.Empty<string>());
             context.ExitCode = Execute(projectPath, outputPath, includeFlags, shake);
         });
 
         return command;
     }
 
-    private sealed record ShakeOptions(bool Enabled, string[] RootFiles, string[] Keep);
+    private sealed record ShakeOptions(bool Enabled, string[] RootFiles, string[] Keep, string[] RootAssemblies);
 
     private static int Execute(string projectPath, string? outputPath, string includeFlags, ShakeOptions shake)
     {
@@ -97,9 +104,9 @@ public static class PackCommand
             return 2;
         }
 
-        if (!shake.Enabled && (shake.RootFiles.Length > 0 || shake.Keep.Length > 0))
+        if (!shake.Enabled && (shake.RootFiles.Length > 0 || shake.Keep.Length > 0 || shake.RootAssemblies.Length > 0))
         {
-            Console.Error.WriteLine("--roots and --keep only apply with --shake.");
+            Console.Error.WriteLine("--roots, --keep and --roots-assembly only apply with --shake.");
             return 2;
         }
 
@@ -233,6 +240,15 @@ public static class PackCommand
                     roots.Add(trimmed);
                 }
             }
+        }
+        foreach (string rootAssembly in shake.RootAssemblies)
+        {
+            if (!File.Exists(rootAssembly))
+            {
+                error = $"Roots assembly '{rootAssembly}' was not found.";
+                return false;
+            }
+            roots.AddRange(GumElementRootAssemblyReader.Read(rootAssembly));
         }
         foreach (string keep in shake.Keep)
         {

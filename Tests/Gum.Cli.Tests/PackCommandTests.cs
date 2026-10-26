@@ -348,6 +348,23 @@ public class PackCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Pack_with_shake_keeps_the_roots_recorded_in_a_game_assembly()
+    {
+        // This test assembly carries [assembly: GumElementRoot("FromAssembly")] (TestAssemblyInitialize.cs),
+        // the attribute the Gum.Analyzers generator writes into a game assembly.
+        string projectPath = CreateShakeProject("ShakeAssembly", "FromAssembly");
+        string bundlePath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath,
+            "--shake", "--keep", "FromKeep,FromRootsFile", "--roots-assembly", typeof(PackCommandTests).Assembly.Location);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(bundlePath);
+        entries.Keys.ShouldContain("Components/FromAssembly.gucx");
+        entries.Keys.ShouldNotContain("Components/SpriteHolder.gucx");
+    }
+
+    [Fact]
     public void Pack_with_shake_exits_with_2_when_a_root_names_no_element()
     {
         string projectPath = CreateShakeProject("ShakeMisspelled");
@@ -377,7 +394,7 @@ public class PackCommandTests : BaseTestClass
 
     // A Game screen holding a Kept instance, two components reachable only as roots (FromRootsFile,
     // FromKeep), and SpriteHolder, which nothing reaches and which references Textures/bg.png.
-    private string CreateShakeProject(string name)
+    private string CreateShakeProject(string name, params string[] extraComponents)
     {
         string projectPath = CreateProjectWithSpriteAndFont(name);
         string projectDir = Path.GetDirectoryName(projectPath)!;
@@ -391,7 +408,7 @@ public class PackCommandTests : BaseTestClass
               <Instance Name="KeptInstance" BaseType="Kept" />
             </ScreenSave>
             """);
-        foreach (string component in new[] { "Kept", "FromRootsFile", "FromKeep" })
+        foreach (string component in new[] { "Kept", "FromRootsFile", "FromKeep" }.Concat(extraComponents))
         {
             File.WriteAllText(Path.Combine(projectDir, "Components", component + ".gucx"),
                 $$"""
