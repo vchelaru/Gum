@@ -26,10 +26,20 @@ public class FileWatchSaveStylesTests : IDisposable
 {
     private readonly string _projectDirectory;
 
+    // The roots the tool watches for a project like VarRef1: nested roots stay in the set because
+    // FileWatchLogic only dedupes against roots already added, and the project directory goes last.
+    private static readonly string[] WatchedFolders =
+    {
+        "Behaviors", "Components/Controls", "Components/Elements", "Components", "Screens", "Standards", "Fonts", "",
+    };
+
     public FileWatchSaveStylesTests()
     {
         _projectDirectory = Path.Combine(Path.GetTempPath(), "FileWatchSaveStyles_" + Path.GetRandomFileName());
-        Directory.CreateDirectory(Path.Combine(_projectDirectory, "Components"));
+        foreach (string folder in WatchedFolders)
+        {
+            Directory.CreateDirectory(Path.Combine(_projectDirectory, folder));
+        }
     }
 
     public void Dispose()
@@ -84,8 +94,12 @@ public class FileWatchSaveStylesTests : IDisposable
             new SynchronousDispatcher(),
             new FileSystemWatcherFactory());
 
-        // FileWatchLogic always watches the project directory (IncludeSubdirectories), which covers Components/.
-        sut.EnableWithDirectories(new HashSet<FilePath> { projectDirectory });
+        HashSet<FilePath> roots = new();
+        foreach (string folder in WatchedFolders)
+        {
+            roots.Add(new FilePath(Path.Combine(_projectDirectory, folder) + "/"));
+        }
+        sut.EnableWithDirectories(roots);
         return sut;
     }
 
@@ -127,4 +141,24 @@ public class FileWatchSaveStylesTests : IDisposable
         sut.Disable();
     }
 
+
+    [Theory]
+    [InlineData("gucj")]
+    [InlineData("gucx")]
+    [InlineData("gusj")]
+    public void CreatedOnlyEventForAnExistingElementFile_IsQueuedForFlush(string extension)
+    {
+        // macOS can report an atomic swap over the file (renamex_np RENAME_SWAP, the safe-save pattern of
+        // TextEdit/NSDocument) as Created with no Changed and no Renamed, so Created alone must queue the file.
+        FilePath projectDirectory = new FilePath(_projectDirectory + "/");
+        string target = Path.Combine(_projectDirectory, "Components", "Styles." + extension);
+        File.WriteAllText(target, "{}");
+        FileWatchManager sut = BuildWatchingProject(projectDirectory);
+        FileSystemEventArgs created = new(WatcherChangeTypes.Created, Path.Combine(_projectDirectory, "Components"), "Styles." + extension);
+
+        sut.HandleFileSystemChange(null, created);
+
+        sut.ChangedFilesWaitingForFlush.ShouldContain(new FilePath(target));
+        sut.Disable();
+    }
 }
