@@ -2,28 +2,13 @@ using Gum.GueDeriving;
 using Gum.Renderables;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using static RaylibGum.Tests.Rendering.TextMeasureHelpers;
 
 namespace RaylibGum.Tests.Rendering;
 
 /// <summary>Gaps not pinned by TextControlCharacterTests (#6835): wrapping, CRLF, hit testing, styled runs.</summary>
 public class TextControlCharacterGapTests : BaseTestClass
 {
-    private static (TextRuntime Runtime, Text Text) Make(string content, float? width = null)
-    {
-        TextRuntime runtime = new();
-        if (width != null)
-        {
-            runtime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-            runtime.Width = width.Value;
-        }
-        runtime.Text = content;
-        Gum.GumService.Default.Root.Children!.Add(runtime);
-        Gum.GumService.Default.Root.UpdateLayout();
-        return (runtime, (Text)runtime.RenderableComponent!);
-    }
-
-    private static void Remove(TextRuntime runtime) => Gum.GumService.Default.Root.Children!.Remove(runtime);
-
     // The shared wrapper (IWrappedTextExtensions) only breaks at ' ', so a tab glues its neighbors into one
     // word that is then cut mid-word; MonoGame runs the same wrapper over a tab that advances four spaces.
     [Fact]
