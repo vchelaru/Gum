@@ -67,9 +67,9 @@ public sealed class DecodedImage
             }
 
             int half = alpha / 2;
-            rgba[i] = (byte)Math.Min(255, (rgba[i] * 255 + half) / alpha);
-            rgba[i + 1] = (byte)Math.Min(255, (rgba[i + 1] * 255 + half) / alpha);
-            rgba[i + 2] = (byte)Math.Min(255, (rgba[i + 2] * 255 + half) / alpha);
+            rgba[i] = (byte)System.Math.Min(255, (rgba[i] * 255 + half) / alpha);
+            rgba[i + 1] = (byte)System.Math.Min(255, (rgba[i + 1] * 255 + half) / alpha);
+            rgba[i + 2] = (byte)System.Math.Min(255, (rgba[i + 2] * 255 + half) / alpha);
         }
         IsPremultiplied = false;
         return true;
