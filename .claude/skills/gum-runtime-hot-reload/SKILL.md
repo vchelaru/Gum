@@ -56,7 +56,7 @@ The 200 ms debounce coalesces the Gum tool's multi-file save burst into one relo
 
 ## ApplyDiff — In-Place Reconciliation Walk
 
-Defined on `GumHotReloadManager` and exposed `public static` for direct test use. Walks every root and, at each visual whose `ElementSave.Name` matches an element in the new project:
+Defined on `GumHotReloadManager` and exposed `public static` for direct test use. It first runs `newProject.ApplyAllVariableReferences()`, so a reader of a reference that is itself fed by a reference (control -> `Styles.Primary` -> `Styles.Brand`) sees the end of the chain even when only the last file was edited and the files between still hold their saved copies (`HotReloadReferenceChainTests`). References and base types resolve through `ObjectFinder`, so `ApplyDiff` sets `ObjectFinder.Self.GumProjectSave` to the new project for the call and puts the previous one back in a `finally`. It then walks every root and, at each visual whose `ElementSave.Name` matches an element in the new project:
 
 1. Re-point `element.ElementSave` to the new project's element.
 2. **Structural diff against the new `Instances` list** (`DiffDesignTimeChildren`):
