@@ -57,34 +57,6 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
-    /// The category states the element's own behaviors drive and its default state selects (the state named by a
-    /// derived or authored <c>ButtonCategoryState</c>). <c>ApplyState</c> applies a state's category-state
-    /// variables before its explicit values, so the default state's hard values beat the category state it names;
-    /// the canvas shows these states as if clicked so the look the Forms control would settle on wins (#6857).
-    /// </summary>
-    public static IReadOnlyList<StateSave> GetOwnDrivenCategoryStates(ElementSave element)
-    {
-        List<StateSave> states = new List<StateSave>();
-        if (element is not ComponentSave component || element.DefaultState == null)
-        {
-            return states;
-        }
-
-        foreach ((string left, _) in GetReferenceLines(component))
-        {
-            VariableSave? variable = element.DefaultState.Variables.FirstOrDefault(item => item.Name == left && item.SetsValue);
-            if (variable?.Value is string stateName &&
-                element.GetStateSaveCategoryRecursively(variable.Type)?.States.FirstOrDefault(item => item.Name == stateName) is { } state &&
-                !states.Contains(state))
-            {
-                states.Add(state);
-            }
-        }
-
-        return states;
-    }
-
-    /// <summary>
     /// Values a Forms control instance's behavior derives that a non-default <paramref name="selectedState"/> of
     /// <paramref name="element"/> would otherwise override: the selected state sets the derived variable itself
     /// (<c>Play.ButtonCategoryState</c>) or a Forms property it reads (<c>Play.IsEnabled</c>). An instance's

@@ -225,7 +225,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     var stateForReferences = GetStateForReferences(elementSave);
                     if (stateForReferences != null)
                     {
-                        ApplyReferencesInDependencyOrder(elementSave, RootGue, stateForReferences, GetStateToShow(elementSave));
+                        ApplyReferencesInDependencyOrder(elementSave, RootGue, stateForReferences, _selectedState.SelectedStateSave);
                     }
 
                     gueManager.Add(RootGue);
@@ -301,7 +301,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     /// </summary>
     private StateSave? GetStateForReferences(ElementSave elementSave)
     {
-        StateSave? selected = GetStateToShow(elementSave);
+        StateSave? selected = _selectedState.SelectedStateSave;
         StateSave? defaultState = elementSave.DefaultState;
 
         if (selected == null || defaultState == null || selected == defaultState)
@@ -313,60 +313,26 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     }
 
     /// <summary>
-    /// The state the canvas shows on top of the default state: the selected state, except that selecting the
-    /// default state of a Forms component shows the category state its behavior derives or its author set
-    /// (<c>ButtonCategoryState</c>) as if it were clicked. <c>ApplyState</c> applies a state's category-state
-    /// variables before its explicit values, so without this the default state's hard values beat the category
-    /// state and the canvas shows Enabled while IsEnabled is false (#6857).
-    /// </summary>
-    private StateSave? GetStateToShow(ElementSave elementSave)
-    {
-        StateSave? selected = _selectedState.SelectedStateSave;
-        if (selected == null || selected != elementSave.DefaultState)
-        {
-            return selected;
-        }
-
-        IReadOnlyList<StateSave> drivenStates = BehaviorToolOnlyReferencesApplier.GetOwnDrivenCategoryStates(elementSave);
-        if (drivenStates.Count == 0)
-        {
-            return selected;
-        }
-
-        StateSave combined = new StateSave { Name = selected.Name, ParentContainer = elementSave };
-        foreach (StateSave drivenState in drivenStates)
-        {
-            combined.Variables.AddRange(drivenState.Variables.Select(item => item.Clone()));
-            combined.VariableLists.AddRange(drivenState.VariableLists.Select(item => (VariableListSave)item.Clone()));
-        }
-        return combined;
-    }
-
-    /// <summary>
-    /// Applies the state to show to a freshly created wireframe root. The default state was already applied
+    /// Applies the selected state to a freshly created wireframe root. The default state was already applied
     /// by <c>ToGraphicalUiElement</c> (SetInitialState) inside CreateGraphicalUiElement, so it must not be
-    /// applied a second time here; only what <see cref="GetStateToShow"/> puts on top of it is.
+    /// applied a second time here.
     /// </summary>
     internal void ApplySelectedStateAfterCreation(GraphicalUiElement rootGue, ElementSave elementSave)
     {
         // Re-applying the default state applied every default-state variable twice per rebuild (issue #3212).
-        StateSave? stateToShow = GetStateToShow(elementSave);
-        if (stateToShow == null || stateToShow == elementSave.DefaultState)
+        StateSave? selected = _selectedState.SelectedStateSave;
+        if (selected == null || selected == elementSave.DefaultState)
         {
             return;
         }
 
-        rootGue.ApplyState(stateToShow);
+        rootGue.ApplyState(selected);
 
         // An instance's Forms values win over visual state values: a state of this element that sets an
         // instance's category state (or the Forms property it derives from) must not beat them (#6860).
         // Viewed on its own, the clicked state wins, which is why only instances are reasserted.
-        StateSave? selected = _selectedState.SelectedStateSave;
-        if (selected != null && selected != elementSave.DefaultState)
-        {
-            HashSet<string> setBySelected = SelectedStateReferenceMerger.GetVariablesSetBy(selected);
-            rootGue.ApplyState(BehaviorToolOnlyReferencesApplier.GetInstanceValuesToReassert(elementSave, selected, setBySelected));
-        }
+        HashSet<string> setBySelected = SelectedStateReferenceMerger.GetVariablesSetBy(selected);
+        rootGue.ApplyState(BehaviorToolOnlyReferencesApplier.GetInstanceValuesToReassert(elementSave, selected, setBySelected));
     }
 
 
