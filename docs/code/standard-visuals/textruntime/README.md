@@ -49,7 +49,7 @@ textRuntime.FontScale = 2;
 
 ## Tab Characters
 
-A tab character (`\t`) in `Text` advances the width of four spaces in the font on MonoGame, KNI, FNA, and raylib. The tab is a fixed amount wide, not a tab stop, so text after it does not line up to a column.
+A tab character (`\t`) in `Text` advances the width of four spaces in the font on MonoGame, KNI, FNA, and raylib. The tab is a fixed width, so text after it does not line up to a column.
 
 ```csharp
 // Initialize
