@@ -397,14 +397,6 @@ public partial class GraphicalUiElement
     /// such as <c>Progress</c> or <c>Instance.Width</c>.</param>
     public void NotifyVariablesChanged(IReadOnlyList<DataTypes.Variables.VariableSave> changedVariables)
     {
-        NotifyVariablesChanged(changedVariables, explicitlySetNames: null);
-    }
-
-    // explicitlySetNames: variables a state being applied set directly. A row that writes one of them is
-    // not re-evaluated, because the state's own value for it wins over the default state's row, whichever
-    // variables that row reads changed (#6851).
-    private void NotifyVariablesChanged(IReadOnlyList<DataTypes.Variables.VariableSave> changedVariables, HashSet<string>? explicitlySetNames)
-    {
         ElementSave? element = ElementSave;
         VariableReferenceGraph? graph = GetReferenceGraph();
         if (element == null || graph == null || !graph.HasRows || changedVariables.Count == 0)
@@ -414,11 +406,6 @@ public partial class GraphicalUiElement
 
         List<ReferenceRow> affected = _affectedRowsScratch ??= new List<ReferenceRow>();
         graph.FindAffectedRows(changedVariables, affected);
-        if (explicitlySetNames != null)
-        {
-            // Rows that read the explicitly set variable were already selected, so only the row that writes it goes.
-            affected.RemoveAll(row => explicitlySetNames.Contains(row.WrittenName));
-        }
         if (affected.Count == 0)
         {
             return;
@@ -580,10 +567,6 @@ public partial class GraphicalUiElement
 
     [ThreadStatic]
     private static List<PendingReferenceChange>? _pendingReferenceChanges;
-
-    // The variables each state applied in the current batch set directly, by the element they were set on.
-    [ThreadStatic]
-    private static List<(GraphicalUiElement Root, string Name)>? _explicitSetsInBatch;
 
     private static bool ReportsFromTypedSetter(string propertyName)
     {
@@ -752,19 +735,7 @@ public partial class GraphicalUiElement
                 pending.RemoveAt(i);
             }
             changed.Reverse();
-
-            HashSet<string>? explicitNames = null;
-            if (_explicitSetsInBatch != null)
-            {
-                foreach ((GraphicalUiElement Root, string Name) set in _explicitSetsInBatch)
-                {
-                    if (set.Root == root)
-                    {
-                        (explicitNames ??= new HashSet<string>()).Add(set.Name);
-                    }
-                }
-            }
-            root.NotifyVariablesChanged(changed, explicitNames);
+            root.NotifyVariablesChanged(changed);
         }
     }
 
@@ -1217,7 +1188,6 @@ public partial class GraphicalUiElement
                         var variable = variablesToConsider[i];
                         if (variable.SetsValue && variable.Value != null)
                         {
-                            (_explicitSetsInBatch ??= new List<(GraphicalUiElement Root, string Name)>()).Add((this, variable.Name));
                             this.SetProperty(variable.Name, variable.Value);
                         }
                     }
@@ -1258,7 +1228,6 @@ public partial class GraphicalUiElement
         if (_stateBatchDepth == 0)
         {
             FlushPendingReferenceChanges();
-            _explicitSetsInBatch?.Clear();
         }
 
     }
