@@ -35,7 +35,8 @@ public class GumFormsLogicTests
         _logic = new GumFormsLogic(
             _formsFileService.Object,
             _themeImporter.Object,
-            _projectState.Object);
+            _projectState.Object,
+            new Mock<Gum.Services.Dialogs.IDialogService>().Object);
     }
 
     [Theory]

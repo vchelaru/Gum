@@ -227,7 +227,7 @@ through `Styles`, and a hardcoded value has no reference for the reapply pass to
 Staging (`FormsThemeBehaviorStagingService`) copies each behavior into the staged theme's `Behaviors/`
 and drops the `SourcePath` from the staged `GumProject.gumx`'s behavior references. That is what lets
 Add Forms and Import from .gumx load a staged theme as a normal source; a `SourcePath` into the
-repo's `FormsBehaviors` would dangle there and the import would skip those behaviors without a message.
+repo's `FormsBehaviors` would dangle there. A theme built before that (a stale tool build) still has them, so `FormsThemeImporter` refuses to import a theme whose `GumxSourceProblems.Find` is not empty and lists each file, instead of adding components that point at behaviors the project never gets.
 
 ## Verifying theme content changes
 

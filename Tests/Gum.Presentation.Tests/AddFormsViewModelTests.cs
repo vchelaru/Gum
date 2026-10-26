@@ -37,7 +37,9 @@ public class AddFormsViewModelTests
     private ThemeSelectionViewModel CreateThemeSelection() =>
         new(_formsFileService.Object, _projectState.Object);
 
-    private AddFormsViewModel CreateSut() => new(CreateThemeSelection(), _themeImporter.Object);
+    private readonly Mock<Gum.Services.Dialogs.IDialogService> _dialogService = new();
+
+    private AddFormsViewModel CreateSut() => new(CreateThemeSelection(), _themeImporter.Object, _dialogService.Object);
 
     [Fact]
     public void OnAffirmative_ImportsTheSelectedTheme()
@@ -60,6 +62,25 @@ public class AddFormsViewModelTests
 
         _themeImporter.Verify(x => x.ImportThemeAsync("Bubblegum", true), Times.Once);
         affirmativeResult.ShouldBe(true);
+    }
+
+    [Fact]
+    public void OnAffirmative_ReportsOnceAndStillCloses_WhenTheImporterThrows()
+    {
+        _formsFileService.Setup(x => x.GetAvailableThemes()).Returns(new List<string> { "Standard" });
+        _themeImporter.Setup(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()))
+            .ThrowsAsync(new System.IO.IOException("disk full"));
+        AddFormsViewModel sut = CreateSut();
+        bool? affirmativeResult = null;
+        sut.RequestClose += (_, e) => affirmativeResult = e;
+
+        sut.OnAffirmative();
+
+        affirmativeResult.ShouldBe(true);
+        _dialogService.Verify(
+            x => x.ShowMessage(It.Is<string>(m => m.Contains("Add Forms failed") && m.Contains("disk full")),
+                It.IsAny<string?>(), It.IsAny<Gum.Services.Dialogs.MessageDialogStyle?>()),
+            Times.Once);
     }
 
     [Fact]

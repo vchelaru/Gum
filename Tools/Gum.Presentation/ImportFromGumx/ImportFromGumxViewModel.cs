@@ -323,14 +323,9 @@ public class ImportFromGumxViewModel : DialogViewModel
             else if (result.SkippedElements.Count > 0)
             {
                 AffirmativeText = "Close";
-                string elementList = string.Join(", ", result.SkippedElements.Take(5));
-                if (result.SkippedElements.Count > 5)
-                {
-                    elementList += $" (and {result.SkippedElements.Count - 5} more)";
-                }
-                WarningMessage =
-                    $"{result.SkippedElements.Count} element(s) were not imported because required " +
-                    $"asset files could not be found: {elementList}";
+                List<string> skippedLines = result.DescribeSkipped();
+                string elementList = ImportResult.CapLines(skippedLines);
+                WarningMessage = $"{skippedLines.Count} item(s) were not imported:\n{elementList}";
             }
             else
             {

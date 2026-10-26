@@ -327,6 +327,158 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
+    public async Task ImportThemeAsync_GivesEachNotAddedItsReason()
+    {
+        _importResult.AddSkipped("Neon/Controls/Icon", "file(s) it uses not found: icon.png");
+
+        await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+        _dialogService.Verify(
+            x => x.ShowMessage(
+                It.Is<string>(m => m.Contains("Neon/Controls/Icon: file(s) it uses not found: icon.png")),
+                It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportThemeAsync_AddsNothingAndSaysWhy_WhenTheThemeListsAFileItCannotSupply()
+    {
+        // A behavior file the theme lists but that is not there loads as an empty stand-in.
+        _theme.Behaviors.Add(new Gum.DataTypes.Behaviors.BehaviorSave { Name = "ButtonBehavior", IsSourceFileMissing = true });
+        _theme.BehaviorReferences.Add(new Gum.DataTypes.Behaviors.BehaviorReference { Name = "ButtonBehavior", SourcePath = "../FormsBehaviors/ButtonBehavior.behx" });
+
+        bool result = await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+        result.ShouldBeFalse();
+        _importedSelections.ShouldBeNull();
+        _dialogService.Verify(
+            x => x.ShowMessage(
+                It.Is<string>(m => m.Contains("Behaviors/ButtonBehavior: file not found: ../FormsBehaviors/ButtonBehavior.behx")),
+                It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    private static void MissingStandard(GumProjectSave theme)
+    {
+        theme.StandardElements.Add(new StandardElementSave { Name = "Circle", IsSourceFileMissing = true });
+        theme.StandardElementReferences.Add(new ElementReference { Name = "Circle", ElementType = ElementType.Standard });
+    }
+
+    private static void DamagedStandard(GumProjectSave theme) =>
+        theme.StandardElementReferences.Add(new ElementReference { Name = "Circle", ElementType = ElementType.Standard });
+
+    private static void MissingDemoScreen(GumProjectSave theme)
+    {
+        theme.Screens.Add(new ScreenSave { Name = "Neon/DemoScreenGum", IsSourceFileMissing = true });
+        theme.ScreenReferences.Add(new ElementReference { Name = "Neon/DemoScreenGum", ElementType = ElementType.Screen });
+    }
+
+    private static void MissingComponent(GumProjectSave theme)
+    {
+        theme.Components.Add(new ComponentSave { Name = "Neon/Controls/Button", IsSourceFileMissing = true });
+        theme.ComponentReferences.Add(new ElementReference { Name = "Neon/Controls/Button", ElementType = ElementType.Component });
+    }
+
+    [Theory]
+    [InlineData("Neon", false, nameof(MissingStandard))]
+    [InlineData("Neon", false, nameof(DamagedStandard))]
+    [InlineData("Neon", false, nameof(MissingDemoScreen))]
+    public async Task ImportThemeAsync_ImportsAnyway_WhenAFileOutsideThisRequestIsMissing(
+        string themeName, bool includeDemoScreen, string problem)
+    {
+        ProblemByName(problem)(_theme);
+
+        bool result = await _importer.ImportThemeAsync(themeName, includeDemoScreen);
+
+        result.ShouldBeTrue();
+        _importedSelections.ShouldNotBeNull();
+        _dialogService.Verify(
+            x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Never);
+    }
+
+    [Theory]
+    [InlineData("Neon", false, nameof(MissingComponent))]
+    [InlineData("Neon", true, nameof(MissingDemoScreen))]
+    [InlineData("Standard", false, nameof(MissingStandard))]
+    [InlineData("Standard", false, nameof(DamagedStandard))]
+    public async Task ImportThemeAsync_AddsNothing_WhenAFileThisRequestNeedsIsMissing(
+        string themeName, bool includeDemoScreen, string problem)
+    {
+        ProblemByName(problem)(_theme);
+
+        bool result = await _importer.ImportThemeAsync(themeName, includeDemoScreen);
+
+        result.ShouldBeFalse();
+        _importedSelections.ShouldBeNull();
+        _dialogService.Verify(
+            x => x.ShowMessage(It.Is<string>(m => m.Contains("incomplete")), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    private static Action<GumProjectSave> ProblemByName(string name) => name switch
+    {
+        nameof(MissingStandard) => MissingStandard,
+        nameof(DamagedStandard) => DamagedStandard,
+        nameof(MissingDemoScreen) => MissingDemoScreen,
+        nameof(MissingComponent) => MissingComponent,
+        _ => throw new ArgumentException(name),
+    };
+
+    [Fact]
+    public async Task ImportThemeAsync_ListsAtMostFiveFiles_WhenManyAreMissing()
+    {
+        for (int i = 0; i < 33; i++)
+        {
+            _theme.Behaviors.Add(new Gum.DataTypes.Behaviors.BehaviorSave { Name = "B" + i, IsSourceFileMissing = true });
+            _theme.BehaviorReferences.Add(new Gum.DataTypes.Behaviors.BehaviorReference { Name = "B" + i });
+        }
+
+        await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+        _dialogService.Verify(
+            x => x.ShowMessage(
+                It.Is<string>(m => m.Contains("(and 28 more)") && m.Length < 600),
+                It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportThemeAsync_ListsAtMostFiveSkippedItems_WhenManyAreSkipped()
+    {
+        for (int i = 0; i < 12; i++)
+        {
+            _importResult.AddSkipped("Neon/C" + i, "texture missing");
+        }
+
+        await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+        _dialogService.Verify(
+            x => x.ShowMessage(It.Is<string>(m => m.Contains("(and 7 more)")), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportThemeAsync_ReportsInsteadOfThrowing_WhenTheImportFailsPartway()
+    {
+        _importService
+            .Setup(x => x.ImportAsync(
+                It.IsAny<ImportSelections>(), It.IsAny<GumProjectSave>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<ConflictResolution>(), It.IsAny<Action?>(), It.IsAny<bool>()))
+            .ThrowsAsync(new ImportFailedException(new IOException("No space left on device"), new[] { "C:/project/Standards/Text.gutx" }));
+
+        bool result = await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+        result.ShouldBeFalse();
+        _dialogService.Verify(
+            x => x.ShowMessage(
+                It.Is<string>(m => m.Contains("Add Forms failed") && m.Contains("No space left on device")
+                    && m.Contains("1 file(s) were already written") && m.Contains("Standards/Text.gutx")),
+                It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task ImportThemeAsync_ReturnsFalse_WhenSomethingConflictsAfterTheCheck()
     {
         _importResult.ConflictingElements.Add("Neon/Controls/Button");
