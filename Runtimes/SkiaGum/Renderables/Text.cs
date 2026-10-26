@@ -1148,7 +1148,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             ? Height
             : (float?)null;
 
-    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(mRawText, forcedWidth, allowMarkup: true);
+    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(_layoutText, forcedWidth, allowMarkup: true);
 
     /// <summary>
     /// Builds a RichTextKit <c>TextBlock</c> for the given text (normally <see cref="RawText"/>, but
@@ -1476,7 +1476,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if (!_hasMarkup || string.IsNullOrEmpty(_layoutText))
         {
-            runs.Add(new StyledTextRun((_hasMarkup ? _layoutText : mRawText) ?? string.Empty, GetStyle()));
+            runs.Add(new StyledTextRun(_layoutText ?? string.Empty, GetStyle()));
             return runs;
         }
 
@@ -1997,6 +1997,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and <see cref="_inlineVariables"/>. Plain text (no recognized tags) leaves _layoutText equal to
     /// mRawText so the render/measure path is byte-for-byte unchanged. Called whenever RawText changes.
     /// </summary>
+    // Control characters become spaces one for one (so indexes into RawText still line up) to match
+    // MonoGame's blank glyph (#6835). A tab is kept: RichTextKit gives it its own tab stop.
+    private static string? BlankControlCharacters(string? text) =>
+        text == null ? null : ControlCharacterBlanker.Blank(text, expandTabs: false);
+
     private void ParseMarkup()
     {
         _inlineVariables.Clear();
@@ -2005,7 +2010,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
             _hasMarkup = false;
-            _layoutText = mRawText;
+            _layoutText = BlankControlCharacters(mRawText);
             return;
         }
 
@@ -2017,12 +2022,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (tags.Count == 0)
         {
             _hasMarkup = false;
-            _layoutText = mRawText;
+            _layoutText = BlankControlCharacters(mRawText);
             return;
         }
 
         _hasMarkup = true;
-        _layoutText = BbCodeParser.RemoveTags(normalized, tags);
+        _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags));
         BuildInlineVariables(tags);
         foreach (InlineVariable variable in _inlineVariables)
         {

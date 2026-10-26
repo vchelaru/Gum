@@ -511,50 +511,12 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
-    /// <summary>
-    /// Raylib's native text calls substitute '?' for a glyph the font lacks, which includes every control
-    /// character. MonoGame's BitmapFont draws those as the space glyph, a tab as four spaces, and leaves
-    /// '\n' alone (it is a zero-advance line break), so do the same before measuring or drawing (#6835).
-    /// </summary>
-    internal static string BlankControlCharacters(string text)
-    {
-        int firstControl = -1;
-        for (int i = 0; i < text.Length; i++)
-        {
-            if (text[i] < ' ' && text[i] != '\n')
-            {
-                firstControl = i;
-                break;
-            }
-        }
-        if (firstControl < 0)
-        {
-            return text;
-        }
-
-        System.Text.StringBuilder builder = new(text.Length + 8);
-        builder.Append(text, 0, firstControl);
-        for (int i = firstControl; i < text.Length; i++)
-        {
-            char c = text[i];
-            if (c == '\t')
-            {
-                builder.Append("    ");
-            }
-            else
-            {
-                builder.Append(c < ' ' && c != '\n' ? ' ' : c);
-            }
-        }
-        return builder.ToString();
-    }
-
     private static Vector2 MeasureBlankedText(Font font, string text, float fontSize, float spacing) =>
-        MeasureTextEx(font, BlankControlCharacters(text), fontSize, spacing);
+        MeasureTextEx(font, ControlCharacterBlanker.Blank(text, expandTabs: true), fontSize, spacing);
 
     private static void DrawBlankedText(Font font, string text, Vector2 position, Vector2 origin, float rotation,
         float fontSize, float spacing, Color tint) =>
-        DrawTextPro(font, BlankControlCharacters(text), position, origin, rotation, fontSize, spacing, tint);
+        DrawTextPro(font, ControlCharacterBlanker.Blank(text, expandTabs: true), position, origin, rotation, fontSize, spacing, tint);
 
     /// <summary>
     /// Sums the pixel width of the widest of <paramref name="lines"/> when measured with
