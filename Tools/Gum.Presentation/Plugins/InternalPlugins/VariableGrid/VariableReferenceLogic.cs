@@ -586,7 +586,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         new System.Text.RegularExpressions.Regex(@"\bIndex\b");
 
     /// <inheritdoc/>
-    public StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide, bool isUndo)
+    public StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide)
     {
         RestoredChanges restored = RestoredChanges.Find(element, before);
         if (restored.IsEmpty)
@@ -599,7 +599,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             foreach (string removed in RestoredChanges.RemovedWrittenNames(state, RestoredChanges.FindState(before, state, element)))
             {
-                KeepHeldValue(state, RestoredChanges.FindState(before, state, element), RestoredChanges.FindState(otherSide, state, element), removed, alwaysKeep: isUndo);
+                KeepHeldValue(state, RestoredChanges.FindState(before, state, element), RestoredChanges.FindState(otherSide, state, element), removed);
             }
             // Any variable the action itself left alone keeps what it holds: a cascade (or an earlier undo)
             // may have changed it since the snapshot was taken, and undoing this action must not undo that.
@@ -647,11 +647,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         return ApplyReferencesToElement(element, trySave: true);
     }
 
-    private static void KeepHeldValue(StateSave state, StateSave? held, StateSave? otherSide, string variableName,
-        bool alwaysKeep = false)
+    private static void KeepHeldValue(StateSave state, StateSave? held, StateSave? otherSide, string variableName)
     {
-        // The action changed this variable itself (it was typed, or reset on purpose): take the snapshot's value.
-        if (!alwaysKeep && otherSide != null && !HoldsSameValue(state, otherSide, variableName))
+        // The action changed this variable itself (it was typed, reset on purpose, or written by the cascade of
+        // a row it added): take the snapshot's value, as typing the old value would.
+        if (otherSide != null && !HoldsSameValue(state, otherSide, variableName))
         {
             return;
         }

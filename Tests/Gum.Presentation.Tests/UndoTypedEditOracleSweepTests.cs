@@ -1,6 +1,8 @@
-// Compares undo and redo with typing: every undo or redo step must leave the element and the element
-// reading it with the variables and reference rows that typing the inverse (or the same) edit gives. Two
-// worlds run one after the other, since ObjectFinder is a static and cannot hold two projects at once.
+// Undo and redo compared with typing, one rule: an undo or redo has the same effect on the rest of the app as
+// typing the old (or new) value. Each step must leave the element and the element reading it with the variables
+// and reference rows that typing the inverse (or the same) edit gives; undoing a row add instead matches the world
+// just before the add. Two worlds run one after the other, since ObjectFinder is a static and cannot hold two
+// projects at once.
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -390,7 +392,7 @@ public sealed class UndoOracleWorld : BaseTestClass
 /// Random edits, resets and reference-row changes followed by undo and redo, checked against a typed-edit
 /// oracle after every step (#6868, #6884).
 /// </summary>
-public class UndoTypedEditOracleSweepTests
+public class UndoTypedEditOracleSweepTests : BaseTestClass
 {
     [Fact]
     public void Sweep_UndoAndRedoOfEditsResetsAndRowChanges_ShouldMatchTypingTheSameEdit()
@@ -414,6 +416,10 @@ public class UndoTypedEditOracleSweepTests
             random.Next();
             List<string> steps = new List<string>();
             List<OracleEdit> typedSteps = new List<OracleEdit>();
+            // Undoing a row add is typing the old value back, not typing the row away: the world is expected
+            // to match what it was just before the add. Null for every other step, which uses the typed oracle.
+            List<SortedDictionary<string, string>?> expectedBeforeAdd = new List<SortedDictionary<string, string>?>();
+            Dictionary<OracleOp, SortedDictionary<string, string>> beforeEachAdd = new Dictionary<OracleOp, SortedDictionary<string, string>>(ReferenceEqualityComparer.Instance);
             List<SortedDictionary<string, string>> afterEachStep = new List<SortedDictionary<string, string>>();
             List<string> problems = new List<string>();
             string description;
@@ -434,6 +440,7 @@ public class UndoTypedEditOracleSweepTests
                         {
                             continue;
                         }
+                        SortedDictionary<string, string> beforeThisOp = world.Snap();
                         world.Typed(op.Fwd);
                         if (world.HistoryCount != cursor + 1)
                         {
@@ -443,8 +450,10 @@ public class UndoTypedEditOracleSweepTests
                         applied.RemoveRange(cursor, applied.Count - cursor);
                         applied.Add(op);
                         cursor = applied.Count;
+                        beforeEachAdd[op] = beforeThisOp;
                         steps.Add("do " + op.Fwd);
                         typedSteps.Add(op.Fwd);
+                        expectedBeforeAdd.Add(null);
                     }
                     else if (action == 1 && cursor > 0)
                     {
@@ -452,6 +461,7 @@ public class UndoTypedEditOracleSweepTests
                         world.Undo();
                         steps.Add("undo " + applied[cursor].Fwd);
                         typedSteps.Add(applied[cursor].Inv);
+                        expectedBeforeAdd.Add(applied[cursor].Fwd.Kind == OracleEditKind.AddRow ? beforeEachAdd[applied[cursor]] : null);
                     }
                     else if (action == 2 && cursor < applied.Count)
                     {
@@ -459,6 +469,7 @@ public class UndoTypedEditOracleSweepTests
                         world.Redo();
                         steps.Add("redo " + applied[cursor - 1].Fwd);
                         typedSteps.Add(applied[cursor - 1].Fwd);
+                        expectedBeforeAdd.Add(null);
                     }
                     else
                     {
@@ -481,8 +492,16 @@ public class UndoTypedEditOracleSweepTests
                 oracle.Build(new Random(buildSeed), materialized: true, autoSave, useAlt, followerOps: false);
                 for (int i = 0; i < typedSteps.Count; i++)
                 {
-                    oracle.Typed(typedSteps[i]);
-                    SortedDictionary<string, string> typed = oracle.Snap();
+                    SortedDictionary<string, string> typed;
+                    if (expectedBeforeAdd[i] != null)
+                    {
+                        typed = expectedBeforeAdd[i]!;
+                    }
+                    else
+                    {
+                        oracle.Typed(typedSteps[i]);
+                        typed = oracle.Snap();
+                    }
                     SortedDictionary<string, string> undone = afterEachStep[i];
                     List<string> diffs = undone.Keys.Union(typed.Keys).OrderBy(key => key)
                         .Where(key => undone.GetValueOrDefault(key) != typed.GetValueOrDefault(key))
@@ -491,6 +510,12 @@ public class UndoTypedEditOracleSweepTests
                     if (diffs.Count > 0)
                     {
                         problems.Add($"step {i + 1} ({steps[i]}) differs from typing: " + string.Join("; ", diffs));
+                        break;
+                    }
+                    if (expectedBeforeAdd[i] != null)
+                    {
+                        // The oracle world cannot be brought back to the pre-add values by typing, so the
+                        // steps after an undone add are not compared.
                         break;
                     }
                 }

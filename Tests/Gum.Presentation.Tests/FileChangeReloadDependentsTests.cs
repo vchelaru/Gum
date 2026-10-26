@@ -481,8 +481,6 @@ public class FileChangeReloadDependentsTests : BaseTestClass
                             Type = "string",
                             Value = new List<string> { "Red = " + QualifiedName(theme ?? styles) + ".Primary.FillRed" },
                         });
-                        // An undone row add keeps the value the row wrote (#6884), so the variable may already exist.
-                        current.DefaultState.Variables.RemoveAll(v => v.Name == "Background.Red");
                         current.DefaultState.Variables.Add(new VariableSave { Name = "Background.Red", Type = "int", Value = sourceValue, SetsValue = true });
                     }
                     SaveToDisk(current);

@@ -471,7 +471,7 @@ public class ExternalChangeScenarioTests
     [AvaloniaFact]
     [Trait("Feature", "FILE-013")]
     [Trait("Feature", "VARREF-001")]
-    public void UndoingAReferenceRowAddedBeforeAnOutsideReload_RemovesTheRowAndKeepsTheValue()
+    public void UndoingAReferenceRowAddedBeforeAnOutsideReload_RemovesTheRowAndItsValue()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness("Harness.gumj");
         ComponentSave styles = tree.Project.AddComponent("Styles");
@@ -512,11 +512,10 @@ public class ExternalChangeScenarioTests
 
             ComponentSave undone = Component(tree, "ButtonStandard");
             undone.DefaultState.VariableLists.ShouldBeEmpty();
-            // A removed reference only stops the value being set that way; the follower keeps what it holds (#6884).
-            VariableGridHarness.StoredValue(undone, "Background.Red").ShouldBe(200);
+            VariableGridHarness.StoredValue(undone, "Background.Red").ShouldBeNull();
             ComponentSave onDisk = ElementReference.DeserializeElement<ComponentSave>(buttonFile, GumProjectSave.NativeVersion);
             onDisk.DefaultState.VariableLists.ShouldBeEmpty();
-            VariableGridHarness.StoredValue(onDisk, "Background.Red").ShouldBe(200);
+            VariableGridHarness.StoredValue(onDisk, "Background.Red").ShouldBeNull();
         }
         finally
         {

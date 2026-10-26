@@ -667,14 +667,14 @@ public class UndoReferenceCascadeTests : BaseTestClass
     private static string[] Rows(ElementSave element, string owner) =>
         element.DefaultState.GetVariableListSave(owner + ".VariableReferences")!.ValueAsIList.Cast<string>().ToArray();
 
-    // #6884: a removed reference keeps the value it had set. Undoing a row add removes the row, so the follower
-    // keeps what the add wrote instead of going back to the snapshot's value, and so do its readers.
+    // Undoing a row add is typing the old value back: the follower the add changed returns to what it held before
+    // the add and the row goes.
     [Theory]
     [InlineData(true, true)]
     [InlineData(true, false)]
     [InlineData(false, true)]
     [InlineData(false, false)]
-    public void UndoRedo_OfAddingAReferenceRow_ShouldKeepTheValueTheRowWrote(bool followerHadAValue, bool autoSave)
+    public void UndoRedo_OfAddingAReferenceRow_ShouldRestoreTheFollowerTheAddChanged(bool followerHadAValue, bool autoSave)
     {
         Arrange(materialized: true, autoSave);
         AddRectangleStandard();
@@ -701,31 +701,36 @@ public class UndoReferenceCascadeTests : BaseTestClass
                 _comp.DefaultState, "F3.VariableReferences", trySave: true);
         }
         _fileCommands.Object.TryAutoSaveElement(_comp);
-        Width(_comp, "F3").ShouldBe(55, "the add wrote F3");
-        Width(_comp, "F4").ShouldBe(56, "the add reached F4");
-        Width(_other, "O3").ShouldBe(55, "the add reached O3");
 
-        void ShouldHoldTheRowsValues()
+        void ShouldBeAfterTheAdd()
         {
-            Width(_comp, "F3").ShouldBe(55, "F3 keeps the value the row wrote");
-            Width(_comp, "F4").ShouldBe(56, "a reader of the follower recomputes from the held value");
-            Width(_other, "O3").ShouldBe(55, "so does a reader in another element");
+            _comp.DefaultState.GetVariableListSave("F3.VariableReferences")!.ValueAsIList.Count.ShouldBe(1);
+            Width(_comp, "F3").ShouldBe(55, "the add wrote F3");
+            Width(_comp, "F4").ShouldBe(56, "the add reached F4");
+            Width(_other, "O3").ShouldBe(55, "the add reached O3");
             MemoryShouldEqualDisk();
         }
+        void ShouldBeBeforeTheAdd()
+        {
+            _comp.DefaultState.GetVariableListSave("F3.VariableReferences")!.ValueAsIList.Count.ShouldBe(0);
+            Width(_comp, "F3").ShouldBe(followerHadAValue ? 62 : null, "F3 holds what it held before the add");
+            Width(_comp, "F4").ShouldBe(followerHadAValue ? 63 : 1, "F4 holds what it held before the add (an empty F3 reads as 0)");
+            Width(_other, "O3").ShouldBe(followerHadAValue ? 62 : 0, "O3 follows F3 (an empty F3 reads as 0)");
+            MemoryShouldEqualDisk();
+        }
+        ShouldBeAfterTheAdd();
 
         _undo.PerformUndo();
-        _comp.DefaultState.GetVariableListSave("F3.VariableReferences")!.ValueAsIList.Count.ShouldBe(0);
-        ShouldHoldTheRowsValues();
+        ShouldBeBeforeTheAdd();
         _undo.PerformRedo();
-        _comp.DefaultState.GetVariableListSave("F3.VariableReferences")!.ValueAsIList.Count.ShouldBe(1);
-        ShouldHoldTheRowsValues();
+        ShouldBeAfterTheAdd();
         _undo.PerformUndo();
-        ShouldHoldTheRowsValues();
+        ShouldBeBeforeTheAdd();
         HistoryCount.ShouldBe(1);
     }
 
     [Fact]
-    public void UndoRedo_OfAddingAReferenceRowInACategorizedState_ShouldKeepTheValueTheRowWrote()
+    public void UndoRedo_OfAddingAReferenceRowInACategorizedState_ShouldRestoreTheFollowerTheAddChanged()
     {
         Arrange();
         AddRectangleStandard();
@@ -749,7 +754,7 @@ public class UndoReferenceCascadeTests : BaseTestClass
         Width(_comp, "F3", Alt()).ShouldBe(75, "the add wrote F3");
 
         _undo.PerformUndo();
-        Width(_comp, "F3", Alt()).ShouldBe(75, "the removed row keeps its value");
+        Width(_comp, "F3", Alt()).ShouldBe(62, "F3 holds what it held before the add");
         _undo.PerformRedo();
         Width(_comp, "F3", Alt()).ShouldBe(75);
     }
