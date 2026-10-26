@@ -21,7 +21,7 @@ The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging 
 - `--shake`: Leave out every Screen and Component that nothing in the project reaches, along with the files only they use. Off by default. See [Leaving Out Unused Elements](pack.md#leaving-out-unused-elements).
 - `--keep <names>`: With `--shake`, element names to keep, comma-separated or repeated.
 - `--roots <file>`: With `--shake`, a text file of element names to keep, one per line. A line starting with `#` is a comment.
-- `--roots-assembly <dll>` — With `--shake`, your built game assembly. Pack keeps every element your game's code uses, as recorded by the Gum source generator.
+- `--roots-assembly <dll>`: With `--shake`, your built game assembly. Pack keeps every element your game's code uses, as recorded by the Gum source generator.
 
 {% hint style="info" %}
 **Shipping September 2026:** Packing a `.ttf` referenced through the `Font` property (not just `CustomFontFile`) will ship in the September release, or now if building Gum from source. Before this, only `CustomFontFile` paths were bundled as external font files.
