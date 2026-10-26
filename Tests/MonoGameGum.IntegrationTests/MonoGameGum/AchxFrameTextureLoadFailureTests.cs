@@ -55,7 +55,7 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
     }
 
     // A NineSlice cannot show a frame with no texture, so on MonoGame it throws whatever ConsumeSilently says.
-    // That is a separate gap (#6896); this pins that a missing, undecodable and corrupt texture fail alike.
+    // That is a separate gap (#6897); this pins that a missing, undecodable and corrupt texture fail alike.
     [Theory]
     [MemberData(nameof(FailingFrames))]
     public void NineSliceSourceFile_FrameTextureFailsToLoad_AllFailuresThrowTheSameError(string textureName, string kind)
