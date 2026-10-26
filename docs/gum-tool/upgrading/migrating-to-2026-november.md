@@ -51,11 +51,11 @@ Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
     Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
 ```
 
-### An .achx Frame Texture That Fails to Load Is Handled the Same on Every Runtime
+### An .achx Frame Texture That Fails to Load Is a Blank Frame
 
-A frame texture that is missing or cannot be decoded no longer drops the whole `.achx`. With `MissingFileBehavior.ConsumeSilently`, the frame loads with a null `Texture` and the rest of the file loads. With `MissingFileBehavior.ThrowException`, the load throws a `FileNotFoundException` naming the texture. Before, MonoGame, KNI, and FNA dropped the `.achx` for an image that could not be decoded, and Skia and raylib did for a missing file, with `AnimationChains` left null and the error raised through `CustomSetPropertyOnRenderable.PropertyAssignmentError`. A `NineSliceRuntime` on MonoGame, KNI, and FNA now throws the same error for a missing and an undecodable frame texture.
+A frame texture that is missing or cannot be decoded follows `MissingFileBehavior` the same way on every runtime. With `ConsumeSilently`, that frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name. With `ThrowException`, loading throws a `FileNotFoundException` naming the first texture that failed. A `NineSliceRuntime` plays a blank frame instead of throwing from `Update`.
 
-This affects you only if your game relied on `AnimationChains` being null, or on that error event, after a frame texture failed to load. Check `Texture` on the frames, or set `ThrowException` to find a bad texture during development.
+This affects you only if your game relied on `AnimationChains` being null after a frame texture failed to load. Check `Texture` on the frames instead, or set `ThrowException` to find a bad texture during development.
 
 ### Shapes Package Types Moved to Gum.Renderables and Gum.Content
 
