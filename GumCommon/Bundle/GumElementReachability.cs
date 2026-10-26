@@ -39,23 +39,46 @@ public class GumElementReachabilityResult
 /// </summary>
 public class GumElementReachability
 {
-    // The behaviors whose components Forms creates by itself when a control with the key behavior exists.
-    private static readonly Dictionary<string, string[]> CompanionBehaviors = new Dictionary<string, string[]>
-    {
-        [StandardFormsBehaviorNames.ListBoxBehaviorName] = new[] { StandardFormsBehaviorNames.ListBoxItemBehaviorName },
-        [StandardFormsBehaviorNames.ComboBoxBehaviorName] = new[]
+    /// <summary>The key in <see cref="FormsCreatedBehaviors"/> that applies to a component with any behavior.</summary>
+    public const string AnyFormsBehavior = "*";
+
+    /// <summary>
+    /// For a component with the key behavior, the behaviors whose components the Forms runtime builds by
+    /// itself (a parameterless <c>new Control()</c> takes its visual from DefaultFormsTemplates, which is the
+    /// behavior's DefaultImplementation in generated code). <c>GumElementReachabilityTests</c> checks this
+    /// against every parameterless construction in <c>MonoGameGum/Forms/Controls</c>.
+    /// </summary>
+    public static IReadOnlyDictionary<string, IReadOnlyList<string>> FormsCreatedBehaviors { get; } =
+        new Dictionary<string, IReadOnlyList<string>>
         {
-            StandardFormsBehaviorNames.ListBoxBehaviorName, StandardFormsBehaviorNames.ListBoxItemBehaviorName,
-        },
-        [StandardFormsBehaviorNames.MenuBehaviorName] = new[]
-        {
-            StandardFormsBehaviorNames.MenuItemBehaviorName, StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName,
-        },
-        [StandardFormsBehaviorNames.MenuItemBehaviorName] = new[]
-        {
-            StandardFormsBehaviorNames.MenuItemBehaviorName, StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName,
-        },
-    };
+            // FrameworkElement.ToolTip
+            [AnyFormsBehavior] = new[] { StandardFormsBehaviorNames.TooltipBehaviorName },
+            // ItemsControl.CreateNewItemFrameworkElement falls back to new Label(); CreateNewVisual uses the
+            // ListBoxItem template
+            [StandardFormsBehaviorNames.ItemsControlBehaviorName] = new[]
+            {
+                StandardFormsBehaviorNames.LabelBehaviorName, StandardFormsBehaviorNames.ListBoxItemBehaviorName,
+            },
+            [StandardFormsBehaviorNames.ListBoxBehaviorName] = new[] { StandardFormsBehaviorNames.ListBoxItemBehaviorName },
+            // FormsUtilities' drop-down template, then the ListBox's items
+            [StandardFormsBehaviorNames.ComboBoxBehaviorName] = new[]
+            {
+                StandardFormsBehaviorNames.ListBoxBehaviorName, StandardFormsBehaviorNames.ListBoxItemBehaviorName,
+            },
+            // Menu.CreateNewItemFrameworkElement, then each MenuItem's popup
+            [StandardFormsBehaviorNames.MenuBehaviorName] = new[]
+            {
+                StandardFormsBehaviorNames.MenuItemBehaviorName, StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName,
+                StandardFormsBehaviorNames.ScrollViewerBehaviorName,
+            },
+            // The submenu popup: the MenuItemSubmenuPopup component, else MenuItem.CreateProjectScrollViewerVisual's
+            // ScrollViewer component, else new ScrollViewer(); its rows are new MenuItem()
+            [StandardFormsBehaviorNames.MenuItemBehaviorName] = new[]
+            {
+                StandardFormsBehaviorNames.MenuItemBehaviorName, StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName,
+                StandardFormsBehaviorNames.ScrollViewerBehaviorName,
+            },
+        };
 
     /// <summary>
     /// Walks the project from its Screens plus <paramref name="extraRoots"/>.
@@ -136,15 +159,17 @@ public class GumElementReachability
             }
             if (element is ComponentSave component && component.Behaviors.Count > 0)
             {
-                Visit(DefaultImplementationLookup.Find(project, StandardFormsBehaviorNames.TooltipBehaviorName));
-                foreach (ElementBehaviorReference behavior in component.Behaviors)
+                IEnumerable<string> keys = component.Behaviors
+                    .Where(behavior => !string.IsNullOrEmpty(behavior.BehaviorName))
+                    .Select(behavior => behavior.BehaviorName!)
+                    .Append(AnyFormsBehavior);
+                foreach (string key in keys)
                 {
-                    if (behavior.BehaviorName != null
-                        && CompanionBehaviors.TryGetValue(behavior.BehaviorName, out string[]? companions))
+                    if (FormsCreatedBehaviors.TryGetValue(key, out IReadOnlyList<string>? created))
                     {
-                        foreach (string companion in companions)
+                        foreach (string createdBehavior in created)
                         {
-                            Visit(DefaultImplementationLookup.Find(project, companion));
+                            Visit(DefaultImplementationLookup.Find(project, createdBehavior));
                         }
                     }
                 }

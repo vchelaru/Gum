@@ -1,4 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -51,6 +55,72 @@ public class GumElementReachabilityTests
         result.KeptElementNames.ShouldBe(new[] { "Card", "CardBase", "Styles" }, ignoreOrder: true);
         result.TrimmedElementNames.ShouldBe(new[] { "Unused" });
         result.UnknownRoots.ShouldBe(new[] { "Misspelled" });
+    }
+
+    [Theory]
+    // ItemsControl.CreateNewItemFrameworkElement falls back to new Label().
+    [InlineData("ItemsControlBehavior", "LabelBehavior")]
+    // MenuItem builds its popup from the ScrollViewer component when the project has no submenu popup.
+    [InlineData("MenuItemBehavior", "ScrollViewerBehavior")]
+    [InlineData("MenuBehavior", "ScrollViewerBehavior")]
+    public void Compute_keeps_the_component_a_kept_control_creates(string ownerBehavior, string createdBehavior)
+    {
+        ScreenSave screen = TestProjectBuilder.BuildScreen("Game");
+        screen.Instances.Add(new InstanceSave { Name = "Owner", BaseType = "Owner", ParentContainer = screen });
+        ComponentSave owner = TestProjectBuilder.BuildComponent("Owner");
+        owner.Behaviors.Add(new ElementBehaviorReference { BehaviorName = ownerBehavior });
+        ComponentSave created = TestProjectBuilder.BuildComponent("Created");
+        created.Behaviors.Add(new ElementBehaviorReference { BehaviorName = createdBehavior });
+        GumProjectSave project = TestProjectBuilder.BuildProject(screens: new[] { screen }, components: new[] { owner, created });
+
+        GumElementReachabilityResult result = new GumElementReachability().Compute(project, extraRoots: new string[0]);
+
+        result.KeptElementNames.ShouldContain("Created");
+    }
+
+    [Fact]
+    public void FormsCreatedBehaviors_covers_every_control_the_Forms_runtime_creates_without_a_visual()
+    {
+        // A parameterless new <Control>() in a Forms control builds that control from DefaultFormsTemplates,
+        // which is the project's component for its behavior. Each one must be an edge, or --shake trims it.
+        string controlsDirectory = Path.Combine(FindRepositoryRoot(), "MonoGameGum", "Forms", "Controls");
+        List<string> missing = new List<string>();
+        foreach (string file in Directory.GetFiles(controlsDirectory, "*.cs", SearchOption.AllDirectories))
+        {
+            string owner = Path.GetFileNameWithoutExtension(file);
+            IEnumerable<string> codeLines = File.ReadAllLines(file).Where(line => !line.TrimStart().StartsWith("//"));
+            foreach (Match match in codeLines.SelectMany(line =>
+                Regex.Matches(line, @"\bnew (?<control>\w+)\(\)|DefaultFormsTemplates\[typeof\((?<control>\w+)\)\]")))
+            {
+                string createdBehavior = match.Groups["control"].Value + "Behavior";
+                if (!StandardFormsBehaviorNamesContains(createdBehavior))
+                {
+                    continue;
+                }
+                string ownerKey = owner == "FrameworkElement" ? GumElementReachability.AnyFormsBehavior : owner + "Behavior";
+                if (!GumElementReachability.FormsCreatedBehaviors.TryGetValue(ownerKey, out IReadOnlyList<string>? created)
+                    || !created.Contains(createdBehavior))
+                {
+                    missing.Add($"{owner} -> {createdBehavior}");
+                }
+            }
+        }
+
+        missing.ShouldBeEmpty();
+    }
+
+    private static bool StandardFormsBehaviorNamesContains(string behaviorName) =>
+        typeof(StandardFormsBehaviorNames).GetFields()
+            .Any(field => field.IsLiteral && (string?)field.GetRawConstantValue() == behaviorName);
+
+    private static string FindRepositoryRoot()
+    {
+        DirectoryInfo? directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory != null && !Directory.Exists(Path.Combine(directory.FullName, "MonoGameGum", "Forms", "Controls")))
+        {
+            directory = directory.Parent;
+        }
+        return directory?.FullName ?? throw new DirectoryNotFoundException("Could not find the repository root.");
     }
 
     [Fact]
