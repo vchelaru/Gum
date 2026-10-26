@@ -32,6 +32,19 @@ namespace Gum.Content.AnimationChain
         /// </summary>
         public bool Loop = true;
 
+        /// <summary>
+        /// Whether the chain plays forward then mirrored back, for a cycle of twice its length. Only
+        /// written when true, so files that omit it (every file before this field existed) play a normal loop.
+        /// </summary>
+        public bool PingPong;
+        public bool ShouldSerializePingPong() => PingPong;
+
+        /// <summary>
+        /// Whether the chain plays its forward timeline mirrored. Only written when true.
+        /// </summary>
+        public bool Reverse;
+        public bool ShouldSerializeReverse() => Reverse;
+
 
         #endregion
 

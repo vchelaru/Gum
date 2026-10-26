@@ -89,6 +89,18 @@ namespace Gum.Graphics.Animation
         /// </summary>
         public bool Loop { get; set; } = true;
 
+        /// <summary>
+        /// Whether this chain plays forward then mirrored back, for a cycle of twice its
+        /// <see cref="TotalLength"/>. See <see cref="PlaybackTimeline"/>.
+        /// </summary>
+        public bool PingPong { get; set; }
+
+        /// <summary>
+        /// Whether this chain plays its forward timeline mirrored (last frame first). See
+        /// <see cref="PlaybackTimeline"/>.
+        /// </summary>
+        public bool IsReversed { get; set; }
+
         private string? mParentAchxFileName;
         public string? ParentAchxFileName
         {
@@ -165,6 +177,9 @@ namespace Gum.Graphics.Animation
             animationChain.IndexInLoadedAchx = IndexInLoadedAchx;
 
             animationChain.mName = this.mName;
+            animationChain.Loop = Loop;
+            animationChain.PingPong = PingPong;
+            animationChain.IsReversed = IsReversed;
 
             return animationChain;
         }
@@ -268,6 +283,8 @@ namespace Gum.Graphics.Animation
 
                 animationChain.Name = animationChainSave.Name;
                 animationChain.Loop = animationChainSave.Loop;
+                animationChain.PingPong = animationChainSave.PingPong;
+                animationChain.IsReversed = animationChainSave.Reverse;
 
                 float divisor = 1;
 
