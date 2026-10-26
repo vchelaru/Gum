@@ -1414,7 +1414,40 @@ namespace GumRuntime
                     mismatchReported = true;
                 }
             }
+
+            if (value == null && !mismatchReported
+                && ReportedTrimmedSource(referenceString, leftVariableName, stateSave, liveRoot))
+            {
+                mismatchReported = true;
+            }
             return true;
+        }
+
+        // A row reading an element that gumcli pack --shake left out of the bundle finds nothing to read. That is
+        // reported once per row and owner rather than skipped silently, naming the --keep that brings it back.
+        private static bool ReportedTrimmedSource(string referenceString, string leftVariableName, StateSave stateSave,
+            GraphicalUiElement? liveRoot)
+        {
+            List<string>? trimmed = ObjectFinder.Self.GumProjectSave?.TrimmedElements;
+            if (trimmed == null || trimmed.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (string elementName in trimmed)
+            {
+                if (ReferenceDependencies.RowReadsElement(referenceString, ElementReference.ComponentSubfolder + "/" + elementName)
+                    || ReferenceDependencies.RowReadsElement(referenceString, ElementReference.ScreenSubfolder + "/" + elementName))
+                {
+                    if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
+                    {
+                        ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot,
+                            $"it reads {elementName}, which gumcli pack --shake trimmed; pack with --keep {elementName}.");
+                    }
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static bool IsNonFiniteNumber(object value)
