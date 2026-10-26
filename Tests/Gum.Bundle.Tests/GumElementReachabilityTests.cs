@@ -81,7 +81,7 @@ public class GumElementReachabilityTests
     [Fact]
     public void FormsCreatedBehaviors_covers_every_control_the_Forms_runtime_creates_without_a_visual()
     {
-        // A parameterless new <Control>() in a Forms control builds that control from DefaultFormsTemplates,
+        // A parameterless new <Control>() (or new <Control> { }, or a target-typed new()) in a Forms control builds that control from DefaultFormsTemplates,
         // which is the project's component for its behavior. Each one must be an edge, or --shake trims it.
         string controlsDirectory = Path.Combine(FindRepositoryRoot(), "MonoGameGum", "Forms", "Controls");
         List<string> missing = new List<string>();
@@ -90,7 +90,10 @@ public class GumElementReachabilityTests
             string owner = Path.GetFileNameWithoutExtension(file);
             IEnumerable<string> codeLines = File.ReadAllLines(file).Where(line => !line.TrimStart().StartsWith("//"));
             foreach (Match match in codeLines.SelectMany(line =>
-                Regex.Matches(line, @"\bnew (?<control>\w+)\(\)|DefaultFormsTemplates\[typeof\((?<control>\w+)\)\]")))
+                Regex.Matches(line,
+                    @"\bnew (?<control>\w+)\s*(\(\s*\)|\{)" +
+                    @"|\b(?<control>\w+)\??\s+\w+\s*=\s*new\s*\(\s*\)" +
+                    @"|DefaultFormsTemplates\[typeof\((?<control>\w+)\)\]")))
             {
                 string createdBehavior = match.Groups["control"].Value + "Behavior";
                 if (!StandardFormsBehaviorNamesContains(createdBehavior))
