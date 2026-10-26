@@ -758,7 +758,8 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     /// <param name="oversampleRatio">How many times larger than its drawn size to rasterize
     /// the font, e.g. the current effective camera/layer zoom. Requested as an exact fraction --
-    /// KernSmith's rasterizer has fractional precision (see issue #4304), so this is not rounded.</param>
+    /// KernSmith's rasterizer has fractional precision (see issue #4304), so this is not rounded. The
+    /// raster never goes below <see cref="FontSize"/>.</param>
     /// <returns>
     /// True if the font was regenerated. False if <see cref="UseFontOversampling"/> is off, no
     /// in-memory font creator is registered, or <paramref name="oversampleRatio"/> is not positive --
@@ -772,7 +773,7 @@ public class TextRuntime : InteractiveGue
             return false;
         }
 
-        return RegenerateOversampledFontAtRasterSize(FontSize * ContainedText.NominalFontScale * oversampleRatio);
+        return RegenerateOversampledFontAtRasterSize(GetOversampleRasterFontSize(oversampleRatio));
     }
 
     bool RegenerateOversampledFontAtRasterSize(float rasterFontSize)
@@ -878,11 +879,11 @@ public class TextRuntime : InteractiveGue
 
     /// <summary>
     /// The raster size that draws this text's glyphs one atlas pixel per screen pixel at
-    /// <paramref name="effectiveZoom"/>: its drawn size times the zoom (issue #6816). Never below
-    /// <see cref="FontSize"/>, since oversampling only raises resolution.
+    /// <paramref name="oversampleRatio"/> (the zoom): its drawn size times the ratio (issue #6816).
+    /// Never below <see cref="FontSize"/>, since oversampling only raises resolution.
     /// </summary>
-    float GetAutomaticOversampleRasterFontSize(float effectiveZoom) =>
-        FontSize * System.Math.Max(1f, ContainedText.NominalFontScale * effectiveZoom);
+    float GetOversampleRasterFontSize(float oversampleRatio) =>
+        FontSize * System.Math.Max(1f, ContainedText.NominalFontScale * oversampleRatio);
 
     /// <summary>
     /// Wired to <see cref="Text.OnPreRender"/> so it runs once per frame for every visible Text on
@@ -929,7 +930,7 @@ public class TextRuntime : InteractiveGue
 
         // The full scaled raster size is compared, so a FontScale change regenerates on the same
         // threshold a zoom change does.
-        float rasterFontSize = GetAutomaticOversampleRasterFontSize(effectiveZoom);
+        float rasterFontSize = GetOversampleRasterFontSize(effectiveZoom);
         float currentRasterFontSize = _oversampledRasterFontSize ?? FontSize;
 
         var rasterDelta = System.MathF.Abs(rasterFontSize - currentRasterFontSize);

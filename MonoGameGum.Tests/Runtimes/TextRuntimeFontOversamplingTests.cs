@@ -1014,6 +1014,35 @@ char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
     }
 
     [Fact]
+    public void RegenerateOversampledFont_WithFontScaleBelowOne_NeverRasterizesBelowFontSize()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            BitmapFont stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            CapturingInMemoryFontCreator creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 0.5f;
+
+            textRuntime.RegenerateOversampledFont(1f).ShouldBeTrue();
+
+            creator.CapturedFontSize.ShouldBe(20f, tolerance: 0.0001f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
     public void UpdateAutomaticFontOversampling_WhenFontScaleChanges_RegeneratesOnTheSameOnePixelRuleAsZoom()
     {
         bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
