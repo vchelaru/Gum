@@ -67,7 +67,10 @@ sprite.Animate = true;
 
 ### Frame Textures That Fail to Load
 
-A frame texture that cannot be loaded, whether the file is missing or the image cannot be decoded, follows `GraphicalUiElement.MissingFileBehavior` the same way on every runtime. With `ConsumeSilently` (the Skia default), the frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name. With `ThrowException` (the default on MonoGame, KNI, FNA, and raylib once Gum is initialized), loading throws a `FileNotFoundException` that names the first texture that failed.
+A frame texture that cannot be loaded, whether the file is missing or the image cannot be decoded, follows `GraphicalUiElement.MissingFileBehavior` the same way on every runtime. See [Migrating to 2026 October](../../gum-tool/upgrading/migrating-to-2026-october.md#raylib-throws-when-a-file-is-missing) for the defaults.
+
+* With `ConsumeSilently`, the frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name.
+* With `ThrowException`, loading throws on the first texture that failed. The outer exception does not name the texture; its `InnerException` is a `FileNotFoundException` that does.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
