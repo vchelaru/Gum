@@ -494,26 +494,104 @@ public class UndoReferenceCascadeTests : BaseTestClass
         Width(_comp, "F1", Alt()).ShouldBe(55, "the categorized follower follows the reference");
     }
 
-    [Fact]
-    public void Redo_OfResettingAFeedingVariable_ShouldLeaveFollowersWithTheirSnapshotValues()
+    private void ResetSource()
     {
-        // Characterization. A typed reset leaves followers at their current values (the null source is not
-        // propagated); redo restores the snapshot's values for the edited element. Tracked in #6884, which
-        // needs a maintainer decision on what a null source means.
-        Arrange(materialized: false);
         using (_undo.RequestLock())
         {
             _comp.DefaultState.Variables.RemoveAll(item => item.Name == "Source.Width");
             _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("Source"), "Width", _comp.DefaultState,
                 "Source.Width", trySave: true);
         }
+        _fileCommands.Object.TryAutoSaveElement(_comp);
+    }
+
+    // #6884: when a source is reset or a reference is removed, followers keep the value they hold. Undo and
+    // redo leave them where a typed reset would, never at the snapshot's value.
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void UndoRedo_OfResettingAFeedingVariable_ShouldLeaveFollowersAtTheirHeldValues(bool materialized, bool autoSave)
+    {
+        Arrange(materialized, autoSave);
+        ResetSource();
+        Width(_comp, "Source").ShouldBeNull();
+
         _undo.PerformUndo();
+        ShouldHaveWidths(50);
+        MemoryShouldEqualDisk();
 
         _undo.PerformRedo();
-
         Width(_comp, "Source").ShouldBeNull();
-        Width(_comp, "F1").ShouldBeNull();
-        Width(_other, "O").ShouldBe(50, "another element is not part of the snapshot");
+        Width(_comp, "F1").ShouldBe(50, "F1 keeps the value it held");
+        Width(_comp, "F2").ShouldBe(51);
+        Width(_other, "O").ShouldBe(50, "a follower in another element keeps its value too");
+        MemoryShouldEqualDisk();
+
+        _undo.PerformUndo();
+        ShouldHaveWidths(50);
+        HistoryCount.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void UndoRedo_OfRemovingAReferenceRow_ShouldLeaveTheFollowerAtItsHeldValue(bool materialized, bool autoSave)
+    {
+        Arrange(materialized, autoSave);
+        using (_undo.RequestLock())
+        {
+            _comp.DefaultState.GetVariableListSave("F1.VariableReferences")!.ValueAsIList.Clear();
+            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("F1"), "VariableReferences",
+                _comp.DefaultState, "F1.VariableReferences", trySave: true);
+        }
+        _fileCommands.Object.TryAutoSaveElement(_comp);
+        EditSourceWidth(55);
+        Width(_comp, "F1").ShouldBe(materialized ? 50 : null, "no row, no follow");
+
+        _undo.PerformUndo();
+        _undo.PerformUndo();
+        Width(_comp, "F1").ShouldBe(50, "the restored row reads Source");
+        MemoryShouldEqualDisk();
+
+        _undo.PerformRedo();
+        Width(_comp, "F1").ShouldBe(50, "removing the row keeps the value");
+        Width(_comp, "F2").ShouldBe(51);
+        _undo.PerformRedo();
+        Width(_comp, "Source").ShouldBe(55);
+        if (materialized)
+        {
+            // Unmaterialized, F1 was never stored while the row existed, so no action changed it and the
+            // snapshot's empty value is all history has to offer.
+            Width(_comp, "F1").ShouldBe(50, "without its row F1 no longer follows");
+        }
+        Width(_other, "O").ShouldBe(55);
+        MemoryShouldEqualDisk();
+    }
+
+    [Fact]
+    public void UndoRedo_OfResettingTheMiddleOfAChain_ShouldKeepTheLastFollowersValue()
+    {
+        // F2 reads F1, which reads Source. Removing F1's row and value is the middle source going away.
+        Arrange(materialized: false);
+        using (_undo.RequestLock())
+        {
+            _comp.DefaultState.GetVariableListSave("F1.VariableReferences")!.ValueAsIList.Clear();
+            _comp.DefaultState.Variables.RemoveAll(item => item.Name == "F1.Width");
+            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("F1"), "VariableReferences",
+                _comp.DefaultState, "F1.VariableReferences", trySave: true);
+        }
+
+        _undo.PerformUndo();
+        ShouldHaveWidths(50);
+
+        _undo.PerformRedo();
+        Width(_comp, "F1").ShouldBe(50, "F1 keeps the value it held; its removed row only stops it following");
+        Width(_comp, "F2").ShouldBe(51, "F2 keeps the value it held");
+        MemoryShouldEqualDisk();
     }
 
     [Fact]

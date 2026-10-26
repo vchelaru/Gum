@@ -586,7 +586,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         new System.Text.RegularExpressions.Regex(@"\bIndex\b");
 
     /// <inheritdoc/>
-    public StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before)
+    public StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide)
     {
         RestoredChanges restored = RestoredChanges.Find(element, before);
         if (restored.IsEmpty)
@@ -597,6 +597,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         GraphicalUiElement? liveRoot = _wireframeObjectManager.GetRepresentation(element);
         foreach (StateSave state in element.AllStates)
         {
+            foreach (string removed in RestoredChanges.RemovedWrittenNames(state, RestoredChanges.FindState(before, state, element)))
+            {
+                KeepHeldValue(state, RestoredChanges.FindState(before, state, element), RestoredChanges.FindState(otherSide, state, element), removed);
+            }
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
             if (!graph.HasRows)
             {
@@ -613,12 +617,55 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             HashSet<ReferenceRow> toApply = new HashSet<ReferenceRow>(rows.Concat(affected));
             if (toApply.Count > 0)
             {
+                // A row whose source is gone or null writes nothing, and the variable keeps its last value:
+                // start each fed variable from the value it held before the restore, as a typed edit does,
+                // not from the snapshot's.
+                StateSave? old = RestoredChanges.FindState(before, state, element);
+                foreach (ReferenceRow row in toApply)
+                {
+                    KeepHeldValue(state, old, RestoredChanges.FindState(otherSide, state, element), row.WrittenName);
+                }
                 ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot, onlyRows: toApply);
                 BehaviorToolOnlyReferencesApplier.Apply(element, state);
             }
         }
 
         return ApplyReferencesToElement(element, trySave: true);
+    }
+
+    private static void KeepHeldValue(StateSave state, StateSave? held, StateSave? otherSide, string variableName)
+    {
+        // The action changed this variable itself (it was typed, or reset on purpose): take the snapshot's value.
+        if (otherSide != null && !HoldsSameValue(state, otherSide, variableName))
+        {
+            return;
+        }
+
+        VariableSave? was = held?.Variables.FirstOrDefault(item => item.Name == variableName);
+        VariableSave? now = state.Variables.FirstOrDefault(item => item.Name == variableName);
+        if (was == null)
+        {
+            if (now != null)
+            {
+                state.Variables.Remove(now);
+            }
+            return;
+        }
+
+        if (now == null)
+        {
+            now = new VariableSave { Name = was.Name, Type = was.Type };
+            state.Variables.Add(now);
+        }
+        now.Value = was.Value;
+        now.SetsValue = was.SetsValue;
+    }
+
+    private static bool HoldsSameValue(StateSave first, StateSave second, string variableName)
+    {
+        VariableSave? a = first.Variables.FirstOrDefault(item => item.Name == variableName);
+        VariableSave? b = second.Variables.FirstOrDefault(item => item.Name == variableName);
+        return a == null || b == null ? a == b : ElementSaveExtensions.ValueEquality(a.Value, b.Value);
     }
 
     /// <inheritdoc/>

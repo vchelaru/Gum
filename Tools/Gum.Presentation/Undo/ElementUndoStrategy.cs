@@ -548,7 +548,7 @@ public class ElementUndoStrategy : IUndoStrategy
             elementHistory.UndoIndex = newIndex;
             DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView,
                 shouldRefreshBehaviorView,
-                addedAndRemovedInstances, beforeRestore);
+                addedAndRemovedInstances, beforeRestore, undoSnapshot.RedoState?.Element);
         }
     }
 
@@ -557,13 +557,14 @@ public class ElementUndoStrategy : IUndoStrategy
         bool shouldRefreshStateTreeView,
         bool shouldRefreshBehaviorView,
         AddedAndRemovedInstances? addedAndRemovedInstances,
-        ElementSave beforeRestore)
+        ElementSave beforeRestore,
+        ElementSave? otherSide)
     {
         // An undo or redo has the same effect on the rest of the app as typing the value: whatever the
         // snapshot held for a variable a reference row feeds, the row's followers re-read their sources
         // (#6868). Before the baseline, so the next edit starts from the cascaded values, and with no undo
         // lock held, so no history entry is added.
-        _variableReferenceLogic.Value.ReapplyReferences(toApplyTo, beforeRestore);
+        _variableReferenceLogic.Value.ReapplyReferences(toApplyTo, beforeRestore, otherSide);
 
         CaptureBaseline();
 
@@ -682,7 +683,7 @@ public class ElementUndoStrategy : IUndoStrategy
             DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe,
                 shouldRefreshStateTreeView,
                 shouldRefreshBehaviorView,
-                addedAndRemoved, beforeRestore);
+                addedAndRemoved, beforeRestore, actionToRedo!.UndoState.Element);
 
         }
 

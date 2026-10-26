@@ -47,17 +47,49 @@ internal sealed class RestoredChanges
         return result;
     }
 
+    /// <summary>
+    /// The variables fed by rows <paramref name="old"/> had and <paramref name="now"/> no longer has. Their
+    /// values stay what they were: a removed reference means the value cannot be set that way, not that it
+    /// resets.
+    /// </summary>
+    public static IEnumerable<string> RemovedWrittenNames(StateSave now, StateSave? old)
+    {
+        if (old == null)
+        {
+            yield break;
+        }
+        HashSet<string> remaining = RowKeys(now);
+        foreach (string key in RowKeys(old).Where(item => !remaining.Contains(item)))
+        {
+            int bar = key.IndexOf('|');
+            string owner = key.Substring(0, bar);
+            string line = key.Substring(bar + 1);
+            int equals = line.IndexOf('=');
+            if (equals <= 0 || line.StartsWith("//"))
+            {
+                continue;
+            }
+            string left = line.Substring(0, equals).Trim();
+            yield return owner.Length == 0 ? left : owner + "." + left;
+        }
+    }
+
     private static HashSet<string> RowKeys(StateSave state) => state.VariableLists
         .Where(list => list.GetRootName() == "VariableReferences")
         .SelectMany(list => list.ValueAsIList.OfType<string>().Select(line => RowKey(list.SourceObject, line)))
         .ToHashSet();
 
-    private static StateSave? FindState(ElementSave element, StateSave state, ElementSave afterElement)
+    public static StateSave? FindState(ElementSave? element, StateSave state, ElementSave afterElement)
     {
+        // A snapshot leaves States and Categories null when its action did not change them.
         StateSaveCategory? category = afterElement.Categories.FirstOrDefault(item => item.States.Contains(state));
-        IEnumerable<StateSave> states = category == null
-            ? element.States
-            : element.Categories.FirstOrDefault(item => item.Name == category.Name)?.States ?? Enumerable.Empty<StateSave>();
+        IEnumerable<StateSave>? states = category == null
+            ? element?.States
+            : element?.Categories?.FirstOrDefault(item => item.Name == category.Name)?.States;
+        if (states == null)
+        {
+            return null;
+        }
         return states.FirstOrDefault(item => item.Name == state.Name);
     }
 }

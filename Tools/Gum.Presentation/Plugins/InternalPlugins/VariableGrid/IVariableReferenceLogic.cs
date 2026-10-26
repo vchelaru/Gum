@@ -30,8 +30,12 @@ public interface IVariableReferenceLogic
     /// </summary>
     /// <param name="element">The element after the restore.</param>
     /// <param name="before">A copy of the element taken just before the restore.</param>
+    /// <param name="otherSide">The snapshot of the same action that was not applied (the redo snapshot of an
+    /// undo, the undo snapshot of a redo). A fed variable the action itself did not change keeps the value it
+    /// held before the restore, because a removed or null source never resets a value; one the action did
+    /// change takes the restored value. Null counts as no change.</param>
     /// <returns>The values that changed in other elements.</returns>
-    StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before);
+    StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide);
 
     /// <summary>
     /// Re-applies the rows of <paramref name="element"/> that read a sibling-dependent name
