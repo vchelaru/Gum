@@ -250,7 +250,7 @@ public sealed class VariableReferenceGraph
             return cached;
         }
 
-        HashSet<string>? loopRows = GetCrossLoopRows(element);
+        HashSet<string>? loopRows = DetectCrossElementLoops ? GetCrossLoopRows(element) : null;
         if (loopRows == null || loopRows.Count == 0)
         {
             return cached;
@@ -278,6 +278,9 @@ public sealed class VariableReferenceGraph
     /// </summary>
     public static VariableReferenceGraph Create(ElementSave element, IReadOnlyList<StateSave> states) =>
         Create(element, states, true);
+
+    /// <summary>False only in tests, to compare against what applying gave before loops were detected.</summary>
+    internal static bool DetectCrossElementLoops = true;
 
     internal static VariableReferenceGraph Create(ElementSave element, IReadOnlyList<StateSave> states, bool findCrossElementLoops)
     {
@@ -361,7 +364,7 @@ public sealed class VariableReferenceGraph
         Order(rows, out ReferenceRow[] ordered, out ReferenceRow[] cyclic, out bool hasChains);
 
         bool hasElementReads = rows.Exists(row => row.ElementReads.Count > 0);
-        if (findCrossElementLoops && hasElementReads)
+        if (findCrossElementLoops && hasElementReads && DetectCrossElementLoops)
         {
             MoveCrossElementLoopRows(element, ref ordered, ref cyclic);
         }
@@ -795,7 +798,10 @@ public sealed class VariableReferenceGraph
     }
 
     private static CrossLoopIndex? _crossLoopIndex;
+    // Per thread: a pass on one thread must not hand its index to a pass on another.
+    [ThreadStatic]
     private static CrossLoopIndex? _batchIndex;
+    [ThreadStatic]
     private static int _batchDepth;
     private static readonly object CrossLoopLock = new object();
 
@@ -900,7 +906,11 @@ public sealed class VariableReferenceGraph
         };
 
         // One node per row (an element's rows, told apart by LoopKey), with the nodes writing each variable.
-        Dictionary<string, int> elementByQualifiedName = new Dictionary<string, int>();
+        // Resolves a name the way ObjectFinder.GetElementSave does without its cache: the first screen, then
+        // the first component (both ignoring case), then the first standard element (exact), by name alone.
+        Dictionary<string, int> screenByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, int> componentByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, int> standardByName = new Dictionary<string, int>(StringComparer.Ordinal);
         List<Dictionary<string, List<int>>> writers = new List<Dictionary<string, List<int>>>();
         List<int> nodeElement = new List<int>();
         List<string> nodeKey = new List<string>();
@@ -910,7 +920,13 @@ public sealed class VariableReferenceGraph
             ElementSave element = ProjectElementAt(project, e);
             index.Elements[e] = element;
             index.Graphs[e] = GetFor(element);
-            elementByQualifiedName[ElementReference.GetQualifiedName(element, element.Name)] = e;
+            Dictionary<string, int> byName = element is ScreenSave ? screenByName
+                : element is ComponentSave ? componentByName
+                : standardByName;
+            if (!byName.ContainsKey(element.Name))
+            {
+                byName[element.Name] = e;
+            }
             Dictionary<string, List<int>> writersOfElement = new Dictionary<string, List<int>>();
             writers.Add(writersOfElement);
             HashSet<string> keys = new HashSet<string>();
@@ -965,7 +981,11 @@ public sealed class VariableReferenceGraph
             foreach (Match match in QualifiedReadRegex.Matches(row.Line.Substring(equalsIndex + 1)))
             {
                 string variablePath = match.Groups[2].Value.TrimStart('.');
-                if (variablePath.Length > 0 && elementByQualifiedName.TryGetValue(match.Groups[1].Value, out int otherElement)
+                string referencedName = match.Groups[1].Value.Substring(match.Groups[1].Value.IndexOf('/') + 1);
+                if (variablePath.Length > 0
+                    && (screenByName.TryGetValue(referencedName, out int otherElement)
+                        || componentByName.TryGetValue(referencedName, out otherElement)
+                        || standardByName.TryGetValue(referencedName, out otherElement))
                     && otherElement != element && writers[otherElement].TryGetValue(variablePath, out List<int>? found))
                 {
                     targets.UnionWith(found);

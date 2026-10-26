@@ -389,7 +389,7 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
 
     // Rows read only elements with a lower number (and I1 reads I0), so the project has no loop, while
     // the same written names recur in many states and base types.
-    private static void AddRandomRows(Random random, StateSave state, int elementNumber)
+    private static void AddRandomRows(Random random, StateSave state, int elementNumber, bool useExpressions = true)
     {
         for (int i = 0; i < 2; i++)
         {
@@ -408,7 +408,8 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
             }
             if (terms.Count > 0)
             {
-                AddRowToState(state, "I" + i, "Width = " + string.Join(" + ", terms));
+                // Without Gum.Expressions only a single path can be read.
+                AddRowToState(state, "I" + i, "Width = " + string.Join(" + ", useExpressions ? terms : terms.Take(1)));
             }
         }
     }
@@ -451,5 +452,164 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
         ringApplied.Wait(15000).ShouldBeTrue("a 10000-element loop took more than 15 s (measured about 0.2 s)");
         ringApplied.GetAwaiter().GetResult();
         ring.Components[0].DefaultState.GetValue("A.Width").ShouldBe(10f);
+    }
+
+    // ---- ApplyAll resolves elements exactly like a per-element apply (no shared lookup cache) ----
+
+    private static ScreenSave AddScreenWithInstance(GumProjectSave project, string name, string instance, float width)
+    {
+        ScreenSave screen = new ScreenSave { Name = name };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = instance, BaseType = "Container", ParentContainer = screen });
+        screen.DefaultState.Variables.Add(new VariableSave { Name = instance + ".Width", Type = "float", Value = width, SetsValue = true });
+        project.Screens.Add(screen);
+        return screen;
+    }
+
+    private static void SetWidth(ComponentSave component, string instance, float width) =>
+        component.DefaultState.Variables.First(variable => variable.Name == instance + ".Width").Value = width;
+
+    [Fact]
+    public void ApplyAll_AScreenAndAComponentWithTheSameName_ReadTheKindTheRowNames()
+    {
+        GumProjectSave project = CreateProject();
+        AddScreenWithInstance(project, "Menu", "M", 40f);
+        ComponentSave menu = AddComponent(project, "Menu", "M");
+        SetWidth(menu, "M", 20f);
+        ComponentSave reader = AddComponent(project, "Reader", "R");
+        AddRow(reader, "R", "Width = Screens/Menu.M.Width + 1");
+
+        project.ApplyAllVariableReferences();
+
+        reader.DefaultState.GetValue("R.Width").ShouldBe(41f);
+    }
+
+    [Fact]
+    public void ApplyAll_AComponentNamedLikeAStandardElement_IsReadByItsReaders()
+    {
+        GumProjectSave project = CreateProject();
+        ComponentSave text = AddComponent(project, "Text", "A");
+        SetWidth(text, "A", 31f);
+        ComponentSave reader = AddComponent(project, "Reader", "R");
+        AddRow(reader, "R", "Width = Components/Text.A.Width + 1");
+
+        project.ApplyAllVariableReferences();
+
+        reader.DefaultState.GetValue("R.Width").ShouldBe(32f);
+    }
+
+    [Fact]
+    public void ApplyAll_ComponentsWhoseNamesDifferOnlyInCase_ResolveToTheFirstLikeAPerElementApply()
+    {
+        GumProjectSave project = CreateProject();
+        ComponentSave upper = AddComponent(project, "Panel", "A");
+        ComponentSave lower = AddComponent(project, "panel", "A");
+        SetWidth(upper, "A", 5f);
+        SetWidth(lower, "A", 50f);
+        ComponentSave reader = AddComponent(project, "Reader", "R");
+        AddRow(reader, "R", "Width = Components/panel.A.Width + 1");
+
+        project.ApplyAllVariableReferences();
+
+        // The lookup ignores case and takes the first, as a per-element apply does.
+        reader.ApplyVariableReferences(reader.DefaultState);
+        float perElement = (float)reader.DefaultState.GetValue("R.Width")!;
+        reader.DefaultState.Variables.First(variable => variable.Name == "R.Width").Value = 10f;
+        project.ApplyAllVariableReferences();
+        reader.DefaultState.GetValue("R.Width").ShouldBe(perElement);
+        perElement.ShouldBe(6f);
+    }
+
+    [Fact]
+    public void CyclicRows_TwoComponentsWithTheSameName_TheLoopIsThroughTheFirstOne()
+    {
+        GumProjectSave project = CreateProject();
+        ComponentSave first = AddComponent(project, "Panel", "A");
+        ComponentSave second = AddComponent(project, "Panel", "A");
+        ComponentSave other = AddComponent(project, "Other", "B");
+        AddRow(first, "A", "Width = Components/Other.B.Width + 1");
+        AddRow(second, "A", "Width = Components/Other.B.Width + 1");
+        AddRow(other, "B", "Width = Components/Panel.A.Width + 1");
+
+        VariableReferenceGraph.GetForApply(first, first.DefaultState).CyclicRows.Count.ShouldBe(1);
+        VariableReferenceGraph.GetForApply(second, second.DefaultState).CyclicRows.ShouldBeEmpty();
+    }
+
+    // ---- Values over random projects ----
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ApplyAll_RandomAcyclicProjects_GiveTheSameValuesWithAndWithoutLoopDetection(bool useExpressions)
+    {
+        for (int seed = 0; seed < 300; seed++)
+        {
+            string with = AppliedSnapshot(seed, useExpressions, detect: true);
+            string without = AppliedSnapshot(seed, useExpressions, detect: false);
+            with.ShouldBe(without, $"seed {seed}");
+        }
+    }
+
+    private string AppliedSnapshot(int seed, bool useExpressions, bool detect)
+    {
+        ElementSaveExtensions.CustomEvaluateExpression = null;
+        ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
+        if (useExpressions)
+        {
+            GumExpressionService.Initialize();
+        }
+        VariableReferenceGraph.DetectCrossElementLoops = detect;
+        try
+        {
+            Random random = new Random(seed);
+            GumProjectSave project = CreateProject();
+            int elementCount = random.Next(2, 6);
+            for (int e = 0; e < elementCount; e++)
+            {
+                ComponentSave component = AddComponent(project, "E" + e, "I0", "I1");
+                if (e > 0 && random.Next(0, 3) == 0)
+                {
+                    component.BaseType = "E" + random.Next(0, e);
+                }
+                AddRandomRows(random, component.DefaultState, e, useExpressions);
+                if (random.Next(0, 2) == 0)
+                {
+                    AddRandomRows(random, AddCategoryState(component, "S").States[0], e, useExpressions);
+                }
+            }
+            project.ApplyAllVariableReferences();
+            return string.Join(";", project.Components.SelectMany(component =>
+                new[] { component.DefaultState }.Concat(component.Categories.SelectMany(category => category.States))
+                    .Select(state => component.Name + "/" + state.Name + ":" + string.Join(",", state.Variables.Select(variable => variable.Name + "=" + variable.Value)))));
+        }
+        finally
+        {
+            VariableReferenceGraph.DetectCrossElementLoops = true;
+            ElementSaveExtensions.CustomEvaluateExpression = null;
+            ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ApplyAll_RandomProjectsWithLoops_KeepLoopRowsAtTheirStoredValues()
+    {
+        for (int seed = 0; seed < 150; seed++)
+        {
+            Random random = new Random(1000 + seed);
+            (GumProjectSave project, Dictionary<string, List<string>> edges) = Build(random, random.Next(2, 6));
+            (HashSet<string> onCycle, _) = Oracle(edges);
+
+            project.ApplyAllVariableReferences();
+            project.ApplyAllVariableReferences();
+            project.ApplyAllVariableReferences();
+
+            foreach (string node in onCycle)
+            {
+                string[] parts = node.Split('|');
+                ComponentSave component = project.Components.First(item => item.Name == parts[0]);
+                component.DefaultState.GetValue(parts[1]).ShouldBe(10f, $"seed {seed}: {node} is in a loop");
+            }
+        }
     }
 }
