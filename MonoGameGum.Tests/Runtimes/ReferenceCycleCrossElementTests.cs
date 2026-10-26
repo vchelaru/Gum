@@ -496,6 +496,10 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
     public void ApplyAll_AComponentNamedLikeAStandardElement_IsReadByItsReaders()
     {
         GumProjectSave project = CreateProject();
+        StandardElementSave textStandard = new StandardElementSave { Name = "Text" };
+        textStandard.States.Add(StandardElementsManager.Self.GetDefaultStateFor("Text")!.Clone());
+        textStandard.DefaultState!.ParentContainer = textStandard;
+        project.StandardElements.Add(textStandard);
         ComponentSave text = AddComponent(project, "Text", "A");
         SetWidth(text, "A", 31f);
         ComponentSave reader = AddComponent(project, "Reader", "R");
