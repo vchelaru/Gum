@@ -38,24 +38,37 @@ public class GumCliScenarioTests : IDisposable
     public void New_EachTemplate_ChecksClean_AndResavesByteForByte(string template)
     {
         string project = Path.Combine(_folder, "Game", "Game.gumx");
+        // Diagnostic for a Windows-CI-only failure where every Behaviors/*.behx changes during resave even
+        // though resave never writes behaviors: records when each step ended and when the first behavior file
+        // was last written, so the next failure shows which step (or something outside them) wrote it.
+        System.Text.StringBuilder timeline = new System.Text.StringBuilder();
+        string probeFile = Path.Combine(_folder, "Game", "Behaviors", "ButtonBehavior.behx");
+        void Mark(string step) => timeline.Append($"\n  {step} ended {DateTime.UtcNow:HH:mm:ss.fffffff}; ButtonBehavior.behx " +
+            (File.Exists(probeFile) ? $"written {File.GetLastWriteTimeUtc(probeFile):HH:mm:ss.fffffff}, {new FileInfo(probeFile).Length} bytes" : "absent"));
+        timeline.Append($"\n  started {DateTime.UtcNow:HH:mm:ss.fffffff}");
 
         GumCliProcess created = Cli("new", project, "--template", template);
+        Mark("new");
 
         created.ExitCode.ShouldBe(0, created.Transcript);
         created.StandardOutput.ShouldContain("Created project");
         Directory.GetFiles(Path.Combine(_folder, "Game", "Standards"), "*.gutx").ShouldNotBeEmpty();
         Directory.Exists(Path.Combine(_folder, "Game", "Components", "Controls")).ShouldBe(template == "forms");
         GumCliProcess checkedProject = Cli("check", project);
+        Mark("check");
         checkedProject.ExitCode.ShouldBe(0, checkedProject.Transcript);
         checkedProject.StandardOutput.ShouldContain("No errors found.");
         Dictionary<string, byte[]> asCreated = Snapshot(Path.Combine(_folder, "Game"));
+        Mark("snapshot");
 
         foreach (string[] resave in new[] { new[] { "resave", project }, new[] { "resave", project, "--raw" } })
         {
             GumCliProcess saved = Cli(resave);
+            Mark(string.Join(" ", resave.Take(1).Concat(resave.Skip(2))));
             saved.ExitCode.ShouldBe(0, saved.Transcript);
             ShouldMatch(Snapshot(Path.Combine(_folder, "Game")), asCreated,
-                $"`gumcli {string.Join(" ", resave.Take(1).Concat(resave.Skip(2)))}` of a new {template} project should change no byte");
+                $"`gumcli {string.Join(" ", resave.Take(1).Concat(resave.Skip(2)))}` of a new {template} project should change no byte"
+                + "\nTimeline:" + timeline + "\nresave output:\n" + saved.Transcript);
         }
     }
 
@@ -364,7 +377,34 @@ public class GumCliScenarioTests : IDisposable
             .Where(path => !expected.TryGetValue(path, out byte[]? before) || !actual.TryGetValue(path, out byte[]? after) || !before.AsSpan().SequenceEqual(after))
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToList();
-        differences.ShouldBeEmpty(because);
+        differences.ShouldBeEmpty(because + DescribeFirstDifference(differences, actual, expected));
+    }
+
+    /// <summary>
+    /// The first differing file's bytes around where it changes, so a CI-only failure shows what the
+    /// resave wrote instead of only which files differ.
+    /// </summary>
+    private static string DescribeFirstDifference(List<string> differences, Dictionary<string, byte[]> actual, Dictionary<string, byte[]> expected)
+    {
+        if (differences.Count == 0)
+        {
+            return string.Empty;
+        }
+        string path = differences[0];
+        if (!expected.TryGetValue(path, out byte[]? before) || !actual.TryGetValue(path, out byte[]? after))
+        {
+            return $"\n{path}: {(expected.ContainsKey(path) ? "deleted" : "added")}";
+        }
+        int offset = 0;
+        while (offset < before.Length && offset < after.Length && before[offset] == after[offset])
+        {
+            offset++;
+        }
+        int start = Math.Max(0, offset - 80);
+        string Excerpt(byte[] bytes) => System.Text.Encoding.UTF8.GetString(bytes, start, Math.Min(bytes.Length, offset + 160) - start)
+            .Replace("\r", "\\r").Replace("\n", "\\n");
+        return $"\n{path}: {before.Length} -> {after.Length} bytes, first difference at {offset}" +
+            $"\n  before: {Excerpt(before)}\n  after:  {Excerpt(after)}";
     }
 
     #endregion

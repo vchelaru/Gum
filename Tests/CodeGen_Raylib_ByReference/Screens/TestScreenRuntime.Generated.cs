@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_Raylib_ByReference.Screens;
+[global::Gum.DataTypes.GumElement("TestScreen")]
 partial class TestScreenRuntime : Gum.Wireframe.GraphicalUiElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -26,8 +27,8 @@ partial class TestScreenRuntime : Gum.Wireframe.GraphicalUiElement
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("TestScreen");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("TestScreen");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

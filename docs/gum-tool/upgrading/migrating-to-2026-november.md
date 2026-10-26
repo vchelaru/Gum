@@ -564,6 +564,12 @@ circle.FillColor = SkiaSharp.SKColors.Red;
 
 The `KernSmith.GumCommon` and `KernSmith.MonoGameGum` packages also add iOS and Android builds. These use the `StbTrueType` rasterizer by default instead of FreeType, and you can pass a backend to `GumFontGenerator` to choose another. When you build these projects from source, pass `-p:IncludeIOS=true` or `-p:IncludeAndroid=true` to include the mobile builds.
 
+### Generated Visuals Throw When Their Element Is Not Loaded
+
+At [syntax version 7](syntax-versions.md), a generated MonoGame, raylib, or Silk.NET runtime class throws an exception from its constructor when the loaded project has no element by its name. Before this, the constructor created an empty visual with no children.
+
+This affects you only if your code creates generated visuals before loading the Gum project, such as in unit tests. Load the project first.
+
 ### References That Cannot Be Applied Are Reported
 
 A reference whose result does not fit the variable on the left is now reported, and the variable keeps its current value. This includes `NaN` or infinity into a `float` or `double` variable (before, some builds threw and others wrote the value), and with `Gum.Expressions` a `bool` or text into a number or a number outside the range of an `int` (before, silently dropped).

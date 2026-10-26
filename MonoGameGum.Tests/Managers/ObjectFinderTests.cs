@@ -42,6 +42,24 @@ public class ObjectFinderTests : BaseTestClass
     }
 
     [Fact]
+    public void GetRequiredElementSave_ShouldSayTrimmed_WhenPackLeftTheElementOut()
+    {
+        GumProjectSave project = new();
+        project.Components.Add(new ComponentSave { Name = "Kept" });
+        project.TrimmedElements.Add("CardGum");
+        _objectFinder.GumProjectSave = project;
+
+        _objectFinder.GetRequiredElementSave("Kept").Name.ShouldBe("Kept");
+        InvalidOperationException trimmed = Should.Throw<InvalidOperationException>(
+            () => _objectFinder.GetRequiredElementSave("CardGum"));
+        trimmed.Message.ShouldContain("'CardGum' was trimmed by gumcli pack --shake");
+        trimmed.Message.ShouldContain("--keep CardGum");
+        InvalidOperationException missing = Should.Throw<InvalidOperationException>(
+            () => _objectFinder.GetRequiredElementSave("CardGumm"));
+        missing.Message.ShouldBe("Could not find an element named CardGumm - did you forget to load a Gum project?");
+    }
+
+    [Fact]
     public void IsVariableOrphaned_ShouldReturnFalse_ForVariablesInBaseTypes()
     {
         GumProjectSave project = new();

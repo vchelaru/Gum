@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.BaseTypes;
+[global::Gum.DataTypes.GumElement("BaseTypes/FromText")]
 partial class FromTextRuntime : global::Gum.GueDeriving.TextRuntime
 {
     #if UNITY_5_3_OR_NEWER
@@ -25,8 +26,8 @@ partial class FromTextRuntime : global::Gum.GueDeriving.TextRuntime
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("BaseTypes/FromText");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("BaseTypes/FromText");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

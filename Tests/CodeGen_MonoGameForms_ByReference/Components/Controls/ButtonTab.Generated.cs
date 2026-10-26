@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/ButtonTab")]
 partial class ButtonTab : global::Gum.Forms.Controls.Button
 {
     #if UNITY_5_3_OR_NEWER
@@ -21,7 +22,7 @@ partial class ButtonTab : global::Gum.Forms.Controls.Button
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonTab") ?? throw new System.InvalidOperationException("Could not find an element named Controls/ButtonTab - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/ButtonTab");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ButtonTab(visual);
             return visual;

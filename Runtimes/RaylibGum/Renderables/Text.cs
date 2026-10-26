@@ -452,9 +452,15 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// The scale applied when drawing plain (non-BBCode) text: composes the public <see cref="FontScale"/>
-    /// with <see cref="OversampleCompensationScale"/>.
+    /// with <see cref="SystemManagers.GlobalFontScale"/> and <see cref="OversampleCompensationScale"/>.
     /// </summary>
-    private float EffectiveFontScale => FontScale * _oversampleCompensationScale;
+    private float EffectiveFontScale => ComposeFontScale(FontScale) * _oversampleCompensationScale;
+
+    /// <summary>
+    /// <paramref name="baseFontScale"/> (the Text's own or an inline run's FontScale) composed with
+    /// <see cref="SystemManagers.GlobalFontScale"/>, as MonoGame's Text does.
+    /// </summary>
+    private float ComposeFontScale(float baseFontScale) => baseFontScale * SystemManagers.GlobalFontScale;
 
     /// <summary>
     /// The scale applied to pre-rendered layout sizes (box width/height, vertical origin offsets). When a
@@ -468,11 +474,11 @@ public class Text : IVisible, IRenderableIpso,
     private float MeasurementFontScale => _measurementFont != null ? NominalFontScale : EffectiveFontScale;
 
     /// <summary>
-    /// The scale this text draws at without <see cref="OversampleCompensationScale"/>. Oversampling
+    /// The scale this text draws at without <see cref="OversampleCompensationScale"/>:
+    /// <see cref="FontScale"/> composed with <see cref="SystemManagers.GlobalFontScale"/>. Oversampling
     /// rasterizes at FontSize times this times the zoom so each atlas pixel lands on one screen pixel.
-    /// Raylib text does not apply GlobalFontScale, so this is <see cref="FontScale"/> alone.
     /// </summary>
-    internal float NominalFontScale => FontScale;
+    internal float NominalFontScale => ComposeFontScale(FontScale);
 
     // Issue #4370 (MonoGame parity): word-wrap must convert a Width constraint using the UNcompensated
     // scale, since wrap decisions measure words against EffectiveMeasurementFont (native units). Already
@@ -1518,9 +1524,9 @@ public class Text : IVisible, IRenderableIpso,
     {
         Font drawFont = baseFont;
         bool hasSwapFont = false;
-        float scale = FontScale * oversampleCompensationScale;
         // The run's scale without the oversample compensation, which a size font does not need (#6486).
-        float sizeFontScale = FontScale;
+        float sizeFontScale = ComposeFontScale(FontScale);
+        float scale = sizeFontScale * oversampleCompensationScale;
         float? absolutePixelSize = null;
 
         foreach (var variable in variables)
@@ -1530,7 +1536,7 @@ public class Text : IVisible, IRenderableIpso,
                 case nameof(FontScale):
                     // An inline [FontScale=v] tag is an ABSOLUTE per-run scale (not relative to the
                     // Text-level FontScale), so it must independently compose the same compensation.
-                    sizeFontScale = (float)variable.Value;
+                    sizeFontScale = ComposeFontScale((float)variable.Value);
                     scale = sizeFontScale * oversampleCompensationScale;
                     break;
                 // "BitmapFont" is the shared historical marker name the font-resolution stack model emits for
@@ -1878,7 +1884,7 @@ public class Text : IVisible, IRenderableIpso,
             // downstream multiplies by it, so the result is 0 either way, and it avoids a
             // divide-by-zero in the per-run base-unit conversion). Kept in parity with the MonoGame
             // Text.UpdatePreRenderDimensions (RenderingLibrary/Graphics/Text.cs).
-            if (InlineVariables.Count > 0 && FontScale > 0)
+            if (InlineVariables.Count > 0 && NominalFontScale > 0)
             {
                 GetInlineVariableAwareWidthAndHeight(out requiredWidth, out requiredHeight);
                 usedStyledSizePass = true;
@@ -1964,14 +1970,14 @@ public class Text : IVisible, IRenderableIpso,
     /// <remarks>
     /// Shared by the size pass (<see cref="GetInlineVariableAwareWidthAndHeight"/>, #3481/#3524) and the
     /// font-aware wrap seam (<see cref="MeasureString(string, int)"/>, #3532) so the measured, drawn, and
-    /// wrapped size of a run cannot drift. Widths are returned in BASE units (<see cref="FontScale"/>
+    /// wrapped size of a run cannot drift. Widths are returned in BASE units (<see cref="NominalFontScale"/>
     /// factored out), matching <see cref="MeasureString(string)"/>; the multiplied base is the floor
     /// (<see cref="StyledLineHeight"/>), so an inline run smaller than it does not shrink the line. Guards <see cref="FontScale"/> == 0
     /// because the wrap seam calls this regardless of scale (the size pass is already gated on scale &gt; 0).
     /// </remarks>
     private float MeasureStyledLineInBaseUnits(List<StyledSubstring> substrings, out float lineHeightFactor)
     {
-        float baseScale = FontScale;
+        float baseScale = NominalFontScale;
         float maxRunScale = 0;
         float lineWidthAtScale = 0;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)

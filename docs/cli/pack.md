@@ -1,7 +1,7 @@
 # pack
 
 ```
-gumcli pack <project.gumj> [-o <path>] [--include <categories>]
+gumcli pack <project.gumj> [-o <path>] [--include <categories>] [--shake [--keep <names>] [--roots <file>] [--roots-assembly <dll>]]
 ```
 
 Loads a `.gumj` or `.gumx` project, walks its dependencies, and writes a single-file `.gumpkg` bundle (tar + brotli) containing the requested file categories. Use this when you want to ship a single file with your game instead of a folder of loose project and element files plus textures and fonts.
@@ -12,12 +12,16 @@ The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging 
 
 ## Options
 
-- `<project>` — Path to the `.gumj` or `.gumx` project file (positional argument)
-- `-o, --output <path>` — Output path. Defaults to `<ProjectName>.gumpkg` next to the project file.
-- `--include <categories>` — Comma-separated list of file categories to include. Defaults to `core,fontcache,external`. Valid values:
-  - `core` — the project file plus all screen, component, standard element, and behavior files referenced by the project
-  - `fontcache` — generated bitmap font files under `FontCache/` (`.fnt` + `.png` pages)
-  - `external` — files referenced by the project but outside Core/FontCache, such as sprite source `.png` textures, `CustomFontFile` paths, and a `Font` value that points at a project-relative `.ttf` file rather than a system font family name (e.g. `Fonts/MyFont.ttf` vs. `Arial`)
+- `<project>`: Path to the `.gumj` or `.gumx` project file (positional argument)
+- `-o, --output <path>`: Output path. Defaults to `<ProjectName>.gumpkg` next to the project file.
+- `--include <categories>`: Comma-separated list of file categories to include. Defaults to `core,fontcache,external`. Valid values:
+  - `core`: the project file plus all screen, component, standard element, and behavior files referenced by the project
+  - `fontcache`: generated bitmap font files under `FontCache/` (`.fnt` + `.png` pages)
+  - `external`: files referenced by the project but outside Core/FontCache, such as sprite source `.png` textures, `CustomFontFile` paths, and a `Font` value that points at a project-relative `.ttf` file rather than a system font family name (e.g. `Fonts/MyFont.ttf` vs. `Arial`)
+- `--shake`: Leave out every Screen and Component that nothing in the project reaches, along with the files only they use. Off by default. See [Leaving Out Unused Elements](pack.md#leaving-out-unused-elements).
+- `--keep <names>`: With `--shake`, element names to keep, comma-separated or repeated.
+- `--roots <file>`: With `--shake`, a text file of element names to keep, one per line. A line starting with `#` is a comment.
+- `--roots-assembly <dll>`: With `--shake`, your built game assembly. Pack keeps every element your game's code uses, as recorded by the Gum source generator.
 
 {% hint style="info" %}
 **Shipping September 2026:** Packing a `.ttf` referenced through the `Font` property (not just `CustomFontFile`) will ship in the September release, or now if building Gum from source. Before this, only `CustomFontFile` paths were bundled as external font files.
@@ -56,6 +60,84 @@ Uncompressed:    2003532 bytes
 Compressed:      541210 bytes
 Ratio:           27.0%
 ```
+
+## Leaving Out Unused Elements
+
+By default, `pack` bundles every element in the project. A project built from the Forms template carries dozens of components that a game may never show, and loading them all costs startup time. `--shake` leaves those elements out:
+
+```
+gumcli pack GumProject/GumProject.gumj --shake
+```
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+Pack starts from every Screen and keeps each element it can reach from there:
+
+* the element's base type
+* the type of every instance in it
+* any element its variable references read, such as a `Styles` component
+* the components Gum Forms creates on its own: the Tooltip component for any control, the ListBoxItem component for a ListBox or ComboBox, and the MenuItem and submenu popup components for a Menu or MenuItem
+
+Standard elements and behaviors are always kept. Textures, fonts, and animation files are bundled only when a kept element uses them.
+
+The output starts with a line that counts the kept elements and names the ones left out:
+
+```
+Kept 12 of 64 Screens and Components; trimmed 52: Controls/ButtonClose, Controls/ButtonDeny, ...
+Packed 41 files into C:\Games\MyGame\GumProject.gumpkg
+```
+
+### Keeping Elements Created From Code
+
+An element that only your code creates, such as a card component added to the screen at runtime, is not reachable from any Screen. Name it so pack keeps it, in one of three ways.
+
+`--keep` takes names on the command line. A name includes its folder, as it appears in the Gum tool:
+
+```
+gumcli pack GumProject/GumProject.gumj --shake --keep CardGum,Controls/Toast
+```
+
+`--roots` reads names from a text file, one per line, which suits a list you check in with your project:
+
+```
+# Elements created only from code
+CardGum
+Controls/Toast
+```
+
+`--roots-assembly` reads the names from your built game assembly. The Gum NuGet packages include a source generator that records every element your hand-written code uses: creating a generated class, naming it as a type, or passing a string literal to an `ObjectFinder` lookup such as `GetElementSave("CardGum")`. Code generation adds the link between a class and its element at [syntax version 7](../gum-tool/upgrading/syntax-versions.md), so generate your code with a current runtime first.
+
+```
+gumcli pack GumProject/GumProject.gumj --shake --roots-assembly bin/Release/net8.0/MyGame.dll
+```
+
+The generator cannot read a name that is not a string literal, such as `GetElementSave(elementName)`. To have the build point out these lookups, set `GumShake` in your game's `.csproj`:
+
+```xml
+<PropertyGroup>
+  <GumShake>true</GumShake>
+</PropertyGroup>
+```
+
+With it set, the build reports warning `GUM004` at each such line, and you add the name with `--keep` or `--roots`.
+
+You can combine all three options. Pack stops with exit code 2 when a name matches no element in the project, so pack catches a misspelled name before it reaches your game.
+
+### When a Trimmed Element Is Requested
+
+The bundle records which elements were left out. When generated code asks for one of them, Gum throws an exception that names the element and the fix:
+
+```
+'CardGum' was trimmed by gumcli pack --shake because nothing in the project reaches it. Pack with --keep CardGum, or list it in the --roots file.
+```
+
+A variable reference that reads a trimmed element is not applied. Gum reports an error that names the reference and the element to keep, the same way it reports [other references that cannot be applied](../code/styling/runtime-variable-references.md#casting-and-type-considerations).
+
+In either case, add the element with `--keep`, `--roots`, or `--roots-assembly` and pack again. `ObjectFinder.Self.GetElementSave` still returns `null` for a trimmed element, the same as for a name that does not exist, so code that looks up elements by name should check the result.
+
+To rule out shaking while you track down a problem, pack without `--shake` or load the loose project files.
 
 ## Loading a `.gumpkg` at runtime
 
@@ -182,4 +264,4 @@ If your build also generates bitmap fonts, run [`gumcli fonts`](fonts.md) before
 |------|---------|
 | 0 | Bundle written successfully |
 | 1 | One or more dependency files were missing on disk |
-| 2 | Project failed to load, project file not found or unreadable, or an invalid `--include` value was supplied |
+| 2 | Project failed to load, project file not found or unreadable, an invalid `--include` value was supplied, `--keep`, `--roots`, or `--roots-assembly` was used without `--shake`, a roots file or assembly was not found, or a kept name matches no element in the project |

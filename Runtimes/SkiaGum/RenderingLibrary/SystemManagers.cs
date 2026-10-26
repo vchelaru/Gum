@@ -22,7 +22,11 @@ namespace RenderingLibrary
         /// The font scale value. This can be used to scale all fonts globally,
         /// generally in response to a font scaling value like the Android font scale setting.
         /// </summary>
-        public static float GlobalFontScale { get; set; } = 1.0f;
+        public static float GlobalFontScale
+        {
+            get => GraphicalUiElement.GlobalFontScale;
+            set => GraphicalUiElement.GlobalFontScale = value;
+        }
 
         // Mirrors the MonoGame/Raylib AssemblyPrefix pattern (issue #3561) so
         // LoadEmbeddedTexture2d below and Gum.Forms.DefaultVisuals.V3.Styling's embedded

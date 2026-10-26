@@ -141,6 +141,7 @@ if ($ListOnly) {
 }
 
 $failed = $false
+$results = [System.Collections.Generic.List[string]]::new()
 
 function Invoke-Timed {
     param([string]$Name, [string[]]$Command, [int]$TimeoutSeconds)
@@ -173,19 +174,27 @@ function Invoke-Timed {
             }
         }
     }
+    $script:results.Add(("{0,-8} {1}" -f $status, $Name))
     if ($status -ne 'ok') { $script:failed = $true }
+    return $status
 }
 
 foreach ($project in $filters.Keys | Sort-Object) {
     $full = Join-Path $repo $project
     $extra = @("-p:SolutionDir=$repo\")
     if (-not $NoBuild) {
-        Invoke-Timed -Name "build $project" -Command (@('build', $full, '-nologo', '-v:q') + $extra) -TimeoutSeconds $BuildTimeoutSeconds
-        if ($failed) { break }
+        # A failed build skips only this project's tests; the other projects still build and run.
+        $buildStatus = Invoke-Timed -Name "build $project" -Command (@('build', $full, '-nologo', '-v:q') + $extra) -TimeoutSeconds $BuildTimeoutSeconds
+        if ($buildStatus -ne 'ok') {
+            Write-Host "skipped        test  $project`: its build failed"
+            $results.Add("skipped  test  $project")
+            continue
+        }
     }
     $filter = ($filters[$project] | Sort-Object -Unique) -join '|'
-    Invoke-Timed -Name "test  $project" -Command (@('test', $full, '--no-build', '-nologo', '-v:m', '--filter', $filter) + $extra) -TimeoutSeconds $TestTimeoutSeconds
+    $null = Invoke-Timed -Name "test  $project" -Command (@('test', $full, '--no-build', '-nologo', '-v:m', '--filter', $filter) + $extra) -TimeoutSeconds $TestTimeoutSeconds
 }
 
+if ($results.Count -gt 1) { Write-Host "`nResults:"; $results | ForEach-Object { Write-Host "  $_" } }
 if ($failed) { Write-Host "`nFAST-TEST FAILED"; exit 1 }
 Write-Host "`nFAST-TEST OK"
