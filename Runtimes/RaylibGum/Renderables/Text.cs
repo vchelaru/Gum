@@ -512,11 +512,11 @@ public class Text : IVisible, IRenderableIpso,
     }
 
     private static Vector2 MeasureBlankedText(Font font, string text, float fontSize, float spacing) =>
-        MeasureTextEx(font, ControlCharacterBlanker.Blank(text, expandTabs: true), fontSize, spacing);
+        MeasureTextEx(font, ControlCharacterBlanker.Blank(text, expandTabs: !RaylibFontMetricsRegistry.HasTabGlyph(font)), fontSize, spacing);
 
     private static void DrawBlankedText(Font font, string text, Vector2 position, Vector2 origin, float rotation,
         float fontSize, float spacing, Color tint) =>
-        DrawTextPro(font, ControlCharacterBlanker.Blank(text, expandTabs: true), position, origin, rotation, fontSize, spacing, tint);
+        DrawTextPro(font, ControlCharacterBlanker.Blank(text, expandTabs: !RaylibFontMetricsRegistry.HasTabGlyph(font)), position, origin, rotation, fontSize, spacing, tint);
 
     /// <summary>
     /// Sums the pixel width of the widest of <paramref name="lines"/> when measured with

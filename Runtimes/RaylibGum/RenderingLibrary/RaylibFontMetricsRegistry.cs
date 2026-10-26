@@ -61,6 +61,11 @@ internal static class RaylibFontMetricsRegistry
 
     private static readonly Dictionary<uint, Entry> _entriesByTextureId = new();
 
+    // Whether a font's glyph table has a tab (codepoint 9) row, scanned once per loaded font.
+    private readonly record struct TabEntry(int BaseSize, int TextureWidth, int TextureHeight, bool HasTab);
+
+    private static readonly Dictionary<uint, TabEntry> _tabEntriesByTextureId = new();
+
     /// <summary>
     /// Records the line metrics for a font of <paramref name="baseSize"/> whose atlas is
     /// <paramref name="texture"/>, overwriting any prior entry for that texture id.
@@ -68,6 +73,41 @@ internal static class RaylibFontMetricsRegistry
     public static void Register(Raylib_cs.Texture2D texture, int baseSize, int lineHeight, int baselineY)
     {
         _entriesByTextureId[texture.Id] = new Entry(new FontLineMetrics(lineHeight, baselineY), baseSize, texture.Width, texture.Height);
+        _tabEntriesByTextureId.Remove(texture.Id);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="font"/>'s glyph table has a tab (<c>char id=9</c>) row, as MonoGame's
+    /// <c>BitmapFont</c> checks. A font without one gets four spaces for a tab. raylib's default font and a
+    /// TTF loaded through <c>TtfFontLoader</c> carry only printable glyphs, so they never have one.
+    /// </summary>
+    public static unsafe bool HasTabGlyph(Raylib_cs.Font font)
+    {
+        if (font.Glyphs == null || font.GlyphCount <= 0)
+        {
+            return false;
+        }
+
+        uint id = font.Texture.Id;
+        if (_tabEntriesByTextureId.TryGetValue(id, out TabEntry cached)
+            && cached.BaseSize == font.BaseSize
+            && cached.TextureWidth == font.Texture.Width
+            && cached.TextureHeight == font.Texture.Height)
+        {
+            return cached.HasTab;
+        }
+
+        bool hasTab = false;
+        for (int i = 0; i < font.GlyphCount; i++)
+        {
+            if (font.Glyphs[i].Value == '	')
+            {
+                hasTab = true;
+                break;
+            }
+        }
+        _tabEntriesByTextureId[id] = new TabEntry(font.BaseSize, font.Texture.Width, font.Texture.Height, hasTab);
+        return hasTab;
     }
 
     /// <summary>
@@ -104,5 +144,6 @@ internal static class RaylibFontMetricsRegistry
     public static void Remove(uint textureId)
     {
         _entriesByTextureId.Remove(textureId);
+        _tabEntriesByTextureId.Remove(textureId);
     }
 }
