@@ -125,7 +125,9 @@ The bundle records which elements were left out. When generated code asks for on
 'CardGum' was trimmed by gumcli pack --shake because nothing in the project reaches it. Pack with --keep CardGum, or list it in the --roots file.
 ```
 
-Add the element with `--keep`, `--roots`, or `--roots-assembly` and pack again. `ObjectFinder.Self.GetElementSave` still returns `null` for a trimmed element, the same as for a name that does not exist, so code that looks up elements by name should check the result.
+A variable reference that reads a trimmed element is not applied. Gum reports an error that names the reference and the element to keep, the same way it reports [other references that cannot be applied](../code/styling/runtime-variable-references.md#casting-and-type-considerations).
+
+In either case, add the element with `--keep`, `--roots`, or `--roots-assembly` and pack again. `ObjectFinder.Self.GetElementSave` still returns `null` for a trimmed element, the same as for a name that does not exist, so code that looks up elements by name should check the result.
 
 To rule out shaking while you track down a problem, pack without `--shake` or load the loose project files.
 
