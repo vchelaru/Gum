@@ -2,6 +2,7 @@ using Gum.Content.AnimationChain;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using RaylibGum.Renderables;
 using RenderingLibrary.Content;
 using Shouldly;
 using System;
