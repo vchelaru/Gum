@@ -586,6 +586,104 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         new System.Text.RegularExpressions.Regex(@"\bIndex\b");
 
     /// <inheritdoc/>
+    public StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide)
+    {
+        RestoredChanges restored = RestoredChanges.Find(element, before);
+        if (restored.IsEmpty)
+        {
+            return Array.Empty<StoredValueChange>();
+        }
+
+        GraphicalUiElement? liveRoot = _wireframeObjectManager.GetRepresentation(element);
+        foreach (StateSave state in element.AllStates)
+        {
+            foreach (string removed in RestoredChanges.RemovedWrittenNames(state, RestoredChanges.FindState(before, state, element)))
+            {
+                KeepHeldValue(state, RestoredChanges.FindState(before, state, element), RestoredChanges.FindState(otherSide, state, element), removed);
+            }
+            // Any variable the action itself left alone keeps what it holds: a cascade (or an earlier undo)
+            // may have changed it since the snapshot was taken, and undoing this action must not undo that.
+            StateSave? heldState = RestoredChanges.FindState(before, state, element);
+            StateSave? otherState = RestoredChanges.FindState(otherSide, state, element);
+            // A state the action added or removed has no counterpart to compare with and is restored whole.
+            if (heldState != null && otherState != null)
+            {
+                foreach (string name in state.Variables.Select(item => item.Name)
+                    .Concat(heldState.Variables.Select(item => item.Name)).Distinct().ToList())
+                {
+                    KeepHeldValue(state, heldState, otherState, name);
+                }
+            }
+
+            VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
+            if (!graph.HasRows)
+            {
+                continue;
+            }
+
+            HashSet<string> names = new HashSet<string>(restored.VariableNames);
+            List<ReferenceRow> rows = graph.OrderedRows.Concat(graph.CyclicRows)
+                .Where(row => restored.AddedRows.Contains(RestoredChanges.RowKey(row.SourceObject, row.Line)))
+                .ToList();
+            names.UnionWith(rows.Select(row => row.WrittenName));
+            List<ReferenceRow> affected = new List<ReferenceRow>();
+            graph.FindAffectedRows(names, affected, includeLiveLayoutRows: false);
+            HashSet<ReferenceRow> toApply = new HashSet<ReferenceRow>(rows.Concat(affected));
+            if (toApply.Count > 0)
+            {
+                // A row whose source is gone or null writes nothing, and the variable keeps its last value:
+                // start each fed variable from the value it held before the restore, as a typed edit does,
+                // not from the snapshot's.
+                StateSave? old = RestoredChanges.FindState(before, state, element);
+                foreach (ReferenceRow row in toApply)
+                {
+                    KeepHeldValue(state, old, RestoredChanges.FindState(otherSide, state, element), row.WrittenName);
+                }
+                ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot, onlyRows: toApply);
+                BehaviorToolOnlyReferencesApplier.Apply(element, state);
+            }
+        }
+
+        return ApplyReferencesToElement(element, trySave: true);
+    }
+
+    private static void KeepHeldValue(StateSave state, StateSave? held, StateSave? otherSide, string variableName)
+    {
+        // The action changed this variable itself (it was typed, reset on purpose, or written by the cascade of
+        // a row it added): take the snapshot's value, as typing the old value would.
+        if (otherSide != null && !HoldsSameValue(state, otherSide, variableName))
+        {
+            return;
+        }
+
+        VariableSave? was = held?.Variables.FirstOrDefault(item => item.Name == variableName);
+        VariableSave? now = state.Variables.FirstOrDefault(item => item.Name == variableName);
+        if (was == null)
+        {
+            if (now != null)
+            {
+                state.Variables.Remove(now);
+            }
+            return;
+        }
+
+        if (now == null)
+        {
+            now = new VariableSave { Name = was.Name, Type = was.Type };
+            state.Variables.Add(now);
+        }
+        now.Value = was.Value;
+        now.SetsValue = was.SetsValue;
+    }
+
+    private static bool HoldsSameValue(StateSave first, StateSave second, string variableName)
+    {
+        VariableSave? a = first.Variables.FirstOrDefault(item => item.Name == variableName);
+        VariableSave? b = second.Variables.FirstOrDefault(item => item.Name == variableName);
+        return a == null || b == null ? a == b : ElementSaveExtensions.ValueEquality(a.Value, b.Value);
+    }
+
+    /// <inheritdoc/>
     public StoredValueChange[] ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
         GumProjectSave? project = ObjectFinder.Self.GumProjectSave;

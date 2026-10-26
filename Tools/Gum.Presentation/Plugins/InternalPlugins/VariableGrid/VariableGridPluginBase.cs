@@ -115,12 +115,7 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
 
     private void HandleAfterUndo()
     {
-        // References in other elements hold values read from the undone element; they follow it
-        // back as they followed the edit.
-        if (_selectedState.SelectedElement is { } element)
-        {
-            _variableReferenceLogic.ApplyReferencesToElement(element, trySave: true);
-        }
+        // The undo itself already re-read the references (ElementUndoStrategy), before this event.
         // An undo can result in variables added or removed, so do a full refresh.
         _propertyGridManager.RefreshEntireGrid(force: true);
     }

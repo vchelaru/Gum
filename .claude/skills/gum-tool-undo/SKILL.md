@@ -86,6 +86,10 @@ Both element and behavior snapshots use `CloneElement`/`CloneBehavior`, so every
 
 Consequence: after an undo, `_selectedState.SelectedInstance` may point to a stale object. Reference-based lookups (e.g. tree node searches using `==`) will fail. Name-based fallback is required to re-locate the logically equivalent node. If undo also changes the instance's name, selection cannot be restored and is silently dropped — this is considered acceptable.
 
+## Undo And Redo Re-Run The Reference Cascade
+
+After restoring a snapshot, `ElementUndoStrategy.DoAfterUndoLogic` calls `IVariableReferenceLogic.ReapplyReferences` (before `CaptureBaseline`, with no lock held, so no history entry) so reference followers re-read the restored sources like a typed edit. A snapshot's follower values are therefore never trusted; do not put a second cascade in an `AfterUndo` plugin handler.
+
 ## Implementation Files
 
 | File | Purpose |

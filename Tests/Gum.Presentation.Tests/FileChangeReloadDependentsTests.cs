@@ -435,7 +435,8 @@ public class FileChangeReloadDependentsTests : BaseTestClass
         _fileCommands.Setup(f => f.TryAutoSaveCurrentElement()).Callback(() => SaveToDisk(selected));
         UndoManager undoManager = new(_selectedState.Object, new Mock<IUndoRenameLogic>().Object, _guiCommands.Object,
             _fileCommands.Object, new Mock<IMessenger>().Object, new Mock<IUndoPluginNotifier>().Object,
-            new Mock<IAnimationUndoProvider>().Object, projectProvider.Object);
+            new Mock<IAnimationUndoProvider>().Object, projectProvider.Object,
+            new Lazy<IVariableReferenceLogic>(() => _referenceLogic));
         _undo = undoManager;
         RebuildReactionLogic();
 
