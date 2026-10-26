@@ -96,4 +96,36 @@ public class ChainNameRestartTests
         applied[^1].ShouldBe(2);
         applied.ShouldNotContain(0);
     }
+
+    [Fact]
+    public void SameName_AfterChainListReplaced_ReseedsLoopingAndAppliesFrameOfNewList()
+    {
+        AnimationChain oldB = Chain("B");
+        AnimationChain newB = Chain("B");
+        newB.Loop = false;
+        List<AnimationFrame> applied = new();
+        AnimationChainLogic l = new() { AnimationChains = new AnimationChainList { Chain("A"), oldB }, ApplyFrame = applied.Add };
+        l.CurrentChainName = "B";
+        applied.Clear();
+
+        l.AnimationChains = new AnimationChainList { Chain("A"), newB };
+        l.CurrentChainName = "B";
+
+        applied.Count.ShouldBeGreaterThan(0);
+        newB.Contains(applied[^1]).ShouldBeTrue();
+        l.IsAnimationChainLooping.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MissingName_ShouldKeepTimeAndFrameOfPlayingChain()
+    {
+        AnimationChainLogic l = new() { AnimationChains = new AnimationChainList { Chain("A") }, Animate = true };
+        l.CurrentChainName = "A";
+        l.AnimateSelf(1.5);
+
+        l.CurrentChainName = "Nope";
+
+        l.TimeIntoAnimation.ShouldBe(1.5);
+        l.CurrentFrameIndex.ShouldBe(1);
+    }
 }

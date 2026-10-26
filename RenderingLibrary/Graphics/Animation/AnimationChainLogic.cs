@@ -26,6 +26,8 @@ public class AnimationChainLogic
     bool _animate;
     bool _justCycled;
     string? _desiredChainName;
+    // The chain object last named, so a replaced list holding the same name counts as a new naming.
+    AnimationChain? _namedChain;
     AnimationChainList? _chains;
 
     public AnimationChainList? AnimationChains
@@ -51,9 +53,11 @@ public class AnimationChainLogic
                 // Naming the chain already playing (even the implicit first one) keeps its
                 // playback (time is kept), but the first naming still seeds looping from the chain
                 // and applies the frame shown at the current time, as naming a chain always has.
-                if (value != _desiredChainName)
+                // A different chain object with the same name (a replaced list) counts as a new naming.
+                if (value != _desiredChainName || !ReferenceEquals(CurrentChain, _namedChain))
                 {
                     _desiredChainName = value;
+                    _namedChain = CurrentChain;
                     _isLooping = CurrentChain.Loop;
                     if (_timeIntoAnimation >= 0)
                     {
@@ -65,13 +69,18 @@ public class AnimationChainLogic
             }
             _desiredChainName = value;
             _currentChainIndex = -1;
-            _timeIntoAnimation = 0;
-            _currentFrameIndex = 0;
             if (_chains != null && _chains.Count > 0)
             {
+                // Only a name that resolves restarts; a missing or empty name leaves time and frame as they were.
+                if (ContainsChainNamed(value))
+                {
+                    _timeIntoAnimation = 0;
+                    _currentFrameIndex = 0;
+                }
                 RefreshCurrentChainToDesiredName();
                 if (CurrentChain != null)
                 {
+                    _namedChain = CurrentChain;
                     _isLooping = CurrentChain.Loop;
                     UpdateFrameBasedOffOfTimeIntoAnimation();
                 }
@@ -425,6 +434,22 @@ public class AnimationChainLogic
             }
         }
         _currentFrameIndex = frameIndex;
+    }
+
+    bool ContainsChainNamed(string? name)
+    {
+        if (_chains == null)
+        {
+            return false;
+        }
+        for (int i = 0; i < _chains.Count; i++)
+        {
+            if (_chains[i].Name == name)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void RefreshCurrentChainToDesiredName()
