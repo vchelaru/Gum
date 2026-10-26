@@ -307,6 +307,22 @@ public class ColorDisplay : DataUiDisplayBase
         return ApplyValueResult.Success;
     }
 
+    /// <inheritdoc/>
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        // A row rebuilt mid-drag never sees the release.
+        CommitPendingFull();
+    }
+
+    /// <inheritdoc/>
+    protected override void OnInstanceMemberChanging()
+    {
+        base.OnInstanceMemberChanging();
+        // A row pointed at another member mid-drag never sees the release.
+        CommitPendingFull();
+    }
+
     /// <summary>Takes the picker's color, keeping alpha, as an intermediate write, as dragging does.</summary>
     internal void HandleColorPicked(Color picked)
     {

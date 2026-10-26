@@ -543,6 +543,15 @@ namespace WpfDataUi.DataTypes
         public event Action<object?, SetPropertyArgs>? CustomSetPropertyEvent;
 
         /// <summary>
+        /// Raised just before the row is re-pointed at another instance in place, while it still
+        /// belongs to the old one, so an editor can finish a drag against the member it began on.
+        /// </summary>
+        public event EventHandler? Retargeting;
+
+        /// <summary>Raises <see cref="Retargeting"/>; called by the code that re-points the row.</summary>
+        public void RaiseRetargeting() => Retargeting?.Invoke(this, EventArgs.Empty);
+
+        /// <summary>
         /// Allows the InstanceMenber to define its own custom logic for getting a value.
         /// This requires a CustomSetEvent or CustomSetPropertyEvent to be functional.
         /// </summary>

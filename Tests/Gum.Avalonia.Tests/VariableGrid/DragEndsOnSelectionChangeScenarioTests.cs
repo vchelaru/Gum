@@ -80,6 +80,38 @@ public class DragEndsOnSelectionChangeScenarioTests
     }
 
     [AvaloniaFact]
+    public void LabelScrub_SelectingTheElementMidDrag_CommitsTheDrag()
+    {
+        // The element's rows are other rows, so the instance's rows are removed rather than re-pointed.
+        using VariableGridHarness grid = new VariableGridHarness();
+        Scene scene = Build(grid, "Sprite", "X");
+        object? before = VariableGridHarness.StoredValue(scene.Button, "Source.X");
+        Point start = grid.Input.CenterOf(grid.Editor<TextBoxDisplay>("X").LabelHost);
+
+        grid.Input.PressLeftAt(start);
+        grid.Input.MoveWithLeftHeld(start + new Point(10, 0));
+        grid.Select(scene.Button);
+        grid.Settle();
+
+        AssertEndedCommitted(scene, "X", before);
+    }
+
+    [AvaloniaFact]
+    public void ColorPicker_SelectingTheElementMidDrag_CommitsTheDrag()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        Scene scene = Build(grid, "Rectangle", "StrokeRed");
+        object? before = VariableGridHarness.StoredValue(scene.Button, "Source.StrokeRed");
+        ColorDisplay display = grid.Editor<ColorDisplay>("StrokeColor");
+
+        display.HandleColorPicked(global::Avalonia.Media.Color.FromRgb(200, 20, 30));
+        grid.Select(scene.Button);
+        grid.Settle();
+
+        AssertEndedCommitted(scene, "StrokeRed", before);
+    }
+
+    [AvaloniaFact]
     public void AngleDial_SelectingAnotherInstanceMidDrag_CommitsTheDrag()
     {
         using VariableGridHarness grid = new VariableGridHarness();
