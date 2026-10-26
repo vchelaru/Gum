@@ -370,6 +370,86 @@ public partial class StateSelectionCanvasSplashTests : BaseTestClass
 
     #endregion
 
+    #region Selected state sets both ends of a default row, and chains
+
+    /// <summary>The clicked state wins when it sets both the left and the right side of a default row.</summary>
+    [Fact]
+    public void RefreshAll_SelectedStateSetsBothSidesOfDefaultRow_LeftKeepsItsOwnValue()
+    {
+        ComponentSave chain = BuildChain(rowA: false, rowB: true);
+        StateSave state = AddCategoryState(chain, "Cat", "S", s =>
+        {
+            SetNumber(s, "B.Width", 102f);
+            SetNumber(s, "C.Width", 103f);
+        });
+
+        GraphicalUiElement root = Show(chain, state);
+
+        (WidthOfChild(root, "B"), WidthOfChild(root, "C")).ShouldBe((102f, 103f));
+    }
+
+    /// <summary>A chain where the selected state sets the middle: the head follows it and the tail is untouched.</summary>
+    [Fact]
+    public void RefreshAll_SelectedStateSetsMiddleOfChain_HeadFollowsAndTailKeepsValue()
+    {
+        ComponentSave chain = BuildChain(rowA: true, rowB: true);
+        StateSave state = AddCategoryState(chain, "Cat", "S", s => SetNumber(s, "B.Width", 77f));
+
+        GraphicalUiElement root = Show(chain, state);
+
+        (WidthOfChild(root, "A"), WidthOfChild(root, "B"), WidthOfChild(root, "C")).ShouldBe((77f, 77f, 10f));
+    }
+
+    /// <summary>
+    /// Oracle over default rows (A = B, B = C) and which of A, B and C the selected state sets: a variable the
+    /// state sets always keeps the state's value, and a variable with no row and no set keeps the default.
+    /// A variable that only follows a row is not asserted: a chain of rows evaluates in written order (#6856).
+    /// </summary>
+    [Fact]
+    public void RefreshAll_RandomDefaultRowsAndSelectedSets_MatchOracle()
+    {
+        Random random = new Random(6858);
+        for (int i = 0; i < 250; i++)
+        {
+            bool rowA = random.Next(2) == 0;
+            bool rowB = random.Next(2) == 0;
+            bool setA = random.Next(2) == 0;
+            bool setB = random.Next(2) == 0;
+            bool setC = random.Next(2) == 0;
+
+            // The default state stores what its rows evaluate to, as the tool materializes them.
+            float defaultC = 30f;
+            float defaultB = rowB ? defaultC : 20f;
+            float defaultA = rowA ? defaultB : 10f;
+            ComponentSave chain = BuildChain(rowA, rowB, defaultA, defaultB, defaultC);
+            StateSave state = AddCategoryState(chain, "Cat", "S", s =>
+            {
+                if (setA) SetNumber(s, "A.Width", 101f);
+                if (setB) SetNumber(s, "B.Width", 102f);
+                if (setC) SetNumber(s, "C.Width", 103f);
+            });
+
+            float expectedC = setC ? 103f : defaultC;
+            float expectedB = setB ? 102f : rowB ? expectedC : defaultB;
+            float expectedA = setA ? 101f : rowA ? expectedB : defaultA;
+
+            GraphicalUiElement root = Show(chain, state);
+
+            string tag = $"case {i}: rowA={rowA} rowB={rowB} setA={setA} setB={setB} setC={setC}";
+            if (setA || !rowA)
+            {
+                WidthOfChild(root, "A").ShouldBe(expectedA, tag);
+            }
+            if (setB || !rowB)
+            {
+                WidthOfChild(root, "B").ShouldBe(expectedB, tag);
+            }
+            WidthOfChild(root, "C").ShouldBe(expectedC, tag);
+        }
+    }
+
+    #endregion
+
     #region Element kinds
 
     /// <summary>A screen's categorized state beats the screen default's reference row.</summary>
@@ -506,6 +586,33 @@ public partial class StateSelectionCanvasSplashTests : BaseTestClass
             }
         }
         throw new InvalidOperationException("No element named " + name + " under " + root.Name);
+    }
+
+    private static float WidthOfChild(GraphicalUiElement root, string name) => FindByName(root, name).Width;
+
+    /// <summary>A, B and C rectangles; rows A = B and B = C are optional. Stored widths are the given defaults.</summary>
+    private static ComponentSave BuildChain(bool rowA, bool rowB, float a = 10f, float b = 10f, float c = 10f)
+    {
+        ComponentSave chain = new ComponentSave { Name = "Chain", BaseType = "Container" };
+        foreach (string name in new[] { "A", "B", "C" })
+        {
+            chain.Instances.Add(new InstanceSave { Name = name, BaseType = "Rectangle", ParentContainer = chain });
+        }
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = chain };
+        chain.States.Add(defaultState);
+        SetNumber(defaultState, "A.Width", a);
+        SetNumber(defaultState, "B.Width", b);
+        SetNumber(defaultState, "C.Width", c);
+        if (rowA)
+        {
+            AddReference(defaultState, "A", "Width = B.Width");
+        }
+        if (rowB)
+        {
+            AddReference(defaultState, "B", "Width = C.Width");
+        }
+        BuildProject(chain);
+        return chain;
     }
 
     private static void SetNumber(StateSave state, string name, float value) =>
