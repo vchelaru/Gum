@@ -320,6 +320,31 @@ public class VariablesTabTests
     }
 
     [AvaloniaFact]
+    public void ColorDisplay_CommitsFully_WhenThePointerCaptureIsLostMidDrag()
+    {
+        // A drag writes intermediate values and the cascade waits for the full commit, so a drag that
+        // loses the pointer (Alt+Tab, another window taking it) must still end with one (#6888).
+        GumEditorFixture fixture = new GumEditorFixture();
+        ColorDisplay display = new ColorDisplay { InstanceMember = fixture.Member(nameof(GumEditorFixture.Color)) };
+        Window window = new Window { Content = display, Width = 400, Height = 300 };
+        window.Show();
+        window.UpdateLayout();
+        List<SetPropertyCommitType> commits = new List<SetPropertyCommitType>();
+        display.InstanceMember!.CustomSetPropertyEvent += (_, args) => commits.Add(args.CommitType);
+        display.ColorPicker.ChannelSliders[0].Color = global::Avalonia.Media.Color.FromRgb(200, 20, 30);
+        commits.ShouldBe(new[] { SetPropertyCommitType.Intermediate });
+
+        Pointer pointer = new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, isPrimary: true);
+        display.ColorPicker.ChannelSliders[0].RaiseEvent(new PointerCaptureLostEventArgs(display.ColorPicker.ChannelSliders[0], pointer)
+        {
+            RoutedEvent = InputElement.PointerCaptureLostEvent
+        });
+
+        commits.ShouldBe(new[] { SetPropertyCommitType.Intermediate, SetPropertyCommitType.Full });
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void PropertyGridManager_FillsTheHeadsGridWithGumEditors_AndFiltersIt()
     {
         AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
