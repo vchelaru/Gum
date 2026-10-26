@@ -280,16 +280,40 @@ public sealed class ContentLoader : IContentLoader
         return toReturn;
     }
 
+    // Decodes with raylib's native, which picks its decoder from the extension. An empty image means the
+    // native build leaves the format out or the data is corrupt; that throws FileNotFoundException so
+    // callers' MissingFileBehavior applies (#6847), and no empty texture is ever created or cached.
+    private static unsafe Image DecodeImageOrThrow(string path, byte[] fileData)
+    {
+        string extension = FileManager.GetExtension(path).ToLowerInvariant();
+        if (fileData.Length > 0)
+        {
+            Image image = LoadImageFromMemory("." + extension, fileData);
+            if (image.Data != null && image.Width > 0 && image.Height > 0)
+            {
+                return image;
+            }
+            UnloadImage(image);
+        }
+
+        // The stock raylib native has no decoder for these.
+        string message = extension is "jpg" or "jpeg" or "tga"
+            ? $"Could not load '{path}': the stock raylib native does not decode .{extension}. " +
+              $"Convert it to PNG, or add an IImageDecoder for .{extension} to LoaderManager.Self.ImageDecoders " +
+              "before GumService.Initialize loads the project."
+            : extension.Length == 0
+                ? $"Could not load '{path}': its data could not be decoded, and without a file extension raylib cannot pick a decoder."
+                : $"Could not load '{path}': its data could not be decoded as .{extension}.";
+        throw new FileNotFoundException(message, path);
+    }
+
     private static Texture2D LoadTextureFromFile(string fileName)
     {
         // Route through FileManager.GetStreamForFile so the FileManager.CustomGetStreamFromFile
         // hook is honored on Raylib the same way it is on the MonoGame-family loader. Handing the
         // path straight to raylib's path-based LoadImage bypassed the hook entirely, so .gumpkg
         // bundles, the GumFromZipFile sample, mobile TitleContainer redirection, and any
-        // in-memory/encrypted asset store silently failed on Raylib (#3033). raylib's in-memory
-        // LoadImageFromMemory takes the file extension (with the leading dot) to pick its decoder.
-        string fileType = "." + FileManager.GetExtension(fileName);
-
+        // in-memory/encrypted asset store silently failed on Raylib (#3033).
         byte[] fileData;
         using (var stream = FileManager.GetStreamForFile(fileName))
         using (var memoryStream = new MemoryStream())
@@ -322,17 +346,7 @@ public sealed class ContentLoader : IContentLoader
             return decodedTexture;
         }
 
-        Image image = LoadImageFromMemory(fileType, fileData);
-        if (image.Width <= 0 || image.Height <= 0)
-        {
-            // raylib returns an empty image for a format its native build leaves out (the stock native has
-            // no JPEG decoder, #6847). Treated exactly like a missing file, so callers' MissingFileBehavior
-            // applies, and no 0x0 texture is ever created or cached.
-            UnloadImage(image);
-            throw new FileNotFoundException(
-                $"Could not load '{fileName}': raylib could not decode its format ({fileType}). " +
-                "The stock raylib native does not include this format; use PNG instead.", fileName);
-        }
+        Image image = DecodeImageOrThrow(fileName, fileData);
         // LoadTextureFromImage uploads to the GPU; the CPU-side Image is no longer needed after.
         var toReturn = LoadTextureFromImage(image);
         // Apply the project's texture filter (issue #3199). raylib defaults new textures to point
@@ -483,13 +497,9 @@ public sealed class ContentLoader : IContentLoader
             fileData = memoryStream.ToArray();
         }
 
-        Image image = LoadImageFromMemory("." + FileManager.GetExtension(pagePath), fileData);
+        Image image = DecodeImageOrThrow(pagePath, fileData);
         try
         {
-            if (image.Data == null || image.Width <= 0 || image.Height <= 0)
-            {
-                throw new InvalidOperationException($"Could not decode font page '{pagePath}'");
-            }
             Raylib.ImageFormat(ref image, Raylib_cs.PixelFormat.UncompressedR8G8B8A8);
             width = image.Width;
             height = image.Height;
