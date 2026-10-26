@@ -370,19 +370,32 @@ namespace Gum.Graphics.Animation
             // above for why this file always has one of the backend symbols defined.
             if (loadTexture && !string.IsNullOrEmpty(animationFrameSave.TextureName))
             {
+                System.Exception? loadFailure = null;
                 try
                 {
                     var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
                     frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(fileName);
                 }
-                catch (System.IO.FileNotFoundException)
+                catch (System.Exception exception)
                 {
+                    // The loaders report a texture they cannot load with different exception types (a missing
+                    // file is an IOException on raylib, an undecodable image an InvalidOperationException on
+                    // MonoGame), so every failure is handled alike, as Sprite and NineSlice SourceFile do (#6890).
+                    loadFailure = exception;
+                }
+
+                // Some loaders return null instead of throwing (MonoGame for a missing file, Skia for an
+                // undecodable image), which is the same failure. A raylib texture is a struct that is never null.
+                if (loadFailure != null || frame.Texture == null)
+                {
+                    string message = $"Error loading texture in animation :\n{animationFrameSave.TextureName}";
                     if (Wireframe.GraphicalUiElement.MissingFileBehavior == Wireframe.MissingFileBehavior.ThrowException)
                     {
-                        string message = $"Error loading texture in animation :\n{animationFrameSave.TextureName}";
-                        throw new System.IO.FileNotFoundException(message);
+                        throw new System.IO.FileNotFoundException(message, loadFailure);
                     }
                     frame.Texture = null;
+                    GumRuntime.ElementSaveExtensions.ReportPropertyAssignmentError?.Invoke(
+                        loadFailure != null ? message + "\n" + loadFailure.ToString() : message);
                 }
             }
             frame.FlipHorizontal = animationFrameSave.FlipHorizontal;
