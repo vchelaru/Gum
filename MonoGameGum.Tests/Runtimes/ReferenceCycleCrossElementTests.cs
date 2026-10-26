@@ -265,4 +265,151 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
 
         VariableReferenceGraph.GetForApply(panel, panel.DefaultState).CyclicRows.Select(row => row.WrittenName).ShouldBe(new[] { "A.Width" });
     }
+
+    // ---- A row that only shares a written name with a loop row is not in the loop ----
+
+    private static StateSaveCategory AddCategoryState(ComponentSave component, string stateName)
+    {
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        category.States.Add(new StateSave { Name = stateName, ParentContainer = component });
+        component.Categories.Add(category);
+        return category;
+    }
+
+    private static void AddRowToState(StateSave state, string instance, string line)
+    {
+        VariableListSave<string> list = new VariableListSave<string> { Name = instance + ".VariableReferences", Type = "string" };
+        list.Value.Add(line);
+        state.VariableLists.Add(list);
+    }
+
+    private static GumProjectSave LoopWithZ(out ComponentSave panel, out ComponentSave z)
+    {
+        GumProjectSave project = CreateProject();
+        panel = AddComponent(project, "Panel", "A");
+        ComponentSave other = AddComponent(project, "Other", "B");
+        z = AddComponent(project, "Z", "I0");
+        AddRow(panel, "A", "Width = Components/Other.B.Width + 1");
+        AddRow(other, "B", "Width = Components/Panel.A.Width + 1");
+        return project;
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_CategorizedStateRowWithTheSameNameAsALoopRow_IsNotSkipped()
+    {
+        LoopWithZ(out ComponentSave panel, out _);
+        StateSaveCategory category = AddCategoryState(panel, "S1");
+        StateSave s1 = category.States[0];
+        AddRowToState(s1, "A", "Width = Components/Z.I0.Width + 1");
+        s1.Variables.Add(new VariableSave { Name = "A.Width", Type = "float", Value = 0f, SetsValue = true });
+
+        panel.ApplyVariableReferences(s1);
+
+        s1.GetValue("A.Width").ShouldBe(11f);
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_CategorizedStateRowIdenticalToALoopRow_IsSkipped()
+    {
+        LoopWithZ(out ComponentSave panel, out _);
+        StateSave s1 = AddCategoryState(panel, "S1").States[0];
+        AddRowToState(s1, "A", "Width = Components/Other.B.Width + 1");
+        s1.Variables.Add(new VariableSave { Name = "A.Width", Type = "float", Value = 3f, SetsValue = true });
+
+        panel.ApplyVariableReferences(s1);
+
+        s1.GetValue("A.Width").ShouldBe(3f);
+    }
+
+    [Fact]
+    public void CyclicRows_DerivedElementOverridingABaseLoopRow_DoesNotSkipTheOverride()
+    {
+        GumProjectSave project = LoopWithZ(out ComponentSave panel, out _);
+        ComponentSave derived = AddComponent(project, "Derived", "A");
+        derived.BaseType = "Panel";
+        AddRow(derived, "A", "Width = Components/Z.I0.Width + 1");
+
+        VariableReferenceGraph graph = VariableReferenceGraph.GetForApply(derived, derived.DefaultState);
+
+        graph.CyclicRows.Select(row => row.Line).ShouldNotContain("Width = Components/Z.I0.Width + 1");
+        graph.OrderedRows.Select(row => row.Line).ShouldContain("Width = Components/Z.I0.Width + 1");
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_DefaultRowReadingAnotherRowsLoopMember_IsStillEvaluated()
+    {
+        GumProjectSave project = LoopWithZ(out ComponentSave panel, out _);
+        ComponentSave reader = AddComponent(project, "Reader", "R");
+        AddRow(reader, "R", "Width = Components/Panel.A.Width + 1");
+
+        reader.ApplyVariableReferences(reader.DefaultState);
+
+        reader.DefaultState.GetValue("R.Width").ShouldBe(11f);
+    }
+
+    [Fact]
+    public void CyclicRows_RandomAcyclicProjectsReusingNamesAcrossStatesAndBaseTypes_AreUnchangedByLoopDetection()
+    {
+        for (int seed = 0; seed < 300; seed++)
+        {
+            Random random = new Random(seed);
+            GumProjectSave project = CreateProject();
+            int elementCount = random.Next(2, 6);
+            for (int e = 0; e < elementCount; e++)
+            {
+                ComponentSave component = AddComponent(project, "E" + e, "I0", "I1");
+                if (e > 0 && random.Next(0, 3) == 0)
+                {
+                    component.BaseType = "E" + random.Next(0, e);
+                }
+                AddRandomRows(random, component.DefaultState, e);
+                if (random.Next(0, 2) == 0)
+                {
+                    StateSave categorized = AddCategoryState(component, "S").States[0];
+                    AddRandomRows(random, categorized, e);
+                }
+            }
+
+            foreach (ComponentSave component in project.Components)
+            {
+                List<StateSave> states = new List<StateSave> { component.DefaultState };
+                states.AddRange(component.Categories.SelectMany(category => category.States));
+                foreach (StateSave state in states)
+                {
+                    VariableReferenceGraph withDetection = VariableReferenceGraph.GetForState(component, state);
+                    VariableReferenceGraph without = VariableReferenceGraph.Create(component, new[] { state }, false);
+                    withDetection.CyclicRows.Select(row => row.Line).ShouldBe(without.CyclicRows.Select(row => row.Line), $"seed {seed} {component.Name}/{state.Name}");
+                    withDetection.OrderedRows.Select(row => row.Line).ShouldBe(without.OrderedRows.Select(row => row.Line), $"seed {seed} {component.Name}/{state.Name}");
+                }
+                VariableReferenceGraph.GetForApply(component, component.DefaultState).CyclicRows.Select(row => row.Line)
+                    .ShouldBe(VariableReferenceGraph.GetFor(component).CyclicRows.Select(row => row.Line), $"seed {seed} {component.Name} default");
+            }
+        }
+    }
+
+    // Rows read only elements with a lower number (and I1 reads I0), so the project has no loop, while
+    // the same written names recur in many states and base types.
+    private static void AddRandomRows(Random random, StateSave state, int elementNumber)
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            if (random.Next(0, 3) == 0)
+            {
+                continue;
+            }
+            List<string> terms = new List<string>();
+            if (elementNumber > 0 && random.Next(0, 2) == 0)
+            {
+                terms.Add($"Components/E{random.Next(0, elementNumber)}.I{random.Next(0, 2)}.Width");
+            }
+            if (i == 1 && random.Next(0, 2) == 0)
+            {
+                terms.Add("I0.Width");
+            }
+            if (terms.Count > 0)
+            {
+                AddRowToState(state, "I" + i, "Width = " + string.Join(" + ", terms));
+            }
+        }
+    }
 }

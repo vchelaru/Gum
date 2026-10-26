@@ -279,7 +279,7 @@ public sealed class VariableReferenceGraph
     public static VariableReferenceGraph Create(ElementSave element, IReadOnlyList<StateSave> states) =>
         Create(element, states, true);
 
-    private static VariableReferenceGraph Create(ElementSave element, IReadOnlyList<StateSave> states, bool findCrossElementLoops)
+    internal static VariableReferenceGraph Create(ElementSave element, IReadOnlyList<StateSave> states, bool findCrossElementLoops)
     {
         List<ReferenceRow> rows = new List<ReferenceRow>();
         IEnumerable<string> instanceNames = ElementSaveExtensions.GetReferencableInstanceNames(element);
