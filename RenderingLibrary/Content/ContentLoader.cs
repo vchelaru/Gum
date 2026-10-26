@@ -158,11 +158,81 @@ public sealed class ContentLoader : IContentLoader
     }
 
     /// <summary>
-    /// Creates a texture from an encoded image stream. <paramref name="isProcessedOnLoad"/> is true
-    /// when the pixels already went through <see cref="ProcessLoadedPixels"/>.
+    /// The load-time fix-up for pixels an <see cref="IImageDecoder"/> produced. Straight pixels get
+    /// <see cref="ProcessLoadedPixels"/>. Premultiplied pixels are left alone when the renderer is
+    /// premultiplied, otherwise un-premultiplied (then edge-bled when that is on).
     /// </summary>
-    private static Texture2D CreateTextureFromStream(GraphicsDevice device, System.IO.Stream stream,
+    /// <returns>True when the pixels were un-premultiplied, which the caller reports as a warning.</returns>
+    internal static bool PrepareDecodedPixels(Span<byte> rgba, int width, int height, bool isPremultiplied,
+        bool usePremultipliedAlpha, bool bleedTransparentEdges)
+    {
+        if (!isPremultiplied)
+        {
+            ProcessLoadedPixels(rgba, width, height, usePremultipliedAlpha, bleedTransparentEdges);
+            return false;
+        }
+
+        if (usePremultipliedAlpha)
+        {
+            return false;
+        }
+
+        TexturePremultiply.UnpremultiplyRgba(rgba);
+        if (bleedTransparentEdges)
+        {
+            TextureEdgeBleed.BleedRgba(rgba, width, height);
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Creates a texture from an encoded image stream: the registered
+    /// <see cref="LoaderManager.ImageDecoders"/> first, then the built-in decoding.
+    /// <paramref name="isProcessedOnLoad"/> is true when the pixels already went through the load-time fix-up.
+    /// </summary>
+    private static Texture2D CreateTextureFromStream(GraphicsDevice device, string fileName, System.IO.Stream stream,
         out bool isProcessedOnLoad)
+    {
+        bool usePremultipliedAlpha = Graphics.Renderer.UsePremultipliedAlpha;
+        bool bleedTransparentEdges = Graphics.Renderer.BleedTransparentTextureEdgesOnLoad;
+#if !FRB
+        System.IO.Stream original = stream;
+        try
+        {
+            DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(fileName, ref stream);
+            if (decoded != null)
+            {
+                bool unpremultiplied = PrepareDecodedPixels(decoded.Rgba, decoded.Width, decoded.Height,
+                    decoded.IsPremultiplied, usePremultipliedAlpha, bleedTransparentEdges);
+                if (unpremultiplied)
+                {
+                    System.Diagnostics.Trace.TraceWarning(
+                        $"Gum: {fileName} was decoded as premultiplied alpha but Renderer.UsePremultipliedAlpha " +
+                        "is false, so it was un-premultiplied on load, which loses precision at low alpha.");
+                }
+                isProcessedOnLoad = true;
+                return CreateTextureFromRgba(device, decoded.Rgba, decoded.Width, decoded.Height);
+            }
+
+            return CreateTextureFromEncodedStream(device, fileName, stream, usePremultipliedAlpha,
+                bleedTransparentEdges, out isProcessedOnLoad);
+        }
+        finally
+        {
+            // TryDecode replaces a non-seekable stream with an in-memory copy; the caller disposes the original.
+            if (!ReferenceEquals(stream, original))
+            {
+                stream.Dispose();
+            }
+        }
+#else
+        return CreateTextureFromEncodedStream(device, fileName, stream, usePremultipliedAlpha,
+            bleedTransparentEdges, out isProcessedOnLoad);
+#endif
+    }
+
+    private static Texture2D CreateTextureFromEncodedStream(GraphicsDevice device, string fileName,
+        System.IO.Stream stream, bool usePremultipliedAlpha, bool bleedTransparentEdges, out bool isProcessedOnLoad)
     {
 #if KNI && !FRB
         if (OperatingSystem.IsBrowser())
@@ -171,17 +241,35 @@ public sealed class ContentLoader : IContentLoader
             // GetData readback. Switch to Texture2D.FromStream with a color processor once a KNI
             // release has it: https://github.com/kniEngine/kni/pull/2740
             byte[] rgba = StbTextureDecoder.Decode(stream, out int width, out int height);
-            ProcessLoadedPixels(rgba, width, height,
-                Graphics.Renderer.UsePremultipliedAlpha,
-                Graphics.Renderer.BleedTransparentTextureEdgesOnLoad);
-            var texture = new Texture2D(device, width, height, false, SurfaceFormat.Color);
-            texture.SetData(rgba);
+            ProcessLoadedPixels(rgba, width, height, usePremultipliedAlpha, bleedTransparentEdges);
             isProcessedOnLoad = true;
-            return texture;
+            return CreateTextureFromRgba(device, rgba, width, height);
         }
 #endif
         isProcessedOnLoad = false;
-        return Texture2D.FromStream(device, stream);
+        try
+        {
+            return Texture2D.FromStream(device, stream);
+        }
+        catch (Exception exception) when (!IsBuiltInImageExtension(FileManager.GetExtension(fileName)))
+        {
+            string extension = FileManager.GetExtension(fileName);
+            throw new InvalidOperationException(
+                $"Could not load {fileName}: no image decoder handled the .{extension} format, and Gum does not " +
+                $"load it on its own. Add an IImageDecoder for .{extension} to LoaderManager.Self.ImageDecoders " +
+                "before GumService.Initialize loads the project.", exception);
+        }
+    }
+
+    // The formats Texture2D.FromStream loads on every XNA-like backend.
+    private static bool IsBuiltInImageExtension(string extension) =>
+        extension is "png" or "jpg" or "jpeg" or "bmp" or "gif" or "tga" or "tif" or "tiff" or "dds";
+
+    private static Texture2D CreateTextureFromRgba(GraphicsDevice device, byte[] rgba, int width, int height)
+    {
+        var texture = new Texture2D(device, width, height, false, SurfaceFormat.Color);
+        texture.SetData(rgba);
+        return texture;
     }
 
     public static string StandardizeCaseSensitive(string fileName)
@@ -211,7 +299,7 @@ public sealed class ContentLoader : IContentLoader
         using (var stream = GetUrlStream(fileName))
         {
             // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
-            texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isProcessedOnLoad);
+            texture = CreateTextureFromStream(renderer.GraphicsDevice!, fileName, stream, out isProcessedOnLoad);
 
             texture.Name = fileNameStandardized;
         }
@@ -384,7 +472,7 @@ public sealed class ContentLoader : IContentLoader
             using (stream)
             {
                 // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
-                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, out isProcessedOnLoad);
+                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, fileNameStandardized, stream, out isProcessedOnLoad);
 
                 texture.Name = fileNameStandardized;
 

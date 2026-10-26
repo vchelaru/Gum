@@ -71,6 +71,13 @@ public class LoaderManager
         set;
     }
 
+    /// <summary>
+    /// Decoders for image formats Gum does not load on its own (for example WebP), asked in order
+    /// before the built-in loading. Register them before <c>GumService.Initialize</c> loads a project,
+    /// or the project's first textures go through the built-in path. XNB content-pipeline loads skip them.
+    /// </summary>
+    public ImageDecoderChain ImageDecoders { get; } = new ImageDecoderChain();
+
     // Defaults to true here (unlike the RenderingLibrary/Content/LoaderManager.cs duplicate, which
     // defaults false): this class's consumers mostly ride the built-in ContentLoader, which checks
     // this flag before consulting the cache. See issue #3566 for the full explanation.
