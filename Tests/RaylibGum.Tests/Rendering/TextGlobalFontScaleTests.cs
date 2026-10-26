@@ -61,8 +61,8 @@ public class TextGlobalFontScaleTests : BaseTestClass
             text.FontScale = 1;
             runtime = text;
         });
-        width = runtime!.GetAbsoluteWidth();
-        height = runtime.GetAbsoluteHeight();
+        width = runtime!.AbsoluteWidth;
+        height = runtime.AbsoluteHeight;
         return TextInkRender.InkBounds(pixels);
     }
 }
