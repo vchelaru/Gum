@@ -57,6 +57,58 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
+    /// Values a Forms control instance's behavior derives that a non-default <paramref name="selectedState"/> of
+    /// <paramref name="element"/> would otherwise override: the selected state sets the derived variable itself
+    /// (<c>Play.ButtonCategoryState</c>) or a Forms property it reads (<c>Play.IsEnabled</c>). An instance's
+    /// authored Forms values win over visual state values, so the canvas applies these after the selected state. They are
+    /// evaluated against the default state with the selected state on top, so the project data is not touched.
+    /// The element's own derived values are not included: viewed on its own, the clicked state wins (#6851).
+    /// </summary>
+    public static StateSave GetInstanceValuesToReassert(ElementSave element, StateSave selectedState, ICollection<string> variablesSetBySelected)
+    {
+        StateSave toReassert = new StateSave { Name = "FormsDerived", ParentContainer = element };
+        StateSave? defaultState = element.DefaultState;
+        if (defaultState == null || selectedState == defaultState)
+        {
+            return toReassert;
+        }
+
+        StateSave effective = defaultState.Clone();
+        effective.ParentContainer = element;
+        effective.MergeIntoThis(selectedState);
+
+        foreach (InstanceSave instance in element.Instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is not ComponentSave instanceComponent)
+            {
+                continue;
+            }
+
+            Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(instanceComponent, instance);
+            foreach ((string left, string right) in GetReferenceLines(instanceComponent))
+            {
+                // Only a Forms value the author set counts: with every Forms property at its default, a state
+                // that sets the category state is the author choosing that look.
+                IReadOnlyList<string> readNames = ReadIdentifiers(right).Select(identifier => $"{instance.Name}.{identifier}").ToList();
+                bool selectedTouchesIt = variablesSetBySelected.Contains($"{instance.Name}.{left}") || readNames.Any(variablesSetBySelected.Contains);
+                bool formsValueAuthored = readNames.Any(name => effective.Variables.Any(item => item.Name == name && item.SetsValue && item.Value != null));
+                if (!selectedTouchesIt || !formsValueAuthored)
+                {
+                    continue;
+                }
+
+                EvaluatedLine? line = EvaluateLine(left, right, instance, effective, fallback);
+                if (line != null)
+                {
+                    toReassert.SetValue(line.EffectiveLeft, line.Value, instance);
+                }
+            }
+        }
+
+        return toReassert;
+    }
+
+    /// <summary>
     /// Returns the underlying (visual) variable names that the relevant element's behavior
     /// <see cref="BehaviorSave.ToolOnlyVariableReferences"/> drive from <paramref name="changedMember"/> -
     /// i.e. the left-hand sides of reference lines whose right-hand side reads
@@ -92,10 +144,60 @@ public static class BehaviorToolOnlyReferencesApplier
 
         List<string>? driven = null;
 
+        foreach ((string left, string right) in GetReferenceLines(component))
+        {
+            if (!RightSideReadsIdentifier(right, changedMember))
+            {
+                continue;
+            }
+
+            driven ??= new List<string>();
+            if (!driven.Contains(left))
+            {
+                driven.Add(left);
+            }
+        }
+
+        if (driven == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        return driven;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="right"/> (the right-hand side of a reference assignment) reads
+    /// <paramref name="identifier"/> as a bare identifier. Parsed with Roslyn so an identifier that only
+    /// appears inside a string literal (e.g. <c>Foo == "Spacing"</c>) does not count as a read.
+    /// </summary>
+    private static bool RightSideReadsIdentifier(string right, string identifier) =>
+        ReadIdentifiers(right).Contains(identifier);
+
+    /// <summary>
+    /// The bare identifiers <paramref name="right"/> reads, parsed with Roslyn so a name that only appears
+    /// inside a string literal (e.g. <c>Foo == "Spacing"</c>) does not count as a read.
+    /// </summary>
+    private static IEnumerable<string> ReadIdentifiers(string right)
+    {
+        SyntaxNode tree = CSharpSyntaxTree.ParseText(right).GetCompilationUnitRoot();
+        return tree.DescendantNodes()
+            .OfType<IdentifierNameSyntax>()
+            .Where(id => !EvaluatedSyntax.IsFunctionName(id))
+            .Select(id => id.Identifier.ValueText)
+            .ToList();
+    }
+
+    /// <summary>
+    /// The left and right side of every active line of every linked behavior's
+    /// <see cref="BehaviorSave.ToolOnlyVariableReferences"/> (blank, commented and assignment-less lines skipped).
+    /// </summary>
+    private static IEnumerable<(string Left, string Right)> GetReferenceLines(ComponentSave component)
+    {
         foreach (ElementBehaviorReference reference in component.Behaviors)
         {
             BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
-            if (behavior == null || behavior.ToolOnlyVariableReferences.Count == 0)
+            if (behavior == null)
             {
                 continue;
             }
@@ -114,77 +216,74 @@ public static class BehaviorToolOnlyReferencesApplier
                 }
 
                 string left = referenceLine.Substring(0, equalsIndex).Trim();
-                string right = referenceLine.Substring(equalsIndex + 1).Trim();
-
-                if (left.Length == 0 || !RightSideReadsIdentifier(right, changedMember))
+                if (left.Length > 0)
                 {
-                    continue;
-                }
-
-                driven ??= new List<string>();
-                if (!driven.Contains(left))
-                {
-                    driven.Add(left);
+                    yield return (left, referenceLine.Substring(equalsIndex + 1).Trim());
                 }
             }
         }
-
-        if (driven == null)
-        {
-            return Array.Empty<string>();
-        }
-
-        return driven;
-    }
-
-    /// <summary>
-    /// Returns true if <paramref name="right"/> (the right-hand side of a reference assignment) reads
-    /// <paramref name="identifier"/> as a bare identifier. Parsed with Roslyn so an identifier that only
-    /// appears inside a string literal (e.g. <c>Foo == "Spacing"</c>) does not count as a read.
-    /// </summary>
-    private static bool RightSideReadsIdentifier(string right, string identifier)
-    {
-        SyntaxNode tree = CSharpSyntaxTree.ParseText(right).GetCompilationUnitRoot();
-        return tree.DescendantNodes()
-            .OfType<IdentifierNameSyntax>()
-            .Any(id => id.Identifier.ValueText == identifier && !EvaluatedSyntax.IsFunctionName(id));
     }
 
     private static void ApplyBehaviorsOf(ComponentSave component, InstanceSave? instance, StateSave stateSave)
     {
         Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance);
 
-        foreach (ElementBehaviorReference reference in component.Behaviors)
+        foreach ((string left, string right) in GetReferenceLines(component))
         {
-            BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
-            if (behavior == null || behavior.ToolOnlyVariableReferences.Count == 0)
+            EvaluatedLine? line = EvaluateLine(left, right, instance, stateSave, fallback);
+            if (line == null)
             {
                 continue;
             }
 
-            foreach (string referenceLine in behavior.ToolOnlyVariableReferences)
+            // Skip materializing a value identical to the resting wireframe — the value the
+            // reference produces when nothing is authored and every identifier resolves to its
+            // FormsProperty default. When the authored result matches that resting value, the
+            // assignment carries no information beyond the resting preview, so writing it only
+            // spams the state — e.g. every Forms-control instance's
+            // "<Instance>.<X>CategoryState = Enabled" in a screen that overrode nothing
+            // (issue #3080). Only authored deviations from rest (IsEnabled = false, a checked
+            // CheckBox, etc.) are worth materializing.
+            if (line.IsResting)
             {
-                ApplyLine(referenceLine, instance, stateSave, fallback);
+                // The reference resolves to its resting (default) value, so the target belongs at its
+                // default. For an instance - where the reference owns the (hidden) variable - remove any
+                // value materialized while the driver was non-default so it resets to default instead of
+                // persisting stale after the driver returns to default (e.g. ChildrenLayout =
+                // LeftToRightStack left behind when Orientation goes Horizontal -> Vertical). The element's
+                // own default state (instance == null) holds the authored baseline, so leave it alone -
+                // issue #3080 only suppressed the write; it never cleaned up a prior one.
+                if (instance != null)
+                {
+                    VariableSave? stale = stateSave.Variables.FirstOrDefault(v => v.Name == line.EffectiveLeft);
+                    if (stale != null)
+                    {
+                        stateSave.Variables.Remove(stale);
+                    }
+                }
+                continue;
             }
+
+            stateSave.SetValue(line.EffectiveLeft, line.Value, instance);
         }
     }
 
-    private static void ApplyLine(string referenceLine, InstanceSave? instance, StateSave stateSave, Func<string, object?> fallback)
+    /// <summary>One reference line evaluated against a state: where it writes, what it resolves to, and whether that is the resting value.</summary>
+    private sealed class EvaluatedLine
     {
-        if (string.IsNullOrWhiteSpace(referenceLine) || referenceLine.TrimStart().StartsWith("//"))
-        {
-            return;
-        }
+        public string EffectiveLeft { get; init; } = "";
+        public object Value { get; init; } = null!;
+        public bool IsResting { get; init; }
+    }
 
-        int equalsIndex = referenceLine.IndexOf('=');
-        if (equalsIndex < 0)
-        {
-            return;
-        }
-
-        string left = referenceLine.Substring(0, equalsIndex).Trim();
-        string right = referenceLine.Substring(equalsIndex + 1).Trim();
-
+    /// <summary>
+    /// Evaluates one reference line against <paramref name="stateSave"/>, coerced to the left-hand variable's
+    /// declared type. The "resting" value is what the line resolves to when nothing is authored and every
+    /// identifier resolves to its FormsProperty default; the throwaway-element ceremony required to evaluate
+    /// "with nothing authored" lives in FromSyntaxNodeUsingDefaultsOnly (issue #3082).
+    /// </summary>
+    private static EvaluatedLine? EvaluateLine(string left, string right, InstanceSave? instance, StateSave stateSave, Func<string, object?> fallback)
+    {
         if (instance != null)
         {
             right = QualifyBareIdentifiersWithInstance(right, instance.Name);
@@ -195,54 +294,26 @@ public static class BehaviorToolOnlyReferencesApplier
         EvaluatedSyntax? evaluated = EvaluatedSyntax.FromSyntaxNode(rightSyntax, stateSave, fallback);
         if (evaluated?.Value == null)
         {
-            return;
+            return null;
         }
 
-        // Skip materializing a value identical to the resting wireframe — the value the
-        // reference produces when nothing is authored and every identifier resolves to its
-        // FormsProperty default. When the authored result matches that resting value, the
-        // assignment carries no information beyond the resting preview, so writing it only
-        // spams the state — e.g. every Forms-control instance's
-        // "<Instance>.<X>CategoryState = Enabled" in a screen that overrode nothing
-        // (issue #3080). Only authored deviations from rest (IsEnabled = false, a checked
-        // CheckBox, etc.) are worth materializing. The throwaway-element ceremony required to
-        // evaluate "with nothing authored" lives in FromSyntaxNodeUsingDefaultsOnly (issue #3082).
         string effectiveLeft = instance == null ? left : $"{instance.Name}.{left}";
 
         EvaluatedSyntax? resting = EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly(rightSyntax, fallback);
-        if (resting != null && Equals(resting.Value, evaluated.Value))
-        {
-            // The reference resolves to its resting (default) value, so the target belongs at its
-            // default. For an instance - where the reference owns the (hidden) variable - remove any
-            // value materialized while the driver was non-default so it resets to default instead of
-            // persisting stale after the driver returns to default (e.g. ChildrenLayout =
-            // LeftToRightStack left behind when Orientation goes Horizontal -> Vertical). The element's
-            // own default state (instance == null) holds the authored baseline, so leave it alone -
-            // issue #3080 only suppressed the write; it never cleaned up a prior one.
-            if (instance != null)
-            {
-                VariableSave? stale = stateSave.Variables.FirstOrDefault(v => v.Name == effectiveLeft);
-                if (stale != null)
-                {
-                    stateSave.Variables.Remove(stale);
-                }
-            }
-            return;
-        }
+        bool isResting = resting != null && Equals(resting.Value, evaluated.Value);
 
-        // Coerce the evaluated value to the left-hand variable's declared type before
-        // writing it - the same step the state-level VariableReferences apply path performs
-        // via EvaluatedSyntax.CastTo (see ApplyVariableReferencesOnSpecificOwner). The
-        // tool-only applier evaluates the RHS directly, so without this an enum-typed target
-        // like ChildrenLayout would store the raw string a ternary produces instead of the
-        // boxed enum (which the typed wireframe setter and int-on-disk serializer require).
+        // Coerce the evaluated value to the left-hand variable's declared type - the same step the
+        // state-level VariableReferences apply path performs via EvaluatedSyntax.CastTo (see
+        // ApplyVariableReferencesOnSpecificOwner). The tool-only applier evaluates the RHS directly, so
+        // without this an enum-typed target like ChildrenLayout would store the raw string a ternary
+        // produces instead of the boxed enum (which the typed wireframe setter and int-on-disk serializer require).
         string? leftSideType = ResolveLeftSideType(effectiveLeft, instance, stateSave);
         if (leftSideType != null)
         {
             evaluated.CastTo(leftSideType);
         }
 
-        stateSave.SetValue(effectiveLeft, evaluated.Value, instance);
+        return new EvaluatedLine { EffectiveLeft = effectiveLeft, Value = evaluated.Value!, IsResting = isResting };
     }
 
     private static string? ResolveLeftSideType(string qualifiedLeftName, InstanceSave? instance, StateSave stateSave)

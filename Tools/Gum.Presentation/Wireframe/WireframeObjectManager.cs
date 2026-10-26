@@ -4,6 +4,7 @@ using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.RenderingLibrary;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
@@ -312,21 +313,26 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     }
 
     /// <summary>
-    /// Applies the selected state to a freshly created wireframe root. The default state was
-    /// already applied by <c>ToGraphicalUiElement</c> (SetInitialState) inside
-    /// CreateGraphicalUiElement, so it must not be applied a second time here.
+    /// Applies the selected state to a freshly created wireframe root. The default state was already applied
+    /// by <c>ToGraphicalUiElement</c> (SetInitialState) inside CreateGraphicalUiElement, so it must not be
+    /// applied a second time here.
     /// </summary>
     internal void ApplySelectedStateAfterCreation(GraphicalUiElement rootGue, ElementSave elementSave)
     {
-        // The default state was already applied by ToGraphicalUiElement (SetInitialState) inside
-        // CreateGraphicalUiElement above, so it must NOT be re-applied here — doing so applied every
-        // default-state variable twice per rebuild (issue #3212). Only the selected state needs
-        // applying, and only when it differs from the default.
-        var selectedState = _selectedState.SelectedStateSave;
-        if (selectedState != null && selectedState != elementSave.DefaultState)
+        // Re-applying the default state applied every default-state variable twice per rebuild (issue #3212).
+        StateSave? selected = _selectedState.SelectedStateSave;
+        if (selected == null || selected == elementSave.DefaultState)
         {
-            rootGue.ApplyState(selectedState);
+            return;
         }
+
+        rootGue.ApplyState(selected);
+
+        // An instance's Forms values win over visual state values: a state of this element that sets an
+        // instance's category state (or the Forms property it derives from) must not beat them (#6860).
+        // Viewed on its own, the clicked state wins, which is why only instances are reasserted.
+        HashSet<string> setBySelected = SelectedStateReferenceMerger.GetVariablesSetBy(selected);
+        rootGue.ApplyState(BehaviorToolOnlyReferencesApplier.GetInstanceValuesToReassert(elementSave, selected, setBySelected));
     }
 
 
