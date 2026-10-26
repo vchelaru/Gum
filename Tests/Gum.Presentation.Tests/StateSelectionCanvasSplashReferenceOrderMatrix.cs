@@ -220,7 +220,11 @@ public partial class StateSelectionCanvasSplashTests
     {
         ComponentSave baseChain = BuildRowlessChain("BaseChain");
         AddReference(baseChain.DefaultState!, "B", "Width = R.Width * 2");
-        ComponentSave derived = new ComponentSave { Name = "DerivedChain", BaseType = "Components/BaseChain" };
+        ComponentSave derived = new ComponentSave { Name = "DerivedChain", BaseType = "BaseChain" };
+        foreach (InstanceSave inherited in baseChain.Instances)
+        {
+            derived.Instances.Add(new InstanceSave { Name = inherited.Name, BaseType = inherited.BaseType, DefinedByBase = true, ParentContainer = derived });
+        }
         StateSave derivedDefault = new StateSave { Name = "Default", ParentContainer = derived };
         derived.States.Add(derivedDefault);
         BuildProject(baseChain, derived);
@@ -237,6 +241,28 @@ public partial class StateSelectionCanvasSplashTests
         GraphicalUiElement root = Show(derived, selected);
 
         ShouldBeWidths(root, "inherited", ("A", 101f), ("B", 100f));
+    }
+
+    /// <summary>The selected state sets what a base component's row writes: the state's value stays, and the derived row reading it follows.</summary>
+    [Fact]
+    public void RefreshAll_SelectedStateSetsTargetOfBaseComponentRow_StateWinsAndDerivedRowFollows()
+    {
+        ComponentSave baseChain = BuildRowlessChain("BaseChain");
+        AddReference(baseChain.DefaultState!, "B", "Width = R.Width * 2");
+        ComponentSave derived = new ComponentSave { Name = "DerivedChain", BaseType = "BaseChain" };
+        foreach (InstanceSave inherited in baseChain.Instances)
+        {
+            derived.Instances.Add(new InstanceSave { Name = inherited.Name, BaseType = inherited.BaseType, DefinedByBase = true, ParentContainer = derived });
+        }
+        StateSave derivedDefault = new StateSave { Name = "Default", ParentContainer = derived };
+        derived.States.Add(derivedDefault);
+        BuildProject(baseChain, derived);
+        AddReference(derivedDefault, "A", "Width = B.Width + 1");
+        StateSave selected = AddCategoryState(derived, "Cat", "S", s => SetNumber(s, "B.Width", 77f));
+
+        GraphicalUiElement root = Show(derived, selected);
+
+        ShouldBeWidths(root, "inherited overridden", ("A", 78f), ("B", 77f));
     }
 
     /// <summary>
