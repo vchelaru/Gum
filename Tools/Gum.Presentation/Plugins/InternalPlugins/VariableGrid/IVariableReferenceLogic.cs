@@ -34,8 +34,10 @@ public interface IVariableReferenceLogic
     /// undo, the undo snapshot of a redo). A fed variable the action itself did not change keeps the value it
     /// held before the restore, because a removed or null source never resets a value; one the action did
     /// change takes the restored value. Null counts as no change.</param>
+    /// <param name="isUndo">True for an undo. A row the undo removes (the undo of a row add) leaves the variable it
+    /// fed at its held value even when the action changed it, since the add's own cascade wrote that value.</param>
     /// <returns>The values that changed in other elements.</returns>
-    StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide);
+    StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide, bool isUndo);
 
     /// <summary>
     /// Re-applies the rows of <paramref name="element"/> that read a sibling-dependent name

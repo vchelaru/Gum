@@ -586,7 +586,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         new System.Text.RegularExpressions.Regex(@"\bIndex\b");
 
     /// <inheritdoc/>
-    public StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide)
+    public StoredValueChange[] ReapplyReferences(ElementSave element, ElementSave before, ElementSave? otherSide, bool isUndo)
     {
         RestoredChanges restored = RestoredChanges.Find(element, before);
         if (restored.IsEmpty)
@@ -599,7 +599,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             foreach (string removed in RestoredChanges.RemovedWrittenNames(state, RestoredChanges.FindState(before, state, element)))
             {
-                KeepHeldValue(state, RestoredChanges.FindState(before, state, element), RestoredChanges.FindState(otherSide, state, element), removed);
+                KeepHeldValue(state, RestoredChanges.FindState(before, state, element), RestoredChanges.FindState(otherSide, state, element), removed, alwaysKeep: isUndo);
             }
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
             if (!graph.HasRows)
@@ -633,10 +633,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         return ApplyReferencesToElement(element, trySave: true);
     }
 
-    private static void KeepHeldValue(StateSave state, StateSave? held, StateSave? otherSide, string variableName)
+    private static void KeepHeldValue(StateSave state, StateSave? held, StateSave? otherSide, string variableName,
+        bool alwaysKeep = false)
     {
         // The action changed this variable itself (it was typed, or reset on purpose): take the snapshot's value.
-        if (otherSide != null && !HoldsSameValue(state, otherSide, variableName))
+        if (!alwaysKeep && otherSide != null && !HoldsSameValue(state, otherSide, variableName))
         {
             return;
         }
