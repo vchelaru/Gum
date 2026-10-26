@@ -6,19 +6,19 @@ This page lists the file types Gum loads at runtime. Each table has a row per ru
 
 Gum resolves relative paths against `FileManager.RelativeDirectory`, which is covered on the [File Loading](file-loading.md) page.
 
-## Images
+## Image Formats
 
-Images load through a Sprite or NineSlice `SourceFile`, or by assigning a texture directly.
+Images load through a Sprite or NineSlice `SourceFile`, or by assigning a texture directly. Each runtime loads the formats its own image decoder supports.
 
 | Runtime | Image files | Loaded from a URL |
 | --- | --- | --- |
-| MonoGame, KNI, FNA | `.png`, `.jpg`, `.gif`, `.bmp` | Yes |
+| MonoGame, KNI, FNA | `.png`, `.jpg`, `.gif`, `.bmp`, content pipeline assets (name without extension) | Yes |
 | raylib | `.png`, `.jpg`, `.gif`, `.bmp` | No |
-| SkiaGum | `.png`, `.jpg`, `.gif`, `.bmp` | Yes |
+| SkiaGum | `.png`, `.jpg`, `.gif`, `.bmp`, `.webp` | Yes |
 
-An animated `.gif` shows its first frame. On raylib, Gum picks the decoder from the file extension, so keep the extension in line with the file's real format.
+An animated `.gif` shows its first frame. SkiaGum hands the file to SkiaSharp without checking the extension, so it loads any format SkiaSharp decodes, including `.webp`. On raylib, Gum picks the decoder from the file extension, so keep the extension in line with the file's real format.
 
-MonoGame, KNI, and FNA also load a texture by name from the content pipeline when an `XnaContentManager` is assigned and the name has no extension.
+MonoGame, KNI, and FNA load an image by name from the content pipeline when an `XnaContentManager` is assigned and the name has no extension.
 
 ## Fonts
 
@@ -83,4 +83,4 @@ A localization file linked in a Gum project loads when you initialize with that 
 | --- | --- |
 | SkiaGum | `.svg` |
 
-Assign the file to an Svg `SourceFile`. See [Svg](../../gum-tool/gum-elements/skia-standard-elements/svg.md).
+Assign the file to an Svg `SourceFile`.

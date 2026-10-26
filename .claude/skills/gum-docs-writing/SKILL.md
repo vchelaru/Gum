@@ -107,6 +107,8 @@ The docs have two top-level sections — **Gum Tool** (`docs/gum-tool/`) and **C
 
 When writing a tool doc page (e.g., a property page under `gum-elements/`), focus entirely on the tool experience: what the property does visually, where it appears in the UI, and screenshots showing the effect. Do not add code examples showing how to set the property in C#. Conversely, code doc pages should not walk through the tool's UI.
 
+Per-runtime supported-file facts live on the one code page `docs/code/files-and-fonts/supported-files.md`; tool pages describe what the tool supports, and a code page never links to a tool page for runtime facts.
+
 ## Cross-Cutting Topics (Binding, Localization, Theming)
 
 Some features cut across many controls — binding, localization, theming, code generation — and individual controls have control-specific behaviors that intersect with them. For example, `TextBox.Text` can be bound to a numeric ViewModel property and the binding implicitly converts string ↔ number; `ListBox` interacts with `BindingContext` differently than other controls; localized labels behave differently in `PasswordBox`.
