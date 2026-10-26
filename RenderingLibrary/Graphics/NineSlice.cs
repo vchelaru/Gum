@@ -1274,19 +1274,17 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     void ApplyAnimationFrame(AnimationFrame frame)
     {
-        if (frame.Texture == null)
-        {
-            throw new InvalidOperationException(
-                $"The animation {AnimationLogic.CurrentChain?.Name} has a frame with a null texture. Frames must have a texture");
-        }
-
+        // A frame whose texture failed to load draws nothing, as on a Sprite, instead of throwing from Update (#6897).
         SetSingleTexture(frame.Texture);
 
-        var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
-        var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
-        var top = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
-        var height = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - top;
-        SourceRectangle = new Rectangle(left, top, width, height);
+        if (frame.Texture != null)
+        {
+            var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
+            var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
+            var top = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
+            var height = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - top;
+            SourceRectangle = new Rectangle(left, top, width, height);
+        }
 
         FlipHorizontal = frame.FlipHorizontal;
         FlipVertical = frame.FlipVertical;

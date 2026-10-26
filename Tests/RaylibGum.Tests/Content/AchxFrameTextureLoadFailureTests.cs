@@ -51,7 +51,7 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         WriteAchxWithFrame(textureName, kind);
 
         AnimationChainList? chains = null;
-        WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
         {
             SpriteRuntime sprite = new() { SourceFileName = _directory + "a.achx" };
             chains = sprite.AnimationChains;
@@ -60,6 +60,8 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         chains.ShouldNotBeNull();
         chains.Count.ShouldBe(1);
         chains[0][0].Texture.ShouldBeNull();
+        errors.Count.ShouldBe(1);
+        errors[0].ShouldContain(textureName);
     }
 
     [Theory]
@@ -90,18 +92,23 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         return null;
     }
 
-    private static void WithMissingFileBehavior(MissingFileBehavior behavior, Action action)
+    private static List<string> WithMissingFileBehavior(MissingFileBehavior behavior, Action action)
     {
         MissingFileBehavior saved = GraphicalUiElement.MissingFileBehavior;
         GraphicalUiElement.MissingFileBehavior = behavior;
+        List<string> errors = new();
+        Action<string> handler = errors.Add;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
         try
         {
             action();
         }
         finally
         {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
             GraphicalUiElement.MissingFileBehavior = saved;
         }
+        return errors;
     }
 
     private void WriteAchxWithFrame(string textureName, string kind)
