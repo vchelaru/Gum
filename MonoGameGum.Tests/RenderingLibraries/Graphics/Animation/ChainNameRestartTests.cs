@@ -65,13 +65,18 @@ public class ChainNameRestartTests
     }
 
     [Fact]
-    public void DefaultIndexZeroChain_NamedExplicitlyForFirstTime_StillRestarts()
+    public void DefaultIndexZeroChain_NamedForFirstTime_KeepsPlaybackAndSeedsLooping()
     {
-        AnimationChainLogic l = new() { AnimationChains = new AnimationChainList { Chain("A") }, Animate = true };
+        AnimationChain a = Chain("A");
+        a.Loop = false;
+        AnimationChainLogic l = new() { AnimationChains = new AnimationChainList { a }, Animate = true };
         l.AnimateSelf(1.5);
-        l.CurrentFrameIndex.ShouldBe(1);
+
         l.CurrentChainName = "A";
-        l.CurrentFrameIndex.ShouldBe(0); l.TimeIntoAnimation.ShouldBe(0);
+
+        l.CurrentFrameIndex.ShouldBe(1);
+        l.TimeIntoAnimation.ShouldBe(1.5);
+        l.IsAnimationChainLooping.ShouldBeFalse();
     }
 
     [Theory]
