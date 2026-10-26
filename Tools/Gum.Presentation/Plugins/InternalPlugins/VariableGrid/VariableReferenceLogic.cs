@@ -605,10 +605,14 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             // may have changed it since the snapshot was taken, and undoing this action must not undo that.
             StateSave? heldState = RestoredChanges.FindState(before, state, element);
             StateSave? otherState = RestoredChanges.FindState(otherSide, state, element);
-            foreach (string name in state.Variables.Select(item => item.Name)
-                .Concat(heldState?.Variables.Select(item => item.Name) ?? Enumerable.Empty<string>()).Distinct().ToList())
+            // A state the action added or removed has no counterpart to compare with and is restored whole.
+            if (heldState != null && otherState != null)
             {
-                KeepHeldValue(state, heldState, otherState, name);
+                foreach (string name in state.Variables.Select(item => item.Name)
+                    .Concat(heldState.Variables.Select(item => item.Name)).Distinct().ToList())
+                {
+                    KeepHeldValue(state, heldState, otherState, name);
+                }
             }
 
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
