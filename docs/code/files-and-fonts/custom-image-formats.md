@@ -2,7 +2,9 @@
 
 ### Introduction
 
-Gum loads the image formats listed on [Source File](../../gum-tool/gum-elements/sprite/source-file.md) on its own. To load another format, such as WebP, add an image decoder. A decoder turns the file's bytes into pixels and Gum turns those pixels into a texture, so one decoder works on every runtime.
+[Supported Files](supported-files.md#image-formats) lists the image formats each runtime loads on its own. To load another format, add an image decoder. A decoder turns the file's bytes into pixels and Gum turns those pixels into a texture, so one decoder works on every runtime.
+
+SkiaGum already loads WebP. The WebP example below is for MonoGame, KNI, FNA and raylib games, and it decodes with SkiaSharp, which those games add as a package.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
@@ -23,8 +25,6 @@ The following decoder loads WebP files through SkiaSharp. It checks the file's h
 ```csharp
 public class WebPDecoder : RenderingLibrary.Content.IImageDecoder
 {
-    public System.Collections.Generic.IEnumerable<string> SupportedExtensions => new[] { "webp" };
-
     public bool TryDecode(string fileName, System.IO.Stream stream,
         out RenderingLibrary.Content.DecodedImage image)
     {
@@ -55,8 +55,6 @@ public class WebPDecoder : RenderingLibrary.Content.IImageDecoder
     }
 }
 ```
-
-`SupportedExtensions` is optional. The Gum tool uses it to accept `.webp` as a Sprite's Source File. Decoders without it still run on every file.
 
 This decoder loads the first frame of an animated WebP file.
 
