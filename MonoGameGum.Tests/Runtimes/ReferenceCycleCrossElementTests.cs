@@ -425,12 +425,16 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
     }
 
     [Fact]
-    public void ApplyAll_AChainOf3200Elements_IsFasterThanBeforeLoopsWereDetected()
+    public void ApplyAll_AChainFourTimesAsLong_TakesAboutFourTimesAsLong()
     {
-        GumProjectSave chain = BuildChains(3200, 3200);
+        GumProjectSave shorter = BuildChains(800, 800);
+        GumProjectSave longer = BuildChains(3200, 3200);
 
-        // Before loops were detected this took about 470 ms on a developer machine; it is about 150 now.
-        MedianMilliseconds(() => chain.ApplyAllVariableReferences()).ShouldBeLessThan(400);
+        double shortMilliseconds = MedianMilliseconds(() => shorter.ApplyAllVariableReferences());
+        double longMilliseconds = MedianMilliseconds(() => longer.ApplyAllVariableReferences());
+
+        // Linear is about 4 (measured 4.2); quadratic is 16.
+        (longMilliseconds / Math.Max(shortMilliseconds, 1)).ShouldBeLessThan(9);
     }
 
     [Fact]
