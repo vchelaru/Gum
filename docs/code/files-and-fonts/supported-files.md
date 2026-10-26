@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This page lists the file types Gum loads at runtime. Each table has a row per runtime. Where MonoGame, KNI, and FNA share Gum's loaders, they share a row.
+This page lists the file types Gum loads at runtime. The image and font tables have one column per runtime, and a ✓ means the runtime loads that format. The other sections apply to every runtime unless they say otherwise.
 
 Gum resolves relative paths against `FileManager.RelativeDirectory`, which is covered on the [File Loading](file-loading.md) page.
 
