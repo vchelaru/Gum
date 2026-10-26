@@ -1,6 +1,7 @@
 ﻿using Gum.Graphics.Animation;
 using System;
 using System.IO;
+using System.Xml.Serialization;
 using Gum.Content.AnimationChain;
 using Shouldly;
 using Xunit;
@@ -380,6 +381,32 @@ public class AnimationChainListSaveAchjTests
         chain.PingPong.ShouldBeTrue();
         chain.IsReversed.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Achx_Save_ShouldRoundTripPingPongAndReverseAndOmitThemWhenFalse()
+    {
+        AnimationChainListSave list = new();
+        list.AnimationChains.Add(new AnimationChainSave { Name = "A", PingPong = true, Reverse = true });
+        list.AnimationChains.Add(new AnimationChainSave { Name = "B" });
+        XmlSerializer serializer = new(typeof(AnimationChainListSave));
+        using StringWriter writer = new();
+        serializer.Serialize(writer, list);
+        // StringWriter declares utf-16, but the file is written as UTF-8.
+        string xml = writer.ToString().Replace("utf-16", "utf-8");
+
+        xml.Split("<PingPong>").Length.ShouldBe(2);
+        xml.Split("<Reverse>").Length.ShouldBe(2);
+        WithTempFile(".achx", xml, path =>
+        {
+            AnimationChainListSave loaded = AnimationChainListSave.FromFile(path);
+
+            loaded.AnimationChains[0].PingPong.ShouldBeTrue();
+            loaded.AnimationChains[0].Reverse.ShouldBeTrue();
+            loaded.AnimationChains[1].PingPong.ShouldBeFalse();
+            loaded.AnimationChains[1].Reverse.ShouldBeFalse();
+        });
+    }
+
     [Fact]
     public void FromFile_AchxExtension_StillParsesAsXml()
     {

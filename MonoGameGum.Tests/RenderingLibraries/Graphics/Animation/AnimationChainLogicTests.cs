@@ -100,7 +100,7 @@ public class AnimationChainLogicTests
     }
 
     [Fact]
-    public void CurrentChainName_Set_ShouldClampFrameIndex_WhenNewChainIsShorter()
+    public void CurrentChainName_SetToDifferentChain_ShouldRestartAtFirstFrame()
     {
         AnimationChain longChain = new() { Name = "Long" };
         longChain.Add(new AnimationFrame { FrameLength = 1 });
@@ -120,9 +120,26 @@ public class AnimationChainLogicTests
 
         sut.CurrentChainName = "Short";
 
+        sut.CurrentFrameIndex.ShouldBe(0);
+        sut.TimeIntoAnimation.ShouldBe(0);
+        applied.ShouldBeSameAs(shortChain[0]);
+    }
+
+    [Fact]
+    public void CurrentChainName_SetToSameChain_ShouldKeepPlaybackAndNotReapply()
+    {
+        AnimationChainList chains = MakeChainWithFrameLengths(1, 1, 1);
+        int applied = 0;
+        AnimationChainLogic sut = new() { AnimationChains = chains, ApplyFrame = _ => applied++ };
+        sut.CurrentChainName = "Chain";
+        sut.TimeIntoAnimation = 1.5;
+        applied = 0;
+
+        sut.CurrentChainName = "Chain";
+
         sut.CurrentFrameIndex.ShouldBe(1);
-        sut.TimeIntoAnimation.ShouldBe(1);
-        applied.ShouldBeSameAs(shortChain[1]);
+        sut.TimeIntoAnimation.ShouldBe(1.5);
+        applied.ShouldBe(0);
     }
 
     [Fact]
