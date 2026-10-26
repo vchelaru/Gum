@@ -2,16 +2,7 @@
 
 ### Introduction
 
-The Source File property determines the file that is used by the Sprite. Sprite Source Files support the following formats:
-
-* .png files
-* .jpg and .jpeg files
-* .bmp files
-* .gif files (animated GIFs show only their first frame)
-* .achx and .achj files (AnimationChains)
-* Images from URLs
-
-Gum rejects any other extension, including .tga. To use one of those images, save it in one of the supported formats first.
+The Source File property determines the file that is used by the Sprite. For the image and animation chain formats a Sprite Source File accepts, as well as URLs, see [Supported Files](../../../code/files-and-fonts/supported-files.md).
 
 <figure><img src="../../../.gitbook/assets/image (93).png" alt=""><figcaption><p>Sprite displaying the FlatRedBall logo</p></figcaption></figure>
 
