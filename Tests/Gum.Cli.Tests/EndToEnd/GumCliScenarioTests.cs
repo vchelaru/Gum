@@ -364,7 +364,34 @@ public class GumCliScenarioTests : IDisposable
             .Where(path => !expected.TryGetValue(path, out byte[]? before) || !actual.TryGetValue(path, out byte[]? after) || !before.AsSpan().SequenceEqual(after))
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToList();
-        differences.ShouldBeEmpty(because);
+        differences.ShouldBeEmpty(because + DescribeFirstDifference(differences, actual, expected));
+    }
+
+    /// <summary>
+    /// The first differing file's bytes around where it changes, so a CI-only failure shows what the
+    /// resave wrote instead of only which files differ.
+    /// </summary>
+    private static string DescribeFirstDifference(List<string> differences, Dictionary<string, byte[]> actual, Dictionary<string, byte[]> expected)
+    {
+        if (differences.Count == 0)
+        {
+            return string.Empty;
+        }
+        string path = differences[0];
+        if (!expected.TryGetValue(path, out byte[]? before) || !actual.TryGetValue(path, out byte[]? after))
+        {
+            return $"\n{path}: {(expected.ContainsKey(path) ? "deleted" : "added")}";
+        }
+        int offset = 0;
+        while (offset < before.Length && offset < after.Length && before[offset] == after[offset])
+        {
+            offset++;
+        }
+        int start = Math.Max(0, offset - 80);
+        string Excerpt(byte[] bytes) => System.Text.Encoding.UTF8.GetString(bytes, start, Math.Min(bytes.Length, offset + 160) - start)
+            .Replace("\r", "\\r").Replace("\n", "\\n");
+        return $"\n{path}: {before.Length} -> {after.Length} bytes, first difference at {offset}" +
+            $"\n  before: {Excerpt(before)}\n  after:  {Excerpt(after)}";
     }
 
     #endregion
