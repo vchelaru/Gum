@@ -46,3 +46,15 @@ var textRuntime = buttonVisual.TextInstance;
 textRuntime.FontScale = 2;
 // additional modifications can be made to textRuntime
 ```
+
+## Tab Characters
+
+A tab character (`\t`) in `Text` advances the width of four spaces in the font on MonoGame, KNI, FNA, and raylib. If the bitmap font's `.fnt` file has an entry for the tab character, MonoGame, KNI, and FNA use that entry's width instead of four spaces. The tab is a fixed width, so text after it does not line up to a column.
+
+```csharp
+// Initialize
+var textRuntime = new TextRuntime();
+textRuntime.Text = "Name:\tGum";
+```
+
+On SkiaGum a tab advances by the text layout's own tab width rather than four spaces, so the same string can measure differently than it does on the other runtimes.
