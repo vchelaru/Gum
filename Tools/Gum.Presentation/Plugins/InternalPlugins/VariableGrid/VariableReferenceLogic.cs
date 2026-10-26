@@ -585,12 +585,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         new System.Text.RegularExpressions.Regex(@"\bIndex\b");
 
     /// <inheritdoc/>
-    public void ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
+    public bool ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
         GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
         if (project == null)
         {
-            return;
+            return false;
         }
 
         // Every state that reads this element or an element downstream of it, whichever of its values
@@ -606,7 +606,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         // The edited element can read itself through its qualified name.
         ApplyStatesReading(element, changedElementNames, elementsToSave, isFullCommit);
-        foreach (ElementSave dependent in ReferenceDependencies.GetDependentsInOrder(allElements, element))
+        List<ElementSave> dependents = ReferenceDependencies.GetDependentsInOrder(allElements, element);
+        foreach (ElementSave dependent in dependents)
         {
             ApplyStatesReading(dependent, changedElementNames, elementsToSave, isFullCommit);
             changedElementNames.Add(ObjectFinder.Self.GetQualifiedElementName(dependent));
@@ -619,6 +620,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 _fileCommands.TryAutoSaveElement(elementToSave);
             }
         }
+
+        return dependents.Count > 0;
     }
 
     private void ApplyStatesReading(ElementSave owner, HashSet<string> elementNames, HashSet<ElementSave> elementsToSave,

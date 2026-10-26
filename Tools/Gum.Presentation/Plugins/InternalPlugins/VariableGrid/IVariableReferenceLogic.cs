@@ -16,7 +16,9 @@ public interface IVariableReferenceLogic
     /// Re-evaluates every variable reference in other elements that reads <paramref name="element"/>,
     /// so their stored values follow it, and optionally auto-saves the elements that hold them.
     /// </summary>
-    void ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true);
+    /// <returns>True when some other element reads <paramref name="element"/> (or an element downstream of it)
+    /// and was re-evaluated, so the canvas and the Variables tab may show a changed value.</returns>
+    bool ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true);
 
     /// <summary>
     /// Re-applies the rows of <paramref name="element"/> that read a sibling-dependent name

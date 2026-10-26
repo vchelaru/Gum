@@ -507,30 +507,34 @@ public class FileWatchManager : IFileWatchManager
                 // else Locked: leave in queue and retry next cycle (e.g. git is writing it).
             }
 
-            foreach (var file in filesToProcess)
+            // Readers of the reloaded elements are updated once every file in the batch is back in memory.
+            using (_fileChangeReactionLogic.DeferDependentUpdates())
             {
-                try
+                foreach (var file in filesToProcess)
                 {
-                    if (PrintFileChangesToOutput)
+                    try
                     {
-                        var stopwatch = Stopwatch.StartNew();
-                        _fileChangeReactionLogic.ReactToFileChanged(file);
-                        stopwatch.Stop();
-                        _guiCommands.PrintOutput($"File change processed: {file} (took {stopwatch.ElapsedMilliseconds}ms)");
+                        if (PrintFileChangesToOutput)
+                        {
+                            var stopwatch = Stopwatch.StartNew();
+                            _fileChangeReactionLogic.ReactToFileChanged(file);
+                            stopwatch.Stop();
+                            _guiCommands.PrintOutput($"File change processed: {file} (took {stopwatch.ElapsedMilliseconds}ms)");
+                        }
+                        else
+                        {
+                            _fileChangeReactionLogic.ReactToFileChanged(file);
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        _fileChangeReactionLogic.ReactToFileChanged(file);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // One bad reload must not poison the rest of the queue.
-                    // Only surface this when the user has opted in to file-change
-                    // diagnostics; otherwise it would just be noise.
-                    if (PrintFileChangesToOutput)
-                    {
-                        _guiCommands.PrintOutput($"Error reacting to file change for {file}: {ex.Message}");
+                        // One bad reload must not poison the rest of the queue.
+                        // Only surface this when the user has opted in to file-change
+                        // diagnostics; otherwise it would just be noise.
+                        if (PrintFileChangesToOutput)
+                        {
+                            _guiCommands.PrintOutput($"Error reacting to file change for {file}: {ex.Message}");
+                        }
                     }
                 }
             }

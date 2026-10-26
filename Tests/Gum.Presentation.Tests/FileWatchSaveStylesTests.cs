@@ -84,7 +84,8 @@ public class FileWatchSaveStylesTests : IDisposable
             new Mock<IStandardElementsManagerGumTool>().Object,
             new Mock<IPluginManager>().Object,
             new Mock<Gum.Services.Dialogs.IDialogService>().Object,
-            new UnsavedChangesTracker());
+            new UnsavedChangesTracker(),
+            new Mock<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceLogic>().Object);
 
         FileWatchManager sut = new(
             new Mock<IGuiCommands>().Object,

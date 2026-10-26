@@ -1,0 +1,294 @@
+using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Expressions;
+using Gum.Managers;
+using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.ToolStates;
+using Gum.Wireframe;
+using GumRuntime;
+using Moq;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using ToolsUtilities;
+using Xunit;
+
+namespace Gum.Presentation.Tests;
+
+/// <summary>
+/// An element reloaded from disk after an external edit must reach every element whose variable
+/// references read it, directly or through a chain. The tool stores a reference's value as a
+/// materialized scalar on the reader, so the reload alone leaves the reader at the old value.
+/// Source = the reloaded element ("Styles"); Theme = an element in the middle of a chain; the reader is
+/// a component (ButtonStandard) or a screen (MenuScreen) whose Background.Red reads the element above it.
+/// </summary>
+public class FileChangeReloadDependentsTests : BaseTestClass
+{
+    private const string ReaderComponent = "Controls/ButtonStandard";
+    private const string ReaderScreen = "MenuScreen";
+
+    private readonly string _tempDirectory;
+    private GumProjectSave _project = null!;
+    private FileChangeReactionLogic _reaction = null!;
+    private VariableReferenceLogic _referenceLogic = null!;
+    private readonly Mock<IFileCommands> _fileCommands = new();
+    private readonly Mock<ISelectedState> _selectedState = new();
+    private readonly Mock<IWireframeObjectManager> _wireframe = new();
+    private readonly Mock<IGuiCommands> _guiCommands = new();
+
+    public FileChangeReloadDependentsTests()
+    {
+        GumExpressionService.Initialize();
+        _tempDirectory = Path.Combine(Path.GetTempPath(), "GumReloadDependents_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(_tempDirectory);
+    }
+
+    public override void Dispose()
+    {
+        ElementSaveExtensions.CustomEvaluateExpression = null;
+        try { Directory.Delete(_tempDirectory, recursive: true); } catch { /* best-effort */ }
+        base.Dispose();
+    }
+
+    /// <summary>Saves the elements as a project, then loads it back the way the tool does.</summary>
+    private void Arrange(params ElementSave[] elements)
+    {
+        GumProjectSave authored = new GumProjectSave { FullFileName = Path.Combine(_tempDirectory, "Project.gumj") };
+        foreach (ElementSave element in elements)
+        {
+            if (element is ScreenSave screen)
+            {
+                authored.Screens.Add(screen);
+                authored.ScreenReferences.Add(new ElementReference { Name = screen.Name, ElementType = ElementType.Screen });
+            }
+            else
+            {
+                authored.Components.Add((ComponentSave)element);
+                authored.ComponentReferences.Add(new ElementReference { Name = element.Name, ElementType = ElementType.Component });
+            }
+        }
+        ObjectFinder.Self.GumProjectSave = authored;
+        authored.Initialize();
+        authored.Save(authored.FullFileName, saveElements: true);
+
+        _project = GumProjectSave.Load(authored.FullFileName);
+        ObjectFinder.Self.GumProjectSave = _project;
+        _project.Initialize();
+
+        _fileCommands.Setup(f => f.ProjectDirectory).Returns(new FilePath(_tempDirectory + Path.DirectorySeparatorChar));
+        Mock<IProjectState> projectState = new();
+        projectState.Setup(p => p.GumProjectSave).Returns(_project);
+        _wireframe.Setup(w => w.AllIpsos).Returns(new List<GraphicalUiElement>());
+
+        _referenceLogic = new VariableReferenceLogic(
+            _guiCommands.Object,
+            new Mock<IWireframeCommands>().Object,
+            new Mock<IDialogService>().Object,
+            _fileCommands.Object,
+            new Mock<ICompositeMemberRegistry>().Object,
+            new Mock<IDispatcher>().Object,
+            _wireframe.Object);
+
+        _reaction = new FileChangeReactionLogic(
+            _selectedState.Object,
+            new Mock<IWireframeCommands>().Object,
+            _guiCommands.Object,
+            _fileCommands.Object,
+            new Mock<IOutputManager>().Object,
+            _wireframe.Object,
+            projectState.Object,
+            new Mock<IStandardElementsManagerGumTool>().Object,
+            new Mock<IPluginManager>().Object,
+            new Mock<IDialogService>().Object,
+            new UnsavedChangesTracker(),
+            _referenceLogic);
+    }
+
+    private static string QualifiedName(ElementSave element) => ElementReference.GetQualifiedName(element, element.Name);
+
+    private static ElementSave NewElement(bool isScreen, string name)
+    {
+        ElementSave element = isScreen ? new ScreenSave { Name = name } : new ComponentSave { Name = name };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        return element;
+    }
+
+    /// <summary>An element holding Primary.FillRed, which the elements built by the other helpers read.</summary>
+    private static ElementSave BuildSource(bool isScreen, string name, int fillRed)
+    {
+        ElementSave source = NewElement(isScreen, name);
+        source.Instances.Add(new InstanceSave { Name = "Primary", BaseType = "Rectangle", ParentContainer = source });
+        source.DefaultState.Variables.Add(new VariableSave { Name = "Primary.FillRed", Type = "int", Value = fillRed, SetsValue = true });
+        return source;
+    }
+
+    /// <summary>A source that takes its own Primary.FillRed from <paramref name="reads"/>.</summary>
+    private static ElementSave BuildTheme(string name, ElementSave reads)
+    {
+        ElementSave theme = BuildSource(isScreen: false, name, fillRed: 21);
+        theme.DefaultState.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = "Primary.VariableReferences",
+            Type = "string",
+            Value = new List<string> { "FillRed = " + QualifiedName(reads) + ".Primary.FillRed" },
+        });
+        return theme;
+    }
+
+    private static ElementSave BuildReader(bool isScreen, string name, ElementSave reads)
+    {
+        ElementSave reader = NewElement(isScreen, name);
+        reader.Instances.Add(new InstanceSave { Name = "Background", BaseType = "NineSlice", ParentContainer = reader });
+        reader.DefaultState.Variables.Add(new VariableSave { Name = "Background.Red", Type = "int", Value = 21, SetsValue = true });
+        reader.DefaultState.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = "Background.VariableReferences",
+            Type = "string",
+            Value = new List<string> { "Red = " + QualifiedName(reads) + ".Primary.FillRed" },
+        });
+        return reader;
+    }
+
+    private string FileOf(ElementSave element) => element is ScreenSave
+        ? Path.Combine(_tempDirectory, "Screens", element.Name + ".gusj")
+        : Path.Combine(_tempDirectory, "Components", element.Name + ".gucj");
+
+    private void EditFillRedOnDisk(ElementSave element, int newValue)
+    {
+        string file = FileOf(element);
+        string text = File.ReadAllText(file);
+        Regex fillRed = new(@"(""Name"": ""Primary\.FillRed"",\s*""Type"": ""int"",\s*""SetsValue"": true,\s*""ValueAsInt"": )\d+");
+        fillRed.IsMatch(text).ShouldBeTrue("the saved file should hold Primary.FillRed as an int");
+        File.WriteAllText(file, fillRed.Replace(text, "${1}" + newValue));
+    }
+
+    private void Reload(ElementSave element) => _reaction.ReactToFileChanged(new FilePath(FileOf(element)));
+
+    private object? GetValue(string elementName, string variableName)
+    {
+        ElementSave? element = ObjectFinder.Self.GetElementSave(elementName);
+        element.ShouldNotBeNull(elementName);
+        return element.DefaultState.Variables.First(v => v.Name == variableName).Value;
+    }
+
+    private void VerifySaved(string elementName, Times times) =>
+        _fileCommands.Verify(f => f.TryAutoSaveElement(It.Is<ElementSave>(e => e.Name == elementName)), times);
+
+    [Fact]
+    public void ReactToFileChanged_ShouldReloadTheEditedElementFromDisk()
+    {
+        ElementSave styles = BuildSource(isScreen: false, "Styles", fillRed: 21);
+        Arrange(styles, BuildReader(isScreen: false, ReaderComponent, styles));
+        EditFillRedOnDisk(styles, 200);
+
+        Reload(styles);
+
+        GetValue("Styles", "Primary.FillRed").ShouldBe(200);
+    }
+
+    [Fact]
+    public void ApplyReferencesToElement_AfterAReload_UpdatesTheDependent()
+    {
+        // Pins the existing in-tool cascade the reload has to mirror: it resolves the reader from the
+        // reloaded element's values.
+        ElementSave styles = BuildSource(isScreen: false, "Styles", fillRed: 21);
+        Arrange(styles, BuildReader(isScreen: false, ReaderComponent, styles));
+        EditFillRedOnDisk(styles, 200);
+        Reload(styles);
+
+        _referenceLogic.ApplyReferencesToElement(ObjectFinder.Self.GetElementSave("Styles")!, trySave: false);
+
+        GetValue(ReaderComponent, "Background.Red").ShouldBe(200);
+    }
+
+    // sourceIsScreen: the reloaded element is a screen or a component.
+    // readerIsScreen: the element reading it is a screen or a component.
+    // viaTheme: the reader reads Theme, which reads the reloaded element (only the reloaded file changes).
+    // readerSelected: the reader is the element selected on the canvas and shown in the Variables tab.
+    [Theory]
+    [InlineData(false, false, false, false)]
+    [InlineData(false, true, false, false)]
+    [InlineData(true, false, false, false)]
+    [InlineData(true, true, false, false)]
+    [InlineData(false, false, true, false)]
+    [InlineData(false, true, true, false)]
+    [InlineData(true, false, true, false)]
+    [InlineData(true, true, true, false)]
+    [InlineData(false, false, false, true)]
+    [InlineData(true, true, true, true)]
+    public void ReactToFileChanged_ShouldUpdateEveryElementWhoseReferencesReadTheReloadedElement(
+        bool sourceIsScreen, bool readerIsScreen, bool viaTheme, bool readerSelected)
+    {
+        ElementSave source = BuildSource(sourceIsScreen, sourceIsScreen ? "HudScreen" : "Styles", fillRed: 21);
+        ElementSave? theme = viaTheme ? BuildTheme("Theme", source) : null;
+        ElementSave reader = BuildReader(readerIsScreen, readerIsScreen ? ReaderScreen : ReaderComponent, theme ?? source);
+        Arrange(theme == null ? new[] { source, reader } : new[] { source, theme, reader });
+        // The tool's in-memory elements are the ones loaded from disk.
+        reader = ObjectFinder.Self.GetElementSave(reader.Name)!;
+        if (readerSelected)
+        {
+            _selectedState.Setup(s => s.SelectedElement).Returns(reader);
+        }
+        EditFillRedOnDisk(source, 200);
+
+        Reload(source);
+
+        GetValue(reader.Name, "Background.Red").ShouldBe(200);
+        if (theme != null)
+        {
+            GetValue(theme.Name, "Primary.FillRed").ShouldBe(200);
+            VerifySaved(theme.Name, Times.AtLeastOnce());
+        }
+        // The reader's file follows its new value, as it does after an edit in the tool.
+        VerifySaved(reader.Name, Times.AtLeastOnce());
+        // The reloaded element is the file that just changed, so saving it would only rewrite it.
+        VerifySaved(source.Name, Times.Never());
+        // The canvas and the Variables tab show the new value.
+        _wireframe.Verify(w => w.RefreshAll(It.IsAny<bool>(), It.IsAny<bool>()), Times.AtLeastOnce());
+        _guiCommands.Verify(g => g.RefreshVariables(true), Times.AtLeastOnce());
+    }
+
+    [Fact]
+    public void ReactToFileChanged_WithNoReaders_ShouldNotSaveAnything()
+    {
+        ElementSave styles = BuildSource(isScreen: false, "Styles", fillRed: 21);
+        Arrange(styles);
+        EditFillRedOnDisk(styles, 200);
+
+        Reload(styles);
+
+        _fileCommands.Verify(f => f.TryAutoSaveElement(It.IsAny<ElementSave>()), Times.Never());
+    }
+
+    [Fact]
+    public void DeferDependentUpdates_WhenTheReaderIsAlsoReloaded_ShouldNotSaveItBeforeItsOwnReload()
+    {
+        // A git checkout changes Theme and Styles together. Updating the readers of Theme before Styles is
+        // reloaded would write Theme's old copy of the Styles value over the file git just wrote.
+        ElementSave styles = BuildSource(isScreen: false, "Styles", fillRed: 21);
+        ElementSave theme = BuildTheme("Theme", styles);
+        ElementSave reader = BuildReader(isScreen: false, ReaderComponent, theme);
+        Arrange(styles, theme, reader);
+        EditFillRedOnDisk(styles, 200);
+        EditFillRedOnDisk(theme, 7);
+
+        using (_reaction.DeferDependentUpdates())
+        {
+            Reload(theme);
+            Reload(styles);
+
+            _fileCommands.Verify(f => f.TryAutoSaveElement(It.IsAny<ElementSave>()), Times.Never());
+        }
+
+        // The reference sets the final value, not the 7 an editor wrote into Theme's own scalar.
+        GetValue("Theme", "Primary.FillRed").ShouldBe(200);
+        GetValue(ReaderComponent, "Background.Red").ShouldBe(200);
+    }
+}

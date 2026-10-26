@@ -80,7 +80,8 @@ public class FileChangeReactionLogicTests : BaseTestClass
             new Mock<IStandardElementsManagerGumTool>().Object,
             pluginManagerMock.Object,
             dialogService,
-            unsavedChangesTracker);
+            unsavedChangesTracker,
+            new Mock<IVariableReferenceLogic>().Object);
     }
 
     [Fact]

@@ -29,6 +29,13 @@ namespace Gum.Managers
         private readonly IPluginManager _pluginManager;
         private readonly IDialogService _dialogService;
         private readonly IUnsavedChangesTracker _unsavedChangesTracker;
+        private readonly IVariableReferenceLogic _variableReferenceLogic;
+
+        /// <summary>
+        /// Names of the elements reloaded while a <see cref="DeferDependentUpdates"/> scope is open;
+        /// null when no scope is open.
+        /// </summary>
+        private List<string>? _reloadedWhileDeferring;
 
         public FileChangeReactionLogic(
             ISelectedState selectedState,
@@ -41,8 +48,10 @@ namespace Gum.Managers
             IStandardElementsManagerGumTool standardElementsManagerGumTool,
             IPluginManager pluginManager,
             IDialogService dialogService,
-            IUnsavedChangesTracker unsavedChangesTracker)
+            IUnsavedChangesTracker unsavedChangesTracker,
+            IVariableReferenceLogic variableReferenceLogic)
         {
+            _variableReferenceLogic = variableReferenceLogic;
             _dialogService = dialogService;
             _unsavedChangesTracker = unsavedChangesTracker;
             _selectedState = selectedState;
@@ -55,7 +64,71 @@ namespace Gum.Managers
             _standardElementsManagerGumTool = standardElementsManagerGumTool;
             _pluginManager = pluginManager;
         }
-        
+
+        /// <summary>
+        /// While the returned scope is open, an element reloaded from disk does not update the elements whose
+        /// variable references read it; disposing the scope does that once for everything reloaded. A flush of
+        /// several changed files (a git checkout or merge) opens one so a reader that is itself in the batch
+        /// is reloaded before any save of it, instead of being written over the external edit still queued.
+        /// </summary>
+        public IDisposable DeferDependentUpdates()
+        {
+            _reloadedWhileDeferring ??= new List<string>();
+            return new DeferredDependentUpdates(this);
+        }
+
+        private sealed class DeferredDependentUpdates : IDisposable
+        {
+            private readonly FileChangeReactionLogic _owner;
+
+            public DeferredDependentUpdates(FileChangeReactionLogic owner) => _owner = owner;
+
+            public void Dispose()
+            {
+                List<string>? reloaded = _owner._reloadedWhileDeferring;
+                _owner._reloadedWhileDeferring = null;
+                try
+                {
+                    if (reloaded != null && _owner.UpdateDependentsOf(reloaded))
+                    {
+                        _owner.RefreshCanvasAndVariables();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // A flush calls this from a using block; one failure must not skip the rest of the flush.
+                    _owner._outputManager.AddError("Could not update the elements that read a file reloaded from disk: " + ex.Message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Re-evaluates the references that read the just-reloaded <paramref name="reloaded"/> elements, the same
+        /// cascade an in-tool edit of their variables runs: readers (and readers of readers) get the new values
+        /// and are saved when Auto Save is on. Elements are looked up by name because a reload replaces the object.
+        /// The reloaded elements themselves are not saved, so the watcher has nothing new to see.
+        /// </summary>
+        /// <returns>True when some reader was re-evaluated.</returns>
+        private bool UpdateDependentsOf(IEnumerable<string> reloaded)
+        {
+            bool updated = false;
+            foreach (string elementName in reloaded.Distinct())
+            {
+                ElementSave? element = ObjectFinder.Self.GetElementSave(elementName);
+                if (element != null)
+                {
+                    updated |= _variableReferenceLogic.ApplyReferencesToElement(element, trySave: true);
+                }
+            }
+            return updated;
+        }
+
+        private void RefreshCanvasAndVariables()
+        {
+            _wireframeObjectManager.RefreshAll(true, true);
+            _guiCommands.RefreshVariables(force: true);
+        }
+
         public void ReactToFileChanged(FilePath file)
         {
             var extension = file.Extension;
@@ -482,6 +555,7 @@ namespace Gum.Managers
             var element = ObjectFinder.Self.GetElementSave(relativeToFolderForType);
 
             var refreshingSelected = element == _selectedState.SelectedElement;
+            bool dependentsUpdated = false;
 
             if (element != null && _unsavedChangesTracker.HasUnsavedChanges(element)
                 && UserKeepsUnsavedChanges(element.Name, file))
@@ -515,17 +589,28 @@ namespace Gum.Managers
                 if (element != null)
                 {
                     _pluginManager.ElementReloaded(element);
+
+                    if (_reloadedWhileDeferring != null)
+                    {
+                        _reloadedWhileDeferring.Add(element.Name);
+                    }
+                    else
+                    {
+                        dependentsUpdated = UpdateDependentsOf(new[] { element.Name });
+                    }
                 }
             }
 
-            bool shouldReloadWireframe = false;
+            // Elements reading the reloaded one changed their stored values, and may be the selected
+            // element or shown by instances the check below does not look at.
+            bool shouldReloadWireframe = dependentsUpdated;
 
             var currentElement = _selectedState.SelectedElement;
 
             if(currentElement != null)
             {
                 var currentElementFile = _fileCommands.GetFullPathXmlFile(currentElement, currentElement.Name);
-                shouldReloadWireframe = currentElementFile == file;
+                shouldReloadWireframe |= currentElementFile == file;
             }
 
             if(element != null && !shouldReloadWireframe)
@@ -541,11 +626,8 @@ namespace Gum.Managers
 
             if(shouldReloadWireframe)
             {
-                // reload wireframe
-                _wireframeObjectManager.RefreshAll(true, true);
-
                 // todo - this isn't working if I rename a variable...
-                _guiCommands.RefreshVariables(force: true);
+                RefreshCanvasAndVariables();
             }
         }
 

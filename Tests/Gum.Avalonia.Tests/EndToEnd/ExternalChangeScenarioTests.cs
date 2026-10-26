@@ -4,6 +4,8 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Dialogs;
 using Gum.Logic.FileWatch;
+using Gum.DataTypes.Variables;
+using System.Text.RegularExpressions;
 using Gum.Managers;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
@@ -306,6 +308,62 @@ public class ExternalChangeScenarioTests
             tree.SaveAll();
             File.ReadAllText(buttonFile).ShouldBe(buttonBeforeEdit);
             File.ReadAllText(projectFile).ShouldContain("1080p");
+        }
+        finally
+        {
+            projectManager.AutoSave = autoSave;
+        }
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "FILE-013")]
+    [Trait("Feature", "VARREF-001")]
+    public void ReloadingAnElementOutsideTheTool_UpdatesAndSavesTheComponentsThatReadIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness("Harness.gumj");
+        ComponentSave styles = tree.Project.AddComponent("Styles");
+        tree.Project.AddInstance(styles, "Primary", "Rectangle");
+        styles.DefaultState.SetValue("Primary.FillRed", 21, "int");
+        ComponentSave button = tree.Project.AddComponent("ButtonStandard");
+        tree.Project.AddInstance(button, "Background", "NineSlice");
+        button.DefaultState.SetValue("Background.Red", 21, "int");
+        button.DefaultState.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = "Background.VariableReferences",
+            Type = "string",
+            Value = new List<string> { "Red = Components/Styles.Primary.FillRed" },
+        });
+        tree.Click(tree.NodeFor(button));
+        IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
+        IFileWatchIgnoreList ignoreList = TestAppBuilder.Services.GetRequiredService<IFileWatchIgnoreList>();
+        FileChangeReactionLogic fileChanges = TestAppBuilder.Services.GetRequiredService<FileChangeReactionLogic>();
+        string stylesFile = Path.Combine(tree.Project.ProjectFolder, "Components", "Styles.gucj");
+        string buttonFile = Path.Combine(tree.Project.ProjectFolder, "Components", "ButtonStandard.gucj");
+
+        bool autoSave = projectManager.AutoSave;
+        try
+        {
+            projectManager.AutoSave = true;
+            tree.SaveAll();
+            File.WriteAllText(stylesFile, Regex.Replace(File.ReadAllText(stylesFile),
+                @"(""Name"": ""Primary\.FillRed"",\s*""Type"": ""int"",\s*""SetsValue"": true,\s*""ValueAsInt"": )\d+", "${1}200"));
+            DateTime stylesIgnoredUntil = ignoreList.TimedChangesToIgnore[new FilePath(stylesFile)];
+            DateTime buttonIgnoredUntil = ignoreList.TimedChangesToIgnore[new FilePath(buttonFile)];
+            Thread.Sleep(20);
+
+            fileChanges.ReactToFileChanged(new FilePath(stylesFile));
+            tree.ThrowIfCrashed();
+
+            // The reader follows the new value in memory, in the Variables tab and on disk.
+            ComponentSave reloadedButton = Component(tree, "ButtonStandard");
+            VariableGridHarness.StoredValue(reloadedButton, "Background.Red").ShouldBe(200);
+            VariableGridHarness.StoredValue(
+                ElementReference.DeserializeElement<ComponentSave>(buttonFile, GumProjectSave.NativeVersion), "Background.Red").ShouldBe(200);
+            // The reader's file is ignored again (the tool wrote it); the reloaded file is not rewritten.
+            ignoreList.TimedChangesToIgnore[new FilePath(buttonFile)].ShouldBeGreaterThan(buttonIgnoredUntil);
+            ignoreList.TimedChangesToIgnore[new FilePath(stylesFile)].ShouldBe(stylesIgnoredUntil);
         }
         finally
         {
