@@ -410,7 +410,15 @@ public class VariableReferenceLogicTests : BaseTestClass
             ElementSaveExtensions.VariableChangedThroughReference = null!;
         }
 
-        notifications.ShouldContain((button, isFullCommit));
+        if (isFullCommit)
+        {
+            notifications.ShouldContain((button, isFullCommit));
+        }
+        else
+        {
+            // A tick of a drag runs no cascade; the full commit that ends it does (#6888).
+            notifications.ShouldBeEmpty();
+        }
     }
 
     [Fact]
