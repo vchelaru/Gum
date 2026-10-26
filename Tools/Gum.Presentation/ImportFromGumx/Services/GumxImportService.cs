@@ -268,6 +268,16 @@ public class GumxImportService : IGumxImportService
             // 8. Save project then reload (standards take effect only after reload)
             string? fileName = _projectState.GumProjectSave?.FullFileName;
             bool wasSaved = _fileCommands.TryAutoSaveProject();
+            // Saving the registered elements is the project's job, and a failed write there only shows
+            // a dialog. With autosave on (wasSaved), a registered file that is not on disk failed.
+            result.WrittenFiles.AddRange(result.RegisteredFiles.Where(File.Exists));
+            List<string> notWritten = result.RegisteredFiles.Where(file => !File.Exists(file)).ToList();
+            if (wasSaved && notWritten.Count > 0)
+            {
+                throw new IOException(
+                    "these could not be written, so the saved project lists them without a file: "
+                    + string.Join(", ", notWritten.Select(Path.GetFileName)));
+            }
             if (wasSaved && fileName is not null)
             {
                 await _fileCommands.LoadProjectAsync(fileName);
@@ -680,7 +690,7 @@ public class GumxImportService : IGumxImportService
         }
 
         if (_importLogic.ImportComponent(clone, saveProject: false) == null) return false;
-        result.WrittenFiles.Add(Path.Combine(projectDir, "Components",
+        result.RegisteredFiles.Add(Path.Combine(projectDir, "Components",
             destName + "." + ComponentExtension(IsDestinationJsonFormat)));
         return true;
     }
@@ -973,7 +983,7 @@ public class GumxImportService : IGumxImportService
         }
 
         if (_importLogic.ImportScreen(clone, saveProject: false) == null) return false;
-        result.WrittenFiles.Add(Path.Combine(projectDir, "Screens",
+        result.RegisteredFiles.Add(Path.Combine(projectDir, "Screens",
             destName + "." + ScreenExtension(IsDestinationJsonFormat)));
         return true;
     }

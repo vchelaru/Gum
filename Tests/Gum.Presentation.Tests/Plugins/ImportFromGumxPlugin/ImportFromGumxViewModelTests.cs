@@ -626,6 +626,40 @@ public class ImportFromGumxViewModelTests
         }
     }
 
+    [Fact]
+    public async Task OnAffirmative_ListsAtMostFiveSkippedItems_WhenManyWereSkipped()
+    {
+        string sourceDir = Path.Combine(Path.GetTempPath(), "GumImportCap_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(sourceDir);
+        try
+        {
+            string path = WriteSourceProject(sourceDir);
+            _projectState.GumProjectSave.Version = 5;
+            RecordingImportService importService = new RecordingImportService();
+            for (int i = 0; i < 30; i++)
+            {
+                importService.Result.AddSkipped("Item" + i, "texture missing");
+            }
+            ImportFromGumxViewModel viewModel = new ImportFromGumxViewModel(
+                new GumxSourceService(), new GumxDependencyResolver(), importService, _projectState,
+                _dialogService, new SynchronousDispatcher(), new ImportVersionGate());
+            await viewModel.UseFixedSourceAsync(new FixedImportSource(path, "Add Forms: Neon", false, () => { }));
+            viewModel.RootNodes.First(n => n.DisplayName == "Behaviors").Children[0].InclusionState = InclusionState.Explicit;
+
+            viewModel.OnAffirmative();
+
+            string[] lines = viewModel.WarningMessage!.Split('\n');
+            lines.Length.ShouldBe(7);
+            lines[0].ShouldBe("30 item(s) were not imported:");
+            lines[1].ShouldBe("Item0: texture missing");
+            lines[6].ShouldBe("(and 25 more)");
+        }
+        finally
+        {
+            Directory.Delete(sourceDir, recursive: true);
+        }
+    }
+
     // ── conflict-resolution dialog (#2644) ────────────────────────────────
 
     [Fact]
@@ -760,6 +794,8 @@ public class ImportFromGumxViewModelTests
 
         public ImportDestinationStatus Status { get; set; } = ImportDestinationStatus.None;
 
+        public ImportResult Result { get; set; } = new ImportResult();
+
         public ImportDestinationStatus GetDestinationStatus(GumProjectSave source, string destinationSubfolder) => Status;
 
         public Task<ImportResult> ImportAsync(
@@ -772,7 +808,7 @@ public class ImportFromGumxViewModelTests
             bool replaceStandardAnimations = true)
         {
             LastBeforeImport = beforeImport;
-            return Task.FromResult(new ImportResult());
+            return Task.FromResult(Result);
         }
     }
 

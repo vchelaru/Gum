@@ -9,6 +9,7 @@ public class AddFormsViewModel : DialogViewModel
     #region Fields/Properties
 
     private readonly IFormsThemeImporter _themeImporter;
+    private readonly IDialogService _dialogService;
 
     public ThemeSelectionViewModel ThemeSelection { get; }
 
@@ -23,8 +24,9 @@ public class AddFormsViewModel : DialogViewModel
 
     #endregion
 
-    public AddFormsViewModel(ThemeSelectionViewModel themeSelection, IFormsThemeImporter themeImporter)
+    public AddFormsViewModel(ThemeSelectionViewModel themeSelection, IFormsThemeImporter themeImporter, IDialogService dialogService)
     {
+        _dialogService = dialogService;
         ThemeSelection = themeSelection;
         _themeImporter = themeImporter;
     }
@@ -37,9 +39,9 @@ public class AddFormsViewModel : DialogViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            // async void: an escaping exception is unobserved. The importer reports its own failures
-            // to the user; this keeps the dialog closing if it ever lets one through.
-            System.Diagnostics.Trace.TraceError("Add Forms failed: " + exception);
+            // async void: an escaping exception is unobserved. The importer reports its own failures;
+            // this is for one it lets through.
+            _dialogService.ShowMessage("Add Forms failed: " + exception.Message);
         }
 
         base.OnAffirmative();

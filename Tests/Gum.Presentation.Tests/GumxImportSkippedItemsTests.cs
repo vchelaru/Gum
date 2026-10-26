@@ -171,6 +171,52 @@ public class GumxImportSkippedItemsTests : IDisposable
         File.Exists(Path.Combine(projectDirectory, "Behaviors", "B.behx")).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("GoodScreen", false)]
+    public async Task ImportAsync_ElementTheProjectFailedToSave_FailsTheImportAndIsNotListedAsWritten(
+        string? elementThatFailsToSave, bool expectSuccess)
+    {
+        string projectDirectory = Path.Combine(_root, "Project");
+        Directory.CreateDirectory(projectDirectory);
+        string sourcePath = WriteSourceProject(Path.Combine(_root, "Source"), Failure.None);
+        GumxSourceService sourceService = new GumxSourceService();
+        GumProjectSave source = (await sourceService.LoadProjectAsync(sourcePath))!;
+        Mock<IFileCommands> fileCommands = new();
+        fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+        GumxImportService sut = CreateService(projectDirectory, source.Version, Failure.None, fileCommands.Object, elementThatFailsToSave);
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = source.Components.ToList(),
+            DirectScreens = source.Screens.ToList(),
+        };
+
+        Task<ImportResult> import = sut.ImportAsync(selections, source, sourceService.GetSourceBase(sourcePath), string.Empty);
+
+        if (expectSuccess)
+        {
+            ImportResult result = await import;
+            result.WrittenFiles.ShouldContain(Path.Combine(projectDirectory, "Screens", "GoodScreen.gusx"));
+            return;
+        }
+        ImportFailedException failure = await Should.ThrowAsync<ImportFailedException>(() => import);
+        failure.Message.ShouldContain("GoodScreen.gusx");
+        failure.WrittenFiles.ShouldContain(Path.Combine(projectDirectory, "Components", "GoodComponent.gucx"));
+        failure.WrittenFiles.ShouldNotContain(Path.Combine(projectDirectory, "Screens", "GoodScreen.gusx"));
+    }
+
+    [Fact]
+    public void ImportFailedException_ListsAtMostFiveWrittenFiles()
+    {
+        string[] written = Enumerable.Range(0, 12).Select(i => $"C:/project/Components/C{i}.gucx").ToArray();
+
+        ImportFailedException failure = new ImportFailedException(new IOException("disk full"), written);
+
+        failure.Message.ShouldContain("12 file(s) were already written");
+        failure.Message.ShouldContain("(and 7 more)");
+        failure.Message.ShouldNotContain("C5.gucx");
+    }
+
     [Fact]
     public void DescribeSkipped_PutsEachItemOnItsOwnLineWithItsReason()
     {
@@ -187,7 +233,9 @@ public class GumxImportSkippedItemsTests : IDisposable
         });
     }
 
-    private GumxImportService CreateService(string projectDirectory, int version, Failure failure, IFileCommands? fileCommands = null)
+    private GumxImportService CreateService(
+        string projectDirectory, int version, Failure failure, IFileCommands? fileCommands = null,
+        string? elementThatFailsToSave = null)
     {
         GumProjectSave project = new GumProjectSave
         {
@@ -207,12 +255,14 @@ public class GumxImportSkippedItemsTests : IDisposable
                     return null;
                 }
                 _registeredComponents.Add(component.Name);
+                WriteLikeTheProjectDoes(projectDirectory, "Components", component, elementThatFailsToSave);
                 return component;
             });
         importLogic.Setup(x => x.ImportScreen(It.IsAny<ScreenSave>(), It.IsAny<bool>()))
             .Returns((ScreenSave screen, bool _) =>
             {
                 _registeredScreens.Add(screen.Name);
+                WriteLikeTheProjectDoes(projectDirectory, "Screens", screen, elementThatFailsToSave);
                 return screen;
             });
         importLogic.Setup(x => x.ImportBehavior(It.IsAny<FilePath>(), It.IsAny<string?>(), It.IsAny<bool>()))
@@ -221,6 +271,19 @@ public class GumxImportSkippedItemsTests : IDisposable
         return new GumxImportService(
             importLogic.Object, projectState.Object, fileCommands ?? new Mock<IFileCommands>().Object,
             new GumxSourceService(), new ImportVersionGate(), new Mock<IFileWatchIgnoreList>().Object);
+    }
+
+    // The real import logic saves each element it registers; a failed save shows a dialog and returns
+    // as if nothing happened, which is what an element named in failsToSave does here.
+    private static void WriteLikeTheProjectDoes(string projectDirectory, string subfolder, ElementSave element, string? failsToSave)
+    {
+        if (element.Name == failsToSave)
+        {
+            return;
+        }
+        string extension = subfolder == "Screens" ? GumProjectSave.ScreenExtension : GumProjectSave.ComponentExtension;
+        Directory.CreateDirectory(Path.Combine(projectDirectory, subfolder));
+        element.Save(Path.Combine(projectDirectory, subfolder, element.Name + "." + extension), useCompactFormat: true);
     }
 
     // A source project with one healthy component, screen and behavior, plus one bad item of the given kind.

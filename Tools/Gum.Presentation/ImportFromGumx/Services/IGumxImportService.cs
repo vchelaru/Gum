@@ -32,8 +32,14 @@ public class ImportResult
         SkippedReasons.TryAdd(name, reason);
     }
 
-    /// <summary>Every file the import wrote before it finished (or failed), in order.</summary>
+    /// <summary>Every file the import wrote before it finished (or failed), in order. Only files seen on disk.</summary>
     public List<string> WrittenFiles { get; } = new();
+
+    /// <summary>
+    /// Files of elements handed to <see cref="IImportLogic"/>, which writes them itself and reports a
+    /// failed write only in a dialog. They join <see cref="WrittenFiles"/> once seen on disk.
+    /// </summary>
+    internal List<string> RegisteredFiles { get; } = new();
 
     /// <summary>
     /// The lines joined one per line, with all but the first <paramref name="max"/> collapsed into
