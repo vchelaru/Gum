@@ -412,4 +412,40 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
             }
         }
     }
+
+    private static GumProjectSave BuildRing(int count)
+    {
+        GumProjectSave ring = CreateProject();
+        for (int i = 0; i < count; i++)
+        {
+            ComponentSave component = AddComponent(ring, "E" + i, "A");
+            AddRow(component, "A", $"Width = Components/E{(i + 1) % count}.A.Width + 1");
+        }
+        return ring;
+    }
+
+    [Fact]
+    public void ApplyAll_AChainOf3200Elements_IsFasterThanBeforeLoopsWereDetected()
+    {
+        GumProjectSave chain = BuildChains(3200, 3200);
+
+        // Before loops were detected this took about 470 ms on a developer machine; it is about 150 now.
+        MedianMilliseconds(() => chain.ApplyAllVariableReferences()).ShouldBeLessThan(400);
+    }
+
+    [Fact]
+    public void ApplyAll_AChainAndALoopOf10000Elements_FinishWithoutOverflowingTheStack()
+    {
+        GumProjectSave chain = BuildChains(10000, 10000);
+        System.Threading.Tasks.Task chainApplied = System.Threading.Tasks.Task.Run(() => chain.ApplyAllVariableReferences());
+        chainApplied.Wait(15000).ShouldBeTrue("a 10000-element chain took more than 15 s (measured about 0.5 s)");
+        chainApplied.GetAwaiter().GetResult();
+        chain.Components[0].DefaultState.GetValue("A.Width").ShouldBe(10009f);
+
+        GumProjectSave ring = BuildRing(10000);
+        System.Threading.Tasks.Task ringApplied = System.Threading.Tasks.Task.Run(() => ring.ApplyAllVariableReferences());
+        ringApplied.Wait(15000).ShouldBeTrue("a 10000-element loop took more than 15 s (measured about 0.2 s)");
+        ringApplied.GetAwaiter().GetResult();
+        ring.Components[0].DefaultState.GetValue("A.Width").ShouldBe(10f);
+    }
 }

@@ -580,6 +580,7 @@ namespace GumRuntime
             List<ElementSave> sorted = ReferenceDependencies.OrderByDependency(allElements);
 
             // The rows do not change during the pass, so loops through other elements are looked up once.
+            ObjectFinder.Self.EnableCache();
             VariableReferenceGraph.BeginBatch();
             try
             {
@@ -607,6 +608,7 @@ namespace GumRuntime
             finally
             {
                 VariableReferenceGraph.EndBatch();
+                ObjectFinder.Self.DisableCache();
             }
         }
 
