@@ -188,6 +188,9 @@ public class ColorDisplay : DataUiDisplayBase
         _colorPicker = new CompactColorPicker();
         _colorPicker.ColorChanged += (_, color) => HandleColorPicked(color);
         _colorPicker.AddHandler(PointerReleasedEvent, (_, _) => CommitPendingFull(), RoutingStrategies.Bubble, handledEventsToo: true);
+        // A drag that loses the pointer never releases it; the cascade waits for the full commit.
+        // Avalonia raises the capture loss on the capturing control and each of its ancestors.
+        _colorPicker.AddHandler(PointerCaptureLostEvent, (_, _) => CommitPendingFull(), RoutingStrategies.Direct, handledEventsToo: true);
         Flyout flyout = new Flyout { Content = _colorPicker };
         flyout.Opening += (_, _) => _colorPicker.OriginalColor = _colorPicker.Color;
         flyout.Closed += (_, _) => CommitPendingFull();

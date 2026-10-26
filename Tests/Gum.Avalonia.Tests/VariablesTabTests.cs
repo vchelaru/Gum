@@ -335,7 +335,8 @@ public class VariablesTabTests
         commits.ShouldBe(new[] { SetPropertyCommitType.Intermediate });
 
         Pointer pointer = new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, isPrimary: true);
-        display.ColorPicker.ChannelSliders[0].RaiseEvent(new PointerCaptureLostEventArgs(display.ColorPicker.ChannelSliders[0], pointer)
+        // Avalonia raises the loss on the capturing slider and each ancestor, the picker among them.
+        display.ColorPicker.RaiseEvent(new PointerCaptureLostEventArgs(display.ColorPicker, pointer)
         {
             RoutedEvent = InputElement.PointerCaptureLostEvent
         });
