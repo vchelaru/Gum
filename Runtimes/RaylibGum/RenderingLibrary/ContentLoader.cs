@@ -297,9 +297,13 @@ public sealed class ContentLoader : IContentLoader
 
         DecodedImage? decoded;
         Stream decoderStream = new MemoryStream(fileData, writable: false);
-        using (decoderStream)
+        try
         {
             decoded = LoaderManager.Self.ImageDecoders.TryDecode(fileName, ref decoderStream);
+        }
+        finally
+        {
+            decoderStream.Dispose();
         }
         if (decoded != null)
         {

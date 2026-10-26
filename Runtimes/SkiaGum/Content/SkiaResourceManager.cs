@@ -198,7 +198,8 @@ public static class SkiaResourceManager
     {
         using var stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
             resourceName, ResourceAssembly);
-        skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream);
+        // A null result (Skia could not decode it) is cached as before.
+        skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream)!;
     }
 
     /// <summary>

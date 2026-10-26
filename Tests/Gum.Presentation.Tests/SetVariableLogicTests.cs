@@ -69,7 +69,7 @@ public class SetVariableLogicTests : BaseTestClass
         global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Add(decoder);
         try
         {
-            string result = _setVariableLogic.GetWhySourcefileIsInvalid(
+            string? result = _setVariableLogic.GetWhySourcefileIsInvalid(
                 "photo.WEBP", element, instance, "SourceFile");
 
             result.ShouldBeNull();

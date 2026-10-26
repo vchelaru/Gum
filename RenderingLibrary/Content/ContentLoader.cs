@@ -179,7 +179,7 @@ public sealed class ContentLoader : IContentLoader
 
     /// <summary>
     /// Creates a texture from an encoded image stream: the registered
-    /// <see cref="LoaderManager.ImageDecoders"/> first, then the built-in decoding.
+    /// <c>LoaderManager.ImageDecoders</c> first, then the built-in decoding.
     /// <paramref name="isProcessedOnLoad"/> is true when the pixels already went through the load-time fix-up.
     /// </summary>
     private static Texture2D CreateTextureFromStream(GraphicsDevice device, string fileName, System.IO.Stream stream,
