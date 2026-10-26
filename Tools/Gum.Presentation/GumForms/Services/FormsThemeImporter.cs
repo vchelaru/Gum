@@ -101,6 +101,17 @@ public class FormsThemeImporter : IFormsThemeImporter
             return false;
         }
 
+        // A theme is one unit: importing around files it lists but cannot supply leaves components
+        // pointing at behaviors the project never gets, so nothing is written.
+        List<(string Name, string Reason)> unloadable = GumxSourceProblems.Find(theme);
+        if (unloadable.Count > 0)
+        {
+            _dialogService.ShowMessage(
+                $"The {themeName} theme is incomplete, so nothing was added:\n\n" +
+                string.Join("\n", unloadable.Select(problem => $"{problem.Name}: {problem.Reason}")));
+            return false;
+        }
+
         bool isDefaultTheme = string.Equals(themeName, _formsFileService.DefaultThemeName, StringComparison.OrdinalIgnoreCase);
         ImportSelections selections = BuildSelections(theme, isDefaultTheme, isIncludeDemoScreenGum);
 
@@ -138,8 +149,7 @@ public class FormsThemeImporter : IFormsThemeImporter
         if (result.SkippedElements.Count > 0)
         {
             _dialogService.ShowMessage(
-                "These were not added because files they use could not be found:\n\n" +
-                string.Join("\n", result.SkippedElements));
+                "These were not added:\n\n" + string.Join("\n", result.DescribeSkipped()));
         }
         if (result.NeedsManualSave)
         {

@@ -327,6 +327,38 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
+    public async Task ImportThemeAsync_GivesEachNotAddedItsReason()
+    {
+        _importResult.AddSkipped("Neon/Controls/Icon", "file(s) it uses not found: icon.png");
+
+        await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+        _dialogService.Verify(
+            x => x.ShowMessage(
+                It.Is<string>(m => m.Contains("Neon/Controls/Icon: file(s) it uses not found: icon.png")),
+                It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportThemeAsync_AddsNothingAndSaysWhy_WhenTheThemeListsAFileItCannotSupply()
+    {
+        // A behavior file the theme lists but that is not there loads as an empty stand-in.
+        _theme.Behaviors.Add(new Gum.DataTypes.Behaviors.BehaviorSave { Name = "ButtonBehavior", IsSourceFileMissing = true });
+        _theme.BehaviorReferences.Add(new Gum.DataTypes.Behaviors.BehaviorReference { Name = "ButtonBehavior", SourcePath = "../FormsBehaviors/ButtonBehavior.behx" });
+
+        bool result = await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+        result.ShouldBeFalse();
+        _importedSelections.ShouldBeNull();
+        _dialogService.Verify(
+            x => x.ShowMessage(
+                It.Is<string>(m => m.Contains("Behaviors/ButtonBehavior: file not found: ../FormsBehaviors/ButtonBehavior.behx")),
+                It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task ImportThemeAsync_ReturnsFalse_WhenSomethingConflictsAfterTheCheck()
     {
         _importResult.ConflictingElements.Add("Neon/Controls/Button");

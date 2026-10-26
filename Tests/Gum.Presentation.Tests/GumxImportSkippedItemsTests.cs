@@ -1,0 +1,242 @@
+using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
+using Gum.Logic.FileWatch;
+using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Plugins.ImportPlugin.Services;
+using Gum.ProjectServices;
+using Gum.ToolStates;
+using ImportFromGumxPlugin.Services;
+using ImportFromGumxPlugin.ViewModels;
+using Moq;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using ToolsUtilities;
+
+namespace Gum.Presentation.Tests;
+
+/// <summary>
+/// An import never drops an element, behavior or file it cannot bring over without saying so (#6854):
+/// each one is reported with its reason, and everything else still imports.
+/// </summary>
+public class GumxImportSkippedItemsTests : IDisposable
+{
+    private readonly string _root = Path.Combine(Path.GetTempPath(), "GumSkippedItems6854_" + Guid.NewGuid().ToString("N"));
+    private readonly List<string> _registeredComponents = new();
+    private readonly List<string> _registeredScreens = new();
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_root))
+        {
+            Directory.Delete(_root, recursive: true);
+        }
+    }
+
+    public enum Failure
+    {
+        BehaviorSourcePathTargetMissing,
+        BehaviorFileMalformed,
+        ComponentFileMissing,
+        ComponentFileMalformed,
+        ScreenFileMissing,
+        StandardFileMissing,
+        TextureMissing,
+        NameCollision,
+        AnimationFileMalformed,
+    }
+
+    [Theory]
+    [InlineData(Failure.BehaviorSourcePathTargetMissing, "Behaviors/BadBehavior", "not found")]
+    [InlineData(Failure.BehaviorFileMalformed, "Behaviors/BadBehavior", "could not be read")]
+    [InlineData(Failure.ComponentFileMissing, "BadComponent", "not found")]
+    [InlineData(Failure.ComponentFileMalformed, "BadComponent", "could not be read")]
+    [InlineData(Failure.ScreenFileMissing, "BadScreen", "not found")]
+    [InlineData(Failure.StandardFileMissing, "Standards/Circle", "not found")]
+    [InlineData(Failure.TextureMissing, "BadComponent", "missing.png")]
+    [InlineData(Failure.NameCollision, "BadComponent", "already")]
+    [InlineData(Failure.AnimationFileMalformed, "Components/BadComponent animations", "could not be read")]
+    public async Task ImportAsync_ItemThatCannotBeImported_IsReportedWithReasonAndTheRestStillImports(
+        Failure failure, string expectedSkippedName, string expectedReasonText)
+    {
+        string sourceDirectory = Path.Combine(_root, "Source");
+        string projectDirectory = Path.Combine(_root, "Project");
+        Directory.CreateDirectory(projectDirectory);
+        string sourcePath = WriteSourceProject(sourceDirectory, failure);
+
+        GumxSourceService sourceService = new GumxSourceService();
+        GumProjectSave? source = await sourceService.LoadProjectAsync(sourcePath);
+        source.ShouldNotBeNull();
+        GumxImportService sut = CreateService(projectDirectory, source.Version, failure);
+
+        ImportSelections everything = new ImportSelections
+        {
+            DirectComponents = source.Components.ToList(),
+            DirectScreens = source.Screens.ToList(),
+            Behaviors = source.Behaviors.ToList(),
+            Standards = source.StandardElements.ToList(),
+        };
+        ImportResult result = await sut.ImportAsync(everything, source, sourceService.GetSourceBase(sourcePath), destinationSubfolder: string.Empty);
+
+        string skipped = result.SkippedElements.SingleOrDefault(name => name == expectedSkippedName)
+            ?? throw new ShouldAssertException($"'{expectedSkippedName}' was not reported. Reported: [{string.Join(", ", result.SkippedElements)}]");
+        result.SkippedReasons[skipped].ShouldContain(expectedReasonText);
+        result.SkippedElements.Count.ShouldBe(1);
+
+        _registeredComponents.ShouldContain("GoodComponent");
+        _registeredScreens.ShouldContain("GoodScreen");
+        File.Exists(Path.Combine(projectDirectory, "Behaviors", "GoodBehavior.behx")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DescribeSkipped_PutsEachItemOnItsOwnLineWithItsReason()
+    {
+        ImportResult result = new ImportResult();
+        result.AddSkipped("Neon/Controls/Icon", "texture icon.png was not found");
+        result.AddSkipped("Behaviors/ButtonBehavior", "file not found: ../FormsBehaviors/ButtonBehavior.behx");
+        result.SkippedElements.Add("Reasonless");
+
+        result.DescribeSkipped().ShouldBe(new[]
+        {
+            "Neon/Controls/Icon: texture icon.png was not found",
+            "Behaviors/ButtonBehavior: file not found: ../FormsBehaviors/ButtonBehavior.behx",
+            "Reasonless",
+        });
+    }
+
+    private GumxImportService CreateService(string projectDirectory, int version, Failure failure)
+    {
+        GumProjectSave project = new GumProjectSave
+        {
+            FullFileName = Path.Combine(projectDirectory, "Test.gumx"),
+            Version = version,
+        };
+        Mock<IProjectState> projectState = new();
+        projectState.Setup(x => x.GumProjectSave).Returns(project);
+        projectState.Setup(x => x.ProjectDirectory).Returns(projectDirectory + Path.DirectorySeparatorChar);
+
+        Mock<IImportLogic> importLogic = new();
+        importLogic.Setup(x => x.ImportComponent(It.IsAny<ComponentSave>(), It.IsAny<bool>()))
+            .Returns((ComponentSave component, bool _) =>
+            {
+                if (failure == Failure.NameCollision && component.Name == "BadComponent")
+                {
+                    return null;
+                }
+                _registeredComponents.Add(component.Name);
+                return component;
+            });
+        importLogic.Setup(x => x.ImportScreen(It.IsAny<ScreenSave>(), It.IsAny<bool>()))
+            .Returns((ScreenSave screen, bool _) =>
+            {
+                _registeredScreens.Add(screen.Name);
+                return screen;
+            });
+        importLogic.Setup(x => x.ImportBehavior(It.IsAny<FilePath>(), It.IsAny<string?>(), It.IsAny<bool>()))
+            .Returns(new BehaviorSave());
+
+        return new GumxImportService(
+            importLogic.Object, projectState.Object, new Mock<IFileCommands>().Object,
+            new GumxSourceService(), new ImportVersionGate(), new Mock<IFileWatchIgnoreList>().Object);
+    }
+
+    // A source project with one healthy component, screen and behavior, plus one bad item of the given kind.
+    private static string WriteSourceProject(string directory, Failure failure)
+    {
+        GumProjectSave project = new GumProjectSave
+        {
+            FullFileName = Path.Combine(directory, "Source.gumx"),
+            Version = (int)GumProjectSave.GumxVersions.AttributeVersion,
+        };
+        Directory.CreateDirectory(directory);
+        AddComponent(project, "GoodComponent");
+        AddScreen(project, "GoodScreen");
+        BehaviorSave good = new BehaviorSave { Name = "GoodBehavior" };
+        project.Behaviors.Add(good);
+        project.BehaviorReferences.Add(new BehaviorReference { Name = "GoodBehavior" });
+
+        switch (failure)
+        {
+            case Failure.BehaviorSourcePathTargetMissing:
+                project.Behaviors.Add(new BehaviorSave { Name = "BadBehavior" });
+                project.BehaviorReferences.Add(new BehaviorReference
+                {
+                    Name = "BadBehavior",
+                    SourcePath = "../FormsBehaviors/BadBehavior.behx",
+                });
+                break;
+            case Failure.BehaviorFileMalformed:
+                project.Behaviors.Add(new BehaviorSave { Name = "BadBehavior" });
+                project.BehaviorReferences.Add(new BehaviorReference { Name = "BadBehavior" });
+                break;
+            case Failure.ComponentFileMissing:
+            case Failure.ComponentFileMalformed:
+            case Failure.NameCollision:
+            case Failure.AnimationFileMalformed:
+                AddComponent(project, "BadComponent");
+                break;
+            case Failure.ScreenFileMissing:
+                AddScreen(project, "BadScreen");
+                break;
+            case Failure.StandardFileMissing:
+                project.StandardElements.Add(new StandardElementSave { Name = "Circle" });
+                project.StandardElementReferences.Add(new ElementReference { Name = "Circle", ElementType = ElementType.Standard });
+                break;
+            case Failure.TextureMissing:
+                ComponentSave textured = AddComponent(project, "BadComponent");
+                textured.DefaultState.Variables.Add(new VariableSave { Name = "SourceFile", Value = "missing.png" });
+                break;
+        }
+
+        project.Save(project.FullFileName, saveElements: true);
+        foreach (BehaviorSave behavior in project.Behaviors.Where(b => b.Name != "BadBehavior" || failure == Failure.BehaviorFileMalformed))
+        {
+            behavior.Save(Path.Combine(directory, "Behaviors", behavior.Name + ".behx"), useCompactFormat: true);
+        }
+
+        switch (failure)
+        {
+            case Failure.BehaviorFileMalformed:
+                File.WriteAllText(Path.Combine(directory, "Behaviors", "BadBehavior.behx"), "<BehaviorSave><Name>BadBehavior");
+                break;
+            case Failure.ComponentFileMissing:
+                File.Delete(Path.Combine(directory, "Components", "BadComponent.gucx"));
+                break;
+            case Failure.ComponentFileMalformed:
+                File.WriteAllText(Path.Combine(directory, "Components", "BadComponent.gucx"), "<ComponentSave><Name>BadComponent");
+                break;
+            case Failure.AnimationFileMalformed:
+                File.WriteAllText(Path.Combine(directory, "Components", "BadComponentAnimations.ganx"), "<ElementAnimationsSave><Animations>");
+                break;
+            case Failure.ScreenFileMissing:
+                File.Delete(Path.Combine(directory, "Screens", "BadScreen.gusx"));
+                break;
+            case Failure.StandardFileMissing:
+                File.Delete(Path.Combine(directory, "Standards", "Circle.gutx"));
+                break;
+        }
+        return project.FullFileName;
+    }
+
+    private static ComponentSave AddComponent(GumProjectSave project, string name)
+    {
+        ComponentSave component = new ComponentSave { Name = name };
+        component.States.Add(new StateSave { Name = "Default" });
+        project.Components.Add(component);
+        project.ComponentReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Component });
+        return component;
+    }
+
+    private static void AddScreen(GumProjectSave project, string name)
+    {
+        ScreenSave screen = new ScreenSave { Name = name };
+        screen.States.Add(new StateSave { Name = "Default" });
+        project.Screens.Add(screen);
+        project.ScreenReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Screen });
+    }
+}

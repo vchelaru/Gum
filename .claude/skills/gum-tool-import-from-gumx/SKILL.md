@@ -33,6 +33,10 @@ Three sets of state live on `ImportFromGumxViewModel`:
 
 When you touch the recompute loop: **always** detach `OnItemPropertyChanged` before mutating `InclusionState`, then re-attach. Otherwise the mutation re-enters the recompute path and clobbers tracking.
 
+## Nothing is skipped silently
+
+Anything `GumxImportService.ImportAsync` cannot bring over (a listed file that is missing or damaged, a missing texture or font, a behavior or Standard it cannot copy, a name the project refuses, an unreadable `.ganx`) goes into `ImportResult` through `AddSkipped(name, reason)`, and the rest still imports. `GumxSourceProblems.Find` lists what the source project names but did not load (a missing file loads as an `IsSourceFileMissing` stand-in; a damaged one is left out of the lists). Add Forms shows `DescribeSkipped()` one line per item; the dialog shows the first five. A new early `return`, `continue` or `catch` in the import path must report the same way.
+
 ## Tree rows
 
 Each row is a check box plus a "Details..." `HyperlinkButton`, visible only on flagged-Standard rows (`ImportTreeNodeViewModel.IsDetailsButtonVisible`). The link opens `StandardDiffDetailsView` as a separate modal showing the row's `StandardDiffRows`; the diff is not expanded inline in the tree. A force-included Standard's check box is disabled, with `RequiredReason` as its tooltip.

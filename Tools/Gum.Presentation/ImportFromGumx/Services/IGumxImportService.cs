@@ -14,8 +14,28 @@ namespace ImportFromGumxPlugin.Services;
 public class ImportResult
 {
     public List<string> CopiedAssets { get; } = new();
-    /// <summary>Elements that were not imported because one or more of their required asset files could not be found.</summary>
+    /// <summary>
+    /// Everything the import could not bring over (elements, behaviors, standards, animation files), by name.
+    /// <see cref="SkippedReasons"/> says why. Nothing is dropped without an entry here.
+    /// </summary>
     public List<string> SkippedElements { get; } = new();
+    /// <summary>Why each <see cref="SkippedElements"/> entry was not imported, keyed by that entry.</summary>
+    public Dictionary<string, string> SkippedReasons { get; } = new();
+
+    /// <summary>Records that <paramref name="name"/> was not imported, and why. The first reason for a name wins.</summary>
+    public void AddSkipped(string name, string reason)
+    {
+        if (!SkippedElements.Contains(name))
+        {
+            SkippedElements.Add(name);
+        }
+        SkippedReasons.TryAdd(name, reason);
+    }
+
+    /// <summary>One line per skipped item: its name, then its reason when known.</summary>
+    public List<string> DescribeSkipped() => SkippedElements
+        .Select(name => SkippedReasons.TryGetValue(name, out string? reason) ? $"{name}: {reason}" : name)
+        .ToList();
     /// <summary>Elements whose destination files already exist. When non-empty the import was cancelled.</summary>
     public List<string> ConflictingElements { get; } = new();
     /// <summary>Why the import was refused because the source project is newer than the destination; null when it was not.</summary>
