@@ -534,8 +534,9 @@ public static class IWrappedTextExtensions
 /// <summary>
 /// Maps control characters to the blanks MonoGame's <c>BitmapFont</c> draws for them (#6835), so a backend
 /// whose native text engine would draw a missing-glyph box or '?' (raylib) or break a line (RichTextKit)
-/// agrees with it: a control character becomes a space, '\t' is four spaces (or kept when the backend
-/// has its own tab stops), '\n' is left alone, and '\r' directly before '\n' stays part of that break.
+/// agrees with it: a control character becomes a space, '\t' becomes four spaces unless the caller keeps it
+/// (a backend with its own tab stops, or a font with a tab glyph), '\n' is left alone, and '\r' directly
+/// before '\n' stays part of that break.
 /// </summary>
 public static class ControlCharacterBlanker
 {

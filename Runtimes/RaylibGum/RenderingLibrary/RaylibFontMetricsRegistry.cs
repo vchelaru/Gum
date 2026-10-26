@@ -77,9 +77,9 @@ internal static class RaylibFontMetricsRegistry
     }
 
     /// <summary>
-    /// Whether <paramref name="font"/>'s glyph table has a tab (<c>char id=9</c>) row, as MonoGame's
-    /// <c>BitmapFont</c> checks. A font without one gets four spaces for a tab. raylib's default font and a
-    /// TTF loaded through <c>TtfFontLoader</c> carry only printable glyphs, so they never have one.
+    /// Whether <paramref name="font"/> has a <c>char id=9</c> row, whose advance is then the tab's width
+    /// (as on MonoGame). A font without one gets four spaces. raylib's default font and a
+    /// <c>TtfFontLoader</c> font have only printable glyphs, so they never do.
     /// </summary>
     public static unsafe bool HasTabGlyph(Raylib_cs.Font font)
     {
@@ -100,7 +100,7 @@ internal static class RaylibFontMetricsRegistry
         bool hasTab = false;
         for (int i = 0; i < font.GlyphCount; i++)
         {
-            if (font.Glyphs[i].Value == '	')
+            if (font.Glyphs[i].Value == '\t')
             {
                 hasTab = true;
                 break;
