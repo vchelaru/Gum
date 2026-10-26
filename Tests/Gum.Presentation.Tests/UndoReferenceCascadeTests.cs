@@ -61,8 +61,10 @@ public class UndoReferenceCascadeTests : BaseTestClass
 
         Mock<IWireframeObjectManager> wireframe = new();
         wireframe.Setup(x => x.AllIpsos).Returns(new List<GraphicalUiElement>());
+        Mock<ICompositeMemberRegistry> compositeRegistry = new();
+        compositeRegistry.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor>());
         _logic = new VariableReferenceLogic(new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object,
-            new Mock<IDialogService>().Object, _fileCommands.Object, new Mock<ICompositeMemberRegistry>().Object,
+            new Mock<IDialogService>().Object, _fileCommands.Object, compositeRegistry.Object,
             new Mock<IDispatcher>().Object, wireframe.Object);
 
         Mock<IReferenceFinderProjectProvider> projectProvider = new();
@@ -195,6 +197,17 @@ public class UndoReferenceCascadeTests : BaseTestClass
         _disk["Comp"] = FileManager.CloneSaveObject(_comp);
         _disk["Other"] = FileManager.CloneSaveObject(_other);
         _undo.RecordState();
+    }
+
+    // Typing a row validates its left side against the instance type's variables, so a test that types a row
+    // needs the Rectangle standard element. The other tests leave it out, so a reset variable reads as null.
+    private static void AddRectangleStandard()
+    {
+        StandardElementSave rectangle = new StandardElementSave { Name = "Rectangle" };
+        StateSave rectangleDefault = new StateSave { Name = "Default", ParentContainer = rectangle };
+        rectangleDefault.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
+        rectangle.States.Add(rectangleDefault);
+        ObjectFinder.Self.GumProjectSave!.StandardElements.Add(rectangle);
     }
 
     private void EditSourceWidth(float value, StateSave? state = null)
@@ -653,6 +666,93 @@ public class UndoReferenceCascadeTests : BaseTestClass
 
     private static string[] Rows(ElementSave element, string owner) =>
         element.DefaultState.GetVariableListSave(owner + ".VariableReferences")!.ValueAsIList.Cast<string>().ToArray();
+
+    // #6884: a removed reference keeps the value it had set. Undoing a row add removes the row, so the follower
+    // keeps what the add wrote instead of going back to the snapshot's value, and so do its readers.
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void UndoRedo_OfAddingAReferenceRow_ShouldKeepTheValueTheRowWrote(bool followerHadAValue, bool autoSave)
+    {
+        Arrange(materialized: true, autoSave);
+        AddRectangleStandard();
+        NewInstance(_comp, "F3", 0);
+        NewInstance(_comp, "F4", 0);
+        NewInstance(_other, "O3", 0);
+        if (followerHadAValue)
+        {
+            SetWidth(_comp.DefaultState, "F3", 62);
+        }
+        AddRow(_comp.DefaultState, "F3");
+        AddRow(_comp.DefaultState, "F4", "Width = F3.Width + 1");
+        AddRow(_other.DefaultState, "O3", "Width = Components/Comp.F3.Width");
+        ElementSaveExtensions.ApplyVariableReferences(_comp, _comp.DefaultState, null);
+        ElementSaveExtensions.ApplyVariableReferences(_other, _other.DefaultState, null);
+        _disk["Comp"] = FileManager.CloneSaveObject(_comp);
+        _disk["Other"] = FileManager.CloneSaveObject(_other);
+        _undo.RecordState();
+
+        using (_undo.RequestLock())
+        {
+            _comp.DefaultState.GetVariableListSave("F3.VariableReferences")!.ValueAsIList.Add("Width = Source.Width + 5");
+            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("F3"), "VariableReferences",
+                _comp.DefaultState, "F3.VariableReferences", trySave: true);
+        }
+        _fileCommands.Object.TryAutoSaveElement(_comp);
+        Width(_comp, "F3").ShouldBe(55, "the add wrote F3");
+        Width(_comp, "F4").ShouldBe(56, "the add reached F4");
+        Width(_other, "O3").ShouldBe(55, "the add reached O3");
+
+        void ShouldHoldTheRowsValues()
+        {
+            Width(_comp, "F3").ShouldBe(55, "F3 keeps the value the row wrote");
+            Width(_comp, "F4").ShouldBe(56, "a reader of the follower recomputes from the held value");
+            Width(_other, "O3").ShouldBe(55, "so does a reader in another element");
+            MemoryShouldEqualDisk();
+        }
+
+        _undo.PerformUndo();
+        _comp.DefaultState.GetVariableListSave("F3.VariableReferences")!.ValueAsIList.Count.ShouldBe(0);
+        ShouldHoldTheRowsValues();
+        _undo.PerformRedo();
+        _comp.DefaultState.GetVariableListSave("F3.VariableReferences")!.ValueAsIList.Count.ShouldBe(1);
+        ShouldHoldTheRowsValues();
+        _undo.PerformUndo();
+        ShouldHoldTheRowsValues();
+        HistoryCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void UndoRedo_OfAddingAReferenceRowInACategorizedState_ShouldKeepTheValueTheRowWrote()
+    {
+        Arrange();
+        AddRectangleStandard();
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        category.States.Add(new StateSave { Name = "Alt", ParentContainer = _comp });
+        _comp.Categories.Add(category);
+        StateSave Alt() => _comp.Categories.Single().States.Single();
+        NewInstance(_comp, "F3", 0);
+        SetWidth(Alt(), "Source", 70);
+        SetWidth(Alt(), "F3", 62);
+        AddRow(Alt(), "F3");
+        _selectedStateSave = Alt();
+        _undo.RecordState();
+
+        using (_undo.RequestLock())
+        {
+            Alt().GetVariableListSave("F3.VariableReferences")!.ValueAsIList.Add("Width = Source.Width + 5");
+            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("F3"), "VariableReferences",
+                Alt(), "F3.VariableReferences", trySave: true);
+        }
+        Width(_comp, "F3", Alt()).ShouldBe(75, "the add wrote F3");
+
+        _undo.PerformUndo();
+        Width(_comp, "F3", Alt()).ShouldBe(75, "the removed row keeps its value");
+        _undo.PerformRedo();
+        Width(_comp, "F3", Alt()).ShouldBe(75);
+    }
 
     [Fact]
     public void UndoRedo_OfAVariableNoRowReads_ShouldRestoreItAndAddOneEntry()
