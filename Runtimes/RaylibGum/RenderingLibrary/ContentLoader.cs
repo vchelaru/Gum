@@ -43,6 +43,9 @@ public sealed class ContentLoader : IContentLoader
     /// </summary>
     internal static Action<Texture2D, Raylib_cs.TextureFilter> TextureFilterApplier { get; set; } = SetTextureFilter;
 
+    // Test seam: sees the RGBA bytes uploaded for a decoder's image (#6829). Null in normal use.
+    internal static Action<byte[]>? DecodedPixelsUploaded { get; set; }
+
     /// <inheritdoc/>
     /// <remarks>
     /// A <see cref="Raylib_cs.Font"/> loaded from a font file or system family name (not a .fnt) has no size to
@@ -308,11 +311,13 @@ public sealed class ContentLoader : IContentLoader
         if (decoded != null)
         {
             // raylib draws straight alpha, so a premultiplied decode is converted back.
-            if (decoded.ConvertToStraightAlpha())
+            DecodedImage straight = decoded.ToStraightAlpha();
+            if (!ReferenceEquals(straight, decoded))
             {
                 System.Diagnostics.Trace.TraceWarning(DecodedImage.GetUnpremultipliedWarning(fileName));
             }
-            Texture2D decodedTexture = UploadRgbaTexture(decoded.Rgba, decoded.Width, decoded.Height);
+            DecodedPixelsUploaded?.Invoke(straight.Rgba);
+            Texture2D decodedTexture = UploadRgbaTexture(straight.Rgba, straight.Width, straight.Height);
             TextureFilterApplier(decodedTexture, DefaultTextureFilter);
             return decodedTexture;
         }

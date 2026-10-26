@@ -163,17 +163,28 @@ public sealed class ContentLoader : IContentLoader
     /// <see cref="ProcessLoadedPixels"/>. Premultiplied pixels are left alone when the renderer is
     /// premultiplied, otherwise converted to straight alpha (then edge-bled when that is on).
     /// </summary>
-    /// <returns>True when the pixels were un-premultiplied, which the caller reports as a warning.</returns>
-    internal static bool PrepareDecodedPixels(DecodedImage image, bool usePremultipliedAlpha, bool bleedTransparentEdges)
+    /// <param name="unpremultiplied">True when the pixels were un-premultiplied, which the caller reports as a warning.</param>
+    /// <returns><paramref name="image"/> when nothing changes, otherwise a fixed-up copy.</returns>
+    internal static DecodedImage PrepareDecodedPixels(DecodedImage image, bool usePremultipliedAlpha,
+        bool bleedTransparentEdges, out bool unpremultiplied)
     {
+        unpremultiplied = false;
         if (image.IsPremultiplied && usePremultipliedAlpha)
         {
-            return false;
+            return image;
+        }
+        if (!image.IsPremultiplied && !usePremultipliedAlpha && !bleedTransparentEdges)
+        {
+            return image;
         }
 
-        bool unpremultiplied = image.ConvertToStraightAlpha();
-        ProcessLoadedPixels(image.Rgba, image.Width, image.Height, usePremultipliedAlpha, bleedTransparentEdges);
-        return unpremultiplied;
+        // Work on a copy: a decoder may hand back a cached instance, which must not be changed.
+        DecodedImage owned = image.IsPremultiplied
+            ? image.ToStraightAlpha()
+            : new DecodedImage((byte[])image.Rgba.Clone(), image.Width, image.Height);
+        unpremultiplied = image.IsPremultiplied;
+        ProcessLoadedPixels(owned.Rgba, owned.Width, owned.Height, usePremultipliedAlpha, bleedTransparentEdges);
+        return owned;
     }
 #endif
 
@@ -194,12 +205,14 @@ public sealed class ContentLoader : IContentLoader
             DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(fileName, ref stream);
             if (decoded != null)
             {
-                if (PrepareDecodedPixels(decoded, usePremultipliedAlpha, bleedTransparentEdges))
+                DecodedImage prepared = PrepareDecodedPixels(decoded, usePremultipliedAlpha,
+                    bleedTransparentEdges, out bool unpremultiplied);
+                if (unpremultiplied)
                 {
                     System.Diagnostics.Trace.TraceWarning(DecodedImage.GetUnpremultipliedWarning(fileName));
                 }
                 isProcessedOnLoad = true;
-                return CreateTextureFromRgba(device, decoded.Rgba, decoded.Width, decoded.Height);
+                return CreateTextureFromRgba(device, prepared.Rgba, prepared.Width, prepared.Height);
             }
 
             return CreateTextureFromEncodedStream(device, fileName, stream, usePremultipliedAlpha,
@@ -364,67 +377,14 @@ public sealed class ContentLoader : IContentLoader
             renderer = managers.Renderer;
         }
         
-        if (extension == "tga")
-        {
-#if RENDERING_LIB_SUPPORTS_TGA
-                if (renderer.GraphicsDevice == null)
-                {
-                    throw new Exception("The renderer is null - did you forget to call Initialize?");
-                }
-
-                Paloma.TargaImage tgaImage = new Paloma.TargaImage(fileName);
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    tgaImage.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-                    stream.Seek(0, SeekOrigin.Begin); //must do this, or error is thrown in next line
-                    toReturn = Texture2D.FromStream(renderer.GraphicsDevice, stream);
-                    toReturn.Name = fileName;
-                }
-#else
-            throw new NotImplementedException();
-#endif
-        }
-#if HAS_SYSTEM_DRAWING_IMAGE
-
-        else if (extension == "bmp")
-        {
-            var image = System.Drawing.Image.FromFile(fileNameStandardized);
-            var bitmap = new System.Drawing.Bitmap(image);
-            
-            var texture = new Texture2D(renderer.GraphicsDevice, bitmap.Width, bitmap.Height, false, SurfaceFormat.Color);
-            var pixels = new Microsoft.Xna.Framework.Color[bitmap.Width * bitmap.Height];
-            var index = 0;
-            for (var y = 0; y < bitmap.Height; y++)
-            {
-                for (var x = 0; x < bitmap.Width; x++)
-                {
-                    var color = bitmap.GetPixel(x, y);
-                    var r = color.R;
-                    var g = color.G;
-                    var b = color.B;
-                    var a = color.A;
-                    pixels[index] = new Microsoft.Xna.Framework.Color(r, g, b, a);
-                    index++;
-                }
-            }
-            
-            texture.SetData(pixels);
-            texture.Name = fileNameStandardized;
-
-            toReturn = texture;
-        }
-#endif
-
 #if XNALIKE && !FRB
-        else if (string.IsNullOrEmpty(extension) && XnaContentManager != null)
+        if (string.IsNullOrEmpty(extension) && XnaContentManager != null)
         {
             toReturn = LoadFromContentManager(fileName, fileNameStandardized);
             isFromContentManager = true;
         }
-#endif
-
-
         else
+#endif
         {
             // This file could be a reference from a .fnt file (with extension),
             // but the file could be a content pipeline file. If so, we need to tolerate

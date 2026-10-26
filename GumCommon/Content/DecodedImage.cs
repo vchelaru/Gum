@@ -42,22 +42,22 @@ public sealed class DecodedImage
     /// True when the color channels are already multiplied by alpha. Gum then skips its own
     /// premultiply, and un-premultiplies when the renderer uses straight alpha.
     /// </summary>
-    public bool IsPremultiplied { get; private set; }
+    public bool IsPremultiplied { get; }
 
     /// <summary>
-    /// When <see cref="IsPremultiplied"/>, divides each pixel's color by its alpha in place (rounding
-    /// to nearest, clamped to 255) and clears the flag. Pixels with alpha 0 stay as they are. Loses
-    /// precision at low alpha, so Gum logs a warning when it has to do this.
+    /// Returns this image when it is already straight alpha, otherwise a new image whose colors are
+    /// divided by alpha (rounded to nearest, clamped to 255). Pixels with alpha 0 are copied as they
+    /// are. This image is never changed, so a decoder may return a cached instance. Loses precision at
+    /// low alpha, so Gum logs a warning when it has to do this.
     /// </summary>
-    /// <returns>True when the pixels were converted.</returns>
-    public bool ConvertToStraightAlpha()
+    public DecodedImage ToStraightAlpha()
     {
         if (!IsPremultiplied)
         {
-            return false;
+            return this;
         }
 
-        byte[] rgba = Rgba;
+        byte[] rgba = (byte[])Rgba.Clone();
         for (int i = 0; i + 3 < rgba.Length; i += 4)
         {
             int alpha = rgba[i + 3];
@@ -71,12 +71,11 @@ public sealed class DecodedImage
             rgba[i + 1] = (byte)System.Math.Min(255, (rgba[i + 1] * 255 + half) / alpha);
             rgba[i + 2] = (byte)System.Math.Min(255, (rgba[i + 2] * 255 + half) / alpha);
         }
-        IsPremultiplied = false;
-        return true;
+        return new DecodedImage(rgba, Width, Height);
     }
 
     /// <summary>
-    /// The warning Gum logs when <see cref="ConvertToStraightAlpha"/> ran because the renderer uses
+    /// The warning Gum logs when <see cref="ToStraightAlpha"/> ran because the renderer uses
     /// straight alpha.
     /// </summary>
     internal static string GetUnpremultipliedWarning(string fileName) =>

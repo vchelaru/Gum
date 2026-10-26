@@ -17,6 +17,8 @@ public class ImageDecoderTests : BaseTestClass
     private static readonly byte[] FileBytes = { 7, 6, 5, 4 };
     private readonly Action<Texture2D, TextureFilter> _savedApplier = ContentLoader.TextureFilterApplier;
     private readonly List<Texture2D> _uploaded = new List<Texture2D>();
+    private readonly List<byte[]> _uploadedPixels = new List<byte[]>();
+    private readonly Action<byte[]>? _savedUploadObserver = ContentLoader.DecodedPixelsUploaded;
 
     public ImageDecoderTests()
     {
@@ -70,8 +72,11 @@ public class ImageDecoderTests : BaseTestClass
 
         LoaderManager.Self.LoadContent<Texture2D>(path);
 
-        image.Rgba.ShouldBe(new byte[] { 199, 100, 50, 128 });
-        image.IsPremultiplied.ShouldBeFalse();
+        _uploadedPixels.Count.ShouldBe(1);
+        _uploadedPixels[0].ShouldBe(new byte[] { 199, 100, 50, 128 });
+        // A decoder may return a cached instance, so its image must not be converted in place.
+        image.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
+        image.IsPremultiplied.ShouldBeTrue();
     }
 
     [Fact]

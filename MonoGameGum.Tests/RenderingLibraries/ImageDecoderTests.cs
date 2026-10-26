@@ -155,6 +155,46 @@ public class ImageDecoderTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadContent_TgaFile_ReachesRegisteredDecoder()
+    {
+        ServeFile("served_6829.tga");
+        FakeDecoder decoder = new FakeDecoder(result: false, readAll: true);
+        LoaderManager.Self.ImageDecoders.Add(decoder);
+
+        // Headless, so the load still fails after the decoders; the decoder must have been asked.
+        Should.Throw<Exception>(() => new ContentLoader().LoadContent<Texture2D>("served_6829.tga"));
+
+        decoder.CallCount.ShouldBe(1);
+        decoder.ReceivedBytes.ShouldBe(FileBytes);
+    }
+
+    [Fact]
+    public void PrepareDecodedPixels_Premultiplied_DoesNotChangeTheDecodersImage()
+    {
+        // A decoder may hand back a cached instance; converting it in place would un-premultiply it twice.
+        DecodedImage image = new DecodedImage(new byte[] { 100, 50, 25, 128 }, 1, 1, isPremultiplied: true);
+
+        DecodedImage prepared = ContentLoader.PrepareDecodedPixels(image,
+            usePremultipliedAlpha: false, bleedTransparentEdges: false, out _);
+
+        image.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
+        image.IsPremultiplied.ShouldBeTrue();
+        prepared.Rgba.ShouldBe(new byte[] { 199, 100, 50, 128 });
+    }
+
+    [Fact]
+    public void PrepareDecodedPixels_Straight_DoesNotChangeTheDecodersImage()
+    {
+        DecodedImage image = new DecodedImage(new byte[] { 200, 100, 50, 128 }, 1, 1);
+
+        DecodedImage prepared = ContentLoader.PrepareDecodedPixels(image,
+            usePremultipliedAlpha: true, bleedTransparentEdges: false, out _);
+
+        image.Rgba.ShouldBe(new byte[] { 200, 100, 50, 128 });
+        prepared.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
+    }
+
+    [Fact]
     public void LoadContent_MissingFile_NeverReachesDecoders()
     {
         FakeDecoder decoder = new FakeDecoder(result: true);
@@ -183,10 +223,10 @@ public class ImageDecoderTests : BaseTestClass
     {
         DecodedImage image = new DecodedImage(new byte[] { 200, 100, 50, 128 }, 1, 1);
 
-        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(image,
-            usePremultipliedAlpha: true, bleedTransparentEdges: false);
+        DecodedImage prepared = ContentLoader.PrepareDecodedPixels(image,
+            usePremultipliedAlpha: true, bleedTransparentEdges: false, out bool unpremultiplied);
 
-        image.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
+        prepared.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
         unpremultiplied.ShouldBeFalse();
     }
 
@@ -195,10 +235,10 @@ public class ImageDecoderTests : BaseTestClass
     {
         DecodedImage image = new DecodedImage(new byte[] { 100, 50, 25, 128 }, 1, 1, isPremultiplied: true);
 
-        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(image,
-            usePremultipliedAlpha: true, bleedTransparentEdges: true);
+        DecodedImage prepared = ContentLoader.PrepareDecodedPixels(image,
+            usePremultipliedAlpha: true, bleedTransparentEdges: true, out bool unpremultiplied);
 
-        image.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
+        prepared.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
         unpremultiplied.ShouldBeFalse();
     }
 
@@ -208,22 +248,20 @@ public class ImageDecoderTests : BaseTestClass
         DecodedImage image = new DecodedImage(
             new byte[] { 100, 50, 25, 128, 0, 0, 0, 0, 9, 8, 7, 255 }, 3, 1, isPremultiplied: true);
 
-        bool unpremultiplied = ContentLoader.PrepareDecodedPixels(image,
-            usePremultipliedAlpha: false, bleedTransparentEdges: false);
+        DecodedImage prepared = ContentLoader.PrepareDecodedPixels(image,
+            usePremultipliedAlpha: false, bleedTransparentEdges: false, out bool unpremultiplied);
 
-        image.Rgba.ShouldBe(new byte[] { 199, 100, 50, 128, 0, 0, 0, 0, 9, 8, 7, 255 });
-        image.IsPremultiplied.ShouldBeFalse();
+        prepared.Rgba.ShouldBe(new byte[] { 199, 100, 50, 128, 0, 0, 0, 0, 9, 8, 7, 255 });
+        prepared.IsPremultiplied.ShouldBeFalse();
         unpremultiplied.ShouldBeTrue();
     }
 
     [Fact]
-    public void ConvertToStraightAlpha_Straight_LeavesPixels()
+    public void ToStraightAlpha_Straight_ReturnsTheSameImage()
     {
         DecodedImage image = new DecodedImage(new byte[] { 100, 50, 25, 128 }, 1, 1);
 
-        image.ConvertToStraightAlpha().ShouldBeFalse();
-
-        image.Rgba.ShouldBe(new byte[] { 100, 50, 25, 128 });
+        image.ToStraightAlpha().ShouldBeSameAs(image);
     }
 
     private sealed class FakeDecoder : IImageDecoder
