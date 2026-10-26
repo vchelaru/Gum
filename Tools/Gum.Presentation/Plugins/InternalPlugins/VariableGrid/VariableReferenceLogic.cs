@@ -601,6 +601,16 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             {
                 KeepHeldValue(state, RestoredChanges.FindState(before, state, element), RestoredChanges.FindState(otherSide, state, element), removed, alwaysKeep: isUndo);
             }
+            // Any variable the action itself left alone keeps what it holds: a cascade (or an earlier undo)
+            // may have changed it since the snapshot was taken, and undoing this action must not undo that.
+            StateSave? heldState = RestoredChanges.FindState(before, state, element);
+            StateSave? otherState = RestoredChanges.FindState(otherSide, state, element);
+            foreach (string name in state.Variables.Select(item => item.Name)
+                .Concat(heldState?.Variables.Select(item => item.Name) ?? Enumerable.Empty<string>()).Distinct().ToList())
+            {
+                KeepHeldValue(state, heldState, otherState, name);
+            }
+
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
             if (!graph.HasRows)
             {
