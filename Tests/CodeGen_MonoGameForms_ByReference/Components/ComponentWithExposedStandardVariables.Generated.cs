@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components;
+[global::Gum.DataTypes.GumElement("ComponentWithExposedStandardVariables")]
 partial class ComponentWithExposedStandardVariables : global::Gum.Forms.Controls.FrameworkElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -21,7 +22,7 @@ partial class ComponentWithExposedStandardVariables : global::Gum.Forms.Controls
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("ComponentWithExposedStandardVariables") ?? throw new System.InvalidOperationException("Could not find an element named ComponentWithExposedStandardVariables - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("ComponentWithExposedStandardVariables");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ComponentWithExposedStandardVariables(visual);
             return visual;

@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/PlayerJoinView")]
 partial class PlayerJoinViewRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER
@@ -31,8 +32,8 @@ partial class PlayerJoinViewRuntime : ContainerRuntime
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/PlayerJoinView");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/PlayerJoinView");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

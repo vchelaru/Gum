@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/ListBox", FormsType = typeof(global::Gum.Forms.Controls.ListBox))]
 partial class ListBox : global::Gum.Forms.Controls.ListBox
 {
     #if UNITY_5_3_OR_NEWER
@@ -22,7 +23,7 @@ partial class ListBox : global::Gum.Forms.Controls.ListBox
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/ListBox") ?? throw new System.InvalidOperationException("Could not find an element named Controls/ListBox - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/ListBox");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ListBox(visual);
             return visual;

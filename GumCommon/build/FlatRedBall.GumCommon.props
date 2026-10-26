@@ -1,0 +1,11 @@
+<Project>
+
+	<!-- NuGet imports buildTransitive\<PackageId>.props into every game that uses a Gum runtime, since each
+	     runtime package depends on this one. <GumShake>true</GumShake> tells the Gum.Analyzers generator
+	     that the game packs its Gum project with the shake option of gumcli pack, which turns on GUM004 (an element lookup by a
+	     non-literal name). Off by default: a dynamic lookup is fine when nothing is trimmed. -->
+	<ItemGroup>
+		<CompilerVisibleProperty Include="GumShake" />
+	</ItemGroup>
+
+</Project>

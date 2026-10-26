@@ -455,6 +455,14 @@ public class GumProjectSave
     public bool ShouldSerializeFavoriteComponents() => FavoriteComponents.Count > 0;
 
     /// <summary>
+    /// Names of the Screens and Components <c>gumcli pack --shake</c> left out of a bundle because
+    /// nothing reached them. Lets the runtime tell a trimmed element from a misspelled one. Empty
+    /// for every project the tool saves.
+    /// </summary>
+    public List<string> TrimmedElements { get; set; } = new List<string>();
+    public bool ShouldSerializeTrimmedElements() => TrimmedElements.Count > 0;
+
+    /// <summary>
     /// The folder of the root of the parent project if this Gum project is part of a larger project (like a game project or android app).
     /// This is a relative path like "../../"
     /// </summary>
