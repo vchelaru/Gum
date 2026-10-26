@@ -16,13 +16,15 @@ namespace Gum.Analyzers;
 /// when hand-written code names a class carrying <c>[GumElement]</c> (creation, typeof, generic
 /// argument, cast, is/as, member access, declaration) or passes a string literal to an ObjectFinder
 /// element lookup. Gum's generated files (<c>*.Generated.cs</c>) do not count: they reference every
-/// element. A non-literal name passed to a lookup cannot be rooted and raises GUM004.
+/// element. A non-literal name passed to a lookup cannot be rooted and raises GUM004 in a game that sets
+/// <c>&lt;GumShake&gt;true&lt;/GumShake&gt;</c>.
 /// </summary>
 [Generator(LanguageNames.CSharp)]
 public sealed class GumElementRootGenerator : IIncrementalGenerator
 {
     public const string DynamicLookupDiagnosticId = "GUM004";
 
+    private const string GumShakePropertyKey = "build_property.GumShake";
     private const string GumElementAttributeName = "Gum.DataTypes.GumElementAttribute";
     private const string GumElementRootAttributeName = "Gum.DataTypes.GumElementRootAttribute";
 
@@ -69,17 +71,27 @@ public sealed class GumElementRootGenerator : IIncrementalGenerator
         IncrementalValueProvider<bool> runtimeSupportsRoots = context.CompilationProvider
             .Select(static (compilation, _) => compilation.GetTypeByMetadataName(GumElementRootAttributeName) != null);
 
-        context.RegisterSourceOutput(uses.Collect().Combine(runtimeSupportsRoots), static (sourceContext, input) =>
+        // GUM004 only matters to a game that packs with --shake, so it is opt-in through <GumShake>true</GumShake>
+        // (made visible to analyzers by RuntimePackage.Analyzers.props). A dynamic lookup is fine otherwise.
+        IncrementalValueProvider<bool> gameShakes = context.AnalyzerConfigOptionsProvider
+            .Select(static (options, _) =>
+                options.GlobalOptions.TryGetValue(GumShakePropertyKey, out string? value)
+                && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase));
+
+        context.RegisterSourceOutput(uses.Collect().Combine(runtimeSupportsRoots).Combine(gameShakes), static (sourceContext, input) =>
         {
-            (ImmutableArray<Use> allUses, bool supportsRoots) = input;
+            ((ImmutableArray<Use> allUses, bool supportsRoots), bool shakes) = input;
             if (!supportsRoots)
             {
                 return;
             }
 
-            foreach (Use use in allUses.Where(use => use.DynamicLookup != null))
+            if (shakes)
             {
-                sourceContext.ReportDiagnostic(Diagnostic.Create(DynamicLookupRule, use.DynamicLookup, use.MethodName));
+                foreach (Use use in allUses.Where(use => use.DynamicLookup != null))
+                {
+                    sourceContext.ReportDiagnostic(Diagnostic.Create(DynamicLookupRule, use.DynamicLookup, use.MethodName));
+                }
             }
 
             List<string> names = allUses

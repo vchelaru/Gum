@@ -1,7 +1,10 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Shouldly;
 using Xunit;
 
@@ -53,9 +56,9 @@ class Game
 }";
 
     [Fact]
-    public void Generator_roots_elements_the_game_code_uses_and_warns_on_a_dynamic_name()
+    public void Generator_roots_elements_the_game_code_uses_and_warns_on_a_dynamic_name_when_the_game_shakes()
     {
-        (string generated, ImmutableArray<Diagnostic> diagnostics) = Run(
+        (string generated, ImmutableArray<Diagnostic> diagnostics) = Run(gumShake: "true",
             (GumTypes, "GumTypes.cs"), (GeneratedCode, "Components/Cards/CardGum.Generated.cs"), (GameCode, "Game.cs"));
 
         generated.ShouldContain("[assembly: global::Gum.DataTypes.GumElementRoot(\"Cards/CardGum\")]");
@@ -68,10 +71,22 @@ class Game
         warning.Severity.ShouldBe(DiagnosticSeverity.Warning);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("false")]
+    public void Generator_does_not_warn_on_a_dynamic_name_when_the_game_does_not_shake(string? gumShake)
+    {
+        (string generated, ImmutableArray<Diagnostic> diagnostics) = Run(gumShake,
+            (GumTypes, "GumTypes.cs"), (GeneratedCode, "Components/Cards/CardGum.Generated.cs"), (GameCode, "Game.cs"));
+
+        generated.ShouldContain("[assembly: global::Gum.DataTypes.GumElementRoot(\"Cards/CardGum\")]");
+        diagnostics.ShouldBeEmpty();
+    }
+
     [Fact]
     public void Generator_emits_nothing_when_the_runtime_has_no_GumElementRoot_attribute()
     {
-        (string generated, ImmutableArray<Diagnostic> diagnostics) = Run(
+        (string generated, ImmutableArray<Diagnostic> diagnostics) = Run(gumShake: "true",
             ("namespace Gum.DataTypes { public sealed class GumElementAttribute : System.Attribute { public GumElementAttribute(string n) { } } }", "Old.cs"),
             ("[Gum.DataTypes.GumElement(\"CardGum\")] partial class CardGum { } class Game { object c = new CardGum(); }", "Game.cs"));
 
@@ -79,7 +94,7 @@ class Game
         diagnostics.ShouldBeEmpty();
     }
 
-    private static (string generated, ImmutableArray<Diagnostic> diagnostics) Run(params (string source, string path)[] files)
+    private static (string generated, ImmutableArray<Diagnostic> diagnostics) Run(string? gumShake, params (string source, string path)[] files)
     {
         CSharpCompilation compilation = CSharpCompilation.Create(
             "Game",
@@ -87,10 +102,39 @@ class Game
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(new GumElementRootGenerator());
+        Dictionary<string, string> globalOptions = new Dictionary<string, string>();
+        if (gumShake != null)
+        {
+            globalOptions["build_property.GumShake"] = gumShake;
+        }
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            new[] { new GumElementRootGenerator().AsSourceGenerator() },
+            optionsProvider: new GlobalOptionsProvider(globalOptions));
         driver = driver.RunGenerators(compilation);
         GeneratorRunResult result = driver.GetRunResult().Results.Single();
         string generated = string.Concat(result.GeneratedSources.Select(source => source.SourceText.ToString()));
         return (generated, result.Diagnostics);
+    }
+
+    private sealed class GlobalOptionsProvider : AnalyzerConfigOptionsProvider
+    {
+        private readonly AnalyzerConfigOptions _global;
+
+        public GlobalOptionsProvider(Dictionary<string, string> values) => _global = new Options(values);
+
+        public override AnalyzerConfigOptions GlobalOptions => _global;
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => Options.Empty;
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => Options.Empty;
+
+        private sealed class Options : AnalyzerConfigOptions
+        {
+            public static readonly Options Empty = new Options(new Dictionary<string, string>());
+            private readonly Dictionary<string, string> _values;
+
+            public Options(Dictionary<string, string> values) => _values = values;
+
+            public override bool TryGetValue(string key, [NotNullWhen(true)] out string? value) =>
+                _values.TryGetValue(key, out value);
+        }
     }
 }
