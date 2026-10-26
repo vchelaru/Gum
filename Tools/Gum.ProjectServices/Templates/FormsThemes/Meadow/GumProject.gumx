@@ -74,13 +74,13 @@
   <ComponentReference Name="Meadow/Controls/PasswordBox" />
   <ComponentReference Name="Meadow/Controls/RadioButton" />
   <ComponentReference Name="Meadow/Controls/ScrollBar" />
+  <ComponentReference Name="Meadow/Controls/ScrollBarThumb" />
   <ComponentReference Name="Meadow/Controls/ScrollViewer" />
   <ComponentReference Name="Meadow/Controls/Slider" />
   <ComponentReference Name="Meadow/Controls/SliderThumb" />
   <ComponentReference Name="Meadow/Controls/Splitter" />
   <ComponentReference Name="Meadow/Controls/StackPanel" />
   <ComponentReference Name="Meadow/Controls/TextBox" />
-  <ComponentReference Name="Meadow/Controls/Thumb" />
   <ComponentReference Name="Meadow/Controls/Toast" />
   <ComponentReference Name="Meadow/Controls/UserControl" />
   <ComponentReference Name="Meadow/Controls/Window" />

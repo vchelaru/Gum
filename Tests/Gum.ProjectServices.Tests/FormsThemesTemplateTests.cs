@@ -127,29 +127,30 @@ public class FormsThemesTemplateTests
             $"FormsTemplate/{subfolder}: manifest.txt vs files on disk");
     }
 
-    // DarkPro and Neon already have separate, styled SliderThumb and ScrollBarThumb components, so they
-    // have no Thumb.
-    public static IEnumerable<object[]> TemplateFoldersWithThumb => AllTemplateFolders
-        .Where(folder => folder != "FormsThemes/DarkPro" && folder != "FormsThemes/Neon")
-        .Select(folder => new object[] { folder });
-
-    // Slider and ScrollBar thumbs get their own Thumb component (a copy of the button) so restyling
-    // a thumb does not restyle every button (#6165).
+    // Slider and ScrollBar thumbs get their own components (copies of the button) so restyling a thumb
+    // does not restyle every button (#6165), and restyling one control's thumb does not restyle the
+    // other's (#6808). DarkPro and Neon, and every theme's SliderThumb except Editor's, are already
+    // styled, so they are not button copies.
     [Theory]
-    [MemberData(nameof(TemplateFoldersWithThumb))]
-    public void Load_ShouldHaveThumbComponentCopiedFromTheButton(string templateFolder)
+    [InlineData("FormsTemplate", "SliderThumb")]
+    [InlineData("FormsTemplate", "ScrollBarThumb")]
+    [InlineData("FormsThemes/Editor", "SliderThumb")]
+    [InlineData("FormsThemes/Editor", "ScrollBarThumb")]
+    [InlineData("FormsThemes/Bubblegum", "ScrollBarThumb")]
+    [InlineData("FormsThemes/ForestGlade", "ScrollBarThumb")]
+    [InlineData("FormsThemes/Hazard", "ScrollBarThumb")]
+    [InlineData("FormsThemes/Meadow", "ScrollBarThumb")]
+    [InlineData("FormsThemes/Retro95", "ScrollBarThumb")]
+    public void Load_ShouldHaveThumbComponentCopiedFromTheButton(string templateFolder, string thumbName)
     {
         StandardElementsManager.Self.Initialize();
-        GumProjectSave project = new ProjectLoader()
-            .Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
+        GumProjectSave project = LoadTemplate(templateFolder);
 
-        string prefix = templateFolder.StartsWith("FormsThemes/", StringComparison.Ordinal)
-            ? templateFolder.Substring("FormsThemes/".Length) + "/"
-            : string.Empty;
+        string prefix = GetPrefix(templateFolder);
         string buttonName = prefix + (prefix.Length == 0 ? "Controls/ButtonStandard" : "Controls/Button");
 
         ComponentSave button = project.Components.Single(c => c.Name == buttonName);
-        ComponentSave thumb = project.Components.Single(c => c.Name == prefix + "Controls/Thumb");
+        ComponentSave thumb = project.Components.Single(c => c.Name == $"{prefix}Controls/{thumbName}");
 
         thumb.BaseType.ShouldBe(button.BaseType);
         thumb.Instances.Select(i => (i.Name, i.BaseType))
@@ -159,28 +160,44 @@ public class FormsThemesTemplateTests
         thumb.DefaultState!.Variables.Count.ShouldBe(button.DefaultState!.Variables.Count);
     }
 
-    // Themes that already have their own SliderThumb / ScrollBarThumb keep them; the rest use Thumb.
+    // Each control's thumb is its own component, so a game can style the slider thumb and the scroll
+    // bar thumb differently without adding a component (#6808).
     [Theory]
-    [InlineData("FormsTemplate", "", "Slider")]
-    [InlineData("FormsTemplate", "", "ScrollBar")]
-    [InlineData("FormsThemes/Editor", "Editor/", "Slider")]
-    [InlineData("FormsThemes/Editor", "Editor/", "ScrollBar")]
-    [InlineData("FormsThemes/Bubblegum", "Bubblegum/", "ScrollBar")]
-    [InlineData("FormsThemes/ForestGlade", "ForestGlade/", "ScrollBar")]
-    [InlineData("FormsThemes/Hazard", "Hazard/", "ScrollBar")]
-    [InlineData("FormsThemes/Meadow", "Meadow/", "ScrollBar")]
-    [InlineData("FormsThemes/Retro95", "Retro95/", "ScrollBar")]
-    public void ThumbInstance_ShouldUseThumbComponent(string templateFolder, string prefix, string controlName)
+    [MemberData(nameof(TemplateFolders))]
+    public void ThumbInstance_ShouldUseItsControlsOwnThumbComponent(string templateFolder)
     {
         StandardElementsManager.Self.Initialize();
-        GumProjectSave project = new ProjectLoader()
-            .Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
+        GumProjectSave project = LoadTemplate(templateFolder);
+        string prefix = GetPrefix(templateFolder);
 
-        ComponentSave control = project.Components.Single(c => c.Name == $"{prefix}Controls/{controlName}");
+        foreach (string controlName in new[] { "Slider", "ScrollBar" })
+        {
+            ComponentSave control = project.Components.Single(c => c.Name == $"{prefix}Controls/{controlName}");
 
-        control.Instances.Single(i => i.Name == "ThumbInstance").BaseType
-            .ShouldBe($"{prefix}Controls/Thumb");
+            control.Instances.Single(i => i.Name == "ThumbInstance").BaseType
+                .ShouldBe($"{prefix}Controls/{controlName}Thumb");
+        }
     }
+
+    // The shared Thumb component is gone from what Add Forms ships. Projects that already have one keep
+    // it, since their own Slider and ScrollBar still reference it.
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void Load_ShouldNotHaveSharedThumbComponent(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = LoadTemplate(templateFolder);
+
+        project.Components.Select(c => c.Name).ShouldNotContain(GetPrefix(templateFolder) + "Controls/Thumb");
+    }
+
+    private static GumProjectSave LoadTemplate(string templateFolder) =>
+        new ProjectLoader().Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
+
+    private static string GetPrefix(string templateFolder) =>
+        templateFolder.StartsWith("FormsThemes/", StringComparison.Ordinal)
+            ? templateFolder.Substring("FormsThemes/".Length) + "/"
+            : string.Empty;
 
     // The scroll bar's up and down arrows get their own ScrollBarButton component (a copy of ButtonIcon)
     // so restyling them does not restyle every icon button (#6165). Only the template, Editor and
