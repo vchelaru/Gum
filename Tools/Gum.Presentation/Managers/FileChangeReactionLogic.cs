@@ -163,7 +163,8 @@ namespace Gum.Managers
             foreach (var subfolder in new[] { ElementReference.ScreenSubfolder, ElementReference.ComponentSubfolder, ElementReference.StandardSubfolder })
             {
                 var prefix = subfolder + "/";
-                if (relativeToFolderForType.StartsWith(prefix))
+                // macOS volumes are case-insensitive, so the folder may be reported as "components/".
+                if (relativeToFolderForType.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
                     return relativeToFolderForType.Substring(prefix.Length);
                 }

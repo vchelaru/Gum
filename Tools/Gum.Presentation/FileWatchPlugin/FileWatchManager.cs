@@ -247,10 +247,6 @@ public class FileWatchManager : IFileWatchManager
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
-        else
-        {
-            PrintSkipped("rename of a file type Gum does not react to", fileName);
-        }
     }
 
     private void ReactToDelete(FileSystemEventArgs e, bool isOnIgnoreList)
@@ -264,10 +260,6 @@ public class FileWatchManager : IFileWatchManager
         if (IsElementFileExtension(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
-        }
-        else
-        {
-            PrintSkipped("delete of a file type Gum does not react to", fileName);
         }
     }
 
@@ -288,8 +280,7 @@ public class FileWatchManager : IFileWatchManager
         var fileName = new FilePath(e.FullPath);
         var extension = fileName.Extension;
 
-        var isGum = extension is "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj"
-            or "gucx" or "gucj" or "ganx" or "ganj" or "behx" or "behj";
+        var isGum = IsGumFileExtension(extension);
 
         if (e.ChangeType != WatcherChangeTypes.Created || !isGum)
         {
@@ -312,11 +303,57 @@ public class FileWatchManager : IFileWatchManager
         }
     }
 
+    private static bool IsGumFileExtension(string extension) =>
+        extension is "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj"
+            or "gucx" or "gucj" or "ganx" or "ganj" or "behx" or "behj";
+
+    private readonly object _skippedSummaryLock = new();
+    private readonly Dictionary<string, (int Count, List<FilePath> Examples)> _skippedSummary = new();
+
+    /// <summary>
+    /// Reports a skipped event while "Print file changes" is on. A skipped Gum file prints at once, since
+    /// that is the line that explains a save that never reloaded. Everything else (a build touching
+    /// hundreds of files) is counted per reason and printed once per flush.
+    /// </summary>
     private void PrintSkipped(string reason, FilePath fileName)
     {
-        if (PrintFileChangesToOutput)
+        if (!PrintFileChangesToOutput)
+        {
+            return;
+        }
+
+        if (IsGumFileExtension(fileName.Extension))
         {
             _guiCommands.PrintOutput($"File change skipped ({reason}): {fileName}");
+            return;
+        }
+
+        lock (_skippedSummaryLock)
+        {
+            _skippedSummary.TryGetValue(reason, out var entry);
+            entry.Examples ??= new List<FilePath>();
+            entry.Count++;
+            if (entry.Examples.Count < 3)
+            {
+                entry.Examples.Add(fileName);
+            }
+            _skippedSummary[reason] = entry;
+        }
+    }
+
+    private void PrintSkippedSummaries()
+    {
+        List<string> lines;
+        lock (_skippedSummaryLock)
+        {
+            lines = _skippedSummary
+                .Select(pair => $"File change skipped ({pair.Key}) x{pair.Value.Count}, e.g. {string.Join(", ", pair.Value.Examples)}")
+                .ToList();
+            _skippedSummary.Clear();
+        }
+        foreach (string line in lines)
+        {
+            _guiCommands.PrintOutput(line);
         }
     }
 
@@ -438,6 +475,8 @@ public class FileWatchManager : IFileWatchManager
             return;
         }
         // endif
+
+        PrintSkippedSummaries();
 
         IsFlushing = true;
         try

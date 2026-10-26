@@ -208,23 +208,93 @@ public class FileWatchEventMatrixTests : BaseTestClass
         _pluginManager.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Once);
     }
 
+    private void FlushWhenSettled()
+    {
+        while (_sut.TimeToNextFlush.TotalMilliseconds > 0) System.Threading.Thread.Sleep(20);
+        _sut.Flush();
+    }
+
+    private List<string> StartPrinting()
+    {
+        _sut.PrintFileChangesToOutput = true;
+        List<string> printed = new();
+        _guiCommands.Setup(g => g.PrintOutput(It.IsAny<string>())).Callback<string>(printed.Add);
+        return printed;
+    }
+
     [Theory]
     [InlineData("Components/.Styles.gucj.tmp.123", Sequence.ChangedOnly, "temp file")]
     [InlineData("Components/Styles.gucj", Sequence.CreatedThenChanged, "saved this file itself")]
     [InlineData("Components/Brand.gucj", Sequence.CreatedOnly, "Created")]
-    [InlineData("Components/Notes.txt", Sequence.RenamedOver, "rename")]
-    [InlineData("Components/Notes.txt", Sequence.DeletedThenCreated, "delete")]
     public void WhenPrintingIsOn_EveryDroppedEventPrintsItsReason(string path, Sequence sequence, string reasonFragment)
     {
         StartProject(isJson: true);
-        _sut.PrintFileChangesToOutput = true;
         _ignoreList.Setup(i => i.TryGetIgnoreFileChange(new FilePath(Path.Combine(_root, "Components/Styles.gucj")))).Returns(true);
-        List<string> printed = new();
-        _guiCommands.Setup(g => g.PrintOutput(It.IsAny<string>())).Callback<string>(printed.Add);
+        List<string> printed = StartPrinting();
 
         Feed(path, sequence);
+        FlushWhenSettled();
 
         printed.ShouldContain(line => line.Contains(reasonFragment) && line.Contains(Path.GetFileName(path)),
             $"printed: [{string.Join(" | ", printed)}]");
+    }
+
+    [Theory]
+    [InlineData(Sequence.RenamedOver)]
+    [InlineData(Sequence.DeletedThenCreated)]
+    public void RenameOrDeleteOfAFileTypeGumDoesNotReactTo_PrintsNothing(Sequence sequence)
+    {
+        StartProject(isJson: true);
+        List<string> printed = StartPrinting();
+
+        Feed("bin/App.dll", sequence);
+        FlushWhenSettled();
+
+        printed.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ABuildTouchingManyFiles_PrintsFewLines_AndStillExplainsAGumFileDrop()
+    {
+        StartProject(isJson: true);
+        List<string> printed = StartPrinting();
+        string elsewhere = Path.Combine(Path.GetTempPath(), "NotWatched_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(elsewhere);
+        try
+        {
+            for (int i = 0; i < 300; i++)
+            {
+                // Watched folder: queued or not reacted to. Unwatched folder: skipped, 3 events each.
+                foreach (Sequence sequence in new[] { Sequence.CreatedThenChanged, Sequence.RenamedOver, Sequence.DeletedThenCreated, Sequence.ChangedOnly })
+                {
+                    Feed($"bin/Out{i}.dll", sequence);
+                }
+                foreach (Sequence sequence in new[] { Sequence.CreatedThenChanged, Sequence.DeletedThenCreated })
+                {
+                    Feed(Path.GetRelativePath(_root, Path.Combine(elsewhere, $"Out{i}.dll")), sequence);
+                }
+            }
+            Feed("Components/Brand.gucj", Sequence.CreatedOnly);
+            FlushWhenSettled();
+        }
+        finally
+        {
+            Directory.Delete(elsewhere, recursive: true);
+        }
+
+        printed.Count.ShouldBeLessThan(6, $"printed {printed.Count} lines");
+        printed.ShouldContain(line => line.Contains("directory not watched") && line.Contains("x") && line.Contains("e.g."));
+        printed.ShouldContain(line => line.Contains("Created event for a Gum file") && line.Contains("Brand.gucj"));
+    }
+
+    [Fact]
+    public void CreatedWhoseFolderDiffersOnlyByCase_IsKnownToTheProject()
+    {
+        // macOS volumes are case-insensitive, so a path reported as components/Styles.gucj is Components/Styles.gucj.
+        StartProject(isJson: true);
+
+        Feed("components/Styles.gucj", Sequence.CreatedOnly);
+
+        IsQueued("components/Styles.gucj").ShouldBeTrue();
     }
 }
