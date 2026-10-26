@@ -482,6 +482,14 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
         StateSave stateSave, string qualifiedName, bool trySave, bool isFullCommit = true)
     {
+        // A tick of a drag changes only the dragged variable. The cascade runs once, on the full commit that
+        // ends the drag, so a tick costs nothing that grows with the project and the result is the one a
+        // typed edit gives. Every drag, scrub and slider ends with a full commit (#6888).
+        if (!isFullCommit && unqualifiedMember != "VariableReferences")
+        {
+            return;
+        }
+
         // The currently-rendered wireframe representation of parentElement, if any. Lets a right
         // side like "Root.AbsoluteWidth" resolve against the live, already-laid-out object - null
         // when nothing is rendered for this element, in which case such identifiers stay
