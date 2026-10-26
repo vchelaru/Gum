@@ -9,6 +9,7 @@
     <Import_RootNamespace>GumCoreShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\GumElementAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\BundleGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\CompositeGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\DependencyWarning.cs" />

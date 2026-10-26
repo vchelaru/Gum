@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/WindowStandard")]
 partial class WindowStandardRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER
@@ -41,8 +42,8 @@ partial class WindowStandardRuntime : ContainerRuntime
         _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/WindowStandard");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/WindowStandard");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

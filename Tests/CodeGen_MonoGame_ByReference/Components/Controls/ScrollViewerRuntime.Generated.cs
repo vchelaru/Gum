@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/ScrollViewer")]
 partial class ScrollViewerRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER
@@ -95,8 +96,8 @@ partial class ScrollViewerRuntime : ContainerRuntime
         _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ScrollViewer");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/ScrollViewer");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

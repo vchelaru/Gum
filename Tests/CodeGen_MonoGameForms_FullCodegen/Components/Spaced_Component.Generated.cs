@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components;
+[global::Gum.DataTypes.GumElement("Spaced Component")]
 partial class Spaced_Component : global::Gum.Forms.Controls.FrameworkElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -21,7 +22,7 @@ partial class Spaced_Component : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Spaced Component") ?? throw new System.InvalidOperationException("Could not find an element named Spaced Component - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Spaced Component");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Spaced_Component(visual);
             return visual;

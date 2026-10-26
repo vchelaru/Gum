@@ -414,6 +414,30 @@ public class ObjectFinder : IObjectFinder
     }
 
     /// <summary>
+    /// Returns the element named <paramref name="elementName"/>, or throws when the loaded project has
+    /// none. The message says whether <c>gumcli pack --shake</c> trimmed it (listed in
+    /// <see cref="GumProjectSave.TrimmedElements"/>) or it was never there. Generated code uses this;
+    /// <see cref="GetElementSave(string?)"/> keeps returning null for callers that probe.
+    /// </summary>
+    public ElementSave GetRequiredElementSave(string elementName)
+    {
+        ElementSave? element = GetElementSave(elementName);
+        if (element != null)
+        {
+            return element;
+        }
+
+        if (GumProjectSave?.TrimmedElements.Contains(elementName) == true)
+        {
+            throw new InvalidOperationException(
+                $"'{elementName}' was trimmed by gumcli pack --shake because nothing in the project reaches it. " +
+                $"Pack with --keep {elementName}, or list it in the --roots file.");
+        }
+        throw new InvalidOperationException(
+            $"Could not find an element named {elementName} - did you forget to load a Gum project?");
+    }
+
+    /// <summary>
     /// Returns a list of Elements that include InstanceSaves that use the argument
     /// elementSave as their BaseType, or that use an ElementSave deriving from elementSave
     /// as their BaseType.

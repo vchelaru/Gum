@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/WindowStandard")]
 partial class WindowStandard : global::Gum.Forms.Window
 {
     #if UNITY_5_3_OR_NEWER
@@ -22,7 +23,7 @@ partial class WindowStandard : global::Gum.Forms.Window
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/WindowStandard") ?? throw new System.InvalidOperationException("Could not find an element named Controls/WindowStandard - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/WindowStandard");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new WindowStandard(visual);
             return visual;

@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.BaseTypes;
+[global::Gum.DataTypes.GumElement("BaseTypes/FromNineSlice")]
 partial class FromNineSliceRuntime : global::Gum.GueDeriving.NineSliceRuntime
 {
     #if UNITY_5_3_OR_NEWER
@@ -25,8 +26,8 @@ partial class FromNineSliceRuntime : global::Gum.GueDeriving.NineSliceRuntime
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("BaseTypes/FromNineSlice");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("BaseTypes/FromNineSlice");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

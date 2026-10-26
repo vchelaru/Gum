@@ -768,8 +768,26 @@ public class CodeGenerator
             header += " : " + inheritance;
         }
 
+        if (EmitsGumElementLink(context))
+        {
+            context.StringBuilder.AppendLine(context.Tabs + $"[global::Gum.DataTypes.GumElement(\"{context.Element.Name}\")]");
+        }
         context.StringBuilder.AppendLine(context.Tabs + header);
     }
+
+    /// <summary>
+    /// Syntax version 7 added <c>GumElementAttribute</c> and <c>ObjectFinder.GetRequiredElementSave</c>,
+    /// which the Gum Forms and unified-runtime output use to link a class to its element.
+    /// </summary>
+    private static bool EmitsGumElementLink(CodeGenerationContext context) =>
+        context.ResolvedSyntaxVersion >= 7
+        && (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms
+            || UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary));
+
+    private static string GetElementLookup(CodeGenerationContext context, ElementSave element) =>
+        EmitsGumElementLink(context)
+            ? $"ObjectFinder.Self.GetRequiredElementSave(\"{element.Name}\")"
+            : $"ObjectFinder.Self.GetElementSave(\"{element.Name}\") ?? throw new System.InvalidOperationException(\"Could not find an element named {element.Name} - did you forget to load a Gum project?\")";
     
     /// <returns>
     /// The corresponding class name, or <c>null</c> if that type couldn't be found.
@@ -2039,8 +2057,7 @@ public class CodeGenerator
             }
 
 
-            builder.AppendLine(context.Tabs +
-                $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\") ?? throw new System.InvalidOperationException(\"Could not find an element named {context.Element.Name} - did you forget to load a Gum project?\");");
+            builder.AppendLine(context.Tabs + $"var element = {GetElementLookup(context, context.Element)};");
 
 
             builder.AppendLine(context.Tabs +
@@ -3726,11 +3743,20 @@ public class CodeGenerator
                 if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
                 {
 
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
+                    if (EmitsGumElementLink(context))
+                    {
+                        context.StringBuilder.AppendLine(context.Tabs + $"var element = {GetElementLookup(context, element)};");
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            "element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                    }
+                    else
+                    {
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
 
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                    }
 
                     // March 8, 2025
                     // This is not needed

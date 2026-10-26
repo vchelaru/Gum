@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/SplitterStandard")]
 partial class SplitterStandard : global::Gum.Forms.Controls.Splitter
 {
     #if UNITY_5_3_OR_NEWER
@@ -21,7 +22,7 @@ partial class SplitterStandard : global::Gum.Forms.Controls.Splitter
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/SplitterStandard") ?? throw new System.InvalidOperationException("Could not find an element named Controls/SplitterStandard - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/SplitterStandard");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new SplitterStandard(visual);
             return visual;

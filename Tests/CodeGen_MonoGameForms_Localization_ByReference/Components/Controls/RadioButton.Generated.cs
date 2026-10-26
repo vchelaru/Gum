@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/RadioButton")]
 partial class RadioButton : global::Gum.Forms.Controls.RadioButton
 {
     #if UNITY_5_3_OR_NEWER
@@ -22,7 +23,7 @@ partial class RadioButton : global::Gum.Forms.Controls.RadioButton
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/RadioButton") ?? throw new System.InvalidOperationException("Could not find an element named Controls/RadioButton - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/RadioButton");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new RadioButton(visual);
             return visual;

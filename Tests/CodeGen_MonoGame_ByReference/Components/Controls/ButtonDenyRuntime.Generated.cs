@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/ButtonDeny")]
 partial class ButtonDenyRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER
@@ -72,8 +73,8 @@ partial class ButtonDenyRuntime : ContainerRuntime
         _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonDeny");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/ButtonDeny");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

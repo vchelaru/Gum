@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Screens;
+[global::Gum.DataTypes.GumElement("FormsScreenWithVariablesSet")]
 partial class FormsScreenWithVariablesSet : global::Gum.Forms.Controls.FrameworkElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -22,7 +23,7 @@ partial class FormsScreenWithVariablesSet : global::Gum.Forms.Controls.Framework
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("FormsScreenWithVariablesSet") ?? throw new System.InvalidOperationException("Could not find an element named FormsScreenWithVariablesSet - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("FormsScreenWithVariablesSet");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new FormsScreenWithVariablesSet(visual);
             visual.Width = 0;
