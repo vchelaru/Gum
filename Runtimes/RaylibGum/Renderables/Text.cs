@@ -511,6 +511,13 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
+    private static Vector2 MeasureBlankedText(Font font, string text, float fontSize, float spacing) =>
+        MeasureTextEx(font, ControlCharacterBlanker.Blank(text, expandTabs: true), fontSize, spacing);
+
+    private static void DrawBlankedText(Font font, string text, Vector2 position, Vector2 origin, float rotation,
+        float fontSize, float spacing, Color tint) =>
+        DrawTextPro(font, ControlCharacterBlanker.Blank(text, expandTabs: true), position, origin, rotation, fontSize, spacing, tint);
+
     /// <summary>
     /// Sums the pixel width of the widest of <paramref name="lines"/> when measured with
     /// <paramref name="font"/> at its own <see cref="Font.BaseSize"/> -- used to derive the ACTUAL
@@ -522,7 +529,7 @@ public class Text : IVisible, IRenderableIpso,
         float maxWidth = 0;
         foreach (string line in lines)
         {
-            maxWidth = System.Math.Max(maxWidth, MeasureTextEx(font, line, font.BaseSize, 0).X);
+            maxWidth = System.Math.Max(maxWidth, MeasureBlankedText(font, line, font.BaseSize, 0).X);
         }
         return maxWidth;
     }
@@ -559,7 +566,7 @@ public class Text : IVisible, IRenderableIpso,
         }
         else
         {
-            lineHeightInPixels = (int)(MeasureTextEx(font, "M", font.BaseSize, 0).Y + .5);
+            lineHeightInPixels = (int)(MeasureBlankedText(font, "M", font.BaseSize, 0).Y + .5);
             descenderHeight = TryGetTtfBaselineY(font, out int baselineY)
                 ? lineHeightInPixels - baselineY
                 : 2;
@@ -1096,7 +1103,7 @@ public class Text : IVisible, IRenderableIpso,
     public float MeasureString(string whatToMeasure)
     {
         var measurementFont = EffectiveMeasurementFont;
-        return MeasureTextEx(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
+        return MeasureBlankedText(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
     }
 
     /// <summary>
@@ -1109,7 +1116,7 @@ public class Text : IVisible, IRenderableIpso,
     public float MeasureString(string whatToMeasure, HorizontalMeasurementStyle style)
     {
         var measurementFont = EffectiveMeasurementFont;
-        return MeasureTextEx(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
+        return MeasureBlankedText(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
     }
 
     public virtual void PreRender()
@@ -1447,12 +1454,12 @@ public class Text : IVisible, IRenderableIpso,
         if (HorizontalAlignment == HorizontalAlignment.Center)
         {
             linePosition.X += (this.Width ?? 32) / 2;
-            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X / 2;
+            origin.X = MeasureBlankedText(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X / 2;
         }
         else if (HorizontalAlignment == HorizontalAlignment.Right)
         {
             linePosition.X += this.Width ?? 32;
-            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X;
+            origin.X = MeasureBlankedText(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X;
         }
 
         linePosition = SnapToPixelIfNeeded(linePosition);
@@ -1462,7 +1469,7 @@ public class Text : IVisible, IRenderableIpso,
         {
             var shadowPosition = SnapToPixelIfNeeded(
                 linePosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * EffectiveFontScale);
-            DrawTextPro(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, DropshadowColor);
+            DrawBlankedText(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, DropshadowColor);
         }
 
         DrawOutline(fontValue, line, linePosition, origin, fontValue.BaseSize * EffectiveFontScale, EffectiveFontScale, Color);
@@ -1470,7 +1477,7 @@ public class Text : IVisible, IRenderableIpso,
         // Texture filtering is applied once when the font's atlas texture is loaded/built (see
         // ContentLoader.DefaultTextureFilter, #3496), not per-draw — a per-line GPU state reset here
         // was both redundant and ignored the project's texture filter setting.
-        DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, Color);
+        DrawBlankedText(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, Color);
     }
 
     /// <summary>
@@ -1729,7 +1736,7 @@ public class Text : IVisible, IRenderableIpso,
             drawRun.ScaleY = scaleY;
             drawRun.ScaleXOrigin = scaleXOrigin;
             drawRun.ScaleYOrigin = scaleYOrigin;
-            drawRun.Width = MeasureTextEx(resolvedFont.Font, runText, drawRun.DrawSize, 0).X;
+            drawRun.Width = MeasureBlankedText(resolvedFont.Font, runText, drawRun.DrawSize, 0).X;
             totalWidth += drawRun.Width;
             maxBaseline = System.Math.Max(maxBaseline, drawRun.BaselineFromTop);
         }
@@ -1773,11 +1780,11 @@ public class Text : IVisible, IRenderableIpso,
             {
                 var shadowRunPosition = SnapToPixelIfNeeded(
                     runPosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale);
-                DrawTextPro(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, 0, drawRun.DrawSize, 0, DropshadowColor);
+                DrawBlankedText(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, 0, drawRun.DrawSize, 0, DropshadowColor);
             }
 
             DrawOutline(drawRun.Font, drawRun.Text, runPosition, runOrigin, drawRun.DrawSize, drawRun.OutlineScale, drawRun.Color);
-            DrawTextPro(drawRun.Font, drawRun.Text, runPosition, runOrigin, 0, drawRun.DrawSize, 0, drawRun.Color);
+            DrawBlankedText(drawRun.Font, drawRun.Text, runPosition, runOrigin, 0, drawRun.DrawSize, 0, drawRun.Color);
 
             advance += drawRun.Width;
         }
@@ -1851,7 +1858,7 @@ public class Text : IVisible, IRenderableIpso,
         Color outlineColor = new Color((byte)0, (byte)0, (byte)0, color.A);
         foreach (Vector2 offset in offsets)
         {
-            DrawTextPro(font, text, position + offset, origin, 0, drawSize, 0, outlineColor);
+            DrawBlankedText(font, text, position + offset, origin, 0, drawSize, 0, outlineColor);
         }
     }
 
@@ -1862,7 +1869,7 @@ public class Text : IVisible, IRenderableIpso,
         // Gum rotation is counterclockwise; rlgl's is clockwise on a y-down screen.
         Raylib_cs.Rlgl.Rotatef(-drawRun.Rotation, 0, 0, 1);
         Raylib_cs.Rlgl.Scalef(drawRun.ScaleX, drawRun.ScaleY, 1);
-        DrawTextPro(font, drawRun.Text, Vector2.Zero, Vector2.Zero, 0, drawRun.DrawSize, 0, color);
+        DrawBlankedText(font, drawRun.Text, Vector2.Zero, Vector2.Zero, 0, drawRun.DrawSize, 0, color);
         Raylib_cs.Rlgl.PopMatrix();
     }
 
@@ -1990,7 +1997,7 @@ public class Text : IVisible, IRenderableIpso,
             // still can't drift on SIZE (#3524): compensation composes DrawSize back down to the exact
             // same on-screen size EffectiveMeasurementFont already represents in native units.
             var resolvedFont = ResolveRunFont(substring.Variables, EffectiveMeasurementFont, oversampleCompensationScale: 1f);
-            lineWidthAtScale += MeasureTextEx(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
+            lineWidthAtScale += MeasureBlankedText(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
             if (IsSizeRun(substring.Variables))
             {
                 maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);

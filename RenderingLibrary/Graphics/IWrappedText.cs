@@ -530,3 +530,62 @@ public static class IWrappedTextExtensions
     }
 
 }
+
+/// <summary>
+/// Maps control characters to the blanks MonoGame's <c>BitmapFont</c> draws for them (#6835), so a backend
+/// whose native text engine would draw a missing-glyph box or '?' (raylib) or break a line (RichTextKit)
+/// agrees with it: a control character becomes a space, '\t' is four spaces (or kept when the backend
+/// has its own tab stops), '\n' is left alone, and '\r' directly before '\n' stays part of that break.
+/// </summary>
+public static class ControlCharacterBlanker
+{
+    public static string Blank(string text, bool expandTabs)
+    {
+        int first = -1;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (NeedsBlanking(text, i, expandTabs))
+            {
+                first = i;
+                break;
+            }
+        }
+        if (first < 0)
+        {
+            return text;
+        }
+
+        StringBuilder builder = new(text.Length + 8);
+        builder.Append(text, 0, first);
+        for (int i = first; i < text.Length; i++)
+        {
+            if (!NeedsBlanking(text, i, expandTabs))
+            {
+                builder.Append(text[i]);
+            }
+            else if (text[i] == '\t')
+            {
+                builder.Append("    ");
+            }
+            else
+            {
+                builder.Append(' ');
+            }
+        }
+        return builder.ToString();
+    }
+
+    private static bool NeedsBlanking(string text, int index, bool expandTabs)
+    {
+        char c = text[index];
+        if (c >= ' ' || c == '\n')
+        {
+            return false;
+        }
+        if (c == '\t')
+        {
+            return expandTabs;
+        }
+        return !(c == '\r' && index + 1 < text.Length && text[index + 1] == '\n');
+    }
+}
