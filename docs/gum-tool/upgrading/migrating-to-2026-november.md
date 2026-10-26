@@ -37,6 +37,20 @@ using Gum.Input;
 Cursor cursor = GumService.Default.Cursor;
 ```
 
+### raylib Throws When an Image Cannot Be Decoded
+
+raylib now treats an image it cannot decode like a missing file. A `.jpg` Source File, for example, loaded as an empty texture before and now throws when the Sprite loads, because the stock raylib native has no JPEG decoder. This follows the `MissingFileBehavior` change from `2026 October`, which raylib sets to throw by default.
+
+This affects you only on raylib, and only if your project references an image raylib cannot decode. Convert the image to PNG, or register an `IImageDecoder` for its extension before Gum loads the project. See [Custom Image Formats](../../code/files-and-fonts/custom-image-formats.md).
+
+To keep the old behavior, set `MissingFileBehavior` after Gum initializes:
+
+```csharp
+// Initialize
+Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
+    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+```
+
 ### Shapes Package Types Moved to Gum.Renderables and Gum.Content
 
 The `Gum.Shapes.MonoGame` and `Gum.Shapes.KNI` packages now put their public types in the unified `Gum` namespaces:

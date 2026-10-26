@@ -1004,4 +1004,140 @@ public class ContentLoaderTests : BaseTestClass
             LoaderManager.Self.CacheTextures = savedCacheTextures;
         }
     }
+
+    // A valid 4x4 JPEG. The stock raylib native has no JPEG decoder, so LoadImageFromMemory returns a 0x0 image (#6847).
+    private const string TinyJpegBase64 =
+        "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAAEAAQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDHooorhPqD/9k=";
+
+    private static string ServeUndecodableJpeg()
+    {
+        ServeBytes("photo.jpg", Convert.FromBase64String(TinyJpegBase64));
+        return "photo.jpg";
+    }
+
+    private static void ServeBytes(string fileName, byte[] bytes)
+    {
+        FileManager.CustomGetStreamFromFile = path => path.EndsWith(fileName) ? new MemoryStream(bytes) : null!;
+    }
+
+    // #6847: a file raylib cannot decode follows the file-not-found rules, so callers' MissingFileBehavior applies.
+    [Fact]
+    public void LoadContent_WhenImageUndecodable_ShouldThrowFileNotFoundNamingFileAndFormat()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            string fileName = ServeUndecodableJpeg();
+
+            FileNotFoundException exception = Should.Throw<FileNotFoundException>(() =>
+                LoaderManager.Self.LoadContent<Texture2D>(fileName));
+
+            exception.Message.ShouldContain("photo.jpg");
+            exception.Message.ShouldContain("PNG");
+            exception.Message.ShouldContain("IImageDecoder");
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
+    // A file with an extension the stock native decodes but whose bytes are garbage is corrupt, not an unsupported format.
+    [Fact]
+    public void LoadContent_WhenPngIsCorrupt_ShouldThrowFileNotFoundSayingDataCouldNotBeDecoded()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            ServeBytes("broken.png", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+
+            FileNotFoundException exception = Should.Throw<FileNotFoundException>(() =>
+                LoaderManager.Self.LoadContent<Texture2D>("broken.png"));
+
+            exception.Message.ShouldContain("broken.png");
+            exception.Message.ShouldContain("could not be decoded");
+            exception.Message.ShouldNotContain("native");
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
+    [Fact]
+    public void LoadContent_WhenPngIsEmpty_ShouldThrowFileNotFoundSayingDataCouldNotBeDecoded()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            ServeBytes("empty.png", new byte[0]);
+
+            FileNotFoundException exception = Should.Throw<FileNotFoundException>(() =>
+                LoaderManager.Self.LoadContent<Texture2D>("empty.png"));
+
+            exception.Message.ShouldContain("empty.png");
+            exception.Message.ShouldContain("could not be decoded");
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
+    // Garbage bytes under .jpg decode to nothing whatever the native build, so this does not depend on a valid JPEG.
+    [Fact]
+    public void LoadContent_WhenJpgBytesAreGarbage_ShouldThrowFileNotFoundSuggestingPngOrDecoder()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            ServeBytes("garbage.jpg", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+
+            FileNotFoundException exception = Should.Throw<FileNotFoundException>(() =>
+                LoaderManager.Self.LoadContent<Texture2D>("garbage.jpg"));
+
+            exception.Message.ShouldContain("garbage.jpg");
+            exception.Message.ShouldContain("PNG");
+            exception.Message.ShouldContain("IImageDecoder");
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
+    [Fact]
+    public void LoadContent_WhenImageUndecodable_ShouldNotCacheATexture()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            LoaderManager.Self.CacheTextures = true;
+            string fileName = ServeUndecodableJpeg();
+
+            Should.Throw<FileNotFoundException>(() => LoaderManager.Self.LoadContent<Texture2D>(fileName));
+
+            LoaderManager.Self.GetDisposable(ContentLoader.StandardizeCaseSensitive(fileName)).ShouldBeNull();
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
+    [Fact]
+    public void TryLoadContent_WhenImageUndecodable_ShouldReturnDefaultWithoutThrowing()
+    {
+        string fileName = ServeUndecodableJpeg();
+
+        Texture2D loaded = new Texture2D { Width = 99 };
+        Should.NotThrow(() => loaded = LoaderManager.Self.TryLoadContent<Texture2D>(fileName));
+
+        loaded.Id.ShouldBe(0u);
+        loaded.Width.ShouldBe(0);
+    }
 }
