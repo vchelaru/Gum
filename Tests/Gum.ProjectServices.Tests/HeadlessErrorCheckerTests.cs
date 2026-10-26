@@ -1578,7 +1578,101 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         errors.ShouldContain(e => e.Code == "GUM0010");
     }
 
-    private void AddComponentWithTextFont(string componentName, string font)
+    #region GUM0012 — Literal Text value has characters outside its font's ranges
+
+    [Fact]
+    public void GetErrorsFor_ShouldWarn_WhenALiteralTextHasCharactersOutsideItsFontRanges()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126,160-255";
+        ComponentSave component = AddComponentWithTextFont("PriceLabel", "Arial");
+        // 'é' (233) is in range; '€' (8364) and 'Ω' (937) are not.
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Café €5 Ω€", Type = "string", SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0012");
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+        error.ElementName.ShouldBe("PriceLabel");
+        error.Message.ShouldContain("MyText");
+        error.Message.ShouldContain("Arial");
+        error.Message.ShouldContain("U+20AC");
+        error.Message.ShouldContain("8364,937");
+        error.Message.ShouldNotContain("U+00E9");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldWarnFromACategoryState_UsingTheDefaultStateFont()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        ComponentSave component = AddComponentWithTextFont("Banner", "Arial");
+        StateSaveCategory category = new StateSaveCategory { Name = "Language" };
+        StateSave french = new StateSave { Name = "French", ParentContainer = component };
+        french.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Été", Type = "string", SetsValue = true });
+        category.States.Add(french);
+        component.Categories.Add(category);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0012");
+        error.Message.ShouldContain("201,233");
+    }
+
+    [Theory]
+    [InlineData("Arial", "Line one\nline two\tend")]
+    [InlineData("Arial", "Price: 5€")]
+    public void GetErrorsFor_ShouldNotWarn_WhenEveryCharacterIsInRangeOrIsLayout(string font, string text)
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = font, Ranges = "32-126,8364" });
+        ComponentSave component = AddComponentWithTextFont("Label", font);
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = text, Type = "string", SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotWarn_ForAPrebakedFntCustomFont()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        ComponentSave component = AddComponentWithTextFont("Label", "Arial");
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.UseCustomFont", Value = true, Type = "bool", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.CustomFontFile", Value = "Fonts/Baked.fnt", Type = "string", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "€", Type = "string", SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldNotContain(e => e.Code == "GUM0012");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldWarnOncePerText_WhenSeveralStatesHaveCharactersOutsideRange()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        ComponentSave component = AddComponentWithTextFont("Banner", "Arial");
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "€", Type = "string", SetsValue = true });
+        StateSaveCategory category = new StateSaveCategory { Name = "Language" };
+        StateSave greek = new StateSave { Name = "Greek", ParentContainer = component };
+        greek.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Ω€", Type = "string", SetsValue = true });
+        StateSave english = new StateSave { Name = "English", ParentContainer = component };
+        english.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Hi", Type = "string", SetsValue = true });
+        category.States.Add(greek);
+        category.States.Add(english);
+        component.Categories.Add(category);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0012");
+        error.Message.ShouldContain("8364,937");
+    }
+
+    #endregion
+
+    private ComponentSave AddComponentWithTextFont(string componentName, string font)
     {
         ComponentSave component = new ComponentSave { Name = componentName };
         component.Instances.Add(new InstanceSave { Name = "MyText", BaseType = "Text" });
@@ -1587,6 +1681,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         defaultState.Variables.Add(new VariableSave { Name = "MyText.FontSize", Value = 18, Type = "int", SetsValue = true });
         component.States.Add(defaultState);
         Project.Components.Add(component);
+        return component;
     }
 
     #endregion

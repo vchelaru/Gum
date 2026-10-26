@@ -10,7 +10,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-// Issue #6818: a character outside the font's ranges used to draw as blank space with no report.
+// Issue #6818: a character outside the font's ranges is reported, and draws as the font's '?' glyph.
 // Reports are deduplicated per font and character across every Text, so each test uses its own font
 // name to stay independent of what other tests already reported.
 public class TextRuntimeMissingCharacterReportTests : BaseTestClass

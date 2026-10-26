@@ -152,6 +152,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
         errors.AddRange(GetUnresolvableVariableReferenceErrorsFor(element));
         errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
+        errors.AddRange(GetTextOutsideFontRangeErrorsFor(element, project));
 
         foreach (var source in _additionalErrorSources)
         {
@@ -1037,6 +1038,104 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 Message = $"The font range entry for \"{entry.FontFamily}\" matches no font in the project, so it " +
                     "never applies. A system font matches by family name ignoring case, and a font file matches by its " +
                     "project-relative path exactly as a Text names it."
+            });
+        }
+
+        return errors;
+    }
+
+    #endregion
+
+    #region GUM0012 — Literal Text value has characters outside its font's ranges
+
+    /// <summary>
+    /// Warns, once per Text, about characters a literal <c>Text</c> value (in any state) uses that its
+    /// font's ranges leave out. The font is generated without them, so at runtime they draw as '?'.
+    /// The font comes from the same state, else the default state. A pre-baked .fnt and an invalid
+    /// range (GUM0011) are skipped, since the ranges don't say what that font holds.
+    /// </summary>
+    private static List<ErrorResult> GetTextOutsideFontRangeErrorsFor(ElementSave element, GumProjectSave project)
+    {
+        var errors = new List<ErrorResult>();
+        StateSave? defaultState = element.DefaultState;
+        if (defaultState == null)
+        {
+            return errors;
+        }
+
+        // Owner name ("" for the element itself) -> font -> missing code points, in first-seen order.
+        var missingByOwner = new Dictionary<string, (string Font, List<int> CodePoints)>();
+        var codePointsByRanges = new Dictionary<string, HashSet<int>>();
+
+        foreach (StateSave state in element.AllStates)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (!variable.SetsValue || variable.Value is not string text || text.Length == 0 || variable.GetRootName() != "Text")
+                {
+                    continue;
+                }
+                string owner = variable.SourceObject ?? "";
+                string prefix = owner.Length > 0 ? owner + "." : "";
+                object? GetValue(string name) => state.GetValueRecursive(prefix + name) ?? defaultState.GetValueRecursive(prefix + name);
+
+                string? font = GetValue("Font") as string;
+                if (font == null)
+                {
+                    continue;
+                }
+                if (GetValue("UseCustomFont") as bool? == true)
+                {
+                    font = BmfcSave.ResolveTtfSourcePath(useCustomFont: true, GetValue("CustomFontFile") as string, font);
+                    if (font == null)
+                    {
+                        continue;
+                    }
+                }
+
+                string ranges = project.GetFontRanges(font) ?? BmfcSave.GetEffectiveDefaultRanges();
+                if (!BmfcSave.GetIfIsValidRange(ranges))
+                {
+                    continue;
+                }
+                if (!codePointsByRanges.TryGetValue(ranges, out HashSet<int>? inRange))
+                {
+                    inRange = new HashSet<int>(BmfcSave.ParseCharRanges(BmfcSave.EnsureRangesContainSpace(ranges)));
+                    codePointsByRanges[ranges] = inRange;
+                }
+
+                foreach (System.Text.Rune rune in text.EnumerateRunes())
+                {
+                    // Line breaks and tabs are layout, not glyphs.
+                    if (System.Text.Rune.IsControl(rune) || inRange.Contains(rune.Value))
+                    {
+                        continue;
+                    }
+                    if (!missingByOwner.TryGetValue(owner, out var entry))
+                    {
+                        entry = (font, new List<int>());
+                        missingByOwner[owner] = entry;
+                    }
+                    if (!entry.CodePoints.Contains(rune.Value))
+                    {
+                        entry.CodePoints.Add(rune.Value);
+                    }
+                }
+            }
+        }
+
+        foreach (KeyValuePair<string, (string Font, List<int> CodePoints)> pair in missingByOwner)
+        {
+            string textName = pair.Key.Length > 0 ? pair.Key : element.Name;
+            string characters = string.Join(", ", pair.Value.CodePoints.Select(c => $"'{char.ConvertFromUtf32(c)}' (U+{c:X4})"));
+            string codes = string.Join(",", pair.Value.CodePoints);
+            errors.Add(new ErrorResult
+            {
+                ElementName = element.Name,
+                Code = "GUM0012",
+                Severity = ErrorSeverity.Warning,
+                Message = $"Text '{textName}' uses {characters}, which the ranges of font '{pair.Value.Font}' leave out, " +
+                    $"so they draw as '?'. Add {codes} to the font's ranges on the Fonts page."
             });
         }
 

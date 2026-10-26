@@ -1179,7 +1179,7 @@ public class TextRuntime : InteractiveGue
             ? $"Regenerate '{CustomFontFile}' with code point(s) {codes}."
             : $"Add {codes} to FontRanges.";
         string message = $"Text '{Name ?? "(unnamed)"}' uses {characters}, which font '{fontIdentity}' at size {FontSize} " +
-            $"does not have, so they draw as blank space. {fix}";
+            $"does not have, so they draw as '?'. {fix}";
         if (shouldThrow)
         {
             throw new InvalidOperationException(message);
@@ -1895,7 +1895,7 @@ public class TextRuntime : InteractiveGue
 /// </summary>
 public enum MissingCharacterBehavior
 {
-    /// <summary>The character draws as blank space and nothing is reported.</summary>
+    /// <summary>The character draws as '?' and nothing is reported.</summary>
     ConsumeSilently,
     /// <summary>
     /// Raises <c>CustomSetPropertyOnRenderable.PropertyAssignmentError</c> (also written to
