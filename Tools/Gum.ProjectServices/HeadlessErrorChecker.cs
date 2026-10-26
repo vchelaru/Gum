@@ -177,8 +177,21 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         return errors;
     }
 
+    // A row in a loop is skipped, so it sets nothing and cannot disagree with a stored value (GUM0013
+    // reports the loop).
+    private static HashSet<string> GetLoopRowKeys(ElementSave element, StateSave state)
+    {
+        var keys = new HashSet<string>();
+        foreach (var row in VariableReferenceGraph.GetForApply(element, state).CyclicRows)
+        {
+            keys.Add(row.SourceObject + "|" + row.Line);
+        }
+        return keys;
+    }
+
     private static void CheckLocalReferenceConflicts(ElementSave element, StateSave state, List<ErrorResult> errors)
     {
+        HashSet<string>? loopRows = null;
         foreach (var variableList in state.VariableLists)
         {
             if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList.Count == 0)
@@ -194,6 +207,11 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 // channels first, the same way ApplyVariableReferences does at apply time.
                 foreach (string expandedReferenceString in ElementSaveExtensions.ExpandCompositeReferenceLine(referenceString, channelOwner))
                 {
+                    loopRows ??= GetLoopRowKeys(element, state);
+                    if (loopRows.Contains(sourceObject + "|" + expandedReferenceString))
+                    {
+                        continue;
+                    }
                     if (TryParseReference(expandedReferenceString, sourceObject, out string qualifiedLeft, out string right))
                     {
                         EmitConflictIfPresent(element, state, state, qualifiedLeft, right, sourceObject, expandedReferenceString, errors);

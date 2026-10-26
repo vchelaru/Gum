@@ -1927,6 +1927,47 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0002_WhenTheRowsAreInALoop()
+    {
+        // The stored 10 differs from what A = B + 1 would give, but a row in a loop sets nothing.
+        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType, liveRoot) => 11f;
+        try
+        {
+            ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1"));
+            component.DefaultState!.Variables.Add(new VariableSave { Name = "A.Width", Type = "float", Value = 10f, SetsValue = true });
+            component.DefaultState.Variables.Add(new VariableSave { Name = "B.Width", Type = "float", Value = 10f, SetsValue = true });
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            errors.Where(item => item.Code == "GUM0002").ShouldBeEmpty();
+            errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem();
+        }
+        finally
+        {
+            ElementSaveExtensions.CustomEvaluateExpression = null;
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0002_WhenTheRowsLoopAcrossTwoElements()
+    {
+        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType, liveRoot) => 11f;
+        try
+        {
+            ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+            ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.A.Width + 1"));
+            panel.DefaultState!.Variables.Add(new VariableSave { Name = "A.Width", Type = "float", Value = 10f, SetsValue = true });
+            other.DefaultState!.Variables.Add(new VariableSave { Name = "B.Width", Type = "float", Value = 10f, SetsValue = true });
+
+            _sut.GetErrorsFor(panel, Project).Where(item => item.Code == "GUM0002").ShouldBeEmpty();
+        }
+        finally
+        {
+            ElementSaveExtensions.CustomEvaluateExpression = null;
+        }
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldNotReportGum0013_WhenRowsFormAChain()
     {
         ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = C.Width + 1"));

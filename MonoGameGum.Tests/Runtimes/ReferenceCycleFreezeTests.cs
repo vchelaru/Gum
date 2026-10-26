@@ -393,4 +393,35 @@ public class ReferenceCycleFreezeTests : BaseTestClass
             Snapshot().ShouldBe(first, $"reload {i}");
         }
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void FormsControl_WithACycleLive_StateChangesNeverFreeze(bool useExpressions)
+    {
+        if (useExpressions)
+        {
+            GumExpressionService.Initialize();
+        }
+        GumProjectSave project = CreateProject();
+        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new Gum.GueDeriving.TextRuntime());
+        ComponentSave label = new ComponentSave { Name = "Label", BaseType = "Text" };
+        label.States.Add(new StateSave { Name = "Default", ParentContainer = label });
+        label.Instances.Add(new InstanceSave { Name = "Shadow", BaseType = "Text", ParentContainer = label });
+        label.Instances.Add(new InstanceSave { Name = "Shadow2", BaseType = "Text", ParentContainer = label });
+        AddRows(label.DefaultState, "Shadow", "Text = Shadow2.Text");
+        AddRows(label.DefaultState, "Shadow2", "Text = Shadow.Text");
+        project.Components.Add(label);
+        ElementSaveExtensions.RegisterGueInstantiation("Label", () => new Gum.Forms.DefaultVisuals.V3.LabelVisual());
+        ScreenSave screen = AddScreen(project, ("Label1", "Label"));
+
+        GraphicalUiElement? root = null;
+        Guard("forms", "create", () => root = screen.ToGraphicalUiElement());
+        Gum.Forms.Controls.Label control = ((Gum.Forms.DefaultVisuals.V3.LabelVisual)root!.GetGraphicalUiElementByName("Label1")!).FormsControl;
+
+        Guard("forms", "Text", () => control.Text = "Code");
+        Guard("forms", "IsEnabled false (UpdateState)", () => control.IsEnabled = false);
+        Guard("forms", "IsEnabled true (UpdateState)", () => control.IsEnabled = true);
+        Guard("forms", "ApplyState", () => control.Visual.ApplyState("Enabled"));
+    }
 }

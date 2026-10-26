@@ -116,15 +116,15 @@ public class ReferenceAnalysisCharacterizationTests : BaseTestClass
     }
 
     [Fact]
-    public void ApplyAll_TwoElementsReadingEachOther_AreAppliedInProjectOrder()
+    public void ApplyAll_TwoElementsReadingEachOther_AreSkippedAndKeepTheirStoredValues()
     {
         ComponentSave a = AddComponent("A", Vars(("V", 0f)), "V = Components/B.V + 1");
         ComponentSave b = AddComponent("B", Vars(("V", 0f)), "V = Components/A.V + 1");
 
         _project.ApplyAllVariableReferences();
 
-        a.DefaultState!.GetValue("V").ShouldBe(1f);
-        b.DefaultState!.GetValue("V").ShouldBe(2f);
+        a.DefaultState!.GetValue("V").ShouldBe(0f);
+        b.DefaultState!.GetValue("V").ShouldBe(0f);
     }
 
     [Fact]
