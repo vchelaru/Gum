@@ -43,6 +43,16 @@ public class GumProjectDependencyWalker
     }
 
     /// <summary>
+    /// Same as <see cref="Walk(GumProjectSave, string, GumBundleInclusion)"/> but leaves out every Screen
+    /// and Component not named in <paramref name="keptElementNames"/>, with the files only they reference
+    /// (textures, fonts, animations). Standards and behaviors are always kept. A null set keeps everything.
+    /// </summary>
+    public WalkResult Walk(GumProjectSave project, string projectRootDirectory, GumBundleInclusion inclusion, ISet<string>? keptElementNames)
+    {
+        return Walk(project, projectRootDirectory, inclusion, scopeElement: null, keptElementNames);
+    }
+
+    /// <summary>
     /// Same as <see cref="Walk(GumProjectSave, string, GumBundleInclusion)"/> but, when
     /// <paramref name="scopeElement"/> is non-null, restricts the walk to that single element.
     /// In scoped mode the project-wide core files (every screen/component/standard/behavior)
@@ -50,6 +60,12 @@ public class GumProjectDependencyWalker
     /// instances and its own file/font references are emitted.
     /// </summary>
     public WalkResult Walk(GumProjectSave project, string projectRootDirectory, GumBundleInclusion inclusion, ElementSave? scopeElement)
+    {
+        return Walk(project, projectRootDirectory, inclusion, scopeElement, keptElementNames: null);
+    }
+
+    private WalkResult Walk(GumProjectSave project, string projectRootDirectory, GumBundleInclusion inclusion,
+        ElementSave? scopeElement, ISet<string>? keptElementNames)
     {
         if (project == null)
         {
@@ -75,6 +91,11 @@ public class GumProjectDependencyWalker
         // project's actual on-disk format, not always the XML extensions (#4345).
         bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName ?? string.Empty);
 
+        // Standards are always kept: they are small and every runtime needs them.
+        List<ElementSave> keptElements = project.AllElements
+            .Where(element => keptElementNames == null || element is StandardElementSave || keptElementNames.Contains(element.Name))
+            .ToList();
+
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -82,18 +103,18 @@ public class GumProjectDependencyWalker
             {
                 if (inclusion.HasFlag(GumBundleInclusion.Core))
                 {
-                    CollectCoreFiles(project, projectRootDirectory, core, missing, isJsonFormat);
-                    CollectInstanceTypeCoreFiles(project, core, isJsonFormat);
+                    CollectCoreFiles(project, projectRootDirectory, core, missing, isJsonFormat, keptElementNames);
+                    CollectInstanceTypeCoreFiles(keptElements, project, core, isJsonFormat);
                 }
 
                 if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
                 {
-                    CollectFileAndFontReferences(project, projectRootDirectory, inclusion, fontCache, external, missing);
+                    CollectFileAndFontReferences(project, keptElements, projectRootDirectory, inclusion, fontCache, external, missing);
                 }
 
                 if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
                 {
-                    CollectFontCacheReferences(project, project.AllElements, projectRootDirectory,
+                    CollectFontCacheReferences(project, keptElements, projectRootDirectory,
                         inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
                         fontCache, external, missing);
 
@@ -139,7 +160,8 @@ public class GumProjectDependencyWalker
         string projectRootDirectory,
         HashSet<string> core,
         List<DependencyWarning> missing,
-        bool isJsonFormat)
+        bool isJsonFormat,
+        ISet<string>? keptElementNames)
     {
         // .gumx itself — derive from FullFileName when present, else from any single .gumx in the root.
         string? gumxRelative = TryGetGumxRelativePath(project, projectRootDirectory);
@@ -150,12 +172,20 @@ public class GumProjectDependencyWalker
 
         foreach (ElementReference reference in project.ScreenReferences ?? new List<ElementReference>())
         {
+            if (keptElementNames != null && !keptElementNames.Contains(reference.Name))
+            {
+                continue;
+            }
             reference.ElementType = ElementType.Screen;
             AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
             AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat);
         }
         foreach (ElementReference reference in project.ComponentReferences ?? new List<ElementReference>())
         {
+            if (keptElementNames != null && !keptElementNames.Contains(reference.Name))
+            {
+                continue;
+            }
             reference.ElementType = ElementType.Component;
             AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
             AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat);
@@ -289,6 +319,7 @@ public class GumProjectDependencyWalker
 
     private static void CollectFileAndFontReferences(
         GumProjectSave project,
+        IEnumerable<ElementSave> elements,
         string projectRootDirectory,
         GumBundleInclusion inclusion,
         HashSet<string> fontCache,
@@ -298,7 +329,7 @@ public class GumProjectDependencyWalker
         bool includeFontCache = inclusion.HasFlag(GumBundleInclusion.FontCache);
         bool includeExternal = inclusion.HasFlag(GumBundleInclusion.ExternalFiles);
 
-        foreach (ElementSave element in project.AllElements)
+        foreach (ElementSave element in elements)
         {
             foreach (StateSave state in element.AllStates)
             {
@@ -328,7 +359,7 @@ public class GumProjectDependencyWalker
         }
     }
 
-    private static void CollectInstanceTypeCoreFiles(GumProjectSave project, HashSet<string> core, bool isJsonFormat)
+    private static void CollectInstanceTypeCoreFiles(IEnumerable<ElementSave> elements, GumProjectSave project, HashSet<string> core, bool isJsonFormat)
     {
         // Mirror the historical ObjectFinder behavior: for every instance, add the .gucx/.gutx
         // file for its BaseType. Projects loaded normally have ComponentReferences/StandardElementReferences
@@ -343,7 +374,7 @@ public class GumProjectDependencyWalker
             }
         }
 
-        foreach (ElementSave element in project.AllElements)
+        foreach (ElementSave element in elements)
         {
             if (element.Instances == null)
             {

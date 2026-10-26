@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components;
+[global::Gum.DataTypes.GumElement("AnimatedComponent")]
 partial class AnimatedComponent : global::Gum.Forms.Controls.FrameworkElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -22,7 +23,7 @@ partial class AnimatedComponent : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("AnimatedComponent") ?? throw new System.InvalidOperationException("Could not find an element named AnimatedComponent - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("AnimatedComponent");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new AnimatedComponent(visual);
             return visual;

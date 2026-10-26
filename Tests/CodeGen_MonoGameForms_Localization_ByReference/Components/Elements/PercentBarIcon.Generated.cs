@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Elements;
+[global::Gum.DataTypes.GumElement("Elements/PercentBarIcon")]
 partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -22,7 +23,7 @@ partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Elements/PercentBarIcon") ?? throw new System.InvalidOperationException("Could not find an element named Elements/PercentBarIcon - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Elements/PercentBarIcon");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new PercentBarIcon(visual);
             return visual;
