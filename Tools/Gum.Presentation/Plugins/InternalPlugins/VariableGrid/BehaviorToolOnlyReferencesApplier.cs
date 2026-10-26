@@ -109,6 +109,53 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
+    /// The category states a running game has applied on top of <paramref name="element"/>'s Default values:
+    /// each category-state reference line of its behaviors (<c>ButtonCategoryState = IsEnabled ? ...</c>)
+    /// evaluated against the Default state, with unset Forms values at their declared defaults. The
+    /// canvas layers these on a Default selection (#6857); the project data is not touched.
+    /// </summary>
+    public static IReadOnlyList<StateSave> GetActiveCategoryStates(ElementSave element)
+    {
+        List<StateSave> active = new List<StateSave>();
+        StateSave? defaultState = element.DefaultState;
+        if (element is not ComponentSave component || defaultState == null)
+        {
+            return active;
+        }
+
+        Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance: null);
+        foreach ((string left, string right) in GetReferenceLines(component))
+        {
+            string? categoryName = ResolveLeftSideType(left, instance: null, defaultState);
+            if (categoryName == null || EvaluateLine(left, right, instance: null, defaultState, fallback)?.Value is not string stateName)
+            {
+                continue;
+            }
+
+            StateSave? state = GetCategoryStates(element, categoryName).FirstOrDefault(item => item.Name == stateName);
+            if (state != null)
+            {
+                active.Add(state);
+            }
+        }
+
+        return active;
+    }
+
+    private static IEnumerable<StateSave> GetCategoryStates(ElementSave element, string categoryName)
+    {
+        foreach (StateSaveCategory category in element.Categories.Concat(ObjectFinder.Self.GetBaseElements(element).SelectMany(item => item.Categories)))
+        {
+            if (category.Name == categoryName)
+            {
+                return category.States;
+            }
+        }
+
+        return Enumerable.Empty<StateSave>();
+    }
+
+    /// <summary>
     /// Returns the underlying (visual) variable names that the relevant element's behavior
     /// <see cref="BehaviorSave.ToolOnlyVariableReferences"/> drive from <paramref name="changedMember"/> -
     /// i.e. the left-hand sides of reference lines whose right-hand side reads

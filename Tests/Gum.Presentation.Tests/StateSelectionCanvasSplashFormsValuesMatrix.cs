@@ -11,8 +11,8 @@ namespace Gum.Presentation.Tests;
 
 /// <summary>
 /// What the canvas shows when the Forms values of a control (IsEnabled, IsChecked) and a visual state value
-/// disagree (#6860). The rule: viewing the control's own component, the clicked state wins (Default shows the
-/// default state's own values, #6857 is open); viewing an instance, an authored Forms value wins
+/// disagree (#6860). The rule: viewing the control's own component, the clicked state wins (Default shows the Default values with the
+/// category state the Forms values choose on top, #6857); viewing an instance, an authored Forms value wins
 /// over a category state a state of the container sets. Controls: Button (IsEnabled), CheckBox (IsEnabled,
 /// IsChecked), the Forms properties that feed a *CategoryState through a behavior's tool-only reference.
 /// </summary>
@@ -49,10 +49,11 @@ public partial class StateSelectionCanvasSplashTests
         string resting = DerivedLook(c.Control, true, false);
         if (c.View == "component")
         {
-            // Default selected is the clicked state: the default state's own values show, so its hard color
-            // (equal to the resting look in this setup) wins over a category state it names (#6857 asks whether
-            // that should change; this pins what the canvas does today).
-            return c.Selected == "Default" ? resting : c.Selected;
+            // Default selected is the base layer a running game never shows alone: the category state the
+            // Forms values choose sits on top of it (#6857). An authored category state is ignored.
+            return c.Selected == "Default"
+                ? DerivedLook(c.Control, c.DefaultEnabled ?? true, c.DefaultChecked ?? false)
+                : c.Selected;
         }
 
         bool authored = c.DefaultEnabled != null || c.DefaultChecked != null || c.StateEnabled != null || c.StateChecked != null;
