@@ -163,8 +163,8 @@ public sealed class ContentLoader : IContentLoader
     /// <see cref="ProcessLoadedPixels"/>. Premultiplied pixels are left alone when the renderer is
     /// premultiplied, otherwise converted to straight alpha (then edge-bled when that is on).
     /// </summary>
-    /// <param name="unpremultiplied">True when the pixels were un-premultiplied, which the caller reports as a warning.</param>
-    /// <returns><paramref name="image"/> when nothing changes, otherwise a fixed-up copy.</returns>
+    /// <returns>The decoder's image when nothing changes, otherwise a fixed-up copy. The out value
+    /// is true when the pixels were un-premultiplied, which the caller reports as a warning.</returns>
     internal static DecodedImage PrepareDecodedPixels(DecodedImage image, bool usePremultipliedAlpha,
         bool bleedTransparentEdges, out bool unpremultiplied)
     {
