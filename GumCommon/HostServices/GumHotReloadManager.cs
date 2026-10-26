@@ -312,9 +312,30 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <see cref="InstanceSave"/>) are added, removed, retyped, and reordered to match the
     /// project's <c>Instances</c> list, and the new default-state variables are re-applied.
     /// Runtime-added children (no <c>InstanceSave</c> tag) are left untouched. Primarily
-    /// called by <see cref="PerformReload"/>; exposed publicly for tests.
+    /// called by <see cref="PerformReload"/>; exposed publicly for tests. While it runs,
+    /// <c>ObjectFinder.Self.GumProjectSave</c> is <paramref name="newProject"/>; the previous project is
+    /// restored when it returns, so the caller decides afterward which project the finder holds.
     /// </summary>
     public static void ApplyDiff(
+        IEnumerable<GraphicalUiElement> roots,
+        GumProjectSave newProject,
+        ISystemManagers systemManagers)
+    {
+        // References and base types resolve through ObjectFinder, so for this call it holds the new
+        // project whatever it held before, and the caller's project is put back afterward.
+        GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
+        ObjectFinder.Self.GumProjectSave = newProject;
+        try
+        {
+            ApplyDiffToNewProject(roots, newProject, systemManagers);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = previousProject;
+        }
+    }
+
+    private static void ApplyDiffToNewProject(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers)

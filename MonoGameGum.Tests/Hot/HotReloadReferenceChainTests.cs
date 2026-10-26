@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Hot;
@@ -132,6 +133,12 @@ public class HotReloadReferenceChainTests : BaseTestClass
         }
         project.Behaviors.Add(new BehaviorSave { Name = StandardFormsBehaviorNames.ButtonBehaviorName });
         project.Behaviors[0].FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+        foreach (string behavior in new[] { StandardFormsBehaviorNames.CheckBoxBehaviorName, StandardFormsBehaviorNames.SliderBehaviorName })
+        {
+            BehaviorSave save = new BehaviorSave { Name = behavior };
+            save.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+            project.Behaviors.Add(save);
+        }
         return project;
     }
 
@@ -247,6 +254,14 @@ public class HotReloadReferenceChainTests : BaseTestClass
         button.Categories.Add(category);
         project.Components.Add(button);
 
+        project.Components.Add(BuildFormsReader(
+            "Controls/CheckBoxStandard", StandardFormsBehaviorNames.CheckBoxBehaviorName, "CheckBoxCategory",
+            new[] { "EnabledOn", "EnabledOff" }, path, readerSaved, extraInstances: Array.Empty<string>()));
+        // A slider needs a thumb and a track that are interactive, so both are buttons.
+        project.Components.Add(BuildFormsReader(
+            "Controls/SliderStandard", StandardFormsBehaviorNames.SliderBehaviorName, "SliderCategory",
+            new[] { "Enabled" }, path, readerSaved, extraInstances: new[] { "ThumbInstance", "TrackInstance" }));
+
         ComponentSave panel = NewComponent("Controls/Panel");
         panel.Instances.Add(new InstanceSave { Name = "Button1", BaseType = button.Name, ParentContainer = panel });
         project.Components.Add(panel);
@@ -256,6 +271,8 @@ public class HotReloadReferenceChainTests : BaseTestClass
         screen.States.Add(screenDefault);
         screen.Instances.Add(new InstanceSave { Name = "Button1", BaseType = button.Name, ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Panel1", BaseType = panel.Name, ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Check1", BaseType = "Controls/CheckBoxStandard", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Slider1", BaseType = "Controls/SliderStandard", ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Swatch", BaseType = "ColoredRectangle", ParentContainer = screen });
         SetRed(screenDefault, "Swatch", readerSaved);
         SetRows(screenDefault, "Swatch", "Color = " + path);
@@ -267,6 +284,31 @@ public class HotReloadReferenceChainTests : BaseTestClass
         project.Screens.Add(screen);
 
         project.Initialize();
+    }
+
+    private static ComponentSave BuildFormsReader(
+        string name, string behaviorName, string categoryName, string[] stateNames, string path, int readerSaved,
+        string[] extraInstances)
+    {
+        ComponentSave component = NewComponent(name);
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle", ParentContainer = component });
+        foreach (string extra in extraInstances)
+        {
+            component.Instances.Add(new InstanceSave { Name = extra, BaseType = "Controls/ButtonStandard", ParentContainer = component });
+        }
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = behaviorName });
+        SetRed(component.DefaultState!, "Background", readerSaved);
+        SetRows(component.DefaultState!, "Background", "Color = " + path);
+        StateSaveCategory category = new StateSaveCategory { Name = categoryName };
+        foreach (string stateName in stateNames)
+        {
+            StateSave state = new StateSave { Name = stateName, ParentContainer = component };
+            SetRed(state, "Background", readerSaved);
+            SetRows(state, "Background", "Color = " + path);
+            category.States.Add(state);
+        }
+        component.Categories.Add(category);
+        return component;
     }
 
     // ---- Reading ----
@@ -473,22 +515,122 @@ public class HotReloadReferenceChainTests : BaseTestClass
         HotReloadFormsProjects.Red(reader).ShouldBe(Mid);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ApplyDiff_ChainIsACycle_Terminates(bool expressions)
+    /// <summary>Fails a test whose body does not return in five seconds, so a loop cannot hang the run.</summary>
+    private static void RunWithGuard(Action action)
     {
-        ChainCell cell = new ChainCell(2, ChainPlacement.OneComponent, ChainEdit.TailOnly, Expressions: expressions);
+        Task task = Task.Run(action);
+        if (!task.Wait(TimeSpan.FromSeconds(5)))
+        {
+            Assert.Fail("Did not finish within 5 seconds.");
+        }
+    }
+
+    [Theory]
+    [InlineData(ChainPlacement.OneComponent, false)]
+    [InlineData(ChainPlacement.OneComponent, true)]
+    [InlineData(ChainPlacement.AcrossComponents, false)]
+    [InlineData(ChainPlacement.AcrossComponents, true)]
+    public void ApplyDiff_ChainIsACycle_TerminatesWithoutThrowingAndStaysStable(ChainPlacement placement, bool expressions)
+    {
+        ChainCell cell = new ChainCell(2, placement, ChainEdit.TailOnly, Expressions: expressions);
         GraphicalUiElement screen = LoadFirst(cell);
         GraphicalUiElement reader = ReaderVisual(screen, cell.Reader);
 
-        GumProjectSave second = Build(cell, second: true);
-        ComponentSave styles = second.Components.Single(c => c.Name == "Styles");
-        SetRows(styles.DefaultState!, "Sw2", "Color = Sw1.Color");
+        GumProjectSave BuildCycle()
+        {
+            GumProjectSave project = Build(cell, second: true);
+            if (placement == ChainPlacement.OneComponent)
+            {
+                SetRows(project.Components.Single(c => c.Name == "Styles").DefaultState!, "Sw2", "Color = Sw1.Color");
+            }
+            else
+            {
+                SetRows(project.Components.Single(c => c.Name == "Chain2").DefaultState!, "Swatch", "Color = Components/Chain1.Swatch.Color");
+            }
+            return project;
+        }
 
-        Should.NotThrow(() => HotReloadFormsProjects.Reload(screen, second));
+        int afterFirst = 0;
+        RunWithGuard(() =>
+        {
+            HotReloadFormsProjects.Reload(screen, BuildCycle());
+            afterFirst = HotReloadFormsProjects.Red(reader);
+        });
 
-        HotReloadFormsProjects.Red(reader).ShouldBeInRange(0, 255);
+        int afterSecond = 0;
+        RunWithGuard(() =>
+        {
+            HotReloadFormsProjects.Reload(screen, BuildCycle());
+            afterSecond = HotReloadFormsProjects.Red(reader);
+        });
+        afterSecond.ShouldBe(afterFirst);
+    }
+
+    // ---- The finder ----
+
+    public enum FinderAtCall { Null, OldProject, NewProject }
+
+    [Theory]
+    [InlineData(FinderAtCall.Null)]
+    [InlineData(FinderAtCall.OldProject)]
+    [InlineData(FinderAtCall.NewProject)]
+    public void ApplyDiff_FinderNotPointingAtTheNewProject_ChainStillShowsTheEnd(FinderAtCall finder)
+    {
+        ChainCell cell = new ChainCell(3, ChainPlacement.AcrossComponents, ChainEdit.TailOnly);
+        GraphicalUiElement screen = LoadFirst(cell);
+        GraphicalUiElement reader = ReaderVisual(screen, cell.Reader);
+        GumProjectSave oldProject = ObjectFinder.Self.GumProjectSave!;
+        GumProjectSave newProject = Build(cell, second: true);
+        ObjectFinder.Self.GumProjectSave = finder switch
+        {
+            FinderAtCall.Null => null,
+            FinderAtCall.OldProject => oldProject,
+            _ => newProject
+        };
+        GumProjectSave? before = ObjectFinder.Self.GumProjectSave;
+
+        GumHotReloadManager.ApplyDiff(new[] { screen }, newProject, RenderingLibrary.SystemManagers.Default);
+
+        HotReloadFormsProjects.Red(reader).ShouldBe(New);
+        ObjectFinder.Self.GumProjectSave.ShouldBeSameAs(before);
+    }
+
+    // ---- Forms controls across a reload with a chain ----
+
+    [Fact]
+    public void ApplyDiff_CheckBoxCheckedAndChainEdited_StaysCheckedAndShowsTheEndOfTheChain()
+    {
+        ChainCell cell = new ChainCell(3, ChainPlacement.AcrossComponents, ChainEdit.TailOnly);
+        GraphicalUiElement screen = LoadFirst(cell);
+        GraphicalUiElement check = HotReloadFormsProjects.Child(screen, "Check1");
+        CheckBox checkBox = HotReloadFormsProjects.Control<CheckBox>(check);
+        checkBox.IsChecked = true;
+        GraphicalUiElement background = HotReloadFormsProjects.Child(check, "Background");
+        HotReloadFormsProjects.Red(background).ShouldBe(Old, "sanity");
+
+        HotReloadFormsProjects.Reload(screen, Build(cell, second: true));
+
+        checkBox.IsChecked.ShouldBe(true);
+        HotReloadFormsProjects.Red(background).ShouldBe(New);
+    }
+
+    [Fact]
+    public void ApplyDiff_SliderValueSetAndChainEdited_KeepsTheValueAndShowsTheEndOfTheChain()
+    {
+        ChainCell cell = new ChainCell(3, ChainPlacement.OneComponent, ChainEdit.TailOnly);
+        GraphicalUiElement screen = LoadFirst(cell);
+        GraphicalUiElement sliderVisual = HotReloadFormsProjects.Child(screen, "Slider1");
+        Slider slider = HotReloadFormsProjects.Control<Slider>(sliderVisual);
+        slider.Minimum = 0;
+        slider.Maximum = 100;
+        slider.Value = 40;
+        GraphicalUiElement background = HotReloadFormsProjects.Child(sliderVisual, "Background");
+        HotReloadFormsProjects.Red(background).ShouldBe(Old, "sanity");
+
+        HotReloadFormsProjects.Reload(screen, Build(cell, second: true));
+
+        slider.Value.ShouldBe(40);
+        HotReloadFormsProjects.Red(background).ShouldBe(New);
     }
 
     // ---- A Standards element in the chain ----
