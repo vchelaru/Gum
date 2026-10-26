@@ -54,4 +54,35 @@ public class TextRuntimeMissingCharacterReportTests : BaseTestClass
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
         }
     }
+
+    [Fact]
+    public void Text_WhenFontLacksCharacter_MeasuresItAsQuestionMark()
+    {
+        bool savedGrowth = TextRuntime.UseAutomaticFontGrowth;
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseAutomaticFontGrowth = false;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = FixtureFontPath;
+            textRuntime.FontSize = 38;
+            textRuntime.Text = "A€";
+            Raylib_cs.Font font = ((Gum.Renderables.Text)textRuntime.RenderableComponent).Font;
+
+            // Drawing (DrawTextPro) and measuring both look the glyph up the same way, so this pins both.
+            float missingWidth = Raylib_cs.Raylib.MeasureTextEx(font, "A€", font.BaseSize, 0).X;
+            float questionWidth = Raylib_cs.Raylib.MeasureTextEx(font, "A?", font.BaseSize, 0).X;
+            float spaceWidth = Raylib_cs.Raylib.MeasureTextEx(font, "A ", font.BaseSize, 0).X;
+
+            missingWidth.ShouldBe(questionWidth);
+            questionWidth.ShouldNotBe(spaceWidth);
+        }
+        finally
+        {
+            TextRuntime.UseAutomaticFontGrowth = savedGrowth;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
 }
