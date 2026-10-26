@@ -65,7 +65,7 @@ In addition to loose files, Gum can load a project from a single-file `.gumpkg` 
 
 "Fonts" here covers both kinds: the baked `FontCache` `.fnt` and `.png` pages, and a `.ttf` the project rasterizes at runtime.
 
-This means a published build can ship a single `.gumpkg` next to the executable instead of a folder tree of `.gusx`/`.gucx`/`.png`/`.fnt` files. See the [pack](../../cli/pack.md) page for the producer side and the runtime contract.
+This means a published build can ship a single `.gumpkg` next to the executable instead of a folder tree of `.gusx`/`.gucx`/`.png`/`.fnt` files. See the [pack](../../cli/pack.md) page for the producer side and the runtime contract, including `--shake`, which leaves out elements nothing in the project uses.
 
 ### Serving Files From Your Own Source
 

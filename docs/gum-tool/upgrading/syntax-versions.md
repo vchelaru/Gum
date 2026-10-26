@@ -29,6 +29,7 @@ The detected version is displayed as Syntax Version in the Output section of the
 | 4 | TBD | Layout enum namespace unification (breaking). Enums like `DimensionUnitType`, `ChildrenLayout`, `HorizontalAlignment`, etc. move to a unified namespace. The bundled Roslyn analyzer provides one-click migration. |
 | 5 | 2026.10.x | Generated code assigns `ColorOperation` on `SpriteRuntime` and `NineSliceRuntime` instances (the Sprite/NineSlice `Color Operation` variable). Older runtimes lack the property, so the code generator omits the assignment below this version. See issue #4880. |
 | 6 | 2026.11.x | Generated code sets `MenuItem.DefaultSubmenuPopupTemplate` to the project's MenuItemSubmenuPopup component, so every MenuItem submenu uses it instead of the ScrollViewer component. Older runtimes lack the property, so the code generator omits the assignment below this version. See issue #6741. |
+| 7 | 2026.11.x | Generated Screen and Component classes carry a `[GumElement]` attribute naming their element, and fetch it with `ObjectFinder.GetRequiredElementSave`, which throws when the element is missing instead of returning `null`. This lets [`gumcli pack --shake`](../../cli/pack.md#keeping-elements-created-from-code) find the elements your code uses. Applies to Gum Forms, MonoGame, raylib, and Silk.NET output. Older runtimes lack both, so the code generator emits the previous lookup below this version. See issue #6817. |
 
 When a new syntax version is introduced, the corresponding monthly migration page will document the specific changes.
 
