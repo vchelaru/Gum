@@ -113,7 +113,15 @@ Controls/Toast
 gumcli pack GumProject/GumProject.gumj --shake --roots-assembly bin/Release/net8.0/MyGame.dll
 ```
 
-The generator cannot read a name that is not a string literal, such as `GetElementSave(elementName)`. It reports warning `GUM004` at that line, and you add the name with `--keep` or `--roots`.
+The generator cannot read a name that is not a string literal, such as `GetElementSave(elementName)`. To have the build point out these lookups, set `GumShake` in your game's `.csproj`:
+
+```xml
+<PropertyGroup>
+  <GumShake>true</GumShake>
+</PropertyGroup>
+```
+
+With it set, the build reports warning `GUM004` at each such line, and you add the name with `--keep` or `--roots`.
 
 You can combine all three options. Pack stops with exit code 2 when a name matches no element in the project, so pack catches a misspelled name before it reaches your game.
 
