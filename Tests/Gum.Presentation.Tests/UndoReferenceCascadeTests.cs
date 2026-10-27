@@ -337,6 +337,83 @@ public class UndoReferenceCascadeTests : BaseTestClass
         Width(_comp, "F1").ShouldBe(50, "the default state is untouched");
     }
 
+    private void RemoveRow(string follower)
+    {
+        using (_undo.RequestLock())
+        {
+            _comp.DefaultState.GetVariableListSave(follower + ".VariableReferences")!.ValueAsIList.Clear();
+            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance(follower), "VariableReferences",
+                _comp.DefaultState, follower + ".VariableReferences", trySave: true);
+        }
+        _fileCommands.Object.TryAutoSaveElement(_comp);
+    }
+
+    private void EditF2Width(float? value)
+    {
+        using (_undo.RequestLock())
+        {
+            SetWidth(_comp.DefaultState, "F2", value);
+            _logic.DoVariableReferenceReaction(_comp, _comp.GetInstance("F2"), "Width", _comp.DefaultState,
+                "F2.Width", trySave: true);
+        }
+        _fileCommands.Object.TryAutoSaveElement(_comp);
+    }
+
+    // An edit made after an undo drops the redo stack; undoing that edit must not bring back a row an earlier
+    // action removed (#6887). The follower has no row, so its
+    // edit sticks and is recorded.
+    [Theory]
+    [InlineData(true, true, true, 99f)]
+    [InlineData(true, false, true, 99f)]
+    [InlineData(true, true, true, null)]
+    [InlineData(true, true, false, null)]
+    [InlineData(true, true, false, 99f)]
+    [InlineData(false, true, true, 99f)]
+    [InlineData(false, true, true, null)]
+    public void Undo_OfAFollowerEditMadeAfterAnUndo_ShouldKeepAnEarlierRemovedRowRemoved(bool materialized, bool autoSave, bool resetSource, float? followerValue)
+    {
+        Arrange(materialized, autoSave);
+        AddRectangleStandard();
+        RemoveRow("F1");
+        RemoveRow("F2");
+        if (resetSource)
+        {
+            ResetSource();
+        }
+        else
+        {
+            EditSourceWidth(55);
+        }
+        _undo.PerformUndo();
+
+        EditF2Width(followerValue);
+        HistoryCount.ShouldBe(3, "the follower edit is a new action and drops the undone source edit");
+        _undo.CanRedo().ShouldBeFalse();
+        _undo.PerformUndo();
+
+        _comp.DefaultState.GetVariableListSave("F1.VariableReferences")!.ValueAsIList.Count.ShouldBe(0, "the row stays removed, as after the first action");
+        MemoryShouldEqualDisk();
+    }
+
+    [Fact]
+    public void Undo_AfterAFollowerEditThatRecordsNothing_ShouldPutBackTheRemovedRow()
+    {
+        Arrange();
+        AddRectangleStandard();
+        RemoveRow("F1");
+        EditSourceWidth(55);
+        _undo.PerformUndo();
+
+        // F2 still has its row, so the typed value is re-read from F1 and nothing changes.
+        EditF2Width(99);
+        HistoryCount.ShouldBe(2, "the edit changed nothing, so it recorded nothing");
+        _undo.CanRedo().ShouldBeTrue("the undone source edit is still on the redo stack");
+        _undo.PerformUndo();
+
+        _comp.DefaultState.GetVariableListSave("F1.VariableReferences")!.ValueAsIList.Count.ShouldBe(1, "the undo reached the row removal");
+        MemoryShouldEqualDisk();
+    }
+
     [Fact]
     public void UndoRedo_OfAnEditThatRemovedAReferenceRow_ShouldPutTheRowAndItsValueBack()
     {
