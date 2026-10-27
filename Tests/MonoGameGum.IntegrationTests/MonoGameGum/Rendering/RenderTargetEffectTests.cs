@@ -347,6 +347,35 @@ technique SpriteDrawing
         Pixel(9, 24).B.ShouldBeLessThan((byte)30);
     }
 
+    // The tool lists a shader's parameters from the compiled effect, so the names, kinds and sizes
+    // must come out as the shader declared them (Outline.slang declares TexelSize, Thickness and
+    // OutlineColor besides the texture it samples).
+    [Fact]
+    public void EffectShaderParameters_Read_ListsTheParametersTheShaderDeclares()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
+        conversion.IsSuccess.ShouldBeTrue();
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue();
+        using Effect outline = new(game.GraphicsDevice, compileResult.Value.Data);
+
+        System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> parameters = EffectShaderParameters.Read(outline);
+
+        parameters.Select(parameter => parameter.Name).OrderBy(name => name)
+            .ShouldBe(new[] { "OutlineColor", "TexelSize", "Thickness" });
+        ShaderParameterInfo thickness = parameters.Single(parameter => parameter.Name == "Thickness");
+        thickness.Kind.ShouldBe(ShaderParameterKind.Float);
+        thickness.Count.ShouldBe(1);
+        parameters.Single(parameter => parameter.Name == "TexelSize").Count.ShouldBe(2);
+        parameters.Single(parameter => parameter.Name == "OutlineColor").Count.ShouldBe(4);
+    }
+
     private static ContainerRuntime BuildRedRenderTarget(float x)
     {
         ContainerRuntime container = new();

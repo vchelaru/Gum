@@ -78,6 +78,54 @@ public readonly struct ShaderParameterValue
 }
 
 /// <summary>
+/// A parameter a shader declares: its name, scalar kind, number of components and the value the
+/// shader starts with. The tool lists these so each one can be edited.
+/// </summary>
+public sealed class ShaderParameterInfo
+{
+    /// <summary>The parameter's name in the shader.</summary>
+    public string Name { get; }
+
+    /// <summary>The scalar type shared by every component.</summary>
+    public ShaderParameterKind Kind { get; }
+
+    /// <summary>The number of components, from 1 (a scalar) to 4.</summary>
+    public int Count { get; }
+
+    /// <summary>The value the shader uses until one is set.</summary>
+    public ShaderParameterValue DefaultValue { get; }
+
+    /// <summary>Creates a description of one declared parameter.</summary>
+    public ShaderParameterInfo(string name, ShaderParameterKind kind, int count, ShaderParameterValue defaultValue)
+    {
+        Name = name;
+        Kind = kind;
+        Count = count;
+        DefaultValue = defaultValue;
+    }
+}
+
+/// <summary>
+/// Lists the parameters of a platform effect for the tool. The effect type differs per backend, so the
+/// tool registers a <see cref="Reader"/> for the one it draws with.
+/// </summary>
+public static class ShaderParameterReader
+{
+    /// <summary>Reads the parameters of the platform effect it was registered for, or null for any other object.</summary>
+    public static System.Func<object, System.Collections.Generic.IReadOnlyList<ShaderParameterInfo>>? Reader { get; set; }
+
+    /// <summary>The parameters <paramref name="effect"/> declares, or none when there is no effect or no reader.</summary>
+    public static System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> Read(object? effect)
+    {
+        if (effect == null || Reader == null)
+        {
+            return new List<ShaderParameterInfo>();
+        }
+        return Reader(effect);
+    }
+}
+
+/// <summary>
 /// Named shader parameter values for one effect owner. Names share a single namespace across all
 /// kinds, and a backend applies the values to the effect just before it draws.
 /// </summary>
