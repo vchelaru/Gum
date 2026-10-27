@@ -659,3 +659,13 @@ Available in November 2026, or now if building Gum from source.
 When a `ListBox` has item-level focus (`DoListItemsHaveFocus` is `true`), the axis the list does not use now leaves the list, like the perpendicular axis of a `Slider`. In a vertical list, left and right used to act as up and down on the d-pad and left stick. In a horizontal list, up and down used to act as left and right. Now they do what they do when the list has top-level focus: with `GamepadNavigationMode.Spatial` focus moves to the nearest control in that direction, with the default tab order left and up move to the previous control and right and down move to the next. An explicit `SpatialNavigationLeft`, `SpatialNavigationRight`, `SpatialNavigationUp` or `SpatialNavigationDown` on the `ListBox` is honored. Leaving sets `DoListItemsHaveFocus` to `false` and keeps `SelectedIndex`.
 
 This affects you if players stepped through a vertical list with left and right, or through a horizontal list with up and down. Use the list's own axis instead. The up and down arrow keys, a wrapping list, and the drop-down list of a `ComboBox` are unchanged.
+
+### Hot Reload Keeps Values Your Code Set
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+A [hot reload](../../code/debugging/hot-reload.md) now applies only the variables the project changed. Before, it applied the whole default state of a component instance, so a `Width` your code set on a tool-authored `Button` went back to the component's value on every reload, while the same `Width` on a plain `ColoredRectangle` stayed. Now both keep the value your code set until the project changes that variable.
+
+This affects you if your game relied on a reload resetting a value it set in code. Set the value again in `HotReloadCompleted`, or change the variable in the Gum project.

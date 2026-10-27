@@ -469,10 +469,6 @@ public class GumHotReloadManager : IGumHotReloadManager
 
             if (newEs.DefaultState != null)
             {
-                if (oldEs != null)
-                {
-                    ResetRemovedVariables(element, oldEs, newEs);
-                }
                 if (oldEs != null && !ReferenceEquals(oldEs, newEs))
                 {
                     context.OldByName[newEs.Name] = oldEs;
@@ -619,6 +615,9 @@ public class GumHotReloadManager : IGumHotReloadManager
                 && !ReferenceEquals(oldEs, es))
             {
                 oldState = oldEs.DefaultState;
+                // Lower layers were applied first, so a variable this layer dropped falls back to
+                // what the layers below it say.
+                ResetRemovedVariables(element, oldEs, es, context);
             }
 
             if (oldState == null || ReferenceEquals(oldState, state))
@@ -738,7 +737,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// than the visuals, so a value assigned in code, which is in neither, is never touched.
     /// Runs before the new state is applied, so the new file's values win.
     /// </summary>
-    private static void ResetRemovedVariables(GraphicalUiElement element, ElementSave oldEs, ElementSave newEs)
+    private static void ResetRemovedVariables(
+        GraphicalUiElement element, ElementSave oldEs, ElementSave newEs, ReloadContext context)
     {
         StateSave? oldState = oldEs.DefaultState;
         StateSave? newState = newEs.DefaultState;
@@ -788,6 +788,15 @@ public class GumHotReloadManager : IGumHotReloadManager
             if (defaultValue != null)
             {
                 element.SetProperty(variable.Name, defaultValue);
+
+                // Layers above this one may still set the variable; they apply it again.
+                GraphicalUiElement? owner = string.IsNullOrEmpty(variable.SourceObject)
+                    ? element
+                    : element.GetGraphicalUiElementByName(variable.SourceObject);
+                if (owner != null)
+                {
+                    context.RecordApplied(owner, variable);
+                }
             }
         }
     }
