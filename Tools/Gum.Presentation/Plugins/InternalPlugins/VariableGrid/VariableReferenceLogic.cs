@@ -692,6 +692,105 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     }
 
     /// <inheritdoc/>
+    public StoredValueChange[] ReapplyToolOnlyReferences(BehaviorSave behavior, bool trySave)
+    {
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        if (project == null)
+        {
+            return Array.Empty<StoredValueChange>();
+        }
+
+        List<ElementSave> targets = new List<ElementSave>();
+        foreach (ComponentSave component in project.Components)
+        {
+            if (component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
+            {
+                targets.Add(component);
+            }
+        }
+        return ReapplyToolOnlyReferencesAround(project, targets, trySave);
+    }
+
+    /// <inheritdoc/>
+    public StoredValueChange[] ReapplyToolOnlyReferences(ElementSave element, bool trySave)
+    {
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        if (project == null)
+        {
+            return Array.Empty<StoredValueChange>();
+        }
+
+        return ReapplyToolOnlyReferencesAround(project, new List<ElementSave> { element }, trySave);
+    }
+
+    /// <summary>
+    /// Re-applies the tool-only references to each of <paramref name="targets"/> and to every element with an
+    /// instance of one, which is where <see cref="BehaviorToolOnlyReferencesApplier.Apply"/> materializes a
+    /// component's references. Elements whose stored values changed are saved and their readers updated.
+    /// </summary>
+    private StoredValueChange[] ReapplyToolOnlyReferencesAround(GumProjectSave project, List<ElementSave> targets, bool trySave)
+    {
+        HashSet<ElementSave> affected = new HashSet<ElementSave>(targets);
+        if (targets.Count > 0)
+        {
+            foreach (ElementSave container in project.Components.Cast<ElementSave>().Concat(project.Screens))
+            {
+                if (container.Instances.Any(instance => ObjectFinder.Self.GetElementSave(instance.BaseType) is { } baseElement && targets.Contains(baseElement)))
+                {
+                    affected.Add(container);
+                }
+            }
+        }
+
+        List<StoredValueChange> changes = new List<StoredValueChange>();
+        List<ElementSave> changedElements = new List<ElementSave>();
+        foreach (ElementSave element in affected)
+        {
+            StateSave? state = element.DefaultState;
+            if (state == null)
+            {
+                continue;
+            }
+
+            Dictionary<string, object?> before = new Dictionary<string, object?>();
+            foreach (VariableSave variable in state.Variables)
+            {
+                before[variable.Name] = variable.Value;
+            }
+            BehaviorToolOnlyReferencesApplier.Apply(element, state);
+
+            int countBefore = changes.Count;
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (!before.TryGetValue(variable.Name, out object? oldValue) || !Equals(oldValue, variable.Value))
+                {
+                    changes.Add(new StoredValueChange(element, null, state.Name, variable.Name, variable.Type, variable.Value));
+                }
+            }
+            // A reference that now resolves to a resting value removes the value an instance held.
+            foreach (string removed in before.Keys.Where(name => state.Variables.All(variable => variable.Name != name)))
+            {
+                changes.Add(new StoredValueChange(element, null, state.Name, removed, null, null));
+            }
+            if (changes.Count > countBefore)
+            {
+                changedElements.Add(element);
+            }
+        }
+
+        foreach (ElementSave element in changedElements)
+        {
+            changes.AddRange(ApplyReferencesToElement(element, trySave));
+            if (trySave)
+            {
+                _fileCommands.TryAutoSaveElement(element);
+            }
+        }
+
+        return changes.ToArray();
+    }
+
+    /// <inheritdoc/>
     public StoredValueChange[] ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
         GumProjectSave? project = ObjectFinder.Self.GumProjectSave;

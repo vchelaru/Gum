@@ -91,7 +91,7 @@ The ignore list (`FileWatchIgnoreList`) is time-based only.
 | `gusx`, `gutx`, `gucx` (and JSON siblings) | Reload element from disk, refresh tree + wireframe, then re-apply the references that read it (see below) |
 | `gumx` | Reload entire project |
 | `ganx` | Print warning — Gum does not support runtime reload of animation collections |
-| `behx` | Reload behavior definition |
+| `behx`, `behj` | Reload behavior definition, then re-apply its tool-only references to implementing components and elements holding their instances (see below) |
 | `csv`, `resx` | Reload localization file (RESX also matches satellites via `IsLocalizationFileThatShouldTriggerReload`) |
 | `ProjectCodeSettings.codsj` | Handled by the code output plugin's `ReactToFileChanged` (`CodeOutputPluginBase.HandleFileChanged`): reload only, never regenerate or migrate; an unreadable file keeps the current settings and makes the Code tab read-only until a readable version arrives or the user resets it |
 
@@ -139,3 +139,5 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 | `Tools/Gum.Presentation/Commands/FileCommands.cs` | Calls `IgnoreNextChangeUntil` before saving elements |
 | `Tools/Gum.Presentation/Managers/ProjectManager.cs` | Calls `IgnoreNextChangeUntil` before saving project |
 | `Tools/Gum.Presentation/Services/Fonts/FontManager.cs` | Calls `IgnoreNextChangeUntil` before generating fonts |
+
+**Tool-only references are re-applied after a reload**: a behavior's `ToolOnlyVariableReferences` are materialized into the default state of each implementing component and of every element holding an instance of one (`BehaviorToolOnlyReferencesApplier.Apply`), so a reload alone leaves them at what the old reference produced. A reloaded behavior calls `IVariableReferenceLogic.ReapplyToolOnlyReferences(behavior, trySave: true)`; a reloaded element calls the `ElementSave` overload. Changed elements are saved (Auto Save on) and their readers cascade; both run in the same deferred batch as the element cascade above. Undo snapshots are not rebased for these values (no reference row feeds them).
