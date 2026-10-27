@@ -65,6 +65,42 @@ public class FileDropdownScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "DISP-011")]
+    public void ShaderDropdown_OffersTheShippedShadersUnderBuiltIn_AndPickingOneCopiesItIntoTheProject()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        InstanceSave box = tree.Project.AddInstance(card, "Box", "Container");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(box));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+        // The shader rows appear once the container renders to a target.
+        grid.Row("IsRenderTarget").GetVisualDescendants().OfType<CheckBox>().First().IsChecked = true;
+        grid.Settle();
+        string copy = Path.Combine(tree.Project.ProjectFolder, "Shaders", "Blur.slang");
+
+        grid.Combo("SourceShaderFile").IsDropDownOpen = true;
+        grid.Settle();
+
+        grid.Combo("SourceShaderFile").Items.Cast<object?>().Select(item => item?.ToString())
+            .ShouldBe(new[] { "Built-in", "Blur.slang", "Grayscale.slang", "Sepia.slang" });
+        File.Exists(copy).ShouldBeFalse("listing the shaders copies nothing");
+        grid.Combo("SourceShaderFile").IsDropDownOpen = false;
+
+        grid.PickComboItem("SourceShaderFile", "Blur.slang");
+
+        VariableGridHarness.StoredValue(card, "Box.SourceShaderFile").ShouldBe("Shaders/Blur.slang");
+        File.ReadAllText(copy).ShouldBe(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Content", "Shaders", "Blur.slang")));
+
+        // The project now holds the copy, so the list offers it once, as the project's file.
+        grid.Combo("SourceShaderFile").IsDropDownOpen = true;
+        grid.Settle();
+        grid.Combo("SourceShaderFile").Items.Cast<object?>().Select(item => item?.ToString())
+            .ShouldBe(new[] { "Project", "Shaders/Blur.slang", "Built-in", "Grayscale.slang", "Sepia.slang" });
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
     public void SourceFileDropdown_PickingAFileOutsideTheProject_AsksToCopyOrReferenceItLikeThePicker()
     {
         string outside = Path.Combine(Path.GetTempPath(), "Gum6869Outside_" + Guid.NewGuid().ToString("N"));

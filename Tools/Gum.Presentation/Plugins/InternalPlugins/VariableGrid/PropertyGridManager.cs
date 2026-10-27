@@ -45,6 +45,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly ObjectFinder _objectFinder;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ReferencedFileChoices _referencedFileChoices;
+    private readonly IBuiltInShaderFiles _builtInShaderFiles;
     private readonly IDialogService _dialogService;
     private readonly LocalizationService _localizationService;
     private readonly ITabManager _tabManager;
@@ -142,8 +143,10 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         IVariableSaveLogic variableSaveLogic,
         IClipboardService clipboardService,
         IStateEditingIndicatorService stateEditingIndicatorService,
-        IVariableGridHead variableGridHead)
+        IVariableGridHead variableGridHead,
+        IBuiltInShaderFiles builtInShaderFiles)
     {
+        _builtInShaderFiles = builtInShaderFiles;
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
         _undoManager = undoManager;
@@ -1217,6 +1220,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 {
                     SetDisplayerProperty(member, "Filter", filter);
                     SetFileChoices(member, ReferencedFileChoices.AcceptingExtensions(filter));
+                    if (rootVariableName == "SourceShaderFile")
+                    {
+                        // The shipped shaders are listed after the project's own; picking one copies it in.
+                        SetDisplayerProperty(member, "BuiltInChoices", (Func<IReadOnlyList<string>, IReadOnlyList<string>>)_builtInShaderFiles.GetOffered);
+                        SetDisplayerProperty(member, "ImportBuiltIn", (Func<string, string?>)_builtInShaderFiles.CopyIntoProject);
+                    }
                 }
                 else if (rootVariableName == "SourceFile")
                 {

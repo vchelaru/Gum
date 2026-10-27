@@ -275,6 +275,91 @@ public class CompositeEditorTests : IDisposable
     }
 
     [AvaloniaFact]
+    public void FileSelectionDisplay_WithBuiltInChoices_ListsThemUnderTheirOwnHeader_AndPickingOneCopiesItAndWritesTheCopy()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.slang" };
+        IReadOnlyList<string>? heldByTheProject = null;
+        string? imported = null;
+        FileSelectionDisplay display = new FileSelectionDisplay
+        {
+            FileChoices = _ => new[] { "Shaders/Mine.slang", "old.slang" },
+            BuiltInChoices = held =>
+            {
+                heldByTheProject = held;
+                return new[] { "Blur.slang", "Sepia.slang" };
+            },
+            ImportBuiltIn = name =>
+            {
+                imported = name;
+                return "Shaders/" + name;
+            },
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        heldByTheProject.ShouldBe(new[] { "Shaders/Mine.slang", "old.slang" });
+        display.ChoiceBox.Items.Cast<object?>().Select(item => item?.ToString()).ShouldBe(
+            new[] { "Project", "Shaders/Mine.slang", "old.slang", "Built-in", "Blur.slang", "Sepia.slang" });
+        display.ChoiceBox.SelectedItem.ShouldBe("old.slang");
+        fixture.File.ShouldBe("old.slang", "listing the choices does not copy or write anything");
+        imported.ShouldBeNull();
+
+        display.ChoiceBox.SelectedItem = display.ChoiceBox.Items.Cast<object?>().Single(item => item?.ToString() == "Blur.slang");
+
+        imported.ShouldBe("Blur.slang");
+        fixture.File.ShouldBe("Shaders/Blur.slang");
+        display.TextBox.Text.ShouldBe("Shaders/Blur.slang");
+        display.ChoiceBox.SelectedItem.ShouldBe("Shaders/Blur.slang");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithBuiltInChoices_ACopyThatCannotBeMade_LeavesTheValueAlone()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.slang" };
+        FileSelectionDisplay display = new FileSelectionDisplay
+        {
+            FileChoices = _ => new[] { "old.slang" },
+            BuiltInChoices = _ => new[] { "Blur.slang" },
+            ImportBuiltIn = _ => null,
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.ChoiceBox.SelectedItem = display.ChoiceBox.Items.Cast<object?>().Single(item => item?.ToString() == "Blur.slang");
+
+        fixture.File.ShouldBe("old.slang");
+        display.ChoiceBox.SelectedItem.ShouldBe("old.slang");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithBuiltInChoices_NothingToOffer_ShowsNoHeaders_AndAnEmptyProjectListHasNoProjectHeader()
+    {
+        EditorFixture fixture = new EditorFixture { File = "" };
+        List<string> builtIn = new List<string>();
+        FileSelectionDisplay display = new FileSelectionDisplay
+        {
+            FileChoices = _ => new[] { "old.slang" },
+            BuiltInChoices = _ => builtIn,
+            ImportBuiltIn = name => name,
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.IsDropDownOpen = true;
+        display.ChoiceBox.Items.Cast<object?>().ShouldBe(new object[] { "old.slang" });
+
+        display.FileChoices = _ => Array.Empty<string>();
+        builtIn.Add("Blur.slang");
+        display.ChoiceBox.IsDropDownOpen = false;
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.ChoiceBox.Items.Cast<object?>().Select(item => item?.ToString()).ShouldBe(new[] { "Built-in", "Blur.slang" });
+    }
+
+    [AvaloniaFact]
     public void FileSelectionDisplay_WithChoices_AValueNobodyReferencesStillShows_AndAnEmptyListHasNoSelection()
     {
         EditorFixture fixture = new EditorFixture { File = "lonely.png" };

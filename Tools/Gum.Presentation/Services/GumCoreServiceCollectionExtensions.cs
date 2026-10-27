@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -226,6 +227,9 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFilePickingFolderProvider, FilePickingFolderProvider>();
         services.AddSingleton<IVariableTypeConverterProvider, VariableTypeConverterProvider>();
         services.AddSingleton<ICompositeMemberRegistry, CompositeMemberRegistry>();
+        services.AddSingleton<IBuiltInShaderFiles>(provider => new BuiltInShaderFiles(
+            provider.GetRequiredService<IProjectState>(),
+            Path.Combine(AppContext.BaseDirectory, "Content", "Shaders")));
         services.AddSingleton<IInstalledFontProvider, SkiaInstalledFontProvider>();
         services.AddSingleton<VariableGridToggleOptions>();
         services.AddSingleton<PropertyGridManager>();

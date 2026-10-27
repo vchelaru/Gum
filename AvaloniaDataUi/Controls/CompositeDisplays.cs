@@ -748,13 +748,18 @@ public class FileSelectionDisplay : DataUiDisplayBase
         _label = new TextBlock { Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
         _textBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Stretch };
         _textBox.EditCommitRequested += HandleEditCommitRequested;
-        _choiceBox = new WheelIgnoringComboBox
+        _choiceBox = new FileChoiceComboBox
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,
             PlaceholderText = "(none)",
             IsEditable = true,
-            ItemTemplate = new FuncDataTemplate<string>((path, _) => new TextBlock { Text = path, TextTrimming = TextTrimming.CharacterEllipsis }),
+            ItemTemplate = new FuncDataTemplate<object>((choice, _) => new TextBlock
+            {
+                Text = choice?.ToString(),
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                FontWeight = choice is FileChoiceHeader ? FontWeight.SemiBold : FontWeight.Normal,
+            }),
         };
         _choiceBox.SelectionChanged += HandleChoiceSelected;
         _choiceBox.LostFocus += (_, _) => CommitTypedText();
@@ -849,6 +854,19 @@ public class FileSelectionDisplay : DataUiDisplayBase
         }
     }
 
+    /// <summary>
+    /// The files that ship with the tool, listed under their own header after the project's files.
+    /// Given the project files the list shows, it returns the names to offer. Called each time the
+    /// list opens. Needs <see cref="FileChoices"/> and <see cref="ImportBuiltIn"/>.
+    /// </summary>
+    public Func<IReadOnlyList<string>, IReadOnlyList<string>>? BuiltInChoices { get; set; }
+
+    /// <summary>
+    /// Copies a built-in file, picked by name, into the project and returns the path to store, or
+    /// null when it cannot be copied.
+    /// </summary>
+    public Func<string, string?>? ImportBuiltIn { get; set; }
+
     /// <summary>The drop-down of <see cref="FileChoices"/>, for tests.</summary>
     internal ComboBox ChoiceBox => _choiceBox;
 
@@ -918,12 +936,28 @@ public class FileSelectionDisplay : DataUiDisplayBase
     // that happens to match an item waits for Enter or focus loss.
     private void HandleChoiceSelected(object? sender, SelectionChangedEventArgs e)
     {
-        if (_isLoadingChoices || SuppressSettingProperty || !_choiceBox.IsDropDownOpen || _choiceBox.SelectedItem is not string choice)
+        if (_isLoadingChoices || SuppressSettingProperty || !_choiceBox.IsDropDownOpen)
         {
             return;
         }
 
-        Commit(choice);
+        if (_choiceBox.SelectedItem is string choice)
+        {
+            Commit(choice);
+        }
+        else if (_choiceBox.SelectedItem is BuiltInFileChoice builtIn)
+        {
+            // The copy's path becomes the value; a copy that cannot be made leaves the row as it was.
+            string? copiedPath = ImportBuiltIn?.Invoke(builtIn.Name);
+            if (copiedPath != null)
+            {
+                Commit(copiedPath);
+            }
+            else
+            {
+                ShowValue();
+            }
+        }
     }
 
     private void HandleChoiceKeyDown(object? sender, KeyEventArgs e)
@@ -978,7 +1012,24 @@ public class FileSelectionDisplay : DataUiDisplayBase
         }
 
         string? current = string.IsNullOrEmpty(_textBox.Text) ? null : _textBox.Text;
-        ShowChoices(_fileChoices(current), current);
+        IReadOnlyList<string> projectFiles = _fileChoices(current);
+        IReadOnlyList<string> builtIn = BuiltInChoices?.Invoke(projectFiles) ?? Array.Empty<string>();
+        if (builtIn.Count == 0)
+        {
+            ShowChoices(projectFiles, current);
+            return;
+        }
+
+        // Two sections, so a shipped file reads as separate from the project's own copy of it.
+        List<object> choices = new List<object>();
+        if (projectFiles.Count > 0)
+        {
+            choices.Add(new FileChoiceHeader("Project"));
+            choices.AddRange(projectFiles);
+        }
+        choices.Add(new FileChoiceHeader("Built-in"));
+        choices.AddRange(builtIn.Select(name => new BuiltInFileChoice(name)));
+        ShowChoices(choices, current);
     }
 
     // Between refreshes the drop-down holds only the row's own value; the list is loaded as it opens.
@@ -997,7 +1048,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
             InstanceMember?.IsDefault == true ? DataUiValueState.Default : DataUiValueState.Custom);
     }
 
-    private void ShowChoices(IReadOnlyList<string> choices, string? current)
+    private void ShowChoices(IReadOnlyList<object> choices, string? current)
     {
         _isLoadingChoices = true;
         _choiceBox.ItemsSource = choices;
@@ -1010,6 +1061,44 @@ public class FileSelectionDisplay : DataUiDisplayBase
     private void RefreshRevealButton()
     {
         _revealButton.IsEnabled = !string.IsNullOrEmpty(InstanceMember?.Value as string);
+    }
+}
+
+/// <summary>A section title in a file drop-down. It is shown but cannot be picked.</summary>
+internal sealed class FileChoiceHeader
+{
+    private readonly string _text;
+
+    public FileChoiceHeader(string text)
+    {
+        _text = text;
+    }
+
+    public override string ToString() => _text;
+}
+
+/// <summary>A file that ships with the tool, listed in a file drop-down by name.</summary>
+internal sealed class BuiltInFileChoice
+{
+    public BuiltInFileChoice(string name)
+    {
+        Name = name;
+    }
+
+    public string Name { get; }
+
+    public override string ToString() => Name;
+}
+
+/// <summary>The file drop-down's list: section headers are disabled so only files can be picked.</summary>
+internal sealed class FileChoiceComboBox : WheelIgnoringComboBox
+{
+    protected override Type StyleKeyOverride => typeof(ComboBox);
+
+    protected override void PrepareContainerForItemOverride(Control container, object? item, int index)
+    {
+        base.PrepareContainerForItemOverride(container, item, index);
+        container.IsEnabled = item is not FileChoiceHeader;
     }
 }
 

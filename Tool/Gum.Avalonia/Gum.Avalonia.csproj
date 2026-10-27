@@ -114,6 +114,8 @@
 		<None Include="..\..\Gum\Content\Fonts\Font18LiberationSans_o1_0.png" Link="Content\Fonts\Font18LiberationSans_o1_0.png" CopyToOutputDirectory="PreserveNewest" />
 		<!-- The Variables tab's text-alignment toggle images, shared with the WPF head. -->
 		<None Include="..\..\Gum\Content\Icons\Alignment\*.png" Link="Content\Icons\Alignment\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The example shaders the Shader File drop-down offers under Built-in (BuiltInShaderFiles). -->
+		<None Include="..\..\Gum\Content\Shaders\*.slang" Link="Content\Shaders\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
