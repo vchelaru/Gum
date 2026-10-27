@@ -2,7 +2,7 @@
 // on MonoGame/KNI/FNA, raylib and Skia (ShadowDusk converts it for each). Set the three parameters
 // from code with ContainerRuntime.SetShaderParameter:
 //   TexelSize    one pixel of the container's render target as a fraction, e.g. (1/144, 1/144)
-//   Thickness    outline width in pixels, from 1 to 8
+//   Thickness    outline width in pixels, from 0 to 8 (0 draws no outline)
 //   OutlineColor red, green, blue and alpha from 0 to 1
 // The outline is drawn outside the content, so the container needs transparent margin of at least
 // Thickness pixels around it or the outline is cut off.

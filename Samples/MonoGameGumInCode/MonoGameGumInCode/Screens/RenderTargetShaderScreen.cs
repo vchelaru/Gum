@@ -162,7 +162,7 @@ internal class RenderTargetShaderScreen : FrameworkElement
 
         outlineRow.AddChild(BuildOutlineCell("Outline.slang (2 px, yellow)", thickness: 2, red: 1f, green: 0.85f, blue: 0.1f));
         outlineRow.AddChild(BuildOutlineCell("Outline.slang (6 px, cyan)", thickness: 6, red: 0.1f, green: 0.9f, blue: 1f));
-        outlineRow.AddChild(BuildOutlineCell("Bear + circle, slider sets thickness", thickness: 3, red: 1f, green: 1f, blue: 1f, interactive: true));
+        outlineRow.AddChild(BuildOutlineCell("Bear + circle (follows cursor), slider sets thickness", thickness: 3, red: 1f, green: 1f, blue: 1f, interactive: true));
 
 #if !RAYLIB && !SKIA
         // Fourth cell, XNA-like only: the same effect authored in Slang (Content/Grayscale.slang)
@@ -240,15 +240,30 @@ internal class RenderTargetShaderScreen : FrameworkElement
         if (interactive)
         {
             // Overlaps the bear's lower right and sticks out past it, so the outline has to follow
-            // both shapes as one.
+            // both shapes as one. It has no stroke of its own, so the only outline is the shader's.
+            const float circleSize = 72;
+            const float edgeRoom = 8;
             var circle = new CircleRuntime();
             circle.IsFilled = true;
+            circle.StrokeWidth = 0;
             circle.FillColor = Rgba(255, 120, 60, 255);
-            circle.X = cellSize - margin - 72;
-            circle.Y = cellSize - margin - 72;
-            circle.Width = 72;
-            circle.Height = 72;
+            circle.X = cellSize - margin - circleSize;
+            circle.Y = cellSize - margin - circleSize;
+            circle.Width = circleSize;
+            circle.Height = circleSize;
             holder.AddChild(circle);
+
+            // The circle follows the cursor while it is over the container, kept 8 px from the edge
+            // so the largest outline still fits.
+            holder.HasEvents = true;
+            holder.RollOver += (_, _) =>
+            {
+                float cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds() - holder.AbsoluteLeft;
+                float cursorY = FrameworkElement.MainCursor.YRespectingGumZoomAndBounds() - holder.AbsoluteTop;
+                float farthest = cellSize - circleSize - edgeRoom;
+                circle.X = System.Math.Max(edgeRoom, System.Math.Min(farthest, cursorX - circleSize / 2));
+                circle.Y = System.Math.Max(edgeRoom, System.Math.Min(farthest, cursorY - circleSize / 2));
+            };
         }
 
         holder.SetShaderParameter("TexelSize", 1f / cellSize, 1f / cellSize);
@@ -271,7 +286,7 @@ internal class RenderTargetShaderScreen : FrameworkElement
             TextRuntime thicknessLabel = AddLabel(cell, "Thickness: " + thickness.ToString("0") + " px");
 
             var slider = new Slider();
-            slider.Minimum = 1;
+            slider.Minimum = 0;
             slider.Maximum = 8;
             slider.TicksFrequency = 1;
             slider.IsSnapToTickEnabled = true;
