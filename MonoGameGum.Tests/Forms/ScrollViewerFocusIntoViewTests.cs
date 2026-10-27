@@ -376,6 +376,17 @@ public class ScrollViewerFocusIntoViewTests : BaseTestClass
     }
 
     [Fact]
+    public void NoMainCursor_FocusChildBelowView_ScrollsWithoutThrowing()
+    {
+        (_, ScrollViewer viewer, List<Button> buttons) = Build(GamepadNavigationMode.TabOrder);
+        FrameworkElement.MainCursor = null!;
+
+        Should.NotThrow(() => buttons[6].IsFocused = true);
+
+        IsInView(viewer, buttons[6].Visual).ShouldBeTrue();
+    }
+
+    [Fact]
     public void FocusLost_DoesNotScroll()
     {
         (_, ScrollViewer viewer, List<Button> buttons) = Build(GamepadNavigationMode.TabOrder);

@@ -279,8 +279,9 @@ public class FrameworkElement : INotifyPropertyChanged
     // under the cursor. Code or Tab focusing some other element during a click still scrolls (#6939).
     void ScrollAncestorViewersToShowThis()
     {
-        ICursor cursor = MainCursor;
-        if ((cursor.PrimaryPush || cursor.PrimaryDown || cursor.PrimaryClick) && IsCursorOverThisOrRelated(cursor))
+        // A render-only host has no cursor (#5406), so nothing is mouse-caused.
+        ICursor? cursor = MainCursor;
+        if (cursor != null && (cursor.PrimaryPush || cursor.PrimaryDown || cursor.PrimaryClick) && IsCursorOverThisOrRelated(cursor))
         {
             return;
         }
