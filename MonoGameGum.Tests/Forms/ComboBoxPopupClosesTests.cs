@@ -314,5 +314,49 @@ public class ComboBoxPopupClosesTests : BaseTestClass
         comboBox.IsDropDownOpen.ShouldBeFalse();
     }
 
+    [Fact]
+    public void PopupKeepsFocusWhenComboBoxMovesWhileOpen()
+    {
+        ComboBox comboBox = CreateComboBox();
+        comboBox.IsFocused = true;
+        PadHarness pad = new();
+        pad.Tap(Buttons.A);
+
+        comboBox.X += 50;
+        Gum.GumService.Default.Root.AnimateSelf(0.016);
+
+        InteractiveGue.CurrentInputReceiver.ShouldBe(comboBox.ListBox);
+        pad.Tap(Buttons.DPadDown);
+        comboBox.SelectedIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void FocusMovedAfterComboBoxMovedWhileOpen_DropDownCloses()
+    {
+        ComboBox comboBox = CreateComboBox();
+        Button other = CreateButton();
+        comboBox.IsFocused = true;
+        comboBox.IsDropDownOpen = true;
+        comboBox.X += 50;
+        Gum.GumService.Default.Root.AnimateSelf(0.016);
+
+        other.IsFocused = true;
+
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void OpeningASecondDropDown_ClosesTheFirst()
+    {
+        ComboBox first = CreateComboBox();
+        ComboBox second = CreateComboBox();
+        first.IsDropDownOpen = true;
+
+        second.IsDropDownOpen = true;
+
+        first.IsDropDownOpen.ShouldBeFalse();
+        second.IsDropDownOpen.ShouldBeTrue();
+    }
+
     #endregion
 }
