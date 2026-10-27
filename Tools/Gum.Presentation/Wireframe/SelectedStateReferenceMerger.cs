@@ -37,42 +37,17 @@ public class SelectedStateReferenceMerger
         HashSet<string> setBySelected = GetVariablesSetBy(selectedState);
         AddInnerVariablesOfExposedNames(defaultState, setBySelected);
 
-        for (int i = merged.VariableLists.Count - 1; i >= 0; i--)
+        FilterReferenceRows(merged, (qualifiedLeft, expanded) =>
         {
-            VariableListSave list = merged.VariableLists[i];
-            if (list is not VariableListSave<string> referenceList || list.GetRootName() != ReferencesRootName)
+            if (qualifiedLeft == null || !setBySelected.Contains(qualifiedLeft))
             {
-                continue;
+                return true;
             }
 
-            ElementSave? channelOwner = ElementSaveExtensions.ResolveChannelOwner(merged, list.SourceObject);
-            List<string> kept = new List<string>();
-            foreach (string line in referenceList.Value)
-            {
-                foreach (string expanded in ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner))
-                {
-                    if (!TryGetQualifiedLeft(expanded, list.SourceObject, out string? qualifiedLeft) ||
-                        !setBySelected.Contains(qualifiedLeft!))
-                    {
-                        kept.Add(expanded);
-                        continue;
-                    }
-
-                    string key = GetRowKey(qualifiedLeft!, expanded);
-                    overriddenRowKeys?.Add(key);
-                    if (keepOverriddenRow != null && keepOverriddenRow(key))
-                    {
-                        kept.Add(expanded);
-                    }
-                }
-            }
-
-            referenceList.Value = kept;
-            if (kept.Count == 0)
-            {
-                merged.VariableLists.RemoveAt(i);
-            }
-        }
+            string key = GetRowKey(qualifiedLeft, expanded);
+            overriddenRowKeys?.Add(key);
+            return keepOverriddenRow != null && keepOverriddenRow(key);
+        });
 
         foreach (VariableListSave selectedList in selectedState.VariableLists)
         {
@@ -97,6 +72,53 @@ public class SelectedStateReferenceMerger
         }
 
         return merged;
+    }
+
+    /// <summary>
+    /// Removes from <paramref name="state"/> everything that sets one of <paramref name="names"/>: its plain
+    /// variables and its reference rows (a composite row such as <c>Color</c> keeps the channels that are not named).
+    /// </summary>
+    internal static void RemoveSettersOf(StateSave state, ICollection<string> names)
+    {
+        state.Variables.RemoveAll(variable => names.Contains(variable.Name));
+        FilterReferenceRows(state, (qualifiedLeft, _) => qualifiedLeft == null || !names.Contains(qualifiedLeft));
+    }
+
+    /// <summary>
+    /// Rewrites each reference list of <paramref name="state"/> as its channel-expanded lines, keeping the ones
+    /// <paramref name="keepRow"/> accepts (given the qualified variable the line writes, or null when it writes
+    /// nothing, such as a comment) and dropping lists left empty.
+    /// </summary>
+    private static void FilterReferenceRows(StateSave state, Func<string?, string, bool> keepRow)
+    {
+        for (int i = state.VariableLists.Count - 1; i >= 0; i--)
+        {
+            VariableListSave list = state.VariableLists[i];
+            if (list is not VariableListSave<string> referenceList || list.GetRootName() != ReferencesRootName)
+            {
+                continue;
+            }
+
+            ElementSave? channelOwner = ElementSaveExtensions.ResolveChannelOwner(state, list.SourceObject);
+            List<string> kept = new List<string>();
+            foreach (string line in referenceList.Value)
+            {
+                foreach (string expanded in ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner))
+                {
+                    TryGetQualifiedLeft(expanded, list.SourceObject, out string? qualifiedLeft);
+                    if (keepRow(qualifiedLeft, expanded))
+                    {
+                        kept.Add(expanded);
+                    }
+                }
+            }
+
+            referenceList.Value = kept;
+            if (kept.Count == 0)
+            {
+                state.VariableLists.RemoveAt(i);
+            }
+        }
     }
 
     /// <summary>Identifies a reference row by the variable it writes and its (channel-expanded) line.</summary>
