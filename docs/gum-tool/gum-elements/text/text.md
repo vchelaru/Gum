@@ -46,7 +46,7 @@ The following table shows the available variables that can be used for inline st
 
 Note that changing Font and FontSize results in new Fonts created in the Font Cache. States must exist on the Text standard definition to be used.
 
-The `Glyph` tag inserts a character by its code point, so a character that has no key, such as a picture in a custom `.fnt` font, can go in the Text variable. Write the code point in decimal (`[Glyph=57344]`) or in hex with a `0x` prefix (`[Glyph=0xE000]`). The character draws when the font has it.
+The `Glyph` tag inserts a character that has no key. For example, `[Glyph=57344]` inserts the character U+E000, which draws when the font has it.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.

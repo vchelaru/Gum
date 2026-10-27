@@ -439,6 +439,9 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     private void ShowInternal(string text, bool forceImmediatePrint)
     {
+        // Every show path ends here, so Glyph tags become their character before letters are counted.
+        text = BbCodeParser.ReplaceGlyphTags(text);
+
         IsVisible = true;
 
         currentPageText = text;
@@ -537,7 +540,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     private string[] ConvertToPages(string text)
     {
-        // Glyph tags become their character here so the typewriter counts them as one letter.
+        // Glyph tags become their character first so pagination measures the real text.
         text = BbCodeParser.ReplaceGlyphTags(text);
 
         var limitsLines = 

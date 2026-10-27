@@ -90,4 +90,24 @@ public class BBCodeParserTests : BaseTestClass
         parsedTags[0].Open.StartStrippedIndex.ShouldBe(0);
         parsedTags[0].Close.StartStrippedIndex.ShouldBe(3);
     }
+
+    [Theory]
+    [InlineData("[Glyph]x[/Glyph]", "x")]
+    [InlineData("[Glyph=abc]x[/Glyph]", "x")]
+    [InlineData("[Glyph=65]x[/Glyph]", "Ax")]
+    [InlineData("x[/Glyph]", "x[/Glyph]")]
+    public void ReplaceGlyphTags_ShouldRemoveCloseTagOnlyAfterAnOpenTag(string text, string expected)
+    {
+        BbCodeParser.ReplaceGlyphTags(text).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void RemoveTags_ShouldLeaveOrphanCloseTagAsText()
+    {
+        string text = "x[/Red]";
+
+        List<FoundTag> parsedTags = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
+
+        BbCodeParser.RemoveTags(text, parsedTags).ShouldBe("x[/Red]");
+    }
 }

@@ -102,7 +102,7 @@ public static class BbCodeParser
     /// <summary>
     /// Replaces every <c>[Glyph=...]</c> tag with the character for its code point: decimal
     /// (<c>[Glyph=57344]</c>) or hex with a 0x prefix (<c>[Glyph=0xE000]</c>). A code point above U+FFFF
-    /// becomes a surrogate pair. A tag whose value is not a valid code point is removed. Call this on the
+    /// becomes a surrogate pair. A tag whose value is not a valid code point is removed, along with a <c>[/Glyph]</c> that follows it. Call this on the
     /// text before <see cref="Parse"/> so the indexes of the other tags are computed against the
     /// final text. Whether the character draws depends on the font.
     /// </summary>
@@ -110,45 +110,71 @@ public static class BbCodeParser
     /// <returns>The text with Glyph tags replaced, or the same string if it has none.</returns>
     public static string ReplaceGlyphTags(string text)
     {
-        const string tagStart = "[glyph";
-
-        int tagIndex = text.IndexOf(tagStart, StringComparison.OrdinalIgnoreCase);
-        if (tagIndex < 0)
+        if (text.IndexOf("glyph", StringComparison.OrdinalIgnoreCase) < 0)
         {
             return text;
         }
 
         StringBuilder? builder = null;
         int copiedUpTo = 0;
+        int openTagsAwaitingClose = 0;
+        int searchFrom = 0;
 
-        while (tagIndex >= 0)
+        while (searchFrom < text.Length)
         {
-            int nameEnd = tagIndex + tagStart.Length;
-            int closeIndex = text.IndexOf(']', tagIndex);
-            bool isTag = closeIndex >= 0 &&
-                nameEnd <= closeIndex &&
-                (text[nameEnd] == '=' || nameEnd == closeIndex) &&
-                text.IndexOf('[', tagIndex + 1, closeIndex - tagIndex - 1) < 0;
-
-            if (isTag)
+            int tagIndex = text.IndexOf('[', searchFrom);
+            if (tagIndex < 0)
             {
-                builder ??= new StringBuilder(text.Length);
-                builder.Append(text, copiedUpTo, tagIndex - copiedUpTo);
+                break;
+            }
 
-                string argument = nameEnd < closeIndex
-                    ? text.Substring(nameEnd + 1, closeIndex - nameEnd - 1)
-                    : "";
+            int closeIndex = text.IndexOf(']', tagIndex);
+            if (closeIndex < 0)
+            {
+                break;
+            }
+
+            // A '[' inside the brackets means this one does not start a tag.
+            if (text.IndexOf('[', tagIndex + 1, closeIndex - tagIndex - 1) >= 0)
+            {
+                searchFrom = tagIndex + 1;
+                continue;
+            }
+
+            string inner = text.Substring(tagIndex + 1, closeIndex - tagIndex - 1);
+            bool isCloseTag = inner.StartsWith("/", StringComparison.Ordinal);
+            int equalsIndex = inner.IndexOf('=');
+            string name = isCloseTag
+                ? inner.Substring(1)
+                : (equalsIndex < 0 ? inner : inner.Substring(0, equalsIndex));
+
+            bool isGlyphTag = name.Equals("glyph", StringComparison.OrdinalIgnoreCase) &&
+                (!isCloseTag || equalsIndex < 0);
+
+            // Like any other orphan close tag, a close with no open before it stays as text.
+            if (!isGlyphTag || (isCloseTag && openTagsAwaitingClose == 0))
+            {
+                searchFrom = tagIndex + 1;
+                continue;
+            }
+
+            builder ??= new StringBuilder(text.Length);
+            builder.Append(text, copiedUpTo, tagIndex - copiedUpTo);
+            copiedUpTo = closeIndex + 1;
+            searchFrom = closeIndex + 1;
+
+            if (isCloseTag)
+            {
+                openTagsAwaitingClose--;
+            }
+            else
+            {
+                openTagsAwaitingClose++;
+                string argument = equalsIndex < 0 ? "" : inner.Substring(equalsIndex + 1);
                 if (TryParseGlyphCodePoint(argument, out int codePoint))
                 {
                     builder.Append(char.ConvertFromUtf32(codePoint));
                 }
-
-                copiedUpTo = closeIndex + 1;
-                tagIndex = text.IndexOf(tagStart, copiedUpTo, StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                tagIndex = text.IndexOf(tagStart, tagIndex + 1, StringComparison.OrdinalIgnoreCase);
             }
         }
 

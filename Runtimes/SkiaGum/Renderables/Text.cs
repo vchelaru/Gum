@@ -343,6 +343,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
             else
             {
+                // Never stop between the halves of a surrogate pair.
+                if (char.IsHighSurrogate(line[remaining - 1]))
+                {
+                    remaining++;
+                }
                 revealed.Add(line.Substring(0, remaining));
                 remaining = 0;
             }
