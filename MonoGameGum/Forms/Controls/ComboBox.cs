@@ -129,11 +129,13 @@ public class ComboBox :
                 _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
                 _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
                 _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
+                _subscribedListBox.EscapeHandler = null;
             }
 
             listBox.SelectionChanged += HandleSelectionChanged;
             listBox.ItemPushed += HandleListBoxItemPushed;
             listBox.ConfirmedWithoutFocusedRow += HandleListBoxItemPushed;
+            listBox.EscapeHandler = CloseDropDownOnEscape;
             _subscribedListBox = listBox;
         }
     }
@@ -596,6 +598,7 @@ public class ComboBox :
             _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
             _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
             _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
+            _subscribedListBox.EscapeHandler = null;
             _subscribedListBox = null;
         }
     }
@@ -1279,6 +1282,30 @@ public class ComboBox :
 
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {
+#if !FRB
+        if (IsDropDownOpen)
+        {
+            foreach (var keyboard in KeyboardsForUiControl)
+            {
+                if (keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape) && CloseDropDownOnEscape())
+                {
+                    args.Handled = true;
+                    return;
+                }
+            }
+        }
+#endif
+    }
+
+    // Escape closes the open drop-down and keeps the selection as it is; the key is consumed only then.
+    private bool CloseDropDownOnEscape()
+    {
+        if (!IsDropDownOpen)
+        {
+            return false;
+        }
+        HideListBox();
+        return true;
     }
     public void OnFocusUpdate()
     {

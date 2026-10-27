@@ -2079,6 +2079,23 @@ public class ListBox : ItemsControl, IInputReceiver
                 direction = RepositionDirections.Down;
             }
 
+            // Left/Right step a list that lays out along the horizontal axis (or wraps), like the gamepad
+            // d-pad does. A vertical list leaves them alone, and a key the project configured for moving
+            // focus out of the list (Left/RightKeyCombos) keeps that meaning.
+            if (StepsAlongHorizontalAxis)
+            {
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Right) == true &&
+                    !IsKeyComboConfigured(RightKeyCombos, Gum.Forms.Input.Keys.Right))
+                {
+                    direction = RepositionDirections.Right;
+                }
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Left) == true &&
+                    !IsKeyComboConfigured(LeftKeyCombos, Gum.Forms.Input.Keys.Left))
+                {
+                    direction = RepositionDirections.Left;
+                }
+            }
+
             DoListItemFocusUpdate(direction, pressedButton);
         }
 
@@ -2087,6 +2104,48 @@ public class ListBox : ItemsControl, IInputReceiver
 
 
 
+    }
+
+#if !FRB
+    private bool StepsAlongHorizontalAxis =>
+        InnerPanel.WrapsChildren || InnerPanel.ChildrenLayout != Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+    private static bool IsKeyComboConfigured(List<KeyCombo> combos, Gum.Forms.Input.Keys key)
+    {
+        foreach (KeyCombo combo in combos)
+        {
+            if (combo.PushedKey == key)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+#endif
+
+    /// <summary>
+    /// Set by a ComboBox for its popup list: called when Escape is pushed, returns whether the owner
+    /// handled it (closed its open drop-down), which consumes the key.
+    /// </summary>
+    internal Func<bool>? EscapeHandler { get; set; }
+
+    /// <inheritdoc/>
+    public override void OnFocusUpdatePreview(RoutedEventArgs args)
+    {
+#if !FRB
+        if (EscapeHandler != null)
+        {
+            foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
+            {
+                if (keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape) && EscapeHandler())
+                {
+                    args.Handled = true;
+                    return;
+                }
+            }
+        }
+#endif
+        base.OnFocusUpdatePreview(args);
     }
 
     private int? GetListBoxIndexAt(float x, float y)
