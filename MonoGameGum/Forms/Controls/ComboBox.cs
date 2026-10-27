@@ -128,10 +128,12 @@ public class ComboBox :
             {
                 _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
                 _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
+                _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
             }
 
             listBox.SelectionChanged += HandleSelectionChanged;
             listBox.ItemPushed += HandleListBoxItemPushed;
+            listBox.ConfirmedWithoutFocusedRow += HandleListBoxItemPushed;
             _subscribedListBox = listBox;
         }
     }
@@ -510,6 +512,12 @@ public class ComboBox :
 
     bool _hadFocusOnListBoxOpened;
 
+#if !FRB
+    // The input receiver other than this ComboBox that had focus when the drop-down opened, so focus
+    // goes back to it when the drop-down closes.
+    IInputReceiver? _receiverBeforeOpen;
+#endif
+
     // What the popup was last placed against, so an open drop-down can be placed again when the
     // ComboBox moves or resizes (including through an ancestor) or the canvas is resized.
     PopupPlacement _popupPlacement;
@@ -587,6 +595,7 @@ public class ComboBox :
         {
             _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
             _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
+            _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
             _subscribedListBox = null;
         }
     }
@@ -750,11 +759,64 @@ public class ComboBox :
         InteractiveGue.AddNextPushAction(TryHideFromPush, Visual);
 
         WatchAncestorsWhileOpen();
+
+        FocusDropDown();
 #endif
 
 
         UpdateState();
     }
+
+#if !FRB
+    /// <summary>
+    /// Gives the open drop-down's list the input focus, however the drop-down was opened (gamepad,
+    /// keyboard, mouse or code), so gamepad and keyboard input operates the list and does not reach
+    /// the controls it covers.
+    /// </summary>
+    private void FocusDropDown()
+    {
+        _receiverBeforeOpen = IsFocused ? null : InteractiveGue.CurrentInputReceiver;
+        if (_receiverBeforeOpen == listBox)
+        {
+            _receiverBeforeOpen = null;
+        }
+
+        // A disabled ComboBox opened from code does not take input, so it does not take focus either.
+        if (IsEnabled && listBox.IsEnabled)
+        {
+            listBox.IsFocused = true;
+            listBox.DoListItemsHaveFocus = true;
+        }
+    }
+
+    private void RestoreFocusAfterClose(ListBox popup, bool restoreFocus)
+    {
+        bool popupHadFocus = popup.IsFocused;
+        if (popupHadFocus)
+        {
+            popup.OnLoseFocus();
+        }
+
+        IInputReceiver? previous = _receiverBeforeOpen;
+        _receiverBeforeOpen = null;
+
+        if (!restoreFocus)
+        {
+            return;
+        }
+
+        if (_hadFocusOnListBoxOpened)
+        {
+            IsFocused = true;
+        }
+        else if (previous is FrameworkElement previousElement &&
+            (popupHadFocus || InteractiveGue.CurrentInputReceiver == null) &&
+            previousElement.Visual?.AbsoluteVisible == true)
+        {
+            previousElement.IsFocused = true;
+        }
+    }
+#endif
 
     /// <summary>
     /// Puts the list box in the popup layer at the pixel position that matches this ComboBox's
@@ -1030,10 +1092,14 @@ public class ComboBox :
 
             UpdateState();
 
+#if FRB
             if (restoreFocus && _hadFocusOnListBoxOpened)
             {
                 IsFocused = true;
             }
+#else
+            RestoreFocusAfterClose(hiddenListBox, restoreFocus);
+#endif
         }
     }
 
@@ -1226,37 +1292,14 @@ public class ComboBox :
 
     private void DoDropDownOpenFocusUpdate(bool movedDown, bool movedUp, bool pressedButton)
     {
+        // Same stepping as the list itself uses when it has the focus, so a disabled item is skipped.
         if (movedDown)
         {
-            if (ItemCount > 0)
-            {
-                if (SelectedIndex < 0 && ItemCount > 0)
-                {
-                    SelectedIndex = 0;
-                }
-                else if (SelectedIndex < ItemCount - 1)
-                {
-                    SelectedIndex++;
-                }
-
-                this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
-            }
+            listBox.StepRowSelection(forward: true);
         }
         else if (movedUp)
         {
-            if (ItemCount > 0)
-            {
-                if (SelectedIndex < 0 && ItemCount > 0)
-                {
-                    SelectedIndex = 0;
-                }
-                else if (SelectedIndex > 0)
-                {
-                    SelectedIndex--;
-                }
-
-                this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
-            }
+            listBox.StepRowSelection(forward: false);
         }
 
         if (pressedButton)
@@ -1278,6 +1321,12 @@ public class ComboBox :
             if (IsEnabled && gamepad.ButtonPushed(GamepadButton.A))
             {
                 OpenAndFocusListBox();
+            }
+            else if (gamepad.ButtonReleased(GamepadButton.A))
+            {
+                // Focus can return here while A is still held (picking an item with A closes the
+                // drop-down), which shows Pushed; nothing else updates the state on release.
+                UpdateState();
             }
 
             void RaiseIfPushedAndEnabled(GamepadButton button)

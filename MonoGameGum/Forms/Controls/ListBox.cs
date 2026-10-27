@@ -2121,6 +2121,119 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     public float AdditionalOffsetToCheckForDPadNavigation { get; set; } = 4;
 
+    /// <summary>
+    /// Raised when gamepad or keyboard confirm or back is pressed while the items have focus but no
+    /// row is focused (nothing is selected). A ComboBox closes its drop-down on this.
+    /// </summary>
+    internal event EventHandler? ConfirmedWithoutFocusedRow;
+
+    /// <summary>
+    /// The first enabled row starting at <paramref name="startRow"/> and moving by <paramref name="step"/>
+    /// (+1 or -1), or -1 when there is none. A disabled row is not selectable by gamepad or keyboard,
+    /// the same as it is not selectable by mouse.
+    /// </summary>
+    private int FindEnabledRow(int startRow, int step)
+    {
+        for (int row = startRow; row >= 0 && row < ListBoxItemsInternal.Count; row += step)
+        {
+            if (ListBoxItemsInternal[row].IsEnabled)
+            {
+                return row;
+            }
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// The row the gamepad or keyboard steps from: the focused row, otherwise the selected row (a
+    /// selected row refuses focus when it is disabled), otherwise -1.
+    /// </summary>
+    private int GetNavigationRow()
+    {
+        int row = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
+        if (row < 0 && _selectedRowsInternal.Count > 0)
+        {
+            row = ListBoxItemsInternal.IndexOf(_selectedRowsInternal[0]);
+        }
+        return row;
+    }
+
+    /// <summary>
+    /// Moves the selection and focus one enabled row forward or backward, as the gamepad or keyboard
+    /// does. Stays where it is at either end; with no current row, picks the first enabled row.
+    /// </summary>
+    internal void StepRowSelection(bool forward)
+    {
+        if (ListBoxItemsInternal.Count == 0)
+        {
+            return;
+        }
+
+        // Move through rows (ListBoxItem space) so non-ListBoxItem visuals are skipped and
+        // ListBoxItemsInternal is never indexed by an Items-space index (issue #556). The
+        // current row is resolved by focus, not by SelectedObject's value (issue #3509).
+        int step = forward ? 1 : -1;
+        int currentRow = GetNavigationRow();
+        int targetRow;
+        if (currentRow < 0)
+        {
+            targetRow = FindEnabledRow(0, 1);
+        }
+        else
+        {
+            targetRow = FindEnabledRow(currentRow + step, step);
+            if (targetRow < 0 && ListBoxItemsInternal[currentRow].IsEnabled)
+            {
+                targetRow = currentRow;
+            }
+        }
+
+        if (targetRow > -1)
+        {
+            SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[targetRow]);
+            ListBoxItemsInternal[targetRow].IsFocused = true;
+        }
+    }
+
+    /// <summary>
+    /// The row next to <paramref name="currentRow"/> in the direction (wrapping layouts), skipping
+    /// disabled rows, or null when there is no enabled row that way.
+    /// </summary>
+    private int? GetEnabledListBoxIndexNextTo(int currentRow, RepositionDirections direction)
+    {
+        var offsetToCheck = InnerPanel.StackSpacing + AdditionalOffsetToCheckForDPadNavigation;
+        int? index = currentRow;
+        for (int attempts = 0; attempts <= ListBoxItemsInternal.Count; attempts++)
+        {
+            var from = ListBoxItemsInternal[index!.Value].Visual;
+
+            float x = from.GetAbsoluteX() + from.AbsoluteWidth / 2.0f;
+            float y = from.GetAbsoluteY() + from.AbsoluteHeight / 2.0f;
+            switch (direction)
+            {
+                case RepositionDirections.Left:
+                    x = from.GetAbsoluteLeft() - offsetToCheck;
+                    break;
+                case RepositionDirections.Right:
+                    x = from.GetAbsoluteRight() + offsetToCheck;
+                    break;
+                case RepositionDirections.Up:
+                    y = from.GetAbsoluteTop() - offsetToCheck;
+                    break;
+                case RepositionDirections.Down:
+                    y = from.GetAbsoluteBottom() + offsetToCheck;
+                    break;
+            }
+
+            index = GetListBoxIndexAt(x, y);
+            if (index == null || ListBoxItemsInternal[index.Value].IsEnabled)
+            {
+                return index;
+            }
+        }
+        return null;
+    }
+
     private void DoListItemFocusUpdate(RepositionDirections? direction, 
         // Whether a button was pushed to consider this a selection.
         // Currently we don't differentiate between A and B on combo
@@ -2146,35 +2259,7 @@ public class ListBox : ItemsControl, IInputReceiver
             var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
             if (currentRow > -1 && currentRow < ListBoxItemsInternal.Count)
             {
-                var currentSelection = this.ListBoxItemsInternal[currentRow].Visual;
-
-                var offsetToCheck = InnerPanel.StackSpacing + AdditionalOffsetToCheckForDPadNavigation;
-
-                float xCenter = currentSelection.GetAbsoluteX() + currentSelection.AbsoluteWidth / 2.0f;
-                float yCenter = currentSelection.GetAbsoluteY() + currentSelection.AbsoluteHeight / 2.0f;
-
-                float x = xCenter;
-                float y = yCenter;
-                switch (direction.Value)
-                {
-                    case RepositionDirections.Left:
-                        x = currentSelection.GetAbsoluteLeft() - offsetToCheck;
-                        break;
-
-                    case RepositionDirections.Right:
-                        x = currentSelection.GetAbsoluteRight() + offsetToCheck;
-                        break;
-
-                    case RepositionDirections.Up:
-                        y = currentSelection.GetAbsoluteTop() - offsetToCheck;
-                        break;
-
-                    case RepositionDirections.Down:
-                        y = currentSelection.GetAbsoluteBottom() + offsetToCheck;
-                        break;
-                }
-
-                var index = GetListBoxIndexAt(x, y);
+                var index = GetEnabledListBoxIndexNextTo(currentRow, direction!.Value);
 
                 if (index != null)
                 {
@@ -2185,10 +2270,14 @@ public class ListBox : ItemsControl, IInputReceiver
                     this.ListBoxItemsInternal[index.Value].IsFocused = true;
                 }
             }
-            else if (ListBoxItemsInternal.Count > 0)
+            else
             {
-                SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[0]);
-                this.ListBoxItemsInternal[0].IsFocused = true;
+                int firstEnabledRow = FindEnabledRow(0, 1);
+                if (firstEnabledRow > -1)
+                {
+                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[firstEnabledRow]);
+                    this.ListBoxItemsInternal[firstEnabledRow].IsFocused = true;
+                }
             }
 
             // The fallback behavior is kinda confusing, so let's just handle it if it wraps.
@@ -2202,40 +2291,11 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             if (direction == RepositionDirections.Down || direction == RepositionDirections.Right)
             {
-                if (ListBoxItemsInternal.Count > 0)
-                {
-                    // Move through rows (ListBoxItem space) so non-ListBoxItem visuals are skipped and
-                    // ListBoxItemsInternal is never indexed by an Items-space index (issue #556). The
-                    // current row is resolved by focus, not by SelectedObject's value (issue #3509).
-                    var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
-                    if (currentRow < 0)
-                    {
-                        currentRow = 0;
-                    }
-                    else if (currentRow < ListBoxItemsInternal.Count - 1)
-                    {
-                        currentRow++;
-                    }
-                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[currentRow]);
-                    this.ListBoxItemsInternal[currentRow].IsFocused = true;
-                }
+                StepRowSelection(forward: true);
             }
             else if (direction == RepositionDirections.Up || direction == RepositionDirections.Left)
             {
-                if (ListBoxItemsInternal.Count > 0)
-                {
-                    var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
-                    if (currentRow < 0)
-                    {
-                        currentRow = 0;
-                    }
-                    else if (currentRow > 0)
-                    {
-                        currentRow--;
-                    }
-                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[currentRow]);
-                    this.ListBoxItemsInternal[currentRow].IsFocused = true;
-                }
+                StepRowSelection(forward: false);
             }
         }
 
@@ -2245,6 +2305,10 @@ public class ListBox : ItemsControl, IInputReceiver
             if(selectedRow != -1)
             {
                 HandleListBoxItemPushed(this.ListBoxItemsInternal[selectedRow], EventArgs.Empty);
+            }
+            else
+            {
+                ConfirmedWithoutFocusedRow?.Invoke(this, EventArgs.Empty);
             }
             if (CanListItemsLoseFocus)
             {
