@@ -198,6 +198,34 @@ public class PopupReparentFocusAuditTests : BaseTestClass
     }
 
     [Fact]
+    public void ShowPopupListBox_FocusedScrolledPopupPlacedAgain_KeepsScroll()
+    {
+        Button owner = new Button();
+        owner.AddToRoot();
+        ListBox popup = new ListBox();
+        for (int i = 0; i < 40; i++)
+        {
+            popup.Items!.Add("Item " + i);
+        }
+        popup.Visual.Height = 100;
+        popup.Visual.HeightUnits = DimensionUnitType.Absolute;
+        ListBox.ShowPopupListBox(popup, owner.Visual);
+        popup.SelectedIndex = 2;
+        popup.VerticalScrollBarValue = 60;
+        popup.IsFocused = true;
+        popup.DoListItemsHaveFocus = true;
+        popup.VerticalScrollBarValue = 60;
+        double scrollBefore = popup.VerticalScrollBarValue;
+        scrollBefore.ShouldBeGreaterThan(0);
+        CoverPopup();
+
+        ListBox.ShowPopupListBox(popup, owner.Visual);
+
+        popup.IsFocused.ShouldBeTrue();
+        popup.VerticalScrollBarValue.ShouldBe(scrollBefore);
+    }
+
+    [Fact]
     public void ShowPopupListBox_FocusedPopupAlreadyOnTop_KeepsFocus()
     {
         (ListBox popup, Button owner) = CreateOpenPopup();
