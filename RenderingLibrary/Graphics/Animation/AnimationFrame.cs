@@ -357,9 +357,35 @@ namespace Gum.Graphics.Animation
             return animationFrameSave.ToAnimationFrame(loadTexture, coordinateType, failedTextures: null);
         }
 
+        // Windows, macOS and iOS volumes are case-insensitive by default; Linux and Android are not. A case-sensitive
+        // macOS volume is the one place this folds two files into one error, which is the lesser mistake.
+        // RuntimeInformation rather than OperatingSystem, which SkiaGum's netstandard2.1 target lacks.
+        private static readonly bool _isFileSystemCaseInsensitive =
+            System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
+            || System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX)
+#if NET5_0_OR_GREATER
+            || System.OperatingSystem.IsIOS()
+#endif
+            ;
+
+        /// <summary>
+        /// The key that tells two spellings of one texture file apart from two files: separators, "." and ".." segments
+        /// and doubled separators are normalized by <see cref="ToolsUtilities.FilePath"/>, and case is folded only where
+        /// the file system ignores it (#6910). Not for opening the file, which uses the case-preserving path.
+        /// </summary>
+        private static string GetTextureIdentity(string fileName)
+        {
+            string identity = new ToolsUtilities.FilePath(fileName).StandardizedCaseSensitive;
+            return _isFileSystemCaseInsensitive ? identity.ToLowerInvariant() : identity;
+        }
+
+        /// <param name="animationFrameSave">The frame to convert.</param>
+        /// <param name="loadTexture">Whether to load the frame's texture.</param>
+        /// <param name="coordinateType">Whether the saved coordinates are UV or pixels.</param>
         /// <param name="failedTextures">
         /// The files that already failed to load during the same load of an .achx, so that frames sharing a
-        /// texture that fails raise one error and ask the loader once (#6899). Null for a frame converted on its own.
+        /// texture that fails raise one error and ask the loader once (#6899). A file is recorded by its identity,
+        /// so every spelling of it counts as the same file (#6910). Null for a frame converted on its own.
         /// </param>
         internal static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, bool loadTexture, TextureCoordinateType coordinateType, System.Collections.Generic.HashSet<string>? failedTextures)
         {
@@ -385,8 +411,8 @@ namespace Gum.Graphics.Animation
                 try
                 {
                     var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
-                    failureKey = fileName;
-                    if (failedTextures != null && failedTextures.Contains(fileName))
+                    failureKey = GetTextureIdentity(fileName);
+                    if (failedTextures != null && failedTextures.Contains(failureKey))
                     {
                         alreadyFailed = true;
                     }

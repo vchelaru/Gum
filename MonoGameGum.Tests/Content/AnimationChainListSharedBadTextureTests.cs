@@ -101,6 +101,63 @@ public class AnimationChainListSharedBadTextureTests : BaseTestClass
         errors[0].Split("the loader said so").Length.ShouldBe(2);
     }
 
+    // One file spelled two ways is one texture: the error is raised once, naming the first spelling (#6910).
+    [Theory]
+    [InlineData("sheet.png", "./sheet.png")]
+    [InlineData("./sheet.png", "sheet.png")]
+    [InlineData("sheet.png", "a/../sheet.png")]
+    [InlineData("art/sheet.png", "art\\sheet.png")]
+    [InlineData("art/sheet.png", "art//sheet.png")]
+    [InlineData("art/sheet.png", "art/./sheet.png")]
+    public void ToAnimationChainList_OneFileSpelledTwoWays_RaisesOneErrorAndLoadsOnce(string first, string second)
+    {
+        CountingFailingLoader loader = Install(new FileNotFoundException("not found"));
+        AnimationChainListSave save = CreateSave(new[] { first, second });
+
+        List<string> errors = Capture(MissingFileBehavior.ConsumeSilently, () => save.ToAnimationChainList());
+
+        errors.Count.ShouldBe(1);
+        errors[0].ShouldContain(first);
+        loader.LoadCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ToAnimationChainList_ChainsSpellOneFileTwoWays_RaisesOneError()
+    {
+        Install(new FileNotFoundException("not found"));
+        AnimationChainListSave save = CreateSave(new[] { "sheet.png" }, new[] { "./sheet.png" });
+
+        List<string> errors = Capture(MissingFileBehavior.ConsumeSilently, () => save.ToAnimationChainList());
+
+        errors.Count.ShouldBe(1);
+    }
+
+    // Names differing only in case are one file on a case-insensitive file system (Windows, macOS, iOS) and
+    // two files on a case-sensitive one, so the loader's own case-preserving spelling decides elsewhere.
+    [Fact]
+    public void ToAnimationChainList_SpellingsDifferInCase_RaisesOneErrorPerFileOnTheFileSystem()
+    {
+        bool caseInsensitive = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() || OperatingSystem.IsIOS();
+        Install(new FileNotFoundException("not found"));
+        AnimationChainListSave save = CreateSave(new[] { "Sheet.png", "sheet.png" });
+
+        List<string> errors = Capture(MissingFileBehavior.ConsumeSilently, () => save.ToAnimationChainList());
+
+        errors.Count.ShouldBe(caseInsensitive ? 1 : 2);
+    }
+
+    // Two different files stay two errors, however similar their names.
+    [Fact]
+    public void ToAnimationChainList_DifferentFilesWithDotsInNames_RaisesOneErrorForEach()
+    {
+        Install(new FileNotFoundException("not found"));
+        AnimationChainListSave save = CreateSave(new[] { "sheet.png", "./sheet2.png", "art/sheet.png" });
+
+        List<string> errors = Capture(MissingFileBehavior.ConsumeSilently, () => save.ToAnimationChainList());
+
+        errors.Count.ShouldBe(3);
+    }
+
     // Under ThrowException the first bad frame throws, so there is nothing to collapse.
     [Fact]
     public void ToAnimationChainList_ThrowException_ThrowsOnFirstBadFrame()

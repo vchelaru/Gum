@@ -117,6 +117,21 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         errors.Count(error => error.Contains("broken.png")).ShouldBe(1);
     }
 
+    // One file spelled two ways ("./" in front) is one failing texture, so one error (#6910).
+    [Fact]
+    public void SpriteSourceFile_OneFailingFileSpelledTwoWays_ConsumeSilentlyRaisesOneError()
+    {
+        WriteAchxWithFrames(("missing.png", "missing"), ("./missing.png", "missing"));
+
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
+        {
+            SpriteRuntime sprite = new() { SourceFileName = _directory + "a.achx" };
+        });
+
+        errors.Count.ShouldBe(1);
+        errors[0].ShouldContain("missing.png");
+    }
+
     private static Exception? FindFileNotFound(Exception? exception, string textureName)
     {
         while (exception != null)
