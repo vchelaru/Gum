@@ -68,6 +68,9 @@ testing after the fact. Sequence a new theme port like this:
    file directly from the staged output (not just the source template) before calling the fix
    verified — a full `dotnet build Gum.slnx` from the command line has reliably re-triggered
    the postbuild in practice; an IDE "Build" may not.
+   The head also warns in the Output tab at startup when the staged themes or plugins are older than the
+   shared libraries they build from (`StagedContentStalenessCheck`); it relies on the `.staged` stamp and each
+   plugin csproj's `Touch` of its copied dll, so a new plugin project's postbuild needs the same `Touch`.
 
 ## Key files
 
