@@ -30,12 +30,13 @@ macOS and Linux. Convert every saved path through `FilePath` or `FileManager.Sta
 I/O, and check existence with `FileManager.FileExists`, not `File.Exists`. Content loads
 (`FileManager.GetStreamForFile`) ask `FileManager.CustomGetStreamFromFile` first, then fall back to disk.
 
-## `..` and interior `.` segments are collapsed
+## `.`, `..` and doubled separators are collapsed
 
-`FileManager.RemoveDotDotSlash` (and so `FilePath`, `Standardize` and the content loaders' cache keys)
-removes `..` pairs and a `.` between two separators, so `dir/./a.png` and `dir/a.png` are one key. A
-**leading** `./` is kept: on mobile it marks an already-resolved path (#4548). Doubled separators are
-collapsed by `FilePath` but not by `RemoveDotDotSlash`. To decide whether two spellings are one file, run
+`FileManager.RemoveDotDotSlash` (and so `FilePath` and the content loaders' cache keys; `Standardize` calls
+it only for a path containing `..`)
+collapses every `.`, `..` and empty segment and keeps the leading separators, so `dir/./a.png`,
+`dir//a.png` and `dir/a.png` are one key. A **leading** `./` is kept: on mobile it marks an
+already-resolved path (#4548). To decide whether two spellings are one file, run
 both through `FilePath.StandardizedCaseSensitive`, and fold case only where the file system ignores it
 (Windows, macOS, iOS), never via `Standardized` (see above); `AnimationFrame.GetTextureIdentity` is the example.
 

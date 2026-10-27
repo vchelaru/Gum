@@ -40,6 +40,151 @@ public class FileManagerTests : IDisposable
         result.ShouldBe(expected.Replace('/', Path.DirectorySeparatorChar));
     }
 
+    // Shapes the callers already rely on: content loaders prefix RelativeDirectory (absolute, with a
+    // trailing separator) and FilePath rejects a result that still starts with "..".
+    [Theory]
+    [InlineData("c/a/../b.png", "c/b.png")]
+    [InlineData("a/../../b.png", "../b.png")]
+    [InlineData("../a/b.png", "../a/b.png")]
+    [InlineData("C:/a/../b.png", "C:/b.png")]
+    [InlineData("/home/user/../x.png", "/home/x.png")]
+    [InlineData("c/dir/", "c/dir/")]
+    [InlineData("c/dir/sub/../", "c/dir/")]
+    [InlineData("./c/a/../b.png", "./c/b.png")]
+    [InlineData("", "")]
+    public void RemoveDotDotSlash_KeepsTheShapesCallersDependOn(string input, string expected)
+    {
+        FileManager.RemoveDotDotSlash(input).ShouldBe(expected.Replace('/', Path.DirectorySeparatorChar));
+    }
+
+    // #6927: a one-character first directory lost the leading separator, a ".." above the root threw, a
+    // trailing "." stayed, and "a/.//b" left a doubled separator, so each spelled one file differently.
+    [Theory]
+    [InlineData("/a/../b.png", "/b.png")]
+    [InlineData("/../b.png", "/b.png")]
+    [InlineData("C:/../b.png", "C:/b.png")]
+    [InlineData("c/dir/.", "c/dir/")]
+    [InlineData("c/dir/sub/..", "c/dir/")]
+    [InlineData("a/.//b.png", "a/b.png")]
+    [InlineData("a//b.png", "a/b.png")]
+    public void RemoveDotDotSlash_KeepsALeadingSeparatorAndCollapsesEveryDotSegment(string input, string expected)
+    {
+        FileManager.RemoveDotDotSlash(input).ShouldBe(expected.Replace('/', Path.DirectorySeparatorChar));
+    }
+
+    // A URL is not a file path: its "//" is part of the scheme and must survive.
+    [Fact]
+    public void RemoveDotDotSlash_LeavesTheSchemeSeparatorOfAUrl()
+    {
+        FileManager.RemoveDotDotSlash("https://example.com/a.png")
+            .ShouldBe("https://example.com/a.png".Replace('/', Path.DirectorySeparatorChar));
+    }
+
+    // Differential against a walk: following the segments of the input and of the result from the same
+    // starting folder must end in the same place, and the result must be fully collapsed.
+    [Fact]
+    public void RemoveDotDotSlash_MatchesAWalkOfTheSegments_ForRandomPaths()
+    {
+        string[] prefixes = { "", "", "/", "./", "C:/", "//" };
+        string[] segmentPool = { "a", "bb", "c.png", ".hidden", "..", "..", ".", "" };
+        Random random = new(6927);
+        char separator = Path.DirectorySeparatorChar;
+
+        int cases = SweepScale.Cases(3000);
+        for (int caseIndex = 0; caseIndex < cases; caseIndex++)
+        {
+            StringBuilder builder = new(prefixes[random.Next(prefixes.Length)]);
+            int segmentCount = random.Next(1, 7);
+            for (int i = 0; i < segmentCount; i++)
+            {
+                if (i > 0)
+                {
+                    builder.Append(random.Next(2) == 0 ? '/' : '\\');
+                }
+                builder.Append(segmentPool[random.Next(segmentPool.Length)]);
+            }
+            string input = builder.ToString();
+
+            string result = Should.NotThrow(() => FileManager.RemoveDotDotSlash(input), input);
+
+            Walk(result).ShouldBe(Walk(input), $"input: {input}  result: {result}");
+            FileManager.RemoveDotDotSlash(result).ShouldBe(result, $"not idempotent for input: {input}");
+
+            int prefixLength = result.TakeWhile(c => c == separator).Count();
+            result.Substring(0, prefixLength).ShouldBe(
+                new string(input.Replace('\\', separator).Replace('/', separator).TakeWhile(c => c == separator).ToArray()),
+                $"leading separators changed for input: {input}");
+
+            string[] segments = result.Substring(prefixLength).TrimEnd(separator).Split(separator);
+            bool isRooted = prefixLength > 0 || (segments[0].Length == 2 && segments[0][1] == ':');
+            bool pastLeadingDots = false;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                string segment = segments[i];
+                if (segments.Length == 1 && segment.Length == 0)
+                {
+                    continue;
+                }
+                segment.ShouldNotBeEmpty($"doubled separator in result: {result}");
+                if (segment == ".")
+                {
+                    (i == 0 && prefixLength == 0).ShouldBeTrue($"'.' left in result: {result}");
+                }
+                else if (segment == "..")
+                {
+                    (!isRooted && !pastLeadingDots).ShouldBeTrue($"uncollapsed '..' in result: {result}");
+                }
+                else
+                {
+                    pastLeadingDots = true;
+                }
+            }
+        }
+    }
+
+    // Where a path leads when its segments are followed one at a time: from the root for a rooted path,
+    // from a folder eight levels deep for a relative one.
+    private static string Walk(string path)
+    {
+        string normalized = path.Replace('\\', '/');
+        string body = normalized.TrimStart('/');
+        string root;
+        List<string> location = new();
+        List<string> segments = body.Split('/').ToList();
+        if (body.Length != normalized.Length)
+        {
+            root = "/";
+        }
+        else if (segments[0].Length == 2 && segments[0][1] == ':')
+        {
+            root = segments[0];
+            segments.RemoveAt(0);
+        }
+        else
+        {
+            root = "relative";
+            location.AddRange(new[] { "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8" });
+        }
+
+        foreach (string segment in segments)
+        {
+            if (segment == "" || segment == ".")
+            {
+                continue;
+            }
+            if (segment == "..")
+            {
+                if (location.Count > 0)
+                {
+                    location.RemoveAt(location.Count - 1);
+                }
+                continue;
+            }
+            location.Add(segment);
+        }
+        return root + ":" + string.Join("/", location);
+    }
+
     // FilePath collapsed doubled separators with Replace("//", "/"), which does nothing on Windows, where
     // RemoveDotDotSlash has already turned every separator into a backslash (#6910). The collapse is
     // tested with an explicit separator so both platforms' behavior is pinned on any OS.
