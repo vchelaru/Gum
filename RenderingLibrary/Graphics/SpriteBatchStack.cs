@@ -94,9 +94,9 @@ namespace RenderingLibrary.Graphics
 
         // A host that never reaches a frame boundary (Draw(Layer) or Begin/End without advancing
         // Activity) never discards the records, so the records and their pooled lists would grow for
-        // the life of the process. Past this many, the oldest are dropped: the frame summary then
-        // describes only the most recent begins, which no real frame comes near.
-        const int MaxRecordedBeginsPerFrame = 4096;
+        // the life of the process. Past this many, the oldest half is dropped: the frame summary then
+        // describes only the most recent begins. Far above any real frame.
+        const int MaxRecordedBeginsPerFrame = 65536;
 
         // True once currentParameters is in beginParametersUsedThisFrame, so End() followed by the next
         // Replace/Pop/LastFrameDrawStates does not record the same begin again.
@@ -469,9 +469,9 @@ namespace RenderingLibrary.Graphics
             {
                 if (beginParametersUsedThisFrame.Count >= MaxRecordedBeginsPerFrame)
                 {
-                    beginParametersUsedThisFrame.Clear();
-                    // The dropped records' lists are released to the GC with the old pool; the current
-                    // begin keeps its own list, which simply is not reused.
+                    beginParametersUsedThisFrame.RemoveRange(0, beginParametersUsedThisFrame.Count / 2);
+                    // The kept records still hold lists from the old pool; a fresh pool hands out new
+                    // lists, so nothing is reused while a record points at it.
                     StateChangeInfoListPool = new StateChangeInfoListPool();
                 }
                 beginParametersUsedThisFrame.Add(currentParameters.Value);

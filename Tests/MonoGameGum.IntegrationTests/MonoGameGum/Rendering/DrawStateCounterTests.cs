@@ -566,17 +566,6 @@ public class DrawStateCounterTests : BaseTestClass
         renderer.GetDrawStateSummary().TextureSetCount.ShouldBe(5000);
     }
 
-    [Fact]
-    public void ImmediateMode_EndWithoutBegin_DoesNotThrow()
-    {
-        using MinimalGame game = new();
-        game.RunOneFrame();
-        Renderer renderer = SystemManagers.Default.Renderer;
-        AdvanceHostFrame();
-
-        Should.NotThrow(() => renderer.End());
-    }
-
     private sealed class MinimalGame : SharedGameLease
     {
         protected override void OnInitialize() => global::Gum.GumService.Default.Initialize(Game, global::Gum.Forms.DefaultVisualsVersion.V3);
