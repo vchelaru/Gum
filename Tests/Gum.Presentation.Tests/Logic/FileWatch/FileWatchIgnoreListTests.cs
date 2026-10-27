@@ -6,7 +6,8 @@ using ToolsUtilities;
 namespace Gum.Presentation.Tests.Logic.FileWatch;
 
 /// <summary>
-/// Pins the time-based ignore, the ignore list's only mechanism (#5281).
+/// Pins the time-based ignore (#5281) and the content check that narrows it once the tool's write is
+/// recorded (#6866).
 /// </summary>
 public class FileWatchIgnoreListTests : IDisposable
 {
