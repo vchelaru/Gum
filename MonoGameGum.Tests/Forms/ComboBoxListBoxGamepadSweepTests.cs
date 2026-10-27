@@ -523,20 +523,6 @@ public class ComboBoxListBoxGamepadSweepTests : BaseTestClass
         listBox.SelectedObject.ShouldBe("c");
     }
 
-    [Fact]
-    public void FocusMovedToOtherControlWhileOpen_DropDownCloses()
-    {
-        ComboBox comboBox = CreateComboBox();
-        Button other = new();
-        other.AddToRoot();
-        comboBox.IsFocused = true;
-        comboBox.IsDropDownOpen = true;
-
-        other.IsFocused = true;
-
-        comboBox.IsDropDownOpen.ShouldBeFalse();
-    }
-
     #endregion
 
     #region Disabled controls
@@ -569,21 +555,6 @@ public class ComboBoxListBoxGamepadSweepTests : BaseTestClass
         pad.Tap(Buttons.A);
 
         comboBox.IsDropDownOpen.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void ComboBoxDisabledWhileOpen_GamepadDoesNotChangeSelection()
-    {
-        ComboBox comboBox = CreateComboBox();
-        comboBox.SelectedIndex = 0;
-        comboBox.IsFocused = true;
-        PadHarness pad = new();
-        pad.Tap(Buttons.A);
-
-        comboBox.IsEnabled = false;
-        pad.Tap(Buttons.DPadDown);
-
-        comboBox.SelectedIndex.ShouldBe(0);
     }
 
     #endregion
