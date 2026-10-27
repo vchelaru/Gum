@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace WpfDataUi.Controls;
@@ -79,40 +80,86 @@ public class FilePickingLogic
     }
 
     /// <summary>
-    /// Normalizes a path by collapsing any "../" segments against the preceding
-    /// directory. Pure helper, no state.
+    /// Normalizes a path to "/" separators and collapses ".", ".." and empty segments. Same rules as
+    /// ToolsUtilities.FileManager.RemoveDotDotSlash (a test ties the two together): leading separators are kept,
+    /// a ".." above a root is dropped, a ".." a relative path cannot resolve stays, a leading "./" stays, and a
+    /// URL is returned unchanged. This is a copy because DataUi.Core cannot reference ToolsUtilities: GumCommon
+    /// compiles the same sources, so a consumer of both would see every type twice.
     /// </summary>
     public static string RemoveDotDotSlash(string fileNameToFix)
     {
-        if (fileNameToFix.Contains(".."))
+        fileNameToFix = fileNameToFix.Replace('\\', '/');
+
+        if (fileNameToFix.StartsWith("http:", StringComparison.Ordinal) ||
+            fileNameToFix.StartsWith("https:", StringComparison.Ordinal))
         {
-            fileNameToFix = fileNameToFix.Replace("\\", "/");
+            return fileNameToFix;
+        }
 
-            // First let's get rid of any ..'s that are in the middle
-            // for example:
-            //
-            // "content/zones/area1/../../background/outdoorsanim/outdoorsanim.achx"
-            //
-            // would become
-            //
-            // "content/background/outdoorsanim/outdoorsanim.achx"
+        int prefixLength = 0;
+        while (prefixLength < fileNameToFix.Length && fileNameToFix[prefixLength] == '/')
+        {
+            prefixLength++;
+        }
+        bool isRooted = prefixLength > 0;
+        string[] segments = fileNameToFix.Substring(prefixLength).Split('/');
 
-            int indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
-
-            bool shouldLoop = indexOfNextDotDotSlash > 0;
-
-            while (shouldLoop)
+        List<string> kept = new List<string>(segments.Length);
+        // The leading "./" marker or a drive ("C:") is never removed by a "..".
+        int unremovableCount = 0;
+        bool endsInDirectory = false;
+        for (int i = 0; i < segments.Length; i++)
+        {
+            string segment = segments[i];
+            endsInDirectory = false;
+            if (segment.Length == 0)
             {
-                int indexOfPreviousDirectory = fileNameToFix.LastIndexOf('/', indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
-
-                fileNameToFix = fileNameToFix.Remove(indexOfPreviousDirectory + 1, indexOfNextDotDotSlash - indexOfPreviousDirectory + 2);
-
-                indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
-
-                shouldLoop = indexOfNextDotDotSlash > 0;
+                endsInDirectory = true;
+            }
+            else if (segment == ".")
+            {
+                if (i == 0 && !isRooted)
+                {
+                    kept.Add(segment);
+                    unremovableCount = 1;
+                }
+                else
+                {
+                    endsInDirectory = true;
+                }
+            }
+            else if (segment == "..")
+            {
+                if (kept.Count > unremovableCount && kept[kept.Count - 1] != "..")
+                {
+                    kept.RemoveAt(kept.Count - 1);
+                    endsInDirectory = true;
+                }
+                else if (isRooted)
+                {
+                    endsInDirectory = true;
+                }
+                else
+                {
+                    kept.Add(segment);
+                }
+            }
+            else
+            {
+                if (i == 0 && !isRooted && segment.Length == 2 && segment[1] == ':')
+                {
+                    isRooted = true;
+                    unremovableCount = 1;
+                }
+                kept.Add(segment);
             }
         }
 
-        return fileNameToFix.Replace("\\", "/");
+        string result = fileNameToFix.Substring(0, prefixLength) + string.Join("/", kept);
+        if (endsInDirectory && kept.Count > 0)
+        {
+            result += "/";
+        }
+        return result;
     }
 }
