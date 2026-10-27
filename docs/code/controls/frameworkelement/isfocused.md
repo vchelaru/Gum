@@ -41,3 +41,11 @@ A focused disabled control shows its **DisabledFocused** state and ignores confi
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
+
+### Hiding a Focused Control
+
+Setting `IsVisible` to `false` on a focused control, or on any of its parents, removes its focus, the same as removing it from the root. A hidden control no longer receives gamepad or keyboard input, so closing a menu from a focused button stops later presses from clicking that button. Showing the control again does not restore focus; set `IsFocused` to `true` to focus it.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
