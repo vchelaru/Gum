@@ -12,19 +12,16 @@ namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
 /// Pins how ListBox reads the gamepad D-pad and left stick while its items have focus. The reading is
-/// shared with Menu through FrameworkElement.GetRepeatedGamepadDirection (#6696).
+/// shared with Menu through FrameworkElement.GetRepeatedGamepadDirection (#6696). Left and right do not step
+/// a vertical list (#6938, see ListBoxPerpendicularExitTests).
 /// </summary>
 public class ListBoxGamepadDirectionTests : BaseTestClass
 {
     [Theory]
     [InlineData(XnaButtons.DPadDown, 0f, 0f, 2)]
-    [InlineData(XnaButtons.DPadRight, 0f, 0f, 2)]
     [InlineData(XnaButtons.DPadUp, 0f, 0f, 0)]
-    [InlineData(XnaButtons.DPadLeft, 0f, 0f, 0)]
     [InlineData((XnaButtons)0, 0f, -1f, 2)]
-    [InlineData((XnaButtons)0, 1f, 0f, 2)]
     [InlineData((XnaButtons)0, 0f, 1f, 0)]
-    [InlineData((XnaButtons)0, -1f, 0f, 0)]
     public void Direction_WithItemFocused_MovesFocusToNeighborRow(
         XnaButtons buttons, float leftStickX, float leftStickY, int expectedRow)
     {
@@ -59,7 +56,7 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
     }
 
     [Fact]
-    public void LeftAndDownHeldTogether_LeftWins()
+    public void LeftAndDownHeldTogether_DownWins()
     {
         ListBox listBox = new ListBox();
         listBox.AddToRoot();
@@ -87,6 +84,7 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
 
         listBox.OnFocusUpdate();
 
-        listBox.SelectedIndex.ShouldBe(0);
+        // Left is the axis the list does not use (#6938), so the held Down steps.
+        listBox.SelectedIndex.ShouldBe(2);
     }
 }
