@@ -294,7 +294,8 @@ public class ComboBoxListBoxGamepadTests : BaseTestClass
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         comboBox.IsDropDownOpen = true;
-        InteractiveGue.CurrentInputReceiver!.OnFocusUpdate();
+        InteractiveGue.CurrentInputReceiver.ShouldNotBeNull();
+        InteractiveGue.CurrentInputReceiver.OnFocusUpdate();
 
         comboBox.SelectedIndex.ShouldBe(1);
     }

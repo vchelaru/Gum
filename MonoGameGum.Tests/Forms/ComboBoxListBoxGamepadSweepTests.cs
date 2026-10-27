@@ -195,7 +195,8 @@ public class ComboBoxListBoxGamepadSweepTests : BaseTestClass
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter)).Returns(true);
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
-        InteractiveGue.CurrentInputReceiver!.OnFocusUpdate();
+        InteractiveGue.CurrentInputReceiver.ShouldNotBeNull();
+        InteractiveGue.CurrentInputReceiver.OnFocusUpdate();
 
         comboBox.IsDropDownOpen.ShouldBeFalse();
         comboBox.SelectedIndex.ShouldBe(1);
@@ -209,7 +210,8 @@ public class ComboBoxListBoxGamepadSweepTests : BaseTestClass
         comboBox.IsDropDownOpen = true;
         AddKeyboard(Gum.Forms.Input.Keys.Up);
 
-        InteractiveGue.CurrentInputReceiver!.OnFocusUpdate();
+        InteractiveGue.CurrentInputReceiver.ShouldNotBeNull();
+        InteractiveGue.CurrentInputReceiver.OnFocusUpdate();
 
         comboBox.SelectedIndex.ShouldBe(1);
     }
