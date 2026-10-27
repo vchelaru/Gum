@@ -164,6 +164,16 @@ public class GumProjectSave
         /// the name looked up. See <see cref="GumProjectSave.UsesPathHashedFontCacheNames"/>.
         /// </summary>
         FontCachePathHash = 6,
+
+        /// <summary>
+        /// Reserves a version slot for the Container standard element's <c>ShaderParameters</c>
+        /// variable (#6988). Files saved at this version use the same XML format as
+        /// <see cref="FontCachePathHash"/>; the bump exists purely so the back-fill gate
+        /// (<see cref="Gum.DataTypes.Variables.VariableSave.MinimumGumxVersion"/>) can tell an older
+        /// project apart from a newer one and skip injecting the variable into the older one, whose
+        /// pinned runtime lacks the property.
+        /// </summary>
+        ShaderParametersExpansion = 7,
     }
 
     /// <summary>
@@ -180,7 +190,7 @@ public class GumProjectSave
     /// explicitly stamp this version. Marking them at the native version is honest — the project
     /// genuinely uses those features — and lets the gate show those variables immediately.
     /// </remarks>
-    public const int NativeVersion = (int)GumxVersions.FontCachePathHash;
+    public const int NativeVersion = (int)GumxVersions.ShaderParametersExpansion;
 
     #region Fields
 

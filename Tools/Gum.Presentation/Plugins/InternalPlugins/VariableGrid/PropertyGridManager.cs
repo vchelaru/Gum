@@ -1036,32 +1036,38 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
             foreach (var row in descriptor.Members)
             {
-                var instanceMember = new InstanceMember
-                {
-                    Name = row.Name,
-                    DetailText = row.DetailText
-                };
-                instanceMember.CustomGetTypeEvent += (_) => row.ValueType;
-                instanceMember.CustomGetEvent += (_) => row.Get();
-                if (row.Set != null)
-                {
-                    instanceMember.CustomSetPropertyEvent += (_, args) => row.Set(args.Value);
-                }
-                if (row.CustomOptions != null)
-                {
-                    instanceMember.CustomOptions = row.CustomOptions;
-                }
-                if (row.PreferredDisplayerKindOverride == VariableDisplayerKind.RemoveButton)
-                {
-                    instanceMember.PreferredDisplayer = typeof(GumDisplayers.RemoveButton);
-                }
-
-                category.Members.Add(instanceMember);
+                category.Members.Add(CreateInstanceMember(row));
             }
 
             categories.Add(category);
         }
         return categories;
+    }
+
+    /// <summary>Materializes one headless <see cref="SyntheticVariableRow"/> into a plain <see cref="InstanceMember"/>.</summary>
+    private static InstanceMember CreateInstanceMember(SyntheticVariableRow row)
+    {
+        var instanceMember = new InstanceMember
+        {
+            Name = row.Name,
+            DetailText = row.DetailText
+        };
+        instanceMember.CustomGetTypeEvent += (_) => row.ValueType;
+        instanceMember.CustomGetEvent += (_) => row.Get();
+        if (row.Set != null)
+        {
+            instanceMember.CustomSetPropertyEvent += (_, args) => row.Set(args.Value);
+        }
+        if (row.CustomOptions != null)
+        {
+            instanceMember.CustomOptions = row.CustomOptions;
+        }
+        if (row.PreferredDisplayerKindOverride == VariableDisplayerKind.RemoveButton)
+        {
+            instanceMember.PreferredDisplayer = typeof(GumDisplayers.RemoveButton);
+        }
+
+        return instanceMember;
     }
 
     private List<MemberCategory> GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave? instance, StateSave stateSave, StateSaveCategory? stateSaveCategory)
@@ -1098,6 +1104,74 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         AdjustFontSourceToggle(categories, stateSave, instance);
 
         AdjustDropshadowFontGeneratorWarning(categories, element, instance);
+
+        AdjustShaderParameters(categories, instance);
+    }
+
+    /// <summary>
+    /// Replaces the saved <c>ShaderParameters</c> text row with one row per parameter the container's
+    /// shader declares, read from the effect the editor compiled for it. With no shader, or one that
+    /// failed to compile, no rows are shown and the saved values are kept.
+    /// </summary>
+    internal void AdjustShaderParameters(List<MemberCategory> categories, InstanceSave? instance)
+    {
+        IReadOnlyList<ShaderParameterInfo> parameters = GetShaderParameters(instance);
+        _shaderParametersSignature = GetShaderParametersSignature(parameters);
+
+        MemberCategory? category = categories.FirstOrDefault(item => item.Name == "Rendering");
+        StateReferencingInstanceMember? textMember = category?.Members
+            .OfType<StateReferencingInstanceMember>()
+            .FirstOrDefault(item => item.RootVariableName == "ShaderParameters");
+        if (category == null || textMember == null)
+        {
+            return;
+        }
+
+        int index = category.Members.IndexOf(textMember);
+        category.Members.RemoveAt(index);
+
+        List<SyntheticVariableRow> rows = ShaderParameterRows.Build(
+            parameters,
+            () => textMember.Value as string,
+            text => textMember.Value = text);
+
+        foreach (SyntheticVariableRow row in rows)
+        {
+            InstanceMember member = CreateInstanceMember(row);
+            member.IsReadOnly = textMember.IsReadOnly;
+            category.Members.Insert(index, member);
+            index++;
+        }
+    }
+
+    // The parameters the last-built rows were made from, so a shader that finishes compiling after the
+    // grid was built (the editor creates its objects after the selection event) is noticed.
+    private string _shaderParametersSignature = "";
+
+    private IReadOnlyList<ShaderParameterInfo> GetShaderParameters(InstanceSave? instance)
+    {
+        GraphicalUiElement? representation = instance == null ? null : _wireframeObjectManager.GetRepresentation(instance);
+        object? effect = (representation?.RenderableComponent as IRenderTargetRenderable)?.RenderTargetEffect;
+        return ShaderParameterReader.Read(effect);
+    }
+
+    private static string GetShaderParametersSignature(IReadOnlyList<ShaderParameterInfo> parameters) =>
+        string.Join(";", parameters.Select(parameter => parameter.Name + ":" + parameter.Kind + ":" + parameter.Count));
+
+    /// <summary>
+    /// True when the selected instance's compiled shader declares different parameters than the rows
+    /// currently shown were built from, so the grid should be rebuilt. Always false for a
+    /// multi-selection, which has no shader rows.
+    /// </summary>
+    public bool HaveShaderParametersChanged()
+    {
+        if (_selectedState.SelectedInstances.Count() != 1)
+        {
+            return false;
+        }
+
+        string current = GetShaderParametersSignature(GetShaderParameters(_selectedState.SelectedInstance));
+        return current != _shaderParametersSignature;
     }
 
     private readonly TextDropshadowFontGeneratorWarningLogic _textDropshadowFontGeneratorWarningLogic = new();

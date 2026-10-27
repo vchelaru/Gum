@@ -446,6 +446,9 @@ public partial class CustomSetPropertyOnRenderable
             case "SourceShaderFile":
                 AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
                 return true;
+            case "ShaderParameters":
+                AssignShaderParametersOnContainer(invisibleRenderable, graphicalUiElement, value as string);
+                return true;
             case "Alpha":
                 {
                     int alpha = InvisibleRenderable.NormalizeDispatchedAlpha(value);
@@ -475,6 +478,25 @@ public partial class CustomSetPropertyOnRenderable
     /// With no resolver registered this is a graceful no-op (the container renders unshaded),
     /// matching how a missing texture degrades. Called internally by the string property path.
     /// </summary>
+    /// <summary>
+    /// Replaces the container's shader parameters with the values in the saved <c>ShaderParameters</c>
+    /// text (see <see cref="ShaderParameterText"/>). An entry that cannot be read is skipped and
+    /// reported without dropping the rest.
+    /// </summary>
+    public static void AssignShaderParametersOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
+    {
+        string? error = ShaderParameterText.Assign(effectOwner, value);
+        if (error != null)
+        {
+            string message = "Error setting ShaderParameters on Container";
+            if (graphicalUiElement.Tag != null)
+            {
+                message += $" in {graphicalUiElement.Tag}";
+            }
+            RaisePropertyAssignmentError(message + "\n" + error);
+        }
+    }
+
     public static void AssignSourceShaderFileOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
         if (string.IsNullOrEmpty(value))
@@ -3147,6 +3169,11 @@ public partial class CustomSetPropertyOnRenderable
             // post-process shader resolves onto the LineRectangle's IRenderTargetRenderable slot
             // (the runtime's InvisibleRenderable path does the same in TrySetPropertyOnContainer).
             AssignSourceShaderFileOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
+            handled = true;
+        }
+        else if (propertyName == "ShaderParameters")
+        {
+            AssignShaderParametersOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
             handled = true;
         }
 

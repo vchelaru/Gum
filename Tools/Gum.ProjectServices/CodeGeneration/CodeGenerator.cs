@@ -6061,6 +6061,22 @@ public class CodeGenerator
             // Non-empty: fall through to the default string-assignment path.
         }
         #endregion
+        #region ShaderParameters
+
+        // ShaderParameters is the saved Name=value text for a render-target Container's shader. There
+        // is no property of that name on the runtime; the text goes through SetProperty, which parses
+        // it the same way the loader does, so default and state assignments both work.
+        else if (rootName == "ShaderParameters")
+        {
+            string shaderParametersText = variable.Value as string ?? "";
+            if (shaderParametersText.Length == 0)
+            {
+                return " ";
+            }
+            string verbatimText = "@\"" + shaderParametersText.Replace("\"", "\"\"") + "\"";
+            return $"{context.CodePrefixNoTabs}.SetProperty(\"ShaderParameters\", {verbatimText});";
+        }
+        #endregion
         // ignored variables:
         else if (rootName == "IsXamarinFormsControl" ||
             rootName == "ExposeChildrenEvents" ||

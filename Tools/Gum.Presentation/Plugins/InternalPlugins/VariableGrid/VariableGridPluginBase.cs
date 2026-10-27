@@ -67,6 +67,17 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         this.InstanceAdd += (element, _) => _variableReferenceLogic.ReapplySiblingDependentReferences(element);
         this.InstanceDelete += (element, _) => ReapplySiblingDependentReferencesOn(element);
         this.InstanceReordered += _ => ReapplySiblingDependentReferencesOn(null);
+        this.WireframeRefreshed += HandleWireframeRefreshed;
+    }
+
+    // A container's shader parameters come from the effect the editor compiles when it creates its
+    // objects, which can happen after the grid for the selection was built.
+    private void HandleWireframeRefreshed()
+    {
+        if (_propertyGridManager.HaveShaderParametersChanged())
+        {
+            _propertyGridManager.RefreshEntireGrid(force: true);
+        }
     }
 
     // Index (position among siblings) goes stale when a structural change moves instances around.

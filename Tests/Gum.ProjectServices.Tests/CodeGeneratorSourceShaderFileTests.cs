@@ -105,6 +105,57 @@ public class CodeGeneratorSourceShaderFileTests : BaseTestClass
         }
     }
 
+    /// <summary>Mirrors StandardElementsManager defining ShaderParameters on the Container standard element.</summary>
+    private void RegisterContainerShaderParametersVariable()
+    {
+        StandardElementSave container = Project.StandardElements.First(item => item.Name == "Container");
+        AddVariable(container, "ShaderParameters", "", "string");
+    }
+
+    private string GetContainerCode(string shaderParametersText)
+    {
+        GumProjectSave project = Project;
+        RegisterContainerShaderParametersVariable();
+
+        ComponentSave main = CreateComponent("MainComponent", "Container");
+        InstanceSave renderTargetContainer = new InstanceSave
+        {
+            Name = "RenderTargetContainer",
+            BaseType = "Container",
+            ParentContainer = main,
+        };
+        main.Instances.Add(renderTargetContainer);
+        AddVariable(main, "RenderTargetContainer.IsRenderTarget", true, "bool");
+        AddVariable(main, "RenderTargetContainer.ShaderParameters", shaderParametersText, "string");
+        project.Components.Add(main);
+
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            return CreateCodeGenerator().GetCodeForInstance(renderTargetContainer, main, CreateMonoGame());
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void GetCodeForInstance_ShaderParameters_EmitsASetPropertyCallWithTheSavedText()
+    {
+        string code = GetContainerCode("Glow=true; Thickness=3.0");
+
+        code.ShouldContain("this.RenderTargetContainer.SetProperty(\"ShaderParameters\", @\"Glow=true; Thickness=3.0\");");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_ShaderParametersEmpty_EmitsNothing()
+    {
+        string code = GetContainerCode("");
+
+        code.ShouldNotContain("ShaderParameters");
+    }
+
     [Fact]
     public void GetCodeForInstance_SourceShaderFileEmpty_EmitsNoAssignment()
     {
