@@ -74,9 +74,11 @@ public class SvgRuntime : InteractiveGue
                 sourceFile = value;
                 Texture = global::SkiaGum.Content.SourceFileLoading.LoadOrNull<SvgDocument>(value);
 #else
-                // Loaded first, so a file that fails to load (and throws) can be assigned again once it is fixed.
-                Texture = ShapeSvgLoader.Load(value!, this);
-                sourceFile = value;
+                // The path is recorded only for a document that loaded, so a file that failed (and threw, or
+                // was consumed silently) can be assigned again once it is fixed.
+                SvgDocument? loaded = ShapeSvgLoader.Load(value!, this);
+                Texture = loaded;
+                sourceFile = loaded != null ? value : null;
 #endif
                 // The getter returns the path, which TryGetProperty cannot recover from the document.
                 ReportTypedPropertyChanged(nameof(SourceFile), value);

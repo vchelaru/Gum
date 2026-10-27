@@ -126,4 +126,76 @@ public class SvgSourceFileLoadFailureTests : RegistrationIsolatedTest
 
         ShapeSvgLoader.Load(path).ShouldNotBeNull();
     }
+
+    [Fact]
+    public void SourceFile_FailedThenFixedOnDisk_ConsumeSilently_LoadsOnNextAssignmentOfSamePath()
+    {
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        string path = WriteBadFile("corrupt");
+        SvgRuntime runtime = new SvgRuntime();
+        runtime.SourceFile = path;
+        runtime.Texture.ShouldBeNull();
+
+        File.WriteAllText(path, ValidSvg);
+        runtime.SourceFile = path;
+
+        runtime.Texture.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void SetProperty_SourceFileMissing_ThrowException_ThrowsFileNotFoundDirectly()
+    {
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+        string path = NewPath();
+        SvgRuntime runtime = new SvgRuntime();
+
+        FileNotFoundException exception =
+            Should.Throw<FileNotFoundException>(() => runtime.SetProperty("SourceFile", path));
+
+        exception.Message.ShouldContain(Path.GetFileName(path));
+    }
+
+    [Fact]
+    public void SetProperty_SourceFileMissing_ConsumeSilently_RaisesPropertyAssignmentError()
+    {
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        string path = NewPath();
+        SvgRuntime runtime = new SvgRuntime();
+
+        runtime.SetProperty("SourceFile", path);
+
+        runtime.Texture.ShouldBeNull();
+        _errors.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SetProperty_SourceFileValid_LoadsDocument()
+    {
+        string path = NewPath();
+        File.WriteAllText(path, ValidSvg);
+        SvgRuntime runtime = new SvgRuntime();
+
+        runtime.SetProperty("SourceFile", path);
+
+        runtime.Texture.ShouldNotBeNull();
+    }
+
+    // gumcli screenshot (MonoGameScreenshotService) turns any exception while creating the element into a
+    // failed result. A missing SVG must therefore throw exactly what a missing Sprite image throws.
+    [Theory]
+    [InlineData("Sprite")]
+    [InlineData("Svg")]
+    public void SetProperty_SourceFileMissing_ThrowException_ThrowsSameExceptionTypeForSpriteAndSvg(string kind)
+    {
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+        string path = NewPath();
+        GraphicalUiElement element = kind == "Sprite"
+            ? new SpriteRuntime()
+            : new SvgRuntime();
+
+        FileNotFoundException exception =
+            Should.Throw<FileNotFoundException>(() => element.SetProperty("SourceFile", path));
+
+        exception.Message.ShouldContain(Path.GetFileName(path));
+    }
 }

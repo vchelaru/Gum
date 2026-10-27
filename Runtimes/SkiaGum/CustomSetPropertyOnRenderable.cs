@@ -1149,6 +1149,19 @@ public partial class CustomSetPropertyOnRenderable
                     break;
             }
         }
+#if !SKIA
+        else if (containedObjectAsIpso is Svg)
+        {
+            // An SvgRuntime takes SourceFile through its own setter. Left to the reflection fallback it would
+            // surface a load failure as a TargetInvocationException instead of the FileNotFoundException a
+            // Sprite throws (#6917).
+            if (propertyName == "SourceFile" && graphicalUiElement is SvgRuntime svgRuntime)
+            {
+                svgRuntime.SourceFile = value as string;
+                handled = true;
+            }
+        }
+#endif
 #if SKIA
         else if (containedObjectAsIpso is Text asText)
         {
