@@ -35,6 +35,8 @@ internal sealed record SweepSpec
     public bool WithGadget { get; init; }
     public bool WithExtraBehavior { get; init; }
     public bool WithWidget { get; init; } = true;
+    public bool OmitBaseX { get; init; }
+    public bool OmitWidgetRed { get; init; }
 }
 
 /// <summary>
@@ -114,14 +116,20 @@ internal sealed class SweepWorld : IDisposable
         project.Components.Add(styles);
 
         ComponentSave baseComponent = NewComponent("Widgets/Base");
-        Set(baseComponent.DefaultState!, "X", "float", spec.BaseX);
+        if (!spec.OmitBaseX)
+        {
+            Set(baseComponent.DefaultState!, "X", "float", spec.BaseX);
+        }
         project.Components.Add(baseComponent);
 
         if (spec.WithWidget)
         {
             ComponentSave widget = NewComponent("Widgets/Widget", "Widgets/Base");
             AddInstance(widget, "Fill", "ColoredRectangle");
-            SetRed(widget.DefaultState!, "Fill", spec.WidgetRed);
+            if (!spec.OmitWidgetRed)
+            {
+                SetRed(widget.DefaultState!, "Fill", spec.WidgetRed);
+            }
             StateSaveCategory look = new StateSaveCategory { Name = "Look" };
             look.States.Add(new StateSave { Name = "Normal", ParentContainer = widget });
             if (spec.WidgetHasHighlighted)

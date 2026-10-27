@@ -1859,8 +1859,14 @@ public class ListBox : ItemsControl, IInputReceiver
         var targetChildren = targetRoot.Children;
         if (!IsAlreadyOnTop(popup.Visual, targetRoot, ownFollowers))
         {
+            // Detaching hides the popup for a moment, which takes its focus away (#6934). The caller only
+            // moved it, so give the focus back.
+            PopupFocusSnapshot focus = PopupFocusSnapshot.Capture(popup);
+
             popup.Visual.Parent = null;
             targetChildren.Add(popup.Visual);
+
+            focus.Restore(popup);
         }
 
         // Reposition after resolving and parenting to the target root, so the clamp reflects
@@ -1883,6 +1889,53 @@ public class ListBox : ItemsControl, IInputReceiver
             ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
 
         return listBoxParent.GetTopParent() == modalRoot ? modalRoot : popupRoot;
+    }
+
+    /// <summary>
+    /// The focus and scroll of a popup that a library operation is about to detach and re-attach. Hiding it
+    /// for a moment takes its focus away (#6934), so <see cref="Restore"/> gives it back. Focusing a row
+    /// scrolls it into view, but a restore is not navigation, so the scroll is put back too.
+    /// </summary>
+    internal readonly struct PopupFocusSnapshot
+    {
+        private readonly bool _hadFocus;
+        private readonly bool _hadItemFocus;
+        private readonly double _scroll;
+
+        private PopupFocusSnapshot(bool hadFocus, bool hadItemFocus, double scroll)
+        {
+            _hadFocus = hadFocus;
+            _hadItemFocus = hadItemFocus;
+            _scroll = scroll;
+        }
+
+        public static PopupFocusSnapshot Capture(ScrollViewer popup) => new PopupFocusSnapshot(
+            popup.IsFocused,
+            popup is ListBox listBox ? listBox.DoListItemsHaveFocus : popup.DoItemsHaveFocus,
+            popup.VerticalScrollBarValue);
+
+        public void Restore(ScrollViewer popup)
+        {
+            if (!_hadFocus)
+            {
+                return;
+            }
+
+            if (!popup.IsFocused)
+            {
+                popup.IsFocused = true;
+                if (popup is ListBox listBox)
+                {
+                    listBox.DoListItemsHaveFocus = _hadItemFocus;
+                }
+                else
+                {
+                    popup.DoItemsHaveFocus = _hadItemFocus;
+                }
+            }
+
+            popup.VerticalScrollBarValue = _scroll;
+        }
     }
 
     private static bool IsAlreadyOnTop(GraphicalUiElement popupVisual, GraphicalUiElement targetRoot,
@@ -2087,10 +2140,16 @@ public class ListBox : ItemsControl, IInputReceiver
 
             RepositionDirections? direction = null;
 
+            // Up/Down step every list. Left/Right additionally step a list that lays out horizontally or
+            // wraps (not a ComboBox drop-down). A key the project configured for moving focus out of the
+            // list (Left/RightKeyCombos) keeps that meaning.
+            bool stepsOnLeftRight = !IsComboBoxDropDown &&
+                (InnerPanel.WrapsChildren || InnerPanel.ChildrenLayout != Gum.Managers.ChildrenLayout.TopToBottomStack);
+
             // Keys.X references are fully qualified to Gum.Forms.Input.Keys so this block compiles
             // on every platform regardless of what the file-level `using Keys = ...` alias resolves
             // to. KeyTyped (pushed + repeat while held) replaces the old "KeyPushed OR KeysTyped.Contains"
-            // two-step — same effective behavior, single call, works on the shared base interface.
+            // two-step - same effective behavior, single call, works on the shared base interface.
             if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Up) == true)
             {
                 direction = RepositionDirections.Up;
@@ -2098,6 +2157,20 @@ public class ListBox : ItemsControl, IInputReceiver
             if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Down) == true)
             {
                 direction = RepositionDirections.Down;
+            }
+
+            if (stepsOnLeftRight)
+            {
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Right) == true &&
+                    !IsKeyComboConfigured(RightKeyCombos, Gum.Forms.Input.Keys.Right))
+                {
+                    direction = RepositionDirections.Right;
+                }
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Left) == true &&
+                    !IsKeyComboConfigured(LeftKeyCombos, Gum.Forms.Input.Keys.Left))
+                {
+                    direction = RepositionDirections.Left;
+                }
             }
 
             DoListItemFocusUpdate(direction, pressedButton);
@@ -2108,6 +2181,45 @@ public class ListBox : ItemsControl, IInputReceiver
 
 
 
+    }
+
+#if !FRB
+    private static bool IsKeyComboConfigured(List<KeyCombo> combos, Gum.Forms.Input.Keys key)
+    {
+        foreach (KeyCombo combo in combos)
+        {
+            if (combo.PushedKey == key)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+#endif
+
+    /// <summary>
+    /// Set by a ComboBox for its popup list: called when Escape is pushed, returns whether the owner
+    /// handled it (closed its open drop-down), which consumes the key.
+    /// </summary>
+    internal Func<bool>? EscapeHandler { get; set; }
+
+    /// <inheritdoc/>
+    public override void OnFocusUpdatePreview(RoutedEventArgs args)
+    {
+#if !FRB
+        if (EscapeHandler != null)
+        {
+            foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
+            {
+                if (keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape) && EscapeHandler())
+                {
+                    args.Handled = true;
+                    return;
+                }
+            }
+        }
+#endif
+        base.OnFocusUpdatePreview(args);
     }
 
     private int? GetListBoxIndexAt(float x, float y)

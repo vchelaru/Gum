@@ -1211,6 +1211,12 @@ public class ScrollViewer :
     {
         // todo - check for ESC and return handled, steal focus from children
 #if !FRB
+        // Previews run outermost first. An open drop-down closes on Escape before this ScrollViewer takes it.
+        if (InteractiveGue.CurrentInputReceiver is ComboBox { IsDropDownOpen: true })
+        {
+            return;
+        }
+
         foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             // eventually we want to support combos but for now use esc:

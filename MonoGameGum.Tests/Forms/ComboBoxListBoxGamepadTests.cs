@@ -445,7 +445,7 @@ public class ComboBoxListBoxGamepadTests : BaseTestClass
 
     #endregion
 
-    private static void PushOn(InteractiveGue visualOver)
+    internal static void PushOn(InteractiveGue visualOver)
     {
         float x = visualOver.GetAbsoluteX() + visualOver.AbsoluteWidth / 2;
         float y = visualOver.GetAbsoluteY() + visualOver.AbsoluteHeight / 2;

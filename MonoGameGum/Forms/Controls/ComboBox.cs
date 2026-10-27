@@ -129,6 +129,7 @@ public class ComboBox :
                 _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
                 _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
                 _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
+                _subscribedListBox.EscapeHandler = null;
                 _subscribedListBox.IsComboBoxDropDown = false;
             }
 
@@ -136,6 +137,7 @@ public class ComboBox :
             listBox.SelectionChanged += HandleSelectionChanged;
             listBox.ItemPushed += HandleListBoxItemPushed;
             listBox.ConfirmedWithoutFocusedRow += HandleListBoxItemPushed;
+            listBox.EscapeHandler = CloseDropDownOnEscape;
             _subscribedListBox = listBox;
         }
     }
@@ -598,6 +600,7 @@ public class ComboBox :
             _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
             _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
             _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
+            _subscribedListBox.EscapeHandler = null;
             _subscribedListBox.IsComboBoxDropDown = false;
             _subscribedListBox = null;
         }
@@ -860,9 +863,7 @@ public class ComboBox :
     {
         var listBoxVisual = listBox.Visual;
 #if !FRB
-        bool popupHadFocus = listBox.IsFocused;
-        bool popupHadItemFocus = listBox.DoListItemsHaveFocus;
-        double popupScroll = listBox.VerticalScrollBarValue;
+        ListBox.PopupFocusSnapshot popupFocus = ListBox.PopupFocusSnapshot.Capture(listBox);
 #endif
 
         // A list box that is already a popup has absolute units; go back to the values
@@ -905,18 +906,7 @@ public class ComboBox :
 #if !FRB
         // Detaching the popup while it is placed again hides it for a moment, which takes its focus away
         // (#6934); give it back so the open drop-down keeps taking input and its focus is still watched.
-        if (popupHadFocus && !listBox.IsFocused)
-        {
-            listBox.IsFocused = true;
-            listBox.DoListItemsHaveFocus = popupHadItemFocus;
-        }
-
-        // Giving focus back (here or inside ShowPopupListBox) is not navigation, but focusing the row scrolls it
-        // into view, so put the scroll back.
-        if (popupHadFocus)
-        {
-            listBox.VerticalScrollBarValue = popupScroll;
-        }
+        popupFocus.Restore(listBox);
 #endif
 
         // Recorded last, with the list box detached: this is the state later frames compare against,
@@ -1282,6 +1272,30 @@ public class ComboBox :
 
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {
+#if !FRB
+        if (IsDropDownOpen)
+        {
+            foreach (var keyboard in KeyboardsForUiControl)
+            {
+                if (keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape) && CloseDropDownOnEscape())
+                {
+                    args.Handled = true;
+                    return;
+                }
+            }
+        }
+#endif
+    }
+
+    // Escape closes the open drop-down and keeps the selection as it is; the key is consumed only then.
+    private bool CloseDropDownOnEscape()
+    {
+        if (!IsDropDownOpen)
+        {
+            return false;
+        }
+        HideListBox();
+        return true;
     }
     public void OnFocusUpdate()
     {
