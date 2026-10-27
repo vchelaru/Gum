@@ -96,7 +96,24 @@ The shader is applied to the container's render target as a whole, so every chil
 
 The effect must follow the standard MonoGame 2D `SpriteBatch` shader convention: a pixel shader that samples the sprite texture, with the vertex transform supplied by `SpriteBatch` through the usual `MatrixTransform` parameter (the same shape used by the standard MonoGame 2D shader examples). An effect that hardcodes its own projection matrix will not position correctly.
 
-Because the `Effect` instance is yours, you can update its parameters each frame - for example animating a blur radius or passing elapsed time - before drawing.
+#### Shader parameters
+
+`SetShaderParameter` gives a container its own value for a shader parameter, such as an outline thickness or color. Gum applies the values to the shader just before it draws that container, so several containers can share one shader and each use different values. The same calls work on every runtime. A name the shader does not declare is ignored.
+
+```csharp
+// Initialize
+container.SetShaderParameter("Thickness", 1f);
+container.SetShaderParameter("OutlineColor", 0f, 0f, 0f, 1f);
+
+// Update
+container.SetShaderParameter("Thickness", pulse);
+```
+
+Overloads take a `float`, `int`, `bool`, two to four float components, or a `System.Numerics` vector. A color is passed as red, green, blue and alpha components from 0 to 1. Setting a name that already has a value does not allocate, so it is safe to call every frame. `ClearShaderParameters` removes every value.
+
+{% hint style="info" %}
+`SetShaderParameter` is available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 {% hint style="info" %}
 To instead display a container's render target as a regular Sprite (so it can be scaled, rotated, or stacked) rather than post-processing it in place, see [RenderTargetTextureSource](spriteruntime/rendertargettexturesource.md).

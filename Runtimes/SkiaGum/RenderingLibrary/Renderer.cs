@@ -846,9 +846,48 @@ namespace RenderingLibrary.Graphics
             {
                 uniforms["ShadowDusk_Resolution"] = new float[] { width, height };
             }
+            ApplyShaderParameters((owner as IRenderTargetRenderable)?.ShaderParameters, effect, uniforms);
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
             canvas.DrawRect(destination, paint);
+        }
+
+        // Copies the container's own values into this blit's uniforms. A name the effect does not
+        // declare is skipped, so one parameter set can drive effects that use different subsets.
+        private static void ApplyShaderParameters(
+            ShaderParameterCollection? parameters, SKRuntimeEffect effect, SKRuntimeEffectUniforms uniforms)
+        {
+            if (parameters == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, ShaderParameterValue> pair in parameters)
+            {
+                if (!effect.Uniforms.Contains(pair.Key))
+                {
+                    continue;
+                }
+
+                ShaderParameterValue value = pair.Value;
+                if (value.Kind == ShaderParameterKind.Float && value.Count == 1)
+                {
+                    uniforms[pair.Key] = value.X;
+                }
+                else if (value.Kind == ShaderParameterKind.Float)
+                {
+                    uniforms[pair.Key] = value.Count switch
+                    {
+                        2 => new float[] { value.X, value.Y },
+                        3 => new float[] { value.X, value.Y, value.Z },
+                        _ => new float[] { value.X, value.Y, value.Z, value.W },
+                    };
+                }
+                else
+                {
+                    uniforms[pair.Key] = (int)value.X;
+                }
+            }
         }
 
         // For a nested render-target container the walk hands the GraphicalUiElement wrapper; for a

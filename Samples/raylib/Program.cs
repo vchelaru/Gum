@@ -42,13 +42,26 @@ public class BasicShapes
         Zoom = 1f,
     };
 
+    // Diagnostic screenshot mode, like SilkNetGum's: when GUM_SCREENSHOT_PATH is set, the window opens
+    // without taking focus (a hidden window crashes raylib on macOS), the screen named by GUM_SCREENSHOT_SCREEN (a nav button label, default "RT Shader") is
+    // shown, a few frames are drawn so layout settles, a PNG is saved and the sample exits.
+    static readonly string? screenshotPath = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_PATH");
+    static readonly string screenshotScreenName = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_SCREEN") ?? "RT Shader";
+    static readonly Dictionary<string, Func<FrameworkElement>> screenFactoriesByName = new();
+
     public static void Main()
     {
-        // Width matches the MonoGameGumInCode feature sample; height is tall enough to show each
-        // shape screen's full content without scrolling (the Polygons bottom row in particular).
-        // The window is resizable if a screen needs more room.
+        // Screens load their files (resources/...) relative to the working directory. Visual Studio
+        // starts the sample in its output folder, but `dotnet run` keeps the folder it was run from.
+        Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
+        // Width matches the MonoGameGum feature sample; height is tall enough to show each shape
+        // screen's content on Windows. On macOS the window must also fit under the menu bar, title bar
+        // and Dock: macOS shrinks a taller window, but raylib keeps drawing for the size it asked for
+        // until the window is resized, so the top of the frame (the nav buttons) is cut off. The
+        // window is resizable if a screen needs more room.
         const int screenWidth = 1400;
-        const int screenHeight = 900;
+        int screenHeight = OperatingSystem.IsMacOS() ? 780 : 900;
 
         GumUI.CanvasWidth = screenWidth;
         GumUI.CanvasHeight = screenHeight;
@@ -56,7 +69,9 @@ public class BasicShapes
         // 4x MSAA enables framebuffer-level antialiasing — raylib has no per-shape AA, so
         // this is the only path to smooth circle/ring edges. Must be set BEFORE InitWindow
         // (raylib only consults config flags at GL context creation).
-        SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
+        SetConfigFlags(screenshotPath != null
+            ? ConfigFlags.UnfocusedWindow
+            : ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib gallery");
 
         GumUI.Initialize();
@@ -89,6 +104,12 @@ public class BasicShapes
         InitializeStyling();
         BuildNavStrip();
         ShowScreen(() => new RawVisualsScreen());
+
+        if (screenshotPath != null)
+        {
+            CaptureScreenshotAndExit(screenshotPath);
+            return;
+        }
 
         while (!WindowShouldClose())
         {
@@ -228,8 +249,31 @@ public class BasicShapes
         navStrip!.AddChild(radio);
     }
 
+    private static void CaptureScreenshotAndExit(string path)
+    {
+        if (screenFactoriesByName.TryGetValue(screenshotScreenName, out Func<FrameworkElement>? factory))
+        {
+            ShowScreen(factory);
+        }
+
+        for (int frame = 0; frame < 15; frame++)
+        {
+            GumUI.Update(GetTime());
+            BeginDrawing();
+            ClearBackground(new Color(100, 149, 237, 255));
+            GumUI.Draw();
+            EndDrawing();
+        }
+
+        Raylib_cs.Image image = LoadImageFromScreen();
+        ExportImage(image, path);
+        UnloadImage(image);
+        CloseWindow();
+    }
+
     private static void AddNavButton(string text, Func<FrameworkElement> factory)
     {
+        screenFactoriesByName[text] = factory;
         Button button = new Button();
         button.Text = text;
         button.Click += (_, _) => ShowScreen(factory);

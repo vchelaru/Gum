@@ -1536,9 +1536,9 @@ public class Renderer : IRenderer
         // IRenderTargetRenderable interface (implemented by the runtime's RenderableBase containers
         // AND the editor's LineRectangle containers), so read it directly off the renderable, or off
         // the wrapper's contained RenderableComponent.
-        var renderTargetEffect = ((renderable as IRenderTargetRenderable)
-            ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable))
-            ?.RenderTargetEffect as Effect;
+        IRenderTargetRenderable? effectOwner = (renderable as IRenderTargetRenderable)
+            ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable);
+        var renderTargetEffect = effectOwner?.RenderTargetEffect as Effect;
 
         // The blit must composite with a premultiplied blend since the target's contents are
         // premultiplied by construction (see the `color` comment above). Only the container's own
@@ -1564,11 +1564,64 @@ public class Renderer : IRenderer
                 mRenderStateVariables.BlendState = compositeBlendState;
             }
 
+            // Set before BeginSpriteBatch: a shared effect keeps the last container's values until
+            // SpriteBatch applies them when this batch ends.
+            ApplyShaderParameters(effectOwner?.ShaderParameters, renderTargetEffect);
+
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
             Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: rotation, objectCausingRendering: renderable);
 
             mRenderStateVariables.BlendState = previousBlendState;
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable);
+        }
+    }
+
+    /// <summary>
+    /// Copies a container's shader parameter values onto its effect. A name the effect does not
+    /// declare is skipped, so one parameter set can drive effects that use different subsets.
+    /// </summary>
+    private static void ApplyShaderParameters(ShaderParameterCollection? parameters, Effect? effect)
+    {
+        if (parameters == null || effect == null)
+        {
+            return;
+        }
+
+        foreach (KeyValuePair<string, ShaderParameterValue> pair in parameters)
+        {
+            EffectParameter? parameter = effect.Parameters[pair.Key];
+            if (parameter == null)
+            {
+                continue;
+            }
+
+            ShaderParameterValue value = pair.Value;
+            switch (value.Kind)
+            {
+                case ShaderParameterKind.Int:
+                    parameter.SetValue((int)value.X);
+                    break;
+                case ShaderParameterKind.Bool:
+                    parameter.SetValue(value.X != 0f);
+                    break;
+                default:
+                    switch (value.Count)
+                    {
+                        case 1:
+                            parameter.SetValue(value.X);
+                            break;
+                        case 2:
+                            parameter.SetValue(new Vector2(value.X, value.Y));
+                            break;
+                        case 3:
+                            parameter.SetValue(new Vector3(value.X, value.Y, value.Z));
+                            break;
+                        default:
+                            parameter.SetValue(new Vector4(value.X, value.Y, value.Z, value.W));
+                            break;
+                    }
+                    break;
+            }
         }
     }
 

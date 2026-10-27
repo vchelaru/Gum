@@ -35,6 +35,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+		<!-- Lets SourceShaderFile load .slang files by converting them to SkSL (UseShadowDusk()). -->
+		<ProjectReference Include="..\..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -62,6 +64,8 @@
 	<ItemGroup>
 		<None Include="..\..\SilkNetGum\SilkNetGumSample\Content\GumProject\**\*.*" LinkBase="Content\GumProject" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\SilkNetGum\SilkNetGumSample\resources\**\*.*" LinkBase="resources" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The one Outline.slang that MonoGameGumInCode, raylib and the Skia samples all run. -->
+		<None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\Outline.slang" Link="resources\Outline.slang" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<!-- In-process automation (scripted Gum input, NDJSON runner, off-screen window). Debug only, so it

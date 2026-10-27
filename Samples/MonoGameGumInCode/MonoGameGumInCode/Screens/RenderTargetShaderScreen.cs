@@ -5,7 +5,10 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
 #if RAYLIB
+using System.Linq;
 using Raylib_cs;
+using ShadowDusk.Compiler.Raylib;
+using ShadowDusk.Core;
 using static Raylib_cs.Raylib;
 using Color = Raylib_cs.Color;
 using EffectType = Raylib_cs.Shader;
@@ -56,6 +59,9 @@ namespace MonoGameGumInCode.Screens;
 /// (issue #4679) adds two more single-pass Slang examples the same way: <c>Content/Blur.slang</c>
 /// (fixed radius — Gum's render-target-effect blit sets no shader parameters, so the blur amount
 /// is a compile-time constant, not host-adjustable) and <c>Content/Sepia.slang</c>.
+/// <para>The second row, on all three backends, runs one Slang file (<c>Outline.slang</c>) that
+/// outlines whatever the container draws. ShadowDusk converts it for each backend and
+/// <see cref="ContainerRuntime.SetShaderParameter(string, float)"/> sets its thickness and color.</para>
 /// </summary>
 internal class RenderTargetShaderScreen : FrameworkElement
 {
@@ -79,6 +85,13 @@ internal class RenderTargetShaderScreen : FrameworkElement
     // adjustable blur isn't possible without new engine work.
     private const string BlurSlangShaderFileName = "Blur.slang";
     private const string SepiaSlangShaderFileName = "Sepia.slang";
+#endif
+
+    // The same Outline.slang on every backend; only the folder it is copied to differs.
+#if RAYLIB || SKIA
+    private const string OutlineShaderFileName = "resources/Outline.slang";
+#else
+    private const string OutlineShaderFileName = "Outline.slang";
 #endif
 
     public RenderTargetShaderScreen() : base(new ContainerRuntime())
@@ -136,6 +149,21 @@ internal class RenderTargetShaderScreen : FrameworkElement
             effect: null,
             sourceShaderFile: inCodeEffect != null ? ShaderFileName : null));
 
+        // Second row, every backend: one Slang outline shader, with its thickness and color set from
+        // code through SetShaderParameter. Both cells share the shader and differ only in values.
+        var outlineRow = new ContainerRuntime();
+        outlineRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        outlineRow.StackSpacing = 48;
+        outlineRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        outlineRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        outlineRow.Width = 0;
+        outlineRow.Height = 0;
+        root.AddChild(outlineRow);
+
+        outlineRow.AddChild(BuildOutlineCell("Outline.slang (2 px, yellow)", thickness: 2, red: 1f, green: 0.85f, blue: 0.1f));
+        outlineRow.AddChild(BuildOutlineCell("Outline.slang (6 px, cyan)", thickness: 6, red: 0.1f, green: 0.9f, blue: 1f));
+        outlineRow.AddChild(BuildOutlineCell("Bear + circle (follows cursor), slider sets thickness", thickness: 3, red: 1f, green: 1f, blue: 1f, interactive: true));
+
 #if !RAYLIB && !SKIA
         // Fourth cell, XNA-like only: the same effect authored in Slang (Content/Grayscale.slang)
         // instead of raw HLSL, referenced the same way via SourceShaderFile — proves the Slang
@@ -167,6 +195,113 @@ internal class RenderTargetShaderScreen : FrameworkElement
         return BuildCell(caption, effect: null, sourceShaderFile: effect != null ? slangFileName : null);
     }
 #endif
+
+    // A bear in a render target container, outlined by Outline.slang. TexelSize is one pixel of the
+    // container; Thickness is in those pixels. The interactive cell also draws a circle overlapping
+    // the bear, so the outline wraps the combined shape, and a slider sets the thickness. A shader
+    // that fails to convert or compile throws from the SourceShaderFile assignment on some backends,
+    // so the failure is shown in the cell.
+    private static ContainerRuntime BuildOutlineCell(
+        string caption, float thickness, float red, float green, float blue, bool interactive = false)
+    {
+        // Transparent margin around the content, so the outline has room to draw (8 px at most).
+        float cellSize = interactive ? 176 : 144;
+        float margin = interactive ? 16 : 8;
+
+        var cell = new ContainerRuntime();
+        cell.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        cell.StackSpacing = 6;
+        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
+        cell.Width = 0;
+        cell.Height = 0;
+
+        AddLabel(cell, caption);
+
+        var holder = new ContainerRuntime();
+        holder.Width = cellSize;
+        holder.Height = cellSize;
+        holder.IsRenderTarget = true;
+
+        var bear = new SpriteRuntime();
+#if RAYLIB
+        bear.SourceFileName = "resources\\BearTexture.png";
+#else
+        bear.SourceFileName = "BearTexture.png";
+#endif
+        bear.WidthUnits = DimensionUnitType.Absolute;
+        bear.HeightUnits = DimensionUnitType.Absolute;
+        bear.X = margin;
+        bear.Y = margin;
+        bear.Width = cellSize - 2 * margin;
+        bear.Height = cellSize - 2 * margin;
+        holder.AddChild(bear);
+
+        if (interactive)
+        {
+            // Overlaps the bear's lower right and sticks out past it, so the outline has to follow
+            // both shapes as one. It has no stroke of its own, so the only outline is the shader's.
+            const float circleSize = 72;
+            const float edgeRoom = 8;
+            var circle = new CircleRuntime();
+            circle.IsFilled = true;
+            circle.StrokeWidth = 0;
+            circle.FillColor = Rgba(255, 120, 60, 255);
+            circle.X = cellSize - margin - circleSize;
+            circle.Y = cellSize - margin - circleSize;
+            circle.Width = circleSize;
+            circle.Height = circleSize;
+            holder.AddChild(circle);
+
+            // The circle follows the cursor while it is over the container, kept 8 px from the edge
+            // so the largest outline still fits.
+            holder.HasEvents = true;
+            holder.RollOver += (_, _) =>
+            {
+                float cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds() - holder.AbsoluteLeft;
+                float cursorY = FrameworkElement.MainCursor.YRespectingGumZoomAndBounds() - holder.AbsoluteTop;
+                float farthest = cellSize - circleSize - edgeRoom;
+                circle.X = System.Math.Max(edgeRoom, System.Math.Min(farthest, cursorX - circleSize / 2));
+                circle.Y = System.Math.Max(edgeRoom, System.Math.Min(farthest, cursorY - circleSize / 2));
+            };
+        }
+
+        holder.SetShaderParameter("TexelSize", 1f / cellSize, 1f / cellSize);
+        holder.SetShaderParameter("Thickness", thickness);
+        holder.SetShaderParameter("OutlineColor", red, green, blue, 1f);
+
+        try
+        {
+            holder.SourceShaderFile = OutlineShaderFileName;
+        }
+        catch (System.Exception e)
+        {
+            AddLabel(cell, "OUTLINE SHADER FAILED: " + e.Message);
+        }
+
+        cell.AddChild(holder);
+
+        if (interactive)
+        {
+            TextRuntime thicknessLabel = AddLabel(cell, "Thickness: " + thickness.ToString("0") + " px");
+
+            var slider = new Slider();
+            slider.Minimum = 0;
+            slider.Maximum = 8;
+            slider.TicksFrequency = 1;
+            slider.IsSnapToTickEnabled = true;
+            slider.Value = thickness;
+            slider.Width = cellSize;
+            slider.ValueChanged += (_, _) =>
+            {
+                holder.SetShaderParameter("Thickness", (float)slider.Value);
+                thicknessLabel.Text = "Thickness: " + slider.Value.ToString("0") + " px";
+            };
+            cell.Children.Add(slider.Visual);
+        }
+
+        return cell;
+    }
 
     // Portable color construction across the three backends' Color aliases (XNA / Raylib_cs /
     // SKColor all expose a (byte,byte,byte,byte) form), matching RenderTargetScreen's Rgba helper.
@@ -230,6 +365,21 @@ internal class RenderTargetShaderScreen : FrameworkElement
         // degrades to a pass-through rather than crashing. raylib loads GLSL directly with no
         // compiler dependency, so unlike MonoGame/Skia (which compile shader source at runtime),
         // there's no compile-error diagnostic to surface here.
+        if (string.Equals(Path.GetExtension(path), ".slang", System.StringComparison.OrdinalIgnoreCase))
+        {
+            // A .slang file is converted to GLSL by ShadowDusk, then loaded like any raylib shader.
+            Result<RaylibShader, ShaderError[]> conversion =
+                RaylibConverter.ConvertSlang(File.ReadAllText(path), new RaylibConvertOptions());
+            if (conversion.IsFailure)
+            {
+                status = "SHADER CONVERT FAILED:\n" + string.Join("\n", conversion.Error.Select(e => e.Message));
+                return null;
+            }
+
+            status = "Slang converted to GLSL by ShadowDusk.";
+            return LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        }
+
         EffectType shader = LoadShader(null, path);
         status = "Grayscale GLSL post-process. Middle and right bears render grayscale; left is the original.";
         return shader;
@@ -321,7 +471,7 @@ internal class RenderTargetShaderScreen : FrameworkElement
     }
 #endif
 
-    private static void AddLabel(ContainerRuntime container, string text)
+    private static TextRuntime AddLabel(ContainerRuntime container, string text)
     {
         var label = new TextRuntime();
         label.Text = text;
@@ -331,5 +481,6 @@ internal class RenderTargetShaderScreen : FrameworkElement
         label.Width = 0;
         label.Height = 0;
         container.AddChild(label);
+        return label;
     }
 }

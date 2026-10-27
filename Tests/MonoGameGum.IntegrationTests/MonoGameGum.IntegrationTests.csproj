@@ -64,6 +64,8 @@
 		<!-- A real .ttf for the KernSmith font-registration tests, which read it back both through
 		     a CustomGetStreamFromFile hook and off disk. -->
 		<None Include="Content\Fonts\Orbitron-Black.ttf" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The shader the samples ship, so the tests run exactly that file. -->
+		<None Include="..\..\Samples\MonoGameGumInCode\MonoGameGumInCode\Content\Outline.slang" Link="Outline.slang" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
