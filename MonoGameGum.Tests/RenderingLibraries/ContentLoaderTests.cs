@@ -12,6 +12,18 @@ namespace MonoGameGum.Tests.RenderingLibraries;
 
 public class ContentLoaderTests : BaseTestClass
 {
+    // The cache key is the standardized path, so a "./" spelling must not make a second entry (and a second
+    // texture) for the same file (#6910).
+    [Theory]
+    [InlineData("./sheet.png")]
+    [InlineData("art/./sheet.png")]
+    public void StandardizeCaseSensitive_DotSegment_IsTheSameKeyAsWithout(string withDot)
+    {
+        string withoutDot = withDot.Replace("./", "", StringComparison.Ordinal);
+
+        ContentLoader.StandardizeCaseSensitive(withDot).ShouldBe(ContentLoader.StandardizeCaseSensitive(withoutDot));
+    }
+
     [Fact]
     public void LoadContent_MissingFileOnDesktop_ReturnsNullWithoutThrowing()
     {

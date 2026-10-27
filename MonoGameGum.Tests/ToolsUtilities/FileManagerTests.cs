@@ -23,6 +23,23 @@ public class FileManagerTests : IDisposable
         CultureInfo.CurrentCulture = _previousCulture;
     }
 
+    // "." segments name the directory they are in, so a path spelled with one is the same file as without (#6910).
+    // A leading "./" stays: on mobile it marks a path that is already resolved (#4548).
+    [Theory]
+    [InlineData("c/dir/./sheet.png", "c/dir/sheet.png")]
+    [InlineData("c/dir/././sheet.png", "c/dir/sheet.png")]
+    [InlineData("c\\dir\\.\\sheet.png", "c/dir/sheet.png")]
+    [InlineData("c/dir/./../sheet.png", "c/sheet.png")]
+    [InlineData("./c/dir/sheet.png", "./c/dir/sheet.png")]
+    [InlineData("c/dir/.hidden/sheet.png", "c/dir/.hidden/sheet.png")]
+    [InlineData("c/dir/sheet.v1.png", "c/dir/sheet.v1.png")]
+    public void RemoveDotDotSlash_CollapsesDotSegmentsAndKeepsALeadingDotSlash(string input, string expected)
+    {
+        string result = FileManager.RemoveDotDotSlash(input);
+
+        result.ShouldBe(expected.Replace('/', Path.DirectorySeparatorChar));
+    }
+
     // GetExtension read the final dot with the ordinal char overload but located the separators with
     // LastIndexOf(string), which compares by the current culture. Where that reported a separator
     // past the dot, every path returned no extension at all - which silently emptied every

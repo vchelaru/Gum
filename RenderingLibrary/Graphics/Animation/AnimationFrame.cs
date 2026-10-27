@@ -357,6 +357,22 @@ namespace Gum.Graphics.Animation
             return animationFrameSave.ToAnimationFrame(loadTexture, coordinateType, failedTextures: null);
         }
 
+        // Windows, macOS and iOS volumes are case-insensitive by default; Linux and Android are not. A case-sensitive
+        // macOS volume is the one place this folds two files into one error, which is the lesser mistake.
+        private static readonly bool _isFileSystemCaseInsensitive =
+            System.OperatingSystem.IsWindows() || System.OperatingSystem.IsMacOS() || System.OperatingSystem.IsIOS();
+
+        /// <summary>
+        /// The key that tells two spellings of one texture file apart from two files: separators, "." and ".." segments
+        /// and doubled separators are normalized by <see cref="ToolsUtilities.FilePath"/>, and case is folded only where
+        /// the file system ignores it (#6910). Not for opening the file, which uses the case-preserving path.
+        /// </summary>
+        private static string GetTextureIdentity(string fileName)
+        {
+            string identity = new ToolsUtilities.FilePath(fileName).StandardizedCaseSensitive;
+            return _isFileSystemCaseInsensitive ? identity.ToLowerInvariant() : identity;
+        }
+
         /// <param name="failedTextures">
         /// The files that already failed to load during the same load of an .achx, so that frames sharing a
         /// texture that fails raise one error and ask the loader once (#6899). Null for a frame converted on its own.
@@ -385,8 +401,8 @@ namespace Gum.Graphics.Animation
                 try
                 {
                     var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
-                    failureKey = fileName;
-                    if (failedTextures != null && failedTextures.Contains(fileName))
+                    failureKey = GetTextureIdentity(fileName);
+                    if (failedTextures != null && failedTextures.Contains(failureKey))
                     {
                         alreadyFailed = true;
                     }

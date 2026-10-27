@@ -712,6 +712,17 @@ namespace ToolsUtilities
             fileNameToFix = fileNameToFix.Replace('\\', Path.DirectorySeparatorChar)
                 .Replace('/', Path.DirectorySeparatorChar);
 
+            // A "." segment names the directory it is in, so "dir/./sheet.png" is "dir/sheet.png". Without this
+            // the two spellings of one file are different cache keys and different strings to compare (#6910).
+            // Only a "." between two separators goes; a leading "./" stays, because on mobile it marks a path
+            // that is already resolved (#4548).
+            string separatorString = Path.DirectorySeparatorChar.ToString();
+            string dotSegment = separatorString + "." + separatorString;
+            while (fileNameToFix.Contains(dotSegment))
+            {
+                fileNameToFix = fileNameToFix.Replace(dotSegment, separatorString);
+            }
+
             if (fileNameToFix.Contains(".."))
             {
 
