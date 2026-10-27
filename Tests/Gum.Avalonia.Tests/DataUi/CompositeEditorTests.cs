@@ -241,6 +241,69 @@ public class CompositeEditorTests : IDisposable
     }
 
     [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_ListsThemWhenOpened_AndPickingOneWritesIt()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.png" };
+        string? shownCurrentValue = null;
+        FileSelectionDisplay display = new FileSelectionDisplay
+        {
+            FileChoices = current =>
+            {
+                shownCurrentValue = current;
+                return new[] { "b.png", "old.png", "z.png" };
+            }
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.IsVisible.ShouldBeTrue();
+        display.TextBox.IsVisible.ShouldBeFalse();
+        display.ChoiceBox.SelectedItem.ShouldBe("old.png");
+
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        shownCurrentValue.ShouldBe("old.png");
+        display.ChoiceBox.Items.Cast<object?>().ShouldBe(new object[] { "b.png", "old.png", "z.png" });
+        display.ChoiceBox.SelectedItem.ShouldBe("old.png");
+        fixture.File.ShouldBe("old.png", "listing the choices does not write anything");
+
+        display.ChoiceBox.SelectedItem = "z.png";
+
+        fixture.File.ShouldBe("z.png");
+        display.TextBox.Text.ShouldBe("z.png");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_AValueNobodyReferencesStillShows_AndAnEmptyListHasNoSelection()
+    {
+        EditorFixture fixture = new EditorFixture { File = "lonely.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay { FileChoices = current => current == null ? new string[0] : new[] { current } };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.SelectedItem.ShouldBe("lonely.png");
+
+        fixture.File = "";
+        display.Refresh();
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.ChoiceBox.SelectedItem.ShouldBeNull();
+        display.ChoiceBox.Items.Count.ShouldBe(0);
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithoutChoices_StaysATextBox()
+    {
+        EditorFixture fixture = new EditorFixture { File = "a.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay();
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.TextBox.IsVisible.ShouldBeTrue();
+        display.ChoiceBox.IsVisible.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
     public void FileSelectionDisplay_RevealsRelativeToItsOwnBaseFolder()
     {
         string folder = Path.Combine(Path.GetTempPath(), "GumCompositeEditorTests", Guid.NewGuid().ToString("N")) + "/";

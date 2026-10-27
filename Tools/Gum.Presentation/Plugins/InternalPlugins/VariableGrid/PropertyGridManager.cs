@@ -44,6 +44,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly IFileCommands _fileCommands;
     private readonly ObjectFinder _objectFinder;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly ReferencedFileChoices _referencedFileChoices;
     private readonly IDialogService _dialogService;
     private readonly LocalizationService _localizationService;
     private readonly ITabManager _tabManager;
@@ -157,6 +158,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _typeManager = typeManager;
         _pluginManager = pluginManager;
         _projectState = projectState;
+        _referencedFileChoices = new ReferencedFileChoices(projectState);
         _compositeMemberRegistry = compositeMemberRegistry;
         _nameVerifier = nameVerifier;
         _deleteVariableService = deleteVariableService;
@@ -1091,7 +1093,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         _compositeMemberLogic.Apply(categories, element, instance);
 
-        UpdateFileFilters(categories);
+        UpdateFileFilters(categories, element, instance);
 
         AdjustFontSourceToggle(categories, stateSave, instance);
 
@@ -1129,7 +1131,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
     }
 
-    private void UpdateFileFilters(List<MemberCategory> categories)
+    internal void UpdateFileFilters(List<MemberCategory> categories, ElementSave element, InstanceSave? instance)
     {
         foreach (var category in categories)
         {
@@ -1140,9 +1142,25 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 if (filter != null)
                 {
                     member.PropertiesToSetOnDisplayer["Filter"] = filter;
+                    SetFileChoices(member, ReferencedFileChoices.AcceptingExtensions(filter));
+                }
+                else if (rootVariableName == "SourceFile")
+                {
+                    // The picker has no filter here; the list offers what a committed SourceFile accepts.
+                    SetFileChoices(member, file => _setVariableLogic.GetWhySourcefileIsInvalid(file, element, instance, "SourceFile") == null);
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Turns a file row's text box into a drop-down of the files the project already references
+    /// that <paramref name="isAccepted"/> allows. The list is read when the drop-down opens.
+    /// </summary>
+    private void SetFileChoices(InstanceMember member, Func<string, bool> isAccepted)
+    {
+        member.PropertiesToSetOnDisplayer["FileChoices"] =
+            (Func<string?, IReadOnlyList<string>>)(current => _referencedFileChoices.GetChoices(isAccepted, current));
     }
 
     /// <summary>
@@ -1192,6 +1210,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         {
             fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
             fontMember.PropertiesToSetOnDisplayer["Filter"] = FontFileFilter;
+            SetFileChoices(fontMember, ReferencedFileChoices.AcceptingExtensions(FontFileFilter));
 
             // Warn if project uses bmfont.exe, which can't handle .ttf file fonts
             var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
@@ -1224,6 +1243,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 // Swap Font row to FileSelectionDisplay
                 fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
                 fontMember.PropertiesToSetOnDisplayer["Filter"] = FontFileFilter;
+                SetFileChoices(fontMember, ReferencedFileChoices.AcceptingExtensions(FontFileFilter));
 
                 // Warn if project uses bmfont.exe
                 var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
@@ -1248,6 +1268,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 // Swap Font row back to ComboBox
                 fontMember.PreferredDisplayer = null;
                 fontMember.PropertiesToSetOnDisplayer.Remove("Filter");
+                fontMember.PropertiesToSetOnDisplayer.Remove("FileChoices");
                 fontMember.DetailText = null;
 
                 // Force container recreation

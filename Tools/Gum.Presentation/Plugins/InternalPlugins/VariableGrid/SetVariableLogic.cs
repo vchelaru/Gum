@@ -827,7 +827,7 @@ public class SetVariableLogic : ISetVariableLogic
         return GeneralResponse.SuccessfulResponse;
     }
 
-    internal string? GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave? instance, string changedMember)
+    public string? GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave? instance, string changedMember)
     {
 
         ////////////////early out//////////////////////
