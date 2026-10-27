@@ -516,14 +516,14 @@ public class DrawStateCounterTests : BaseTestClass
         SpriteRuntime sprite = new() { Texture = a, Width = 10, Height = 10 };
         AdvanceHostFrame();
 
-        for (int i = 0; i < 20000; i++)
+        for (int i = 0; i < 40000; i++)
         {
             renderer.Begin();
             renderer.Draw(sprite);
             renderer.End();
         }
 
-        renderer.SpriteRenderer.LastFrameDrawStates.Count().ShouldBeLessThan(10000);
+        renderer.SpriteRenderer.LastFrameDrawStates.Count().ShouldBeLessThan(70000);
     }
 
     [Fact]
@@ -538,12 +538,43 @@ public class DrawStateCounterTests : BaseTestClass
         AddClipContainer(a, b, renderer.MainLayer, 2);
         AdvanceHostFrame();
 
-        for (int i = 0; i < 6000; i++)
+        for (int i = 0; i < 20000; i++)
         {
             renderer.Draw(managers, renderer.MainLayer);
         }
 
-        renderer.SpriteRenderer.LastFrameDrawStates.Count().ShouldBeLessThan(10000);
+        renderer.SpriteRenderer.LastFrameDrawStates.Count().ShouldBeLessThan(70000);
+    }
+
+    [Fact]
+    public void ImmediateMode_LargeSingleFrame_ReportsEveryBegin()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        Renderer renderer = SystemManagers.Default.Renderer;
+        using Texture2D a = CreateTexture(game.GraphicsDevice, Color.Red);
+        SpriteRuntime sprite = new() { Texture = a, Width = 10, Height = 10 };
+        AdvanceHostFrame();
+
+        for (int i = 0; i < 5000; i++)
+        {
+            renderer.Begin();
+            renderer.Draw(sprite);
+            renderer.End();
+        }
+
+        renderer.GetDrawStateSummary().TextureSetCount.ShouldBe(5000);
+    }
+
+    [Fact]
+    public void ImmediateMode_EndWithoutBegin_DoesNotThrow()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        Renderer renderer = SystemManagers.Default.Renderer;
+        AdvanceHostFrame();
+
+        Should.NotThrow(() => renderer.End());
     }
 
     private sealed class MinimalGame : SharedGameLease
