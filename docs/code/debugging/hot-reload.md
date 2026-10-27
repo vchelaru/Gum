@@ -85,7 +85,7 @@ When `EnableHotReload` is called, Gum creates a `FileSystemWatcher` on the direc
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
-A variable the reload does not find changed keeps the value your code gave it. Changing a variable in the Gum tool, or the default of the component an instance is built from, applies the new value over a value your code set.
+A variable the reload does not find changed keeps the value your code gave it. Changing a variable in the Gum tool, or the default of the component an instance is built from, applies the new value over a value your code set. A variable the control's current state also sets is applied again with the state, so a value your code set on it is reset.
 
 ## Preserving Runtime State
 

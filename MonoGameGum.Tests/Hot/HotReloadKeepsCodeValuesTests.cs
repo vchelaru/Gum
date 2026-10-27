@@ -38,6 +38,8 @@ public class HotReloadKeepsCodeValuesTests : BaseTestClass
         float? RectWidth = null,
         float? RectHeight = null,
         bool NestedPanel = false,
+        float ContainerWidth = 100,
+        bool RectInHolder = false,
         float PanelButtonWidth = 150);
 
     private static void Set(StateSave state, string name, object value, string type)
@@ -59,7 +61,7 @@ public class HotReloadKeepsCodeValuesTests : BaseTestClass
     private static GumProjectSave Build(Spec spec)
     {
         GumProjectSave project = new GumProjectSave();
-        AddStandard(project, "Container");
+        AddStandard(project, "Container").DefaultState!.Variables.Single(v => v.Name == "Width").Value = spec.ContainerWidth;
         AddStandard(project, "ColoredRectangle");
 
         ComponentSave button = new ComponentSave { Name = "Button", BaseType = "Container" };
@@ -84,6 +86,11 @@ public class HotReloadKeepsCodeValuesTests : BaseTestClass
         if (spec.NestedPanel)
         {
             screen.Instances.Add(new InstanceSave { Name = "Panel1", BaseType = "Panel", ParentContainer = screen });
+        }
+        if (spec.RectInHolder)
+        {
+            screen.Instances.Add(new InstanceSave { Name = "Holder", BaseType = "Container", ParentContainer = screen });
+            Set(screenDefault, "Rect.Parent", "Holder", "string");
         }
         if (spec.BtnWidthOverride != null) Set(screenDefault, "Btn.Width", spec.BtnWidthOverride.Value, "float");
         if (spec.BtnHeightOverride != null) Set(screenDefault, "Btn.Height", spec.BtnHeightOverride.Value, "float");
@@ -193,6 +200,34 @@ public class HotReloadKeepsCodeValuesTests : BaseTestClass
         Reload(session, before with { RectWidth = 175 });
 
         session.Rect.Width.ShouldBe(175);
+    }
+
+    [Fact]
+    public void Reload_BaseLayerChangedUnderUnchangedDerivedValue_KeepsTheDerivedValue()
+    {
+        // Container's width changed, which resets the Button instance to it, so Button's own unchanged
+        // width has to be applied again.
+        Spec before = new Spec();
+        Session session = Load(before);
+        session.Btn.Width = 321;
+
+        Reload(session, before with { ContainerWidth = 130 });
+
+        session.Btn.Width.ShouldBe(150);
+    }
+
+    [Fact]
+    public void Reload_UnrelatedEdit_PutsAnInstanceTheFileParentsBackUnderItsParent()
+    {
+        Spec before = new Spec(RectInHolder: true, RectHeight: 255f);
+        Session session = Load(before);
+        GraphicalUiElement holder = Find(session.Screen, "Holder");
+        session.Rect.Parent.ShouldBe(holder, "sanity");
+        session.Rect.Parent = session.Screen;
+
+        Reload(session, before with { RectHeight = 128f });
+
+        session.Rect.Parent.ShouldBe(holder);
     }
 
     [Fact]
