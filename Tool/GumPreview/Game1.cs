@@ -97,6 +97,10 @@ public class Game1 : Game
         // initialized GumService/GraphicsDevice.
         ShapeRenderer.Self.Initialize();
 
+        // Registered before the project's elements are built so a container's SourceShaderFile
+        // resolves as it loads.
+        PreviewShaderResolver.Register(GraphicsDevice);
+
         // The window is sized for the backing scale on the first Update, once it is showing; a resize
         // here is undone when MonoGame shows it.
         _isRetinaBackingEnabled = MacRetinaBacking.TryEnable(Window.Handle);

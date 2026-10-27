@@ -144,6 +144,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
+
+    /// <summary>The toolbar's view model, for tests; null until <c>StartUp</c> has run.</summary>
+    internal EditorViewModel Editor => _editorViewModel;
     private IGridSnapWarningService _gridSnapWarningService;
     private readonly FileLocations _fileLocations;
     private readonly IThemingService _themingService;
@@ -1014,6 +1017,14 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void HandleInstanceSelected(ElementSave? element, InstanceSave? instance)
     {
+        // Selecting an instance with no element selected changes the selected element without
+        // raising ElementSelected, so the Preview button hears about it here (#6990). A cleared
+        // instance is followed by ElementSelected when an element remains selected.
+        if (instance != null)
+        {
+            _editorViewModel.UpdateHasSelectedElement(element);
+        }
+
         _wireframeObjectManager.RefreshAll(forceLayout: false);
         _editingManager.RefreshContextMenu();
         _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
