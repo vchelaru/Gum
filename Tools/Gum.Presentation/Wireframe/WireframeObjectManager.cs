@@ -21,7 +21,7 @@ namespace Gum.Wireframe;
 
 public partial class WireframeObjectManager : IWireframeObjectManager
 {
-    private readonly SelectedStateReferenceMerger _selectedStateReferenceMerger = new SelectedStateReferenceMerger();
+    private readonly ReDrivenReferenceRowTracker _reDrivenReferenceRowTracker;
 
     #region Properties
 
@@ -72,6 +72,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         _projectState = projectState;
 
         gueManager = new GraphicalUiElementManager();
+        _reDrivenReferenceRowTracker = new ReDrivenReferenceRowTracker(new SelectedStateReferenceMerger());
     }
 
     // This method will eventually move up to the constructor, but we can't do it yet until we get rid of all Self usages
@@ -140,6 +141,11 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave? elementSave)
     {
         bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
+
+        if (elementSave != ElementShowing)
+        {
+            _reDrivenReferenceRowTracker.Clear();
+        }
 
         if (elementSave == null || elementSave.IsSourceFileMissing)
         {
@@ -280,7 +286,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         VariableReferenceGraph ownGraph = VariableReferenceGraph.GetForState(elementSave, state);
         foreach (ReferenceRow row in ownGraph.OrderedRows.Concat(ownGraph.CyclicRows))
         {
-            ownRows.Add(row.WrittenName + "=" + row.Line);
+            ownRows.Add(SelectedStateReferenceMerger.GetRowKey(row.WrittenName, row.Line));
         }
         HashSet<string> setBySelected = new HashSet<string>();
         foreach (StateSave stateOnTop in statesOnTop)
@@ -290,7 +296,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
         List<ReferenceRow> rows = graph.OrderedRows
             .Where(row => row.IsLiveEvaluable &&
-                (ownRows.Contains(row.WrittenName + "=" + row.Line) || !setBySelected.Contains(row.WrittenName)))
+                (ownRows.Contains(SelectedStateReferenceMerger.GetRowKey(row.WrittenName, row.Line)) || !setBySelected.Contains(row.WrittenName)))
             .ToList();
         VariableReferenceGraph.Evaluate(rows, state.Clone(), root);
     }
@@ -299,7 +305,8 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     /// The state variable references are evaluated against. A state other than the default (such as a
     /// categorized state) inherits everything it doesn't set from the default state, references
     /// included, so those are evaluated against the default state with the selected state's values on top.
-    /// The selected state wins for what it sets (#6851), see <see cref="SelectedStateReferenceMerger"/>.
+    /// The selected state wins for what it sets (#6851) unless the source of a row it overrides changed
+    /// since the state was shown, as in a running game (#6861), see <see cref="ReDrivenReferenceRowTracker"/>.
     /// </summary>
     private StateSave? GetStateForReferences(ElementSave elementSave)
     {
@@ -309,13 +316,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             return _selectedState.SelectedStateSave;
         }
 
-        StateSave result = defaultState;
-        foreach (StateSave stateOnTop in GetStatesOnTopOfDefault(elementSave))
-        {
-            result = _selectedStateReferenceMerger.Merge(result, stateOnTop);
-        }
-
-        return result;
+        return _reDrivenReferenceRowTracker.Merge(elementSave, defaultState, GetStatesOnTopOfDefault(elementSave));
     }
 
     /// <summary>
