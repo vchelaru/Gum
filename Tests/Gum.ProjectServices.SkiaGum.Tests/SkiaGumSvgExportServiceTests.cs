@@ -290,7 +290,8 @@ public class SkiaGumSvgExportServiceTests : IDisposable
     }
 
     // An Svg instance whose file is missing or cannot be parsed follows MissingFileBehavior like a Sprite's image (#6903):
-    // the export, which consumes silently, still draws the rest instead of failing.
+    // the export, which consumes silently, still draws the rest instead of failing. The Svg standard must be seeded or
+    // no Svg instance is created. (A LottieAnimation instance has no SourceFile route in a project, so it has no case.)
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -301,9 +302,14 @@ public class SkiaGumSvgExportServiceTests : IDisposable
         {
             File.WriteAllText(svgPath, "this is not an svg document");
         }
+        StandardElementSave standard = new StandardElementSave { Name = "Svg" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = standard };
+        standard.States.Add(defaultState);
+        defaultState.Variables.Add(new VariableSave { Name = "Visible", Type = "bool", Value = true, SetsValue = true });
 
         ExportScreenWithInstance(
             "Svg",
+            new[] { standard },
             new VariableSave { Name = "ShapeInstance.SourceFile", Type = "string", Value = svgPath, SetsValue = true });
     }
 
