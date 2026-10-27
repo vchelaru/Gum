@@ -1159,6 +1159,14 @@ public class ComboBox :
     }
     public void OnFocusUpdate()
     {
+#if !FRB
+        // A disabled control can hold focus (AllowFocusWhenDisabled) or be disabled while open; it does not act on input.
+        if (IsDropDownOpen && !IsEnabled)
+        {
+            // skip input
+        }
+        else
+#endif
         if (IsDropDownOpen)
         {
             DoOpenDropDownFocusUpdate();

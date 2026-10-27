@@ -1939,6 +1939,14 @@ public class ListBox : ItemsControl, IInputReceiver
 
     public override void OnFocusUpdate()
     {
+#if !FRB
+        // A disabled control can hold focus (AllowFocusWhenDisabled) or be disabled while its items have focus; it does not act on input.
+        if (DoListItemsHaveFocus && !IsEnabled)
+        {
+            // skip input
+        }
+        else
+#endif
         if (DoListItemsHaveFocus)
         {
             DoListItemFocusUpdate();
