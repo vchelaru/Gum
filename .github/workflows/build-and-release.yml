@@ -328,6 +328,7 @@ jobs:
       - name: Build and pack the Unity package
         shell: pwsh
         run: |
+          ./Unity/check-package-tests.ps1
           ./Unity/build-unity-package.ps1
           ./Unity/publish-unity-package.ps1 -Version '0.0.0-ci'
 

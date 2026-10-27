@@ -90,7 +90,7 @@ public static class LegacyKeyMap
         };
 
         // D0 to D9 follow Alpha0 to Alpha9 (48 to 57), A to Z follow a to z (97 to 122), NumPad0 to
-        // NumPad9 follow Keypad0 to Keypad9 (256 to 265), F1 to F12 follow F1 (282).
+        // NumPad9 follow Keypad0 to Keypad9 (256 to 265), F1 to F15 follow F1 (282).
         for (int i = 0; i < 10; i++)
         {
             list.Add(((GumKeys)((int)GumKeys.D0 + i), 48 + i));
@@ -100,7 +100,7 @@ public static class LegacyKeyMap
         {
             list.Add(((GumKeys)((int)GumKeys.A + i), 97 + i));
         }
-        for (int i = 0; i < 12; i++)
+        for (int i = 0; i < 15; i++)
         {
             list.Add(((GumKeys)((int)GumKeys.F1 + i), 282 + i));
         }

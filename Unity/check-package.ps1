@@ -1,6 +1,6 @@
 # Checks a built Unity package folder (default: Unity/com.vchelaru.gum after build-unity-package.ps1,
 # or the staging folder publish-unity-package.ps1 writes):
-#  1. Every file and folder has a .meta. A package installed from git is read-only, so Unity can't write
+#  1. Every file and folder has a .meta, and every .meta has its file or folder. A package installed from git is read-only, so Unity can't write
 #     the missing ones and logs "has no meta file, but it's in an immutable folder" on every import.
 #     Folders ending in ~ and dot-files are ignored by Unity and need none.
 #  2. Every assembly a managed Plugins/ DLL references is either in Plugins/, shipped by
@@ -10,21 +10,29 @@ param(
     [string]$Path = (Join-Path $PSScriptRoot 'com.vchelaru.gum')
 )
 $ErrorActionPreference = 'Stop'
-$root = (Resolve-Path $Path).Path
+$root = [IO.Path]::GetFullPath((Get-Item -LiteralPath $Path).FullName)
 $problems = @()
 
+function Get-Relative([string]$fullPath) {
+    [IO.Path]::GetRelativePath($root, [IO.Path]::GetFullPath($fullPath)).Replace([string][char]92, '/')
+}
+
 function Test-Ignored([string]$fullPath) {
-    $relative = $fullPath.Substring($root.Length).TrimStart([char]92, [char]47).Replace([string][char]92, '/')
-    foreach ($segment in $relative -split '/') {
+    foreach ($segment in (Get-Relative $fullPath) -split '/') {
         if ($segment.EndsWith('~') -or $segment.StartsWith('.')) { return $true }
     }
     return $false
 }
 
-foreach ($item in Get-ChildItem $root -Recurse -Force) {
-    if ($item.Extension -eq '.meta' -or (Test-Ignored $item.FullName)) { continue }
-    if (-not (Test-Path -LiteralPath "$($item.FullName).meta")) {
-        $problems += "No .meta file: $($item.FullName.Substring($root.Length).TrimStart([char]92, [char]47))"
+foreach ($item in Get-ChildItem -LiteralPath $root -Recurse -Force) {
+    if (Test-Ignored $item.FullName) { continue }
+    if ($item.Extension -eq '.meta') {
+        # Unity warns about a .meta whose asset is gone, and can't delete it in a read-only package.
+        if (-not (Test-Path -LiteralPath $item.FullName.Substring(0, $item.FullName.Length - 5))) {
+            $problems += "Orphan .meta file (its asset is missing): $(Get-Relative $item.FullName)"
+        }
+    } elseif (-not (Test-Path -LiteralPath "$($item.FullName).meta")) {
+        $problems += "No .meta file: $(Get-Relative $item.FullName)"
     }
 }
 

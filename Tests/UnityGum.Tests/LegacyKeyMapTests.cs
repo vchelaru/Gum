@@ -38,6 +38,9 @@ public class LegacyKeyMapTests
     [InlineData(KeyCodeLeftShift, Keys.LeftShift)]
     [InlineData(KeyCodeF12, Keys.F12)]
     [InlineData(KeyCodeKeypad9, Keys.NumPad9)]
+    [InlineData(294, Keys.F13)]
+    [InlineData(295, Keys.F14)]
+    [InlineData(296, Keys.F15)]
     public void Push_HeldKeyCode_ReportsTheGumKeyPushed(int keyCode, Keys expected)
     {
         Keyboard keyboard = PushHeld(keyCode);
@@ -92,6 +95,6 @@ public class LegacyKeyMapTests
 
         for (Keys key = Keys.A; key <= Keys.Z; key++) gumKeys.ShouldContain(key);
         for (Keys key = Keys.D0; key <= Keys.D9; key++) gumKeys.ShouldContain(key);
-        for (Keys key = Keys.F1; key <= Keys.F12; key++) gumKeys.ShouldContain(key);
+        for (Keys key = Keys.F1; key <= Keys.F15; key++) gumKeys.ShouldContain(key);
     }
 }
