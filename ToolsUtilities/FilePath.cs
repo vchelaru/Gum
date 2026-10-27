@@ -187,6 +187,23 @@ namespace ToolsUtilities
             }
         }
 
+        /// <summary>
+        /// Collapses each run of <paramref name="separator"/> to one, so "art//sheet.png" is "art/sheet.png". A leading
+        /// "\\" (a network path) is kept when the separator is a backslash.
+        /// </summary>
+        internal static string CollapseDoubledSeparators(string path, char separator)
+        {
+            string prefix = separator == '\\' && path.StartsWith("\\\\") ? "\\\\" : "";
+            string rest = path.Substring(prefix.Length);
+            string single = separator.ToString();
+            string doubled = single + single;
+            while (rest.Contains(doubled))
+            {
+                rest = rest.Replace(doubled, single);
+            }
+            return prefix + rest;
+        }
+
         private string StandardizeInternal(string fileNameToFix)
         {
             bool isNetwork = fileNameToFix.StartsWith("\\\\");
@@ -209,8 +226,9 @@ namespace ToolsUtilities
                 throw new InvalidOperationException("Tried to remove all ../ but ended up with this: " + fileNameToFix);
             }
 
-            // It's possible that there will be double forward slashes.
-            fileNameToFix = fileNameToFix.Replace("//", "/");
+            // It's possible that there will be doubled separators. RemoveDotDotSlash has made them all the
+            // platform's separator, so that is the one to collapse (a "//" replace did nothing on Windows, #6910).
+            fileNameToFix = CollapseDoubledSeparators(fileNameToFix, System.IO.Path.DirectorySeparatorChar);
 
             return fileNameToFix;
         }
