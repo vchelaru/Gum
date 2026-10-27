@@ -171,7 +171,19 @@ public static class SpatialNavigationService
         {
             return candidate.Visual.AbsoluteLeft < other.Visual.AbsoluteLeft;
         }
-        return candidate.Visual.AbsoluteTop < other.Visual.AbsoluteTop;
+        if (candidate.Visual.AbsoluteTop != other.Visual.AbsoluteTop)
+        {
+            return candidate.Visual.AbsoluteTop < other.Visual.AbsoluteTop;
+        }
+        // Same top-left corner: the smaller rectangle (width, then height) wins.
+        float candidateWidth = candidate.Visual.AbsoluteRight - candidate.Visual.AbsoluteLeft;
+        float otherWidth = other.Visual.AbsoluteRight - other.Visual.AbsoluteLeft;
+        if (candidateWidth != otherWidth)
+        {
+            return candidateWidth < otherWidth;
+        }
+        return candidate.Visual.AbsoluteBottom - candidate.Visual.AbsoluteTop <
+            other.Visual.AbsoluteBottom - other.Visual.AbsoluteTop;
     }
 
     private static bool IsNestedUnderAnotherCandidate(FrameworkElement candidate, List<FrameworkElement> candidates)

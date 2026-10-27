@@ -151,6 +151,30 @@ public class SpatialNavigationTouchingTests : BaseTestClass
     }
 
     [Fact]
+    public void FindBestCandidate_TouchingTieWithSameLeftAndTopButDifferentSize_IsListOrderIndependent()
+    {
+        Button origin = Create(140, 0, 220, 40);
+        Button shorter = Create(0, 0, 140, 20);
+        Button taller = Create(0, 0, 140, 60);
+
+        // Equal lateral center offset (10), same left and top: the smaller size wins in any order.
+        SpatialNavigationService.FindBestCandidate(origin, Left, All(shorter, taller)).ShouldBe(shorter);
+        SpatialNavigationService.FindBestCandidate(origin, Left, All(taller, shorter)).ShouldBe(shorter);
+        SpatialNavigationService.FindBestCandidate(origin, Left, All(taller, origin, shorter)).ShouldBe(shorter);
+    }
+
+    [Fact]
+    public void FindBestCandidate_FallbackTieWithSameLeftAndTopButDifferentSize_IsListOrderIndependent()
+    {
+        Button origin = Create(100, 0, 100, 30);
+        Button narrow = Create(300, 100, 50, 50);
+        Button wide = Create(300, 100, 80, 20);
+
+        SpatialNavigationService.FindBestCandidate(origin, Down, All(narrow, wide)).ShouldBe(narrow);
+        SpatialNavigationService.FindBestCandidate(origin, Down, All(wide, narrow)).ShouldBe(narrow);
+    }
+
+    [Fact]
     public void FindBestCandidate_TouchingSideNeighbor_DoesNotCountForVerticalPress()
     {
         Button origin = Create(0, 0, 100, 30);
