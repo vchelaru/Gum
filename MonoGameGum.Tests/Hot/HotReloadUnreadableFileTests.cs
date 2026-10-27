@@ -5,6 +5,7 @@ using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
@@ -24,12 +25,27 @@ public class HotReloadUnreadableFileTests : BaseTestClass
 
     public HotReloadUnreadableFileTests()
     {
-        CustomSetPropertyOnRenderable.PropertyAssignmentError += _errors.Add;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Collect;
+    }
+
+    private string? _originalRelativeDirectory;
+
+    // The event is static, so font-loading noise from other tests can arrive too.
+    private void Collect(string message)
+    {
+        if (message.Contains("Hot reload") || message.Contains("Could not copy font"))
+        {
+            _errors.Add(message);
+        }
     }
 
     public override void Dispose()
     {
-        CustomSetPropertyOnRenderable.PropertyAssignmentError -= _errors.Add;
+        if (_originalRelativeDirectory != null)
+        {
+            global::ToolsUtilities.FileManager.RelativeDirectory = _originalRelativeDirectory;
+        }
+        CustomSetPropertyOnRenderable.PropertyAssignmentError -= Collect;
         _world.Dispose();
         ElementSaveExtensions.Reset();
         ObjectFinder.Self.GumProjectSave = null;
@@ -152,5 +168,90 @@ public class HotReloadUnreadableFileTests : BaseTestClass
         _world.Find("Box")!.X.ShouldBe(50f);
         _errors.Count.ShouldBe(1);
         _errors[0].ShouldContain("Widget");
+    }
+
+    // Replaces the world's manager with one whose host hooks the test controls.
+    private void UseManager(Func<GumProjectSave, Gum.Bundle.IGumFileProvider, int> loadAnimations, Action<GumProjectSave> applyFilter)
+    {
+        GumHotReloadManager manager = new GumHotReloadManager(
+            applyFilter, loadAnimations, path => _world.Disposed.Add(path), () => _world.Now);
+        manager.ReloadCompleted += () => _world.Reloads++;
+        manager.Start(_world.Gumx);
+        manager.Stop();
+        _world.Manager = manager;
+    }
+
+    [Fact]
+    public void FailureAfterTheLoad_RestoresTheFinderAndFilter_ReportsOnceWithItsOwnWording_AndTheNextSaveReloads()
+    {
+        _world.Boot(Reader);
+        GumProjectSave before = ObjectFinder.Self.GumProjectSave!;
+        List<GumProjectSave> filterCalls = new List<GumProjectSave>();
+        bool fail = true;
+        UseManager(
+            (project, provider) => fail ? throw new InvalidOperationException("animation boom") : 0,
+            filterCalls.Add);
+        _world.EditInPlace(_world.ScreenFile, _world.ElementText(Reader with { BoxX = 50 }, "MainScreen"));
+
+        SettleThroughRetry(_world.ScreenFile);
+
+        ObjectFinder.Self.GumProjectSave.ShouldBeSameAs(before);
+        filterCalls[filterCalls.Count - 1].ShouldBeSameAs(before);
+        _errors.Count.ShouldBe(1);
+        _errors[0].ShouldContain("animation boom");
+        _errors[0].ShouldContain("partially updated");
+        _errors[0].ShouldNotContain("unchanged");
+
+        fail = false;
+        _world.EditInPlace(_world.ScreenFile, _world.ElementText(Reader with { BoxX = 60 }, "MainScreen"));
+        _world.NotifyAndSettle(_world.ScreenFile);
+
+        _world.Reloads.ShouldBe(1);
+        _world.Find("Box")!.X.ShouldBe(60f);
+    }
+
+    [Fact]
+    public void NewChangeAfterAFailure_GetsItsOwnRetryBeforeAnythingIsReported()
+    {
+        _world.Boot(Reader);
+        _world.EditInPlace(_world.ScreenFile, "");
+
+        _world.NotifyAndSettle(_world.ScreenFile);
+        _world.NotifyAndSettle(_world.ScreenFile);
+
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void FontLockedByTheEditor_IsReportedAndCopiedOnTheNextReload()
+    {
+        _originalRelativeDirectory = global::ToolsUtilities.FileManager.RelativeDirectory;
+        string bin = Path.Combine(_world.Dir, "bin") + Path.DirectorySeparatorChar;
+        Directory.CreateDirectory(bin);
+        global::ToolsUtilities.FileManager.RelativeDirectory = bin;
+        _world.Boot(Reader);
+        string fontCache = Path.Combine(_world.Dir, "FontCache");
+        Directory.CreateDirectory(fontCache);
+        string fnt = Path.Combine(fontCache, "Font18Arial.fnt");
+        File.WriteAllText(fnt, "info");
+        _world.Notify(fnt);
+
+        FileStream locked = new FileStream(fnt, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        try
+        {
+            Should.NotThrow(() => _world.NotifyAndSettle(_world.ScreenFile));
+        }
+        finally
+        {
+            locked.Dispose();
+        }
+
+        _errors.Count.ShouldBe(1);
+        _errors[0].ShouldContain("Font18Arial.fnt");
+        _world.Disposed.ShouldBeEmpty();
+
+        _world.NotifyAndSettle(_world.ScreenFile);
+
+        _world.Disposed.ShouldContain(p => p.EndsWith("Font18Arial.fnt"));
     }
 }

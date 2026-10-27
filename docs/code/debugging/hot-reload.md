@@ -85,7 +85,7 @@ When `EnableHotReload` is called, Gum creates a `FileSystemWatcher` on the direc
 Re-applying design-time variables overwrites values your code set on those same properties at runtime. If your game writes to UI elements after creation (e.g., populating a label with a score, hiding a panel), that code needs to run again after a reload.
 {% endhint %}
 
-A project file that cannot be read during a reload (half written or locked by the editor) leaves the running UI as it was, and the file name and reason are reported through `CustomSetPropertyOnRenderable.PropertyAssignmentError` and the console. Gum retries once after the debounce, and the next complete save reloads normally. An element file that was deleted while the project still lists it is reported and left out, and the rest reloads.
+A project file that cannot be read during a reload (half written or locked by the editor) leaves the running UI as it was, and the file name and reason are reported through `CustomSetPropertyOnRenderable.PropertyAssignmentError` and the console. Gum retries once after the debounce, and the next complete save reloads normally. An element file that was deleted while the project still lists it is reported and left out, and the rest reloads. A failure while applying a file that loaded is reported the same way and the next complete save reloads.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.

@@ -78,7 +78,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     private bool _pendingReload;
     private DateTime _lastChangeTime;
     private readonly object _pendingReloadLock = new object();
-    // Consecutive reloads that failed to read the project; reset by any new file change and by a success.
+    // Consecutive reloads that failed to read the project; reset by any new file change.
     private int _failedAttempts;
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
@@ -337,20 +337,18 @@ public class GumHotReloadManager : IGumHotReloadManager
 
             ApplyDiff(rootList, newProject, ISystemManagers.Default!);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             ObjectFinder.Self.GumProjectSave = previousProject;
             if (previousProject != null)
             {
                 _applyProjectTextureFilter(previousProject);
             }
-            HandleFailedReload($"Hot reload failed while applying {_projectSourcePath}: {exception.Message}", fontFailure);
+            HandleFailedReload(
+                $"Hot reload failed while applying {_projectSourcePath}: {exception.Message}\nThe UI may be partially updated; the next complete save reloads.",
+                fontFailure,
+                uiUnchanged: false);
             return;
-        }
-
-        lock (_pendingReloadLock)
-        {
-            _failedAttempts = 0;
         }
 
         if (fontFailure != null)
@@ -372,7 +370,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             project = GumProjectSave.Load(_projectSourcePath, out result);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             failure = $"Could not read {_projectSourcePath}: {exception.Message}";
             return null;
@@ -398,7 +396,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     // A failed read is tried once more after the debounce, since the writer may still have had the file
     // open; a second failure is reported and waits for the next save.
-    private void HandleFailedReload(string? failure, string? fontFailure)
+    private void HandleFailedReload(string? failure, string? fontFailure, bool uiUnchanged = true)
     {
         bool retry;
         lock (_pendingReloadLock)
@@ -414,7 +412,8 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         if (!retry)
         {
-            ReportError(("Hot reload skipped, the running UI is unchanged. " + failure + fontFailure).Trim());
+            string prefix = uiUnchanged ? "Hot reload skipped, the running UI is unchanged. " : "";
+            ReportError((prefix + failure + fontFailure).Trim());
         }
     }
 
@@ -431,7 +430,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 Console.Error.WriteLine($"[Gum] {message}");
             }
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting a hot reload failure: {exception}");
         }
