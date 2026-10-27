@@ -16,7 +16,7 @@ namespace MonoGameGum.Tests.Runtimes;
 /// What a running game shows when the default state has a reference row (<c>X = Source.X</c>) and a
 /// categorized state sets <c>X</c> to a plain value with no row of its own (#6851, PR #6858). The
 /// state is applied the way a Forms control applies it, through <c>SetProperty("&lt;Category&gt;State", ...)</c>.
-/// These pin the behavior as it is today; the canvas-side counterparts are in
+/// These pin the behavior as it is today (the maintainer decided on 2026-10-26 that a row re-driving the value is correct, #6861); the canvas-side counterparts are in
 /// <c>StateVersusReferenceRowCanvasTests</c> (Gum.Presentation.Tests).
 /// </summary>
 public class StateVersusReferenceRowPrecedenceTests : BaseTestClass
@@ -125,6 +125,36 @@ public class StateVersusReferenceRowPrecedenceTests : BaseTestClass
         source.Blue = 50;
 
         ColorOf(swatch, "Box").ShouldBe((200, 100, 50));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ApplyState_PlainChannelsThenOnlyOneSourceChannelChanges_RowReDrivesOnlyThatChannel(bool useExpressions)
+    {
+        UseExpressions(useExpressions);
+        GraphicalUiElement swatch = CreateSwatch();
+        swatch.SetProperty("ShadeCategoryState", "Dark");
+        ColoredRectangleRuntime source = (ColoredRectangleRuntime)swatch.GetGraphicalUiElementByName("Source")!;
+
+        source.Red = 200;
+
+        ColorOf(swatch, "Box").ShouldBe((200, DarkGray.Green, DarkGray.Blue));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ApplyState_PlainWidthThenReferencedSourceChangesBackToItsOriginalValue_RowReDrivesTheOriginalValue(bool useExpressions)
+    {
+        UseExpressions(useExpressions);
+        GraphicalUiElement panel = CreatePanel();
+        panel.SetProperty("SizeCategoryState", "Large");
+        panel.GetGraphicalUiElementByName("Reference")!.Width = 80f;
+
+        panel.GetGraphicalUiElementByName("Reference")!.Width = 50f;
+
+        Background(panel).Width.ShouldBe(50f);
     }
 
     #endregion

@@ -13,13 +13,23 @@ namespace Gum.Wireframe;
 /// the selected state wins for every variable it sets: a default-state reference row whose left side
 /// the selected state sets (by value or by its own reference row) is dropped, so it cannot re-apply
 /// the default's value over the state the user clicked. Default rows that read variables the selected
-/// state sets, but write something else, are kept so they still follow the selected state.
+/// state sets, but write something else, are kept so they still follow the selected state. The caller can
+/// keep a dropped row whose source changed after the state was applied, as a running game re-drives it (#6861).
 /// </summary>
 public class SelectedStateReferenceMerger
 {
     private const string ReferencesRootName = "VariableReferences";
 
-    public StateSave Merge(StateSave defaultState, StateSave selectedState)
+    public StateSave Merge(StateSave defaultState, StateSave selectedState) =>
+        Merge(defaultState, selectedState, null, null);
+
+    /// <summary>
+    /// Merges like <see cref="Merge(StateSave, StateSave)"/>, except that a default row the selected state
+    /// overrides stays when <paramref name="keepOverriddenRow"/> returns true for its <see cref="GetRowKey"/>.
+    /// The key of every overridden row, kept or not, is added to <paramref name="overriddenRowKeys"/>.
+    /// </summary>
+    public StateSave Merge(StateSave defaultState, StateSave selectedState, Func<string, bool>? keepOverriddenRow,
+        ICollection<string>? overriddenRowKeys)
     {
         StateSave merged = defaultState.Clone();
         merged.MergeIntoThis(selectedState);
@@ -43,6 +53,14 @@ public class SelectedStateReferenceMerger
                 {
                     if (!TryGetQualifiedLeft(expanded, list.SourceObject, out string? qualifiedLeft) ||
                         !setBySelected.Contains(qualifiedLeft!))
+                    {
+                        kept.Add(expanded);
+                        continue;
+                    }
+
+                    string key = GetRowKey(qualifiedLeft!, expanded);
+                    overriddenRowKeys?.Add(key);
+                    if (keepOverriddenRow != null && keepOverriddenRow(key))
                     {
                         kept.Add(expanded);
                     }
@@ -80,6 +98,9 @@ public class SelectedStateReferenceMerger
 
         return merged;
     }
+
+    /// <summary>Identifies a reference row by the variable it writes and its (channel-expanded) line.</summary>
+    internal static string GetRowKey(string writtenName, string line) => writtenName + "=" + line;
 
     /// <summary>
     /// A state that sets an exposed name (<c>BackgroundWidth</c>) sets the inner variable it exposes

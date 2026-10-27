@@ -78,6 +78,103 @@ public class StateVersusReferenceRowCanvasTests : BaseTestClass
         (background.Red, background.Green, background.Blue).ShouldBe(DarkGray);
     }
 
+    /// <summary>
+    /// In the game, changing the referenced source after the state was applied makes the row re-drive
+    /// the variable over the state's plain value (the width becomes the source's 80). The canvas drops the
+    /// default row for a variable the selected state sets, so it keeps 200 and disagrees with the game.
+    /// </summary>
+    [Fact]
+    public void RefreshAll_ReferencedWidthEditedWhileLargeSelected_MatchesTheGame()
+    {
+        ComponentSave panel = BuildPanelWithSizeCategory();
+        StateSave large = panel.Categories[0].States.Single(s => s.Name == "Large");
+        CanvasSession session = new CanvasSession(panel, large);
+        panel.DefaultState!.GetVariableSave("Reference.Width")!.Value = 80f;
+
+        session.Refresh();
+
+        session.Root!.GetGraphicalUiElementByName("Background")!.Width.ShouldBe(80f);
+    }
+
+    /// <summary>The Color counterpart of the width case above: the game re-drives the color from the changed source.</summary>
+    [Fact]
+    public void RefreshAll_ReferencedColorEditedWhileDarkSelected_MatchesTheGame()
+    {
+        ComponentSave swatch = BuildSwatch();
+        StateSave dark = swatch.Categories[0].States.Single(s => s.Name == "Dark");
+        CanvasSession session = new CanvasSession(swatch, dark);
+        StateSave defaultState = swatch.DefaultState!;
+        defaultState.GetVariableSave("Source.Red")!.Value = 200;
+        defaultState.GetVariableSave("Source.Green")!.Value = 100;
+        defaultState.GetVariableSave("Source.Blue")!.Value = 50;
+
+        session.Refresh();
+
+        RecordingRenderable background = BackgroundOf(session.Root!);
+        (background.Red, background.Green, background.Blue).ShouldBe((200, 100, 50));
+    }
+
+    /// <summary>A game keeps the re-driven value until the state is applied again, so a refresh with no further change keeps it.</summary>
+    [Fact]
+    public void RefreshAll_RefreshedAgainAfterReferencedWidthEdit_KeepsTheReDrivenWidth()
+    {
+        ComponentSave panel = BuildPanelWithSizeCategory();
+        StateSave large = panel.Categories[0].States.Single(s => s.Name == "Large");
+        CanvasSession session = new CanvasSession(panel, large);
+        panel.DefaultState!.GetVariableSave("Reference.Width")!.Value = 80f;
+        session.Refresh();
+
+        session.Refresh();
+
+        session.Root!.GetGraphicalUiElementByName("Background")!.Width.ShouldBe(80f);
+    }
+
+    [Fact]
+    public void RefreshAll_ReferencedWidthEditedBackToTheOriginal_ShowsTheOriginal()
+    {
+        ComponentSave panel = BuildPanelWithSizeCategory();
+        StateSave large = panel.Categories[0].States.Single(s => s.Name == "Large");
+        CanvasSession session = new CanvasSession(panel, large);
+        panel.DefaultState!.GetVariableSave("Reference.Width")!.Value = 80f;
+        session.Refresh();
+        panel.DefaultState!.GetVariableSave("Reference.Width")!.Value = 50f;
+
+        session.Refresh();
+
+        session.Root!.GetGraphicalUiElementByName("Background")!.Width.ShouldBe(50f);
+    }
+
+    /// <summary>Clicking the state again applies it again, so the state wins over the row once more.</summary>
+    [Fact]
+    public void Select_LargeAgainAfterReferencedWidthEdit_ShowsTheStatesWidth()
+    {
+        ComponentSave panel = BuildPanelWithSizeCategory();
+        StateSave large = panel.Categories[0].States.Single(s => s.Name == "Large");
+        CanvasSession session = new CanvasSession(panel, large);
+        panel.DefaultState!.GetVariableSave("Reference.Width")!.Value = 80f;
+        session.Refresh();
+
+        session.Select(panel.DefaultState!);
+        session.Select(large);
+
+        session.Root!.GetGraphicalUiElementByName("Background")!.Width.ShouldBe(200f);
+    }
+
+    /// <summary>A game re-drives only the channel whose source channel changed (the row is per channel).</summary>
+    [Fact]
+    public void RefreshAll_OnlyOneReferencedChannelEditedWhileDarkSelected_ReDrivesOnlyThatChannel()
+    {
+        ComponentSave swatch = BuildSwatch();
+        StateSave dark = swatch.Categories[0].States.Single(s => s.Name == "Dark");
+        CanvasSession session = new CanvasSession(swatch, dark);
+        swatch.DefaultState!.GetVariableSave("Source.Red")!.Value = 200;
+
+        session.Refresh();
+
+        RecordingRenderable background = BackgroundOf(session.Root!);
+        (background.Red, background.Green, background.Blue).ShouldBe((200, DarkGray.Green, DarkGray.Blue));
+    }
+
     // Default: Background (Container child, teal) follows Source's color through "Color = Source.Color";
     // Dark sets Background to dark gray by value and has no row.
     private static ComponentSave BuildSwatch()
