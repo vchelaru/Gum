@@ -99,6 +99,47 @@ public class SelectedStateReferenceMerger
         return merged;
     }
 
+    /// <summary>
+    /// Removes from <paramref name="state"/> everything that sets one of <paramref name="names"/>: its plain
+    /// variables and its reference rows (a composite row such as <c>Color</c> keeps the channels that are not named).
+    /// </summary>
+    internal static void RemoveSettersOf(StateSave state, ICollection<string> names)
+    {
+        state.Variables.RemoveAll(variable => names.Contains(variable.Name));
+
+        for (int i = state.VariableLists.Count - 1; i >= 0; i--)
+        {
+            VariableListSave list = state.VariableLists[i];
+            if (list is not VariableListSave<string> referenceList || list.GetRootName() != ReferencesRootName)
+            {
+                continue;
+            }
+
+            ElementSave? channelOwner = ElementSaveExtensions.ResolveChannelOwner(state, list.SourceObject);
+            List<string> kept = new List<string>();
+            foreach (string line in referenceList.Value)
+            {
+                List<string> expandedLines = ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner).ToList();
+                bool IsNamed(string expanded) => TryGetQualifiedLeft(expanded, list.SourceObject, out string? qualifiedLeft) &&
+                    names.Contains(qualifiedLeft!);
+                if (expandedLines.Any(IsNamed))
+                {
+                    kept.AddRange(expandedLines.Where(expanded => !IsNamed(expanded)));
+                }
+                else
+                {
+                    kept.Add(line);
+                }
+            }
+
+            referenceList.Value = kept;
+            if (kept.Count == 0)
+            {
+                state.VariableLists.RemoveAt(i);
+            }
+        }
+    }
+
     /// <summary>Identifies a reference row by the variable it writes and its (channel-expanded) line.</summary>
     internal static string GetRowKey(string writtenName, string line) => writtenName + "=" + line;
 

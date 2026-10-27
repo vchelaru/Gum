@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
 using Gum.Managers;
+using Gum.Wireframe;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -124,7 +125,7 @@ public static class BehaviorToolOnlyReferencesApplier
         }
 
         // A value the Forms control assigns (a reference line that is not a category state) belongs to
-        // Default, so a category state does not override it.
+        // Default, so a category state does not override it, whether it sets it by value or by a reference row (#6908).
         HashSet<string> formsAssigned = new HashSet<string>();
         Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance: null);
         foreach ((string left, string right) in GetReferenceLines(component))
@@ -148,7 +149,7 @@ public static class BehaviorToolOnlyReferencesApplier
         {
             StateSave withoutFormsValues = active[i].Clone();
             withoutFormsValues.ParentContainer = element;
-            withoutFormsValues.Variables.RemoveAll(variable => formsAssigned.Contains(variable.Name));
+            SelectedStateReferenceMerger.RemoveSettersOf(withoutFormsValues, formsAssigned);
             active[i] = withoutFormsValues;
         }
 
