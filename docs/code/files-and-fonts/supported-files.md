@@ -26,7 +26,11 @@ Images load through a Sprite or NineSlice `SourceFile`, or by assigning a textur
 
 KNI decodes images with the decoder of its platform head: System.Drawing on DesktopGL, WIC on WindowsDX, StbImageSharp on BlazorGL, and BitmapFactory on Android.
 
-An animated `.gif` shows its first frame. SkiaGum hands the file to SkiaSharp without checking the extension, so it loads any format SkiaSharp decodes, including `.webp`. A file SkiaSharp cannot decode fails like a missing file and follows `MissingFileBehavior`. On raylib, Gum picks the decoder from the file extension, so keep the extension in line with the file's real format. A raylib image Gum cannot decode, such as a `.jpg`, fails like a missing file and follows `MissingFileBehavior`. Convert it to PNG or add an [image decoder](custom-image-formats.md).
+An animated `.gif` shows its first frame. SkiaGum hands the file to SkiaSharp without checking the extension, so it loads any format SkiaSharp decodes, including `.webp`. On raylib, Gum picks the decoder from the file extension, so keep the extension in line with the file's real format. An image that SkiaSharp or raylib cannot decode, such as a `.jpg` on raylib, fails like a missing file and follows `MissingFileBehavior`. Convert it to PNG or add an [image decoder](custom-image-formats.md).
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 MonoGame, KNI, and FNA load an image by name from the content pipeline when an `XnaContentManager` is assigned and the name has no extension.
 

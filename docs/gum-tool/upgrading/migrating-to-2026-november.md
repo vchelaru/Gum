@@ -53,9 +53,13 @@ Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
 
 ### SkiaGum Applies MissingFileBehavior to a Sprite or NineSlice Image That Fails to Load
 
-A Sprite or NineSlice `SourceFile` image that is missing, or exists but SkiaSharp cannot decode, now follows `MissingFileBehavior` like on the other runtimes. Before, an undecodable image drew nothing and reported nothing, and a missing file threw an `ArgumentException` whatever `MissingFileBehavior` was.
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
-With `ConsumeSilently`, which is the SkiaGum default, the Sprite has a null `Texture` and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the file name (a NineSlice raises no event, as on the other runtimes). With `ThrowException`, a `FileNotFoundException` naming the file is thrown. A Skia game that caught the `ArgumentException` for a missing file should now check the Sprite's `Texture` or subscribe to `PropertyAssignmentError`.
+SkiaGum now treats a Sprite or NineSlice `SourceFile` image that SkiaSharp cannot decode like a missing file, the same as [raylib](#raylib-throws-when-an-image-cannot-be-decoded). Before, the image drew nothing and reported nothing.
+
+A missing file now follows `MissingFileBehavior` too, where it used to throw an `ArgumentException` whatever the setting. Under the SkiaGum default of `ConsumeSilently`, the Sprite's `Texture` is null and `PropertyAssignmentError` is raised with the file name, as described for an [.achx frame texture](#an-achx-frame-texture-that-fails-to-load-is-a-blank-frame). If your code caught that `ArgumentException`, check `Texture` or subscribe to `PropertyAssignmentError` instead.
 
 ### An .achx Frame Texture That Fails to Load Is a Blank Frame
 
