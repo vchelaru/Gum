@@ -113,6 +113,51 @@ public class PropertyGridManagerShaderParametersTests : BaseTestClass, IDisposab
         category.Members.Select(member => member.Name).ToArray().ShouldBe(new[] { "Before", "After" });
     }
 
+    private void GivenTheHolderIsTheOnlySelection()
+    {
+        _mocker.GetMock<ISelectedState>().Setup(state => state.SelectedInstance).Returns(_holder);
+        _mocker.GetMock<ISelectedState>().Setup(state => state.SelectedInstances).Returns(new[] { _holder });
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsTrueWhenTheCompiledShaderAppearsAfterTheRowsWereBuilt()
+    {
+        // The Variables tab can be built before the editor has compiled the shader.
+        GivenTheHolderIsTheOnlySelection();
+        GivenTheHolderHasAnEffect(false);
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+        sut.AdjustShaderParameters(new List<MemberCategory> { BuildRenderingCategory() }, _holder);
+        sut.HaveShaderParametersChanged().ShouldBeFalse();
+
+        GivenTheHolderHasAnEffect(true);
+
+        sut.HaveShaderParametersChanged().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsFalseOnceTheRowsMatchTheCompiledShader()
+    {
+        GivenTheHolderIsTheOnlySelection();
+        GivenTheHolderHasAnEffect(true);
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+
+        sut.AdjustShaderParameters(new List<MemberCategory> { BuildRenderingCategory() }, _holder);
+
+        sut.HaveShaderParametersChanged().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsFalseWhenSeveralInstancesAreSelected()
+    {
+        _mocker.GetMock<ISelectedState>().Setup(state => state.SelectedInstance).Returns(_holder);
+        _mocker.GetMock<ISelectedState>().Setup(state => state.SelectedInstances)
+            .Returns(new[] { _holder, new InstanceSave { Name = "Other", BaseType = "Container" } });
+        GivenTheHolderHasAnEffect(true);
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+
+        sut.HaveShaderParametersChanged().ShouldBeFalse();
+    }
+
     [Fact]
     public void EditingARow_StoresTheParameterInTheSavedText()
     {

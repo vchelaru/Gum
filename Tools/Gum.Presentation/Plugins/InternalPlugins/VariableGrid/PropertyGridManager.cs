@@ -1115,6 +1115,9 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     /// </summary>
     internal void AdjustShaderParameters(List<MemberCategory> categories, InstanceSave? instance)
     {
+        IReadOnlyList<ShaderParameterInfo> parameters = GetShaderParameters(instance);
+        _shaderParametersSignature = GetShaderParametersSignature(parameters);
+
         MemberCategory? category = categories.FirstOrDefault(item => item.Name == "Rendering");
         StateReferencingInstanceMember? textMember = category?.Members
             .OfType<StateReferencingInstanceMember>()
@@ -1127,11 +1130,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         int index = category.Members.IndexOf(textMember);
         category.Members.RemoveAt(index);
 
-        GraphicalUiElement? representation = instance == null ? null : _wireframeObjectManager.GetRepresentation(instance);
-        object? effect = (representation?.RenderableComponent as IRenderTargetRenderable)?.RenderTargetEffect;
-
         List<SyntheticVariableRow> rows = ShaderParameterRows.Build(
-            ShaderParameterReader.Read(effect),
+            parameters,
             () => textMember.Value as string,
             text => textMember.Value = text);
 
@@ -1142,6 +1142,36 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             category.Members.Insert(index, member);
             index++;
         }
+    }
+
+    // The parameters the last-built rows were made from, so a shader that finishes compiling after the
+    // grid was built (the editor creates its objects after the selection event) is noticed.
+    private string _shaderParametersSignature = "";
+
+    private IReadOnlyList<ShaderParameterInfo> GetShaderParameters(InstanceSave? instance)
+    {
+        GraphicalUiElement? representation = instance == null ? null : _wireframeObjectManager.GetRepresentation(instance);
+        object? effect = (representation?.RenderableComponent as IRenderTargetRenderable)?.RenderTargetEffect;
+        return ShaderParameterReader.Read(effect);
+    }
+
+    private static string GetShaderParametersSignature(IReadOnlyList<ShaderParameterInfo> parameters) =>
+        string.Join(";", parameters.Select(parameter => parameter.Name + ":" + parameter.Kind + ":" + parameter.Count));
+
+    /// <summary>
+    /// True when the selected instance's compiled shader declares different parameters than the rows
+    /// currently shown were built from, so the grid should be rebuilt. Always false for a
+    /// multi-selection, which has no shader rows.
+    /// </summary>
+    public bool HaveShaderParametersChanged()
+    {
+        if (_selectedState.SelectedInstances.Count() != 1)
+        {
+            return false;
+        }
+
+        string current = GetShaderParametersSignature(GetShaderParameters(_selectedState.SelectedInstance));
+        return current != _shaderParametersSignature;
     }
 
     private readonly TextDropshadowFontGeneratorWarningLogic _textDropshadowFontGeneratorWarningLogic = new();
