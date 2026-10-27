@@ -229,6 +229,10 @@ public class FrameworkElement : INotifyPropertyChanged
             {
                 isFocused = value && (IsEnabled || AllowFocusWhenDisabled);
 
+#if !FRB
+                if (isFocused) { WatchVisibilityWhileFocused(); } else { StopWatchingVisibility(); }
+#endif
+
                 if (isFocused && this is IInputReceiver inputReceiver)
                 {
                     InteractiveGue.CurrentInputReceiver = inputReceiver;
@@ -264,6 +268,60 @@ public class FrameworkElement : INotifyPropertyChanged
 
         }
     }
+
+#if !FRB
+    // A focused control that becomes hidden, itself or through any ancestor, loses focus like one removed
+    // from a root (#6934). Event based: while focused, the Visual and each ancestor are listened to for
+    // visibility and parent changes, so nothing runs per frame.
+    List<GraphicalUiElement>? _visibilityWatched;
+
+    void WatchVisibilityWhileFocused()
+    {
+        StopWatchingVisibility();
+        _visibilityWatched ??= new List<GraphicalUiElement>();
+        GraphicalUiElement? current = Visual;
+        while (current != null)
+        {
+            current.VisibleChanged += HandleFocusedVisibilityChanged;
+            current.ParentChanged += HandleFocusedParentChanged;
+            _visibilityWatched.Add(current);
+            current = current.Parent;
+        }
+    }
+
+    void StopWatchingVisibility()
+    {
+        if (_visibilityWatched == null) return;
+        for (int i = 0; i < _visibilityWatched.Count; i++)
+        {
+            _visibilityWatched[i].VisibleChanged -= HandleFocusedVisibilityChanged;
+            _visibilityWatched[i].ParentChanged -= HandleFocusedParentChanged;
+        }
+        _visibilityWatched.Clear();
+    }
+
+    void HandleFocusedVisibilityChanged(object? sender, EventArgs args)
+    {
+        if (isFocused && Visual?.AbsoluteVisible == false)
+        {
+            IsFocused = false;
+        }
+    }
+
+    void HandleFocusedParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs args)
+    {
+        if (!isFocused) return;
+        if (Visual?.AbsoluteVisible == false)
+        {
+            IsFocused = false;
+        }
+        else
+        {
+            // Moved to another parent: the ancestors to listen to changed.
+            WatchVisibilityWhileFocused();
+        }
+    }
+#endif
 
     [Obsolete] 
     protected Dictionary<string, string> vmPropsToUiProps = null!;
@@ -612,6 +670,9 @@ public class FrameworkElement : INotifyPropertyChanged
                     visual.InheritedBindingContextChanged -= OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange -= HandleEnabledChanged;
                     visual.ParentChanged -= HandleParentChanged;
+#if !FRB
+                    StopWatchingVisibility();
+#endif
                     ReactToVisualRemoved();
 
                     // The detached Visual no longer belongs to this control, so it can be assigned again later.
@@ -642,6 +703,9 @@ public class FrameworkElement : INotifyPropertyChanged
                     visual.InheritedBindingContextChanged += OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange += HandleEnabledChanged;
                     visual.ParentChanged += HandleParentChanged;
+#if !FRB
+                    if (isFocused) { WatchVisibilityWhileFocused(); }
+#endif
 
                     // A disabled control stays disabled when its visual is replaced. Only disable
                     // here: an enabled control must not override a visual authored as disabled.
