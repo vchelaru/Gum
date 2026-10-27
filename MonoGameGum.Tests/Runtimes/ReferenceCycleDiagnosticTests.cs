@@ -98,6 +98,20 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
         list.Value.Add(row);
     }
 
+    private static void AddCategorizedState(ComponentSave panel, string stateName, params (string Instance, string Row)[] rows)
+    {
+        StateSave state = new StateSave { Name = stateName, ParentContainer = panel };
+        foreach ((string instance, string row) in rows)
+        {
+            VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = instance + ".VariableReferences" };
+            list.Value.Add(row);
+            state.VariableLists.Add(list);
+        }
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        category.States.Add(state);
+        panel.Categories.Add(category);
+    }
+
     private static ScreenSave AddScreen(GumProjectSave project, params (string Instance, string Type)[] instances)
     {
         ScreenSave screen = new ScreenSave { Name = "TestScreen" };
@@ -252,16 +266,7 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
     {
         GumProjectSave project = CreateProject();
         ComponentSave panel = AddPanel(project, "Panel", "A", "B");
-        StateSave alt = new StateSave { Name = "Alt", ParentContainer = panel };
-        VariableListSave<string> listA = new VariableListSave<string> { Type = "string", Name = "A.VariableReferences" };
-        listA.Value.Add("Width = B.Width + 1");
-        VariableListSave<string> listB = new VariableListSave<string> { Type = "string", Name = "B.VariableReferences" };
-        listB.Value.Add("Width = A.Width + 1");
-        alt.VariableLists.Add(listA);
-        alt.VariableLists.Add(listB);
-        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
-        category.States.Add(alt);
-        panel.Categories.Add(category);
+        AddCategorizedState(panel, "Alt", ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1"));
         ScreenSave screen = AddScreen(project, ("P", "Panel"));
 
         screen.ToGraphicalUiElement();
@@ -289,16 +294,7 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
     {
         GumProjectSave project = CreateProject();
         ComponentSave panel = AddPanel(project, "Panel", "A", "B");
-        StateSave alt = new StateSave { Name = "Alt", ParentContainer = panel };
-        VariableListSave<string> listA = new VariableListSave<string> { Type = "string", Name = "A.VariableReferences" };
-        listA.Value.Add("Width = B.Width + 1");
-        VariableListSave<string> listB = new VariableListSave<string> { Type = "string", Name = "B.VariableReferences" };
-        listB.Value.Add("Width = A.Width + 1");
-        alt.VariableLists.Add(listA);
-        alt.VariableLists.Add(listB);
-        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
-        category.States.Add(alt);
-        panel.Categories.Add(category);
+        AddCategorizedState(panel, "Alt", ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1"));
         ScreenSave screen = AddScreen(project, ("P", "Panel"));
 
         screen.ToGraphicalUiElement();
@@ -400,6 +396,49 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
         _messages[0].ShouldContain("in DerivedPanel (Default):");
         _messages[0].ShouldContain("A.Width = B.Width + 1");
         _messages[0].ShouldContain("B.Width = A.Width + 1");
+    }
+
+    [Fact]
+    public void Create_LoopsInTwoStatesOfOneElement_ReportEachOnceNamingItsState()
+    {
+        GumProjectSave project = CreateProject();
+        ComponentSave panel = AddTwoRowLoop(project, "Panel");
+        AddCategorizedState(panel, "Alt", ("A", "Height = B.Height + 1"), ("B", "Height = A.Height + 1"));
+        ScreenSave screen = AddScreen(project, ("P", "Panel"));
+
+        screen.ToGraphicalUiElement();
+        project.ApplyAllVariableReferences();
+        project.ApplyAllVariableReferences();
+
+        _messages.Count.ShouldBe(2, string.Join(Environment.NewLine, _messages));
+        string defaultMessage = _messages.Single(item => item.Contains("in Panel (Default):"));
+        defaultMessage.ShouldContain("A.Width = B.Width + 1");
+        defaultMessage.ShouldNotContain("Height");
+        string altMessage = _messages.Single(item => item.Contains("in Panel (Alt):"));
+        altMessage.ShouldContain("A.Height = B.Height + 1");
+        altMessage.ShouldNotContain("A.Width");
+    }
+
+    [Fact]
+    public void Create_TwoSeparateLoopsInOneState_ReportEachLoopOnceOnItsOwn()
+    {
+        GumProjectSave project = CreateProject();
+        ComponentSave panel = AddTwoRowLoop(project, "Panel");
+        AddRow(panel, "A", "Height = B.Height + 1");
+        AddRow(panel, "B", "Height = A.Height + 1");
+        ScreenSave screen = AddScreen(project, ("P", "Panel"), ("Q", "Panel"));
+
+        screen.ToGraphicalUiElement();
+        screen.ToGraphicalUiElement();
+        project.ApplyAllVariableReferences();
+
+        _messages.Count.ShouldBe(2, string.Join(Environment.NewLine, _messages));
+        string widthMessage = _messages.Single(item => item.Contains("A.Width = B.Width + 1"));
+        widthMessage.ShouldContain("in Panel (Default):");
+        widthMessage.ShouldNotContain("Height");
+        string heightMessage = _messages.Single(item => item.Contains("A.Height = B.Height + 1"));
+        heightMessage.ShouldContain("in Panel (Default):");
+        heightMessage.ShouldNotContain("Width");
     }
 #else
     [Fact]

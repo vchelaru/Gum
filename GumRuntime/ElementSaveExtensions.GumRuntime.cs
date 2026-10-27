@@ -960,9 +960,9 @@ namespace GumRuntime
 
 #if FULL_DIAGNOSTICS
         // Rows in a loop are skipped (#6871), so a game would otherwise never learn of the loop. The element that declares
-        // a loop reports it once, however often its references are applied and however many elements are built on it, so
-        // a reload of the project (new elements) reports again.
-        private static readonly ConditionalWeakTable<ElementSave, object> ReportedCycles = new ConditionalWeakTable<ElementSave, object>();
+        // a loop reports each of its loops once, however often its references are applied and however many elements are
+        // built on it, so a reload of the project (new elements) reports again.
+        private static readonly ConditionalWeakTable<ElementSave, HashSet<string>> ReportedCycles = new ConditionalWeakTable<ElementSave, HashSet<string>>();
 
         private static void ReportCyclicRows(ElementSave element, StateSave state, VariableReferenceGraph graph)
         {
@@ -995,8 +995,6 @@ namespace GumRuntime
                 }
             }
 
-            List<ElementSave> owners = new List<ElementSave>();
-            List<List<ReferenceRow>> ownedRows = new List<List<ReferenceRow>>();
             for (int first = 0; first < group.Length; first++)
             {
                 if (FindGroup(group, first) != first)
@@ -1004,49 +1002,34 @@ namespace GumRuntime
                     continue;
                 }
                 ElementSave owner = cyclic[first].DeclaredIn ?? element;
-                List<ReferenceRow> loopRows = new List<ReferenceRow>();
+                List<string> rows = new List<string>();
                 for (int i = first; i < group.Length; i++)
                 {
                     if (FindGroup(group, i) == first)
                     {
-                        loopRows.Add(cyclic[i]);
-                        if ((cyclic[i].DeclaredIn ?? element) != owner)
+                        ReferenceRow row = cyclic[i];
+                        rows.Add(string.IsNullOrEmpty(row.SourceObject) ? row.Line : row.SourceObject + "." + row.Line);
+                        if ((row.DeclaredIn ?? element) != owner)
                         {
                             owner = element;
                         }
                     }
                 }
-                int ownerIndex = owners.IndexOf(owner);
-                if (ownerIndex < 0)
-                {
-                    owners.Add(owner);
-                    ownedRows.Add(loopRows);
-                }
-                else
-                {
-                    ownedRows[ownerIndex].AddRange(loopRows);
-                }
-            }
 
-            for (int ownerIndex = 0; ownerIndex < owners.Count; ownerIndex++)
-            {
-                ElementSave owner = owners[ownerIndex];
+                // Each loop is reported once, by its state and rows, so another state's loop or a second loop in the
+                // same state is still reported.
+                string[] sortedRows = rows.ToArray();
+                Array.Sort(sortedRows, StringComparer.Ordinal);
+                string loopKey = state.Name + "\n" + string.Join("\n", sortedRows);
                 lock (ReportedCycles)
                 {
-                    if (ReportedCycles.TryGetValue(owner, out _))
+                    HashSet<string> reported = ReportedCycles.GetOrCreateValue(owner);
+                    if (!reported.Add(loopKey))
                     {
                         continue;
                     }
-                    ReportedCycles.Add(owner, new object());
                 }
 
-                List<ReferenceRow> loopRows = ownedRows[ownerIndex];
-                string[] rows = new string[loopRows.Count];
-                for (int i = 0; i < rows.Length; i++)
-                {
-                    ReferenceRow row = loopRows[i];
-                    rows[i] = string.IsNullOrEmpty(row.SourceObject) ? row.Line : row.SourceObject + "." + row.Line;
-                }
                 RaiseReferenceError($"Circular variable reference in {owner.Name} ({state.Name}): {string.Join("; ", rows)}. " +
                     "These rows are not evaluated and keep their stored values; remove one of them to break the loop.");
             }
