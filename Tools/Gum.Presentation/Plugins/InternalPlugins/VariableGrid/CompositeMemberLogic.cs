@@ -427,8 +427,21 @@ public class CompositeMemberLogic
         for (int i = 0; i < triple.ChannelMembers.Count; i++)
         {
             InstanceMember channelMember = triple.ChannelMembers[i];
-            if (!channelMember.IsReadOnly || string.IsNullOrEmpty(channelMember.DetailText))
+            if (string.IsNullOrEmpty(channelMember.DetailText))
             {
+                continue;
+            }
+
+            if (!channelMember.IsReadOnly)
+            {
+                // An editable channel contributes only the note that a category state overrides it.
+                foreach (string line in channelMember.DetailText.Split('\n').Where(line => line.StartsWith("Overridden by")))
+                {
+                    if (!sharedLines.Contains(line))
+                    {
+                        sharedLines.Add(line);
+                    }
+                }
                 continue;
             }
 
