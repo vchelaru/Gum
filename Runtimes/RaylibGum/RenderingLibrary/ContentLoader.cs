@@ -307,21 +307,26 @@ public sealed class ContentLoader : IContentLoader
         throw new FileNotFoundException(message, path);
     }
 
-    private static Texture2D LoadTextureFromFile(string fileName)
+    // Routes through FileManager.GetStreamForFile so the FileManager.CustomGetStreamFromFile hook is
+    // honored on Raylib the same way it is on the MonoGame-family loader. Handing the path straight to
+    // raylib's path-based LoadImage bypassed the hook entirely, so .gumpkg bundles, the GumFromZipFile
+    // sample, mobile TitleContainer redirection, and any in-memory/encrypted asset store silently
+    // failed on Raylib (#3033).
+    private static byte[] ReadFileBytes(string fileName)
     {
-        // Route through FileManager.GetStreamForFile so the FileManager.CustomGetStreamFromFile
-        // hook is honored on Raylib the same way it is on the MonoGame-family loader. Handing the
-        // path straight to raylib's path-based LoadImage bypassed the hook entirely, so .gumpkg
-        // bundles, the GumFromZipFile sample, mobile TitleContainer redirection, and any
-        // in-memory/encrypted asset store silently failed on Raylib (#3033).
-        byte[] fileData;
         using (var stream = FileManager.GetStreamForFile(fileName))
         using (var memoryStream = new MemoryStream())
         {
             stream.CopyTo(memoryStream);
-            fileData = memoryStream.ToArray();
+            return memoryStream.ToArray();
         }
+    }
 
+    // Offers the bytes to the registered IImageDecoders (#6829) before raylib's native decoder, for
+    // sprite textures and bitmap font pages alike (#6891). Null means none claimed the file. The result
+    // is straight alpha, which is what raylib draws, so a premultiplied decode is converted back.
+    private static DecodedImage? TryDecodeWithRegisteredDecoders(string fileName, byte[] fileData)
+    {
         DecodedImage? decoded;
         Stream decoderStream = new MemoryStream(fileData, writable: false);
         try
@@ -332,16 +337,28 @@ public sealed class ContentLoader : IContentLoader
         {
             decoderStream.Dispose();
         }
+        if (decoded == null)
+        {
+            return null;
+        }
+
+        DecodedImage straight = decoded.ToStraightAlpha();
+        if (!ReferenceEquals(straight, decoded))
+        {
+            System.Diagnostics.Trace.TraceWarning(DecodedImage.GetUnpremultipliedWarning(fileName));
+        }
+        return straight;
+    }
+
+    private static Texture2D LoadTextureFromFile(string fileName)
+    {
+        byte[] fileData = ReadFileBytes(fileName);
+
+        DecodedImage? decoded = TryDecodeWithRegisteredDecoders(fileName, fileData);
         if (decoded != null)
         {
-            // raylib draws straight alpha, so a premultiplied decode is converted back.
-            DecodedImage straight = decoded.ToStraightAlpha();
-            if (!ReferenceEquals(straight, decoded))
-            {
-                System.Diagnostics.Trace.TraceWarning(DecodedImage.GetUnpremultipliedWarning(fileName));
-            }
-            DecodedPixelsUploaded?.Invoke(straight.Rgba);
-            Texture2D decodedTexture = UploadRgbaTexture(straight.Rgba, straight.Width, straight.Height);
+            DecodedPixelsUploaded?.Invoke(decoded.Rgba);
+            Texture2D decodedTexture = UploadRgbaTexture(decoded.Rgba, decoded.Width, decoded.Height);
             TextureFilterApplier(decodedTexture, DefaultTextureFilter);
             return decodedTexture;
         }
@@ -485,16 +502,18 @@ public sealed class ContentLoader : IContentLoader
         return BuildFont(parsedFontFile, atlasTexture, layout.PageYOffsets);
     }
 
-    // Reads an image through FileManager.GetStreamForFile (so the stream hook is honored, as in
-    // LoadTextureFromFile) and returns its pixels as RGBA, whatever the file's own format was.
+    // Reads an image through the same hook and decoder path as LoadTextureFromFile and returns its
+    // pixels as RGBA, whatever the file's own format was.
     private static unsafe byte[] LoadPageRgba(string pagePath, out int width, out int height)
     {
-        byte[] fileData;
-        using (var stream = FileManager.GetStreamForFile(pagePath))
-        using (var memoryStream = new MemoryStream())
+        byte[] fileData = ReadFileBytes(pagePath);
+
+        DecodedImage? decoded = TryDecodeWithRegisteredDecoders(pagePath, fileData);
+        if (decoded != null)
         {
-            stream.CopyTo(memoryStream);
-            fileData = memoryStream.ToArray();
+            width = decoded.Width;
+            height = decoded.Height;
+            return decoded.Rgba;
         }
 
         Image image = DecodeImageOrThrow(pagePath, fileData);
