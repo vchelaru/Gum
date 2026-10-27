@@ -776,6 +776,14 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public void OnFocusUpdate()
     {
+#if !FRB
+        // A disabled control can hold focus (AllowFocusWhenDisabled) but does not act on input.
+        if (!IsEnabled)
+        {
+            FocusUpdate?.Invoke(this);
+            return;
+        }
+#endif
         if(AdvancePageInputPredicate != null)
         {
             if(AdvancePageInputPredicate())

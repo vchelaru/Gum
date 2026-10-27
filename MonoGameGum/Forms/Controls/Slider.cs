@@ -454,13 +454,14 @@ public class Slider : RangeBase, IInputReceiver
 
             var valueBeforeGamepad = Value;
 
-            if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
+            // A disabled control can hold focus (AllowFocusWhenDisabled) but does not change its value.
+            if (IsEnabled && (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left)))
             {
                 this.Value -= this.SmallChange;
             }
-            else if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
+            else if (IsEnabled && (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right)))
             {
                 this.Value += this.SmallChange;
             }

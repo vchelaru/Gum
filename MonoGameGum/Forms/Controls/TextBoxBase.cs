@@ -1162,7 +1162,7 @@ public abstract class TextBoxBase :
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(GamepadButton.A))
+            if (IsEnabled && gamepad.ButtonPushed(GamepadButton.A))
             {
                 this.Visual.CallClick();
 
@@ -1218,6 +1218,12 @@ public abstract class TextBoxBase :
     {
 #if !FRB
         ReceiveInput();
+
+        // A disabled control can hold focus (AllowFocusWhenDisabled) but does not take typing.
+        if (!IsEnabled)
+        {
+            return;
+        }
 
         var shift = keyboard.IsShiftDown;
         var ctrl = keyboard.IsCtrlDown;

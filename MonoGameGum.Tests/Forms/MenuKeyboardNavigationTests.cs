@@ -180,6 +180,41 @@ public class MenuKeyboardNavigationTests : BaseTestClass
 
     #endregion
 
+    #region Disabled
+
+    private static Bar CreateDisabledFocusedBar()
+    {
+        Bar bar = CreateBar();
+        bar.Menu.IsEnabled = false;
+        bar.Menu.AllowFocusWhenDisabled = true;
+        bar.Menu.IsFocused = true;
+        bar.Menu.IsFocused.ShouldBeTrue("precondition: the disabled menu takes focus");
+        return bar;
+    }
+
+    [Fact]
+    public void Keyboard_DisabledFocusedMenu_EnterDoesNotOpenSubmenu()
+    {
+        Bar bar = CreateDisabledFocusedBar();
+
+        Press(Keys.Enter);
+        Press(Keys.Down);
+
+        bar.File.IsPopupVisible.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Gamepad_DisabledFocusedMenu_ADoesNotOpenSubmenu()
+    {
+        Bar bar = CreateDisabledFocusedBar();
+
+        PressGamepad(XnaButtons.A);
+
+        bar.File.IsPopupVisible.ShouldBeFalse();
+    }
+
+    #endregion
+
     #region Focus
 
     [Fact]

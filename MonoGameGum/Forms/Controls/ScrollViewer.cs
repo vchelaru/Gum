@@ -1216,7 +1216,7 @@ public class ScrollViewer :
 
             ApplyGamepadStickScroll(gamepad);
 
-            if (gamepad.ButtonPushed(GamepadButton.A))
+            if (IsEnabled && gamepad.ButtonPushed(GamepadButton.A))
             {
                 DoItemsHaveFocus = true;
             }
@@ -1252,7 +1252,7 @@ public class ScrollViewer :
         {
             foreach (var keyCombo in FrameworkElement.ClickCombos)
             {
-                if (keyCombo.IsComboPushed())
+                if (IsEnabled && keyCombo.IsComboPushed())
                 {
                     DoItemsHaveFocus = true;
                     break;

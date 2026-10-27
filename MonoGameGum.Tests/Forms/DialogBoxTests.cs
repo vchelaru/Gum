@@ -52,6 +52,40 @@ public class DialogBoxTests : BaseTestClass
         ((IUpdateEveryFrame)dialogBox).Activity(secondDifference);
 
     [Fact]
+    public void OnFocusUpdate_DisabledFocused_GamepadBDoesNotRevealText()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.Show("hello");
+        dialogBox.IsEnabled = false;
+        dialogBox.AllowFocusWhenDisabled = true;
+        dialogBox.IsFocused = true;
+        var gamepad = new Gum.Input.GamePad();
+        gamepad.SetButtonState(Gum.Input.GamepadButton.B, true);
+        gamepad.Activity(1);
+        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        ((Gum.Wireframe.IInputReceiver)dialogBox).OnFocusUpdate();
+
+        visual.TextInstance.MaxLettersToShow.ShouldNotBe(5);
+    }
+
+    [Fact]
+    public void OnFocusUpdate_DisabledFocused_AdvancePredicateIsNotConsulted()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.Show("hello");
+        dialogBox.IsEnabled = false;
+        dialogBox.AllowFocusWhenDisabled = true;
+        dialogBox.IsFocused = true;
+        bool consulted = false;
+        dialogBox.AdvancePageInputPredicate = () => { consulted = true; return true; };
+
+        ((Gum.Wireframe.IInputReceiver)dialogBox).OnFocusUpdate();
+
+        consulted.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Constructor_ShouldWireUpDialogBoxToVisual()
     {
         var (dialogBox, visual) = CreateDialogBox();
