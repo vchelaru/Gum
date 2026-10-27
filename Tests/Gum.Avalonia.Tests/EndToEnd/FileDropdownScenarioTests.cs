@@ -365,4 +365,49 @@ public class FileDropdownScenarioTests
             scale.BaseFontSize = originalSize;
         }
     }
+    [AvaloniaTheory]
+    [InlineData(9)]
+    [InlineData(12)]
+    [InlineData(16)]
+    [InlineData(24)]
+    public void FileRow_WithAWrappedLabel_KeepsTheFieldAndButtonsAtTheirHeight_Centered(double baseFontSize)
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave card = grid.Project.AddComponent("Card");
+        InstanceSave icon = grid.Project.AddInstance(card, "Icon", "Sprite");
+        grid.Select(icon);
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        double originalSize = scale.BaseFontSize;
+        using IDisposable follower = AppWideWindowInput.FollowBaseFontSize(grid.Input.Window, scale);
+        try
+        {
+            scale.BaseFontSize = baseFontSize;
+            grid.Settle();
+            double normalFieldHeight = grid.Row("SourceFile").GetVisualDescendants().OfType<ComboBox>().First().Bounds.Height;
+
+            grid.Member("SourceFile").DisplayName = "A source file variable with a long name that wraps";
+            grid.Editor<FileSelectionDisplay>("SourceFile").Refresh();
+            grid.Settle();
+
+            Control row = grid.Row("SourceFile");
+            TextBlock label = row.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == grid.Member("SourceFile").DisplayName);
+            Control field = row.GetVisualDescendants().OfType<ComboBox>().First();
+            label.Bounds.Height.ShouldBeGreaterThan(normalFieldHeight * 1.5, "the label should wrap onto several lines");
+            field.Bounds.Height.ShouldBe(normalFieldHeight, 0.5, $"the field at font size {baseFontSize}");
+            double labelCenter = label.TranslatePoint(new Point(0, label.Bounds.Height / 2), grid.Input.Window)!.Value.Y;
+            double fieldCenter = field.TranslatePoint(new Point(0, field.Bounds.Height / 2), grid.Input.Window)!.Value.Y;
+            fieldCenter.ShouldBe(labelCenter, 1, $"the field is centered beside the label at font size {baseFontSize}");
+            foreach (Button button in row.GetVisualDescendants().OfType<Button>())
+            {
+                button.Bounds.Height.ShouldBe(normalFieldHeight, 0.5, $"the {button.Content} button at font size {baseFontSize}");
+                double buttonTop = button.TranslatePoint(new Point(0, 0), grid.Input.Window)!.Value.Y;
+                double fieldTop = field.TranslatePoint(new Point(0, 0), grid.Input.Window)!.Value.Y;
+                buttonTop.ShouldBe(fieldTop, 0.5, $"the {button.Content} button's top at font size {baseFontSize}");
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = originalSize;
+        }
+    }
 }
