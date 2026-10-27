@@ -768,7 +768,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
                 LoadChoices();
             }
         };
-        // Every control in the row is as tall as the row, so the buttons match the field at any zoom.
+        // The field and its buttons fill one Auto row, so the buttons match the field at any zoom.
         Button pickButton = new Button { Content = "...", MinWidth = 24, Margin = new Thickness(2, 0, 0, 0), VerticalAlignment = VerticalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Center };
         pickButton.Click += (_, _) => PickFile();
         _revealButton = new Button { Content = "↗", MinWidth = 24, Margin = new Thickness(1, 0, 0, 0), VerticalAlignment = VerticalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Center };
@@ -779,15 +779,22 @@ public class FileSelectionDisplay : DataUiDisplayBase
         _grid = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions("100,*,Auto,Auto"),
-            RowDefinitions = new RowDefinitions("Auto,Auto"),
+            // A label that wraps spans the two star rows around the field's row, which split its
+            // extra height, so the field and buttons keep their height and stay centered.
+            RowDefinitions = new RowDefinitions("*,Auto,*,Auto"),
         };
         DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
         DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 44);
+        Grid.SetRowSpan(_label, 3);
         Grid.SetColumn(_textBox, 1);
         Grid.SetColumn(_choiceBox, 1);
         Grid.SetColumn(pickButton, 2);
         Grid.SetColumn(_revealButton, 3);
-        Grid.SetRow(_hint, 1);
+        Grid.SetRow(_textBox, 1);
+        Grid.SetRow(_choiceBox, 1);
+        Grid.SetRow(pickButton, 1);
+        Grid.SetRow(_revealButton, 1);
+        Grid.SetRow(_hint, 3);
         Grid.SetColumnSpan(_hint, 4);
         _grid.Children.Add(_label);
         _grid.Children.Add(_textBox);

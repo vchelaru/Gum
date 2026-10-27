@@ -55,6 +55,21 @@ public class FileVariableDropdownScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "source-file-list-open");
     });
 
+    [SkippableFact]
+    public void SourceFileRowWithAWrappedLabel() => PrScreenshot.Run(() =>
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        InstanceSave icon = AddSpritesReferencingThreeTextures(grid);
+        grid.Select(icon);
+        grid.Input.TypeInto(grid.View.FilterTextBox, "SourceFile");
+        grid.Member("SourceFile").DisplayName = "A source file variable with a long name that wraps";
+        grid.Editor<FileSelectionDisplay>("SourceFile").Refresh();
+        grid.Input.Window.Height = 360;
+        grid.Settle();
+
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6928-source-file-wrapped-label");
+    });
+
     private static InstanceSave AddSpritesReferencingThreeTextures(VariableGridHarness grid)
     {
         ComponentSave button = grid.Project.AddComponent("Button");
