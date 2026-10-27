@@ -236,6 +236,65 @@ public class GumServiceTests : BaseTestClass
         }
     }
 
+    // #6881: a project loaded from a file applies its variable references before the first visual is built, so a
+    // file edited by hand (only the last box of a chain changed) shows the end of the chain.
+    [Fact]
+    public void Initialize_OnlyTheLastBoxOfAChainEdited_ReaderShowsTheEndOfTheChain()
+    {
+        string sourceDirectory = Path.Combine(Path.GetTempPath(), "SkiaFreshLoad6881_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            GumProjectSave projectToSave = new GumProjectSave();
+            StandardElementSave container = new StandardElementSave { Name = "Container" };
+            container.States.Add(new StateSave { Name = "Default", ParentContainer = container });
+            projectToSave.StandardElements.Add(container);
+            projectToSave.StandardElementReferences.Add(new ElementReference { Name = "Container", ElementType = ElementType.Standard });
+
+            void AddBox(ElementSave owner, string instance, float width, string? row)
+            {
+                owner.Instances.Add(new InstanceSave { Name = instance, BaseType = "Container", ParentContainer = owner });
+                owner.DefaultState!.Variables.Add(new VariableSave { Name = instance + ".Width", Type = "float", Value = width, SetsValue = true });
+                if (row != null)
+                {
+                    VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = instance + ".VariableReferences" };
+                    list.Value.Add(row);
+                    owner.DefaultState.VariableLists.Add(list);
+                }
+            }
+
+            for (int i = 1; i <= 3; i++)
+            {
+                ComponentSave chain = new ComponentSave { Name = "Chain" + i, BaseType = "Container" };
+                chain.States.Add(new StateSave { Name = "Default", ParentContainer = chain });
+                AddBox(chain, "Box", i == 3 ? 110 : 10, i == 3 ? null : "Width = Components/Chain" + (i + 1) + ".Box.Width");
+                projectToSave.Components.Add(chain);
+                projectToSave.ComponentReferences.Add(new ElementReference { Name = chain.Name, ElementType = ElementType.Component });
+            }
+
+            ScreenSave screenToSave = new ScreenSave { Name = "TestScreen" };
+            screenToSave.States.Add(new StateSave { Name = "Default", ParentContainer = screenToSave });
+            AddBox(screenToSave, "Reader", 10, "Width = Components/Chain1.Box.Width");
+            projectToSave.Screens.Add(screenToSave);
+            projectToSave.ScreenReferences.Add(new ElementReference { Name = screenToSave.Name, ElementType = ElementType.Screen });
+
+            string gumxPath = Path.Combine(sourceDirectory, "Proj.gumx");
+            projectToSave.Save(gumxPath, saveElements: true);
+
+            using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+            GumService.Default.Initialize(surface.Canvas, 200, 100, gumxPath);
+
+            ScreenSave screen = Gum.Managers.ObjectFinder.Self.GumProjectSave!.Screens.Single(item => item.Name == "TestScreen");
+            GraphicalUiElement visual = GumRuntime.ElementSaveExtensions.ToGraphicalUiElement(screen, SystemManagers.Default, addToManagers: false);
+
+            visual.GetGraphicalUiElementByName("Reader")!.Width.ShouldBe(110f);
+        }
+        finally
+        {
+            try { Directory.Delete(sourceDirectory, recursive: true); } catch { /* best-effort */ }
+        }
+    }
+
     [Fact]
     public void FrameworkElement_AddToRoot_ShouldAddVisualToRoot()
     {

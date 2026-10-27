@@ -87,14 +87,16 @@ public class FreshLoadReferenceChainTests : BaseTestClass
         HotReloadFormsProjects.Red(HotReloadReferenceChainTests.ReaderVisual(first, Plain.Reader))
             .ShouldBe(HotReloadReferenceChainTests.New, "sanity: first build");
 
-        // The game sets the reader's stored value in code after the first build.
-        ComponentSave button = edited.Components.Single(c => c.Name == "Controls/ButtonStandard");
-        button.DefaultState!.Variables.Single(v => v.Name == "Background.Red").Value = 77;
-        button.DefaultState.VariableLists.Clear();
+        // The game changes the tail's stored value after the first build. The rows are still there, so a second
+        // application would carry 200 to the reader; the first one already settled the chain.
+        const int ChangedLater = 200;
+        ComponentSave tail = edited.Components.Single(c => c.Name == "Chain3");
+        tail.DefaultState!.Variables.Single(v => v.Name == "Swatch.Red").Value = ChangedLater;
 
         GraphicalUiElement second = HotReloadFormsProjects.Load(edited);
 
-        HotReloadFormsProjects.Red(HotReloadReferenceChainTests.ReaderVisual(second, Plain.Reader)).ShouldBe(77);
+        HotReloadFormsProjects.Red(HotReloadReferenceChainTests.ReaderVisual(second, Plain.Reader))
+            .ShouldBe(HotReloadReferenceChainTests.New);
     }
 
     [Fact]
