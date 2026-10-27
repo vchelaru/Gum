@@ -347,6 +347,9 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceShaderFile", IsFile = true, Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion,
                 DetailText = "A .fx post-process shader applied to this container's contents when it is drawn to the screen." });
 
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "ShaderParameters", Category = "Rendering",
+                MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion });
+
             var alphaValue = CreateAlphaVariable();
             stateSave.Variables.Add(alphaValue);
 
