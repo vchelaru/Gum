@@ -672,30 +672,53 @@ public class Renderer : IRenderer
     public void Draw(SystemManagers managers)
     {
         ClearPerformanceRecordingVariables();
+        // Already reset for this frame, so a render-target bake's Begin must not reset again.
+        _perfStatsResetForHostFrame = true;
 
         if (managers == null)
         {
             managers = OwnManagers;
         }
 
-#if !FNA
-        // GraphicsDevice.Metrics only resets on Present (never mid-pass, e.g. from the Clear calls
-        // render-target baking issues), so a before/after delta across this whole pass is safe even
-        // when the pass bakes render targets. See RenderStateChangeStatistics.DrawCallCount remarks.
-        // FNA's GraphicsDevice has no Metrics API (confirmed against FNA-XNA/FNA source), so this is
-        // MonoGame/KNI-only; DrawCallCount stays at 0 on FNA until it's wired some other way.
-        long drawCountBefore = GraphicsDevice?.Metrics.DrawCount ?? 0;
-#endif
-
-        Draw(managers, _layers);
-
-        ForceEnd();
-        EndFrame();
-
-#if !FNA
-        if (GraphicsDevice != null)
+        long drawCountStart = EnterDrawCountScope();
+        try
         {
-            RenderStateChangeStatistics.AddDrawCalls((int)(InitializedGraphicsDevice.Metrics.DrawCount - drawCountBefore));
+            Draw(managers, _layers);
+
+            ForceEnd();
+            EndFrame();
+        }
+        finally
+        {
+            ExitDrawCountScope(drawCountStart);
+        }
+    }
+
+    // Draw calls are summed from a before/after delta of GraphicsDevice.Metrics.DrawCount, which only
+    // resets on Present (never mid-pass, e.g. from the Clear calls render-target baking issues), so a
+    // delta across a whole pass is safe even when the pass bakes render targets. Only the outermost
+    // scope records, so a render-target bake's own Begin/End (or a Draw(Layer) inside a bigger scope)
+    // does not add the same draw calls a second time (#6841). FNA's GraphicsDevice has no Metrics API
+    // (confirmed against FNA-XNA/FNA source), so DrawCallCount stays at 0 on FNA until wired some other way.
+    private int _drawCountScopeDepth;
+
+    private long EnterDrawCountScope()
+    {
+        _drawCountScopeDepth++;
+#if !FNA
+        return GraphicsDevice?.Metrics.DrawCount ?? 0;
+#else
+        return 0;
+#endif
+    }
+
+    private void ExitDrawCountScope(long drawCountStart)
+    {
+        _drawCountScopeDepth--;
+#if !FNA
+        if (_drawCountScopeDepth == 0 && GraphicsDevice != null)
+        {
+            RenderStateChangeStatistics.AddDrawCalls((int)(InitializedGraphicsDevice.Metrics.DrawCount - drawCountStart));
         }
 #endif
     }
@@ -714,30 +737,47 @@ public class Renderer : IRenderer
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {
-            mCamera.ClientWidth = InitializedGraphicsDevice.Viewport.Width;
-            mCamera.ClientHeight = InitializedGraphicsDevice.Viewport.Height;
-            mCamera.ClientLeft = InitializedGraphicsDevice.Viewport.X;
-            mCamera.ClientTop = InitializedGraphicsDevice.Viewport.Y;
-
-            TrySweepUnusedRenderTargetsAtFrameBoundary();
-
-            var oldSampler = InitializedGraphicsDevice.SamplerStates[0];
-
-            mRenderStateVariables.BlendState = Renderer.NormalBlendState;
-            mRenderStateVariables.Wrap = false;
-
-            TryPreRenderAllLayersForHostFrame();
-
-            SetFilteringForLayer(layer);
-            PreRender(layer.Renderables);
-
-            SetFilteringForLayer(layer);
-            RenderLayer(managers, layer, prerender:false);
-
-            if (oldSampler != null)
+            // This path has no per-frame Clear of its own, so the first layer drawn in a host frame
+            // starts the frame's counters. Without it LastFrameDrawStates and the draw-state counters
+            // grew for the life of the process (#6841).
+            TryResetPerformanceStatsForHostFrame();
+            long drawCountStart = EnterDrawCountScope();
+            try
             {
-                InitializedGraphicsDevice.SamplerStates[0] = oldSampler;
+                DrawLayerCore(managers, layer);
             }
+            finally
+            {
+                ExitDrawCountScope(drawCountStart);
+            }
+        }
+    }
+
+    private void DrawLayerCore(SystemManagers managers, Layer layer)
+    {
+        mCamera.ClientWidth = InitializedGraphicsDevice.Viewport.Width;
+        mCamera.ClientHeight = InitializedGraphicsDevice.Viewport.Height;
+        mCamera.ClientLeft = InitializedGraphicsDevice.Viewport.X;
+        mCamera.ClientTop = InitializedGraphicsDevice.Viewport.Y;
+
+        TrySweepUnusedRenderTargetsAtFrameBoundary();
+
+        var oldSampler = InitializedGraphicsDevice.SamplerStates[0];
+
+        mRenderStateVariables.BlendState = Renderer.NormalBlendState;
+        mRenderStateVariables.Wrap = false;
+
+        TryPreRenderAllLayersForHostFrame();
+
+        SetFilteringForLayer(layer);
+        PreRender(layer.Renderables);
+
+        SetFilteringForLayer(layer);
+        RenderLayer(managers, layer, prerender:false);
+
+        if (oldSampler != null)
+        {
+            InitializedGraphicsDevice.SamplerStates[0] = oldSampler;
         }
     }
 
@@ -792,7 +832,6 @@ public class Renderer : IRenderer
             PreRender(layer.Renderables);
         }
 
-        SpriteBatchStack.PerformStartOfLayerRenderingLogic();
 
         spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera, null);
 
@@ -860,7 +899,6 @@ public class Renderer : IRenderer
         _immediateModeDrawCountBeforeCycle = GraphicsDevice?.Metrics.DrawCount ?? 0;
 #endif
 
-        SpriteBatchStack.PerformStartOfLayerRenderingLogic();
         spriteRenderer.ForcedMatrix = spriteBatchMatrix;
         spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera, null);
     }
@@ -960,7 +998,9 @@ public class Renderer : IRenderer
         spriteRenderer.ForcedMatrix = null;
 
 #if !FNA
-        if (GraphicsDevice != null)
+        // Inside a larger scope (a render-target bake during Draw(SystemManagers)) the outer delta
+        // already contains these draw calls.
+        if (GraphicsDevice != null && _drawCountScopeDepth == 0)
         {
             RenderStateChangeStatistics.AddDrawCalls(
                 (int)(InitializedGraphicsDevice.Metrics.DrawCount - _immediateModeDrawCountBeforeCycle));
@@ -1929,8 +1969,15 @@ public class Renderer : IRenderer
     /// </summary>
     public void ForceEnd()
     {
-        this.spriteRenderer.End();
-
+        long drawCountStart = EnterDrawCountScope();
+        try
+        {
+            this.spriteRenderer.End();
+        }
+        finally
+        {
+            ExitDrawCountScope(drawCountStart);
+        }
     }
 }
 

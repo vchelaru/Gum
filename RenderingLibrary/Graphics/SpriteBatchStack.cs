@@ -86,7 +86,15 @@ namespace RenderingLibrary.Graphics
 
     public class SpriteBatchStack
     {
-        static StateChangeInfoListPool StateChangeInfoListPool = new StateChangeInfoListPool();
+        // Per-instance, and recycled only when the frame's draw-state records are discarded
+        // (ClearPerformanceRecordingVariables). The records hold these lists by reference, so recycling
+        // earlier (per layer or per Begin/End cycle) made later begins reuse and Clear() lists that
+        // earlier records still pointed to, which broke DrawStateSummary.TextureSetCount (#6841).
+        StateChangeInfoListPool StateChangeInfoListPool = new StateChangeInfoListPool();
+
+        // True once currentParameters is in beginParametersUsedThisFrame, so End() followed by the next
+        // Replace/Pop/LastFrameDrawStates does not record the same begin again.
+        bool currentParametersRecorded;
 
         public enum SpriteBatchBeginEndState
         {
@@ -133,7 +141,7 @@ namespace RenderingLibrary.Graphics
                 toReturn.AddRange(beginParametersUsedThisFrame);
 
                 // The last parameters used for draw will not be part of beginParametersUsedThisFrame, so add it here:
-                if (currentParameters != null)
+                if (currentParameters != null && !currentParametersRecorded)
                 {
                     toReturn.Add(currentParameters.Value);
                 }
@@ -149,13 +157,6 @@ namespace RenderingLibrary.Graphics
         public SpriteBatchStack(GraphicsDevice graphicsDevice)
         {
             SpriteBatch = new SpriteBatch(graphicsDevice);
-        }
-
-        public static void PerformStartOfLayerRenderingLogic()
-        {
-            // Resets the pool so that the rendering can use lists without having to instantiate or expand the internal array.
-            // This means that the internal StateChange info is only valid for that particular frame of rendering
-            StateChangeInfoListPool.MakeAllUnused();
         }
 
         /// <summary>
@@ -181,12 +182,14 @@ namespace RenderingLibrary.Graphics
         {
             if(createNewParameters)
             {
+                RecordCurrentParameters();
                 var beginParams = new BeginParameters();
                 beginParams.ChangeRecord = StateChangeInfoListPool.GetNextAvailable();
                 beginParams.ChangeRecord.Clear();
 
                 beginParams.IsDefault = true;
                 currentParameters = beginParams;
+                currentParametersRecorded = false;
             }
 
             if (beginEndState == SpriteBatchBeginEndState.Began)
@@ -295,12 +298,10 @@ namespace RenderingLibrary.Graphics
             {
                 throw new Exception("Could not set scissor rectangle to:" + scissorRectangle.ToString(), e);
             }
-            if (currentParameters != null)
-            {
-                beginParametersUsedThisFrame.Add(currentParameters.Value);
-            }
+            RecordCurrentParameters();
 
             currentParameters = newParameters;
+            currentParametersRecorded = false;
 
             if (beginEndState == SpriteBatchBeginEndState.Began)
             {
@@ -431,12 +432,10 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                if (currentParameters != null)
-                {
-                    beginParametersUsedThisFrame.Add(currentParameters.Value);
-                }
+                RecordCurrentParameters();
                 // this is the end
                 currentParameters = null;
+                currentParametersRecorded = false;
                 End();
             }
         }
@@ -460,16 +459,20 @@ namespace RenderingLibrary.Graphics
 
         private void RecordCurrentParameters()
         {
-            if (currentParameters != null)
+            if (currentParameters != null && !currentParametersRecorded)
             {
                 beginParametersUsedThisFrame.Add(currentParameters.Value);
+                currentParametersRecorded = true;
             }
         }
 
         internal void ClearPerformanceRecordingVariables()
         {
             currentParameters = null;
+            currentParametersRecorded = false;
             beginParametersUsedThisFrame.Clear();
+            // The records are gone, so their change lists can be reused.
+            StateChangeInfoListPool.MakeAllUnused();
             // The state stack is per-frame scratch: a balanced frame pushes in RenderLayer's outer
             // BeginSpriteBatch(Push) and pops in the matching EndSpriteBatch. On NET8+ that end-of-layer
             // pop is skipped (RenderLayer relies on the frame-level ForceEnd instead), so without this
