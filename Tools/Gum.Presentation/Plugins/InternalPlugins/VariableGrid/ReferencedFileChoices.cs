@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gum.Bundle;
-using Gum.DataTypes;
 using Gum.ToolStates;
+using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -29,29 +29,43 @@ public class ReferencedFileChoices
     /// </summary>
     public IReadOnlyList<string> GetChoices(Func<string, bool> isAccepted, string? currentValue)
     {
-        HashSet<string> choices = new HashSet<string>(StringComparer.Ordinal);
+        // One entry per file, whatever way the project spells its path ("./a.png", "x/../a.png",
+        // the absolute path, another case on a case-insensitive file system).
+        Dictionary<FilePath, string> choices = new Dictionary<FilePath, string>();
+        string? projectDirectory = null;
 
         if (_projectState.GumProjectSave is { FullFileName: { Length: > 0 } projectFile } project)
         {
-            string projectDirectory = Path.GetDirectoryName(projectFile)!;
-            WalkResult walk = new GumProjectDependencyWalker().Walk(project, projectDirectory, GumBundleInclusion.ExternalFiles);
+            projectDirectory = Path.GetDirectoryName(projectFile)!;
+            // A walk of each element on its own lists what that element's variables name. The
+            // project-wide walk also adds the files those files load (an .achx's textures, a
+            // .fnt's pages), which nobody picks directly.
+            GumProjectDependencyWalker walker = new GumProjectDependencyWalker();
+            IEnumerable<string> referenced = project.AllElements
+                .SelectMany(element => walker.Walk(project, projectDirectory, GumBundleInclusion.ExternalFiles, element).ExternalFiles)
+                .Distinct(StringComparer.Ordinal);
 
-            foreach (string file in walk.ExternalFiles)
+            foreach (string file in referenced)
             {
                 // The walk lists a reference whether or not its file exists.
-                if (isAccepted(file) && File.Exists(Path.Combine(projectDirectory, file)))
+                string fullPath = Path.GetFullPath(Path.Combine(projectDirectory, file));
+                if (isAccepted(file) && File.Exists(fullPath))
                 {
-                    choices.Add(file);
+                    choices.TryAdd(new FilePath(fullPath), Path.GetRelativePath(projectDirectory, fullPath).Replace('\\', '/'));
                 }
             }
         }
 
         if (!string.IsNullOrEmpty(currentValue))
         {
-            choices.Add(currentValue);
+            // The row shows the value as stored, so it keeps its own spelling in the list.
+            string currentFullPath = projectDirectory == null || Path.IsPathRooted(currentValue)
+                ? currentValue
+                : Path.GetFullPath(Path.Combine(projectDirectory, currentValue));
+            choices[new FilePath(currentFullPath)] = currentValue;
         }
 
-        return choices.OrderBy(file => file, StringComparer.OrdinalIgnoreCase).ThenBy(file => file, StringComparer.Ordinal).ToList();
+        return choices.Values.OrderBy(file => file, StringComparer.OrdinalIgnoreCase).ThenBy(file => file, StringComparer.Ordinal).ToList();
     }
 
     /// <summary>

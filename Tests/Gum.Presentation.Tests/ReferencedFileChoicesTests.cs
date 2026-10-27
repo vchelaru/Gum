@@ -51,6 +51,76 @@ public class ReferencedFileChoicesTests : BaseTestClass
     }
 
     [Fact]
+    public void GetChoices_ListsOneFileOnceWhateverWayTheProjectSpellsIt()
+    {
+        AddSprite("Plain", "Art/a.png");
+        AddSprite("DotSlash", "./Art/a.png", createFile: false);
+        AddSprite("DotDot", "Art/../Art/a.png", createFile: false);
+        AddSprite("Absolute", _projectDirectory + "Art/a.png", createFile: false);
+        AddSprite("OtherCase", "art/a.png", createFile: false);
+        AddSprite("Backslash", "Art\\a.png", createFile: false);
+
+        IReadOnlyList<string> choices = _choices.GetChoices(_ => true, currentValue: null);
+
+        // A different case is the same file only on a case-insensitive file system, and a missing
+        // spelling is not listed on a case-sensitive one, so either way there is one entry.
+        choices.ShouldBe(new[] { "Art/a.png" });
+    }
+
+    [Fact]
+    public void GetChoices_ShowsTheCurrentValueInItsOwnSpelling_WhenTheProjectSpellsItAnotherWay()
+    {
+        AddSprite("Plain", "Art/a.png");
+
+        IReadOnlyList<string> choices = _choices.GetChoices(_ => true, currentValue: "./Art/a.png");
+
+        choices.ShouldBe(new[] { "./Art/a.png" });
+    }
+
+    [Fact]
+    public void GetChoices_ListsAFileOutsideTheProjectFolderOnce()
+    {
+        string outside = Path.Combine(Path.GetTempPath(), "GumReferencedOutside_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(outside);
+        try
+        {
+            File.WriteAllText(Path.Combine(outside, "far.png"), "");
+            string folderName = Path.GetFileName(outside);
+            AddSprite("Relative", "../" + folderName + "/far.png", createFile: false);
+            AddSprite("Absolute", Path.Combine(outside, "far.png"), createFile: false);
+
+            IReadOnlyList<string> choices = _choices.GetChoices(_ => true, currentValue: null);
+
+            choices.Count.ShouldBe(1);
+        }
+        finally
+        {
+            Directory.Delete(outside, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetChoices_ListsOnlyFilesAVariableNamesNotTheFilesThoseFilesLoad()
+    {
+        AddSprite("Sheet", "Anims/hero.achx", createFile: false);
+        Directory.CreateDirectory(_projectDirectory + "Anims");
+        File.WriteAllText(_projectDirectory + "Anims/hero.achx",
+            "<AnimationChainArraySave><FileRelativeTextures>true</FileRelativeTextures>" +
+            "<AnimationChain><Name>Run</Name><Frame><TextureName>run.png</TextureName></Frame></AnimationChain></AnimationChainArraySave>");
+        File.WriteAllText(_projectDirectory + "Anims/run.png", "");
+        AddInstance("Label", "Text", "CustomFontFile", "Fonts/pixel.fnt", createFile: false);
+        _component.DefaultState.Variables.Add(new VariableSave { Name = "Label.UseCustomFont", Type = "bool", Value = true, SetsValue = true });
+        Directory.CreateDirectory(_projectDirectory + "Fonts");
+        File.WriteAllText(_projectDirectory + "Fonts/pixel.fnt", "info face=\"Pixel\" size=12\npage id=0 file=\"pixel_0.png\"\n");
+        File.WriteAllText(_projectDirectory + "Fonts/pixel_0.png", "");
+        AddSprite("Direct", "Anims/direct.png");
+
+        IReadOnlyList<string> choices = _choices.GetChoices(_ => true, currentValue: null);
+
+        choices.ShouldBe(new[] { "Anims/direct.png", "Anims/hero.achx", "Fonts/pixel.fnt" });
+    }
+
+    [Fact]
     public void GetChoices_LeavesOutAFileThatIsNotOnDisk()
     {
         AddSprite("Present", "present.png");

@@ -1141,7 +1141,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 var filter = GetFileFilterForRootVariableName(rootVariableName);
                 if (filter != null)
                 {
-                    member.PropertiesToSetOnDisplayer["Filter"] = filter;
+                    SetDisplayerProperty(member, "Filter", filter);
                     SetFileChoices(member, ReferencedFileChoices.AcceptingExtensions(filter));
                 }
                 else if (rootVariableName == "SourceFile")
@@ -1159,8 +1159,29 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     /// </summary>
     private void SetFileChoices(InstanceMember member, Func<string, bool> isAccepted)
     {
-        member.PropertiesToSetOnDisplayer["FileChoices"] =
-            (Func<string?, IReadOnlyList<string>>)(current => _referencedFileChoices.GetChoices(isAccepted, current));
+        SetDisplayerProperty(member, "FileChoices",
+            (Func<string?, IReadOnlyList<string>>)(current => _referencedFileChoices.GetChoices(isAccepted, current)));
+    }
+
+    // A row shown for one instance is retargeted onto the next instance's entry (see
+    // StateReferencingInstanceMember.Retarget), which carries its own displayer properties; setting
+    // them on the member alone would lose them as soon as another instance is selected.
+    private static void SetDisplayerProperty(InstanceMember member, string key, object value)
+    {
+        member.PropertiesToSetOnDisplayer[key] = value;
+        if (member is StateReferencingInstanceMember row)
+        {
+            row.Entry.PropertiesToSetOnDisplayer[key] = value;
+        }
+    }
+
+    private static void RemoveDisplayerProperty(InstanceMember member, string key)
+    {
+        member.PropertiesToSetOnDisplayer.Remove(key);
+        if (member is StateReferencingInstanceMember row)
+        {
+            row.Entry.PropertiesToSetOnDisplayer.Remove(key);
+        }
     }
 
     /// <summary>
@@ -1209,7 +1230,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         if (isTtfMode)
         {
             fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
-            fontMember.PropertiesToSetOnDisplayer["Filter"] = FontFileFilter;
+            SetDisplayerProperty(fontMember, "Filter", FontFileFilter);
             SetFileChoices(fontMember, ReferencedFileChoices.AcceptingExtensions(FontFileFilter));
 
             // Warn if project uses bmfont.exe, which can't handle .ttf file fonts
@@ -1242,7 +1263,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 isTtfMode = true;
                 // Swap Font row to FileSelectionDisplay
                 fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
-                fontMember.PropertiesToSetOnDisplayer["Filter"] = FontFileFilter;
+                SetDisplayerProperty(fontMember, "Filter", FontFileFilter);
                 SetFileChoices(fontMember, ReferencedFileChoices.AcceptingExtensions(FontFileFilter));
 
                 // Warn if project uses bmfont.exe
@@ -1267,8 +1288,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 fontMember.Value = "Arial";
                 // Swap Font row back to ComboBox
                 fontMember.PreferredDisplayer = null;
-                fontMember.PropertiesToSetOnDisplayer.Remove("Filter");
-                fontMember.PropertiesToSetOnDisplayer.Remove("FileChoices");
+                RemoveDisplayerProperty(fontMember, "Filter");
+                RemoveDisplayerProperty(fontMember, "FileChoices");
                 fontMember.DetailText = null;
 
                 // Force container recreation

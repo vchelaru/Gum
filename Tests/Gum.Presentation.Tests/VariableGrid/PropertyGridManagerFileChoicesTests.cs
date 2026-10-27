@@ -74,6 +74,24 @@ public class PropertyGridManagerFileChoicesTests : BaseTestClass
     }
 
     [Fact]
+    public void UpdateFileFilters_ARowRetargetedToAnotherInstance_KeepsItsFilterAndChoices()
+    {
+        // Selecting another instance of the same type retargets the shown rows onto the new rows'
+        // entries instead of rebuilding them, so the settings must live on the entry.
+        AddInstance("Label", "Text", "CustomFontFile", "label.fnt");
+        StateReferencingInstanceMember shown = CreateMember("CustomFontFile");
+        StateReferencingInstanceMember next = CreateMember("CustomFontFile");
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+        sut.UpdateFileFilters(Categorize(shown), _component, null);
+        sut.UpdateFileFilters(Categorize(next), _component, null);
+
+        shown.Retarget(next.Entry);
+
+        shown.PropertiesToSetOnDisplayer.ContainsKey("FileChoices").ShouldBeTrue();
+        shown.PropertiesToSetOnDisplayer["Filter"].ShouldBe("Bitmap Font Generator Font|*.fnt");
+    }
+
+    [Fact]
     public void FontSourceToggle_FontFileRow_OffersFontFiles_AndSystemFontDropsTheChoices()
     {
         AddInstance("Hero", "Sprite", "SourceFile", "hero.png");
