@@ -373,9 +373,13 @@ namespace Gum.Graphics.Animation
             return _isFileSystemCaseInsensitive ? identity.ToLowerInvariant() : identity;
         }
 
+        /// <param name="animationFrameSave">The frame to convert.</param>
+        /// <param name="loadTexture">Whether to load the frame's texture.</param>
+        /// <param name="coordinateType">Whether the saved coordinates are UV or pixels.</param>
         /// <param name="failedTextures">
         /// The files that already failed to load during the same load of an .achx, so that frames sharing a
-        /// texture that fails raise one error and ask the loader once (#6899). Null for a frame converted on its own.
+        /// texture that fails raise one error and ask the loader once (#6899). A file is recorded by its identity,
+        /// so every spelling of it counts as the same file (#6910). Null for a frame converted on its own.
         /// </param>
         internal static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, bool loadTexture, TextureCoordinateType coordinateType, System.Collections.Generic.HashSet<string>? failedTextures)
         {
