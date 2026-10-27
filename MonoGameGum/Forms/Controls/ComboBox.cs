@@ -129,8 +129,10 @@ public class ComboBox :
                 _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
                 _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
                 _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
+                _subscribedListBox.IsComboBoxDropDown = false;
             }
 
+            listBox.IsComboBoxDropDown = true;
             listBox.SelectionChanged += HandleSelectionChanged;
             listBox.ItemPushed += HandleListBoxItemPushed;
             listBox.ConfirmedWithoutFocusedRow += HandleListBoxItemPushed;
@@ -596,6 +598,7 @@ public class ComboBox :
             _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
             _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
             _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
+            _subscribedListBox.IsComboBoxDropDown = false;
             _subscribedListBox = null;
         }
     }

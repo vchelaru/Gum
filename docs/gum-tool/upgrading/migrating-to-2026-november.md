@@ -649,3 +649,13 @@ dialog.IsVisible = true;
 dialog.IsVisible = true;
 okButton.IsFocused = true;
 ```
+
+### ListBox Left and Right No Longer Step a Vertical List
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+When a `ListBox` has item-level focus (`DoListItemsHaveFocus` is `true`), the axis the list does not use now leaves the list, like the perpendicular axis of a `Slider`. In a vertical list, left and right used to act as up and down on the d-pad and left stick. In a horizontal list, up and down used to act as left and right. Now they do what they do when the list has top-level focus: with `GamepadNavigationMode.Spatial` focus moves to the nearest control in that direction, with the default tab order left and up move to the previous control and right and down move to the next. An explicit `SpatialNavigationLeft`, `SpatialNavigationRight`, `SpatialNavigationUp` or `SpatialNavigationDown` on the `ListBox` is honored. Leaving sets `DoListItemsHaveFocus` to `false` and keeps `SelectedIndex`.
+
+This affects you if players stepped through a vertical list with left and right, or through a horizontal list with up and down. Use the list's own axis instead. The up and down arrow keys, a wrapping list, and the drop-down list of a `ComboBox` are unchanged.

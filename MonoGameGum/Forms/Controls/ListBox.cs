@@ -233,13 +233,20 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
+    /// <summary>
+    /// Whether this list is the drop-down of a ComboBox. A drop-down list that has focus always has item-level
+    /// focus, so the gamepad and keyboard act on it however focus reached it, and a direction the list does not
+    /// use never moves focus out of it (that would close the drop-down).
+    /// </summary>
+    internal bool IsComboBoxDropDown { get; set; }
+
     public override bool IsFocused
     {
         get => base.IsFocused;
         set
         {
             base.IsFocused = value;
-            if (IsFocused && canListItemsLoseFocus == false)
+            if (IsFocused && (canListItemsLoseFocus == false || IsComboBoxDropDown))
             {
                 DoListItemsHaveFocus = true;
             }
@@ -1947,7 +1954,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
         else
 #endif
-        if (DoListItemsHaveFocus)
+        if (DoListItemsHaveFocus || IsComboBoxDropDown)
         {
             DoListItemFocusUpdate();
         }
@@ -1976,12 +1983,26 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             var gamepad = xboxGamepads[i];
 
-            RepositionDirections? direction = GetRepeatedGamepadDirection(gamepad);
+            // A wrapping list and a ComboBox drop-down use every direction to step through the rows.
+            Orientation? singleAxis = IsComboBoxDropDown || InnerPanel.WrapsChildren ? null : Orientation;
+            RepositionDirections? direction = GetRepeatedGamepadDirection(gamepad, singleAxis, out bool leavesList);
 
             var pressedButton = (LoseListItemFocusOnPrimaryInput && gamepad.ButtonPushed(GamepadButton.A)) ||
                 gamepad.ButtonPushed(GamepadButton.B);
 
-            DoListItemFocusUpdate(direction, pressedButton);
+            if (leavesList && !pressedButton)
+            {
+                // The same navigation the list uses at its top level for this direction.
+                HandleGamepadNavigation(gamepad);
+                if (!IsFocused)
+                {
+                    DoListItemsHaveFocus = false;
+                }
+            }
+            else
+            {
+                DoListItemFocusUpdate(direction, pressedButton);
+            }
 
             void RaiseIfPushedAndEnabled(GamepadButton button)
             {
