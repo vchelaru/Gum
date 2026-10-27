@@ -285,7 +285,9 @@ public class HotReloadSweepBNextStateTests : BaseTestClass
     {
         // No documented rule for a variable the file never sets; chosen: code keeps it.
         GraphicalUiElement screen = Load(First);
+#pragma warning disable CS0618 // the fixture instantiates the legacy ColoredRectangle standard
         Gum.GueDeriving.ColoredRectangleRuntime plain = (Gum.GueDeriving.ColoredRectangleRuntime)HotReloadFormsProjects.Child(screen, "Plain1");
+#pragma warning restore CS0618
         plain.Alpha = 77;
         plain.Width = 123;
 
