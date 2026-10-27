@@ -615,3 +615,13 @@ A reference whose result does not fit the variable on the left is now reported, 
 `MinWidth`, `MaxWidth`, `MinHeight` and `MaxHeight` are the exception: `NaN` or infinity now means no limit, where `MinWidth` or `MinHeight` set to positive infinity gave an infinite size or threw.
 
 See [Casting and Type Considerations](../../code/styling/runtime-variable-references.md#casting-and-type-considerations).
+
+### SvgRuntime Throws When Its SVG Cannot Be Loaded
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+On MonoGame and KNI, an `SvgRuntime` whose `SourceFile` is missing or is not an SVG Gum can read now follows `MissingFileBehavior` like a Sprite image does. Before, it drew nothing and reported nothing. With the default `ThrowException`, assigning the file throws a `FileNotFoundException` naming it. The same applies to `ShapeSvgLoader.Load`.
+
+Fix the path, or set `ConsumeSilently` as described for [SkiaGum](#skiagum-throws-when-a-file-is-missing-or-an-image-cannot-be-decoded). The `SvgRuntime` then has a null `Texture` and `PropertyAssignmentError` is raised with the file name.

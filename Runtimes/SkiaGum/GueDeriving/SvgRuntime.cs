@@ -58,9 +58,8 @@ public class SvgRuntime : InteractiveGue
 
     /// <summary>
     /// Path to the .svg file to draw. Assigning re-resolves the document, which is cached by
-    /// standardized path so the same file assigned to many runtimes parses once. On the XNA family a
-    /// missing or unreadable file clears <see cref="Texture"/> and draws nothing rather than throwing.
-    /// On Skia it follows <see cref="GraphicalUiElement.MissingFileBehavior"/> like a Sprite's
+    /// standardized path so the same file assigned to many runtimes parses once. A missing or
+    /// unreadable file follows <see cref="GraphicalUiElement.MissingFileBehavior"/> like a Sprite's
     /// <c>SourceFile</c>: <c>ThrowException</c> throws a <see cref="System.IO.FileNotFoundException"/>,
     /// otherwise <see cref="Texture"/> is cleared and <c>PropertyAssignmentError</c> is raised.
     /// </summary>
@@ -83,8 +82,11 @@ public class SvgRuntime : InteractiveGue
                 }
                 sourceFile = value;
 #else
-                sourceFile = value;
-                Texture = ShapeSvgLoader.Load(value!);
+                // The path is recorded only for a document that loaded, so a file that failed (and threw, or
+                // was consumed silently) can be assigned again once it is fixed.
+                SvgDocument? loaded = ShapeSvgLoader.Load(value!, this);
+                Texture = loaded;
+                sourceFile = loaded != null ? value : null;
 #endif
                 // The getter returns the path, which TryGetProperty cannot recover from the document.
                 ReportTypedPropertyChanged(nameof(SourceFile), value);
