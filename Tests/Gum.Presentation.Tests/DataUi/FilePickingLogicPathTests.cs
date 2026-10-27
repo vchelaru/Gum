@@ -41,8 +41,8 @@ public class FilePickingLogicPathTests : BaseTestClass
     [Fact]
     public void RemoveDotDotSlash_MatchesFileManager_ForRandomPaths()
     {
-        string[] prefixes = { "", "", "/", "./", "C:/", "//", "https://h/" };
-        string[] segmentPool = { "a", "bb", "c.png", ".hidden", "..", "..", ".", "" };
+        string[] prefixes = { "", "", "/", "./", "C:/", "c:/", "C:", "//", "https://h/" };
+        string[] segmentPool = { "a", "bb", "c.png", ".hidden", "a..b", "..", "..", "..", ".", "" };
         Random random = new(6948);
         char separator = Path.DirectorySeparatorChar;
 
