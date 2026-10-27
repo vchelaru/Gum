@@ -2144,8 +2144,8 @@ public class ListBox : ItemsControl, IInputReceiver
             // is left to moving focus away (opt-in through the Up/Down/Left/RightKeyCombos). A wrapping list
             // and a ComboBox drop-down step on Up/Down; Left/Right also step a wrapping list.
             Orientation? singleAxis = IsComboBoxDropDown || InnerPanel.WrapsChildren ? null : Orientation;
-            bool stepsOnUpDown = singleAxis != Orientation.Horizontal;
-            bool stepsOnLeftRight = !IsComboBoxDropDown && singleAxis != Orientation.Vertical;
+            bool stepsOnUpDown = singleAxis != Controls.Orientation.Horizontal;
+            bool stepsOnLeftRight = !IsComboBoxDropDown && singleAxis != Controls.Orientation.Vertical;
 
             // Keys.X references are fully qualified to Gum.Forms.Input.Keys so this block compiles
             // on every platform regardless of what the file-level `using Keys = ...` alias resolves
