@@ -37,42 +37,17 @@ public class SelectedStateReferenceMerger
         HashSet<string> setBySelected = GetVariablesSetBy(selectedState);
         AddInnerVariablesOfExposedNames(defaultState, setBySelected);
 
-        for (int i = merged.VariableLists.Count - 1; i >= 0; i--)
+        FilterReferenceRows(merged, (qualifiedLeft, expanded) =>
         {
-            VariableListSave list = merged.VariableLists[i];
-            if (list is not VariableListSave<string> referenceList || list.GetRootName() != ReferencesRootName)
+            if (qualifiedLeft == null || !setBySelected.Contains(qualifiedLeft))
             {
-                continue;
+                return true;
             }
 
-            ElementSave? channelOwner = ElementSaveExtensions.ResolveChannelOwner(merged, list.SourceObject);
-            List<string> kept = new List<string>();
-            foreach (string line in referenceList.Value)
-            {
-                foreach (string expanded in ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner))
-                {
-                    if (!TryGetQualifiedLeft(expanded, list.SourceObject, out string? qualifiedLeft) ||
-                        !setBySelected.Contains(qualifiedLeft!))
-                    {
-                        kept.Add(expanded);
-                        continue;
-                    }
-
-                    string key = GetRowKey(qualifiedLeft!, expanded);
-                    overriddenRowKeys?.Add(key);
-                    if (keepOverriddenRow != null && keepOverriddenRow(key))
-                    {
-                        kept.Add(expanded);
-                    }
-                }
-            }
-
-            referenceList.Value = kept;
-            if (kept.Count == 0)
-            {
-                merged.VariableLists.RemoveAt(i);
-            }
-        }
+            string key = GetRowKey(qualifiedLeft, expanded);
+            overriddenRowKeys?.Add(key);
+            return keepOverriddenRow != null && keepOverriddenRow(key);
+        });
 
         foreach (VariableListSave selectedList in selectedState.VariableLists)
         {
@@ -106,7 +81,16 @@ public class SelectedStateReferenceMerger
     internal static void RemoveSettersOf(StateSave state, ICollection<string> names)
     {
         state.Variables.RemoveAll(variable => names.Contains(variable.Name));
+        FilterReferenceRows(state, (qualifiedLeft, _) => qualifiedLeft == null || !names.Contains(qualifiedLeft));
+    }
 
+    /// <summary>
+    /// Rewrites each reference list of <paramref name="state"/> as its channel-expanded lines, keeping the ones
+    /// <paramref name="keepRow"/> accepts (given the qualified variable the line writes, or null when it writes
+    /// nothing, such as a comment) and dropping lists left empty.
+    /// </summary>
+    private static void FilterReferenceRows(StateSave state, Func<string?, string, bool> keepRow)
+    {
         for (int i = state.VariableLists.Count - 1; i >= 0; i--)
         {
             VariableListSave list = state.VariableLists[i];
@@ -119,16 +103,13 @@ public class SelectedStateReferenceMerger
             List<string> kept = new List<string>();
             foreach (string line in referenceList.Value)
             {
-                List<string> expandedLines = ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner).ToList();
-                bool IsNamed(string expanded) => TryGetQualifiedLeft(expanded, list.SourceObject, out string? qualifiedLeft) &&
-                    names.Contains(qualifiedLeft!);
-                if (expandedLines.Any(IsNamed))
+                foreach (string expanded in ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner))
                 {
-                    kept.AddRange(expandedLines.Where(expanded => !IsNamed(expanded)));
-                }
-                else
-                {
-                    kept.Add(line);
+                    TryGetQualifiedLeft(expanded, list.SourceObject, out string? qualifiedLeft);
+                    if (keepRow(qualifiedLeft, expanded))
+                    {
+                        kept.Add(expanded);
+                    }
                 }
             }
 

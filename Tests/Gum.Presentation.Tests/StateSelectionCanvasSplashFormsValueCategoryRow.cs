@@ -55,6 +55,45 @@ public partial class StateSelectionCanvasSplashTests
         ShowSelectedAndReadBackgroundWidth(button, button.DefaultState!).ShouldBe(expected);
     }
 
+    /// <summary>A category state that sets a Forms-assigned variable by its exposed name does not override the Forms value.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RefreshAll_DefaultSelectedAndCategoryStateSetsTheExposedNameOfAFormsAssignedWidth_ShowsTheFormsValue(bool isEnabled)
+    {
+        ComponentSave button = BuildFullButton(defaultReference: false, materialized: true);
+        BehaviorSave behavior = ObjectFinder.Self.GumProjectSave!.Behaviors.Single();
+        behavior.FormsProperties.Add(new VariableSave { Type = "float", Name = "WidthProxy", Value = 10f });
+        behavior.ToolOnlyVariableReferences.Add("Background.Width = WidthProxy");
+        StateSave defaultState = button.DefaultState!;
+        defaultState.Variables.Add(new VariableSave { Name = "Background.Width", ExposedAsName = "BackgroundWidth", Value = DefaultOwnWidth, Type = "float", SetsValue = true });
+        defaultState.SetValue("WidthProxy", FormsWidth, "float");
+        defaultState.SetValue("IsEnabled", isEnabled, "bool");
+        string active = isEnabled ? "Enabled" : "Disabled";
+        SetNumber(button.Categories[0].States.Single(item => item.Name == active), "BackgroundWidth", EnabledStateWidth);
+        BehaviorToolOnlyReferencesApplier.Apply(button, defaultState);
+
+        ShowSelectedAndReadBackgroundWidth(button, defaultState).ShouldBe(FormsWidth);
+    }
+
+    /// <summary>A category state's Color row does not override a Forms-assigned color channel.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RefreshAll_DefaultSelectedAndCategoryStateColorRowOverAFormsAssignedChannel_ShowsTheFormsChannel(bool isEnabled)
+    {
+        ComponentSave button = BuildFullButton(defaultReference: false, materialized: false);
+        BehaviorSave behavior = ObjectFinder.Self.GumProjectSave!.Behaviors.Single();
+        behavior.FormsProperties.Add(new VariableSave { Type = "int", Name = "RedProxy", Value = 1 });
+        behavior.ToolOnlyVariableReferences.Add("Background.Red = RedProxy");
+        StateSave defaultState = button.DefaultState!;
+        defaultState.SetValue("RedProxy", 200, "int");
+        defaultState.SetValue("IsEnabled", isEnabled, "bool");
+        BehaviorToolOnlyReferencesApplier.Apply(button, defaultState);
+
+        ShowSelectedAndReadBackground(button, defaultState).Item1.ShouldBe(200);
+    }
+
     /// <summary>A Forms-assigned color channel removes only that channel from a state's <c>Color</c> row.</summary>
     [Fact]
     public void RemoveSettersOf_ColorRowAndOneChannelNamed_KeepsTheOtherChannels()
