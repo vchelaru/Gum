@@ -1,4 +1,5 @@
 using Apos.Shapes;
+using Gum.Wireframe;
 using RenderingLibrary.Content;
 using System;
 using System.IO;
@@ -42,11 +43,18 @@ public static class ShapeSvgLoader
 {
     /// <summary>
     /// Returns the <see cref="ShapeSvg"/> for <paramref name="fileName"/>, loading and caching it
-    /// on first request. Returns <c>null</c> when the file is missing or isn't SVG this can read,
-    /// so a bad <c>SourceFile</c> renders nothing rather than throwing mid-layout — matching how
-    /// <see cref="ContentLoader"/> returns a null texture for a missing image.
+    /// on first request. A file that is missing or isn't SVG this can read follows
+    /// <see cref="GraphicalUiElement.MissingFileBehavior"/> like a Sprite's image does:
+    /// <c>ThrowException</c> throws a <see cref="FileNotFoundException"/> naming the file, otherwise
+    /// this returns <c>null</c> and raises <c>PropertyAssignmentError</c>. A failure is never cached,
+    /// so a file fixed on disk loads on the next call.
     /// </summary>
-    public static ShapeSvg? Load(string fileName)
+    public static ShapeSvg? Load(string fileName) => Load(fileName, owner: null);
+
+    /// <summary>
+    /// <see cref="Load(string)"/> that also names <paramref name="owner"/> (by its Tag) in a failure message.
+    /// </summary>
+    internal static ShapeSvg? Load(string fileName, GraphicalUiElement? owner)
     {
         if (string.IsNullOrEmpty(fileName))
         {
@@ -65,9 +73,15 @@ public static class ShapeSvgLoader
 
         // The key has its slashes flipped to the OS separator, which breaks a URL, so download
         // from the original string.
-        var loaded = LoadFromFile(FileManager.IsUrl(fileName) ? fileName : key);
+        var loaded = LoadFromFile(FileManager.IsUrl(fileName) ? fileName : key, out Exception? failure);
 
-        if (loaded != null && LoaderManager.Self.CacheTextures)
+        if (loaded == null)
+        {
+            ReportLoadFailure(fileName, owner, failure);
+            return null;
+        }
+
+        if (LoaderManager.Self.CacheTextures)
         {
             LoaderManager.Self.AddDisposable(key, new ManagedShapeSvg(loaded),
                 LoaderManager.ExistingContentBehavior.Replace);
@@ -76,8 +90,10 @@ public static class ShapeSvgLoader
         return loaded;
     }
 
-    private static ShapeSvg? LoadFromFile(string standardizedFileName)
+    private static ShapeSvg? LoadFromFile(string standardizedFileName, out Exception? failure)
     {
+        failure = null;
+
         // Routed through FileManager.GetStreamForFile rather than File.OpenRead so the
         // FileManager.CustomGetStreamFromFile hook is honored — .gumpkg bundles, the
         // GumFromZipFile sample, mobile TitleContainer redirection, and any in-memory asset store
@@ -93,10 +109,33 @@ public static class ShapeSvgLoader
 
             return ShapeSvg.TryLoad(stream, out var svg) ? svg : null;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            failure = ex;
             return null;
         }
+    }
+
+    // Mirrors the Sprite SourceFile failure in Gum/Wireframe/CustomSetPropertyOnRenderable.cs.
+    private static void ReportLoadFailure(string fileName, GraphicalUiElement? owner, Exception? failure)
+    {
+        string message = "Error setting SourceFile on Svg";
+        if (owner?.Tag != null)
+        {
+            message += $" in {owner.Tag}";
+        }
+        message += $"\n{fileName}";
+        message += "\nThe file is missing or is not an SVG that Gum can read.";
+        message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+        message += "\nThe current relative directory is:\n" + FileManager.RelativeDirectory;
+
+        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+        {
+            throw new FileNotFoundException(message, failure);
+        }
+
+        Gum.Wireframe.CustomSetPropertyOnRenderable.RaisePropertyAssignmentError(
+            failure != null ? message + "\n" + failure : message);
     }
 
     // Blocking, like the texture loader's URL path. The URL needs no .svg extension; the content
