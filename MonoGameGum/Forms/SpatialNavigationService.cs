@@ -61,7 +61,7 @@ public static class SpatialNavigationService
             if (candidate == origin ||
                 origin.Visual.IsInParentChain(candidate.Visual) ||
                 candidate.Visual.IsInParentChain(origin.Visual) ||
-                IsNestedUnderAnotherCandidate(candidate, candidateList))
+                IsNestedUnderAnotherCandidate(candidate, origin, candidateList))
             {
                 continue;
             }
@@ -97,12 +97,14 @@ public static class SpatialNavigationService
     // Two independently-focusable elements can be in an ancestor/descendant relationship (a Slider
     // and its own Thumb button both pass the focusable filter), so excluding only origin-relative
     // ancestors/descendants isn't enough once neither is the origin. Only the outermost focusable
-    // element in any such chain should compete for the score.
-    private static bool IsNestedUnderAnotherCandidate(FrameworkElement candidate, List<FrameworkElement> candidates)
+    // element in any such chain should compete for the score. The origin's own ancestors never count
+    // as the outer element, since they are excluded from scoring: a focusable ScrollViewer containing
+    // the origin would otherwise swallow every sibling inside it (#6939).
+    private static bool IsNestedUnderAnotherCandidate(FrameworkElement candidate, FrameworkElement origin, List<FrameworkElement> candidates)
     {
         foreach (FrameworkElement other in candidates)
         {
-            if (other != candidate && candidate.Visual.IsInParentChain(other.Visual))
+            if (other != candidate && !origin.Visual.IsInParentChain(other.Visual) && candidate.Visual.IsInParentChain(other.Visual))
             {
                 return true;
             }

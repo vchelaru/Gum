@@ -730,6 +730,51 @@ public class ScrollViewer :
         }
     }
 
+    /// <summary>
+    /// Scrolls both axes by the least amount that shows all of <paramref name="descendant"/>, an element
+    /// inside <see cref="InnerPanel"/>. An element larger than the view gets its leading edge aligned.
+    /// Does nothing when the viewer is hidden, the element is not inside the inner panel, or an axis
+    /// has no scroll range.
+    /// </summary>
+    internal void ScrollDescendantIntoView(GraphicalUiElement descendant)
+    {
+        if (innerPanel == null || clipContainer == null || !Visual.AbsoluteVisible)
+        {
+            return;
+        }
+
+        GraphicalUiElement? ancestor = descendant.Parent;
+        while (ancestor != null && ancestor != innerPanel)
+        {
+            ancestor = ancestor.Parent;
+        }
+        if (ancestor == null)
+        {
+            return;
+        }
+
+        if (verticalScrollBar is { Maximum: > 0 })
+        {
+            verticalScrollBar.Value += GetAmountToShow(
+                descendant.AbsoluteTop, descendant.AbsoluteBottom, clipContainer.AbsoluteTop, clipContainer.AbsoluteBottom);
+        }
+        if (horizontalScrollBar is { Maximum: > 0 })
+        {
+            horizontalScrollBar.Value += GetAmountToShow(
+                descendant.AbsoluteLeft, descendant.AbsoluteRight, clipContainer.AbsoluteLeft, clipContainer.AbsoluteRight);
+        }
+    }
+
+    private static double GetAmountToShow(float start, float end, float viewStart, float viewEnd)
+    {
+        bool isLargerThanView = end - start > viewEnd - viewStart;
+        if (start < viewStart || isLargerThanView)
+        {
+            return start - viewStart;
+        }
+        return end > viewEnd ? end - viewEnd : 0;
+    }
+
     private void HandleMouseWheelScroll(object? sender, RoutedEventArgs args)
     {
         if(verticalScrollBar != null)

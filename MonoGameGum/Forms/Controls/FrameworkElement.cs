@@ -246,6 +246,9 @@ public class FrameworkElement : INotifyPropertyChanged
                 {
                     timeFocused = InteractiveGue.CurrentGameTime;
                     GotFocus?.Invoke(this, EventArgs.Empty);
+#if !FRB
+                    ScrollAncestorViewersToShowThis();
+#endif
                 }
                 else
                 {
@@ -273,6 +276,28 @@ public class FrameworkElement : INotifyPropertyChanged
     // A focused control that becomes hidden, itself or through any ancestor, loses focus like one removed
     // from a root (#6934). Event based: while focused, the Visual and each ancestor are listened to for
     // visibility and parent changes, so nothing runs per frame.
+#if !FRB
+    // Focus moved by gamepad, keyboard, tab or code scrolls each ScrollViewer holding this element,
+    // innermost first. A mouse push, hold or click that focuses this element does not: the element
+    // is under the cursor already (#6939).
+    void ScrollAncestorViewersToShowThis()
+    {
+        ICursor cursor = MainCursor;
+        if (cursor.PrimaryPush || cursor.PrimaryDown || cursor.PrimaryClick)
+        {
+            return;
+        }
+
+        for (GraphicalUiElement? current = Visual.Parent; current != null; current = current.Parent)
+        {
+            if (current is InteractiveGue { FormsControlAsObject: ScrollViewer viewer } && viewer != this)
+            {
+                viewer.ScrollDescendantIntoView(Visual);
+            }
+        }
+    }
+#endif
+
     List<GraphicalUiElement>? _visibilityWatched;
 
     void WatchVisibilityWhileFocused()
