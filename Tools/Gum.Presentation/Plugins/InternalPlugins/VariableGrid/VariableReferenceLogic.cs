@@ -747,6 +747,148 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     }
 
     /// <inheritdoc/>
+    public StoredValueChange[] ReapplyToolOnlyReferences(BehaviorSave behavior, BehaviorSave? previous, bool trySave)
+    {
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        if (project == null)
+        {
+            return Array.Empty<StoredValueChange>();
+        }
+
+        ISet<string> previousNames = previous == null
+            ? new HashSet<string>()
+            : BehaviorToolOnlyReferencesApplier.GetDrivenVariableNames(previous);
+        Dictionary<ComponentSave, ISet<string>> stale = new Dictionary<ComponentSave, ISet<string>>();
+        foreach (ComponentSave component in project.Components)
+        {
+            if (component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
+            {
+                HashSet<string> removed = new HashSet<string>(previousNames);
+                removed.ExceptWith(BehaviorToolOnlyReferencesApplier.GetDrivenVariableNames(component));
+                stale[component] = removed;
+            }
+        }
+        return ReapplyToolOnlyReferencesAround(project, stale, trySave);
+    }
+
+    /// <inheritdoc/>
+    public StoredValueChange[] ReapplyToolOnlyReferences(ElementSave element, ElementSave? previous, bool trySave)
+    {
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        if (project == null)
+        {
+            return Array.Empty<StoredValueChange>();
+        }
+
+        // Only a component carries behaviors, but a screen's own instances are re-applied the same way.
+        Dictionary<ComponentSave, ISet<string>> stale = new Dictionary<ComponentSave, ISet<string>>();
+        if (element is ComponentSave component)
+        {
+            HashSet<string> removed = previous is ComponentSave previousComponent
+                ? new HashSet<string>(BehaviorToolOnlyReferencesApplier.GetDrivenVariableNames(previousComponent))
+                : new HashSet<string>();
+            removed.ExceptWith(BehaviorToolOnlyReferencesApplier.GetDrivenVariableNames(component));
+            stale[component] = removed;
+        }
+        return ReapplyToolOnlyReferencesAround(project, stale, trySave, extraTargets: new[] { element });
+    }
+
+    /// <summary>
+    /// Re-applies the tool-only references to each component of <paramref name="staleNames"/> and to every
+    /// element with an instance of one, which is where <see cref="BehaviorToolOnlyReferencesApplier.Apply"/>
+    /// materializes a component's references. First, the variables a component's removed references wrote
+    /// (its value in <paramref name="staleNames"/>) are removed from it and from those instances. Elements
+    /// whose stored values changed are saved and their readers updated.
+    /// </summary>
+    private StoredValueChange[] ReapplyToolOnlyReferencesAround(GumProjectSave project, Dictionary<ComponentSave, ISet<string>> staleNames,
+        bool trySave, IEnumerable<ElementSave>? extraTargets = null)
+    {
+        HashSet<ElementSave> affected = new HashSet<ElementSave>(staleNames.Keys);
+        if (extraTargets != null)
+        {
+            affected.UnionWith(extraTargets);
+        }
+        if (staleNames.Count > 0)
+        {
+            foreach (ElementSave container in project.Components.Cast<ElementSave>().Concat(project.Screens))
+            {
+                if (container.Instances.Any(instance => ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave baseComponent && staleNames.ContainsKey(baseComponent)))
+                {
+                    affected.Add(container);
+                }
+            }
+        }
+
+        List<StoredValueChange> changes = new List<StoredValueChange>();
+        List<ElementSave> changedElements = new List<ElementSave>();
+        foreach (ElementSave element in affected)
+        {
+            StateSave? state = element.DefaultState;
+            if (state == null)
+            {
+                continue;
+            }
+
+            Dictionary<string, object?> before = new Dictionary<string, object?>();
+            foreach (VariableSave variable in state.Variables)
+            {
+                before[variable.Name] = variable.Value;
+            }
+            RemoveStaleValues(element, state, staleNames);
+            BehaviorToolOnlyReferencesApplier.Apply(element, state);
+
+            int countBefore = changes.Count;
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (!before.TryGetValue(variable.Name, out object? oldValue) || !Equals(oldValue, variable.Value))
+                {
+                    changes.Add(new StoredValueChange(element, null, state.Name, variable.Name, variable.Type, variable.Value));
+                }
+            }
+            // A reference that now resolves to a resting value removes the value an instance held.
+            foreach (string removed in before.Keys.Where(name => state.Variables.All(variable => variable.Name != name)))
+            {
+                changes.Add(new StoredValueChange(element, null, state.Name, removed, null, null));
+            }
+            if (changes.Count > countBefore)
+            {
+                changedElements.Add(element);
+            }
+        }
+
+        foreach (ElementSave element in changedElements)
+        {
+            changes.AddRange(ApplyReferencesToElement(element, trySave));
+            if (trySave)
+            {
+                _fileCommands.TryAutoSaveElement(element);
+            }
+        }
+
+        return changes.ToArray();
+    }
+
+    /// <summary>
+    /// Removes from <paramref name="state"/> the values a removed reference wrote: the component's own variable
+    /// when <paramref name="element"/> is the component, and <c>Instance.Variable</c> for each of its instances.
+    /// </summary>
+    private static void RemoveStaleValues(ElementSave element, StateSave state, Dictionary<ComponentSave, ISet<string>> staleNames)
+    {
+        if (element is ComponentSave self && staleNames.TryGetValue(self, out ISet<string>? own))
+        {
+            state.Variables.RemoveAll(variable => own.Contains(variable.Name));
+        }
+        foreach (InstanceSave instance in element.Instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave baseComponent &&
+                staleNames.TryGetValue(baseComponent, out ISet<string>? names) && names.Count > 0)
+            {
+                state.Variables.RemoveAll(variable => names.Any(name => variable.Name == instance.Name + "." + name));
+            }
+        }
+    }
+
+    /// <inheritdoc/>
     public StoredValueChange[] ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
         GumProjectSave? project = ObjectFinder.Self.GumProjectSave;

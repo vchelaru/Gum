@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Undo;
 using System.Collections.Generic;
 using Gum.DataTypes.Variables;
@@ -43,6 +44,31 @@ public interface IVariableReferenceLogic
     /// nothing, and does not touch the wireframe, when no row uses such a name.
     /// </summary>
     void ReapplySiblingDependentReferences(ElementSave element);
+
+    /// <summary>
+    /// After <paramref name="behavior"/> was reloaded from disk, re-applies its tool-only references to the
+    /// components that implement it and to every element holding an instance of one, the same pass an edit
+    /// of those elements runs, then updates the elements whose variable references read what changed.
+    /// </summary>
+    /// <param name="behavior">The behavior as it is now loaded.</param>
+    /// <param name="previous">The copy the reload replaced. A variable only its lines wrote, and no remaining line of
+    /// the component writes, is removed; null when unknown.</param>
+    /// <param name="trySave">True to auto-save each element whose stored values changed.</param>
+    /// <returns>Every stored value that changed, in the re-applied elements and in the elements that read them
+    /// (a value a reference removed is reported with a null value); empty when nothing changed.</returns>
+    StoredValueChange[] ReapplyToolOnlyReferences(BehaviorSave behavior, BehaviorSave? previous, bool trySave);
+
+    /// <summary>
+    /// After <paramref name="element"/> was reloaded from disk, re-applies the tool-only references of its
+    /// behaviors (and of its instances' components) to it and to every element holding an instance of it,
+    /// because an outside edit may have changed a Forms value they read or the behaviors it implements.
+    /// </summary>
+    /// <param name="element">The element as it is now loaded.</param>
+    /// <param name="previous">The copy the reload replaced. A variable a behavior it no longer implements wrote is
+    /// removed from it and from instances of it; null when unknown.</param>
+    /// <param name="trySave">True to auto-save each element whose stored values changed.</param>
+    /// <returns>See <see cref="ReapplyToolOnlyReferences(BehaviorSave, BehaviorSave?, bool)"/>.</returns>
+    StoredValueChange[] ReapplyToolOnlyReferences(ElementSave element, ElementSave? previous, bool trySave);
 
     void ReactIfChangedMemberIsVariableReference(InstanceSave? instance, StateSave stateSave, string changedMember, object? oldValue);
 }
