@@ -13,7 +13,8 @@ namespace Gum.Wireframe;
 /// state's plain value (#6861). A game applies the state once; when a row's source later changes, the row
 /// writes its value again. The canvas is rebuilt from saved data on every refresh, so this remembers each
 /// overridden row's evaluated value between refreshes of the same selection: a row whose value changed
-/// stays re-driven until the selection changes, which is when a game would apply the state again.
+/// stays re-driven until the selection changes, which is when a game would apply the state again, or
+/// until the state's own value for that variable is edited, which sets it again.
 /// Rows that read another element are not tracked: a game applies the state again after those change
 /// (<c>RefreshStyles</c>), so the state keeps winning.
 /// </summary>
@@ -23,11 +24,25 @@ internal class ReDrivenReferenceRowTracker
     private ElementSave? _element;
     private List<StateSave> _statesOnTop = new List<StateSave>();
     private Dictionary<string, object?> _lastValues = new Dictionary<string, object?>();
+    private Dictionary<string, object?> _lastStateValues = new Dictionary<string, object?>();
     private HashSet<string> _reDrivenKeys = new HashSet<string>();
 
     public ReDrivenReferenceRowTracker(SelectedStateReferenceMerger merger)
     {
         _merger = merger;
+    }
+
+    /// <summary>The element whose selection is remembered, or null when nothing is.</summary>
+    internal ElementSave? TrackedElement => _element;
+
+    /// <summary>Forgets the selection, so nothing is kept once it is gone.</summary>
+    public void Clear()
+    {
+        _element = null;
+        _statesOnTop = new List<StateSave>();
+        _lastValues = new Dictionary<string, object?>();
+        _lastStateValues = new Dictionary<string, object?>();
+        _reDrivenKeys = new HashSet<string>();
     }
 
     /// <summary>
@@ -38,7 +53,7 @@ internal class ReDrivenReferenceRowTracker
     {
         if (statesOnTop.Count == 0)
         {
-            Reset(element, statesOnTop);
+            Clear();
             return defaultState;
         }
 
@@ -49,7 +64,7 @@ internal class ReDrivenReferenceRowTracker
             everything = _merger.Merge(everything, stateOnTop, _ => true, overriddenKeys);
         }
 
-        UpdateReDrivenKeys(element, statesOnTop, everything, overriddenKeys);
+        UpdateReDrivenKeys(element, statesOnTop, everything, new HashSet<string>(overriddenKeys));
 
         StateSave result = defaultState;
         foreach (StateSave stateOnTop in statesOnTop)
@@ -60,7 +75,7 @@ internal class ReDrivenReferenceRowTracker
     }
 
     private void UpdateReDrivenKeys(ElementSave element, IReadOnlyList<StateSave> statesOnTop, StateSave everything,
-        List<string> overriddenKeys)
+        HashSet<string> overriddenKeys)
     {
         bool isSameSelection = element == _element && statesOnTop.SequenceEqual(_statesOnTop);
         if (!isSameSelection)
@@ -68,22 +83,32 @@ internal class ReDrivenReferenceRowTracker
             Reset(element, statesOnTop);
         }
 
-        Dictionary<string, object?> values = GetOverriddenRowValues(element, everything, new HashSet<string>(overriddenKeys));
+        Dictionary<string, object?> values = new Dictionary<string, object?>();
+        Dictionary<string, object?> stateValues = new Dictionary<string, object?>();
+        FillOverriddenRowValues(element, everything, statesOnTop, overriddenKeys, values, stateValues);
         if (isSameSelection)
         {
             foreach (KeyValuePair<string, object?> pair in values)
             {
-                if (_lastValues.TryGetValue(pair.Key, out object? last) && !Equals(last, pair.Value))
+                // Editing the state's own value sets the variable again, which ends a re-drive; a
+                // source that changes after that re-drives it again.
+                if (_lastStateValues.TryGetValue(pair.Key, out object? lastState) && !Equals(lastState, stateValues[pair.Key]))
+                {
+                    _reDrivenKeys.Remove(pair.Key);
+                }
+                else if (_lastValues.TryGetValue(pair.Key, out object? last) && !Equals(last, pair.Value))
                 {
                     _reDrivenKeys.Add(pair.Key);
                 }
             }
         }
         _lastValues = values;
+        _lastStateValues = stateValues;
     }
 
-    private static Dictionary<string, object?> GetOverriddenRowValues(ElementSave element, StateSave everything,
-        HashSet<string> overriddenKeys)
+    private static void FillOverriddenRowValues(ElementSave element, StateSave everything,
+        IReadOnlyList<StateSave> statesOnTop, HashSet<string> overriddenKeys,
+        Dictionary<string, object?> values, Dictionary<string, object?> stateValues)
     {
         List<StateSave> states = new List<StateSave>();
         List<ElementSave> baseElements = ObjectFinder.Self.GetBaseElements(element);
@@ -96,7 +121,6 @@ internal class ReDrivenReferenceRowTracker
         }
         states.Add(everything);
 
-        Dictionary<string, object?> values = new Dictionary<string, object?>();
         VariableReferenceGraph graph = VariableReferenceGraph.Create(element, states);
         StateSave evaluationState = everything.Clone();
         foreach (ReferenceRow row in graph.OrderedRows)
@@ -107,16 +131,29 @@ internal class ReDrivenReferenceRowTracker
             if (row.IsLiveEvaluable && row.ElementReads.Count == 0 && overriddenKeys.Contains(key))
             {
                 values[key] = result.NewValue;
+                stateValues[key] = GetStateValue(statesOnTop, row.WrittenName);
             }
         }
-        return values;
+    }
+
+    private static object? GetStateValue(IReadOnlyList<StateSave> statesOnTop, string variableName)
+    {
+        object? value = null;
+        foreach (StateSave stateOnTop in statesOnTop)
+        {
+            VariableSave? variable = stateOnTop.GetVariableSave(variableName);
+            if (variable != null && variable.SetsValue)
+            {
+                value = variable.Value;
+            }
+        }
+        return value;
     }
 
     private void Reset(ElementSave element, IReadOnlyList<StateSave> statesOnTop)
     {
+        Clear();
         _element = element;
         _statesOnTop = statesOnTop.ToList();
-        _lastValues = new Dictionary<string, object?>();
-        _reDrivenKeys = new HashSet<string>();
     }
 }

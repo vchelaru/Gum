@@ -92,6 +92,24 @@ public class StateVersusReferenceRowPrecedenceTests : BaseTestClass
         Background(panel).Width.ShouldBe(80f);
     }
 
+    /// <summary>
+    /// The state sets Other.Width by value, and also sets Background.Width, which the default row
+    /// Other.Width = Background.Width reads. Applying the state changes the row's source, so the row
+    /// re-drives Other.Width (200) over the state's 400. The canvas shows the same on first show.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ApplyState_StateAlsoChangesTheRowsSource_RowReDrivesOverTheStatesPlainWidth(bool useExpressions)
+    {
+        UseExpressions(useExpressions);
+        GraphicalUiElement panel = CreatePanel(withChainedRow: true);
+
+        panel.SetProperty("SizeCategoryState", "Large");
+
+        panel.GetGraphicalUiElementByName("Other")!.Width.ShouldBe(200f);
+    }
+
     #endregion
 
     #region Composite (Color)
@@ -242,7 +260,7 @@ public class StateVersusReferenceRowPrecedenceTests : BaseTestClass
     }
 
     // Default: Background.Width = 50 with the row "Width = Reference.Width"; Large sets Background.Width = 200 and has no row.
-    private static GraphicalUiElement CreatePanel()
+    private static GraphicalUiElement CreatePanel(bool withChainedRow = false)
     {
         ComponentSave panel = new ComponentSave { Name = "Panel", BaseType = "Container" };
         panel.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle", ParentContainer = panel });
@@ -259,6 +277,15 @@ public class StateVersusReferenceRowPrecedenceTests : BaseTestClass
         large.Variables.Add(new VariableSave { Name = "Background.Width", Value = 200f, Type = "float", SetsValue = true });
         category.States.Add(large);
         panel.Categories.Add(category);
+
+        if (withChainedRow)
+        {
+            // Other follows Background through a row; Large sets Other by value too.
+            panel.Instances.Add(new InstanceSave { Name = "Other", BaseType = "ColoredRectangle", ParentContainer = panel });
+            defaultState.Variables.Add(new VariableSave { Name = "Other.Width", Value = 50f, Type = "float", SetsValue = true });
+            AddRow(defaultState, "Other", "Width = Background.Width");
+            large.Variables.Add(new VariableSave { Name = "Other.Width", Value = 400f, Type = "float", SetsValue = true });
+        }
 
         BuildProject(panel);
         return panel.ToGraphicalUiElement();

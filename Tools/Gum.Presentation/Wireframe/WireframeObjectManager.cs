@@ -142,6 +142,11 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     {
         bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
 
+        if (elementSave != ElementShowing)
+        {
+            _reDrivenReferenceRowTracker.Clear();
+        }
+
         if (elementSave == null || elementSave.IsSourceFileMissing)
         {
             ClearAll();
