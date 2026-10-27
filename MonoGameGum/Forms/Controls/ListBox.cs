@@ -1859,8 +1859,14 @@ public class ListBox : ItemsControl, IInputReceiver
         var targetChildren = targetRoot.Children;
         if (!IsAlreadyOnTop(popup.Visual, targetRoot, ownFollowers))
         {
+            // Detaching hides the popup for a moment, which takes its focus away (#6934). The caller only
+            // moved it, so give the focus back.
+            PopupFocusSnapshot focus = PopupFocusSnapshot.Capture(popup);
+
             popup.Visual.Parent = null;
             targetChildren.Add(popup.Visual);
+
+            focus.Restore(popup);
         }
 
         // Reposition after resolving and parenting to the target root, so the clamp reflects
@@ -1883,6 +1889,53 @@ public class ListBox : ItemsControl, IInputReceiver
             ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
 
         return listBoxParent.GetTopParent() == modalRoot ? modalRoot : popupRoot;
+    }
+
+    /// <summary>
+    /// The focus and scroll of a popup that a library operation is about to detach and re-attach. Hiding it
+    /// for a moment takes its focus away (#6934), so <see cref="Restore"/> gives it back. Focusing a row
+    /// scrolls it into view, but a restore is not navigation, so the scroll is put back too.
+    /// </summary>
+    internal readonly struct PopupFocusSnapshot
+    {
+        private readonly bool _hadFocus;
+        private readonly bool _hadItemFocus;
+        private readonly double _scroll;
+
+        private PopupFocusSnapshot(bool hadFocus, bool hadItemFocus, double scroll)
+        {
+            _hadFocus = hadFocus;
+            _hadItemFocus = hadItemFocus;
+            _scroll = scroll;
+        }
+
+        public static PopupFocusSnapshot Capture(ScrollViewer popup) => new PopupFocusSnapshot(
+            popup.IsFocused,
+            popup is ListBox listBox ? listBox.DoListItemsHaveFocus : popup.DoItemsHaveFocus,
+            popup.VerticalScrollBarValue);
+
+        public void Restore(ScrollViewer popup)
+        {
+            if (!_hadFocus)
+            {
+                return;
+            }
+
+            if (!popup.IsFocused)
+            {
+                popup.IsFocused = true;
+                if (popup is ListBox listBox)
+                {
+                    listBox.DoListItemsHaveFocus = _hadItemFocus;
+                }
+                else
+                {
+                    popup.DoItemsHaveFocus = _hadItemFocus;
+                }
+            }
+
+            popup.VerticalScrollBarValue = _scroll;
+        }
     }
 
     private static bool IsAlreadyOnTop(GraphicalUiElement popupVisual, GraphicalUiElement targetRoot,
