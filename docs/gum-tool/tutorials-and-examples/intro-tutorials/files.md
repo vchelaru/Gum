@@ -26,7 +26,7 @@ First we'll set up a workspace:
 
 ![SpriteInstance displaying a bear Source File](<../../../.gitbook/assets/02_09 19 49.png>)
 
-`Source File` is a drop-down. It lists the image files your project already references, so a file used by another Sprite can be chosen without browsing for it. Use the "..." button to pick a file that the project does not reference yet.
+`Source File` is a drop-down that you can also type into. The list shows the image files your project already references, so a file used by another Sprite can be chosen without browsing for it. To use another file, type a path or a URL and press Enter, or use the "..." button to pick one. Clearing the text clears the value.
 
 {% hint style="info" %}
 The `Source File` drop-down is available in November 2026, or now if building Gum from source. Earlier versions show a text box instead.

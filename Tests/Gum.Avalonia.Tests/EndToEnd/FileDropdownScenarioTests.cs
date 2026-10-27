@@ -1,5 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.VisualTree;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Avalonia.Tests.VariableGrid;
@@ -151,4 +153,175 @@ public class FileDropdownScenarioTests
         grid.Combo("SourceFile").IsEffectivelyEnabled.ShouldBeFalse("a row set by a reference cannot be picked from");
         grid.Combo("SourceFile").SelectedItem.ShouldBe("Hero.png");
     }
+
+    #region Typing
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_TypedPathUrlAndEmptyText_CommitOnEnter_AndUndoRestoresTheFiles()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        InstanceSave icon = tree.Project.AddInstance(card, "Icon", "Sprite");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        tree.Click(tree.NodeFor(icon));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        grid.Input.TypeAndEnter(TypedField(grid), "Hero.png");
+        VariableGridHarness.StoredValue(grid.ReadSaved(card), "Icon.SourceFile").ShouldBe("Hero.png");
+
+        grid.Input.TypeAndEnter(TypedField(grid), "https://example.com/Hero.png");
+        VariableGridHarness.StoredValue(card, "Icon.SourceFile").ShouldBe("https://example.com/Hero.png");
+
+        ClearAndEnter(grid);
+        (VariableGridHarness.StoredValue(card, "Icon.SourceFile") as string).ShouldBeNullOrEmpty("emptying the text clears the value");
+
+        tree.Undo();
+        tree.Undo();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the three edits should restore the files");
+        tree.Redo();
+        VariableGridHarness.StoredValue(card, "Icon.SourceFile").ShouldBe("Hero.png");
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_TypedInvalidValue_ShowsTheErrorAndKeepsTheOldValue()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        InstanceSave icon = tree.Project.AddInstance(card, "Icon", "Sprite");
+        tree.Click(tree.NodeFor(icon));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+
+        grid.Input.TypeAndEnter(TypedField(grid), "notes.txt");
+
+        tree.Dialogs.Messages.ShouldHaveSingleItem().ShouldContain("txt");
+        (VariableGridHarness.StoredValue(card, "Icon.SourceFile") as string).ShouldBeNullOrEmpty();
+        grid.Combo("SourceFile").Text.ShouldBeNullOrEmpty("the row shows the kept value again");
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_TypedPathOutsideTheProject_StillAsksToCopyOrReference()
+    {
+        string outside = Path.Combine(Path.GetTempPath(), "Gum6869Typed_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(outside);
+        try
+        {
+            using ProjectTreeHarness tree = new ProjectTreeHarness();
+            ComponentSave card = tree.Project.AddComponent("Card");
+            InstanceSave icon = tree.Project.AddInstance(card, "Icon", "Sprite");
+            File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(outside, "Far.png"));
+            tree.Click(tree.NodeFor(icon));
+            VariableGridHarness grid = tree.Grid;
+            grid.Settle();
+            string reference = Path.GetRelativePath(tree.Project.ProjectFolder, Path.Combine(outside, "Far.png")).Replace('\\', '/');
+
+            tree.Dialogs.AnswerNext<ChoiceDialogViewModel>(dialog =>
+            {
+                dialog.SelectedValue = dialog.OptionValues.First(option => option.StartsWith("Reference"));
+                return true;
+            });
+            grid.Input.TypeAndEnter(TypedField(grid), reference);
+
+            VariableGridHarness.StoredValue(card, "Icon.SourceFile").ShouldBe(reference);
+        }
+        finally
+        {
+            Directory.Delete(outside, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_SetByAReference_StaysDisabledWhenTypedAt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        tree.Project.AddInstance(card, "Leader", "Sprite");
+        InstanceSave follower = tree.Project.AddInstance(card, "Follower", "Sprite");
+        card.GetDefaultStateOrThrow().SetValue("Leader.SourceFile", "Hero.png", "string");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(follower));
+        VariableGridHarness grid = tree.Grid;
+        grid.TypeLinesAndApply("VariableReferences", "SourceFile = Leader.SourceFile");
+
+        TextBox field = TypedField(grid);
+        field.IsEffectivelyEnabled.ShouldBeFalse();
+        grid.Input.TypeAndEnter(field, "Other.png");
+
+        VariableGridHarness.StoredValue(card, "Follower.SourceFile").ShouldBe("Hero.png");
+        grid.Combo("SourceFile").IsEffectivelyEnabled.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_RetargetedToAnotherInstance_ShowsItsValueAndKeepsTypingAndTheList()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        InstanceSave first = tree.Project.AddInstance(card, "First", "Sprite");
+        InstanceSave second = tree.Project.AddInstance(card, "Second", "Sprite");
+        tree.Click(tree.NodeFor(first));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+        grid.Input.TypeAndEnter(TypedField(grid), "Hero.png");
+
+        tree.Click(tree.NodeFor(second));
+        grid.Settle();
+
+        grid.Combo("SourceFile").Text.ShouldBeNullOrEmpty("the second instance has no file");
+        grid.PickComboItem("SourceFile", "Hero.png");
+        VariableGridHarness.StoredValue(card, "Second.SourceFile").ShouldBe("Hero.png");
+        tree.Click(tree.NodeFor(first));
+        grid.Settle();
+        grid.Combo("SourceFile").Text.ShouldBe("Hero.png");
+        ClearAndEnter(grid);
+        (VariableGridHarness.StoredValue(card, "First.SourceFile") as string).ShouldBeNullOrEmpty();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_TypedWithTwoInstancesSelected_SetsBoth_AndOneUndoRestoresThem()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        InstanceSave sprite = tree.Project.AddInstance(card, "Icon", "Sprite");
+        InstanceSave nineSlice = tree.Project.AddInstance(card, "Panel", "NineSlice");
+        tree.SaveAll();
+        VariableGridHarness grid = tree.Grid;
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        grid.Select(sprite, nineSlice);
+
+        grid.Input.TypeAndEnter(TypedField(grid), "Hero.png");
+
+        VariableGridHarness.StoredValue(card, "Icon.SourceFile").ShouldBe("Hero.png");
+        VariableGridHarness.StoredValue(card, "Panel.SourceFile").ShouldBe("Hero.png");
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "one undo restores both instances");
+    }
+
+    private static void ClearAndEnter(VariableGridHarness grid)
+    {
+        TextBox field = TypedField(grid);
+        grid.Input.Click(field);
+        field.Focus();
+        field.SelectAll();
+        grid.Input.Press(Key.Delete, PhysicalKey.Delete);
+        grid.Input.Press(Key.Enter, PhysicalKey.Enter);
+    }
+
+    // The editable combo's own text field (the row's other text box, the value holder, is not shown).
+    private static TextBox TypedField(VariableGridHarness grid) =>
+        grid.Row("SourceFile").GetVisualDescendants().OfType<TextBox>().First();
+
+    #endregion
 }

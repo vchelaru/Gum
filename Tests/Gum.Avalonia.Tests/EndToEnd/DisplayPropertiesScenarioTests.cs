@@ -72,12 +72,11 @@ public class DisplayPropertiesScenarioTests
         ProjectFileSnapshot start = tree.SnapshotFiles();
 
         ComboBox combo = grid.Combo("SourceFile");
-        grid.Input.Click(combo);
+        combo.IsDropDownOpen = true;
         grid.Settle();
 
-        combo.IsDropDownOpen.ShouldBeTrue("a click on the row opens the list");
         combo.Items.Cast<object?>().ShouldBe(new object[] { "Art/Banner.png", "Hero.png" }, "images the project references, not the font");
-        grid.Editor<FileSelectionDisplay>("SourceFile").TextBox.IsVisible.ShouldBeFalse("a path is picked, not typed");
+        combo.IsEditable.ShouldBeTrue("a path can also be typed");
 
         grid.PickComboItem("SourceFile", "Art/Banner.png");
 

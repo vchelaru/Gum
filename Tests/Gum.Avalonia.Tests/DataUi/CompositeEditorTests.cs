@@ -257,7 +257,7 @@ public class CompositeEditorTests : IDisposable
         display.Refresh();
 
         display.ChoiceBox.IsVisible.ShouldBeTrue();
-        display.TextBox.IsVisible.ShouldBeFalse();
+        display.ChoiceBox.IsEditable.ShouldBeTrue();
         display.ChoiceBox.SelectedItem.ShouldBe("old.png");
 
         display.ChoiceBox.IsDropDownOpen = true;
@@ -269,7 +269,7 @@ public class CompositeEditorTests : IDisposable
 
         display.ChoiceBox.SelectedItem = "z.png";
 
-        fixture.File.ShouldBe("z.png");
+        fixture.File.ShouldBe("z.png", "a pick from the open list commits at once");
         display.TextBox.Text.ShouldBe("z.png");
     }
 
@@ -292,6 +292,44 @@ public class CompositeEditorTests : IDisposable
     }
 
     [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_TypedTextCommitsOnEnterOrFocusLoss_AndEmptyClears()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay { FileChoices = _ => new[] { "old.png" } };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.Text = "https://example.com/typed.png";
+        fixture.File.ShouldBe("old.png", "typing alone commits nothing");
+        display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        fixture.File.ShouldBe("https://example.com/typed.png");
+
+        display.ChoiceBox.Text = "other/typed.png";
+        display.ChoiceBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+        fixture.File.ShouldBe("other/typed.png");
+
+        display.ChoiceBox.Text = "";
+        display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        fixture.File.ShouldBe("");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_EscapeRevertsTypedText()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay { FileChoices = _ => new[] { "old.png" } };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.Text = "half-typed";
+        display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
+        display.ChoiceBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+
+        display.ChoiceBox.Text.ShouldBe("old.png");
+        fixture.File.ShouldBe("old.png");
+    }
+
+    [AvaloniaFact]
     public void FileSelectionDisplay_WithoutChoices_StaysATextBox()
     {
         EditorFixture fixture = new EditorFixture { File = "a.png" };
@@ -299,8 +337,8 @@ public class CompositeEditorTests : IDisposable
         display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
         display.Refresh();
 
-        display.TextBox.IsVisible.ShouldBeTrue();
-        display.ChoiceBox.IsVisible.ShouldBeFalse();
+        display.TextBox.Parent.ShouldNotBeNull();
+        display.ChoiceBox.Parent.ShouldBeNull("the drop-down is not part of a plain file row");
     }
 
     [AvaloniaFact]

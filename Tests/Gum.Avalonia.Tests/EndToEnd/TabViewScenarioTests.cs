@@ -7,7 +7,6 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Panels;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
@@ -84,9 +83,7 @@ public class TabViewScenarioTests
         }
 
         // Errors: a missing source file is listed and counted, and copies from the row.
-        tree.Dialogs.AnswerNextOpenFile(Path.Combine(tree.Project.ProjectFolder, "Missing.png"));
-        grid.Editor<FileSelectionDisplay>("SourceFile").PickFile();
-        grid.Settle();
+        grid.Input.TypeAndEnter(grid.Row("SourceFile").GetVisualDescendants().OfType<TextBox>().First(), "Missing.png");
         tree.ThrowIfCrashed();
         AllErrorsViewModel errors = ErrorsViewModel();
         RecordingClipboardService clipboard = (RecordingClipboardService)Services.GetRequiredService<IClipboardService>();

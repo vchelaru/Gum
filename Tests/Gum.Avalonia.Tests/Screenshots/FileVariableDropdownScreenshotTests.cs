@@ -1,3 +1,5 @@
+using Avalonia.Controls;
+using Avalonia.VisualTree;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Avalonia.Tests.VariableGrid;
@@ -23,6 +25,20 @@ public class FileVariableDropdownScreenshotTests
         grid.Settle();
 
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "source-file-row");
+    });
+
+    [SkippableFact]
+    public void SourceFileRowTypedAUrl() => PrScreenshot.Run(() =>
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        InstanceSave icon = AddSpritesReferencingThreeTextures(grid);
+        grid.Select(icon);
+        grid.Input.TypeInto(grid.View.FilterTextBox, "SourceFile");
+        grid.Input.TypeInto(grid.Row("SourceFile").GetVisualDescendants().OfType<TextBox>().First(), "https://example.com/hero.png");
+        grid.Input.Window.Height = 140;
+        grid.Settle();
+
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "source-file-typed-url");
     });
 
     [SkippableFact]
