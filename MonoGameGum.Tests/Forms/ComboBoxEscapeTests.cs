@@ -1,4 +1,5 @@
 using Gum.Forms.Controls;
+using System.Collections.Generic;
 using Gum.Input;
 using Gum.Wireframe;
 using Moq;
@@ -116,5 +117,93 @@ public class ComboBoxEscapeTests : BaseTestClass
 
         handled.ShouldBeTrue();
         listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    // Previews run outermost first, as InteractiveGue does each frame.
+    private static bool RunFrameThroughParents()
+    {
+        IInputReceiver receiver = InteractiveGue.CurrentInputReceiver!;
+        List<IInputReceiver> chain = new() { receiver };
+        for (IInputReceiver? parent = receiver.ParentInputReceiver; parent != null; parent = parent.ParentInputReceiver)
+        {
+            chain.Insert(0, parent);
+        }
+        foreach (IInputReceiver link in chain)
+        {
+            RoutedEventArgs args = new();
+            link.OnFocusUpdatePreview(args);
+            if (args.Handled)
+            {
+                return true;
+            }
+        }
+        receiver.OnFocusUpdate();
+        return false;
+    }
+
+    [Fact]
+    public void Escape_ComboBoxFocusedWhileOpenInsideScrollViewer_ClosesDropDown()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.AddToRoot();
+        ComboBox comboBox = new();
+        scrollViewer.AddChild(comboBox);
+        comboBox.Items!.Add("a");
+        comboBox.Items.Add("b");
+        comboBox.SelectedIndex = 1;
+        comboBox.IsDropDownOpen = true;
+        comboBox.IsFocused = true;
+        InteractiveGue.CurrentInputReceiver.ShouldBe(comboBox);
+        PushEscape();
+
+        RunFrameThroughParents();
+
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+        comboBox.SelectedIndex.ShouldBe(1);
+        // The ComboBox consumed the key, so the ScrollViewer did not take focus.
+        comboBox.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Escape_ComboBoxFocusedInsideScrollViewerDropDownClosed_StillLeavesScrollViewerItems()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.AddToRoot();
+        ComboBox comboBox = new();
+        scrollViewer.AddChild(comboBox);
+        comboBox.IsFocused = true;
+        PushEscape();
+
+        bool handled = RunFrameThroughParents();
+
+        handled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Escape_DisabledWhileOpen_ClosedByDisableThenEscapeDoesNothing()
+    {
+        ComboBox comboBox = CreateComboBox();
+        comboBox.IsDropDownOpen = true;
+        comboBox.IsEnabled = false;
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+        comboBox.AllowFocusWhenDisabled = true;
+        comboBox.IsFocused = true;
+        PushEscape();
+
+        bool handled = RunFrame();
+
+        handled.ShouldBeFalse();
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+        comboBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void MouseOpened_FocusIsOnThePopupList()
+    {
+        ComboBox comboBox = CreateComboBox();
+        ComboBoxListBoxGamepadTests.PushOn(comboBox.Visual);
+
+        comboBox.IsDropDownOpen.ShouldBeTrue();
+        InteractiveGue.CurrentInputReceiver.ShouldBe(comboBox.ListBox);
     }
 }

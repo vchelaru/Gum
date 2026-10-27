@@ -131,4 +131,51 @@ public class ListBoxKeyboardAxisTests : BaseTestClass
 
         listBox.SelectedIndex.ShouldBe(1);
     }
+
+    [Fact]
+    public void Left_HorizontalList_AtFirstItem_ClampsWithoutWrapping()
+    {
+        ListBox listBox = CreateList(horizontal: true, selectedIndex: 0);
+        TypeKey(Keys.Left);
+
+        listBox.OnFocusUpdate();
+
+        listBox.SelectedIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Right_HorizontalList_RaisesSelectionChangedOncePerStep()
+    {
+        ListBox listBox = CreateList(horizontal: true);
+        int count = 0;
+        listBox.SelectionChanged += (_, _) => count++;
+        TypeKey(Keys.Right);
+
+        listBox.OnFocusUpdate();
+
+        count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Right_WrappingHorizontalList_StepsToNeighborRow()
+    {
+        ListBox listBox = CreateList(horizontal: true, selectedIndex: 0);
+        listBox.InnerPanel.WrapsChildren = true;
+        listBox.InnerPanel.StackSpacing = 0;
+        foreach (ListBoxItem item in listBox.ListBoxItems)
+        {
+            item.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            item.Visual.Width = 100;
+            item.Visual.Height = 20;
+        }
+        listBox.InnerPanel.Width = 200;
+        listBox.InnerPanel.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        listBox.InnerPanel.UpdateLayout();
+        TypeKey(Keys.Right);
+
+        listBox.OnFocusUpdate();
+
+        listBox.SelectedIndex.ShouldBe(1);
+        listBox.ListBoxItems[1].IsFocused.ShouldBeTrue();
+    }
 }
