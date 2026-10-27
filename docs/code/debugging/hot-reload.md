@@ -87,6 +87,12 @@ Available in November 2026, or now if building Gum from source.
 
 A variable the reload does not find changed keeps the value your code gave it. Changing a variable in the Gum tool, or the default of the component an instance is built from, applies the new value over a value your code set. A variable the control's current state also sets is applied again with the state, so a value your code set on it is reset.
 
+A project file that cannot be read during a reload (half written or locked by the editor) leaves the running UI as it was, and the file name and reason are reported through `CustomSetPropertyOnRenderable.PropertyAssignmentError` and the console. Gum retries once after the debounce, and the next complete save reloads normally. An element file that was deleted while the project still lists it is reported and left out, and the rest reloads. A failure while applying a file that loaded is reported the same way and the next complete save reloads.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Preserving Runtime State
 
 Values your code set stay as long as the project does not change those variables. When the project does change a variable, the reload applies it, including to state your game derives from it, such as text computed from a variable. Subscribe to the `HotReloadCompleted` event to set that state again.
