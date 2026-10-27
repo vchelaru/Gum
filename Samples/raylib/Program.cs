@@ -72,13 +72,16 @@ public class BasicShapes
             : ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib gallery");
 
-        // raylib on macOS can start the window at an invalid y (int.MinValue), which leaves the top of
-        // the window, and the nav buttons, off the screen until the window is resized. Placing the
-        // window explicitly avoids that.
+        // macOS shrinks a window that is taller than the visible screen (menu bar, title bar and Dock
+        // take space), but raylib keeps drawing for the size it asked for until the window is resized,
+        // so the top of the frame, and the nav buttons, end up cut off. Asking for a height that fits
+        // makes raylib's size match the real window.
         int monitor = GetCurrentMonitor();
-        SetWindowPosition(
-            Math.Max(0, (GetMonitorWidth(monitor) - screenWidth) / 2),
-            Math.Max(40, (GetMonitorHeight(monitor) - screenHeight) / 2));
+        int fittingHeight = GetMonitorHeight(monitor) - 200;
+        if (screenHeight > fittingHeight)
+        {
+            SetWindowSize(screenWidth, fittingHeight);
+        }
 
         GumUI.Initialize();
 
