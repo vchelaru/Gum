@@ -51,15 +51,21 @@ Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
     Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
 ```
 
-### SkiaGum Applies MissingFileBehavior to a Sprite or NineSlice Image That Fails to Load
+### SkiaGum Throws When a File Is Missing or an Image Cannot Be Decoded
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
-SkiaGum now treats a Sprite or NineSlice `SourceFile` image that SkiaSharp cannot decode like a missing file, the same as [raylib](#raylib-throws-when-an-image-cannot-be-decoded). Before, the image drew nothing and reported nothing.
+SkiaGum now defaults `MissingFileBehavior` to `ThrowException`, the same as MonoGame, KNI, FNA and raylib. A missing Sprite or NineSlice image, a missing font file, and an image SkiaSharp cannot decode (the case [raylib](#raylib-throws-when-an-image-cannot-be-decoded) already covers) now throw a `FileNotFoundException` naming the file when the element is created. Before, a missing image threw an `ArgumentException`, a missing font file was reported only, and an undecodable image drew nothing.
 
-A missing file now follows `MissingFileBehavior` too, where it used to throw an `ArgumentException` whatever the setting. Under the SkiaGum default of `ConsumeSilently`, the Sprite's `Texture` is null and `PropertyAssignmentError` is raised with the file name, as described for an [.achx frame texture](#an-achx-frame-texture-that-fails-to-load-is-a-blank-frame). If your code caught that `ArgumentException`, check `Texture` or subscribe to `PropertyAssignmentError` instead.
+Fix the path, or keep the old silent behavior by setting `ConsumeSilently` after Gum initializes. A Sprite then has a null `Texture` and `PropertyAssignmentError` is raised with the file name, as described for an [.achx frame texture](#an-achx-frame-texture-that-fails-to-load-is-a-blank-frame).
+
+```csharp
+// Initialize
+Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
+    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+```
 
 ### An .achx Frame Texture That Fails to Load Is a Blank Frame
 

@@ -137,6 +137,9 @@ namespace RenderingLibrary
             // assigned before Initialize.
             CustomSetPropertyOnRenderable.LocalizationService ??= new Gum.Localization.LocalizationService();
 
+            // Same default as the MonoGame/KNI/FNA and raylib SystemManagers (#6889).
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+
         }
 
         private void UpdateFonts(IText text, GraphicalUiElement element)
