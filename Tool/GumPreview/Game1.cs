@@ -74,6 +74,7 @@ public class Game1 : Game
         // uses a Shader Model 4 effect, which requires HiDef - Reach cannot load it and shapes
         // silently fail to draw.
         _graphics.GraphicsProfile = GraphicsProfile.HiDef;
+        _graphics.PreparingDeviceSettings += PreviewDeviceSettings.PreserveBackBufferContents;
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
