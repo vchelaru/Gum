@@ -72,7 +72,7 @@ public static class SpatialNavigationService
             if (candidate == origin ||
                 origin.Visual.IsInParentChain(candidate.Visual) ||
                 candidate.Visual.IsInParentChain(origin.Visual) ||
-                IsNestedUnderAnotherCandidate(candidate, candidateList))
+                IsNestedUnderAnotherCandidate(candidate, origin, candidateList))
             {
                 continue;
             }
@@ -134,11 +134,13 @@ public static class SpatialNavigationService
         return candidate.Visual.AbsoluteTop < other.Visual.AbsoluteTop;
     }
 
-    private static bool IsNestedUnderAnotherCandidate(FrameworkElement candidate, List<FrameworkElement> candidates)
+    // The origin's own ancestors never count as the outer element: they are excluded from scoring, and a
+    // focusable ScrollViewer containing the origin would otherwise swallow every sibling inside it (#6939).
+    private static bool IsNestedUnderAnotherCandidate(FrameworkElement candidate, FrameworkElement origin, List<FrameworkElement> candidates)
     {
         foreach (FrameworkElement other in candidates)
         {
-            if (other != candidate && candidate.Visual.IsInParentChain(other.Visual))
+            if (other != candidate && !origin.Visual.IsInParentChain(other.Visual) && candidate.Visual.IsInParentChain(other.Visual))
             {
                 return true;
             }
