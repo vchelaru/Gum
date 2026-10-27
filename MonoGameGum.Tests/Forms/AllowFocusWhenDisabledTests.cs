@@ -375,7 +375,7 @@ public class AllowFocusWhenDisabledTests : BaseTestClass
     {
         ComboBox comboBox = new ComboBox();
         comboBox.AddToRoot();
-        comboBox.Items.Add("a");
+        comboBox.Items!.Add("a");
         comboBox.IsEnabled = false;
         comboBox.AllowFocusWhenDisabled = true;
         comboBox.IsFocused = true;
@@ -391,7 +391,7 @@ public class AllowFocusWhenDisabledTests : BaseTestClass
     {
         ListBox listBox = new ListBox();
         listBox.AddToRoot();
-        listBox.Items.Add("a");
+        listBox.Items!.Add("a");
         listBox.IsEnabled = false;
         listBox.AllowFocusWhenDisabled = true;
         listBox.IsFocused = true;
