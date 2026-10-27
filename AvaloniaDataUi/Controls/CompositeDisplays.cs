@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -720,7 +721,12 @@ public class ListBoxDisplay : DataUiDisplayBase
     }
 }
 
-/// <summary>A file path field with a picker button and a button that reveals the file.</summary>
+/// <summary>
+/// A file path field with a picker button and a button that reveals the file. With
+/// <see cref="FileChoices"/> set, the field is an editable drop-down of those files instead: a path
+/// or URL can be typed (committed on Enter or focus loss, empty clears) or picked from the list.
+/// The text box stays as the row's value holder and is out of the layout.
+/// </summary>
 public class FileSelectionDisplay : DataUiDisplayBase
 {
     private readonly TextBoxDisplayLogic _textLogic;
@@ -728,19 +734,44 @@ public class FileSelectionDisplay : DataUiDisplayBase
     private readonly Grid _grid;
     private readonly TextBlock _label;
     private readonly EditTrackingTextBox _textBox;
+    private readonly ComboBox _choiceBox;
     private readonly Button _revealButton;
     private readonly TextBlock _hint;
+    private Func<string?, IReadOnlyList<string>>? _fileChoices;
+    private bool _isLoadingChoices;
+    private string _shownChoiceText = string.Empty;
 
     /// <summary>Builds the displayer.</summary>
     public FileSelectionDisplay()
     {
         _filePickingLogic = new FilePickingLogic();
         _label = new TextBlock { Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-        _textBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Center };
+        _textBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Stretch };
         _textBox.EditCommitRequested += HandleEditCommitRequested;
-        Button pickButton = new Button { Content = "...", MinWidth = 24, Margin = new Thickness(2, 0, 0, 0) };
+        _choiceBox = new WheelIgnoringComboBox
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Stretch,
+            PlaceholderText = "(none)",
+            IsEditable = true,
+            ItemTemplate = new FuncDataTemplate<string>((path, _) => new TextBlock { Text = path, TextTrimming = TextTrimming.CharacterEllipsis }),
+        };
+        _choiceBox.SelectionChanged += HandleChoiceSelected;
+        _choiceBox.LostFocus += (_, _) => CommitTypedText();
+        _choiceBox.AddHandler(KeyDownEvent, HandleChoiceKeyDown, RoutingStrategies.Tunnel);
+        // The list is built as it opens, so a file the project started referencing since the row
+        // was last refreshed is there, without walking the project on every refresh.
+        _choiceBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == ComboBox.IsDropDownOpenProperty && e.NewValue is true)
+            {
+                LoadChoices();
+            }
+        };
+        // Every control in the row is as tall as the row, so the buttons match the field at any zoom.
+        Button pickButton = new Button { Content = "...", MinWidth = 24, Margin = new Thickness(2, 0, 0, 0), VerticalAlignment = VerticalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Center };
         pickButton.Click += (_, _) => PickFile();
-        _revealButton = new Button { Content = "↗", MinWidth = 24, Margin = new Thickness(1, 0, 0, 0) };
+        _revealButton = new Button { Content = "↗", MinWidth = 24, Margin = new Thickness(1, 0, 0, 0), VerticalAlignment = VerticalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(_revealButton, "View file in the file manager");
         _revealButton.Click += (_, _) => Reveal();
         _hint = CreateHintTextBlock();
@@ -753,6 +784,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
         DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
         DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 44);
         Grid.SetColumn(_textBox, 1);
+        Grid.SetColumn(_choiceBox, 1);
         Grid.SetColumn(pickButton, 2);
         Grid.SetColumn(_revealButton, 3);
         Grid.SetRow(_hint, 1);
@@ -791,6 +823,28 @@ public class FileSelectionDisplay : DataUiDisplayBase
         set => _filePickingLogic.RelativeToProvider = value;
     }
 
+    /// <summary>
+    /// The files the drop-down offers, given the row's current path. Called each time the list
+    /// opens. Null leaves the row a text box.
+    /// </summary>
+    public Func<string?, IReadOnlyList<string>>? FileChoices
+    {
+        get => _fileChoices;
+        set
+        {
+            _fileChoices = value;
+            // Only one of the two fields is in the row, so the row has a single text field.
+            _grid.Children.Remove(value != null ? _textBox : _choiceBox);
+            if (!_grid.Children.Contains(value != null ? _choiceBox : _textBox))
+            {
+                _grid.Children.Add(value != null ? _choiceBox : _textBox);
+            }
+        }
+    }
+
+    /// <summary>The drop-down of <see cref="FileChoices"/>, for tests.</summary>
+    internal ComboBox ChoiceBox => _choiceBox;
+
     /// <summary>The path field, for tests.</summary>
     internal TextBox TextBox => _textBox;
 
@@ -818,6 +872,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
         _label.Text = InstanceMember.DisplayName;
         RefreshRevealButton();
         RefreshIsEnabled();
+        RefreshChoiceBox(forceRefreshEvenIfFocused);
         SuppressSettingProperty = false;
     }
 
@@ -850,6 +905,99 @@ public class FileSelectionDisplay : DataUiDisplayBase
             SetIsEditable(false);
         }
         RefreshRevealButton();
+    }
+
+    // Commits a pick from the open list the way the picker button commits a picked file. Typed text
+    // that happens to match an item waits for Enter or focus loss.
+    private void HandleChoiceSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoadingChoices || SuppressSettingProperty || !_choiceBox.IsDropDownOpen || _choiceBox.SelectedItem is not string choice)
+        {
+            return;
+        }
+
+        Commit(choice);
+    }
+
+    private void HandleChoiceKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && !_choiceBox.IsDropDownOpen)
+        {
+            CommitTypedText();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && !_choiceBox.IsDropDownOpen)
+        {
+            ShowValue();
+        }
+        else if (e.Key == Key.Z && e.KeyModifiers.HasCommand())
+        {
+            // The tool's undo owns Ctrl+Z (Cmd+Z on macOS), not the text field's own.
+            e.Handled = true;
+        }
+    }
+
+    private void CommitTypedText()
+    {
+        string typed = _choiceBox.Text ?? string.Empty;
+        if (_fileChoices != null && typed != _shownChoiceText)
+        {
+            Commit(typed);
+        }
+    }
+
+    // Applies the path as the picker button does, then shows what the row holds: a rejected path
+    // (an unsupported extension) is put back by the commit and must not stay in the field.
+    private void Commit(string path)
+    {
+        _textBox.Text = path;
+        _textLogic.TryApplyToInstance();
+        RefreshRevealButton();
+        ShowValue();
+    }
+
+    private void ShowValue()
+    {
+        string? current = InstanceMember?.Value as string;
+        ShowChoices(string.IsNullOrEmpty(current) ? Array.Empty<string>() : new[] { current }, string.IsNullOrEmpty(current) ? null : current);
+    }
+
+    /// <summary>Fills the drop-down from <see cref="FileChoices"/>, as opening it does.</summary>
+    internal void LoadChoices()
+    {
+        if (_fileChoices == null)
+        {
+            return;
+        }
+
+        string? current = string.IsNullOrEmpty(_textBox.Text) ? null : _textBox.Text;
+        ShowChoices(_fileChoices(current), current);
+    }
+
+    // Between refreshes the drop-down holds only the row's own value; the list is loaded as it opens.
+    // A field the user is typing in keeps its text unless the refresh is forced.
+    private void RefreshChoiceBox(bool force)
+    {
+        if (_fileChoices == null || _choiceBox.IsDropDownOpen || (!force && _choiceBox.IsKeyboardFocusWithin))
+        {
+            return;
+        }
+
+        string? current = string.IsNullOrEmpty(_textBox.Text) ? null : _textBox.Text;
+        ShowChoices(current == null ? Array.Empty<string>() : new[] { current }, current);
+        // Only the default state is tinted, as the other drop-downs do.
+        DataUiValueStateBrushes.ApplyBackground(_choiceBox,
+            InstanceMember?.IsDefault == true ? DataUiValueState.Default : DataUiValueState.Custom);
+    }
+
+    private void ShowChoices(IReadOnlyList<string> choices, string? current)
+    {
+        _isLoadingChoices = true;
+        _choiceBox.ItemsSource = choices;
+        _choiceBox.SelectedItem = current;
+        _choiceBox.Text = current ?? string.Empty;
+        _shownChoiceText = current ?? string.Empty;
+        _isLoadingChoices = false;
     }
 
     private void RefreshRevealButton()

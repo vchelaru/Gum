@@ -47,6 +47,53 @@ public class DisplayPropertiesScenarioTests
     #region Variables tab editors
 
     [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileDropdown_ListsTheImagesTheProjectReferences_PickingOneSavesIt_AndUndoRestoresTheFiles()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        string content = Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png");
+        Directory.CreateDirectory(Path.Combine(tree.Project.ProjectFolder, "Art"));
+        File.Copy(content, Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        File.Copy(content, Path.Combine(tree.Project.ProjectFolder, "Art", "Banner.png"));
+        File.WriteAllText(Path.Combine(tree.Project.ProjectFolder, "Label.fnt"), "");
+        InstanceSave icon = tree.Project.AddInstance(button, "Icon", "Sprite");
+        InstanceSave hero = tree.Project.AddInstance(button, "Hero", "Sprite");
+        InstanceSave banner = tree.Project.AddInstance(button, "Banner", "Sprite");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        StateSave state = button.GetDefaultStateOrThrow();
+        state.SetValue("Hero.SourceFile", "Hero.png", "string");
+        state.SetValue("Banner.SourceFile", "Art/Banner.png", "string");
+        state.SetValue("Label.UseCustomFont", true, "bool");
+        state.SetValue("Label.CustomFontFile", "Label.fnt", "string");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(icon));
+        VariableGridHarness grid = tree.Grid;
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        ComboBox combo = grid.Combo("SourceFile");
+        combo.IsDropDownOpen = true;
+        grid.Settle();
+
+        combo.Items.Cast<object?>().ShouldBe(new object[] { "Art/Banner.png", "Hero.png" }, "images the project references, not the font");
+        combo.IsEditable.ShouldBeTrue("a path can also be typed");
+
+        grid.PickComboItem("SourceFile", "Art/Banner.png");
+
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Icon.SourceFile").ShouldBe("Art/Banner.png");
+        grid.Combo("SourceFile").SelectedItem.ShouldBe("Art/Banner.png");
+
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the pick should restore the files");
+        grid.Combo("SourceFile").SelectedItem.ShouldBeNull();
+
+        tree.Redo();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Icon.SourceFile").ShouldBe("Art/Banner.png");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "DISP-008")]
     [Trait("Feature", "DISP-010")]
     [Trait("Feature", "DISP-011")]
