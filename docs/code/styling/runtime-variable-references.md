@@ -14,6 +14,12 @@ For information on setting up variable references in the Gum tool, see the [Vari
 
 `ApplyAllVariableReferences` operates at the project level, modifying values on `ElementSave` and `StateSave` objects rather than on live `GraphicalUiElement` visuals, so call it before creating your UI. Any controls created after applying references will use the updated values. To update visuals which are already on screen, see [Live Updates Within a Component](#live-updates-within-a-component) and [Refreshing Live Visuals After Style Changes](#refreshing-live-visuals-after-style-changes).
 
+A project loaded through `Initialize` applies its variable references once, just before the first visual is created from it. A style file edited by hand, such as in a text editor or a git merge, shows the same values as it does after a [hot reload](../debugging/hot-reload.md) of that edit, without calling `ApplyAllVariableReferences` yourself.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 After loading a Gum project, you can modify style variables and call `ApplyAllVariableReferences` to propagate changes across all elements in dependency order. Elements that are referenced by others are applied first, so downstream references always pick up the latest values.
 
 ```csharp

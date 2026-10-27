@@ -68,9 +68,9 @@ public sealed record ChainCell(
 /// </summary>
 public class HotReloadReferenceChainTests : BaseTestClass
 {
-    private const int Old = 10;
-    private const int New = 110;
-    private const int Accent = 210;
+    internal const int Old = 10;
+    internal const int New = 110;
+    internal const int Accent = 210;
     private const int Mid = 150;
 
     public override void Dispose()
@@ -82,7 +82,7 @@ public class HotReloadReferenceChainTests : BaseTestClass
         base.Dispose();
     }
 
-    private static void UseExpressions(bool useExpressions)
+    internal static void UseExpressions(bool useExpressions)
     {
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
@@ -174,7 +174,7 @@ public class HotReloadReferenceChainTests : BaseTestClass
     /// <paramref name="second"/> is the file as it is after the edit; false is what the running game loaded,
     /// where every saved value is <see cref="Old"/>.
     /// </summary>
-    private static GumProjectSave Build(ChainCell cell, bool second)
+    internal static GumProjectSave Build(ChainCell cell, bool second)
     {
         GumProjectSave project = NewProjectWithStandards();
 
@@ -313,7 +313,7 @@ public class HotReloadReferenceChainTests : BaseTestClass
 
     // ---- Reading ----
 
-    private static GraphicalUiElement ReaderVisual(GraphicalUiElement screen, ChainReader reader) => reader switch
+    internal static GraphicalUiElement ReaderVisual(GraphicalUiElement screen, ChainReader reader) => reader switch
     {
         ChainReader.ButtonInScreen => HotReloadFormsProjects.Child(HotReloadFormsProjects.Child(screen, "Button1"), "Background"),
         ChainReader.ButtonNestedInPanel => HotReloadFormsProjects.Child(
@@ -329,7 +329,7 @@ public class HotReloadReferenceChainTests : BaseTestClass
         _ => null
     };
 
-    private static void EnterState(GraphicalUiElement screen, ChainCell cell)
+    internal static void EnterState(GraphicalUiElement screen, ChainCell cell)
     {
         Button? button = ButtonOf(screen, cell.Reader);
         if (button == null)
@@ -347,7 +347,7 @@ public class HotReloadReferenceChainTests : BaseTestClass
         }
     }
 
-    private static int ExpectedAfterEdit(ChainCell cell) => cell.Edit == ChainEdit.MiddleRetargeted ? Accent : New;
+    internal static int ExpectedAfterEdit(ChainCell cell) => cell.Edit == ChainEdit.MiddleRetargeted ? Accent : New;
 
     private static GraphicalUiElement LoadFirst(ChainCell cell)
     {
@@ -357,7 +357,7 @@ public class HotReloadReferenceChainTests : BaseTestClass
 
     // ---- The matrix ----
 
-    private static IEnumerable<ChainCell> StaleCells()
+    internal static IEnumerable<ChainCell> StaleCells()
     {
         foreach (int length in new[] { 2, 3, 4 })
         {
