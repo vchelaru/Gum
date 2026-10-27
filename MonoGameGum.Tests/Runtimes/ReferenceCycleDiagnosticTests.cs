@@ -57,10 +57,22 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
         return project;
     }
 
-    private static ComponentSave AddPanel(GumProjectSave project, string name, params string[] instanceNames)
+    private static ComponentSave AddPanel(GumProjectSave project, string name, params string[] instanceNames) =>
+        AddPanelBasedOn(project, name, "Container", instanceNames);
+
+    private static ComponentSave AddPanelBasedOn(GumProjectSave project, string name, string baseType, params string[] instanceNames)
     {
-        ComponentSave panel = new ComponentSave { Name = name, BaseType = "Container" };
+        ComponentSave panel = new ComponentSave { Name = name, BaseType = baseType };
         panel.States.Add(new StateSave { Name = "Default", ParentContainer = panel });
+        // A saved project repeats a base component's instances on the derived one, marked DefinedByBase.
+        ComponentSave? baseComponent = project.Components.FirstOrDefault(item => item.Name == baseType);
+        foreach (InstanceSave inherited in baseComponent?.Instances ?? new List<InstanceSave>())
+        {
+            panel.Instances.Add(new InstanceSave
+            {
+                Name = inherited.Name, BaseType = inherited.BaseType, DefinedByBase = true, ParentContainer = panel
+            });
+        }
         foreach (string instanceName in instanceNames)
         {
             panel.Instances.Add(new InstanceSave { Name = instanceName, BaseType = "Container", ParentContainer = panel });
@@ -128,7 +140,7 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
         screen.ToGraphicalUiElement();
 
         _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
-        _messages[0].ShouldContain("in Panel:");
+        _messages[0].ShouldContain("in Panel (Default):");
         _messages[0].ShouldContain("A.Width = B.Width + 1");
         _messages[0].ShouldContain("B.Width = A.Width + 1");
         _messages[0].ShouldContain("keep their stored values");
@@ -163,7 +175,7 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
         project.ApplyAllVariableReferences();
 
         _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
-        _messages[0].ShouldContain("in Panel:");
+        _messages[0].ShouldContain("in Panel (Default):");
     }
 
     [Fact]
@@ -193,8 +205,8 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
         screen.ToGraphicalUiElement();
 
         _messages.Count.ShouldBe(2, string.Join(Environment.NewLine, _messages));
-        _messages.Count(item => item.Contains("in FirstPanel:")).ShouldBe(1);
-        _messages.Count(item => item.Contains("in SecondPanel:")).ShouldBe(1);
+        _messages.Count(item => item.Contains("in FirstPanel (Default):")).ShouldBe(1);
+        _messages.Count(item => item.Contains("in SecondPanel (Default):")).ShouldBe(1);
     }
 
     [Fact]
@@ -231,8 +243,8 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
         project.ApplyAllVariableReferences();
 
         _messages.Count.ShouldBe(2, string.Join(Environment.NewLine, _messages));
-        _messages.Count(item => item.Contains("in Panel:")).ShouldBe(1);
-        _messages.Count(item => item.Contains("in Other:")).ShouldBe(1);
+        _messages.Count(item => item.Contains("in Panel (Default):")).ShouldBe(1);
+        _messages.Count(item => item.Contains("in Other (Default):")).ShouldBe(1);
     }
 
     [Fact]
@@ -257,7 +269,137 @@ public class ReferenceCycleDiagnosticTests : BaseTestClass
         project.ApplyAllVariableReferences();
 
         _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
-        _messages[0].ShouldContain("in Panel:");
+        _messages[0].ShouldContain("in Panel (Alt):");
+    }
+    [Fact]
+    public void Create_ALoopInTheDefaultState_NamesTheState()
+    {
+        GumProjectSave project = CreateProject();
+        AddTwoRowLoop(project, "Panel");
+        ScreenSave screen = AddScreen(project, ("P", "Panel"));
+
+        screen.ToGraphicalUiElement();
+
+        _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
+        _messages[0].ShouldContain("in Panel (Default):");
+    }
+
+    [Fact]
+    public void Create_ALoopInACategorizedState_NamesThatState()
+    {
+        GumProjectSave project = CreateProject();
+        ComponentSave panel = AddPanel(project, "Panel", "A", "B");
+        StateSave alt = new StateSave { Name = "Alt", ParentContainer = panel };
+        VariableListSave<string> listA = new VariableListSave<string> { Type = "string", Name = "A.VariableReferences" };
+        listA.Value.Add("Width = B.Width + 1");
+        VariableListSave<string> listB = new VariableListSave<string> { Type = "string", Name = "B.VariableReferences" };
+        listB.Value.Add("Width = A.Width + 1");
+        alt.VariableLists.Add(listA);
+        alt.VariableLists.Add(listB);
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        category.States.Add(alt);
+        panel.Categories.Add(category);
+        ScreenSave screen = AddScreen(project, ("P", "Panel"));
+
+        screen.ToGraphicalUiElement();
+        project.ApplyAllVariableReferences();
+
+        _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
+        _messages[0].ShouldContain("in Panel (Alt):");
+    }
+
+    [Fact]
+    public void Create_ALoopInABaseComponent_IsReportedOnceOnTheBase()
+    {
+        GumProjectSave project = CreateProject();
+        AddTwoRowLoop(project, "BasePanel");
+        AddPanelBasedOn(project, "FirstPanel", "BasePanel");
+        AddPanelBasedOn(project, "SecondPanel", "BasePanel");
+        ScreenSave screen = AddScreen(project, ("P", "FirstPanel"), ("Q", "SecondPanel"), ("R", "BasePanel"));
+
+        screen.ToGraphicalUiElement();
+        screen.ToGraphicalUiElement();
+        project.ApplyAllVariableReferences();
+
+        _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
+        _messages[0].ShouldContain("in BasePanel (Default):");
+        _messages[0].ShouldContain("A.Width = B.Width + 1");
+    }
+
+    [Fact]
+    public void Create_OnlyDerivedElementsAreBuilt_ABaseLoopIsStillReportedOnTheBase()
+    {
+        GumProjectSave project = CreateProject();
+        AddTwoRowLoop(project, "BasePanel");
+        AddPanelBasedOn(project, "FirstPanel", "BasePanel");
+        AddPanelBasedOn(project, "SecondPanel", "BasePanel");
+        ScreenSave screen = AddScreen(project, ("P", "FirstPanel"), ("Q", "SecondPanel"));
+
+        screen.ToGraphicalUiElement();
+
+        _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
+        _messages[0].ShouldContain("in BasePanel (Default):");
+    }
+
+    [Fact]
+    public void Create_ALoopInABaseStandardElement_IsReportedOnceOnTheStandard()
+    {
+        GumProjectSave project = CreateProject();
+        VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        list.Value.Add("Width = Height + 1");
+        list.Value.Add("Height = Width + 1");
+        project.StandardElements[0].DefaultState.VariableLists.Add(list);
+        AddPanelBasedOn(project, "FirstPanel", "Container");
+        AddPanelBasedOn(project, "SecondPanel", "Container");
+        ScreenSave screen = AddScreen(project, ("P", "FirstPanel"), ("Q", "SecondPanel"));
+
+        screen.ToGraphicalUiElement();
+        project.ApplyAllVariableReferences();
+
+        _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
+        _messages[0].ShouldContain("in Container (Default):");
+    }
+
+    [Fact]
+    public void Create_ADerivedElementWithItsOwnLoop_ReportsItsLoopAndTheBaseLoopOnceEach()
+    {
+        GumProjectSave project = CreateProject();
+        AddTwoRowLoop(project, "BasePanel");
+        ComponentSave derived = AddPanelBasedOn(project, "DerivedPanel", "BasePanel", "C", "D");
+        AddRow(derived, "C", "Width = D.Width + 1");
+        AddRow(derived, "D", "Width = C.Width + 1");
+        ScreenSave screen = AddScreen(project, ("P", "DerivedPanel"), ("Q", "BasePanel"));
+
+        screen.ToGraphicalUiElement();
+        screen.ToGraphicalUiElement();
+        project.ApplyAllVariableReferences();
+
+        _messages.Count.ShouldBe(2, string.Join(Environment.NewLine, _messages));
+        string baseMessage = _messages.Single(item => item.Contains("in BasePanel (Default):"));
+        baseMessage.ShouldContain("A.Width = B.Width + 1");
+        baseMessage.ShouldNotContain("C.Width");
+        string derivedMessage = _messages.Single(item => item.Contains("in DerivedPanel (Default):"));
+        derivedMessage.ShouldContain("C.Width = D.Width + 1");
+        derivedMessage.ShouldContain("D.Width = C.Width + 1");
+        derivedMessage.ShouldNotContain("A.Width");
+    }
+
+    [Fact]
+    public void Create_ADerivedRowClosesALoopWithABaseRow_IsReportedOnTheDerivedElement()
+    {
+        GumProjectSave project = CreateProject();
+        ComponentSave basePanel = AddPanel(project, "BasePanel", "A", "B");
+        AddRow(basePanel, "A", "Width = B.Width + 1");
+        ComponentSave derived = AddPanelBasedOn(project, "DerivedPanel", "BasePanel");
+        AddRow(derived, "B", "Width = A.Width + 1");
+        ScreenSave screen = AddScreen(project, ("P", "DerivedPanel"), ("Q", "BasePanel"));
+
+        screen.ToGraphicalUiElement();
+
+        _messages.Count.ShouldBe(1, string.Join(Environment.NewLine, _messages));
+        _messages[0].ShouldContain("in DerivedPanel (Default):");
+        _messages[0].ShouldContain("A.Width = B.Width + 1");
+        _messages[0].ShouldContain("B.Width = A.Width + 1");
     }
 #else
     [Fact]
