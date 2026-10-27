@@ -197,12 +197,12 @@ public abstract class RangeBase :
 
                 var shouldRaiseChangeCompleted = true;
 
-                if(thumb != null && MainCursor.WindowPushed == thumb.Visual)
+                if(thumb != null && MainCursor?.WindowPushed == thumb.Visual)
                 {
                     shouldRaiseChangeCompleted = false;
                 }
 
-                if(MainCursor.WindowPushed == Track && IsMoveToPointEnabled)
+                if(MainCursor?.WindowPushed == Track && IsMoveToPointEnabled)
                 {
                     shouldRaiseChangeCompleted = false;
                 }

@@ -862,6 +862,7 @@ public class ComboBox :
 #if !FRB
         bool popupHadFocus = listBox.IsFocused;
         bool popupHadItemFocus = listBox.DoListItemsHaveFocus;
+        double popupScroll = listBox.VerticalScrollBarValue;
 #endif
 
         // A list box that is already a popup has absolute units; go back to the values
@@ -908,6 +909,13 @@ public class ComboBox :
         {
             listBox.IsFocused = true;
             listBox.DoListItemsHaveFocus = popupHadItemFocus;
+        }
+
+        // Giving focus back (here or inside ShowPopupListBox) is not navigation, but focusing the row scrolls it
+        // into view, so put the scroll back.
+        if (popupHadFocus)
+        {
+            listBox.VerticalScrollBarValue = popupScroll;
         }
 #endif
 

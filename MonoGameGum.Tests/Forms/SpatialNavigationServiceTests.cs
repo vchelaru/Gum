@@ -38,6 +38,25 @@ public class SpatialNavigationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void FindBestCandidate_OriginInsideFocusableAncestor_StillPicksSiblingOfOrigin()
+    {
+        ScrollViewer viewer = new();
+        viewer.AddToRoot();
+        Button origin = new();
+        viewer.AddChild(origin);
+        Button sibling = new();
+        viewer.AddChild(sibling);
+        sibling.Y = 100;
+        viewer.Visual.UpdateLayout();
+
+        List<FrameworkElement> candidates = new() { viewer, origin, sibling };
+
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, MathF.PI / 2f, candidates);
+
+        result.ShouldBe(sibling);
+    }
+
+    [Fact]
     public void FindBestCandidate_ExcludesCandidateOutsideDirectionCone_EvenWhenClosest()
     {
         Button origin = CreatePositionedButton(0, 0);
