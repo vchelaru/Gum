@@ -85,6 +85,66 @@ public class ContainerRuntimeTests
         sut.RenderTargetEffect.ShouldBeNull();
     }
 
+    private static ShaderParameterValue GetShaderParameter(ContainerRuntime container, string name)
+    {
+        IRenderTargetRenderable owner = (IRenderTargetRenderable)container.RenderableComponent;
+        owner.ShaderParameters.ShouldNotBeNull();
+        owner.ShaderParameters!.TryGetValue(name, out ShaderParameterValue value).ShouldBeTrue();
+        return value;
+    }
+
+    [Fact]
+    public void SetShaderParameter_Overloads_StoreKindCountAndComponents()
+    {
+        ContainerRuntime sut = new();
+
+        sut.SetShaderParameter("F", 1.5f);
+        sut.SetShaderParameter("I", 3);
+        sut.SetShaderParameter("B", true);
+        sut.SetShaderParameter("V2", 1f, 2f);
+        sut.SetShaderParameter("V3", 1f, 2f, 3f);
+        sut.SetShaderParameter("V4", 1f, 2f, 3f, 4f);
+        sut.SetShaderParameter("N3", new System.Numerics.Vector3(5f, 6f, 7f));
+
+        GetShaderParameter(sut, "F").Kind.ShouldBe(ShaderParameterKind.Float);
+        GetShaderParameter(sut, "F").X.ShouldBe(1.5f);
+        GetShaderParameter(sut, "I").Kind.ShouldBe(ShaderParameterKind.Int);
+        GetShaderParameter(sut, "I").X.ShouldBe(3f);
+        GetShaderParameter(sut, "B").Kind.ShouldBe(ShaderParameterKind.Bool);
+        GetShaderParameter(sut, "B").X.ShouldBe(1f);
+        GetShaderParameter(sut, "V2").Count.ShouldBe(2);
+        GetShaderParameter(sut, "V3").Count.ShouldBe(3);
+        GetShaderParameter(sut, "V4").Count.ShouldBe(4);
+        GetShaderParameter(sut, "V4").W.ShouldBe(4f);
+        GetShaderParameter(sut, "N3").Count.ShouldBe(3);
+        GetShaderParameter(sut, "N3").Z.ShouldBe(7f);
+    }
+
+    [Fact]
+    public void SetShaderParameter_ValuesAreIndependentPerContainer()
+    {
+        ContainerRuntime first = new();
+        ContainerRuntime second = new();
+
+        first.SetShaderParameter("Strength", 1f);
+        second.SetShaderParameter("Strength", 2f);
+
+        GetShaderParameter(first, "Strength").X.ShouldBe(1f);
+        GetShaderParameter(second, "Strength").X.ShouldBe(2f);
+    }
+
+    [Fact]
+    public void ClearShaderParameters_RemovesEverySetValue()
+    {
+        ContainerRuntime sut = new();
+        sut.SetShaderParameter("Strength", 1f);
+
+        sut.ClearShaderParameters();
+
+        IRenderTargetRenderable owner = (IRenderTargetRenderable)sut.RenderableComponent;
+        (owner.ShaderParameters?.Count ?? 0).ShouldBe(0);
+    }
+
     [Fact]
     public void Visible_ShouldBeTrue_ByDefault()
     {

@@ -740,6 +740,7 @@ public class Renderer : IRenderer
             (cacheOwner as IRenderTargetRenderable)?.RenderTargetEffect as Raylib_cs.Shader?;
         if (renderTargetShader != null)
         {
+            ApplyShaderParameters((cacheOwner as IRenderTargetRenderable)?.ShaderParameters, renderTargetShader.Value);
             counter.BeginShaderMode(renderTargetShader.Value);
         }
 
@@ -761,6 +762,52 @@ public class Renderer : IRenderer
             counter.EndShaderMode();
         }
         counter.EndBlendMode();
+    }
+
+    // Sets a container's own values on its shader just before the composite blit. A name the shader
+    // does not declare has no location and is skipped. Raylib cannot read a uniform's declared type,
+    // so the value's kind picks the upload type.
+    private static void ApplyShaderParameters(ShaderParameterCollection? parameters, Raylib_cs.Shader shader)
+    {
+        if (parameters == null)
+        {
+            return;
+        }
+
+        foreach (KeyValuePair<string, ShaderParameterValue> pair in parameters)
+        {
+            int location = Raylib.GetShaderLocation(shader, pair.Key);
+            if (location < 0)
+            {
+                continue;
+            }
+
+            ShaderParameterValue value = pair.Value;
+            switch (value.Kind)
+            {
+                case ShaderParameterKind.Int:
+                case ShaderParameterKind.Bool:
+                    Raylib.SetShaderValue(shader, location, (int)value.X, ShaderUniformDataType.Int);
+                    break;
+                default:
+                    switch (value.Count)
+                    {
+                        case 1:
+                            Raylib.SetShaderValue(shader, location, value.X, ShaderUniformDataType.Float);
+                            break;
+                        case 2:
+                            Raylib.SetShaderValue(shader, location, new System.Numerics.Vector2(value.X, value.Y), ShaderUniformDataType.Vec2);
+                            break;
+                        case 3:
+                            Raylib.SetShaderValue(shader, location, new System.Numerics.Vector3(value.X, value.Y, value.Z), ShaderUniformDataType.Vec3);
+                            break;
+                        default:
+                            Raylib.SetShaderValue(shader, location, new System.Numerics.Vector4(value.X, value.Y, value.Z, value.W), ShaderUniformDataType.Vec4);
+                            break;
+                    }
+                    break;
+            }
+        }
     }
 
     // For a nested render-target container the walk hands us the GraphicalUiElement wrapper; for a

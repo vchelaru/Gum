@@ -95,6 +95,45 @@ half4 main(float2 coord) {
         Math.Abs(withShader.Red - withShader.Blue).ShouldBeLessThan(20);
     }
 
+    // Two containers share one compiled effect (as SourceShaderFile does through the cache) and each
+    // sets its own value for the same uniform, so the value must be applied per container at the
+    // composite, not stored on the effect.
+    [Fact]
+    public void Draw_ShaderParameter_AppliesEachContainersOwnValue()
+    {
+        const string StrengthSksl = @"
+uniform shader SpriteTexture;
+uniform float Strength;
+half4 main(float2 coord) {
+    half4 texel = SpriteTexture.eval(coord);
+    return half4(Strength * texel.a, 0, 0, texel.a);
+}
+";
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(120, 64));
+        GumService.Default.Initialize(surface.Canvas, 120, 64);
+
+        SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(StrengthSksl, out string errors);
+        string.IsNullOrEmpty(errors).ShouldBeTrue(errors);
+        using SKRuntimeEffect disposableEffect = effect;
+
+        ContainerRuntime dim = BuildRedRenderTarget();
+        dim.RenderTargetEffect = effect;
+        dim.SetShaderParameter("Strength", 0.25f);
+        ContainerRuntime bright = BuildRedRenderTarget();
+        bright.X = 64;
+        bright.RenderTargetEffect = effect;
+        bright.SetShaderParameter("Strength", 0.75f);
+        GumService.Default.Root.Children.Add(dim);
+        GumService.Default.Root.Children.Add(bright);
+
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        Math.Abs(bitmap.GetPixel(19, 19).Red - 64).ShouldBeLessThan(12);
+        Math.Abs(bitmap.GetPixel(79, 19).Red - 191).ShouldBeLessThan(12);
+    }
+
     // The shaded composite turns with a rotated container like the plain one (#6588): the child
     // in the container's top-right corner lands above the container's origin, outside the
     // container's axis-aligned rectangle, and still reads back gray.

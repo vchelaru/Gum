@@ -121,6 +121,87 @@ void main()
         }
     }
 
+    // Two containers share one shader (as SourceShaderFile does through the cache) and set different
+    // values for the same uniform, so each blit must apply its own container's value.
+    [Fact]
+    public void Draw_ShaderParameter_AppliesEachContainersOwnValue()
+    {
+        const string strengthShader = @"#version 330
+in vec2 fragTexCoord;
+in vec4 fragColor;
+out vec4 finalColor;
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+uniform float strength;
+void main()
+{
+    vec4 texel = texture(texture0, fragTexCoord);
+    finalColor = vec4(strength * texel.a, 0.0, 0.0, texel.a) * fragColor * colDiffuse;
+}
+";
+        ContainerRuntime outer = new();
+        outer.Width = 200;
+        outer.Height = 100;
+        outer.IsRenderTarget = true;
+
+        ContainerRuntime dim = BuildRedInner(0);
+        ContainerRuntime bright = BuildRedInner(100);
+        outer.Children.Add(dim);
+        outer.Children.Add(bright);
+        GumService.Default.Root.Children.Add(outer);
+        GumService.Default.Root.UpdateLayout();
+
+        Shader shared = LoadShaderFromMemory(null, strengthShader);
+        try
+        {
+            dim.RenderTargetEffect = shared;
+            dim.SetShaderParameter("strength", 0.25f);
+            bright.RenderTargetEffect = shared;
+            bright.SetShaderParameter("strength", 0.75f);
+            DrawOnce();
+
+            RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
+            Math.Abs(ReadRenderTargetPixel(baked, 50, 50).R - 64).ShouldBeLessThan(12);
+            Math.Abs(ReadRenderTargetPixel(baked, 150, 50).R - 191).ShouldBeLessThan(12);
+        }
+        finally
+        {
+            UnloadShader(shared);
+            GumService.Default.Root.Children.Clear();
+        }
+    }
+
+    private static ContainerRuntime BuildRedInner(float x)
+    {
+        ContainerRuntime inner = new();
+        inner.X = x;
+        inner.Width = 100;
+        inner.Height = 100;
+        inner.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+        ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+        red.Width = 100;
+        red.Height = 100;
+        red.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+        inner.Children.Add(red);
+        return inner;
+    }
+
+    private static Color ReadRenderTargetPixel(RenderTexture2D renderTexture, int x, int y)
+    {
+        Image image = LoadImageFromTexture(renderTexture.Texture);
+        try
+        {
+            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
+        }
+        finally
+        {
+            UnloadImage(image);
+        }
+    }
+
     [Fact]
     public void Draw_SourceShaderFile_GraysTheCompositedPixels_WhenResolverRegistered()
     {
