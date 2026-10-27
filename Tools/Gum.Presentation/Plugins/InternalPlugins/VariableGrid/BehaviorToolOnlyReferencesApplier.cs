@@ -109,6 +109,66 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
+    /// The category states a running game has applied on top of <paramref name="element"/>'s Default values:
+    /// each category-state reference line of its behaviors (<c>ButtonCategoryState = IsEnabled ? ...</c>)
+    /// evaluated against the Default state, with unset Forms values at their declared defaults. The
+    /// canvas layers these on a Default selection (#6857); the project data is not touched.
+    /// </summary>
+    public static IReadOnlyList<StateSave> GetActiveCategoryStates(ElementSave element)
+    {
+        List<StateSave> active = new List<StateSave>();
+        StateSave? defaultState = element.DefaultState;
+        if (element is not ComponentSave component || defaultState == null)
+        {
+            return active;
+        }
+
+        // A value the Forms control assigns (a reference line that is not a category state) belongs to
+        // Default, so a category state does not override it.
+        HashSet<string> formsAssigned = new HashSet<string>();
+        Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance: null);
+        foreach ((string left, string right) in GetReferenceLines(component))
+        {
+            string? categoryName = ResolveLeftSideType(left, instance: null, defaultState);
+            IEnumerable<StateSave> categoryStates = categoryName == null ? Enumerable.Empty<StateSave>() : GetCategoryStates(element, categoryName);
+            if (!categoryStates.Any())
+            {
+                formsAssigned.Add(left);
+                continue;
+            }
+
+            if (EvaluateLine(left, right, instance: null, defaultState, fallback)?.Value is string stateName &&
+                categoryStates.FirstOrDefault(item => item.Name == stateName) is { } state)
+            {
+                active.Add(state);
+            }
+        }
+
+        for (int i = 0; i < active.Count; i++)
+        {
+            StateSave withoutFormsValues = active[i].Clone();
+            withoutFormsValues.ParentContainer = element;
+            withoutFormsValues.Variables.RemoveAll(variable => formsAssigned.Contains(variable.Name));
+            active[i] = withoutFormsValues;
+        }
+
+        return active;
+    }
+
+    private static IEnumerable<StateSave> GetCategoryStates(ElementSave element, string categoryName)
+    {
+        foreach (StateSaveCategory category in element.Categories.Concat(ObjectFinder.Self.GetBaseElements(element).SelectMany(item => item.Categories)))
+        {
+            if (category.Name == categoryName)
+            {
+                return category.States;
+            }
+        }
+
+        return Enumerable.Empty<StateSave>();
+    }
+
+    /// <summary>
     /// Returns the underlying (visual) variable names that the relevant element's behavior
     /// <see cref="BehaviorSave.ToolOnlyVariableReferences"/> drive from <paramref name="changedMember"/> -
     /// i.e. the left-hand sides of reference lines whose right-hand side reads

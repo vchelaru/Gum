@@ -95,12 +95,7 @@ public partial class StateSelectionCanvasSplashTests
 
     #region Precedence matrix: view x selected state x IsEnabled x authored category state x default reference row
 
-    public static IEnumerable<object[]> PrecedenceCells() =>
-        AllPrecedenceCells().Where(cell => !IsKnownDefaultStateGap((string)cell[0], (string)cell[1], (string)cell[2], (string)cell[3]));
-
-    /// <summary>The component's Default selection when the look should be Disabled: red, see the default-state branch.</summary>
-    public static IEnumerable<object[]> DefaultStateGapCells() =>
-        AllPrecedenceCells().Where(cell => IsKnownDefaultStateGap((string)cell[0], (string)cell[1], (string)cell[2], (string)cell[3]));
+    public static IEnumerable<object[]> PrecedenceCells() => AllPrecedenceCells();
 
     private static IEnumerable<object[]> AllPrecedenceCells()
     {
@@ -126,8 +121,8 @@ public partial class StateSelectionCanvasSplashTests
     }
 
     /// <summary>
-    /// Component view: the clicked categorized state wins; Default shows what the Forms variable derives,
-    /// or the authored category state when IsEnabled does not make it Disabled. Instance view (screen or
+    /// Component view: the clicked categorized state wins; Default shows what the Forms variable derives
+    /// (an authored category state does not change it, #6857). Instance view (screen or
     /// another component): the instance's IsEnabled decides the look and an authored category state that
     /// disagrees with it is replaced.
     /// </summary>
@@ -139,13 +134,10 @@ public partial class StateSelectionCanvasSplashTests
             {
                 return state;
             }
-            return isEnabled == "false" ? "Disabled" : authored == "absent" ? "Enabled" : authored;
+            return isEnabled == "false" ? "Disabled" : "Enabled";
         }
         return isEnabled == "false" ? "Disabled" : "Enabled";
     }
-
-    private static bool IsKnownDefaultStateGap(string view, string state, string isEnabled, string authored) =>
-        view == "component" && state == "Default" && ExpectedLook(view, state, isEnabled, authored) == "Disabled";
 
     private static (int, int, int) ShowPrecedenceCell(string view, string state, string isEnabled, string authored, bool defaultReference)
     {

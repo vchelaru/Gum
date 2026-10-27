@@ -225,7 +225,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     var stateForReferences = GetStateForReferences(elementSave);
                     if (stateForReferences != null)
                     {
-                        ApplyReferencesInDependencyOrder(elementSave, RootGue, stateForReferences, _selectedState.SelectedStateSave);
+                        ApplyReferencesInDependencyOrder(elementSave, RootGue, stateForReferences, GetStatesOnTopOfDefault(elementSave));
                     }
 
                     gueManager.Add(RootGue);
@@ -254,7 +254,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     /// in a cycle are skipped and keep their stored values (#6871). Results are
     /// written to a copy of the state, where later rows read them; the project's data is not changed.
     /// </summary>
-    private static void ApplyReferencesInDependencyOrder(ElementSave elementSave, GraphicalUiElement root, StateSave state, StateSave? selectedState)
+    private static void ApplyReferencesInDependencyOrder(ElementSave elementSave, GraphicalUiElement root, StateSave state, IReadOnlyList<StateSave> statesOnTop)
     {
         List<StateSave> states = new List<StateSave>();
         List<ElementSave> baseElements = ObjectFinder.Self.GetBaseElements(elementSave);
@@ -282,9 +282,11 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         {
             ownRows.Add(row.WrittenName + "=" + row.Line);
         }
-        HashSet<string> setBySelected = selectedState != null && selectedState != elementSave.DefaultState
-            ? SelectedStateReferenceMerger.GetVariablesSetBy(selectedState)
-            : new HashSet<string>();
+        HashSet<string> setBySelected = new HashSet<string>();
+        foreach (StateSave stateOnTop in statesOnTop)
+        {
+            setBySelected.UnionWith(SelectedStateReferenceMerger.GetVariablesSetBy(stateOnTop));
+        }
 
         List<ReferenceRow> rows = graph.OrderedRows
             .Where(row => row.IsLiveEvaluable &&
@@ -301,15 +303,34 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     /// </summary>
     private StateSave? GetStateForReferences(ElementSave elementSave)
     {
-        StateSave? selected = _selectedState.SelectedStateSave;
         StateSave? defaultState = elementSave.DefaultState;
-
-        if (selected == null || defaultState == null || selected == defaultState)
+        if (defaultState == null)
         {
-            return selected ?? defaultState;
+            return _selectedState.SelectedStateSave;
         }
 
-        return _selectedStateReferenceMerger.Merge(defaultState, selected);
+        StateSave result = defaultState;
+        foreach (StateSave stateOnTop in GetStatesOnTopOfDefault(elementSave))
+        {
+            result = _selectedStateReferenceMerger.Merge(result, stateOnTop);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// The states layered on the default state: the clicked state, or with Default selected the category
+    /// states a running game applies on top of it, chosen by the Forms values (#6857).
+    /// </summary>
+    private IReadOnlyList<StateSave> GetStatesOnTopOfDefault(ElementSave elementSave)
+    {
+        StateSave? selected = _selectedState.SelectedStateSave;
+        if (selected != null && selected != elementSave.DefaultState)
+        {
+            return new[] { selected };
+        }
+
+        return BehaviorToolOnlyReferencesApplier.GetActiveCategoryStates(elementSave);
     }
 
     /// <summary>
@@ -323,6 +344,12 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         StateSave? selected = _selectedState.SelectedStateSave;
         if (selected == null || selected == elementSave.DefaultState)
         {
+            // The Default state is never in effect alone: a control is always enabled or disabled, so the
+            // category state its Forms values choose sits on top (#6857).
+            foreach (StateSave categoryState in BehaviorToolOnlyReferencesApplier.GetActiveCategoryStates(elementSave))
+            {
+                rootGue.ApplyState(categoryState);
+            }
             return;
         }
 
