@@ -55,11 +55,13 @@ public class BasicShapes
         // starts the sample in its output folder, but `dotnet run` keeps the folder it was run from.
         Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
-        // Width matches the MonoGameGumInCode feature sample; height is tall enough to show each
-        // shape screen's full content without scrolling (the Polygons bottom row in particular).
-        // The window is resizable if a screen needs more room.
+        // Width matches the MonoGameGum feature sample; height is tall enough to show each shape
+        // screen's content on Windows. On macOS the window must also fit under the menu bar, title bar
+        // and Dock: macOS shrinks a taller window, but raylib keeps drawing for the size it asked for
+        // until the window is resized, so the top of the frame (the nav buttons) is cut off. The
+        // window is resizable if a screen needs more room.
         const int screenWidth = 1400;
-        const int screenHeight = 900;
+        int screenHeight = OperatingSystem.IsMacOS() ? 780 : 900;
 
         GumUI.CanvasWidth = screenWidth;
         GumUI.CanvasHeight = screenHeight;
@@ -71,17 +73,6 @@ public class BasicShapes
             ? ConfigFlags.UnfocusedWindow
             : ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib gallery");
-
-        // macOS shrinks a window that is taller than the visible screen (menu bar, title bar and Dock
-        // take space), but raylib keeps drawing for the size it asked for until the window is resized,
-        // so the top of the frame, and the nav buttons, end up cut off. Asking for a height that fits
-        // makes raylib's size match the real window.
-        int monitor = GetCurrentMonitor();
-        int fittingHeight = GetMonitorHeight(monitor) - 200;
-        if (screenHeight > fittingHeight)
-        {
-            SetWindowSize(screenWidth, fittingHeight);
-        }
 
         GumUI.Initialize();
 
