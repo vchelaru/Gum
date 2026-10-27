@@ -51,7 +51,6 @@ public class ElementSaveDisplayer
         "System.Drawing.Design.UITypeEditor");
 
     private readonly SubtextLogic _subtextLogic;
-    private Dictionary<string, string> _overriddenNotes = new Dictionary<string, string>();
     private readonly IVariableReferenceLinkLogic _referenceLinkLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
@@ -479,7 +478,6 @@ public class ElementSaveDisplayer
     {
         var categories = new List<VariableCategoryDescriptor>();
 
-        _overriddenNotes = GetOverriddenNotes(instanceOwner, stateSave);
         var properties = GetProperties(instanceOwner, instance, stateSave);
 
         StateSave defaultState;
@@ -834,12 +832,7 @@ public class ElementSaveDisplayer
 
         // moved to internal
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
-        string? subtext = propertyData.Subtext;
-        if (instanceOwner != null && _overriddenNotes.TryGetValue(variableName, out string? overriddenNote))
-        {
-            subtext = string.IsNullOrEmpty(subtext) ? overriddenNote : subtext + "\n" + overriddenNote;
-        }
-        SetSubtext(stateSave, subtext, entry, variableName);
+        SetSubtext(stateSave, propertyData.Subtext, entry, variableName);
 
         if (propertyData.ReferenceSource != null && instanceOwner != null)
         {
@@ -858,40 +851,12 @@ public class ElementSaveDisplayer
                 // subscribe directly the way the old WPF-only InstanceMember.PropertyChanged did.
                 // The WPF adapter (StateReferencingInstanceMember) generically invokes this hook and
                 // re-reads DetailText whenever its own "Value" PropertyChanged fires.
-                entry.RecomputeDetailTextOnValueChanged = () => SetSubtext(stateSave, subtext, entry, variableName);
+                entry.RecomputeDetailTextOnValueChanged = () => SetSubtext(stateSave, propertyData.Subtext, entry, variableName);
             }
         }
 
         return entry;
     }
-
-    /// <summary>
-    /// With a component's Default state selected, the variables the active Enabled or Disabled category state
-    /// also sets, mapped to the note that a running game shows that state's value instead (#6857).
-    /// </summary>
-    private static Dictionary<string, string> GetOverriddenNotes(ElementSave instanceOwner, StateSave stateSave)
-    {
-        Dictionary<string, string> notes = new Dictionary<string, string>();
-        if (instanceOwner is not ComponentSave || stateSave != instanceOwner.DefaultState)
-        {
-            return notes;
-        }
-
-        foreach (StateSave active in BehaviorToolOnlyReferencesApplier.GetActiveCategoryStates(instanceOwner))
-        {
-            foreach (VariableSave variable in active.Variables.Where(item => item.SetsValue && DefaultSetsValue(instanceOwner, item.Name)))
-            {
-                notes.TryAdd(variable.Name, $"Overridden by the {active.Name} state");
-            }
-        }
-
-        return notes;
-    }
-
-    /// <summary>Whether Default (the element's or a base's) sets the value, so a category state's value overrides it.</summary>
-    private static bool DefaultSetsValue(ElementSave element, string variableName) =>
-        new[] { element }.Concat(ObjectFinder.Self.GetBaseElements(element))
-            .Any(item => item.DefaultState?.Variables.Any(variable => variable.Name == variableName && variable.SetsValue) == true);
 
     private void SetSubtext(StateSave? stateSave, string? subtext, VariableGridEntry entry, string variableName)
     {
