@@ -1140,6 +1140,16 @@ public partial class CustomSetPropertyOnRenderable
                     handled = true;
                     break;
 #endif
+                case "ShaderParameters":
+                    {
+                        string? error = RenderingLibrary.Graphics.ShaderParameterText.Assign(asInvisibleRenderable, value as string);
+                        if (error != null)
+                        {
+                            RaisePropertyAssignmentError("Error setting ShaderParameters on Container\n" + error);
+                        }
+                        handled = true;
+                        break;
+                    }
                 case "Alpha":
                     if (containerRuntime != null)
                     {

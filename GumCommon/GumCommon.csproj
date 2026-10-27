@@ -158,6 +158,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\LetterCellScale.cs" Link="RenderingLibrary\LetterCellScale.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IWrappedText.cs" Link="RenderingLibrary\IWrappedText.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ShaderParameters.cs" Link="RenderingLibrary\ShaderParameters.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\ShaderParameterText.cs" Link="RenderingLibrary\ShaderParameterText.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ITextureCoordinate.cs" Link="RenderingLibrary\ITextureCoordinate.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="RenderingLibrary\NineSliceExtensions.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NonFiniteCheck.cs" Link="RenderingLibrary\NonFiniteCheck.cs" />
