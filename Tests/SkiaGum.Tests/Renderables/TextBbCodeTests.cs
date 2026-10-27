@@ -198,4 +198,27 @@ public class TextBbCodeTests
 
         text.StoredMarkupText.ShouldBe("plain [Color=Red]red[/Color] plain");
     }
+
+    [Theory]
+    [InlineData("A[Glyph=57344]B", "A\uE000B")]
+    [InlineData("A[Glyph=0xE000]B", "A\uE000B")]
+    [InlineData("A[Glyph=abc]B", "AB")]
+    public void GetStyledRuns_GlyphTag_ReplacesTagWithCharacter(string input, string expected)
+    {
+        Text text = MakeText();
+        text.RawText = input;
+
+        string.Concat(text.GetStyledRuns().Select(r => r.Text)).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void GetStyledRuns_GlyphTagInsideColorTag_KeepsColorRun()
+    {
+        Text text = MakeText();
+        text.RawText = "A[Color=Red]B[Glyph=0xE000]C[/Color]D";
+
+        List<Text.StyledTextRun> runs = text.GetStyledRuns();
+
+        runs.Single(r => r.Text == "B\uE000C").Style.TextColor.ShouldBe(new SKColor(255, 0, 0, 255));
+    }
 }

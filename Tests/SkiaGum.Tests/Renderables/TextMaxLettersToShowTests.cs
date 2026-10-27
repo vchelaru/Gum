@@ -139,4 +139,17 @@ public class TextMaxLettersToShowTests
             }
         }
     }
+
+    [Fact]
+    public void GetVisibleWrappedText_ShouldNotStopBetweenTheHalvesOfASurrogatePair()
+    {
+        Text text = new();
+        text.FontName = "Arial";
+        text.FontSize = 20;
+        text.Width = 1000;
+        text.RawText = "a\U0001F600b";
+        text.MaxLettersToShow = 2;
+
+        string.Concat(text.GetVisibleWrappedText()).ShouldBe("a\U0001F600");
+    }
 }

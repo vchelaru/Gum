@@ -99,6 +99,29 @@ public class DialogBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Show_WithGlyphTag_ShouldCountGlyphAsOneLetter()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show("A[Glyph=0xE000]B");
+
+        visual.TextInstance.MaxLettersToShow.ShouldBe(3);
+    }
+
+    [Fact]
+    public void ShowAsync_WithGlyphTagInDialogPageTask_ShouldCountGlyphAsOneLetter()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 0;
+
+        // The first page is shown before the first await, so the task is left running.
+        _ = dialogBox.ShowAsync(new DialogPageTask[] { "A[Glyph=0x1F600]B" });
+
+        visual.TextInstance.MaxLettersToShow.ShouldBe(4);
+    }
+
+    [Fact]
     public void Activity_ShouldAdvanceMaxLettersToShow_ProportionalToElapsedTime()
     {
         var (dialogBox, visual) = CreateDialogBox();
