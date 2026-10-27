@@ -171,6 +171,12 @@ linearList.GamepadNavigationMode = GamepadNavigationMode.TabOrder;
 
 Keyboard Tab navigation always uses tab order, regardless of `GamepadNavigationMode`. Spatial navigation only affects gamepad DPad and left stick input.
 
+Spatial navigation prefers controls within 45 degrees of the pressed direction. If none is, it moves to the nearest control that still lies on that side, so a button centered under a row of cards is reachable by pressing down from any card. It never moves to a control behind or directly beside the focused one.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ### Explicit Direction Overrides
 
 Spatial navigation scores candidates by distance and angle, which can occasionally pick a control other than the one you expect for an unusual layout. To force a specific direction to a specific control, set `SpatialNavigationUp`, `SpatialNavigationDown`, `SpatialNavigationLeft`, or `SpatialNavigationRight` on the control:

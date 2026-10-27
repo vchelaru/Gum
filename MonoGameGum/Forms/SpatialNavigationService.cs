@@ -14,6 +14,11 @@ namespace Gum.Forms;
 /// </summary>
 public static class SpatialNavigationService
 {
+    // A candidate outside the cone still lies in the pressed direction when its gap angle is under
+    // 90 degrees off it. The small margin keeps a candidate exactly beside the origin (90 degrees,
+    // up to float rounding) out, so Down never turns into a sideways move.
+    private const float HalfPlaneLimitRadians = MathF.PI / 2f - 0.0001f;
+
     /// <summary>
     /// Returns whichever <paramref name="candidates"/> element best matches
     /// <paramref name="directionAngleRadians"/> from <paramref name="origin"/>, or null if none
@@ -25,7 +30,10 @@ public static class SpatialNavigationService
     /// across from each other. Candidates outside the direction cone
     /// (<paramref name="maxAngleRadians"/> either side of the requested angle) are excluded so
     /// navigation never moves backwards; among the rest, the lowest
-    /// <c>distance * (1 + angleWeight * angleDiff / maxAngleRadians)</c> score wins.
+    /// <c>distance * (1 + angleWeight * angleDiff / maxAngleRadians)</c> score wins. Only when no
+    /// candidate is inside the cone does the search fall back to the nearest candidate whose gap
+    /// angle is less than 90 degrees off the requested direction (ties go to the smaller angle, then
+    /// the leftmost, then topmost candidate), so a control that lies on the pressed side is still reachable.
     /// </summary>
     /// <param name="origin">The currently-focused element navigation is relative to.</param>
     /// <param name="directionAngleRadians">
@@ -55,6 +63,9 @@ public static class SpatialNavigationService
 
         FrameworkElement? best = null;
         float bestScore = float.MaxValue;
+        FrameworkElement? bestInHalfPlane = null;
+        float bestHalfPlaneDistance = float.MaxValue;
+        float bestHalfPlaneAngleDiff = float.MaxValue;
 
         foreach (FrameworkElement candidate in candidateList)
         {
@@ -79,6 +90,16 @@ public static class SpatialNavigationService
 
             if (angleDiff > maxAngleRadians)
             {
+                if (angleDiff < HalfPlaneLimitRadians &&
+                    (distance < bestHalfPlaneDistance ||
+                    (distance == bestHalfPlaneDistance && angleDiff < bestHalfPlaneAngleDiff) ||
+                    (distance == bestHalfPlaneDistance && angleDiff == bestHalfPlaneAngleDiff &&
+                        IsLeftOrAbove(candidate, bestInHalfPlane))))
+                {
+                    bestInHalfPlane = candidate;
+                    bestHalfPlaneDistance = distance;
+                    bestHalfPlaneAngleDiff = angleDiff;
+                }
                 continue;
             }
 
@@ -91,13 +112,28 @@ public static class SpatialNavigationService
             }
         }
 
-        return best;
+        return best ?? bestInHalfPlane;
     }
 
     // Two independently-focusable elements can be in an ancestor/descendant relationship (a Slider
     // and its own Thumb button both pass the focusable filter), so excluding only origin-relative
     // ancestors/descendants isn't enough once neither is the origin. Only the outermost focusable
     // element in any such chain should compete for the score.
+    // Final fallback tie-break so equal-distance, equal-angle candidates resolve the same way
+    // regardless of list order.
+    private static bool IsLeftOrAbove(FrameworkElement candidate, FrameworkElement? other)
+    {
+        if (other == null)
+        {
+            return true;
+        }
+        if (candidate.Visual.AbsoluteLeft != other.Visual.AbsoluteLeft)
+        {
+            return candidate.Visual.AbsoluteLeft < other.Visual.AbsoluteLeft;
+        }
+        return candidate.Visual.AbsoluteTop < other.Visual.AbsoluteTop;
+    }
+
     private static bool IsNestedUnderAnotherCandidate(FrameworkElement candidate, List<FrameworkElement> candidates)
     {
         foreach (FrameworkElement other in candidates)
