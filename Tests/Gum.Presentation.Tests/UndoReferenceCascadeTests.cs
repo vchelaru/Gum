@@ -507,6 +507,83 @@ public class UndoReferenceCascadeTests : BaseTestClass
         Width(_comp, "F1", Alt()).ShouldBe(55, "the categorized follower follows the reference");
     }
 
+    private StateSave AddCategorizedState(params (string Owner, string Row, float? Stored)[] followers)
+    {
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        StateSave alt = new StateSave { Name = "Alt", ParentContainer = _comp };
+        category.States.Add(alt);
+        _comp.Categories.Add(category);
+        foreach ((string owner, string row, float? stored) in followers)
+        {
+            AddRow(alt, owner, row);
+            SetWidth(alt, owner, stored);
+        }
+        _undo.RecordState();
+        return alt;
+    }
+
+    [Fact]
+    public void TypedEdit_OfADefaultStateSource_ShouldRefreshFollowersInACategorizedState()
+    {
+        // #6886: the reference sets the final value, so a categorized state's row that reads the edited source
+        // follows it, and so does a row in that state reading the first follower.
+        Arrange();
+        StateSave alt = AddCategorizedState(("F1", "Width = Source.Width", 50), ("F2", "Width = F1.Width + 1", 51));
+
+        EditSourceWidth(55);
+
+        Width(_comp, "F1", alt).ShouldBe(55, "the categorized follower reads the new source");
+        Width(_comp, "F2", alt).ShouldBe(56, "a follower of that follower is refreshed in dependency order");
+        Width(_comp, "F1").ShouldBe(55);
+        MemoryShouldEqualDisk();
+    }
+
+    [Fact]
+    public void TypedEdit_AndUndoRedo_ShouldGiveTheSameCategorizedFollowers()
+    {
+        // The typed edit is the oracle for undo and redo: after each step the categorized follower holds what
+        // typing the same value gives.
+        Arrange();
+        AddCategorizedState(("F1", "Width = Source.Width", 50));
+        // Undo replaces the state objects with copies, so each read looks the state up again.
+        StateSave Alt() => _comp.Categories.Single().States.Single();
+        EditSourceWidth(55);
+        float? afterTyping = Width(_comp, "F1", Alt());
+
+        _undo.PerformUndo();
+        Width(_comp, "F1", Alt()).ShouldBe(50);
+        _undo.PerformRedo();
+
+        Width(_comp, "F1", Alt()).ShouldBe(afterTyping);
+        Width(_comp, "F1", Alt()).ShouldBe(55);
+    }
+
+    [Fact]
+    public void TypedEdit_ResettingTheSource_ShouldLeaveACategorizedFollowerAtItsLastValue()
+    {
+        Arrange();
+        StateSave alt = AddCategorizedState(("F1", "Width = Source.Width", 50));
+        EditSourceWidth(55);
+
+        ResetSource();
+
+        Width(_comp, "F1", alt).ShouldBe(55, "a reset source never resets a follower");
+    }
+
+    [Fact]
+    public void TypedEdit_WithACycleInACategorizedState_ShouldFinishAndKeepTheCycleValues()
+    {
+        // F1 and F2 read each other in Alt: no order exists, so neither is evaluated and both keep their values.
+        Arrange();
+        StateSave alt = AddCategorizedState(("F1", "Width = F2.Width", 7), ("F2", "Width = F1.Width", 8));
+
+        EditSourceWidth(55);
+
+        Width(_comp, "F1", alt).ShouldBe(7);
+        Width(_comp, "F2", alt).ShouldBe(8);
+        Width(_comp, "F1").ShouldBe(55, "the default state's rows still follow");
+    }
+
     private void ResetSource()
     {
         using (_undo.RequestLock())

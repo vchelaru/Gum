@@ -207,7 +207,10 @@ public sealed class UndoOracleWorld : BaseTestClass
             _comp.Categories.Add(category);
             SetWidth(alt, "S0", 70);
             AddRow(alt, "FA", "Width = S0.Width + 1");
-            Description += " | Alt: S0=70, FA: Width = S0.Width + 1";
+            // Alt does not set S1, so FB reads the default state's value: the case where a default-state edit has to reach a categorized state (#6886).
+            NewInstance(_comp, "FB");
+            AddRow(alt, "FB", "Width = S1.Width + 2");
+            Description += " | Alt: S0=70, FA: Width = S0.Width + 1, FB: Width = S1.Width + 2";
         }
 
         GumProjectSave project = new GumProjectSave();
@@ -410,9 +413,8 @@ public class UndoTypedEditOracleSweepTests : BaseTestClass
         {
             int buildSeed = random.Next();
             bool autoSave = random.Next(2) == 0;
-            // A categorized state is left out: undo re-reads its rows but a typed edit of the default state does not (#6886, pinned by UndoReferenceCascadeTests).
-            bool useAlt = false;
-            random.Next(3);
+            // A third of the cases add a categorized state whose row reads the default state's source (#6886).
+            bool useAlt = random.Next(3) == 0;
             random.Next();
             List<string> steps = new List<string>();
             List<OracleEdit> typedSteps = new List<OracleEdit>();

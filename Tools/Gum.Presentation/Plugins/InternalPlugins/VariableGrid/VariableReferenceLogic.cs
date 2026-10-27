@@ -528,6 +528,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         // apply references on this element first, then apply the values to the other references:
+        Dictionary<string, object?> valuesBefore = new Dictionary<string, object?>();
+        foreach (VariableSave variable in stateSave.Variables)
+        {
+            valuesBefore[variable.Name] = variable.Value;
+        }
         ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
 
         // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
@@ -535,6 +540,17 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // ButtonCategoryState = "Disabled"). Tool-only by design — never invoked at
         // runtime, since the Forms control's own setter owns the visual at runtime.
         BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+
+        // A categorized state's rows read the same instances, so they follow too (#6886).
+        HashSet<string> changedNames = new HashSet<string> { qualifiedName };
+        foreach (VariableSave variable in stateSave.Variables)
+        {
+            if (!valuesBefore.TryGetValue(variable.Name, out object? oldValue) || !ElementSaveExtensions.ValueEquality(oldValue, variable.Value))
+            {
+                changedNames.Add(variable.Name);
+            }
+        }
+        ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
 
         if (unqualifiedMember == "VariableReferences")
         {
@@ -629,14 +645,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 continue;
             }
 
-            HashSet<string> names = new HashSet<string>(restored.VariableNames);
             List<ReferenceRow> rows = graph.OrderedRows.Concat(graph.CyclicRows)
                 .Where(row => restored.AddedRows.Contains(RestoredChanges.RowKey(row.SourceObject, row.Line)))
                 .ToList();
-            names.UnionWith(rows.Select(row => row.WrittenName));
-            List<ReferenceRow> affected = new List<ReferenceRow>();
-            graph.FindAffectedRows(names, affected, includeLiveLayoutRows: false);
-            HashSet<ReferenceRow> toApply = new HashSet<ReferenceRow>(rows.Concat(affected));
+            HashSet<ReferenceRow> toApply = FindRowsToApply(graph, restored.VariableNames, rows);
             if (toApply.Count > 0)
             {
                 // A row whose source is gone or null writes nothing, and the variable keeps its last value:
@@ -653,6 +665,49 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         return ApplyReferencesToElement(element, trySave: true);
+    }
+
+    /// <summary>
+    /// The rows to re-read when <paramref name="changedNames"/> changed: <paramref name="seedRows"/> (rows that
+    /// were added) and every row that reads a changed variable or the result of an affected row.
+    /// </summary>
+    private static HashSet<ReferenceRow> FindRowsToApply(VariableReferenceGraph graph, IEnumerable<string> changedNames,
+        List<ReferenceRow> seedRows)
+    {
+        HashSet<string> names = new HashSet<string>(changedNames);
+        names.UnionWith(seedRows.Select(row => row.WrittenName));
+        List<ReferenceRow> affected = new List<ReferenceRow>();
+        graph.FindAffectedRows(names, affected, includeLiveLayoutRows: false);
+        return new HashSet<ReferenceRow>(seedRows.Concat(affected));
+    }
+
+    /// <summary>
+    /// After a typed edit changed <paramref name="changedNames"/> in <paramref name="editedState"/>, re-reads the
+    /// rows of the element's other states that read them, as undo does. A row that reads nothing that changed
+    /// is left alone, and a row in a loop is never evaluated, so it keeps its stored value.
+    /// </summary>
+    private static void ApplyOtherStatesReading(ElementSave element, StateSave editedState, ICollection<string> changedNames,
+        GraphicalUiElement? liveRoot, bool isFullCommit)
+    {
+        foreach (StateSave state in element.AllStates)
+        {
+            if (state == editedState)
+            {
+                continue;
+            }
+
+            VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
+            if (!graph.HasRows)
+            {
+                continue;
+            }
+
+            HashSet<ReferenceRow> toApply = FindRowsToApply(graph, changedNames, new List<ReferenceRow>());
+            if (toApply.Count > 0)
+            {
+                ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot, isFullCommit, onlyRows: toApply);
+            }
+        }
     }
 
     private static void KeepHeldValue(StateSave state, StateSave? held, StateSave? otherSide, string variableName)

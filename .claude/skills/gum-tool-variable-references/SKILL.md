@@ -117,6 +117,8 @@ Variable references write **hard values** into the `StateSave`. This means at ga
 
 When a variable changes, `DoVariableReferenceReaction` finds all elements that reference the changed element via `ObjectFinder.GetElementReferencesToThis` (filtered to `ReferenceType.VariableReference`). It then applies variable references on those elements too, creating a cascade. Modified elements are auto-saved.
 
+A typed edit also re-reads the rows of the element's other states (Highlighted, Disabled) that read the changed variables, through the same row selection undo uses (`FindRowsToApply`), so a typed edit, an undo and a redo leave a categorized state's followers the same. A row in a loop is not evaluated.
+
 ### Deep Propagation
 
 `DoVariableReferenceReactionOnInstanceVariableSet` handles a subtler case: when an instance's base element has variable references internally, and the changed variable tunnels through. It walks the reference graph to find which inner-instance variables need updating and writes the values directly into the container's state.
