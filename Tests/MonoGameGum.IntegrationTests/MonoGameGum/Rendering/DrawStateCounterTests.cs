@@ -481,6 +481,71 @@ public class DrawStateCounterTests : BaseTestClass
         renderer.GetDrawStateSummary().ShapeBatchBeginCount.ShouldBe(0);
     }
 
+    [Fact]
+    public void ImmediateMode_NestedBeginEnd_CountsEachDrawCallOnce()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        Renderer renderer = SystemManagers.Default.Renderer;
+        using Texture2D a = CreateTexture(game.GraphicsDevice, Color.Red);
+        using Texture2D b = CreateTexture(game.GraphicsDevice, Color.Blue);
+        SpriteRuntime[] sprites = CreateAlternatingSprites(a, b, 2);
+        AdvanceHostFrame();
+
+        long measured = MeasureDrawCalls(game.GraphicsDevice, () =>
+        {
+            renderer.Begin();
+            renderer.Draw(sprites[0]);
+            renderer.Begin();
+            renderer.Draw(sprites[1]);
+            renderer.End();
+            renderer.Draw(sprites[0]);
+            renderer.End();
+        });
+
+        renderer.RenderStateChangeStatistics.DrawCallCount.ShouldBe((int)measured);
+    }
+
+    [Fact]
+    public void ImmediateMode_NeverAdvancingHostFrame_KeepsRecordsBounded()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        Renderer renderer = SystemManagers.Default.Renderer;
+        using Texture2D a = CreateTexture(game.GraphicsDevice, Color.Red);
+        SpriteRuntime sprite = new() { Texture = a, Width = 10, Height = 10 };
+        AdvanceHostFrame();
+
+        for (int i = 0; i < 20000; i++)
+        {
+            renderer.Begin();
+            renderer.Draw(sprite);
+            renderer.End();
+        }
+
+        renderer.SpriteRenderer.LastFrameDrawStates.Count().ShouldBeLessThan(10000);
+    }
+
+    [Fact]
+    public void PerLayerDraw_NeverAdvancingHostFrame_KeepsRecordsBounded()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+        using Texture2D a = CreateTexture(game.GraphicsDevice, Color.Red);
+        using Texture2D b = CreateTexture(game.GraphicsDevice, Color.Blue);
+        AddClipContainer(a, b, renderer.MainLayer, 2);
+        AdvanceHostFrame();
+
+        for (int i = 0; i < 6000; i++)
+        {
+            renderer.Draw(managers, renderer.MainLayer);
+        }
+
+        renderer.SpriteRenderer.LastFrameDrawStates.Count().ShouldBeLessThan(10000);
+    }
+
     private sealed class MinimalGame : SharedGameLease
     {
         protected override void OnInitialize() => global::Gum.GumService.Default.Initialize(Game, global::Gum.Forms.DefaultVisualsVersion.V3);

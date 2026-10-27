@@ -101,12 +101,10 @@ public class Renderer : IRenderer
     private GumBatchDrawMode _immediateModeDrawMode = GumBatchDrawMode.Immediate;
     private readonly List<IRenderableIpso> _deferredImmediateModeRoots = new();
     private readonly List<DrawCommand> _deferredImmediateModeCommands = new();
-#if !FNA
-    // Set at the start of each immediate-mode Begin/End cycle (Renderer.Begin/Draw/End, the path
-    // GumBatch wraps) so End can take the same before/after GraphicsDevice.Metrics.DrawCount delta
-    // that Draw(SystemManagers) takes for the layered path. See RenderStateChangeStatistics.DrawCallCount remarks.
-    private long _immediateModeDrawCountBeforeCycle;
-#endif
+    // One entry per open immediate-mode Begin (Renderer.Begin/Draw/End, the path GumBatch wraps), so
+    // End can take the same before/after GraphicsDevice.Metrics.DrawCount delta that Draw(SystemManagers)
+    // takes for the layered path. See RenderStateChangeStatistics.DrawCallCount remarks.
+    private readonly Stack<long> _immediateModeDrawCountStarts = new Stack<long>();
     Camera mCamera;
 
     // Set immediately before every renderable.Render(managers) call (both the legacy recursive
@@ -674,6 +672,9 @@ public class Renderer : IRenderer
         ClearPerformanceRecordingVariables();
         // Already reset for this frame, so a render-target bake's Begin must not reset again.
         _perfStatsResetForHostFrame = true;
+        // The frame root: a Begin left open by an earlier exception must not swallow this frame's counts.
+        _drawCountScopeDepth = 0;
+        _immediateModeDrawCountStarts.Clear();
 
         if (managers == null)
         {
@@ -895,9 +896,8 @@ public class Renderer : IRenderer
     {
         _immediateModeDrawMode = mode;
         TryResetPerformanceStatsForHostFrame();
-#if !FNA
-        _immediateModeDrawCountBeforeCycle = GraphicsDevice?.Metrics.DrawCount ?? 0;
-#endif
+        // A stack, so nested Begin/End cycles each close their own scope; only the outermost records.
+        _immediateModeDrawCountStarts.Push(EnterDrawCountScope());
 
         spriteRenderer.ForcedMatrix = spriteBatchMatrix;
         spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera, null);
@@ -997,15 +997,12 @@ public class Renderer : IRenderer
         // inherit a stale matrix from this one.
         spriteRenderer.ForcedMatrix = null;
 
-#if !FNA
-        // Inside a larger scope (a render-target bake during Draw(SystemManagers)) the outer delta
-        // already contains these draw calls.
-        if (GraphicsDevice != null && _drawCountScopeDepth == 0)
+        // Only the outermost scope records, so a nested Begin/End or a render-target bake during
+        // Draw(SystemManagers) does not add draw calls the enclosing delta already contains.
+        if (_immediateModeDrawCountStarts.Count > 0)
         {
-            RenderStateChangeStatistics.AddDrawCalls(
-                (int)(InitializedGraphicsDevice.Metrics.DrawCount - _immediateModeDrawCountBeforeCycle));
+            ExitDrawCountScope(_immediateModeDrawCountStarts.Pop());
         }
-#endif
     }
 
 
