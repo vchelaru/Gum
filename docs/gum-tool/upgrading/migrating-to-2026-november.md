@@ -625,3 +625,27 @@ Available in November 2026, or now if building Gum from source.
 On MonoGame and KNI, an `SvgRuntime` whose `SourceFile` is missing or is not an SVG Gum can read now follows `MissingFileBehavior` like a Sprite image does. Before, it drew nothing and reported nothing. With the default `ThrowException`, assigning the file throws a `FileNotFoundException` naming it. The same applies to `ShapeSvgLoader.Load`.
 
 Fix the path, or set `ConsumeSilently` as described for [SkiaGum](#skiagum-throws-when-a-file-is-missing-or-an-image-cannot-be-decoded). The `SvgRuntime` then has a null `Texture` and `PropertyAssignmentError` is raised with the file name.
+
+### A Hidden Control Refuses Focus
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+Setting `IsFocused` to `true` on a control that is not visible, because it or any of its parents has `IsVisible` set to `false`, now leaves `IsFocused` as `false`. A hidden control cannot take focus, the same as a disabled one. Gamepad, keyboard, and tab navigation already skipped hidden controls.
+
+This affects you only if your code sets `IsFocused` before it shows the control. Show the control first, then focus it.
+
+❌ Old:
+```csharp
+// Initialize
+okButton.IsFocused = true;
+dialog.IsVisible = true;
+```
+
+✅ New:
+```csharp
+// Initialize
+dialog.IsVisible = true;
+okButton.IsFocused = true;
+```

@@ -225,6 +225,12 @@ public class FrameworkElement : INotifyPropertyChanged
         get { return isFocused; }
         set
         {
+            // A control that is not visible, itself or through an ancestor, refuses focus (#6956).
+            if (value && !isFocused && Visual?.AbsoluteVisible == false)
+            {
+                return;
+            }
+
             if (value != isFocused)
             {
                 isFocused = value && (IsEnabled || AllowFocusWhenDisabled);

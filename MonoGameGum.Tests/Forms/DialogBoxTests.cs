@@ -364,8 +364,8 @@ public class DialogBoxTests : BaseTestClass
         dialogBox.FinishedShowing += (_, _) =>
         {
             // Typical chained-dialog usage: show the next dialog from the handler.
-            dialogBox.IsFocused = true;
             dialogBox.Show(new[] { "second A", "second B" });
+            dialogBox.IsFocused = true;
         };
 
         dialogBox.Dismiss();
