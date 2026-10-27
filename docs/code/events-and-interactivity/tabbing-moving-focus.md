@@ -209,10 +209,18 @@ void SetEditing(bool value)
     slider.SpatialNavigationLeft = isEditing ? null : leftNeighbor;
     slider.SpatialNavigationRight = isEditing ? null : rightNeighbor;
 }
+```
 
+Call it once at startup so the overrides start set:
+
+```csharp
 // Initialize
 SetEditing(false);
+```
 
+Each frame, A starts editing and A or B stops it:
+
+```csharp
 // Update
 if (slider.IsFocused)
 {
