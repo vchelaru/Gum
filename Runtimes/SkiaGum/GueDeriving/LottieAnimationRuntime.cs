@@ -34,8 +34,9 @@ public class LottieAnimationRuntime : InteractiveGue
         {
             if (sourceFile != value)
             {
+                // Loaded first, so a file that fails to load (and throws) can be assigned again once it is fixed.
+                Animation = global::SkiaGum.Content.SourceFileLoading.Load<Animation>(value, this, nameof(LottieAnimation));
                 sourceFile = value;
-                Animation = global::SkiaGum.Content.SourceFileLoading.LoadOrNull<Animation>(value);
                 // The getter returns the path, which TryGetProperty cannot recover from the animation.
                 ReportTypedPropertyChanged(nameof(SourceFile), value);
             }

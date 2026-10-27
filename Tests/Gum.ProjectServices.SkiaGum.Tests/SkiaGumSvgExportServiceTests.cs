@@ -289,6 +289,24 @@ public class SkiaGumSvgExportServiceTests : IDisposable
         }
     }
 
+    // An Svg instance whose file is missing or cannot be parsed follows MissingFileBehavior like a Sprite's image (#6903):
+    // the export, which consumes silently, still draws the rest instead of failing.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ExportSvg_SvgInstanceWithUnloadableFile_ShouldSucceed(bool fileExists)
+    {
+        string svgPath = Path.Combine(_tempDirectory, "unloadable.svg");
+        if (fileExists)
+        {
+            File.WriteAllText(svgPath, "this is not an svg document");
+        }
+
+        ExportScreenWithInstance(
+            "Svg",
+            new VariableSave { Name = "ShapeInstance.SourceFile", Type = "string", Value = svgPath, SetsValue = true });
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))
