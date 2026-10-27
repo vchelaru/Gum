@@ -78,6 +78,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     private bool _pendingReload;
     private DateTime _lastChangeTime;
     private readonly object _pendingReloadLock = new object();
+    // Consecutive reloads that failed to read the project; reset by any new file change and by a success.
+    private int _failedAttempts;
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
 
@@ -190,6 +192,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 _lastChangeTime = now;
                 _pendingReload = true;
+                _failedAttempts = 0;
             }
         }
     }
@@ -211,7 +214,9 @@ public class GumHotReloadManager : IGumHotReloadManager
             or ".behx" or ".behj"
             or ".fnt";
 
-    private void CopyAndUnloadChangedFonts()
+    // Returns a description of the fonts that could not be copied (a file the editor still has open),
+    // which stay queued for the next reload; null when every font copied.
+    private string? CopyAndUnloadChangedFonts()
     {
         List<string> changedFonts;
         lock (_fontFileLock)
@@ -222,53 +227,72 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         if (changedFonts.Count == 0)
         {
-            return;
+            return null;
         }
 
         var sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
         if (sourceDirectory == null)
         {
-            return;
+            return null;
         }
 
         var sourceFontCache = Path.Combine(sourceDirectory, "FontCache");
         if (!Directory.Exists(sourceFontCache))
         {
-            return;
+            return null;
         }
 
+        string? failures = null;
+        foreach (var sourceFntPath in changedFonts)
+        {
+            try
+            {
+                CopyAndUnloadFont(sourceFntPath, sourceFontCache);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                lock (_fontFileLock)
+                {
+                    _changedFontFiles.Add(sourceFntPath);
+                }
+                failures += $"\nCould not copy font file {sourceFntPath}: {exception.Message}";
+            }
+        }
+
+        return failures;
+    }
+
+    private void CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
+    {
         var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
         Directory.CreateDirectory(destinationFontCache);
 
-        foreach (var sourceFntPath in changedFonts)
+        var fileName = Path.GetFileName(sourceFntPath);
+
+        // Copy the .fnt file
+        var destinationFile = Path.Combine(destinationFontCache, fileName);
+        File.Copy(sourceFntPath, destinationFile, overwrite: true);
+
+        // Copy associated .png texture pages (same name prefix)
+        var baseName = Path.GetFileNameWithoutExtension(fileName);
+        var copiedPngs = new List<string>();
+        foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
         {
-            var fileName = Path.GetFileName(sourceFntPath);
+            var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
+            File.Copy(pngFile, pngDestination, overwrite: true);
+            copiedPngs.Add(pngDestination);
+        }
 
-            // Copy the .fnt file
-            var destinationFile = Path.Combine(destinationFontCache, fileName);
-            File.Copy(sourceFntPath, destinationFile, overwrite: true);
+        // Unload the cached font so it gets reloaded from the new file
+        var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
+        var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
+        _disposeCachedAsset(standardizedFont);
 
-            // Copy associated .png texture pages (same name prefix)
-            var baseName = Path.GetFileNameWithoutExtension(fileName);
-            var copiedPngs = new List<string>();
-            foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
-            {
-                var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
-                File.Copy(pngFile, pngDestination, overwrite: true);
-                copiedPngs.Add(pngDestination);
-            }
-
-            // Unload the cached font so it gets reloaded from the new file
-            var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
-            var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
-            _disposeCachedAsset(standardizedFont);
-
-            // Unload the cached texture pages so they get reloaded too
-            foreach (var pngPath in copiedPngs)
-            {
-                var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
-                _disposeCachedAsset(standardizedPng);
-            }
+        // Unload the cached texture pages so they get reloaded too
+        foreach (var pngPath in copiedPngs)
+        {
+            var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
+            _disposeCachedAsset(standardizedPng);
         }
     }
 
@@ -280,29 +304,137 @@ public class GumHotReloadManager : IGumHotReloadManager
         // is safe from us modifying it via the rebuild step.
         var rootList = roots.ToList();
 
-        CopyAndUnloadChangedFonts();
+        string? fontFailure = CopyAndUnloadChangedFonts();
 
-        GumProjectSave newProject = GumProjectSave.Load(_projectSourcePath);
-        newProject.Initialize();
-        ObjectFinder.Self.GumProjectSave = newProject;
+        // The whole project is read into a temporary first. A file caught half written, locked by the
+        // editor or unparsable leaves the running tree and ObjectFinder exactly as they were (#6978).
+        GumProjectSave? newProject = TryLoadProject(out string? loadFailure);
+        if (newProject == null)
+        {
+            HandleFailedReload(loadFailure, fontFailure);
+            return;
+        }
 
-        // Re-apply the project's texture filter so editing it in the tool carries over on reload
-        // (issue #3199). On XNALIKE this takes effect on the next Draw; on raylib it affects
-        // textures loaded after this point (already-cached textures keep their prior filter).
-        _applyProjectTextureFilter(newProject);
+        GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
+        try
+        {
+            newProject.Initialize();
+            ObjectFinder.Self.GumProjectSave = newProject;
 
-        // Reload animations from the source project directory (loose files on disk) by enumerating
-        // its *Animations.ganx files. Hot reload only ever runs against a real filesystem, so a
-        // LooseFileGumFileProvider rooted at the source directory is the right seam — no need to
-        // mutate FileManager.RelativeDirectory the way the old per-element probe did.
-        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
-        Gum.Bundle.LooseFileGumFileProvider animationProvider = new Gum.Bundle.LooseFileGumFileProvider(
-            string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
-        _loadAnimationsFromProvider(newProject, animationProvider);
+            // Re-apply the project's texture filter so editing it in the tool carries over on reload
+            // (issue #3199). On XNALIKE this takes effect on the next Draw; on raylib it affects
+            // textures loaded after this point (already-cached textures keep their prior filter).
+            _applyProjectTextureFilter(newProject);
 
-        ApplyDiff(rootList, newProject, ISystemManagers.Default!);
+            // Reload animations from the source project directory (loose files on disk) by enumerating
+            // its *Animations.ganx files. Hot reload only ever runs against a real filesystem, so a
+            // LooseFileGumFileProvider rooted at the source directory is the right seam - no need to
+            // mutate FileManager.RelativeDirectory the way the old per-element probe did.
+            string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+            Gum.Bundle.LooseFileGumFileProvider animationProvider = new Gum.Bundle.LooseFileGumFileProvider(
+                string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
+            _loadAnimationsFromProvider(newProject, animationProvider);
+
+            ApplyDiff(rootList, newProject, ISystemManagers.Default!);
+        }
+        catch (Exception exception)
+        {
+            ObjectFinder.Self.GumProjectSave = previousProject;
+            if (previousProject != null)
+            {
+                _applyProjectTextureFilter(previousProject);
+            }
+            HandleFailedReload($"Hot reload failed while applying {_projectSourcePath}: {exception.Message}", fontFailure);
+            return;
+        }
+
+        lock (_pendingReloadLock)
+        {
+            _failedAttempts = 0;
+        }
+
+        if (fontFailure != null)
+        {
+            ReportError(fontFailure.Trim());
+        }
 
         ReloadCompleted?.Invoke();
+    }
+
+    // Returns null with a description when the project cannot be read. Files the project lists but that
+    // are gone (a git checkout between branches) are reported and left out, so the rest still reloads.
+    private GumProjectSave? TryLoadProject(out string? failure)
+    {
+        failure = null;
+        GumProjectSave? project;
+        GumLoadResult result;
+        try
+        {
+            project = GumProjectSave.Load(_projectSourcePath, out result);
+        }
+        catch (Exception exception)
+        {
+            failure = $"Could not read {_projectSourcePath}: {exception.Message}";
+            return null;
+        }
+
+        if (project == null || !string.IsNullOrEmpty(result.ErrorMessage))
+        {
+            failure = $"Could not read {_projectSourcePath}: {result.ErrorMessage?.Trim()}";
+            if (result.MissingFiles?.Count > 0)
+            {
+                failure += "\nMissing: " + string.Join(", ", result.MissingFiles);
+            }
+            return null;
+        }
+
+        if (result.MissingFiles?.Count > 0)
+        {
+            ReportError("Hot reload left out missing file(s): " + string.Join(", ", result.MissingFiles));
+        }
+
+        return project;
+    }
+
+    // A failed read is tried once more after the debounce, since the writer may still have had the file
+    // open; a second failure is reported and waits for the next save.
+    private void HandleFailedReload(string? failure, string? fontFailure)
+    {
+        bool retry;
+        lock (_pendingReloadLock)
+        {
+            _failedAttempts++;
+            retry = _failedAttempts < 2;
+            if (retry)
+            {
+                _lastChangeTime = _utcNow();
+                _pendingReload = true;
+            }
+        }
+
+        if (!retry)
+        {
+            ReportError(("Hot reload skipped, the running UI is unchanged. " + failure + fontFailure).Trim());
+        }
+    }
+
+    private static void ReportError(string message)
+    {
+        try
+        {
+            if (ElementSaveExtensions.ReportPropertyAssignmentError != null)
+            {
+                ElementSaveExtensions.ReportPropertyAssignmentError(message);
+            }
+            else
+            {
+                Console.Error.WriteLine($"[Gum] {message}");
+            }
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting a hot reload failure: {exception}");
+        }
     }
 
     /// <summary>
