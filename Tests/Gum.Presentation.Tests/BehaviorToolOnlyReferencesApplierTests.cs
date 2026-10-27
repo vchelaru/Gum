@@ -949,6 +949,32 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_ComponentDriverBackAtDefault_ReplacesTheValueItsReferenceWroteEarlier()
+    {
+        // IsEnabled was false, so the component stored "Disabled"; IsEnabled is true again, so the stored
+        // value must follow instead of keeping the stale "Disabled".
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+        behavior.ToolOnlyVariableReferences.Add("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ButtonStandard", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true, SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Type = "string", Name = "ButtonCategoryState", Value = "Disabled", SetsValue = true });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("ButtonCategoryState").ShouldBe("Enabled");
+    }
+
+    [Fact]
     public void GetUnderlyingMembersDrivenBy_ComponentLevelSpacing_ReturnsStackSpacing()
     {
         // Component-level (instance == null) resolution: the component itself carries the behavior.

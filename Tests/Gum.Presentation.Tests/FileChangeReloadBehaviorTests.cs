@@ -65,11 +65,11 @@ public class FileChangeReloadBehaviorTests : BaseTestClass
 
     private string BehaviorFile => Path.Combine(_tempDirectory, "Behaviors", BehaviorName + ".behj");
 
-    private static BehaviorSave BuildBehavior(string categoryReference)
+    private static BehaviorSave BuildBehavior(params string[] references)
     {
         BehaviorSave behavior = new BehaviorSave { Name = BehaviorName };
         behavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
-        behavior.ToolOnlyVariableReferences.Add(categoryReference);
+        behavior.ToolOnlyVariableReferences.AddRange(references);
         return behavior;
     }
 
@@ -162,7 +162,8 @@ public class FileChangeReloadBehaviorTests : BaseTestClass
             new Mock<IUndoManager>().Object);
     }
 
-    private void EditBehaviorOnDisk() => BuildBehavior(EditedCategoryReference).Save(BehaviorFile);
+    private void EditBehaviorOnDisk(params string[] references) =>
+        BuildBehavior(references.Length > 0 ? references : new[] { EditedCategoryReference }).Save(BehaviorFile);
 
     private void ReloadBehavior() => _reaction.ReactToFileChanged(new FilePath(BehaviorFile));
 
@@ -294,5 +295,147 @@ public class FileChangeReloadBehaviorTests : BaseTestClass
         _reaction.ReactToFileChanged(new FilePath(file));
 
         GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Disabled");
+    }
+
+    private void EditIsEnabledOnDisk(string elementName, bool from, bool to)
+    {
+        string file = ElementFile(elementName);
+        string text = File.ReadAllText(file);
+        Regex isEnabled = new(@"(""Name"": ""IsEnabled"",\s*""Type"": ""bool"",\s*""SetsValue"": true,\s*""ValueAsBool"": )" + from.ToString().ToLowerInvariant());
+        isEnabled.IsMatch(text).ShouldBeTrue("the saved file should hold IsEnabled");
+        File.WriteAllText(file, isEnabled.Replace(text, "${1}" + to.ToString().ToLowerInvariant()));
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ComponentFileWithIsEnabledBackToTrue_ShouldResetTheDerivedValueItHeld()
+    {
+        // The component stored "Disabled" because IsEnabled was false. IsEnabled now decides again, and the
+        // reference resolves to the resting value, which must replace the stale "Disabled".
+        Arrange(BuildButton(ButtonName, implementsBehavior: true, isEnabled: false));
+        EditIsEnabledOnDisk(ButtonName, from: false, to: true);
+
+        _reaction.ReactToFileChanged(new FilePath(ElementFile(ButtonName)));
+
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Enabled");
+    }
+
+    // ButtonStandard is disabled and implements the behavior; OtherButton is enabled, implements it, and the
+    // screen holds a disabled instance of it (an instance equal to its component's value stores nothing).
+    private void ArrangeDisabledButtonAndScreenWithDisabledInstanceOfAnother(ComponentSave? otherButton = null) =>
+        Arrange(
+            BuildButton(ButtonName, implementsBehavior: true, isEnabled: false),
+            otherButton ?? BuildButton(OtherButtonName, implementsBehavior: true, isEnabled: true),
+            BuildScreen(OtherButtonName));
+
+    private const string InstanceCategory = "PlayOtherButton.ButtonCategoryState";
+    private const string InstanceLabel = "PlayOtherButton.ButtonLabelState";
+    private const string LabelReference = "ButtonLabelState = IsEnabled ? \"On\" : \"Off\"";
+
+    [Fact]
+    public void ReactToFileChanged_BehaviorFileThatNowResolvesToTheRestingValue_ShouldResetTheComponentAndItsInstances()
+    {
+        ArrangeDisabledButtonAndScreenWithDisabledInstanceOfAnother();
+        EditBehaviorOnDisk("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Enabled\"");
+
+        ReloadBehavior();
+
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Enabled");
+        // The instance override equals what its component resolves to now, so it is gone.
+        GetValue(ScreenName, InstanceCategory).ShouldBeNull();
+    }
+
+    [Fact]
+    public void ReactToFileChanged_BehaviorFileWithALineRemoved_ShouldRemoveTheValuesItMaterialized()
+    {
+        ArrangeDisabledButtonAndScreenWithDisabledInstanceOfAnother();
+        EditBehaviorOnDisk("// no references left");
+
+        ReloadBehavior();
+
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBeNull();
+        GetValue(ScreenName, InstanceCategory).ShouldBeNull();
+        VerifySaved(ButtonName, Times.AtLeastOnce());
+        VerifySaved(ScreenName, Times.AtLeastOnce());
+    }
+
+    [Fact]
+    public void ReactToFileChanged_BehaviorFileWithOneOfTwoLinesRemoved_ShouldKeepTheOtherLinesValue()
+    {
+        ArrangeDisabledButtonAndScreenWithDisabledInstanceOfAnother();
+        EditBehaviorOnDisk(CategoryReference, LabelReference);
+        ReloadBehavior();
+        GetValue(ButtonName, "ButtonLabelState").ShouldBe("Off");
+        GetValue(ScreenName, InstanceLabel).ShouldBe("Off");
+
+        EditBehaviorOnDisk(CategoryReference);
+        ReloadBehavior();
+
+        GetValue(ButtonName, "ButtonLabelState").ShouldBeNull();
+        GetValue(ScreenName, InstanceLabel).ShouldBeNull();
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Disabled");
+        GetValue(ScreenName, InstanceCategory).ShouldBe("Disabled");
+    }
+
+    [Fact]
+    public void ReactToFileChanged_BehaviorFileWithALineAdded_ShouldMaterializeItOnTheComponentAndItsInstances()
+    {
+        ArrangeDisabledButtonAndScreenWithDisabledInstanceOfAnother();
+        EditBehaviorOnDisk(CategoryReference, LabelReference);
+
+        ReloadBehavior();
+
+        GetValue(ButtonName, "ButtonLabelState").ShouldBe("Off");
+        GetValue(ScreenName, InstanceLabel).ShouldBe("Off");
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ComponentFileThatNoLongerImplementsTheBehavior_ShouldRemoveTheValuesItMaterialized()
+    {
+        ArrangeDisabledButtonAndScreenWithDisabledInstanceOfAnother();
+        BuildButton(ButtonName, implementsBehavior: false, isEnabled: false).Save(ElementFile(ButtonName));
+
+        _reaction.ReactToFileChanged(new FilePath(ElementFile(ButtonName)));
+
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBeNull();
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ComponentFileThatNoLongerImplementsTheBehavior_ShouldRemoveTheValuesItsInstancesHold()
+    {
+        ArrangeDisabledButtonAndScreenWithDisabledInstanceOfAnother();
+        BuildButton(OtherButtonName, implementsBehavior: false, isEnabled: true).Save(ElementFile(OtherButtonName));
+
+        _reaction.ReactToFileChanged(new FilePath(ElementFile(OtherButtonName)));
+
+        GetValue(ScreenName, InstanceCategory).ShouldBeNull();
+    }
+
+    [Fact]
+    public void ReactToFileChanged_BehaviorFileWhenReadersFormALoop_ShouldFinish()
+    {
+        // The button's Background.Red reads Other.Primary.FillRed, which reads the button's Background.Red.
+        ComponentSave button = BuildButton(ButtonName, implementsBehavior: true, isEnabled: false);
+        button.Instances.Add(new InstanceSave { Name = "Background", BaseType = "NineSlice", ParentContainer = button });
+        button.DefaultState.Variables.Add(new VariableSave { Name = "Background.Red", Type = "int", Value = 1, SetsValue = true });
+        ComponentSave other = BuildButton(OtherButtonName, implementsBehavior: false, isEnabled: true);
+        other.Instances.Add(new InstanceSave { Name = "Primary", BaseType = "Rectangle", ParentContainer = other });
+        other.DefaultState.Variables.Add(new VariableSave { Name = "Primary.FillRed", Type = "int", Value = 2, SetsValue = true });
+        button.DefaultState.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = "Background.VariableReferences", Type = "string",
+            Value = new List<string> { "Red = " + ElementReference.GetQualifiedName(other, other.Name) + ".Primary.FillRed" },
+        });
+        other.DefaultState.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = "Primary.VariableReferences", Type = "string",
+            Value = new List<string> { "FillRed = " + ElementReference.GetQualifiedName(button, button.Name) + ".Background.Red" },
+        });
+        Arrange(button, other);
+        EditBehaviorOnDisk();
+
+        System.Threading.Tasks.Task reload = System.Threading.Tasks.Task.Run(ReloadBehavior);
+
+        reload.Wait(TimeSpan.FromSeconds(20)).ShouldBeTrue("the reload should finish even when elements read each other");
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Greyed");
     }
 }

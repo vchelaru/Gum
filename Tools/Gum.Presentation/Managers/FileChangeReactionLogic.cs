@@ -37,10 +37,13 @@ namespace Gum.Managers
         /// Names of the elements reloaded while a <see cref="DeferDependentUpdates"/> scope is open;
         /// null when no scope is open.
         /// </summary>
-        private List<string>? _reloadedWhileDeferring;
+        private Dictionary<string, ElementSave>? _reloadedWhileDeferring;
 
-        /// <summary>Names of the behaviors reloaded in the same scope; null exactly when <see cref="_reloadedWhileDeferring"/> is.</summary>
-        private List<string>? _behaviorsReloadedWhileDeferring;
+        /// <summary>
+        /// The behaviors reloaded in the same scope, by name, each with the copy it replaced (the first, when
+        /// reloaded twice); null exactly when <see cref="_reloadedWhileDeferring"/> is.
+        /// </summary>
+        private Dictionary<string, BehaviorSave>? _behaviorsReloadedWhileDeferring;
 
         public FileChangeReactionLogic(
             ISelectedState selectedState,
@@ -80,8 +83,8 @@ namespace Gum.Managers
         /// </summary>
         public IDisposable DeferDependentUpdates()
         {
-            _reloadedWhileDeferring ??= new List<string>();
-            _behaviorsReloadedWhileDeferring ??= new List<string>();
+            _reloadedWhileDeferring ??= new Dictionary<string, ElementSave>();
+            _behaviorsReloadedWhileDeferring ??= new Dictionary<string, BehaviorSave>();
             return new DeferredDependentUpdates(this);
         }
 
@@ -93,13 +96,13 @@ namespace Gum.Managers
 
             public void Dispose()
             {
-                List<string>? reloaded = _owner._reloadedWhileDeferring;
-                List<string>? reloadedBehaviors = _owner._behaviorsReloadedWhileDeferring;
+                Dictionary<string, ElementSave>? reloaded = _owner._reloadedWhileDeferring;
+                Dictionary<string, BehaviorSave>? reloadedBehaviors = _owner._behaviorsReloadedWhileDeferring;
                 _owner._reloadedWhileDeferring = null;
                 _owner._behaviorsReloadedWhileDeferring = null;
                 try
                 {
-                    if (reloaded != null && _owner.UpdateDependentsOf(reloaded, reloadedBehaviors ?? new List<string>()))
+                    if (reloaded != null && _owner.UpdateDependentsOf(reloaded, reloadedBehaviors ?? new Dictionary<string, BehaviorSave>()))
                     {
                         _owner.RefreshCanvasAndVariables();
                     }
@@ -122,24 +125,24 @@ namespace Gum.Managers
         /// values the references materialize follow the outside edit.
         /// </summary>
         /// <returns>True when some stored value changed.</returns>
-        private bool UpdateDependentsOf(IEnumerable<string> reloaded, IEnumerable<string> reloadedBehaviors)
+        private bool UpdateDependentsOf(IReadOnlyDictionary<string, ElementSave> reloaded, IReadOnlyDictionary<string, BehaviorSave> reloadedBehaviors)
         {
             List<StoredValueChange> changes = new List<StoredValueChange>();
-            foreach (string behaviorName in reloadedBehaviors.Distinct())
+            foreach (KeyValuePair<string, BehaviorSave> pair in reloadedBehaviors)
             {
                 BehaviorSave? behavior = _projectState.GumProjectSave?.Behaviors.FirstOrDefault(item =>
-                    string.Equals(item?.Name, behaviorName, StringComparison.OrdinalIgnoreCase));
+                    string.Equals(item?.Name, pair.Key, StringComparison.OrdinalIgnoreCase));
                 if (behavior != null)
                 {
-                    changes.AddRange(_variableReferenceLogic.ReapplyToolOnlyReferences(behavior, trySave: true));
+                    changes.AddRange(_variableReferenceLogic.ReapplyToolOnlyReferences(behavior, pair.Value, trySave: true));
                 }
             }
-            foreach (string elementName in reloaded.Distinct())
+            foreach (KeyValuePair<string, ElementSave> pair in reloaded)
             {
-                ElementSave? element = ObjectFinder.Self.GetElementSave(elementName);
+                ElementSave? element = ObjectFinder.Self.GetElementSave(pair.Key);
                 if (element != null)
                 {
-                    changes.AddRange(_variableReferenceLogic.ReapplyToolOnlyReferences(element, trySave: true));
+                    changes.AddRange(_variableReferenceLogic.ReapplyToolOnlyReferences(element, pair.Value, trySave: true));
                     changes.AddRange(_variableReferenceLogic.ApplyReferencesToElement(element, trySave: true));
                 }
             }
@@ -593,6 +596,8 @@ namespace Gum.Managers
 
             if(element != null)
             {
+                // The copy the reload replaces, to find what its behaviors materialized and no longer do.
+                ElementSave previousElement = element;
                 // File changes are only watched while a project is open.
                 var gumProject = _projectState.GetLoadedProject();
                 gumProject.ReloadElement(element);
@@ -619,11 +624,13 @@ namespace Gum.Managers
 
                     if (_reloadedWhileDeferring != null)
                     {
-                        _reloadedWhileDeferring.Add(element.Name);
+                        _reloadedWhileDeferring.TryAdd(element.Name, previousElement);
                     }
                     else
                     {
-                        dependentsUpdated = UpdateDependentsOf(new[] { element.Name }, Array.Empty<string>());
+                        dependentsUpdated = UpdateDependentsOf(
+                            new Dictionary<string, ElementSave> { [element.Name] = previousElement },
+                            new Dictionary<string, BehaviorSave>());
                     }
                 }
             }
@@ -725,6 +732,8 @@ namespace Gum.Managers
 
             if (behavior != null)
             {
+                // The copy the reload replaces, to find the variables its removed lines materialized.
+                BehaviorSave previousBehavior = behavior;
                 gumProject.ReloadBehavior(behavior);
                 gumProject.Initialize();
                 _standardElementsManagerGumTool.FixCustomTypeConverters(gumProject);
@@ -748,9 +757,11 @@ namespace Gum.Managers
                 // materialize in the components implementing it, and in their instances, do.
                 if (_behaviorsReloadedWhileDeferring != null)
                 {
-                    _behaviorsReloadedWhileDeferring.Add(file.CaseSensitiveNoPathNoExtension);
+                    _behaviorsReloadedWhileDeferring.TryAdd(file.CaseSensitiveNoPathNoExtension, previousBehavior);
                 }
-                else if (UpdateDependentsOf(Array.Empty<string>(), new[] { file.CaseSensitiveNoPathNoExtension }))
+                else if (UpdateDependentsOf(
+                    new Dictionary<string, ElementSave>(),
+                    new Dictionary<string, BehaviorSave> { [file.CaseSensitiveNoPathNoExtension] = previousBehavior }))
                 {
                     RefreshCanvasAndVariables();
                 }

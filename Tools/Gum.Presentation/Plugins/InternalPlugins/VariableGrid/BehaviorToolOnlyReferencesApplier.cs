@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
@@ -197,32 +197,46 @@ public static class BehaviorToolOnlyReferencesApplier
         foreach (ElementBehaviorReference reference in component.Behaviors)
         {
             BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
-            if (behavior == null)
+            if (behavior != null)
             {
-                continue;
-            }
-
-            foreach (string referenceLine in behavior.ToolOnlyVariableReferences)
-            {
-                if (string.IsNullOrWhiteSpace(referenceLine) || referenceLine.TrimStart().StartsWith("//"))
+                foreach ((string left, string right) in GetReferenceLines(behavior))
                 {
-                    continue;
-                }
-
-                int equalsIndex = referenceLine.IndexOf('=');
-                if (equalsIndex < 0)
-                {
-                    continue;
-                }
-
-                string left = referenceLine.Substring(0, equalsIndex).Trim();
-                if (left.Length > 0)
-                {
-                    yield return (left, referenceLine.Substring(equalsIndex + 1).Trim());
+                    yield return (left, right);
                 }
             }
         }
     }
+
+    private static IEnumerable<(string Left, string Right)> GetReferenceLines(BehaviorSave behavior)
+    {
+        foreach (string referenceLine in behavior.ToolOnlyVariableReferences)
+        {
+            if (string.IsNullOrWhiteSpace(referenceLine) || referenceLine.TrimStart().StartsWith("//"))
+            {
+                continue;
+            }
+
+            int equalsIndex = referenceLine.IndexOf('=');
+            if (equalsIndex < 0)
+            {
+                continue;
+            }
+
+            string left = referenceLine.Substring(0, equalsIndex).Trim();
+            if (left.Length > 0)
+            {
+                yield return (left, referenceLine.Substring(equalsIndex + 1).Trim());
+            }
+        }
+    }
+
+    /// <summary>The (unqualified) variables the active reference lines of <paramref name="behavior"/> write.</summary>
+    public static ISet<string> GetDrivenVariableNames(BehaviorSave behavior) =>
+        new HashSet<string>(GetReferenceLines(behavior).Select(line => line.Left));
+
+    /// <summary>The (unqualified) variables the active reference lines of <paramref name="component"/>'s behaviors write.</summary>
+    public static ISet<string> GetDrivenVariableNames(ComponentSave component) =>
+        new HashSet<string>(GetReferenceLines(component).Select(line => line.Left));
 
     private static void ApplyBehaviorsOf(ComponentSave component, InstanceSave? instance, StateSave stateSave)
     {
@@ -253,13 +267,20 @@ public static class BehaviorToolOnlyReferencesApplier
                 // LeftToRightStack left behind when Orientation goes Horizontal -> Vertical). The element's
                 // own default state (instance == null) holds the authored baseline, so leave it alone -
                 // issue #3080 only suppressed the write; it never cleaned up a prior one.
+                VariableSave? stale = stateSave.Variables.FirstOrDefault(v => v.Name == line.EffectiveLeft);
                 if (instance != null)
                 {
-                    VariableSave? stale = stateSave.Variables.FirstOrDefault(v => v.Name == line.EffectiveLeft);
                     if (stale != null)
                     {
                         stateSave.Variables.Remove(stale);
                     }
+                }
+                else if (stale != null && !Equals(stale.Value, line.Value))
+                {
+                    // Only a value the reference wrote can be here (the variable is derived, never authored
+                    // apart from it), written while the driver was off its default; once the driver is back
+                    // the baseline is the resting value, which the instances without an override read.
+                    stale.Value = line.Value;
                 }
                 continue;
             }
