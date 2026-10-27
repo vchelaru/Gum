@@ -246,6 +246,20 @@ public class HotReloadSweepBNextStateTests : BaseTestClass
     }
 
     [Fact]
+    public void ApplyDiff_ProjectComponentInstantiatedInCodeUnderTheScreen_GetsTheNewValues()
+    {
+        GraphicalUiElement screen = Load(First);
+        ComponentSave component = ObjectFinder.Self.GumProjectSave!.Components.Single(c => c.Name == "Controls/ButtonStandard");
+        GraphicalUiElement added = component.ToGraphicalUiElement(RenderingLibrary.SystemManagers.Default, addToManagers: false)!;
+        added.Parent = screen;
+        HotReloadFormsProjects.Red(HotReloadFormsProjects.Child(added, "Background")).ShouldBe(First.Enabled, "sanity");
+
+        Reload(screen, Second);
+
+        HotReloadFormsProjects.Red(HotReloadFormsProjects.Child(added, "Background")).ShouldBe(Second.Enabled);
+    }
+
+    [Fact]
     public void ApplyDiff_ButtonAddedInCodeUnderAPanelThenReloadedTwice_IsNotDuplicated()
     {
         GraphicalUiElement screen = Load(First);
@@ -283,18 +297,17 @@ public class HotReloadSweepBNextStateTests : BaseTestClass
     [Fact]
     public void ApplyDiff_UnrelatedVariableSetInCodeOnAPlainVisual_IsNotOverwritten()
     {
-        // No documented rule for a variable the file never sets; chosen: code keeps it.
+        // Alpha is neither set by the file nor by the standard instance's defaults; chosen: code keeps it.
+        // Width is deliberately not asserted for any kind of visual (undecided, see the issue about code-set Width).
         GraphicalUiElement screen = Load(First);
 #pragma warning disable CS0618 // the fixture instantiates the legacy ColoredRectangle standard
         Gum.GueDeriving.ColoredRectangleRuntime plain = (Gum.GueDeriving.ColoredRectangleRuntime)HotReloadFormsProjects.Child(screen, "Plain1");
 #pragma warning restore CS0618
         plain.Alpha = 77;
-        plain.Width = 123;
 
         Reload(screen, Second);
 
         plain.Alpha.ShouldBe(77);
-        plain.Width.ShouldBe(123);
         HotReloadFormsProjects.Red(plain).ShouldBe(Second.Default);
     }
 

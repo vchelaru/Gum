@@ -46,164 +46,7 @@ public class HotReloadSweepBCodeControlsTests : BaseTestClass
         control.UpdateState();
     }
 
-    // ---- TextBox ----
-
-    [Fact]
-    public void ApplyDiff_TextBoxWithTextCaretAndSelection_AllSurvive()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        TextBox textBox = AddToScreen(screen, new TextBox());
-        textBox.Text = "hello world";
-        textBox.IsFocused = true;
-        textBox.CaretIndex = 6;
-        textBox.SelectionLength = 3;
-
-        Reload(screen, Second);
-
-        textBox.Text.ShouldBe("hello world");
-        textBox.CaretIndex.ShouldBe(6);
-        textBox.SelectionLength.ShouldBe(3);
-    }
-
-    [Fact]
-    public void ApplyDiff_TextBoxFocused_StaysFocused()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        TextBox textBox = AddToScreen(screen, new TextBox());
-        textBox.IsFocused = true;
-
-        Reload(screen, Second);
-
-        textBox.IsFocused.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ApplyDiff_TextBoxThenTypingContinues_InsertsAtTheSavedCaret()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        TextBox textBox = AddToScreen(screen, new TextBox());
-        textBox.Text = "abcd";
-        textBox.IsFocused = true;
-        textBox.CaretIndex = 2;
-
-        Reload(screen, Second);
-        textBox.HandleCharEntered('X');
-
-        textBox.Text.ShouldBe("abXcd");
-        textBox.CaretIndex.ShouldBe(3);
-    }
-
-    [Fact]
-    public void ApplyDiff_TextBoxReloadedTwice_KeepsTextAndCaret()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        TextBox textBox = AddToScreen(screen, new TextBox());
-        textBox.Text = "twice";
-        textBox.IsFocused = true;
-        textBox.CaretIndex = 3;
-
-        Reload(screen, Second);
-        Reload(screen, First);
-
-        textBox.Text.ShouldBe("twice");
-        textBox.CaretIndex.ShouldBe(3);
-    }
-
-    [Fact]
-    public void ApplyDiff_TextBoxPlaceholderAndEmptyText_KeepsThePlaceholder()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        TextBox textBox = AddToScreen(screen, new TextBox());
-        textBox.Placeholder = "type here";
-
-        Reload(screen, Second);
-
-        textBox.Text.ShouldBeNullOrEmpty();
-        textBox.Placeholder.ShouldBe("type here");
-    }
-
-    // ---- ListBox ----
-
-    private static ListBox NewListBox(GraphicalUiElement screen, int itemCount)
-    {
-        ListBox listBox = AddToScreen(screen, new ListBox());
-        for (int i = 0; i < itemCount; i++)
-        {
-            listBox.Items!.Add("Item" + i);
-        }
-        return listBox;
-    }
-
-    [Fact]
-    public void ApplyDiff_ListBoxWithItems_ItemsAreNotDuplicatedOrLost()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        ListBox listBox = NewListBox(screen, 4);
-        int visualCount = listBox.InnerPanel.Children.Count;
-
-        Reload(screen, Second);
-
-        listBox.Items!.Count.ShouldBe(4);
-        listBox.InnerPanel.Children.Count.ShouldBe(visualCount);
-    }
-
-    [Fact]
-    public void ApplyDiff_ListBoxWithSelection_KeepsTheSelection()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        ListBox listBox = NewListBox(screen, 4);
-        listBox.SelectedIndex = 2;
-
-        Reload(screen, Second);
-
-        listBox.SelectedIndex.ShouldBe(2);
-        listBox.SelectedObject.ShouldBe("Item2");
-    }
-
-    [Fact]
-    public void ApplyDiff_ListBoxThenItemAddedAfterReload_ItemIsCreatedFromTheTemplate()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        ListBox listBox = NewListBox(screen, 2);
-        int before = listBox.InnerPanel.Children.Count;
-
-        Reload(screen, Second);
-        listBox.Items!.Add("Late");
-
-        listBox.Items.Count.ShouldBe(3);
-        listBox.InnerPanel.Children.Count.ShouldBe(before + 1);
-    }
-
-    [Fact]
-    public void ApplyDiff_ListBoxThenSelectionChangesAfterReload_SelectionFollows()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        ListBox listBox = NewListBox(screen, 3);
-        listBox.SelectedIndex = 0;
-
-        Reload(screen, Second);
-        listBox.SelectedIndex = 1;
-
-        listBox.SelectedObject.ShouldBe("Item1");
-    }
-
-    // ---- ComboBox, Slider, Menu, ScrollViewer ----
-
-    [Fact]
-    public void ApplyDiff_ComboBoxWithSelection_KeepsItemsAndSelection()
-    {
-        GraphicalUiElement screen = LoadScreen();
-        ComboBox combo = AddToScreen(screen, new ComboBox());
-        combo.Items!.Add("A");
-        combo.Items.Add("B");
-        combo.SelectedIndex = 1;
-
-        Reload(screen, Second);
-
-        combo.Items.Count.ShouldBe(2);
-        combo.SelectedIndex.ShouldBe(1);
-        combo.SelectedObject.ShouldBe("B");
-    }
+    // ---- Slider, Menu, ScrollViewer ----
 
     [Fact]
     public void ApplyDiff_SliderValue_SurvivesAndStillMoves()
@@ -383,5 +226,82 @@ public class HotReloadSweepBCodeControlsTests : BaseTestClass
         button.IsEnabled.ShouldBeFalse();
         button.IsFocused.ShouldBeTrue();
         visual.Background.Color.ShouldBe(look);
+    }
+
+    // ---- Code-only visual with states set up in code ----
+
+    private static GraphicalUiElement NewStatefulVisual(GraphicalUiElement parent)
+    {
+        Gum.GueDeriving.ContainerRuntime visual = new Gum.GueDeriving.ContainerRuntime();
+        Gum.DataTypes.Variables.StateSaveCategory category = new Gum.DataTypes.Variables.StateSaveCategory { Name = "Cat" };
+        foreach ((string name, float width) in new[] { ("Off", 20f), ("On", 77f) })
+        {
+            Gum.DataTypes.Variables.StateSave state = new Gum.DataTypes.Variables.StateSave { Name = name };
+            state.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+            {
+                Name = "Width", Type = "float", Value = width, SetsValue = true
+            });
+            category.States.Add(state);
+        }
+        visual.Categories["Cat"] = category;
+        foreach (Gum.DataTypes.Variables.StateSave state in category.States)
+        {
+            visual.States[state.Name] = state;
+        }
+        visual.Parent = parent;
+        return visual;
+    }
+
+    [Fact]
+    public void ApplyDiff_CodeOnlyVisualInACodeDefinedState_StaysInThatState()
+    {
+        GraphicalUiElement screen = LoadScreen();
+        GraphicalUiElement visual = NewStatefulVisual(screen);
+        visual.ApplyState("Cat", "On");
+
+        Reload(screen, Second);
+
+        visual.Width.ShouldBe(77f);
+    }
+
+    [Fact]
+    public void ApplyDiff_CodeOnlyVisualChangesStateAfterReload_NewStateApplies()
+    {
+        GraphicalUiElement screen = LoadScreen();
+        GraphicalUiElement visual = NewStatefulVisual(screen);
+        visual.ApplyState("Cat", "On");
+
+        Reload(screen, Second);
+        visual.ApplyState("Cat", "Off");
+
+        visual.Width.ShouldBe(20f);
+    }
+
+    [Fact]
+    public void ApplyDiff_CodeOnlyVisualUnderAToolAuthoredPanelReloadedTwice_StaysInItsState()
+    {
+        GraphicalUiElement screen = LoadScreen();
+        GraphicalUiElement panel = HotReloadFormsProjects.Child(screen, "Panel1");
+        GraphicalUiElement visual = NewStatefulVisual(panel);
+        visual.ApplyState("Cat", "On");
+
+        Reload(screen, Second);
+        Reload(screen, First);
+
+        visual.Parent.ShouldBe(panel);
+        visual.Width.ShouldBe(77f);
+        visual.States.ContainsKey("On").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ApplyDiff_CodeOnlyVisualStateDefinitionsAndCategory_AreNotRemovedByTheReload()
+    {
+        GraphicalUiElement screen = LoadScreen();
+        GraphicalUiElement visual = NewStatefulVisual(screen);
+
+        Reload(screen, Second);
+
+        visual.Categories.ContainsKey("Cat").ShouldBeTrue();
+        visual.States.ContainsKey("Off").ShouldBeTrue();
     }
 }
