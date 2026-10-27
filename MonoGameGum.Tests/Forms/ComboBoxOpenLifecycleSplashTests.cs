@@ -80,15 +80,17 @@ public class ComboBoxOpenLifecycleSplashTests : BaseTestClass
         ComboBox second = CreateComboBox("Cherry", "Date");
         second.Y = 120;
         first.IsDropDownOpen = true;
-        second.IsDropDownOpen = true;
         (float X, float Y) firstOffset = OffsetFromComboBox(first);
-        (float X, float Y) secondOffset = OffsetFromComboBox(second);
-
         first.X += 50;
+        Tick();
+        ShouldKeepOffset(first, firstOffset);
+
+        // Opening the second drop-down takes focus, which closes the first (#6958).
+        second.IsDropDownOpen = true;
+        (float X, float Y) secondOffset = OffsetFromComboBox(second);
         second.Y += 30;
         Tick();
 
-        ShouldKeepOffset(first, firstOffset);
         ShouldKeepOffset(second, secondOffset);
     }
 

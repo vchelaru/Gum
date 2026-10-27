@@ -761,6 +761,9 @@ public class ComboBox :
         WatchAncestorsWhileOpen();
 
         FocusDropDown();
+
+        LostFocus += HandleOwnerLostFocusWhileOpen;
+        listBox.LostFocus += HandleOwnerLostFocusWhileOpen;
 #endif
 
 
@@ -768,6 +771,33 @@ public class ComboBox :
     }
 
 #if !FRB
+    /// <inheritdoc/>
+    public override bool IsEnabled
+    {
+        get => base.IsEnabled;
+        set
+        {
+            base.IsEnabled = value;
+
+            // A disabled owner takes no input, so its popup list must not keep taking gamepad and keyboard input.
+            if (!value && IsDropDownOpen)
+            {
+                HideListBox(restoreFocus: false);
+            }
+        }
+    }
+
+    // Focus moves between the ComboBox and its own list when the drop-down opens and closes; focus landing
+    // on any other receiver closes the drop-down, like a push outside does (#6958).
+    private void HandleOwnerLostFocusWhileOpen(object? sender, EventArgs args)
+    {
+        IInputReceiver? current = InteractiveGue.CurrentInputReceiver;
+        if (IsDropDownOpen && current != null && current != (IInputReceiver)this && current != listBox)
+        {
+            HideListBox(restoreFocus: false);
+        }
+    }
+
     /// <summary>
     /// Gives the open drop-down's list the input focus, however the drop-down was opened (gamepad,
     /// keyboard, mouse or code), so gamepad and keyboard input operates the list and does not reach
@@ -826,6 +856,10 @@ public class ComboBox :
     private void PlaceListBoxRelativeToComboBox()
     {
         var listBoxVisual = listBox.Visual;
+#if !FRB
+        bool popupHadFocus = listBox.IsFocused;
+        bool popupHadItemFocus = listBox.DoListItemsHaveFocus;
+#endif
 
         // A list box that is already a popup has absolute units; go back to the values
         // it has when attached to the ComboBox so the layout engine resolves them again.
@@ -863,6 +897,16 @@ public class ComboBox :
         listBox.Width = width;
         listBox.Height = height;
         ListBox.ShowPopupListBox(listBox, this.Visual);
+
+#if !FRB
+        // Detaching the popup while it is placed again hides it for a moment, which takes its focus away
+        // (#6934); give it back so the open drop-down keeps taking input and its focus is still watched.
+        if (popupHadFocus && !listBox.IsFocused)
+        {
+            listBox.IsFocused = true;
+            listBox.DoListItemsHaveFocus = popupHadItemFocus;
+        }
+#endif
 
         // Recorded last, with the list box detached: this is the state later frames compare against,
         // and a ComboBox sized to its children has a different rect while the list box is attached.
@@ -1055,6 +1099,11 @@ public class ComboBox :
     {
 #if !FRB
         StopWatchingAncestors();
+        LostFocus -= HandleOwnerLostFocusWhileOpen;
+        if (listBox != null)
+        {
+            listBox.LostFocus -= HandleOwnerLostFocusWhileOpen;
+        }
 #endif
 
         if (listBox != null && listBox.IsVisible)

@@ -414,7 +414,7 @@ public class AllowFocusWhenDisabledTests : BaseTestClass
 
         comboBox.OnFocusUpdate();
 
-        comboBox.IsDropDownOpen.ShouldBeTrue();
+        comboBox.IsDropDownOpen.ShouldBeFalse();
     }
 
     [Fact]
