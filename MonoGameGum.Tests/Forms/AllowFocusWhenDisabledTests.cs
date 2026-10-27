@@ -403,6 +403,38 @@ public class AllowFocusWhenDisabledTests : BaseTestClass
     }
 
     [Fact]
+    public void ComboBox_DisabledWhileOpen_GamepadADoesNotCloseDropDown()
+    {
+        ComboBox comboBox = new ComboBox();
+        comboBox.AddToRoot();
+        comboBox.Items!.Add("a");
+        comboBox.IsDropDownOpen = true;
+        comboBox.IsEnabled = false;
+        PressGamepad(GamepadButton.A);
+
+        comboBox.OnFocusUpdate();
+
+        comboBox.IsDropDownOpen.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_DisabledWhileItemsFocused_GamepadDownDoesNotChangeSelection()
+    {
+        ListBox listBox = new ListBox();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.IsFocused = true;
+        listBox.DoListItemsHaveFocus = true;
+        listBox.IsEnabled = false;
+        PressGamepad(GamepadButton.DPadDown);
+
+        listBox.OnFocusUpdate();
+
+        listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    [Fact]
     public void ScrollViewer_DisabledFocused_GamepadADoesNotGiveFocusToItems()
     {
         ScrollViewer scrollViewer = new ScrollViewer();
