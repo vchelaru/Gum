@@ -193,6 +193,55 @@ myButton.SpatialNavigationRight = myButton;
 
 Leaving the property unset is not the same as blocking the direction. With no override assigned, that direction still falls back to automatic distance/angle scoring and can still move focus to a nearby control.
 
+#### Overrides on a Slider
+
+A `Slider` uses left and right to change its `Value`. An explicit `SpatialNavigationLeft` or `SpatialNavigationRight` on a focused `Slider` takes priority: the press moves focus and leaves the `Value` unchanged. With no override, left and right (D-pad or left stick) change the `Value` and up/down navigate.
+
+Setting and clearing the overrides lets a game lock in a `Slider`, the way console menus do: A starts editing so left and right change the `Value`, and A or B stops editing so left and right move focus again. The `Slider` does not use the A button, so the game can read it directly:
+
+```csharp
+// Class scope
+bool isEditing;
+
+void SetEditing(bool value)
+{
+    isEditing = value;
+    slider.SpatialNavigationLeft = isEditing ? null : leftNeighbor;
+    slider.SpatialNavigationRight = isEditing ? null : rightNeighbor;
+}
+```
+
+Call it once at startup so the overrides start set:
+
+```csharp
+// Initialize
+SetEditing(false);
+```
+
+Each frame, A starts editing and A or B stops it:
+
+```csharp
+// Update
+if (slider.IsFocused)
+{
+    var gamepad = GumUI.Gamepads[0];
+    if (!isEditing && gamepad.ButtonPushed(GamepadButton.A))
+    {
+        SetEditing(true);
+    }
+    else if (isEditing && (gamepad.ButtonPushed(GamepadButton.A) || gamepad.ButtonPushed(GamepadButton.B)))
+    {
+        SetEditing(false);
+    }
+}
+```
+
+Run this code before the Forms update in the same frame, so a Left or Right pressed together with A is handled once, by the new mode.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Modal Tab Trapping
 
 When you show an element modally by adding it to `GumService.Default.ModalRoot`, tab focus is confined to the controls inside that modal element. Tabbing forward past the last focusable control wraps back to the first, and Shift+Tabbing before the first control wraps to the last. Focus never escapes to the controls behind the modal under the regular `Root`.
