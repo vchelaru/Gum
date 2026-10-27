@@ -282,6 +282,71 @@ technique SpriteDrawing
         Math.Abs(data[(20 * CaptureSize) + 84].R - 191).ShouldBeLessThan(12);
     }
 
+    // Runs the Outline.slang file the samples ship through the Slang frontend and the OpenGL
+    // compiler, so a break in the shader or the conversion shows up here and not only by eye.
+    [Fact]
+    public void Outline_SampleSlangShader_DrawsTheColorJustOutsideTheContent_AndStopsAtThickness()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
+        conversion.IsSuccess.ShouldBeTrue(
+            conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
+
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
+        using Effect outline = new(gd, compileResult.Value.Data);
+
+        // A 24x24 red square in the middle of a 48x48 render target, outlined in blue.
+        ContainerRuntime container = new();
+        container.X = 0;
+        container.Y = 0;
+        container.Width = 48;
+        container.Height = 48;
+        container.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+        ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+        square.X = 12;
+        square.Y = 12;
+        square.Width = 24;
+        square.Height = 24;
+        square.Color = Color.Red;
+        container.AddChild(square);
+
+        container.RenderTargetEffect = outline;
+        container.SetShaderParameter("TexelSize", 1f / 48f, 1f / 48f);
+        container.SetShaderParameter("Thickness", 2f);
+        container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+
+        container.AddToManagers(managers, null);
+        container.UpdateLayout();
+
+        Color[] data = RenderToCapture(gd, renderer, managers);
+        Color Pixel(int x, int y) => data[(y * CaptureSize) + x];
+
+        // Inside the square is still red.
+        Pixel(24, 24).R.ShouldBeGreaterThan((byte)200);
+        Pixel(24, 24).B.ShouldBeLessThan((byte)60);
+
+        // One and two pixels outside the left edge (the square starts at x = 12) are the blue
+        // outline, three pixels out is not.
+        Pixel(11, 24).B.ShouldBeGreaterThan((byte)200);
+        Pixel(11, 24).R.ShouldBeLessThan((byte)60);
+        Pixel(10, 24).B.ShouldBeGreaterThan((byte)200);
+        Pixel(9, 24).B.ShouldBeLessThan((byte)30);
+    }
+
     private static ContainerRuntime BuildRedRenderTarget(float x)
     {
         ContainerRuntime container = new();

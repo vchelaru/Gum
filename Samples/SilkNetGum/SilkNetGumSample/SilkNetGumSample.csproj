@@ -45,6 +45,8 @@
 	     wiring, which had no input context at all (#3652). -->
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
+	  <!-- Lets SourceShaderFile load .slang files by converting them to SkSL (GumUI.UseShadowDusk()). -->
+	  <ProjectReference Include="..\..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
 	</ItemGroup>
 
 	<!-- Shared with MonoGameGumInCode (the reference feature sample) so Forms control rendering
@@ -78,6 +80,10 @@
 	  <!-- Loose .sksl shader(s) for RenderTargetShaderScreen (#3998), mirroring Samples/raylib's
 	       resources\*.fs copy rule. -->
 	  <None Update="resources\**\*.*">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <!-- The one Outline.slang that MonoGameGumInCode, raylib and SilkNetGum all run. -->
+	  <None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\Outline.slang" Link="resources\Outline.slang">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="libEGL.dll">

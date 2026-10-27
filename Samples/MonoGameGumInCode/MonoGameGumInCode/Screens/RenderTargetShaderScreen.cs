@@ -5,7 +5,10 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
 #if RAYLIB
+using System.Linq;
 using Raylib_cs;
+using ShadowDusk.Compiler.Raylib;
+using ShadowDusk.Core;
 using static Raylib_cs.Raylib;
 using Color = Raylib_cs.Color;
 using EffectType = Raylib_cs.Shader;
@@ -56,6 +59,9 @@ namespace MonoGameGumInCode.Screens;
 /// (issue #4679) adds two more single-pass Slang examples the same way: <c>Content/Blur.slang</c>
 /// (fixed radius — Gum's render-target-effect blit sets no shader parameters, so the blur amount
 /// is a compile-time constant, not host-adjustable) and <c>Content/Sepia.slang</c>.
+/// <para>The second row, on all three backends, runs one Slang file (<c>Outline.slang</c>) that
+/// outlines whatever the container draws. ShadowDusk converts it for each backend and
+/// <see cref="ContainerRuntime.SetShaderParameter(string, float)"/> sets its thickness and color.</para>
 /// </summary>
 internal class RenderTargetShaderScreen : FrameworkElement
 {
@@ -80,6 +86,17 @@ internal class RenderTargetShaderScreen : FrameworkElement
     private const string BlurSlangShaderFileName = "Blur.slang";
     private const string SepiaSlangShaderFileName = "Sepia.slang";
 #endif
+
+    // The same Outline.slang on every backend; only the folder it is copied to differs.
+#if RAYLIB || SKIA
+    private const string OutlineShaderFileName = "resources/Outline.slang";
+#else
+    private const string OutlineShaderFileName = "Outline.slang";
+#endif
+
+    // Transparent margin around the bear inside each outline cell, so the outline has room to draw.
+    private const float OutlineCellSize = 144;
+    private const float OutlineMargin = 8;
 
     public RenderTargetShaderScreen() : base(new ContainerRuntime())
     {
@@ -136,6 +153,20 @@ internal class RenderTargetShaderScreen : FrameworkElement
             effect: null,
             sourceShaderFile: inCodeEffect != null ? ShaderFileName : null));
 
+        // Second row, every backend: one Slang outline shader, with its thickness and color set from
+        // code through SetShaderParameter. Both cells share the shader and differ only in values.
+        var outlineRow = new ContainerRuntime();
+        outlineRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        outlineRow.StackSpacing = 48;
+        outlineRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        outlineRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        outlineRow.Width = 0;
+        outlineRow.Height = 0;
+        root.AddChild(outlineRow);
+
+        outlineRow.AddChild(BuildOutlineCell("Outline.slang (2 px, yellow)", thickness: 2, red: 1f, green: 0.85f, blue: 0.1f));
+        outlineRow.AddChild(BuildOutlineCell("Outline.slang (6 px, cyan)", thickness: 6, red: 0.1f, green: 0.9f, blue: 1f));
+
 #if !RAYLIB && !SKIA
         // Fourth cell, XNA-like only: the same effect authored in Slang (Content/Grayscale.slang)
         // instead of raw HLSL, referenced the same way via SourceShaderFile — proves the Slang
@@ -167,6 +198,57 @@ internal class RenderTargetShaderScreen : FrameworkElement
         return BuildCell(caption, effect: null, sourceShaderFile: effect != null ? slangFileName : null);
     }
 #endif
+
+    // A bear in a render target container, outlined by Outline.slang. TexelSize is one pixel of the
+    // container; Thickness is in those pixels. A shader that fails to convert or compile throws from
+    // the SourceShaderFile assignment on some backends, so the failure is shown in the cell.
+    private static ContainerRuntime BuildOutlineCell(string caption, float thickness, float red, float green, float blue)
+    {
+        var cell = new ContainerRuntime();
+        cell.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        cell.StackSpacing = 6;
+        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
+        cell.Width = 0;
+        cell.Height = 0;
+
+        AddLabel(cell, caption);
+
+        var holder = new ContainerRuntime();
+        holder.Width = OutlineCellSize;
+        holder.Height = OutlineCellSize;
+        holder.IsRenderTarget = true;
+
+        var bear = new SpriteRuntime();
+#if RAYLIB
+        bear.SourceFileName = "resources\\BearTexture.png";
+#else
+        bear.SourceFileName = "BearTexture.png";
+#endif
+        bear.WidthUnits = DimensionUnitType.Absolute;
+        bear.HeightUnits = DimensionUnitType.Absolute;
+        bear.X = OutlineMargin;
+        bear.Y = OutlineMargin;
+        bear.Width = OutlineCellSize - 2 * OutlineMargin;
+        bear.Height = OutlineCellSize - 2 * OutlineMargin;
+        holder.AddChild(bear);
+
+        holder.SetShaderParameter("TexelSize", 1f / OutlineCellSize, 1f / OutlineCellSize);
+        holder.SetShaderParameter("Thickness", thickness);
+        holder.SetShaderParameter("OutlineColor", red, green, blue, 1f);
+
+        try
+        {
+            holder.SourceShaderFile = OutlineShaderFileName;
+        }
+        catch (System.Exception e)
+        {
+            AddLabel(cell, "OUTLINE SHADER FAILED: " + e.Message);
+        }
+
+        cell.AddChild(holder);
+        return cell;
+    }
 
     // Portable color construction across the three backends' Color aliases (XNA / Raylib_cs /
     // SKColor all expose a (byte,byte,byte,byte) form), matching RenderTargetScreen's Rgba helper.
@@ -230,6 +312,21 @@ internal class RenderTargetShaderScreen : FrameworkElement
         // degrades to a pass-through rather than crashing. raylib loads GLSL directly with no
         // compiler dependency, so unlike MonoGame/Skia (which compile shader source at runtime),
         // there's no compile-error diagnostic to surface here.
+        if (string.Equals(Path.GetExtension(path), ".slang", System.StringComparison.OrdinalIgnoreCase))
+        {
+            // A .slang file is converted to GLSL by ShadowDusk, then loaded like any raylib shader.
+            Result<RaylibShader, ShaderError[]> conversion =
+                RaylibConverter.ConvertSlang(File.ReadAllText(path), new RaylibConvertOptions());
+            if (conversion.IsFailure)
+            {
+                status = "SHADER CONVERT FAILED:\n" + string.Join("\n", conversion.Error.Select(e => e.Message));
+                return null;
+            }
+
+            status = "Slang converted to GLSL by ShadowDusk.";
+            return LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        }
+
         EffectType shader = LoadShader(null, path);
         status = "Grayscale GLSL post-process. Middle and right bears render grayscale; left is the original.";
         return shader;

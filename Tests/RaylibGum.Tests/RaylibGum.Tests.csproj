@@ -21,6 +21,12 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
 	<PackageReference Include="Raylib-cs" VersionOverride="8.0.0" />
+    <PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.21.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The shader the samples ship, so the tests run exactly that file. -->
+    <None Include="..\..\Samples\MonoGameGumInCode\MonoGameGumInCode\Content\Outline.slang" Link="Outline.slang" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
