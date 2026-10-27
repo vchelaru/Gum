@@ -422,8 +422,15 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        internal const string EndWithoutBeginMessage =
+            "End was called without a matching Begin. You must call Begin before calling End.";
+
         public void PopRenderStates()
         {
+            if (mStateStack.Count == 0)
+            {
+                throw new InvalidOperationException(EndWithoutBeginMessage);
+            }
 
             var parameters = mStateStack.Last();
             mStateStack.RemoveAt(mStateStack.Count - 1);
