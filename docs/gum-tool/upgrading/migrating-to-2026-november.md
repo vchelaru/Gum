@@ -57,9 +57,9 @@ Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
-SkiaGum now defaults `MissingFileBehavior` to `ThrowException`, the same as MonoGame, KNI, FNA and raylib. A missing Sprite or NineSlice image, a missing font file, and an image SkiaSharp cannot decode (the case [raylib](#raylib-throws-when-an-image-cannot-be-decoded) already covers) now throw a `FileNotFoundException` naming the file when the element is created. Before, a missing image threw an `ArgumentException`, a missing font file was reported only, and an undecodable image drew nothing.
+SkiaGum now defaults `MissingFileBehavior` to `ThrowException`, the same as MonoGame, KNI, FNA and raylib. A missing Sprite or NineSlice image, a missing font file, an image SkiaSharp cannot decode (the case [raylib](#raylib-throws-when-an-image-cannot-be-decoded) already covers), and a missing or unparseable Svg or LottieAnimation file now throw a `FileNotFoundException` naming the file when the element is created. Before, a missing image or Svg threw an `ArgumentException`, an unparseable Svg threw an `XmlException`, a missing font file was reported only, and an undecodable image or unparseable Lottie file drew nothing.
 
-Fix the path, or keep the old silent behavior by setting `ConsumeSilently` after Gum initializes. A Sprite then has a null `Texture` and `PropertyAssignmentError` is raised with the file name, as described for an [.achx frame texture](#an-achx-frame-texture-that-fails-to-load-is-a-blank-frame).
+Fix the path, or keep the old silent behavior by setting `ConsumeSilently` after Gum initializes. A Sprite then has a null `Texture` (an `SvgRuntime` a null `Texture`, a `LottieAnimationRuntime` a null `Animation`) and `PropertyAssignmentError` is raised with the file name, as described for an [.achx frame texture](#an-achx-frame-texture-that-fails-to-load-is-a-blank-frame).
 
 ```csharp
 // Initialize

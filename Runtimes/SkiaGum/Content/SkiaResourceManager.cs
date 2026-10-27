@@ -43,30 +43,30 @@ public static class SkiaResourceManager
 
     private static void CacheSvg(string resourceName)
     {
-        using Stream? fileStream = TryOpenFile(resourceName);
-        if (fileStream != null)
-        {
-            SKSvg svg = new SKSvg();
-            svg.Load(fileStream);
-            svgCache[resourceName] = svg;
-        }
-        else
-        {
-            using (Stream stream = GetManifestResourceStream(
-                resourceName, ResourceAssembly))
-            {
-                SKSvg svg = new SKSvg();
+        using Stream stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
+            resourceName, ResourceAssembly);
 
-                try
-                {
-                    svg.Load(stream);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception($"Error loading SVG {resourceName}\n{e}");
-                }
-                svgCache[resourceName] = svg;
+        // A document that does not parse is a load failure like a missing file, and is not cached, so a later
+        // call can succeed once the file is fixed (#6903).
+        svgCache[resourceName] = ParseSvg(resourceName, stream);
+    }
+
+    private static SKSvg ParseSvg(string resourceName, Stream stream)
+    {
+        SKSvg svg = new SKSvg();
+        try
+        {
+            // The parser throws on malformed XML and on a root that is not an svg element (a
+            // NullReferenceException), and returns null for a document it reads but cannot draw.
+            if (svg.Load(stream) != null && svg.Picture != null)
+            {
+                return svg;
             }
+            throw new InvalidDataException($"The parser returned no picture for {resourceName}.");
+        }
+        catch (Exception e)
+        {
+            throw new FileNotFoundException(DescribeUnparseable("SVG", resourceName, "an SVG document"), resourceName, e);
         }
     }
 
@@ -79,7 +79,7 @@ public static class SkiaResourceManager
 
     #region Lottie Animation Caching
 
-    private static ConcurrentDictionary<string, Animation?> animationCache = new ConcurrentDictionary<string, Animation?>();
+    private static ConcurrentDictionary<string, Animation> animationCache = new ConcurrentDictionary<string, Animation>();
 
     public static Animation? GetLottieAnimation(string resourceName)
     {
@@ -91,21 +91,13 @@ public static class SkiaResourceManager
 
     private static void CacheAnimation(string resourceName)
     {
-        using (Stream stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
-            resourceName, ResourceAssembly))
-        {
-            Animation? animation = null;
+        using Stream stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
+            resourceName, ResourceAssembly);
 
-            try
-            {
-                animation = Animation.Create(stream);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"Error loading Animation {resourceName}\n{e}");
-            }
-            animationCache[resourceName] = animation;
-        }
+        // Skottie returns null for a file it cannot parse. That is a load failure like a missing file, and is
+        // not cached, so a later call can succeed once the file is fixed (#6903).
+        animationCache[resourceName] = Animation.Create(stream)
+            ?? throw new FileNotFoundException(DescribeUnparseable("Lottie animation", resourceName, "a Lottie JSON file"), resourceName);
     }
 
     #endregion
@@ -211,6 +203,9 @@ public static class SkiaResourceManager
         return $"The image {resourceName} exists but could not be decoded. It may be corrupt, empty, or in a format " +
             $"Skia does not support ({format}); use a supported format such as PNG, or register an IImageDecoder.";
     }
+
+    private static string DescribeUnparseable(string kind, string resourceName, string expected) =>
+        $"The {kind} {resourceName} exists but could not be parsed. It may be corrupt, empty, or not {expected}.";
 
     /// <summary>
     /// Decodes <paramref name="stream"/> with the registered <see cref="LoaderManager.ImageDecoders"/>
