@@ -330,7 +330,7 @@ public class ScrollViewer :
                             childAsInputReceiver = interactiveGue.FormsControlAsObject as IInputReceiver;
                         }
 
-                        if (childAsInputReceiver != null)
+                        if (childAsInputReceiver != null && this.InnerPanel.Children[i].AbsoluteVisible)
                         {
                             InteractiveGue.CurrentInputReceiver = childAsInputReceiver;
                             break;
