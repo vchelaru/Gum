@@ -1852,8 +1852,26 @@ public class ListBox : ItemsControl, IInputReceiver
         var targetChildren = targetRoot.Children;
         if (!IsAlreadyOnTop(popup.Visual, targetRoot, ownFollowers))
         {
+            // Detaching hides the popup for a moment, which takes its focus away (#6934). The caller only
+            // moved it, so give the focus back.
+            bool popupHadFocus = popup.IsFocused;
+            bool popupHadItemFocus = popup is ListBox focusedListBox ? focusedListBox.DoListItemsHaveFocus : popup.DoItemsHaveFocus;
+
             popup.Visual.Parent = null;
             targetChildren.Add(popup.Visual);
+
+            if (popupHadFocus && !popup.IsFocused)
+            {
+                popup.IsFocused = true;
+                if (popup is ListBox listBoxPopup)
+                {
+                    listBoxPopup.DoListItemsHaveFocus = popupHadItemFocus;
+                }
+                else
+                {
+                    popup.DoItemsHaveFocus = popupHadItemFocus;
+                }
+            }
         }
 
         // Reposition after resolving and parenting to the target root, so the clamp reflects
