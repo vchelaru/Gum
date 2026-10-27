@@ -197,6 +197,24 @@ public class SliderSpatialOverrideTests : BaseTestClass
     }
 
     [Fact]
+    public void DPad_OnlyUpOverride_DiagonalUpLeft_StillChangesValueAsBefore()
+    {
+        Button above = new Button();
+        _panel.AddChild(above);
+        above.X = 300;
+        above.Y = -200;
+        _slider.SpatialNavigationUp = above;
+        _slider.IsFocused = true;
+
+        _gamepad.SetButtonState(GamepadButton.DPadUp, true);
+        _gamepad.SetButtonState(GamepadButton.DPadLeft, true);
+        Frame();
+
+        above.IsFocused.ShouldBeTrue();
+        _slider.Value.ShouldBe(45);
+    }
+
+    [Fact]
     public void DPad_OverrideSet_DownStillNavigatesAsBefore()
     {
         Button below = new Button();

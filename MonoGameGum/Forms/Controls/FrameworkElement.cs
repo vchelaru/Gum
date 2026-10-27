@@ -1994,8 +1994,31 @@ public class FrameworkElement : INotifyPropertyChanged
     internal bool IsSpatialNavigationOverridePressed(IGamePad gamepad)
     {
         (GamepadNavigationMode mode, GraphicalUiElement? spatialRoot) = ResolveGamepadNavigationMode();
-        return mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null &&
-            TryGetExplicitDirectionOverride(gamepad) != null;
+        if (mode != Controls.GamepadNavigationMode.Spatial || spatialRoot == null)
+        {
+            return false;
+        }
+
+        if (IsHorizontalOverrideSelected(GetDigitalDirectionState(gamepad, ignoreLeftRightMask: true)))
+        {
+            return true;
+        }
+
+        if (GetDigitalDirectionState(gamepad).ShouldFire || !gamepad.LeftStick.RadialPushedRepeatRate())
+        {
+            return false;
+        }
+
+        float x = gamepad.LeftStick.X;
+        float y = gamepad.LeftStick.Y;
+        if (x == 0f && y == 0f)
+        {
+            return false;
+        }
+        float twoPi = MathF.PI * 2f;
+        float normalized = ((MathF.Atan2(-y, x) % twoPi) + twoPi) % twoPi;
+        int cardinal = (int)MathF.Round(normalized / (MathF.PI / 2f)) % 4;
+        return (cardinal == 0 && SpatialNavigationRight != null) || (cardinal == 2 && SpatialNavigationLeft != null);
     }
 
     /// <summary>
@@ -2005,7 +2028,15 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         (GamepadNavigationMode mode, GraphicalUiElement? spatialRoot) = ResolveGamepadNavigationMode();
         return mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null &&
-            GetExplicitDirectionOverride(GetDigitalDirectionStateFromKeyCombos(ignoreLeftRightMask: true)) != null;
+            IsHorizontalOverrideSelected(GetDigitalDirectionStateFromKeyCombos(ignoreLeftRightMask: true));
+    }
+
+    // Only a Left/Right override suppresses a Slider's value change; an Up/Down override firing on a
+    // diagonal leaves a held Left/Right acting on the Value exactly as it did before overrides won.
+    private bool IsHorizontalOverrideSelected(DigitalDirectionState state)
+    {
+        return state.ShouldFire &&
+            ((state.Right && SpatialNavigationRight != null) || (state.Left && SpatialNavigationLeft != null));
     }
 
     // Zeroes the stick's horizontal axis when IsUsingLeftAndRightGamepadDirectionsForNavigation is

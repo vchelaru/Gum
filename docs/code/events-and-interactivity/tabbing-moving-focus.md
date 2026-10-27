@@ -228,6 +228,8 @@ if (slider.IsFocused)
 }
 ```
 
+Run this code before the Forms update in the same frame, so a Left or Right pressed together with A is handled once, by the new mode.
+
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
