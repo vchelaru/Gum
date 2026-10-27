@@ -2014,15 +2014,18 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return;
         }
 
+        // [Glyph=...] tags become their character first, as in the MonoGame/Raylib SetBbCodeText path.
+        string withGlyphs = BbCodeParser.ReplaceGlyphTags(mRawText);
+
         // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes,
         // mirroring the MonoGame/Raylib SetBbCodeText path. Parsing and stripping from the same
         // normalized string keeps InlineVariable indexes aligned with the layout text.
-        var normalized = mRawText.Replace("\r\n", "\n");
+        var normalized = withGlyphs.Replace("\r\n", "\n");
         var tags = BbCodeParser.Parse(normalized, SupportedTags);
         if (tags.Count == 0)
         {
             _hasMarkup = false;
-            _layoutText = BlankControlCharacters(mRawText);
+            _layoutText = BlankControlCharacters(withGlyphs);
             return;
         }
 

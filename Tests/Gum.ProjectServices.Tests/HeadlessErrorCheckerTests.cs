@@ -1634,6 +1634,31 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         errors.ShouldBeEmpty();
     }
 
+    [Theory]
+    [InlineData("32-126", "Price [Glyph=0x20AC]5", true)]
+    [InlineData("32-126", "Price [Glyph=8364]5", true)]
+    [InlineData("32-126,8364", "Price [Glyph=0x20AC]5", false)]
+    [InlineData("32-126", "Price [Glyph=65]5 [Glyph=abc]", false)]
+    public void GetErrorsFor_ShouldCheckTheCharacterOfAGlyphTag_AgainstTheFontRanges(string ranges, string text, bool shouldWarn)
+    {
+        Project.FontRangeEntries.Single().Ranges = ranges;
+        ComponentSave component = AddComponentWithTextFont("Label", "Arial");
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = text, Type = "string", SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        if (shouldWarn)
+        {
+            ErrorResult error = errors.ShouldHaveSingleItem();
+            error.Code.ShouldBe("GUM0012");
+            error.Message.ShouldContain("U+20AC");
+        }
+        else
+        {
+            errors.ShouldBeEmpty();
+        }
+    }
+
     [Fact]
     public void GetErrorsFor_ShouldNotWarn_ForAPrebakedFntCustomFont()
     {

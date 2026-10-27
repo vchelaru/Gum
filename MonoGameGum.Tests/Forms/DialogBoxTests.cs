@@ -99,6 +99,17 @@ public class DialogBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Show_WithGlyphTag_ShouldCountGlyphAsOneLetter()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show("A[Glyph=0xE000]B");
+
+        visual.TextInstance.MaxLettersToShow.ShouldBe(3);
+    }
+
+    [Fact]
     public void Activity_ShouldAdvanceMaxLettersToShow_ProportionalToElapsedTime()
     {
         var (dialogBox, visual) = CreateDialogBox();

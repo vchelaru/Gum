@@ -537,6 +537,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     private string[] ConvertToPages(string text)
     {
+        // Glyph tags become their character here so the typewriter counts them as one letter.
+        text = BbCodeParser.ReplaceGlyphTags(text);
 
         var limitsLines = 
             this.CoreTextObject.MaxNumberOfLines != null || 

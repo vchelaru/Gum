@@ -1792,7 +1792,9 @@ public partial class CustomSetPropertyOnRenderable
         // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes.
         // Parsing and stripping from the same normalized string keeps InlineVariable indexes aligned
         // with the RawText the renderer sees.
-        var normalized = bbcode.Replace("\r\n", "\n");
+        // [Glyph=...] tags become their character first so every other tag's indexes are computed
+        // against the final text.
+        var normalized = BbCodeParser.ReplaceGlyphTags(bbcode.Replace("\r\n", "\n"));
 
         var results = BbCodeParser.Parse(normalized, Tags);
         var strippedText = BbCodeParser.RemoveTags(normalized, results);

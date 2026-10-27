@@ -1,6 +1,7 @@
 
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
@@ -96,6 +97,86 @@ public static class BbCodeParser
         {
             return $"{(IsOpening ? "Open" : "Close")} {Name} {Argument}";
         }
+    }
+
+    /// <summary>
+    /// Replaces every <c>[Glyph=...]</c> tag with the character for its code point: decimal
+    /// (<c>[Glyph=57344]</c>) or hex with a 0x prefix (<c>[Glyph=0xE000]</c>). A code point above U+FFFF
+    /// becomes a surrogate pair. A tag whose value is not a valid code point is removed. Call this on the
+    /// text before <see cref="Parse"/> so the indexes of the other tags are computed against the
+    /// final text. Whether the character draws depends on the font.
+    /// </summary>
+    /// <param name="text">The text which may contain Glyph tags.</param>
+    /// <returns>The text with Glyph tags replaced, or the same string if it has none.</returns>
+    public static string ReplaceGlyphTags(string text)
+    {
+        const string tagStart = "[glyph";
+
+        int tagIndex = text.IndexOf(tagStart, StringComparison.OrdinalIgnoreCase);
+        if (tagIndex < 0)
+        {
+            return text;
+        }
+
+        StringBuilder? builder = null;
+        int copiedUpTo = 0;
+
+        while (tagIndex >= 0)
+        {
+            int nameEnd = tagIndex + tagStart.Length;
+            int closeIndex = text.IndexOf(']', tagIndex);
+            bool isTag = closeIndex >= 0 &&
+                nameEnd <= closeIndex &&
+                (text[nameEnd] == '=' || nameEnd == closeIndex) &&
+                text.IndexOf('[', tagIndex + 1, closeIndex - tagIndex - 1) < 0;
+
+            if (isTag)
+            {
+                builder ??= new StringBuilder(text.Length);
+                builder.Append(text, copiedUpTo, tagIndex - copiedUpTo);
+
+                string argument = nameEnd < closeIndex
+                    ? text.Substring(nameEnd + 1, closeIndex - nameEnd - 1)
+                    : "";
+                if (TryParseGlyphCodePoint(argument, out int codePoint))
+                {
+                    builder.Append(char.ConvertFromUtf32(codePoint));
+                }
+
+                copiedUpTo = closeIndex + 1;
+                tagIndex = text.IndexOf(tagStart, copiedUpTo, StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                tagIndex = text.IndexOf(tagStart, tagIndex + 1, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        if (builder == null)
+        {
+            return text;
+        }
+
+        builder.Append(text, copiedUpTo, text.Length - copiedUpTo);
+        return builder.ToString();
+    }
+
+    private static bool TryParseGlyphCodePoint(string argument, out int codePoint)
+    {
+        string number = argument.Trim();
+        NumberStyles styles = NumberStyles.None;
+        if (number.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            number = number.Substring(2);
+            styles = NumberStyles.AllowHexSpecifier;
+        }
+
+        bool isSurrogateHalf(int value) => value >= 0xD800 && value <= 0xDFFF;
+
+        return int.TryParse(number, styles, CultureInfo.InvariantCulture, out codePoint) &&
+            codePoint > 0 &&
+            codePoint <= 0x10FFFF &&
+            !isSurrogateHalf(codePoint);
     }
 
     /// <summary>

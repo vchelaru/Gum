@@ -1252,7 +1252,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     codePointsByRanges[ranges] = inRange;
                 }
 
-                foreach (System.Text.Rune rune in text.EnumerateRunes())
+                // A [Glyph=...] tag draws as its character, so that is the character the font needs.
+                foreach (System.Text.Rune rune in Gum.Wireframe.BbCodeParser.ReplaceGlyphTags(text).EnumerateRunes())
                 {
                     // Line breaks and tabs are layout, not glyphs.
                     if (System.Text.Rune.IsControl(rune) || inRange.Contains(rune.Value))
