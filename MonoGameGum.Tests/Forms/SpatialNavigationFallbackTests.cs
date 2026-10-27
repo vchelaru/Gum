@@ -132,6 +132,21 @@ public class SpatialNavigationFallbackTests : BaseTestClass
     }
 
     [Fact]
+    public void FindBestCandidate_EmptyCone_MirroredCandidatesWithEqualDistanceAndAngle_PickSameCandidateRegardlessOfListOrder()
+    {
+        // Gaps (-80, 40) and (80, 40): same distance, same angle off Down, both outside the cone.
+        Button origin = Create(200, 0, 50, 50);
+        Button left = Create(70, 90, 50, 50);
+        Button right = Create(330, 90, 50, 50);
+
+        FrameworkElement? leftFirst = SpatialNavigationService.FindBestCandidate(origin, Down, All(left, right));
+        FrameworkElement? rightFirst = SpatialNavigationService.FindBestCandidate(origin, Down, All(right, left));
+
+        leftFirst.ShouldNotBeNull();
+        leftFirst.ShouldBe(rightFirst);
+    }
+
+    [Fact]
     public void FindBestCandidate_EmptyCone_OverlappingCandidate_IsStillSkipped()
     {
         Button origin = Create(0, 0, 100, 100);

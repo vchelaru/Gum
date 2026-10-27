@@ -173,7 +173,9 @@ Keyboard Tab navigation always uses tab order, regardless of `GamepadNavigationM
 
 Spatial navigation prefers controls within 45 degrees of the pressed direction. If none is, it moves to the nearest control that still lies on that side, so a button centered under a row of cards is reachable by pressing down from any card. It never moves to a control behind or directly beside the focused one.
 
+{% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 ### Explicit Direction Overrides
 
