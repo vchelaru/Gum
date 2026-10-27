@@ -22,6 +22,9 @@ if (Test-Path $out) { Remove-Item -LiteralPath $out -Recurse -Force }
 New-Item -ItemType Directory -Force $staging | Out-Null
 Get-ChildItem $package -Force | Copy-Item -Destination $staging -Recurse
 
+# What gets published has to pass the same check the build ran (a .meta for every file, no missing assemblies).
+& (Join-Path $PSScriptRoot 'check-package.ps1') -Path $staging
+
 $manifestPath = Join-Path $staging 'package.json'
 $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
 $manifest.version = $Version

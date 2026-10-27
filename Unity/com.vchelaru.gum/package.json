@@ -6,7 +6,6 @@
   "unity": "6000.0",
   "license": "MIT",
   "dependencies": {
-    "com.unity.inputsystem": "1.11.0",
     "com.unity.modules.imgui": "1.0.0"
   }
 }

@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using SkiaGameRendering.Unity;
+using SkiaGameRendering;
 using SkiaSharp;
 using UnityEngine;
 
@@ -10,7 +10,7 @@ namespace Gum.Unity
 {
     /// <summary>
     /// Initializes <see cref="GumService.Default"/> and draws it every frame into a texture the size of
-    /// the screen. Gum draws on the GPU through SkiaGameRendering's <see cref="SkiaUnityRenderTarget"/>
+    /// the screen. Gum draws on the GPU through SkiaGameRendering's <see cref="SkiaRenderTarget2D"/>
     /// wherever SkiaGameRendering supports the graphics device; otherwise it draws into a CPU raster surface
     /// that is uploaded to a <see cref="Texture2D"/> each frame. Either way <see cref="Texture"/> has Unity's
     /// orientation (row 0 at the bottom). Add <see cref="GumInput"/> next to it for mouse and keyboard.
@@ -30,7 +30,7 @@ namespace Gum.Unity
         [Tooltip("Uses the CPU fallback even where the GPU path is available.")]
         [SerializeField] bool _forceCpu;
 
-        SkiaUnityRenderTarget? _gpuTarget;
+        SkiaRenderTarget2D? _gpuTarget;
         bool _gpuUnavailable;
         SKSurface? _cpuSurface;
         Texture2D? _cpuTexture;
@@ -161,7 +161,7 @@ namespace Gum.Unity
 
             // The texture's row 0 is its bottom row, which GUI drawing puts at the bottom of the rect.
             var rect = new Rect(0, 0, Screen.width, Screen.height);
-            UnityEngine.Graphics.DrawTexture(rect, texture, SkiaUnityRenderTarget.PremultipliedGuiMaterial);
+            UnityEngine.Graphics.DrawTexture(rect, texture, SkiaRenderTarget2D.PremultipliedGuiMaterial);
         }
 
         void OnDestroy()
@@ -185,7 +185,7 @@ namespace Gum.Unity
             {
                 try
                 {
-                    _gpuTarget = new SkiaUnityRenderTarget(width, height);
+                    _gpuTarget = new SkiaRenderTarget2D(width, height);
                     return;
                 }
                 catch (Exception exception)
