@@ -1,3 +1,5 @@
+// ColoredRectangle is the standard the project files in this sweep instantiate.
+#pragma warning disable CS0618
 using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -270,7 +272,7 @@ internal sealed class SweepWorld : IDisposable
             .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
 
         Manager = new GumHotReloadManager(
-            GumService.ApplyProjectTextureFilter,
+            Gum.GumService.ApplyProjectTextureFilter,
             GumAnimationLoader.LoadAnimationsFromProvider,
             path => Disposed.Add(path),
             () => Now);

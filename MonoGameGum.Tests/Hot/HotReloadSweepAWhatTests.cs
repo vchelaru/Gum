@@ -1,3 +1,5 @@
+// ColoredRectangle is the standard the project files in this sweep instantiate.
+#pragma warning disable CS0618
 using Gum;
 using Gum.DataTypes;
 using Gum.GueDeriving;
