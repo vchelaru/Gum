@@ -354,6 +354,7 @@ public sealed class UndoOracleWorld : BaseTestClass
     public void Undo() => _undo.PerformUndo();
     public void Redo() => _undo.PerformRedo();
     public int HistoryCount => _undo.CurrentElementHistory?.Actions.Count ?? 0;
+    public bool CanRedo => _undo.CanRedo();
 
     public bool MemoryEqualsDisk()
     {
@@ -404,8 +405,6 @@ public class UndoTypedEditOracleSweepTests : BaseTestClass
         // can leave a follower unstored; there, a typed edit re-applies every row of the element while undo
         // re-reads only the rows that read what it restored, so the two differ. That gap is accepted and is
         // left out of this comparison on purpose.
-        // Edits of a follower's own value are left out too: an undo after "undo, then edit a follower" can bring
-        // back a row removed earlier in the history (#6887, which reproduces without the cascade).
         int cases = SweepScale.Cases(300);
         Random random = new Random(68790);
         List<string> failures = new List<string>();
@@ -427,7 +426,7 @@ public class UndoTypedEditOracleSweepTests : BaseTestClass
             string description;
             using (UndoOracleWorld world = new UndoOracleWorld())
             {
-                world.Build(new Random(buildSeed), materialized: true, autoSave, useAlt, followerOps: false);
+                world.Build(new Random(buildSeed), materialized: true, autoSave, useAlt, followerOps: true);
                 description = world.Description;
                 List<OracleOp> applied = new List<OracleOp>();
                 int cursor = 0;
@@ -444,9 +443,10 @@ public class UndoTypedEditOracleSweepTests : BaseTestClass
                         }
                         SortedDictionary<string, string> beforeThisOp = world.Snap();
                         world.Typed(op.Fwd);
-                        if (world.HistoryCount != cursor + 1)
+                        if (world.HistoryCount != cursor + 1 || world.CanRedo)
                         {
-                            // The edit changed nothing, so it recorded nothing and the model cannot continue.
+                            // The edit changed nothing, so it recorded nothing (a recorded edit drops the redo
+                            // tail) and the model cannot continue.
                             break;
                         }
                         applied.RemoveRange(cursor, applied.Count - cursor);
@@ -491,7 +491,7 @@ public class UndoTypedEditOracleSweepTests : BaseTestClass
 
             using (UndoOracleWorld oracle = new UndoOracleWorld())
             {
-                oracle.Build(new Random(buildSeed), materialized: true, autoSave, useAlt, followerOps: false);
+                oracle.Build(new Random(buildSeed), materialized: true, autoSave, useAlt, followerOps: true);
                 for (int i = 0; i < typedSteps.Count; i++)
                 {
                     SortedDictionary<string, string> typed;
