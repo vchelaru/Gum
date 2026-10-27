@@ -34,6 +34,10 @@ public static class SpatialNavigationService
     /// candidate is inside the cone does the search fall back to the nearest candidate whose gap
     /// angle is less than 90 degrees off the requested direction (ties go to the smaller angle, then
     /// the leftmost, then topmost candidate), so a control that lies on the pressed side is still reachable.
+    /// A candidate whose rectangle only touches the origin's along an edge (zero spacing) lies in the
+    /// direction of its center and outranks every candidate with a gap; several are ranked by center
+    /// alignment across the pressed axis. A corner-only touch is reachable only through the fallback.
+    /// Rectangles whose interiors overlap are never neighbors.
     /// </summary>
     /// <param name="origin">The currently-focused element navigation is relative to.</param>
     /// <param name="directionAngleRadians">
@@ -66,6 +70,8 @@ public static class SpatialNavigationService
         FrameworkElement? bestInHalfPlane = null;
         float bestHalfPlaneDistance = float.MaxValue;
         float bestHalfPlaneAngleDiff = float.MaxValue;
+        FrameworkElement? bestTouching = null;
+        float bestTouchingLateral = float.MaxValue;
 
         foreach (FrameworkElement candidate in candidateList)
         {
@@ -80,15 +86,49 @@ public static class SpatialNavigationService
             (float dx, float dy) = GetClosestGap(origin, candidate);
             float distance = MathF.Sqrt(dx * dx + dy * dy);
 
+            float candidateAngle;
+            bool isCornerTouch = false;
+            float touchingLateral = 0f;
             if (distance == 0f)
             {
+                // Zero gap: the rectangles either overlap (interiors intersect: stays excluded, as a
+                // child, a covering rectangle or a stacked window has no direction) or only touch
+                // along an edge or corner (zero-spacing stack or grid), which is a valid neighbor.
+                if (!TryGetTouchDirection(origin, candidate, out float touchX, out float touchY))
+                {
+                    continue;
+                }
+                candidateAngle = MathF.Atan2(touchY, touchX);
+                isCornerTouch = touchX != 0f && touchY != 0f;
+                // Offset across the pressed axis; picks the best-aligned of several touching candidates.
+                touchingLateral = touchX == 0f
+                    ? MathF.Abs(GetCenterX(candidate) - GetCenterX(origin))
+                    : MathF.Abs(GetCenterY(candidate) - GetCenterY(origin));
+            }
+            else
+            {
+                candidateAngle = MathF.Atan2(dy, dx);
+            }
+
+            float angleDiff = MathF.Abs(NormalizeAngle(candidateAngle - directionAngleRadians));
+
+            if (distance == 0f && !isCornerTouch && angleDiff <= maxAngleRadians)
+            {
+                // Edge-touching neighbor in the pressed direction: distance 0 beats any gap, so it
+                // outranks every scored candidate. Ties between several go to the best-aligned
+                // (smallest lateral center offset), then leftmost, then topmost.
+                if (touchingLateral < bestTouchingLateral ||
+                    (touchingLateral == bestTouchingLateral && IsLeftOrAbove(candidate, bestTouching)))
+                {
+                    bestTouching = candidate;
+                    bestTouchingLateral = touchingLateral;
+                }
                 continue;
             }
 
-            float candidateAngle = MathF.Atan2(dy, dx);
-            float angleDiff = MathF.Abs(NormalizeAngle(candidateAngle - directionAngleRadians));
-
-            if (angleDiff > maxAngleRadians)
+            // A corner-touching neighbor lies on the diagonal (45 degrees off both axes), so it never
+            // counts as in the cone; it is only reachable through the half-plane fallback below.
+            if (isCornerTouch || angleDiff > maxAngleRadians)
             {
                 if (angleDiff < HalfPlaneLimitRadians &&
                     (distance < bestHalfPlaneDistance ||
@@ -112,7 +152,7 @@ public static class SpatialNavigationService
             }
         }
 
-        return best ?? bestInHalfPlane;
+        return bestTouching ?? best ?? bestInHalfPlane;
     }
 
     // Two independently-focusable elements can be in an ancestor/descendant relationship (a Slider
@@ -145,6 +185,47 @@ public static class SpatialNavigationService
         }
         return false;
     }
+
+    // For a zero-gap pair: false when the interiors intersect (overlap). Otherwise the pair touches,
+    // and (x, y) is the unit-sign direction from origin to candidate: an edge touch is purely along
+    // one axis (toward the candidate's center), a corner touch is the diagonal toward the candidate's
+    // center. False too when the centers coincide (degenerate zero-size rectangles), which has no
+    // direction.
+    private static bool TryGetTouchDirection(FrameworkElement origin, FrameworkElement candidate, out float x, out float y)
+    {
+        float overlapWidth = MathF.Min(origin.Visual.AbsoluteRight, candidate.Visual.AbsoluteRight) -
+            MathF.Max(origin.Visual.AbsoluteLeft, candidate.Visual.AbsoluteLeft);
+        float overlapHeight = MathF.Min(origin.Visual.AbsoluteBottom, candidate.Visual.AbsoluteBottom) -
+            MathF.Max(origin.Visual.AbsoluteTop, candidate.Visual.AbsoluteTop);
+        x = 0f;
+        y = 0f;
+
+        if (overlapWidth > 0f && overlapHeight > 0f)
+        {
+            return false;
+        }
+
+        float centerDx = GetCenterX(candidate) - GetCenterX(origin);
+        float centerDy = GetCenterY(candidate) - GetCenterY(origin);
+        // Touching along a horizontal edge (ranges overlap on X) means the neighbor lies up or down.
+        bool touchesHorizontalEdge = overlapWidth > 0f;
+        bool touchesVerticalEdge = overlapHeight > 0f;
+        if (!touchesVerticalEdge)
+        {
+            y = MathF.Sign(centerDy);
+        }
+        if (!touchesHorizontalEdge)
+        {
+            x = MathF.Sign(centerDx);
+        }
+        return x != 0f || y != 0f;
+    }
+
+    private static float GetCenterX(FrameworkElement element) =>
+        (element.Visual.AbsoluteLeft + element.Visual.AbsoluteRight) / 2f;
+
+    private static float GetCenterY(FrameworkElement element) =>
+        (element.Visual.AbsoluteTop + element.Visual.AbsoluteBottom) / 2f;
 
     // The (dx, dy) gap from origin's rectangle to candidate's rectangle: zero on any axis where the
     // two rectangles' ranges overlap on that axis, and the true edge-to-edge gap (signed, positive
