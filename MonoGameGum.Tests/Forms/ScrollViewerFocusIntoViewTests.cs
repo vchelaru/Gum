@@ -327,10 +327,52 @@ public class ScrollViewerFocusIntoViewTests : BaseTestClass
     {
         (_, ScrollViewer viewer, List<Button> buttons) = Build(GamepadNavigationMode.TabOrder);
         SetCursor(push: true);
+        _cursor.Object.VisualOver = buttons[3].Visual;
 
         buttons[3].IsFocused = true;
 
         viewer.VerticalScrollBarValue.ShouldBe(0);
+    }
+
+    [Fact]
+    public void MouseClickOnLabelInsideFocusedControl_DoesNotScroll()
+    {
+        (_, ScrollViewer viewer, List<Button> buttons) = Build(GamepadNavigationMode.TabOrder);
+        SetCursor(push: true);
+        _cursor.Object.VisualOver = buttons[3].Visual.Children[0] as InteractiveGue ?? buttons[3].Visual;
+
+        buttons[3].IsFocused = true;
+
+        viewer.VerticalScrollBarValue.ShouldBe(0);
+    }
+
+    [Fact]
+    public void MouseClickHandlerFocusingOtherOffscreenButton_Scrolls()
+    {
+        (_, ScrollViewer viewer, List<Button> buttons) = Build(GamepadNavigationMode.TabOrder);
+        SetCursor(push: true);
+        _cursor.Object.VisualOver = buttons[0].Visual;
+
+        buttons[7].IsFocused = true;
+
+        IsInView(viewer, buttons[7].Visual).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TabWhileMouseHeld_Scrolls()
+    {
+        (_, ScrollViewer viewer, List<Button> buttons) = Build(GamepadNavigationMode.TabOrder);
+        SetCursor(push: true);
+        _cursor.Object.VisualOver = buttons[0].Visual;
+        buttons[0].IsFocused = true;
+
+        for (int i = 0; i < 6; i++)
+        {
+            buttons[i].HandleTab(TabDirection.Down);
+        }
+
+        buttons[6].IsFocused.ShouldBeTrue();
+        IsInView(viewer, buttons[6].Visual).ShouldBeTrue();
     }
 
     [Fact]

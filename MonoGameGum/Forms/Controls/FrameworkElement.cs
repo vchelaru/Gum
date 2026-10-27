@@ -273,17 +273,14 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 
 #if !FRB
-    // A focused control that becomes hidden, itself or through any ancestor, loses focus like one removed
-    // from a root (#6934). Event based: while focused, the Visual and each ancestor are listened to for
-    // visibility and parent changes, so nothing runs per frame.
-#if !FRB
     // Focus moved by gamepad, keyboard, tab or code scrolls each ScrollViewer holding this element,
-    // innermost first. A mouse push, hold or click that focuses this element does not: the element
-    // is under the cursor already (#6939).
+    // innermost first. Focus the mouse itself caused does not: while the cursor is pushing, holding or
+    // clicking, an element the cursor is over (this one, or related to it by its visuals) is already
+    // under the cursor. Code or Tab focusing some other element during a click still scrolls (#6939).
     void ScrollAncestorViewersToShowThis()
     {
         ICursor cursor = MainCursor;
-        if (cursor.PrimaryPush || cursor.PrimaryDown || cursor.PrimaryClick)
+        if ((cursor.PrimaryPush || cursor.PrimaryDown || cursor.PrimaryClick) && IsCursorOverThisOrRelated(cursor))
         {
             return;
         }
@@ -296,8 +293,30 @@ public class FrameworkElement : INotifyPropertyChanged
             }
         }
     }
+
+    bool IsCursorOverThisOrRelated(ICursor cursor)
+    {
+        GraphicalUiElement? target = cursor.WindowPushed ?? cursor.VisualOver;
+        if (target == null)
+        {
+            return false;
+        }
+        for (GraphicalUiElement? current = target; current != null; current = current.Parent)
+        {
+            if (current == Visual) return true;
+        }
+        for (GraphicalUiElement? current = Visual; current != null; current = current.Parent)
+        {
+            if (current == target) return true;
+        }
+        return false;
+    }
 #endif
 
+#if !FRB
+    // A focused control that becomes hidden, itself or through any ancestor, loses focus like one removed
+    // from a root (#6934). Event based: while focused, the Visual and each ancestor are listened to for
+    // visibility and parent changes, so nothing runs per frame.
     List<GraphicalUiElement>? _visibilityWatched;
 
     void WatchVisibilityWhileFocused()
