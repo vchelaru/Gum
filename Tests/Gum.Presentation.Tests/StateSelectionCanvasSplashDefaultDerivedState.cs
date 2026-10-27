@@ -1,4 +1,6 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
+using Gum.Managers;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Wireframe;
@@ -57,5 +59,24 @@ public partial class StateSelectionCanvasSplashTests
         StateSave highlighted = button.Categories[0].States.Single(item => item.Name == "Highlighted");
 
         ShowSelectedAndReadBackground(button, highlighted).ShouldBe(ButtonColors["Highlighted"]);
+    }
+
+    /// <summary>A value the Forms control assigns (here a proxy feeding Background.Width) belongs to Default and always shows.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RefreshAll_DefaultSelectedAndCategoryStateSetsAFormsAssignedValue_ShowsTheFormsValue(bool isEnabled)
+    {
+        ComponentSave button = BuildFullButton(defaultReference: false, materialized: true);
+        BehaviorSave behavior = ObjectFinder.Self.GumProjectSave!.Behaviors.Single();
+        behavior.FormsProperties.Add(new VariableSave { Type = "float", Name = "BackgroundWidth", Value = 10f });
+        behavior.ToolOnlyVariableReferences.Add("Background.Width = BackgroundWidth");
+        button.DefaultState!.SetValue("BackgroundWidth", 77f, "float");
+        button.DefaultState.SetValue("IsEnabled", isEnabled, "bool");
+        string active = isEnabled ? "Enabled" : "Disabled";
+        button.Categories[0].States.Single(item => item.Name == active).SetValue("Background.Width", 5f, "float");
+        BehaviorToolOnlyReferencesApplier.Apply(button, button.DefaultState);
+
+        ShowSelectedAndReadBackgroundWidth(button, button.DefaultState).ShouldBe(77f);
     }
 }

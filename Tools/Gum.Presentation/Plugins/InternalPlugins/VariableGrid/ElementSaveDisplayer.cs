@@ -879,7 +879,7 @@ public class ElementSaveDisplayer
 
         foreach (StateSave active in BehaviorToolOnlyReferencesApplier.GetActiveCategoryStates(instanceOwner))
         {
-            foreach (VariableSave variable in active.Variables.Where(item => item.SetsValue))
+            foreach (VariableSave variable in active.Variables.Where(item => item.SetsValue && DefaultSetsValue(instanceOwner, item.Name)))
             {
                 notes.TryAdd(variable.Name, $"Overridden by the {active.Name} state");
             }
@@ -887,6 +887,11 @@ public class ElementSaveDisplayer
 
         return notes;
     }
+
+    /// <summary>Whether Default (the element's or a base's) sets the value, so a category state's value overrides it.</summary>
+    private static bool DefaultSetsValue(ElementSave element, string variableName) =>
+        new[] { element }.Concat(ObjectFinder.Self.GetBaseElements(element))
+            .Any(item => item.DefaultState?.Variables.Any(variable => variable.Name == variableName && variable.SetsValue) == true);
 
     private void SetSubtext(StateSave? stateSave, string? subtext, VariableGridEntry entry, string variableName)
     {

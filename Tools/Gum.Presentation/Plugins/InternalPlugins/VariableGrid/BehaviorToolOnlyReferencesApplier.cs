@@ -123,20 +123,33 @@ public static class BehaviorToolOnlyReferencesApplier
             return active;
         }
 
+        // A value the Forms control assigns (a reference line that is not a category state) belongs to
+        // Default, so a category state does not override it.
+        HashSet<string> formsAssigned = new HashSet<string>();
         Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance: null);
         foreach ((string left, string right) in GetReferenceLines(component))
         {
             string? categoryName = ResolveLeftSideType(left, instance: null, defaultState);
-            if (categoryName == null || EvaluateLine(left, right, instance: null, defaultState, fallback)?.Value is not string stateName)
+            IEnumerable<StateSave> categoryStates = categoryName == null ? Enumerable.Empty<StateSave>() : GetCategoryStates(element, categoryName);
+            if (!categoryStates.Any())
             {
+                formsAssigned.Add(left);
                 continue;
             }
 
-            StateSave? state = GetCategoryStates(element, categoryName).FirstOrDefault(item => item.Name == stateName);
-            if (state != null)
+            if (EvaluateLine(left, right, instance: null, defaultState, fallback)?.Value is string stateName &&
+                categoryStates.FirstOrDefault(item => item.Name == stateName) is { } state)
             {
                 active.Add(state);
             }
+        }
+
+        for (int i = 0; i < active.Count; i++)
+        {
+            StateSave withoutFormsValues = active[i].Clone();
+            withoutFormsValues.ParentContainer = element;
+            withoutFormsValues.Variables.RemoveAll(variable => formsAssigned.Contains(variable.Name));
+            active[i] = withoutFormsValues;
         }
 
         return active;

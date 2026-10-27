@@ -98,4 +98,18 @@ public class DefaultStateOverriddenMarkerScenarioTests
 
         grid.Member("Color").DetailText.ShouldContain("Overridden by the Enabled state");
     }
+
+    /// <summary>Only the category state sets Height, so the Default row has no value to be overridden.</summary>
+    [AvaloniaFact]
+    public void DefaultSelected_RowOnlyTheCategoryStateSets_HasNoMarker()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        (ComponentSave button, InstanceSave label, StateSave enabled, _) = BuildButton(grid);
+        enabled.SetValue("Label.Height", 99f, "float");
+        grid.Select(button);
+
+        grid.Select(label);
+
+        (grid.Member("Label.Height").DetailText ?? "").ShouldNotContain("Overridden");
+    }
 }
