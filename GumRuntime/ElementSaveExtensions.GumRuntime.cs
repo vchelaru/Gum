@@ -835,6 +835,9 @@ namespace GumRuntime
             // Rows run in dependency order, so a row that reads another row's result sees it whatever
             // order they are written in. Rows in a cycle run last, in written order.
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, stateSave);
+#if FULL_DIAGNOSTICS
+            ReportCyclicRows(element, graph);
+#endif
             foreach (ReferenceRow row in graph.LoadOrderRows)
             {
                 // Matched by text because a graph built per state creates its own row objects.
@@ -942,6 +945,9 @@ namespace GumRuntime
             {
                 return null;
             }
+#if FULL_DIAGNOSTICS
+            ReportCyclicRows(element, graph);
+#endif
             HashSet<string> keys = new HashSet<string>();
             foreach (ReferenceRow row in graph.CyclicRows)
             {
@@ -951,6 +957,39 @@ namespace GumRuntime
         }
 
         private static string CyclicRowKey(string? sourceObject, string line) => sourceObject + "|" + line;
+
+#if FULL_DIAGNOSTICS
+        // Rows in a loop are skipped (#6871), so a game would otherwise never learn of the loop. An element reports it once,
+        // however often its references are applied, so a reload of the project (new elements) reports again.
+        private static readonly ConditionalWeakTable<ElementSave, object> ReportedCycles = new ConditionalWeakTable<ElementSave, object>();
+
+        private static void ReportCyclicRows(ElementSave element, VariableReferenceGraph graph)
+        {
+            IReadOnlyList<ReferenceRow> cyclic = graph.CyclicRows;
+            if (cyclic.Count == 0)
+            {
+                return;
+            }
+
+            lock (ReportedCycles)
+            {
+                if (ReportedCycles.TryGetValue(element, out _))
+                {
+                    return;
+                }
+                ReportedCycles.Add(element, new object());
+            }
+
+            string[] rows = new string[cyclic.Count];
+            for (int i = 0; i < rows.Length; i++)
+            {
+                ReferenceRow row = cyclic[i];
+                rows[i] = string.IsNullOrEmpty(row.SourceObject) ? row.Line : row.SourceObject + "." + row.Line;
+            }
+            RaiseReferenceError($"Circular variable reference in {element.Name}: {string.Join("; ", rows)}. " +
+                "These rows are not evaluated and keep their stored values; remove one of them to break the loop.");
+        }
+#endif
 
         static char[] equalsArray = new char[] { '=' };
 
