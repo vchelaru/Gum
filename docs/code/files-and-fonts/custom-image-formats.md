@@ -72,6 +72,8 @@ Gum asks decoders in the order they were added, and `Insert(0, decoder)` puts a 
 
 A decoded texture goes into Gum's texture cache under its file name, so each file is decoded once. Files loaded through a MonoGame `ContentManager` (XNB files) never reach decoders.
 
+Decoders also apply to the page images of a bitmap font (`.fnt`).
+
 If no decoder handles a file whose format Gum does not load, the load fails with a message naming the extension and `LoaderManager.Self.ImageDecoders`.
 
 ### Premultiplied Alpha

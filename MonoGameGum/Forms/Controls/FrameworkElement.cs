@@ -252,6 +252,9 @@ public class FrameworkElement : INotifyPropertyChanged
                 {
                     timeFocused = InteractiveGue.CurrentGameTime;
                     GotFocus?.Invoke(this, EventArgs.Empty);
+#if !FRB
+                    ScrollAncestorViewersToShowThis();
+#endif
                 }
                 else
                 {
@@ -274,6 +277,48 @@ public class FrameworkElement : INotifyPropertyChanged
 
         }
     }
+
+#if !FRB
+    // Focus moved by gamepad, keyboard, tab or code scrolls each ScrollViewer holding this element,
+    // innermost first. Focus the mouse itself caused does not: while the cursor is pushing, holding or
+    // clicking, an element the cursor is over (this one, or related to it by its visuals) is already
+    // under the cursor. Code or Tab focusing some other element during a click still scrolls (#6939).
+    void ScrollAncestorViewersToShowThis()
+    {
+        // A render-only host has no cursor (#5406), so nothing is mouse-caused.
+        ICursor? cursor = MainCursor;
+        if (cursor != null && (cursor.PrimaryPush || cursor.PrimaryDown || cursor.PrimaryClick) && IsCursorOverThisOrRelated(cursor))
+        {
+            return;
+        }
+
+        for (GraphicalUiElement? current = Visual.Parent; current != null; current = current.Parent)
+        {
+            if (current is InteractiveGue { FormsControlAsObject: ScrollViewer viewer } && viewer != this)
+            {
+                viewer.ScrollDescendantIntoView(Visual);
+            }
+        }
+    }
+
+    bool IsCursorOverThisOrRelated(ICursor cursor)
+    {
+        GraphicalUiElement? target = cursor.WindowPushed ?? cursor.VisualOver;
+        if (target == null)
+        {
+            return false;
+        }
+        for (GraphicalUiElement? current = target; current != null; current = current.Parent)
+        {
+            if (current == Visual) return true;
+        }
+        for (GraphicalUiElement? current = Visual; current != null; current = current.Parent)
+        {
+            if (current == target) return true;
+        }
+        return false;
+    }
+#endif
 
 #if !FRB
     // A focused control that becomes hidden, itself or through any ancestor, loses focus like one removed

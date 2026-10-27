@@ -43,6 +43,14 @@ ScrollViewers can be scrolled by the user using by performing any of the followi
 * Using the mouse wheel to scroll vertically
 * Using shift+mouse wheel to scroll horizontally. For more information see the [Horizontal Scrolling](horizontal-scrolling.md) page.
 
+### Scrolling to a Focused Child
+
+A ScrollViewer scrolls by the smallest amount that shows a child when focus moves to that child by gamepad, keyboard, tab navigation, or by setting `IsFocused` to `true` in code. Clicking a child with the mouse does not scroll.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ### Mouse Wheel Scroll Speed
 
 The `MouseWheelScrollSpeed` property controls how far the content scrolls per mouse-wheel notch. It applies to both vertical scrolling and shift+wheel horizontal scrolling. Larger values scroll farther per notch; the default is `30`.
