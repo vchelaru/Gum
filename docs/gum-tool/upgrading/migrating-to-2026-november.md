@@ -69,7 +69,7 @@ Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
 
 ### An .achx Frame Texture That Fails to Load Is a Blank Frame
 
-A frame texture that is missing or cannot be decoded follows `MissingFileBehavior` the same way on every runtime. With `ConsumeSilently`, that frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name. With `ThrowException`, loading throws on the first texture that failed, and the `FileNotFoundException` that names it is the `InnerException`. A `NineSliceRuntime` plays a blank frame instead of throwing from `Update`.
+A frame texture that is missing or cannot be decoded follows `MissingFileBehavior` the same way on every runtime. With `ConsumeSilently`, that frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name, once per texture per load even when many frames share it. With `ThrowException`, loading throws on the first texture that failed, and the `FileNotFoundException` that names it is the `InnerException`. A `NineSliceRuntime` plays a blank frame instead of throwing from `Update`.
 
 On MonoGame, KNI, and FNA, a missing frame texture was silent under the default `ThrowException`. It now throws when the `.achx` loads, so fix the texture path or set `ConsumeSilently`.
 

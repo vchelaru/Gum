@@ -8,6 +8,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ToolsUtilities;
 using Xunit;
 
@@ -80,6 +81,42 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         FindFileNotFound(thrown, textureName).ShouldNotBeNull();
     }
 
+    // Frames of one sprite sheet share the texture; the load raises one error for it, not one per frame (#6899).
+    [Theory]
+    [MemberData(nameof(FailingFrames))]
+    public void SpriteSourceFile_ManyFramesShareOneFailingTexture_ConsumeSilentlyRaisesOneError(string textureName, string kind)
+    {
+        WriteAchxWithFrames((textureName, kind), (textureName, kind), (textureName, kind), (textureName, kind));
+
+        AnimationChainList? chains = null;
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
+        {
+            SpriteRuntime sprite = new() { SourceFileName = _directory + "a.achx" };
+            chains = sprite.AnimationChains;
+        });
+
+        chains.ShouldNotBeNull();
+        chains[0].Count.ShouldBe(4);
+        errors.Count.ShouldBe(1);
+        errors[0].ShouldContain(textureName);
+    }
+
+    [Fact]
+    public void SpriteSourceFile_FramesShareTwoFailingTextures_ConsumeSilentlyRaisesOneErrorForEach()
+    {
+        WriteAchxWithFrames(("missing.png", "missing"), ("broken.png", "corrupt"), ("missing.png", "missing"),
+            ("broken.png", "corrupt"), ("missing.png", "missing"));
+
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
+        {
+            SpriteRuntime sprite = new() { SourceFileName = _directory + "a.achx" };
+        });
+
+        errors.Count.ShouldBe(2);
+        errors.Count(error => error.Contains("missing.png")).ShouldBe(1);
+        errors.Count(error => error.Contains("broken.png")).ShouldBe(1);
+    }
+
     private static Exception? FindFileNotFound(Exception? exception, string textureName)
     {
         while (exception != null)
@@ -112,12 +149,20 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         return errors;
     }
 
-    private void WriteAchxWithFrame(string textureName, string kind)
+    private void WriteAchxWithFrame(string textureName, string kind) => WriteAchxWithFrames((textureName, kind));
+
+    private void WriteAchxWithFrames(params (string TextureName, string Kind)[] frameTextures)
     {
         Directory.CreateDirectory(_directory);
-        if (kind == "undecodable" || kind == "corrupt")
+        string frames = "";
+        foreach ((string textureName, string kind) in frameTextures)
         {
-            File.WriteAllBytes(_directory + textureName, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+            if (kind == "undecodable" || kind == "corrupt")
+            {
+                File.WriteAllBytes(_directory + textureName, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+            }
+            frames += $"<Frame><TextureName>{textureName}</TextureName><FrameLength>0.1</FrameLength>" +
+                "<LeftCoordinate>0</LeftCoordinate><RightCoordinate>1</RightCoordinate><TopCoordinate>0</TopCoordinate><BottomCoordinate>1</BottomCoordinate></Frame>";
         }
         File.WriteAllText(_directory + "a.achx",
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -125,8 +170,7 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
             "  <FileRelativeTextures>true</FileRelativeTextures>\n" +
             "  <TimeMeasurementUnit>Second</TimeMeasurementUnit>\n" +
             "  <CoordinateType>UV</CoordinateType>\n" +
-            $"  <AnimationChain><Name>Idle</Name><Frame><TextureName>{textureName}</TextureName><FrameLength>0.1</FrameLength>" +
-            "<LeftCoordinate>0</LeftCoordinate><RightCoordinate>1</RightCoordinate><TopCoordinate>0</TopCoordinate><BottomCoordinate>1</BottomCoordinate></Frame></AnimationChain>\n" +
+            $"  <AnimationChain><Name>Idle</Name>{frames}</AnimationChain>\n" +
             "</AnimationChainArraySave>\n");
     }
 }

@@ -354,6 +354,15 @@ namespace Gum.Graphics.Animation
 
         public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, bool loadTexture, TextureCoordinateType coordinateType)
         {
+            return animationFrameSave.ToAnimationFrame(loadTexture, coordinateType, failedTextures: null);
+        }
+
+        /// <param name="failedTextures">
+        /// The files that already failed to load during the same load of an .achx, so that frames sharing a
+        /// texture that fails raise one error and ask the loader once (#6899). Null for a frame converted on its own.
+        /// </param>
+        internal static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, bool loadTexture, TextureCoordinateType coordinateType, System.Collections.Generic.HashSet<string>? failedTextures)
+        {
             AnimationFrame frame = new AnimationFrame();
 
             #region Set basic variables
@@ -371,10 +380,20 @@ namespace Gum.Graphics.Animation
             if (loadTexture && !string.IsNullOrEmpty(animationFrameSave.TextureName))
             {
                 System.Exception? loadFailure = null;
+                string failureKey = animationFrameSave.TextureName;
+                bool alreadyFailed = false;
                 try
                 {
                     var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
-                    frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(fileName);
+                    failureKey = fileName;
+                    if (failedTextures != null && failedTextures.Contains(fileName))
+                    {
+                        alreadyFailed = true;
+                    }
+                    else
+                    {
+                        frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(fileName);
+                    }
                 }
                 catch (System.Exception exception)
                 {
@@ -386,7 +405,12 @@ namespace Gum.Graphics.Animation
 
                 // Some loaders return null instead of throwing (MonoGame for a missing file, Skia for an
                 // undecodable image), which is the same failure. A raylib texture is a struct that is never null.
-                if (loadFailure != null || frame.Texture == null)
+                if (alreadyFailed)
+                {
+                    // Another frame of this load already raised the error for this file.
+                    frame.Texture = null;
+                }
+                else if (loadFailure != null || frame.Texture == null)
                 {
                     string message = $"Error loading texture in animation :\n{animationFrameSave.TextureName}";
                     if (Wireframe.GraphicalUiElement.MissingFileBehavior == Wireframe.MissingFileBehavior.ThrowException)
@@ -394,6 +418,7 @@ namespace Gum.Graphics.Animation
                         throw new System.IO.FileNotFoundException(message, loadFailure);
                     }
                     frame.Texture = null;
+                    failedTextures?.Add(failureKey);
                     GumRuntime.ElementSaveExtensions.ReportPropertyAssignmentError?.Invoke(
                         loadFailure != null ? message + "\n" + loadFailure.ToString() : message);
                 }

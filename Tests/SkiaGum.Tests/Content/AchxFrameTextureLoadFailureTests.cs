@@ -7,6 +7,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace SkiaGum.Tests.Content;
@@ -139,6 +140,45 @@ public class AchxFrameTextureLoadFailureTests : BaseTestClass
         chains.ShouldNotBeNull();
         chains[0][0].Texture.ShouldNotBeNull();
         errors.ShouldBeEmpty();
+    }
+
+    // Frames of one sprite sheet share the texture; the load raises one error for it, not one per frame (#6899).
+    [Theory]
+    [MemberData(nameof(FailingFrames))]
+    public void SpriteSourceFile_ManyFramesShareOneFailingTexture_ConsumeSilentlyRaisesOneError(string textureName)
+    {
+        WriteAchx(CreatePng(), "ok.png", textureName, textureName, textureName, "ok.png", textureName);
+
+        AnimationChainList? chains = null;
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
+        {
+            SpriteRuntime sprite = new() { SourceFileName = _directory + "a.achx" };
+            chains = sprite.AnimationChains;
+        });
+
+        chains.ShouldNotBeNull();
+        chains[0].Count.ShouldBe(6);
+        chains[0][0].Texture.ShouldNotBeNull();
+        chains[0][1].Texture.ShouldBeNull();
+        chains[0][4].Texture.ShouldNotBeNull();
+        chains[0][5].Texture.ShouldBeNull();
+        errors.Count.ShouldBe(1);
+        errors[0].ShouldContain(textureName);
+    }
+
+    [Fact]
+    public void SpriteSourceFile_FramesShareTwoFailingTextures_ConsumeSilentlyRaisesOneErrorForEach()
+    {
+        WriteAchx(null, "missing.png", "broken.png", "missing.png", "broken.png", "missing.png");
+
+        List<string> errors = WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () =>
+        {
+            SpriteRuntime sprite = new() { SourceFileName = _directory + "a.achx" };
+        });
+
+        errors.Count.ShouldBe(2);
+        errors.Count(error => error.Contains("missing.png")).ShouldBe(1);
+        errors.Count(error => error.Contains("broken.png")).ShouldBe(1);
     }
 
     private static Exception? FindFileNotFound(Exception? exception, string textureName)

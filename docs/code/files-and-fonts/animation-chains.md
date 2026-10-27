@@ -69,7 +69,7 @@ sprite.Animate = true;
 
 A frame texture that cannot be loaded, whether the file is missing or the image cannot be decoded, follows `GraphicalUiElement.MissingFileBehavior` the same way on every runtime. See [Migrating to 2026 October](../../gum-tool/upgrading/migrating-to-2026-october.md#raylib-throws-when-a-file-is-missing) for the defaults.
 
-* With `ConsumeSilently`, the frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name.
+* With `ConsumeSilently`, the frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name. Frames that share a texture that fails raise it once per load, not once per frame.
 * With `ThrowException`, loading throws on the first texture that failed. The outer exception does not name the texture; its `InnerException` is a `FileNotFoundException` that does.
 
 {% hint style="info" %}
