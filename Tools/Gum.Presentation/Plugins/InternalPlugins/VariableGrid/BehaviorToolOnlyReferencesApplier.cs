@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
@@ -242,6 +242,10 @@ public static class BehaviorToolOnlyReferencesApplier
     {
         Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance);
 
+        // Two behaviors can write the same variable; a resting line must not undo what an earlier line
+        // of this pass wrote, whichever behavior comes first.
+        HashSet<string> writtenThisPass = new HashSet<string>();
+
         foreach ((string left, string right) in GetReferenceLines(component))
         {
             EvaluatedLine? line = EvaluateLine(left, right, instance, stateSave, fallback);
@@ -258,6 +262,11 @@ public static class BehaviorToolOnlyReferencesApplier
             // "<Instance>.<X>CategoryState = Enabled" in a screen that overrode nothing
             // (issue #3080). Only authored deviations from rest (IsEnabled = false, a checked
             // CheckBox, etc.) are worth materializing.
+            if (line.IsResting && writtenThisPass.Contains(line.EffectiveLeft))
+            {
+                continue;
+            }
+
             if (line.IsResting)
             {
                 // The reference resolves to its resting (default) value, so the target belongs at its
@@ -286,6 +295,7 @@ public static class BehaviorToolOnlyReferencesApplier
             }
 
             stateSave.SetValue(line.EffectiveLeft, line.Value, instance);
+            writtenThisPass.Add(line.EffectiveLeft);
         }
     }
 

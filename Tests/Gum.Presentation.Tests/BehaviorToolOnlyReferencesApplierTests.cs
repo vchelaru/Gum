@@ -974,6 +974,56 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
         defaultState.GetValue("ButtonCategoryState").ShouldBe("Enabled");
     }
 
+    // Two behaviors write ButtonCategoryState: Button resolves to the resting "Enabled", Toggle to a
+    // non-resting "On" (IsChecked). The non-resting result wins in either order.
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public void Apply_TwoBehaviorsWritingTheSameVariable_KeepsTheNonRestingValueInEitherOrder(bool buttonFirst, bool onInstance)
+    {
+        BehaviorSave button = new BehaviorSave { Name = "ButtonBehavior" };
+        button.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+        button.ToolOnlyVariableReferences.Add("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+        BehaviorSave toggle = new BehaviorSave { Name = "ToggleBehavior" };
+        toggle.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsChecked", Value = false });
+        toggle.ToolOnlyVariableReferences.Add("ButtonCategoryState = IsChecked ? \"On\" : \"Off\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ToggleButton", BaseType = "Container" };
+        StateSave componentDefault = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(componentDefault);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = buttonFirst ? "ButtonBehavior" : "ToggleBehavior" });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = buttonFirst ? "ToggleBehavior" : "ButtonBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(button);
+        project.Behaviors.Add(toggle);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ElementSave owner = component;
+        string variableName = "ButtonCategoryState";
+        if (onInstance)
+        {
+            ScreenSave screen = new ScreenSave { Name = "MenuScreen" };
+            screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+            screen.Instances.Add(new InstanceSave { Name = "Toggle", BaseType = component.Name, ParentContainer = screen });
+            project.Screens.Add(screen);
+            owner = screen;
+            variableName = "Toggle.ButtonCategoryState";
+            screen.DefaultState.Variables.Add(new VariableSave { Type = "bool", Name = "Toggle.IsChecked", Value = true, SetsValue = true });
+        }
+        else
+        {
+            componentDefault.Variables.Add(new VariableSave { Type = "bool", Name = "IsChecked", Value = true, SetsValue = true });
+        }
+
+        BehaviorToolOnlyReferencesApplier.Apply(owner, owner.DefaultState);
+
+        owner.DefaultState.GetValue(variableName).ShouldBe("On");
+    }
+
     [Fact]
     public void GetUnderlyingMembersDrivenBy_ComponentLevelSpacing_ReturnsStackSpacing()
     {
