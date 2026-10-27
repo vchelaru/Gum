@@ -251,7 +251,7 @@ public class RefuseFocusWhenHiddenTests : BaseTestClass
     {
         ListBox listBox = new ListBox();
         listBox.AddToRoot();
-        listBox.Items.Add("a");
+        listBox.Items!.Add("a");
         listBox.IsVisible = false;
 
         listBox.IsFocused = true;
