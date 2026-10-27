@@ -73,8 +73,14 @@ public class SvgRuntime : InteractiveGue
             if (sourceFile != value)
             {
 #if SKIA
-                // Loaded first, so a file that fails to load (and throws) can be assigned again once it is fixed.
-                Texture = global::SkiaGum.Content.SourceFileLoading.Load<SvgDocument>(value, this, "Svg");
+                SvgDocument? loaded = global::SkiaGum.Content.SourceFileLoading.Load<SvgDocument>(value, this, "Svg");
+                Texture = loaded;
+                // The path is recorded only for a file that loaded (or none), so assigning the same path again after
+                // a failed load retries it once the file is fixed.
+                if (loaded == null && !string.IsNullOrEmpty(value))
+                {
+                    return;
+                }
                 sourceFile = value;
 #else
                 sourceFile = value;

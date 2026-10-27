@@ -97,6 +97,40 @@ public class SourceFileDocumentLoadFailureTests : BaseTestClass
         HasDocument(runtime).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("svg", "broken.svg", ValidSvg)]
+    [InlineData("lottie", "broken.json", ValidLottie)]
+    public void SourceFile_FileFixedAfterSilentFailure_ReassigningSamePathLoads(string kind, string fileName, string fixedContent)
+    {
+        string path = Prepare(fileName);
+        GraphicalUiElement runtime = kind == "svg" ? new SvgRuntime() : new LottieAnimationRuntime();
+        WithMissingFileBehavior(MissingFileBehavior.ConsumeSilently, () => SetSourceFile(runtime, path));
+        HasDocument(runtime).ShouldBeFalse();
+
+        File.WriteAllText(path, fixedContent);
+        SetSourceFile(runtime, path);
+
+        HasDocument(runtime).ShouldBeTrue();
+    }
+
+    // How a project-loaded Svg or Lottie gets its file. A Sprite throws the FileNotFoundException itself, not a wrapper.
+    [Theory]
+    [InlineData("svg", "missing.svg")]
+    [InlineData("svg", "broken.svg")]
+    [InlineData("lottie", "missing.json")]
+    [InlineData("lottie", "broken.json")]
+    public void SetPropertySourceFile_FileFailsToLoad_ThrowsFileNotFoundNamingFileDirectly(string kind, string fileName)
+    {
+        string path = Prepare(fileName);
+        GraphicalUiElement runtime = kind == "svg" ? new SvgRuntime() : new LottieAnimationRuntime();
+
+        WithMissingFileBehavior(MissingFileBehavior.ThrowException, () =>
+        {
+            FileNotFoundException thrown = Should.Throw<FileNotFoundException>(() => runtime.SetProperty("SourceFile", path));
+            thrown.Message.ShouldContain(fileName);
+        });
+    }
+
     [Fact]
     public void SourceFile_PlainElementWithVectorSprite_UnparseableSvgFollowsMissingFileBehavior()
     {

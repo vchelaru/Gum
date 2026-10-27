@@ -1172,6 +1172,13 @@ public partial class CustomSetPropertyOnRenderable
                 handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
             }
         }
+        else if(containedObjectAsIpso is LottieAnimation && propertyName == "SourceFile" && graphicalUiElement is LottieAnimationRuntime lottieRuntime)
+        {
+            // Through the runtime's own setter, as for SvgRuntime above. The reflection fallback below would wrap a
+            // missing file's FileNotFoundException in a TargetInvocationException (#6903).
+            lottieRuntime.SourceFile = value as string;
+            handled = true;
+        }
         else if(containedObjectAsIpso is Sprite asSprite)
         {
             // Route through SpriteRuntime first (ADR 0011) so mechanical properties
