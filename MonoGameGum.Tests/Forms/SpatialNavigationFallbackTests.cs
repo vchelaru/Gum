@@ -292,22 +292,45 @@ public class SpatialNavigationFallbackTests : BaseTestClass
                 candidates.Add(Create(random.Next(0, 700), random.Next(0, 400), random.Next(20, 200), random.Next(20, 120)));
             }
 
+            // #6961: a candidate with a zero gap to the origin that only touches it is now a neighbor,
+            // which the old algorithm excluded, so the old-behavior comparison only covers origins
+            // with no zero-gap candidate.
+            bool originHasZeroGapCandidate = false;
+            foreach (FrameworkElement candidate in candidates)
+            {
+                if (Gap(candidate.Visual.AbsoluteLeft, candidate.Visual.AbsoluteRight, origin.Visual.AbsoluteLeft, origin.Visual.AbsoluteRight) == 0f &&
+                    Gap(candidate.Visual.AbsoluteTop, candidate.Visual.AbsoluteBottom, origin.Visual.AbsoluteTop, origin.Visual.AbsoluteBottom) == 0f)
+                {
+                    originHasZeroGapCandidate = true;
+                }
+            }
+
             foreach (float direction in directions)
             {
                 FrameworkElement? old = OldFindBestCandidate(origin, direction, candidates);
                 FrameworkElement? actual = SpatialNavigationService.FindBestCandidate(origin, direction, candidates);
-                if (old != null)
+                if (old != null && !originHasZeroGapCandidate)
                 {
                     coneCases++;
                     actual.ShouldBe(old);
                 }
-                else if (actual != null)
+                else if (actual != null && (old == null || originHasZeroGapCandidate))
                 {
                     fallbackCases++;
                     float dx = Gap(actual.Visual.AbsoluteLeft, actual.Visual.AbsoluteRight, origin.Visual.AbsoluteLeft, origin.Visual.AbsoluteRight);
                     float dy = Gap(actual.Visual.AbsoluteTop, actual.Visual.AbsoluteBottom, origin.Visual.AbsoluteTop, origin.Visual.AbsoluteBottom);
-                    float along = dx * MathF.Round(MathF.Cos(direction)) + dy * MathF.Round(MathF.Sin(direction));
-                    along.ShouldBeGreaterThan(0f);
+                    float axisX = MathF.Round(MathF.Cos(direction));
+                    float axisY = MathF.Round(MathF.Sin(direction));
+                    float along = dx * axisX + dy * axisY;
+                    if (along == 0f)
+                    {
+                        // Touching neighbor (zero gap along the pressed axis): its center must lie
+                        // in the pressed direction from the origin's center.
+                        float centerDx = (actual.Visual.AbsoluteLeft + actual.Visual.AbsoluteRight - origin.Visual.AbsoluteLeft - origin.Visual.AbsoluteRight) / 2f;
+                        float centerDy = (actual.Visual.AbsoluteTop + actual.Visual.AbsoluteBottom - origin.Visual.AbsoluteTop - origin.Visual.AbsoluteBottom) / 2f;
+                        (centerDx * axisX + centerDy * axisY).ShouldBeGreaterThan(0f);
+                    }
+                    along.ShouldBeGreaterThanOrEqualTo(0f);
                 }
             }
         }
