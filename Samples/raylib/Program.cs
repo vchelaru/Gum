@@ -72,6 +72,14 @@ public class BasicShapes
             : ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib gallery");
 
+        // raylib on macOS can start the window at an invalid y (int.MinValue), which leaves the top of
+        // the window, and the nav buttons, off the screen until the window is resized. Placing the
+        // window explicitly avoids that.
+        int monitor = GetCurrentMonitor();
+        SetWindowPosition(
+            Math.Max(0, (GetMonitorWidth(monitor) - screenWidth) / 2),
+            Math.Max(40, (GetMonitorHeight(monitor) - screenHeight) / 2));
+
         GumUI.Initialize();
 
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
