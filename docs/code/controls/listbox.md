@@ -227,12 +227,14 @@ int count = listBox.SelectedItems.Count;
 
 A `ListBox` uses a two-level focus model:
 
-* **Top-level focus** — the `ListBox` itself is focused (`IsFocused` is `true`). In this state, input moves focus _between controls_ (tabbing), not within the list. This is the state a `ListBox` is in right after you set `IsFocused = true`.
-* **Item-level focus** — focus has moved _into_ the list (`DoListItemsHaveFocus` is `true`). Now the up and down arrow keys and the d-pad move the highlighted item, and the `SelectionChanged` event fires as the selection changes.
+* **Top-level focus**: the `ListBox` is focused (`IsFocused` is `true`) and `DoListItemsHaveFocus` is `false`. Directional input moves focus _between controls_, by tab order or by position (see [Tabbing](../events-and-interactivity/tabbing-moving-focus.md)), and the list does not move its selection. This is the state a `ListBox` is in right after you set `IsFocused = true`.
+* **Item-level focus**: focus has moved _into_ the list, so `DoListItemsHaveFocus` is `true` and `IsFocused` stays `true`. The d-pad and left stick move the highlighted item along the list's own axis (up and down in a vertical list, left and right in a horizontal list), the arrow keys along the same axis move it from the keyboard, and the `SelectionChanged` event fires as the selection changes.
+
+At item level, the axis the list does not use leaves the list: left and right in a vertical list, up and down in a horizontal list. The input does what it does at top level, so focus moves to the neighboring control, `DoListItemsHaveFocus` becomes `false`, and `SelectedIndex` is kept. A wrapping list steps in every direction, and so does the drop-down list of a `ComboBox`, which does not leave until it closes.
 
 By default the user moves from top-level to item-level focus by pressing the confirm input — Enter on the keyboard, or the A button on a gamepad. This is the extra "enter the list" press.
 
-A list whose items lay out horizontally (or wrap) is also stepped with the left and right arrow keys. A vertical list uses the up and down arrow keys only.
+From the keyboard, a vertical list is stepped with the up and down arrow keys, a horizontal list with the left and right arrow keys, and a wrapping list with all four.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.

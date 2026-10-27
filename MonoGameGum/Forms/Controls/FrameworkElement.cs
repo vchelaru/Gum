@@ -1480,33 +1480,75 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     internal static RepositionDirections? GetRepeatedGamepadDirection(GamePadForNavigation gamepad)
     {
-        RepositionDirections? direction = null;
+        ReadRepeatedGamepadDirections(gamepad, out bool up, out bool down, out bool left, out bool right);
 
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down))
+        RepositionDirections? direction = null;
+        if (down)
         {
             direction = RepositionDirections.Down;
         }
-
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
+        if (right)
         {
             direction = RepositionDirections.Right;
         }
-
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up))
+        if (up)
         {
             direction = RepositionDirections.Up;
         }
-
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
+        if (left)
         {
             direction = RepositionDirections.Left;
         }
 
         return direction;
+    }
+
+    /// <summary>
+    /// Like <see cref="GetRepeatedGamepadDirection(GamePadForNavigation)"/> for a control that steps along one
+    /// axis only (<paramref name="singleAxis"/>; null steps in every direction). The other axis does not step:
+    /// when it is pushed and the control's own axis is not, <paramref name="leavesList"/> is true and the
+    /// result is null, so the caller moves focus away as the control does at its top level.
+    /// </summary>
+    internal static RepositionDirections? GetRepeatedGamepadDirection(GamePadForNavigation gamepad,
+        Orientation? singleAxis, out bool leavesList)
+    {
+        leavesList = false;
+        if (singleAxis == null)
+        {
+            return GetRepeatedGamepadDirection(gamepad);
+        }
+
+        ReadRepeatedGamepadDirections(gamepad, out bool up, out bool down, out bool left, out bool right);
+
+        bool isVertical = singleAxis == Orientation.Vertical;
+        if (isVertical ? up : left)
+        {
+            return isVertical ? RepositionDirections.Up : RepositionDirections.Left;
+        }
+        if (isVertical ? down : right)
+        {
+            return isVertical ? RepositionDirections.Down : RepositionDirections.Right;
+        }
+
+        leavesList = isVertical ? (left || right) : (up || down);
+        return null;
+    }
+
+    /// <summary>
+    /// Reads which of the four directions the gamepad's D-pad or left stick is pushing this frame, repeating
+    /// while held. Several can be true at once.
+    /// </summary>
+    internal static void ReadRepeatedGamepadDirections(GamePadForNavigation gamepad,
+        out bool up, out bool down, out bool left, out bool right)
+    {
+        down = gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down);
+        right = gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right);
+        up = gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up);
+        left = gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left);
     }
 
     protected void HandleGamepadNavigation(GamePadForNavigation gamepad)

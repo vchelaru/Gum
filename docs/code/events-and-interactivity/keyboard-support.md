@@ -19,7 +19,7 @@ Unlike a TextBox, a `ListBox` does not receive keyboard input simply by being fo
 GumUI.UseKeyboardDefaults();
 ```
 
-A focused `ListBox` starts at the top level, where it participates in [tabbing](tabbing-moving-focus.md) between controls. Press Enter to move focus into the items; the up and down arrow keys then move the highlighted item (a horizontal list also uses left and right), and Enter selects the highlighted item and returns focus to the top level.
+A focused `ListBox` starts at the top level, where it participates in [tabbing](tabbing-moving-focus.md) between controls. Press Enter to move focus into the items; the arrow keys along the list's axis then move the highlighted item (up and down in a vertical list, left and right in a horizontal list), and Enter selects the highlighted item and returns focus to the top level.
 
 To have a `ListBox` start with an item already focused, so the arrow keys work without first pressing Enter, see [Keyboard and Gamepad Navigation](../controls/listbox.md#keyboard-and-gamepad-navigation) on the ListBox page.
 
