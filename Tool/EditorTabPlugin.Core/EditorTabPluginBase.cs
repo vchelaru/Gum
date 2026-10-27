@@ -387,6 +387,11 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // silent and users can't tell it actually compiled.
         _renderTargetShaderResolver = CreateRenderTargetShaderResolver();
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = ResolveAndReportRenderTargetShader;
+        // The Variables tab lists the parameters a container's compiled shader declares.
+        global::RenderingLibrary.Graphics.ShaderParameterReader.Reader = effect =>
+            effect is Microsoft.Xna.Framework.Graphics.Effect xnaEffect
+                ? global::RenderingLibrary.Graphics.EffectShaderParameters.Read(xnaEffect)
+                : new List<global::RenderingLibrary.Graphics.ShaderParameterInfo>();
         CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
         AssignEvents();

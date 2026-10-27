@@ -49,6 +49,8 @@ public class SetVariableLogic : ISetVariableLogic
         {"TextureAddress",                                         VariableRefreshType.FullGridRefresh   },
         {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
         {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
+        // The shader's parameters are listed as rows, so choosing a different shader changes the rows.
+        {"SourceShaderFile",                                       VariableRefreshType.FullGridRefresh   },
         {"TextOverflowVerticalMode",                               VariableRefreshType.FullGridRefresh   },
         // These four gate which gradient / dropshadow / stroke channels are visible on
         // shape elements (Circle/Rectangle/ColoredCircle/RoundedRectangle/Arc/Line/etc.).
