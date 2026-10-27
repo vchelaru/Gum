@@ -761,6 +761,9 @@ public class ComboBox :
         WatchAncestorsWhileOpen();
 
         FocusDropDown();
+
+        LostFocus += HandleOwnerLostFocusWhileOpen;
+        listBox.LostFocus += HandleOwnerLostFocusWhileOpen;
 #endif
 
 
@@ -768,6 +771,35 @@ public class ComboBox :
     }
 
 #if !FRB
+    /// <inheritdoc/>
+    public override bool IsEnabled
+    {
+        get => base.IsEnabled;
+        set
+        {
+            base.IsEnabled = value;
+
+            // A disabled owner takes no input, so its popup list must not keep taking gamepad and keyboard input.
+            if (!value && IsDropDownOpen)
+            {
+                HideListBox(restoreFocus: false);
+            }
+        }
+    }
+
+    // Focus moves between the ComboBox and its own list when the drop-down opens and closes; focus landing
+    // on any other receiver closes the drop-down, like a push outside does (#6958).
+    private void HandleOwnerLostFocusWhileOpen(object? sender, EventArgs args)
+    {
+        // Another ComboBox opening its own drop-down takes focus as part of opening; code that opens two
+        // drop-downs asked for both, so that is not a focus move away.
+        IInputReceiver? current = InteractiveGue.CurrentInputReceiver;
+        if (!_isFocusingDropDown && IsDropDownOpen && current != null && current != (IInputReceiver)this && current != listBox)
+        {
+            HideListBox(restoreFocus: false);
+        }
+    }
+
     /// <summary>
     /// Gives the open drop-down's list the input focus, however the drop-down was opened (gamepad,
     /// keyboard, mouse or code), so gamepad and keyboard input operates the list and does not reach
@@ -784,10 +816,20 @@ public class ComboBox :
         // A disabled ComboBox opened from code does not take input, so it does not take focus either.
         if (IsEnabled && listBox.IsEnabled)
         {
-            listBox.IsFocused = true;
-            listBox.DoListItemsHaveFocus = true;
+            _isFocusingDropDown = true;
+            try
+            {
+                listBox.IsFocused = true;
+                listBox.DoListItemsHaveFocus = true;
+            }
+            finally
+            {
+                _isFocusingDropDown = false;
+            }
         }
     }
+
+    static bool _isFocusingDropDown;
 
     private void RestoreFocusAfterClose(ListBox popup, bool restoreFocus)
     {
@@ -1055,6 +1097,11 @@ public class ComboBox :
     {
 #if !FRB
         StopWatchingAncestors();
+        LostFocus -= HandleOwnerLostFocusWhileOpen;
+        if (listBox != null)
+        {
+            listBox.LostFocus -= HandleOwnerLostFocusWhileOpen;
+        }
 #endif
 
         if (listBox != null && listBox.IsVisible)
