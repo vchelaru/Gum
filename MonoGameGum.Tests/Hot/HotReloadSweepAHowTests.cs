@@ -91,6 +91,58 @@ public class HotReloadSweepAHowTests : BaseTestClass
     }
 
     [Fact]
+    public void UpdateAfterACompletedReload_WithNoNewNotification_DoesNotReloadAgain()
+    {
+        _world.Boot(Reader);
+        _world.NotifyAndSettle(_world.ScreenFile);
+        _world.Reloads.ShouldBe(1);
+
+        _world.Advance(1000);
+        _world.Update();
+        _world.Advance(1000);
+        _world.Update();
+
+        _world.Reloads.ShouldBe(1);
+    }
+
+    [Fact]
+    public void UpdateWithNothingEverNotified_NeverReloads()
+    {
+        _world.Boot(Reader);
+
+        _world.Advance(5000);
+        _world.Update();
+
+        _world.Reloads.ShouldBe(0);
+    }
+
+    [Fact]
+    public void NotificationArrivingDuringAReload_SchedulesExactlyOneMoreReload()
+    {
+        _world.Boot(Reader);
+        bool notified = false;
+        _world.Manager.ReloadCompleted += () =>
+        {
+            if (!notified)
+            {
+                notified = true;
+                _world.Notify(_world.ScreenFile);
+            }
+        };
+
+        _world.NotifyAndSettle(_world.ScreenFile);
+        _world.Reloads.ShouldBe(1);
+        _world.Update();
+        _world.Reloads.ShouldBe(1, "the late notification is not yet 200 ms old");
+
+        _world.Advance(300);
+        _world.Update();
+        _world.Update();
+
+        _world.Reloads.ShouldBe(2);
+    }
+
+    [Fact]
     public void FileNotifiedBeforeTheDebounce_IsNotReloadedUntilTheDebounceHasPassed()
     {
         _world.Boot(Reader);

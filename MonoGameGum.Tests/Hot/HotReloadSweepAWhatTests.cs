@@ -225,6 +225,45 @@ public class HotReloadSweepAWhatTests : BaseTestClass
     }
 
     [Fact]
+    public void RemovedVariable_BaseComponentNoLongerSetsX_DerivedInstanceFallsBackToTheDefault()
+    {
+        using SweepWorld fresh = new SweepWorld();
+        float expected = FreshValue(fresh, Reader with { OmitBaseX = true }, w => w.Find("Widget1")!.X);
+        ObjectFinder.Self.GumProjectSave = null;
+        _world.Boot(Reader);
+        _world.Find("Widget1")!.X.ShouldBe(7f, "sanity");
+
+        _world.EditInPlace(_world.BaseFile, _world.ElementText(Reader with { OmitBaseX = true }, "Widgets/Base"));
+        _world.NotifyAndSettle(_world.BaseFile);
+
+        _world.Find("Widget1")!.X.ShouldBe(expected);
+        expected.ShouldNotBe(7f);
+    }
+
+    [Fact]
+    public void RemovedVariable_ComponentDefaultStateNoLongerSetsRed_InstanceFallsBackToTheDefault()
+    {
+        using SweepWorld fresh = new SweepWorld();
+        int expected = FreshValue(fresh, Reader with { OmitWidgetRed = true }, w => w.WidgetFillRed());
+        ObjectFinder.Self.GumProjectSave = null;
+        _world.Boot(Reader);
+        _world.WidgetFillRed().ShouldBe(30, "sanity");
+
+        _world.EditInPlace(_world.WidgetFile, _world.ElementText(Reader with { OmitWidgetRed = true }, "Widgets/Widget"));
+        _world.NotifyAndSettle(_world.WidgetFile);
+
+        _world.WidgetFillRed().ShouldBe(expected);
+        expected.ShouldNotBe(30);
+    }
+
+    // What a first load of the edited files shows, which is what a reload must converge to.
+    private static T FreshValue<T>(SweepWorld fresh, SweepSpec spec, System.Func<SweepWorld, T> read)
+    {
+        fresh.Boot(spec);
+        return read(fresh);
+    }
+
+    [Fact]
     public void Behavior_NewBehaviorFileAndProjectListing_ReloadsWithoutDisturbingTheTree()
     {
         _world.Boot(Reader);
