@@ -958,6 +958,12 @@ public class Renderer : IRenderer
 
     public void End()
     {
+        // Checked before any flush or draw-count bookkeeping so a stray End leaves no state behind.
+        if (spriteRenderer.RenderStateStackDepth == 0)
+        {
+            throw new InvalidOperationException(SpriteBatchStack.EndWithoutBeginMessage);
+        }
+
         if (_deferredImmediateModeRoots.Count > 0)
         {
             try
