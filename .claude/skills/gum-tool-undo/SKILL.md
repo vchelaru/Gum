@@ -88,7 +88,7 @@ Consequence: after an undo, `_selectedState.SelectedInstance` may point to a sta
 
 ## Undo And Redo Re-Run The Reference Cascade
 
-After restoring a snapshot, `ElementUndoStrategy.DoAfterUndoLogic` calls `IVariableReferenceLogic.ReapplyReferences` (before `CaptureBaseline`, with no lock held, so no history entry) so reference followers re-read the restored sources like a typed edit. A snapshot's follower values are therefore never trusted; do not put a second cascade in an `AfterUndo` plugin handler.
+After restoring a snapshot, `ElementUndoStrategy.DoAfterUndoLogic` calls `IVariableReferenceLogic.ReapplyReferences` (before `CaptureBaseline`, with no lock held, so no history entry) so reference followers re-read the restored sources like a typed edit. A snapshot's follower values are therefore never trusted; do not put a second cascade in an `AfterUndo` plugin handler. `ReapplyReferences` also re-runs `BehaviorToolOnlyReferencesApplier.Apply` on every restore, so a snapshot's derived tool-only values (`ButtonCategoryState`) are never trusted either; `RebaseStoredValues` covers only reference-row values.
 
 ## Implementation Files
 

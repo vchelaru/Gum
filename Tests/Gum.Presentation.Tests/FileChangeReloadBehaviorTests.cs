@@ -11,6 +11,8 @@ using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using Gum.Logic;
+using CommunityToolkit.Mvvm.Messaging;
 using GumRuntime;
 using Moq;
 using RenderingLibrary.Graphics;
@@ -43,11 +45,14 @@ public class FileChangeReloadBehaviorTests : BaseTestClass
     private readonly string _tempDirectory;
     private GumProjectSave _project = null!;
     private FileChangeReactionLogic _reaction = null!;
+    private VariableReferenceLogic _referenceLogic = null!;
     private readonly Mock<IFileCommands> _fileCommands = new();
     private readonly Mock<ISelectedState> _selectedState = new();
     private readonly Mock<IWireframeObjectManager> _wireframe = new();
     private readonly Mock<IGuiCommands> _guiCommands = new();
     private readonly Mock<IPluginManager> _pluginManager = new();
+    private IUndoManager _undo = new Mock<IUndoManager>().Object;
+    private ElementSave? _selected;
 
     public FileChangeReloadBehaviorTests()
     {
@@ -146,6 +151,7 @@ public class FileChangeReloadBehaviorTests : BaseTestClass
             new Mock<IDispatcher>().Object,
             _wireframe.Object);
 
+        _referenceLogic = referenceLogic;
         _reaction = new FileChangeReactionLogic(
             _selectedState.Object,
             new Mock<IWireframeCommands>().Object,
@@ -159,7 +165,7 @@ public class FileChangeReloadBehaviorTests : BaseTestClass
             new Mock<IDialogService>().Object,
             new UnsavedChangesTracker(),
             referenceLogic,
-            new Mock<IUndoManager>().Object);
+            _undo);
     }
 
     private void EditBehaviorOnDisk(params string[] references) =>
@@ -437,5 +443,162 @@ public class FileChangeReloadBehaviorTests : BaseTestClass
 
         reload.Wait(TimeSpan.FromSeconds(20)).ShouldBeTrue("the reload should finish even when elements read each other");
         GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Greyed");
+    }
+
+    // The undo tests use the real UndoManager, selecting the element they edit.
+    private void ArrangeWithRealUndo(params ElementSave[] elements)
+    {
+        _selectedState.Setup(x => x.SelectedElement).Returns(() => _selected);
+        _selectedState.Setup(x => x.SelectedComponent).Returns(() => _selected as ComponentSave);
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(() => _selected?.DefaultState);
+        Mock<IReferenceFinderProjectProvider> projectProvider = new();
+        projectProvider.Setup(x => x.GumProjectSave).Returns(() => ObjectFinder.Self.GumProjectSave);
+        _undo = new UndoManager(_selectedState.Object, new Mock<IUndoRenameLogic>().Object, _guiCommands.Object,
+            _fileCommands.Object, new Mock<IMessenger>().Object, new Mock<IUndoPluginNotifier>().Object,
+            new Mock<IAnimationUndoProvider>().Object, projectProvider.Object,
+            new Lazy<IVariableReferenceLogic>(() => _referenceLogic));
+        Arrange(elements);
+    }
+
+    private ElementSave Select(string elementName)
+    {
+        _selected = ObjectFinder.Self.GetElementSave(elementName);
+        _selected.ShouldNotBeNull(elementName);
+        return _selected;
+    }
+
+    // What typing the variable does: the edit, the tool-only references it feeds, one history entry.
+    private void Type(string variableName, string type, object value)
+    {
+        ElementSave element = _selected!;
+        _undo.RecordState();
+        VariableSave? variable = element.DefaultState.Variables.FirstOrDefault(item => item.Name == variableName);
+        if (variable == null)
+        {
+            variable = new VariableSave { Name = variableName, Type = type };
+            element.DefaultState.Variables.Add(variable);
+        }
+        variable.Value = value;
+        variable.SetsValue = true;
+        BehaviorToolOnlyReferencesApplier.Apply(element, element.DefaultState);
+        _undo.RecordUndo();
+    }
+
+    // Every save of the selected element, so a stale value that reaches the file is seen.
+    private List<object?> RecordSavedValues(string variableName)
+    {
+        List<object?> saved = new List<object?>();
+        _fileCommands.Setup(f => f.TryAutoSaveCurrentElement()).Callback(() =>
+            saved.Add(_selected!.DefaultState.Variables.FirstOrDefault(v => v.Name == variableName)?.Value));
+        return saved;
+    }
+
+    [Fact]
+    public void PerformUndo_OfAnEarlierEditAfterABehaviorReload_ShouldKeepTheReappliedValue()
+    {
+        ArrangeWithRealUndo(BuildButton(ButtonName, implementsBehavior: true, isEnabled: false));
+        Select(ButtonName);
+        Type("Width", "float", 80f);
+        EditBehaviorOnDisk();
+        ReloadBehavior();
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Greyed");
+        List<object?> saved = RecordSavedValues("ButtonCategoryState");
+
+        _undo.PerformUndo();
+
+        GetValue(ButtonName, "Width").ShouldBeNull();
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Greyed");
+        saved.ShouldAllBe(value => (string?)value == "Greyed");
+    }
+
+    [Fact]
+    public void PerformRedo_OfATypedIsEnabledEditAfterABehaviorReload_ShouldGiveTheReappliedValue()
+    {
+        ArrangeWithRealUndo(BuildButton(ButtonName, implementsBehavior: true, isEnabled: true));
+        Select(ButtonName);
+        Type("IsEnabled", "bool", false);
+        Type("Width", "float", 80f);
+        EditBehaviorOnDisk();
+        ReloadBehavior();
+        List<object?> saved = RecordSavedValues("ButtonCategoryState");
+
+        _undo.PerformUndo();
+        _undo.PerformUndo();
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Enabled");
+        _undo.PerformRedo();
+
+        GetValue(ButtonName, "IsEnabled").ShouldBe(false);
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Greyed");
+        saved.ShouldNotContain("Disabled");
+    }
+
+    [Fact]
+    public void PerformRedo_AfterABehaviorReloadWhileUndone_ShouldGiveTheReappliedValue()
+    {
+        ArrangeWithRealUndo(BuildButton(ButtonName, implementsBehavior: true, isEnabled: true));
+        Select(ButtonName);
+        Type("IsEnabled", "bool", false);
+        _undo.PerformUndo();
+        EditBehaviorOnDisk();
+        ReloadBehavior();
+
+        _undo.PerformRedo();
+
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Greyed");
+    }
+
+    [Fact]
+    public void PerformUndo_OfATypedIsEnabledEditWhoseOldValueTheReloadReplaced_ShouldGiveTheReappliedValue()
+    {
+        // The reload changes what a disabled button derives while the button is enabled, so nothing stored
+        // on the element changes, and the edit's undo snapshot still holds the old derived value.
+        ArrangeWithRealUndo(BuildButton(ButtonName, implementsBehavior: true, isEnabled: false));
+        Select(ButtonName);
+        Type("IsEnabled", "bool", true);
+        EditBehaviorOnDisk();
+        ReloadBehavior();
+        List<object?> saved = RecordSavedValues("ButtonCategoryState");
+
+        _undo.PerformUndo();
+
+        GetValue(ButtonName, "IsEnabled").ShouldBe(false);
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Greyed");
+        saved.ShouldNotContain("Disabled");
+    }
+
+    [Fact]
+    public void PerformUndo_OfATypedInstanceIsEnabledEditAfterABehaviorReload_ShouldGiveTheReappliedValue()
+    {
+        // A screen holds the derived value of its disabled instance.
+        ArrangeWithRealUndo(BuildButton(ButtonName, implementsBehavior: true, isEnabled: true), BuildScreen(ButtonName));
+        Select(ScreenName);
+        Type("PlayButtonStandard.IsEnabled", "bool", true);
+        EditBehaviorOnDisk();
+        ReloadBehavior();
+        List<object?> saved = RecordSavedValues("PlayButtonStandard.ButtonCategoryState");
+
+        _undo.PerformUndo();
+
+        GetValue(ScreenName, "PlayButtonStandard.IsEnabled").ShouldBe(false);
+        GetValue(ScreenName, "PlayButtonStandard.ButtonCategoryState").ShouldBe("Greyed");
+        saved.ShouldNotContain("Disabled");
+        _undo.PerformRedo();
+        GetValue(ScreenName, "PlayButtonStandard.IsEnabled").ShouldBe(true);
+        GetValue(ScreenName, "PlayButtonStandard.ButtonCategoryState").ShouldBeNull();
+    }
+
+    [Fact]
+    public void PerformUndo_OfATypedIsEnabledEditAfterABehaviorReload_ShouldGiveTheEnabledValue()
+    {
+        ArrangeWithRealUndo(BuildButton(ButtonName, implementsBehavior: true, isEnabled: true));
+        Select(ButtonName);
+        Type("IsEnabled", "bool", false);
+        EditBehaviorOnDisk();
+        ReloadBehavior();
+
+        _undo.PerformUndo();
+
+        GetValue(ButtonName, "IsEnabled").ShouldBe(true);
+        GetValue(ButtonName, "ButtonCategoryState").ShouldBe("Enabled");
     }
 }
