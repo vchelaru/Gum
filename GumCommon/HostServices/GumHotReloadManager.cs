@@ -335,7 +335,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
             _loadAnimationsFromProvider(newProject, animationProvider);
 
-            ApplyDiff(rootList, newProject, ISystemManagers.Default!);
+            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -452,13 +452,29 @@ public class GumHotReloadManager : IGumHotReloadManager
         GumProjectSave newProject,
         ISystemManagers systemManagers)
     {
+        ApplyDiff(roots, newProject, systemManagers, ObjectFinder.Self.GumProjectSave);
+    }
+
+    /// <summary>
+    /// Same as the three-argument overload, with the project the live visuals were built from.
+    /// A reload compares it with <paramref name="newProject"/> to decide which variables the file
+    /// changed; a variable it did not change keeps the value the game gave it (#6980). Without it
+    /// (null, or the same object as the new project) the comparison uses what the visuals still
+    /// hold of the old project, and an element it cannot find an old version of is applied in full.
+    /// </summary>
+    public static void ApplyDiff(
+        IEnumerable<GraphicalUiElement> roots,
+        GumProjectSave newProject,
+        ISystemManagers systemManagers,
+        GumProjectSave? oldProject)
+    {
         // References and base types resolve through ObjectFinder, so for this call it holds the new
         // project whatever it held before, and the caller's project is put back afterward.
         GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
         ObjectFinder.Self.GumProjectSave = newProject;
         try
         {
-            ApplyDiffToNewProject(roots, newProject, systemManagers);
+            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject);
         }
         finally
         {
@@ -469,7 +485,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     private static void ApplyDiffToNewProject(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
-        ISystemManagers systemManagers)
+        ISystemManagers systemManagers,
+        GumProjectSave? oldProject)
     {
         // A file the tool did not save together with the files that read it (a text-editor edit of one
         // swatch) leaves the readers holding the value they were saved with. A reference sets the final
@@ -485,6 +502,8 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         List<GraphicalUiElement> rootList = roots.ToList();
 
+        ReloadContext context = new ReloadContext(byName, oldProject, newProject, rootList);
+
         // The same three passes RefreshStyles runs, so a control keeps what it holds in code and the
         // state it is in: save before anything is re-applied, restore after everything is (#6855).
         foreach (GraphicalUiElement root in rootList)
@@ -494,7 +513,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         foreach (GraphicalUiElement root in rootList)
         {
-            ApplyDiffRecursive(root, byName, systemManagers);
+            ApplyDiffRecursive(root, byName, systemManagers, context);
         }
 
         // Re-applying a default state overwrites what a categorical state set, so each visual goes
@@ -550,7 +569,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     private static void ApplyDiffRecursive(
         GraphicalUiElement element,
         Dictionary<string, ElementSave> byName,
-        ISystemManagers systemManagers)
+        ISystemManagers systemManagers,
+        ReloadContext context)
     {
         string? name = element.ElementSave?.Name;
         HashSet<string>? designTimeChildNames = null;
@@ -561,7 +581,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             element.ElementSave = newEs;
             RefreshStatesAndCategories(element, newEs, byName);
 
-            DiffDesignTimeChildren(element, newEs, systemManagers);
+            DiffDesignTimeChildren(element, newEs, systemManagers, context);
 
             // An instance is built from its own element, so an edit to that element (a component's
             // default state or its own instances) has to reach it too, however deeply nested.
@@ -571,17 +591,17 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 if (instance.Tag is InstanceSave && instance.ElementSave is not StandardElementSave)
                 {
-                    ApplyDiffRecursive(instance, byName, systemManagers);
+                    ApplyDiffRecursive(instance, byName, systemManagers, context);
                 }
             }
 
             if (newEs.DefaultState != null)
             {
-                if (oldEs != null)
+                if (oldEs != null && !ReferenceEquals(oldEs, newEs))
                 {
-                    ResetRemovedVariables(element, oldEs, newEs);
+                    context.OldByName[newEs.Name] = oldEs;
                 }
-                element.SetVariablesRecursively(newEs, newEs.DefaultState);
+                SetChangedVariablesRecursively(element, newEs, context);
             }
 
             // After variables, so Parent variables have already moved each instance to its
@@ -607,8 +627,234 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 continue;
             }
-            ApplyDiffRecursive(child, byName, systemManagers);
+            ApplyDiffRecursive(child, byName, systemManagers, context);
         }
+    }
+
+    /// <summary>
+    /// What one reload knows while it walks the tree: the elements of the project the visuals were
+    /// built from, the visuals it has rebuilt, and the variables it has already applied to each
+    /// visual so a value the file did not change but a lower layer just reset can be put back.
+    /// </summary>
+    private sealed class ReloadContext
+    {
+        public Dictionary<string, ElementSave> OldByName { get; } =
+            new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
+
+        public HashSet<GraphicalUiElement> Recreated { get; } = new HashSet<GraphicalUiElement>();
+
+        public Dictionary<GraphicalUiElement, HashSet<string>> Applied { get; } =
+            new Dictionary<GraphicalUiElement, HashSet<string>>();
+
+        public ReloadContext(
+            Dictionary<string, ElementSave> newByName,
+            GumProjectSave? oldProject,
+            GumProjectSave newProject,
+            List<GraphicalUiElement> roots)
+        {
+            if (oldProject != null && !ReferenceEquals(oldProject, newProject))
+            {
+                foreach (ElementSave element in oldProject.AllElements)
+                {
+                    OldByName[element.Name] = element;
+                }
+            }
+
+            // What the visuals still hold of the old project fills in when the caller did not give it.
+            HashSet<GraphicalUiElement> visited = new HashSet<GraphicalUiElement>();
+            foreach (GraphicalUiElement root in roots)
+            {
+                CollectOldElements(root, newByName, visited);
+            }
+        }
+
+        private void CollectOldElements(
+            GraphicalUiElement element,
+            Dictionary<string, ElementSave> newByName,
+            HashSet<GraphicalUiElement> visited)
+        {
+            if (!visited.Add(element))
+            {
+                return;
+            }
+
+            ElementSave? elementSave = element.ElementSave;
+            if (elementSave != null
+                && !OldByName.ContainsKey(elementSave.Name)
+                && newByName.TryGetValue(elementSave.Name, out ElementSave? current)
+                && !ReferenceEquals(current, elementSave))
+            {
+                OldByName[elementSave.Name] = elementSave;
+            }
+
+            foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children).ToList())
+            {
+                CollectOldElements(child, newByName, visited);
+            }
+        }
+
+        public void RecordApplied(GraphicalUiElement element, VariableSave variable)
+        {
+            if (!Applied.TryGetValue(element, out HashSet<string>? names))
+            {
+                names = new HashSet<string>(StringComparer.Ordinal);
+                Applied[element] = names;
+            }
+            names.Add(variable.Name);
+            names.Add(variable.GetRootName());
+            if (!string.IsNullOrEmpty(variable.ExposedAsName))
+            {
+                names.Add(variable.ExposedAsName!);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies <paramref name="es"/>'s default state (and its base types') to <paramref name="element"/>
+    /// the way <c>SetVariablesRecursively</c> does, except that a variable is only set when the file
+    /// changed it: its value differs from the previous project's, it is new, or something earlier in
+    /// this reload reset the live value (a lower layer or a rebuilt instance). Any other variable keeps
+    /// what the game gave it. A layer with no previous version is applied in full. References are
+    /// evaluated as ever, since a reference's source may have changed (#6980).
+    /// </summary>
+    private static void SetChangedVariablesRecursively(
+        GraphicalUiElement element, ElementSave es, ReloadContext context)
+    {
+        StateSave? state = es.DefaultState;
+        if (state == null)
+        {
+            return;
+        }
+
+        element.BeginReferenceLoad();
+        try
+        {
+            if (!string.IsNullOrEmpty(es.BaseType))
+            {
+                ElementSave? baseElementSave = ObjectFinder.Self.GetElementSave(es.BaseType);
+                if (baseElementSave != null)
+                {
+                    SetChangedVariablesRecursively(element, baseElementSave, context);
+                }
+            }
+
+            StateSave? oldState = null;
+            if (context.OldByName.TryGetValue(es.Name, out ElementSave? oldEs)
+                && !ReferenceEquals(oldEs, es))
+            {
+                oldState = oldEs.DefaultState;
+                // Lower layers were applied first, so a variable this layer dropped falls back to
+                // what the layers below it say.
+                ResetRemovedVariables(element, oldEs, es, context);
+            }
+
+            if (oldState == null || ReferenceEquals(oldState, state))
+            {
+                element.ApplyState(state);
+                foreach (VariableSave variable in state.Variables.Where(v => v.SetsValue && v.Value != null))
+                {
+                    context.RecordApplied(element, variable);
+                }
+            }
+            else
+            {
+                StateSave changed = CreateChangedState(element, state, oldState, context);
+                element.ApplyState(changed);
+                foreach (VariableSave variable in changed.Variables)
+                {
+                    context.RecordApplied(element, variable);
+                }
+            }
+
+            element.ApplyVariableReferences(state);
+
+            if (es is not StandardElementSave)
+            {
+                VariableReferenceGraph graph = VariableReferenceGraph.GetFor(es);
+                if (graph.HasChains || graph.HasInheritedRows)
+                {
+                    graph.ApplyAll(es, element);
+                }
+            }
+        }
+        finally
+        {
+            element.EndReferenceLoad();
+        }
+    }
+
+    private static StateSave CreateChangedState(
+        GraphicalUiElement element, StateSave state, StateSave oldState, ReloadContext context)
+    {
+        Dictionary<string, VariableSave> oldByName = new Dictionary<string, VariableSave>(StringComparer.Ordinal);
+        foreach (VariableSave oldVariable in oldState.Variables)
+        {
+            if (AppliesAValue(oldVariable))
+            {
+                oldByName[oldVariable.Name] = oldVariable;
+            }
+        }
+
+        context.Applied.TryGetValue(element, out HashSet<string>? appliedToElement);
+
+        StateSave changed = new StateSave { Name = state.Name, ParentContainer = state.ParentContainer };
+        foreach (VariableSave variable in state.Variables)
+        {
+            if (!variable.SetsValue)
+            {
+                continue;
+            }
+
+            // A reparent is cheap and keeps the tree right after instances were rebuilt or moved.
+            bool applies = !oldByName.TryGetValue(variable.Name, out VariableSave? oldVariable)
+                || !ValuesMatch(oldVariable.Value, variable.Value)
+                || variable.GetRootName() == "Parent";
+
+            if (!applies)
+            {
+                string rootName = variable.GetRootName();
+                if (string.IsNullOrEmpty(variable.SourceObject))
+                {
+                    // A lower layer (the base type) set this on the element earlier in this reload.
+                    applies = appliedToElement != null && appliedToElement.Contains(rootName);
+                }
+                else
+                {
+                    GraphicalUiElement? target = element.GetGraphicalUiElementByName(variable.SourceObject);
+                    applies = target != null
+                        && (context.Recreated.Contains(target)
+                            || (context.Applied.TryGetValue(target, out HashSet<string>? appliedToTarget)
+                                && appliedToTarget.Contains(rootName)));
+                }
+            }
+
+            if (applies)
+            {
+                changed.Variables.Add(variable);
+            }
+        }
+
+        // Lists (variable references) are applied as ever.
+        changed.VariableLists.AddRange(state.VariableLists);
+        return changed;
+    }
+
+    private static bool ValuesMatch(object? oldValue, object? newValue)
+    {
+        if (Equals(oldValue, newValue))
+        {
+            return true;
+        }
+        if (oldValue == null || newValue == null || oldValue is string || newValue is string)
+        {
+            return false;
+        }
+        // A number read back from a file can arrive as another numeric type.
+        return oldValue is IConvertible && newValue is IConvertible
+            && string.Equals(
+                Convert.ToString(oldValue, System.Globalization.CultureInfo.InvariantCulture),
+                Convert.ToString(newValue, System.Globalization.CultureInfo.InvariantCulture),
+                StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -619,7 +865,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// than the visuals, so a value assigned in code, which is in neither, is never touched.
     /// Runs before the new state is applied, so the new file's values win.
     /// </summary>
-    private static void ResetRemovedVariables(GraphicalUiElement element, ElementSave oldEs, ElementSave newEs)
+    private static void ResetRemovedVariables(
+        GraphicalUiElement element, ElementSave oldEs, ElementSave newEs, ReloadContext context)
     {
         StateSave? oldState = oldEs.DefaultState;
         StateSave? newState = newEs.DefaultState;
@@ -669,6 +916,15 @@ public class GumHotReloadManager : IGumHotReloadManager
             if (defaultValue != null)
             {
                 element.SetProperty(variable.Name, defaultValue);
+
+                // Layers above this one may still set the variable; they apply it again.
+                GraphicalUiElement? owner = string.IsNullOrEmpty(variable.SourceObject)
+                    ? element
+                    : element.GetGraphicalUiElementByName(variable.SourceObject);
+                if (owner != null)
+                {
+                    context.RecordApplied(owner, variable);
+                }
             }
         }
     }
@@ -695,7 +951,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     private static void DiffDesignTimeChildren(
         GraphicalUiElement parent,
         ElementSave newEs,
-        ISystemManagers systemManagers)
+        ISystemManagers systemManagers,
+        ReloadContext context)
     {
         // Two lookup tables: one for design-time children (Tag is InstanceSave) so we can do
         // typed operations like retype/remove, and one keyed by Name across ALL children so
@@ -759,6 +1016,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                     GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
                     if (created != null)
                     {
+                        context.Recreated.Add(created);
                         designTimeByName[newInstance.Name] = created;
                         anyByName[newInstance.Name] = created;
                     }
@@ -781,6 +1039,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
                 if (created != null)
                 {
+                    context.Recreated.Add(created);
                     designTimeByName[newInstance.Name] = created;
                     anyByName[newInstance.Name] = created;
                 }
