@@ -1,13 +1,17 @@
 using Avalonia.Controls;
+using Avalonia;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Avalonia.Tests.VariableGrid;
+using Gum.Avalonia.Shell;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Services;
 using Gum.Services.Dialogs;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
@@ -324,4 +328,41 @@ public class FileDropdownScenarioTests
         grid.Row("SourceFile").GetVisualDescendants().OfType<TextBox>().First();
 
     #endregion
+
+    [AvaloniaTheory]
+    [InlineData(9)]
+    [InlineData(12)]
+    [InlineData(16)]
+    [InlineData(24)]
+    public void FileRow_PickAndRevealButtonsMatchTheFieldHeight_AtEveryZoom(double baseFontSize)
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave card = grid.Project.AddComponent("Card");
+        InstanceSave icon = grid.Project.AddInstance(card, "Icon", "Sprite");
+        grid.Select(icon);
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        double originalSize = scale.BaseFontSize;
+        using IDisposable follower = AppWideWindowInput.FollowBaseFontSize(grid.Input.Window, scale);
+        try
+        {
+            scale.BaseFontSize = baseFontSize;
+            grid.Settle();
+
+            Control row = grid.Row("SourceFile");
+            Control field = row.GetVisualDescendants().OfType<ComboBox>().First();
+            List<Button> buttons = row.GetVisualDescendants().OfType<Button>().ToList();
+            buttons.Count.ShouldBe(2);
+            foreach (Button button in buttons)
+            {
+                button.Bounds.Height.ShouldBe(field.Bounds.Height, 0.5, $"the {button.Content} button at font size {baseFontSize}");
+                double buttonTop = button.TranslatePoint(new Point(0, 0), grid.Input.Window)!.Value.Y;
+                double fieldTop = field.TranslatePoint(new Point(0, 0), grid.Input.Window)!.Value.Y;
+                buttonTop.ShouldBe(fieldTop, 0.5, $"the {button.Content} button's top at font size {baseFontSize}");
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = originalSize;
+        }
+    }
 }

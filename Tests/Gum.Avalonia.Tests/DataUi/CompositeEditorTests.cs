@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.VisualTree;
 using Avalonia.Interactivity;
 using AvaloniaDataUi.Controls;
 using Shouldly;
@@ -327,6 +328,28 @@ public class CompositeEditorTests : IDisposable
 
         display.ChoiceBox.Text.ShouldBe("old.png");
         fixture.File.ShouldBe("old.png");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithoutChoices_ButtonsAreAsTallAsTheTextBox()
+    {
+        EditorFixture fixture = new EditorFixture { File = "a.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.File)) };
+        display.Refresh();
+        Window window = new Window { Content = display, Width = 400, Height = 100 };
+        window.Show();
+        try
+        {
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            foreach (Button button in display.GetVisualDescendants().OfType<Button>())
+            {
+                button.Bounds.Height.ShouldBe(display.TextBox.Bounds.Height, 0.5, $"the {button.Content} button");
+            }
+        }
+        finally
+        {
+            window.Close();
+        }
     }
 
     [AvaloniaFact]

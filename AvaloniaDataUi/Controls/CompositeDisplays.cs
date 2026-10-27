@@ -746,12 +746,12 @@ public class FileSelectionDisplay : DataUiDisplayBase
     {
         _filePickingLogic = new FilePickingLogic();
         _label = new TextBlock { Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-        _textBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Center };
+        _textBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Stretch };
         _textBox.EditCommitRequested += HandleEditCommitRequested;
         _choiceBox = new WheelIgnoringComboBox
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            VerticalAlignment = VerticalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Stretch,
             PlaceholderText = "(none)",
             IsEditable = true,
             ItemTemplate = new FuncDataTemplate<string>((path, _) => new TextBlock { Text = path, TextTrimming = TextTrimming.CharacterEllipsis }),
@@ -768,9 +768,10 @@ public class FileSelectionDisplay : DataUiDisplayBase
                 LoadChoices();
             }
         };
-        Button pickButton = new Button { Content = "...", MinWidth = 24, Margin = new Thickness(2, 0, 0, 0) };
+        // Every control in the row is as tall as the row, so the buttons match the field at any zoom.
+        Button pickButton = new Button { Content = "...", MinWidth = 24, Margin = new Thickness(2, 0, 0, 0), VerticalAlignment = VerticalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Center };
         pickButton.Click += (_, _) => PickFile();
-        _revealButton = new Button { Content = "↗", MinWidth = 24, Margin = new Thickness(1, 0, 0, 0) };
+        _revealButton = new Button { Content = "↗", MinWidth = 24, Margin = new Thickness(1, 0, 0, 0), VerticalAlignment = VerticalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(_revealButton, "View file in the file manager");
         _revealButton.Click += (_, _) => Reveal();
         _hint = CreateHintTextBlock();
