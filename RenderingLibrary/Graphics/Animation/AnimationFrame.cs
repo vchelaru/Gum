@@ -359,8 +359,14 @@ namespace Gum.Graphics.Animation
 
         // Windows, macOS and iOS volumes are case-insensitive by default; Linux and Android are not. A case-sensitive
         // macOS volume is the one place this folds two files into one error, which is the lesser mistake.
+        // RuntimeInformation rather than OperatingSystem, which SkiaGum's netstandard2.1 target lacks.
         private static readonly bool _isFileSystemCaseInsensitive =
-            System.OperatingSystem.IsWindows() || System.OperatingSystem.IsMacOS() || System.OperatingSystem.IsIOS();
+            System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
+            || System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX)
+#if NET5_0_OR_GREATER
+            || System.OperatingSystem.IsIOS()
+#endif
+            ;
 
         /// <summary>
         /// The key that tells two spellings of one texture file apart from two files: separators, "." and ".." segments
