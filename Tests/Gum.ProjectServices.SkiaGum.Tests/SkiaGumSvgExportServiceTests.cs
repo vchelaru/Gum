@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
 using Gum.ProjectServices.SvgExport;
+using Gum.Wireframe;
 using Shouldly;
 
 namespace Gum.ProjectServices.SkiaGum.Tests;
@@ -265,6 +266,27 @@ public class SkiaGumSvgExportServiceTests : IDisposable
         result.Success.ShouldBeTrue(result.ErrorMessage);
 
         return File.ReadAllText(outputPath);
+    }
+
+    // SkiaGum now defaults MissingFileBehavior to ThrowException (#6889), but an export of a project with a
+    // missing image still draws the rest, and leaves the caller's setting (the tool uses ConsumeSilently) alone.
+    [Fact]
+    public void ExportSvg_SpriteWithMissingImage_ShouldSucceedAndRestoreMissingFileBehavior()
+    {
+        MissingFileBehavior before = GraphicalUiElement.MissingFileBehavior;
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        try
+        {
+            ExportScreenWithInstance(
+                "Sprite",
+                new VariableSave { Name = "ShapeInstance.SourceFile", Type = "string", Value = "missing.png", SetsValue = true });
+
+            GraphicalUiElement.MissingFileBehavior.ShouldBe(MissingFileBehavior.ConsumeSilently);
+        }
+        finally
+        {
+            GraphicalUiElement.MissingFileBehavior = before;
+        }
     }
 
     public void Dispose()

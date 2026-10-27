@@ -1456,9 +1456,53 @@ public partial class CustomSetPropertyOnRenderable
         }
         else
         {
-            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-            asNineSlice.Texture = loaderManager.LoadContent<SKBitmap>(value);
+            // The MonoGame/raylib NineSlice falls back to a placeholder or no texture and raises no event, so none here either.
+            asNineSlice.Texture = LoadSourceFileBitmap(value, graphicalUiElement, nameof(NineSlice), raiseError: false);
         }
+    }
+
+    /// <summary>
+    /// Loads a Sprite or NineSlice SourceFile image. A file that is missing or exists but cannot be decoded is one
+    /// failure: <see cref="MissingFileBehavior.ThrowException"/> throws a <see cref="System.IO.FileNotFoundException"/>
+    /// naming the file, otherwise the result is null and, when <paramref name="raiseError"/> is true,
+    /// <see cref="PropertyAssignmentError"/> is raised. Mirrors the MonoGame/raylib dispatcher (#6889).
+    /// </summary>
+    private static SKBitmap? LoadSourceFileBitmap(string value, GraphicalUiElement graphicalUiElement, string elementTypeName, bool raiseError)
+    {
+        Exception? loadException = null;
+        SKBitmap? bitmap = null;
+        try
+        {
+            bitmap = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<SKBitmap>(value);
+        }
+        catch (Exception ex)
+        {
+            // Whatever the loader throws is treated as a failed load, as MonoGame does.
+            loadException = ex;
+        }
+
+        if (bitmap != null)
+        {
+            return bitmap;
+        }
+
+        string message = $"Error setting SourceFile on {elementTypeName}";
+        if (graphicalUiElement.Tag != null)
+        {
+            message += $" in {graphicalUiElement.Tag}";
+        }
+        message += $"\n{value}";
+        message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+        message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+        {
+            throw new System.IO.FileNotFoundException(message, loadException);
+        }
+        if (raiseError)
+        {
+            RaisePropertyAssignmentError(loadException != null ? message + "\n" + loadException : message);
+        }
+        return null;
     }
 
     // An .achx/.achj SourceFile loads animation chains instead of a texture, the same as the
@@ -1510,8 +1554,7 @@ public partial class CustomSetPropertyOnRenderable
                         AssignAnimationChainSourceFile(asString, asSprite.AnimationLogic, asSprite, graphicalUiElement);
                         return true;
                     }
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    image = loaderManager.LoadContent<SKBitmap>(asString);
+                    image = LoadSourceFileBitmap(asString, graphicalUiElement, nameof(Sprite), raiseError: true);
                 }
                 // Through the runtime when there is one, so its Texture setter re-runs
                 // PercentageOfSourceFile layout.

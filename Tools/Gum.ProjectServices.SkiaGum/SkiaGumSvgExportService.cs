@@ -24,6 +24,9 @@ public class SkiaGumSvgExportService : ISvgExportService
     /// <inheritdoc/>
     public SvgExportResult ExportSvg(SvgExportRequest request)
     {
+        // Initializing SkiaGum sets MissingFileBehavior to ThrowException (#6889). An export still draws
+        // the rest of an element whose image is missing, and the tool process keeps its own setting.
+        MissingFileBehavior previousMissingFileBehavior = GraphicalUiElement.MissingFileBehavior;
         try
         {
             string outputPath = Path.GetFullPath(request.OutputPath);
@@ -40,6 +43,7 @@ public class SkiaGumSvgExportService : ISvgExportService
             {
                 GumService gumService = GumService.Default;
                 gumService.Initialize(measureCanvas, request.ProjectPath);
+                GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
 
                 GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
 
@@ -115,6 +119,10 @@ public class SkiaGumSvgExportService : ISvgExportService
         catch (Exception ex)
         {
             return SvgExportResult.Failed(ex.ToString());
+        }
+        finally
+        {
+            GraphicalUiElement.MissingFileBehavior = previousMissingFileBehavior;
         }
     }
 }

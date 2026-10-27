@@ -29,6 +29,8 @@ public class TextRuntimeUnsupportedCustomFontTests : IDisposable
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
         GumService.Default.Initialize(surface.Canvas, 200, 100);
+        // Initialize defaults to ThrowException (#6889); these tests are about the reported (silent) case.
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
         _handler = message => _reported.Add(message);
         CustomSetPropertyOnRenderable.PropertyAssignmentError += _handler;
     }

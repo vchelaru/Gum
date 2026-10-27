@@ -198,8 +198,18 @@ public static class SkiaResourceManager
     {
         using var stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
             resourceName, ResourceAssembly);
-        // A null result (Skia could not decode it) is cached as before.
-        skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream)!;
+        // A file Skia cannot decode is a load failure like a missing file, and is not cached, so a later
+        // call can succeed once the file is fixed (#6889).
+        skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream)
+            ?? throw new FileNotFoundException(DescribeUndecodableImage(resourceName), resourceName);
+    }
+
+    private static string DescribeUndecodableImage(string resourceName)
+    {
+        string extension = Path.GetExtension(resourceName);
+        string format = string.IsNullOrEmpty(extension) ? "an unknown format" : $"the {extension} format";
+        return $"The image {resourceName} exists but could not be decoded. It may be corrupt, empty, or in a format " +
+            $"Skia does not support ({format}); use a supported format such as PNG, or register an IImageDecoder.";
     }
 
     /// <summary>
