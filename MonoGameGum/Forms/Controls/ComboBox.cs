@@ -1267,7 +1267,7 @@ public class ComboBox :
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(GamepadButton.A))
+            if (IsEnabled && gamepad.ButtonPushed(GamepadButton.A))
             {
                 OpenAndFocusListBox();
             }
@@ -1339,7 +1339,7 @@ public class ComboBox :
             var wasReleased = false;
             foreach(var item in FrameworkElement.ClickCombos)
             {
-                if(item.IsComboPushed())
+                if(IsEnabled && item.IsComboPushed())
                 {
                     wasPushed = true;
                 }

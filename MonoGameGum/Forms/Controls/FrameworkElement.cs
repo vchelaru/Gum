@@ -206,6 +206,16 @@ public class FrameworkElement : INotifyPropertyChanged
 
     protected bool isFocused;
     protected double timeFocused;
+
+    /// <summary>
+    /// Whether this element can take focus while <see cref="IsEnabled"/> is false. Defaults to false.
+    /// When true, setting <see cref="IsFocused"/> from code, tab order, and gamepad and keyboard
+    /// spatial navigation all include this element, and it shows its DisabledFocused state. It still
+    /// ignores confirm and other input, and a disabled parent container still keeps it out of
+    /// navigation.
+    /// </summary>
+    public bool AllowFocusWhenDisabled { get; set; }
+
     /// <summary>
     /// Whether this element has input focus. If true, the element shows its focused
     /// state and receives input from keyboards and gamepads.
@@ -217,7 +227,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             if (value != isFocused)
             {
-                isFocused = value && IsEnabled;
+                isFocused = value && (IsEnabled || AllowFocusWhenDisabled);
 
                 if (isFocused && this is IInputReceiver inputReceiver)
                 {
@@ -1774,11 +1784,29 @@ public class FrameworkElement : INotifyPropertyChanged
         return didChildHandle;
     }
 
+    private static bool AreAncestorsEnabled(InteractiveGue visual)
+    {
+        return visual.Parent is not InteractiveGue parent || parent.IsEnabledRecursively;
+    }
+
+    /// <summary>
+    /// Gives focus to <paramref name="target"/> and takes it from this element only if the target
+    /// accepted it (a target that refuses focus, such as a disabled control, must not leave nothing focused).
+    /// </summary>
+    private void MoveFocusTo(FrameworkElement target)
+    {
+        target.IsFocused = true;
+        if (target.IsFocused)
+        {
+            this.IsFocused = false;
+        }
+    }
+
     internal static bool CanElementBeFocused(FrameworkElement? element)
     {
         return element is IInputReceiver &&
                     ((IVisible)element.Visual).AbsoluteVisible == true &&
-                    element.IsEnabled &&
+                    (element.IsEnabled || (element.AllowFocusWhenDisabled && AreAncestorsEnabled(element.Visual))) &&
                     element.Visual.HasEvents &&
                     element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
     }
@@ -1816,8 +1844,7 @@ public class FrameworkElement : INotifyPropertyChanged
             // unconditionally setting IsFocused true then false on the same object nets to false.
             if (explicitOverride != this)
             {
-                explicitOverride.IsFocused = true;
-                this.IsFocused = false;
+                MoveFocusTo(explicitOverride);
             }
             return;
         }
@@ -1834,8 +1861,7 @@ public class FrameworkElement : INotifyPropertyChanged
         FrameworkElement? best = Gum.Forms.SpatialNavigationService.FindBestCandidate(this, angle.Value, candidates);
         if (best != null)
         {
-            best.IsFocused = true;
-            this.IsFocused = false;
+            MoveFocusTo(best);
         }
     }
 
@@ -2068,8 +2094,7 @@ public class FrameworkElement : INotifyPropertyChanged
                 // See the matching self-reference guard in HandleGamepadSpatialNavigation.
                 if (explicitOverride != this)
                 {
-                    explicitOverride.IsFocused = true;
-                    this.IsFocused = false;
+                    MoveFocusTo(explicitOverride);
                 }
                 return;
             }
@@ -2086,8 +2111,7 @@ public class FrameworkElement : INotifyPropertyChanged
             FrameworkElement? best = Gum.Forms.SpatialNavigationService.FindBestCandidate(this, angle.Value, candidates);
             if (best != null)
             {
-                best.IsFocused = true;
-                this.IsFocused = false;
+                MoveFocusTo(best);
             }
             return;
         }

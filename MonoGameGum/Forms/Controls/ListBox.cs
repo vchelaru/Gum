@@ -2268,7 +2268,7 @@ public class ListBox : ItemsControl, IInputReceiver
             // isn't duplicated between the two copies (issue #3839).
             ApplyGamepadStickScroll(gamepad);
 
-            if (gamepad.ButtonPushed(GamepadButton.A))
+            if (IsEnabled && gamepad.ButtonPushed(GamepadButton.A))
             {
                 DoListItemsHaveFocus = true;
             }
@@ -2328,7 +2328,7 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             foreach(var keyCombo in FrameworkElement.ClickCombos)
             {
-                if(keyCombo.IsComboPushed())
+                if(IsEnabled && keyCombo.IsComboPushed())
                 {
                     DoListItemsHaveFocus = true;
                     break;
