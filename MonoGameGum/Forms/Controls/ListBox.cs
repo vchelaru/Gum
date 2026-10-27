@@ -2140,27 +2140,25 @@ public class ListBox : ItemsControl, IInputReceiver
 
             RepositionDirections? direction = null;
 
-            // Same axis rule as the gamepad: a single-axis list steps along its own axis, and the other axis
-            // is left to moving focus away (opt-in through the Up/Down/Left/RightKeyCombos). A wrapping list
-            // and a ComboBox drop-down step on Up/Down; Left/Right also step a wrapping list.
-            Orientation? singleAxis = IsComboBoxDropDown || InnerPanel.WrapsChildren ? null : Orientation;
-            bool stepsOnUpDown = singleAxis != Controls.Orientation.Horizontal;
-            bool stepsOnLeftRight = !IsComboBoxDropDown && singleAxis != Controls.Orientation.Vertical;
+            // Up/Down step every list. Left/Right additionally step a list that lays out horizontally or
+            // wraps (not a ComboBox drop-down). A key the project configured for moving focus out of the
+            // list (Left/RightKeyCombos) keeps that meaning.
+            bool stepsOnLeftRight = !IsComboBoxDropDown &&
+                (InnerPanel.WrapsChildren || InnerPanel.ChildrenLayout != Gum.Managers.ChildrenLayout.TopToBottomStack);
 
             // Keys.X references are fully qualified to Gum.Forms.Input.Keys so this block compiles
             // on every platform regardless of what the file-level `using Keys = ...` alias resolves
             // to. KeyTyped (pushed + repeat while held) replaces the old "KeyPushed OR KeysTyped.Contains"
             // two-step - same effective behavior, single call, works on the shared base interface.
-            if (stepsOnUpDown && keyboard.KeyTyped(Gum.Forms.Input.Keys.Up) == true)
+            if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Up) == true)
             {
                 direction = RepositionDirections.Up;
             }
-            if (stepsOnUpDown && keyboard.KeyTyped(Gum.Forms.Input.Keys.Down) == true)
+            if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Down) == true)
             {
                 direction = RepositionDirections.Down;
             }
 
-            // A key the project configured for moving focus out of the list keeps that meaning.
             if (stepsOnLeftRight)
             {
                 if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Right) == true &&

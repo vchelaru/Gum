@@ -11,7 +11,7 @@ namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
 /// Keyboard stepping at item level follows the list's own axis: Left/Right step a horizontal list,
-/// the same as the gamepad d-pad does; Up/Down step a vertical or wrapping list; on a horizontal list they leave stepping alone, like the gamepad (#6972).
+/// the same as the gamepad d-pad does; Up/Down keep stepping every list (#6972).
 /// </summary>
 public class ListBoxKeyboardAxisTests : BaseTestClass
 {
@@ -88,14 +88,14 @@ public class ListBoxKeyboardAxisTests : BaseTestClass
     }
 
     [Fact]
-    public void Down_HorizontalList_DoesNotStep()
+    public void Down_HorizontalList_StillSteps()
     {
         ListBox listBox = CreateList(horizontal: true);
         TypeKey(Keys.Down);
 
         listBox.OnFocusUpdate();
 
-        listBox.SelectedIndex.ShouldBe(1);
+        listBox.SelectedIndex.ShouldBe(2);
     }
 
     [Fact]
