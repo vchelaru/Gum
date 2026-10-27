@@ -836,7 +836,7 @@ namespace GumRuntime
             // order they are written in. Rows in a cycle run last, in written order.
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, stateSave);
 #if FULL_DIAGNOSTICS
-            ReportCyclicRows(element, graph);
+            ReportCyclicRows(element, stateSave, graph);
 #endif
             foreach (ReferenceRow row in graph.LoadOrderRows)
             {
@@ -946,7 +946,7 @@ namespace GumRuntime
                 return null;
             }
 #if FULL_DIAGNOSTICS
-            ReportCyclicRows(element, graph);
+            ReportCyclicRows(element, stateSave, graph);
 #endif
             HashSet<string> keys = new HashSet<string>();
             foreach (ReferenceRow row in graph.CyclicRows)
@@ -959,11 +959,12 @@ namespace GumRuntime
         private static string CyclicRowKey(string? sourceObject, string line) => sourceObject + "|" + line;
 
 #if FULL_DIAGNOSTICS
-        // Rows in a loop are skipped (#6871), so a game would otherwise never learn of the loop. An element reports it once,
-        // however often its references are applied, so a reload of the project (new elements) reports again.
+        // Rows in a loop are skipped (#6871), so a game would otherwise never learn of the loop. The element that declares
+        // a loop reports it once, however often its references are applied and however many elements are built on it, so
+        // a reload of the project (new elements) reports again.
         private static readonly ConditionalWeakTable<ElementSave, object> ReportedCycles = new ConditionalWeakTable<ElementSave, object>();
 
-        private static void ReportCyclicRows(ElementSave element, VariableReferenceGraph graph)
+        private static void ReportCyclicRows(ElementSave element, StateSave state, VariableReferenceGraph graph)
         {
             IReadOnlyList<ReferenceRow> cyclic = graph.CyclicRows;
             if (cyclic.Count == 0)
@@ -971,23 +972,93 @@ namespace GumRuntime
                 return;
             }
 
-            lock (ReportedCycles)
+            // A loop made only of one base element's rows belongs to that base, which may never be built itself;
+            // a loop that mixes rows of several elements exists only for the element being applied.
+            int[] group = new int[cyclic.Count];
+            for (int i = 0; i < group.Length; i++)
             {
-                if (ReportedCycles.TryGetValue(element, out _))
+                group[i] = i;
+            }
+            for (int reader = 0; reader < group.Length; reader++)
+            {
+                foreach (string read in cyclic[reader].ReadNames)
                 {
-                    return;
+                    for (int writer = 0; writer < group.Length; writer++)
+                    {
+                        if (cyclic[writer].WrittenName == read)
+                        {
+                            int readerRoot = FindGroup(group, reader);
+                            int writerRoot = FindGroup(group, writer);
+                            group[Math.Max(readerRoot, writerRoot)] = Math.Min(readerRoot, writerRoot);
+                        }
+                    }
                 }
-                ReportedCycles.Add(element, new object());
             }
 
-            string[] rows = new string[cyclic.Count];
-            for (int i = 0; i < rows.Length; i++)
+            List<ElementSave> owners = new List<ElementSave>();
+            List<List<ReferenceRow>> ownedRows = new List<List<ReferenceRow>>();
+            for (int first = 0; first < group.Length; first++)
             {
-                ReferenceRow row = cyclic[i];
-                rows[i] = string.IsNullOrEmpty(row.SourceObject) ? row.Line : row.SourceObject + "." + row.Line;
+                if (FindGroup(group, first) != first)
+                {
+                    continue;
+                }
+                ElementSave owner = cyclic[first].DeclaredIn ?? element;
+                List<ReferenceRow> loopRows = new List<ReferenceRow>();
+                for (int i = first; i < group.Length; i++)
+                {
+                    if (FindGroup(group, i) == first)
+                    {
+                        loopRows.Add(cyclic[i]);
+                        if ((cyclic[i].DeclaredIn ?? element) != owner)
+                        {
+                            owner = element;
+                        }
+                    }
+                }
+                int ownerIndex = owners.IndexOf(owner);
+                if (ownerIndex < 0)
+                {
+                    owners.Add(owner);
+                    ownedRows.Add(loopRows);
+                }
+                else
+                {
+                    ownedRows[ownerIndex].AddRange(loopRows);
+                }
             }
-            RaiseReferenceError($"Circular variable reference in {element.Name}: {string.Join("; ", rows)}. " +
-                "These rows are not evaluated and keep their stored values; remove one of them to break the loop.");
+
+            for (int ownerIndex = 0; ownerIndex < owners.Count; ownerIndex++)
+            {
+                ElementSave owner = owners[ownerIndex];
+                lock (ReportedCycles)
+                {
+                    if (ReportedCycles.TryGetValue(owner, out _))
+                    {
+                        continue;
+                    }
+                    ReportedCycles.Add(owner, new object());
+                }
+
+                List<ReferenceRow> loopRows = ownedRows[ownerIndex];
+                string[] rows = new string[loopRows.Count];
+                for (int i = 0; i < rows.Length; i++)
+                {
+                    ReferenceRow row = loopRows[i];
+                    rows[i] = string.IsNullOrEmpty(row.SourceObject) ? row.Line : row.SourceObject + "." + row.Line;
+                }
+                RaiseReferenceError($"Circular variable reference in {owner.Name} ({state.Name}): {string.Join("; ", rows)}. " +
+                    "These rows are not evaluated and keep their stored values; remove one of them to break the loop.");
+            }
+        }
+
+        private static int FindGroup(int[] group, int index)
+        {
+            while (group[index] != index)
+            {
+                index = group[index];
+            }
+            return index;
         }
 #endif
 

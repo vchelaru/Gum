@@ -69,6 +69,9 @@ public sealed class ReferenceRow
 
     internal int AuthoredIndex { get; }
 
+    /// <summary>The element whose state holds the row: a base element for a row the element inherits.</summary>
+    internal ElementSave? DeclaredIn { get; set; }
+
     public override string ToString() => Line;
 }
 
@@ -346,7 +349,10 @@ public sealed class VariableReferenceGraph
                         bool isLiveEvaluable = !(instance == null && (left == "Name" || left == "BaseType"));
 
                         rows.Add(new ReferenceRow(sourceObject, instance, left, line, reads.ToArray(),
-                            elementReads.ToArray(), readsLiveLayout, isLiveEvaluable, rows.Count));
+                            elementReads.ToArray(), readsLiveLayout, isLiveEvaluable, rows.Count)
+                        {
+                            DeclaredIn = states[stateIndex].ParentContainer
+                        });
                     }
                 }
             }
