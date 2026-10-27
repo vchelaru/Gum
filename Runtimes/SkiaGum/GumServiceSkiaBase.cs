@@ -5,6 +5,7 @@ using Gum.Forms.Controls;
 using Gum.Managers;
 using Gum.Threading;
 using Gum.Wireframe;
+using GumRuntime;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -558,6 +559,7 @@ public abstract class GumServiceSkiaBase : IGumService
             }
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
+            gumProject.ApplyAllVariableReferencesBeforeFirstBuild();
             ApplyProjectTextureFilter(gumProject);
             // Overrides the code-only defaults registered above with the project's own
             // Forms-behavior visuals, where the project defines one.

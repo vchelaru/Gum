@@ -343,6 +343,10 @@ namespace GumRuntime
             // With two or more services, set IGumService.Default to the service these managers belong to before
             // calling this: the build resolves its registrations and project through the default.
             bool isOutermostBuild = _buildDepth == 0;
+            if (isOutermostBuild)
+            {
+                ApplyReferencesOfProjectAwaitingFirstBuild();
+            }
             _buildDepth++;
             try
             {
@@ -351,6 +355,31 @@ namespace GumRuntime
             finally
             {
                 _buildDepth--;
+            }
+        }
+
+        // Projects a service loaded from files, whose references have not been applied yet. A file edited by hand
+        // (a text editor, a git merge) leaves a reader holding the value it was saved with, and a hot reload shows
+        // the end of the chain (#6853), so a fresh load does too (#6881). Applied at the first build rather than at
+        // load because the game installs Gum.Expressions after it initializes Gum, and the rows need it to evaluate.
+        private static readonly ConditionalWeakTable<GumProjectSave, object> ProjectsAwaitingFirstBuild =
+            new ConditionalWeakTable<GumProjectSave, object>();
+
+        /// <summary>
+        /// Applies <see cref="ApplyAllVariableReferences"/> to the project the first time a visual is built from it.
+        /// Called by each service after it loads a project from files.
+        /// </summary>
+        internal static void ApplyAllVariableReferencesBeforeFirstBuild(this GumProjectSave project)
+        {
+            ProjectsAwaitingFirstBuild.AddOrUpdate(project, project);
+        }
+
+        private static void ApplyReferencesOfProjectAwaitingFirstBuild()
+        {
+            GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+            if (project != null && ProjectsAwaitingFirstBuild.Remove(project))
+            {
+                project.ApplyAllVariableReferences();
             }
         }
 

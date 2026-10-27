@@ -85,3 +85,6 @@ Rows that read each other (or their own result) never freeze or overflow on any 
 
 `VariableReferenceGraph.ScanReads` is the only place that decides what a row reads. `ReferenceDependencies` builds on it for cross-element questions, and `ApplyAllVariableReferences`, `ObjectFinder.GetElementReferencesToThis` and the tool's `VariableReferenceLogic.ApplyReferencesToElement` all call it. Match references through it, not by string prefix. `ApplyVariableReferences(ElementSave, StateSave)` runs a state's rows in `VariableReferenceGraph.LoadOrderRows` order, so written order does not matter.
 
+## A fresh load applies references like a reload (#6881)
+
+A service that loads a project from files (`GumService.FinishInitialize`, `GumServiceSkiaBase`) calls `ApplyAllVariableReferencesBeforeFirstBuild()`; the project's rows are applied once, in `ElementSave.ToGraphicalUiElement`'s outermost build, to whichever project is then in `ObjectFinder`. It waits for the first build because games call `GumExpressionService.Initialize()` after `GumService.Initialize()`. A project built in code or by the tool is never flagged, so a build does not change it. Tests: `FreshLoadReferenceChainTests`, `GumServiceFreshLoadReferenceChainTests`.
