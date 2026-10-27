@@ -195,11 +195,11 @@ public class ControllerSpatialNavigationTests : BaseTestClass
     }
 
     [Fact]
-    public void HandleGamepadSpatialNavigation_LeftRightNavigationDisabledWithExplicitOverride_StickPushedRight_DoesNotUseOverride()
+    public void HandleGamepadSpatialNavigation_LeftRightNavigationDisabledWithExplicitOverride_StickPushedRight_UsesOverride()
     {
-        // Same root cause as above, via the explicit-override branch: an override assigned to the
-        // right cardinal must not fire from a horizontal stick push when left/right navigation is
-        // disabled (e.g. a Slider, which reserves left/right stick input for adjusting its own Value).
+        // Issue #6937 reversed this: an explicit override assigned to the right cardinal wins over
+        // the left/right exclusion (e.g. a Slider, which reserves left/right stick input for its own
+        // Value), so the horizontal stick push moves focus to the override target.
         ContainerRuntime root = new ContainerRuntime();
 
         SpatialNavHarness origin = CreateHarness(root, 0, 0);
@@ -215,8 +215,8 @@ public class ControllerSpatialNavigationTests : BaseTestClass
 
         origin.InvokeHandleGamepadSpatialNavigation(gamepad, root);
 
-        origin.IsFocused.ShouldBeTrue();
-        overrideTarget.IsFocused.ShouldBeFalse();
+        origin.IsFocused.ShouldBeFalse();
+        overrideTarget.IsFocused.ShouldBeTrue();
     }
 
     [Fact]

@@ -1891,10 +1891,13 @@ public class FrameworkElement : INotifyPropertyChanged
     // existing index-based path (HandleGamepadNavigation above) — a control that disables it
     // (e.g. Slider, which uses Left/Right for its own value adjustment) must keep that exclusion
     // under spatial navigation too, or the same press would both navigate and act on the control.
-    private DigitalDirectionState GetDigitalDirectionState(IGamePad gamepad)
+    // ignoreLeftRightMask is used only to look up explicit overrides: an override the game set on a
+    // control wins over that control's own use of Left/Right (issue #6937).
+    private DigitalDirectionState GetDigitalDirectionState(IGamePad gamepad, bool ignoreLeftRightMask = false)
     {
-        bool right = IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonDown(GamepadButton.DPadRight);
-        bool left = IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonDown(GamepadButton.DPadLeft);
+        bool useLeftRight = ignoreLeftRightMask || IsUsingLeftAndRightGamepadDirectionsForNavigation;
+        bool right = useLeftRight && gamepad.ButtonDown(GamepadButton.DPadRight);
+        bool left = useLeftRight && gamepad.ButtonDown(GamepadButton.DPadLeft);
         bool down = gamepad.ButtonDown(GamepadButton.DPadDown);
         bool up = gamepad.ButtonDown(GamepadButton.DPadUp);
 
@@ -1942,24 +1945,67 @@ public class FrameworkElement : INotifyPropertyChanged
     // GetCardinalOverride) so overrides help stick-driven navigation the same way they help the DPad.
     private FrameworkElement? TryGetExplicitDirectionOverride(IGamePad gamepad)
     {
-        DigitalDirectionState state = GetDigitalDirectionState(gamepad);
-        if (state.ShouldFire)
+        // Overrides are looked up before the Left/Right mask applies, so an explicit override on a
+        // control that reserves Left/Right for its own value (e.g. Slider) still wins (issue #6937).
+        DigitalDirectionState overrideState = GetDigitalDirectionState(gamepad, ignoreLeftRightMask: true);
+        if (overrideState.ShouldFire)
         {
-            return GetExplicitDirectionOverride(state);
+            FrameworkElement? digitalOverride = GetExplicitDirectionOverride(overrideState);
+            if (digitalOverride != null)
+            {
+                return digitalOverride;
+            }
+        }
+
+        if (GetDigitalDirectionState(gamepad).ShouldFire)
+        {
+            return null;
         }
 
         if (gamepad.LeftStick.RadialPushedRepeatRate())
         {
+            float rawX = gamepad.LeftStick.X;
+            float rawY = gamepad.LeftStick.Y;
+            if (rawX != 0f || rawY != 0f)
+            {
+                FrameworkElement? stickOverride = GetCardinalOverride(MathF.Atan2(-rawY, rawX));
+                if (stickOverride != null)
+                {
+                    return stickOverride;
+                }
+            }
+
             (float stickX, float stickY) = GetEffectiveStickPosition(gamepad);
             if (stickX == 0f && stickY == 0f)
             {
                 return null;
             }
-            float stickAngle = MathF.Atan2(-stickY, stickX);
-            return GetCardinalOverride(stickAngle);
+            return GetCardinalOverride(MathF.Atan2(-stickY, stickX));
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Whether the gamepad's current directional press selects an explicit SpatialNavigation override
+    /// on this element. Controls that use Left/Right for their own value (e.g. Slider) skip that
+    /// action on such a press, because the override wins (issue #6937).
+    /// </summary>
+    internal bool IsSpatialNavigationOverridePressed(IGamePad gamepad)
+    {
+        (GamepadNavigationMode mode, GraphicalUiElement? spatialRoot) = ResolveGamepadNavigationMode();
+        return mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null &&
+            TryGetExplicitDirectionOverride(gamepad) != null;
+    }
+
+    /// <summary>
+    /// Keyboard counterpart to <see cref="IsSpatialNavigationOverridePressed(IGamePad)"/>.
+    /// </summary>
+    internal bool IsSpatialNavigationOverridePressedByKeyboard()
+    {
+        (GamepadNavigationMode mode, GraphicalUiElement? spatialRoot) = ResolveGamepadNavigationMode();
+        return mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null &&
+            GetExplicitDirectionOverride(GetDigitalDirectionStateFromKeyCombos(ignoreLeftRightMask: true)) != null;
     }
 
     // Zeroes the stick's horizontal axis when IsUsingLeftAndRightGamepadDirectionsForNavigation is
@@ -2031,10 +2077,11 @@ public class FrameworkElement : INotifyPropertyChanged
     // already uses), so a held combo only triggers on its own push/repeat pulses. Right/Left reuse
     // IsUsingLeftAndRightGamepadDirectionsForNavigation -- the same flag a control like Slider
     // already sets false to keep Left/Right for its own value instead of navigation.
-    private DigitalDirectionState GetDigitalDirectionStateFromKeyCombos()
+    private DigitalDirectionState GetDigitalDirectionStateFromKeyCombos(bool ignoreLeftRightMask = false)
     {
-        bool right = IsUsingLeftAndRightGamepadDirectionsForNavigation && AnyComboDown(RightKeyCombos);
-        bool left = IsUsingLeftAndRightGamepadDirectionsForNavigation && AnyComboDown(LeftKeyCombos);
+        bool useLeftRight = ignoreLeftRightMask || IsUsingLeftAndRightGamepadDirectionsForNavigation;
+        bool right = useLeftRight && AnyComboDown(RightKeyCombos);
+        bool left = useLeftRight && AnyComboDown(LeftKeyCombos);
         bool down = AnyComboDown(DownKeyCombos);
         bool up = AnyComboDown(UpKeyCombos);
 
@@ -2086,9 +2133,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
         if (mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null)
         {
-            DigitalDirectionState state = GetDigitalDirectionStateFromKeyCombos();
-
-            FrameworkElement? explicitOverride = GetExplicitDirectionOverride(state);
+            FrameworkElement? explicitOverride = GetExplicitDirectionOverride(GetDigitalDirectionStateFromKeyCombos(ignoreLeftRightMask: true));
             if (explicitOverride != null)
             {
                 // See the matching self-reference guard in HandleGamepadSpatialNavigation.
@@ -2099,6 +2144,7 @@ public class FrameworkElement : INotifyPropertyChanged
                 return;
             }
 
+            DigitalDirectionState state = GetDigitalDirectionStateFromKeyCombos();
             float? angle = GetRequestedDirectionAngle(state);
             if (angle == null)
             {
