@@ -79,7 +79,7 @@ during `ProjectLoad` are ignored (`IsNotifyingProjectLoad`).
 - `AnimationCollectionViewModelManager.cs` — animation save
 - `TextureCoordinateSelectionPlugin` — sprite sheet edits
 
-The ignore list (`FileWatchIgnoreList`) is time-based only.
+The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path that also calls `RecordWrittenContent(path)` after the write (element and behavior saves in `FileCommands`, the project and element files in `ProjectManager.SaveProject`) adds a content check: inside the window an event is ignored only while the file still holds the bytes the tool wrote, so an outside edit shortly after a save still reloads. `IgnoreNextChangeUntil` clears the record, so events during the next save are ignored by time until that write is recorded. Other callers (JSON conversion, theme/gumx import, font generation, animation and sprite-sheet saves) are time-only; add `RecordWrittenContent` after their write when it can be followed by an outside edit.
 
 ## ReactToFileChanged Extension Dispatch
 

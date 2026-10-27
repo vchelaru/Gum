@@ -409,6 +409,9 @@ public class FileWatchManager : IFileWatchManager
     public void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null)
         => _ignoreList.IgnoreNextChangeUntil(filePath, time);
 
+    public void RecordWrittenContent(FilePath filePath)
+        => _ignoreList.RecordWrittenContent(filePath);
+
     public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromMilliseconds(500)) - DateTime.Now;
 
     private enum FileReadiness

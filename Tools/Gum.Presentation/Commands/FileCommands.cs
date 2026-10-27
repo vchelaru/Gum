@@ -406,6 +406,7 @@ public class FileCommands : IFileCommands
                         {
                             bool useCompact = _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
                             elementSave.Save(fileName.FullPath, useCompact);
+                            _fileWatchIgnoreList.RecordWrittenContent(fileName);
                             succeeded = true;
                             break;
                         }
@@ -611,6 +612,7 @@ public class FileCommands : IFileCommands
                         {
                             bool useCompact = _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
                             behavior.Save(fileName, useCompact);
+                            _fileWatchIgnoreList.RecordWrittenContent(new FilePath(fileName));
 
                             succeeded = true;
                             break;

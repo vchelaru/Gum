@@ -528,6 +528,119 @@ public class ExternalChangeScenarioTests
     private static object? ReadFillRed<T>(string file, string variableName) where T : ElementSave, new() =>
         VariableGridHarness.StoredValue(ElementReference.DeserializeElement<T>(file, GumProjectSave.NativeVersion), variableName);
 
+    // The ignore window hides the tool's own write from the watcher. A different write to the same file
+    // inside that window is an outside edit and must still reach the reload (#6866).
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    [Trait("Feature", "FILE-013")]
+    public void AnOutsideEditShortlyAfterAToolSave_IsNotIgnored(bool savedByProjectSave)
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Button");
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
+        IFileWatchIgnoreList ignoreList = TestAppBuilder.Services.GetRequiredService<IFileWatchIgnoreList>();
+        FilePath buttonFile = new FilePath(Path.Combine(tree.Project.ProjectFolder, "Components", "Button.gucx"));
+
+        bool autoSave = projectManager.AutoSave;
+        try
+        {
+            projectManager.AutoSave = true;
+            if (savedByProjectSave)
+            {
+                tree.SaveAll();
+            }
+            else
+            {
+                tree.Grid.TypeAndEnter("Width", "80");
+            }
+
+            // The tool's own write is still ignored, including events that arrive after it finished.
+            ignoreList.TryGetIgnoreFileChange(buttonFile).ShouldBeTrue();
+
+            string toolBytes = File.ReadAllText(buttonFile.FullPath);
+            File.WriteAllText(buttonFile.FullPath, toolBytes + "<!-- outside -->");
+
+            ignoreList.TryGetIgnoreFileChange(buttonFile).ShouldBeFalse();
+
+            // The same bytes again are the tool's file; leave it as the tool wrote it for the oracles.
+            File.WriteAllText(buttonFile.FullPath, toolBytes);
+            ignoreList.TryGetIgnoreFileChange(buttonFile).ShouldBeTrue();
+        }
+        finally
+        {
+            projectManager.AutoSave = autoSave;
+        }
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    [Trait("Feature", "FILE-013")]
+    public void AnOutsideEditShortlyAfterAToolBehaviorSave_IsNotIgnored(bool savedByProjectSave)
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Dialogs.AnswerNextUserString("Clickable");
+        tree.RightClick(tree.RootNode("Behaviors"));
+        tree.PickMenu("Add Behavior");
+        IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
+        IFileWatchIgnoreList ignoreList = TestAppBuilder.Services.GetRequiredService<IFileWatchIgnoreList>();
+        FilePath behaviorFile = new FilePath(Path.Combine(tree.Project.ProjectFolder, "Behaviors", "Clickable.behx"));
+
+        bool autoSave = projectManager.AutoSave;
+        try
+        {
+            projectManager.AutoSave = true;
+            if (savedByProjectSave)
+            {
+                tree.SaveAll();
+            }
+            else
+            {
+                tree.Dialogs.AnswerNext<AddCategoryDialogViewModel>(dialog => { dialog.Value = "Looks"; return true; });
+                tree.States.ClickNewCategory();
+            }
+
+            ignoreList.TryGetIgnoreFileChange(behaviorFile).ShouldBeTrue();
+
+            string toolBytes = File.ReadAllText(behaviorFile.FullPath);
+            File.WriteAllText(behaviorFile.FullPath, toolBytes + "<!-- outside -->");
+
+            ignoreList.TryGetIgnoreFileChange(behaviorFile).ShouldBeFalse();
+
+            File.WriteAllText(behaviorFile.FullPath, toolBytes);
+        }
+        finally
+        {
+            projectManager.AutoSave = autoSave;
+        }
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "FILE-013")]
+    public void AnOutsideEditShortlyAfterAToolProjectFileSave_IsNotIgnored()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        IFileWatchIgnoreList ignoreList = TestAppBuilder.Services.GetRequiredService<IFileWatchIgnoreList>();
+        tree.SaveAll();
+        FilePath projectFile = new FilePath(tree.Project.Project.FullFileName);
+
+        ignoreList.TryGetIgnoreFileChange(projectFile).ShouldBeTrue();
+
+        string toolBytes = File.ReadAllText(projectFile.FullPath);
+        File.WriteAllText(projectFile.FullPath, toolBytes + "<!-- outside -->");
+
+        ignoreList.TryGetIgnoreFileChange(projectFile).ShouldBeFalse();
+
+        File.WriteAllText(projectFile.FullPath, toolBytes);
+        tree.AssertOracles();
+    }
+
     /// <summary>Exactly one message was shown; on failure, names every message and the file watcher's queue.</summary>
     private static void ShouldHaveShownOnePrompt(ProjectTreeHarness tree)
     {
