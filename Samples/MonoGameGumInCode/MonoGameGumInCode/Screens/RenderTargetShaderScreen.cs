@@ -94,10 +94,6 @@ internal class RenderTargetShaderScreen : FrameworkElement
     private const string OutlineShaderFileName = "Outline.slang";
 #endif
 
-    // Transparent margin around the bear inside each outline cell, so the outline has room to draw.
-    private const float OutlineCellSize = 144;
-    private const float OutlineMargin = 8;
-
     public RenderTargetShaderScreen() : base(new ContainerRuntime())
     {
         Dock(Gum.Wireframe.Dock.Fill);
@@ -166,6 +162,7 @@ internal class RenderTargetShaderScreen : FrameworkElement
 
         outlineRow.AddChild(BuildOutlineCell("Outline.slang (2 px, yellow)", thickness: 2, red: 1f, green: 0.85f, blue: 0.1f));
         outlineRow.AddChild(BuildOutlineCell("Outline.slang (6 px, cyan)", thickness: 6, red: 0.1f, green: 0.9f, blue: 1f));
+        outlineRow.AddChild(BuildOutlineCell("Bear + circle, slider sets thickness", thickness: 3, red: 1f, green: 1f, blue: 1f, interactive: true));
 
 #if !RAYLIB && !SKIA
         // Fourth cell, XNA-like only: the same effect authored in Slang (Content/Grayscale.slang)
@@ -200,10 +197,17 @@ internal class RenderTargetShaderScreen : FrameworkElement
 #endif
 
     // A bear in a render target container, outlined by Outline.slang. TexelSize is one pixel of the
-    // container; Thickness is in those pixels. A shader that fails to convert or compile throws from
-    // the SourceShaderFile assignment on some backends, so the failure is shown in the cell.
-    private static ContainerRuntime BuildOutlineCell(string caption, float thickness, float red, float green, float blue)
+    // container; Thickness is in those pixels. The interactive cell also draws a circle overlapping
+    // the bear, so the outline wraps the combined shape, and a slider sets the thickness. A shader
+    // that fails to convert or compile throws from the SourceShaderFile assignment on some backends,
+    // so the failure is shown in the cell.
+    private static ContainerRuntime BuildOutlineCell(
+        string caption, float thickness, float red, float green, float blue, bool interactive = false)
     {
+        // Transparent margin around the content, so the outline has room to draw (8 px at most).
+        float cellSize = interactive ? 176 : 144;
+        float margin = interactive ? 16 : 8;
+
         var cell = new ContainerRuntime();
         cell.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         cell.StackSpacing = 6;
@@ -215,8 +219,8 @@ internal class RenderTargetShaderScreen : FrameworkElement
         AddLabel(cell, caption);
 
         var holder = new ContainerRuntime();
-        holder.Width = OutlineCellSize;
-        holder.Height = OutlineCellSize;
+        holder.Width = cellSize;
+        holder.Height = cellSize;
         holder.IsRenderTarget = true;
 
         var bear = new SpriteRuntime();
@@ -227,13 +231,27 @@ internal class RenderTargetShaderScreen : FrameworkElement
 #endif
         bear.WidthUnits = DimensionUnitType.Absolute;
         bear.HeightUnits = DimensionUnitType.Absolute;
-        bear.X = OutlineMargin;
-        bear.Y = OutlineMargin;
-        bear.Width = OutlineCellSize - 2 * OutlineMargin;
-        bear.Height = OutlineCellSize - 2 * OutlineMargin;
+        bear.X = margin;
+        bear.Y = margin;
+        bear.Width = cellSize - 2 * margin;
+        bear.Height = cellSize - 2 * margin;
         holder.AddChild(bear);
 
-        holder.SetShaderParameter("TexelSize", 1f / OutlineCellSize, 1f / OutlineCellSize);
+        if (interactive)
+        {
+            // Overlaps the bear's lower right and sticks out past it, so the outline has to follow
+            // both shapes as one.
+            var circle = new CircleRuntime();
+            circle.IsFilled = true;
+            circle.FillColor = Rgba(255, 120, 60, 255);
+            circle.X = cellSize - margin - 72;
+            circle.Y = cellSize - margin - 72;
+            circle.Width = 72;
+            circle.Height = 72;
+            holder.AddChild(circle);
+        }
+
+        holder.SetShaderParameter("TexelSize", 1f / cellSize, 1f / cellSize);
         holder.SetShaderParameter("Thickness", thickness);
         holder.SetShaderParameter("OutlineColor", red, green, blue, 1f);
 
@@ -247,6 +265,26 @@ internal class RenderTargetShaderScreen : FrameworkElement
         }
 
         cell.AddChild(holder);
+
+        if (interactive)
+        {
+            TextRuntime thicknessLabel = AddLabel(cell, "Thickness: " + thickness.ToString("0") + " px");
+
+            var slider = new Slider();
+            slider.Minimum = 1;
+            slider.Maximum = 8;
+            slider.TicksFrequency = 1;
+            slider.IsSnapToTickEnabled = true;
+            slider.Value = thickness;
+            slider.Width = cellSize;
+            slider.ValueChanged += (_, _) =>
+            {
+                holder.SetShaderParameter("Thickness", (float)slider.Value);
+                thicknessLabel.Text = "Thickness: " + slider.Value.ToString("0") + " px";
+            };
+            cell.Children.Add(slider.Visual);
+        }
+
         return cell;
     }
 
@@ -418,7 +456,7 @@ internal class RenderTargetShaderScreen : FrameworkElement
     }
 #endif
 
-    private static void AddLabel(ContainerRuntime container, string text)
+    private static TextRuntime AddLabel(ContainerRuntime container, string text)
     {
         var label = new TextRuntime();
         label.Text = text;
@@ -428,5 +466,6 @@ internal class RenderTargetShaderScreen : FrameworkElement
         label.Width = 0;
         label.Height = 0;
         container.AddChild(label);
+        return label;
     }
 }
