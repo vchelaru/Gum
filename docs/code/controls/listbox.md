@@ -234,6 +234,12 @@ At item level, the axis the list does not use leaves the list: left and right in
 
 By default the user moves from top-level to item-level focus by pressing the confirm input — Enter on the keyboard, or the A button on a gamepad. This is the extra "enter the list" press.
 
+A list whose items lay out horizontally (or wrap) is also stepped with the left and right arrow keys. A vertical list uses the up and down arrow keys only.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 {% hint style="warning" %}
 A `ListBox` only responds to the keyboard or gamepad once that input device is registered with Gum Forms. Unlike a `TextBox` — which receives keyboard input whenever it is focused — a `ListBox` does **nothing** in response to arrow keys until a keyboard is added to `FrameworkElement.KeyboardsForUiControl`. The simplest way is `GumUI.UseKeyboardDefaults()` for the keyboard and `GumUI.UseGamepadDefaults()` for gamepads. Each only needs to be called once, at startup.
 {% endhint %}
