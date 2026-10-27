@@ -39,7 +39,7 @@ text.AddToRoot();
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACkWOTQvCMAyG7_sVoSeF4cCjsoMfODx4mbt1PXQ2zEDXQtdOUfzvdoMphECe5CHvOwFg574IHduAdwHTEZAhT1LTCyNlg3Tg8ekhB4MPuFhjC9lhdFZFwCM6Gsi0qyqelMF46nCx3NZmVCYYvZpVd-ohFj9YbV1eohIOFc-mUaQz3-uAoontv5FGAT9Z4683qTFfi4Zanv2AmLLVbP64U6qypbU-hmDJ5wu5H0Ud4QAAAA)
 
-BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, and `Custom`.
+BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, `Custom`, and `Glyph` (see [Inline Glyphs](#inline-glyphs)).
 
 `HasDropshadow` toggles the shadow for just the wrapped run, independently of the TextRuntime's own `HasDropshadow` value. The shadow's offset, blur, and color always come from the TextRuntime's `DropshadowOffsetX`/`DropshadowOffsetY`/`DropshadowBlur`/`DropshadowColor` properties; the tag only controls whether a given run draws it:
 
@@ -53,6 +53,23 @@ text.AddToRoot();
 
 {% hint style="info" %}
 `HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On SkiaSharp-based runtimes (Skia, Silk.NET, MAUI, WPF) the tag is parsed and stripped from the text but has no effect - the shadow always follows the TextRuntime's own `HasDropshadow` value there.
+{% endhint %}
+
+## Inline Glyphs
+
+The `Glyph` tag inserts one character by its code point. Write the code point in decimal (`[Glyph=57344]`) or in hex with a `0x` prefix (`[Glyph=0xE000]`). A code point above U+FFFF, such as an emoji, becomes a surrogate pair. A tag with a value that is not a valid code point is removed from the text.
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Press [Glyph=0xE000] to jump";
+text.AddToRoot();
+```
+
+The tag only substitutes the character, so the glyph appears when the font has it. It works the same on every runtime. To draw a picture, embed it in a bitmap font as described in [Custom Glyphs](../../files-and-fonts/advanced-font-effects.md#custom-glyphs).
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 ## Custom Functions

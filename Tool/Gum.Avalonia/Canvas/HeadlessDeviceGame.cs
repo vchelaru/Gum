@@ -23,8 +23,9 @@ internal sealed class HeadlessDeviceGame : Game
         {
             PreferredBackBufferWidth = 1,
             PreferredBackBufferHeight = 1,
-            // The tool's shapes use an SM4 effect that the Reach profile cannot load.
-            GraphicsProfile = GraphicsProfile.HiDef,
+            // Reach cannot load the tool's SM4 shape effect. FL10_0 is the lowest KNI profile that allows
+            // 8192 px textures; HiDef stops at 4096 (#6838).
+            GraphicsProfile = GraphicsProfile.FL10_0,
             SynchronizeWithVerticalRetrace = false,
         };
         IsFixedTimeStep = false;

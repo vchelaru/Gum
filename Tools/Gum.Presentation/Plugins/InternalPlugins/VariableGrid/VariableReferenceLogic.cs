@@ -640,28 +640,29 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             }
 
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
-            if (!graph.HasRows)
+            if (graph.HasRows)
             {
-                continue;
+                List<ReferenceRow> rows = graph.OrderedRows.Concat(graph.CyclicRows)
+                    .Where(row => restored.AddedRows.Contains(RestoredChanges.RowKey(row.SourceObject, row.Line)))
+                    .ToList();
+                HashSet<ReferenceRow> toApply = FindRowsToApply(graph, restored.VariableNames, rows);
+                if (toApply.Count > 0)
+                {
+                    // A row whose source is gone or null writes nothing, and the variable keeps its last value:
+                    // start each fed variable from the value it held before the restore, as a typed edit does,
+                    // not from the snapshot's.
+                    StateSave? old = RestoredChanges.FindState(before, state, element);
+                    foreach (ReferenceRow row in toApply)
+                    {
+                        KeepHeldValue(state, old, RestoredChanges.FindState(otherSide, state, element), row.WrittenName);
+                    }
+                    ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot, onlyRows: toApply);
+                }
             }
 
-            List<ReferenceRow> rows = graph.OrderedRows.Concat(graph.CyclicRows)
-                .Where(row => restored.AddedRows.Contains(RestoredChanges.RowKey(row.SourceObject, row.Line)))
-                .ToList();
-            HashSet<ReferenceRow> toApply = FindRowsToApply(graph, restored.VariableNames, rows);
-            if (toApply.Count > 0)
-            {
-                // A row whose source is gone or null writes nothing, and the variable keeps its last value:
-                // start each fed variable from the value it held before the restore, as a typed edit does,
-                // not from the snapshot's.
-                StateSave? old = RestoredChanges.FindState(before, state, element);
-                foreach (ReferenceRow row in toApply)
-                {
-                    KeepHeldValue(state, old, RestoredChanges.FindState(otherSide, state, element), row.WrittenName);
-                }
-                ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot, onlyRows: toApply);
-                BehaviorToolOnlyReferencesApplier.Apply(element, state);
-            }
+            // As a typed edit does, derive again what the behaviors' tool-only references write from the
+            // restored Forms values. The snapshot may hold what a reload from disk has since replaced (#6907).
+            BehaviorToolOnlyReferencesApplier.Apply(element, state);
         }
 
         return ApplyReferencesToElement(element, trySave: true);

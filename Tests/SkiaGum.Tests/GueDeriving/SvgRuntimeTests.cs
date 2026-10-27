@@ -72,11 +72,11 @@ public class SvgRuntimeTests : BaseTestClass
         LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
 
         SvgRuntime runtime = new SvgRuntime();
-        Should.Throw<ArgumentException>(() => runtime.SetProperty("SourceFile", missing));
+        Should.Throw<FileNotFoundException>(() => runtime.SetProperty("SourceFile", missing));
 
         GraphicalUiElement plain = new GraphicalUiElement();
         plain.SetContainedObject(new VectorSprite());
-        Should.Throw<ArgumentException>(() => plain.SetProperty("SourceFile", missing));
+        Should.Throw<FileNotFoundException>(() => plain.SetProperty("SourceFile", missing));
     }
 
     [Fact]

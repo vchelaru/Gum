@@ -59,23 +59,28 @@ internal static class StateSelectionCanvasHarness
     {
         private readonly WireframeObjectManager _manager;
         private StateSave _selected;
+        private IReadOnlyList<ElementSave> _selectedElements;
 
         public GraphicalUiElement? Root { get; private set; }
+
+        /// <summary>What the manager is showing now, or null when it shows nothing.</summary>
+        public GraphicalUiElement? ShownRoot => _manager.RootGue;
 
         public CanvasSession(ElementSave element, StateSave selected)
         {
             _selected = selected;
+            _selectedElements = new[] { element };
 
             Mock<IPluginManager> pluginManager = new Mock<IPluginManager>();
-            pluginManager.Setup(x => x.CreateGraphicalUiElement(element)).Returns(() =>
+            pluginManager.Setup(x => x.CreateGraphicalUiElement(It.IsAny<ElementSave>())).Returns((ElementSave created) =>
             {
-                Root = element.ToGraphicalUiElement(systemManagers: null!, addToManagers: false);
+                Root = created.ToGraphicalUiElement(systemManagers: null!, addToManagers: false);
                 return Root;
             });
 
             Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
-            selectedState.SetupGet(x => x.SelectedElements).Returns(new[] { element });
-            selectedState.SetupGet(x => x.SelectedElement).Returns(element);
+            selectedState.SetupGet(x => x.SelectedElements).Returns(() => _selectedElements);
+            selectedState.SetupGet(x => x.SelectedElement).Returns(() => _selectedElements.FirstOrDefault());
             selectedState.SetupGet(x => x.SelectedStateSave).Returns(() => _selected);
 
             _manager = new WireframeObjectManager(
@@ -88,6 +93,17 @@ internal static class StateSelectionCanvasHarness
                 Mock.Of<IProjectState>());
 
             Refresh();
+        }
+
+        /// <summary>Selects other elements (none, one, or several) and shows the first state of <paramref name="selected"/>.</summary>
+        public void SelectElements(StateSave? selected, params ElementSave[] elements)
+        {
+            _selectedElements = elements;
+            if (selected != null)
+            {
+                _selected = selected;
+            }
+            _manager.RefreshAll(forceLayout: true);
         }
 
         public void Select(StateSave state)

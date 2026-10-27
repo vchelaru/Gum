@@ -1185,6 +1185,13 @@ public partial class CustomSetPropertyOnRenderable
                 handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
             }
         }
+        else if(containedObjectAsIpso is LottieAnimation && propertyName == "SourceFile" && graphicalUiElement is LottieAnimationRuntime lottieRuntime)
+        {
+            // Through the runtime's own setter, as for SvgRuntime above. The reflection fallback below would wrap a
+            // missing file's FileNotFoundException in a TargetInvocationException (#6903).
+            lottieRuntime.SourceFile = value as string;
+            handled = true;
+        }
         else if(containedObjectAsIpso is Sprite asSprite)
         {
             // Route through SpriteRuntime first (ADR 0011) so mechanical properties
@@ -1470,52 +1477,8 @@ public partial class CustomSetPropertyOnRenderable
         else
         {
             // The MonoGame/raylib NineSlice falls back to a placeholder or no texture and raises no event, so none here either.
-            asNineSlice.Texture = LoadSourceFileBitmap(value, graphicalUiElement, nameof(NineSlice), raiseError: false);
+            asNineSlice.Texture = SourceFileLoading.Load<SKBitmap>(value, graphicalUiElement, nameof(NineSlice), raiseError: false);
         }
-    }
-
-    /// <summary>
-    /// Loads a Sprite or NineSlice SourceFile image. A file that is missing or exists but cannot be decoded is one
-    /// failure: <see cref="MissingFileBehavior.ThrowException"/> throws a <see cref="System.IO.FileNotFoundException"/>
-    /// naming the file, otherwise the result is null and, when <paramref name="raiseError"/> is true,
-    /// <see cref="PropertyAssignmentError"/> is raised. Mirrors the MonoGame/raylib dispatcher (#6889).
-    /// </summary>
-    private static SKBitmap? LoadSourceFileBitmap(string value, GraphicalUiElement graphicalUiElement, string elementTypeName, bool raiseError)
-    {
-        Exception? loadException = null;
-        SKBitmap? bitmap = null;
-        try
-        {
-            bitmap = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<SKBitmap>(value);
-        }
-        catch (Exception ex)
-        {
-            // Whatever the loader throws is treated as a failed load, as MonoGame does.
-            loadException = ex;
-        }
-
-        if (bitmap != null)
-        {
-            return bitmap;
-        }
-
-        string message = $"Error setting SourceFile on {elementTypeName}";
-        if (graphicalUiElement.Tag != null)
-        {
-            message += $" in {graphicalUiElement.Tag}";
-        }
-        message += $"\n{value}";
-        message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
-        message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
-        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-        {
-            throw new System.IO.FileNotFoundException(message, loadException);
-        }
-        if (raiseError)
-        {
-            RaisePropertyAssignmentError(loadException != null ? message + "\n" + loadException : message);
-        }
-        return null;
     }
 
     // An .achx/.achj SourceFile loads animation chains instead of a texture, the same as the
@@ -1567,7 +1530,7 @@ public partial class CustomSetPropertyOnRenderable
                         AssignAnimationChainSourceFile(asString, asSprite.AnimationLogic, asSprite, graphicalUiElement);
                         return true;
                     }
-                    image = LoadSourceFileBitmap(asString, graphicalUiElement, nameof(Sprite), raiseError: true);
+                    image = SourceFileLoading.Load<SKBitmap>(asString, graphicalUiElement, nameof(Sprite));
                 }
                 // Through the runtime when there is one, so its Texture setter re-runs
                 // PercentageOfSourceFile layout.
@@ -1674,16 +1637,7 @@ public partial class CustomSetPropertyOnRenderable
         switch(propertyName) 
         {
             case "SourceFile":
-                var asString = value as string;
-
-                if(!string.IsNullOrEmpty(asString))
-                {
-                    asSvg.Texture = RenderingLibrary.Content.ContentLoader.LoadSvg(asString);
-                }
-                else
-                {
-                    asSvg.Texture = null;
-                }
+                asSvg.Texture = SourceFileLoading.Load<Svg.Skia.SKSvg>(value as string, graphicalUiElement, "Svg");
                 graphicalUiElement.UpdateLayout();
                 return true;
         }

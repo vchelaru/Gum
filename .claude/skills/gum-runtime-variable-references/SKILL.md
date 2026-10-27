@@ -79,7 +79,7 @@ All three work in a game that calls `GumExpressionService.Initialize()`. The `Gr
 
 ## Circular references (#6871)
 
-Rows that read each other (or their own result) never freeze or overflow on any path (`ReferenceCycleFreezeTests`, `ReferenceCycleToolFreezeTests`). One rule for the tool, creation and `ApplyAllVariableReferences`: cyclic rows (`VariableReferenceGraph.CyclicRows`) are skipped everywhere and keep their stored values, so applying again is idempotent. The tool reports the loop as GUM0013 (`HeadlessErrorChecker`); the runtime reports nothing.
+Rows that read each other (or their own result) never freeze or overflow on any path (`ReferenceCycleFreezeTests`, `ReferenceCycleToolFreezeTests`). One rule for the tool, creation and `ApplyAllVariableReferences`: cyclic rows (`VariableReferenceGraph.CyclicRows`) are skipped everywhere and keep their stored values, so applying again is idempotent. The tool reports the loop as GUM0013 (`HeadlessErrorChecker`). The runtime reports it under `FULL_DIAGNOSTICS` only, once per `ElementSave` (`ReportCyclicRows`, from both apply overloads, through the shared `RaiseReferenceError` channel; a reloaded project has new elements and reports again), and stays silent and allocation-free otherwise. Test: `ReferenceCycleDiagnosticTests`.
 
 ## One analysis of which rows read what
 
