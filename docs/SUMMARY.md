@@ -81,6 +81,7 @@
     * [Wraps Children](gum-tool/gum-elements/container/wraps-children.md)
   * [NineSlice](gum-tool/gum-elements/nineslice/README.md)
     * [Blend](gum-tool/gum-elements/nineslice/blend.md)
+    * [Border Scale](gum-tool/gum-elements/nineslice/border-scale.md)
     * [Custom Frame Texture Coordinate Width](gum-tool/gum-elements/nineslice/custom-frame-texture-coordinate-width.md)
     * [Is Tiling Middle Sections](gum-tool/gum-elements/nineslice/is-tiling-middle-sections.md)
     * [Texture Address](gum-tool/gum-elements/nineslice/nineslice.texture-address.md)

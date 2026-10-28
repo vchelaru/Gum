@@ -111,36 +111,6 @@ container.SetShaderParameter("Thickness", pulse);
 
 Overloads take a `float`, `int`, `bool`, two to four float components, or a `System.Numerics` vector. A color is passed as red, green, blue and alpha components from 0 to 1. Setting a name that already has a value does not allocate, so it is safe to call every frame. `ClearShaderParameters` removes every value.
 
-#### Example - Outlining a Sprite
-
-The Outline shader that ships with Gum draws a pixel-exact outline around everything a render target container draws. Put the Sprite in a container with `IsRenderTarget` set, then give the container the shader.
-
-```csharp
-// Initialize
-var container = new ContainerRuntime();
-container.Width = 32;
-container.Height = 32;
-container.IsRenderTarget = true;
-// A 16x16 Sprite with 8 canvas pixels of margin, at least Thickness * PixelSize
-sprite.X = 8;
-sprite.Y = 8;
-container.AddChild(sprite);
-
-// Outline.slang is copied from Gum/Content/Shaders into the game's content folder
-container.SourceShaderFile = "Outline.slang";
-container.SetShaderParameter("Thickness", 2f);
-container.SetShaderParameter("OutlineRed", 255f);
-container.SetShaderParameter("OutlineGreen", 255f);
-```
-
-The shader has five parameters, all optional. `OutlineRed`, `OutlineGreen` and `OutlineBlue` are the outline color from 0 to 255 (all zero, the default, is black), `Thickness` is the outline width in canvas pixels from 0 to 8 (default 1; 0 draws no outline), and `PixelSize` is the size of one art pixel in canvas pixels (default 1). A 16x16 icon drawn 48 canvas pixels wide has a `PixelSize` of 3, so a `Thickness` of 1 gives a 3 canvas pixel outline that lines up with the art pixels. Both are in canvas pixels, so the outline scales with the camera zoom like the Sprite does. The outline is opaque, and the container's `Alpha` still fades it.
-
-The outline is drawn outside the content, so the container must leave at least `Thickness * PixelSize` pixels of transparent margin around the Sprite or the outline is cut off.
-
-{% hint style="info" %}
-The Outline shader is available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 {% hint style="info" %}
 `SetShaderParameter` is available in November 2026, or now if building Gum from source.
 {% endhint %}
