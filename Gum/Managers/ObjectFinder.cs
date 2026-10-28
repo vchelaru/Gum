@@ -67,6 +67,21 @@ public interface IObjectFinder
     List<ElementSave> GetBaseElements(ElementSave elementSave);
 
     /// <summary>
+    /// The element named by <paramref name="element"/>'s <see cref="ElementSave.BaseType"/>, or null when it
+    /// has no base type, the base is missing, or <paramref name="element"/> is part of a <c>BaseType</c> cycle
+    /// (see <see cref="GetBaseTypeCycle"/>). Every walk up a base chain takes its next step through this method
+    /// so a cycle ends the walk instead of overflowing the stack.
+    /// </summary>
+    ElementSave? GetBaseElement(ElementSave element);
+
+    /// <summary>
+    /// The elements of the <c>BaseType</c> cycle <paramref name="element"/> belongs to, starting with
+    /// <paramref name="element"/> and following each base in turn (an element that is its own base returns just
+    /// itself). Empty when <paramref name="element"/> is not part of a cycle, including when it only derives from one.
+    /// </summary>
+    IReadOnlyList<ElementSave> GetBaseTypeCycle(ElementSave element);
+
+    /// <summary>
     /// Returns true if <paramref name="variableName"/> appears in <see cref="ElementSave.VariablesHiddenFromInstances"/>
     /// on <paramref name="elementSave"/> or any of its base types.
     /// </summary>
@@ -732,7 +747,7 @@ public class ObjectFinder : IObjectFinder
         }
         while (!(elementSave is StandardElementSave) && !string.IsNullOrEmpty(elementSave?.BaseType))
         {
-            elementSave = GetElementSave(elementSave.BaseType);
+            elementSave = GetBaseElement(elementSave);
         }
 
         return elementSave as StandardElementSave;
@@ -765,8 +780,9 @@ public class ObjectFinder : IObjectFinder
 
         if(element is ScreenSave)
         {
+            // An element in a BaseType cycle has no base, so nothing inherits through it.
             var screensInheriting = GumProjectSave.Screens
-                .Where(item => item.BaseType == element.Name)
+                .Where(item => item.BaseType == element.Name && !IsInBaseTypeCycle(item))
                 .ToArray();
 
             listToAddTo.AddRange(screensInheriting);
@@ -779,7 +795,7 @@ public class ObjectFinder : IObjectFinder
         else
         {
             var componentsInheriting = GumProjectSave.Components
-                .Where(item => item.BaseType == element.Name)
+                .Where(item => item.BaseType == element.Name && !IsInBaseTypeCycle(item))
                 .ToArray();
 
             listToAddTo.AddRange(componentsInheriting);
@@ -794,15 +810,73 @@ public class ObjectFinder : IObjectFinder
 
     private void FillListWithBaseElements(ElementSave element, List<ElementSave> listToAddTo)
     {
-        var baseElement = !string.IsNullOrWhiteSpace(element.BaseType) ? GetElementSave(element.BaseType) : null;
+        // An element in a BaseType cycle has no base, so this ends even for a circular project.
+        ElementSave? baseElement = GetBaseElement(element);
 
-        if (baseElement != null)
+        while (baseElement != null)
         {
             listToAddTo.Add(baseElement);
 
-            FillListWithBaseElements(baseElement, listToAddTo);
+            baseElement = GetBaseElement(baseElement);
         }
-        
+    }
+
+    /// <inheritdoc/>
+    public ElementSave? GetBaseElement(ElementSave element)
+    {
+        if (string.IsNullOrWhiteSpace(element.BaseType))
+        {
+            return null;
+        }
+
+        ElementSave? baseElement = GetElementSave(element.BaseType);
+
+        return baseElement != null && !IsInBaseTypeCycle(element) ? baseElement : null;
+    }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<ElementSave> GetBaseTypeCycle(ElementSave element)
+    {
+        List<ElementSave> cycle = new List<ElementSave>();
+
+        if (IsInBaseTypeCycle(element))
+        {
+            ElementSave? current = element;
+            do
+            {
+                cycle.Add(current!);
+                current = GetElementSave(current!.BaseType);
+            }
+            while (current != null && current != element);
+        }
+
+        return cycle;
+    }
+
+    private bool IsInBaseTypeCycle(ElementSave element)
+    {
+        // Following BaseType from an element on a cycle returns to the element within as many steps as the
+        // project has elements; a walk that has not returned by then is on a tail leading into a cycle.
+        int maxSteps = GumProjectSave != null
+            ? GumProjectSave.Screens.Count + GumProjectSave.Components.Count + GumProjectSave.StandardElements.Count
+            : 0;
+
+        ElementSave? current = element;
+        for (int step = 0; step <= maxSteps; step++)
+        {
+            current = string.IsNullOrWhiteSpace(current!.BaseType) ? null : GetElementSave(current.BaseType);
+
+            if (current == null)
+            {
+                return false;
+            }
+            if (current == element)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -843,7 +917,7 @@ public class ObjectFinder : IObjectFinder
                 }
             }
 
-            current = !string.IsNullOrEmpty(current.BaseType) ? GetElementSave(current.BaseType) : null;
+            current = GetBaseElement(current);
         }
 
         return false;
@@ -859,7 +933,7 @@ public class ObjectFinder : IObjectFinder
             {
                 return true;
             }
-            current = !string.IsNullOrEmpty(current.BaseType) ? GetElementSave(current.BaseType) : null;
+            current = GetBaseElement(current);
         }
         return false;
     }
@@ -1226,7 +1300,7 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            var baseElement = GetElementSave(element.BaseType);
+            var baseElement = GetBaseElement(element);
 
             if (baseElement != null)
             {
@@ -1292,7 +1366,7 @@ public class ObjectFinder : IObjectFinder
             }
             else
             {
-                var baseElement = GetElementSave(element.BaseType);
+                var baseElement = GetBaseElement(element);
 
                 // Give the base a chance first since we want the root-most
                 if(baseElement != null)
@@ -1418,7 +1492,7 @@ public class ObjectFinder : IObjectFinder
             }
             else
             {
-                var baseElement = ObjectFinder.Self.GetElementSave(container.BaseType);
+                var baseElement = GetBaseElement(container);
                 if(baseElement == null)
                 {
                     return false;
@@ -1448,31 +1522,24 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            var baseType = element.BaseType;
-
-            var baseElement = GetElementSave(baseType);
+            var baseElement = GetBaseElement(element);
 
             if(baseElement is StandardElementSave)
             {
                 return false;
             }
-            else if(baseType == null)
+            else if(element.BaseType == null)
             {
                 // this would be a screen...
                 return false;
             }
+            else if(baseElement != null)
+            {
+                return IsInstanceRecursivelyReferencingElement(instance, baseElement);
+            }
             else
             {
-                var baseElementSave = GetElementSave(baseType);
-                if(baseElementSave != null)
-                {
-                    return IsInstanceRecursivelyReferencingElement(instance, baseElementSave);
-
-                }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
         }
     }

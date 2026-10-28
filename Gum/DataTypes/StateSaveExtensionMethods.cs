@@ -220,7 +220,7 @@ public static class StateSaveExtensionMethods
                 if (!string.IsNullOrEmpty(elementContainingState.BaseType))
                 {
                     // eventually pass the state, but for now use default
-                    value = TryToGetValueFromInheritance(variableName, elementContainingState.BaseType);
+                    value = TryToGetValueFromInheritance(variableName, ObjectFinder.Self.GetBaseElement(elementContainingState));
                 }
 
                 if (value == null)
@@ -252,11 +252,9 @@ public static class StateSaveExtensionMethods
     }
 
 
-    private static object? TryToGetValueFromInheritance(string variableName, string baseType)
+    private static object? TryToGetValueFromInheritance(string variableName, ElementSave? baseElement)
     {
         object? foundValue = null;
-
-        var baseElement = ObjectFinder.Self.GetElementSave(baseType);
 
         if (baseElement?.DefaultState != null)
         {
@@ -268,9 +266,9 @@ public static class StateSaveExtensionMethods
             }
         }
 
-        if (foundValue == null && !string.IsNullOrEmpty(baseElement?.BaseType))
+        if (foundValue == null && baseElement != null && !string.IsNullOrEmpty(baseElement.BaseType))
         {
-            foundValue = TryToGetValueFromInheritance(variableName, baseElement.BaseType);
+            foundValue = TryToGetValueFromInheritance(variableName, ObjectFinder.Self.GetBaseElement(baseElement));
         }
 
         return foundValue;
@@ -296,7 +294,7 @@ public static class StateSaveExtensionMethods
         }
         else
         {
-            baseElement = ObjectFinder.Self.GetElementSave(parent.BaseType);
+            baseElement = ObjectFinder.Self.GetBaseElement(parent);
         }
         return baseElement;
     }
@@ -379,7 +377,7 @@ public static class StateSaveExtensionMethods
 
                 if (shouldGoToBaseType)
                 {
-                    var baseElement = ObjectFinder.Self.GetElementSave(elementContainingState.BaseType);
+                    var baseElement = ObjectFinder.Self.GetBaseElement(elementContainingState);
 
                     if (baseElement != null)
                     {
@@ -526,7 +524,7 @@ public static class StateSaveExtensionMethods
 
                 if (shouldGoToBaseType)
                 {
-                    var baseElement = ObjectFinder.Self.GetElementSave(elementContainingState.BaseType);
+                    var baseElement = ObjectFinder.Self.GetBaseElement(elementContainingState);
 
                     if (baseElement != null)
                     {

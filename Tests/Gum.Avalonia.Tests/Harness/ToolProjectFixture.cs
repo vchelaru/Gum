@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia.Threading;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -153,8 +154,14 @@ internal sealed class ToolProjectFixture : IDisposable
         Services.GetRequiredService<IFileCommands>().ForceSaveProject(forceSaveContainedElements: true);
         Task load = projectManager.LoadProjectAsync(new FilePath(ProjectFilePath));
         // [AvaloniaFact] tests stay synchronous; the load posts work to the UI thread it waits on.
+        Stopwatch waited = Stopwatch.StartNew();
         while (!load.IsCompleted)
         {
+            if (waited.Elapsed > TimeSpan.FromSeconds(30))
+            {
+                // A load that never finishes fails here, not at the test run's timeout.
+                throw new TimeoutException("The reload did not finish within 30 seconds.");
+            }
             Thread.Sleep(10);
             Dispatcher.UIThread.RunJobs();
         }

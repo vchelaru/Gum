@@ -731,7 +731,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             if (!string.IsNullOrEmpty(es.BaseType))
             {
-                ElementSave? baseElementSave = ObjectFinder.Self.GetElementSave(es.BaseType);
+                ElementSave? baseElementSave = ObjectFinder.Self.GetBaseElement(es);
                 if (baseElementSave != null)
                 {
                     SetChangedVariablesRecursively(element, baseElementSave, context);
