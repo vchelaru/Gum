@@ -24,6 +24,7 @@ public class TextCrlfWrappedTextTests
     [Theory]
     [InlineData("AB\r\nCD", "AB\n", "CD")]
     [InlineData("AB\r\n[x]CD", "AB\n", "[x]CD")]
+    // Baseline (already passed before #6991): the BBCode path always normalized.
     [InlineData("AB\r\n[Color=Red]CD[/Color]", "AB\n", "CD")]
     public void WrappedText_Crlf_DropsTheCarriageReturn(string content, string first, string second)
     {
@@ -54,6 +55,20 @@ public class TextCrlfWrappedTextTests
         }
 
         found.ShouldBe(new List<char> { 'C', 'D' });
+    }
+
+    // MonoGame/Raylib only turn "\r\n" into "\n"; every other '\r' stays one character that draws as
+    // a blank, so Skia keeps one character per '\r' (as a space) and never loses or adds one.
+    [Theory]
+    [InlineData("AB\rCD", "AB CD")]
+    [InlineData("\r", " ")]
+    [InlineData("\r\r\n", " \n")]
+    [InlineData("A\n\rB", "A\n B")]
+    public void WrappedText_OtherCarriageReturns_KeepOneCharacterEach(string content, string expected)
+    {
+        Text text = Make(content);
+
+        string.Concat(text.WrappedText).ShouldBe(expected);
     }
 
     [Fact]
