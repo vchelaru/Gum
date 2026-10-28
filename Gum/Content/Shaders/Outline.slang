@@ -16,7 +16,9 @@ float2 TexelSize;
 float OutlineRed;
 float OutlineGreen;
 float OutlineBlue;
-float Thickness;
+// The default is read by the tool's Variables tab from this text; the compiled shader drops it,
+// which is why ThicknessIsSet exists.
+float Thickness = 1.0;
 float PixelSize;
 // Set to 1 by Gum when Thickness was set, so a Thickness of 0 (no outline) differs from an unset one.
 float ThicknessIsSet;
