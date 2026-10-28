@@ -103,16 +103,26 @@ internal sealed class HeadlessWindowDriver : IDisposable
     public void RightClick(Control control)
     {
         control.BringIntoView();
+        // Hit testing reads the compositor's last rendered scene, so a control laid out since the last
+        // frame (a palette chip after a selection change) can be missed on a slow, loaded machine.
+        RenderFrame();
         Point point = CenterOf(control);
+        _lastRightClick = $"{control.GetType().Name} at {point}, bounds {control.Bounds}, effectively visible {control.IsEffectivelyVisible}, hit test {Window.InputHitTest(point)?.GetType().Name ?? "nothing"}";
         Window.MouseMove(point, RawInputModifiers.None);
         Window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
         Window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
         Layout();
     }
 
+    /// <summary>What the last <see cref="RightClick"/> aimed at, for the "no context menu" message.</summary>
+    private string _lastRightClick = "no right-click yet";
+
+    private InvalidOperationException NoContextMenuOpen() =>
+        new InvalidOperationException($"No context menu is open. Last right-click: {_lastRightClick}; focused: {Window.FocusManager?.GetFocusedElement()?.GetType().Name ?? "nothing"}.");
+
     /// <summary>The headers of the open context menu's items.</summary>
     public List<string> ContextMenuHeaders() =>
-        (OpenContextMenu ?? throw new InvalidOperationException("No context menu is open."))
+        (OpenContextMenu ?? throw NoContextMenuOpen())
             .Items.OfType<MenuItem>().Select(item => item.Header?.ToString() ?? "").ToList();
 
     /// <summary>
@@ -121,7 +131,7 @@ internal sealed class HeadlessWindowDriver : IDisposable
     /// </summary>
     public void PickContextMenuItem(string header)
     {
-        ContextMenu menu = OpenContextMenu ?? throw new InvalidOperationException("No context menu is open.");
+        ContextMenu menu = OpenContextMenu ?? throw NoContextMenuOpen();
         MenuItem item = menu.Items.OfType<MenuItem>().SingleOrDefault(candidate => candidate.Header?.ToString() is string text && (text == header || text.StartsWith(header + " (", StringComparison.Ordinal)))
             ?? throw new InvalidOperationException($"The context menu has no \"{header}\"; it has [{string.Join(", ", ContextMenuHeaders())}].");
         if (!item.IsEnabled)
