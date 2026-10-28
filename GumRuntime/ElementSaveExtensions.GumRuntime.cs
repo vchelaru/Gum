@@ -1096,6 +1096,11 @@ namespace GumRuntime
                 "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
                 "CustomRadiusBottomLeft", "CustomRadiusBottomRight"
             }),
+            new CompositeReferenceDescriptor("BorderScale", new[]
+            {
+                "BorderScale", "CustomBorderScaleLeft", "CustomBorderScaleTop",
+                "CustomBorderScaleRight", "CustomBorderScaleBottom"
+            }),
         };
 
         /// <summary>

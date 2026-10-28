@@ -11,13 +11,14 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
     /// <inheritdoc/>
     public IReadOnlyList<CompositeMemberDescriptor> Descriptors { get; }
 
-    /// <summary>Creates the registry pre-populated with the built-in descriptors (color, corner radius).</summary>
+    /// <summary>Creates the registry pre-populated with the built-in descriptors (color, corner radius, border scale).</summary>
     public CompositeMemberRegistry()
     {
         Descriptors = new List<CompositeMemberDescriptor>
         {
             CreateColorDescriptor(),
             CreateCornerRadiusDescriptor(),
+            CreateBorderScaleDescriptor(),
         };
     }
 
@@ -83,13 +84,49 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
     private object?[] DecomposeCornerRadius(object value)
     {
         CornerRadiusComposite composite = (CornerRadiusComposite)value;
+        return DecomposeUniformWithOverrides(
+            composite.Uniform, composite.TopLeft, composite.TopRight, composite.BottomLeft, composite.BottomRight);
+    }
+
+    private CompositeMemberDescriptor CreateBorderScaleDescriptor()
+    {
+        // NineSlice only; same shape as the corner radius: a uniform value plus four optional overrides.
+        return new CompositeMemberDescriptor(
+            ChannelRootNames: ElementSaveExtensions.GetCompositeChannelRootNames("BorderScale")!,
+            CompositeNameFormat: "{prefix}BorderScale{suffix}",
+            Displayer: typeof(GumDisplayers.BorderScale),
+            CompositeType: typeof(BorderScaleComposite),
+            Compose: ComposeBorderScale,
+            Decompose: DecomposeBorderScale);
+    }
+
+    private object ComposeBorderScale(IReadOnlyList<object?> channels)
+    {
+        return new BorderScaleComposite(
+            ToFloat(channels[0]),
+            ToNullableFloat(channels[1]),
+            ToNullableFloat(channels[2]),
+            ToNullableFloat(channels[3]),
+            ToNullableFloat(channels[4]));
+    }
+
+    private object?[] DecomposeBorderScale(object value)
+    {
+        BorderScaleComposite composite = (BorderScaleComposite)value;
+        return DecomposeUniformWithOverrides(
+            composite.Uniform, composite.Left, composite.Top, composite.Right, composite.Bottom);
+    }
+
+    // The channels of a composite that is one value plus four optional overrides; negatives floor at 0.
+    private static object?[] DecomposeUniformWithOverrides(float uniform, float? first, float? second, float? third, float? fourth)
+    {
         return new object?[]
         {
-            ClampToZeroMin(composite.Uniform),
-            ClampNullableToZeroMin(composite.TopLeft),
-            ClampNullableToZeroMin(composite.TopRight),
-            ClampNullableToZeroMin(composite.BottomLeft),
-            ClampNullableToZeroMin(composite.BottomRight)
+            ClampToZeroMin(uniform),
+            ClampNullableToZeroMin(first),
+            ClampNullableToZeroMin(second),
+            ClampNullableToZeroMin(third),
+            ClampNullableToZeroMin(fourth)
         };
     }
 
