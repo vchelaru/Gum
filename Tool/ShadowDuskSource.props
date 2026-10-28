@@ -1,0 +1,17 @@
+<Project>
+	<!--
+		Lets the tool build ShadowDusk.Compiler from a sibling ShadowDusk checkout instead of the
+		NuGet package, so an unreleased ShadowDusk change (e.g. parameter defaults) can be tried in
+		the tool before a release exists. Imported by every tool project that compiles shaders
+		(EditorTabPlugin.Core, GumPreview).
+
+		On when ../ShadowDusk/src/ShadowDusk.Compiler exists next to the Gum checkout (CI and
+		contributors without it keep the package). Override the location with
+		-p:ShadowDuskSourceDir=<dir>/ (trailing slash), or force the package with
+		-p:UseShadowDuskSource=false. The checkout is used as it is, so keep it on the commit to test.
+	-->
+	<PropertyGroup>
+		<ShadowDuskSourceDir Condition="'$(ShadowDuskSourceDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'ShadowDusk'))</ShadowDuskSourceDir>
+		<UseShadowDuskSource Condition="'$(UseShadowDuskSource)' == '' AND Exists('$(ShadowDuskSourceDir)src/ShadowDusk.Compiler/ShadowDusk.Compiler.csproj')">true</UseShadowDuskSource>
+	</PropertyGroup>
+</Project>
