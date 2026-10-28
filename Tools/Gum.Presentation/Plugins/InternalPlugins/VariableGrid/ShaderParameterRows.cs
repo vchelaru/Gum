@@ -78,6 +78,16 @@ public static class ShaderParameterRows
             Name = rowName,
             ValueType = valueType,
             Get = () => ToDisplayValue(info.Kind, GetComponent(GetCurrent(info, getText), componentIndex)),
+            // A stored value counts as set even when it equals the default, like any other variable.
+            IsDefault = () => !ShaderParameterText.Parse(getText(), null).TryGetValue(info.Name, out _),
+            ResetToDefault = () =>
+            {
+                ShaderParameterCollection collection = ShaderParameterText.Parse(getText(), null);
+                if (collection.Remove(info.Name))
+                {
+                    setText(ShaderParameterText.Format(collection));
+                }
+            },
             Set = value =>
             {
                 if (!TryConvert(info.Kind, value, out float component))

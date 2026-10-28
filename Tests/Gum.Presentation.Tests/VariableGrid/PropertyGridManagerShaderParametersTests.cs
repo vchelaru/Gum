@@ -120,6 +120,24 @@ public class PropertyGridManagerShaderParametersTests : BaseTestClass, IDisposab
     }
 
     [Fact]
+    public void AdjustShaderParameters_RowsAreDefaultOnlyWhenTheirValueIsNotSaved()
+    {
+        GivenTheHolderHasAnEffect(true);
+        _component.DefaultState.SetValue("Holder.ShaderParameters", "Thickness=3.0");
+        MemberCategory category = BuildRenderingCategory();
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+
+        sut.AdjustShaderParameters(new List<MemberCategory> { category }, _holder);
+
+        InstanceMember thickness = category.Members.Single(member => member.Name == "Thickness");
+        InstanceMember outlineX = category.Members.Single(member => member.Name == "OutlineColor X");
+        thickness.IsDefault.ShouldBeFalse();
+        thickness.ValueState.ShouldBe(DataUiValueState.Custom);
+        outlineX.IsDefault.ShouldBeTrue();
+        outlineX.ValueState.ShouldBe(DataUiValueState.Default);
+    }
+
+    [Fact]
     public void AdjustShaderParameters_ShowsNoRowsWhenTheContainerHasNoCompiledShader()
     {
         GivenTheHolderHasAnEffect(false);

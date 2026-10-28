@@ -1051,7 +1051,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     /// <summary>Materializes one headless <see cref="SyntheticVariableRow"/> into a plain <see cref="InstanceMember"/>.</summary>
     private static InstanceMember CreateInstanceMember(SyntheticVariableRow row)
     {
-        var instanceMember = new InstanceMember
+        var instanceMember = new SyntheticInstanceMember(row.IsDefault, row.ResetToDefault)
         {
             Name = row.Name,
             DetailText = row.DetailText
