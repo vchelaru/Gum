@@ -524,6 +524,55 @@ void main()
         });
     }
 
+    // Raylib textures can wrap, so a square touching the right and bottom edges must not outline the left
+    // and top edges: the shader treats samples past the edge as empty whatever the texture's wrap mode.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Draw_OutlineSampleSlang_OfASpriteTouchingTheRightAndBottomEdges_DrawsNothingOnTheOppositeEdges(bool forceRepeat)
+    {
+        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+        conversion.IsSuccess.ShouldBeTrue();
+
+        ContainerRuntime outer = new() { Width = 48, Height = 48, IsRenderTarget = true };
+        ContainerRuntime inner = new() { Width = 48, Height = 48, IsRenderTarget = true };
+#pragma warning disable CS0618
+        ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+        square.X = 24;
+        square.Y = 24;
+        square.Width = 24;
+        square.Height = 24;
+        square.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+        inner.Children.Add(square);
+        outer.Children.Add(inner);
+        Gum.GumService.Default.Root.Children.Add(outer);
+        Gum.GumService.Default.Root.UpdateLayout();
+
+        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        try
+        {
+            inner.RenderTargetEffect = outline;
+            DrawOnce();
+            if (forceRepeat)
+            {
+                SetTextureWrap(Renderer.Self.TryGetBakedRenderTargetFor(inner)!.Value.Texture, TextureWrap.Repeat);
+                DrawOnce();
+            }
+
+            RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
+            ReadRenderTargetPixel(baked, 0, 36).A.ShouldBe((byte)0);
+            ReadRenderTargetPixel(baked, 36, 0).A.ShouldBe((byte)0);
+            ReadRenderTargetPixel(baked, 23, 36).A.ShouldBeGreaterThan((byte)200);
+        }
+        finally
+        {
+            UnloadShader(outline);
+            Gum.GumService.Default.Root.Children.Clear();
+        }
+    }
+
     private static ContainerRuntime BuildRedInner(float x)
     {
         ContainerRuntime inner = new();
