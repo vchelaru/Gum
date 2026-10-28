@@ -8,6 +8,7 @@ using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -548,37 +549,59 @@ namespace Gum.Managers
 
         /// <summary>
         /// A shader source file changed or was deleted on disk. The compiled effect is cached by path
-        /// for every container showing it, and the Variables tab rows come from that effect and from
-        /// the defaults in the source text. Reloading the textures drops every cached asset, so the
-        /// canvas compiles the shader again whichever element is shown next, and the refresh rebuilds
-        /// the selected instance's rows. A shader no element references shows nothing, so is skipped.
+        /// (in <see cref="LoaderManager"/>) for every container showing it, and the Variables tab rows come
+        /// from that effect and from the defaults in the source text. Dropping the cache entry makes the next
+        /// build of any container using the shader, in whatever element is selected later, compile again.
+        /// If the shown element uses the shader it is rebuilt now, which also rebuilds the selected
+        /// instance's rows. Images and fonts stay cached. A shader no element references shows nothing,
+        /// so is skipped.
         /// </summary>
         private void ReactToShaderFileChanged(FilePath file)
         {
-            if (IsReferencedByProject(file))
+            if (!IsReferencedByProject(file))
             {
-                _wireframeObjectManager.RefreshAll(true, true);
+                return;
+            }
+
+            DropCachedEffect(file);
+
+            ElementSave? shown = _selectedState.SelectedElement;
+            if (shown != null && ObjectFinder.Self.GetFilesReferencedBy(shown).Any(item => IsSameFile(item, file)))
+            {
+                _wireframeObjectManager.RefreshAll(true);
+            }
+        }
+
+        private static void DropCachedEffect(FilePath file)
+        {
+            // The cache key is the path as the canvas built it, so match by file rather than by spelling.
+            List<string> keys = LoaderManager.Self.CachedDisposables.Keys
+                .Where(key => IsSameFile(key, file))
+                .ToList();
+            foreach (string key in keys)
+            {
+                LoaderManager.Self.Dispose(key);
+            }
+        }
+
+        private static bool IsSameFile(string path, FilePath file)
+        {
+            try
+            {
+                return new FilePath(path) == file;
+            }
+            catch
+            {
+                // An invalid path in a variable cannot be the file that changed.
+                return false;
             }
         }
 
         private static bool IsReferencedByProject(FilePath file)
         {
-            foreach (string referenced in ObjectFinder.Self.GetAllFilesInProject(
-                Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles))
-            {
-                try
-                {
-                    if (new FilePath(referenced) == file)
-                    {
-                        return true;
-                    }
-                }
-                catch
-                {
-                    // An invalid path in a variable cannot be the file that changed.
-                }
-            }
-            return false;
+            return ObjectFinder.Self.GetAllFilesInProject(
+                Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles)
+                .Any(referenced => IsSameFile(referenced, file));
         }
 
         private void ReactToAnimationChainChanged(FilePath file)

@@ -80,6 +80,9 @@ public class FileChangeShaderReactionTests : BaseTestClass
         return screen;
     }
 
+    private void SelectScreenWithShader(string shaderFile) =>
+        _selectedState.Setup(s => s.SelectedElement).Returns(AddScreenWithShader("Main", shaderFile));
+
     private string WriteShader(string relativePath)
     {
         string path = Path.GetFullPath(Path.Combine(_projectFolder, relativePath));
@@ -87,25 +90,60 @@ public class FileChangeShaderReactionTests : BaseTestClass
         return path;
     }
 
-    private void VerifyRefreshedWithTextureReload(Times times) =>
-        _wireframe.Verify(w => w.RefreshAll(true, true), times);
+    // The shown element is rebuilt without reloading images and fonts: only the effect's cache entry goes.
+    private void VerifyRebuilt(Times times) =>
+        _wireframe.Verify(w => w.RefreshAll(true, false), times);
+    private void VerifyNoTextureReload() =>
+        _wireframe.Verify(w => w.RefreshAll(It.IsAny<bool>(), true), Times.Never());
 
     [Theory]
     [InlineData("Shaders/Blur.slang")]
     [InlineData("Shaders/Blur.fx")]
     [InlineData("Shaders/Blur.SLANG")]
-    public void ReactToFileChanged_RefreshesTheCanvasAndDropsTheCachedEffect_WhenTheSelectedElementUsesTheShader(string shader)
+    public void ReactToFileChanged_RebuildsTheCanvas_WhenTheSelectedElementUsesTheShader(string shader)
     {
         ScreenSave screen = AddScreenWithShader("Main", shader);
         _selectedState.Setup(s => s.SelectedElement).Returns(screen);
 
         _reaction.ReactToFileChanged(new FilePath(WriteShader(shader)));
 
-        VerifyRefreshedWithTextureReload(Times.Once());
+        VerifyRebuilt(Times.Once());
+        VerifyNoTextureReload();
+    }
+
+    private sealed class CachedEffect : IDisposable
+    {
+        public bool Disposed;
+        public void Dispose() => Disposed = true;
     }
 
     [Fact]
-    public void ReactToFileChanged_DropsTheCachedEffect_WhenOnlyAnotherElementUsesTheShader()
+    public void ReactToFileChanged_DropsTheCachedEffectOnly_WhateverIsSelected()
+    {
+        AddScreenWithShader("Main", "Shaders/Blur.slang");
+        _selectedState.Setup(s => s.SelectedElement).Returns((ElementSave?)null);
+        string path = WriteShader("Shaders/Blur.slang");
+        CachedEffect effect = new CachedEffect();
+        CachedEffect image = new CachedEffect();
+        global::RenderingLibrary.Content.LoaderManager.Self.DisposeAndClear();
+        global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(path, effect);
+        global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(Path.Combine(_projectFolder, "Photo.png"), image);
+        try
+        {
+            _reaction.ReactToFileChanged(new FilePath(path));
+
+            effect.Disposed.ShouldBeTrue("selecting an element using it later would draw the stale effect");
+            image.Disposed.ShouldBeFalse();
+            VerifyRebuilt(Times.Never());
+        }
+        finally
+        {
+            global::RenderingLibrary.Content.LoaderManager.Self.DisposeAndClear();
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_DoesNotRebuild_WhenOnlyAnotherElementUsesTheShader()
     {
         AddScreenWithShader("Other", "Shaders/Blur.slang");
         ScreenSave selected = new ScreenSave { Name = "Selected" };
@@ -114,8 +152,9 @@ public class FileChangeShaderReactionTests : BaseTestClass
 
         _reaction.ReactToFileChanged(new FilePath(WriteShader("Shaders/Blur.slang")));
 
-        // Selecting the other element later must not draw the old cached effect.
-        VerifyRefreshedWithTextureReload(Times.Once());
+        // Nothing shown uses it, so nothing is rebuilt; the cache entry goes so that selecting the
+        // other element later compiles the new source (see ShaderFileEditScenarioTests).
+        VerifyRebuilt(Times.Never());
     }
 
     [Fact]
@@ -128,7 +167,7 @@ public class FileChangeShaderReactionTests : BaseTestClass
 
         _reaction.ReactToFileChanged(new FilePath(outside));
 
-        VerifyRefreshedWithTextureReload(Times.Once());
+        VerifyRebuilt(Times.Once());
     }
 
     [Fact]
@@ -139,7 +178,7 @@ public class FileChangeShaderReactionTests : BaseTestClass
 
         _reaction.ReactToFileChanged(new FilePath(WriteShader("Shaders/Unused.slang")));
 
-        VerifyRefreshedWithTextureReload(Times.Never());
+        VerifyRebuilt(Times.Never());
     }
 
     [Fact]
@@ -150,7 +189,7 @@ public class FileChangeShaderReactionTests : BaseTestClass
 
         _reaction.ReactToFileDeleted(new FilePath(Path.Combine(_projectFolder, "Shaders", "Blur.slang")));
 
-        VerifyRefreshedWithTextureReload(Times.Once());
+        VerifyRebuilt(Times.Once());
     }
 
     [Fact]
@@ -160,7 +199,7 @@ public class FileChangeShaderReactionTests : BaseTestClass
 
         _reaction.ReactToFileDeleted(new FilePath(Path.Combine(_projectFolder, "Shaders", "Unused.fx")));
 
-        VerifyRefreshedWithTextureReload(Times.Never());
+        VerifyRebuilt(Times.Never());
     }
 
     private sealed class SynchronousDispatcher : IDispatcher
@@ -193,33 +232,33 @@ public class FileChangeShaderReactionTests : BaseTestClass
     [InlineData("Blur.fx")]
     public void ASaveByRenamingATempFileOverTheShader_Refreshes(string name)
     {
-        AddScreenWithShader("Main", "Shaders/" + name);
+        SelectScreenWithShader("Shaders/" + name);
         FileWatchManager watch = StartWatching();
         string path = WriteShader("Shaders/" + name);
 
         watch.HandleRename(null, new RenamedEventArgs(WatcherChangeTypes.Renamed, Path.GetDirectoryName(path)!, name, name + ".tmp.1"));
         FlushWhenSettled(watch);
 
-        VerifyRefreshedWithTextureReload(Times.Once());
+        VerifyRebuilt(Times.Once());
     }
 
     [Fact]
     public void DeletingTheShader_RefreshesOnce_AndDoesNotThrow()
     {
-        AddScreenWithShader("Main", "Shaders/Blur.slang");
+        SelectScreenWithShader("Shaders/Blur.slang");
         FileWatchManager watch = StartWatching();
         string path = Path.Combine(_projectFolder, "Shaders", "Blur.slang");
 
         watch.HandleFileSystemDelete(null, Args(path, WatcherChangeTypes.Deleted));
         FlushWhenSettled(watch);
 
-        VerifyRefreshedWithTextureReload(Times.Once());
+        VerifyRebuilt(Times.Once());
     }
 
     [Fact]
     public void DeletingTheShaderThenRecreatingIt_ReloadsLikeAnEdit()
     {
-        AddScreenWithShader("Main", "Shaders/Blur.slang");
+        SelectScreenWithShader("Shaders/Blur.slang");
         FileWatchManager watch = StartWatching();
         string path = WriteShader("Shaders/Blur.slang");
 
@@ -227,13 +266,13 @@ public class FileChangeShaderReactionTests : BaseTestClass
         watch.HandleFileSystemChange(null, Args(path, WatcherChangeTypes.Created));
         FlushWhenSettled(watch);
 
-        VerifyRefreshedWithTextureReload(Times.Once());
+        VerifyRebuilt(Times.Once());
     }
 
     [Fact]
     public void AnEditorWritingTwice_RefreshesOnce()
     {
-        AddScreenWithShader("Main", "Shaders/Blur.slang");
+        SelectScreenWithShader("Shaders/Blur.slang");
         FileWatchManager watch = StartWatching();
         string path = WriteShader("Shaders/Blur.slang");
 
@@ -241,13 +280,13 @@ public class FileChangeShaderReactionTests : BaseTestClass
         watch.HandleFileSystemChange(null, Args(path, WatcherChangeTypes.Changed));
         FlushWhenSettled(watch);
 
-        VerifyRefreshedWithTextureReload(Times.Once());
+        VerifyRebuilt(Times.Once());
     }
 
     [Fact]
     public void AShaderTheToolWroteItself_IsNotQueued()
     {
-        AddScreenWithShader("Main", "Shaders/Blur.slang");
+        SelectScreenWithShader("Shaders/Blur.slang");
         FileWatchManager watch = StartWatching();
         string path = WriteShader("Shaders/Blur.slang");
         _ignoreList.Setup(i => i.TryGetIgnoreFileChange(new FilePath(path))).Returns(true);
@@ -255,7 +294,7 @@ public class FileChangeShaderReactionTests : BaseTestClass
         watch.HandleFileSystemChange(null, Args(path, WatcherChangeTypes.Created));
         FlushWhenSettled(watch);
 
-        VerifyRefreshedWithTextureReload(Times.Never());
+        VerifyRebuilt(Times.Never());
     }
 
     [Fact]
