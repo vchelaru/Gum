@@ -394,6 +394,105 @@ technique SpriteDrawing
         outlineWidth.ShouldBeInRange((int)System.Math.Floor(expected), (int)System.Math.Ceiling(expected));
     }
 
+    // Two render-target containers share one effect, A at x = 0 and B at x = 64, each with a 24x24 red
+    // square 12 pixels in. Draws a frame, applies changeAfterFirstFrame to A, and returns the last frame
+    // on white so a black outline can be measured.
+    private Color[] RenderSharedEffect(
+        System.Action<ContainerRuntime> setA, System.Action<ContainerRuntime> setB, System.Action<ContainerRuntime>? changeAfterFirstFrame = null)
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
+        conversion.IsSuccess.ShouldBeTrue();
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue();
+        using Effect outline = new(gd, compileResult.Value.Data);
+
+        ContainerRuntime Build(float x, System.Action<ContainerRuntime> set)
+        {
+            ContainerRuntime container = new() { X = x, Y = 0, Width = 48, Height = 48, IsRenderTarget = true };
+#pragma warning disable CS0618
+            ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+            square.X = 12;
+            square.Y = 12;
+            square.Width = 24;
+            square.Height = 24;
+            square.Color = Color.Red;
+            container.AddChild(square);
+            container.RenderTargetEffect = outline;
+            set(container);
+            container.AddToManagers(managers, null);
+            container.UpdateLayout();
+            return container;
+        }
+
+        ContainerRuntime a = Build(0, setA);
+        Build(64, setB);
+
+        Color[] data = RenderToCapture(gd, renderer, managers, Color.White);
+        if (changeAfterFirstFrame != null)
+        {
+            changeAfterFirstFrame(a);
+            data = RenderToCapture(gd, renderer, managers, Color.White);
+        }
+        return data;
+    }
+
+    // Dark pixels immediately left of a square whose left edge is at squareLeft, on its middle row.
+    private static int OutlineWidthLeftOf(Color[] data, int squareLeft)
+    {
+        int width = 0;
+        for (int x = squareLeft - 1; x >= 0 && data[(24 * CaptureSize) + x].R < 128; x--)
+        {
+            width++;
+        }
+        return width;
+    }
+
+    [Fact]
+    public void Outline_SharedEffect_AfterAThicknessZeroContainer_AnUnsetContainerDrawsOnePixel()
+    {
+        Color[] data = RenderSharedEffect(a => a.SetShaderParameter("Thickness", 0f), b => { });
+
+        OutlineWidthLeftOf(data, 11).ShouldBe(0);
+        OutlineWidthLeftOf(data, 76).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Outline_SharedEffect_AfterAThicknessThreeContainer_AContainerSettingOneDrawsOnePixel()
+    {
+        Color[] data = RenderSharedEffect(a => a.SetShaderParameter("Thickness", 3f), b => b.SetShaderParameter("Thickness", 1f));
+
+        OutlineWidthLeftOf(data, 12).ShouldBe(3);
+        OutlineWidthLeftOf(data, 76).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Outline_ClearingTheParameters_RevertsToTheUnsetOnePixel()
+    {
+        Color[] data = RenderSharedEffect(a => a.SetShaderParameter("Thickness", 3f), b => { }, a => a.ClearShaderParameters());
+
+        OutlineWidthLeftOf(data, 12).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Outline_ASetTexelSize_WinsOverTheOneGumFillsIn()
+    {
+        // Two pixels per step instead of the one Gum would fill in.
+        Color[] data = RenderSharedEffect(a => a.SetShaderParameter("TexelSize", 2f / 48f, 2f / 48f), b => { });
+
+        OutlineWidthLeftOf(data, 12).ShouldBe(2);
+        OutlineWidthLeftOf(data, 76).ShouldBe(1);
+    }
+
     private Color[] RenderOutlinedSquare(System.Action<ContainerRuntime>? setParameters, Color? background = null, float zoom = 1f)
     {
         using MinimalGame game = new();

@@ -181,6 +181,48 @@ public class SpriteOutlineShaderTests : IDisposable
         ShouldBeEmpty(bitmap, 9, 24);
     }
 
+    // Two containers share the shader (A at x = 0, B at x = 64): what A set must not reach B.
+    private static SKBitmap DrawTwoContainers(Action<ContainerRuntime> setA, Action<ContainerRuntime> setB)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(112, 48));
+        GumService.Default.Initialize(surface.Canvas, 112, 48);
+        foreach ((float x, Action<ContainerRuntime> set) in new[] { (0f, setA), (64f, setB) })
+        {
+            ContainerRuntime container = new() { X = x, Width = 48, Height = 48, IsRenderTarget = true };
+            container.Children.Add(new RectangleRuntime
+            {
+                X = 12, Y = 12, Width = 24, Height = 24, IsFilled = true, StrokeWidth = 0, FillColor = SKColors.Red,
+            });
+            GumService.Default.Root.Children.Add(container);
+            set(container);
+            container.SourceShaderFile = ShippedShaderPath;
+        }
+        GumService.Default.Draw();
+        using SKImage image = surface.Snapshot();
+        return SKBitmap.FromImage(image);
+    }
+
+    [Fact]
+    public void Outline_AfterAThicknessZeroContainer_AnUnsetContainerDrawsOnePixel()
+    {
+        using SKBitmap bitmap = DrawTwoContainers(a => a.SetShaderParameter("Thickness", 0f), b => { });
+
+        ShouldBeEmpty(bitmap, 11, 24);
+        ShouldBeOutline(bitmap, 75, 24, SKColors.Black);
+        ShouldBeEmpty(bitmap, 74, 24);
+    }
+
+    [Fact]
+    public void Outline_ASetTexelSize_WinsOverTheOneGumFillsIn()
+    {
+        using SKBitmap bitmap = DrawTwoContainers(a => a.SetShaderParameter("TexelSize", 2f / 48f, 2f / 48f), b => { });
+
+        ShouldBeOutline(bitmap, 10, 24, SKColors.Black);
+        ShouldBeEmpty(bitmap, 9, 24);
+        ShouldBeOutline(bitmap, 75, 24, SKColors.Black);
+        ShouldBeEmpty(bitmap, 74, 24);
+    }
+
     // The outline is measured in canvas pixels, so it grows and shrinks with the camera zoom exactly
     // like the content does: Thickness * PixelSize canvas pixels is that many times zoom device pixels.
     [Theory]

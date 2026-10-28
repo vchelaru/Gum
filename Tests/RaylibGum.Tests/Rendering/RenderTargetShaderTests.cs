@@ -419,6 +419,111 @@ void main()
         });
     }
 
+    // Two containers (A and B) share one shader. Draws a frame, applies changeAfterFirstFrame to A,
+    // draws again, and hands the outline width left of each square (12 px in) to the check.
+    private static void WithSharedOutline(
+        System.Action<ContainerRuntime> setA, System.Action<ContainerRuntime> setB,
+        System.Action<ContainerRuntime>? changeAfterFirstFrame, System.Action<int, int> check)
+    {
+        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+        conversion.IsSuccess.ShouldBeTrue();
+
+        (ContainerRuntime outer, ContainerRuntime inner) Build(float x)
+        {
+            ContainerRuntime outer = new() { X = x, Width = 48, Height = 48, IsRenderTarget = true };
+            ContainerRuntime inner = new() { Width = 48, Height = 48, IsRenderTarget = true };
+#pragma warning disable CS0618
+            ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+            square.X = 12;
+            square.Y = 12;
+            square.Width = 24;
+            square.Height = 24;
+            square.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+            inner.Children.Add(square);
+            outer.Children.Add(inner);
+            Gum.GumService.Default.Root.Children.Add(outer);
+            return (outer, inner);
+        }
+
+        (ContainerRuntime outerA, ContainerRuntime innerA) = Build(0);
+        (ContainerRuntime outerB, ContainerRuntime innerB) = Build(64);
+        Gum.GumService.Default.Root.UpdateLayout();
+
+        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        try
+        {
+            innerA.RenderTargetEffect = outline;
+            innerB.RenderTargetEffect = outline;
+            setA(innerA);
+            setB(innerB);
+            DrawOnce();
+            if (changeAfterFirstFrame != null)
+            {
+                changeAfterFirstFrame(innerA);
+                DrawOnce();
+            }
+
+            int Width(ContainerRuntime outer)
+            {
+                RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
+                int width = 0;
+                for (int x = 11; x >= 0 && ReadRenderTargetPixel(baked, x, 24).A > 127; x--)
+                {
+                    width++;
+                }
+                return width;
+            }
+
+            check(Width(outerA), Width(outerB));
+        }
+        finally
+        {
+            UnloadShader(outline);
+            Gum.GumService.Default.Root.Children.Clear();
+        }
+    }
+
+    [Fact]
+    public void Draw_OutlineSampleSlang_SharedShader_AfterAThicknessZeroContainer_AnUnsetContainerDrawsOnePixel()
+    {
+        WithSharedOutline(a => a.SetShaderParameter("Thickness", 0f), b => { }, null, (a, b) =>
+        {
+            a.ShouldBe(0);
+            b.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public void Draw_OutlineSampleSlang_SharedShader_AfterAThicknessThreeContainer_AContainerSettingOneDrawsOnePixel()
+    {
+        WithSharedOutline(a => a.SetShaderParameter("Thickness", 3f), b => b.SetShaderParameter("Thickness", 1f), null, (a, b) =>
+        {
+            a.ShouldBe(3);
+            b.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public void Draw_OutlineSampleSlang_ClearingTheParameters_RevertsToTheUnsetOnePixel()
+    {
+        WithSharedOutline(a => a.SetShaderParameter("Thickness", 3f), b => { }, a => a.ClearShaderParameters(), (a, b) =>
+        {
+            a.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public void Draw_OutlineSampleSlang_ASetTexelSize_WinsOverTheOneGumFillsIn()
+    {
+        WithSharedOutline(a => a.SetShaderParameter("TexelSize", 2f / 48f, 2f / 48f), b => { }, null, (a, b) =>
+        {
+            a.ShouldBe(2);
+            b.ShouldBe(1);
+        });
+    }
+
     private static ContainerRuntime BuildRedInner(float x)
     {
         ContainerRuntime inner = new();

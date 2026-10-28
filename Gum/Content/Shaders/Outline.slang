@@ -2,11 +2,11 @@
 // on MonoGame/KNI/FNA, raylib and Skia (ShadowDusk converts it for each). Five optional parameters,
 // set in the tool's Variables tab or from code with ContainerRuntime.SetShaderParameter:
 //   OutlineRed, OutlineGreen, OutlineBlue  outline color, each from 0 to 255 (all zero is black)
-//   Thickness  outline width in art pixels, 0 to 8 (default 1; 0 draws no outline)
-//   PixelSize  size of one art pixel in render target pixels (below 1 counts as 1). A 16x16 icon
-//              drawn 48 pixels wide has a PixelSize of 3
+//   Thickness  outline width in canvas pixels, 0 to 8 (default 1; 0 draws no outline)
+//   PixelSize  size of one art pixel in canvas pixels (below 1 counts as 1). A 16x16 icon
+//              drawn 48 canvas pixels wide has a PixelSize of 3
 // The outline is opaque and drawn outside the content, so the container needs transparent margin of
-// at least Thickness * PixelSize pixels around the content or the outline is cut off.
+// at least Thickness * PixelSize canvas pixels around the content or the outline is cut off.
 Texture2D SpriteTexture;
 SamplerState SpriteTextureSampler;
 

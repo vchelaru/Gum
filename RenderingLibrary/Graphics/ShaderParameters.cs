@@ -73,6 +73,20 @@ public readonly struct ShaderParameterValue
         new ShaderParameterValue(ShaderParameterKind.Float, 3, x, y, z, 0);
 
     /// <summary>Creates a four component float vector, which is also how a color is passed.</summary>
+    /// <summary>Zero of the same kind and component count as <paramref name="like"/>.</summary>
+    public static ShaderParameterValue ZeroLike(ShaderParameterValue like)
+    {
+        if (like.Kind == ShaderParameterKind.Int) return FromInt(0);
+        if (like.Kind == ShaderParameterKind.Bool) return FromBool(false);
+        switch (like.Count)
+        {
+            case 1: return FromFloat(0f);
+            case 2: return FromVector2(0f, 0f);
+            case 3: return FromVector3(0f, 0f, 0f);
+            default: return FromVector4(0f, 0f, 0f, 0f);
+        }
+    }
+
     public static ShaderParameterValue FromVector4(float x, float y, float z, float w) =>
         new ShaderParameterValue(ShaderParameterKind.Float, 4, x, y, z, w);
 }
@@ -196,4 +210,45 @@ public class ShaderParameterCollection
     /// Enumerates the parameters without allocating. Do not add or remove entries while enumerating.
     /// </summary>
     public Dictionary<string, ShaderParameterValue>.Enumerator GetEnumerator() => _values.GetEnumerator();
+}
+
+/// <summary>
+/// Remembers which parameter values Gum last wrote to one shared effect or shader, so the next
+/// container that draws with it can put back to zero the ones it did not set itself. Values the
+/// application wrote to the effect directly are never in the history, so they are left alone.
+/// </summary>
+public sealed class ShaderParameterHistory
+{
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, ShaderParameterHistory> _histories =
+        new System.Runtime.CompilerServices.ConditionalWeakTable<object, ShaderParameterHistory>();
+
+    private readonly Dictionary<string, ShaderParameterValue> _applied = new Dictionary<string, ShaderParameterValue>();
+    private readonly List<KeyValuePair<string, ShaderParameterValue>> _stale = new List<KeyValuePair<string, ShaderParameterValue>>();
+
+    /// <summary>The history for <paramref name="effect"/> (a MonoGame Effect or a raylib shader, boxed once per call site).</summary>
+    public static ShaderParameterHistory For(object effect) => _histories.GetValue(effect, _ => new ShaderParameterHistory());
+
+    /// <summary>Notes that <paramref name="name"/> was written with <paramref name="value"/>.</summary>
+    public void Record(string name, ShaderParameterValue value) => _applied[name] = value;
+
+    /// <summary>
+    /// Returns, and forgets, the values written earlier for names not in <paramref name="current"/>.
+    /// The returned list is reused by the next call.
+    /// </summary>
+    public List<KeyValuePair<string, ShaderParameterValue>> TakeStale(ShaderParameterCollection? current)
+    {
+        _stale.Clear();
+        foreach (KeyValuePair<string, ShaderParameterValue> pair in _applied)
+        {
+            if (current == null || !current.TryGetValue(pair.Key, out _))
+            {
+                _stale.Add(pair);
+            }
+        }
+        foreach (KeyValuePair<string, ShaderParameterValue> pair in _stale)
+        {
+            _applied.Remove(pair.Key);
+        }
+        return _stale;
+    }
 }

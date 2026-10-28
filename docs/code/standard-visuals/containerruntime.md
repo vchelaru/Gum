@@ -131,7 +131,7 @@ container.SetShaderParameter("OutlineRed", 255f);
 container.SetShaderParameter("OutlineGreen", 255f);
 ```
 
-The shader has five parameters, all optional. `OutlineRed`, `OutlineGreen` and `OutlineBlue` are the outline color from 0 to 255 (all zero, the default, is black), `Thickness` is the outline width in art pixels from 0 to 8 (default 1; 0 draws no outline), and `PixelSize` is how many render target pixels one art pixel covers (default 1). A 16x16 icon drawn 48 pixels wide has a `PixelSize` of 3, so a `Thickness` of 1 gives a 3 pixel outline that lines up with the art pixels. The outline is opaque, and the container's `Alpha` still fades it.
+The shader has five parameters, all optional. `OutlineRed`, `OutlineGreen` and `OutlineBlue` are the outline color from 0 to 255 (all zero, the default, is black), `Thickness` is the outline width in canvas pixels from 0 to 8 (default 1; 0 draws no outline), and `PixelSize` is the size of one art pixel in canvas pixels (default 1). A 16x16 icon drawn 48 canvas pixels wide has a `PixelSize` of 3, so a `Thickness` of 1 gives a 3 canvas pixel outline that lines up with the art pixels. Both are in canvas pixels, so the outline scales with the camera zoom like the Sprite does. The outline is opaque, and the container's `Alpha` still fades it.
 
 The outline is drawn outside the content, so the container must leave at least `Thickness * PixelSize` pixels of transparent margin around the Sprite or the outline is cut off.
 

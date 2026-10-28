@@ -779,6 +779,18 @@ public class Renderer : IRenderer
     // so the value's kind picks the upload type.
     private static void ApplyShaderParameters(ShaderParameterCollection? parameters, Raylib_cs.Shader shader)
     {
+        // A shared shader keeps the last values written to it, so what an earlier container set and
+        // this one did not goes back to zero (the unset value) before this container's values go on.
+        ShaderParameterHistory history = ShaderParameterHistory.For(HistoryKey(shader.Id));
+        foreach (KeyValuePair<string, ShaderParameterValue> stale in history.TakeStale(parameters))
+        {
+            int staleLocation = Raylib.GetShaderLocation(shader, stale.Key);
+            if (staleLocation >= 0)
+            {
+                SetShaderUniform(shader, staleLocation, ShaderParameterValue.ZeroLike(stale.Value));
+            }
+        }
+
         if (parameters == null)
         {
             return;
@@ -792,37 +804,58 @@ public class Renderer : IRenderer
                 continue;
             }
 
-            int isSetLocation = Raylib.GetShaderLocation(shader, ShaderParameterCollection.GetIsSetName(pair.Key));
+            string isSetName = ShaderParameterCollection.GetIsSetName(pair.Key);
+            int isSetLocation = Raylib.GetShaderLocation(shader, isSetName);
             if (isSetLocation >= 0)
             {
                 Raylib.SetShaderValue(shader, isSetLocation, 1f, ShaderUniformDataType.Float);
+                history.Record(isSetName, ShaderParameterValue.FromFloat(1f));
             }
 
-            ShaderParameterValue value = pair.Value;
-            switch (value.Kind)
-            {
-                case ShaderParameterKind.Int:
-                case ShaderParameterKind.Bool:
-                    Raylib.SetShaderValue(shader, location, (int)value.X, ShaderUniformDataType.Int);
-                    break;
-                default:
-                    switch (value.Count)
-                    {
-                        case 1:
-                            Raylib.SetShaderValue(shader, location, value.X, ShaderUniformDataType.Float);
-                            break;
-                        case 2:
-                            Raylib.SetShaderValue(shader, location, new System.Numerics.Vector2(value.X, value.Y), ShaderUniformDataType.Vec2);
-                            break;
-                        case 3:
-                            Raylib.SetShaderValue(shader, location, new System.Numerics.Vector3(value.X, value.Y, value.Z), ShaderUniformDataType.Vec3);
-                            break;
-                        default:
-                            Raylib.SetShaderValue(shader, location, new System.Numerics.Vector4(value.X, value.Y, value.Z, value.W), ShaderUniformDataType.Vec4);
-                            break;
-                    }
-                    break;
-            }
+            history.Record(pair.Key, pair.Value);
+            SetShaderUniform(shader, location, pair.Value);
+        }
+    }
+
+    // Raylib's Shader is a struct, so the history is keyed by one boxed object per shader id.
+    private static readonly Dictionary<uint, object> _historyKeys = new Dictionary<uint, object>();
+
+    private static object HistoryKey(uint shaderId)
+    {
+        if (!_historyKeys.TryGetValue(shaderId, out object? key))
+        {
+            key = new object();
+            _historyKeys[shaderId] = key;
+        }
+        return key;
+    }
+
+    // Raylib cannot read a uniform's declared type, so the value's kind picks the upload type.
+    private static void SetShaderUniform(Raylib_cs.Shader shader, int location, ShaderParameterValue value)
+    {
+        switch (value.Kind)
+        {
+            case ShaderParameterKind.Int:
+            case ShaderParameterKind.Bool:
+                Raylib.SetShaderValue(shader, location, (int)value.X, ShaderUniformDataType.Int);
+                break;
+            default:
+                switch (value.Count)
+                {
+                    case 1:
+                        Raylib.SetShaderValue(shader, location, value.X, ShaderUniformDataType.Float);
+                        break;
+                    case 2:
+                        Raylib.SetShaderValue(shader, location, new System.Numerics.Vector2(value.X, value.Y), ShaderUniformDataType.Vec2);
+                        break;
+                    case 3:
+                        Raylib.SetShaderValue(shader, location, new System.Numerics.Vector3(value.X, value.Y, value.Z), ShaderUniformDataType.Vec3);
+                        break;
+                    default:
+                        Raylib.SetShaderValue(shader, location, new System.Numerics.Vector4(value.X, value.Y, value.Z, value.W), ShaderUniformDataType.Vec4);
+                        break;
+                }
+                break;
         }
     }
 
