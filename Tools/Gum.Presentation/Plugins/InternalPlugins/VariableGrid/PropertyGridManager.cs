@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Gum.ToolStates;
 using Gum.DataTypes;
@@ -1119,7 +1120,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     internal void AdjustShaderParameters(List<MemberCategory> categories, InstanceSave? instance)
     {
         IReadOnlyList<ShaderParameterInfo> parameters = GetShaderParameters(instance);
-        _shaderParametersSignature = GetShaderParametersSignature(parameters);
+        IReadOnlyDictionary<string, ShaderParameterValue> sourceDefaults = GetShaderSourceDefaults(instance);
+        _shaderParametersSignature = GetShaderParametersSignature(parameters, sourceDefaults);
 
         MemberCategory? category = categories.FirstOrDefault(item => item.Name == "Rendering");
         StateReferencingInstanceMember? textMember = category?.Members
@@ -1136,7 +1138,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         List<SyntheticVariableRow> rows = ShaderParameterRows.Build(
             parameters,
             () => textMember.Value as string,
-            text => textMember.Value = text);
+            text => textMember.Value = text,
+            sourceDefaults);
 
         foreach (SyntheticVariableRow row in rows)
         {
@@ -1158,8 +1161,39 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         return ShaderParameterReader.Read(effect);
     }
 
-    private static string GetShaderParametersSignature(IReadOnlyList<ShaderParameterInfo> parameters) =>
-        string.Join(";", parameters.Select(parameter => parameter.Name + ":" + parameter.Kind + ":" + parameter.Count));
+    // The defaults the shader's own source text declares (ShadowDusk drops them from the compiled effect),
+    // or none when the container has no shader file, the file is missing, or it cannot be read.
+    private IReadOnlyDictionary<string, ShaderParameterValue> GetShaderSourceDefaults(InstanceSave? instance)
+    {
+        string? projectDirectory = _projectState.ProjectDirectory;
+        StateSave? state = _selectedState.SelectedStateSave ?? instance?.ParentContainer?.DefaultState;
+        string? shaderFile = instance == null ? null : state?.GetValueRecursive(instance.Name + ".SourceShaderFile") as string;
+        if (string.IsNullOrEmpty(projectDirectory) || string.IsNullOrEmpty(shaderFile))
+        {
+            return ShaderSourceDefaults.Parse(null);
+        }
+
+        try
+        {
+            return ShaderSourceDefaults.Parse(File.ReadAllText(Path.Combine(projectDirectory, shaderFile.Replace('\\', '/'))));
+        }
+        catch (Exception exception) when (
+            exception is IOException || exception is UnauthorizedAccessException ||
+            exception is ArgumentException || exception is NotSupportedException || exception is System.Security.SecurityException)
+        {
+            return ShaderSourceDefaults.Parse(null);
+        }
+    }
+
+    private static string GetShaderParametersSignature(
+        IReadOnlyList<ShaderParameterInfo> parameters, IReadOnlyDictionary<string, ShaderParameterValue> sourceDefaults) =>
+        string.Join(";", parameters.Select(parameter =>
+        {
+            string signature = parameter.Name + ":" + parameter.Kind + ":" + parameter.Count;
+            return sourceDefaults.TryGetValue(parameter.Name, out ShaderParameterValue declared)
+                ? signature + ":" + declared.X + "," + declared.Y + "," + declared.Z + "," + declared.W
+                : signature;
+        }));
 
     /// <summary>
     /// True when the selected instance's compiled shader declares different parameters than the rows
@@ -1173,7 +1207,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             return false;
         }
 
-        string current = GetShaderParametersSignature(GetShaderParameters(_selectedState.SelectedInstance));
+        string current = GetShaderParametersSignature(
+            GetShaderParameters(_selectedState.SelectedInstance), GetShaderSourceDefaults(_selectedState.SelectedInstance));
         return current != _shaderParametersSignature;
     }
 
