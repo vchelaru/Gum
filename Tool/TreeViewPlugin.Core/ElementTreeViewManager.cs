@@ -1720,6 +1720,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 nodeForInstance.Expand();
             }
 
+            // An instance in elementSave.Instances belongs to elementSave, whatever its back reference
+            // says. A clone of a base's instance keeps the base as its ParentContainer, and the sibling
+            // and parent lookups below read the container's lists, not elementSave's (#7005).
+            if (!ReferenceEquals(instance.ParentContainer, elementSave))
+            {
+                instance.ParentContainer = elementSave;
+            }
+
             var siblingInstances = siblingLists.FirstOrDefault(item => item.Contains(instance));
             if (siblingInstances == null)
             {
@@ -1729,7 +1737,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             var desiredIndex = siblingInstances.IndexOf(instance);
 
             // Every instance here comes from elementSave.Instances, so elementSave is its container.
-            var container = instance.ParentContainer ?? elementSave;
+            var container = elementSave;
             var defaultState = container.DefaultState;
             var thisParentValue = defaultState?.GetValueRecursive($"{instance.Name}.Parent") as string;
 
@@ -1759,7 +1767,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 ((ITreeNodeMutable)desiredParentNode).AddChild((ITreeNodeMutable)nodeForInstance);
             }
 
-            ((ITreeNodeMutable)nodeForInstance).MoveToIndex(desiredIndex);
+            if (desiredIndex >= 0)
+            {
+                ((ITreeNodeMutable)nodeForInstance).MoveToIndex(desiredIndex);
+            }
+            else
+            {
+                // One misplaced instance must not take the whole tree down.
+                _guiCommands.PrintOutput($"The tree could not find {instance.Name} among the instances of {elementSave.Name}; it is left where it is.");
+            }
 
             var element = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
