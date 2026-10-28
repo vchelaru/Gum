@@ -740,7 +740,16 @@ public class Renderer : IRenderer
             (cacheOwner as IRenderTargetRenderable)?.RenderTargetEffect as Raylib_cs.Shader?;
         if (renderTargetShader != null)
         {
-            ApplyShaderParameters((cacheOwner as IRenderTargetRenderable)?.ShaderParameters, renderTargetShader.Value);
+            ShaderParameterCollection? shaderParameters = (cacheOwner as IRenderTargetRenderable)?.ShaderParameters;
+            ApplyShaderParameters(shaderParameters, renderTargetShader.Value);
+            int texelSizeLocation = Raylib.GetShaderLocation(renderTargetShader.Value, ShaderParameterCollection.TexelSizeName);
+            if (texelSizeLocation >= 0 && shaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
+            {
+                // One pixel of the baked texture as a fraction, for shaders that step whole pixels.
+                Raylib.SetShaderValue(renderTargetShader.Value, texelSizeLocation,
+                    new System.Numerics.Vector2(1f / renderTexture.Value.Texture.Width, 1f / renderTexture.Value.Texture.Height),
+                    ShaderUniformDataType.Vec2);
+            }
             counter.BeginShaderMode(renderTargetShader.Value);
         }
 

@@ -212,7 +212,6 @@ void main()
         try
         {
             inner.RenderTargetEffect = outline;
-            inner.SetShaderParameter("TexelSize", 1f / 48f, 1f / 48f);
             inner.SetShaderParameter("Thickness", 2f);
             inner.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
             DrawOnce();

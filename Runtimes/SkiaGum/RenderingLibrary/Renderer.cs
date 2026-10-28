@@ -894,7 +894,14 @@ namespace RenderingLibrary.Graphics
             {
                 uniforms["ShadowDusk_Resolution"] = new float[] { width, height };
             }
-            ApplyShaderParameters((owner as IRenderTargetRenderable)?.ShaderParameters, effect, uniforms);
+            ShaderParameterCollection? shaderParameters = (owner as IRenderTargetRenderable)?.ShaderParameters;
+            ApplyShaderParameters(shaderParameters, effect, uniforms);
+            if (effect.Uniforms.Contains(ShaderParameterCollection.TexelSizeName) &&
+                shaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
+            {
+                // One container pixel as a fraction, for shaders that step whole pixels.
+                uniforms[ShaderParameterCollection.TexelSizeName] = new float[] { 1f / width, 1f / height };
+            }
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
             canvas.DrawRect(destination, paint);

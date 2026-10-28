@@ -10,8 +10,9 @@ using SkiaSharp;
 namespace SkiaGum.Tests.ShadowDusk;
 
 /// <summary>
-/// Runs the Outline.slang file the samples ship through ShadowDusk and SkiaGum, so a break in the
+/// Runs the Outline.slang file the tool ships through ShadowDusk and SkiaGum, so a break in the
 /// shader, the conversion or the parameter plumbing shows up here and not only by eye in a sample.
+/// The outline has to be pixel exact: Thickness N is exactly N whole pixels on every side.
 /// </summary>
 public class SpriteOutlineShaderTests : IDisposable
 {
@@ -26,25 +27,26 @@ public class SpriteOutlineShaderTests : IDisposable
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
     }
 
-    // The csproj copies the sample's Outline.slang next to the test assembly.
-    private static string SampleShaderPath => Path.Combine(AppContext.BaseDirectory, "Outline.slang");
+    // The csproj copies the shipped Outline.slang next to the test assembly.
+    private static string ShippedShaderPath => Path.Combine(AppContext.BaseDirectory, "Outline.slang");
 
-    // A 24x24 red square in the middle of a 48x48 render target, outlined in blue.
-    private static SKBitmap DrawOutlinedSquare(float thickness)
+    // A 24x24 red square whose top left is at (squareLeft, squareLeft) in a render target of
+    // targetSize, with the parameters the caller sets (none means the shader's defaults).
+    private static SKBitmap DrawOutlinedSquare(int targetSize, int squareLeft, Action<ContainerRuntime>? setParameters)
     {
-        using SKSurface surface = SKSurface.Create(new SKImageInfo(48, 48));
-        GumService.Default.Initialize(surface.Canvas, 48, 48);
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(targetSize, targetSize));
+        GumService.Default.Initialize(surface.Canvas, targetSize, targetSize);
 
         ContainerRuntime container = new()
         {
-            Width = 48,
-            Height = 48,
+            Width = targetSize,
+            Height = targetSize,
             IsRenderTarget = true,
         };
         container.Children.Add(new RectangleRuntime
         {
-            X = 12,
-            Y = 12,
+            X = squareLeft,
+            Y = squareLeft,
             Width = 24,
             Height = 24,
             IsFilled = true,
@@ -52,10 +54,8 @@ public class SpriteOutlineShaderTests : IDisposable
         });
         GumService.Default.Root.Children.Add(container);
 
-        container.SetShaderParameter("TexelSize", 1f / 48f, 1f / 48f);
-        container.SetShaderParameter("Thickness", thickness);
-        container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
-        container.SourceShaderFile = SampleShaderPath;
+        setParameters?.Invoke(container);
+        container.SourceShaderFile = ShippedShaderPath;
 
         GumService.Default.Draw();
 
@@ -63,30 +63,88 @@ public class SpriteOutlineShaderTests : IDisposable
         return SKBitmap.FromImage(image);
     }
 
-    [Fact]
-    public void Outline_DrawsTheColorJustOutsideTheContent_AndLeavesTheContentAlone()
+    private static void ShouldBeOutline(SKBitmap bitmap, int x, int y, SKColor expected)
     {
-        using SKBitmap bitmap = DrawOutlinedSquare(thickness: 2f);
+        SKColor pixel = bitmap.GetPixel(x, y);
+        pixel.Alpha.ShouldBe((byte)255, $"alpha at {x},{y}");
+        pixel.Red.ShouldBe(expected.Red, $"red at {x},{y}");
+        pixel.Green.ShouldBe(expected.Green, $"green at {x},{y}");
+        pixel.Blue.ShouldBe(expected.Blue, $"blue at {x},{y}");
+    }
 
-        // Inside the square is still red.
-        SKColor inside = bitmap.GetPixel(24, 24);
-        inside.Red.ShouldBeGreaterThan((byte)200);
-        inside.Blue.ShouldBeLessThan((byte)60);
+    private static void ShouldBeEmpty(SKBitmap bitmap, int x, int y) =>
+        bitmap.GetPixel(x, y).Alpha.ShouldBe((byte)0, $"alpha at {x},{y}");
 
-        // One pixel outside the left edge (the square starts at x = 12) is the blue outline.
-        SKColor outline = bitmap.GetPixel(11, 24);
-        outline.Blue.ShouldBeGreaterThan((byte)200);
-        outline.Red.ShouldBeLessThan((byte)60);
-        outline.Alpha.ShouldBeGreaterThan((byte)200);
+    [Fact]
+    public void Outline_OfThicknessOne_IsOneWholePixelOnEverySide_IncludingTheCorners()
+    {
+        using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container =>
+        {
+            container.SetShaderParameter("Thickness", 1f);
+            container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+        });
+
+        SKColor blue = SKColors.Blue;
+        ShouldBeOutline(bitmap, 11, 24, blue); // left
+        ShouldBeOutline(bitmap, 36, 24, blue); // right (the square covers 12 to 35)
+        ShouldBeOutline(bitmap, 24, 11, blue); // top
+        ShouldBeOutline(bitmap, 24, 36, blue); // bottom
+        ShouldBeOutline(bitmap, 11, 11, blue); // diagonal corner
+        ShouldBeOutline(bitmap, 36, 36, blue); // diagonal corner
+        ShouldBeEmpty(bitmap, 10, 24);
+        ShouldBeEmpty(bitmap, 24, 10);
+        ShouldBeEmpty(bitmap, 10, 10);
+        ShouldBeEmpty(bitmap, 37, 24);
     }
 
     [Fact]
-    public void Outline_StopsAtThickness()
+    public void Outline_OfThicknessTwo_IsTwoWholePixelsOnEverySide()
     {
-        using SKBitmap bitmap = DrawOutlinedSquare(thickness: 2f);
+        using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container =>
+        {
+            container.SetShaderParameter("Thickness", 2f);
+            container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+        });
 
-        // Two pixels out is still outline, three pixels out is not.
-        bitmap.GetPixel(10, 24).Alpha.ShouldBeGreaterThan((byte)200);
-        bitmap.GetPixel(9, 24).Alpha.ShouldBe((byte)0);
+        ShouldBeOutline(bitmap, 11, 24, SKColors.Blue);
+        ShouldBeOutline(bitmap, 10, 24, SKColors.Blue);
+        ShouldBeEmpty(bitmap, 9, 24);
+        ShouldBeOutline(bitmap, 37, 24, SKColors.Blue);
+        ShouldBeEmpty(bitmap, 38, 24);
+        ShouldBeOutline(bitmap, 24, 10, SKColors.Blue);
+        ShouldBeEmpty(bitmap, 24, 9);
+        ShouldBeOutline(bitmap, 24, 37, SKColors.Blue);
+        ShouldBeEmpty(bitmap, 24, 38);
+        ShouldBeOutline(bitmap, 10, 10, SKColors.Blue); // the corner
+        ShouldBeEmpty(bitmap, 9, 9);
+    }
+
+    [Fact]
+    public void Outline_NeedsNoTexelSize_WhateverTheRenderTargetSize()
+    {
+        // A 96x96 target: a hand-set texel size would have to change with it, the shader reads it.
+        using SKBitmap bitmap = DrawOutlinedSquare(96, 40, container =>
+        {
+            container.SetShaderParameter("Thickness", 2f);
+            container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+        });
+
+        ShouldBeOutline(bitmap, 38, 52, SKColors.Blue);
+        ShouldBeEmpty(bitmap, 37, 52);
+        ShouldBeOutline(bitmap, 65, 52, SKColors.Blue);
+        ShouldBeEmpty(bitmap, 66, 52);
+    }
+
+    [Fact]
+    public void Outline_WithHalfAlphaColor_DrawsAHalfCoveredOutline()
+    {
+        using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container =>
+        {
+            container.SetShaderParameter("Thickness", 1f);
+            container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 0.5f);
+        });
+
+        SKColor pixel = bitmap.GetPixel(11, 24);
+        pixel.Alpha.ShouldBeInRange((byte)126, (byte)129);
     }
 }

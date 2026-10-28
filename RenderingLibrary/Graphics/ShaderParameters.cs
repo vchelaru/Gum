@@ -131,6 +131,13 @@ public static class ShaderParameterReader
 /// </summary>
 public class ShaderParameterCollection
 {
+    /// <summary>
+    /// The name of a <c>float2</c> parameter every backend fills in with one pixel of the render
+    /// target as a fraction (1 / width, 1 / height) when the effect declares it and nothing was set
+    /// for it, so a shader can step whole pixels without the host passing a size.
+    /// </summary>
+    public const string TexelSizeName = "TexelSize";
+
     private readonly Dictionary<string, ShaderParameterValue> _values;
 
     /// <summary>Creates an empty collection.</summary>

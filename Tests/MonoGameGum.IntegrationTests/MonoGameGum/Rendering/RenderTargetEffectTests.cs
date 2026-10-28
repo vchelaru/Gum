@@ -325,7 +325,6 @@ technique SpriteDrawing
         container.AddChild(square);
 
         container.RenderTargetEffect = outline;
-        container.SetShaderParameter("TexelSize", 1f / 48f, 1f / 48f);
         container.SetShaderParameter("Thickness", 2f);
         container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
 

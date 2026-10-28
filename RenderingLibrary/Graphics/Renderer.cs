@@ -1567,6 +1567,11 @@ public class Renderer : IRenderer
             // Set before BeginSpriteBatch: a shared effect keeps the last container's values until
             // SpriteBatch applies them when this batch ends.
             ApplyShaderParameters(effectOwner?.ShaderParameters, renderTargetEffect);
+            if (effectOwner?.ShaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
+            {
+                renderTargetEffect?.Parameters[ShaderParameterCollection.TexelSizeName]?.SetValue(
+                    new Vector2(1f / renderTarget.Width, 1f / renderTarget.Height));
+            }
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
             Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: rotation, objectCausingRendering: renderable);

@@ -80,7 +80,7 @@
 	     already repo-licensed for redistribution). -->
 	<ItemGroup>
 		<!-- The shader the samples ship, so the tests run exactly that file. -->
-		<None Include="..\..\Samples\MonoGameGumInCode\MonoGameGumInCode\Content\Outline.slang" Link="Outline.slang" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Gum\Content\Shaders\Outline.slang" Link="Outline.slang" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="Assets\Fonts\TestFont.ttf">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

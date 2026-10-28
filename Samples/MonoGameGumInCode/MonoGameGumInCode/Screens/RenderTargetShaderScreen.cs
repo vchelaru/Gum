@@ -61,7 +61,7 @@ namespace MonoGameGumInCode.Screens;
 /// is a compile-time constant, not host-adjustable) and <c>Content/Sepia.slang</c>.
 /// <para>The second row, on all three backends, runs one Slang file (<c>Outline.slang</c>) that
 /// outlines whatever the container draws. ShadowDusk converts it for each backend and
-/// <see cref="ContainerRuntime.SetShaderParameter(string, float)"/> sets its thickness and color.</para>
+/// <see cref="ContainerRuntime.SetShaderParameter(string, float)"/> sets its thickness and color (the pixel size is filled in by Gum).</para>
 /// </summary>
 internal class RenderTargetShaderScreen : FrameworkElement
 {
@@ -196,8 +196,8 @@ internal class RenderTargetShaderScreen : FrameworkElement
     }
 #endif
 
-    // A bear in a render target container, outlined by Outline.slang. TexelSize is one pixel of the
-    // container; Thickness is in those pixels. The interactive cell also draws a circle overlapping
+    // A bear in a render target container, outlined by the shipped Outline.slang. Thickness is in
+    // render target pixels; the pixel size comes from Gum. The interactive cell also draws a circle overlapping
     // the bear, so the outline wraps the combined shape, and a slider sets the thickness. A shader
     // that fails to convert or compile throws from the SourceShaderFile assignment on some backends,
     // so the failure is shown in the cell.
@@ -266,7 +266,6 @@ internal class RenderTargetShaderScreen : FrameworkElement
             };
         }
 
-        holder.SetShaderParameter("TexelSize", 1f / cellSize, 1f / cellSize);
         holder.SetShaderParameter("Thickness", thickness);
         holder.SetShaderParameter("OutlineColor", red, green, blue, 1f);
 

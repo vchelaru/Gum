@@ -115,6 +115,32 @@ Overloads take a `float`, `int`, `bool`, two to four float components, or a `Sys
 `SetShaderParameter` is available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+#### Example - Outlining a Sprite
+
+The Outline shader that ships with Gum draws a pixel-exact outline around everything a render target container draws. Put the Sprite in a container with `IsRenderTarget` set, then give the container the shader (in the Gum tool, pick `Outline.slang` in the container's Shader File drop-down under Built-in).
+
+```csharp
+// Initialize
+var container = new ContainerRuntime();
+container.Width = 48;
+container.Height = 48;
+container.IsRenderTarget = true;
+// Transparent margin of at least Thickness pixels around the Sprite
+sprite.X = 8;
+sprite.Y = 8;
+container.AddChild(sprite);
+
+container.SourceShaderFile = "Outline.slang";
+container.SetShaderParameter("Thickness", 2f);
+container.SetShaderParameter("OutlineColor", 1f, 1f, 0f, 1f);
+```
+
+`Thickness` is a whole number of pixels, from 1 to 8, and `OutlineColor` is red, green, blue and alpha from 0 to 1. The outline is drawn outside the content, so the container must leave at least `Thickness` pixels of transparent margin around the Sprite or the outline is cut off.
+
+{% hint style="info" %}
+The Outline shader is available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 {% hint style="info" %}
 To instead display a container's render target as a regular Sprite (so it can be scaled, rotated, or stacked) rather than post-processing it in place, see [RenderTargetTextureSource](spriteruntime/rendertargettexturesource.md).
 {% endhint %}
