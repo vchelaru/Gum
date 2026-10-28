@@ -257,7 +257,8 @@ public class FileChangeShaderReactionTests : BaseTestClass
     [Fact]
     public void ReactToFileDeleted_DoesNothing_WhenNoElementUsesTheShader()
     {
-        AddScreenWithShader("Main", "Shaders/Blur.slang");
+        ScreenSave screen = AddScreenWithShader("Main", "Shaders/Blur.slang");
+        _selectedState.Setup(s => s.SelectedElement).Returns(screen);
 
         _reaction.ReactToFileDeleted(new FilePath(Path.Combine(_projectFolder, "Shaders", "Unused.fx")));
 

@@ -417,15 +417,12 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     /// Where a head's shader resolver reports a shader that stopped compiling while the preview keeps
     /// the last version that worked (the Output tab).
     /// </summary>
-    protected void ReportShaderError(string message)
-    {
-        _shaderFellBackToLastGood = true;
-        _guiCommands.PrintOutput(message);
-    }
+    protected void ReportShaderError(string message) => ShaderReporter.ReportError(message);
 
-    // Set by ReportShaderError during one resolve, so a shader that kept its old version is not also
-    // reported as freshly compiled.
-    private bool _shaderFellBackToLastGood;
+    private RenderTargetShaderReporter? _shaderReporter;
+
+    private RenderTargetShaderReporter ShaderReporter =>
+        _shaderReporter ??= new RenderTargetShaderReporter(message => _guiCommands.PrintOutput(message));
 
     // Compiles the .fx via the tool-side resolver and, on success, reports it to the Output window.
     // The resolver only ever logs failures (it throws, which AssignSourceShaderFileOnContainer turns
@@ -433,16 +430,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     // successful return is logged here; failures keep propagating to the existing error path. Note
     // the underlying effect is cached by path in LoaderManager, so this fires once per actual
     // compile (a cache hit skips the resolver), which is exactly the "it compiled" signal we want.
-    private object? ResolveAndReportRenderTargetShader(string absolutePath)
-    {
-        _shaderFellBackToLastGood = false;
-        object? effect = _renderTargetShaderResolver?.Invoke(absolutePath);
-        if (effect != null && !_shaderFellBackToLastGood)
-        {
-            _guiCommands.PrintOutput($"Compiled render-target shader for the preview:\n{absolutePath}");
-        }
-        return effect;
-    }
+    private object? ResolveAndReportRenderTargetShader(string absolutePath) =>
+        ShaderReporter.ResolveAndReport(_renderTargetShaderResolver, absolutePath);
 
     private void AssignEvents()
     {
