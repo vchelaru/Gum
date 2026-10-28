@@ -49,9 +49,13 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         for (int x = -8; x <= 8; x++)
         {
             float2 offset = float2(x, y);
-            if (reach > 0.5 && abs(offset.x) <= reach && abs(offset.y) <= reach)
+            float2 uv = input.TextureCoordinates + offset * step;
+            // A neighbor past the edge of the render target is empty, whatever the sampler's address
+            // mode (wrap would otherwise draw the outline of the far edge on this side).
+            bool inside = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
+            if (inside && reach > 0.5 && abs(offset.x) <= reach && abs(offset.y) <= reach)
             {
-                neighborAlpha = max(neighborAlpha, SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates + offset * step).a);
+                neighborAlpha = max(neighborAlpha, SpriteTexture.Sample(SpriteTextureSampler, uv).a);
             }
         }
     }

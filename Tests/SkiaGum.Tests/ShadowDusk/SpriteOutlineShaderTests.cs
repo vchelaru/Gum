@@ -223,6 +223,36 @@ public class SpriteOutlineShaderTests : IDisposable
         ShouldBeEmpty(bitmap, 74, 24);
     }
 
+    [Fact]
+    public void Outline_OfANegativeThickness_DrawsNoOutline()
+    {
+        using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container => container.SetShaderParameter("Thickness", -2f));
+
+        ShouldBeEmpty(bitmap, 11, 24);
+    }
+
+    [Theory]
+    [InlineData(0f)]
+    [InlineData(-3f)]
+    public void Outline_WithAPixelSizeBelowOne_CountsItAsOne(float pixelSize)
+    {
+        using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container => container.SetShaderParameter("PixelSize", pixelSize));
+
+        ShouldBeOutline(bitmap, 11, 24, SKColors.Black);
+        ShouldBeEmpty(bitmap, 10, 24);
+    }
+
+    [Fact]
+    public void Outline_OfASpriteTouchingTheRightAndBottomEdges_DrawsNothingOnTheOppositeEdges()
+    {
+        // The square covers 24 to 47, the far edges of the 48 pixel container.
+        using SKBitmap bitmap = DrawOutlinedSquare(48, 24, setParameters: null);
+
+        ShouldBeEmpty(bitmap, 0, 36);
+        ShouldBeEmpty(bitmap, 36, 0);
+        ShouldBeOutline(bitmap, 23, 36, SKColors.Black);
+    }
+
     // The outline is measured in canvas pixels, so it grows and shrinks with the camera zoom exactly
     // like the content does: Thickness * PixelSize canvas pixels is that many times zoom device pixels.
     [Theory]

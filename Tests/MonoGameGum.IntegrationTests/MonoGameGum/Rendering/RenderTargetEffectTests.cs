@@ -398,7 +398,7 @@ technique SpriteDrawing
     // square 12 pixels in. Draws a frame, applies changeAfterFirstFrame to A, and returns the last frame
     // on white so a black outline can be measured.
     private Color[] RenderSharedEffect(
-        System.Action<ContainerRuntime> setA, System.Action<ContainerRuntime> setB, System.Action<ContainerRuntime>? changeAfterFirstFrame = null)
+        System.Action<ContainerRuntime> setA, System.Action<ContainerRuntime> setB, System.Action<ContainerRuntime>? changeAfterFirstFrame = null, float squareOffset = 12)
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -421,8 +421,8 @@ technique SpriteDrawing
 #pragma warning disable CS0618
             ColoredRectangleRuntime square = new();
 #pragma warning restore CS0618
-            square.X = 12;
-            square.Y = 12;
+            square.X = squareOffset;
+            square.Y = squareOffset;
             square.Width = 24;
             square.Height = 24;
             square.Color = Color.Red;
@@ -444,6 +444,15 @@ technique SpriteDrawing
             data = RenderToCapture(gd, renderer, managers, Color.White);
         }
         return data;
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_OfASpriteTouchingTheRightAndBottomEdges_DrawsNothingOnTheOppositeEdges()
+    {
+        Color[] data = RenderSharedEffect(a => { }, b => { }, null, squareOffset: 24);
+
+        data[(36 * CaptureSize) + 0].R.ShouldBe((byte)255);
+        data[(0 * CaptureSize) + 36].R.ShouldBe((byte)255);
     }
 
     // Dark pixels immediately left of a square whose left edge is at squareLeft, on its middle row.

@@ -876,9 +876,12 @@ namespace RenderingLibrary.Graphics
             // container's absolute (left, top), so the child shader needs a matching translation;
             // without it, any non-origin container reads the wrong (typically out-of-bounds,
             // edge-clamped) region of the baked image instead of its own contents (#4001).
+            // The draw happens in the image's own space (the canvas is translated to its corner), so the
+            // coordinate the effect receives, and the UV a converted shader derives from it, run from 0
+            // at the container's top left whatever its position.
             using SKShader imageShader = image.ToShader(
                 SKShaderTileMode.Clamp, SKShaderTileMode.Clamp,
-                SKMatrix.CreateScaleTranslation(1 / zoom, 1 / zoom, left, top));
+                SKMatrix.CreateScale(1 / zoom, 1 / zoom));
             using SKRuntimeEffectUniforms uniforms = new SKRuntimeEffectUniforms(effect);
             using SKRuntimeEffectChildren children = new SKRuntimeEffectChildren(effect);
             children["SpriteTexture"] = imageShader;
@@ -905,7 +908,10 @@ namespace RenderingLibrary.Graphics
             }
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
-            canvas.DrawRect(destination, paint);
+            canvas.Save();
+            canvas.Translate(left, top);
+            canvas.DrawRect(new SKRect(0, 0, destination.Width, destination.Height), paint);
+            canvas.Restore();
         }
 
         // A new uniform block starts with whatever bytes the allocator returned, but a shader (and the

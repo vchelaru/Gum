@@ -33,6 +33,19 @@ public class ShaderParameterRowsTests
         rows.Select(row => row.Name).ShouldBe(new[] { "Thickness", "PixelSize" });
     }
 
+    [Theory]
+    [InlineData(0f)]
+    [InlineData(-1f)]
+    public void Set_StoresAnExplicitValue_EvenWhenItEqualsTheDisplayedDefault(float value)
+    {
+        List<SyntheticVariableRow> rows = Build(FloatInfo("Thickness", defaultValue: 0f));
+
+        rows[0].Set(value);
+
+        _text.ShouldContain("Thickness=");
+        rows[0].Get().ShouldBe(value);
+    }
+
     [Fact]
     public void Build_ScalarFloat_IsOneRowNamedAfterTheParameter()
     {
