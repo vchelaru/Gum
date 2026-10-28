@@ -1141,15 +1141,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     // state-based path, which preserves the existing restoration behavior.
                     if (mRecordedSelectedObject is InstanceSave instanceSave)
                     {
-                        // An instance the refresh dropped (undo/redo replaced it with a clone, or
-                        // it was removed) must not be selected: selecting it also clears the
+                        // A required instance the refresh dropped (undo/redo replaced it with a
+                        // clone, or it was removed) must not be selected: selecting it clears the
                         // behavior, since a behavior is found through its required instances.
-                        // Its container stays selected instead.
-                        object? container = GetContainerOfStaleInstance(instanceSave, mRecordedSelectedContainer);
-                        if (container is BehaviorSave containerBehavior)
-                            _selectedState.SelectedBehavior = containerBehavior;
-                        else if (container is ElementSave containerElement)
-                            _selectedState.SelectedElement = containerElement;
+                        // The behavior stays selected instead.
+                        BehaviorSave? behaviorOfStaleInstance = GetBehaviorOfStaleInstance(instanceSave, mRecordedSelectedContainer);
+                        if (behaviorOfStaleInstance != null)
+                            _selectedState.SelectedBehavior = behaviorOfStaleInstance;
                         else
                             _selectedState.SelectedInstance = instanceSave;
                     }
@@ -1188,20 +1186,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     /// <summary>
-    /// The container to select in place of <paramref name="instance"/> after a tree refresh found no
-    /// node for it, or null when the container still holds that very instance. The container is
-    /// the recorded one (the behavior or element that was selected with the instance), else the
-    /// instance's own element.
+    /// The behavior to select in place of <paramref name="instance"/> after a tree refresh found no
+    /// node for it, or null when the behavior still holds that very instance or the instance was
+    /// not selected in a behavior. <paramref name="recordedContainer"/> is the behavior that was
+    /// selected with the instance.
     /// </summary>
-    internal static object? GetContainerOfStaleInstance(InstanceSave instance, object? recordedContainer)
+    internal static BehaviorSave? GetBehaviorOfStaleInstance(InstanceSave instance, object? recordedContainer)
     {
-        if (recordedContainer is BehaviorSave behavior)
-        {
-            return behavior.RequiredInstances.Contains(instance) ? null : behavior;
-        }
-
-        ElementSave? element = recordedContainer as ElementSave ?? instance.ParentContainer;
-        return element != null && !element.Instances.Contains(instance) ? element : null;
+        return recordedContainer is BehaviorSave behavior && !behavior.RequiredInstances.Contains(instance)
+            ? behavior
+            : null;
     }
 
     private ITreeNode? FindTreeNodeForRecordedObject() =>

@@ -84,7 +84,7 @@ A Variables-tab edit's undo step is recorded when its lock is released after plu
 
 Both element and behavior snapshots use `CloneElement`/`CloneBehavior`, so every saved snapshot contains **new object instances** with different references than the live data. When undo is applied, the restored instances replace the live ones — meaning any code holding a reference to the pre-undo instance now has a **stale reference** that no longer exists in the element or behavior.
 
-Consequence: after an undo, `_selectedState.SelectedInstance` may point to a stale object. Reference-based lookups (e.g. tree node searches using `==`) will fail. Name-based fallback is required to re-locate the logically equivalent node. If undo also changes the instance's name, or removes it, the instance selection is dropped and its container (the behavior or element) stays selected: `ElementTreeViewManager.SelectRecordedSelection` uses `GetContainerOfStaleInstance` instead of assigning the stale instance, because a behavior is found through its required instances and a stale one would clear `SelectedBehavior`, leaving the next undo with nothing to act on.
+Consequence: after an undo, `_selectedState.SelectedInstance` may point to a stale object. Reference-based lookups (e.g. tree node searches using `==`) will fail. Name-based fallback is required to re-locate the logically equivalent node. If undo also changes the instance's name, or removes it, the instance selection is dropped and, for a behavior, the behavior stays selected: `ElementTreeViewManager.SelectRecordedSelection` uses `GetBehaviorOfStaleInstance` instead of assigning the stale instance, because a behavior is found through its required instances and a stale one would clear `SelectedBehavior`, leaving the next undo with nothing to act on. The element path is left as it was: selecting the element in place of a dropped instance sends no `SelectionChangedMessage`, so the add destination would stay anchored to the old container.
 
 ## Undo And Redo Re-Run The Reference Cascade
 
@@ -114,3 +114,4 @@ After restoring a snapshot, `ElementUndoStrategy.DoAfterUndoLogic` calls `IVaria
 | No selection restore | Selection state is not captured or restored on undo/redo |
 | No persistence | History is lost on app close or opening another project; a same-project reload keeps unchanged elements' history |
 | No element-deletion undo | Deleting an element removes its history permanently |
+| Behavior fields outside the tracked three | Renaming a behavior, and any behavior field other than categories, required variables and required instances, is not undoable (#7019) |

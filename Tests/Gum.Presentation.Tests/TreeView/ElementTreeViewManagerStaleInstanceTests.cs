@@ -9,48 +9,37 @@ namespace Gum.Presentation.Tests;
 public class ElementTreeViewManagerStaleInstanceTests : BaseTestClass
 {
     [Fact]
-    public void GetContainerOfStaleInstance_BehaviorNoLongerHoldingTheInstance_ReturnsTheBehavior()
+    public void GetBehaviorOfStaleInstance_BehaviorNoLongerHoldingTheInstance_ReturnsTheBehavior()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "Clickable" };
         BehaviorInstanceSave replaced = new BehaviorInstanceSave { Name = "Label" };
         behavior.RequiredInstances.Add(new BehaviorInstanceSave { Name = "Label" });
 
-        ElementTreeViewManager.GetContainerOfStaleInstance(replaced, behavior).ShouldBeSameAs(behavior);
+        ElementTreeViewManager.GetBehaviorOfStaleInstance(replaced, behavior).ShouldBeSameAs(behavior);
     }
 
     [Fact]
-    public void GetContainerOfStaleInstance_BehaviorStillHoldingTheInstance_ReturnsNull()
+    public void GetBehaviorOfStaleInstance_BehaviorStillHoldingTheInstance_ReturnsNull()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "Clickable" };
         BehaviorInstanceSave held = new BehaviorInstanceSave { Name = "Label" };
         behavior.RequiredInstances.Add(held);
 
-        ElementTreeViewManager.GetContainerOfStaleInstance(held, behavior).ShouldBeNull();
+        ElementTreeViewManager.GetBehaviorOfStaleInstance(held, behavior).ShouldBeNull();
     }
 
     [Fact]
-    public void GetContainerOfStaleInstance_ElementNoLongerHoldingTheInstance_ReturnsTheElement()
+    public void GetBehaviorOfStaleInstance_InstanceSelectedInAnElement_ReturnsNull()
     {
         ComponentSave component = new ComponentSave { Name = "Button" };
         InstanceSave removed = new InstanceSave { Name = "Label", ParentContainer = component };
 
-        ElementTreeViewManager.GetContainerOfStaleInstance(removed, component).ShouldBeSameAs(component);
-        ElementTreeViewManager.GetContainerOfStaleInstance(removed, null).ShouldBeSameAs(component);
+        ElementTreeViewManager.GetBehaviorOfStaleInstance(removed, component).ShouldBeNull();
     }
 
     [Fact]
-    public void GetContainerOfStaleInstance_ElementStillHoldingTheInstance_ReturnsNull()
+    public void GetBehaviorOfStaleInstance_NoContainerKnown_ReturnsNull()
     {
-        ComponentSave component = new ComponentSave { Name = "Button" };
-        InstanceSave held = new InstanceSave { Name = "Label", ParentContainer = component };
-        component.Instances.Add(held);
-
-        ElementTreeViewManager.GetContainerOfStaleInstance(held, component).ShouldBeNull();
-    }
-
-    [Fact]
-    public void GetContainerOfStaleInstance_NoContainerKnown_ReturnsNull()
-    {
-        ElementTreeViewManager.GetContainerOfStaleInstance(new InstanceSave { Name = "Label" }, null).ShouldBeNull();
+        ElementTreeViewManager.GetBehaviorOfStaleInstance(new InstanceSave { Name = "Label" }, null).ShouldBeNull();
     }
 }
