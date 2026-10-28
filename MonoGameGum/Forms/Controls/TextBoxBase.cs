@@ -664,8 +664,7 @@ public abstract class TextBoxBase :
         if (MainCursor.PrimaryDoublePush)
         {
             indexPushed = null;
-            selectionStart = 0;
-            SelectionLength = DisplayedText?.Length ?? 0;
+            SetSelectionRange(0, DisplayedText?.Length ?? 0);
         }
         else
         {
@@ -730,8 +729,7 @@ public abstract class TextBoxBase :
 
                 var maxIndex = System.Math.Max(currentIndex, indexPushed.Value);
 
-                selectionStart = minIndex;
-                SelectionLength = maxIndex - minIndex;
+                SetSelectionRange(minIndex, maxIndex - minIndex);
             }
         }
         if (MainCursor.LastInputDevice == InputDevice.TouchScreen)
@@ -1111,10 +1109,7 @@ public abstract class TextBoxBase :
 
             if (SelectionLength == 0)
             {
-                // set the field (doesn't update the selection visuals)...
-                selectionStart = System.Math.Min(oldIndex, newIndex);
-                // ...now set the property to update the visuals.
-                SelectionLength = System.Math.Abs(oldIndex - newIndex);
+                SetSelectionRange(System.Math.Min(oldIndex, newIndex), System.Math.Abs(oldIndex - newIndex));
             }
             else
             {
@@ -1131,13 +1126,26 @@ public abstract class TextBoxBase :
                     rightMost = System.Math.Max(selectionStart, newIndex);
                 }
 
-                selectionStart = leftMost;
-                SelectionLength = rightMost - leftMost;
+                SetSelectionRange(leftMost, rightMost - leftMost);
             }
         }
         else
         {
             SelectionLength = 0;
+        }
+    }
+
+    // Sets both values and always redraws. Assigning the field and then SelectionLength skips the
+    // redraw when the length is unchanged but the start moved, which leaves the old rectangles.
+    private void SetSelectionRange(int start, int length)
+    {
+        int oldStart = selectionStart;
+        int oldLength = selectionLength;
+        selectionStart = start;
+        SelectionLength = length;
+        if (selectionLength == oldLength && selectionStart != oldStart)
+        {
+            UpdateToSelection();
         }
     }
 
@@ -1986,6 +1994,12 @@ public abstract class TextBoxBase :
 
             for (int i = startLineNumber; i < endLineNumber + 1; i++)
             {
+                // A selection that ends exactly at the start of a line does not touch that line.
+                if (i == endLineNumber && i > startLineNumber && endRelativeIndexInLine == 0)
+                {
+                    break;
+                }
+
                 var lineOfText = this.coreTextObject.WrappedText[i];
 
                 int startOfSelectionInThisLineAbsolute = 0;
