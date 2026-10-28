@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,8 +21,18 @@ namespace EditorTabPlugin_XNA.Services;
 /// </summary>
 public static class RenderTargetShaderResolver
 {
-    /// <summary>A resolver that compiles for <paramref name="target"/>, for the head to register.</summary>
-    public static Func<string, object?> For(PlatformTarget target) => path => Resolve(path, target);
+    // The bytecode of the last version of each shader file that compiled, so an edit that breaks the
+    // shader does not blank the container. Bytecode rather than an Effect: the canvas disposes the
+    // effects it cached every time it reloads, and a disposed Effect cannot be handed out again.
+    private static readonly Dictionary<string, byte[]> LastGoodBytecode = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// A resolver that compiles for <paramref name="target"/>, for the head to register. With a
+    /// <paramref name="reportError"/>, a shader that stops compiling keeps its last good effect and the
+    /// error goes to the callback instead of being thrown.
+    /// </summary>
+    public static Func<string, object?> For(PlatformTarget target, Action<string>? reportError = null) =>
+        path => Resolve(path, target, reportError);
 
     /// <summary>
     /// Compiles the <c>.fx</c>/<c>.slang</c> file at <paramref name="absolutePath"/> (already made
@@ -35,7 +46,7 @@ public static class RenderTargetShaderResolver
     /// way: GraphicsDevice not ready, file missing, ShadowDusk conversion/compile errors, and KNI
     /// rejecting the compiled bytecode (or a native compiler binary failing to load).
     /// </summary>
-    public static object? Resolve(string absolutePath, PlatformTarget target)
+    public static object? Resolve(string absolutePath, PlatformTarget target, Action<string>? reportError = null)
     {
         // The GraphicsDevice only exists once the wireframe is initialized; the resolver is invoked
         // during rendering, so it is normally present.
@@ -55,7 +66,47 @@ public static class RenderTargetShaderResolver
 
         // If KNI rejects the compiled bytecode (or a native compiler binary fails to load), the
         // resulting exception propagates and is surfaced by the caller just like a compile error.
-        return new Effect(graphicsDevice, Compile(ResolveFxSource(absolutePath), target, absolutePath));
+        return CreateKeepingLastGood(
+            absolutePath,
+            () => Compile(ResolveFxSource(absolutePath), target, absolutePath),
+            bytecode => new Effect(graphicsDevice, bytecode),
+            reportError);
+    }
+
+    /// <summary>
+    /// Compiles with <paramref name="compile"/> and builds the result with <paramref name="create"/>.
+    /// When either fails and <paramref name="reportError"/> is given, the last bytecode that built for
+    /// <paramref name="absolutePath"/> is built again and the failure is reported, so the container keeps
+    /// the last shader that worked. With no earlier good version, or no callback, the failure is thrown.
+    /// </summary>
+    public static T CreateKeepingLastGood<T>(string absolutePath, Func<byte[]> compile, Func<byte[], T> create, Action<string>? reportError)
+    {
+        byte[] bytecode;
+        T created;
+        try
+        {
+            bytecode = compile();
+            created = create(bytecode);
+        }
+        catch (Exception exception) when (reportError != null && TryGetLastGood(absolutePath, out byte[]? lastGood))
+        {
+            reportError(exception.Message + "\nKeeping the last version of the shader that compiled.");
+            return create(lastGood!);
+        }
+
+        lock (LastGoodBytecode)
+        {
+            LastGoodBytecode[absolutePath] = bytecode;
+        }
+        return created;
+    }
+
+    private static bool TryGetLastGood(string absolutePath, out byte[]? bytecode)
+    {
+        lock (LastGoodBytecode)
+        {
+            return LastGoodBytecode.TryGetValue(absolutePath, out bytecode);
+        }
     }
 
     /// <summary>

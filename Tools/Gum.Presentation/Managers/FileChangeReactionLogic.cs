@@ -199,6 +199,10 @@ namespace Gum.Managers
             {
                 ReactToLocalizationFileChanged(file);
             }
+            else if(ShaderFileExtensions.Contains(extension))
+            {
+                ReactToShaderFileChanged(file);
+            }
 
             _pluginManager.ReactToFileChanged(file);
         }
@@ -216,6 +220,12 @@ namespace Gum.Managers
             if (IsElementExtension(extension))
             {
                 ReactToElementSaveDeleted(file);
+            }
+            else if (ShaderFileExtensions.Contains(extension))
+            {
+                // The refresh makes the canvas look the shader up again; a missing file is reported
+                // the way a missing shader is when it is picked.
+                ReactToShaderFileChanged(file);
             }
         }
 
@@ -534,6 +544,41 @@ namespace Gum.Managers
                     // bad file, do anything?
                 }
             }
+        }
+
+        /// <summary>
+        /// A shader source file changed or was deleted on disk. The compiled effect is cached by path
+        /// for every container showing it, and the Variables tab rows come from that effect and from
+        /// the defaults in the source text. Reloading the textures drops every cached asset, so the
+        /// canvas compiles the shader again whichever element is shown next, and the refresh rebuilds
+        /// the selected instance's rows. A shader no element references shows nothing, so is skipped.
+        /// </summary>
+        private void ReactToShaderFileChanged(FilePath file)
+        {
+            if (IsReferencedByProject(file))
+            {
+                _wireframeObjectManager.RefreshAll(true, true);
+            }
+        }
+
+        private static bool IsReferencedByProject(FilePath file)
+        {
+            foreach (string referenced in ObjectFinder.Self.GetAllFilesInProject(
+                Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles))
+            {
+                try
+                {
+                    if (new FilePath(referenced) == file)
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                    // An invalid path in a variable cannot be the file that changed.
+                }
+            }
+            return false;
         }
 
         private void ReactToAnimationChainChanged(FilePath file)

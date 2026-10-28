@@ -243,7 +243,8 @@ public class FileWatchManager : IFileWatchManager
             or "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj" or "gucx" or "gucj"
             or "ganx" or "ganj" or "behx" or "behj" or "fnt"
             or "achx" or "achj"
-            or "codsj")
+            or "codsj"
+            || ShaderFileExtensions.Contains(extension))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -257,11 +258,15 @@ public class FileWatchManager : IFileWatchManager
         // like a change - the flush re-checks existence, so a delete-then-recreate (atomic save)
         // within the debounce window collapses back into a normal reload. Non-element deletes are
         // left unhandled, as before.
-        if (IsElementFileExtension(fileName))
+        if (IsElementFileExtension(fileName) || IsShaderFileExtension(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
     }
+
+    // A shader source file deleted while a container shows it is reported like any missing shader, so
+    // the delete is queued too; the flush re-checks existence, so a delete-then-create save reloads.
+    private static bool IsShaderFileExtension(FilePath file) => ShaderFileExtensions.Contains(file.Extension);
 
     // internal (not private) so tests can pin the recognized extension set directly.
     internal static bool IsElementFileExtension(FilePath file)
@@ -486,7 +491,7 @@ public class FileWatchManager : IFileWatchManager
         {
             var candidateFiles = _changedFilesWaitingForFlush.Keys.ToList();
             var filesToProcess = new List<FilePath>();
-            var deletedElementFiles = new List<FilePath>();
+            var deletedFiles = new List<FilePath>();
             foreach (var file in candidateFiles)
             {
                 var readiness = GetFileReadiness(file);
@@ -502,9 +507,9 @@ public class FileWatchManager : IFileWatchManager
                     // Drop usually means an atomic-save temp that was renamed away. But an element
                     // file that's still gone at flush time is a real deletion the user should see
                     // (issue #3367) — route it to the delete reaction instead of dropping silently.
-                    if (IsElementFileExtension(file) && !IsTransientTempFile(file))
+                    if ((IsElementFileExtension(file) || IsShaderFileExtension(file)) && !IsTransientTempFile(file))
                     {
-                        deletedElementFiles.Add(file);
+                        deletedFiles.Add(file);
                     }
                 }
                 // else Locked: leave in queue and retry next cycle (e.g. git is writing it).
@@ -542,7 +547,7 @@ public class FileWatchManager : IFileWatchManager
                 }
             }
 
-            foreach (var file in deletedElementFiles)
+            foreach (var file in deletedFiles)
             {
                 try
                 {
