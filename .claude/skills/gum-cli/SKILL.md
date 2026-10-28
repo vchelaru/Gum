@@ -54,7 +54,6 @@ Each command class has a static `Create()` returning a `System.CommandLine` `Com
 
 **CLI-specific adapters:**
 - `ConsoleCodeGenLogger` — implements `ICodeGenLogger`, writes to stdout/stderr
-- `HeadlessNameVerifier` — implements `INameVerifier` for C# name validation
 
 ## Gum.ProjectServices
 
@@ -65,6 +64,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 | Type | Role |
 |------|------|
 | `ProjectLoader` / `IProjectLoader` | Loads `.gumx`; detects malformed XML; returns `ProjectLoadResult` with fatal errors and non-fatal `LoadErrors` |
+| `NameRules` | Pure name-validation rules shared by the tool's `NameVerifier` and the CLI |
 | `HeadlessErrorChecker` / `IHeadlessErrorChecker` | Validates base types, behaviors, parent refs, variable types. Delegates from tool's `ErrorChecker`. |
 | `ProjectCreator` / `IProjectCreator` | Creates blank projects with subfolder structure |
 | `FormsTemplateCreator` / `IFormsTemplateCreator` | Extracts embedded Forms template resources |
@@ -82,7 +82,7 @@ Any command that runs `HeadlessErrorChecker` must call `GumExpressionService.Ini
 
 `HeadlessErrorChecker` accepts a second constructor overload taking `IEnumerable<IAdditionalErrorSource>` for extensibility; the CLI uses the single-argument overload.
 
-`HeadlessNameVerifier` only implements real logic in `IsValidCSharpName`; all other `INameVerifier` methods return `true` unconditionally. This is intentional — the CLI only needs C# name validation for codegen.
+`NameRules` holds the name rules that need no tool service (common name check, C# name and keywords, Windows reserved file names, Android file names, `Standardize`, duplicate behavior names). The tool's `NameVerifier` delegates to it and keeps only the checks that need tool services; `CodegenCommand` passes a `NameRules` straight to `CodeGenerationNameVerifier`. A new name rule that needs only the name (or a list of existing names) goes in `NameRules` so the tool and the CLI cannot disagree.
 
 `ProjectLoader` runs `DetectSilentlyDroppedContent` after deserialization to catch incorrect XML element names (e.g., `<States>` instead of `<State>`, `<InstanceSave>` instead of `<Instance>`) that `XmlSerializer` silently ignores. Without this, AI-generated files with wrong structure load as empty elements with no error.
 

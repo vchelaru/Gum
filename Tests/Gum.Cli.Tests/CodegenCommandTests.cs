@@ -663,6 +663,54 @@ public class CodegenCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Codegen_WhenInstanceNamesAreNotLegalCSharp_EscapesThemWithTheSharedNameRules()
+    {
+        // The CLI's C# name check is the same NameRules the tool's NameVerifier delegates to (#7025).
+        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(TempDirectory, "Screens", "TestScreen.gusx"),
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>TestScreen</Name>
+              <State>
+                <Name>Default</Name>
+              </State>
+              <Instance>
+                <Name>class</Name>
+                <BaseType>Text</BaseType>
+                <DefinedByBase>false</DefinedByBase>
+              </Instance>
+              <Instance>
+                <Name>1stText</Name>
+                <BaseType>Text</BaseType>
+                <DefinedByBase>false</DefinedByBase>
+              </Instance>
+            </ScreenSave>
+            """);
+        string gumxContent = File.ReadAllText(gumxPath);
+        File.WriteAllText(gumxPath, gumxContent.Replace("</GumProjectSave>",
+            "  <ScreenReference Name=\"TestScreen\" />\n</GumProjectSave>"));
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        string generated = File.ReadAllText(Path.Combine(TempDirectory, "Screens", "TestScreen.Generated.cs"));
+        generated.ShouldContain("@class");
+        generated.ShouldContain("_1stText");
+    }
+
+    [Fact]
     public void Codegen_WritesStandardElementsFallbackFile()
     {
         // Issue #3505: CI's Codegen Drift Check regeneration (Tests/GenerateAllCodeGenProjects.bat,

@@ -2,12 +2,10 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.ProjectServices;
 using Gum.ToolStates;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Diagnostics.CodeAnalysis;
 namespace Gum.Managers;
 
@@ -15,133 +13,13 @@ public class NameVerifier : INameVerifier
 {
     #region Fields/Properties
 
-    public static readonly ImmutableArray<UnicodeCategory> ValidCharacterCategories =
-    [
-        UnicodeCategory.UppercaseLetter,
-        UnicodeCategory.LowercaseLetter,
-        UnicodeCategory.TitlecaseLetter,
-        UnicodeCategory.ModifierLetter,
-        UnicodeCategory.LetterNumber,
-        UnicodeCategory.DecimalDigitNumber,
-        UnicodeCategory.ConnectorPunctuation,
-        UnicodeCategory.NonSpacingMark,
-        UnicodeCategory.SpacingCombiningMark,
-        UnicodeCategory.Format
-    ];
-
-    private static readonly ImmutableHashSet<string> InvalidWindowsFileNames =
-    [
-        "con",
-        "prn",
-        "aux",
-        "nul",
-        "com0",
-        "com1",
-        "com2",
-        "com3",
-        "com4",
-        "com5",
-        "com6",
-        "com7",
-        "com8",
-        "com9",
-        "lpt0",
-        "lpt1",
-        "lpt2",
-        "lpt3",
-        "lpt4",
-        "lpt5",
-        "lpt6",
-        "lpt7",
-        "lpt8",
-        "lpt9"
-    ];
-
-    private static readonly ImmutableHashSet<string> CSharpReservedKeywords =
-    [
-        "abstract",
-        "as",
-        "base",
-        "bool",
-        "break",
-        "byte",
-        "case",
-        "catch",
-        "char",
-        "checked",
-        "class",
-        "const",
-        "continue",
-        "decimal",
-        "default",
-        "delegate",
-        "do",
-        "double",
-        "else",
-        "enum",
-        "event",
-        "explicit",
-        "extern",
-        "false",
-        "finally",
-        "fixed",
-        "float",
-        "for",
-        "foreach",
-        "goto",
-        "if",
-        "implicit",
-        "in",
-        "int",
-        "interface",
-        "internal",
-        "is",
-        "lock",
-        "long",
-        "namespace",
-        "new",
-        "null",
-        "object",
-        "operator",
-        "out",
-        "override",
-        "params",
-        "private",
-        "protected",
-        "public",
-        "readonly",
-        "ref",
-        "return",
-        "sbyte",
-        "sealed",
-        "short",
-        "sizeof",
-        "stackalloc",
-        "static",
-        "string",
-        "struct",
-        "switch",
-        "this",
-        "throw",
-        "true",
-        "try",
-        "typeof",
-        "uint",
-        "ulong",
-        "unchecked",
-        "unsafe",
-        "ushort",
-        "using",
-        "virtual",
-        "void",
-        "volatile",
-        "while"
-    ];
-
     private readonly StandardElementsManager _standardElementsManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly Plugins.IPluginManager _pluginManager;
     private readonly ISelectedState _selectedState;
+
+    // The rules that need no tool service; the CLI runs the same ones.
+    private readonly NameRules _rules = new NameRules();
 
     #endregion
 
@@ -167,7 +45,7 @@ public class NameVerifier : INameVerifier
         IsNameValidCommon(componentNameWithoutFolder, out whyNotValid, out _);
         if (string.IsNullOrEmpty(whyNotValid))
         {
-            IsFileNameWindowsReserved(componentNameWithoutFolder, out whyNotValid);
+            _rules.IsFileNameWindowsReserved(componentNameWithoutFolder, out whyNotValid);
         }
         if (string.IsNullOrEmpty(whyNotValid) && componentNameWithoutFolder != null)
         {
@@ -197,12 +75,12 @@ public class NameVerifier : INameVerifier
         }
             
         {
-            string standardizedName = Standardize(name);
+            string standardizedName = _rules.Standardize(name);
             string? existingName = null;
             categoryContainer.GetStateSaveCategoryRecursively(item =>
             {
                 if (item == categoryToIgnore) return false;
-                if (Standardize(item.Name) == standardizedName)
+                if (_rules.Standardize(item.Name) == standardizedName)
                 {
                     existingName = item.Name;
                     return true;
@@ -238,7 +116,7 @@ public class NameVerifier : INameVerifier
             return false;
         }
 
-        var existing = category?.States.Find(item => Standardize(item.Name) == Standardize(name) && item != stateSave);
+        var existing = category?.States.Find(item => _rules.Standardize(item.Name) == _rules.Standardize(name) && item != stateSave);
         if (category != null && existing != null)
         {
             whyNotValid = $"The category {category.Name} already has a state named {name}";
@@ -314,9 +192,9 @@ public class NameVerifier : INameVerifier
 
         _pluginManager.FillTopLevelNames(element, names);
 
-        string standardizedName = Standardize(name);
+        string standardizedName = _rules.Standardize(name);
 
-        var match = names.FirstOrDefault(item => item.SourceObject != objectToIgnore && Standardize(item.Name) == standardizedName);
+        var match = names.FirstOrDefault(item => item.SourceObject != objectToIgnore && _rules.Standardize(item.Name) == standardizedName);
 
         if (match != null)
         {
@@ -372,89 +250,13 @@ public class NameVerifier : INameVerifier
     }
     public bool IsBehaviorNameValid(string? behaviorName, BehaviorSave? behaviorSave, [NotNullWhen(false)] out string? whyNotValid)
     {
-        IsNameValidCommon(behaviorName, out string commonWhyNotValid, out _);
-        whyNotValid = commonWhyNotValid;
-        if (string.IsNullOrEmpty(whyNotValid))
-        {
-            IsFileNameWindowsReserved(behaviorName, out whyNotValid);
-        }
-        if (string.IsNullOrEmpty(whyNotValid))
-        {
-            // Behaviors are files named after them, so a duplicate (compared as elements are) would overwrite the other's file.
-            string standardizedName = Standardize(behaviorName)!;
-            BehaviorSave? existing = ObjectFinder.Self.GumProjectSave?.Behaviors.FirstOrDefault(item =>
-                item != behaviorSave && Standardize(item.Name) == standardizedName);
-            if (existing != null)
-            {
-                whyNotValid = $"There is already a behavior named {existing.Name} so this name can't be used.";
-            }
-        }
-        return string.IsNullOrEmpty(whyNotValid);
+        // Behaviors are files named after them, so a duplicate (compared as elements are) would overwrite the other's file.
+        IEnumerable<BehaviorSave> allBehaviors = ObjectFinder.Self.GumProjectSave?.Behaviors ?? Enumerable.Empty<BehaviorSave>();
+        return _rules.IsBehaviorNameValid(behaviorName, behaviorSave, allBehaviors, out whyNotValid);
     }
     public bool IsNameValidCommon([NotNullWhen(true)] string? name, out string whyNotValid, out CommonValidationError commonValidationError)
     {
-        whyNotValid = string.Empty;
-        
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            whyNotValid = "Empty names are not valid";
-            commonValidationError = CommonValidationError.IsEmpty;
-            return false;
-        }
-        if(string.IsNullOrEmpty(whyNotValid) && name.StartsWith(" "))
-        {
-            whyNotValid = "The name can't begin with a space";
-            commonValidationError = CommonValidationError.StartsWithSpace;
-            return false;
-        }
-        if (string.IsNullOrEmpty(whyNotValid) && name.EndsWith(" "))
-        {
-            whyNotValid = "The name can't end with a space";
-            commonValidationError = CommonValidationError.EndsWithSpace;
-            return false;
-        }
-        foreach (var rune in name.EnumerateRunes())
-        {
-            if (rune.Value == ' ') continue;
-
-            var category = Rune.GetUnicodeCategory(rune);
-            if (!ValidCharacterCategories.Contains(category))
-            {
-                whyNotValid = $"The name can't contain invalid character {rune}";
-                commonValidationError = CommonValidationError.InvalidCharacter;
-                return false;
-            }
-        }
-        commonValidationError = CommonValidationError.None;
-        return true;
-    }
-    /// <summary>
-    /// Replaces every character a name can't contain (including spaces) with an underscore.
-    /// </summary>
-    public static string ToValidName(string candidate)
-    {
-        StringBuilder builder = new StringBuilder(candidate.Length);
-        foreach (Rune rune in candidate.EnumerateRunes())
-        {
-            if (ValidCharacterCategories.Contains(Rune.GetUnicodeCategory(rune)))
-            {
-                builder.Append(rune.ToString());
-            }
-            else
-            {
-                builder.Append('_');
-            }
-        }
-        return builder.ToString();
-    }
-
-    private void IsFileNameWindowsReserved(string? name, out string? whyNotValid)
-    {
-        whyNotValid = null;
-        if (name != null && InvalidWindowsFileNames.Contains(name.ToLower()))
-        {
-            whyNotValid = $"The name {name} is a reserved file name in Windows";
-        }
+        return _rules.IsNameValidCommon(name, out whyNotValid, out commonValidationError);
     }
     /// <summary>
     /// Returns the variable from the element's currently-selected state if <paramref name="element"/>
@@ -472,23 +274,7 @@ public class NameVerifier : INameVerifier
     }
     public bool IsValidCSharpName(string name, [NotNullWhen(false)] out string? whyNotValid, out CommonValidationError commonValidationError)
     {
-        if (name[0] != '_' && !char.IsLetter(name[0]))
-        {
-            whyNotValid = $"Name may not begin with character {name[0]}";
-            commonValidationError = CommonValidationError.InvalidStartingCharacterForCSharp;
-            return false;
-        }
-        
-        if (CSharpReservedKeywords.Contains(name))
-        {
-            whyNotValid = "Name is a C# reserved keyword";
-            commonValidationError = CommonValidationError.ReservedCSharpKeyword;
-            return false;
-        }
-        
-        whyNotValid = null;
-        commonValidationError = CommonValidationError.None;
-        return true;
+        return _rules.IsValidCSharpName(name, out whyNotValid, out commonValidationError);
     }
     public bool IsComponentNameAlreadyUsed(string name)
     {
@@ -497,17 +283,17 @@ public class NameVerifier : INameVerifier
     private void IsNameAlreadyUsed(string name, object? objectToIgnore, IInstanceContainer instanceContainer, out string? whyNotValid)
     {
         whyNotValid = null;
-        if (objectToIgnore != instanceContainer && Standardize(name) == Standardize(instanceContainer.Name))
+        if (objectToIgnore != instanceContainer && _rules.Standardize(name) == _rules.Standardize(instanceContainer.Name))
         {
             whyNotValid = $"The element is named '{instanceContainer.Name}'";
         }
-        var instance = instanceContainer.Instances.FirstOrDefault(item => item != objectToIgnore && Standardize(item.Name) == Standardize(name));
+        var instance = instanceContainer.Instances.FirstOrDefault(item => item != objectToIgnore && _rules.Standardize(item.Name) == _rules.Standardize(name));
         if (instance != null)
         {
             whyNotValid = $"There is already an instance named '{instance.Name}'";
         }
         var stateContainer = instanceContainer as IStateContainer;
-        var state = stateContainer?.AllStates.FirstOrDefault(item => item != objectToIgnore && Standardize(item.Name) == Standardize(name));
+        var state = stateContainer?.AllStates.FirstOrDefault(item => item != objectToIgnore && _rules.Standardize(item.Name) == _rules.Standardize(name));
         if (state != null)
         {
             whyNotValid = $"There is already a state named '{state.Name}'";
@@ -515,7 +301,7 @@ public class NameVerifier : INameVerifier
         
         var variable = stateContainer?.AllStates
                                       .SelectMany(item => item.Variables)
-                                      .FirstOrDefault(item => item != objectToIgnore && Standardize(item.ExposedAsName) == Standardize(name));
+                                      .FirstOrDefault(item => item != objectToIgnore && _rules.Standardize(item.ExposedAsName) == _rules.Standardize(name));
         if (variable != null)
         {
             whyNotValid = $"There is already a variable named '{variable.Name}'";
@@ -535,21 +321,21 @@ public class NameVerifier : INameVerifier
             folderPrefix += "/";
         }
 
-        string newStandardizedNameWithFolder = Standardize(folderPrefix + name);
+        string newStandardizedNameWithFolder = _rules.Standardize(folderPrefix + name);
         var standardElement = ObjectFinder.Self.GumProjectSave?.StandardElements.FirstOrDefault(item =>
-            item != objectToIgnore && Standardize(item.Name) == newStandardizedNameWithFolder);
+            item != objectToIgnore && _rules.Standardize(item.Name) == newStandardizedNameWithFolder);
         if (standardElement != null)
         {
             whyNotValid = "There is a standard element named " + standardElement.Name + " so this name can't be used.";
         }
         var component = ObjectFinder.Self.GumProjectSave?.Components.FirstOrDefault(item =>
-            item != objectToIgnore && Standardize(item.Name) == newStandardizedNameWithFolder);
+            item != objectToIgnore && _rules.Standardize(item.Name) == newStandardizedNameWithFolder);
         if (component != null)
         {
             whyNotValid = "There is a component named " + component.Name + " so this name can't be used.";
         }
         var screen = ObjectFinder.Self.GumProjectSave?.Screens.FirstOrDefault(item =>
-            item != objectToIgnore && Standardize(item.Name) == newStandardizedNameWithFolder);
+            item != objectToIgnore && _rules.Standardize(item.Name) == newStandardizedNameWithFolder);
         if (screen != null)
         {
             whyNotValid = "There is a screen named " + screen.Name + " so this name can't be used.";
@@ -557,30 +343,6 @@ public class NameVerifier : INameVerifier
     }
     public bool IsNameValidAndroidFile(string name, [NotNullWhen(false)] out string? whyNotValid)
     {
-        whyNotValid = null;
-        for(int i = 0; i < name.Length; i++)
-        {
-            if(!IsValidAndroidFileCharacter(name[i]))
-            {
-                whyNotValid = $"The character {name[i]} is not supported on Android.";
-                break;
-            }
-        }
-        return string.IsNullOrEmpty(whyNotValid);
-    }
-    private bool IsValidAndroidFileCharacter(char c)
-    {
-        return (c >= 'a' && c <= 'z') ||
-            //(c >= 'A' && c <= 'Z' && allowUpperCase) ||
-            (c == '_') ||
-            (c >= '0' && c <= '9');
-    }
-    [return: NotNullIfNotNull(nameof(name))]
-    private string? Standardize(string? name)
-    {
-        if (name == null) return null;
-
-        string formatted = name.Replace(" ", "_");
-        return formatted.ToLowerInvariant();
+        return _rules.IsNameValidAndroidFile(name, out whyNotValid);
     }
 }
