@@ -21,6 +21,7 @@ public class BehaviorUndoStrategy : IUndoStrategy
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IMessenger _messenger;
+    private readonly IUndoRenameLogic _renameLogic;
     private readonly IUndoPluginNotifier _pluginNotifier;
     private readonly Func<bool> _areUndoLocksActive;
     private readonly Action<UndoOperation> _raiseUndosChanged;
@@ -50,6 +51,7 @@ public class BehaviorUndoStrategy : IUndoStrategy
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IMessenger messenger,
+        IUndoRenameLogic renameLogic,
         IUndoPluginNotifier pluginNotifier,
         Func<bool> areUndoLocksActive,
         Action<UndoOperation> raiseUndosChanged)
@@ -58,6 +60,7 @@ public class BehaviorUndoStrategy : IUndoStrategy
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _messenger = messenger;
+        _renameLogic = renameLogic;
         _pluginNotifier = pluginNotifier;
         _areUndoLocksActive = areUndoLocksActive;
         _raiseUndosChanged = raiseUndosChanged;
@@ -227,6 +230,22 @@ public class BehaviorUndoStrategy : IUndoStrategy
         {
             target.RequiredInstances.Add(instance);
         }
+
+        // Every other field BehaviorSave serializes, so a change to one undoes like the rest (#7019).
+        target.FormsProperties.Clear();
+        target.FormsProperties.AddRange(snapshot.Behavior.FormsProperties);
+        target.ToolOnlyVariableReferences.Clear();
+        target.ToolOnlyVariableReferences.AddRange(snapshot.Behavior.ToolOnlyVariableReferences);
+        target.RequiredAnimations.Clear();
+        target.RequiredAnimations.AddRange(snapshot.Behavior.RequiredAnimations);
+        target.DefaultImplementation = snapshot.Behavior.DefaultImplementation;
+
+        // Last: renaming also renames what names the behavior (element references, the project's
+        // reference, the file), and saves it with the contents restored above.
+        if (target.Name != snapshot.Behavior.Name)
+        {
+            _renameLogic.RenameBehavior(target, snapshot.Behavior.Name);
+        }
     }
 
     private void DoAfterBehaviorUndoLogic(BehaviorSave behavior, UndoOperation operation)
@@ -300,6 +319,11 @@ public class BehaviorUndoStrategy : IUndoStrategy
         }
 
         var parts = new List<string>();
+
+        if (before.Name != after.Name)
+        {
+            parts.Add($"Rename behavior: {before.Name} to {after.Name}");
+        }
 
         var beforeCategoryNames = before.Categories.Select(c => c.Name).ToHashSet();
         var afterCategoryNames = after.Categories.Select(c => c.Name).ToHashSet();

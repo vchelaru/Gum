@@ -44,6 +44,7 @@ public class EditCommands : IEditCommands
     private readonly IProjectState _projectState;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IReferenceFinder _referenceFinder;
+    private readonly BehaviorRenamer _behaviorRenamer;
 
     public EditCommands(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -77,6 +78,8 @@ public class EditCommands : IEditCommands
         _referenceFinder = referenceFinder;
 
         _deleteLogic = deleteLogic;
+
+        _behaviorRenamer = new BehaviorRenamer(referenceFinder, () => projectManager.GetLoadedProject(), fileCommands, guiCommands);
     }
 
     #region State
@@ -450,34 +453,9 @@ public class EditCommands : IEditCommands
         if (_dialogService.GetUserString("Enter new behavior name:", "Rename Behavior", options) is not { } newName)
             return;
 
-        var oldName = behavior.Name;
-        var oldFile = _fileCommands.GetFullPathXmlFile(behavior);
-
-        // Update behavior references on all elements that reference the old name
-        var references = _referenceFinder.GetReferencesToBehavior(behavior, oldName);
-        foreach (var (_, reference) in references.ElementsWithBehaviorReference)
-            reference.BehaviorName = newName;
-
-        // Update the project-level BehaviorReference entry
-        var projectRef = _projectManager.GetLoadedProject().BehaviorReferences
-            .FirstOrDefault(r => r.Name == oldName);
-        if (projectRef != null)
-            projectRef.Name = newName;
-
-        behavior.Name = newName;
-
-        // Delete the old file and save under the new name
-        if (oldFile?.Exists() == true)
-            System.IO.File.Delete(oldFile.FullPath);
-
-        _fileCommands.TryAutoSaveBehavior(behavior);
-        _fileCommands.TryAutoSaveProject();
-
-        // Save all elements whose behavior references changed
-        foreach (var (container, _) in references.ElementsWithBehaviorReference)
-            _fileCommands.TryAutoSaveElement(container);
-
-        _guiCommands.RefreshElementTreeView();
+        // The rename is its own undo step on the behavior's history (#7019).
+        using var undoLock = _undoManager.RequestLock();
+        _behaviorRenamer.Rename(behavior, newName);
     }
 
     public void AddBehavior()
