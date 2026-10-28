@@ -412,6 +412,14 @@ public class SetVariableLogic : ISetVariableLogic
                     _fileCommands.TryAutoSaveObject(instanceContainer);
                 }
             }
+            else if (instanceContainer is ElementSave element && ObjectFinder.Self.GetBaseTypeCycle(element).Count > 0)
+            {
+                // The base picker leaves out elements deriving from this one, but its box accepts typed names.
+                _dialogService.ShowMessage("This assignment would create a circular reference, which is not allowed.");
+                element.BaseType = string.IsNullOrEmpty((string?)oldValue) ? null : (string?)oldValue;
+                _guiCommands.PrintOutput($"BaseType assignment on {element.Name} is not allowed - reverting to previous value");
+                _guiCommands.RefreshVariables(force: true);
+            }
         }
     }
 
