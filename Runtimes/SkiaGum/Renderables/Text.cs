@@ -2015,7 +2015,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
             _hasMarkup = false;
-            _layoutText = BlankControlCharacters(mRawText);
+            // CRLF counts as one character everywhere (#6991), as on MonoGame/Raylib.
+            _layoutText = BlankControlCharacters(mRawText?.Replace("\r\n", "\n"));
             return;
         }
 
@@ -2030,7 +2031,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (tags.Count == 0)
         {
             _hasMarkup = false;
-            _layoutText = BlankControlCharacters(withGlyphs);
+            _layoutText = BlankControlCharacters(normalized);
             return;
         }
 
