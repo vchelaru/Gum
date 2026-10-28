@@ -81,7 +81,8 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
 
     protected override string? Validate(string? value)
     {
-        if (!_nameVerifier.IsInstanceNameValid(value, null, _selectedState.SelectedElement, out string? whyNotValid))
+        IInstanceContainer? container = (IInstanceContainer?)_selectedState.SelectedElement ?? _selectedState.SelectedBehavior;
+        if (!_nameVerifier.IsInstanceNameValid(value, null, container, out string? whyNotValid))
         {
             return whyNotValid;
         }

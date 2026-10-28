@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -49,5 +50,28 @@ public class AddInstanceDialogViewModelTests : BaseTestClass
         _sut.OnAffirmative();
 
         _addInstanceLogic.Verify(x => x.AddInstanceAtDestination(text, "NewInstance"), Times.Once);
+    }
+
+    [Fact]
+    public void Value_ElementSelected_ChecksNameAgainstTheElement()
+    {
+        ComponentSave component = new ComponentSave { Name = "MyComponent" };
+        _selectedState.Setup(x => x.SelectedElement).Returns(component);
+
+        _sut.Value = "Taken";
+
+        _nameVerifier.Verify(x => x.IsInstanceNameValid("Taken", null, component, out It.Ref<string?>.IsAny), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void Value_BehaviorSelected_ChecksNameAgainstTheBehavior()
+    {
+        // A required instance added to a behavior must not reuse a name the behavior already has.
+        BehaviorSave behavior = new BehaviorSave { Name = "MyBehavior" };
+        _selectedState.Setup(x => x.SelectedBehavior).Returns(behavior);
+
+        _sut.Value = "Taken";
+
+        _nameVerifier.Verify(x => x.IsInstanceNameValid("Taken", null, behavior, out It.Ref<string?>.IsAny), Times.AtLeastOnce);
     }
 }
