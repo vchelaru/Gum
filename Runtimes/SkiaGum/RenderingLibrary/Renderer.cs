@@ -961,6 +961,12 @@ namespace RenderingLibrary.Graphics
                     continue;
                 }
 
+                string isSetName = ShaderParameterCollection.GetIsSetName(pair.Key);
+                if (effect.Uniforms.Contains(isSetName))
+                {
+                    uniforms[isSetName] = 1f;
+                }
+
                 ShaderParameterValue value = pair.Value;
                 if (value.Kind == ShaderParameterKind.Float && value.Count == 1)
                 {

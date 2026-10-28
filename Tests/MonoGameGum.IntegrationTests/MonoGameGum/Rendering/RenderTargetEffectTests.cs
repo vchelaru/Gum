@@ -321,7 +321,80 @@ technique SpriteDrawing
         Pixel(10, 10).R.ShouldBe((byte)255);
     }
 
-    private Color[] RenderOutlinedSquare(System.Action<ContainerRuntime>? setParameters, Color? background = null)
+    [Fact]
+    public void Outline_SampleSlangShader_WithThicknessSetToZero_DrawsNoOutline_AtAnyPixelSize()
+    {
+        Color[] data = RenderOutlinedSquare(container =>
+        {
+            container.SetShaderParameter("Thickness", 0f);
+            container.SetShaderParameter("PixelSize", 3f);
+        }, Color.White);
+
+        data[(24 * CaptureSize) + 24].R.ShouldBeGreaterThan((byte)200);
+        data[(24 * CaptureSize) + 11].R.ShouldBe((byte)255);
+        data[(11 * CaptureSize) + 11].R.ShouldBe((byte)255);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithPixelSizeThree_OutlinesThreePixelsIncludingTheDiagonal()
+    {
+        Color[] data = RenderOutlinedSquare(container => container.SetShaderParameter("PixelSize", 3f), Color.White);
+
+        data[(24 * CaptureSize) + 9].R.ShouldBeLessThan((byte)30);
+        data[(24 * CaptureSize) + 8].R.ShouldBe((byte)255);
+        data[(9 * CaptureSize) + 9].R.ShouldBeLessThan((byte)30);
+        data[(8 * CaptureSize) + 8].R.ShouldBe((byte)255);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithThicknessTwo_OutlinesTheDiagonalCorner()
+    {
+        Color[] data = RenderOutlinedSquare(container => container.SetShaderParameter("Thickness", 2f), Color.White);
+
+        data[(10 * CaptureSize) + 10].R.ShouldBeLessThan((byte)30);
+        data[(9 * CaptureSize) + 9].R.ShouldBe((byte)255);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithHalfAlpha_FadesTheOutline()
+    {
+        Color[] data = RenderOutlinedSquare(container => container.Alpha = 128, Color.White);
+
+        // Black at half alpha over white is mid gray.
+        data[(24 * CaptureSize) + 11].R.ShouldBeInRange((byte)115, (byte)140);
+    }
+
+    // The outline is measured in canvas pixels, so it grows and shrinks with the camera zoom exactly
+    // like the content: Thickness * PixelSize canvas pixels is that many times zoom screen pixels.
+    [Theory]
+    [InlineData(1f, 1f, 1f)]
+    [InlineData(2f, 1f, 1f)]
+    [InlineData(0.5f, 1f, 1f)]
+    [InlineData(1.5f, 1f, 1f)]
+    [InlineData(2f, 2f, 1f)]
+    [InlineData(2f, 1f, 3f)]
+    public void Outline_SampleSlangShader_ScalesWithCameraZoom(float zoom, float thickness, float pixelSize)
+    {
+        Color[] data = RenderOutlinedSquare(container =>
+        {
+            container.SetShaderParameter("Thickness", thickness);
+            container.SetShaderParameter("PixelSize", pixelSize);
+        }, Color.White, zoom);
+
+        // Count the dark outline pixels left of the square on its middle row (the square is white-free red).
+        int row = (int)(24 * zoom);
+        int squareLeft = (int)(12 * zoom);
+        int outlineWidth = 0;
+        for (int x = squareLeft - 1; x >= 0 && data[(row * CaptureSize) + x].R < 128; x--)
+        {
+            outlineWidth++;
+        }
+
+        float expected = thickness * pixelSize * zoom;
+        outlineWidth.ShouldBeInRange((int)System.Math.Floor(expected), (int)System.Math.Ceiling(expected));
+    }
+
+    private Color[] RenderOutlinedSquare(System.Action<ContainerRuntime>? setParameters, Color? background = null, float zoom = 1f)
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -362,6 +435,7 @@ technique SpriteDrawing
 
         container.RenderTargetEffect = outline;
         setParameters?.Invoke(container);
+        renderer.Camera.Zoom = zoom;
 
         container.AddToManagers(managers, null);
         container.UpdateLayout();
@@ -390,7 +464,7 @@ technique SpriteDrawing
         System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> parameters = EffectShaderParameters.Read(outline);
 
         parameters.Select(parameter => parameter.Name).OrderBy(name => name)
-            .ShouldBe(new[] { "OutlineBlue", "OutlineGreen", "OutlineRed", "PixelSize", "TexelSize", "Thickness" });
+            .ShouldBe(new[] { "OutlineBlue", "OutlineGreen", "OutlineRed", "PixelSize", "TexelSize", "Thickness", "ThicknessIsSet" });
         ShaderParameterInfo thickness = parameters.Single(parameter => parameter.Name == "Thickness");
         thickness.Kind.ShouldBe(ShaderParameterKind.Float);
         thickness.Count.ShouldBe(1);

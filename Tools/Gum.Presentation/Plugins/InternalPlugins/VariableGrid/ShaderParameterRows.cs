@@ -25,8 +25,8 @@ public static class ShaderParameterRows
         List<SyntheticVariableRow> rows = new List<SyntheticVariableRow>();
         foreach (ShaderParameterInfo info in parameters)
         {
-            // Gum fills this one in itself on every backend, so there is nothing for the user to set.
-            if (info.Name == ShaderParameterCollection.TexelSizeName)
+            // Gum fills these (the texel size and the <Name>IsSet markers) in itself, so there is nothing to set.
+            if (info.Name == ShaderParameterCollection.TexelSizeName || ShaderParameterCollection.IsIsSetName(info.Name))
             {
                 continue;
             }

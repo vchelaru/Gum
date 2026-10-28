@@ -745,9 +745,10 @@ public class Renderer : IRenderer
             int texelSizeLocation = Raylib.GetShaderLocation(renderTargetShader.Value, ShaderParameterCollection.TexelSizeName);
             if (texelSizeLocation >= 0 && shaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
             {
-                // One pixel of the baked texture as a fraction, for shaders that step whole pixels.
+                // One canvas pixel in the baked texture's UV space (it is baked at the camera zoom), for shaders
+                // that step whole pixels.
                 Raylib.SetShaderValue(renderTargetShader.Value, texelSizeLocation,
-                    new System.Numerics.Vector2(1f / renderTexture.Value.Texture.Width, 1f / renderTexture.Value.Texture.Height),
+                    new System.Numerics.Vector2(_camera.Zoom / renderTexture.Value.Texture.Width, _camera.Zoom / renderTexture.Value.Texture.Height),
                     ShaderUniformDataType.Vec2);
             }
             counter.BeginShaderMode(renderTargetShader.Value);
@@ -789,6 +790,12 @@ public class Renderer : IRenderer
             if (location < 0)
             {
                 continue;
+            }
+
+            int isSetLocation = Raylib.GetShaderLocation(shader, ShaderParameterCollection.GetIsSetName(pair.Key));
+            if (isSetLocation >= 0)
+            {
+                Raylib.SetShaderValue(shader, isSetLocation, 1f, ShaderUniformDataType.Float);
             }
 
             ShaderParameterValue value = pair.Value;

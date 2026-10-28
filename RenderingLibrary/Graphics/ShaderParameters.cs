@@ -146,6 +146,30 @@ public class ShaderParameterCollection
         _values = new Dictionary<string, ShaderParameterValue>();
     }
 
+    private const string IsSetSuffix = "IsSet";
+    private static readonly Dictionary<string, string> _isSetNames = new Dictionary<string, string>();
+
+    /// <summary>
+    /// The name of the companion <c>float</c> parameter a backend sets to 1 whenever the user set
+    /// <paramref name="name"/> (for example <c>ThicknessIsSet</c> for <c>Thickness</c>), so a shader can
+    /// tell an unset parameter from one explicitly set to zero. Skipped when the shader does not declare it.
+    /// </summary>
+    public static string GetIsSetName(string name)
+    {
+        lock (_isSetNames)
+        {
+            if (!_isSetNames.TryGetValue(name, out string? isSetName))
+            {
+                isSetName = name + IsSetSuffix;
+                _isSetNames[name] = isSetName;
+            }
+            return isSetName;
+        }
+    }
+
+    /// <summary>Whether <paramref name="name"/> is a companion set by <see cref="GetIsSetName"/>.</summary>
+    public static bool IsIsSetName(string name) => name.EndsWith(IsSetSuffix, System.StringComparison.Ordinal);
+
     /// <summary>The number of parameters set.</summary>
     public int Count => _values.Count;
 

@@ -2,7 +2,7 @@
 // on MonoGame/KNI/FNA, raylib and Skia (ShadowDusk converts it for each). Five optional parameters,
 // set in the tool's Variables tab or from code with ContainerRuntime.SetShaderParameter:
 //   OutlineRed, OutlineGreen, OutlineBlue  outline color, each from 0 to 255 (all zero is black)
-//   Thickness  outline width in art pixels, 1 to 8 (below 1 counts as 1)
+//   Thickness  outline width in art pixels, 0 to 8 (default 1; 0 draws no outline)
 //   PixelSize  size of one art pixel in render target pixels (below 1 counts as 1). A 16x16 icon
 //              drawn 48 pixels wide has a PixelSize of 3
 // The outline is opaque and drawn outside the content, so the container needs transparent margin of
@@ -18,6 +18,8 @@ float OutlineGreen;
 float OutlineBlue;
 float Thickness;
 float PixelSize;
+// Set to 1 by Gum when Thickness was set, so a Thickness of 0 (no outline) differs from an unset one.
+float ThicknessIsSet;
 
 struct VertexShaderOutput
 {
@@ -31,8 +33,9 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 {
     float4 sprite = SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates);
 
-    // Unset parameters read as zero, which stands for the defaults: one pixel, one art pixel per pixel.
-    float reach = max(1.0, floor(Thickness + 0.5));
+    // Unset parameters read as zero on some backends, so an unset Thickness counts as 1 and a PixelSize
+    // below 1 counts as 1.
+    float reach = ThicknessIsSet > 0.5 ? clamp(floor(Thickness + 0.5), 0.0, 8.0) : 1.0;
     float2 step = TexelSize * max(1.0, floor(PixelSize + 0.5));
 
     float neighborAlpha = 0.0;
@@ -46,7 +49,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         for (int x = -8; x <= 8; x++)
         {
             float2 offset = float2(x, y);
-            if (abs(offset.x) <= reach && abs(offset.y) <= reach)
+            if (reach > 0.5 && abs(offset.x) <= reach && abs(offset.y) <= reach)
             {
                 neighborAlpha = max(neighborAlpha, SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates + offset * step).a);
             }

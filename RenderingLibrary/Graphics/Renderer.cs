@@ -1567,10 +1567,12 @@ public class Renderer : IRenderer
             // Set before BeginSpriteBatch: a shared effect keeps the last container's values until
             // SpriteBatch applies them when this batch ends.
             ApplyShaderParameters(effectOwner?.ShaderParameters, renderTargetEffect);
+            // One canvas pixel in the texture's UV space: the target is baked at the camera zoom, so it has
+            // zoom times more texels per canvas pixel.
             if (effectOwner?.ShaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
             {
                 renderTargetEffect?.Parameters[ShaderParameterCollection.TexelSizeName]?.SetValue(
-                    new Vector2(1f / renderTarget.Width, 1f / renderTarget.Height));
+                    new Vector2(Camera.Zoom / renderTarget.Width, Camera.Zoom / renderTarget.Height));
             }
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
@@ -1599,6 +1601,8 @@ public class Renderer : IRenderer
             {
                 continue;
             }
+
+            effect.Parameters[ShaderParameterCollection.GetIsSetName(pair.Key)]?.SetValue(1f);
 
             ShaderParameterValue value = pair.Value;
             switch (value.Kind)

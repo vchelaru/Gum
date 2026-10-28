@@ -111,13 +111,9 @@ container.SetShaderParameter("Thickness", pulse);
 
 Overloads take a `float`, `int`, `bool`, two to four float components, or a `System.Numerics` vector. A color is passed as red, green, blue and alpha components from 0 to 1. Setting a name that already has a value does not allocate, so it is safe to call every frame. `ClearShaderParameters` removes every value.
 
-{% hint style="info" %}
-`SetShaderParameter` is available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 #### Example - Outlining a Sprite
 
-The Outline shader that ships with Gum draws a pixel-exact outline around everything a render target container draws. Put the Sprite in a container with `IsRenderTarget` set, then give the container the shader (in the Gum tool, pick `Outline.slang` in the container's Shader File drop-down under Built-in).
+The Outline shader that ships with Gum draws a pixel-exact outline around everything a render target container draws. Put the Sprite in a container with `IsRenderTarget` set, then give the container the shader.
 
 ```csharp
 // Initialize
@@ -125,7 +121,6 @@ var container = new ContainerRuntime();
 container.Width = 48;
 container.Height = 48;
 container.IsRenderTarget = true;
-// Transparent margin of at least Thickness pixels around the Sprite
 sprite.X = 8;
 sprite.Y = 8;
 container.AddChild(sprite);
@@ -136,12 +131,16 @@ container.SetShaderParameter("OutlineRed", 255f);
 container.SetShaderParameter("OutlineGreen", 255f);
 ```
 
-The shader has five parameters, all optional. `OutlineRed`, `OutlineGreen` and `OutlineBlue` are the outline color from 0 to 255 (all zero, the default, is black), `Thickness` is the outline width in art pixels from 1 to 8 (default 1), and `PixelSize` is how many render target pixels one art pixel covers (default 1). A 16x16 icon drawn 48 pixels wide has a `PixelSize` of 3, so a `Thickness` of 1 gives a 3 pixel outline that lines up with the art pixels. The outline is opaque, and the container's `Alpha` still fades it.
+The shader has five parameters, all optional. `OutlineRed`, `OutlineGreen` and `OutlineBlue` are the outline color from 0 to 255 (all zero, the default, is black), `Thickness` is the outline width in art pixels from 0 to 8 (default 1; 0 draws no outline), and `PixelSize` is how many render target pixels one art pixel covers (default 1). A 16x16 icon drawn 48 pixels wide has a `PixelSize` of 3, so a `Thickness` of 1 gives a 3 pixel outline that lines up with the art pixels. The outline is opaque, and the container's `Alpha` still fades it.
 
 The outline is drawn outside the content, so the container must leave at least `Thickness * PixelSize` pixels of transparent margin around the Sprite or the outline is cut off.
 
 {% hint style="info" %}
 The Outline shader is available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+{% hint style="info" %}
+`SetShaderParameter` is available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 {% hint style="info" %}

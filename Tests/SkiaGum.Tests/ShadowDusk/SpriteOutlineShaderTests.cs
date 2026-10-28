@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Gum;
 using Gum.GueDeriving;
+using RenderingLibrary;
 using Shouldly;
 using SkiaGum;
 using SkiaGum.Content;
@@ -163,6 +164,64 @@ public class SpriteOutlineShaderTests : IDisposable
         ShouldBeEmpty(bitmap, 8, 24);
         ShouldBeOutline(bitmap, 9, 9, green);
         ShouldBeEmpty(bitmap, 8, 8);
+    }
+
+    [Fact]
+    public void Outline_WithThicknessSetToZero_DrawsNoOutline_AtAnyPixelSize()
+    {
+        using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container =>
+        {
+            container.SetShaderParameter("Thickness", 0f);
+            container.SetShaderParameter("PixelSize", 3f);
+        });
+
+        ShouldBeOutline(bitmap, 24, 24, SKColors.Red);
+        ShouldBeEmpty(bitmap, 11, 24);
+        ShouldBeEmpty(bitmap, 11, 11);
+        ShouldBeEmpty(bitmap, 9, 24);
+    }
+
+    // The outline is measured in canvas pixels, so it grows and shrinks with the camera zoom exactly
+    // like the content does: Thickness * PixelSize canvas pixels is that many times zoom device pixels.
+    [Theory]
+    [InlineData(1f, 1f, 1f)]
+    [InlineData(2f, 1f, 1f)]
+    [InlineData(0.5f, 1f, 1f)]
+    [InlineData(1.5f, 1f, 1f)]
+    [InlineData(2f, 2f, 1f)]
+    [InlineData(2f, 1f, 3f)]
+    public void Outline_ScalesWithCameraZoom(float zoom, float thickness, float pixelSize)
+    {
+        // A 24x24 canvas pixel square at 12,12 in a 48x48 canvas pixel container, drawn at the zoom.
+        int deviceSize = (int)(48 * zoom);
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(deviceSize, deviceSize));
+        GumService.Default.Initialize(surface.Canvas, deviceSize, deviceSize);
+        SystemManagers.Default.Renderer.Camera.Zoom = zoom;
+        ContainerRuntime container = new() { Width = 48, Height = 48, IsRenderTarget = true };
+        container.Children.Add(new RectangleRuntime
+        {
+            X = 12, Y = 12, Width = 24, Height = 24, IsFilled = true, StrokeWidth = 0, FillColor = SKColors.Red,
+        });
+        GumService.Default.Root.Children.Add(container);
+        container.SetShaderParameter("Thickness", thickness);
+        container.SetShaderParameter("PixelSize", pixelSize);
+        container.SourceShaderFile = ShippedShaderPath;
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+
+        // Count the outline (black) pixels to the left of the square on its middle row.
+        int row = (int)(24 * zoom);
+        int squareLeft = (int)(12 * zoom);
+        int outlineWidth = 0;
+        for (int x = squareLeft - 1; x >= 0 && bitmap.GetPixel(x, row).Alpha > 127; x--)
+        {
+            outlineWidth++;
+        }
+
+        float expected = thickness * pixelSize * zoom;
+        outlineWidth.ShouldBeInRange((int)System.Math.Floor(expected), (int)System.Math.Ceiling(expected));
     }
 
     // Writes a picture of the outline for a person to look at; only runs when GUM_SCREENSHOT_DIR is set.

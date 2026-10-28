@@ -301,6 +301,124 @@ void main()
         }
     }
 
+    // Bakes a 24x24 red square at 12,12 in a 48x48 render target outlined by the shipped shader and
+    // hands the baked texture's pixel reader to the check, at the given camera zoom and Alpha.
+    private static void WithOutlinedSquare(
+        System.Action<ContainerRuntime> setParameters, float zoom, int alpha, System.Action<System.Func<int, int, Color>> check)
+    {
+        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+        conversion.IsSuccess.ShouldBeTrue(
+            conversion.IsFailure ? string.Join(", ", conversion.Error.Select(e => e.Message)) : "");
+
+        ContainerRuntime outer = new() { Width = 48, Height = 48, IsRenderTarget = true };
+        ContainerRuntime inner = new() { Width = 48, Height = 48, IsRenderTarget = true, Alpha = alpha };
+#pragma warning disable CS0618
+        ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+        square.X = 12;
+        square.Y = 12;
+        square.Width = 24;
+        square.Height = 24;
+        square.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+        inner.Children.Add(square);
+        outer.Children.Add(inner);
+        Gum.GumService.Default.Root.Children.Add(outer);
+        Gum.GumService.Default.Root.UpdateLayout();
+
+        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = zoom;
+        try
+        {
+            inner.RenderTargetEffect = outline;
+            setParameters(inner);
+            DrawOnce();
+
+            RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
+            check((x, y) => ReadRenderTargetPixel(baked, x, y));
+        }
+        finally
+        {
+            global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = 1f;
+            UnloadShader(outline);
+            Gum.GumService.Default.Root.Children.Clear();
+        }
+    }
+
+    [Theory]
+    [InlineData(1f, 1f, 1f)]
+    [InlineData(2f, 1f, 1f)]
+    [InlineData(0.5f, 1f, 1f)]
+    [InlineData(1.5f, 1f, 1f)]
+    [InlineData(2f, 2f, 1f)]
+    [InlineData(2f, 1f, 3f)]
+    public void Draw_OutlineSampleSlang_ScalesWithCameraZoom(float zoom, float thickness, float pixelSize)
+    {
+        WithOutlinedSquare(container =>
+        {
+            container.SetShaderParameter("Thickness", thickness);
+            container.SetShaderParameter("PixelSize", pixelSize);
+        }, zoom, 255, pixel =>
+        {
+            int row = (int)(24 * zoom);
+            int squareLeft = (int)(12 * zoom);
+            int outlineWidth = 0;
+            for (int x = squareLeft - 1; x >= 0 && pixel(x, row).A > 127; x--)
+            {
+                outlineWidth++;
+            }
+
+            float expected = thickness * pixelSize * zoom;
+            outlineWidth.ShouldBeInRange((int)System.Math.Floor(expected), (int)System.Math.Ceiling(expected));
+        });
+    }
+
+    [Fact]
+    public void Draw_OutlineSampleSlang_WithPixelSizeThree_OutlinesThreePixelsIncludingTheDiagonal()
+    {
+        WithOutlinedSquare(container => container.SetShaderParameter("PixelSize", 3f), 1f, 255, pixel =>
+        {
+            pixel(9, 24).A.ShouldBeGreaterThan((byte)200);
+            pixel(8, 24).A.ShouldBe((byte)0);
+            pixel(9, 9).A.ShouldBeGreaterThan((byte)200);
+            pixel(8, 8).A.ShouldBe((byte)0);
+        });
+    }
+
+    [Fact]
+    public void Draw_OutlineSampleSlang_WithThicknessTwo_OutlinesTheDiagonalCorner()
+    {
+        WithOutlinedSquare(container => container.SetShaderParameter("Thickness", 2f), 1f, 255, pixel =>
+        {
+            pixel(10, 10).A.ShouldBeGreaterThan((byte)200);
+            pixel(9, 9).A.ShouldBe((byte)0);
+        });
+    }
+
+    [Fact]
+    public void Draw_OutlineSampleSlang_WithThicknessSetToZero_DrawsNoOutline_AtAnyPixelSize()
+    {
+        WithOutlinedSquare(container =>
+        {
+            container.SetShaderParameter("Thickness", 0f);
+            container.SetShaderParameter("PixelSize", 3f);
+        }, 1f, 255, pixel =>
+        {
+            pixel(24, 24).R.ShouldBeGreaterThan((byte)200);
+            pixel(11, 24).A.ShouldBe((byte)0);
+            pixel(11, 11).A.ShouldBe((byte)0);
+        });
+    }
+
+    [Fact]
+    public void Draw_OutlineSampleSlang_WithHalfAlpha_FadesTheOutline()
+    {
+        WithOutlinedSquare(container => { }, 1f, 128, pixel =>
+        {
+            pixel(11, 24).A.ShouldBeInRange((byte)118, (byte)138);
+        });
+    }
+
     private static ContainerRuntime BuildRedInner(float x)
     {
         ContainerRuntime inner = new();
