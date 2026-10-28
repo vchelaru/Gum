@@ -3,6 +3,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using AvaloniaDataUi.Controls;
 using Shouldly;
 using WpfDataUi;
@@ -307,11 +308,42 @@ public class CompositeEditorTests : IDisposable
         imported.ShouldBeNull();
 
         display.ChoiceBox.SelectedItem = display.ChoiceBox.Items.Cast<object?>().Single(item => item?.ToString() == "Blur.slang");
+        Dispatcher.UIThread.RunJobs();
 
         imported.ShouldBe("Blur.slang");
         fixture.File.ShouldBe("Shaders/Blur.slang");
         display.TextBox.Text.ShouldBe("Shaders/Blur.slang");
         display.ChoiceBox.SelectedItem.ShouldBe("Shaders/Blur.slang");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithBuiltInChoices_PickingOneImportsAfterTheDropDownHasClosed()
+    {
+        // The import can open a prompt, which must not open under the still-open drop-down popup.
+        EditorFixture fixture = new EditorFixture { File = "old.slang" };
+        bool? dropDownOpenWhenImporting = null;
+        FileSelectionDisplay? display = null;
+        display = new FileSelectionDisplay
+        {
+            FileChoices = _ => new[] { "old.slang" },
+            BuiltInChoices = _ => new[] { "Blur.slang" },
+            ImportBuiltIn = name =>
+            {
+                dropDownOpenWhenImporting = display!.ChoiceBox.IsDropDownOpen;
+                return "Shaders/" + name;
+            },
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.ChoiceBox.SelectedItem = display.ChoiceBox.Items.Cast<object?>().Single(item => item?.ToString() == "Blur.slang");
+
+        dropDownOpenWhenImporting.ShouldBeNull("the pick is still routing");
+        display.ChoiceBox.IsDropDownOpen = false;
+        Dispatcher.UIThread.RunJobs();
+        dropDownOpenWhenImporting.ShouldBe(false);
+        fixture.File.ShouldBe("Shaders/Blur.slang");
     }
 
     [AvaloniaFact]
@@ -329,6 +361,7 @@ public class CompositeEditorTests : IDisposable
         display.ChoiceBox.IsDropDownOpen = true;
 
         display.ChoiceBox.SelectedItem = display.ChoiceBox.Items.Cast<object?>().Single(item => item?.ToString() == "Blur.slang");
+        Dispatcher.UIThread.RunJobs();
 
         fixture.File.ShouldBe("old.slang");
         display.ChoiceBox.SelectedItem.ShouldBe("old.slang");

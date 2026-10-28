@@ -1,4 +1,5 @@
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
@@ -13,6 +14,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
     private readonly string _projectDirectory;
     private readonly Mock<IProjectState> _projectState = new Mock<IProjectState>();
     private readonly Mock<IDialogService> _dialogService = new Mock<IDialogService>();
+    private readonly Mock<IOutputManager> _outputManager = new Mock<IOutputManager>();
 
     public BuiltInShaderFilesTests()
     {
@@ -52,7 +54,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "blur");
         File.WriteAllText(Path.Combine(_builtInFolder, "Old.fx"), "old");
         File.WriteAllText(Path.Combine(_builtInFolder, "readme.txt"), "text");
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         IReadOnlyList<string> offered = sut.GetOffered(Array.Empty<string>());
 
@@ -62,7 +64,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
     [Fact]
     public void GetOffered_FolderIsMissing_OffersNothing()
     {
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, Path.Combine(_root, "nowhere"));
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, Path.Combine(_root, "nowhere"));
 
         sut.GetOffered(Array.Empty<string>()).ShouldBeEmpty();
     }
@@ -73,7 +75,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "blur");
         File.WriteAllText(Path.Combine(_builtInFolder, "Sepia.slang"), "sepia");
         File.WriteAllText(Path.Combine(_builtInFolder, "Grayscale.slang"), "gray");
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         IReadOnlyList<string> offered = sut.GetOffered(new[] { "./Shaders/Blur.slang", "shaders/sepia.slang", "Elsewhere/Grayscale.slang" });
 
@@ -85,7 +87,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
     public void CopyIntoProject_PutsTheShaderInTheShadersFolder_AndReturnsItsRelativePath()
     {
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "blur source");
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         string? path = sut.CopyIntoProject("Blur.slang");
 
@@ -99,7 +101,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
         Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
         File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "edited by the user");
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         string? path = sut.CopyIntoProject("Blur.slang");
 
@@ -111,7 +113,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
     public void CopyIntoProject_NoCopyYet_CopiesWithoutAsking()
     {
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         sut.CopyIntoProject("Blur.slang");
 
@@ -125,7 +127,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
         Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
         File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "shipped");
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         string? path = sut.CopyIntoProject("Blur.slang");
 
@@ -140,7 +142,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
         File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "old copy");
         AnswerYesNo(MessageDialogResult.Affirmative);
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         string? path = sut.CopyIntoProject("Blur.slang");
 
@@ -159,7 +161,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
         File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "old copy");
         AnswerYesNo(answer);
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         string? path = sut.CopyIntoProject("Blur.slang");
 
@@ -169,10 +171,58 @@ public class BuiltInShaderFilesTests : BaseTestClass
     }
 
     [Fact]
+    public void CopyIntoProject_CopyIsReadOnly_AnsweringYes_KeepsItReportsTheFailureAndStillReturnsThePath()
+    {
+        File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
+        string copy = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.WriteAllText(copy, "old copy");
+        File.SetAttributes(copy, FileAttributes.ReadOnly);
+        try
+        {
+            AnswerYesNo(MessageDialogResult.Affirmative);
+            BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+
+            string? path = sut.CopyIntoProject("Blur.slang");
+
+            path.ShouldBe("Shaders/Blur.slang");
+            File.ReadAllText(copy).ShouldBe("old copy");
+            _outputManager.Verify(output => output.AddError(It.Is<string>(message => message.Contains("Shaders/Blur.slang"))), Times.Once());
+        }
+        finally
+        {
+            File.SetAttributes(copy, FileAttributes.Normal);
+        }
+    }
+
+    [Fact]
+    public void CopyIntoProject_CopyCannotBeRead_DoesNotAskOrReplaceReportsTheFailureAndStillReturnsThePath()
+    {
+        File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
+        string copy = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.WriteAllText(copy, "old copy");
+        AnswerYesNo(MessageDialogResult.Affirmative);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+        string? path;
+
+        // Another process holding the file open exclusively.
+        using (new FileStream(copy, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            path = sut.CopyIntoProject("Blur.slang");
+        }
+
+        path.ShouldBe("Shaders/Blur.slang");
+        File.ReadAllText(copy).ShouldBe("old copy");
+        VerifyAskedTimes(Times.Never());
+        _outputManager.Verify(output => output.AddError(It.Is<string>(message => message.Contains("Shaders/Blur.slang"))), Times.Once());
+    }
+
+    [Fact]
     public void CopyIntoProject_PickedAgainAfterTheShippedFileChanged_AsksThenReplaces()
     {
         File.WriteAllText(Path.Combine(_builtInFolder, "Outline.slang"), "version 1");
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
         sut.CopyIntoProject("Outline.slang");
 
         // The assignment is removed, but the file stays. Picking it again with nothing new shipped is quiet.
@@ -193,7 +243,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
     {
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "blur");
         _projectState.SetupGet(state => state.ProjectDirectory).Returns((string?)null);
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         sut.CopyIntoProject("Blur.slang").ShouldBeNull();
     }
@@ -206,7 +256,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
     {
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "blur");
         File.WriteAllText(_projectDirectory + "Project.gumx", "project");
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _builtInFolder);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         sut.CopyIntoProject(name).ShouldBeNull();
         Directory.Exists(Path.Combine(_projectDirectory, "Shaders")).ShouldBeFalse();

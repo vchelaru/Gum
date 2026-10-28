@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using ToolsUtilities;
@@ -38,13 +39,15 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
 
     private readonly IProjectState _projectState;
     private readonly IDialogService _dialogService;
+    private readonly IOutputManager _outputManager;
     private readonly string _builtInFolder;
 
     /// <param name="builtInFolder">The folder the shipped shaders are staged in.</param>
-    public BuiltInShaderFiles(IProjectState projectState, IDialogService dialogService, string builtInFolder)
+    public BuiltInShaderFiles(IProjectState projectState, IDialogService dialogService, IOutputManager outputManager, string builtInFolder)
     {
         _projectState = projectState;
         _dialogService = dialogService;
+        _outputManager = outputManager;
         _builtInFolder = builtInFolder;
     }
 
@@ -82,13 +85,44 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
             Directory.CreateDirectory(Path.GetDirectoryName(copyPath)!);
             File.Copy(shippedPath, copyPath);
         }
-        else if (!File.ReadAllBytes(copyPath).AsSpan().SequenceEqual(File.ReadAllBytes(shippedPath)) &&
-            _dialogService.ShowYesNoMessage($"Replace your {ProjectFolder}/{name} with the built-in?", "Replace shader?"))
+        else
         {
-            File.Copy(shippedPath, copyPath, overwrite: true);
+            ReplaceCopyIfUserAgrees(name, copyPath, shippedPath);
         }
 
         return ProjectFolder + "/" + name;
+    }
+
+    // A copy that cannot be read or written is kept and reported; the shader is still assigned.
+    private void ReplaceCopyIfUserAgrees(string name, string copyPath, string shippedPath)
+    {
+        string relativePath = ProjectFolder + "/" + name;
+        try
+        {
+            if (File.ReadAllBytes(copyPath).AsSpan().SequenceEqual(File.ReadAllBytes(shippedPath)))
+            {
+                return;
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _outputManager.AddError($"Could not compare {relativePath} with the built-in, so it was left as is: {e.Message}");
+            return;
+        }
+
+        if (!_dialogService.ShowYesNoMessage($"Replace your {relativePath} with the built-in?", "Replace shader?"))
+        {
+            return;
+        }
+
+        try
+        {
+            File.Copy(shippedPath, copyPath, overwrite: true);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _outputManager.AddError($"Could not replace {relativePath} with the built-in, so it was left as is: {e.Message}");
+        }
     }
 
     private static string GetCopyPath(string projectDirectory, string name) =>
