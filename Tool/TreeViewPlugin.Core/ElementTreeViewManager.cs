@@ -1140,7 +1140,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     // Node not found (object may have been deleted). Fall back to the
                     // state-based path, which preserves the existing restoration behavior.
                     if (mRecordedSelectedObject is InstanceSave instanceSave)
-                        _selectedState.SelectedInstance = instanceSave;
+                    {
+                        // A required instance the refresh dropped (undo/redo replaced it with a
+                        // clone, or it was removed) must not be selected: selecting it clears the
+                        // behavior, since a behavior is found through its required instances.
+                        // The behavior stays selected instead.
+                        BehaviorSave? behaviorOfStaleInstance = GetBehaviorOfStaleInstance(instanceSave, mRecordedSelectedContainer);
+                        if (behaviorOfStaleInstance != null)
+                            _selectedState.SelectedBehavior = behaviorOfStaleInstance;
+                        else
+                            _selectedState.SelectedInstance = instanceSave;
+                    }
                     else if (mRecordedSelectedObject is ElementSave elementSave)
                         _selectedState.SelectedElement = elementSave;
                     else if (mRecordedSelectedObject is BehaviorSave behaviorSave)
@@ -1173,6 +1183,19 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
         return nodes;
+    }
+
+    /// <summary>
+    /// The behavior to select in place of <paramref name="instance"/> after a tree refresh found no
+    /// node for it, or null when the behavior still holds that very instance or the instance was
+    /// not selected in a behavior. <paramref name="recordedContainer"/> is the behavior that was
+    /// selected with the instance.
+    /// </summary>
+    internal static BehaviorSave? GetBehaviorOfStaleInstance(InstanceSave instance, object? recordedContainer)
+    {
+        return recordedContainer is BehaviorSave behavior && !behavior.RequiredInstances.Contains(instance)
+            ? behavior
+            : null;
     }
 
     private ITreeNode? FindTreeNodeForRecordedObject() =>
