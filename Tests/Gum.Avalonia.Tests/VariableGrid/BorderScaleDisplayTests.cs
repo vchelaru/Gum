@@ -143,4 +143,68 @@ public class BorderScaleDisplayTests
         ((float)committed! * 100f).ShouldBe((float)System.Math.Round((float)committed * 100f), 0.01f);
         grid.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(historyBefore + 1);
     }
+
+    [AvaloniaFact]
+    public void UnlinkedFields_AreLaidOutAsADiamond_MatchingTheSidesOnTheNineSlice()
+    {
+        Fixture fixture = new Fixture();
+        BorderScaleDisplay display = new BorderScaleDisplay { InstanceMember = fixture.Member() };
+        Window window = new Window { Content = display, Width = 400, Height = 300 };
+        window.Show();
+        display.ToggleLinked();
+        window.UpdateLayout();
+        try
+        {
+            // Field order is left, top, right, bottom.
+            Rect left = Bounds(display.CornerTextBoxes[0], window);
+            Rect top = Bounds(display.CornerTextBoxes[1], window);
+            Rect right = Bounds(display.CornerTextBoxes[2], window);
+            Rect bottom = Bounds(display.CornerTextBoxes[3], window);
+
+            top.Bottom.ShouldBeLessThanOrEqualTo(left.Top + 0.5);
+            top.Bottom.ShouldBeLessThanOrEqualTo(right.Top + 0.5);
+            left.Right.ShouldBeLessThanOrEqualTo(right.Left);
+            left.Top.ShouldBe(right.Top, 0.5);
+            bottom.Top.ShouldBeGreaterThanOrEqualTo(left.Bottom - 0.5);
+            bottom.Top.ShouldBeGreaterThanOrEqualTo(right.Bottom - 0.5);
+            double middle = (left.Center.X + right.Center.X) / 2;
+            top.Center.X.ShouldBe(middle, 2);
+            bottom.Center.X.ShouldBe(middle, 2);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public void CornerRadiusFields_StayA2x2Grid()
+    {
+        CornerRadiusDisplay display = new CornerRadiusDisplay { InstanceMember = new InstanceMember("C", new CornerFixture()) };
+        Window window = new Window { Content = display, Width = 400, Height = 300 };
+        window.Show();
+        display.ToggleLinked();
+        window.UpdateLayout();
+        try
+        {
+            Rect topLeft = Bounds(display.CornerTextBoxes[0], window);
+            Rect topRight = Bounds(display.CornerTextBoxes[1], window);
+            Rect bottomLeft = Bounds(display.CornerTextBoxes[2], window);
+            topLeft.Top.ShouldBe(topRight.Top, 0.5);
+            topLeft.Left.ShouldBe(bottomLeft.Left, 0.5);
+            bottomLeft.Top.ShouldBeGreaterThan(topLeft.Top);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    private class CornerFixture
+    {
+        public CornerRadiusComposite C { get; set; } = new CornerRadiusComposite(1, null, null, null, null);
+    }
+
+    private static Rect Bounds(Control control, Visual root) =>
+        new Rect(control.TranslatePoint(new Point(0, 0), root)!.Value, control.Bounds.Size);
 }

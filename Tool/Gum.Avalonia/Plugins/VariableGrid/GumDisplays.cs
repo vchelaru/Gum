@@ -457,8 +457,9 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
     /// <param name="unlinkedTip">The chain button's tooltip while unlinked.</param>
     /// <param name="scrubMultiplier">Units per pixel of label drag.</param>
     /// <param name="scrubRounding">What a scrubbed value rounds to.</param>
+    /// <param name="diamondLayout">When true the fields are laid out as top / left right / bottom, in field order left, top, right, bottom; otherwise as a 2x2 grid.</param>
     protected LinkedOverridesDisplay(UniformWithOverridesDisplayLogic logic, string[] fieldNames, string[] fieldTips,
-        string linkedTip, string unlinkedTip, decimal scrubMultiplier, decimal scrubRounding)
+        string linkedTip, string unlinkedTip, decimal scrubMultiplier, decimal scrubRounding, bool diamondLayout = false)
     {
         _logic = logic;
         _linkedTip = linkedTip;
@@ -476,8 +477,8 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
         _cornerTextBoxes = new TextBox[4];
         _cornersGrid = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,*"),
-            RowDefinitions = new RowDefinitions("Auto,Auto"),
+            ColumnDefinitions = diamondLayout ? new ColumnDefinitions("*,*") : new ColumnDefinitions("Auto,*,Auto,*"),
+            RowDefinitions = diamondLayout ? new RowDefinitions("Auto,Auto,Auto") : new RowDefinitions("Auto,Auto"),
             IsVisible = false,
             Margin = new Thickness(0, 2),
         };
@@ -493,9 +494,34 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
             };
             ToolTip.SetTip(cornerLabel, fieldTips[i]);
             TextBox field = CreateField();
-            field.Margin = new Thickness(0, 0, i % 2 == 0 ? 6 : 0, i < 2 ? 2 : 0);
             _cornerTextBoxes[i] = field;
             AddDragTarget(cornerLabel, field);
+
+            if (diamondLayout)
+            {
+                // Field order is left, top, right, bottom; each side sits where it is on the nine-slice.
+                field.Margin = new Thickness(0, 0, 0, 2);
+                Grid cell = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+                Grid.SetColumn(field, 1);
+                cell.Children.Add(cornerLabel);
+                cell.Children.Add(field);
+                if (i == 1 || i == 3)
+                {
+                    cell.HorizontalAlignment = HorizontalAlignment.Center;
+                    cell.Width = 90;
+                    Grid.SetColumnSpan(cell, 2);
+                }
+                else
+                {
+                    cell.Margin = new Thickness(i == 0 ? 0 : 6, 0, i == 0 ? 6 : 0, 0);
+                }
+                Grid.SetRow(cell, i == 1 ? 0 : i == 3 ? 2 : 1);
+                Grid.SetColumn(cell, i == 2 ? 1 : 0);
+                _cornersGrid.Children.Add(cell);
+                continue;
+            }
+
+            field.Margin = new Thickness(0, 0, i % 2 == 0 ? 6 : 0, i < 2 ? 2 : 0);
 
             Grid.SetRow(cornerLabel, i / 2);
             Grid.SetColumn(cornerLabel, (i % 2) * 2);
@@ -790,7 +816,8 @@ public class BorderScaleDisplay : LinkedOverridesDisplay
             "Linked - all sides share Border Scale. Click to set sides independently.",
             "Unlinked - click to use one Border Scale for all sides again.",
             scrubMultiplier: .02m,
-            scrubRounding: .01m)
+            scrubRounding: .01m,
+            diamondLayout: true)
     {
     }
 

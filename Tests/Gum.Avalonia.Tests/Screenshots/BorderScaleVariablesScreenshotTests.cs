@@ -23,7 +23,7 @@ public class BorderScaleVariablesScreenshotTests
         grid.Input.Window.Height = 140;
         grid.Settle();
 
-        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-linked");
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-linked-diamond");
     });
 
     [SkippableFact]
@@ -42,10 +42,10 @@ public class BorderScaleVariablesScreenshotTests
             grid.Input.TypeAndEnter(grid.Editor<BorderScaleDisplay>("BorderScale").CornerTextBoxes[index], text);
             grid.Settle();
         }
-        grid.Input.Window.Height = 160;
+        grid.Input.Window.Height = 200;
         grid.Settle();
 
-        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-broken-apart");
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-broken-apart-diamond");
     });
 
     private static InstanceSave AddNineSlice(VariableGridHarness grid)

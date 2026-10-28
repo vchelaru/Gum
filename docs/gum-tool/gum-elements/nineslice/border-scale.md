@@ -12,7 +12,7 @@ Available in November 2026, or now if building Gum from source.
 
 ## Setting Each Side
 
-The chain button next to `Border Scale` breaks it apart into **L**, **T**, **R**, and **B** fields, one for the left, top, right, and bottom border. A side left blank uses the `Border Scale` value, so you only fill in the sides that differ. Click the chain button again to return to one value, which clears every side.
+The chain button next to `Border Scale` breaks it apart into **T**, **L**, **R**, and **B** fields, arranged the way the sides sit on the NineSlice: top above, left and right in the middle, bottom below. A side left blank uses the `Border Scale` value, so you only fill in the sides that differ. Click the chain button again to return to one value, which clears every side.
 
 A side set to `0` draws no border, and the rest of the NineSlice fills that space. This is useful for a panel that sits against a screen edge or another panel.
 
