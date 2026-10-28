@@ -1567,6 +1567,13 @@ public class Renderer : IRenderer
             // Set before BeginSpriteBatch: a shared effect keeps the last container's values until
             // SpriteBatch applies them when this batch ends.
             ApplyShaderParameters(effectOwner?.ShaderParameters, renderTargetEffect);
+            // One canvas pixel in the texture's UV space: the target is baked at the camera zoom, so it has
+            // zoom times more texels per canvas pixel.
+            if (effectOwner?.ShaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
+            {
+                renderTargetEffect?.Parameters[ShaderParameterCollection.TexelSizeName]?.SetValue(
+                    new Vector2(Camera.Zoom / renderTarget.Width, Camera.Zoom / renderTarget.Height));
+            }
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
             Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: rotation, objectCausingRendering: renderable);
@@ -1582,7 +1589,24 @@ public class Renderer : IRenderer
     /// </summary>
     private static void ApplyShaderParameters(ShaderParameterCollection? parameters, Effect? effect)
     {
-        if (parameters == null || effect == null)
+        if (effect == null)
+        {
+            return;
+        }
+
+        // A shared effect keeps the last values written to it, so what an earlier container set and
+        // this one did not goes back to zero (the unset value) before this container's values go on.
+        ShaderParameterHistory history = ShaderParameterHistory.For(effect);
+        foreach (KeyValuePair<string, ShaderParameterValue> stale in history.TakeStale(parameters))
+        {
+            EffectParameter? staleParameter = effect.Parameters[stale.Key];
+            if (staleParameter != null)
+            {
+                SetEffectParameter(staleParameter, ShaderParameterValue.ZeroLike(stale.Value));
+            }
+        }
+
+        if (parameters == null)
         {
             return;
         }
@@ -1595,33 +1619,41 @@ public class Renderer : IRenderer
                 continue;
             }
 
-            ShaderParameterValue value = pair.Value;
-            switch (value.Kind)
-            {
-                case ShaderParameterKind.Int:
-                    parameter.SetValue((int)value.X);
-                    break;
-                case ShaderParameterKind.Bool:
-                    parameter.SetValue(value.X != 0f);
-                    break;
-                default:
-                    switch (value.Count)
-                    {
-                        case 1:
-                            parameter.SetValue(value.X);
-                            break;
-                        case 2:
-                            parameter.SetValue(new Vector2(value.X, value.Y));
-                            break;
-                        case 3:
-                            parameter.SetValue(new Vector3(value.X, value.Y, value.Z));
-                            break;
-                        default:
-                            parameter.SetValue(new Vector4(value.X, value.Y, value.Z, value.W));
-                            break;
-                    }
-                    break;
-            }
+            string isSetName = ShaderParameterCollection.GetIsSetName(pair.Key);
+            effect.Parameters[isSetName]?.SetValue(1f);
+            history.Record(isSetName, ShaderParameterValue.FromFloat(1f));
+            history.Record(pair.Key, pair.Value);
+            SetEffectParameter(parameter, pair.Value);
+        }
+    }
+
+    private static void SetEffectParameter(EffectParameter parameter, ShaderParameterValue value)
+    {
+        switch (value.Kind)
+        {
+            case ShaderParameterKind.Int:
+                parameter.SetValue((int)value.X);
+                break;
+            case ShaderParameterKind.Bool:
+                parameter.SetValue(value.X != 0f);
+                break;
+            default:
+                switch (value.Count)
+                {
+                    case 1:
+                        parameter.SetValue(value.X);
+                        break;
+                    case 2:
+                        parameter.SetValue(new Vector2(value.X, value.Y));
+                        break;
+                    case 3:
+                        parameter.SetValue(new Vector3(value.X, value.Y, value.Z));
+                        break;
+                    default:
+                        parameter.SetValue(new Vector4(value.X, value.Y, value.Z, value.W));
+                        break;
+                }
+                break;
         }
     }
 

@@ -83,7 +83,7 @@ public class FileDropdownScenarioTests
         grid.Settle();
 
         grid.Combo("SourceShaderFile").Items.Cast<object?>().Select(item => item?.ToString())
-            .ShouldBe(new[] { "Built-in", "Blur.slang", "Grayscale.slang", "Sepia.slang" });
+            .ShouldBe(new[] { "Built-in", "Blur.slang", "Grayscale.slang", "Outline.slang", "Sepia.slang" });
         File.Exists(copy).ShouldBeFalse("listing the shaders copies nothing");
         grid.Combo("SourceShaderFile").IsDropDownOpen = false;
 
@@ -96,7 +96,7 @@ public class FileDropdownScenarioTests
         grid.Combo("SourceShaderFile").IsDropDownOpen = true;
         grid.Settle();
         grid.Combo("SourceShaderFile").Items.Cast<object?>().Select(item => item?.ToString())
-            .ShouldBe(new[] { "Project", "Shaders/Blur.slang", "Built-in", "Grayscale.slang", "Sepia.slang" });
+            .ShouldBe(new[] { "Project", "Shaders/Blur.slang", "Built-in", "Grayscale.slang", "Outline.slang", "Sepia.slang" });
     }
 
     [AvaloniaFact]

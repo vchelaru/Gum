@@ -15,6 +15,7 @@ public class ToolShaderContentTests
     [InlineData("Grayscale.slang")]
     [InlineData("Blur.slang")]
     [InlineData("Sepia.slang")]
+    [InlineData("Outline.slang")]
     public void ShippedShader_ShouldBeStagedWithTheHead(string name)
     {
         string path = Path.Combine(AppContext.BaseDirectory, "Content", "Shaders", name);

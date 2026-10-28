@@ -26,6 +26,27 @@ public class ShaderParameterRowsTests
     }
 
     [Fact]
+    public void Build_TexelSize_IsHiddenBecauseGumFillsItIn()
+    {
+        List<SyntheticVariableRow> rows = Build(FloatInfo("Thickness"), VectorInfo("TexelSize", 2), FloatInfo("PixelSize"));
+
+        rows.Select(row => row.Name).ShouldBe(new[] { "Thickness", "PixelSize" });
+    }
+
+    [Theory]
+    [InlineData(0f)]
+    [InlineData(-1f)]
+    public void Set_StoresAnExplicitValue_EvenWhenItEqualsTheDisplayedDefault(float value)
+    {
+        List<SyntheticVariableRow> rows = Build(FloatInfo("Thickness", defaultValue: 0f));
+
+        rows[0].Set(value);
+
+        _text.ShouldContain("Thickness=");
+        rows[0].Get().ShouldBe(value);
+    }
+
+    [Fact]
     public void Build_ScalarFloat_IsOneRowNamedAfterTheParameter()
     {
         List<SyntheticVariableRow> rows = Build(FloatInfo("Thickness"));
@@ -94,12 +115,12 @@ public class ShaderParameterRowsTests
     }
 
     [Theory]
-    [InlineData(2, new[] { "TexelSize X", "TexelSize Y" })]
-    [InlineData(3, new[] { "TexelSize X", "TexelSize Y", "TexelSize Z" })]
-    [InlineData(4, new[] { "TexelSize X", "TexelSize Y", "TexelSize Z", "TexelSize W" })]
+    [InlineData(2, new[] { "Tint X", "Tint Y" })]
+    [InlineData(3, new[] { "Tint X", "Tint Y", "Tint Z" })]
+    [InlineData(4, new[] { "Tint X", "Tint Y", "Tint Z", "Tint W" })]
     public void Build_Vector_HasOneFloatRowPerComponent(int count, string[] expectedNames)
     {
-        List<SyntheticVariableRow> rows = Build(VectorInfo("TexelSize", count));
+        List<SyntheticVariableRow> rows = Build(VectorInfo("Tint", count));
 
         rows.Select(row => row.Name).ToArray().ShouldBe(expectedNames);
         rows.All(row => row.ValueType == typeof(float)).ShouldBeTrue();
