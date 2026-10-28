@@ -331,7 +331,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _guiCommands,
             _wireframeEditorFactory,
             new NineSliceCoordinateRefresher(),
-            new PreciseHitTester());
+            new PreciseHitTester(),
+            messenger);
 
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
         _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService, _backgroundManager, _editorRenderableFactory);

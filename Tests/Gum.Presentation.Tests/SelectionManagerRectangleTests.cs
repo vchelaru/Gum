@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -56,7 +57,8 @@ public class SelectionManagerRectangleTests : BaseTestClass
             Mock.Of<IGuiCommands>(),
             Mock.Of<IWireframeEditorFactory>(),
             Mock.Of<INineSliceCoordinateRefresher>(),
-            Mock.Of<IPreciseHitTester>());
+            Mock.Of<IPreciseHitTester>(),
+            Mock.Of<IMessenger>());
 
         _selectionManager.Initialize(
             new Layer(),
