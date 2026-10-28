@@ -349,9 +349,11 @@ public class FileChangeShaderReactionTests : BaseTestClass
     public void AShaderTheToolWroteItself_IsNotQueued()
     {
         SelectScreenWithShader("Shaders/Blur.slang");
-        FileWatchManager watch = StartWatching();
+        // The file is written and marked ignored before the real FileSystemWatcher starts: Windows and Linux
+        // report the write at once, and an event read before the mark would queue the shader (#7026 CI).
         string path = WriteShader("Shaders/Blur.slang");
         _ignoreList.Setup(i => i.TryGetIgnoreFileChange(new FilePath(path))).Returns(true);
+        FileWatchManager watch = StartWatching();
 
         watch.HandleFileSystemChange(null, Args(path, WatcherChangeTypes.Created));
         FlushWhenSettled(watch);
