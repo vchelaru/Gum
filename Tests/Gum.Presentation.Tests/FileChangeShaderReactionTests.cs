@@ -142,8 +142,71 @@ public class FileChangeShaderReactionTests : BaseTestClass
         }
     }
 
+    private ComponentSave AddComponent(string name, string? baseType = null)
+    {
+        ComponentSave component = new ComponentSave { Name = name, BaseType = baseType };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        _project.Components.Add(component);
+        return component;
+    }
+
+    private static void AddInstance(ElementSave element, string name, string baseType) =>
+        element.Instances.Add(new InstanceSave { Name = name, BaseType = baseType, ParentContainer = element });
+
+    private ComponentSave AddCardUsingTheShader()
+    {
+        ComponentSave card = AddComponent("Card", "Container");
+        AddInstance(card, "Box", "Container");
+        card.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Box.SourceShaderFile", Type = "string", Value = "Shaders/Blur.slang", IsFile = true, SetsValue = true,
+        });
+        return card;
+    }
+
+    [Theory]
+    [InlineData("ScreenHoldingCard")]
+    [InlineData("DerivedFromCard")]
+    [InlineData("ScreenHoldingDerived")]
+    [InlineData("ScreenHoldingCardTwoLevelsDeep")]
+    public void ReactToFileChanged_RebuildsTheShownElement_WhenItUsesTheShaderThroughAnotherComponent(string shown)
+    {
+        AddCardUsingTheShader();
+        ElementSave element;
+        switch (shown)
+        {
+            case "DerivedFromCard":
+                element = AddComponent("Derived", "Card");
+                break;
+            case "ScreenHoldingDerived":
+                AddComponent("Derived", "Card");
+                element = new ScreenSave { Name = "Main" };
+                AddInstance(element, "Item", "Derived");
+                _project.Screens.Add((ScreenSave)element);
+                break;
+            case "ScreenHoldingCardTwoLevelsDeep":
+                ComponentSave outer = AddComponent("Outer", "Container");
+                AddInstance(outer, "Inner", "Card");
+                element = new ScreenSave { Name = "Main" };
+                AddInstance(element, "Item", "Outer");
+                _project.Screens.Add((ScreenSave)element);
+                break;
+            default:
+                element = new ScreenSave { Name = "Main" };
+                AddInstance(element, "Item", "Card");
+                _project.Screens.Add((ScreenSave)element);
+                break;
+        }
+        _selectedState.Setup(s => s.SelectedElement).Returns(element);
+
+        _reaction.ReactToFileChanged(new FilePath(WriteShader("Shaders/Blur.slang")));
+
+        VerifyRebuilt(Times.Once());
+        VerifyNoTextureReload();
+    }
+
     [Fact]
-    public void ReactToFileChanged_DoesNotRebuild_WhenOnlyAnotherElementUsesTheShader()
+    public void ReactToFileChanged_RebuildsTheShownElement_EvenWhenOnlyAnotherElementUsesTheShader()
     {
         AddScreenWithShader("Other", "Shaders/Blur.slang");
         ScreenSave selected = new ScreenSave { Name = "Selected" };
@@ -152,9 +215,8 @@ public class FileChangeShaderReactionTests : BaseTestClass
 
         _reaction.ReactToFileChanged(new FilePath(WriteShader("Shaders/Blur.slang")));
 
-        // Nothing shown uses it, so nothing is rebuilt; the cache entry goes so that selecting the
-        // other element later compiles the new source (see ShaderFileEditScenarioTests).
-        VerifyRebuilt(Times.Never());
+        // The shown element may use the shader through a base type or nested instance, so it is rebuilt.
+        VerifyRebuilt(Times.Once());
     }
 
     [Fact]

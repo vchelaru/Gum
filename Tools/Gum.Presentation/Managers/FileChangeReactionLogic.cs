@@ -552,9 +552,9 @@ namespace Gum.Managers
         /// (in <see cref="LoaderManager"/>) for every container showing it, and the Variables tab rows come
         /// from that effect and from the defaults in the source text. Dropping the cache entry makes the next
         /// build of any container using the shader, in whatever element is selected later, compile again.
-        /// If the shown element uses the shader it is rebuilt now, which also rebuilds the selected
-        /// instance's rows. Images and fonts stay cached. A shader no element references shows nothing,
-        /// so is skipped.
+        /// The shown element is rebuilt now, which also rebuilds the selected instance's rows. Images and
+        /// fonts stay cached, so the rebuild is cheap. A shader no element references shows nothing, so
+        /// nothing is touched.
         /// </summary>
         private void ReactToShaderFileChanged(FilePath file)
         {
@@ -565,8 +565,9 @@ namespace Gum.Managers
 
             DropCachedEffect(file);
 
-            ElementSave? shown = _selectedState.SelectedElement;
-            if (shown != null && ObjectFinder.Self.GetFilesReferencedBy(shown).Any(item => IsSameFile(item, file)))
+            // Whatever is shown may use the shader through a nested component instance or a base type, which
+            // a per-element file walk does not follow, so the shown element is always rebuilt.
+            if (_selectedState.SelectedElement != null)
             {
                 _wireframeObjectManager.RefreshAll(true);
             }
