@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using ToolsUtilities;
 
@@ -22,8 +23,9 @@ public interface IBuiltInShaderFiles
 
     /// <summary>
     /// Copies the shipped shader <paramref name="name"/> into the project's Shaders folder and returns
-    /// its project-relative path. A copy already there is kept as is, since the user may have edited
-    /// it. Null when the project has not been saved yet or the shader is not shipped.
+    /// its project-relative path. A copy already there that differs from the shipped file is replaced
+    /// only if the user says yes to a prompt; otherwise, and when it is identical, it is kept as is.
+    /// Null when the project has not been saved yet or the shader is not shipped.
     /// </summary>
     string? CopyIntoProject(string name);
 }
@@ -35,12 +37,14 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
     private static readonly string[] ShaderExtensions = { ".slang", ".fx" };
 
     private readonly IProjectState _projectState;
+    private readonly IDialogService _dialogService;
     private readonly string _builtInFolder;
 
     /// <param name="builtInFolder">The folder the shipped shaders are staged in.</param>
-    public BuiltInShaderFiles(IProjectState projectState, string builtInFolder)
+    public BuiltInShaderFiles(IProjectState projectState, IDialogService dialogService, string builtInFolder)
     {
         _projectState = projectState;
+        _dialogService = dialogService;
         _builtInFolder = builtInFolder;
     }
 
@@ -72,10 +76,16 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
         }
 
         string copyPath = GetCopyPath(projectDirectory, name);
+        string shippedPath = Path.Combine(_builtInFolder, name);
         if (!File.Exists(copyPath))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(copyPath)!);
-            File.Copy(Path.Combine(_builtInFolder, name), copyPath);
+            File.Copy(shippedPath, copyPath);
+        }
+        else if (!File.ReadAllBytes(copyPath).AsSpan().SequenceEqual(File.ReadAllBytes(shippedPath)) &&
+            _dialogService.ShowYesNoMessage($"Replace your {ProjectFolder}/{name} with the built-in?", "Replace shader?"))
+        {
+            File.Copy(shippedPath, copyPath, overwrite: true);
         }
 
         return ProjectFolder + "/" + name;

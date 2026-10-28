@@ -99,6 +99,35 @@ public class FileDropdownScenarioTests
             .ShouldBe(new[] { "Project", "Shaders/Blur.slang", "Built-in", "Grayscale.slang", "Sepia.slang" });
     }
 
+    [AvaloniaTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [Trait("Feature", "DISP-011")]
+    public void ShaderDropdown_PickingABuiltInWhoseProjectCopyDiffers_AsksBeforeReplacingIt(bool replace)
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        InstanceSave box = tree.Project.AddInstance(card, "Box", "Container");
+        // A copy left from an earlier pick, unassigned since, that no longer matches the shipped file.
+        string copy = Path.Combine(tree.Project.ProjectFolder, "Shaders", "Blur.slang");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.WriteAllText(copy, "an older Blur");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(box));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+        grid.Row("IsRenderTarget").GetVisualDescendants().OfType<CheckBox>().First().IsChecked = true;
+        grid.Settle();
+        string shipped = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Content", "Shaders", "Blur.slang"));
+
+        tree.Dialogs.AnswerNextMessage(replace ? MessageDialogResult.Affirmative : MessageDialogResult.Negative);
+        grid.PickComboItem("SourceShaderFile", "Blur.slang");
+
+        tree.Dialogs.Messages.ShouldBe(new[] { "Replace your Shaders/Blur.slang with the built-in?" });
+        VariableGridHarness.StoredValue(card, "Box.SourceShaderFile").ShouldBe("Shaders/Blur.slang");
+        File.ReadAllText(copy).ShouldBe(replace ? shipped : "an older Blur");
+    }
+
     [AvaloniaFact]
     [Trait("Feature", "DISP-011")]
     public void SourceFileDropdown_PickingAFileOutsideTheProject_AsksToCopyOrReferenceItLikeThePicker()

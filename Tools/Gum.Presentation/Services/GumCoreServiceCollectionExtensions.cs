@@ -229,6 +229,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<ICompositeMemberRegistry, CompositeMemberRegistry>();
         services.AddSingleton<IBuiltInShaderFiles>(provider => new BuiltInShaderFiles(
             provider.GetRequiredService<IProjectState>(),
+            provider.GetRequiredService<IDialogService>(),
             Path.Combine(AppContext.BaseDirectory, "Content", "Shaders")));
         services.AddSingleton<IInstalledFontProvider, SkiaInstalledFontProvider>();
         services.AddSingleton<VariableGridToggleOptions>();
