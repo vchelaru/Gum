@@ -380,7 +380,14 @@ public class NameVerifier : INameVerifier
         }
         if (string.IsNullOrEmpty(whyNotValid))
         {
-            // need to check for duplicate names eventually
+            // Behaviors are files named after them, so a duplicate (compared as elements are) would overwrite the other's file.
+            string standardizedName = Standardize(behaviorName)!;
+            BehaviorSave? existing = ObjectFinder.Self.GumProjectSave?.Behaviors.FirstOrDefault(item =>
+                item != behaviorSave && Standardize(item.Name) == standardizedName);
+            if (existing != null)
+            {
+                whyNotValid = $"There is already a behavior named {existing.Name} so this name can't be used.";
+            }
         }
         return string.IsNullOrEmpty(whyNotValid);
     }

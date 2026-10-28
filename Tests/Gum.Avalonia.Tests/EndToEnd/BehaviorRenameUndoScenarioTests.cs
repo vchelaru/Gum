@@ -73,6 +73,49 @@ public class BehaviorRenameUndoScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    public void ReplayingAnOlderComponentStep_AfterTheBehaviorItReferencesWasRenamed_KeepsTheNewName()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave b1 = AddBehavior(tree, "B1");
+        ComponentSave compA = tree.Project.AddComponent("CompA");
+        tree.Click(tree.NodeFor(compA));
+        using (tree.UndoManager.RequestLock())
+        {
+            tree.Project.ElementCommands.AddBehaviorTo(b1, compA);
+        }
+        Services.GetRequiredService<IAddInstanceLogic>().AddInstanceAtDestination(tree.Project.Standard("Text"), "Label");
+        tree.SaveAll();
+        compA.Behaviors.Select(item => item.BehaviorName).ShouldBe(new[] { "B1" });
+
+        tree.Click(tree.NodeFor(b1));
+        Rename(tree, "B2");
+        compA.Behaviors.Select(item => item.BehaviorName).ShouldBe(new[] { "B2" }, "the rename follows the reference");
+
+        tree.Click(tree.NodeFor(compA));
+        tree.Undo();
+        tree.Undo();
+        compA.Behaviors.ShouldBeEmpty("both component steps were undone");
+        tree.Redo();
+        tree.Redo();
+
+        compA.Behaviors.Select(item => item.BehaviorName).ShouldBe(new[] { "B2" }, "after replaying the older steps");
+        tree.Project.Project.Behaviors.Select(item => item.Name).ShouldBe(new[] { "B2" });
+
+        // Undoing the rename and replaying again must land on the old name.
+        tree.Click(tree.NodeFor(tree.Project.Project.Behaviors.Single()));
+        tree.Undo();
+        compA.Behaviors.Select(item => item.BehaviorName).ShouldBe(new[] { "B1" }, "after undoing the rename");
+        tree.Click(tree.NodeFor(compA));
+        tree.Undo();
+        tree.Undo();
+        tree.Redo();
+        tree.Redo();
+        compA.Behaviors.Select(item => item.BehaviorName).ShouldBe(new[] { "B1" }, "after replaying with the old name restored");
+
+        tree.AssertOracles();
+    }
+
     private static void AssertNamed(ProjectTreeHarness tree, BehaviorSave behavior, ElementBehaviorReference reference, string name, string when)
     {
         behavior.Name.ShouldBe(name, when);

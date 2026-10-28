@@ -25,6 +25,7 @@ public class BehaviorUndoStrategy : IUndoStrategy
     private readonly IUndoPluginNotifier _pluginNotifier;
     private readonly Func<bool> _areUndoLocksActive;
     private readonly Action<UndoOperation> _raiseUndosChanged;
+    private readonly Action<string, string> _renameBehaviorInElementSnapshots;
 
     bool isRecordingUndos = true;
 
@@ -54,7 +55,8 @@ public class BehaviorUndoStrategy : IUndoStrategy
         IUndoRenameLogic renameLogic,
         IUndoPluginNotifier pluginNotifier,
         Func<bool> areUndoLocksActive,
-        Action<UndoOperation> raiseUndosChanged)
+        Action<UndoOperation> raiseUndosChanged,
+        Action<string, string> renameBehaviorInElementSnapshots)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
@@ -64,6 +66,7 @@ public class BehaviorUndoStrategy : IUndoStrategy
         _pluginNotifier = pluginNotifier;
         _areUndoLocksActive = areUndoLocksActive;
         _raiseUndosChanged = raiseUndosChanged;
+        _renameBehaviorInElementSnapshots = renameBehaviorInElementSnapshots;
     }
 
     public void CaptureBaseline()
@@ -140,6 +143,12 @@ public class BehaviorUndoStrategy : IUndoStrategy
 
             history.Actions.Add(action);
             history.UndoIndex = history.Actions.Count - 1;
+
+            // The rename already rewrote the elements' references; their stored history must follow.
+            if (_recordedBehaviorSnapshot.Behavior.Name != behavior.Name)
+            {
+                _renameBehaviorInElementSnapshots(_recordedBehaviorSnapshot.Behavior.Name, behavior.Name);
+            }
 
             CaptureBaseline();
 
@@ -244,7 +253,9 @@ public class BehaviorUndoStrategy : IUndoStrategy
         // reference, the file), and saves it with the contents restored above.
         if (target.Name != snapshot.Behavior.Name)
         {
+            string oldName = target.Name;
             _renameLogic.RenameBehavior(target, snapshot.Behavior.Name);
+            _renameBehaviorInElementSnapshots(oldName, snapshot.Behavior.Name);
         }
     }
 
