@@ -74,6 +74,28 @@ public class PropertyGridManagerFileChoicesTests : BaseTestClass
     }
 
     [Fact]
+    public void UpdateFileFilters_ShaderRow_OffersTheShippedShadersAndCopiesThePickedOne_OtherFileRowsDoNot()
+    {
+        _mocker.GetMock<IBuiltInShaderFiles>()
+            .Setup(shaders => shaders.GetOffered(It.IsAny<IReadOnlyList<string>>()))
+            .Returns((IReadOnlyList<string> held) => held.Contains("Shaders/Blur.slang") ? new[] { "Sepia.slang" } : new[] { "Blur.slang", "Sepia.slang" });
+        _mocker.GetMock<IBuiltInShaderFiles>()
+            .Setup(shaders => shaders.CopyIntoProject("Blur.slang")).Returns("Shaders/Blur.slang");
+        StateReferencingInstanceMember shader = CreateMember("SourceShaderFile");
+        StateReferencingInstanceMember sprite = CreateMember("SourceFile");
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+
+        sut.UpdateFileFilters(Categorize(shader, sprite), _component, null);
+
+        Func<IReadOnlyList<string>, IReadOnlyList<string>> offered =
+            (Func<IReadOnlyList<string>, IReadOnlyList<string>>)shader.PropertiesToSetOnDisplayer["BuiltInChoices"];
+        offered(new[] { "Shaders/Blur.slang" }).ShouldBe(new[] { "Sepia.slang" });
+        ((Func<string, string?>)shader.PropertiesToSetOnDisplayer["ImportBuiltIn"])("Blur.slang").ShouldBe("Shaders/Blur.slang");
+        sprite.PropertiesToSetOnDisplayer.ContainsKey("BuiltInChoices").ShouldBeFalse();
+        sprite.PropertiesToSetOnDisplayer.ContainsKey("ImportBuiltIn").ShouldBeFalse();
+    }
+
+    [Fact]
     public void UpdateFileFilters_ARowRetargetedToAnotherInstance_KeepsItsFilterAndChoices()
     {
         // Selecting another instance of the same type retargets the shown rows onto the new rows'
