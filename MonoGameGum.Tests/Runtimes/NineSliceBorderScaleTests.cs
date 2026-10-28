@@ -103,4 +103,60 @@ public class NineSliceBorderScaleTests : BaseTestClass
 
         sut.BorderScale.ShouldBe(2f);
     }
+
+    // Reads the destination size of each of the nine sections after the sprite sizes are refreshed,
+    // so a mapping mistake (a side reading another side's override) is caught without a graphics device.
+    private static List<(float Width, float Height)> SectionSizes(NineSlice nineSlice)
+    {
+        System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        typeof(NineSlice).GetField("_fullOutsideTexturePixelWidth", flags)!.SetValue(nineSlice, 1);
+        typeof(NineSlice).GetField("_fullOutsideTexturePixelHeight", flags)!.SetValue(nineSlice, 1);
+        typeof(NineSlice).GetMethod("RefreshSpriteDimensions", flags)!.Invoke(nineSlice, null);
+        System.Collections.IList sprites = (System.Collections.IList)typeof(NineSlice).GetField("mSprites", flags)!.GetValue(nineSlice)!;
+        List<(float, float)> sizes = new();
+        foreach (Sprite sprite in sprites)
+        {
+            sizes.Add((sprite.Width, sprite.Height));
+        }
+        return sizes;
+    }
+
+    private static NineSlice Create(float? left, float? top, float? right, float? bottom) => new()
+    {
+        Width = 100, Height = 100, BorderScale = 5f,
+        CustomBorderScaleLeft = left, CustomBorderScaleTop = top,
+        CustomBorderScaleRight = right, CustomBorderScaleBottom = bottom,
+    };
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void SectionSizes_LoneOverride_ReachesOnlyItsOwnSide(int sideIndex)
+    {
+        float?[] overrides = new float?[4];
+        overrides[sideIndex] = 20f;
+        NineSlice sut = Create(overrides[0], overrides[1], overrides[2], overrides[3]);
+
+        List<(float Width, float Height)> sizes = SectionSizes(sut);
+
+        // sideIndex: 0 left, 1 top, 2 right, 3 bottom.
+        (float Width, float Height) topLeft = sizes[(int)NineSliceSections.TopLeft];
+        (float Width, float Height) topRight = sizes[(int)NineSliceSections.TopRight];
+        (float Width, float Height) bottomLeft = sizes[(int)NineSliceSections.BottomLeft];
+        topLeft.Width.ShouldBe(sideIndex == 0 ? 20f : 5f);
+        topLeft.Height.ShouldBe(sideIndex == 1 ? 20f : 5f);
+        topRight.Width.ShouldBe(sideIndex == 2 ? 20f : 5f);
+        bottomLeft.Height.ShouldBe(sideIndex == 3 ? 20f : 5f);
+    }
+
+    [Fact]
+    public void SectionSizes_NegativeOverride_BehavesAsZero()
+    {
+        List<(float Width, float Height)> sizes = SectionSizes(Create(-5f, null, null, null));
+
+        sizes[(int)NineSliceSections.TopLeft].Width.ShouldBe(0f);
+        sizes[(int)NineSliceSections.Center].Width.ShouldBe(95f);
+    }
 }

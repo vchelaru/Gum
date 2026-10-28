@@ -147,6 +147,15 @@ public class BorderScaleCompositeTests : BaseTestClass
     }
 
     [Fact]
+    public void DisplayLogic_Relinking_DropsEveryOverrideOfTheCurrentValue()
+    {
+        BorderScaleDisplayLogic logic = new BorderScaleDisplayLogic();
+        BorderScaleComposite current = new BorderScaleComposite(4, 1, 2, 3, 4);
+
+        logic.Compose(isLinked: true, "6", "1", "2", "3", "4", current).ShouldBe(new BorderScaleComposite(6, null, null, null, null));
+    }
+
+    [Fact]
     public void DisplayLogic_KeepsAZeroSideAsZero_NotInherited()
     {
         BorderScaleDisplayLogic logic = new BorderScaleDisplayLogic();

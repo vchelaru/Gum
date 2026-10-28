@@ -163,4 +163,57 @@ public class SkiaNineSliceBorderScaleTests
 
         sut.CustomBorderScaleLeft.ShouldBeNull();
     }
+
+    [Fact]
+    public void Render_ZeroLeftOnly_CollapsesTheLeftBorderAndFillsFromTheEdge()
+    {
+        using SKBitmap pixels = Render(60, 60, 10, 0f, null, null, null, false);
+
+        pixels.GetPixel(2, 30).ShouldBe(TexelColor(1, 1));
+        pixels.GetPixel(2, 2).ShouldBe(TexelColor(1, 0));
+        pixels.GetPixel(57, 30).ShouldBe(TexelColor(2, 1));
+    }
+
+    [Fact]
+    public void Render_NegativeOverride_BehavesAsZero()
+    {
+        using SKBitmap pixels = Render(60, 60, 10, -5f, null, null, null, false);
+
+        pixels.GetPixel(2, 30).ShouldBe(TexelColor(1, 1));
+    }
+
+    [Fact]
+    public void Render_SmallWidth_SamplesFewerTexelsOfAWideFrame()
+    {
+        // 6 texel strip, 2 texel frame, scale 10 would need 40 wide; at 20 each band is 10 wide and
+        // samples 1 texel, so the left band shows column 0 only.
+        using SKBitmap texture = new(6, 6);
+        for (int y = 0; y < 6; y++)
+        {
+            for (int x = 0; x < 6; x++)
+            {
+                texture.SetPixel(x, y, new SKColor((byte)(30 + x * 40), 0, 0));
+            }
+        }
+        AnimationChain chain = new() { Name = "c" };
+        chain.Add(new AnimationFrame { FrameLength = 1f, Texture = texture, RightCoordinate = 1f, BottomCoordinate = 1f });
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(128, 128));
+        GumService.Default.Initialize(surface.Canvas, 128, 128);
+        NineSliceRuntime nineSlice = new()
+        {
+            Width = 20, Height = 60, BorderScale = 10,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+        };
+        nineSlice.AnimationChains = new AnimationChainList { chain };
+        nineSlice.CurrentChainName = "c";
+        nineSlice.Animate = true;
+        nineSlice.AnimateSelf(0.0);
+        GumService.Default.Root.Children.Add(nineSlice);
+        GumService.Default.Draw();
+        using SKImage image = surface.Snapshot();
+        using SKBitmap pixels = SKBitmap.FromImage(image);
+
+        pixels.GetPixel(8, 30).Red.ShouldBe((byte)30);
+    }
 }

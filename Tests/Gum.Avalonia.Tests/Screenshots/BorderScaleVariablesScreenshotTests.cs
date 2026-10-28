@@ -23,7 +23,7 @@ public class BorderScaleVariablesScreenshotTests
         grid.Input.Window.Height = 140;
         grid.Settle();
 
-        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-linked-diamond");
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-linked-zoomfix");
     });
 
     [SkippableFact]
@@ -45,8 +45,41 @@ public class BorderScaleVariablesScreenshotTests
         grid.Input.Window.Height = 200;
         grid.Settle();
 
-        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-broken-apart-diamond");
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-broken-apart-zoomfix");
     });
+
+    [SkippableFact]
+    public void CornerRadiusLinked() => PrScreenshot.Run(() =>
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        grid.Select(AddRectangle(grid));
+        grid.Input.TypeInto(grid.View.FilterTextBox, "CornerRadius");
+        grid.Input.Window.Height = 140;
+        grid.Settle();
+
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-corner-radius-linked-zoomfix");
+    });
+
+    [SkippableFact]
+    public void CornerRadiusBrokenApart() => PrScreenshot.Run(() =>
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        grid.Select(AddRectangle(grid));
+        grid.Input.TypeInto(grid.View.FilterTextBox, "CornerRadius");
+        CornerRadiusDisplay display = grid.Editor<CornerRadiusDisplay>("CornerRadius");
+        grid.Input.Click(display.GetVisualDescendants().OfType<Button>().Single());
+        grid.Settle();
+        grid.Input.Window.Height = 160;
+        grid.Settle();
+
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-corner-radius-broken-apart-zoomfix");
+    });
+
+    private static InstanceSave AddRectangle(VariableGridHarness grid)
+    {
+        ComponentSave panel = grid.Project.AddComponent("Panel");
+        return grid.Project.AddInstance(panel, "Box", "Rectangle");
+    }
 
     private static InstanceSave AddNineSlice(VariableGridHarness grid)
     {

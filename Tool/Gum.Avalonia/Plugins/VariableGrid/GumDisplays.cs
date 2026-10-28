@@ -440,6 +440,7 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
     private readonly Grid _cornersGrid;
     private readonly TextBox[] _cornerTextBoxes;
     private readonly Button _linkButton;
+    private readonly TextBlock[] _fieldLabels = new TextBlock[4];
     private readonly TextBlock _hint;
     private readonly Dictionary<Control, TextBox> _dragTargets;
     private float _currentUniform;
@@ -487,12 +488,14 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
             TextBlock cornerLabel = new TextBlock
             {
                 Text = fieldNames[i],
-                FontSize = 10,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 2, 0),
                 Cursor = new Cursor(StandardCursorType.SizeWestEast),
             };
             ToolTip.SetTip(cornerLabel, fieldTips[i]);
+            _fieldLabels[i] = cornerLabel;
+            // 10 at the default base font of 12, following the zoom.
+            cornerLabel.Bind(TextBlock.FontSizeProperty, FollowBaseFontSize(10.0 / 12));
             TextBox field = CreateField();
             _cornerTextBoxes[i] = field;
             AddDragTarget(cornerLabel, field);
@@ -508,7 +511,8 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
                 if (i == 1 || i == 3)
                 {
                     cell.HorizontalAlignment = HorizontalAlignment.Center;
-                    cell.Width = 90;
+                    // 90 at the default base font of 12.
+                    cell.Bind(Layoutable.WidthProperty, FollowBaseFontSize(7.5));
                     Grid.SetColumnSpan(cell, 2);
                 }
                 else
@@ -559,6 +563,12 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
 
     /// <summary>The four override fields, in field order, for tests.</summary>
     internal IReadOnlyList<TextBox> CornerTextBoxes => _cornerTextBoxes;
+
+    /// <summary>The chain button, for tests.</summary>
+    internal Button LinkButton => _linkButton;
+
+    /// <summary>The short labels of the four override fields, in field order, for tests.</summary>
+    internal IReadOnlyList<TextBlock> FieldLabels => _fieldLabels;
 
     /// <summary>Whether all corners share the uniform radius.</summary>
     internal bool IsLinked => _isLinked;
@@ -673,14 +683,28 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
         return field;
     }
 
+    // A size that is the window's base font size times <paramref name="factor"/>, so it follows the tool's zoom.
+    private static Binding FollowBaseFontSize(double factor) => new Binding(nameof(Window.FontSize))
+    {
+        RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(Window) },
+        Converter = GumChromeStyles.ScaleFontSize(factor),
+    };
+
     private void SetLinkedState(bool isLinked)
     {
         _isLinked = isLinked;
         _uniformTextBox.IsVisible = isLinked;
         _cornersGrid.IsVisible = !isLinked;
         string iconName = isLinked ? "ChainLinked" : "ChainUnlinked";
-        _linkButton.Content = GumIcon.Create(iconName, 16)
-            ?? (object)(isLinked ? "Linked" : "Unlinked");
+        GumIcon? icon = GumIcon.Create(iconName, 16);
+        if (icon != null)
+        {
+            // 16 at the default base font of 12, following the zoom.
+            Binding size = FollowBaseFontSize(16.0 / 12);
+            icon.Bind(Layoutable.WidthProperty, size);
+            icon.Bind(Layoutable.HeightProperty, size);
+        }
+        _linkButton.Content = icon ?? (object)(isLinked ? "Linked" : "Unlinked");
         ToolTip.SetTip(_linkButton, isLinked ? _linkedTip : _unlinkedTip);
     }
 

@@ -330,9 +330,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
         bool isFlipped = FlipHorizontal || FlipVertical || FlipDiagonal;
         void DrawOnce()
         {
-            if (!IsTilingMiddleSections && BorderScale == 1f && CustomFrameTextureCoordinateWidth == null && !isFlipped
-                && CustomBorderScaleLeft == null && CustomBorderScaleTop == null
-                && CustomBorderScaleRight == null && CustomBorderScaleBottom == null)
+            if (CanUseNinePatch(isFlipped))
             {
                 RenderNinePatch(nonNullText, absoluteRotation, animationOffset);
             }
@@ -366,6 +364,20 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             counter.EndShaderMode();
         }
     }
+
+    // Raylib's built-in nine-patch draw can only express the plain, uniform, untiled, unflipped case.
+    internal bool CanUseNinePatch(bool isFlipped) =>
+        !IsTilingMiddleSections && BorderScale == 1f && CustomFrameTextureCoordinateWidth == null && !isFlipped
+        && CustomBorderScaleLeft == null && CustomBorderScaleTop == null
+        && CustomBorderScaleRight == null && CustomBorderScaleBottom == null;
+
+    // The sections RenderSections draws, with each side's effective scale wired in.
+    internal List<NineSliceDrawSection> GetDrawSections(int srcLeft, int srcTop, int srcRight, int srcBottom) =>
+        ComputeDrawSections(
+            srcLeft, srcTop, srcRight, srcBottom,
+            this.Width, this.Height,
+            BorderScale, EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
+            CustomFrameTextureCoordinateWidth, IsTilingMiddleSections);
 
     private void RenderNinePatch(Texture2D texture, float absoluteRotation, (float X, float Y) animationOffset)
     {
@@ -434,11 +446,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             srcBottom = texture.Height;
         }
 
-        var sections = ComputeDrawSections(
-            srcLeft, srcTop, srcRight, srcBottom,
-            this.Width, this.Height,
-            BorderScale, EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
-            CustomFrameTextureCoordinateWidth, IsTilingMiddleSections);
+        var sections = GetDrawSections(srcLeft, srcTop, srcRight, srcBottom);
 
         // raylib's DrawTexturePro rotates each destination rect around its own top-left
         // (origin = Vector2.Zero). To keep the sections contiguous and rotate the whole

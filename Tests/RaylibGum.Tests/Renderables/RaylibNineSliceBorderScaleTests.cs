@@ -145,4 +145,65 @@ public class RaylibNineSliceBorderScaleTests : BaseTestClass
 
         sut.CustomBorderScaleLeft.ShouldBeNull();
     }
+
+    [Fact]
+    public void GetDrawSections_LoneLeftOverride_WithBorderScaleOne_WidensOnlyTheLeftBand()
+    {
+        NineSlice sut = new() { Width = 100, Height = 100, BorderScale = 1f, CustomBorderScaleLeft = 10f };
+
+        List<NineSliceDrawSection> sections = sut.GetDrawSections(0, 0, 3, 3);
+
+        SectionWithSource(sections, 0, 0).Destination.Width.ShouldBe(10f);
+        SectionWithSource(sections, 2, 0).Destination.Width.ShouldBe(1f);
+        SectionWithSource(sections, 0, 0).Destination.Height.ShouldBe(1f);
+        SectionWithSource(sections, 0, 2).Destination.Height.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void GetDrawSections_EachSideOverride_MapsToItsOwnSide()
+    {
+        NineSlice sut = new() { Width = 100, Height = 100, BorderScale = 1f };
+        sut.CustomBorderScaleLeft = 10f;
+        sut.CustomBorderScaleTop = 20f;
+        sut.CustomBorderScaleRight = 30f;
+        sut.CustomBorderScaleBottom = 40f;
+
+        List<NineSliceDrawSection> sections = sut.GetDrawSections(0, 0, 3, 3);
+
+        SectionWithSource(sections, 0, 1).Destination.Width.ShouldBe(10f);
+        SectionWithSource(sections, 1, 0).Destination.Height.ShouldBe(20f);
+        SectionWithSource(sections, 2, 1).Destination.Width.ShouldBe(30f);
+        SectionWithSource(sections, 1, 2).Destination.Height.ShouldBe(40f);
+    }
+
+    [Fact]
+    public void CanUseNinePatch_ShouldBeTrueOnlyWhenNoScaleOverrideIsSet()
+    {
+        new NineSlice().CanUseNinePatch(isFlipped: false).ShouldBeTrue();
+        new NineSlice { CustomBorderScaleLeft = 1f }.CanUseNinePatch(false).ShouldBeFalse();
+        new NineSlice { CustomBorderScaleTop = 1f }.CanUseNinePatch(false).ShouldBeFalse();
+        new NineSlice { CustomBorderScaleRight = 1f }.CanUseNinePatch(false).ShouldBeFalse();
+        new NineSlice { CustomBorderScaleBottom = 1f }.CanUseNinePatch(false).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ComputeDrawSections_SmallWidth_ShouldShrinkTheSampledTexels()
+    {
+        // 6 texel source with a 2 texel frame at scale 10 wants 40 wide, but only 20 is available.
+        List<NineSliceDrawSection> sections = NineSlice.ComputeDrawSections(0, 0, 6, 6, 20, 100,
+            10f, 10f, 10f, 10f, 10f, null, false);
+
+        NineSliceDrawSection left = sections.Single(s => s.Destination.X == 0 && s.Destination.Y == 0);
+        left.Destination.Width.ShouldBe(10f);
+        left.Source.Width.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void ComputeDrawSections_NegativeOverride_ShouldBehaveAsZero()
+    {
+        List<NineSliceDrawSection> sections = Layout(60, 60, 10, -5f, null, null, null);
+
+        sections.Any(s => s.Source.X == 0).ShouldBeFalse();
+        SectionWithSource(sections, 1, 1).Destination.X.ShouldBe(0f);
+    }
 }

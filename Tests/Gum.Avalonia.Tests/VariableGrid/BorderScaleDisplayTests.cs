@@ -2,6 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
+using Gum.Avalonia.Shell;
+using Gum.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Gum.Avalonia.Plugins.VariableGrid;
 using Gum.DataTypes;
 using Shouldly;
@@ -207,4 +210,46 @@ public class BorderScaleDisplayTests
 
     private static Rect Bounds(Control control, Visual root) =>
         new Rect(control.TranslatePoint(new Point(0, 0), root)!.Value, control.Bounds.Size);
+
+    // The tool zooms by changing the base font size; labels and the chain icon must follow it.
+    private static (double LabelFont, double LinkWidth, double LinkIconWidth) Measure(Func<LinkedOverridesDisplay> create, double baseFontSize)
+    {
+        LinkedOverridesDisplay display = create();
+        display.ToggleLinked();
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        double original = scale.BaseFontSize;
+        Window window = new Window { Content = display, Width = 600, Height = 300 };
+        using IDisposable follower = AppWideWindowInput.FollowBaseFontSize(window, scale);
+        window.Show();
+        try
+        {
+            scale.BaseFontSize = baseFontSize;
+            window.UpdateLayout();
+            Control icon = display.LinkButton.GetVisualDescendants().OfType<Control>()
+                .First(c => c.GetType().Name == "GumIcon");
+            return (display.FieldLabels[0].FontSize, display.LinkButton.Bounds.Width, icon.Bounds.Width);
+        }
+        finally
+        {
+            scale.BaseFontSize = original;
+            window.Close();
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void LabelsAndChainIcon_GrowWithTheBaseFontSize(bool borderScale)
+    {
+        Func<LinkedOverridesDisplay> display = () => borderScale
+            ? new BorderScaleDisplay { InstanceMember = new Fixture().Member() }
+            : new CornerRadiusDisplay { InstanceMember = new InstanceMember("C", new CornerFixture()) };
+
+        (double labelSmall, double linkSmall, double iconSmall) = Measure(display, 9);
+        (double labelLarge, double linkLarge, double iconLarge) = Measure(display, 24);
+
+        labelLarge.ShouldBeGreaterThan(labelSmall * 2);
+        iconLarge.ShouldBeGreaterThan(iconSmall * 2);
+        linkLarge.ShouldBeGreaterThan(linkSmall);
+    }
 }
