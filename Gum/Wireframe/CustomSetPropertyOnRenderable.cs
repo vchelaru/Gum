@@ -696,6 +696,40 @@ public partial class CustomSetPropertyOnRenderable
             }
             handled = true;
         }
+#if !FRB
+        else if(propertyName == "CustomBorderScaleLeft")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleLeft = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleTop")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleTop = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleRight")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleRight = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleBottom")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleBottom = (float?)value;
+            }
+            handled = true;
+        }
+#endif
         else if(propertyName == nameof(NineSlice.IsTilingMiddleSections))
         {
             if (nineSliceRuntime != null)

@@ -422,21 +422,28 @@ public class ColorDisplay : DataUiDisplayBase
 }
 
 /// <summary>
-/// The corner-radius composite's editor: one uniform field while linked, four per-corner fields once
-/// unlinked with the chain button. Dragging a field's label scrubs it (whole numbers, floor of 0).
+/// The editor of a composite made of one uniform value and four optional overrides: one uniform field
+/// while linked, four fields once unlinked with the chain button. Dragging a field's label scrubs it
+/// (floor of 0). The corner-radius and border-scale composites differ only in their labels, scrub step
+/// and how the fields compose into a value, which the subclasses supply.
 /// </summary>
-public class CornerRadiusDisplay : DataUiDisplayBase
+public abstract class LinkedOverridesDisplay : DataUiDisplayBase
 {
-    private readonly CornerRadiusDisplayLogic _logic;
+    private readonly UniformWithOverridesDisplayLogic _logic;
+    private readonly string _linkedTip;
+    private readonly string _unlinkedTip;
+    private readonly decimal _scrubMultiplier;
+    private readonly decimal _scrubRounding;
     private readonly LabelDragScrubLogic _scrubLogic;
     private readonly TextBlock _label;
     private readonly TextBox _uniformTextBox;
     private readonly Grid _cornersGrid;
     private readonly TextBox[] _cornerTextBoxes;
     private readonly Button _linkButton;
+    private readonly TextBlock[] _fieldLabels = new TextBlock[4];
     private readonly TextBlock _hint;
     private readonly Dictionary<Control, TextBox> _dragTargets;
-    private CornerRadiusComposite _current;
+    private float _currentUniform;
     private bool _isLinked;
     private bool _isSyncing;
     private TextBox? _draggingTextBox;
@@ -444,9 +451,22 @@ public class CornerRadiusDisplay : DataUiDisplayBase
     private bool _hasScrubbed;
 
     /// <summary>Builds the editor.</summary>
-    public CornerRadiusDisplay()
+    /// <param name="logic">Formats and parses the fields.</param>
+    /// <param name="fieldNames">The short label of each override field, in field order.</param>
+    /// <param name="fieldTips">The tooltip of each override field, in field order.</param>
+    /// <param name="linkedTip">The chain button's tooltip while linked.</param>
+    /// <param name="unlinkedTip">The chain button's tooltip while unlinked.</param>
+    /// <param name="scrubMultiplier">Units per pixel of label drag.</param>
+    /// <param name="scrubRounding">What a scrubbed value rounds to.</param>
+    /// <param name="diamondLayout">When true the fields are laid out as top / left right / bottom, in field order left, top, right, bottom; otherwise as a 2x2 grid.</param>
+    protected LinkedOverridesDisplay(UniformWithOverridesDisplayLogic logic, string[] fieldNames, string[] fieldTips,
+        string linkedTip, string unlinkedTip, decimal scrubMultiplier, decimal scrubRounding, bool diamondLayout = false)
     {
-        _logic = new CornerRadiusDisplayLogic();
+        _logic = logic;
+        _linkedTip = linkedTip;
+        _unlinkedTip = unlinkedTip;
+        _scrubMultiplier = scrubMultiplier;
+        _scrubRounding = scrubRounding;
         _scrubLogic = new LabelDragScrubLogic();
         _isLinked = true;
         _dragTargets = new Dictionary<Control, TextBox>();
@@ -455,13 +475,11 @@ public class CornerRadiusDisplay : DataUiDisplayBase
         _uniformTextBox = CreateField();
         AddDragTarget(_label, _uniformTextBox);
 
-        string[] cornerNames = { "TL", "TR", "BL", "BR" };
-        string[] cornerTips = { "Top-left corner radius", "Top-right corner radius", "Bottom-left corner radius", "Bottom-right corner radius" };
         _cornerTextBoxes = new TextBox[4];
         _cornersGrid = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,*"),
-            RowDefinitions = new RowDefinitions("Auto,Auto"),
+            ColumnDefinitions = diamondLayout ? new ColumnDefinitions("*,*") : new ColumnDefinitions("Auto,*,Auto,*"),
+            RowDefinitions = diamondLayout ? new RowDefinitions("Auto,Auto,Auto") : new RowDefinitions("Auto,Auto"),
             IsVisible = false,
             Margin = new Thickness(0, 2),
         };
@@ -469,17 +487,45 @@ public class CornerRadiusDisplay : DataUiDisplayBase
         {
             TextBlock cornerLabel = new TextBlock
             {
-                Text = cornerNames[i],
-                FontSize = 10,
+                Text = fieldNames[i],
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 2, 0),
                 Cursor = new Cursor(StandardCursorType.SizeWestEast),
             };
-            ToolTip.SetTip(cornerLabel, cornerTips[i]);
+            ToolTip.SetTip(cornerLabel, fieldTips[i]);
+            _fieldLabels[i] = cornerLabel;
+            // 10 at the default base font of 12, following the zoom.
+            cornerLabel.Bind(TextBlock.FontSizeProperty, FollowBaseFontSize(10.0 / 12));
             TextBox field = CreateField();
-            field.Margin = new Thickness(0, 0, i % 2 == 0 ? 6 : 0, i < 2 ? 2 : 0);
             _cornerTextBoxes[i] = field;
             AddDragTarget(cornerLabel, field);
+
+            if (diamondLayout)
+            {
+                // Field order is left, top, right, bottom; each side sits where it is on the nine-slice.
+                field.Margin = new Thickness(0, 0, 0, 2);
+                Grid cell = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+                Grid.SetColumn(field, 1);
+                cell.Children.Add(cornerLabel);
+                cell.Children.Add(field);
+                if (i == 1 || i == 3)
+                {
+                    cell.HorizontalAlignment = HorizontalAlignment.Center;
+                    // 90 at the default base font of 12.
+                    cell.Bind(Layoutable.WidthProperty, FollowBaseFontSize(7.5));
+                    Grid.SetColumnSpan(cell, 2);
+                }
+                else
+                {
+                    cell.Margin = new Thickness(i == 0 ? 0 : 6, 0, i == 0 ? 6 : 0, 0);
+                }
+                Grid.SetRow(cell, i == 1 ? 0 : i == 3 ? 2 : 1);
+                Grid.SetColumn(cell, i == 2 ? 1 : 0);
+                _cornersGrid.Children.Add(cell);
+                continue;
+            }
+
+            field.Margin = new Thickness(0, 0, i % 2 == 0 ? 6 : 0, i < 2 ? 2 : 0);
 
             Grid.SetRow(cornerLabel, i / 2);
             Grid.SetColumn(cornerLabel, (i % 2) * 2);
@@ -515,8 +561,14 @@ public class CornerRadiusDisplay : DataUiDisplayBase
     /// <summary>The label that scrubs the uniform radius, for tests.</summary>
     internal Control UniformLabel => _label;
 
-    /// <summary>The TL, TR, BL, BR fields, for tests.</summary>
+    /// <summary>The four override fields, in field order, for tests.</summary>
     internal IReadOnlyList<TextBox> CornerTextBoxes => _cornerTextBoxes;
+
+    /// <summary>The chain button, for tests.</summary>
+    internal Button LinkButton => _linkButton;
+
+    /// <summary>The short labels of the four override fields, in field order, for tests.</summary>
+    internal IReadOnlyList<TextBlock> FieldLabels => _fieldLabels;
 
     /// <summary>Whether all corners share the uniform radius.</summary>
     internal bool IsLinked => _isLinked;
@@ -539,10 +591,16 @@ public class CornerRadiusDisplay : DataUiDisplayBase
         RefreshBackgrounds();
     }
 
+    /// <summary>Reads the composite a value holds into the uniform value, the four overrides and whether it is linked.</summary>
+    protected abstract bool TryReadComposite(object? value, out float uniform, out float?[] overrides, out bool isLinked);
+
+    /// <summary>Composes the fields' text into the composite value.</summary>
+    protected abstract object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float currentUniform);
+
     /// <inheritdoc/>
     public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
-        if (valueOnInstance is not CornerRadiusComposite composite)
+        if (!TryReadComposite(valueOnInstance, out float uniform, out float?[] overrides, out bool isLinked))
         {
             return ApplyValueResult.NotSupported;
         }
@@ -550,13 +608,13 @@ public class CornerRadiusDisplay : DataUiDisplayBase
         _isSyncing = true;
         try
         {
-            _current = composite;
-            _uniformTextBox.Text = _logic.FormatFloat(composite.Uniform);
-            _cornerTextBoxes[0].Text = _logic.FormatNullableFloat(composite.TopLeft);
-            _cornerTextBoxes[1].Text = _logic.FormatNullableFloat(composite.TopRight);
-            _cornerTextBoxes[2].Text = _logic.FormatNullableFloat(composite.BottomLeft);
-            _cornerTextBoxes[3].Text = _logic.FormatNullableFloat(composite.BottomRight);
-            SetLinkedState(composite.IsLinked);
+            _currentUniform = uniform;
+            _uniformTextBox.Text = _logic.FormatFloat(uniform);
+            for (int i = 0; i < 4; i++)
+            {
+                _cornerTextBoxes[i].Text = _logic.FormatNullableFloat(overrides[i]);
+            }
+            SetLinkedState(isLinked);
         }
         finally
         {
@@ -569,8 +627,12 @@ public class CornerRadiusDisplay : DataUiDisplayBase
     /// <inheritdoc/>
     public override ApplyValueResult TryGetValueOnUi(out object? value)
     {
-        value = _logic.Compose(_isLinked, _uniformTextBox.Text, _cornerTextBoxes[0].Text, _cornerTextBoxes[1].Text,
-            _cornerTextBoxes[2].Text, _cornerTextBoxes[3].Text, _current);
+        string?[] overrideTexts = new string?[4];
+        for (int i = 0; i < 4; i++)
+        {
+            overrideTexts[i] = _cornerTextBoxes[i].Text;
+        }
+        value = ComposeValue(_isLinked, _uniformTextBox.Text, overrideTexts, _currentUniform);
         return ApplyValueResult.Success;
     }
 
@@ -621,17 +683,29 @@ public class CornerRadiusDisplay : DataUiDisplayBase
         return field;
     }
 
+    // A size that is the window's base font size times <paramref name="factor"/>, so it follows the tool's zoom.
+    private static Binding FollowBaseFontSize(double factor) => new Binding(nameof(Window.FontSize))
+    {
+        RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(Window) },
+        Converter = GumChromeStyles.ScaleFontSize(factor),
+    };
+
     private void SetLinkedState(bool isLinked)
     {
         _isLinked = isLinked;
         _uniformTextBox.IsVisible = isLinked;
         _cornersGrid.IsVisible = !isLinked;
         string iconName = isLinked ? "ChainLinked" : "ChainUnlinked";
-        _linkButton.Content = GumIcon.Create(iconName, 16)
-            ?? (object)(isLinked ? "Linked" : "Unlinked");
-        ToolTip.SetTip(_linkButton, isLinked
-            ? "Linked - all corners share Corner Radius. Click to set corners independently."
-            : "Unlinked - click to use one Corner Radius for all corners again.");
+        GumIcon? icon = GumIcon.Create(iconName, 16);
+        if (icon != null)
+        {
+            // 16 at the default base font of 12, following the zoom.
+            Binding size = FollowBaseFontSize(16.0 / 12);
+            icon.Bind(Layoutable.WidthProperty, size);
+            icon.Bind(Layoutable.HeightProperty, size);
+        }
+        _linkButton.Content = icon ?? (object)(isLinked ? "Linked" : "Unlinked");
+        ToolTip.SetTip(_linkButton, isLinked ? _linkedTip : _unlinkedTip);
     }
 
     private void RefreshBackgrounds()
@@ -664,7 +738,7 @@ public class CornerRadiusDisplay : DataUiDisplayBase
                 _draggingTextBox = target;
                 _dragLastPosition = e.GetPosition(this);
                 _hasScrubbed = false;
-                _scrubLogic.Begin(_logic.ParseFloat(target.Text) ?? _current.Uniform);
+                _scrubLogic.Begin(_logic.ParseFloat(target.Text) ?? _currentUniform);
                 return true;
             },
             e =>
@@ -698,10 +772,100 @@ public class CornerRadiusDisplay : DataUiDisplayBase
     {
         // Sticks at the 0 floor while scrubbing rather than showing a negative value that only snaps
         // back once the commit round-trips through Decompose's clamp.
-        double rounded = _scrubLogic.ApplyDelta(difference, changeMultiplier: 1m, rounding: 1m, min: 0m, max: null);
+        double rounded = _scrubLogic.ApplyDelta(difference, changeMultiplier: _scrubMultiplier, rounding: _scrubRounding, min: 0m, max: null);
         _draggingTextBox!.Text = _logic.FormatFloat((float)rounded);
         Commit(SetPropertyCommitType.Intermediate);
     }
+}
+
+/// <summary>
+/// The corner-radius composite's editor: one uniform field while linked, four per-corner fields once
+/// unlinked with the chain button. Dragging a field's label scrubs it (whole numbers, floor of 0).
+/// </summary>
+public class CornerRadiusDisplay : LinkedOverridesDisplay
+{
+    private static readonly CornerRadiusDisplayLogic Logic = new CornerRadiusDisplayLogic();
+
+    /// <summary>Builds the editor.</summary>
+    public CornerRadiusDisplay()
+        : base(
+            Logic,
+            new[] { "TL", "TR", "BL", "BR" },
+            new[] { "Top-left corner radius", "Top-right corner radius", "Bottom-left corner radius", "Bottom-right corner radius" },
+            "Linked - all corners share Corner Radius. Click to set corners independently.",
+            "Unlinked - click to use one Corner Radius for all corners again.",
+            scrubMultiplier: 1m,
+            scrubRounding: 1m)
+    {
+    }
+
+    /// <inheritdoc/>
+    protected override bool TryReadComposite(object? value, out float uniform, out float?[] overrides, out bool isLinked)
+    {
+        if (value is not CornerRadiusComposite composite)
+        {
+            uniform = 0;
+            overrides = new float?[4];
+            isLinked = true;
+            return false;
+        }
+
+        uniform = composite.Uniform;
+        overrides = new[] { composite.TopLeft, composite.TopRight, composite.BottomLeft, composite.BottomRight };
+        isLinked = composite.IsLinked;
+        return true;
+    }
+
+    /// <inheritdoc/>
+    protected override object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float currentUniform) =>
+        Logic.Compose(isLinked, uniformText, overrideTexts[0], overrideTexts[1], overrideTexts[2], overrideTexts[3],
+            new CornerRadiusComposite(currentUniform, null, null, null, null));
+}
+
+/// <summary>
+/// The NineSlice border-scale composite's editor: one uniform field while linked, four per-side fields
+/// (left, top, right, bottom) once unlinked with the chain button. Dragging a field's label scrubs it in
+/// hundredths, floor of 0.
+/// </summary>
+public class BorderScaleDisplay : LinkedOverridesDisplay
+{
+    private static readonly BorderScaleDisplayLogic Logic = new BorderScaleDisplayLogic();
+
+    /// <summary>Builds the editor.</summary>
+    public BorderScaleDisplay()
+        : base(
+            Logic,
+            new[] { "L", "T", "R", "B" },
+            new[] { "Left border scale", "Top border scale", "Right border scale", "Bottom border scale" },
+            "Linked - all sides share Border Scale. Click to set sides independently.",
+            "Unlinked - click to use one Border Scale for all sides again.",
+            scrubMultiplier: .02m,
+            scrubRounding: .01m,
+            diamondLayout: true)
+    {
+    }
+
+    /// <inheritdoc/>
+    protected override bool TryReadComposite(object? value, out float uniform, out float?[] overrides, out bool isLinked)
+    {
+        if (value is not BorderScaleComposite composite)
+        {
+            uniform = 0;
+            overrides = new float?[4];
+            isLinked = true;
+            return false;
+        }
+
+        uniform = composite.Uniform;
+        overrides = new[] { composite.Left, composite.Top, composite.Right, composite.Bottom };
+        isLinked = composite.IsLinked;
+        return true;
+    }
+
+    /// <inheritdoc/>
+    protected override object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float currentUniform) =>
+        Logic.Compose(isLinked, uniformText, overrideTexts[0], overrideTexts[1], overrideTexts[2], overrideTexts[3],
+            new BorderScaleComposite(currentUniform, null, null, null, null));
 }
 
 /// <summary>A row with a button that removes its variable from the category; the member's setter does the removal.</summary>

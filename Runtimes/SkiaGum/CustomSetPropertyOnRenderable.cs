@@ -1456,6 +1456,34 @@ public partial class CustomSetPropertyOnRenderable
                     return true;
                 }
                 break;
+            case nameof(NineSliceRuntime.CustomBorderScaleLeft):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomBorderScaleLeft = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomBorderScaleTop):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomBorderScaleTop = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomBorderScaleRight):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomBorderScaleRight = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomBorderScaleBottom):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomBorderScaleBottom = (float?)value;
+                    return true;
+                }
+                break;
             case nameof(NineSliceRuntime.IsTilingMiddleSections):
                 if (nineSliceRuntime != null)
                 {

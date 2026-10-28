@@ -176,6 +176,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\LayerCameraSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\LetterCellScale.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NineSlice.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NineSliceBorders.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NineSliceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\EffectShaderParameters.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Renderer.cs" />

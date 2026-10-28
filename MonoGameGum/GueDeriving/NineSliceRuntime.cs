@@ -396,6 +396,62 @@ public class NineSliceRuntime : InteractiveGue
             NotifyPropertyChanged();
         }
     }
+
+    /// <summary>
+    /// Left border scale override. When <c>null</c> the left border uses <see cref="BorderScale"/>;
+    /// 0 draws no left border.
+    /// </summary>
+    public float? CustomBorderScaleLeft
+    {
+        get => ContainedNineSlice.CustomBorderScaleLeft;
+        set
+        {
+            ContainedNineSlice.CustomBorderScaleLeft = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Top border scale override. When <c>null</c> the top border uses <see cref="BorderScale"/>;
+    /// 0 draws no top border.
+    /// </summary>
+    public float? CustomBorderScaleTop
+    {
+        get => ContainedNineSlice.CustomBorderScaleTop;
+        set
+        {
+            ContainedNineSlice.CustomBorderScaleTop = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Right border scale override. When <c>null</c> the right border uses <see cref="BorderScale"/>;
+    /// 0 draws no right border.
+    /// </summary>
+    public float? CustomBorderScaleRight
+    {
+        get => ContainedNineSlice.CustomBorderScaleRight;
+        set
+        {
+            ContainedNineSlice.CustomBorderScaleRight = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Bottom border scale override. When <c>null</c> the bottom border uses <see cref="BorderScale"/>;
+    /// 0 draws no bottom border.
+    /// </summary>
+    public float? CustomBorderScaleBottom
+    {
+        get => ContainedNineSlice.CustomBorderScaleBottom;
+        set
+        {
+            ContainedNineSlice.CustomBorderScaleBottom = value;
+            NotifyPropertyChanged();
+        }
+    }
 #endif
 
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
