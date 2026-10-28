@@ -25,6 +25,12 @@ public static class ShaderParameterRows
         List<SyntheticVariableRow> rows = new List<SyntheticVariableRow>();
         foreach (ShaderParameterInfo info in parameters)
         {
+            // Gum fills these (the texel size and the <Name>IsSet markers) in itself, so there is nothing to set.
+            if (info.Name == ShaderParameterCollection.TexelSizeName || ShaderParameterCollection.IsIsSetName(info.Name))
+            {
+                continue;
+            }
+
             if (info.Count == 1)
             {
                 rows.Add(CreateRow(info, componentIndex: 0, info.Name, getText, setText));

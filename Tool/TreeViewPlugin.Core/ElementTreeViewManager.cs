@@ -181,6 +181,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
+    private readonly IAddDestinationTracker _addDestinationTracker;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -222,7 +223,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IFileSystemRevealService fileSystemRevealService,
         IClipboardService clipboardService,
         IElementTreeViewFactory viewFactory,
-        IAddInstanceLogic addInstanceLogic)
+        IAddInstanceLogic addInstanceLogic,
+        IAddDestinationTracker addDestinationTracker)
     {
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
@@ -253,6 +255,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _clipboardService = clipboardService;
         _viewFactory = viewFactory;
         _addInstanceLogic = addInstanceLogic;
+        _addDestinationTracker = addDestinationTracker;
         _contextMenuItems = new List<ContextMenuItemViewModel>();
     }
 
@@ -1990,6 +1993,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void ObjectTreeView_AfterClickSelect(GumTreeNode? node)
     {
+        // A click or key press on a node picks it as the add destination even when it was already
+        // selected, which raises no selection change for the tracker to hear (#7003).
+        _addDestinationTracker.MarkSelectionChanged();
         OnSelect(Selection.SelectedNode);
     }
 
@@ -2137,6 +2143,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         var backingObject = vm?.BackingObject;
         if(backingObject != null)
         {
+            // Choosing a result picks it as the add destination even when it is already selected (#7003).
+            _addDestinationTracker.MarkSelectionChanged();
+
             if (backingObject is ScreenSave asScreen)
                 _selectedState.SelectedElement = asScreen;
             else if (backingObject is ComponentSave asComponent)
