@@ -28,6 +28,8 @@ When an element (Screen, Component, or StandardElement) is deleted, its entire u
 ### Behaviors Have Their Own Strategy
 A behavior's own changes (required instances, categories, states, required variables) undo through `BehaviorUndoStrategy`: whole-behavior clone snapshots applied in place to the same `BehaviorSave`, with one history per behavior. Behavior-instance and category/state changes record through the `UndoPlugin` handlers; a baseline for a behavior that is not selected needs `RecordBehaviorState(behavior)`. Adding or removing a behavior *reference* on an element is an element change and goes through `ElementUndoStrategy`.
 
+The snapshot covers every serialized `BehaviorSave` field (name, categories, required variables and instances, Forms properties, tool-only variable references, required animations, default implementation). Elements reference a behavior by name, so restoring a different name calls `IUndoRenameLogic.RenameBehavior`, the same `BehaviorRenamer` the Rename Behavior command uses: it renames the elements' `ElementBehaviorReference`s, the project's `BehaviorReference` and the `.behx`, then the history (keyed by the `BehaviorSave` object, so a rename neither orphans nor duplicates it) carries on. The command takes a `RequestLock()` so the rename is one behavior history step. Those element-side reference edits are not recorded in the elements' own histories, so `BehaviorUndoStrategy` also calls `ElementUndoStrategy.RenameBehaviorInSnapshots` (when the rename is recorded, and on every undo/redo that changes the name) to rewrite the old name in every stored element snapshot; otherwise replaying an older element step would bring back a reference to a behavior that no longer exists. `NameVerifier.IsBehaviorNameValid` rejects a name another behavior already has (case-insensitively), because the file is named after the behavior.
+
 ## History Tab
 
 The **History tab** in the Gum UI tool displays a human-readable list of all recorded undo actions for the currently selected element. Each entry shows a description of what changed, such as:
@@ -114,4 +116,3 @@ After restoring a snapshot, `ElementUndoStrategy.DoAfterUndoLogic` calls `IVaria
 | No selection restore | Selection state is not captured or restored on undo/redo |
 | No persistence | History is lost on app close or opening another project; a same-project reload keeps unchanged elements' history |
 | No element-deletion undo | Deleting an element removes its history permanently |
-| Behavior fields outside the tracked three | Renaming a behavior, and any behavior field other than categories, required variables and required instances, is not undoable (#7019) |

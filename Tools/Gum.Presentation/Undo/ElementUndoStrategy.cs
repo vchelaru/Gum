@@ -1172,6 +1172,42 @@ public class ElementUndoStrategy : IUndoStrategy
         }
     }
 
+    /// <summary>
+    /// Writes <paramref name="newName"/> over <paramref name="oldName"/> in the behavior references of every
+    /// snapshot taken of every element (the baseline, the targeted baselines, both sides of every history
+    /// action and each history's final state), so replaying an older step after a behavior was renamed
+    /// does not bring the old name back (#7019).
+    /// </summary>
+    public void RenameBehaviorInSnapshots(string oldName, string newName)
+    {
+        void Rename(ElementSave? snapshotElement)
+        {
+            // A snapshot's Behaviors is null when its action did not change them.
+            foreach (ElementBehaviorReference reference in snapshotElement?.Behaviors ?? new List<ElementBehaviorReference>())
+            {
+                if (reference.BehaviorName == oldName)
+                {
+                    reference.BehaviorName = newName;
+                }
+            }
+        }
+
+        Rename(recordedSnapshot?.Element);
+        foreach (UndoSnapshot targeted in _targetedBaselines.Values)
+        {
+            Rename(targeted.Element);
+        }
+        foreach (ElementHistory history in mUndos.Values)
+        {
+            Rename(history.FinalState);
+            foreach (HistoryAction action in history.Actions)
+            {
+                Rename(action.UndoState.Element);
+                Rename(action.RedoState?.Element);
+            }
+        }
+    }
+
     // A snapshot's States and Categories are null when its action did not change them, so there is
     // nothing stale to fix there.
     private static void Rebase(ElementSave snapshotElement, StoredValueChange change)
