@@ -287,6 +287,42 @@ technique SpriteDrawing
     [Fact]
     public void Outline_SampleSlangShader_DrawsTheColorJustOutsideTheContent_AndStopsAtThickness()
     {
+        Color[] data = RenderOutlinedSquare(container =>
+        {
+            container.SetShaderParameter("Thickness", 2f);
+            container.SetShaderParameter("OutlineBlue", 255f);
+        });
+        Color Pixel(int x, int y) => data[(y * CaptureSize) + x];
+
+        // Inside the square is still red.
+        Pixel(24, 24).R.ShouldBeGreaterThan((byte)200);
+        Pixel(24, 24).B.ShouldBeLessThan((byte)60);
+
+        // One and two pixels outside the left edge (the square starts at x = 12) are the blue
+        // outline, three pixels out is not.
+        Pixel(11, 24).B.ShouldBeGreaterThan((byte)200);
+        Pixel(11, 24).R.ShouldBeLessThan((byte)60);
+        Pixel(10, 24).B.ShouldBeGreaterThan((byte)200);
+        Pixel(9, 24).B.ShouldBeLessThan((byte)30);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithNothingSet_DrawsAOnePixelBlackOutline()
+    {
+        // On white, so a black outline can be told from the cleared target.
+        Color[] data = RenderOutlinedSquare(setParameters: null, background: Color.White);
+        Color Pixel(int x, int y) => data[(y * CaptureSize) + x];
+
+        Pixel(24, 24).R.ShouldBeGreaterThan((byte)200);
+        Pixel(11, 24).R.ShouldBeLessThan((byte)30);
+        Pixel(11, 24).G.ShouldBeLessThan((byte)30);
+        Pixel(11, 11).R.ShouldBeLessThan((byte)30);
+        Pixel(10, 24).R.ShouldBe((byte)255);
+        Pixel(10, 10).R.ShouldBe((byte)255);
+    }
+
+    private Color[] RenderOutlinedSquare(System.Action<ContainerRuntime>? setParameters, Color? background = null)
+    {
         using MinimalGame game = new();
         game.RunOneFrame();
 
@@ -325,30 +361,17 @@ technique SpriteDrawing
         container.AddChild(square);
 
         container.RenderTargetEffect = outline;
-        container.SetShaderParameter("Thickness", 2f);
-        container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+        setParameters?.Invoke(container);
 
         container.AddToManagers(managers, null);
         container.UpdateLayout();
 
-        Color[] data = RenderToCapture(gd, renderer, managers);
-        Color Pixel(int x, int y) => data[(y * CaptureSize) + x];
-
-        // Inside the square is still red.
-        Pixel(24, 24).R.ShouldBeGreaterThan((byte)200);
-        Pixel(24, 24).B.ShouldBeLessThan((byte)60);
-
-        // One and two pixels outside the left edge (the square starts at x = 12) are the blue
-        // outline, three pixels out is not.
-        Pixel(11, 24).B.ShouldBeGreaterThan((byte)200);
-        Pixel(11, 24).R.ShouldBeLessThan((byte)60);
-        Pixel(10, 24).B.ShouldBeGreaterThan((byte)200);
-        Pixel(9, 24).B.ShouldBeLessThan((byte)30);
+        return RenderToCapture(gd, renderer, managers, background);
     }
 
     // The tool lists a shader's parameters from the compiled effect, so the names, kinds and sizes
-    // must come out as the shader declared them (Outline.slang declares TexelSize, Thickness and
-    // OutlineColor besides the texture it samples).
+    // must come out as the shader declared them (Outline.slang declares TexelSize, Thickness,
+    // PixelSize and the three color channels besides the texture it samples).
     [Fact]
     public void EffectShaderParameters_Read_ListsTheParametersTheShaderDeclares()
     {
@@ -367,12 +390,11 @@ technique SpriteDrawing
         System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> parameters = EffectShaderParameters.Read(outline);
 
         parameters.Select(parameter => parameter.Name).OrderBy(name => name)
-            .ShouldBe(new[] { "OutlineColor", "TexelSize", "Thickness" });
+            .ShouldBe(new[] { "OutlineBlue", "OutlineGreen", "OutlineRed", "PixelSize", "TexelSize", "Thickness" });
         ShaderParameterInfo thickness = parameters.Single(parameter => parameter.Name == "Thickness");
         thickness.Kind.ShouldBe(ShaderParameterKind.Float);
         thickness.Count.ShouldBe(1);
         parameters.Single(parameter => parameter.Name == "TexelSize").Count.ShouldBe(2);
-        parameters.Single(parameter => parameter.Name == "OutlineColor").Count.ShouldBe(4);
     }
 
     private static ContainerRuntime BuildRedRenderTarget(float x)
@@ -894,7 +916,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         return RenderToCapture(gd, renderer, managers)[(20 * CaptureSize) + 20];
     }
 
-    private static Color[] RenderToCapture(GraphicsDevice gd, Renderer renderer, SystemManagers managers)
+    private static Color[] RenderToCapture(GraphicsDevice gd, Renderer renderer, SystemManagers managers, Color? background = null)
     {
         const int w = CaptureSize;
         const int h = CaptureSize;
@@ -904,7 +926,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         for (int i = 0; i < 2; i++)
         {
             gd.SetRenderTarget(capture);
-            gd.Clear(Color.Black);
+            gd.Clear(background ?? Color.Black);
             renderer.Draw(managers);
         }
         gd.SetRenderTarget(null);

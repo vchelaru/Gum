@@ -895,6 +895,7 @@ namespace RenderingLibrary.Graphics
                 uniforms["ShadowDusk_Resolution"] = new float[] { width, height };
             }
             ShaderParameterCollection? shaderParameters = (owner as IRenderTargetRenderable)?.ShaderParameters;
+            ZeroUnsetUniforms(effect, uniforms, shaderParameters);
             ApplyShaderParameters(shaderParameters, effect, uniforms);
             if (effect.Uniforms.Contains(ShaderParameterCollection.TexelSizeName) &&
                 shaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
@@ -905,6 +906,42 @@ namespace RenderingLibrary.Graphics
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
             canvas.DrawRect(destination, paint);
+        }
+
+        // A new uniform block starts with whatever bytes the allocator returned, but a shader (and the
+        // tool, which shows an unset parameter as zero) expects an unset parameter to read as zero.
+        // The ShadowDusk_ uniforms Gum already filled are skipped.
+        private static void ZeroUnsetUniforms(
+            SKRuntimeEffect effect, SKRuntimeEffectUniforms uniforms, ShaderParameterCollection? parameters)
+        {
+            foreach (string name in effect.Uniforms)
+            {
+                if (name.StartsWith("ShadowDusk_", System.StringComparison.Ordinal) ||
+                    (parameters != null && parameters.TryGetValue(name, out _)))
+                {
+                    continue;
+                }
+
+                // The component count is not exposed, so the one whose size the uniform accepts wins.
+                for (int count = 1; count <= 4; count++)
+                {
+                    try
+                    {
+                        if (count == 1)
+                        {
+                            uniforms[name] = 0f;
+                        }
+                        else
+                        {
+                            uniforms[name] = new float[count];
+                        }
+                        break;
+                    }
+                    catch (System.Exception)
+                    {
+                    }
+                }
+            }
         }
 
         // Copies the container's own values into this blit's uniforms. A name the effect does not

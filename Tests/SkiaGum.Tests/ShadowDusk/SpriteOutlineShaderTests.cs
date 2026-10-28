@@ -66,6 +66,7 @@ public class SpriteOutlineShaderTests : IDisposable
     private static void ShouldBeOutline(SKBitmap bitmap, int x, int y, SKColor expected)
     {
         SKColor pixel = bitmap.GetPixel(x, y);
+        pixel.ToString().ShouldBe(expected.ToString(), $"pixel at {x},{y}");
         pixel.Alpha.ShouldBe((byte)255, $"alpha at {x},{y}");
         pixel.Red.ShouldBe(expected.Red, $"red at {x},{y}");
         pixel.Green.ShouldBe(expected.Green, $"green at {x},{y}");
@@ -81,7 +82,7 @@ public class SpriteOutlineShaderTests : IDisposable
         using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container =>
         {
             container.SetShaderParameter("Thickness", 1f);
-            container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+            container.SetShaderParameter("OutlineBlue", 255f);
         });
 
         SKColor blue = SKColors.Blue;
@@ -103,7 +104,7 @@ public class SpriteOutlineShaderTests : IDisposable
         using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container =>
         {
             container.SetShaderParameter("Thickness", 2f);
-            container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+            container.SetShaderParameter("OutlineBlue", 255f);
         });
 
         ShouldBeOutline(bitmap, 11, 24, SKColors.Blue);
@@ -126,7 +127,7 @@ public class SpriteOutlineShaderTests : IDisposable
         using SKBitmap bitmap = DrawOutlinedSquare(96, 40, container =>
         {
             container.SetShaderParameter("Thickness", 2f);
-            container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+            container.SetShaderParameter("OutlineBlue", 255f);
         });
 
         ShouldBeOutline(bitmap, 38, 52, SKColors.Blue);
@@ -136,15 +137,105 @@ public class SpriteOutlineShaderTests : IDisposable
     }
 
     [Fact]
-    public void Outline_WithHalfAlphaColor_DrawsAHalfCoveredOutline()
+    public void Outline_WithNothingSet_DrawsAOnePixelBlackOutline()
     {
+        using SKBitmap bitmap = DrawOutlinedSquare(48, 12, setParameters: null);
+
+        ShouldBeOutline(bitmap, 24, 24, SKColors.Red);
+        ShouldBeOutline(bitmap, 11, 24, SKColors.Black);
+        ShouldBeOutline(bitmap, 11, 11, SKColors.Black);
+        ShouldBeEmpty(bitmap, 10, 24);
+    }
+
+    [Fact]
+    public void Outline_WithPixelSizeThree_IsThreeTargetPixelsPerArtPixel()
+    {
+        // The square is 24 target pixels, so 8 art pixels at a PixelSize of 3; Thickness 1 is 3 pixels.
         using SKBitmap bitmap = DrawOutlinedSquare(48, 12, container =>
         {
-            container.SetShaderParameter("Thickness", 1f);
-            container.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 0.5f);
+            container.SetShaderParameter("PixelSize", 3f);
+            container.SetShaderParameter("OutlineGreen", 255f);
         });
 
-        SKColor pixel = bitmap.GetPixel(11, 24);
-        pixel.Alpha.ShouldBeInRange((byte)126, (byte)129);
+        SKColor green = SKColors.Lime;
+        ShouldBeOutline(bitmap, 11, 24, green);
+        ShouldBeOutline(bitmap, 9, 24, green);
+        ShouldBeEmpty(bitmap, 8, 24);
+        ShouldBeOutline(bitmap, 9, 9, green);
+        ShouldBeEmpty(bitmap, 8, 8);
+    }
+
+    // Writes a picture of the outline for a person to look at; only runs when GUM_SCREENSHOT_DIR is set.
+    [Fact]
+    public void Outline_RendersPixelArtPicture_WhenAskedFor()
+    {
+        string? directory = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_DIR");
+        if (string.IsNullOrEmpty(directory))
+        {
+            return;
+        }
+
+        string[] art =
+        {
+            "..XX..",
+            ".XXXX.",
+            "XXXXXX",
+            "XXXXXX",
+            ".XXXX.",
+            "..XX..",
+        };
+        (float thickness, int pixelSize, bool outlined)[] variants =
+        {
+            (1, 1, false), (1, 1, true), (2, 1, true), (1, 3, true), (2, 3, true),
+        };
+        const int scaleUp = 6;
+        int cell = (art.Length + 6) * 3;
+        using SKBitmap sheet = new SKBitmap(cell * scaleUp * variants.Length, cell * scaleUp);
+        using SKCanvas sheetCanvas = new SKCanvas(sheet);
+        sheetCanvas.Clear(SKColors.White);
+
+        for (int variant = 0; variant < variants.Length; variant++)
+        {
+            (float thickness, int pixelSize, bool outlined) = variants[variant];
+            int size = (art.Length + 6) * pixelSize;
+            using SKSurface surface = SKSurface.Create(new SKImageInfo(size, size));
+            GumService.Default.Initialize(surface.Canvas, size, size);
+            ContainerRuntime container = new() { Width = size, Height = size, IsRenderTarget = true };
+            for (int row = 0; row < art.Length; row++)
+            {
+                for (int column = 0; column < art[row].Length; column++)
+                {
+                    if (art[row][column] == 'X')
+                    {
+                        container.Children.Add(new RectangleRuntime
+                        {
+                            X = (column + 3) * pixelSize,
+                            Y = (row + 3) * pixelSize,
+                            Width = pixelSize,
+                            Height = pixelSize,
+                            IsFilled = true,
+                            StrokeWidth = 0,
+                            FillColor = new SKColor(220, 60, 60),
+                        });
+                    }
+                }
+            }
+            GumService.Default.Root.Children.Add(container);
+            if (outlined)
+            {
+                container.SetShaderParameter("Thickness", thickness);
+                container.SetShaderParameter("PixelSize", (float)pixelSize);
+                container.SourceShaderFile = ShippedShaderPath;
+            }
+            GumService.Default.Draw();
+
+            using SKImage image = surface.Snapshot();
+            SKRect destination = new SKRect(variant * cell * scaleUp, 0, (variant + 1) * cell * scaleUp, cell * scaleUp);
+            sheetCanvas.DrawImage(image, destination, new SKSamplingOptions(SKFilterMode.Nearest));
+        }
+
+        using SKImage sheetImage = SKImage.FromBitmap(sheet);
+        using SKData data = sheetImage.Encode(SKEncodedImageFormat.Png, 100);
+        File.WriteAllBytes(Path.Combine(directory, "6984-outline.png"), data.ToArray());
     }
 }

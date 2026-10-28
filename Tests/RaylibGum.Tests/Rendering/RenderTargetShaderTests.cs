@@ -213,7 +213,7 @@ void main()
         {
             inner.RenderTargetEffect = outline;
             inner.SetShaderParameter("Thickness", 2f);
-            inner.SetShaderParameter("OutlineColor", 0f, 0f, 1f, 1f);
+            inner.SetShaderParameter("OutlineBlue", 255f);
             DrawOnce();
 
             RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
@@ -230,6 +230,69 @@ void main()
             oneOut.R.ShouldBeLessThan((byte)60);
             ReadRenderTargetPixel(baked, 10, 24).B.ShouldBeGreaterThan((byte)200);
             ReadRenderTargetPixel(baked, 9, 24).A.ShouldBe((byte)0);
+        }
+        finally
+        {
+            UnloadShader(outline);
+            GumService.Default.Root.Children.Clear();
+        }
+    }
+
+    // Runs the Outline.slang file the samples ship through ShadowDusk's raylib converter, so a break
+    // in the shader or the conversion shows up here and not only by eye in a sample.
+    [Fact]
+    public void Draw_OutlineSampleSlang_WithNothingSet_DrawsAOnePixelBlackOutline()
+    {
+        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+        conversion.IsSuccess.ShouldBeTrue(
+            conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
+
+        // A 24x24 red square in the middle of a 48x48 render target, outlined in blue.
+        ContainerRuntime outer = new();
+        outer.Width = 48;
+        outer.Height = 48;
+        outer.IsRenderTarget = true;
+
+        ContainerRuntime inner = new();
+        inner.Width = 48;
+        inner.Height = 48;
+        inner.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+        ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+        square.X = 12;
+        square.Y = 12;
+        square.Width = 24;
+        square.Height = 24;
+        square.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+        inner.Children.Add(square);
+        outer.Children.Add(inner);
+        GumService.Default.Root.Children.Add(outer);
+        GumService.Default.Root.UpdateLayout();
+
+        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        try
+        {
+            inner.RenderTargetEffect = outline;
+            DrawOnce();
+
+            RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
+
+            // Inside the square is still red.
+            Color inside = ReadRenderTargetPixel(baked, 24, 24);
+            inside.R.ShouldBeGreaterThan((byte)200);
+            inside.B.ShouldBeLessThan((byte)60);
+
+            // One pixel outside the left edge (the square starts at x = 12), diagonal corner included,
+            // is black; two pixels out is empty.
+            Color oneOut = ReadRenderTargetPixel(baked, 11, 24);
+            oneOut.A.ShouldBeGreaterThan((byte)200);
+            oneOut.B.ShouldBeLessThan((byte)30);
+            oneOut.R.ShouldBeLessThan((byte)30);
+            ReadRenderTargetPixel(baked, 11, 11).A.ShouldBeGreaterThan((byte)200);
+            ReadRenderTargetPixel(baked, 10, 24).A.ShouldBe((byte)0);
         }
         finally
         {

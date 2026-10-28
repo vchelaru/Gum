@@ -267,7 +267,10 @@ internal class RenderTargetShaderScreen : FrameworkElement
         }
 
         holder.SetShaderParameter("Thickness", thickness);
-        holder.SetShaderParameter("OutlineColor", red, green, blue, 1f);
+        // The shipped Outline shader takes its color as three 0 to 255 channels.
+        holder.SetShaderParameter("OutlineRed", red * 255f);
+        holder.SetShaderParameter("OutlineGreen", green * 255f);
+        holder.SetShaderParameter("OutlineBlue", blue * 255f);
 
         try
         {

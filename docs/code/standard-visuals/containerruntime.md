@@ -132,10 +132,13 @@ container.AddChild(sprite);
 
 container.SourceShaderFile = "Outline.slang";
 container.SetShaderParameter("Thickness", 2f);
-container.SetShaderParameter("OutlineColor", 1f, 1f, 0f, 1f);
+container.SetShaderParameter("OutlineRed", 255f);
+container.SetShaderParameter("OutlineGreen", 255f);
 ```
 
-`Thickness` is a whole number of pixels, from 1 to 8, and `OutlineColor` is red, green, blue and alpha from 0 to 1. The outline is drawn outside the content, so the container must leave at least `Thickness` pixels of transparent margin around the Sprite or the outline is cut off.
+The shader has five parameters, all optional. `OutlineRed`, `OutlineGreen` and `OutlineBlue` are the outline color from 0 to 255 (all zero, the default, is black), `Thickness` is the outline width in art pixels from 1 to 8 (default 1), and `PixelSize` is how many render target pixels one art pixel covers (default 1). A 16x16 icon drawn 48 pixels wide has a `PixelSize` of 3, so a `Thickness` of 1 gives a 3 pixel outline that lines up with the art pixels. The outline is opaque, and the container's `Alpha` still fades it.
+
+The outline is drawn outside the content, so the container must leave at least `Thickness * PixelSize` pixels of transparent margin around the Sprite or the outline is cut off.
 
 {% hint style="info" %}
 The Outline shader is available in November 2026, or now if building Gum from source.
