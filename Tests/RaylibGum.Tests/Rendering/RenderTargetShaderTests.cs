@@ -269,8 +269,8 @@ void main()
         square.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
         inner.Children.Add(square);
         outer.Children.Add(inner);
-        GumService.Default.Root.Children.Add(outer);
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.Children.Add(outer);
+        Gum.GumService.Default.Root.UpdateLayout();
 
         Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
         try
@@ -297,7 +297,7 @@ void main()
         finally
         {
             UnloadShader(outline);
-            GumService.Default.Root.Children.Clear();
+            Gum.GumService.Default.Root.Children.Clear();
         }
     }
 
