@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\ShadowDuskSource.props" />
 	<PropertyGroup>
 		<!--
 			The runtime host the Gum tool's Preview button (issue #4697) launches: loads a project's
@@ -141,8 +140,7 @@
 	<ItemGroup>
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
 		<!-- Compiles a container's SourceShaderFile (.fx or .slang) at runtime; see PreviewShaderResolver. -->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.20.0" Condition="'$(UseShadowDuskSource)' != 'true'" />
-		<ProjectReference Include="$(ShadowDuskSourceDir)src/ShadowDusk.Compiler/ShadowDusk.Compiler.csproj" Condition="'$(UseShadowDuskSource)' == 'true'" />
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<!-- MonoGame's SDL window loads Icon.bmp from the entry assembly and falls back to the MonoGame logo. -->
