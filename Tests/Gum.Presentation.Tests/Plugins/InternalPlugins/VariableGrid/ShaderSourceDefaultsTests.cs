@@ -212,4 +212,41 @@ public class ShaderSourceDefaultsTests
 
         Parse(source).Count.ShouldBe(0);
     }
+
+    [Theory]
+    [InlineData("#define X 1\nfloat Thickness = 1.0;")]
+    [InlineData("#include \"Common.slang\"\nfloat Thickness = 1.0;")]
+    [InlineData("#pragma once\r\nfloat Thickness = 1.0;")]
+    [InlineData("#if USE_OUTLINE\nfloat Thickness = 1.0;\n#endif")]
+    [InlineData("   # define X 1\nfloat Thickness = 1.0;")]
+    [InlineData("#define LONG 1 \\\n  + 2\nfloat Thickness = 1.0;")]
+    [InlineData("/* c */ #define X 1\nfloat Thickness = 1.0;")]
+    public void Parse_APreprocessorLineBeforeADeclaration_DoesNotHideIt(string source)
+    {
+        Parse(source)["Thickness"].X.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void Parse_ADirectiveBetweenTwoDeclarations_KeepsBoth()
+    {
+        IReadOnlyDictionary<string, ShaderParameterValue> defaults = Parse("float A = 1.0;\n#define X 1\nfloat B = 2.0;");
+
+        defaults["A"].X.ShouldBe(1f);
+        defaults["B"].X.ShouldBe(2f);
+    }
+
+    [Fact]
+    public void Parse_BothBranchesOfAnIfBlock_AreReadWithoutEvaluatingTheCondition()
+    {
+        IReadOnlyDictionary<string, ShaderParameterValue> defaults = Parse("#if A\nfloat X = 1.0;\n#else\nfloat Y = 2.0;\n#endif");
+
+        defaults["X"].X.ShouldBe(1f);
+        defaults["Y"].X.ShouldBe(2f);
+    }
+
+    [Fact]
+    public void Parse_AHashInsideAnExpressionLine_IsNotADirective()
+    {
+        Parse("float Thickness = 1.0; // #not a directive")["Thickness"].X.ShouldBe(1f);
+    }
 }

@@ -45,7 +45,7 @@ public static class ShaderSourceDefaults
             return defaults;
         }
 
-        foreach (string statement in GetGlobalStatements(StripComments(source)))
+        foreach (string statement in GetGlobalStatements(StripDirectives(StripComments(source))))
         {
             Match declaration = DeclarationRegex.Match(statement);
             if (!declaration.Success)
@@ -195,6 +195,33 @@ public static class ShaderSourceDefaults
             {
                 builder.Append(source[i]);
                 i++;
+            }
+        }
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Replaces every preprocessor line (first non-space character <c>#</c>, plus its backslash
+    /// continuations) with a statement boundary. Conditions are not evaluated, so the declarations in
+    /// every branch of an <c>#if</c> are read.
+    /// </summary>
+    private static string StripDirectives(string source)
+    {
+        StringBuilder builder = new StringBuilder(source.Length);
+        string[] lines = source.Split('\n');
+        bool continuing = false;
+        foreach (string line in lines)
+        {
+            string trimmed = line.TrimEnd('\r');
+            bool isDirective = continuing || trimmed.TrimStart().StartsWith("#", System.StringComparison.Ordinal);
+            if (isDirective)
+            {
+                continuing = trimmed.EndsWith("\\", System.StringComparison.Ordinal);
+                builder.Append(";\n");
+            }
+            else
+            {
+                builder.Append(line).Append('\n');
             }
         }
         return builder.ToString();
