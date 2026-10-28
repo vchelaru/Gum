@@ -118,13 +118,15 @@ The Outline shader that ships with Gum draws a pixel-exact outline around everyt
 ```csharp
 // Initialize
 var container = new ContainerRuntime();
-container.Width = 48;
-container.Height = 48;
+container.Width = 32;
+container.Height = 32;
 container.IsRenderTarget = true;
+// A 16x16 Sprite with 8 canvas pixels of margin, at least Thickness * PixelSize
 sprite.X = 8;
 sprite.Y = 8;
 container.AddChild(sprite);
 
+// Outline.slang is copied from Gum/Content/Shaders into the game's content folder
 container.SourceShaderFile = "Outline.slang";
 container.SetShaderParameter("Thickness", 2f);
 container.SetShaderParameter("OutlineRed", 255f);

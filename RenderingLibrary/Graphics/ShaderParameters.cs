@@ -72,7 +72,6 @@ public readonly struct ShaderParameterValue
     public static ShaderParameterValue FromVector3(float x, float y, float z) =>
         new ShaderParameterValue(ShaderParameterKind.Float, 3, x, y, z, 0);
 
-    /// <summary>Creates a four component float vector, which is also how a color is passed.</summary>
     /// <summary>Zero of the same kind and component count as <paramref name="like"/>.</summary>
     public static ShaderParameterValue ZeroLike(ShaderParameterValue like)
     {
@@ -87,6 +86,7 @@ public readonly struct ShaderParameterValue
         }
     }
 
+    /// <summary>Creates a four component float vector, which is also how a color is passed.</summary>
     public static ShaderParameterValue FromVector4(float x, float y, float z, float w) =>
         new ShaderParameterValue(ShaderParameterKind.Float, 4, x, y, z, w);
 }
@@ -215,7 +215,9 @@ public class ShaderParameterCollection
 /// <summary>
 /// Remembers which parameter values Gum last wrote to one shared effect or shader, so the next
 /// container that draws with it can put back to zero the ones it did not set itself. Values the
-/// application wrote to the effect directly are never in the history, so they are left alone.
+/// application wrote to the effect directly are not in the history, so they are left alone, except that once
+/// Gum has written a name, a later container that does not set it resets it to zero even if the application
+/// wrote that name in between.
 /// </summary>
 public sealed class ShaderParameterHistory
 {
