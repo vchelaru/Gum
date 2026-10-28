@@ -8,6 +8,7 @@ using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -199,6 +200,10 @@ namespace Gum.Managers
             {
                 ReactToLocalizationFileChanged(file);
             }
+            else if(ShaderFileExtensions.Contains(extension))
+            {
+                ReactToShaderFileChanged(file);
+            }
 
             _pluginManager.ReactToFileChanged(file);
         }
@@ -216,6 +221,12 @@ namespace Gum.Managers
             if (IsElementExtension(extension))
             {
                 ReactToElementSaveDeleted(file);
+            }
+            else if (ShaderFileExtensions.Contains(extension))
+            {
+                // The refresh makes the canvas look the shader up again; a missing file is reported
+                // the way a missing shader is when it is picked.
+                ReactToShaderFileChanged(file);
             }
         }
 
@@ -534,6 +545,64 @@ namespace Gum.Managers
                     // bad file, do anything?
                 }
             }
+        }
+
+        /// <summary>
+        /// A shader source file changed or was deleted on disk. The compiled effect is cached by path
+        /// (in <see cref="LoaderManager"/>) for every container showing it, and the Variables tab rows come
+        /// from that effect and from the defaults in the source text. Dropping the cache entry makes the next
+        /// build of any container using the shader, in whatever element is selected later, compile again.
+        /// The shown element is rebuilt now, which also rebuilds the selected instance's rows. Images and
+        /// fonts stay cached, so the rebuild is cheap. A shader no element references shows nothing, so
+        /// nothing is touched.
+        /// </summary>
+        private void ReactToShaderFileChanged(FilePath file)
+        {
+            if (!IsReferencedByProject(file))
+            {
+                return;
+            }
+
+            DropCachedEffect(file);
+
+            // Whatever is shown may use the shader through a nested component instance or a base type, which
+            // a per-element file walk does not follow, so the shown element is always rebuilt.
+            if (_selectedState.SelectedElement != null)
+            {
+                _wireframeObjectManager.RefreshAll(true);
+            }
+        }
+
+        private static void DropCachedEffect(FilePath file)
+        {
+            // The cache key is the path as the canvas built it, so match by file rather than by spelling.
+            List<string> keys = LoaderManager.Self.CachedDisposables.Keys
+                .Where(key => IsSameFile(key, file))
+                .ToList();
+            foreach (string key in keys)
+            {
+                LoaderManager.Self.Dispose(key);
+            }
+        }
+
+        private static bool IsSameFile(string path, FilePath file)
+        {
+            try
+            {
+                return new FilePath(path) == file;
+            }
+            catch
+            {
+                // An invalid path in a variable cannot be the file that changed.
+                return false;
+            }
+        }
+
+        private static bool IsReferencedByProject(FilePath file)
+        {
+            return ObjectFinder.Self.GetAllFilesInProject(
+                Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles)
+                .Any(referenced => IsSameFile(referenced, file));
         }
 
         private void ReactToAnimationChainChanged(FilePath file)
