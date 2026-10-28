@@ -386,11 +386,11 @@ public class SelectionManager : ISelectionManager
                 }
             }
             SelectedGues = selectedGues;
-
-            // A marquee picks its set even when that set is already selected (#7007).
-            _messenger.Send(new SelectionPickedMessage());
         }
     }
+
+    /// <inheritdoc/>
+    public void NotifySelectionPicked() => _messenger.Send(new SelectionPickedMessage());
 
     /// <summary>
     /// Toggles the selection state of the specified element.
@@ -1296,7 +1296,7 @@ public class SelectionManager : ISelectionManager
 
                 // A click picks what it lands on even when that is already selected, which raises
                 // no selection change (#7007).
-                _messenger.Send(new SelectionPickedMessage());
+                NotifySelectionPicked();
             }
         }
         catch (Exception e)

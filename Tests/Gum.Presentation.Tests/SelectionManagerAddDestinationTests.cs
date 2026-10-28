@@ -234,6 +234,50 @@ public class SelectionManagerAddDestinationTests : BaseTestClass
         AssertDestinationForgotten();
     }
 
+    [Fact]
+    public void AMarqueeOverEmptyCanvas_WithNothingSelected_MakesTheElementTheDestination()
+    {
+        _tracker.Anchor(_first);
+
+        Marquee(fromX: CellSize * 1.4f, toX: CellSize * 1.6f);
+
+        _selectedState.SelectedInstances.ShouldBeEmpty();
+        AssertDestinationForgotten();
+    }
+
+    [Fact]
+    public void AMarqueeOverEmptyCanvas_WithAnInstanceSelected_MakesTheElementTheDestination()
+    {
+        SelectAsAnAddWould(_first, destination: _first);
+
+        Marquee(fromX: CellSize * 1.4f, toX: CellSize * 1.6f);
+
+        _selectedState.SelectedInstances.ShouldBeEmpty();
+        AssertDestinationForgotten();
+    }
+
+    [Fact]
+    public void AShiftMarqueeOverEmptyCanvas_MakesTheSelectionTheDestination()
+    {
+        SelectAsAnAddWould(_first, destination: _screen);
+
+        Marquee(fromX: CellSize * 1.4f, toX: CellSize * 1.6f, shift: true);
+
+        _selectedState.SelectedInstances.ShouldBe(new[] { _first });
+        AssertDestinationForgotten();
+    }
+
+    [Fact]
+    public void AShiftMarqueeOverAnotherInstance_MakesTheSetTheDestination()
+    {
+        SelectAsAnAddWould(_first, destination: _screen);
+
+        Marquee(fromX: CellSize * 2.5f, toX: CellSize * 1.6f, shift: true);
+
+        _selectedState.SelectedInstances.ShouldBe(new[] { _first, _second });
+        AssertDestinationForgotten();
+    }
+
     #endregion
 
     #region Behavior that already worked
@@ -404,8 +448,9 @@ public class SelectionManagerAddDestinationTests : BaseTestClass
     }
 
     /// <summary>Drags from below the cells (empty canvas) up and across them.</summary>
-    private void Marquee(float fromX, float toX)
+    private void Marquee(float fromX, float toX, bool shift = false)
     {
+        _isShiftHeld = shift;
         float startY = CellSize * 1.5f;
         float endY = CellSize / 2;
         Frame(fromX, startY);
@@ -413,6 +458,7 @@ public class SelectionManagerAddDestinationTests : BaseTestClass
         Frame((fromX + toX) / 2, endY, down: true);
         Frame(toX, endY, down: true);
         Frame(toX, endY, click: true);
+        _isShiftHeld = false;
     }
 
     #endregion
