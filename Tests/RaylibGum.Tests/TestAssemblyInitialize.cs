@@ -11,13 +11,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit.Abstractions;
-using Xunit.Sdk;
 
-
-[assembly: Xunit.TestFramework("RaylibGum.Tests.TestAssemblyInitialize", "RaylibGum.Tests")]
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
+
+// The window must be created on the process main thread (GLFW/Cocoa refuses it anywhere else, and
+// hangs rather than failing). MainThreadTestHost.cs moves test execution onto the main thread, and
+// an assembly fixture is built inside that execution, so the fixture is where the bootstrap runs (#6987).
+[assembly: Xunit.AssemblyFixture(typeof(RaylibGum.Tests.TestAssemblyInitialize))]
 namespace RaylibGum.Tests;
 
 /// <summary>
@@ -28,9 +29,9 @@ namespace RaylibGum.Tests;
 /// so <c>new Button()</c> / <c>new ListBox()</c> / etc. return a control with a valid Visual,
 /// and registers the shared Gum keyboard via <c>GumService.Default.UseKeyboardDefaults()</c>.
 /// </summary>
-public class TestAssemblyInitialize : XunitTestFramework
+public class TestAssemblyInitialize
 {
-    public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink)
+    public TestAssemblyInitialize()
     {
         ApplyDefaultTestState();
     }

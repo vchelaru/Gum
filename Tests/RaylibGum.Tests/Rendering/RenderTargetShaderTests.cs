@@ -180,7 +180,7 @@ void main()
     public void Draw_OutlineSampleSlang_DrawsTheColorJustOutsideTheContent_AndStopsAtThickness()
     {
         Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
         conversion.IsSuccess.ShouldBeTrue(
             conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
 

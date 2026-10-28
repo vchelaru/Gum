@@ -381,12 +381,6 @@ foreach ($project in $testFilters.Keys | Sort-Object) {
         # unit tests").
         $command += "-p:SolutionDir=$repo\"
     }
-    if ($IsMacOS -and $project -match 'RaylibGum\.Tests\.csproj$') {
-        # Its test host hangs at 100% CPU on macOS (the raylib window cannot be created there), so
-        # these tests only run in CI on Windows.
-        Write-Host ("skipped      test $relativeProject ($filter): hangs on macOS, CI only")
-        continue
-    }
     if (Skip-WithoutSokol "test $relativeProject ($filter)" $relativeProject) { continue }
     Invoke-Step -Name "test $relativeProject ($filter)" -Command $command -TimeoutSeconds 300
 }
