@@ -18,6 +18,7 @@ using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.SettingsWindow;
@@ -685,6 +686,96 @@ public class DisplayPropertiesScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "PAL-001")]
+    public void ClickOnAChip_WithABehaviorSelected_AddsARequiredInstance_AndUndoRestoresTheFiles()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave behavior = AddBehavior(tree, "Clickable");
+        tree.Click(tree.NodeFor(behavior));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Input.Click(Chip(tree, "Container"));
+        tree.ThrowIfCrashed();
+
+        tree.Dialogs.Messages.ShouldBeEmpty();
+        BehaviorInstanceSave added = behavior.RequiredInstances.ShouldHaveSingleItem();
+        added.BaseType.ShouldBe("Container");
+        tree.SelectedState.SelectedInstance.ShouldBeSameAs(added);
+        tree.SelectedState.SelectedBehavior.ShouldBeSameAs(behavior);
+        tree.ChildTexts(tree.NodeFor(behavior)).ShouldBe(new[] { added.Name });
+        SavedBehaviorText(tree, "Clickable").ShouldContain(added.Name);
+
+        tree.Undo();
+        behavior.RequiredInstances.ShouldBeEmpty();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the click should restore the files");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
+    public void ClickOnAChip_WithARequiredInstanceSelected_AddsToTheBehavior()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave behavior = AddBehavior(tree, "Clickable");
+        tree.Click(tree.NodeFor(behavior));
+        tree.Input.Click(Chip(tree, "Container"));
+        BehaviorInstanceSave container = behavior.RequiredInstances.ShouldHaveSingleItem();
+        tree.Click(tree.NodeFor(behavior).Nodes.Single(node => node.Tag == container));
+        tree.SelectedState.SelectedInstance.ShouldBeSameAs(container);
+
+        // Required instances are a flat list: the add goes to the behavior, not under the instance,
+        // and a repeated type is named uniquely.
+        tree.Input.Click(Chip(tree, "Container"));
+        tree.ThrowIfCrashed();
+
+        tree.Dialogs.Messages.ShouldBeEmpty();
+        behavior.RequiredInstances.Select(instance => instance.Name).Distinct().Count().ShouldBe(2);
+        tree.SelectedState.SelectedBehavior.ShouldBeSameAs(behavior);
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-002")]
+    public void AddToCurrent_OnAChip_WithABehaviorSelected_NamesTheBehavior_AndAddsARequiredInstance()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave behavior = AddBehavior(tree, "Clickable");
+        tree.Click(tree.NodeFor(behavior));
+
+        tree.Input.RightClick(Chip(tree, "Sprite"));
+        tree.Input.ContextMenuHeaders().ShouldBe(new[] { "Add to Clickable", "Edit defaults..." });
+        tree.Input.PickContextMenuItem("Add to Clickable");
+        tree.ThrowIfCrashed();
+
+        behavior.RequiredInstances.ShouldHaveSingleItem().BaseType.ShouldBe("Sprite");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-002")]
+    public void AddObjectMenuAndAddInstanceDialog_WithABehaviorSelected_AddRequiredInstances()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave behavior = AddBehavior(tree, "Clickable");
+        tree.Click(tree.NodeFor(behavior));
+
+        tree.RightClick(tree.NodeFor(behavior));
+        tree.PickMenu("Add object to Clickable", "Circle");
+        behavior.RequiredInstances.ShouldHaveSingleItem().BaseType.ShouldBe("Circle");
+
+        tree.Click(tree.NodeFor(behavior));
+        tree.Dialogs.AnswerNext<AddInstanceDialogViewModel>(dialog => { dialog.TypeToCreate = "Sprite"; dialog.Value = "Icon"; return true; });
+        tree.PickMainMenu("Edit", "Add", "Instance");
+        behavior.RequiredInstances.Select(instance => instance.Name).ShouldContain("Icon");
+        behavior.RequiredInstances.Count.ShouldBe(2);
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
     [Trait("Feature", "PAL-004")]
     public void DraggingAChip_OnlyDrops_AndDoesNotAlsoAddToTheSelectedElement()
     {
@@ -786,6 +877,18 @@ public class DisplayPropertiesScenarioTests
     #endregion
 
     #region Helpers
+
+    /// <summary>Adds a behavior from the Behaviors menu, which saves it while Auto Save is on.</summary>
+    private static BehaviorSave AddBehavior(ProjectTreeHarness tree, string name)
+    {
+        tree.Dialogs.AnswerNextUserString(name);
+        tree.RightClick(tree.RootNode("Behaviors"));
+        tree.PickMenu("Add Behavior");
+        return tree.Project.Project.Behaviors.Single(behavior => behavior.Name == name);
+    }
+
+    private static string SavedBehaviorText(ProjectTreeHarness tree, string name) =>
+        File.ReadAllText(Path.Combine(tree.Project.ProjectFolder, "Behaviors", name + ".behx"));
 
     private static ComponentSave Component(ProjectTreeHarness tree, string name) =>
         tree.Project.Project.Components.Single(component => component.Name == name);

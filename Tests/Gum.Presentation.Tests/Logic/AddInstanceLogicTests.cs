@@ -177,4 +177,79 @@ public class AddInstanceLogicTests : BaseTestClass
         _sut.AddInstanceAtDestination(_text);
         _mocker.GetMock<IElementCommands>().Verify(x => x.AddInstance(_component, "TextInstance", "Text", null, (int?)null), Times.Once);
     }
+
+    [Fact]
+    public void AddInstanceAtDestination_BehaviorSelected_AddsRequiredInstanceToIt()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "MyBehavior" };
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedBehavior).Returns(behavior);
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.GetUniqueNameForNewInstance(_text, behavior))
+            .Returns("TextInstance");
+
+        _sut.AddInstanceAtDestination(_text);
+
+        _mocker.GetMock<IDialogService>().Verify(x => x.ShowMessage(It.IsAny<string>(), null, null), Times.Never);
+        _mocker.GetMock<IUndoManager>().Verify(x => x.RecordBehaviorState(behavior), Times.Once);
+        _mocker.GetMock<IElementCommands>().Verify(x => x.AddInstance(behavior, "TextInstance", "Text", null!), Times.Once);
+        _mocker.GetMock<IAddDestinationTracker>().Verify(x => x.Anchor(behavior), Times.Once);
+    }
+
+    [Fact]
+    public void AddInstanceAtDestination_RequiredInstanceSelected_AddsToItsBehavior()
+    {
+        // Required instances are a flat list, so one selected instance cannot be a parent: the add
+        // goes to the behavior that holds it.
+        BehaviorSave behavior = new BehaviorSave { Name = "MyBehavior" };
+        BehaviorInstanceSave required = new BehaviorInstanceSave { Name = "ContainerInstance", BaseType = "Container" };
+        behavior.RequiredInstances.Add(required);
+        ObjectFinder.Self.GumProjectSave!.Behaviors.Add(behavior);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedBehavior).Returns(behavior);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedInstance).Returns(required);
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.GetUniqueNameForNewInstance(_text, behavior))
+            .Returns("TextInstance");
+
+        _sut.AddInstanceAtDestination(_text);
+
+        _mocker.GetMock<IDialogService>().Verify(x => x.ShowMessage(It.IsAny<string>(), null, null), Times.Never);
+        _mocker.GetMock<IElementCommands>().Verify(x => x.AddInstance(behavior, "TextInstance", "Text", null!), Times.Once);
+    }
+
+    [Fact]
+    public void AddInstanceAtDestination_RememberedBehaviorDestination_AddsToIt()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "MyBehavior" };
+        _mocker.GetMock<IAddDestinationTracker>().Setup(x => x.Destination).Returns(behavior);
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.GetUniqueNameForNewInstance(_text, behavior))
+            .Returns("TextInstance");
+
+        _sut.AddInstanceAtDestination(_text);
+
+        _mocker.GetMock<IElementCommands>().Verify(x => x.AddInstance(behavior, "TextInstance", "Text", null!), Times.Once);
+    }
+
+    [Fact]
+    public void AddInstanceAtDestination_ScreenIntoSelectedBehavior_ShowsMessageAndAddsNothing()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "MyBehavior" };
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedBehavior).Returns(behavior);
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+
+        InstanceSave? added = _sut.AddInstanceAtDestination(screen);
+
+        added.ShouldBeNull();
+        _mocker.GetMock<IDialogService>().Verify(x => x.ShowMessage(It.IsAny<string>(), null, null), Times.Once);
+        _mocker.GetMock<IElementCommands>().Verify(x => x.AddInstance(It.IsAny<BehaviorSave>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()), Times.Never);
+    }
+
+    [Fact]
+    public void AddInstanceAtDestination_NothingSelected_ShowsNoScreenOrComponentMessage()
+    {
+        InstanceSave? added = _sut.AddInstanceAtDestination(_text);
+
+        added.ShouldBeNull();
+        _mocker.GetMock<IDialogService>().Verify(x => x.ShowMessage("No Screen or Component selected", null, null), Times.Once);
+    }
 }

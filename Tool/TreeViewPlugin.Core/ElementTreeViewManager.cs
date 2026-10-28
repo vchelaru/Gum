@@ -409,7 +409,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         View.CurrentElementNameProvider = () =>
             _selectedState.SelectedElement is { } element && element is not StandardElementSave
                 ? element.Name
-                : null;
+                : _selectedState.SelectedBehavior?.Name;
 
         View.AddStandardToCurrentRequested += AddStandardAtDestination;
 
