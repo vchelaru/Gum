@@ -120,10 +120,16 @@ public class FileDropdownScenarioTests
         grid.Settle();
         string shipped = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Content", "Shaders", "Blur.slang"));
 
-        tree.Dialogs.AnswerNextMessage(replace ? MessageDialogResult.Affirmative : MessageDialogResult.Negative);
+        List<string> asked = new List<string>();
+        tree.Dialogs.AnswerNext<ChoiceDialogViewModel>(dialog =>
+        {
+            asked.Add(dialog.Message);
+            dialog.SelectedValue = dialog.OptionValues.First(option => option.StartsWith(replace ? "Replace" : "Keep"));
+            return true;
+        });
         grid.PickComboItem("SourceShaderFile", "Blur.slang");
 
-        tree.Dialogs.Messages.ShouldBe(new[] { "Replace your Shaders/Blur.slang with the built-in?" });
+        asked.ShouldHaveSingleItem().ShouldContain("Shaders/Blur.slang");
         VariableGridHarness.StoredValue(card, "Box.SourceShaderFile").ShouldBe("Shaders/Blur.slang");
         File.ReadAllText(copy).ShouldBe(replace ? shipped : "an older Blur");
     }

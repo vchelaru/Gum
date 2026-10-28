@@ -24,8 +24,9 @@ public interface IBuiltInShaderFiles
 
     /// <summary>
     /// Copies the shipped shader <paramref name="name"/> into the project's Shaders folder and returns
-    /// its project-relative path. A copy already there that differs from the shipped file is replaced
-    /// only if the user says yes to a prompt; otherwise, and when it is identical, it is kept as is.
+    /// its project-relative path. A copy already there that differs from the shipped file (line endings
+    /// aside) is replaced only if the user picks "Replace with built-in"; otherwise, and when it is
+    /// the same, it is kept as is. Closing the prompt keeps the copy.
     /// Null when the project has not been saved yet or the shader is not shipped.
     /// </summary>
     string? CopyIntoProject(string name);
@@ -35,6 +36,8 @@ public interface IBuiltInShaderFiles
 public class BuiltInShaderFiles : IBuiltInShaderFiles
 {
     private const string ProjectFolder = "Shaders";
+    private const string ReplaceKey = "replace";
+    private const string KeepKey = "keep";
     private static readonly string[] ShaderExtensions = { ".slang", ".fx" };
 
     private readonly IProjectState _projectState;
@@ -99,7 +102,9 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
         string relativePath = ProjectFolder + "/" + name;
         try
         {
-            if (File.ReadAllBytes(copyPath).AsSpan().SequenceEqual(File.ReadAllBytes(shippedPath)))
+            byte[] copyBytes = File.ReadAllBytes(copyPath);
+            byte[] shippedBytes = File.ReadAllBytes(shippedPath);
+            if (WithoutCarriageReturnLineFeeds(copyBytes).AsSpan().SequenceEqual(WithoutCarriageReturnLineFeeds(shippedBytes)))
             {
                 return;
             }
@@ -110,7 +115,7 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
             return;
         }
 
-        if (!_dialogService.ShowYesNoMessage($"Replace your {relativePath} with the built-in?", "Replace shader?"))
+        if (!UserWantsBuiltIn(name, relativePath))
         {
             return;
         }
@@ -123,6 +128,38 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
         {
             _outputManager.AddError($"Could not replace {relativePath} with the built-in, so it was left as is: {e.Message}");
         }
+    }
+
+    // "Keep my copy" is listed first so it is the choice Enter confirms; closing the dialog is also a keep.
+    private bool UserWantsBuiltIn(string name, string relativePath)
+    {
+        DialogChoices<string> choices = new()
+        {
+            [KeepKey] = "Keep my copy",
+            [ReplaceKey] = "Replace with built-in",
+        };
+        string message =
+            $"Your project's {relativePath} differs from the built-in {name}.\n\n" +
+            "Replace with built-in: overwrites your file with the built-in one.\n" +
+            "Keep my copy: uses your file as it is.\n\n" +
+            "The shader is assigned either way.";
+
+        return _dialogService.ShowChoices(message, choices, title: "Built-in shader differs", canCancel: true) == ReplaceKey;
+    }
+
+    // Compares equal for files that differ only in CRLF against LF. Other bytes, including a lone CR, are kept.
+    private static byte[] WithoutCarriageReturnLineFeeds(byte[] bytes)
+    {
+        List<byte> result = new List<byte>(bytes.Length);
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            if (bytes[i] == (byte)'\r' && i + 1 < bytes.Length && bytes[i + 1] == (byte)'\n')
+            {
+                continue;
+            }
+            result.Add(bytes[i]);
+        }
+        return result.ToArray();
     }
 
     private static string GetCopyPath(string projectDirectory, string name) =>

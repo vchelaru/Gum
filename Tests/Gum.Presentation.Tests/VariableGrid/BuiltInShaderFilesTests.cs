@@ -1,3 +1,4 @@
+using System.Text;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Managers;
 using Gum.Services.Dialogs;
@@ -24,22 +25,64 @@ public class BuiltInShaderFilesTests : BaseTestClass
         Directory.CreateDirectory(_builtInFolder);
         Directory.CreateDirectory(_projectDirectory);
         _projectState.SetupGet(state => state.ProjectDirectory).Returns(_projectDirectory);
+        // A test that sets up no answer gets a dialog the user closes, as an unset mock used to answer "not yes".
+        AnswerChoice(null);
     }
 
-    private readonly List<string> _asked = new List<string>();
+    private readonly List<ChoiceDialogViewModel> _shown = new List<ChoiceDialogViewModel>();
 
-    private void AnswerYesNo(MessageDialogResult answer)
+    // IDialogService.Show has an out parameter, which Moq can only populate through a callback
+    // delegate whose signature mirrors the method.
+    private delegate void ShowChoiceCallback(Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel);
+
+    private const string ReplaceChoice = "Replace with built-in";
+    private const string KeepChoice = "Keep my copy";
+
+    /// <summary>Answers the next choice dialog with the option text <paramref name="pick"/>, or closes it (null).</summary>
+    private void AnswerChoice(string? pick)
     {
         _dialogService
-            .Setup(dialogs => dialogs.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.Is<MessageDialogStyle?>(style => style != null && style.AffirmativeText == "Yes")))
-            .Callback((string message, string? _, MessageDialogStyle? _) => _asked.Add(message))
-            .Returns(answer);
+            .Setup(dialogs => dialogs.Show(It.IsAny<Action<ChoiceDialogViewModel>?>(), out It.Ref<ChoiceDialogViewModel>.IsAny))
+            .Callback(new ShowChoiceCallback((Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel) =>
+            {
+                viewModel = new ChoiceDialogViewModel();
+                initializer?.Invoke(viewModel);
+                _shown.Add(viewModel);
+                if (pick == null)
+                {
+                    viewModel.NegativeCommand.Execute(null);
+                }
+                else
+                {
+                    viewModel.SelectedValue = pick;
+                    viewModel.AffirmativeCommand.Execute(null);
+                }
+            }))
+            .Returns(pick != null);
     }
+
+    private void AnswerPrompt(MessageDialogResult answer) =>
+        AnswerChoice(answer switch
+        {
+            MessageDialogResult.Affirmative => ReplaceChoice,
+            MessageDialogResult.Negative => KeepChoice,
+            _ => null,
+        });
 
     private void VerifyAskedTimes(Times times) =>
         _dialogService.Verify(
-            dialogs => dialogs.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            dialogs => dialogs.Show(It.IsAny<Action<ChoiceDialogViewModel>?>(), out It.Ref<ChoiceDialogViewModel>.IsAny),
             times);
+
+    // Also catches the old yes/no message box, so a "no prompt" test cannot pass just because the
+    // prompt moved to another dialog.
+    private void VerifyNothingAsked()
+    {
+        VerifyAskedTimes(Times.Never());
+        _dialogService.Verify(
+            dialogs => dialogs.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Never());
+    }
 
     public override void Dispose()
     {
@@ -141,7 +184,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
         Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
         File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "old copy");
-        AnswerYesNo(MessageDialogResult.Affirmative);
+        AnswerPrompt(MessageDialogResult.Affirmative);
         BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         string? path = sut.CopyIntoProject("Blur.slang");
@@ -149,7 +192,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         path.ShouldBe("Shaders/Blur.slang");
         File.ReadAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang")).ShouldBe("shipped");
         VerifyAskedTimes(Times.Once());
-        _asked.ShouldBe(new[] { "Replace your Shaders/Blur.slang with the built-in?" });
+        _shown.Single().Message.ShouldContain("Shaders/Blur.slang");
     }
 
     [Theory]
@@ -160,7 +203,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
         Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
         File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "old copy");
-        AnswerYesNo(answer);
+        AnswerPrompt(answer);
         BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
         string? path = sut.CopyIntoProject("Blur.slang");
@@ -180,7 +223,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         File.SetAttributes(copy, FileAttributes.ReadOnly);
         try
         {
-            AnswerYesNo(MessageDialogResult.Affirmative);
+            AnswerPrompt(MessageDialogResult.Affirmative);
             BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
 
             string? path = sut.CopyIntoProject("Blur.slang");
@@ -202,7 +245,7 @@ public class BuiltInShaderFilesTests : BaseTestClass
         string copy = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
         Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
         File.WriteAllText(copy, "old copy");
-        AnswerYesNo(MessageDialogResult.Affirmative);
+        AnswerPrompt(MessageDialogResult.Affirmative);
         BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
         string? path;
 
@@ -231,11 +274,137 @@ public class BuiltInShaderFilesTests : BaseTestClass
 
         // A newer Gum ships a different Outline.
         File.WriteAllText(Path.Combine(_builtInFolder, "Outline.slang"), "version 2");
-        AnswerYesNo(MessageDialogResult.Affirmative);
+        AnswerPrompt(MessageDialogResult.Affirmative);
         sut.CopyIntoProject("Outline.slang");
 
         VerifyAskedTimes(Times.Once());
         File.ReadAllText(Path.Combine(_projectDirectory, "Shaders", "Outline.slang")).ShouldBe("version 2");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyIntoProject_CopyDiffersOnlyInLineEndings_SaysNothingAndLeavesTheCopyAlone(bool copyHasCrLf)
+    {
+        byte[] lf = Encoding.UTF8.GetBytes("float a;\nfloat b;\n");
+        byte[] crlf = Encoding.UTF8.GetBytes("float a;\r\nfloat b;\r\n");
+        File.WriteAllBytes(Path.Combine(_builtInFolder, "Blur.slang"), copyHasCrLf ? lf : crlf);
+        string copy = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.WriteAllBytes(copy, copyHasCrLf ? crlf : lf);
+        AnswerChoice(ReplaceChoice);
+        _dialogService
+            .Setup(dialogs => dialogs.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Affirmative);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+
+        string? path = sut.CopyIntoProject("Blur.slang");
+
+        path.ShouldBe("Shaders/Blur.slang");
+        VerifyNothingAsked();
+        File.ReadAllBytes(copy).ShouldBe(copyHasCrLf ? crlf : lf);
+    }
+
+    [Fact]
+    public void CopyIntoProject_CopyDiffersInContentAndLineEndings_StillAsks()
+    {
+        File.WriteAllBytes(Path.Combine(_builtInFolder, "Blur.slang"), Encoding.UTF8.GetBytes("float a;\nfloat b;\n"));
+        string copy = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.WriteAllBytes(copy, Encoding.UTF8.GetBytes("float a;\r\nfloat c;\r\n"));
+        AnswerChoice(KeepChoice);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+
+        sut.CopyIntoProject("Blur.slang");
+
+        VerifyAskedTimes(Times.Once());
+    }
+
+    [Fact]
+    public void CopyIntoProject_CopyDiffers_AnsweringReplaceCopiesTheShippedFilesBytesUnchanged()
+    {
+        byte[] shipped = Encoding.UTF8.GetBytes("float a;\r\nfloat b;\r\n");
+        File.WriteAllBytes(Path.Combine(_builtInFolder, "Blur.slang"), shipped);
+        string copy = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.WriteAllBytes(copy, Encoding.UTF8.GetBytes("float a;\nfloat c;\n"));
+        AnswerChoice(ReplaceChoice);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+
+        string? path = sut.CopyIntoProject("Blur.slang");
+
+        path.ShouldBe("Shaders/Blur.slang");
+        File.ReadAllBytes(copy).ShouldBe(shipped);
+    }
+
+    [Fact]
+    public void CopyIntoProject_CopyDiffers_AnsweringKeepLeavesTheFileAndStillReturnsThePath()
+    {
+        File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
+        string copy = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.WriteAllText(copy, "my edits");
+        AnswerChoice(KeepChoice);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+
+        string? path = sut.CopyIntoProject("Blur.slang");
+
+        path.ShouldBe("Shaders/Blur.slang");
+        File.ReadAllText(copy).ShouldBe("my edits");
+        _outputManager.Verify(output => output.AddError(It.IsAny<string>()), Times.Never());
+    }
+
+    [Fact]
+    public void CopyIntoProject_CopyDiffers_ClosingTheDialogKeepsTheCopyAndStillReturnsThePath()
+    {
+        File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
+        string copy = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
+        Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.WriteAllText(copy, "my edits");
+        AnswerChoice(null);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+
+        string? path = sut.CopyIntoProject("Blur.slang");
+
+        path.ShouldBe("Shaders/Blur.slang");
+        File.ReadAllText(copy).ShouldBe("my edits");
+        _outputManager.Verify(output => output.AddError(It.IsAny<string>()), Times.Never());
+    }
+
+    [Fact]
+    public void CopyIntoProject_CopyDiffers_OffersExactlyReplaceOrKeep_KeepFirstSoEnterNeverOverwrites_AndCanBeClosed()
+    {
+        File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
+        Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
+        File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "my edits");
+        AnswerChoice(KeepChoice);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+
+        sut.CopyIntoProject("Blur.slang");
+
+        ChoiceDialogViewModel dialog = _shown.Single();
+        dialog.OptionValues.ShouldBe(new[] { KeepChoice, ReplaceChoice });
+        dialog.CanCancel.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CopyIntoProject_CopyDiffers_TheMessageSaysWhatEachChoiceDoes()
+    {
+        File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
+        Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
+        File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "my edits");
+        AnswerChoice(KeepChoice);
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder);
+
+        sut.CopyIntoProject("Blur.slang");
+
+        ChoiceDialogViewModel dialog = _shown.Single();
+        dialog.Title.ShouldBe("Built-in shader differs");
+        dialog.Message.ShouldBe(
+            "Your project's Shaders/Blur.slang differs from the built-in Blur.slang.\n\n" +
+            "Replace with built-in: overwrites your file with the built-in one.\n" +
+            "Keep my copy: uses your file as it is.\n\n" +
+            "The shader is assigned either way.");
     }
 
     [Fact]
