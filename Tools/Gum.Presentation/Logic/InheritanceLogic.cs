@@ -155,6 +155,7 @@ public class InheritanceLogic
                         {
                             var derivedInstance = instance.Clone();
                             derivedInstance.DefinedByBase = true;
+                            derivedInstance.ParentContainer = asElementSave;
                             asElementSave.Instances.Add(derivedInstance);
                         }
                     }
