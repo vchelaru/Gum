@@ -58,22 +58,6 @@ firstNineSlice.SourceFileName = "Frame.png";
 secondNineSlice.Texture = firstNineSlice.Texture;
 ```
 
-### Border Scale
-
-`BorderScale` multiplies the thickness of every border. `CustomBorderScaleLeft`, `CustomBorderScaleTop`, `CustomBorderScaleRight`, and `CustomBorderScaleBottom` override it for one side. A side left `null` uses `BorderScale`, and a side set to `0` draws no border.
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-```csharp
-// Initialize
-nineSlice.BorderScale = 2;
-// The left border is drawn at 4x, and the top border is not drawn
-nineSlice.CustomBorderScaleLeft = 4;
-nineSlice.CustomBorderScaleTop = 0;
-```
-
 ### Animating a NineSlice
 
 A NineSliceRuntime can also play back a frame-by-frame animation from an `.achx` file. Setting `SourceFileName` to a path ending in `.achx` is auto-detected the same way as a texture file:
