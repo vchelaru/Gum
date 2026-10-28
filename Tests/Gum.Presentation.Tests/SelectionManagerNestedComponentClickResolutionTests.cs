@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
@@ -97,7 +98,8 @@ public class SelectionManagerNestedComponentClickResolutionTests : BaseTestClass
             Mock.Of<IGuiCommands>(),
             Mock.Of<IWireframeEditorFactory>(),
             Mock.Of<INineSliceCoordinateRefresher>(),
-            mockPreciseHitTester.Object);
+            mockPreciseHitTester.Object,
+            Mock.Of<IMessenger>());
 
         var elementStack = new List<ElementWithState> { new ElementWithState(screen) };
 

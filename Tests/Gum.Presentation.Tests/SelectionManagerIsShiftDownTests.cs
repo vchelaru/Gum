@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
@@ -32,7 +33,8 @@ public class SelectionManagerIsShiftDownTests
             Mock.Of<IGuiCommands>(),
             Mock.Of<IWireframeEditorFactory>(),
             Mock.Of<INineSliceCoordinateRefresher>(),
-            Mock.Of<IPreciseHitTester>());
+            Mock.Of<IPreciseHitTester>(),
+            Mock.Of<IMessenger>());
 
         return (selectionManager, hotkeyManager);
     }

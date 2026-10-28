@@ -43,4 +43,10 @@ public interface ISelectionManager
     void DeselectAll();
     void ToggleSelection(GraphicalUiElement element);
     void Select(IEnumerable<GraphicalUiElement> elements);
+
+    /// <summary>
+    /// Tells listeners the user picked the current selection on the canvas, even when it was
+    /// already selected or the pick changed nothing (a marquee over empty canvas).
+    /// </summary>
+    void NotifySelectionPicked();
 }
