@@ -2004,8 +2004,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     // Control characters become spaces one for one (so indexes into RawText still line up) to match
     // MonoGame's blank glyph (#6835). A tab is kept: RichTextKit gives it its own tab stop.
+    // Callers have already turned "\r\n" into "\n", so a "\r\n" left here (from "\r\r\n") would be
+    // read by RichTextKit as one character; blank its '\r' so the length stays one per char (#6991).
     private static string? BlankControlCharacters(string? text) =>
-        text == null ? null : ControlCharacterBlanker.Blank(text, expandTabs: false);
+        text == null ? null : ControlCharacterBlanker.Blank(text, expandTabs: false).Replace("\r\n", " \n");
 
     private void ParseMarkup()
     {
@@ -2015,7 +2017,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
             _hasMarkup = false;
-            _layoutText = BlankControlCharacters(mRawText);
+            // CRLF counts as one character everywhere (#6991), as on MonoGame/Raylib.
+            _layoutText = BlankControlCharacters(mRawText?.Replace("\r\n", "\n"));
             return;
         }
 
@@ -2030,7 +2033,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (tags.Count == 0)
         {
             _hasMarkup = false;
-            _layoutText = BlankControlCharacters(withGlyphs);
+            _layoutText = BlankControlCharacters(normalized);
             return;
         }
 
