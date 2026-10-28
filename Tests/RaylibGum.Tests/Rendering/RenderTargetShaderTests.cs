@@ -244,7 +244,7 @@ void main()
     public void Draw_OutlineSampleSlang_WithNothingSet_DrawsAOnePixelBlackOutline()
     {
         Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
         conversion.IsSuccess.ShouldBeTrue(
             conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
 
@@ -307,7 +307,7 @@ void main()
         System.Action<ContainerRuntime> setParameters, float zoom, int alpha, System.Action<System.Func<int, int, Color>> check)
     {
         Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
         conversion.IsSuccess.ShouldBeTrue(
             conversion.IsFailure ? string.Join(", ", conversion.Error.Select(e => e.Message)) : "");
 
@@ -426,7 +426,7 @@ void main()
         System.Action<ContainerRuntime>? changeAfterFirstFrame, System.Action<int, int> check)
     {
         Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
         conversion.IsSuccess.ShouldBeTrue();
 
         (ContainerRuntime outer, ContainerRuntime inner) Build(float x)
@@ -532,7 +532,7 @@ void main()
     public void Draw_OutlineSampleSlang_OfASpriteTouchingTheRightAndBottomEdges_DrawsNothingOnTheOppositeEdges(bool forceRepeat)
     {
         Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions());
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
         conversion.IsSuccess.ShouldBeTrue();
 
         ContainerRuntime outer = new() { Width = 48, Height = 48, IsRenderTarget = true };
