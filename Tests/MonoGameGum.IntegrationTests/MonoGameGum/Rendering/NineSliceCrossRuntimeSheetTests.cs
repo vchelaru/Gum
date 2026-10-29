@@ -14,7 +14,8 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// Tests/Shared/CrossRuntime). This class renders every case of <see cref="NineSliceCases"/> with
 /// MonoGame and checks the result against the checked-in contact sheets, which SkiaGum.Tests
 /// (<c>NineSliceCrossRuntimeTests</c>) reads. A MonoGame change that moves a pixel fails here, so the
-/// sheets cannot go stale; regenerate them with <c>GUM_UPDATE_CROSS_RUNTIME_BASELINES=1</c> only for
+/// sheets cannot go stale (cells in <see cref="NineSliceKnownDifferences"/> marked rasterizer dependent are
+/// skipped, because the macOS and Mesa rasterizers disagree on them); regenerate them with <c>GUM_UPDATE_CROSS_RUNTIME_BASELINES=1</c> only for
 /// an intended MonoGame change, and review the diff of the PNGs. <c>GUM_COMPARE_OUT=&lt;dir&gt;</c>
 /// also writes each sheet to <c>&lt;dir&gt;/monogame</c>.
 /// </summary>
@@ -68,6 +69,13 @@ public class NineSliceCrossRuntimeSheetTests : BaseTestClass
         List<string> differing = new();
         for (int index = 0; index < sheet.Cases.Count; index++)
         {
+            // The baselines come from the macOS GPU; the Windows CI draws with Mesa llvmpipe, which
+            // resolves a texel-boundary tie the other way in some cells (first full CI run of #7038).
+            if (NineSliceKnownDifferences.IsRasterizerDependent(sheet.Name, sheet.Cases[index].Name))
+            {
+                continue;
+            }
+
             (int originX, int originY) = NineSliceCases.CellOrigin(index);
             bool differs = false;
             for (int y = 0; y < NineSliceCases.CellSize && !differs; y++)

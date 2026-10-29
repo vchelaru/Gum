@@ -7,7 +7,7 @@ compared against it.
 - `NineSliceCases.cs` (linked into both test projects; `Gum.Presentation.Tests` and `Gum.Avalonia.Tests` glob
   `Tests/Shared/**` and exclude this folder, since they render nothing): the cases, a deterministic texture (every texel
   its own color) and the contact-sheet layout (`CellSize` square cells, `Columns` per row). Case names
-  are written with the invariant culture because `KnownDifferences` keys on them. A new element type adds
+  are written with the invariant culture because `NineSliceKnownDifferences` keys on them. A new element type adds
   its own `*Cases.cs` beside it.
 - `NineSliceBaselines/*.png`: the MonoGame render of each sheet. Written and kept true by
   `MonoGameGum.IntegrationTests` `NineSliceCrossRuntimeSheetTests`, which fails when MonoGame stops
@@ -17,7 +17,7 @@ compared against it.
   differs when an RGB channel is more than 2 apart; no anti-aliasing is involved, nearest sampling) and
   writes the pictures.
 - `NineSliceCrossRuntimeTests` renders each case with Skia on a CPU surface and asserts the differing
-  cells are exactly its `KnownDifferences` list, each with a reason. A fix removes its entry; a new
+  cells are exactly the `NineSliceKnownDifferences` list, each with a reason. A fix removes its entry; a new
   difference fails the test.
 
 Pictures: set `GUM_COMPARE_OUT=<folder>` on the Skia test run to get `overview.png`, `sheets/<sheet>.png`
@@ -32,5 +32,9 @@ difference: with it off MonoGame matches Skia. In `frame3-9x9` 5x3, 3x5 and 5x5 
 zoom 2 and 3 the cell differs from Skia with the rule on and off; those are listed as a sampling tie where
 the rule also plays a part.
 
-The MonoGame sheet test compares exact RGB on a real GL device, so it runs in the `mesa-1` stream of the full
-CI (software OpenGL) and not under the `fast-ci` label.
+The MonoGame sheet test compares exact RGB on a real GL device. It runs in the `mesa-1` stream of the full CI
+(Mesa llvmpipe, software OpenGL), not under the `fast-ci` label, and the baselines come from a Mac GPU. The first
+full CI run showed the two rasterizers disagree on 25 cells, all of them texel-boundary ties or fractional
+edges. So `NineSliceKnownDifferences` (shared, with the reasons) marks every tie and fractional-edge cell as
+rasterizer dependent and the MonoGame sheet test skips those cells; every other cell, including the odd-height
+ones, is compared exactly. Skia still compares all cells against the Mac baselines.
