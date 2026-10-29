@@ -415,8 +415,9 @@ public class FileChangeReferencedFileReactionTests : BaseTestClass
     public void ARenameOfAFileNothingReferences_IsNotQueued()
     {
         Select(AddScreen("Main"));
-        FileWatchManager watch = StartWatching();
+        // Written before the watcher starts: on Windows its Created event would queue the file by itself.
         string path = WriteFile("bin/App.dll");
+        FileWatchManager watch = StartWatching();
 
         watch.HandleRename(null, new RenamedEventArgs(
             WatcherChangeTypes.Renamed, Path.GetDirectoryName(path)!, "App.dll", "App.dll.tmp.1"));
