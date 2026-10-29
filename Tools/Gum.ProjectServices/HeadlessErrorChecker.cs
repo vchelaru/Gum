@@ -94,6 +94,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
             errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
             errors.AddRange(GetFontRangeEntryErrors(project));
+            errors.AddRange(GetMissingComponentBaseTypeErrors(project));
         }
         finally
         {
@@ -121,6 +122,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
             List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
             errors.AddRange(GetFontRangeEntryErrors(project));
+            errors.AddRange(GetMissingComponentBaseTypeErrors(project));
             return errors;
         }
         finally
@@ -144,7 +146,6 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
-        errors.AddRange(GetMissingComponentBaseTypeErrorFor(element));
         errors.AddRange(GetCircularBaseTypeErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetUnprefixedInstanceVariableErrorsFor(element));
@@ -1378,11 +1379,12 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     // GUM0015: a component with no BaseType loads fine, but codegen then writes a class with no base class.
     // Screens and standards legitimately have none.
-    private static List<ErrorResult> GetMissingComponentBaseTypeErrorFor(ElementSave elementSave)
+    // It is a project-level row, so the Errors tab lists it whichever element is selected.
+    private static List<ErrorResult> GetMissingComponentBaseTypeErrors(GumProjectSave project)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
 
-        if (elementSave is ComponentSave && string.IsNullOrWhiteSpace(elementSave.BaseType))
+        foreach (ComponentSave elementSave in project.Components.Where(component => string.IsNullOrWhiteSpace(component.BaseType)))
         {
             errors.Add(new ErrorResult
             {
@@ -1429,6 +1431,16 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
         foreach (StateSave state in elementSave.AllStates)
         {
+            // A reference whose left side is unprefixed (Color = Source.Color) is what creates element-level
+            // variables like Red, so a state with one is left alone.
+            bool hasElementLevelReference = state.VariableLists.Any(list =>
+                list.Name == "VariableReferences" &&
+                list.ValueAsIList.OfType<string>().Any(line => !line.Split('=')[0].Contains('.')));
+            if (hasElementLevelReference)
+            {
+                continue;
+            }
+
             foreach (VariableSave variable in state.Variables)
             {
                 string name = variable.Name;
