@@ -128,7 +128,7 @@ internal sealed class ToolSaveRuntimeWorld : IDisposable
     /// The design-time part of the running tree (instances from the project, not what the game added)
     /// as text: name, element, layout and the Text and Red the renderable holds, down the hierarchy.
     /// </summary>
-    public static string Describe(GraphicalUiElement element, int depth = 0)
+    public static string Describe(GraphicalUiElement element, int depth = 0, bool sortSiblings = false)
     {
         string indent = new string(' ', depth * 2);
         RecordingRenderable? renderable = element.RenderableComponent as RecordingRenderable;
@@ -136,16 +136,22 @@ internal sealed class ToolSaveRuntimeWorld : IDisposable
         text.Append(indent).Append(element.Name).Append(" <").Append(element.ElementSave?.Name).Append("> ")
             .Append(element.X).Append(',').Append(element.Y).Append(' ').Append(element.Width).Append('x').Append(element.Height)
             .Append(" text=").Append(renderable?.Text).Append(" red=").Append(renderable?.Red).AppendLine();
-        foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children).Distinct()
-                     .Where(child => child.Tag is InstanceSave))
+        IEnumerable<GraphicalUiElement> children = element.ContainedElements.Concat(element.Children).Distinct()
+            .Where(child => child.Tag is InstanceSave);
+        if (sortSiblings)
         {
-            text.Append(Describe(child, depth + 1));
+            // A rebuilt instance lands last in ContainedElements; Children keep the right order.
+            children = children.OrderBy(child => child.Name, StringComparer.Ordinal);
+        }
+        foreach (GraphicalUiElement child in children)
+        {
+            text.Append(Describe(child, depth + 1, sortSiblings));
         }
         return text.ToString();
     }
 
     /// <summary>The tree a game that started now, from the files on disk, would show.</summary>
-    public string DescribeAFreshLoad()
+    public string DescribeAFreshLoad(bool sortSiblings = false)
     {
         GumProjectSave fresh = GumProjectSave.Load(GumxPath);
         fresh.Initialize();
@@ -156,7 +162,7 @@ internal sealed class ToolSaveRuntimeWorld : IDisposable
             ScreenSave? screen = fresh.Screens.FirstOrDefault(candidate => candidate.Name == Screen.ElementSave!.Name);
             return screen == null
                 ? "<no screen " + Screen.ElementSave!.Name + ">"
-                : Describe(screen.ToGraphicalUiElement(systemManagers: null!, addToManagers: false));
+                : Describe(screen.ToGraphicalUiElement(systemManagers: null!, addToManagers: false), 0, sortSiblings);
         }
         finally
         {

@@ -228,6 +228,44 @@ public class ToolSaveHotReloadScenarioTests
     }
 
     [AvaloniaFact]
+    public void BaseComponentRenamedInTheTool_WithADerivedComponent_IsCleanAndMatchesARestart()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave widget = tree.Project.AddComponent("Widget");
+        tree.Project.AddInstance(widget, "Title", "Text");
+        ComponentSave gadget = tree.Project.AddComponent("Gadget", "Widget");
+        tree.Project.AddInstance(gadget, "Extra", "Rectangle");
+        ScreenSave main = tree.Project.AddScreen("Main");
+        tree.Project.AddInstance(main, "Widget1", "Widget");
+        tree.Project.AddInstance(main, "Gadget1", "Gadget");
+        tree.Project.AddInstance(main, "Heading", "Text");
+        tree.SaveAll();
+        using ToolSaveRuntimeWorld world = new ToolSaveRuntimeWorld(tree.Project.ProjectFilePath, "Main");
+
+        tree.Click(tree.NodeFor(widget));
+        tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "Control"; return true; });
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+        world.WaitForReload(_reloadBudget).ShouldBeTrue("a base component rename should reach the running game");
+        world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
+
+        gadget.BaseType.ShouldBe("Control", "sanity: the tool updated the derived component");
+        world.Find("Widget1")!.ElementSave!.Name.ShouldBe("Control");
+        world.Results.SelectMany(result => result.Issues)
+            .ShouldNotContain(issue => issue.Kind != HotReloadIssueKind.InstanceRebuilt);
+        world.Results.ShouldAllBe(result => result.MatchesRestart);
+        ToolSaveRuntimeWorld.Describe(world.Screen, 0, sortSiblings: true).ShouldBe(world.DescribeAFreshLoad(sortSiblings: true), "the running tree should match what a restart would show");
+
+        // A later edit is clean again, not a repeat of the rename
+        tree.Click(tree.NodeFor(main.GetInstance("Heading")!));
+        tree.Grid.TypeAndLeave("Text", "After");
+        ShouldReloadWithinTheDebounceBudget(world, "a Text edit");
+        world.Results[world.Results.Count - 1].IsClean.ShouldBeTrue();
+        ToolSaveRuntimeWorld.Describe(world.Screen, 0, sortSiblings: true).ShouldBe(world.DescribeAFreshLoad(sortSiblings: true), "the running tree should match what a restart would show");
+        // No AssertOracles: the fixture's derived component is saved without its inherited instances, as the tool would add them.
+    }
+
+    [AvaloniaFact]
     public void ManyEditsThenSaveAll_AndTwoQuickSaves_LeaveTheRunningTreeOnTheLastSave()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

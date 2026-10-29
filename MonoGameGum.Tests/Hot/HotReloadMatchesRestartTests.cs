@@ -273,10 +273,14 @@ public class HotReloadMatchesRestartTests : BaseTestClass
             HotReloadIssueKind.BaseElementMissing);
 
     [Fact]
-    public void BaseRenamedAndTheDerivedComponentUpdated_IsListedAsABaseTypeChange() =>
-        ShouldHaveOneIssue(
-            Edit(new SweepSpec(), new SweepSpec { BaseName = "Widgets/Base2", WidgetBase = "Widgets/Base2" }),
-            HotReloadIssueKind.ComponentBaseTypeChanged);
+    public void BaseRenamedAndTheDerivedComponentUpdated_IsAPureRenameAndClean()
+    {
+        // #7176: the tool updates the derived component, the tree equals a restart.
+        HotReloadResult result = Edit(new SweepSpec(), new SweepSpec { BaseName = "Widgets/Base2", WidgetBase = "Widgets/Base2" });
+
+        result.IsClean.ShouldBeTrue();
+        SweepWorld.Describe(_world.Screen).ShouldBe(_world.DescribeAFreshLoad());
+    }
 
     [Fact]
     public void BaseReplacedByAComponentThatDoesNotExistYet_IsListedUntilItIsAdded()
