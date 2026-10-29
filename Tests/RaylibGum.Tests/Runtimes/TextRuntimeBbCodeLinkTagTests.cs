@@ -304,4 +304,33 @@ public class TextRuntimeBbCodeLinkTagTests : BaseTestClass
             textRuntime.GetTagAtIndex("Link", i).ShouldBeNull();
         }
     }
+
+    // #7085: an opening tag with no closing tag stays as literal text, the same as a lone opening
+    // tag does today and as an orphan closing tag does. Tags that do close still apply.
+    [Theory]
+    [InlineData("[Color=Red]a[Color=Blue]b[/Color]", "[Color=Red]ab")]
+    [InlineData("[Link=x]a[Link=y]b[/Link]", "[Link=x]ab")]
+    [InlineData("[FontScale=2]a[FontScale=3]b[/FontScale]", "[FontScale=2]ab")]
+    [InlineData("[Color=Red]a[Color=Blue]b[/Color][/Color]", "ab")]
+    [InlineData("x[/Color]", "x[/Color]")]
+    [InlineData("[Color=Red]a", "[Color=Red]a")]
+    public void Text_WithUnclosedOpenTag_KeepsItAsLiteralText(string markup, string expected)
+    {
+        TextRuntime textRuntime = Make(markup);
+
+        ((Text)textRuntime.RenderableComponent!).RawText.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void GetTagAtIndex_WithUnclosedOuterLink_FindsOnlyTheClosedInnerLink()
+    {
+        TextRuntime textRuntime = Make("[Link=x]a[Link=y]b[/Link]");
+
+        // Displayed as "[Link=x]ab": the unclosed tag is literal, so "b" is the last character.
+        textRuntime.GetTagAtIndex("Link", 8).ShouldBeNull();
+        TextTagSpan span = textRuntime.GetTagAtIndex("Link", 9)!.Value;
+        span.Argument.ShouldBe("y");
+        span.StartIndex.ShouldBe(9);
+        span.EndIndex.ShouldBe(10);
+    }
 }

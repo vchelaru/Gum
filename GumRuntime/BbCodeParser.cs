@@ -131,7 +131,6 @@ public static class BbCodeParser
         public int Count;
         public string Name;
         public string? Argument;
-        public int StartStrippedIndex;
 
         public override string ToString()
         {
@@ -262,18 +261,15 @@ public static class BbCodeParser
         var index = 0;
         var activeTags = new List<Tag>();
 
-        int accumulatedTagLetterCount = 0;
-
         while (index < text.Length)
         {
-            var nullableTag = GetTagAtIndex(text, availableTags, index, accumulatedTagLetterCount);
+            var nullableTag = GetTagAtIndex(text, availableTags, index);
             if (nullableTag != null)
             {
                 var tag = nullableTag.Value;
                 if (tag.IsOpening)
                 {
                     activeTags.Add(tag);
-                    accumulatedTagLetterCount += tag.Count;
                 }
                 else if(activeTags.Count > 0)
                 {
@@ -292,20 +288,15 @@ public static class BbCodeParser
                             StartIndex = foundTag.StartIndex,
                             Count = foundTag.Count,
                             Argument = foundTag.Argument,
-                            StartStrippedIndex = foundTag.StartStrippedIndex,
                             Name = tag.Name
                         };
-
-                        var closeStripped = tag.StartIndex - accumulatedTagLetterCount;
 
                         var close = new TagInfo()
                         {
                             StartIndex = tag.StartIndex,
                             Count = tag.Count,
-                            StartStrippedIndex = closeStripped,
                             Name = tag.Name
                         };
-                        accumulatedTagLetterCount += close.Count;
                         results.Add(new FoundTag
                         {
                             Name = tag.Name,
@@ -325,7 +316,36 @@ public static class BbCodeParser
             }
         }
 
+        // An opening tag with no closing tag stays in the text, so a tag's stripped index can only be
+        // known once every tag has been matched: it is the tag's index minus the length of every
+        // matched tag before it.
+        for (int i = 0; i < results.Count; i++)
+        {
+            FoundTag found = results[i];
+            found.Open.StartStrippedIndex = found.Open.StartIndex - CountMatchedTagLettersBefore(results, found.Open.StartIndex);
+            found.Close.StartStrippedIndex = found.Close.StartIndex - CountMatchedTagLettersBefore(results, found.Close.StartIndex);
+            results[i] = found;
+        }
+
         return results.OrderBy(x => x.Open.StartIndex).ToList();
+    }
+
+    private static int CountMatchedTagLettersBefore(List<FoundTag> matchedTags, int index)
+    {
+        int count = 0;
+        for (int i = 0; i < matchedTags.Count; i++)
+        {
+            FoundTag found = matchedTags[i];
+            if (found.Open.StartIndex < index)
+            {
+                count += found.Open.Count;
+            }
+            if (found.Close.StartIndex < index)
+            {
+                count += found.Close.Count;
+            }
+        }
+        return count;
     }
 
     public static string AddTags(string text, List<FoundTag> tags, int strippedStringPaddingCount = 0)
@@ -382,7 +402,7 @@ public static class BbCodeParser
         return stringBuilder.ToString();
     }
 
-    private static Tag? GetTagAtIndex(string text, HashSet<string> tags, int startIndex, int accumulatedTagLetterCount)
+    private static Tag? GetTagAtIndex(string text, HashSet<string> tags, int startIndex)
     {
         if (text[startIndex] != '[' || text.Length <= startIndex + 1)
         {
@@ -445,8 +465,7 @@ public static class BbCodeParser
                             StartIndex = startIndex,
                             Count = peekIndex - startIndex + 1,
                             Name = tagName,
-                            Argument = argument,
-                            StartStrippedIndex = startIndex - accumulatedTagLetterCount
+                            Argument = argument
                         };
                     }
 

@@ -110,4 +110,18 @@ public class BBCodeParserTests : BaseTestClass
 
         BbCodeParser.RemoveTags(text, parsedTags).ShouldBe("x[/Red]");
     }
+
+    [Fact]
+    public void Parse_ShouldLeaveUnclosedOpenTagAsText_WhenFollowedByNestedTag()
+    {
+        string text = "[Color=Red]a[Color=Blue]b[/Color]";
+
+        List<FoundTag> parsedTags = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
+
+        parsedTags.Count.ShouldBe(1);
+        parsedTags[0].Open.Argument.ShouldBe("Blue");
+        BbCodeParser.RemoveTags(text, parsedTags).ShouldBe("[Color=Red]ab");
+        parsedTags[0].Open.StartStrippedIndex.ShouldBe(12);
+        parsedTags[0].Close.StartStrippedIndex.ShouldBe(13);
+    }
 }
