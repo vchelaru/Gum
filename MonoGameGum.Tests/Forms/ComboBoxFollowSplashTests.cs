@@ -49,7 +49,7 @@ public class ComboBoxFollowSplashTests : BaseTestClass
         now.Y.ShouldBe(offset.Y, 0.5f);
     }
 
-    private static void PushOn(InteractiveGue? visualOver, int frames = 1)
+    internal static void PushOn(InteractiveGue? visualOver, int frames = 1)
     {
         float x = GraphicalUiElement.CanvasWidth - 1;
         float y = GraphicalUiElement.CanvasHeight - 1;
