@@ -135,6 +135,9 @@ public class PasswordBox : TextBoxBase
 
     public PasswordBox(InteractiveGue visual) : base(visual) { }
 
+    /// <summary>A password never contains a line break, so Enter always ends the edit.</summary>
+    protected override bool EnterEndsEdit => true;
+
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
@@ -165,7 +168,7 @@ public class PasswordBox : TextBoxBase
         //if (HasFocus) // See TextBox on why we don't check IsFocused
         if (!IsReadOnly)
         {
-            if (selectionLength != 0)
+            if (selectionLength != 0 && CharacterAddsText(character))
             {
                 DeleteSelection();
             }

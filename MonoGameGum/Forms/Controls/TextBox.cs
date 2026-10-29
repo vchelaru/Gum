@@ -210,7 +210,7 @@ public class TextBox : TextBoxBase
         //if(IsFocused)
         if(!IsReadOnly)
         {
-            if (selectionLength != 0)
+            if (selectionLength != 0 && CharacterAddsText(character))
             {
                 DeleteSelection();
             }
