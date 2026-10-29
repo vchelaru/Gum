@@ -762,7 +762,7 @@ public class Renderer : IRenderer
         Raylib.DrawTexturePro(
             renderTexture.Value.Texture,
             new Rectangle(0, 0, bounds.Width, -bounds.Height),
-            new Rectangle(bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top),
+            GetCompositeDestination(bounds, _camera.Zoom),
             System.Numerics.Vector2.Zero,
             -container.GetAbsoluteRotation(),
             tint);
@@ -773,6 +773,15 @@ public class Renderer : IRenderer
         }
         counter.EndBlendMode();
     }
+
+    // Where the baked texture lands in world space. The texture is bounds.Width x bounds.Height pixels
+    // (the world size rounded to whole pixels), so the blit is texel for pixel only when the destination
+    // is that same size in world units. Using the fractional world size instead squeezes or stretches the
+    // texture by up to half a pixel, and a pixel row whose centre sits on the destination's edge (a
+    // fractional bottom of .5) is dropped on some GL drivers (#7073). MonoGame sizes its blit from the
+    // texture the same way (Renderer.DrawRenderTargetToScreen).
+    internal static Rectangle GetCompositeDestination(RenderTargetBounds bounds, float zoom) =>
+        new Rectangle(bounds.Left, bounds.Top, bounds.Width / zoom, bounds.Height / zoom);
 
     // Sets a container's own values on its shader just before the composite blit. A name the shader
     // does not declare has no location and is skipped. Raylib cannot read a uniform's declared type,
