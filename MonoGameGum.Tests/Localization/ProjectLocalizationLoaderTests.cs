@@ -198,6 +198,24 @@ public class ProjectLocalizationLoaderTests
         }
     }
 
+    [Theory]
+    [InlineData("/Game/Content/Strings.csv", true)]
+    [InlineData("/Game/Content/Text/Buttons.es.resx", true)]
+    [InlineData("/Game/Content/Text/Buttons.resx", true)]
+    [InlineData("/Game/Content/Text/Other.es.resx", false)]
+    [InlineData("/Game/Content/Text/Sub/Buttons.es.resx", false)]
+    [InlineData("/Game/Content/Other.csv", false)]
+    [InlineData("/Game/Content/Strings.csv.bak", false)]
+    public void IsLocalizationFile_matches_listed_files_and_resx_satellites_only(string changedFile, bool expected)
+    {
+        GumProjectSave project = ProjectWithLocalizationFiles("Strings.csv");
+        project.LocalizationFiles.Clear();
+        project.LocalizationFiles.Add("Strings.csv");
+        project.LocalizationFiles.Add("Text/Buttons.resx");
+
+        ProjectLocalizationLoader.IsLocalizationFile(project, "/Game/Content", changedFile).ShouldBe(expected);
+    }
+
     private static GumProjectSave ProjectWithLocalizationFiles(params string[] files)
     {
         GumProjectSave project = new GumProjectSave { FullFileName = "C:/Game/Content/Project.gumx" };

@@ -112,6 +112,47 @@ public static class ProjectLocalizationLoader
     }
 
     /// <summary>
+    /// Whether <paramref name="changedFile"/> is one of <paramref name="project"/>'s localization files,
+    /// or a <c>{BaseName}.{culture}.resx</c> satellite of a listed <c>.resx</c> in the same folder:
+    /// the files whose edit changes what <see cref="Load(GumProjectSave, string, ILocalizationService, ProjectLocalizationLoadOptions)"/>
+    /// produces.
+    /// </summary>
+    /// <param name="project">The project whose <see cref="GumProjectSave.LocalizationFiles"/> are checked.</param>
+    /// <param name="projectDirectory">The folder the project-relative paths resolve against.</param>
+    /// <param name="changedFile">The file that changed on disk.</param>
+    public static bool IsLocalizationFile(GumProjectSave project, string projectDirectory, string changedFile)
+    {
+        if (!projectDirectory.EndsWith("/") && !projectDirectory.EndsWith("\\"))
+        {
+            projectDirectory += "/";
+        }
+
+        string changed = FileManager.Standardize(changedFile, preserveCase: false, makeAbsolute: true);
+        string? changedDirectory = Path.GetDirectoryName(changed);
+        string changedName = Path.GetFileName(changed);
+
+        foreach (string relativePath in ToRelativePaths(project.LocalizationFiles))
+        {
+            string basePath = FileManager.Standardize(
+                ToLooseFilePath(projectDirectory, relativePath), preserveCase: false, makeAbsolute: true);
+            if (basePath == changed)
+            {
+                return true;
+            }
+
+            if (IsResx(relativePath)
+                && Path.GetDirectoryName(basePath) == changedDirectory
+                && changedName.StartsWith(Path.GetFileNameWithoutExtension(basePath) + ".", StringComparison.Ordinal)
+                && changedName.EndsWith(".resx", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// The non-empty entries of <paramref name="localizationFiles"/> with forward slashes, the form
     /// bundle entries are keyed by. A project saved on Windows stores backslashes.
     /// </summary>
