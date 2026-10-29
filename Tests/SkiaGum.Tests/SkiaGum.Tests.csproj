@@ -41,6 +41,7 @@
 		<Compile Include="..\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />
 		<Compile Include="..\Shared\GraphicalUiElementState.cs" Link="Shared\GraphicalUiElementState.cs" />
 		<Compile Include="..\Shared\GraphicalUiElementStateAssert.cs" Link="Shared\GraphicalUiElementStateAssert.cs" />
+		<Compile Include="..\Shared\CrossRuntime\NineSliceCases.cs" Link="Shared\CrossRuntime\NineSliceCases.cs" />
 	</ItemGroup>
 
 	<!-- Forms tests linked from MonoGameGum.Tests: same source runs against shared Skia code (#6511). -->
