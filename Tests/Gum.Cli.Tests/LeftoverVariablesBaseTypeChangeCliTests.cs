@@ -104,21 +104,74 @@ public class LeftoverVariablesBaseTypeChangeCliTests : BaseTestClass
         GeneratedGameHarness.Compile(TempDirectory).ShouldBeEmpty();
     }
 
-    [Fact]
-    public void Codegen_ConsumerOfExposedLeftover_FullyInCodeDoesNotCompile_Issue7152()
+    [Theory]
+    [InlineData(ObjectInstantiationType.FindByName)]
+    [InlineData(ObjectInstantiationType.FullyInCode)]
+    public void Codegen_ConsumerOfExposedLeftover_SkipsAssignmentAndCompiles_Issue7152(ObjectInstantiationType instantiationType)
     {
-        // Pins today's output: the only error is the consumer's assignment. When #7152 is fixed this
-        // expectation changes to an empty list.
-        string gumx = GeneratedGameHarness.CreateGame(TempDirectory, ObjectInstantiationType.FullyInCode);
+        // Card no longer generates CaptionText (its Caption became a Container), so Outer's
+        // Card1.CaptionText assignment is skipped the same way, silently.
+        string gumx = GeneratedGameHarness.CreateGame(TempDirectory, instantiationType);
         GeneratedGameHarness.EditProject(gumx, project => LeftoverVariablesProject.AddComponents(project, typeChanged: true));
 
-        GeneratedGameHarness.Codegen(gumx).ExitCode.ShouldBe(0);
+        CliTestHelper result = GeneratedGameHarness.Codegen(gumx);
 
-        List<string> errors = GeneratedGameHarness.Compile(TempDirectory);
-        errors.Count.ShouldBe(1);
-        errors[0].ShouldContain("Outer.Generated.cs");
-        errors[0].ShouldContain("CS1061");
-        errors[0].ShouldContain("CaptionText");
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        GeneratedGameHarness.Compile(TempDirectory).ShouldBeEmpty();
+        File.ReadAllText(GeneratedFile("Outer")).ShouldNotContain(LeftoverVariablesProject.OuterCaptionText);
+    }
+
+    [Theory]
+    [InlineData(ObjectInstantiationType.FindByName)]
+    [InlineData(ObjectInstantiationType.FullyInCode)]
+    public void Codegen_EveryOtherConsumerOfExposedLeftover_SkipsAssignmentAndCompiles_Issue7152(ObjectInstantiationType instantiationType)
+    {
+        // A category state of Outer that sets Card1.CaptionText, a component derived from Card that sets
+        // its inherited CaptionText in its default state and in a category state, and a screen that sets
+        // it on an instance of that derived component.
+        string gumx = GeneratedGameHarness.CreateGame(TempDirectory, instantiationType);
+        GeneratedGameHarness.EditProject(gumx, project =>
+        {
+            LeftoverVariablesProject.AddComponents(project, typeChanged: true);
+
+            ComponentSave outer = project.Components.Single(component => component.Name == "Outer");
+            outer.Categories.Add(StateWithCaptionText(outer, "Card1.CaptionText", "OuterStateText"));
+
+            ComponentSave sub = GeneratedGameHarness.AddComponent(project, "Sub", "Card");
+            sub.DefaultState!.Variables.Add(CaptionTextVariable("CaptionText", "SubDefaultText"));
+            sub.Categories.Add(StateWithCaptionText(sub, "CaptionText", "SubStateText"));
+
+            ComponentSave subHolder = GeneratedGameHarness.AddComponent(project, "SubHolder", "Container", ("Sub1", "Sub"));
+            subHolder.DefaultState!.Variables.Add(CaptionTextVariable("Sub1.CaptionText", "HolderText"));
+        });
+
+        CliTestHelper result = GeneratedGameHarness.Codegen(gumx);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        GeneratedGameHarness.Compile(TempDirectory).ShouldBeEmpty();
+        foreach (string name in new[] { "Outer", "Sub", "SubHolder" })
+        {
+            string code = File.ReadAllText(GeneratedFile(name));
+            foreach (string value in new[] { "OuterStateText", "SubDefaultText", "SubStateText", "HolderText" })
+            {
+                code.ShouldNotContain(value, Case.Sensitive, name);
+            }
+        }
+    }
+
+    private string GeneratedFile(string elementName) =>
+        Directory.GetFiles(TempDirectory, elementName + ".Generated.cs", SearchOption.AllDirectories).Single();
+
+    private static VariableSave CaptionTextVariable(string name, string value) =>
+        new VariableSave { Name = name, Type = "string", Value = value, SetsValue = true };
+
+    private static StateSaveCategory StateWithCaptionText(ComponentSave component, string variableName, string value)
+    {
+        StateSave state = new StateSave { Name = "Alt", ParentContainer = component };
+        state.Variables.Add(CaptionTextVariable(variableName, value));
+        StateSaveCategory category = new StateSaveCategory { Name = "Texts" };
+        category.States.Add(state);
+        return category;
     }
 
     [Theory]
