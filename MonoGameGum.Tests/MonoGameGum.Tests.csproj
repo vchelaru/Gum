@@ -64,6 +64,7 @@
     <Compile Include="..\Tests\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
     <Compile Include="..\Tests\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
     <Compile Include="..\Tests\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />
+    <Compile Include="..\Tests\Shared\LeftoverVariablesProject.cs" Link="Shared\LeftoverVariablesProject.cs" />
     <Compile Include="..\Tests\Shared\GraphicalUiElementState.cs" Link="Shared\GraphicalUiElementState.cs" />
     <Compile Include="..\Tests\Shared\GraphicalUiElementStateAssert.cs" Link="Shared\GraphicalUiElementStateAssert.cs" />
   </ItemGroup>
