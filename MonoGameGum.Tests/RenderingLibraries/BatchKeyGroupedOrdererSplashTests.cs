@@ -692,6 +692,48 @@ public class BatchKeyGroupedOrdererSplashTests : BaseTestClass
 
     [Theory]
     [MemberData(nameof(ProfileNames))]
+    public void RandomScenes_WithoutHardBoundaries_NeverSwitchTextureMoreThanHierarchical(string profileName)
+    {
+        Profile profile = GetProfile(profileName);
+        if (!profile.NoBoundaries || profile.SecondarySort)
+        {
+            return;
+        }
+
+        int cases = SweepScale.Cases(300);
+        for (int seed = 0; seed < cases; seed++)
+        {
+            List<DrawCommand> grouped = new List<DrawCommand>();
+            List<DrawCommand> hierarchical = new List<DrawCommand>();
+            new BatchKeyGroupedOrderer().BuildDrawList(BuildLayer(RandomScene(profile, seed)), grouped);
+            HierarchicalOrderer.Instance.BuildDrawList(BuildLayer(RandomScene(profile, seed)), hierarchical);
+
+            KeyRuns(grouped).ShouldBeLessThanOrEqualTo(KeyRuns(hierarchical), $"{profileName} seed {seed}");
+        }
+    }
+
+    // The seeds where the greedy pick alone produced more key runs than HierarchicalOrderer
+    // (#7051). The sweep above reaches them only at full scale; this pins them at any scale and
+    // checks the diagnostic tallies still reconcile when the depth-first order is the one emitted.
+    [Theory]
+    [InlineData("Invisible", 61)]
+    [InlineData("Overlapping", 192)]
+    [InlineData("NestedComponents", 169)]
+    public void KnownSeeds_WhereGreedyAloneWasWorse_NeverSwitchTextureMoreThanHierarchical(string profileName, int seed)
+    {
+        Profile profile = GetProfile(profileName);
+        List<IRenderableIpso> roots = RandomScene(profile, seed);
+        List<DrawCommand> grouped = Build(roots, out BatchKeyGroupedOrderer orderer);
+        List<DrawCommand> hierarchical = new List<DrawCommand>();
+        HierarchicalOrderer.Instance.BuildDrawList(BuildLayer(RandomScene(profile, seed)), hierarchical);
+
+        KeyRuns(grouped).ShouldBeLessThanOrEqualTo(KeyRuns(hierarchical));
+        orderer.GetBreakGroups().Sum(g => g.Count).ShouldBe(KeyRuns(grouped));
+        AssertDrawListIsPixelEquivalent(roots, grouped, $"{profileName} seed {seed}");
+    }
+
+    [Theory]
+    [MemberData(nameof(ProfileNames))]
     public void RandomScenes_WithoutHardBoundaries_BreakGroupsReconcileWithRunCount(string profileName)
     {
         Profile profile = GetProfile(profileName);
