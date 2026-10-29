@@ -3,6 +3,7 @@
 #endif
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
@@ -96,6 +97,9 @@ public class GumHotReloadManager : IGumHotReloadManager
     // whose definition has since changed. The diff re-points a visual at the new element, so without
     // this the next reload would see no change and stop listing a tree that is still stale.
     private readonly ReloadMemory _memory = new ReloadMemory();
+    // Consecutive tries at the files beside the project that could not be read (one the editor still had
+    // open); reset by any new file change; guarded by _pendingReloadLock.
+    private int _failedFileAttempts;
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
@@ -141,6 +145,13 @@ public class GumHotReloadManager : IGumHotReloadManager
         _disposeCachedAsset = disposeCachedAsset;
         _utcNow = utcNow;
     }
+
+    /// <summary>
+    /// Returns the localization service the game translates text with, or null when it has none. The
+    /// service is a host static (<c>CustomSetPropertyOnRenderable.LocalizationService</c>), so each host
+    /// supplies it; without it a changed localization file is not reloaded.
+    /// </summary>
+    public Func<ILocalizationService?>? LocalizationServiceProvider { get; set; }
 
     /// <inheritdoc/>
     public event Action? ReloadCompleted;
@@ -213,7 +224,11 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
         if (reload)
         {
-            PerformReload(rootList);
+            PerformReload(rootList, otherFiles);
+        }
+        else if (otherFiles.Count > 0)
+        {
+            PerformFileReload(rootList, otherFiles);
         }
     }
 
@@ -250,6 +265,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 _lastOtherChangeTime = now;
                 _changedOtherFiles.Add(fullPath);
+                _failedFileAttempts = 0;
             }
         }
     }
@@ -280,21 +296,8 @@ public class GumHotReloadManager : IGumHotReloadManager
                 continue;
             }
 
-            string? cacheKey = null;
-            try
+            if (!TryResolveReference(shaderFile, out string cacheKey, out string standardized) || !changed.Contains(standardized))
             {
-                cacheKey = ToolsUtilities.FileManager.IsRelative(shaderFile) && !ToolsUtilities.FileManager.IsUrl(shaderFile)
-                    ? ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + shaderFile)
-                    : shaderFile;
-                string standardized = ToolsUtilities.FileManager.Standardize(cacheKey, preserveCase: false, makeAbsolute: true);
-                if (!changed.Contains(standardized))
-                {
-                    continue;
-                }
-            }
-            catch (ArgumentException)
-            {
-                // An invalid path in a variable cannot be the file that changed.
                 continue;
             }
 
@@ -302,6 +305,27 @@ public class GumHotReloadManager : IGumHotReloadManager
             _disposeCachedAsset(cacheKey);
             _disposeCachedAsset(shaderFile);
             element.SetProperty("SourceShaderFile", shaderFile);
+        }
+    }
+
+    // The key the content cache stores a file reference under (a relative reference resolves against the
+    // game's content folder) and its standardized form for comparing with a changed file's path.
+    private static bool TryResolveReference(string reference, out string cacheKey, out string standardized)
+    {
+        cacheKey = reference;
+        standardized = "";
+        try
+        {
+            cacheKey = ToolsUtilities.FileManager.IsRelative(reference) && !ToolsUtilities.FileManager.IsUrl(reference)
+                ? ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + reference)
+                : reference;
+            standardized = ToolsUtilities.FileManager.Standardize(cacheKey, preserveCase: false, makeAbsolute: true);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            // An invalid path in a variable cannot be the file that changed.
+            return false;
         }
     }
 
@@ -415,20 +439,83 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     // internal (not private) so tests can drive a reload deterministically without the
     // FileSystemWatcher + debounce. ApplyDiff is exposed for tests for the same reason.
-    internal void PerformReload(IEnumerable<GraphicalUiElement> roots)
+    internal void PerformReload(IEnumerable<GraphicalUiElement> roots, IReadOnlyCollection<string>? changedFiles = null)
     {
         List<HotReloadIssue> issues = new List<HotReloadIssue>();
+        List<GraphicalUiElement> rootList = roots.ToList();
+        changedFiles ??= Array.Empty<string>();
 
         // Materialize so we can iterate twice and so the caller's collection
         // is safe from us modifying it via the rebuild step.
-        bool applied = TryReload(roots.ToList(), issues, out bool willRetry);
+        bool applied = TryReload(rootList, changedFiles, issues, out bool willRetry);
 
-        // An attempt that is tried again says nothing: only the end of the chain is a result.
+        // An attempt that is tried again says nothing: only the end of the chain is a result. The files
+        // that changed beside the project are looked at again with it.
         if (willRetry)
         {
+            lock (_pendingReloadLock)
+            {
+                _lastOtherChangeTime = _utcNow();
+                _changedOtherFiles.UnionWith(changedFiles);
+            }
             return;
         }
 
+        RaiseResult(applied, issues);
+    }
+
+    // A change to files the project does not own (localization files) with no project save beside it. Raises a result only when something was applied or has to be reported.
+    internal void PerformFileReload(IEnumerable<GraphicalUiElement> roots, IReadOnlyCollection<string> changedFiles)
+    {
+        List<HotReloadIssue> issues = new List<HotReloadIssue>();
+        bool applied = false;
+        try
+        {
+            List<GraphicalUiElement> rootList = roots.ToList();
+            GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+            if (project != null)
+            {
+                // A file the editor still has open is tried once more after the debounce, as the project is.
+                bool lastTry;
+                lock (_pendingReloadLock)
+                {
+                    lastTry = _failedFileAttempts >= 1;
+                }
+
+                if (ReloadLocalization(project, null, changedFiles, issues, lastTry, out bool willRetry))
+                {
+                    RefreshLocalization(rootList);
+                    applied = true;
+                }
+
+                if (willRetry)
+                {
+                    lock (_pendingReloadLock)
+                    {
+                        _failedFileAttempts++;
+                        _lastOtherChangeTime = _utcNow();
+                        _changedOtherFiles.UnionWith(changedFiles);
+                    }
+                    return;
+                }
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Update runs on the game's thread: a failure here must not end the game.
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.ReloadFailed,
+                $"Hot reload failed while applying the changed files: {exception.Message}\nThe UI may be partially updated; the next save reloads."));
+        }
+
+        if (applied || issues.Count > 0)
+        {
+            RaiseResult(applied, issues);
+        }
+    }
+
+    private void RaiseResult(bool applied, List<HotReloadIssue> issues)
+    {
         // A subscriber that throws must not break Update or keep the others from hearing.
         if (applied)
         {
@@ -479,7 +566,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     // Returns whether the reload was applied; every issue the attempt had is added to issues.
     // willRetry is true when the attempt failed and will be tried again after the debounce.
-    private bool TryReload(List<GraphicalUiElement> rootList, List<HotReloadIssue> issues, out bool willRetry)
+    private bool TryReload(List<GraphicalUiElement> rootList, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues, out bool willRetry)
     {
         willRetry = false;
         string? fontFailure = CopyAndUnloadChangedFonts();
@@ -495,6 +582,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
         List<HotReloadIssue> diffIssues = new List<HotReloadIssue>();
+        List<HotReloadIssue> localizationIssues = new List<HotReloadIssue>();
         try
         {
             newProject.Initialize();
@@ -514,7 +602,15 @@ public class GumHotReloadManager : IGumHotReloadManager
                 string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
             _loadAnimationsFromProvider(newProject, animationProvider);
 
+            // The database is replaced before the diff so text the save changed translates against it.
+            bool localizationReloaded = ReloadLocalization(newProject, previousProject, changedFiles, localizationIssues, reportFailure: true, out _);
+
             ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems, diffIssues, _memory);
+
+            if (localizationReloaded)
+            {
+                RefreshLocalization(rootList);
+            }
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -527,6 +623,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             // What the walk found before it threw was not printed yet.
             PrintIssues(diffIssues, printedProblems: null);
             issues.AddRange(diffIssues);
+            issues.AddRange(localizationIssues);
             willRetry = HandleFailedReload(
                 $"Hot reload failed while applying {_projectSourcePath}: {exception.Message}\nThe UI may be partially updated; the next complete save reloads.",
                 fontFailure,
@@ -536,12 +633,111 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
 
         issues.AddRange(diffIssues);
+        issues.AddRange(localizationIssues);
         if (fontFailure != null)
         {
             Report(issues, new HotReloadIssue(HotReloadIssueKind.FontFailure, fontFailure.Trim()));
         }
 
         return true;
+    }
+
+    // Replaces the localization database when the project's list of files changed or one of the listed
+    // files (or a .resx satellite) changed on disk. Returns whether it did, so the caller translates the
+    // visuals again. The files load into a scratch service first: one that cannot be read leaves the
+    // game's database, and so its text, as it was.
+    // A file that cannot be read sets willRetry unless reportFailure is true, in which case it is reported.
+    private bool ReloadLocalization(
+        GumProjectSave project, GumProjectSave? previousProject, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues,
+        bool reportFailure, out bool willRetry)
+    {
+        willRetry = false;
+        ILocalizationService? service = LocalizationServiceProvider?.Invoke();
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        if (service == null || string.IsNullOrEmpty(sourceDirectory))
+        {
+            return false;
+        }
+
+        bool listChanged = previousProject != null
+            && !previousProject.LocalizationFiles.SequenceEqual(project.LocalizationFiles);
+        bool fileChanged = changedFiles.Any(file => ProjectLocalizationLoader.IsLocalizationFile(project, sourceDirectory, file));
+        if (!listChanged && !fileChanged)
+        {
+            return false;
+        }
+
+        CapturedLocalization captured = new CapturedLocalization();
+        List<string> skipped = new List<string>();
+        try
+        {
+            ProjectLocalizationLoader.Load(project, sourceDirectory, captured, new ProjectLocalizationLoadOptions
+            {
+                OnSkipped = skipped.Add,
+                OnWarning = ReportError,
+            });
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            if (!reportFailure)
+            {
+                willRetry = true;
+                return false;
+            }
+
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.ReloadFailed,
+                $"Hot reload could not read the localization files: {exception.Message}\nText keeps its previous translations until the next save."));
+            return false;
+        }
+
+        service.Clear();
+        if (captured.Database != null)
+        {
+            service.AddDatabase(captured.Database, captured.Languages);
+        }
+
+        foreach (string message in skipped)
+        {
+            Report(issues, new HotReloadIssue(HotReloadIssueKind.MissingFile, "Hot reload left out a localization file. " + message));
+        }
+
+        return true;
+    }
+
+    private static void RefreshLocalization(List<GraphicalUiElement> roots)
+    {
+        foreach (GraphicalUiElement root in roots)
+        {
+            root.RefreshLocalization();
+            // A re-translated Text leaves its size to the next frame; a result is read before one.
+            root.UpdateLayout();
+        }
+    }
+
+    // Collects what a loader hands to ILocalizationService.AddDatabase.
+    private sealed class CapturedLocalization : ILocalizationService
+    {
+        public Dictionary<string, string[]>? Database { get; private set; }
+        public List<string> Languages { get; private set; } = new List<string>();
+
+        public int CurrentLanguage { get; set; }
+        IReadOnlyList<string> ILocalizationService.Languages => Languages;
+        public event Action? CurrentLanguageChanged { add { } remove { } }
+
+        public void AddDatabase(Dictionary<string, string[]> entryDictionary, List<string> headerList)
+        {
+            Database = entryDictionary;
+            Languages = headerList;
+        }
+
+        public void Clear()
+        {
+            Database = null;
+            Languages = new List<string>();
+        }
+
+        public string Translate(string stringId) => stringId;
     }
 
     // Returns null with a description when the project cannot be read. Files the project lists but that
