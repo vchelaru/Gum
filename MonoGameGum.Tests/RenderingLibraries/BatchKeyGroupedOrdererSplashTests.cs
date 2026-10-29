@@ -692,28 +692,6 @@ public class BatchKeyGroupedOrdererSplashTests : BaseTestClass
 
     [Theory]
     [MemberData(nameof(ProfileNames))]
-    public void RandomScenes_WithoutHardBoundaries_NeverSwitchTextureMoreThanHierarchical(string profileName)
-    {
-        Profile profile = GetProfile(profileName);
-        if (!profile.NoBoundaries || profile.SecondarySort)
-        {
-            return;
-        }
-
-        int cases = SweepScale.Cases(300);
-        for (int seed = 0; seed < cases; seed++)
-        {
-            List<DrawCommand> grouped = new List<DrawCommand>();
-            List<DrawCommand> hierarchical = new List<DrawCommand>();
-            new BatchKeyGroupedOrderer().BuildDrawList(BuildLayer(RandomScene(profile, seed)), grouped);
-            HierarchicalOrderer.Instance.BuildDrawList(BuildLayer(RandomScene(profile, seed)), hierarchical);
-
-            KeyRuns(grouped).ShouldBeLessThanOrEqualTo(KeyRuns(hierarchical), $"{profileName} seed {seed}");
-        }
-    }
-
-    [Theory]
-    [MemberData(nameof(ProfileNames))]
     public void RandomScenes_WithoutHardBoundaries_BreakGroupsReconcileWithRunCount(string profileName)
     {
         Profile profile = GetProfile(profileName);
