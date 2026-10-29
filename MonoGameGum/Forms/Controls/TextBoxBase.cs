@@ -438,6 +438,26 @@ public abstract class TextBoxBase :
     /// </summary>
     public event EventHandler? SelectionChanged;
     protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Raised when the user presses Enter while this control is focused and Enter does not add a line break:
+    /// always for a <see cref="PasswordBox"/>, and for a <see cref="TextBox"/> when <see cref="AcceptsReturn"/>
+    /// is <c>false</c>. Raised from the keyboard only; text added in code or by an on-screen keyboard does not
+    /// raise it. The control keeps focus; the handler decides where focus goes.
+    /// </summary>
+    public event EventHandler? EditCommitted;
+
+    /// <summary>
+    /// Raised when the user presses Escape while this control is focused. Raised from the keyboard only. The
+    /// control keeps focus and its text; the handler decides what to restore and where focus goes.
+    /// </summary>
+    public event EventHandler? EditCancelled;
+
+    /// <summary>
+    /// Whether Enter ends the edit (raises <see cref="EditCommitted"/>) rather than adding a line break.
+    /// </summary>
+    protected virtual bool EnterEndsEdit => !AcceptsReturn;
+
     protected virtual TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {
         var args = new TextCompositionEventArgs(newText);
@@ -1028,6 +1048,16 @@ public abstract class TextBoxBase :
                     SelectAll();
                 }
                 break;
+            case Keys.Enter:
+                // Raised here, not from HandleCharEntered: the key path is gated on focus and runs once per press.
+                if (EnterEndsEdit)
+                {
+                    EditCommitted?.Invoke(this, EventArgs.Empty);
+                }
+                break;
+            case Keys.Escape:
+                EditCancelled?.Invoke(this, EventArgs.Empty);
+                break;
         }
 
 
@@ -1154,6 +1184,20 @@ public abstract class TextBoxBase :
     protected abstract void HandleDelete();
 
     public abstract void HandleCharEntered(char character);
+
+    /// <summary>
+    /// Whether <paramref name="character"/> adds text (and so replaces a selection). Backspace, delete and escape
+    /// are handled by <see cref="HandleKeyDown(Keys, bool, bool, bool)"/>, and Enter adds nothing unless it adds a
+    /// line break, so none of them may edit the text or the selection from <see cref="HandleCharEntered"/>.
+    /// </summary>
+    protected bool CharacterAddsText(char character)
+    {
+        if (character == '\b' || character == (char)127 || character == (char)27)
+        {
+            return false;
+        }
+        return !((character == '\r' || character == '\n') && EnterEndsEdit);
+    }
 
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {

@@ -1217,6 +1217,13 @@ public class ScrollViewer :
             return;
         }
 
+        // A focused text box owns Escape so it can raise EditCancelled; taking focus here would end the edit
+        // before the box saw the key.
+        if (InteractiveGue.CurrentInputReceiver is TextBoxBase)
+        {
+            return;
+        }
+
         foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             // eventually we want to support combos but for now use esc:
