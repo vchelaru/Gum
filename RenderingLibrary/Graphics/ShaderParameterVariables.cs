@@ -137,6 +137,13 @@ public static class ShaderParameterVariables
     }
 
     /// <summary>
+    /// The shader file last recorded for the container with <see cref="SetShaderFile"/>, exactly as it
+    /// was assigned, or null when it has none.
+    /// </summary>
+    public static string? GetShaderFile(IRenderTargetRenderable owner) =>
+        _layers.TryGetValue(owner, out Layer? layer) ? layer.ShaderFile : null;
+
+    /// <summary>
     /// Assigns the legacy <c>ShaderParameters</c> text with <see cref="ShaderParameterText.Assign"/>, then
     /// lays the container's variables over it. Returns the same message <c>Assign</c> does.
     /// </summary>
