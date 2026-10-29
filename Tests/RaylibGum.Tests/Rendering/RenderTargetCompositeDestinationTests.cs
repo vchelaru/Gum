@@ -14,8 +14,7 @@ public class RenderTargetCompositeDestinationTests
     [Theory]
     [InlineData(42.5f, 29.5f, 43, 30, 1f)]
     [InlineData(40.4f, 27.6f, 40, 28, 1f)]
-    [InlineData(42.5f, 29.5f, 85, 59, 2f)]
-    [InlineData(40f, 28f, 40, 28, 1f)]
+    [InlineData(21.25f, 14.75f, 43, 30, 2f)]
     public void GetCompositeDestination_IsTheBakedTextureSizeInWorldUnits(
         float worldWidth, float worldHeight, int textureWidth, int textureHeight, float zoom)
     {
@@ -27,5 +26,17 @@ public class RenderTargetCompositeDestinationTests
         destination.Y.ShouldBe(20.75f);
         destination.Width.ShouldBe(textureWidth / zoom);
         destination.Height.ShouldBe(textureHeight / zoom);
+    }
+
+    // Regression pin for unchanged behavior: a whole-pixel container already blitted 1:1.
+    [Fact]
+    public void GetCompositeDestination_WholeSizeContainer_IsUnchanged()
+    {
+        RenderTargetBounds bounds = new(10f, 20f, 50f, 48f, 40, 28);
+
+        Raylib_cs.Rectangle destination = global::RenderingLibrary.Graphics.Renderer.GetCompositeDestination(bounds, 1f);
+
+        destination.Width.ShouldBe(40f);
+        destination.Height.ShouldBe(28f);
     }
 }
