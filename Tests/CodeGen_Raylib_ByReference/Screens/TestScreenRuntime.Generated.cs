@@ -12,7 +12,7 @@ namespace CodeGen_Raylib_ByReference.Screens;
 [global::Gum.DataTypes.GumElement("TestScreen")]
 partial class TestScreenRuntime : Gum.Wireframe.GraphicalUiElement
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

@@ -13,7 +13,7 @@ namespace CodeGen_MonoGameForms_FullCodegen.Screens;
 [global::Gum.DataTypes.GumElement("GeneralScreen")]
 partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

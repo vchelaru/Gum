@@ -13,7 +13,7 @@ namespace CodeGenProject.Components.Elements;
 [global::Gum.DataTypes.GumElement("Elements/DividerVertical")]
 partial class DividerVertical : global::Gum.Forms.Controls.FrameworkElement
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

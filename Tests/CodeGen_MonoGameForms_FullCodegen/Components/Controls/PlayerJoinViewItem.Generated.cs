@@ -13,7 +13,7 @@ namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 [global::Gum.DataTypes.GumElement("Controls/PlayerJoinViewItem")]
 partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
