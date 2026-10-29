@@ -88,3 +88,17 @@ Derived types get access to all of the exposed variables in the base type. For e
 * States are often used to set variables temporarily, while inheritance is permanent. For example, a button may set its background color values in response to being highlighted. By contrast, a Cancel button may always say "Cancel".
 * States do not allow for the creation of new instances. Although derived components cannot delete children which are defined by their `Base Type`, derived components can add additional instances.
 * Components can use multiple categories. Therefore, it may not be clear which category defines the type of component. A component can only have one Base Type, so its type is defined clearly.
+
+### Circular Base Types (GUM0014)
+
+A circular base type is a loop of inheritance, such as component A with a `Base Type` of B while B has a `Base Type` of A, or a component whose `Base Type` is itself. Neither element can inherit anything, because each one waits on the other.
+
+Gum prevents these in the tool. The `Base Type` dropdown leaves out components that derive from the element you are editing, and typing the name of one shows a message that the assignment would create a circular reference and puts the previous `Base Type` back.
+
+A loop can still appear when a project file is edited outside of Gum, for example when merging changes from version control. Gum opens the project anyway and reports a **GUM0014** error in the [Errors tab](../../editor-tab.md) on each element in the loop, naming it (`A -> B -> A`). `gumcli check` reports GUM0014 too. Until the loop is broken, Gum treats every element in it as having no `Base Type`, so none of them show inherited variables, instances, or exposed variables.
+
+To resolve it, change or clear the `Base Type` of one element in the loop, either in the tool or in its element file.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
