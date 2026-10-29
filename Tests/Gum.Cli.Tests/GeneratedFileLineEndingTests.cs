@@ -1,5 +1,9 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.ProjectServices;
+using Gum.ProjectServices.CodeGeneration;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
 using System.Text.RegularExpressions;
 
@@ -37,6 +41,51 @@ public class GeneratedFileLineEndingTests : BaseTestClass
             }
         }
         notCrLf.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("A\nB")]
+    [InlineData("say \"hi\"\nC:\\dir")]
+    public void Codegen_TextWithLineBreaks_KeepsItsValueAndPutsNoRawNewlineInAStringLiteral(string text)
+    {
+        string gumx = CreateGame();
+        string gumFolder = Path.GetDirectoryName(gumx)! + Path.DirectorySeparatorChar;
+        CodeOutputProjectSettingsManager settingsManager = new CodeOutputProjectSettingsManager(
+            new SilentLogger(), new FixedProjectDirectoryProvider(gumFolder));
+        CodeOutputProjectSettings settings = settingsManager.CreateOrLoadSettingsForProject();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.ObjectInstantiationType = ObjectInstantiationType.FullyInCode;
+        settingsManager.WriteSettingsForProject(settings);
+        EditProject(gumx, project =>
+        {
+            AddScreen(project, "MainMenu", ("PlayText", "Text"));
+            project.GetScreenSave("MainMenu")!.DefaultState!.Variables.Add(new VariableSave
+            {
+                Name = "PlayText.Text", Type = "string", Value = text, SetsValue = true,
+            });
+        });
+
+        CliTestHelper.Run("codegen", gumx).ExitCode.ShouldBe(0);
+
+        string generated = File.ReadAllText(Directory.GetFiles(TempDirectory, "MainMenu.Generated.cs", SearchOption.AllDirectories).Single());
+        List<string> literals = CSharpSyntaxTree.ParseText(generated).GetRoot().DescendantTokens()
+            .Where(token => token.IsKind(SyntaxKind.StringLiteralToken))
+            .Select(token => token.ValueText)
+            .ToList();
+        literals.ShouldContain(text);
+        foreach (SyntaxToken token in CSharpSyntaxTree.ParseText(generated).GetRoot().DescendantTokens()
+            .Where(token => token.IsKind(SyntaxKind.StringLiteralToken)))
+        {
+            token.Text.ShouldNotContain("\n");
+            token.Text.ShouldNotContain("\r");
+        }
+    }
+
+    private class SilentLogger : ICodeGenLogger
+    {
+        public void PrintOutput(string message) { }
+
+        public void PrintError(string message) { }
     }
 
     private string CreateGame()
