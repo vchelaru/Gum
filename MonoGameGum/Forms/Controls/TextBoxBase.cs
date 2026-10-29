@@ -836,12 +836,19 @@ public abstract class TextBoxBase :
         float distanceMeasuredSoFar = 0;
         var fontScale = coreTextObject.FontScale;
 
-        for (int i = 0; i < textToUse.Length; i++)
+        for (int i = 0; i < textToUse.Length; )
         {
+            // A surrogate pair is one character, so the cursor lands before or after both halves.
+            int charLength = IsSurrogatePairAt(textToUse, i) ? 2 : 1;
+
             // GetCharacterAdvance returns raw glyph-pixel width; the rendered glyph is
             // FontScale-wider, so the hit-test must scale to match the screen-space
             // cursor offset coming in.
-            float advance = coreTextObject.GetCharacterAdvance(textToUse[i]) * fontScale;
+            float advance = 0;
+            for (int j = 0; j < charLength; j++)
+            {
+                advance += coreTextObject.GetCharacterAdvance(textToUse[i + j]) * fontScale;
+            }
 
             distanceMeasuredSoFar += advance;
 
@@ -855,7 +862,7 @@ public abstract class TextBoxBase :
                 }
                 else
                 {
-                    index = i + 1;
+                    index = i + charLength;
                 }
                 break;
             }
@@ -886,7 +893,7 @@ public abstract class TextBoxBase :
         /////////////////////////End Early Out/////////////////////
         // A caret inside a CRLF (set from code) acts as the one before the break for the navigation keys, so
         // End there does not "move" and select the lone CR.
-        if (key is Keys.Home or Keys.End or Keys.Up or Keys.Down or Keys.Left or Keys.Right && IsInsideCrlf(DisplayedText, caretIndex))
+        if (key is Keys.Home or Keys.End or Keys.Up or Keys.Down or Keys.Left or Keys.Right && IsInsideCharacter(CaretStepText, caretIndex))
         {
             caretIndex--;
         }
@@ -912,11 +919,11 @@ public abstract class TextBoxBase :
                         // 12 34
                         // If the cursor is at 4, pressing left moves the cursor
                         // before the 3 but after the space.
-                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(StepLeft(DisplayedText, caretIndex));
+                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(StepLeft(CaretStepText, caretIndex));
                         if (letterToMoveToFromCtrl != null)
                         {
 
-                            if (letterToMoveToFromCtrl == StepLeft(DisplayedText, caretIndex))
+                            if (letterToMoveToFromCtrl == StepLeft(CaretStepText, caretIndex))
                             {
                                 letterToMoveToFromCtrl = null;
                             }
@@ -927,7 +934,7 @@ public abstract class TextBoxBase :
                         }
                     }
 
-                    caretIndex = letterToMoveToFromCtrl ?? StepLeft(DisplayedText, caretIndex);
+                    caretIndex = letterToMoveToFromCtrl ?? StepLeft(CaretStepText, caretIndex);
                 }
                 break;
             case Keys.Home:
@@ -977,14 +984,14 @@ public abstract class TextBoxBase :
 
                     if (isCtrlDown)
                     {
-                        letterToMoveToFromCtrl = GetSpaceIndexAfter(StepRight(DisplayedText, caretIndex));
+                        letterToMoveToFromCtrl = GetSpaceIndexAfter(StepRight(CaretStepText, caretIndex));
                         if (letterToMoveToFromCtrl != null)
                         {
 
                             // match Visual Studio behavior, and go after the last space
-                            if (letterToMoveToFromCtrl != StepRight(DisplayedText, caretIndex))
+                            if (letterToMoveToFromCtrl != StepRight(CaretStepText, caretIndex))
                             {
-                                letterToMoveToFromCtrl = StepRight(DisplayedText, letterToMoveToFromCtrl.Value);
+                                letterToMoveToFromCtrl = StepRight(CaretStepText, letterToMoveToFromCtrl.Value);
                             }
                             else
                             {
@@ -997,7 +1004,7 @@ public abstract class TextBoxBase :
                         }
                     }
 
-                    caretIndex = letterToMoveToFromCtrl ?? StepRight(DisplayedText, caretIndex);
+                    caretIndex = letterToMoveToFromCtrl ?? StepRight(CaretStepText, caretIndex);
 
                 }
                 break;
@@ -1461,30 +1468,69 @@ public abstract class TextBoxBase :
         return textIndex + System.Math.Max(0, wrappedIndex - wrapped);
     }
 
-    // One caret step left or right moves over a "\r\n" as a single character.
+    // A "\r\n" and a surrogate pair (an emoji) are each one character stored as two chars. Every caret
+    // step, delete and click lands on the edges of those pairs, never between the halves. Indexes stay
+    // UTF-16 indexes. Grapheme clusters (flags, ZWJ sequences, combining marks) are not handled yet.
+    internal static bool IsSurrogatePairAt(string text, int index) =>
+        index >= 0 && index + 1 < text.Length && char.IsHighSurrogate(text[index]) && char.IsLowSurrogate(text[index + 1]);
+
+    // True when index is between the two halves of a "\r\n" or of a surrogate pair.
+    internal static bool IsInsideCharacter(string? text, int index) =>
+        text != null && index > 0 && index < text.Length &&
+        ((text[index - 1] == '\r' && text[index] == '\n') || IsSurrogatePairAt(text, index - 1));
+
+    // One caret step left or right moves over a whole character.
     internal static int StepLeft(string? text, int index)
     {
         int result = index - 1;
-        if (text != null && result > 0 && result < text.Length && text[result] == '\n' && text[result - 1] == '\r')
-        {
-            result--;
-        }
-        return result;
+        return IsInsideCharacter(text, result) ? result - 1 : result;
     }
-
-    // True when index is between the \r and \n of a CRLF.
-    internal static bool IsInsideCrlf(string? text, int index) =>
-        text != null && index > 0 && index < text.Length && text[index - 1] == '\r' && text[index] == '\n';
 
     internal static int StepRight(string? text, int index)
     {
         int result = index + 1;
-        if (text != null && index + 1 < text.Length && text[index] == '\r' && text[index + 1] == '\n')
-        {
-            result++;
-        }
-        return result;
+        return IsInsideCharacter(text, result) ? result + 1 : result;
     }
+
+    // The part of the text Backspace removes with no selection: the whole character before the caret.
+    // A caret between the halves of a character (a programmatic CaretIndex) removes that character.
+    internal static (int Start, int Length) GetBackspaceRange(string? text, int caretIndex)
+    {
+        int end = IsInsideCharacter(text, caretIndex) ? caretIndex + 1 : caretIndex;
+        int start = StepLeft(text, end);
+        return (start, end - start);
+    }
+
+    // The part of the text Delete removes with no selection: the whole character after the caret.
+    internal static (int Start, int Length) GetDeleteRange(string? text, int caretIndex)
+    {
+        int start = IsInsideCharacter(text, caretIndex) ? caretIndex - 1 : caretIndex;
+        return (start, StepRight(text, start) - start);
+    }
+
+    // Widens a selection so neither edge is between the halves of a character.
+    internal static void ExpandToWholeCharacters(string? text, ref int start, ref int length)
+    {
+        if (IsInsideCharacter(text, start))
+        {
+            start--;
+            length++;
+        }
+        if (IsInsideCharacter(text, start + length))
+        {
+            length++;
+        }
+    }
+
+    // The length to keep when cutting text to maxLength: a surrogate pair is dropped whole, not halved.
+    internal static int GetTruncatedLength(string text, int maxLength) =>
+        maxLength > 0 && IsSurrogatePairAt(text, maxLength - 1) ? maxLength - 1 : maxLength;
+
+    /// <summary>
+    /// The text the caret steps over. It is the displayed text, except where that is a mask (PasswordBox)
+    /// that does not show which characters are two chars.
+    /// </summary>
+    protected virtual string? CaretStepText => DisplayedText;
 
     /// <summary>
     /// Returns the line number, start of the line, and relative index into the line given an absolute character index
