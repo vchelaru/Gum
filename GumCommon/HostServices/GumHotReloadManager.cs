@@ -86,6 +86,9 @@ public class GumHotReloadManager : IGumHotReloadManager
     // Changed files that are not project/element/font files. Each is checked against what the loaded
     // visuals reference once the debounce passes; guarded by _pendingReloadLock.
     private readonly HashSet<string> _changedOtherFiles = new HashSet<string>();
+    // Separate from _lastChangeTime so editor temp files and the like cannot push a pending project
+    // reload past its debounce.
+    private DateTime _lastOtherChangeTime;
 
     /// <param name="applyProjectTextureFilter">
     /// Applies the reloaded project's <see cref="GumProjectSave.TextureFilter"/> to the host's
@@ -164,18 +167,25 @@ public class GumHotReloadManager : IGumHotReloadManager
     {
         DateTime now = _utcNow();
         bool reload;
-        List<string> otherFiles;
+        List<string> otherFiles = new List<string>();
         lock (_pendingReloadLock)
         {
-            if ((!_pendingReload && _changedOtherFiles.Count == 0)
-                || (now - _lastChangeTime) < TimeSpan.FromMilliseconds(200))
+            TimeSpan debounce = TimeSpan.FromMilliseconds(200);
+            reload = _pendingReload && (now - _lastChangeTime) >= debounce;
+            bool checkOtherFiles = _changedOtherFiles.Count > 0 && (now - _lastOtherChangeTime) >= debounce;
+            if (!reload && !checkOtherFiles)
             {
                 return;
             }
-            reload = _pendingReload;
-            _pendingReload = false;
-            otherFiles = _changedOtherFiles.ToList();
-            _changedOtherFiles.Clear();
+            if (reload)
+            {
+                _pendingReload = false;
+            }
+            if (checkOtherFiles)
+            {
+                otherFiles = _changedOtherFiles.ToList();
+                _changedOtherFiles.Clear();
+            }
         }
 
         List<GraphicalUiElement> rootList = roots.ToList();
@@ -220,7 +230,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             DateTime now = _utcNow();
             lock (_pendingReloadLock)
             {
-                _lastChangeTime = now;
+                _lastOtherChangeTime = now;
                 _changedOtherFiles.Add(fullPath);
             }
         }

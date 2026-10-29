@@ -29,9 +29,11 @@ public class HotReloadShaderFileTests : BaseTestClass
             System.IO.Path.GetTempPath(), "HotReloadShaderFileTests_" + System.IO.Path.GetRandomFileName());
         public DateTime Now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public int ProjectReloadCount;
+        public List<string> Sequence = new List<string>();
         public int ResolveCount;
         public List<FakeEffect> Effects = new List<FakeEffect>();
         public GumHotReloadManager Manager;
+        public string GumxPath = "";
         private readonly bool _previousCacheTextures = LoaderManager.Self.CacheTextures;
 
         public Harness()
@@ -44,16 +46,18 @@ public class HotReloadShaderFileTests : BaseTestClass
             Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path =>
             {
                 ResolveCount++;
+                Sequence.Add("resolve");
                 FakeEffect effect = new FakeEffect();
                 Effects.Add(effect);
                 return effect;
             };
 
             Manager = new GumHotReloadManager(
-                _ => ProjectReloadCount++,
+                _ => { ProjectReloadCount++; Sequence.Add("reload"); },
                 GumAnimationLoader.LoadAnimationsFromProvider,
                 path => LoaderManager.Self.Dispose(path),
                 () => Now);
+            GumxPath = gumxPath;
             Manager.Start(gumxPath);
             Manager.Stop();
         }
@@ -157,5 +161,38 @@ public class HotReloadShaderFileTests : BaseTestClass
 
         harness.ResolveCount.ShouldBe(3);
         harness.Effects[1].IsDisposed.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Update_StillReloadsAfterTheDebounce_WhenAnUnrelatedFileChangesInTheMeantime()
+    {
+        using Harness harness = new Harness();
+
+        harness.Manager.NotifyFileChanged(harness.GumxPath);
+        harness.Now = harness.Now.AddMilliseconds(150);
+        harness.Manager.NotifyFileChanged(Path.Combine(harness.Directory, "editor-swap.tmp"));
+        harness.Now = harness.Now.AddMilliseconds(60);
+        harness.Manager.Update(Array.Empty<GraphicalUiElement>());
+
+        harness.ProjectReloadCount.ShouldBe(1, "the project change is 210 ms old; the temp file must not restart its debounce");
+    }
+
+    [Fact]
+    public void Update_ReassignsShadersThenReloads_WhenAProjectFileAndAShaderChangeInOneBurst()
+    {
+        using Harness harness = new Harness();
+        string shaderPath = harness.WriteFile("effect.fx");
+
+        ContainerRuntime container = new ContainerRuntime();
+        container.IsRenderTarget = true;
+        container.SourceShaderFile = shaderPath;
+        harness.Sequence.Clear();
+
+        harness.Manager.NotifyFileChanged(Path.Combine(harness.Directory, "Screen.gusx"));
+        harness.Manager.NotifyFileChanged(shaderPath);
+        harness.Now = harness.Now.AddMilliseconds(300);
+        harness.Manager.Update(new GraphicalUiElement[] { container });
+
+        harness.Sequence.ShouldBe(new[] { "resolve", "reload" });
     }
 }
