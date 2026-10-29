@@ -1,6 +1,7 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
@@ -58,6 +59,7 @@ namespace Gum.Managers
         /// memory walks it once. Null exactly when <see cref="_reloadedWhileDeferring"/> is.
         /// </summary>
         private List<FilePath>? _referencedFileChecksWhileDeferring;
+        private HashSet<FilePath>? _shaderFiles;
 
         public FileChangeReactionLogic(
             ISelectedState selectedState,
@@ -226,7 +228,7 @@ namespace Gum.Managers
             {
                 ReactToLocalizationFileChanged(file);
             }
-            else if(ShaderFileExtensions.Contains(extension))
+            else if(IsShaderFile(file))
             {
                 ReactToShaderFileChanged(file);
             }
@@ -254,7 +256,7 @@ namespace Gum.Managers
             {
                 ReactToElementSaveDeleted(file);
             }
-            else if (ShaderFileExtensions.Contains(extension))
+            else if (IsShaderFile(file))
             {
                 // The refresh makes the canvas look the shader up again; a missing file is reported
                 // the way a missing shader is when it is picked.
@@ -482,7 +484,7 @@ namespace Gum.Managers
 
         private void ReactToProjectChanged(FilePath file)
         {
-            _referencedFiles.Invalidate();
+            ForgetReferencedFiles();
 
             // Reloading the project replaces every element and behavior, so any unsaved edit
             // anywhere in it would be lost (#5388).
@@ -552,7 +554,7 @@ namespace Gum.Managers
             if (ListsOtherFiles(file))
             {
                 // What the project references includes the pictures this file names, which the edit changed.
-                _referencedFiles.Invalidate();
+                ForgetReferencedFiles();
             }
 
             if (_reloadedWhileDeferring != null)
@@ -583,7 +585,7 @@ namespace Gum.Managers
             }
             if (anyListerChanged)
             {
-                _referencedFiles.Invalidate();
+                ForgetReferencedFiles();
             }
 
             return anyListerChanged || files.Where(file => !ListsOtherFiles(file)).Any(IsReferencedFile);
@@ -609,6 +611,67 @@ namespace Gum.Managers
 
         /// <summary>Files that name other files the project then references (an animation chain's pictures, a font's pages).</summary>
         private static bool ListsOtherFiles(FilePath file) => file.Extension is "achx" or "achj" or "fnt";
+
+        private void ForgetReferencedFiles()
+        {
+            _referencedFiles.Invalidate();
+            _shaderFiles = null;
+        }
+
+        /// <summary>
+        /// True when <paramref name="file"/> is a shader: a container's <c>SourceShaderFile</c> names it, in any
+        /// extension (ShadowDusk lists none and treats every extension but <c>.slang</c> as HLSL text), or it has
+        /// one of the shader extensions the tool offers, which keeps an unreferenced <c>.slang</c>/<c>.fx</c> the
+        /// canvas still caches from reloading everything (#7034). The variable's set is kept with the rest of the
+        /// referenced files and forgotten with them.
+        /// </summary>
+        private bool IsShaderFile(FilePath file)
+        {
+            if (ShaderFileExtensions.Contains(file.Extension))
+            {
+                return true;
+            }
+
+            // Walks only variables, never the files they name, so it is cheap to ask for every file event.
+            _shaderFiles ??= CollectShaderFiles();
+            return _shaderFiles.Contains(file);
+        }
+
+        private HashSet<FilePath> CollectShaderFiles()
+        {
+            HashSet<FilePath> shaderFiles = new HashSet<FilePath>();
+            string? projectFile = ObjectFinder.Self.GumProjectSave?.FullFileName;
+            if (string.IsNullOrEmpty(projectFile))
+            {
+                return shaderFiles;
+            }
+
+            string projectDirectory = FileManager.GetDirectory(projectFile);
+            foreach (ElementSave element in ObjectFinder.Self.GumProjectSave!.AllElements)
+            {
+                foreach (StateSave state in element.AllStates)
+                {
+                    foreach (VariableSave variable in state.Variables)
+                    {
+                        if (variable.GetRootName() != "SourceShaderFile" || variable.Value is not string value || value.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            // The same resolution the project walk uses: relative to the project file.
+                            shaderFiles.Add(new FilePath(System.IO.Path.IsPathRooted(value) ? value : projectDirectory + value));
+                        }
+                        catch
+                        {
+                            // An invalid path in a variable cannot be the file that changed.
+                        }
+                    }
+                }
+            }
+            return shaderFiles;
+        }
 
         private static bool IsCachedByCanvas(FilePath file) =>
             LoaderManager.Self.CachedDisposables.Keys.Any(key => IsSameFile(key, file));
@@ -681,12 +744,12 @@ namespace Gum.Managers
         /// Forgets the kept set of referenced files. Called whenever what the project references may have
         /// changed: an element, behavior or project reload here, and an edit made in the tool.
         /// </summary>
-        public void InvalidateReferencedFiles() => _referencedFiles.Invalidate();
+        public void InvalidateReferencedFiles() => ForgetReferencedFiles();
 
         private void ReactToElementSaveChanged(FilePath file)
         {
             // What the project references may have changed.
-            _referencedFiles.Invalidate();
+            ForgetReferencedFiles();
 
             var projectDirectory = _fileCommands.ProjectDirectory;
             var relativeToFolderForType = GetElementNameForElementFile(file, projectDirectory);
@@ -828,7 +891,7 @@ namespace Gum.Managers
 
         private void ReactToBehaviorChanged(FilePath file)
         {
-            _referencedFiles.Invalidate();
+            ForgetReferencedFiles();
             // File changes are only watched while a project is open.
             var gumProject = _projectState.GetLoadedProject();
             var behavior = gumProject.Behaviors.FirstOrDefault(item =>

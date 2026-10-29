@@ -266,6 +266,134 @@ public class FileChangeShaderReactionTests : BaseTestClass
         VerifyRebuilt(Times.Never());
     }
 
+    // #7034: a shader is whatever a container's SourceShaderFile names; the extension decides nothing.
+    [Theory]
+    [InlineData("Shaders/Blur.shader")]
+    [InlineData("Shaders/Blur.hlsl")]
+    [InlineData("Shaders/Blur.glsl")]
+    [InlineData("Shaders/Blur")]
+    public void ReactToFileChanged_RebuildsTheCanvasWithoutReloadingTextures_WhenTheShaderHasAnyExtension(string shader)
+    {
+        SelectScreenWithShader(shader);
+
+        _reaction.ReactToFileChanged(new FilePath(WriteShader(shader)));
+
+        VerifyRebuilt(Times.Once());
+        VerifyNoTextureReload();
+    }
+
+    [Fact]
+    public void ReactToFileChanged_DropsTheCachedEffectOnly_WhenTheShaderHasAnyExtension()
+    {
+        AddScreenWithShader("Main", "Shaders/Blur.shader");
+        _selectedState.Setup(s => s.SelectedElement).Returns((ElementSave?)null);
+        string path = WriteShader("Shaders/Blur.shader");
+        CachedEffect effect = new CachedEffect();
+        CachedEffect image = new CachedEffect();
+        global::RenderingLibrary.Content.LoaderManager.Self.DisposeAndClear();
+        global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(path, effect);
+        global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(Path.Combine(_projectFolder, "Photo.png"), image);
+        try
+        {
+            _reaction.ReactToFileChanged(new FilePath(path));
+
+            effect.Disposed.ShouldBeTrue();
+            image.Disposed.ShouldBeFalse("a shader edit leaves the other cached files alone");
+        }
+        finally
+        {
+            global::RenderingLibrary.Content.LoaderManager.Self.DisposeAndClear();
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_Refreshes_WhenAComponentsInstanceUsesAShaderWithAnyExtension()
+    {
+        ComponentSave card = AddComponent("Card", "Container");
+        AddInstance(card, "Box", "Container");
+        card.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Box.SourceShaderFile", Type = "string", Value = "Shaders/Blur.shader", IsFile = true, SetsValue = true,
+        });
+        ScreenSave screen = new ScreenSave { Name = "Main" };
+        AddInstance(screen, "Item", "Card");
+        _project.Screens.Add(screen);
+        _selectedState.Setup(s => s.SelectedElement).Returns(screen);
+
+        _reaction.ReactToFileChanged(new FilePath(WriteShader("Shaders/Blur.shader")));
+
+        VerifyRebuilt(Times.Once());
+        VerifyNoTextureReload();
+    }
+
+    [Fact]
+    public void ReactToFileChanged_DoesNothing_WhenNoElementUsesAShaderWithAnyExtension()
+    {
+        SelectScreenWithShader("Shaders/Blur.shader");
+
+        _reaction.ReactToFileChanged(new FilePath(WriteShader("Shaders/Unused.shader")));
+
+        VerifyRebuilt(Times.Never());
+        VerifyNoTextureReload();
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ReloadsEverything_WhenAnImageIsReferencedNextToAShader()
+    {
+        // Only the file a SourceShaderFile names gets the shader reaction; a picture keeps the full reload.
+        ScreenSave screen = AddScreenWithShader("Main", "Shaders/Blur.shader");
+        screen.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Box.SourceFile", Type = "string", Value = "Photo.png", IsFile = true, SetsValue = true,
+        });
+        _selectedState.Setup(s => s.SelectedElement).Returns(screen);
+        string photo = Path.Combine(_projectFolder, "Photo.png");
+        File.WriteAllText(photo, "png");
+
+        _reaction.ReactToFileChanged(new FilePath(photo));
+
+        _wireframe.Verify(w => w.RefreshAll(true, true), Times.Once());
+    }
+
+    [Fact]
+    public void ReactToFileDeleted_RefreshesSoTheMissingFileIsReported_WhenTheShaderHasAnyExtension()
+    {
+        SelectScreenWithShader("Shaders/Blur.shader");
+
+        _reaction.ReactToFileDeleted(new FilePath(Path.Combine(_projectFolder, "Shaders", "Blur.shader")));
+
+        VerifyRebuilt(Times.Once());
+        VerifyNoTextureReload();
+    }
+
+    [Fact]
+    public void ASaveByRenamingATempFileOverAShaderWithAnyExtension_Refreshes()
+    {
+        SelectScreenWithShader("Shaders/Blur.shader");
+        FileWatchManager watch = StartWatching();
+        string path = WriteShader("Shaders/Blur.shader");
+
+        watch.HandleRename(null, new RenamedEventArgs(WatcherChangeTypes.Renamed, Path.GetDirectoryName(path)!, "Blur.shader", "Blur.shader.tmp.1"));
+        FlushWhenSettled(watch);
+
+        VerifyRebuilt(Times.Once());
+        VerifyNoTextureReload();
+    }
+
+    [Fact]
+    public void DeletingAShaderWithAnyExtension_RefreshesOnce()
+    {
+        SelectScreenWithShader("Shaders/Blur.shader");
+        FileWatchManager watch = StartWatching();
+        string path = Path.Combine(_projectFolder, "Shaders", "Blur.shader");
+
+        watch.HandleFileSystemDelete(null, Args(path, WatcherChangeTypes.Deleted));
+        FlushWhenSettled(watch);
+
+        VerifyRebuilt(Times.Once());
+        VerifyNoTextureReload();
+    }
+
     private sealed class SynchronousDispatcher : IDispatcher
     {
         public void Invoke(Action action) => action();

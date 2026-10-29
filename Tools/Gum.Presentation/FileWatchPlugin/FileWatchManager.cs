@@ -244,8 +244,8 @@ public class FileWatchManager : IFileWatchManager
             or "ganx" or "ganj" or "behx" or "behj" or "fnt"
             or "achx" or "achj"
             or "codsj"
-            || ShaderFileExtensions.Contains(extension)
-            // Any other file an element references or the canvas cached (svg, lottie json, a decoder plugin's format, ...).
+            // Any other file an element references or the canvas cached (a shader in any extension, svg, lottie json,
+            // a decoder plugin's format, ...).
             || _fileChangeReactionLogic.IsReferencedFile(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
@@ -259,17 +259,13 @@ public class FileWatchManager : IFileWatchManager
         // (red "!" / GUM0004) instead of silently diverging from disk (issue #3367). Enqueue it
         // like a change - the flush re-checks existence, so a delete-then-recreate (atomic save)
         // within the debounce window collapses back into a normal reload. A file an element references or the
-        // canvas cached (picture, svg, font, ...) is queued the same way so the canvas stops showing the cached
+        // canvas cached (picture, svg, font, shader, ...) is queued the same way so the canvas stops showing the cached
         // copy; other deletes are left unhandled.
-        if (IsElementFileExtension(fileName) || IsShaderFileExtension(fileName) || _fileChangeReactionLogic.IsReferencedFile(fileName))
+        if (IsElementFileExtension(fileName) || _fileChangeReactionLogic.IsReferencedFile(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
     }
-
-    // A shader source file deleted while a container shows it is reported like any missing shader, so
-    // the delete is queued too; the flush re-checks existence, so a delete-then-create save reloads.
-    private static bool IsShaderFileExtension(FilePath file) => ShaderFileExtensions.Contains(file.Extension);
 
     // internal (not private) so tests can pin the recognized extension set directly.
     internal static bool IsElementFileExtension(FilePath file)
@@ -514,7 +510,7 @@ public class FileWatchManager : IFileWatchManager
                     // file that's still gone at flush time is a real deletion the user should see
                     // (issue #3367) — route it to the delete reaction instead of dropping silently.
                     if (!IsTransientTempFile(file)
-                        && (IsElementFileExtension(file) || IsShaderFileExtension(file) || _fileChangeReactionLogic.IsReferencedFile(file)))
+                        && (IsElementFileExtension(file) || _fileChangeReactionLogic.IsReferencedFile(file)))
                     {
                         deletedFiles.Add(file);
                     }
