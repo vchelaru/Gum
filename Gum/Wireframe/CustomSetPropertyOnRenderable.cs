@@ -1738,6 +1738,30 @@ public partial class CustomSetPropertyOnRenderable
 
     static List<TagInfo> allTags = new List<TagInfo>();
 
+    // BbCodeParser recognizes tag names ignoring case and carries a name as written, but the apply code
+    // below switches on the PascalCase variable names (also the InlineVariable names the renderers read),
+    // so a lowercase [color=Red] was stripped and never applied (#7106).
+    private static readonly Dictionary<string, string> CanonicalTagNames =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Red"] = "Red",
+            ["Green"] = "Green",
+            ["Blue"] = "Blue",
+            ["Color"] = "Color",
+            ["FontScale"] = "FontScale",
+            ["Custom"] = "Custom",
+            ["State"] = "State",
+            ["Font"] = "Font",
+            ["FontSize"] = "FontSize",
+            ["OutlineThickness"] = "OutlineThickness",
+            ["IsItalic"] = "IsItalic",
+            ["IsBold"] = "IsBold",
+            ["HasDropshadow"] = "HasDropshadow",
+        };
+
+    private static string CanonicalTagName(string name) =>
+        CanonicalTagNames.TryGetValue(name, out string? canonicalName) ? canonicalName : name;
+
     /// <summary>
     /// Variable names a <c>[state=Name]</c> BBCode tag is allowed to apply to the substring it wraps -
     /// exactly the set already wired for per-run application elsewhere in this file (the direct-value
@@ -1794,9 +1818,9 @@ public partial class CustomSetPropertyOnRenderable
 
         foreach (FoundTag tag in results)
         {
-            if (tag.Name == "State")
+            if (CanonicalTagName(tag.Name) == "State")
             {
-                expanded ??= new List<FoundTag>(results.Where(item => item.Name != "State"));
+                expanded ??= new List<FoundTag>(results.Where(item => CanonicalTagName(item.Name) != "State"));
 
                 if (graphicalUiElement.TryGetStateByName(tag.Open.Argument ?? string.Empty,
                         out Gum.DataTypes.Variables.StateSave? state))
@@ -1878,7 +1902,8 @@ public partial class CustomSetPropertyOnRenderable
         {
             object? castedValue = item.Open.Argument;
             var shouldApply = false;
-            switch (item.Name)
+            string canonicalName = CanonicalTagName(item.Name);
+            switch (canonicalName)
             {
                 case "Red":
                 case "Green":
@@ -1959,7 +1984,7 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
                     StartIndex = item.Open.StartStrippedIndex,
-                    VariableName = item.Name,
+                    VariableName = canonicalName,
                     // shouldApply is only set alongside a parsed value.
                     Value = castedValue!
                 });
@@ -2079,7 +2104,7 @@ public partial class CustomSetPropertyOnRenderable
             // creator wired - the raw pixel size as a float (ResolveRunFont then scales the base atlas).
             object? castedValue = null;
             string convertedName = "BitmapFont"; // shared historical run-marker name (see ResolvedFont note).
-            switch (tag.Name)
+            switch (CanonicalTagName(tag.Name))
             {
                 case "Font":
                     if (!string.IsNullOrEmpty(tag.Argument))
