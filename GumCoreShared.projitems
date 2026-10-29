@@ -151,6 +151,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NonFiniteCheck.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameters.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameterText.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameterMarker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderVariableNaming.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableCloneLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HorizontalAlignment.cs" />

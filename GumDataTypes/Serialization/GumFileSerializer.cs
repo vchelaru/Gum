@@ -33,7 +33,8 @@ public static class GumFileSerializer
     private static readonly string[] AttributeProps =
     [
         "Type", "Name", "SetsValue", "Category", "ExposedAsName",
-        "StandardizedName", "IsFile", "IsFont", "IsHiddenInPropertyGrid", "IsCustomVariable"
+        "StandardizedName", "IsFile", "IsFont", "IsHiddenInPropertyGrid", "IsCustomVariable",
+        "ShaderParameter"
     ];
 
     private static void AddVariableSaveOverrides(XmlAttributeOverrides overrides, bool suppressDefaultSetsValue = false)

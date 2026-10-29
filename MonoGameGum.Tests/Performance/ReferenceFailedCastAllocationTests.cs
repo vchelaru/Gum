@@ -32,8 +32,10 @@ public class ReferenceFailedCastAllocationTests : BaseTestClass
 
     // Bytes per frame measured on main, before refused rows were reported (the Width and Visible updates themselves
     // allocate most of it). A refused row evaluated once then too, and the tolerance absorbs measurement noise only.
-    private const long ExpressionRowBytesPerFrame = 5116;
-    private const long PlainRowBytesPerFrame = 4812;
+    // The expression and plain figures include 24 bytes for VariableSave.ShaderParameter: each frame allocates three
+    // VariableSaves, and the new reference field makes every one 8 bytes larger.
+    private const long ExpressionRowBytesPerFrame = 5140;
+    private const long PlainRowBytesPerFrame = 4836;
     private const long RefusedRowBytesPerFrame = 3484;
     private const long Tolerance = 16;
 
