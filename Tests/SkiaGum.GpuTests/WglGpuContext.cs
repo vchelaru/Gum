@@ -31,6 +31,7 @@ public sealed class WglGpuContext : IDisposable
     // test assembly) only sees pixel formats chosen through these; the gdi32 versions go through the installed driver.
     [DllImport("opengl32")] static extern int wglChoosePixelFormat(IntPtr dc, ref PixelFormatDescriptor pfd);
     [DllImport("opengl32")] static extern bool wglSetPixelFormat(IntPtr dc, int format, ref PixelFormatDescriptor pfd);
+    [DllImport("opengl32")] static extern IntPtr glGetString(uint name);
     [DllImport("opengl32")] static extern IntPtr wglCreateContext(IntPtr dc);
     [DllImport("opengl32")] static extern bool wglMakeCurrent(IntPtr dc, IntPtr rc);
     [DllImport("opengl32")] static extern bool wglDeleteContext(IntPtr rc);
@@ -59,7 +60,22 @@ public sealed class WglGpuContext : IDisposable
         {
             throw new InvalidOperationException("GRContext.CreateGl failed; this machine has no usable OpenGL GPU.");
         }
+        Renderer = Marshal.PtrToStringAnsi(glGetString(0x1F01)) ?? "unknown"; // GL_RENDERER
+        Version = Marshal.PtrToStringAnsi(glGetString(0x1F02)) ?? "unknown"; // GL_VERSION
+        // CI sets GALLIUM_DRIVER=llvmpipe for the Mesa lane; fail loudly if something else rendered instead.
+        if (Environment.GetEnvironmentVariable("GALLIUM_DRIVER") == "llvmpipe"
+            && !Renderer.Contains("llvmpipe", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"GALLIUM_DRIVER=llvmpipe is set but GL_RENDERER is '{Renderer}' (GL_VERSION '{Version}'); the Mesa software GL is not the renderer in use.");
+        }
     }
+
+    /// <summary>GL_RENDERER of the context the tests run on.</summary>
+    public string Renderer { get; }
+
+    /// <summary>GL_VERSION of the context the tests run on.</summary>
+    public string Version { get; }
 
     static bool TryCreate(bool useWglPixelFormat, out IntPtr hwnd, out IntPtr dc, out IntPtr rc, out GRContext grContext)
     {
