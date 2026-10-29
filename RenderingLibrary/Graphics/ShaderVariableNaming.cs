@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text;
 
 namespace RenderingLibrary.Graphics;
@@ -20,9 +21,10 @@ namespace RenderingLibrary.Graphics;
 /// </para>
 /// <para>
 /// The stem is the shader file name without directory or last extension, with every character that is
-/// not a letter, digit or underscore replaced by an underscore. <c>Outline.fx</c>, <c>Outline.slang</c>
-/// and <c>Outline.fs</c> share the stem <c>Outline</c> on purpose, so one set of saved values follows a
-/// shader across its per-runtime file types.
+/// the tool's name rules do not accept (see <see cref="GetSanitizedStem"/>) replaced by an underscore.
+/// <c>Outline.fx</c>, <c>Outline.slang</c> and <c>Outline.fs</c> share the stem <c>Outline</c> on purpose,
+/// so one set of saved values follows a shader across its per-runtime file types. Kana, CJK ideographs and the like are not accepted, so a
+/// shader named in them has a stem of underscores and shares it with every other such name.
 /// </para>
 /// <para>
 /// Collisions. For one shader file, two different (parameter, component) inputs never produce the same
@@ -42,8 +44,10 @@ public static class ShaderVariableNaming
 
     /// <summary>
     /// The shader file name without directory or last extension, made safe to put in a variable name:
-    /// every character that is not a letter, digit or underscore becomes an underscore, a leading digit
-    /// gets an underscore in front, and a file name with nothing usable becomes <c>Shader</c>.
+    /// every character the tool's name rules do not accept becomes an underscore (this includes letters
+    /// that are neither cased nor modifiers, such as kana and CJK ideographs, so a shader named in those
+    /// scripts gets a stem of underscores), a name that does not start with a letter or underscore gets
+    /// an underscore in front, and a file name with nothing usable becomes <c>Shader</c>.
     /// </summary>
     /// <param name="shaderFile">A path or a name, with either kind of slash. May be null or empty.</param>
     public static string GetSanitizedStem(string? shaderFile)
@@ -67,15 +71,52 @@ public static class ShaderVariableNaming
         }
 
         StringBuilder builder = new StringBuilder(name.Length + 1);
-        if (char.IsDigit(name[0]))
+        if (!StartsWithLetterOrUnderscore(name))
         {
             builder.Append('_');
         }
         foreach (char character in name)
         {
-            builder.Append(char.IsLetterOrDigit(character) || character == '_' ? character : '_');
+            builder.Append(IsStemCharacter(char.GetUnicodeCategory(character)) ? character : '_');
         }
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Whether a character of this category can stay in a stem. These are the categories the tool's name
+    /// rules (<c>NameRules</c> in Gum.ProjectServices, which this assembly cannot reference) accept in a
+    /// name, minus the space; <c>ShaderVariableNamingToolRulesTests</c> checks the two agree. Roslyn
+    /// accepts all of them in an identifier. Kana, CJK and other letters of category OtherLetter are not
+    /// in the list, so they are replaced. Characters are looked at one UTF-16 unit at a time, so every
+    /// half of a surrogate pair is replaced too: Roslyn rejects characters outside the BMP in an
+    /// identifier, and variable references are parsed by Roslyn.
+    /// </summary>
+    private static bool IsStemCharacter(UnicodeCategory category)
+    {
+        switch (category)
+        {
+            case UnicodeCategory.UppercaseLetter:
+            case UnicodeCategory.LowercaseLetter:
+            case UnicodeCategory.TitlecaseLetter:
+            case UnicodeCategory.ModifierLetter:
+            case UnicodeCategory.LetterNumber:
+            case UnicodeCategory.DecimalDigitNumber:
+            case UnicodeCategory.ConnectorPunctuation:
+            case UnicodeCategory.NonSpacingMark:
+            case UnicodeCategory.SpacingCombiningMark:
+            case UnicodeCategory.Format:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // A name has to start with a letter or underscore for C#. A first character that is replaced
+    // becomes an underscore, which also qualifies.
+    private static bool StartsWithLetterOrUnderscore(string name)
+    {
+        UnicodeCategory category = char.GetUnicodeCategory(name[0]);
+        return name[0] == '_' || char.IsLetter(name[0]) || !IsStemCharacter(category);
     }
 
     /// <summary>

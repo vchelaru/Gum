@@ -27,6 +27,11 @@ public class ShaderVariableNamingTests
     [InlineData("3d.fx", "_3d")]
     [InlineData("3d", "_3d")]
     [InlineData("Wave:Fast#1.fx", "Wave_Fast_1")]
+    [InlineData("アウトライン.fx", "______")]
+    [InlineData("a輪郭b.fx", "a__b")]
+    [InlineData("Ünï.fx", "Ünï")]
+    [InlineData("\U0001D400x.fx", "__x")]
+    [InlineData("\u0301x.fx", "_\u0301x")]
     public void GetSanitizedStem_CharactersInvalidInNames_BecomeUnderscores(string shaderFile, string expected)
     {
         ShaderVariableNaming.GetSanitizedStem(shaderFile).ShouldBe(expected);
