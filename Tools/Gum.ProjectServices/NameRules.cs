@@ -104,7 +104,7 @@ public class NameRules
             return false;
         }
 
-        if (name[0] != '_' && !char.IsLetter(name[0]))
+        if (!StartsLikeCSharpIdentifier(name))
         {
             whyNotValid = $"Name may not begin with character {name[0]}";
             commonValidationError = CommonValidationError.InvalidStartingCharacterForCSharp;
@@ -121,6 +121,69 @@ public class NameRules
         whyNotValid = null;
         commonValidationError = CommonValidationError.None;
         return true;
+    }
+
+    /// <summary>
+    /// Turns any text (a project file name, a folder name) into one C# identifier: every character that
+    /// can't be part of an identifier, including spaces, dots and hyphens, becomes an underscore; a leading
+    /// character that can't start one gets an underscore in front (the rule MSBuild applies to a default
+    /// RootNamespace); a reserved keyword gets an <c>@</c>. A text that is already an identifier is returned unchanged.
+    /// </summary>
+    public static string ToCSharpIdentifier(string? name)
+    {
+        name ??= string.Empty;
+        // An identifier already escaped as @name stays as it is.
+        if (name.Length > 1 && name[0] == '@' && ToCSharpIdentifier(name.Substring(1)) is string inner && (inner == name || inner == name.Substring(1)))
+        {
+            return name;
+        }
+
+        StringBuilder builder = new StringBuilder(name.Length + 1);
+        foreach (Rune rune in name.EnumerateRunes())
+        {
+            builder.Append(IsCSharpIdentifierPart(rune) ? rune.ToString() : "_");
+        }
+
+        if (builder.Length == 0)
+        {
+            return "_";
+        }
+
+        string identifier = builder.ToString();
+        if (!StartsLikeCSharpIdentifier(identifier))
+        {
+            return "_" + identifier;
+        }
+
+        return CSharpReservedKeywords.Contains(identifier) ? "@" + identifier : identifier;
+    }
+
+    private static bool StartsLikeCSharpIdentifier(string name)
+    {
+        // A letter outside the basic plane is a surrogate pair, so the first character alone is not a letter.
+        Rune first = name.EnumerateRunes().First();
+        return first.Value == '_' || Rune.IsLetter(first);
+    }
+
+    private static bool IsCSharpIdentifierPart(Rune rune)
+    {
+        switch (Rune.GetUnicodeCategory(rune))
+        {
+            case UnicodeCategory.UppercaseLetter:
+            case UnicodeCategory.LowercaseLetter:
+            case UnicodeCategory.TitlecaseLetter:
+            case UnicodeCategory.ModifierLetter:
+            case UnicodeCategory.OtherLetter:
+            case UnicodeCategory.LetterNumber:
+            case UnicodeCategory.DecimalDigitNumber:
+            case UnicodeCategory.ConnectorPunctuation:
+            case UnicodeCategory.NonSpacingMark:
+            case UnicodeCategory.SpacingCombiningMark:
+            case UnicodeCategory.Format:
+                return true;
+            default:
+                return false;
+        }
     }
 
     /// <summary>

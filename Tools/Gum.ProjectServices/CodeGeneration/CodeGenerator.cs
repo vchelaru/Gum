@@ -736,7 +736,7 @@ public class CodeGenerator
             if(projectSettings.AppendFolderToNamespace)
             {
                 var splitElementName = elementName.Replace("\\", "/").Split('/').ToArray();
-                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).Select(NameRules.ToCSharpIdentifier).ToArray();
                 var whatToAppend = string.Join(".", splitPrefix);
                 if (!string.IsNullOrEmpty(whatToAppend))
                 {

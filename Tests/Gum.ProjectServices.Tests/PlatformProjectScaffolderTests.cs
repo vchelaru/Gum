@@ -58,6 +58,26 @@ public class PlatformProjectScaffolderTests : IDisposable
         settings.CsprojPath.ShouldBe("../../MyGame.csproj");
     }
 
+    [Theory]
+    [InlineData("My-Game.Client", "My_Game_Client")]
+    [InlineData("class", "@class")]
+    public void Create_WhenProjectNameIsNotAnIdentifier_ShouldUseAValidRootNamespaceEverywhere(
+        string projectName, string expectedNamespace)
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, projectName);
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        File.ReadAllText(result.CsprojPath).ShouldContain($"<RootNamespace>{expectedNamespace}</RootNamespace>");
+        File.ReadAllText(Path.Combine(projectDirectory, "Game1.cs")).ShouldContain($"namespace {expectedNamespace};");
+        CodeOutputProjectSettings? settings = new CodeOutputProjectSettingsManager(
+            new NullCodeGenLogger(),
+            new FixedProjectDirectoryProvider(Path.Combine(projectDirectory, "Content", "GumProject") + Path.DirectorySeparatorChar))
+            .TryLoadSettingsForProject();
+        settings!.RootNamespace.ShouldBe(expectedNamespace);
+    }
+
     [Fact]
     public void Create_Stride_ShouldTargetPlainNet10SoTheCpuRenderPathRuns()
     {

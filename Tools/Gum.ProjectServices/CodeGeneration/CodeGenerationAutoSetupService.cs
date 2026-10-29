@@ -186,10 +186,6 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
             }
         }
 
-        string csprojFileName = Path.GetFileNameWithoutExtension(csprojPath);
-        return csprojFileName
-            .Replace(".", "_")
-            .Replace("-", "_")
-            .Replace(" ", "_");
+        return NameRules.ToCSharpIdentifier(Path.GetFileNameWithoutExtension(csprojPath));
     }
 }
