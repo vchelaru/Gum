@@ -50,7 +50,7 @@ Hot reload matches each screen or component your game is showing to the project 
 
 An instance of a deleted component inside a screen or another component is treated differently. The tool keeps the instance in the file, and a restarted game would not create it, so Gum removes the instance and its children from the running UI to match. It reports this once as well, for example `Hot reload: 'Card1' in 'Main' is a 'Card', which is not in the project any more`.
 
-An instance whose component was renamed, moved to another folder, or changed to another type is rebuilt, since its visual is made from the new component. The running tree is right, but code references and Forms handlers you held on the old visual are stale. Gum reports this once per pair of components in each reload, for example `Hot reload: 'Card1' in 'Main' is now a 'Card2' (was 'Card')`. The removal and the rebuild are also issues in the result of [`HotReloadFinished`](#reacting-to-a-reload).
+An instance whose component was renamed, moved to another folder, or changed to another type is rebuilt, since its visual is made from the new component. The running tree is right, but code references and Forms handlers you held on the old visual are stale. Gum reports this once per pair of components in each reload, for example `Hot reload: 'Card1' in 'Main' is now a 'Card2' (was 'Card')`. The removal and the rebuild are also issues in the result of [`HotReloadFinished`](#reacting-to-a-reload). A custom runtime class you registered for a component name with `RegisterGueInstantiation` is not registered again for the new name, so an instance rebuilt after a rename keeps the old class until you restart.
 
 ### What Is Not Reloaded
 
