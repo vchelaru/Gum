@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using RaylibGum.Renderables;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
 using ShadowDusk.Compiler.Raylib;
@@ -249,6 +250,40 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         {
             RaylibShaderDefaults.Remove(shader);
             UnloadShader(shader);
+        }
+    }
+
+    // #7053: UseShadowDusk() registers the declared defaults itself, so a game no longer calls
+    // RaylibShaderDefaults.Set by hand after converting the shader.
+    [Fact]
+    public void Draw_UseShadowDusk_UnsetParametersReadTheirDeclaredDefaults()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "GumUseShadowDuskDefaults_" + Guid.NewGuid().ToString("N") + ".slang");
+        File.WriteAllText(path, Slang);
+        Shader shader = default;
+        try
+        {
+            Gum.GumServiceShadowDuskExtensions.UseShadowDusk(Gum.GumService.Default);
+            shader = (Shader)CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(path)!;
+
+            Color[] pixels = Draw(shader, _ => { });
+
+            foreach (Color pixel in pixels)
+            {
+                Math.Abs(pixel.R - 128).ShouldBeLessThan(3);   // Strength = 0.5
+                Math.Abs(pixel.G - 128).ShouldBeLessThan(3);   // Tint.y * 0.5 = 0.5
+                pixel.B.ShouldBe((byte)0);                     // Plain declares no default
+            }
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(path);
+            if (shader.Id != 0)
+            {
+                RaylibShaderDefaults.Remove(shader);
+                UnloadShader(shader);
+            }
         }
     }
 

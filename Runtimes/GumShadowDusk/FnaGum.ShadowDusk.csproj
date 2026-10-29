@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.FNA.ShadowDusk: the FNA build of the ShadowDusk shader package (see MonoGameGum.ShadowDusk.csproj).
+		It needs the fna submodule, like FnaGum.
+	-->
+	<PropertyGroup>
+		<PackageId>Gum.FNA.ShadowDusk</PackageId>
+		<DefineConstants>$(DefineConstants);FNA;XNALIKE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\fna\FNA.Core.csproj" PrivateAssets="All" />
+		<ProjectReference Include="..\..\MonoGameGum\FnaGum\FnaGum.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="build\Gum.FNA.ShadowDusk.targets" Pack="true" PackagePath="buildTransitive\Gum.FNA.ShadowDusk.targets" Visible="false" />
+	</ItemGroup>
+
+	<Import Project="..\RuntimePackage.Analyzers.props" />
+
+</Project>

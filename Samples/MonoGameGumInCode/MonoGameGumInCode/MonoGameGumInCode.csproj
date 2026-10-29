@@ -26,10 +26,6 @@
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
-    <!-- Runtime HLSL .fx/.slang compiler used by RenderTargetShaderScreen to build a post-process
-         shader at runtime without the content pipeline (issue #816). 0.19.0+ is required for the
-         .slang input frontend (ShadowDusk.Compiler.Slang.SlangFrontend). -->
-    <PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
@@ -39,6 +35,9 @@
          Polygon, gradients) for the shape demo screens. As of Apos.Shapes 0.7.2+ the shader is
          embedded in the assembly, so no separate content copy is needed. -->
     <ProjectReference Include="..\..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+    <!-- Runtime .fx/.slang shader loading for SourceShaderFile (GumService.UseShadowDusk), so
+         RenderTargetShaderScreen builds post-process shaders without the content pipeline (#816, #7053). -->
+    <ProjectReference Include="..\..\..\Runtimes\GumShadowDusk\MonoGameGum.ShadowDusk.csproj" />
   </ItemGroup>
   <!-- In-process automation (scripted Gum input, NDJSON runner, off-screen window). Debug only, so it
        never ships to players. The launch command is at the top of Automation/smoke.ndjson. -->

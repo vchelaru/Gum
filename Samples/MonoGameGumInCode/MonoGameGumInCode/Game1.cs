@@ -69,13 +69,11 @@ namespace MonoGameGumInCode
             CustomSetPropertyOnRenderable.InMemoryFontCreator =
                 new KernSmithFontCreator(GraphicsDevice);
 
-            // Issue #3206: Gum core ships no shader loader, so the app registers a resolver that
-            // turns a ContainerRuntime.SourceShaderFile (.fx path) into a platform Effect. Here it
-            // compiles the .fx at runtime via ShadowDusk (see RenderTargetShaderScreen). With no
-            // resolver registered, SourceShaderFile is a graceful no-op (the container renders
+            // Gum core ships no shader loader. The Gum.MonoGame.ShadowDusk package registers one that
+            // compiles a ContainerRuntime.SourceShaderFile (.fx or .slang path) at runtime (#3206, #7053).
+            // With no resolver registered, SourceShaderFile is a graceful no-op (the container renders
             // unshaded), matching how a missing texture degrades.
-            CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
-                path => RenderTargetShaderScreen.CompileEffectFromFile(path);
+            GumService.Default.UseShadowDusk();
 
             // Demo the auto-fit helpers — flip via the Zoom/Expand buttons in the nav strip.
             GumService.Default.EnableZoomToWindow();
