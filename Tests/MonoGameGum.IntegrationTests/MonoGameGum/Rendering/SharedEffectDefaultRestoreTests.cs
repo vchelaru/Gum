@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Gum.GueDeriving;
+using MonoGameGum.TestsCommon;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
@@ -271,21 +272,19 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         setsBoth.Set("Vec", ShaderParameterValue.FromVector2(1f, 0f));
         ShaderParameterCollection setsNothing = new();
 
-        for (int i = 0; i < 10; i++)
+        // Allocation noise on a busy runner (tiered JIT, test host work on this thread) can land in one
+        // round; a real per-draw allocation lands in every round, so the minimum is what must be zero.
+        long[] rounds = new long[5];
+        for (int round = 0; round < rounds.Length; round++)
         {
-            Renderer.ApplyShaderParameters(setsBoth, effect);
-            Renderer.ApplyShaderParameters(setsNothing, effect);
+            rounds[round] = AllocationMeasurer.Measure(() =>
+            {
+                Renderer.ApplyShaderParameters(setsBoth, effect);
+                Renderer.ApplyShaderParameters(setsNothing, effect);
+            }, warmupIterations: 200, measuredIterations: 1000).TotalBytes;
         }
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < 1000; i++)
-        {
-            Renderer.ApplyShaderParameters(setsBoth, effect);
-            Renderer.ApplyShaderParameters(setsNothing, effect);
-        }
-        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
-
-        allocated.ShouldBe(0);
+        rounds.Min().ShouldBe(0, $"bytes allocated per round of 1000 draws: {string.Join(", ", rounds)}");
     }
 
     private static Effect CompileDefaultsEffect(GraphicsDevice gd) => CompileEffect(gd, DefaultsSlang);
