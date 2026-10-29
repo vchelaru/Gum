@@ -1526,7 +1526,7 @@ public abstract class TextBoxBase :
     }
 
     // Widens a selection so neither edge is between the halves of a character.
-    internal static void ExpandToWholeCharacters(string? text, ref int start, ref int length)
+    private static void ExpandToWholeCharacters(string? text, ref int start, ref int length)
     {
         if (IsInsideCharacter(text, start))
         {
@@ -1537,6 +1537,17 @@ public abstract class TextBoxBase :
         {
             length++;
         }
+    }
+
+    // The selected range of text with neither edge between the halves of a character. Selection delete,
+    // Copy and Cut all read the selection through it, so what is copied is what is removed.
+    internal static (int Start, int Length) GetWholeCharacterSelection(string? text, int selectionStart, int selectionLength)
+    {
+        int textLength = text?.Length ?? 0;
+        int start = System.Math.Max(0, System.Math.Min(selectionStart, textLength));
+        int length = System.Math.Max(0, System.Math.Min(selectionLength, textLength - start));
+        ExpandToWholeCharacters(text, ref start, ref length);
+        return (start, length);
     }
 
     // The length to keep when cutting text to maxLength: a surrogate pair is dropped whole, not halved.
