@@ -53,9 +53,9 @@ public class TextBox : TextBoxBase
         set
         {
             bool isChange = value != Text;
-            if (isChange && value?.Length > MaxLength)
+            if (isChange)
             {
-                value = value.Substring(0, MaxLength.Value);
+                value = TruncateTextToMaxLength(value);
             }
 
             _textSetInCode.Record(value, translate: true);
@@ -82,9 +82,9 @@ public class TextBox : TextBoxBase
     public void SetTextNoTranslate(string? value)
     {
         bool isChange = value != Text;
-        if (isChange && value?.Length > MaxLength)
+        if (isChange)
         {
-            value = value.Substring(0, MaxLength.Value);
+            value = TruncateTextToMaxLength(value);
         }
 
         // Typing, paste and delete come through here, so user input survives RefreshStyles too.
@@ -306,10 +306,8 @@ public class TextBox : TextBoxBase
             }
             else
             {
-                // A caret inside a CRLF (a programmatic CaretIndex) removes the whole break.
-                var removeEnd = IsInsideCrlf(Text, caretIndex) ? caretIndex + 1 : caretIndex;
-                var whereToRemoveFrom = StepLeft(Text, removeEnd);
-                var lengthToRemove = removeEnd - whereToRemoveFrom;
+                // A caret inside a CRLF or an emoji (a programmatic CaretIndex) removes the whole character.
+                var (whereToRemoveFrom, lengthToRemove) = GetBackspaceRange(Text, caretIndex);
                 // Move the caret left before removing from the text. Otherwise, if the
                 // caret is at the end of the word, modifying the word will shift the caret to
                 // the left, and that could cause it to shift over two times.
@@ -331,12 +329,10 @@ public class TextBox : TextBoxBase
         else if (Text is { } text && caretIndex < text.Length)
         {
             // Use SetTextFromUi because this is user-initiated editing
-            // A caret inside a CRLF (a programmatic CaretIndex) removes the whole break.
-            if (IsInsideCrlf(text, caretIndex))
-            {
-                caretIndex--;
-            }
-            SetTextFromUi(text.Remove(caretIndex, StepRight(text, caretIndex) - caretIndex));
+            // A caret inside a CRLF or an emoji (a programmatic CaretIndex) removes the whole character.
+            var (whereToRemoveFrom, lengthToRemove) = GetDeleteRange(text, caretIndex);
+            caretIndex = whereToRemoveFrom;
+            SetTextFromUi(text.Remove(whereToRemoveFrom, lengthToRemove));
             RefreshCaretAfterEdit();
         }
     }
@@ -417,16 +413,8 @@ public class TextBox : TextBoxBase
         {
             lengthToRemove = text.Length - selectionStart;
         }
-        // An edge of the selection inside a CRLF takes the whole break, so no half of one is left behind.
-        if (IsInsideCrlf(text, selectionStart))
-        {
-            selectionStart--;
-            lengthToRemove++;
-        }
-        if (IsInsideCrlf(text, selectionStart + lengthToRemove))
-        {
-            lengthToRemove++;
-        }
+        // An edge of the selection inside a CRLF or an emoji takes the whole character, so no half is left behind.
+        ExpandToWholeCharacters(text, ref selectionStart, ref lengthToRemove);
         // Use SetTextFromUi because this is user-initiated editing
         SetTextFromUi(text.Remove(selectionStart, lengthToRemove));
         CaretIndex = selectionStart;
@@ -463,7 +451,7 @@ public class TextBox : TextBoxBase
     {
         if (text != null && MaxLength is int maxLength && text.Length > maxLength)
         {
-            text = text.Substring(0, maxLength);
+            text = text.Substring(0, GetTruncatedLength(text, maxLength));
         }
 
         return text;
