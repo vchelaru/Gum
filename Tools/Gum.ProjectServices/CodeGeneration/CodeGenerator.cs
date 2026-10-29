@@ -475,11 +475,13 @@ public class CodeGenerator
     /// <summary>
     /// Appends the attribute that runs a static registration method at startup. Unity compiles
     /// [ModuleInitializer] but never calls it, so Unity builds (which define UNITY_5_3_OR_NEWER)
-    /// get Unity's earliest startup hook instead. The same file works in both kinds of project.
+    /// get Unity's earliest startup hook instead. An assembly with Unity's "No Engine References" still
+    /// defines UNITY_5_3_OR_NEWER but cannot see UnityEngine, so it defines GUM_NO_UNITY_ENGINE to take the
+    /// [ModuleInitializer] branch. The same file works in all three kinds of project.
     /// </summary>
     private static void AppendStartupInitializerAttribute(StringBuilder builder, string tabs, string moduleInitializerAttribute)
     {
-        builder.AppendLine(tabs + "#if UNITY_5_3_OR_NEWER");
+        builder.AppendLine(tabs + "#if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE");
         builder.AppendLine(tabs + "[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]");
         builder.AppendLine(tabs + "#else");
         builder.AppendLine(tabs + moduleInitializerAttribute);
@@ -1364,6 +1366,14 @@ public class CodeGenerator
                         hasGetter = false;
                     }
 
+                    // A shader parameter is no property of the runtime: it is only reachable by name through
+                    // SetProperty, so the exposed property is write-only.
+                    bool isShaderParameter = !string.IsNullOrEmpty(rootVariable?.ShaderParameter);
+                    if (isShaderParameter)
+                    {
+                        hasGetter = false;
+                    }
+
                     // See if this is an exposed variable:
                     InstanceSave? instance = context.Instance;
                     ElementSave? instanceElement = null;
@@ -1398,6 +1408,10 @@ public class CodeGenerator
                     {
                         var rightSide = $"{sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
+                    }
+                    else if (isShaderParameter)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value);");
                     }
                     else
                     {

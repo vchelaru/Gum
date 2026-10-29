@@ -86,6 +86,7 @@ The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path th
 | Extension | Action |
 |-----------|--------|
 | Any file a container's `SourceShaderFile` names (any extension) | Drop the cached effect and rebuild the shown element if any element references the shader (`FileChangeReactionLogic.IsShaderFile`: named by a `SourceShaderFile` variable; `slang`/`fx` also count, so an unreferenced one stays untouched) |
+| A file a shader `#include`s (any extension, nested too) | Same reaction for each recorded shader that an element references. The canvas's `RenderTargetShaderResolver` records what each shader read in `IShaderIncludeMap` when it compiles (a failed compile too); `IsReferencedFile` admits those files so the watcher queues them. An entry lives until that shader compiles again. An extensionless include is not seen by the watcher |
 | Any other file (images, svg, lottie json, `achx`, `fnt`, a decoder plugin's format), except the types below that keep their own reaction | If an element references it (see below) or the canvas cached it, drop the whole `LoaderManager` cache and reload the canvas and Variables tab |
 | `gusx`, `gutx`, `gucx` (and JSON siblings) | Reload element from disk, refresh tree + wireframe, then re-apply the references that read it (see below) |
 | `gumx` | Reload entire project |

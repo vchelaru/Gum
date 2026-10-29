@@ -141,6 +141,10 @@ Landmine: `CompositeMemberLogic.GroupTriples` matches channels by finding the **
 
 Landmine: `CompositeInstanceMember.HandleCustomSet` writes **every** channel on every commit, but skips a channel whose decomposed value already equals its current value — this guard matters. It's harmless to omit for Color (an edit there is always "set all of R/G/B explicitly"), but a composite whose channels carry inherit-vs-explicit semantics via nullability (e.g. corner radius's per-corner overrides, where `null` means "inherit the uniform value") would otherwise force-write `null` onto every hidden/untouched channel on every commit, silently flipping it from inherited to explicitly-set and corrupting `IsDefault` bookkeeping for a value nobody touched. "Linked vs. unlinked" for such a composite isn't a stored flag either — it's derived purely from whether the override channels currently resolve to null, recomputed from `ChannelMembers` on every `Compose`.
 
+### Shader Parameter Rows: Expose
+
+A scalar shader parameter row (`VariableGridEntry.ShaderBinding`) is not saved until something names it, so `VariableGridEntry.ExposeVariable` first adds a marked `SetsValue = false` placeholder (`ShaderParameterVariableBinding.AddNamedPlaceholder`) because `ExposeVariableService` and `ObjectFinder.GetRootVariable` only find saved entries. It removes the placeholder again if the name prompt is cancelled. The generated exposed property is write-only and goes through `SetProperty` (`CodeGenerator`, `isShaderParameter`), since the runtime has no property of that name.
+
 ---
 
 ## Category Copy/Paste (whole-group values)

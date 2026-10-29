@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
-using ShadowDusk.Compiler;
-using ShadowDusk.Compiler.Slang;
+using Gum.Managers;
 using ShadowDusk.Core;
+using ToolsUtilities;
 
 namespace EditorTabPlugin_XNA.Services;
 
@@ -29,10 +29,11 @@ public static class RenderTargetShaderResolver
     /// <summary>
     /// A resolver that compiles for <paramref name="target"/>, for the head to register. With a
     /// <paramref name="reportError"/>, a shader that stops compiling keeps its last good effect and the
-    /// error goes to the callback instead of being thrown.
+    /// error goes to the callback instead of being thrown. With <paramref name="includes"/>, the files each
+    /// shader <c>#include</c>s are recorded there, so an edit of one reloads the shader.
     /// </summary>
-    public static Func<string, object?> For(PlatformTarget target, Action<string>? reportError = null) =>
-        path => Resolve(path, target, reportError);
+    public static Func<string, object?> For(PlatformTarget target, Action<string>? reportError = null, IShaderIncludeMap? includes = null) =>
+        path => Resolve(path, target, reportError, includes);
 
     /// <summary>
     /// Compiles the <c>.fx</c>/<c>.slang</c> file at <paramref name="absolutePath"/> (already made
@@ -46,7 +47,7 @@ public static class RenderTargetShaderResolver
     /// way: GraphicsDevice not ready, file missing, ShadowDusk conversion/compile errors, and KNI
     /// rejecting the compiled bytecode (or a native compiler binary failing to load).
     /// </summary>
-    public static object? Resolve(string absolutePath, PlatformTarget target, Action<string>? reportError = null)
+    public static object? Resolve(string absolutePath, PlatformTarget target, Action<string>? reportError = null, IShaderIncludeMap? includes = null)
     {
         // The GraphicsDevice only exists once the wireframe is initialized; the resolver is invoked
         // during rendering, so it is normally present.
@@ -68,7 +69,7 @@ public static class RenderTargetShaderResolver
         // resulting exception propagates and is surfaced by the caller just like a compile error.
         return CreateKeepingLastGood(
             absolutePath,
-            () => Compile(ResolveFxSource(absolutePath), target, absolutePath),
+            () => CompileFile(absolutePath, target, includes),
             bytecode => new Effect(graphicsDevice, bytecode),
             reportError);
     }
@@ -111,46 +112,29 @@ public static class RenderTargetShaderResolver
 
     /// <summary>
     /// Compiles <paramref name="source"/> for <paramref name="target"/> and returns the bytecode,
-    /// or throws naming <paramref name="describedPath"/> and every compiler error.
+    /// or throws naming <paramref name="describedPath"/> and every compiler error. <paramref name="describedPath"/>
+    /// is also what a relative <c>#include</c> resolves against, and each file included is passed to
+    /// <paramref name="onInclude"/>.
     /// </summary>
-    public static byte[] Compile(string source, PlatformTarget target, string describedPath)
-    {
-        EffectCompiler compiler = new EffectCompiler();
-        Result<CompiledShader, ShaderError[]> result = compiler.Compile(source, new CompilerOptions { Target = target });
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(
-                "ShadowDusk could not compile the render-target shader '" + describedPath + "':\n" +
-                string.Join("\n", result.Error.Select(error => error.Message)));
-        }
-        return result.Value.Data;
-    }
+    public static byte[] Compile(string source, PlatformTarget target, string describedPath, Action<string>? onInclude = null) =>
+        ShaderSourceCompiler.Compile(source, target, describedPath, onInclude);
 
     /// <summary>
-    /// Returns ordinary <c>.fx</c> effect text for <paramref name="absolutePath"/>. A <c>.slang</c>
-    /// file is converted first via ShadowDusk's Slang frontend (Slang has no technique/pass concept,
-    /// so it can't go through <see cref="EffectCompiler.Compile"/> directly); every other extension
-    /// is assumed to already be <c>.fx</c> source and passed through unchanged.
+    /// Compiles the shader file at <paramref name="absolutePath"/> and records in <paramref name="includes"/> what it
+    /// <c>#include</c>d, even when the compile fails, so fixing a broken include reloads the shader.
     /// </summary>
-    private static string ResolveFxSource(string absolutePath)
+    public static byte[] CompileFile(string absolutePath, PlatformTarget target, IShaderIncludeMap? includes)
     {
-        string sourceText = File.ReadAllText(absolutePath);
-        if (!string.Equals(Path.GetExtension(absolutePath), SlangFrontend.Extension, StringComparison.OrdinalIgnoreCase))
+        List<FilePath> included = new List<FilePath>();
+        try
         {
-            return sourceText;
+            return Compile(
+                ShaderSourceCompiler.ReadFxSource(absolutePath), target, absolutePath,
+                includes == null ? null : path => included.Add(new FilePath(path)));
         }
-
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            sourceText,
-            new SlangConvertOptions { SourceName = absolutePath });
-
-        if (conversion.IsFailure)
+        finally
         {
-            throw new InvalidOperationException(
-                "ShadowDusk could not convert the Slang render-target shader '" + absolutePath + "':\n" +
-                string.Join("\n", conversion.Error.Select(error => error.Message)));
+            includes?.SetIncludes(new FilePath(absolutePath), included);
         }
-
-        return conversion.Value.FxText;
     }
 }

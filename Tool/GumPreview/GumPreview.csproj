@@ -151,6 +151,7 @@
 		     referenced so this host stays free of the tool's plugin assemblies. -->
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="PreviewSelectionMessage.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionFile.cs" Link="PreviewSelectionFile.cs" />
+		<Compile Include="..\EditorTabPlugin.Core\Services\ShaderSourceCompiler.cs" Link="ShaderSourceCompiler.cs" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />

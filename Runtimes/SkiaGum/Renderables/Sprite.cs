@@ -365,6 +365,59 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
     }
 
+    // The most a Point-sampled source rectangle is pulled in on each side, in texels.
+    private const float MaxPointSamplingInset = 1f / 64f;
+
+    /// <summary>
+    /// Draws <paramref name="sourceRectangle"/> of the Image or Texture into <paramref name="boundingRect"/>.
+    /// With Point (nearest) filtering the source rectangle is pulled in a fraction of a texel on every side so a
+    /// sample landing exactly on a texel boundary resolves to a texel inside the rectangle. At a half screen pixel the
+    /// first pixel center of every sprite lands exactly on the left (or top) edge of its source rectangle, and a
+    /// GPU surface (Ganesh, so Unity and the other SkiaGameRendering hosts) picked the texel just outside it,
+    /// leaving a one pixel seam between sprites drawn end to end (#7030). SkiaSharp's DrawImage and DrawBitmap
+    /// do not expose Skia's strict source-rectangle constraint, which would clamp this. Pulling in both sides keeps
+    /// the rectangle inside the image, and needs no direction for a flipped axis, which is drawn mirrored.
+    /// The inset is at most a quarter of a device pixel, so a heavily magnified texel never reaches past its
+    /// neighbor.
+    /// </summary>
+    private void DrawSourceRectangle(SKCanvas canvas, SKRect sourceRectangle, SKRect boundingRect, SKPaint paint)
+    {
+        if (Renderer.TextureFilter == SKFilterMode.Nearest)
+        {
+            float insetX = GetPointSamplingInset(canvas, sourceRectangle.Width, boundingRect.Width, 1, 0);
+            float insetY = GetPointSamplingInset(canvas, sourceRectangle.Height, boundingRect.Height, 0, 1);
+            sourceRectangle.Inflate(-insetX, -insetY);
+        }
+
+        if (Image != null)
+        {
+            canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
+        }
+        else
+        {
+            canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
+        }
+    }
+
+    private static float GetPointSamplingInset(SKCanvas canvas, float sourceLength, float destinationLength, float axisX, float axisY)
+    {
+        if (sourceLength <= 0 || destinationLength <= 0)
+        {
+            return 0;
+        }
+
+        // Device pixels per texel along this axis, including the camera zoom and any other canvas scale.
+        SKPoint onScreen = canvas.TotalMatrix.MapVector(axisX * destinationLength / sourceLength, axisY * destinationLength / sourceLength);
+        float pixelsPerTexel = MathF.Sqrt(onScreen.X * onScreen.X + onScreen.Y * onScreen.Y);
+        if (pixelsPerTexel <= 0 || float.IsNaN(pixelsPerTexel))
+        {
+            return 0;
+        }
+
+        // Never more than half a texel in total, whatever the scale.
+        return MathF.Min(MaxPointSamplingInset, MathF.Min(0.25f / pixelsPerTexel, sourceLength / 4f));
+    }
+
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         // Render-target pull (#3988): display the baked texture of the referenced container instead of
@@ -438,28 +491,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
                         right, 
                         bottom);
 
-                    if(Image != null)
-                    {
-                        canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
-                    }
-                    else
-                    {
-                        canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
-                    }
-
+                    DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint);
                 }
 
             }
             else
             {
-                if(Image != null)
-                {
-                    canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
-                }
-                else
-                {
-                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
-                }
+                DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint);
             }
 
         }
