@@ -439,6 +439,19 @@ public class FileCommands : IFileCommands
 
     public Task LoadProjectAsync(string fileName)
     {
+        // A path handed in from outside (the command line, the OS) is relative to the process's
+        // working directory. FilePath would resolve it against the tool's own folder instead (#7134).
+        if (!string.IsNullOrEmpty(fileName) && !Path.IsPathRooted(fileName))
+        {
+            fileName = Path.GetFullPath(fileName);
+        }
+
+        if (!string.IsNullOrEmpty(fileName) && !File.Exists(fileName))
+        {
+            // The load shows a dialog too, but an unattended run never answers it and the Output tab outlasts it.
+            _outputManager.AddError($"Project file not found: {fileName}");
+        }
+
         return _projectManager.LoadProjectAsync(fileName);
     }
 

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
@@ -71,6 +72,46 @@ public class FileCommandsTests : BaseTestClass
             Directory.Delete(_tempDirectory, recursive: true);
         }
         base.Dispose();
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_ResolvesARelativePathAgainstTheWorkingDirectory()
+    {
+        // The tool's FilePath would otherwise resolve it against the tool's own folder (#7134).
+        FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(), "SomeToolFolder") + Path.DirectorySeparatorChar;
+        FilePath? loaded = null;
+        _projectManager.Setup(p => p.LoadProjectAsync(It.IsAny<FilePath>()))
+            .Callback<FilePath>(f => loaded = f)
+            .Returns(Task.CompletedTask);
+        string relative = Path.Combine("Content", "GumProject", "GumProject.gumx");
+
+        await _fileCommands.LoadProjectAsync(relative);
+
+        loaded.ShouldBe(new FilePath(Path.GetFullPath(relative)));
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_LeavesAnAbsolutePathAlone()
+    {
+        FilePath? loaded = null;
+        _projectManager.Setup(p => p.LoadProjectAsync(It.IsAny<FilePath>()))
+            .Callback<FilePath>(f => loaded = f)
+            .Returns(Task.CompletedTask);
+        string absolute = Path.Combine(Path.GetTempPath(), "Some Game", "GumProject.gumx");
+
+        await _fileCommands.LoadProjectAsync(absolute);
+
+        loaded.ShouldBe(new FilePath(absolute));
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_ReportsInTheOutput_WhenTheProjectFileDoesNotExist()
+    {
+        string relative = Path.Combine("NoSuchFolder", "Missing.gumx");
+
+        await _fileCommands.LoadProjectAsync(relative);
+
+        _errorCalls.ShouldContain(e => e.Contains(Path.GetFullPath(relative)) && e.Contains("not found"));
     }
 
     [Fact]
