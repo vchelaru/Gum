@@ -1,4 +1,4 @@
-using Gum.Bundle;
+﻿using Gum.Bundle;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -94,6 +94,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
             errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
             errors.AddRange(GetFontRangeEntryErrors(project));
+            errors.AddRange(GetMissingComponentBaseTypeErrors(project));
         }
         finally
         {
@@ -121,6 +122,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
             List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
             errors.AddRange(GetFontRangeEntryErrors(project));
+            errors.AddRange(GetMissingComponentBaseTypeErrors(project));
             return errors;
         }
         finally
@@ -1368,6 +1370,28 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 Code = "GUM0014",
                 Severity = ErrorSeverity.Error,
                 Message = $"Circular base type: {path}. These elements are treated as having no base type until the cycle is broken."
+            });
+        }
+
+        return errors;
+    }
+
+    // GUM0015: a component with no BaseType loads fine, but codegen then writes a class with no base class.
+    // Screens and standards legitimately have none.
+    // It is a project-level row, so the Errors tab lists it whichever element is selected.
+    private static List<ErrorResult> GetMissingComponentBaseTypeErrors(GumProjectSave project)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+
+        foreach (ComponentSave elementSave in project.Components.Where(component => string.IsNullOrWhiteSpace(component.BaseType)))
+        {
+            errors.Add(new ErrorResult
+            {
+                ElementName = elementSave.Name,
+                Code = "GUM0015",
+                Severity = ErrorSeverity.Error,
+                Message = $"Component {elementSave.Name} has no BaseType, so generated code gives its class no base class. " +
+                    "In the Gum tool, pick a Base Type (for example Container) in the BaseType dropdown, or set <BaseType> in its .gucx file to Container or to the component it derives from."
             });
         }
 

@@ -102,3 +102,23 @@ To resolve it, change or clear the `Base Type` of one element in the loop, eithe
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
+
+### Component With No Base Type (GUM0015)
+
+A component file with an empty `<BaseType>` loads, but code generation then writes a class with no base class. `gumcli check` reports **GUM0015** as an error on each such component. Screens and standard elements are not checked, since they legitimately have no `Base Type`.
+
+To resolve it, open the component in the Gum tool and pick a `Base Type` (for example `Container`) in the `Base Type` dropdown, or set `<BaseType>` in the component's `.gucx` file to `Container` or to the component it derives from.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+### Missing Base Instance (GUM0016)
+
+A component that derives from another component must list each of the base's instances with `<DefinedByBase>true</DefinedByBase>`. When a hand-written or out-of-date file leaves one out, Gum adds the instance in memory at load, so nothing breaks, but the file on disk is stale. `gumcli check` reports **GUM0016** as a warning naming the missing instance.
+
+To resolve it, add an `<Instance>` with that name and `<DefinedByBase>true</DefinedByBase>` to the file, or run `gumcli resave` to write it.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}

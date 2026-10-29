@@ -378,16 +378,22 @@ namespace Gum.DataTypes
         /// Repaired instances are inserted where a correct file has them: base instances in the base's order ahead of the element's own.
         /// </summary>
         /// <returns>True if any instance was added. A second call returns false.</returns>
-        public static bool RepairMissingDefinedByBaseInstances(this GumProjectSave gumProjectSave)
+        public static bool RepairMissingDefinedByBaseInstances(this GumProjectSave gumProjectSave) =>
+            gumProjectSave.RepairMissingDefinedByBaseInstances(null);
+
+        /// <inheritdoc cref="RepairMissingDefinedByBaseInstances(GumProjectSave)"/>
+        /// <param name="gumProjectSave">The project to repair.</param>
+        /// <param name="repairs">When not null, receives one entry per instance added (#7059), so a caller can report that the file on disk was out of date.</param>
+        public static bool RepairMissingDefinedByBaseInstances(this GumProjectSave gumProjectSave, List<MissingBaseInstanceRepair>? repairs)
         {
             // The project is searched directly, not through ObjectFinder, because the headless loader and
             // the runtimes call Initialize before (or without) pointing ObjectFinder at the project.
-            bool wasAnythingAdded = RepairMissingBaseInstances(gumProjectSave.Screens);
-            wasAnythingAdded |= RepairMissingBaseInstances(gumProjectSave.Components);
+            bool wasAnythingAdded = RepairMissingBaseInstances(gumProjectSave.Screens, repairs);
+            wasAnythingAdded |= RepairMissingBaseInstances(gumProjectSave.Components, repairs);
             return wasAnythingAdded;
         }
 
-        private static bool RepairMissingBaseInstances<T>(List<T> elements) where T : ElementSave
+        private static bool RepairMissingBaseInstances<T>(List<T> elements, List<MissingBaseInstanceRepair>? repairs) where T : ElementSave
         {
             Dictionary<string, ElementSave>? elementsByName = null;
             bool wasAnythingAdded = false;
@@ -411,6 +417,7 @@ namespace Gum.DataTypes
                 // Walk up the whole chain: a base that is itself missing instances still passes down
                 // everything its own bases define. The visited set stops a circular BaseType.
                 List<InstanceSave>? inherited = null;
+                Dictionary<InstanceSave, string>? ownerNames = repairs != null ? new Dictionary<InstanceSave, string>() : null;
                 HashSet<ElementSave> visited = new HashSet<ElementSave> { element };
                 ElementSave current = element;
                 while (!string.IsNullOrWhiteSpace(current.BaseType) &&
@@ -420,6 +427,13 @@ namespace Gum.DataTypes
                     // Higher ancestors go first, so the list reads grandparent, parent, as a correct file would.
                     inherited ??= new List<InstanceSave>();
                     inherited.InsertRange(0, baseElement.Instances);
+                    if (ownerNames != null)
+                    {
+                        foreach (InstanceSave baseInstance in baseElement.Instances)
+                        {
+                            ownerNames[baseInstance] = baseElement.Name;
+                        }
+                    }
                     current = baseElement;
                 }
 
@@ -448,6 +462,7 @@ namespace Gum.DataTypes
                         element.Instances.Insert(insertIndex, instance);
                         insertIndex++;
                         wasAnythingAdded = true;
+                        repairs?.Add(new MissingBaseInstanceRepair(element, instanceInBase.Name, instanceInBase.BaseType, ownerNames![instanceInBase]));
                     }
                 }
             }
@@ -696,4 +711,11 @@ namespace Gum.DataTypes
             return lastDotIndex < 0 ? variableName : variableName.Substring(lastDotIndex + 1);
         }
     }
+
+    /// <summary>One instance a derived element's file did not list, which the loader added as DefinedByBase (#6597, #7059).</summary>
+    /// <param name="Element">The derived screen or component whose file was out of date.</param>
+    /// <param name="InstanceName">The instance's name.</param>
+    /// <param name="InstanceBaseType">The instance's base type.</param>
+    /// <param name="OwnerName">The name of the base element that owns the instance.</param>
+    public record MissingBaseInstanceRepair(ElementSave Element, string InstanceName, string InstanceBaseType, string OwnerName);
 }
