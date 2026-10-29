@@ -222,13 +222,10 @@ public class HotReloadMatchesRestartTests : BaseTestClass
     }
 
     [Fact]
-    public void ScreenBaseSwitchedBetweenScreensWithTheSameContent_IsClean()
-    {
-        HotReloadResult result = Edit(Screens("BaseA", baseBLikeA: true), Screens("BaseB", baseBLikeA: true));
-
-        result.IsClean.ShouldBeTrue();
-        SweepWorld.Describe(_world.Screen).ShouldBe(_world.DescribeAFreshLoad());
-    }
+    public void ScreenBaseSwitchedBetweenScreensWithTheSameContent_IsStillListed() =>
+        ShouldHaveOneIssue(
+            Edit(Screens("BaseA", baseBLikeA: true), Screens("BaseB", baseBLikeA: true)),
+            HotReloadIssueKind.ComponentBaseTypeChanged);
 
     [Fact]
     public void ScreenBaseAddedAndRemoved_AreListed()
@@ -276,21 +273,17 @@ public class HotReloadMatchesRestartTests : BaseTestClass
             HotReloadIssueKind.BaseElementMissing);
 
     [Fact]
-    public void BaseRenamedAndTheDerivedComponentUpdated_IsListedAsABaseTypeChange()
-    {
-        // The renamed base has the same content, so the visuals are not stale.
-        HotReloadResult result = Edit(new SweepSpec(), new SweepSpec { BaseName = "Widgets/Base2", WidgetBase = "Widgets/Base2" });
-
-        result.IsClean.ShouldBeTrue();
-        SweepWorld.Describe(_world.Screen).ShouldBe(_world.DescribeAFreshLoad());
-    }
+    public void BaseRenamedAndTheDerivedComponentUpdated_IsListedAsABaseTypeChange() =>
+        ShouldHaveOneIssue(
+            Edit(new SweepSpec(), new SweepSpec { BaseName = "Widgets/Base2", WidgetBase = "Widgets/Base2" }),
+            HotReloadIssueKind.ComponentBaseTypeChanged);
 
     [Fact]
     public void BaseReplacedByAComponentThatDoesNotExistYet_IsListedUntilItIsAdded()
     {
         HotReloadResult first = Edit(new SweepSpec(), new SweepSpec { WidgetBase = "Widgets/NewBase" });
 
-        ShouldHaveOneIssue(first, HotReloadIssueKind.BaseElementMissing);
+        ShouldHaveOneIssue(first, HotReloadIssueKind.ComponentBaseTypeChanged);
 
         SaveAndReload(new SweepSpec { WidgetBase = "Widgets/NewBase", WithNewBase = true });
 
