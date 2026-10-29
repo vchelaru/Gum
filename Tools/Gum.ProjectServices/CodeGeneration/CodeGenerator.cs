@@ -5213,7 +5213,7 @@ public class CodeGenerator
                     foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
                     {
                         context.StringBuilder.AppendLine(context.Tabs + $"new System.Numerics.Vector2(" +
-                            $"{point.X.ToString(CultureInfo.InvariantCulture)}f, {point.Y.ToString(CultureInfo.InvariantCulture)}f),");
+                            $"{FloatToCode(point.X)}, {FloatToCode(point.Y)}),");
                     }
                     context.TabCount--;
                     context.StringBuilder.AppendLine(context.Tabs + "});");
