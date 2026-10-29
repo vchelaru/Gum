@@ -48,7 +48,8 @@ internal static class ShaderSourceCompiler
     /// Compiles <paramref name="source"/> for <paramref name="target"/> and returns the bytecode, or throws
     /// naming <paramref name="sourcePath"/> and every compiler error. <paramref name="sourcePath"/> is the
     /// shader's own path, which is what a relative <c>#include</c> resolves against. Each file the
-    /// shader includes, nested includes too, is passed to <paramref name="onInclude"/> as ShadowDusk reads it.
+    /// shader includes, nested includes too, is passed to <paramref name="onInclude"/> as ShadowDusk looks for it,
+    /// a file that does not exist yet included, so creating it later can be noticed.
     /// </summary>
     public static byte[] Compile(string source, PlatformTarget target, string sourcePath, Action<string>? onInclude = null)
     {
@@ -59,7 +60,7 @@ internal static class ShaderSourceCompiler
             {
                 Target = target,
                 SourceFileName = sourcePath,
-                IncludeResolver = new ReportingIncludeResolver(onInclude),
+                IncludeResolver = new ReportingIncludeResolver(sourcePath, onInclude),
             });
         if (result.IsFailure)
         {
@@ -72,15 +73,19 @@ internal static class ShaderSourceCompiler
 
     /// <summary>
     /// ShadowDusk's own file-system resolution (the same one it uses with no resolver set), reporting each
-    /// file it resolves. ShadowDusk lists no files read in its result, so this is the only way to learn them.
+    /// file it looks for. ShadowDusk lists no files read in its result, so this is the only way to learn them.
+    /// A file that is not found is reported at the place ShadowDusk looks first, next to the file that includes it,
+    /// so a shader that stopped compiling because an include went missing reloads when the file comes back.
     /// </summary>
     private sealed class ReportingIncludeResolver : IIncludeResolver
     {
         private readonly FileSystemIncludeResolver _fileSystem = new FileSystemIncludeResolver();
+        private readonly string _sourcePath;
         private readonly Action<string>? _onInclude;
 
-        public ReportingIncludeResolver(Action<string>? onInclude)
+        public ReportingIncludeResolver(string sourcePath, Action<string>? onInclude)
         {
+            _sourcePath = sourcePath;
             _onInclude = onInclude;
         }
 
@@ -89,11 +94,26 @@ internal static class ShaderSourceCompiler
         {
             Result<IncludeResolvedFile, ShaderError> resolved =
                 _fileSystem.Resolve(includePath, includingFilePath, additionalSearchPaths);
-            if (!resolved.IsFailure)
+            string? reported = resolved.IsFailure ? NextToIncluder(includePath, includingFilePath) : resolved.Value.FilePath;
+            if (reported != null)
             {
-                _onInclude?.Invoke(resolved.Value.FilePath);
+                _onInclude?.Invoke(reported);
             }
             return resolved;
+        }
+
+        private string? NextToIncluder(string includePath, string? includingFilePath)
+        {
+            try
+            {
+                string folder = Path.GetDirectoryName(includingFilePath ?? _sourcePath) ?? "";
+                return Path.GetFullPath(Path.Combine(folder, includePath));
+            }
+            catch (ArgumentException)
+            {
+                // A spelling that is no path cannot be created later either.
+                return null;
+            }
         }
     }
 }

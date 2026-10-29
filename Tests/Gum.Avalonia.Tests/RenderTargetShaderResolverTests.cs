@@ -164,6 +164,108 @@ public class RenderTargetShaderResolverTests
         }
     }
 
+    private static string NewFolder()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "Gum7034i_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(Path.Combine(folder, "lib"));
+        return folder;
+    }
+
+    [Fact]
+    public void CompileFile_RecordsAnIncludeThatIsMissing_SoCreatingItLaterReloadsTheShader()
+    {
+        string folder = NewFolder();
+        try
+        {
+            string shaderPath = Path.Combine(folder, "Grayscale.fx");
+            File.WriteAllText(shaderPath, GrayscaleFxIncluding("Luma.hlsli"));
+            ShaderIncludeMap includes = new ShaderIncludeMap();
+
+            InvalidOperationException error = Should.Throw<InvalidOperationException>(
+                () => RenderTargetShaderResolver.CompileFile(shaderPath, PlatformTarget.OpenGL, includes));
+
+            error.Message.ShouldContain("Cannot find include");
+            includes.GetShadersIncluding(new FilePath(Path.Combine(folder, "Luma.hlsli")))
+                .ShouldBe(new[] { new FilePath(shaderPath) });
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompileFile_RecordsAMissingNestedInclude_NextToTheIncludeThatNamesIt()
+    {
+        string folder = NewFolder();
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "Luma.hlsli"), "#include \"lib/Weights.hlsli\"\n");
+            string shaderPath = Path.Combine(folder, "Grayscale.fx");
+            File.WriteAllText(shaderPath, GrayscaleFxIncluding("Luma.hlsli"));
+            ShaderIncludeMap includes = new ShaderIncludeMap();
+
+            Should.Throw<InvalidOperationException>(
+                () => RenderTargetShaderResolver.CompileFile(shaderPath, PlatformTarget.OpenGL, includes));
+
+            includes.IsIncluded(new FilePath(Path.Combine(folder, "Luma.hlsli"))).ShouldBeTrue();
+            includes.IsIncluded(new FilePath(Path.Combine(folder, "lib", "Weights.hlsli"))).ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompileFile_KeepsTheIncludesOfAShaderWhoseIncludeWasDeleted()
+    {
+        string folder = NewFolder();
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "Luma.hlsli"), "#include \"lib/Weights.hlsli\"\n");
+            File.WriteAllText(Path.Combine(folder, "lib", "Weights.hlsli"), LumaHlsli);
+            string shaderPath = Path.Combine(folder, "Grayscale.fx");
+            File.WriteAllText(shaderPath, GrayscaleFxIncluding("Luma.hlsli"));
+            ShaderIncludeMap includes = new ShaderIncludeMap();
+            RenderTargetShaderResolver.CompileFile(shaderPath, PlatformTarget.OpenGL, includes);
+            File.Delete(Path.Combine(folder, "lib", "Weights.hlsli"));
+
+            Should.Throw<InvalidOperationException>(
+                () => RenderTargetShaderResolver.CompileFile(shaderPath, PlatformTarget.OpenGL, includes));
+
+            // Creating the file again has to reload the shader.
+            includes.IsIncluded(new FilePath(Path.Combine(folder, "lib", "Weights.hlsli"))).ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompileFile_ForgetsAnInclude_OnceTheShaderCompilesWithoutIt()
+    {
+        string folder = NewFolder();
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "Luma.hlsli"), LumaHlsli);
+            string shaderPath = Path.Combine(folder, "Grayscale.fx");
+            File.WriteAllText(shaderPath, GrayscaleFxIncluding("Luma.hlsli"));
+            ShaderIncludeMap includes = new ShaderIncludeMap();
+            RenderTargetShaderResolver.CompileFile(shaderPath, PlatformTarget.OpenGL, includes);
+
+            File.WriteAllText(shaderPath, GrayscaleFx.Replace("float3(0.299, 0.587, 0.114)", "float3(1, 0, 0)"));
+            RenderTargetShaderResolver.CompileFile(shaderPath, PlatformTarget.OpenGL, includes);
+
+            includes.IsIncluded(new FilePath(Path.Combine(folder, "Luma.hlsli"))).ShouldBeFalse();
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
     [Fact]
     public void Compile_NamesTheFileAndTheErrors_WhenTheShaderIsInvalid()
     {
