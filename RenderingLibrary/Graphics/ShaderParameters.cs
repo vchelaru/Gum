@@ -214,10 +214,13 @@ public class ShaderParameterCollection
 
 /// <summary>
 /// Remembers which parameter values Gum last wrote to one shared effect or shader, so the next
-/// container that draws with it can put back to zero the ones it did not set itself. Values the
-/// application wrote to the effect directly are not in the history, so they are left alone, except that once
-/// Gum has written a name, a later container that does not set it resets it to zero even if the application
-/// wrote that name in between.
+/// container that draws with it can put back the ones it did not set itself. A backend that can read a
+/// parameter back (MonoGame, KNI) records its value from just before Gum first wrote it as the baseline,
+/// and that is what goes back; a name with no baseline (raylib cannot read one) goes back to zero. A value the
+/// application wrote to the effect directly before Gum's first write of that name is captured as the baseline.
+/// Values the application wrote to the effect directly are not in the history, so they are left alone, except
+/// that once Gum has written a name, a later container that does not set it restores the baseline even if the
+/// application wrote that name in between.
 /// </summary>
 public sealed class ShaderParameterHistory
 {
@@ -225,6 +228,7 @@ public sealed class ShaderParameterHistory
         new System.Runtime.CompilerServices.ConditionalWeakTable<object, ShaderParameterHistory>();
 
     private readonly Dictionary<string, ShaderParameterValue> _applied = new Dictionary<string, ShaderParameterValue>();
+    private readonly Dictionary<string, ShaderParameterValue> _baselines = new Dictionary<string, ShaderParameterValue>();
     private readonly List<KeyValuePair<string, ShaderParameterValue>> _stale = new List<KeyValuePair<string, ShaderParameterValue>>();
 
     /// <summary>The history for <paramref name="effect"/> (a MonoGame Effect or a raylib shader, boxed once per call site).</summary>
@@ -232,6 +236,28 @@ public sealed class ShaderParameterHistory
 
     /// <summary>Notes that <paramref name="name"/> was written with <paramref name="value"/>.</summary>
     public void Record(string name, ShaderParameterValue value) => _applied[name] = value;
+
+    /// <summary>Whether a baseline was stored for <paramref name="name"/>.</summary>
+    public bool HasBaseline(string name) => _baselines.ContainsKey(name);
+
+    /// <summary>
+    /// Stores <paramref name="value"/>, which <paramref name="name"/> held before Gum first wrote it, as the value
+    /// to restore. Only the first call for a name counts, so a later write is never mistaken for the original.
+    /// </summary>
+    public void SetBaseline(string name, ShaderParameterValue value)
+    {
+        if (!_baselines.ContainsKey(name))
+        {
+            _baselines[name] = value;
+        }
+    }
+
+    /// <summary>
+    /// The value to put back on <paramref name="name"/> when a container does not set it: its baseline, or
+    /// zero shaped like <paramref name="lastWritten"/> when no baseline was stored.
+    /// </summary>
+    public ShaderParameterValue GetRestoreValue(string name, ShaderParameterValue lastWritten) =>
+        _baselines.TryGetValue(name, out ShaderParameterValue baseline) ? baseline : ShaderParameterValue.ZeroLike(lastWritten);
 
     /// <summary>
     /// Returns, and forgets, the values written earlier for names not in <paramref name="current"/>.
