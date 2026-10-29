@@ -201,6 +201,33 @@ public class ToolSaveHotReloadScenarioTests
     }
 
     [AvaloniaFact]
+    public void ComponentBaseTypeChangedInTheTool_IsListed_BecauseTheTreeDiffersFromARestart()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave pad = tree.Project.AddComponent("Pad");
+        pad.DefaultState.SetValue("Width", 222f, "float");
+        ComponentSave card = tree.Project.AddComponent("Card", "Pad");
+        tree.Project.AddInstance(card, "Title", "Text");
+        ScreenSave main = tree.Project.AddScreen("Main");
+        tree.Project.AddInstance(main, "Card1", "Card");
+        tree.SaveAll();
+        using ToolSaveRuntimeWorld world = new ToolSaveRuntimeWorld(tree.Project.ProjectFilePath, "Main");
+        world.Find("Card1")!.Width.ShouldBe(222f);
+
+        card.BaseType = "Container";
+        tree.SaveAll();
+        world.WaitForReload(_reloadBudget).ShouldBeTrue("a base type change should reach the running game");
+        world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
+
+        ToolSaveRuntimeWorld.Describe(world.Screen).ShouldNotBe(world.DescribeAFreshLoad(), "sanity: the visual keeps what it inherited");
+        HotReloadIssue issue = world.Results.SelectMany(result => result.Issues)
+            .First(candidate => candidate.Kind == HotReloadIssueKind.ComponentBaseTypeChanged);
+        issue.ElementName.ShouldBe("Card");
+        world.Results[world.Results.Count - 1].MatchesRestart.ShouldBeFalse();
+        world.ErrorOutput.ShouldContain(issue.Message);
+    }
+
+    [AvaloniaFact]
     public void ManyEditsThenSaveAll_AndTwoQuickSaves_LeaveTheRunningTreeOnTheLastSave()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

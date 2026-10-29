@@ -166,8 +166,10 @@ public class HotReloadUnreadableFileTests : BaseTestClass
         _world.NotifyAndSettle(_world.ScreenFile);
 
         _world.Find("Box")!.X.ShouldBe(50f);
-        _errors.Count.ShouldBe(1);
+        // The element the missing file held is left empty, so its base type is gone too.
+        _errors.Count.ShouldBe(2);
         _errors[0].ShouldContain("Widget");
+        _errors[1].ShouldContain("changed its base type");
     }
 
     // Replaces the world's manager with one whose host hooks the test controls.

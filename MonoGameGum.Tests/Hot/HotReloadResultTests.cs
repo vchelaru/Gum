@@ -161,25 +161,62 @@ public class HotReloadResultTests : BaseTestClass
     }
 
     [Fact]
-    public void HalfWrittenFile_RaisesReloadFailedOnEveryAttempt_AndOnlyTheSecondIsPrinted()
+    public void HalfWrittenFile_RaisesNothingForTheRetriedAttempt_AndReloadFailedForTheFinalOne()
     {
         Boot(Reader);
         _world.EditInPlace(_world.ScreenFile, "<GumScreen");
 
         _world.NotifyAndSettle(_world.ScreenFile);
 
-        _results.Count.ShouldBe(1, "the first failed read is a result too, though it is retried");
+        _results.ShouldBeEmpty("the first failed read is tried again, so it is not an outcome yet");
         _printed.ShouldBeEmpty();
 
         _world.Advance(300);
         _world.Update();
 
         _world.Reloads.ShouldBe(0, "ReloadCompleted is only for a reload that applied");
-        _results.Count.ShouldBe(2);
-        _results.ShouldAllBe(result => result.Issues.Count == 1 && result.Issues[0].Kind == HotReloadIssueKind.ReloadFailed);
-        _results.ShouldAllBe(result => !result.MatchesRestart && !result.IsClean);
-        _results[1].Issues[0].Message.ShouldBe(_printed.Single());
-        _results[1].Issues[0].Message.ShouldContain("MainScreen");
+        HotReloadResult result = _results.Single();
+        HotReloadIssue issue = result.Issues.Single();
+        issue.Kind.ShouldBe(HotReloadIssueKind.ReloadFailed);
+        result.MatchesRestart.ShouldBeFalse();
+        issue.Message.ShouldBe(_printed.Single());
+        issue.Message.ShouldContain("MainScreen");
+    }
+
+    [Fact]
+    public void HalfWrittenFileCompletedBeforeTheRetry_RaisesOnlyTheCleanResult()
+    {
+        Boot(Reader);
+        _world.EditInPlace(_world.ScreenFile, "<GumScreen");
+        _world.NotifyAndSettle(_world.ScreenFile);
+
+        _world.EditInPlace(_world.ScreenFile, _world.ElementText(Reader with { BoxX = 70 }, "MainScreen"));
+        _world.Advance(300);
+        _world.Update();
+
+        _results.Single().IsClean.ShouldBeTrue();
+        _world.Reloads.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ThrowingSubscribers_DoNotBreakUpdateOrTheOtherSubscribers()
+    {
+        Boot(Reader);
+        List<string> heard = new List<string>();
+        _world.Manager.ReloadCompleted += () => throw new InvalidOperationException("completed boom");
+        _world.Manager.ReloadCompleted += () => heard.Add("completed");
+        _world.Manager.ReloadFinished += _ => throw new InvalidOperationException("finished boom");
+        _world.Manager.ReloadFinished += _ => heard.Add("finished");
+        _world.SaveAll(Reader with { BoxX = 9 });
+
+        Should.NotThrow(() => _world.NotifyAndSettle(_world.Gumx, _world.ScreenFile));
+
+        heard.ShouldBe(new[] { "completed", "finished" });
+        _world.Find("Box")!.X.ShouldBe(9f);
+        _printed.Count(message => message.Contains("completed boom")).ShouldBe(1);
+        _printed.Count(message => message.Contains("finished boom")).ShouldBe(1);
+        _results.ShouldHaveSingleItem("the printed exceptions are not issues");
+        _results[0].IsClean.ShouldBeTrue();
     }
 
     [Fact]

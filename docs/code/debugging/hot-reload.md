@@ -141,7 +141,7 @@ If your game has a single screen-level "apply current state to UI" method, calli
 
 ## Reacting to a Reload
 
-`HotReloadFinished` fires after every reload attempt, including one that failed, and gives you a `HotReloadResult` listing what the reload could not do exactly. `HotReloadCompleted` still fires after a reload that was applied.
+`HotReloadFinished` fires after every reload, including one that failed, and gives you a `HotReloadResult` listing what the reload could not do exactly. `HotReloadCompleted` still fires after a reload that was applied.
 
 ```csharp
 // Initialize
@@ -164,7 +164,7 @@ GumUI.HotReloadFinished += result =>
 };
 ```
 
-Every reload's result lists every issue that reload had, including one an earlier reload had too. Only the console output is once-only. A project that could not be read is retried once, so a failed attempt can be followed by a clean one.
+Every reload's result lists every issue that reload had, including one an earlier reload had too. Only the console output is once-only. A project that could not be read is retried once after the debounce, and only the final outcome raises the event. An exception thrown by a handler of `HotReloadCompleted` or `HotReloadFinished` is printed and does not stop the reload or the other handlers.
 
 | `HotReloadIssueKind`  | Meaning                                                                                             | `MatchesRestart` |
 | --------------------- | --------------------------------------------------------------------------------------------------- | ---------------- |
@@ -174,6 +174,11 @@ Every reload's result lists every issue that reload had, including one an earlie
 | `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
 | `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |
 | `InstanceRebuilt`     | An instance's component changed or was renamed, so its visual was rebuilt. References and handlers on it are stale. | `true` |
+| `ComponentBaseTypeChanged` | A screen or component changed its base type. Visuals already on screen keep what they inherited from the old base. | `false` |
+| `ExposedVariableChanged` | A component changed which variables it exposes. Instances already on screen keep the exposure they were built with. | `false` |
+| `StandardElementChanged` | The default state of a standard element changed. Instances already on screen keep their old values. | `false` |
+
+An issue that makes `MatchesRestart` `false` because the running tree is stale, such as `ShownElementGone` or `ComponentBaseTypeChanged`, is listed in every result until a restart or until an edit puts the definition back.
 
 `MatchesRestart` is `true` when the running tree equals what restarting the game with the same project would show. On the result it is `true` only if every issue's `MatchesRestart` is `true`, so a clean result matches. An issue with `MatchesRestart` set to `true` can still need attention from your code, for example `InstanceRebuilt`.
 

@@ -37,6 +37,12 @@ internal sealed record SweepSpec
     public bool WithWidget { get; init; } = true;
     public bool OmitBaseX { get; init; }
     public bool OmitWidgetRed { get; init; }
+    public string WidgetBase { get; init; } = "Widgets/Base";
+    public bool BaseInstance { get; init; }
+    public string? ExposedName { get; init; }
+    public int ExposedValue { get; init; } = 150;
+    public float? RectWidth { get; init; }
+    public string? LabelParent { get; init; }
 }
 
 /// <summary>
@@ -105,6 +111,10 @@ internal sealed class SweepWorld : IDisposable
             StandardElementSave standardElement = new StandardElementSave { Name = standard };
             standardElement.States.Add(StandardElementsManager.Self.GetDefaultStateFor(standard)!.Clone());
             standardElement.DefaultState!.ParentContainer = standardElement;
+            if (standard == "ColoredRectangle" && spec.RectWidth != null)
+            {
+                Set(standardElement.DefaultState!, "Width", "float", spec.RectWidth.Value);
+            }
             project.StandardElements.Add(standardElement);
         }
 
@@ -120,15 +130,24 @@ internal sealed class SweepWorld : IDisposable
         {
             Set(baseComponent.DefaultState!, "X", "float", spec.BaseX);
         }
+        if (spec.BaseInstance)
+        {
+            AddInstance(baseComponent, "BaseDot", "ColoredRectangle");
+            SetRed(baseComponent.DefaultState!, "BaseDot", 77);
+        }
         project.Components.Add(baseComponent);
 
         if (spec.WithWidget)
         {
-            ComponentSave widget = NewComponent("Widgets/Widget", "Widgets/Base");
+            ComponentSave widget = NewComponent("Widgets/Widget", spec.WidgetBase);
             AddInstance(widget, "Fill", "ColoredRectangle");
             if (!spec.OmitWidgetRed)
             {
                 SetRed(widget.DefaultState!, "Fill", spec.WidgetRed);
+            }
+            if (spec.ExposedName != null)
+            {
+                widget.DefaultState!.Variables.First(v => v.Name == "Fill.Red").ExposedAsName = spec.ExposedName;
             }
             StateSaveCategory look = new StateSaveCategory { Name = "Look" };
             look.States.Add(new StateSave { Name = "Normal", ParentContainer = widget });
@@ -172,9 +191,17 @@ internal sealed class SweepWorld : IDisposable
         }
         AddInstance(screen, "Label", "Text");
         Set(screenDefault, "Label.Text", "string", spec.LabelText);
+        if (spec.LabelParent != null)
+        {
+            Set(screenDefault, "Label.Parent", "string", spec.LabelParent);
+        }
         if (spec.WithWidget)
         {
             AddInstance(screen, "Widget1", "Widgets/Widget");
+            if (spec.ExposedName != null)
+            {
+                Set(screenDefault, "Widget1." + spec.ExposedName, "int", spec.ExposedValue);
+            }
         }
         if (spec.WithGadget)
         {
@@ -306,6 +333,52 @@ internal sealed class SweepWorld : IDisposable
         }
         Advance(300);
         Update();
+    }
+
+    /// <summary>
+    /// The design-time part of a tree as text: name, element, layout, visibility and the Red and Text
+    /// the runtime holds. Siblings are sorted by name, since rebuilt instances land in another order
+    /// in <c>ContainedElements</c> than a fresh load gives them.
+    /// </summary>
+    public static string Describe(GraphicalUiElement element, int depth = 0)
+    {
+        System.Text.StringBuilder text = new System.Text.StringBuilder();
+        text.Append(' ', depth * 2).Append(element.Name).Append(" <").Append(element.ElementSave?.Name).Append("> ")
+            .Append(element.X).Append(',').Append(element.Y).Append(' ').Append(element.Width).Append('x').Append(element.Height)
+            .Append(element.Visible ? "" : " hidden");
+        if (element is ColoredRectangleRuntime rectangle)
+        {
+            text.Append(" red=").Append(rectangle.Red);
+        }
+        if (element is TextRuntime label)
+        {
+            text.Append(" text=").Append(label.Text);
+        }
+        text.AppendLine();
+        foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children).Distinct()
+                     .Where(child => child.Tag is InstanceSave).OrderBy(child => child.Name, StringComparer.Ordinal))
+        {
+            text.Append(Describe(child, depth + 1));
+        }
+        return text.ToString();
+    }
+
+    /// <summary>The tree a game that started now, from the files on disk, would show.</summary>
+    public string DescribeAFreshLoad()
+    {
+        GumProjectSave fresh = GumProjectSave.Load(Gumx);
+        fresh.Initialize();
+        GumProjectSave? running = ObjectFinder.Self.GumProjectSave;
+        ObjectFinder.Self.GumProjectSave = fresh;
+        try
+        {
+            return Describe(fresh.Screens.Single(s => s.Name == "MainScreen")
+                .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false));
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = running;
+        }
     }
 
     public GraphicalUiElement? Find(string name) => Screen.GetGraphicalUiElementByName(name);
