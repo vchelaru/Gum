@@ -1252,7 +1252,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     customLettersByStart ??= new();
                     customLettersByStart[codePointIndex] = run;
                 }
-                codePointIndex += run.Text.Length;
+                for (int i = 0; i < run.Text.Length; i++)
+                {
+                    if (!char.IsLowSurrogate(run.Text[i]))
+                    {
+                        codePointIndex++;
+                    }
+                }
             }
             switch (HorizontalAlignment)
             {
