@@ -24,6 +24,18 @@ namespace RenderingLibrary.Graphics
         bool IsChainAnimationEnabled { get; }
 
         /// <summary>
+        /// The AnimationChainList currently assigned, typed as object because GumCommon cannot name it.
+        /// Hot reload compares it with the list it loaded from a file to tell chains that came from
+        /// the file from chains assigned by code.
+        /// </summary>
+        object? AnimationChainList { get; }
+
+        /// <summary>
+        /// True when a chain name was set and the assigned list has no chain with that name, so nothing plays.
+        /// </summary>
+        bool IsNamedChainMissing { get; }
+
+        /// <summary>
         /// Sets the callback raised when the playback flag turns on, so the owning element can stop
         /// skipping this renderable.
         /// </summary>

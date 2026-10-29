@@ -42,7 +42,7 @@ When any of these files change, Gum reloads the project in place: it diffs the n
 
 Children added at runtime by your game code are left untouched. Hot reload identifies "design-time" children by their `Tag` — when Gum creates a visual from an `InstanceSave`, it stores the `InstanceSave` in `Tag`. Anything without an `InstanceSave` `Tag` is treated as runtime-owned and skipped.
 
-Animation chain files (`.achx`, `.achj`) are reloaded when a Sprite or NineSlice uses one as its `SourceFile`: Gum drops the cached chains, reads the file again and assigns it to every visual using it. A chain file no visual uses is ignored.
+Animation chain files (`.achx`, `.achj`) are reloaded when a Sprite or NineSlice uses one as its `SourceFile`: Gum drops the cached chains, reads the file again and assigns it to every visual using it. A chain file no visual uses is ignored. The playing chain is found again by name, so reordering chains is fine. If the chain was renamed or deleted, the visual keeps its last frame and Gum reports a `ReloadFailed` issue (`MatchesRestart` is `false`), since a restart would show nothing. Chains your code assigned to the visual's `AnimationChains` after the file was assigned are left alone.
 
 When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files from the source project's `FontCache/` directory to the bin-side `FontCache/` directory, and evicts cached fonts so they are reloaded from disk.
 
@@ -59,7 +59,7 @@ An instance whose component was renamed, moved to another folder, or changed to 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
 
 * **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader imports or includes is not tracked.
-* **Textures and images** — If you change a `.png` file that a Sprite or NineSlice shows, the cached texture is still used. Restart the game to pick up texture changes. Gum reports the file as a `ReloadFailed` issue, so `MatchesRestart` is `false`.
+* **Textures and images** — If you change a `.png` file that a Sprite or NineSlice shows, the cached texture is still used. Restart the game to pick up texture changes. This includes images that an animation chain file names for its frames. Gum reports the file as a `ReloadFailed` issue, so `MatchesRestart` is `false`, and lists it in every later result until the game restarts.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
 
