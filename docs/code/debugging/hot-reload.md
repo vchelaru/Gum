@@ -53,9 +53,9 @@ Hot reload is focused on Gum element definitions. The following are **not** auto
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
 
-### Renamed or Deleted Screens
+### Renamed or Deleted Screens and Components
 
-Hot reload matches the screen your game is showing to the project by name. If you rename it, move it to another folder, or delete it in the tool, the running screen has nothing to match. It stays on screen as it was, and a line like `Hot reload: the screen 'MainScreen' the game is showing is not in the project any more` goes to `PropertyAssignmentError` and the console, once. Edits to that screen, or to the one that replaced it, do not reach the game until you restart it. If you undo the rename, the screen is matched again and edits arrive.
+Hot reload matches each screen or component your game is showing to the project by name. If you rename one, move it to another folder, or delete it in the tool, the running visual has nothing to match. It stays on screen as it was, and Gum reports it once to `PropertyAssignmentError` and the console, for example `Hot reload: the screen 'MainScreen' the game is showing is not in the project any more`. A component reads `the component 'Name'` instead. Edits to it, or to what replaced it, do not reach the game until you restart it. If you undo the rename, Gum matches it again and edits arrive.
 
 ### Known Limitation: Cleared Tags
 

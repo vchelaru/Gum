@@ -9,7 +9,7 @@ description: Runtime hot reload — FileSystemWatcher rebuilds the Gum element t
 
 Hot reload lets a running game pick up changes saved in the Gum tool without restarting. `GumService.EnableHotReload(absoluteGumxSourcePath)` starts a `FileSystemWatcher` on the **source** project directory; file changes trigger a debounced rebuild of `GumService.Default.Root`'s children from freshly loaded save data.
 
-User-facing docs: `docs/code/hot-reload.md`. User docs are the source of truth for the public API; keep them in sync when behavior changes.
+User-facing docs: `docs/code/debugging/hot-reload.md`. User docs are the source of truth for the public API; keep them in sync when behavior changes.
 
 ## Key Files
 
@@ -17,7 +17,7 @@ User-facing docs: `docs/code/hot-reload.md`. User docs are the source of truth f
 |------|---------|
 | `GumCommon/HostServices/GumHotReloadManager.cs` | `IGumHotReloadManager` + `GumHotReloadManager`; host-specific steps (texture filter, animation load, cache eviction) come in as constructor delegates |
 | `MonoGameGum/GumService.cs`, `Runtimes/SkiaGum/GumServiceSkiaBase.cs` | `EnableHotReload`, per-frame `Update`, `Uninitialize` stop |
-| `docs/code/hot-reload.md` | Public documentation |
+| `docs/code/debugging/hot-reload.md` | Public documentation |
 
 ## Platform Gating
 
@@ -72,8 +72,8 @@ Defined on `GumHotReloadManager` and exposed `public static` for direct test use
 
 ## Non-Obvious Behaviors / Gotchas
 
-- **`Tag` is the design-time marker.** `InstanceSave.ToGraphicalUiElement` sets `Tag = instanceSave` (`GumRuntime/InstanceSaveExtensionMethods.GumRuntime.cs:39`). If user code nulls or replaces that `Tag`, the diff treats the visual as runtime-owned: not removed, not retyped, not duplicated. Variable application via `Name` still works. Documented limitation, see `docs/code/hot-reload.md`.
-- **A visual whose element is gone from the new project is kept and reported once.** `ApplyDiffRecursive` records it in `ReloadContext.Problems` (keyed `gone:<name>`) when `byName` has no match and it is not a standard element: a renamed, moved or deleted shown screen (no identity survives a rename), or a code-added component visual. `ReportProblems` says it through `ReportError` at the end of the walk; the manager's `_reportedProblems` keeps it from repeating on every later save and clears it when the element comes back. The public static `ApplyDiff` has no memory and reports every time. Edits to the old screen or its replacement do not arrive (the message says so). Tests: `HotReloadGoneElementTests`.
+- **`Tag` is the design-time marker.** `InstanceSave.ToGraphicalUiElement` sets `Tag = instanceSave` (`GumRuntime/InstanceSaveExtensionMethods.GumRuntime.cs:39`). If user code nulls or replaces that `Tag`, the diff treats the visual as runtime-owned: not removed, not retyped, not duplicated. Variable application via `Name` still works. Documented limitation, see `docs/code/debugging/hot-reload.md`.
+- **A visual whose element is gone from the new project is kept and reported once.** `ApplyDiffRecursive` records it in `ReloadContext.Problems` (keyed `gone:<name>`) when `byName` has no match and it is not a standard element: a renamed, moved or deleted shown screen (no identity survives a rename), or a code-added component visual. The message says "screen", "component" or "element" by `KindOf`; screens and components get the same message. `ReportProblems` says it through `ReportError` at the end of the walk; the manager's `_reportedProblems` keeps it from repeating on every later save and clears it when the element comes back. The public static `ApplyDiff` has no memory and reports every time. Edits to the old screen or its replacement do not arrive (the message says so). Tests: `HotReloadGoneElementTests`.
 - **Retype detection uses `ElementSave.Name`, not the old `Tag.BaseType`.** This is the visual's actual built-from type, which stays stable across diffs whether the caller passed a fresh project or mutated the existing one in place — important for tests.
 - **`Root.Children` and any roots passed to `Update(IEnumerable<GraphicalUiElement>)`** are the reload surface. `PopupRoot` / `ModalRoot` are untouched.
 - **`ApplyDiff` runs `RefreshStyles`'s three passes.** It saves Forms runtime properties, applies the diff, then re-applies the categorical states code drove by name (`_appliedCategoryStates` on `GraphicalUiElement`) and runs `UpdateState` + `ApplyRuntimeProperties` on each Forms control. A new restore need goes in a control's `SaveRuntimeProperties`/`ApplyRuntimeProperties`, not in the diff. Values set in code on any other visual are left alone unless the project changed that variable (below).
