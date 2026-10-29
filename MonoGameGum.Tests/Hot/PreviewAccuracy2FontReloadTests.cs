@@ -107,4 +107,82 @@ public partial class PreviewAccuracy2Tests
 
         ShouldNotBeStaleSilently(verdict);
     }
+
+    [Fact]
+    public void Font_CustomFontFile_EditedInPlace()
+    {
+        PreviewAccuracy2World world = BootWithCustomFont(separateBin: false);
+        string custom = WriteFont(world.Dir, "Custom", advance: 22, lineHeight: 36, folder: "Fonts");
+        PreviewVerdict2 verdict = world.Reload(custom);
+        ShouldNotBeStaleSilently(verdict);
+        ShouldBeCorrect(verdict);
+    }
+
+    [Fact]
+    public void Font_CustomFontFile_EditedInPlace_GameRunningFromItsBuildFolder()
+    {
+        PreviewAccuracy2World world = BootWithCustomFont(separateBin: true);
+        string custom = WriteFont(world.Dir, "Custom", advance: 22, lineHeight: 36, folder: "Fonts");
+        PreviewVerdict2 verdict = world.Reload(custom);
+        ShouldBeCorrect(verdict);
+        File.Exists(Path.Combine(world.Bin, "FontCache", "Custom.fnt")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Font_CustomFontFile_EditedInPlace_WithoutANotification_GameRunningFromItsBuildFolder()
+    {
+        PreviewAccuracy2World world = BootWithCustomFont(separateBin: true);
+        WriteFont(world.Dir, "Custom", advance: 22, lineHeight: 36, folder: "Fonts");
+        PreviewVerdict2 verdict = world.Save(project => Std(MainScreen(project), "Caption", "Text", "Hello Again"), dir => { });
+        ShouldBeCorrect(verdict);
+    }
+
+    [Fact]
+    public void Font_CustomFontFile_PageNamedDifferentlyFromTheFont_IsReloaded()
+    {
+        PreviewAccuracy2World world = BootWithCustomFont(separateBin: true);
+        string custom = WriteFont(world.Dir, "Custom", advance: 22, lineHeight: 36, folder: "Fonts");
+        File.WriteAllText(custom, File.ReadAllText(custom).Replace("file=\"Custom.png\"", "file=\"Atlas.png\""));
+        WritePng(Path.Combine(world.Dir, "Fonts", "Atlas.png"), 128, 64);
+        PreviewVerdict2 verdict = world.Reload(custom);
+        ShouldBeCorrect(verdict);
+        verdict.Hot.ShouldContain("Fonts/Atlas.png");
+    }
+
+    [Fact]
+    public void Font_PageArrivesAfterTheFnt_IsLoadedWhenItArrives_GameRunningFromItsBuildFolder()
+    {
+        PreviewAccuracy2World world = Boot(separateBin: true);
+        world.Save(project => Std(MainScreen(project), "Caption", "FontSize", 24));
+        string fnt = WriteFont(world.Dir, "Font24Pixel", advance: 12, lineHeight: 28);
+        string page = Path.Combine(world.Dir, "FontCache", "Font24Pixel.png");
+        File.Delete(page);
+        world.Reload(fnt);
+        PageOf(world).ShouldBeNull();
+
+        WritePng(page, 256, 256);
+        PreviewVerdict2 verdict = world.Reload(page);
+
+        PageOf(world).ShouldNotBeNull();
+        ShouldBeCorrect(verdict);
+    }
+
+    private static Microsoft.Xna.Framework.Graphics.Texture2D? PageOf(PreviewAccuracy2World world) =>
+        ((RenderingLibrary.Graphics.Text)world.Find("Caption")!.RenderableComponent).BitmapFont?.Textures[0];
+
+    // A game that has loaded the project, whose Caption uses Fonts/Custom.fnt.
+    private PreviewAccuracy2World BootWithCustomFont(bool separateBin)
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World();
+        _worlds.Add(world);
+        world.Boot(
+            separateBin: separateBin,
+            editBaseline: project =>
+            {
+                Std(MainScreen(project), "Caption", "UseCustomFont", true);
+                Std(MainScreen(project), "Caption", "CustomFontFile", "Fonts/Custom.fnt");
+            },
+            beforeBoot: dir => WriteFont(dir, "Custom", advance: 16, lineHeight: 32, folder: "Fonts"));
+        return world;
+    }
 }

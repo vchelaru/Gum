@@ -227,6 +227,15 @@ public class GumHotReloadManager : IGumHotReloadManager
     internal void NotifyFileChanged(string fullPath)
     {
         string extension = Path.GetExtension(fullPath).ToLowerInvariant();
+        if (extension == ".png")
+        {
+            // A font's page can be written after its .fnt; the font is loaded again to pick it up.
+            foreach (string fontFile in FontsThatNamePage(fullPath))
+            {
+                NotifyFileChanged(fontFile);
+            }
+        }
+
         if (IsWatchedExtension(extension))
         {
             if (extension == ".fnt")
@@ -348,30 +357,24 @@ public class GumHotReloadManager : IGumHotReloadManager
             _changedFontFiles.Clear();
         }
 
-        var sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
         if (sourceDirectory == null)
         {
             return null;
         }
 
-        var sourceFontCache = Path.Combine(sourceDirectory, "FontCache");
-        if (!Directory.Exists(sourceFontCache))
-        {
-            return null;
-        }
-
-        AddFontsChangedWithoutNotice(changedFonts, sourceFontCache);
+        AddFontsChangedWithoutNotice(changedFonts, sourceDirectory);
         if (changedFonts.Count == 0)
         {
             return null;
         }
 
         string? failures = null;
-        foreach (var sourceFntPath in changedFonts)
+        foreach (string sourceFntPath in changedFonts)
         {
             try
             {
-                CopyAndUnloadFont(sourceFntPath, sourceFontCache);
+                CopyAndUnloadFont(sourceFntPath, sourceDirectory);
                 fontsEvicted = true;
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
@@ -387,8 +390,6 @@ public class GumHotReloadManager : IGumHotReloadManager
         return failures;
     }
 
-    // A game that loads its content from the folder the tool saves into (Preview) has the file where
-    // the runtime reads it; copying a file onto itself throws.
     private static bool IsSameFile(string first, string second)
     {
         StringComparison comparison = _isFileSystemCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
@@ -404,26 +405,48 @@ public class GumHotReloadManager : IGumHotReloadManager
             return;
         }
 
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
         File.Copy(source, destination, overwrite: true);
         File.SetLastWriteTimeUtc(destination, File.GetLastWriteTimeUtc(source));
     }
 
-    // A watcher drops events when its buffer overflows, so a font the load folder still holds in an older
-    // version than the source folder is also changed, whether or not a notification arrived.
-    private void AddFontsChangedWithoutNotice(List<string> changedFonts, string sourceFontCache)
+    private string LoadFolder => string.IsNullOrEmpty(_binGumDirectory) ? "." : _binGumDirectory;
+
+    private static bool IsInside(string folder, string file)
     {
-        string destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
-        if (!Directory.Exists(destinationFontCache))
+        string relative = Path.GetRelativePath(folder, file);
+        return !relative.StartsWith("..", StringComparison.Ordinal) && !Path.IsPathRooted(relative);
+    }
+
+    // Where the game loads a file of the project from: the same place relative to the load folder.
+    // A file outside the project folder, or already inside the load folder (a build folder under the
+    // project), has no such place, so it is loaded from where it is.
+    private string LoadFolderPathOf(string sourceFile, string sourceDirectory)
+    {
+        string relative = Path.GetRelativePath(sourceDirectory, sourceFile);
+        if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) || IsInside(LoadFolder, sourceFile))
+        {
+            return sourceFile;
+        }
+
+        return Path.Combine(LoadFolder, relative);
+    }
+
+    // A watcher drops events when its buffer overflows, so a font the load folder still holds in an older
+    // version than the project folder is also changed, whether or not a notification arrived.
+    private void AddFontsChangedWithoutNotice(List<string> changedFonts, string sourceDirectory)
+    {
+        if (IsSameFile(sourceDirectory, LoadFolder))
         {
             return;
         }
 
-        HashSet<string> queued = new HashSet<string>(changedFonts.Select(Path.GetFileName)!);
-        foreach (string sourceFnt in Directory.GetFiles(sourceFontCache, "*.fnt"))
+        StringComparer comparer = _isFileSystemCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        HashSet<string> queued = new HashSet<string>(changedFonts.Select(Path.GetFullPath), comparer);
+        foreach (string sourceFnt in Directory.EnumerateFiles(sourceDirectory, "*.fnt", SearchOption.AllDirectories))
         {
-            string fileName = Path.GetFileName(sourceFnt);
-            string destination = Path.Combine(destinationFontCache, fileName);
-            if (queued.Contains(fileName) || !File.Exists(destination) || IsSameFile(sourceFnt, destination))
+            string destination = LoadFolderPathOf(sourceFnt, sourceDirectory);
+            if (queued.Contains(Path.GetFullPath(sourceFnt)) || !File.Exists(destination) || IsSameFile(sourceFnt, destination))
             {
                 continue;
             }
@@ -436,38 +459,93 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
     }
 
-    private void CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
+    // The .fnt and its texture pages go to the load folder (a no-op where the game loads from the project
+    // folder) and are dropped from the cache under the path the game loads them by, wherever in the
+    // project the font lives (FontCache/ for generated fonts, anywhere for a CustomFontFile).
+    private void CopyAndUnloadFont(string sourceFntPath, string sourceDirectory)
     {
-        var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
-        Directory.CreateDirectory(destinationFontCache);
-
-        var fileName = Path.GetFileName(sourceFntPath);
-
-        // Copy the .fnt file
-        var destinationFile = Path.Combine(destinationFontCache, fileName);
+        string destinationFile = LoadFolderPathOf(sourceFntPath, sourceDirectory);
         CopyUnlessSameFile(sourceFntPath, destinationFile);
 
-        // Copy associated .png texture pages (same name prefix)
-        var baseName = Path.GetFileNameWithoutExtension(fileName);
-        var copiedPngs = new List<string>();
-        foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
+        List<string> pagePaths = new List<string>();
+        foreach (string pageFile in PagesOf(sourceFntPath))
         {
-            var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
-            CopyUnlessSameFile(pngFile, pngDestination);
-            copiedPngs.Add(pngDestination);
+            string pageSource = Path.Combine(Path.GetDirectoryName(sourceFntPath)!, pageFile);
+            if (File.Exists(pageSource))
+            {
+                string pageDestination = LoadFolderPathOf(pageSource, sourceDirectory);
+                CopyUnlessSameFile(pageSource, pageDestination);
+                pagePaths.Add(pageDestination);
+            }
         }
 
         // Unload the cached font so it gets reloaded from the new file
-        var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
-        var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
-        _disposeCachedAsset(standardizedFont);
+        _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(destinationFile, preserveCase: true, makeAbsolute: true));
 
         // Unload the cached texture pages so they get reloaded too
-        foreach (var pngPath in copiedPngs)
+        foreach (string pagePath in pagePaths)
         {
-            var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
-            _disposeCachedAsset(standardizedPng);
+            _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(pagePath, preserveCase: true, makeAbsolute: true));
         }
+    }
+
+    // The .fnt files next to a texture that name it as a page. Only a .fnt whose name starts the
+    // texture's name is read, which is how the generator names pages.
+    private static IEnumerable<string> FontsThatNamePage(string pagePath)
+    {
+        string? directory = Path.GetDirectoryName(pagePath);
+        if (directory == null || !Directory.Exists(directory))
+        {
+            return Array.Empty<string>();
+        }
+
+        string pageName = Path.GetFileName(pagePath);
+        string pageBaseName = Path.GetFileNameWithoutExtension(pagePath);
+        List<string> fonts = new List<string>();
+        try
+        {
+            foreach (string fontFile in Directory.GetFiles(directory, "*.fnt"))
+            {
+                if (pageBaseName.StartsWith(Path.GetFileNameWithoutExtension(fontFile), StringComparison.OrdinalIgnoreCase)
+                    && PagesOf(fontFile).Any(page => string.Equals(Path.GetFileName(page), pageName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    fonts.Add(fontFile);
+                }
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // A folder that cannot be listed has no font to reload.
+        }
+
+        return fonts;
+    }
+
+    // The page files a .fnt names, plus the files next to it that share its name, which are the pages
+    // the font generator writes and cover a .fnt that cannot be read yet.
+    private static IEnumerable<string> PagesOf(string fntPath)
+    {
+        HashSet<string> pages = new HashSet<string>();
+        try
+        {
+            ParsedFontFile parsed = new ParsedFontFile(File.ReadAllText(fntPath));
+            foreach (string page in parsed.GetPagesAsArrayOfStrings.Where(page => !Path.IsPathRooted(page)))
+            {
+                pages.Add(page);
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException && exception is not IOException)
+        {
+            // Not a text/XML .fnt: the generator's naming below is all there is to go by.
+        }
+
+        string baseName = Path.GetFileNameWithoutExtension(fntPath);
+        foreach (string sibling in Directory.GetFiles(Path.GetDirectoryName(fntPath)!, baseName + "*.png"))
+        {
+            pages.Add(Path.GetFileName(sibling));
+        }
+
+        return pages;
     }
 
     // internal (not private) so tests can drive a reload deterministically without the
