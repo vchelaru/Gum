@@ -48,6 +48,7 @@ When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files
 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
 
+* **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader imports or includes is not tracked.
 * **Textures and images** — If you change a `.png` file, the cached texture is still used. Restart the game to pick up texture changes.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.

@@ -7,6 +7,7 @@ using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -82,6 +83,12 @@ public class GumHotReloadManager : IGumHotReloadManager
     private int _failedAttempts;
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
+    // Changed files that are not project/element/font files. Each is checked against what the loaded
+    // visuals reference once the debounce passes; guarded by _pendingReloadLock.
+    private readonly HashSet<string> _changedOtherFiles = new HashSet<string>();
+    // Separate from _lastChangeTime so editor temp files and the like cannot push a pending project
+    // reload past its debounce.
+    private DateTime _lastOtherChangeTime;
 
     /// <param name="applyProjectTextureFilter">
     /// Applies the reloaded project's <see cref="GumProjectSave.TextureFilter"/> to the host's
@@ -159,15 +166,37 @@ public class GumHotReloadManager : IGumHotReloadManager
     public void Update(IEnumerable<GraphicalUiElement> roots)
     {
         DateTime now = _utcNow();
+        bool reload;
+        List<string> otherFiles = new List<string>();
         lock (_pendingReloadLock)
         {
-            if (!_pendingReload || (now - _lastChangeTime) < TimeSpan.FromMilliseconds(200))
+            TimeSpan debounce = TimeSpan.FromMilliseconds(200);
+            reload = _pendingReload && (now - _lastChangeTime) >= debounce;
+            bool checkOtherFiles = _changedOtherFiles.Count > 0 && (now - _lastOtherChangeTime) >= debounce;
+            if (!reload && !checkOtherFiles)
             {
                 return;
             }
-            _pendingReload = false;
+            if (reload)
+            {
+                _pendingReload = false;
+            }
+            if (checkOtherFiles)
+            {
+                otherFiles = _changedOtherFiles.ToList();
+                _changedOtherFiles.Clear();
+            }
         }
-        PerformReload(roots);
+
+        List<GraphicalUiElement> rootList = roots.ToList();
+        if (otherFiles.Count > 0)
+        {
+            ReassignShaderFiles(rootList, otherFiles);
+        }
+        if (reload)
+        {
+            PerformReload(rootList);
+        }
     }
 
     private void HandleFileChange(object sender, FileSystemEventArgs e) => NotifyFileChanged(e.FullPath);
@@ -194,6 +223,76 @@ public class GumHotReloadManager : IGumHotReloadManager
                 _pendingReload = true;
                 _failedAttempts = 0;
             }
+        }
+        else if (extension.Length > 0)
+        {
+            // Not a file Gum owns, but an element may reference it (a shader, in any format).
+            DateTime now = _utcNow();
+            lock (_pendingReloadLock)
+            {
+                _lastOtherChangeTime = now;
+                _changedOtherFiles.Add(fullPath);
+            }
+        }
+    }
+
+    // Re-assigns SourceShaderFile on every container using a changed file, so each looks its effect up
+    // again. The tree is not rebuilt. The rule is "an element references the file", so no extension list.
+    private void ReassignShaderFiles(List<GraphicalUiElement> roots, List<string> changedFiles)
+    {
+        HashSet<string> changed = new HashSet<string>(
+            changedFiles.Select(file => ToolsUtilities.FileManager.Standardize(file, preserveCase: false, makeAbsolute: true)));
+
+        List<GraphicalUiElement> visited = new List<GraphicalUiElement>();
+        foreach (GraphicalUiElement root in roots)
+        {
+            CollectDescendants(root, visited);
+        }
+
+        foreach (GraphicalUiElement element in visited)
+        {
+            if (element.RenderableComponent is not IRenderTargetRenderable renderTarget)
+            {
+                continue;
+            }
+
+            string? shaderFile = ShaderParameterVariables.GetShaderFile(renderTarget);
+            if (shaderFile == null)
+            {
+                continue;
+            }
+
+            string? cacheKey = null;
+            try
+            {
+                cacheKey = ToolsUtilities.FileManager.IsRelative(shaderFile) && !ToolsUtilities.FileManager.IsUrl(shaderFile)
+                    ? ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + shaderFile)
+                    : shaderFile;
+                string standardized = ToolsUtilities.FileManager.Standardize(cacheKey, preserveCase: false, makeAbsolute: true);
+                if (!changed.Contains(standardized))
+                {
+                    continue;
+                }
+            }
+            catch (ArgumentException)
+            {
+                // An invalid path in a variable cannot be the file that changed.
+                continue;
+            }
+
+            // The effect is cached by the path the container resolved; drop it so the assignment compiles again.
+            _disposeCachedAsset(cacheKey);
+            _disposeCachedAsset(shaderFile);
+            element.SetProperty("SourceShaderFile", shaderFile);
+        }
+    }
+
+    private static void CollectDescendants(GraphicalUiElement element, List<GraphicalUiElement> into)
+    {
+        into.Add(element);
+        foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children).Distinct().ToList())
+        {
+            CollectDescendants(child, into);
         }
     }
 
