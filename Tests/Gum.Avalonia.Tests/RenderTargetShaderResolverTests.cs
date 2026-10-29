@@ -1,6 +1,9 @@
 using EditorTabPlugin_XNA.Services;
+using Gum.Managers;
+using System.IO;
 using RenderingLibrary;
 using ShadowDusk.Core;
+using ToolsUtilities;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -56,6 +59,109 @@ public class RenderTargetShaderResolverTests
         byte[] bytecode = RenderTargetShaderResolver.Compile(GrayscaleFx, PlatformTarget.OpenGL, "Grayscale.fx");
 
         bytecode.Length.ShouldBeGreaterThan(0);
+    }
+
+    private const string LumaHlsli = """
+        static const float3 LumaWeights = float3(0.299, 0.587, 0.114);
+        """;
+
+    // GrayscaleFx with the luma weights moved into an #included file.
+    private static string GrayscaleFxIncluding(string includeName) =>
+        GrayscaleFx
+            .Replace("float3(0.299, 0.587, 0.114)", "LumaWeights")
+            .Replace("Texture2D SpriteTexture;", "#include \"" + includeName + "\"\n\nTexture2D SpriteTexture;");
+
+    [Fact]
+    public void Compile_ResolvesAnIncludeNextToTheShader()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "Gum7034i_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "Luma.hlsli"), LumaHlsli);
+            string shaderPath = Path.Combine(folder, "Grayscale.fx");
+
+            byte[] bytecode = RenderTargetShaderResolver.Compile(
+                GrayscaleFxIncluding("Luma.hlsli"), PlatformTarget.OpenGL, shaderPath);
+
+            bytecode.Length.ShouldBeGreaterThan(0);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Compile_ReportsEveryIncludedFile_NestedOnesToo()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "Gum7034i_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(Path.Combine(folder, "lib"));
+        try
+        {
+            // Luma.hlsli includes lib/Weights.hlsli, which is found next to Luma.hlsli rather than the shader.
+            File.WriteAllText(Path.Combine(folder, "Luma.hlsli"), "#include \"lib/Weights.hlsli\"\n");
+            File.WriteAllText(Path.Combine(folder, "lib", "Weights.hlsli"), LumaHlsli);
+            List<string> included = new List<string>();
+
+            RenderTargetShaderResolver.Compile(
+                GrayscaleFxIncluding("Luma.hlsli"), PlatformTarget.OpenGL, Path.Combine(folder, "Grayscale.fx"), included.Add);
+
+            included.Select(Path.GetFullPath).ShouldBe(
+                new[] { Path.Combine(folder, "Luma.hlsli"), Path.Combine(folder, "lib", "Weights.hlsli") },
+                ignoreOrder: true);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompileFile_RecordsTheIncludesInTheMap_AgainstTheShadersPath()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "Gum7034i_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "Luma.hlsli"), LumaHlsli);
+            string shaderPath = Path.Combine(folder, "Grayscale.fx");
+            File.WriteAllText(shaderPath, GrayscaleFxIncluding("Luma.hlsli"));
+            ShaderIncludeMap includes = new ShaderIncludeMap();
+
+            RenderTargetShaderResolver.CompileFile(shaderPath, PlatformTarget.OpenGL, includes);
+
+            includes.GetShadersIncluding(new FilePath(Path.Combine(folder, "Luma.hlsli")))
+                .ShouldBe(new[] { new FilePath(shaderPath) });
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompileFile_StillRecordsTheIncludes_WhenTheShaderDoesNotCompile()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "Gum7034i_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "Luma.hlsli"), "this is not hlsl");
+            string shaderPath = Path.Combine(folder, "Grayscale.fx");
+            File.WriteAllText(shaderPath, GrayscaleFxIncluding("Luma.hlsli"));
+            ShaderIncludeMap includes = new ShaderIncludeMap();
+
+            Should.Throw<InvalidOperationException>(
+                () => RenderTargetShaderResolver.CompileFile(shaderPath, PlatformTarget.OpenGL, includes));
+
+            // Fixing the include has to reload the shader that kept its last good version.
+            includes.IsIncluded(new FilePath(Path.Combine(folder, "Luma.hlsli"))).ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
     }
 
     [Fact]

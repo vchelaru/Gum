@@ -44,6 +44,78 @@ public class PreviewShaderResolverTests : BaseTestClass
         }
     }
 
+    // #7034: a relative #include resolves against the shader's own folder.
+    private const string GrayscaleFxIncludingLuma = """
+        #include "Luma.hlsli"
+
+        #if OPENGL
+            #define PS_SHADERMODEL ps_3_0
+        #else
+            #define PS_SHADERMODEL ps_4_0_level_9_1
+        #endif
+
+        Texture2D SpriteTexture;
+
+        sampler2D SpriteTextureSampler = sampler_state
+        {
+            Texture = <SpriteTexture>;
+        };
+
+        struct VertexShaderOutput
+        {
+            float4 Position : SV_POSITION;
+            float4 Color : COLOR0;
+            float2 TextureCoordinates : TEXCOORD0;
+        };
+
+        float4 MainPS(VertexShaderOutput input) : COLOR0
+        {
+            float4 color = tex2D(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
+            float gray = dot(color.rgb, LumaWeights);
+            return float4(gray, gray, gray, color.a);
+        }
+
+        technique SpriteDrawing
+        {
+            pass P0
+            {
+                PixelShader = compile PS_SHADERMODEL MainPS();
+            }
+        };
+        """;
+
+    [Fact]
+    public void SourceShaderFile_ResolvesAnIncludeNextToTheShader()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "Gum7034i_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(folder);
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "Luma.hlsli"), "static const float3 LumaWeights = float3(0.299, 0.587, 0.114);");
+            string shaderPath = Path.Combine(folder, "Grayscale.fx");
+            File.WriteAllText(shaderPath, GrayscaleFxIncludingLuma);
+            PreviewShaderResolver.Register(game.GraphicsDevice);
+
+            ContainerRuntime container = new();
+            container.Width = 64;
+            container.Height = 64;
+            container.IsRenderTarget = true;
+            container.AddToManagers(SystemManagers.Default, null);
+
+            container.SourceShaderFile = shaderPath;
+
+            container.RenderTargetEffect.ShouldNotBeNull();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            try { Directory.Delete(folder, recursive: true); } catch { /* best-effort */ }
+        }
+    }
+
     private sealed class MinimalGame : SharedGameLease
     {
         public GumService GumService { get; } = new GumService();
