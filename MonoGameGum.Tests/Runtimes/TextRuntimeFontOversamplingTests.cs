@@ -68,13 +68,9 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
             creator.CapturedFontSize.ShouldBe(50f);
             var text = (Text)textRuntime.RenderableComponent;
             text.BitmapFont.ShouldBeSameAs(stubFont);
-            // Issue #4309: compensation is now derived from ACTUAL measured width (pinned native vs.
-            // oversampled), not a naive FontSize/rasterFontSize ratio. CapturingInMemoryFontCreator
-            // returns the identical stub font object regardless of requested size, so there is
-            // genuinely nothing to compensate for -- 1f is correct here. See
-            // RegenerateOversampledFont_PinsOutgoingNativeMeasurement_NoJumpWhenOversamplingActivates
-            // for a fake whose oversampled font actually differs, covering the general case.
-            text.OversampleCompensationScale.ShouldBe(1f);
+            // Issue #6814: compensation is exactly FontSize / rasterFontSize so each atlas pixel lands on
+            // one screen pixel, whatever the generated font measures.
+            text.OversampleCompensationScale.ShouldBe(20f / 50f);
             text.FontScale.ShouldBe(1f, "because oversampling must compensate through the internal-only " +
                 "OversampleCompensationScale, not by overwriting the public FontScale (issue #4317)");
         }
@@ -137,10 +133,8 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
 
             var text = (Text)textRuntime.RenderableComponent;
             text.FontScale.ShouldBe(2f, "because the caller's own FontScale must not be stomped by oversampling");
-            // Compensation is 1f here (see the "leaves FontScale untouched" test above for why) --
-            // the identical stub font is returned for any requested size, so there's nothing to
-            // compensate for; the effective scale is just the caller's FontScale.
-            ((IText)text).FontScale.ShouldBe(2f * 1f,
+            // The raster includes FontScale (#6816): 20 * 2 * 2.5 = 100, so compensation is 20 / 100 (#6814).
+            ((IText)text).FontScale.ShouldBe(2f * (20f / 100f),
                 "because the effective on-screen scale is the caller's FontScale composed with the " +
                 "internal compensation, not just the compensation alone");
         }
@@ -363,9 +357,7 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
             result.ShouldBeTrue();
             creator.CapturedFontSize.ShouldBe(50f);
             var text = (Text)textRuntime.RenderableComponent;
-            // 1f: the identical stub font is returned for any requested size, so there's nothing to
-            // compensate for (see RegenerateOversampledFont_WhenEnabledWithCreator_... 's comment).
-            text.OversampleCompensationScale.ShouldBe(1f);
+            text.OversampleCompensationScale.ShouldBe(20f / 50f);
         }
         finally
         {
@@ -672,49 +664,6 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
-    // Issue #4309 (render-side gap found via manual test, FontScale 2 at ~2.9x zoom): the box is now
-    // correctly pinned/stable, but a naive FontSize/rasterFontSize compensation ratio assumes the
-    // oversampled font's glyphs are an exact linear scale of the native font's -- they're not, since
-    // hinting isn't linear across raster sizes. That leaves a visible gap between the drawn text and
-    // its own box. The fix derives the compensation from the ACTUAL measured width ratio between the
-    // pinned and oversampled fonts (for this Text's own content), so the drawn text exactly fills the box.
-    [Fact]
-    public void RegenerateOversampledFont_CompensationDerivedFromActualMeasurement_DrawnTextExactlyFillsPinnedBox()
-    {
-        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
-        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
-        try
-        {
-            TextRuntime.UseFontOversampling = true;
-            CustomSetPropertyOnRenderable.InMemoryFontCreator = new NearlyProportionalFontCreator(baseFontSize: 20);
-
-            TextRuntime textRuntime = new();
-            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
-            textRuntime.FontSize = 20;
-            textRuntime.Text = "AB AB";
-
-            var text = (Text)textRuntime.RenderableComponent;
-            float pinnedWidth = text.WrappedTextWidth; // the box size, already proven stable above
-
-            textRuntime.RegenerateOversampledFont(2.5f);
-
-            // The actual DRAWN width: the live (oversampled) BitmapFont's own raw measurement, scaled
-            // by the composed effective scale -- what Sprite.Render actually puts on screen, as
-            // distinct from the separately-pinned box measurement.
-            float drawnWidth = text.BitmapFont.MeasureString("AB AB") * ((IText)text).FontScale;
-
-            drawnWidth.ShouldBe(pinnedWidth, tolerance: 0.01f,
-                "because the drawn text must exactly fill its own box, not just approximately -- a naive " +
-                "FontSize/rasterFontSize ratio would leave a visible gap since the oversampled font's " +
-                "glyph advances aren't an exact linear scale of the native font's");
-        }
-        finally
-        {
-            TextRuntime.UseFontOversampling = savedUseFontOversampling;
-            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
-        }
-    }
-
     // Issue #4309 (discontinuity found via manual test): an earlier version of this fix measured against
     // KernSmith design-unit metrics -- a DIFFERENT measurement system than the native rasterized font,
     // not guaranteed to agree with it (hinted vs. unhinted). That mismatched every text whose display
@@ -854,6 +803,70 @@ char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         }
     }
 
+    // Issue #6814: a real rasterizer rounds glyph advances at each size, so a fit to measured widths
+    // misses 1/ratio and resamples every glyph. The on-screen scale of the atlas must be exactly 1.
+    [Theory]
+    [InlineData(26, 1.5f)]
+    [InlineData(20, 2.5f)]
+    [InlineData(12, 1.75f)]
+    public void RegenerateOversampledFont_WithHintedFont_CompensatesByExactlyTheInverseRatio(int fontSize, float ratio)
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new NearlyProportionalFontCreator(baseFontSize: fontSize);
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = fontSize;
+            textRuntime.Text = "AB AB";
+
+            textRuntime.RegenerateOversampledFont(ratio).ShouldBeTrue();
+
+            Text text = (Text)textRuntime.RenderableComponent!;
+            text.OversampleCompensationScale.ShouldBe(fontSize / (fontSize * ratio), tolerance: 0.00001f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Issue #6814: with an exact scale the drawn text can differ from the native-measured box by the
+    // fonts' hinting difference, so alignment inside the box uses the drawn width.
+    [Theory]
+    [InlineData(HorizontalAlignment.Center, 79.6f)]
+    [InlineData(HorizontalAlignment.Right, 159.2f)]
+    [InlineData(HorizontalAlignment.Left, 0f)]
+    public void RegenerateOversampledFont_AlignsTheDrawnWidthInsideTheBox(HorizontalAlignment alignment, float expectedLeft)
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new NearlyProportionalFontCreator(baseFontSize: 20);
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.WidthUnits = DimensionUnitType.Absolute;
+            textRuntime.Width = 200;
+            textRuntime.HorizontalAlignment = alignment;
+            // Native: 2 glyphs * 20 = 40 wide. Oversampled at 2.5: 2 * 51 * (20/50) = 40.8 wide.
+            textRuntime.Text = "AB";
+
+            textRuntime.RegenerateOversampledFont(2.5f).ShouldBeTrue();
+
+            Text text = (Text)textRuntime.RenderableComponent!;
+            text.UpdateIpsoForRenderingForTests().X.ShouldBe(expectedLeft, tolerance: 0.001f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     // Every glyph's xadvance equals the requested FontSize exactly, so a font generated at size N is
     // a perfect (N/baseSize)x scale of one generated at baseSize -- isolates whether Gum's own
     // wrap-width math introduces error, independent of any real rasterizer's rounding/hinting noise.
@@ -917,6 +930,178 @@ char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
                 "because the Absolute Width constraint must always convert to wrap-measurement units via " +
                 "the uncompensated measurement scale -- oversampling's display-only compensation must not " +
                 "change how many lines a fixed-width box wraps to");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Issue #6816: the raster must include the text's own scale (FontScale * GlobalFontScale), or scaled
+    // text draws each atlas pixel larger than one screen pixel. The drawn scale times the zoom is the
+    // screen pixels per atlas pixel, so it must come out at exactly 1.
+    [Theory]
+    [InlineData(1.5f, 1f, 2f, 60f)]
+    [InlineData(2f, 1f, 1f, 40f)]
+    [InlineData(0.5f, 1f, 4f, 40f)]
+    [InlineData(1f, 2f, 1.5f, 60f)]
+    public void UpdateAutomaticFontOversampling_WithFontScale_RasterizesAtScaledSizeSoEachAtlasPixelIsOneScreenPixel(
+        float fontScale, float globalFontScale, float zoom, float expectedRasterSize)
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        float savedGlobalFontScale = SystemManagers.GlobalFontScale;
+        try
+        {
+            BitmapFont stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            CapturingInMemoryFontCreator creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+            SystemManagers.GlobalFontScale = globalFontScale;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = fontScale;
+
+            bool result = textRuntime.UpdateAutomaticFontOversampling(zoom);
+
+            result.ShouldBeTrue();
+            creator.CapturedFontSize.ShouldBe(expectedRasterSize, tolerance: 0.0001f);
+            Text text = (Text)textRuntime.RenderableComponent!;
+            (((IText)text).FontScale * zoom).ShouldBe(1f, tolerance: 0.0001f);
+            text.FontScale.ShouldBe(fontScale);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+            SystemManagers.GlobalFontScale = savedGlobalFontScale;
+        }
+    }
+
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WithFontScaleBelowOneAtNativeZoom_DoesNotUndersample()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            BitmapFont stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            CapturingInMemoryFontCreator creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 0.5f;
+            creator.ResetCallTracking();
+
+            bool result = textRuntime.UpdateAutomaticFontOversampling(1f);
+
+            result.ShouldBeFalse();
+            creator.WasCalled.ShouldBeFalse();
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void RegenerateOversampledFont_WithFontScaleBelowOne_NeverRasterizesBelowFontSize()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            BitmapFont stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            CapturingInMemoryFontCreator creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 0.5f;
+
+            textRuntime.RegenerateOversampledFont(1f).ShouldBeTrue();
+
+            creator.CapturedFontSize.ShouldBe(20f, tolerance: 0.0001f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WhenFontScaleChanges_RegeneratesOnTheSameOnePixelRuleAsZoom()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            BitmapFont stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            CapturingInMemoryFontCreator creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 2f;
+            textRuntime.UpdateAutomaticFontOversampling(1f).ShouldBeTrue(); // raster = 40px
+            creator.ResetCallTracking();
+
+            // 20 * 2.02 = 40.4, under 1px from the 40px raster.
+            textRuntime.FontScale = 2.02f;
+            textRuntime.UpdateAutomaticFontOversampling(1f).ShouldBeFalse();
+            creator.WasCalled.ShouldBeFalse();
+
+            // 20 * 2.5 = 50, 10px past it.
+            textRuntime.FontScale = 2.5f;
+            textRuntime.UpdateAutomaticFontOversampling(1f).ShouldBeTrue();
+            creator.CapturedFontSize.ShouldBe(50f, tolerance: 0.0001f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WithFontScale_KeepsMeasuredSizeUnchanged()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new ProportionalFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.HeightUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 1.5f;
+            textRuntime.Text = "AB AB";
+            float widthBefore = textRuntime.AbsoluteWidth;
+            float heightBefore = textRuntime.AbsoluteHeight;
+
+            textRuntime.UpdateAutomaticFontOversampling(2f).ShouldBeTrue();
+
+            textRuntime.AbsoluteWidth.ShouldBe(widthBefore);
+            textRuntime.AbsoluteHeight.ShouldBe(heightBefore);
         }
         finally
         {

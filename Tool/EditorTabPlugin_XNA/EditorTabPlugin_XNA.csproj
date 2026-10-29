@@ -46,7 +46,7 @@
 			transitively (e.g. win-x64 libvkd3d-shader-1.dll), which the PostBuild step copies
 			alongside the plugin so they load when invoked.
 		-->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.20.0" />
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />

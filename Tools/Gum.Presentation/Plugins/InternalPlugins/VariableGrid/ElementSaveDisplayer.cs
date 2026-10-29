@@ -881,7 +881,7 @@ public class ElementSaveDisplayer
     private StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave? stateToAddTo = null)
     {
         // go bottom up
-        var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+        var baseElement = ObjectFinder.Self.GetBaseElement(elementSave);
         if (baseElement != null)
         {
             stateToAddTo = GetRecursiveStateFor(baseElement, stateToAddTo);

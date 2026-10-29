@@ -57,12 +57,15 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             bool changed = _instanceMember != value;
             if (_instanceMember != null && changed)
             {
+                OnInstanceMemberChanging();
                 _instanceMember.PropertyChanged -= HandleMemberPropertyChanged;
+                _instanceMember.Retargeting -= HandleMemberRetargeting;
             }
             _instanceMember = value;
             if (_instanceMember != null && changed)
             {
                 _instanceMember.PropertyChanged += HandleMemberPropertyChanged;
+                _instanceMember.Retargeting += HandleMemberRetargeting;
             }
 
             if (changed)
@@ -100,6 +103,17 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
 
     /// <inheritdoc/>
     public abstract ApplyValueResult TrySetValueOnUi(object? value);
+
+    /// <summary>
+    /// Raised just before a different member replaces the current one, while <see cref="InstanceMember"/>
+    /// still returns the current one; a drag in progress ends here so its full commit reaches that member.
+    /// </summary>
+    public event EventHandler? InstanceMemberChanging;
+
+    /// <summary>Called before a different member replaces the current one; <see cref="InstanceMember"/> is still the current one.</summary>
+    protected virtual void OnInstanceMemberChanging() => InstanceMemberChanging?.Invoke(this, EventArgs.Empty);
+
+    private void HandleMemberRetargeting(object? sender, EventArgs e) => OnInstanceMemberChanging();
 
     /// <summary>Called when a different member is assigned, before the refresh; clear per-member state here.</summary>
     protected virtual void OnInstanceMemberChanged()

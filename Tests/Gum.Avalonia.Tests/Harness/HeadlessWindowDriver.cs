@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
@@ -103,16 +104,45 @@ internal sealed class HeadlessWindowDriver : IDisposable
     public void RightClick(Control control)
     {
         control.BringIntoView();
+        // Hit testing reads the compositor's last rendered scene, so a control laid out since the last
+        // frame (a palette chip after a selection change) can be missed on a slow, loaded machine.
+        RenderFrame();
         Point point = CenterOf(control);
+        _lastRightClick = DescribeRightClick(control, point);
         Window.MouseMove(point, RawInputModifiers.None);
         Window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
         Window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
         Layout();
+
+        // The menu may open a dispatcher job or a frame after the release; give it a bounded moment
+        // (by the real clock) before a caller finds it missing.
+        Stopwatch waited = Stopwatch.StartNew();
+        while (OpenContextMenu == null && waited.Elapsed < TimeSpan.FromMilliseconds(500))
+        {
+            Thread.Sleep(10);
+            RenderFrame();
+        }
     }
+
+    /// <summary>What the last <see cref="RightClick"/> aimed at, for the "no context menu" message.</summary>
+    private string _lastRightClick = "no right-click yet";
+
+    private string DescribeRightClick(Control control, Point point)
+    {
+        Visual? hit = Window.InputHitTest(point) as Visual;
+        string chain = string.Join(" < ", hit.GetSelfAndVisualAncestors().Take(8).OfType<Control>()
+            .Select(ancestor => ancestor.GetType().Name + (ancestor.ContextMenu != null ? (ancestor.ContextMenu.IsOpen ? "[menu open]" : "[menu]") : "")));
+        return $"{control.GetType().Name} at {point}, bounds {control.Bounds}, own menu {(control.ContextMenu == null ? "none" : "set")}, "
+            + $"hit chain [{(chain.Length == 0 ? "nothing" : chain)}], pointer captured by {_lastPressedPointer?.Captured?.GetType().Name ?? "nothing"}, "
+            + $"window active {Window.IsActive} visible {Window.IsVisible}";
+    }
+
+    private InvalidOperationException NoContextMenuOpen() =>
+        new InvalidOperationException($"No context menu is open. Last right-click: {_lastRightClick}; focused: {Window.FocusManager?.GetFocusedElement()?.GetType().Name ?? "nothing"}.");
 
     /// <summary>The headers of the open context menu's items.</summary>
     public List<string> ContextMenuHeaders() =>
-        (OpenContextMenu ?? throw new InvalidOperationException("No context menu is open."))
+        (OpenContextMenu ?? throw NoContextMenuOpen())
             .Items.OfType<MenuItem>().Select(item => item.Header?.ToString() ?? "").ToList();
 
     /// <summary>
@@ -121,7 +151,7 @@ internal sealed class HeadlessWindowDriver : IDisposable
     /// </summary>
     public void PickContextMenuItem(string header)
     {
-        ContextMenu menu = OpenContextMenu ?? throw new InvalidOperationException("No context menu is open.");
+        ContextMenu menu = OpenContextMenu ?? throw NoContextMenuOpen();
         MenuItem item = menu.Items.OfType<MenuItem>().SingleOrDefault(candidate => candidate.Header?.ToString() is string text && (text == header || text.StartsWith(header + " (", StringComparison.Ordinal)))
             ?? throw new InvalidOperationException($"The context menu has no \"{header}\"; it has [{string.Join(", ", ContextMenuHeaders())}].");
         if (!item.IsEnabled)

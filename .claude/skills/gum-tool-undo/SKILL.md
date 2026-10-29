@@ -25,8 +25,10 @@ Undo history is entirely in-memory and is lost when Gum closes. Loading a differ
 ### Element Deletion Is Not Undoable
 When an element (Screen, Component, or StandardElement) is deleted, its entire undo history is discarded along with it. Deleting an element cannot be undone.
 
-### Behaviors Are Not Currently Supported
-Undo/redo does not currently work for behavior-related changes. Changes to behaviors (adding, removing, or modifying) on an element may not be correctly undoable.
+### Behaviors Have Their Own Strategy
+A behavior's own changes (required instances, categories, states, required variables) undo through `BehaviorUndoStrategy`: whole-behavior clone snapshots applied in place to the same `BehaviorSave`, with one history per behavior. Behavior-instance and category/state changes record through the `UndoPlugin` handlers; a baseline for a behavior that is not selected needs `RecordBehaviorState(behavior)`. Adding or removing a behavior *reference* on an element is an element change and goes through `ElementUndoStrategy`.
+
+The snapshot covers every serialized `BehaviorSave` field (name, categories, required variables and instances, Forms properties, tool-only variable references, required animations, default implementation). Elements reference a behavior by name, so restoring a different name calls `IUndoRenameLogic.RenameBehavior`, the same `BehaviorRenamer` the Rename Behavior command uses: it renames the elements' `ElementBehaviorReference`s, the project's `BehaviorReference` and the `.behx`, then the history (keyed by the `BehaviorSave` object, so a rename neither orphans nor duplicates it) carries on. The command takes a `RequestLock()` so the rename is one behavior history step. Those element-side reference edits are not recorded in the elements' own histories, so `BehaviorUndoStrategy` also calls `ElementUndoStrategy.RenameBehaviorInSnapshots` (when the rename is recorded, and on every undo/redo that changes the name) to rewrite the old name in every stored element snapshot; otherwise replaying an older element step would bring back a reference to a behavior that no longer exists. `NameVerifier.IsBehaviorNameValid` rejects a name another behavior already has (case-insensitively), because the file is named after the behavior.
 
 ## History Tab
 
@@ -84,7 +86,11 @@ A Variables-tab edit's undo step is recorded when its lock is released after plu
 
 Both element and behavior snapshots use `CloneElement`/`CloneBehavior`, so every saved snapshot contains **new object instances** with different references than the live data. When undo is applied, the restored instances replace the live ones — meaning any code holding a reference to the pre-undo instance now has a **stale reference** that no longer exists in the element or behavior.
 
-Consequence: after an undo, `_selectedState.SelectedInstance` may point to a stale object. Reference-based lookups (e.g. tree node searches using `==`) will fail. Name-based fallback is required to re-locate the logically equivalent node. If undo also changes the instance's name, selection cannot be restored and is silently dropped — this is considered acceptable.
+Consequence: after an undo, `_selectedState.SelectedInstance` may point to a stale object. Reference-based lookups (e.g. tree node searches using `==`) will fail. Name-based fallback is required to re-locate the logically equivalent node. If undo also changes the instance's name, or removes it, the instance selection is dropped and, for a behavior, the behavior stays selected: `ElementTreeViewManager.SelectRecordedSelection` uses `GetBehaviorOfStaleInstance` instead of assigning the stale instance, because a behavior is found through its required instances and a stale one would clear `SelectedBehavior`, leaving the next undo with nothing to act on. The element path is left as it was: selecting the element in place of a dropped instance sends no `SelectionChangedMessage`, so the add destination would stay anchored to the old container.
+
+## Undo And Redo Re-Run The Reference Cascade
+
+After restoring a snapshot, `ElementUndoStrategy.DoAfterUndoLogic` calls `IVariableReferenceLogic.ReapplyReferences` (before `CaptureBaseline`, with no lock held, so no history entry) so reference followers re-read the restored sources like a typed edit. A snapshot's follower values are therefore never trusted; do not put a second cascade in an `AfterUndo` plugin handler. `ReapplyReferences` also re-runs `BehaviorToolOnlyReferencesApplier.Apply` on every restore, so a snapshot's derived tool-only values (`ButtonCategoryState`) are never trusted either; `RebaseStoredValues` covers only reference-row values.
 
 ## Implementation Files
 
@@ -110,4 +116,3 @@ Consequence: after an undo, `_selectedState.SelectedInstance` may point to a sta
 | No selection restore | Selection state is not captured or restored on undo/redo |
 | No persistence | History is lost on app close or opening another project; a same-project reload keeps unchanged elements' history |
 | No element-deletion undo | Deleting an element removes its history permanently |
-| Behaviors not supported | Behavior changes are not reliably undoable |

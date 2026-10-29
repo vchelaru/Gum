@@ -124,8 +124,13 @@ public class ContainerRuntime : InteractiveGue
     /// active backend's registered resolver (XNA-like/raylib:
     /// <c>Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver</c>; Skia:
     /// <c>SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver</c>) and assigns the
-    /// result to <see cref="RenderTargetEffect"/>. With no resolver registered the assignment is a
-    /// graceful no-op (the container renders unshaded). Only has an effect when
+    /// result to <see cref="RenderTargetEffect"/>. With no resolver registered (or one that returns null
+    /// for the file), whatever the extension, the assignment fails like a missing file: it honors
+    /// <c>GraphicalUiElement.MissingFileBehavior</c> (throwing by default once the GumService is
+    /// initialized; <c>ConsumeSilently</c> reports through <c>PropertyAssignmentError</c> and renders
+    /// unshaded) and the message suggests registering a resolver, for example the ShadowDusk package for
+    /// the runtime (<c>Gum.MonoGame.ShadowDusk</c>, then <c>UseShadowDusk()</c> once at startup, before
+    /// creating any element that uses a SourceShaderFile). Only has an effect when
     /// <see cref="IsRenderTarget"/> is true. Write-only: there is no backing field; the resolved
     /// effect is read back via <see cref="RenderTargetEffect"/>.
     /// </summary>
@@ -134,6 +139,68 @@ public class ContainerRuntime : InteractiveGue
         set => base.SetProperty("SourceShaderFile", value);
     }
 #endif
+
+    private void SetShaderParameterValue(string name, ShaderParameterValue value)
+    {
+        if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+        {
+            invisibleRenderable.ShaderParameters ??= new ShaderParameterCollection();
+            invisibleRenderable.ShaderParameters.Set(name, value);
+        }
+    }
+
+    /// <summary>
+    /// Sets a float parameter of this container's render-target shader. The value is applied to the
+    /// shader just before the container is drawn back to the screen, so several containers can share
+    /// one shader with different values. A name the shader does not declare is ignored. Setting an
+    /// existing name does not allocate.
+    /// </summary>
+    public void SetShaderParameter(string name, float value) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromFloat(value));
+
+    /// <summary>Sets an int parameter of this container's render-target shader.</summary>
+    public void SetShaderParameter(string name, int value) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromInt(value));
+
+    /// <summary>Sets a bool parameter of this container's render-target shader.</summary>
+    public void SetShaderParameter(string name, bool value) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromBool(value));
+
+    /// <summary>Sets a two component float vector parameter of this container's render-target shader.</summary>
+    public void SetShaderParameter(string name, float x, float y) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromVector2(x, y));
+
+    /// <summary>Sets a three component float vector parameter of this container's render-target shader.</summary>
+    public void SetShaderParameter(string name, float x, float y, float z) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromVector3(x, y, z));
+
+    /// <summary>
+    /// Sets a four component float vector parameter of this container's render-target shader. Pass a
+    /// color as its red, green, blue and alpha components in the 0 to 1 range.
+    /// </summary>
+    public void SetShaderParameter(string name, float x, float y, float z, float w) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromVector4(x, y, z, w));
+
+    /// <summary>Sets a two component float vector parameter of this container's render-target shader.</summary>
+    public void SetShaderParameter(string name, System.Numerics.Vector2 value) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromVector2(value.X, value.Y));
+
+    /// <summary>Sets a three component float vector parameter of this container's render-target shader.</summary>
+    public void SetShaderParameter(string name, System.Numerics.Vector3 value) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromVector3(value.X, value.Y, value.Z));
+
+    /// <summary>Sets a four component float vector parameter of this container's render-target shader.</summary>
+    public void SetShaderParameter(string name, System.Numerics.Vector4 value) =>
+        SetShaderParameterValue(name, ShaderParameterValue.FromVector4(value.X, value.Y, value.Z, value.W));
+
+    /// <summary>Removes every shader parameter set with <c>SetShaderParameter</c>.</summary>
+    public void ClearShaderParameters()
+    {
+        if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+        {
+            invisibleRenderable.ShaderParameters?.Clear();
+        }
+    }
 
 
 #if !SOKOL

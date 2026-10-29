@@ -16,5 +16,12 @@ public interface IFileWatchManager
     void EnableWithDirectories(HashSet<FilePath> directories);
     void Disable();
     void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null);
+    void RecordWrittenContent(FilePath filePath);
+
+    /// <summary>
+    /// Call when an edit may have changed which files the project's elements reference, so the next
+    /// rename or delete of a file is judged against the project as it is now.
+    /// </summary>
+    void InvalidateReferencedFiles();
     void Flush();
 }

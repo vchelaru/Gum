@@ -233,13 +233,20 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
+    /// <summary>
+    /// Whether this list is the drop-down of a ComboBox. A drop-down list that has focus always has item-level
+    /// focus, so the gamepad and keyboard act on it however focus reached it, and a direction the list does not
+    /// use never moves focus out of it (that would close the drop-down).
+    /// </summary>
+    internal bool IsComboBoxDropDown { get; set; }
+
     public override bool IsFocused
     {
         get => base.IsFocused;
         set
         {
             base.IsFocused = value;
-            if (IsFocused && canListItemsLoseFocus == false)
+            if (IsFocused && (canListItemsLoseFocus == false || IsComboBoxDropDown))
             {
                 DoListItemsHaveFocus = true;
             }
@@ -1852,8 +1859,14 @@ public class ListBox : ItemsControl, IInputReceiver
         var targetChildren = targetRoot.Children;
         if (!IsAlreadyOnTop(popup.Visual, targetRoot, ownFollowers))
         {
+            // Detaching hides the popup for a moment, which takes its focus away (#6934). The caller only
+            // moved it, so give the focus back.
+            PopupFocusSnapshot focus = PopupFocusSnapshot.Capture(popup);
+
             popup.Visual.Parent = null;
             targetChildren.Add(popup.Visual);
+
+            focus.Restore(popup);
         }
 
         // Reposition after resolving and parenting to the target root, so the clamp reflects
@@ -1876,6 +1889,53 @@ public class ListBox : ItemsControl, IInputReceiver
             ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
 
         return listBoxParent.GetTopParent() == modalRoot ? modalRoot : popupRoot;
+    }
+
+    /// <summary>
+    /// The focus and scroll of a popup that a library operation is about to detach and re-attach. Hiding it
+    /// for a moment takes its focus away (#6934), so <see cref="Restore"/> gives it back. Focusing a row
+    /// scrolls it into view, but a restore is not navigation, so the scroll is put back too.
+    /// </summary>
+    internal readonly struct PopupFocusSnapshot
+    {
+        private readonly bool _hadFocus;
+        private readonly bool _hadItemFocus;
+        private readonly double _scroll;
+
+        private PopupFocusSnapshot(bool hadFocus, bool hadItemFocus, double scroll)
+        {
+            _hadFocus = hadFocus;
+            _hadItemFocus = hadItemFocus;
+            _scroll = scroll;
+        }
+
+        public static PopupFocusSnapshot Capture(ScrollViewer popup) => new PopupFocusSnapshot(
+            popup.IsFocused,
+            popup is ListBox listBox ? listBox.DoListItemsHaveFocus : popup.DoItemsHaveFocus,
+            popup.VerticalScrollBarValue);
+
+        public void Restore(ScrollViewer popup)
+        {
+            if (!_hadFocus)
+            {
+                return;
+            }
+
+            if (!popup.IsFocused)
+            {
+                popup.IsFocused = true;
+                if (popup is ListBox listBox)
+                {
+                    listBox.DoListItemsHaveFocus = _hadItemFocus;
+                }
+                else
+                {
+                    popup.DoItemsHaveFocus = _hadItemFocus;
+                }
+            }
+
+            popup.VerticalScrollBarValue = _scroll;
+        }
     }
 
     private static bool IsAlreadyOnTop(GraphicalUiElement popupVisual, GraphicalUiElement targetRoot,
@@ -1939,7 +1999,15 @@ public class ListBox : ItemsControl, IInputReceiver
 
     public override void OnFocusUpdate()
     {
-        if (DoListItemsHaveFocus)
+#if !FRB
+        // A disabled control can hold focus (AllowFocusWhenDisabled) or be disabled while its items have focus; it does not act on input.
+        if (DoListItemsHaveFocus && !IsEnabled)
+        {
+            // skip input
+        }
+        else
+#endif
+        if (DoListItemsHaveFocus || IsComboBoxDropDown)
         {
             DoListItemFocusUpdate();
         }
@@ -1968,12 +2036,26 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             var gamepad = xboxGamepads[i];
 
-            RepositionDirections? direction = GetRepeatedGamepadDirection(gamepad);
+            // A wrapping list and a ComboBox drop-down use every direction to step through the rows.
+            Orientation? singleAxis = IsComboBoxDropDown || InnerPanel.WrapsChildren ? null : Orientation;
+            RepositionDirections? direction = GetRepeatedGamepadDirection(gamepad, singleAxis, out bool leavesList);
 
             var pressedButton = (LoseListItemFocusOnPrimaryInput && gamepad.ButtonPushed(GamepadButton.A)) ||
                 gamepad.ButtonPushed(GamepadButton.B);
 
-            DoListItemFocusUpdate(direction, pressedButton);
+            if (leavesList && !pressedButton)
+            {
+                // The same navigation the list uses at its top level for this direction.
+                HandleGamepadNavigation(gamepad);
+                if (!IsFocused)
+                {
+                    DoListItemsHaveFocus = false;
+                }
+            }
+            else
+            {
+                DoListItemFocusUpdate(direction, pressedButton);
+            }
 
             void RaiseIfPushedAndEnabled(GamepadButton button)
             {
@@ -2058,10 +2140,16 @@ public class ListBox : ItemsControl, IInputReceiver
 
             RepositionDirections? direction = null;
 
+            // Up/Down step every list. Left/Right additionally step a list that lays out horizontally or
+            // wraps (not a ComboBox drop-down). A key the project configured for moving focus out of the
+            // list (Left/RightKeyCombos) keeps that meaning.
+            bool stepsOnLeftRight = !IsComboBoxDropDown &&
+                (InnerPanel.WrapsChildren || InnerPanel.ChildrenLayout != Gum.Managers.ChildrenLayout.TopToBottomStack);
+
             // Keys.X references are fully qualified to Gum.Forms.Input.Keys so this block compiles
             // on every platform regardless of what the file-level `using Keys = ...` alias resolves
             // to. KeyTyped (pushed + repeat while held) replaces the old "KeyPushed OR KeysTyped.Contains"
-            // two-step — same effective behavior, single call, works on the shared base interface.
+            // two-step - same effective behavior, single call, works on the shared base interface.
             if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Up) == true)
             {
                 direction = RepositionDirections.Up;
@@ -2069,6 +2157,20 @@ public class ListBox : ItemsControl, IInputReceiver
             if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Down) == true)
             {
                 direction = RepositionDirections.Down;
+            }
+
+            if (stepsOnLeftRight)
+            {
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Right) == true &&
+                    !IsKeyComboConfigured(RightKeyCombos, Gum.Forms.Input.Keys.Right))
+                {
+                    direction = RepositionDirections.Right;
+                }
+                if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Left) == true &&
+                    !IsKeyComboConfigured(LeftKeyCombos, Gum.Forms.Input.Keys.Left))
+                {
+                    direction = RepositionDirections.Left;
+                }
             }
 
             DoListItemFocusUpdate(direction, pressedButton);
@@ -2079,6 +2181,45 @@ public class ListBox : ItemsControl, IInputReceiver
 
 
 
+    }
+
+#if !FRB
+    private static bool IsKeyComboConfigured(List<KeyCombo> combos, Gum.Forms.Input.Keys key)
+    {
+        foreach (KeyCombo combo in combos)
+        {
+            if (combo.PushedKey == key)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+#endif
+
+    /// <summary>
+    /// Set by a ComboBox for its popup list: called when Escape is pushed, returns whether the owner
+    /// handled it (closed its open drop-down), which consumes the key.
+    /// </summary>
+    internal Func<bool>? EscapeHandler { get; set; }
+
+    /// <inheritdoc/>
+    public override void OnFocusUpdatePreview(RoutedEventArgs args)
+    {
+#if !FRB
+        if (EscapeHandler != null)
+        {
+            foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
+            {
+                if (keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape) && EscapeHandler())
+                {
+                    args.Handled = true;
+                    return;
+                }
+            }
+        }
+#endif
+        base.OnFocusUpdatePreview(args);
     }
 
     private int? GetListBoxIndexAt(float x, float y)
@@ -2113,6 +2254,119 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     public float AdditionalOffsetToCheckForDPadNavigation { get; set; } = 4;
 
+    /// <summary>
+    /// Raised when gamepad or keyboard confirm or back is pressed while the items have focus but no
+    /// row is focused (nothing is selected). A ComboBox closes its drop-down on this.
+    /// </summary>
+    internal event EventHandler? ConfirmedWithoutFocusedRow;
+
+    /// <summary>
+    /// The first enabled row starting at <paramref name="startRow"/> and moving by <paramref name="step"/>
+    /// (+1 or -1), or -1 when there is none. A disabled row is not selectable by gamepad or keyboard,
+    /// the same as it is not selectable by mouse.
+    /// </summary>
+    private int FindEnabledRow(int startRow, int step)
+    {
+        for (int row = startRow; row >= 0 && row < ListBoxItemsInternal.Count; row += step)
+        {
+            if (ListBoxItemsInternal[row].IsEnabled)
+            {
+                return row;
+            }
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// The row the gamepad or keyboard steps from: the focused row, otherwise the selected row (a
+    /// selected row refuses focus when it is disabled), otherwise -1.
+    /// </summary>
+    private int GetNavigationRow()
+    {
+        int row = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
+        if (row < 0 && _selectedRowsInternal.Count > 0)
+        {
+            row = ListBoxItemsInternal.IndexOf(_selectedRowsInternal[0]);
+        }
+        return row;
+    }
+
+    /// <summary>
+    /// Moves the selection and focus one enabled row forward or backward, as the gamepad or keyboard
+    /// does. Stays where it is at either end; with no current row, picks the first enabled row.
+    /// </summary>
+    internal void StepRowSelection(bool forward)
+    {
+        if (ListBoxItemsInternal.Count == 0)
+        {
+            return;
+        }
+
+        // Move through rows (ListBoxItem space) so non-ListBoxItem visuals are skipped and
+        // ListBoxItemsInternal is never indexed by an Items-space index (issue #556). The
+        // current row is resolved by focus, not by SelectedObject's value (issue #3509).
+        int step = forward ? 1 : -1;
+        int currentRow = GetNavigationRow();
+        int targetRow;
+        if (currentRow < 0)
+        {
+            targetRow = FindEnabledRow(0, 1);
+        }
+        else
+        {
+            targetRow = FindEnabledRow(currentRow + step, step);
+            if (targetRow < 0 && ListBoxItemsInternal[currentRow].IsEnabled)
+            {
+                targetRow = currentRow;
+            }
+        }
+
+        if (targetRow > -1)
+        {
+            SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[targetRow]);
+            ListBoxItemsInternal[targetRow].IsFocused = true;
+        }
+    }
+
+    /// <summary>
+    /// The row next to <paramref name="currentRow"/> in the direction (wrapping layouts), skipping
+    /// disabled rows, or null when there is no enabled row that way.
+    /// </summary>
+    private int? GetEnabledListBoxIndexNextTo(int currentRow, RepositionDirections direction)
+    {
+        var offsetToCheck = InnerPanel.StackSpacing + AdditionalOffsetToCheckForDPadNavigation;
+        int? index = currentRow;
+        for (int attempts = 0; attempts <= ListBoxItemsInternal.Count; attempts++)
+        {
+            var from = ListBoxItemsInternal[index!.Value].Visual;
+
+            float x = from.GetAbsoluteX() + from.AbsoluteWidth / 2.0f;
+            float y = from.GetAbsoluteY() + from.AbsoluteHeight / 2.0f;
+            switch (direction)
+            {
+                case RepositionDirections.Left:
+                    x = from.GetAbsoluteLeft() - offsetToCheck;
+                    break;
+                case RepositionDirections.Right:
+                    x = from.GetAbsoluteRight() + offsetToCheck;
+                    break;
+                case RepositionDirections.Up:
+                    y = from.GetAbsoluteTop() - offsetToCheck;
+                    break;
+                case RepositionDirections.Down:
+                    y = from.GetAbsoluteBottom() + offsetToCheck;
+                    break;
+            }
+
+            index = GetListBoxIndexAt(x, y);
+            if (index == null || ListBoxItemsInternal[index.Value].IsEnabled)
+            {
+                return index;
+            }
+        }
+        return null;
+    }
+
     private void DoListItemFocusUpdate(RepositionDirections? direction, 
         // Whether a button was pushed to consider this a selection.
         // Currently we don't differentiate between A and B on combo
@@ -2138,35 +2392,7 @@ public class ListBox : ItemsControl, IInputReceiver
             var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
             if (currentRow > -1 && currentRow < ListBoxItemsInternal.Count)
             {
-                var currentSelection = this.ListBoxItemsInternal[currentRow].Visual;
-
-                var offsetToCheck = InnerPanel.StackSpacing + AdditionalOffsetToCheckForDPadNavigation;
-
-                float xCenter = currentSelection.GetAbsoluteX() + currentSelection.AbsoluteWidth / 2.0f;
-                float yCenter = currentSelection.GetAbsoluteY() + currentSelection.AbsoluteHeight / 2.0f;
-
-                float x = xCenter;
-                float y = yCenter;
-                switch (direction.Value)
-                {
-                    case RepositionDirections.Left:
-                        x = currentSelection.GetAbsoluteLeft() - offsetToCheck;
-                        break;
-
-                    case RepositionDirections.Right:
-                        x = currentSelection.GetAbsoluteRight() + offsetToCheck;
-                        break;
-
-                    case RepositionDirections.Up:
-                        y = currentSelection.GetAbsoluteTop() - offsetToCheck;
-                        break;
-
-                    case RepositionDirections.Down:
-                        y = currentSelection.GetAbsoluteBottom() + offsetToCheck;
-                        break;
-                }
-
-                var index = GetListBoxIndexAt(x, y);
+                var index = GetEnabledListBoxIndexNextTo(currentRow, direction!.Value);
 
                 if (index != null)
                 {
@@ -2177,10 +2403,14 @@ public class ListBox : ItemsControl, IInputReceiver
                     this.ListBoxItemsInternal[index.Value].IsFocused = true;
                 }
             }
-            else if (ListBoxItemsInternal.Count > 0)
+            else
             {
-                SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[0]);
-                this.ListBoxItemsInternal[0].IsFocused = true;
+                int firstEnabledRow = FindEnabledRow(0, 1);
+                if (firstEnabledRow > -1)
+                {
+                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[firstEnabledRow]);
+                    this.ListBoxItemsInternal[firstEnabledRow].IsFocused = true;
+                }
             }
 
             // The fallback behavior is kinda confusing, so let's just handle it if it wraps.
@@ -2194,40 +2424,11 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             if (direction == RepositionDirections.Down || direction == RepositionDirections.Right)
             {
-                if (ListBoxItemsInternal.Count > 0)
-                {
-                    // Move through rows (ListBoxItem space) so non-ListBoxItem visuals are skipped and
-                    // ListBoxItemsInternal is never indexed by an Items-space index (issue #556). The
-                    // current row is resolved by focus, not by SelectedObject's value (issue #3509).
-                    var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
-                    if (currentRow < 0)
-                    {
-                        currentRow = 0;
-                    }
-                    else if (currentRow < ListBoxItemsInternal.Count - 1)
-                    {
-                        currentRow++;
-                    }
-                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[currentRow]);
-                    this.ListBoxItemsInternal[currentRow].IsFocused = true;
-                }
+                StepRowSelection(forward: true);
             }
             else if (direction == RepositionDirections.Up || direction == RepositionDirections.Left)
             {
-                if (ListBoxItemsInternal.Count > 0)
-                {
-                    var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
-                    if (currentRow < 0)
-                    {
-                        currentRow = 0;
-                    }
-                    else if (currentRow > 0)
-                    {
-                        currentRow--;
-                    }
-                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[currentRow]);
-                    this.ListBoxItemsInternal[currentRow].IsFocused = true;
-                }
+                StepRowSelection(forward: false);
             }
         }
 
@@ -2237,6 +2438,10 @@ public class ListBox : ItemsControl, IInputReceiver
             if(selectedRow != -1)
             {
                 HandleListBoxItemPushed(this.ListBoxItemsInternal[selectedRow], EventArgs.Empty);
+            }
+            else
+            {
+                ConfirmedWithoutFocusedRow?.Invoke(this, EventArgs.Empty);
             }
             if (CanListItemsLoseFocus)
             {
@@ -2268,7 +2473,7 @@ public class ListBox : ItemsControl, IInputReceiver
             // isn't duplicated between the two copies (issue #3839).
             ApplyGamepadStickScroll(gamepad);
 
-            if (gamepad.ButtonPushed(GamepadButton.A))
+            if (IsEnabled && gamepad.ButtonPushed(GamepadButton.A))
             {
                 DoListItemsHaveFocus = true;
             }
@@ -2328,7 +2533,7 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             foreach(var keyCombo in FrameworkElement.ClickCombos)
             {
-                if(keyCombo.IsComboPushed())
+                if(IsEnabled && keyCombo.IsComboPushed())
                 {
                     DoListItemsHaveFocus = true;
                     break;

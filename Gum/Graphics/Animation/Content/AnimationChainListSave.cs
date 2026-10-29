@@ -227,7 +227,9 @@ namespace Gum.Content.AnimationChain
                     AnimationChainSave chain = new AnimationChainSave
                     {
                         Name = chainObj["name"]?.GetValue<string>() ?? string.Empty,
-                        Loop = BoolProperty(chainObj, "loop", defaultValue: true)
+                        Loop = BoolProperty(chainObj, "loop", defaultValue: true),
+                        PingPong = BoolProperty(chainObj, "pingPong"),
+                        Reverse = BoolProperty(chainObj, "reverse")
                     };
 
                     if (chainObj["frames"] is JsonArray framesArray)

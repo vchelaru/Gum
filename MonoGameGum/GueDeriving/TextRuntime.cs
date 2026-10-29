@@ -729,8 +729,26 @@ public class TextRuntime : InteractiveGue
 
 #if XNALIKE || RAYLIB
     /// <summary>
-    /// Regenerates this text's font at <paramref name="oversampleRatio"/> times <see cref="FontSize"/>
-    /// via <see cref="CustomSetPropertyOnRenderableType.InMemoryFontCreator"/>, then compensates with
+    /// Builds the <see cref="BmfcSave"/> for an in-memory bake or growth of this text's font at
+    /// <paramref name="fontSize"/>. BmfcSave's own 512x256 output default is sized for a small disk
+    /// cache file and would cap an in-memory font at a handful of glyphs; see
+    /// <see cref="MaxInMemoryFontAtlasSize"/>.
+    /// </summary>
+    BmfcSave CreateInMemoryBmfcSave(float fontSize)
+    {
+        string? fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
+        BmfcSave bmfcSave = new BmfcSave();
+        CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
+        bmfcSave.FontSize = fontSize;
+        bmfcSave.OutputWidth = MaxInMemoryFontAtlasSize;
+        bmfcSave.OutputHeight = MaxInMemoryFontAtlasSize;
+        return bmfcSave;
+    }
+
+    /// <summary>
+    /// Regenerates this text's font at <paramref name="oversampleRatio"/> times its drawn size
+    /// (<see cref="FontSize"/> times <see cref="FontScale"/>, and GlobalFontScale on XNALIKE) via
+    /// <see cref="CustomSetPropertyOnRenderableType.InMemoryFontCreator"/>, then compensates with
     /// the contained Text's internal-only <see cref="Text.OversampleCompensationScale"/> so the
     /// on-screen size is unchanged -- the glyphs are just rasterized at a higher pixel density
     /// (issue #4302). Unlike the compensation this replaced, it composes with the public
@@ -738,9 +756,10 @@ public class TextRuntime : InteractiveGue
     /// (including inline [FontScale] BBCode runs, XNALIKE only -- see the Raylib-side gap noted on
     /// <see cref="Text.OversampleCompensationScale"/>) keeps working while oversampling is active.
     /// </summary>
-    /// <param name="oversampleRatio">How many times larger than <see cref="FontSize"/> to rasterize
+    /// <param name="oversampleRatio">How many times larger than its drawn size to rasterize
     /// the font, e.g. the current effective camera/layer zoom. Requested as an exact fraction --
-    /// KernSmith's rasterizer has fractional precision (see issue #4304), so this is not rounded.</param>
+    /// KernSmith's rasterizer has fractional precision (see issue #4304), so this is not rounded. The
+    /// raster never goes below <see cref="FontSize"/>.</param>
     /// <returns>
     /// True if the font was regenerated. False if <see cref="UseFontOversampling"/> is off, no
     /// in-memory font creator is registered, or <paramref name="oversampleRatio"/> is not positive --
@@ -749,30 +768,31 @@ public class TextRuntime : InteractiveGue
     /// </returns>
     public bool RegenerateOversampledFont(float oversampleRatio)
     {
-        if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null || oversampleRatio <= 0)
+        if (oversampleRatio <= 0)
         {
             return false;
         }
 
-        var rasterFontSize = System.MathF.Max(1f, FontSize * oversampleRatio);
+        return RegenerateOversampledFontAtRasterSize(GetOversampleRasterFontSize(oversampleRatio));
+    }
 
-        var fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
+    bool RegenerateOversampledFontAtRasterSize(float rasterFontSize)
+    {
+        if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
+        {
+            return false;
+        }
 
-        var bmfcSave = new BmfcSave();
-        CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
-        bmfcSave.FontSize = rasterFontSize;
-        // BmfcSave's own OutputWidth/OutputHeight default (512x256) is sized for a small, disk-
-        // persisted .fnt/.png cache file -- far too small a ceiling for an in-memory oversampled
-        // bake, which ReplayGrownCharacters below also reuses as the growth ceiling for this same
-        // font. See MaxInMemoryFontAtlasSize's own doc comment.
-        bmfcSave.OutputWidth = MaxInMemoryFontAtlasSize;
-        bmfcSave.OutputHeight = MaxInMemoryFontAtlasSize;
+        rasterFontSize = System.MathF.Max(1f, rasterFontSize);
+
+        // ReplayGrownCharacters below also reuses this as the growth ceiling for this same font.
+        BmfcSave bmfcSave = CreateInMemoryBmfcSave(rasterFontSize);
 
 #if XNALIKE
-        BitmapFont? font;
+        BitmapFont? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
         try
         {
-            font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+            font ??= CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
         }
         catch (Exception ex)
         {
@@ -794,39 +814,25 @@ public class TextRuntime : InteractiveGue
         // nothing about characters grown in at runtime, so replay this Text's own growth history into
         // it before it becomes live, or continuous zooming would silently drop them on every regenerate.
         ReplayGrownCharacters(font, bmfcSave);
+        UseSharedOversampledFont(bmfcSave.FontCacheFileName, font);
 
         // Issue #4309: pins the OUTGOING (native) font as the measurement source, if nothing is pinned
         // yet, before swapping in this new (oversampled) display font -- see Text.SetOversampledDisplayFont.
         ContainedText.SetOversampledDisplayFont(font);
 
-        // Issue #4309 (render-side gap found via manual test): a naive FontSize/rasterFontSize ratio
-        // assumes the oversampled font's glyphs are an exact linear scale of the pinned/native font's --
-        // they're not, since hinting isn't linear across raster sizes. That leaves a visible gap (or
-        // overflow) between the drawn text and its own box, even though the box's SIZE is now correctly
-        // stable. Deriving the compensation from the ACTUAL measured width ratio between the two fonts,
-        // for this Text's own wrapped content, makes the drawn text fill exactly the pinned box instead
-        // of only approximately fitting it.
-        BitmapFont? pinnedFont = ContainedText.MeasurementFont;
-        if (pinnedFont != null)
-        {
-            pinnedFont.GetRequiredWidthAndHeight(ContainedText.WrappedText, out int pinnedWidth, out _);
-            font.GetRequiredWidthAndHeight(ContainedText.WrappedText, out int oversampledWidth, out _);
-            ContainedText.OversampleCompensationScale = oversampledWidth > 0
-                ? (float)pinnedWidth / oversampledWidth
-                : FontSize / rasterFontSize;
-        }
-        else
-        {
-            ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
-        }
+        // Issue #6814: exactly the inverse of the raster ratio, so each atlas pixel lands on one screen
+        // pixel. Fitting the drawn width to the pinned box instead (#4309) resamples every glyph, because
+        // hinting rounds advances differently at each raster size. The drawn text can then differ from
+        // the box by that rounding; Text aligns on the drawn width so it stays centered or right-aligned.
+        ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
 #else
         // Raylib parity for #4317 (issue #4330): same shape as the XNALIKE branch above, but against
         // Raylib_cs.Font (a live GPU-resident font, not a BitmapFont) -- see IRaylibFontCreator and
         // Text.SetOversampledDisplayFont/MeasureLinesWidth (Runtimes/RaylibGum/Renderables/Text.cs).
-        Raylib_cs.Font? font;
+        Raylib_cs.Font? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
         try
         {
-            font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+            font ??= CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
         }
         catch (Exception ex)
         {
@@ -847,23 +853,15 @@ public class TextRuntime : InteractiveGue
         Font replayedFont = font.Value;
         ReplayGrownCharacters(ref replayedFont, bmfcSave);
         font = replayedFont;
+        UseSharedOversampledFont(bmfcSave.FontCacheFileName, replayedFont);
 
         ContainedText.SetOversampledDisplayFont(font.Value);
 
-        Raylib_cs.Font? pinnedFont = ContainedText.MeasurementFont;
-        if (pinnedFont != null)
-        {
-            var pinnedWidth = Gum.Renderables.Text.MeasureLinesWidth(pinnedFont.Value, ContainedText.WrappedText);
-            var oversampledWidth = Gum.Renderables.Text.MeasureLinesWidth(font.Value, ContainedText.WrappedText);
-            ContainedText.OversampleCompensationScale = oversampledWidth > 0
-                ? pinnedWidth / oversampledWidth
-                : FontSize / rasterFontSize;
-        }
-        else
-        {
-            ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
-        }
+        // See the XNALIKE branch above (#6814). Raylib already aligns each line on its drawn width.
+        ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
 #endif
+
+        _oversampledRasterFontSize = rasterFontSize;
 
         // BitmapFont/OversampleCompensationScale are renderable-level properties -- assigning them
         // directly (bypassing the normal property-setter cascade a call like FontSize= goes through)
@@ -875,7 +873,17 @@ public class TextRuntime : InteractiveGue
         return true;
     }
 
-    float _lastAutoOversampleRatio = 1f;
+    // The raster size of the live oversampled display font, or null while this text draws with its
+    // native font. Automatic oversampling compares against it, and glyph growth bakes at it.
+    float? _oversampledRasterFontSize;
+
+    /// <summary>
+    /// The raster size that draws this text's glyphs one atlas pixel per screen pixel at
+    /// <paramref name="oversampleRatio"/> (the zoom): its drawn size times the ratio (issue #6816).
+    /// Never below <see cref="FontSize"/>, since oversampling only raises resolution.
+    /// </summary>
+    float GetOversampleRasterFontSize(float oversampleRatio) =>
+        FontSize * System.Math.Max(1f, ContainedText.NominalFontScale * oversampleRatio);
 
     /// <summary>
     /// Wired to <see cref="Text.OnPreRender"/> so it runs once per frame for every visible Text on
@@ -910,28 +918,23 @@ public class TextRuntime : InteractiveGue
             // normal (non-oversampled) property cascade so it actually reverts to native, instead of
             // silently leaving the last-oversampled raster/compensation in place forever just because
             // no further regeneration is happening. UpdateToFontValues also resets
-            // OversampleCompensationScale and the hysteresis state (_lastAutoOversampleRatio) via
+            // OversampleCompensationScale and the hysteresis state (_oversampledRasterFontSize) via
             // CustomSetPropertyOnRenderable.UpdateToFontValues, so this only fires once per
             // enabled-to-disabled transition, not every frame.
-            if (_lastAutoOversampleRatio != 1f)
+            if (_oversampledRasterFontSize != null)
             {
                 UpdateToFontValues();
             }
             return false;
         }
 
-        // Regenerating below native resolution isn't this feature's job -- only oversample, never
-        // undersample.
-        var oversampleRatio = System.Math.Max(1f, effectiveZoom);
+        // The full scaled raster size is compared, so a FontScale change regenerates on the same
+        // threshold a zoom change does.
+        float rasterFontSize = GetOversampleRasterFontSize(effectiveZoom);
+        float currentRasterFontSize = _oversampledRasterFontSize ?? FontSize;
 
-        var rasterDelta = System.MathF.Abs(FontSize * oversampleRatio - FontSize * _lastAutoOversampleRatio);
-        if (rasterDelta >= OversamplingRegenerateThresholdPixels && RegenerateOversampledFont(oversampleRatio))
-        {
-            _lastAutoOversampleRatio = oversampleRatio;
-            return true;
-        }
-
-        return false;
+        var rasterDelta = System.MathF.Abs(rasterFontSize - currentRasterFontSize);
+        return rasterDelta >= OversamplingRegenerateThresholdPixels && RegenerateOversampledFontAtRasterSize(rasterFontSize);
     }
 
     /// <summary>
@@ -965,7 +968,103 @@ public class TextRuntime : InteractiveGue
     /// stale (issue #4317). <see cref="Text.OversampleCompensationScale"/> itself is reset by the
     /// caller directly, since it lives on the renderable that caller already has a reference to.
     /// </summary>
-    internal void ResetAutomaticOversamplingState() => _lastAutoOversampleRatio = 1f;
+    internal void ResetAutomaticOversamplingState()
+    {
+        _oversampledRasterFontSize = null;
+        // The caller is about to put this text back on its native font. The font is not disposed here,
+        // since this runs before the native font replaces it on the renderable.
+        ReleaseSharedOversampledFont(disposeWhenUnused: false);
+    }
+
+    sealed class SharedOversampledFont
+    {
+        public string Key = null!;
+        public object? Creator;
+#if XNALIKE
+        public BitmapFont Font = null!;
+#else
+        public Raylib_cs.Font Font;
+#endif
+        public int UserCount;
+    }
+
+    // Issue #6810: oversampled fonts in use, keyed by BmfcSave.FontCacheFileName, so texts asking for the
+    // same font at the same raster size share one generation instead of each building its own. A font
+    // leaves the map when the last text using it moves to another raster size or back to its native
+    // font, so continuous zooming does not keep every size alive. The map owns disposal (#6814): a font
+    // is disposed when the last text using it moves to another oversampled font (#4364), never while
+    // another text still draws it.
+    static readonly Dictionary<string, SharedOversampledFont> _sharedOversampledFonts = new(StringComparer.OrdinalIgnoreCase);
+
+    SharedOversampledFont? _sharedOversampledFont;
+
+#if XNALIKE
+    static BitmapFont? FindSharedOversampledFont(string key)
+#else
+    static Raylib_cs.Font? FindSharedOversampledFont(string key)
+#endif
+    {
+        // A font made by a creator that has since been replaced is not reused.
+        if (_sharedOversampledFonts.TryGetValue(key, out SharedOversampledFont? shared)
+            && shared.Creator == CustomSetPropertyOnRenderableType.InMemoryFontCreator)
+        {
+            return shared.Font;
+        }
+        return null;
+    }
+
+#if XNALIKE
+    void UseSharedOversampledFont(string key, BitmapFont font)
+#else
+    void UseSharedOversampledFont(string key, Raylib_cs.Font font)
+#endif
+    {
+        object? creator = CustomSetPropertyOnRenderableType.InMemoryFontCreator;
+        if (!_sharedOversampledFonts.TryGetValue(key, out SharedOversampledFont? shared) || shared.Creator != creator)
+        {
+            shared = new SharedOversampledFont { Key = key, Creator = creator };
+            _sharedOversampledFonts[key] = shared;
+        }
+        // On Raylib, growth hands back an updated copy of the font, so keep the latest one.
+        shared.Font = font;
+
+        if (_sharedOversampledFont == shared)
+        {
+            return;
+        }
+        ReleaseSharedOversampledFont(disposeWhenUnused: true);
+        shared.UserCount++;
+        _sharedOversampledFont = shared;
+    }
+
+    void ReleaseSharedOversampledFont(bool disposeWhenUnused)
+    {
+        SharedOversampledFont? shared = _sharedOversampledFont;
+        if (shared == null)
+        {
+            return;
+        }
+        _sharedOversampledFont = null;
+        shared.UserCount--;
+        if (shared.UserCount > 0)
+        {
+            return;
+        }
+        // The map may already hold a newer entry under this key, made after the creator changed.
+        if (_sharedOversampledFonts.TryGetValue(shared.Key, out SharedOversampledFont? current) && current == shared)
+        {
+            _sharedOversampledFonts.Remove(shared.Key);
+        }
+        if (disposeWhenUnused)
+        {
+#if XNALIKE
+            shared.Font.Dispose();
+#else
+            // ManagedFont also unloads the drop-shadow companion and clears the line-metrics entry.
+            new ManagedFont(shared.Font).Dispose();
+#endif
+        }
+    }
 #endif
 #endif
 
@@ -1002,19 +1101,96 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     void CheckAndGrowFont()
     {
-        if (!UseAutomaticFontGrowth)
-        {
-            return;
-        }
-
-#if XNALIKE
-        if (CustomSetPropertyOnRenderableType.InMemoryFontCreator is not IGrowableFontCreator growCreator)
+        if (!UseAutomaticFontGrowth && MissingCharacterBehavior == MissingCharacterBehavior.ConsumeSilently)
         {
             return;
         }
 
         string? text = ContainedText.RawText;
         if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
+        if (UseAutomaticFontGrowth)
+        {
+            GrowFontIfNeeded(text);
+        }
+
+        if (MissingCharacterBehavior != MissingCharacterBehavior.ConsumeSilently)
+        {
+#if XNALIKE
+            // A Text with no font of its own draws with the default font.
+            BitmapFont? font = ContainedText.MeasurementFont ?? ContainedText.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
+            // A font with no characters at all failed to load, which is reported where it loads.
+            string missing = font?.GetCharacterInfo(' ') == null ? string.Empty : font.GetMissingCharacters(text);
+#else
+            Font font = ContainedText.MeasurementFont ?? ContainedText.Font;
+            string missing = font.GlyphCount == 0 ? string.Empty : font.GetMissingCharacters(text);
+#endif
+            HandleMissingCharacters(missing);
+        }
+    }
+
+    // Font identity (as the report names it) mapped to the characters already reported for it, shared
+    // by every Text so a missing character is reported once per font rather than once per Text.
+    static readonly Dictionary<string, HashSet<char>> _reportedMissingCharacters = new();
+
+    void HandleMissingCharacters(string missing)
+    {
+        if (missing.Length == 0)
+        {
+            return;
+        }
+
+        string? fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
+        string fontIdentity = (UseCustomFont ? CustomFontFile : fontFilePath ?? Font) ?? "(default)";
+        string key = $"{fontIdentity}|{FontSize}|{IsBold}|{IsItalic}|{OutlineThickness}|{UseFontSmoothing}";
+        if (!_reportedMissingCharacters.TryGetValue(key, out HashSet<char>? reported))
+        {
+            reported = new HashSet<char>();
+            _reportedMissingCharacters[key] = reported;
+        }
+
+        bool shouldThrow = MissingCharacterBehavior == MissingCharacterBehavior.ThrowException;
+        List<char> toReport = new();
+        foreach (char c in missing)
+        {
+            // Line breaks and tabs are layout, not glyphs.
+            if (char.IsControl(c))
+            {
+                continue;
+            }
+            // Throwing happens every time. A report happens once, and a failed growth was already reported.
+            if (shouldThrow || (!_failedGrowthCharacters.Contains(c) && reported.Add(c)))
+            {
+                toReport.Add(c);
+            }
+        }
+        if (toReport.Count == 0)
+        {
+            return;
+        }
+
+        string characters = string.Join(", ", toReport.Select(c => $"'{c}' (U+{(int)c:X4})"));
+        string codes = string.Join(",", toReport.Select(c => ((int)c).ToString()));
+        bool isPregeneratedFile = UseCustomFont && CustomFontFile?.EndsWith(".fnt", StringComparison.OrdinalIgnoreCase) == true;
+        string fix = isPregeneratedFile
+            ? $"Regenerate '{CustomFontFile}' with code point(s) {codes}."
+            : $"Add {codes} to FontRanges.";
+        string message = $"Text '{Name ?? "(unnamed)"}' uses {characters}, which font '{fontIdentity}' at size {FontSize} " +
+            $"does not have, so they draw as '?'. {fix}";
+        if (shouldThrow)
+        {
+            throw new InvalidOperationException(message);
+        }
+        CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(message);
+    }
+
+#if XNALIKE
+    void GrowFontIfNeeded(string text)
+    {
+        if (CustomSetPropertyOnRenderableType.InMemoryFontCreator is not IGrowableFontCreator growCreator)
         {
             return;
         }
@@ -1036,16 +1212,13 @@ public class TextRuntime : InteractiveGue
         // drawing would disagree with wrapping about whether it exists (design decision #3).
         if (measurementFont != null && displayFont != null && displayFont != measurementFont)
         {
-            GrowIfNeeded(growCreator, displayFont, FontSize * _lastAutoOversampleRatio, text);
+            GrowIfNeeded(growCreator, displayFont, _oversampledRasterFontSize ?? FontSize, text);
         }
+    }
 #else
+    void GrowFontIfNeeded(string text)
+    {
         if (CustomSetPropertyOnRenderableType.InMemoryFontCreator is not IGrowableRaylibFontCreator growCreator)
-        {
-            return;
-        }
-
-        string? text = ContainedText.RawText;
-        if (string.IsNullOrEmpty(text))
         {
             return;
         }
@@ -1076,13 +1249,13 @@ public class TextRuntime : InteractiveGue
         // drawing would disagree with wrapping about whether it exists (design decision #3).
         if (measurementFont != null && displayFont.Texture.Id != measurementFont.Value.Texture.Id)
         {
-            if (GrowIfNeeded(growCreator, ref displayFont, FontSize * _lastAutoOversampleRatio, text))
+            if (GrowIfNeeded(growCreator, ref displayFont, _oversampledRasterFontSize ?? FontSize, text))
             {
                 ContainedText.Font = displayFont;
             }
         }
-#endif
     }
+#endif
 
 #if XNALIKE
     void GrowIfNeeded(IGrowableFontCreator growCreator, BitmapFont font, float fontSize, string text)
@@ -1102,14 +1275,7 @@ public class TextRuntime : InteractiveGue
             }
         }
 
-        var fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
-        var bmfcSave = new BmfcSave();
-        CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
-        bmfcSave.FontSize = fontSize;
-        // See MaxInMemoryFontAtlasSize's doc comment -- BmfcSave's own 512x256 disk-cache default
-        // would cap growth at a handful of glyphs.
-        bmfcSave.OutputWidth = MaxInMemoryFontAtlasSize;
-        bmfcSave.OutputHeight = MaxInMemoryFontAtlasSize;
+        BmfcSave bmfcSave = CreateInMemoryBmfcSave(fontSize);
 
         try
         {
@@ -1128,7 +1294,7 @@ public class TextRuntime : InteractiveGue
                 // Font is the only identity that applies there. When UseCustomFont is true, Font
                 // still holds whatever unrelated default/last value it was constructed or last set
                 // to (e.g. "Arial") -- CustomFontFile/fontFilePath is the actual font in that case.
-                string? fontIdentity = fontFilePath ?? Font;
+                string? fontIdentity = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font) ?? Font;
                 CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
                     $"Font '{fontIdentity}' cannot render character(s) \"{new string(failed.ToArray())}\" -- " +
                     "no glyph for them exists in the font file.");
@@ -1181,14 +1347,7 @@ public class TextRuntime : InteractiveGue
             }
         }
 
-        var fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
-        var bmfcSave = new BmfcSave();
-        CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
-        bmfcSave.FontSize = fontSize;
-        // See MaxInMemoryFontAtlasSize's doc comment -- BmfcSave's own 512x256 disk-cache default
-        // would cap growth at a handful of glyphs.
-        bmfcSave.OutputWidth = MaxInMemoryFontAtlasSize;
-        bmfcSave.OutputHeight = MaxInMemoryFontAtlasSize;
+        BmfcSave bmfcSave = CreateInMemoryBmfcSave(fontSize);
 
         try
         {
@@ -1214,7 +1373,7 @@ public class TextRuntime : InteractiveGue
                 // Font is the only identity that applies there. When UseCustomFont is true, Font
                 // still holds whatever unrelated default/last value it was constructed or last set
                 // to (e.g. "Arial") -- CustomFontFile/fontFilePath is the actual font in that case.
-                string? fontIdentity = fontFilePath ?? Font;
+                string? fontIdentity = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font) ?? Font;
                 CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
                     $"Font '{fontIdentity}' cannot render character(s) \"{new string(failed.ToArray())}\" -- " +
                     "no glyph for them exists in the font file.");
@@ -1582,6 +1741,17 @@ public class TextRuntime : InteractiveGue
     public static bool UseAutomaticFontGrowth = false;
 
     /// <summary>
+    /// What a Text does when its font has no glyph for a character it shows (issue #6818). Such a
+    /// character draws as blank space, so without a report a narrow font range fails silently. The
+    /// message names the Text, the font, its size and the code points to add to the font ranges.
+    /// Characters <see cref="UseAutomaticFontGrowth"/> adds never count as missing. Separate from
+    /// <c>GraphicalUiElement.MissingFileBehavior</c>, which games set to throw: a missing file is an
+    /// authoring mistake, but a missing character can come from runtime text such as a player name.
+    /// Not used by SkiaGum, which draws from the whole typeface.
+    /// </summary>
+    public static MissingCharacterBehavior MissingCharacterBehavior = MissingCharacterBehavior.Report;
+
+    /// <summary>
     /// The page width/height, in pixels, used as the growth ceiling for a font <see cref="UseAutomaticFontGrowth"/>
     /// grows, and as the bake size for a font <see cref="UseFontOversampling"/> regenerates -- both
     /// in-memory-only KernSmith fonts, never disk-persisted. <see cref="BmfcSave.OutputWidth"/>/
@@ -1717,4 +1887,62 @@ public class TextRuntime : InteractiveGue
     /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
     /// <returns>The index in the WrappedText</returns>
     public int GetCharacterIndexAtPosition(float screenX, float screenY) => ContainedText.GetCharacterIndexAtPosition(screenX, screenY);
+
+    /// <summary>
+    /// Returns the BBCode tag named <paramref name="tagName"/> that contains the character at
+    /// <paramref name="index"/>, or null if there is none. The index is in the text as displayed (BBCode
+    /// removed), the same index <see cref="GetCharacterIndexAtPosition"/> returns, so the two combine to
+    /// find the tag under the cursor: <c>text.GetTagAtIndex("Link", text.GetCharacterIndexAtPosition(x, y))</c>.
+    /// </summary>
+    /// <remarks>
+    /// If tags of the same name are nested, the innermost one is returned. Only tags the parser
+    /// recognizes (see <see cref="BbCodeParser.KnownTags"/>) can be found, and a tag needs its closing
+    /// tag to be found.
+    /// </remarks>
+    /// <param name="tagName">The tag name, such as "Link". Case is ignored.</param>
+    /// <param name="index">The index in the text as displayed.</param>
+    /// <returns>The tag's name, argument, and range, or null if no such tag contains the index.</returns>
+    public TextTagSpan? GetTagAtIndex(string tagName, int index)
+    {
+        List<FoundTag>? tags = ContainedText.ParsedBbCodeTags;
+        if (tags == null)
+        {
+            return null;
+        }
+
+        // Tags are ordered by where they open, so the last match is the innermost.
+        TextTagSpan? innermost = null;
+        for (int i = 0; i < tags.Count; i++)
+        {
+            FoundTag tag = tags[i];
+            int start = tag.Open.StartStrippedIndex;
+            int end = tag.Close.StartStrippedIndex;
+            if (index >= start && index < end && string.Equals(tag.Name, tagName, StringComparison.OrdinalIgnoreCase))
+            {
+                innermost = new TextTagSpan(tag.Name, tag.Open.Argument, start, end);
+            }
+        }
+
+        return innermost;
+    }
+}
+
+/// <summary>
+/// What a Text does with a character its font has no glyph for. See
+/// <see cref="TextRuntime.MissingCharacterBehavior"/>.
+/// </summary>
+public enum MissingCharacterBehavior
+{
+    /// <summary>The character draws as '?' and nothing is reported.</summary>
+    ConsumeSilently,
+    /// <summary>
+    /// Raises <c>CustomSetPropertyOnRenderable.PropertyAssignmentError</c> (also written to
+    /// <see cref="System.Console.Error"/>) once per font and character for the whole process.
+    /// </summary>
+    Report,
+    /// <summary>
+    /// Throws an <see cref="System.InvalidOperationException"/> every time a Text wraps text holding
+    /// the character. Meant for debug builds and tests that should fail on a font range gap.
+    /// </summary>
+    ThrowException
 }

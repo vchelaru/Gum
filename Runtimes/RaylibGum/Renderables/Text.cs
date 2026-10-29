@@ -452,9 +452,15 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// The scale applied when drawing plain (non-BBCode) text: composes the public <see cref="FontScale"/>
-    /// with <see cref="OversampleCompensationScale"/>.
+    /// with <see cref="SystemManagers.GlobalFontScale"/> and <see cref="OversampleCompensationScale"/>.
     /// </summary>
-    private float EffectiveFontScale => FontScale * _oversampleCompensationScale;
+    private float EffectiveFontScale => ComposeFontScale(FontScale) * _oversampleCompensationScale;
+
+    /// <summary>
+    /// <paramref name="baseFontScale"/> (the Text's own or an inline run's FontScale) composed with
+    /// <see cref="SystemManagers.GlobalFontScale"/>, as MonoGame's Text does.
+    /// </summary>
+    private float ComposeFontScale(float baseFontScale) => baseFontScale * SystemManagers.GlobalFontScale;
 
     /// <summary>
     /// The scale applied to pre-rendered layout sizes (box width/height, vertical origin offsets). When a
@@ -465,7 +471,14 @@ public class Text : IVisible, IRenderableIpso,
     /// when unset (matches today's unchanged behavior, since compensation defaults to 1 with no active
     /// oversampling).
     /// </summary>
-    private float MeasurementFontScale => _measurementFont != null ? FontScale : EffectiveFontScale;
+    private float MeasurementFontScale => _measurementFont != null ? NominalFontScale : EffectiveFontScale;
+
+    /// <summary>
+    /// The scale this text draws at without <see cref="OversampleCompensationScale"/>:
+    /// <see cref="FontScale"/> composed with <see cref="SystemManagers.GlobalFontScale"/>. Oversampling
+    /// rasterizes at FontSize times this times the zoom so each atlas pixel lands on one screen pixel.
+    /// </summary>
+    internal float NominalFontScale => ComposeFontScale(FontScale);
 
     // Issue #4370 (MonoGame parity): word-wrap must convert a Width constraint using the UNcompensated
     // scale, since wrap decisions measure words against EffectiveMeasurementFont (native units). Already
@@ -483,21 +496,11 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     internal void SetOversampledDisplayFont(Font oversampledFont)
     {
+        // A superseded oversampled font is not unloaded here: other texts can share it, so TextRuntime's
+        // shared-font map unloads it once no text uses it (#4364, #6814).
         if (MeasurementFont == null)
         {
             MeasurementFont = Font;
-        }
-        else if (_font.BaseSize != 0
-            && _font.Texture.Id != MeasurementFont.Value.Texture.Id
-            && _font.Texture.Id != oversampledFont.Texture.Id)
-        {
-            // Issue #4364: MeasurementFont is already pinned, so _font here is a previously generated
-            // oversampled font being superseded by another re-rasterize (e.g. mid continuous zoom
-            // gesture) -- it isn't cached or referenced anywhere else, so its GPU atlas must be unloaded
-            // here or it leaks VRAM on every swap. ManagedFont also unloads its drop-shadow companion
-            // (if any) and clears its line-metrics registry entry, mirroring the cleanup a cached font
-            // gets elsewhere (see RaylibFontShadowRegistry/RaylibFontMetricsRegistry).
-            new ManagedFont(_font).Dispose();
         }
 
         if (_font.Texture.Id != oversampledFont.Texture.Id || _font.BaseSize != oversampledFont.BaseSize)
@@ -507,6 +510,13 @@ public class Text : IVisible, IRenderableIpso,
             UpdatePreRenderDimensions();
         }
     }
+
+    private static Vector2 MeasureBlankedText(Font font, string text, float fontSize, float spacing) =>
+        MeasureTextEx(font, ControlCharacterBlanker.Blank(text, expandTabs: !RaylibFontMetricsRegistry.HasTabGlyph(font)), fontSize, spacing);
+
+    private static void DrawBlankedText(Font font, string text, Vector2 position, Vector2 origin, float rotation,
+        float fontSize, float spacing, Color tint) =>
+        DrawTextPro(font, ControlCharacterBlanker.Blank(text, expandTabs: !RaylibFontMetricsRegistry.HasTabGlyph(font)), position, origin, rotation, fontSize, spacing, tint);
 
     /// <summary>
     /// Sums the pixel width of the widest of <paramref name="lines"/> when measured with
@@ -519,7 +529,7 @@ public class Text : IVisible, IRenderableIpso,
         float maxWidth = 0;
         foreach (string line in lines)
         {
-            maxWidth = System.Math.Max(maxWidth, MeasureTextEx(font, line, font.BaseSize, 0).X);
+            maxWidth = System.Math.Max(maxWidth, MeasureBlankedText(font, line, font.BaseSize, 0).X);
         }
         return maxWidth;
     }
@@ -556,7 +566,7 @@ public class Text : IVisible, IRenderableIpso,
         }
         else
         {
-            lineHeightInPixels = (int)(MeasureTextEx(font, "M", font.BaseSize, 0).Y + .5);
+            lineHeightInPixels = (int)(MeasureBlankedText(font, "M", font.BaseSize, 0).Y + .5);
             descenderHeight = TryGetTtfBaselineY(font, out int baselineY)
                 ? lineHeightInPixels - baselineY
                 : 2;
@@ -723,6 +733,8 @@ public class Text : IVisible, IRenderableIpso,
             if (mRawText != value)
             {
                 mRawText = value;
+                // The tags belong to the previous text. The markup path sets them again after assigning RawText.
+                ParsedBbCodeTags = null;
                 UpdateWrappedText();
 
                 UpdatePreRenderDimensions();
@@ -1013,6 +1025,13 @@ public class Text : IVisible, IRenderableIpso,
     public string? StoredMarkupText { get; set; }
 
     /// <summary>
+    /// The tags found in the markup text assigned to this Text, with indexes into the text as displayed
+    /// (tags removed). Null when the text has no markup. Replaced, never mutated, each time the text
+    /// changes. Read by <c>TextRuntime.GetTagAtIndex</c>.
+    /// </summary>
+    internal List<Gum.Wireframe.FoundTag>? ParsedBbCodeTags { get; set; }
+
+    /// <summary>
     /// The inline styling variables (Color / FontScale runs, plus resolved-font "BitmapFont" runs for the
     /// Font / FontSize / IsBold / IsItalic / OutlineThickness family tags, and "Custom" per-letter callback
     /// runs) parsed from BBCode markup assigned to this Text. Populated by the property pipeline when the
@@ -1093,7 +1112,7 @@ public class Text : IVisible, IRenderableIpso,
     public float MeasureString(string whatToMeasure)
     {
         var measurementFont = EffectiveMeasurementFont;
-        return MeasureTextEx(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
+        return MeasureBlankedText(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
     }
 
     /// <summary>
@@ -1106,7 +1125,7 @@ public class Text : IVisible, IRenderableIpso,
     public float MeasureString(string whatToMeasure, HorizontalMeasurementStyle style)
     {
         var measurementFont = EffectiveMeasurementFont;
-        return MeasureTextEx(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
+        return MeasureBlankedText(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
     }
 
     public virtual void PreRender()
@@ -1323,7 +1342,15 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     private float GetLineAdvance(int lineIndex, int startOfLineIndex, string line)
     {
-        return StyledLineHeight(EffectiveFontScale, GetTallestSizeRunScale(lineIndex, startOfLineIndex, line));
+        float tallestSizeRunScale = GetTallestSizeRunScale(lineIndex, startOfLineIndex, line);
+        if (_measurementFont != null)
+        {
+            // Issue #6814: while oversampled, the live font's line height drawn at exactly 1/ratio
+            // differs from the pinned font's by rounding, and that difference adds up with every line.
+            // Step by the pinned font's line height instead, matching the measured box.
+            return TextLineHeight.Compute(MeasurementLineHeightInPixels, MeasurementFontScale, LineHeightMultiplier, tallestSizeRunScale);
+        }
+        return StyledLineHeight(EffectiveFontScale, tallestSizeRunScale);
     }
 
     /// <summary>
@@ -1436,12 +1463,12 @@ public class Text : IVisible, IRenderableIpso,
         if (HorizontalAlignment == HorizontalAlignment.Center)
         {
             linePosition.X += (this.Width ?? 32) / 2;
-            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X / 2;
+            origin.X = MeasureBlankedText(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X / 2;
         }
         else if (HorizontalAlignment == HorizontalAlignment.Right)
         {
             linePosition.X += this.Width ?? 32;
-            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X;
+            origin.X = MeasureBlankedText(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X;
         }
 
         linePosition = SnapToPixelIfNeeded(linePosition);
@@ -1451,7 +1478,7 @@ public class Text : IVisible, IRenderableIpso,
         {
             var shadowPosition = SnapToPixelIfNeeded(
                 linePosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * EffectiveFontScale);
-            DrawTextPro(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, DropshadowColor);
+            DrawBlankedText(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, DropshadowColor);
         }
 
         DrawOutline(fontValue, line, linePosition, origin, fontValue.BaseSize * EffectiveFontScale, EffectiveFontScale, Color);
@@ -1459,7 +1486,7 @@ public class Text : IVisible, IRenderableIpso,
         // Texture filtering is applied once when the font's atlas texture is loaded/built (see
         // ContentLoader.DefaultTextureFilter, #3496), not per-draw — a per-line GPU state reset here
         // was both redundant and ignored the project's texture filter setting.
-        DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, Color);
+        DrawBlankedText(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, Color);
     }
 
     /// <summary>
@@ -1513,9 +1540,9 @@ public class Text : IVisible, IRenderableIpso,
     {
         Font drawFont = baseFont;
         bool hasSwapFont = false;
-        float scale = FontScale * oversampleCompensationScale;
         // The run's scale without the oversample compensation, which a size font does not need (#6486).
-        float sizeFontScale = FontScale;
+        float sizeFontScale = ComposeFontScale(FontScale);
+        float scale = sizeFontScale * oversampleCompensationScale;
         float? absolutePixelSize = null;
 
         foreach (var variable in variables)
@@ -1525,7 +1552,7 @@ public class Text : IVisible, IRenderableIpso,
                 case nameof(FontScale):
                     // An inline [FontScale=v] tag is an ABSOLUTE per-run scale (not relative to the
                     // Text-level FontScale), so it must independently compose the same compensation.
-                    sizeFontScale = (float)variable.Value;
+                    sizeFontScale = ComposeFontScale((float)variable.Value);
                     scale = sizeFontScale * oversampleCompensationScale;
                     break;
                 // "BitmapFont" is the shared historical marker name the font-resolution stack model emits for
@@ -1718,7 +1745,7 @@ public class Text : IVisible, IRenderableIpso,
             drawRun.ScaleY = scaleY;
             drawRun.ScaleXOrigin = scaleXOrigin;
             drawRun.ScaleYOrigin = scaleYOrigin;
-            drawRun.Width = MeasureTextEx(resolvedFont.Font, runText, drawRun.DrawSize, 0).X;
+            drawRun.Width = MeasureBlankedText(resolvedFont.Font, runText, drawRun.DrawSize, 0).X;
             totalWidth += drawRun.Width;
             maxBaseline = System.Math.Max(maxBaseline, drawRun.BaselineFromTop);
         }
@@ -1762,11 +1789,11 @@ public class Text : IVisible, IRenderableIpso,
             {
                 var shadowRunPosition = SnapToPixelIfNeeded(
                     runPosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * drawRun.Scale);
-                DrawTextPro(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, 0, drawRun.DrawSize, 0, DropshadowColor);
+                DrawBlankedText(runShadowFont, drawRun.Text, shadowRunPosition, runOrigin, 0, drawRun.DrawSize, 0, DropshadowColor);
             }
 
             DrawOutline(drawRun.Font, drawRun.Text, runPosition, runOrigin, drawRun.DrawSize, drawRun.OutlineScale, drawRun.Color);
-            DrawTextPro(drawRun.Font, drawRun.Text, runPosition, runOrigin, 0, drawRun.DrawSize, 0, drawRun.Color);
+            DrawBlankedText(drawRun.Font, drawRun.Text, runPosition, runOrigin, 0, drawRun.DrawSize, 0, drawRun.Color);
 
             advance += drawRun.Width;
         }
@@ -1840,7 +1867,7 @@ public class Text : IVisible, IRenderableIpso,
         Color outlineColor = new Color((byte)0, (byte)0, (byte)0, color.A);
         foreach (Vector2 offset in offsets)
         {
-            DrawTextPro(font, text, position + offset, origin, 0, drawSize, 0, outlineColor);
+            DrawBlankedText(font, text, position + offset, origin, 0, drawSize, 0, outlineColor);
         }
     }
 
@@ -1851,7 +1878,7 @@ public class Text : IVisible, IRenderableIpso,
         // Gum rotation is counterclockwise; rlgl's is clockwise on a y-down screen.
         Raylib_cs.Rlgl.Rotatef(-drawRun.Rotation, 0, 0, 1);
         Raylib_cs.Rlgl.Scalef(drawRun.ScaleX, drawRun.ScaleY, 1);
-        DrawTextPro(font, drawRun.Text, Vector2.Zero, Vector2.Zero, 0, drawRun.DrawSize, 0, color);
+        DrawBlankedText(font, drawRun.Text, Vector2.Zero, Vector2.Zero, 0, drawRun.DrawSize, 0, color);
         Raylib_cs.Rlgl.PopMatrix();
     }
 
@@ -1873,7 +1900,7 @@ public class Text : IVisible, IRenderableIpso,
             // downstream multiplies by it, so the result is 0 either way, and it avoids a
             // divide-by-zero in the per-run base-unit conversion). Kept in parity with the MonoGame
             // Text.UpdatePreRenderDimensions (RenderingLibrary/Graphics/Text.cs).
-            if (InlineVariables.Count > 0 && FontScale > 0)
+            if (InlineVariables.Count > 0 && NominalFontScale > 0)
             {
                 GetInlineVariableAwareWidthAndHeight(out requiredWidth, out requiredHeight);
                 usedStyledSizePass = true;
@@ -1959,14 +1986,14 @@ public class Text : IVisible, IRenderableIpso,
     /// <remarks>
     /// Shared by the size pass (<see cref="GetInlineVariableAwareWidthAndHeight"/>, #3481/#3524) and the
     /// font-aware wrap seam (<see cref="MeasureString(string, int)"/>, #3532) so the measured, drawn, and
-    /// wrapped size of a run cannot drift. Widths are returned in BASE units (<see cref="FontScale"/>
+    /// wrapped size of a run cannot drift. Widths are returned in BASE units (<see cref="NominalFontScale"/>
     /// factored out), matching <see cref="MeasureString(string)"/>; the multiplied base is the floor
     /// (<see cref="StyledLineHeight"/>), so an inline run smaller than it does not shrink the line. Guards <see cref="FontScale"/> == 0
     /// because the wrap seam calls this regardless of scale (the size pass is already gated on scale &gt; 0).
     /// </remarks>
     private float MeasureStyledLineInBaseUnits(List<StyledSubstring> substrings, out float lineHeightFactor)
     {
-        float baseScale = FontScale;
+        float baseScale = NominalFontScale;
         float maxRunScale = 0;
         float lineWidthAtScale = 0;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
@@ -1979,7 +2006,7 @@ public class Text : IVisible, IRenderableIpso,
             // still can't drift on SIZE (#3524): compensation composes DrawSize back down to the exact
             // same on-screen size EffectiveMeasurementFont already represents in native units.
             var resolvedFont = ResolveRunFont(substring.Variables, EffectiveMeasurementFont, oversampleCompensationScale: 1f);
-            lineWidthAtScale += MeasureTextEx(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
+            lineWidthAtScale += MeasureBlankedText(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
             if (IsSizeRun(substring.Variables))
             {
                 maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);

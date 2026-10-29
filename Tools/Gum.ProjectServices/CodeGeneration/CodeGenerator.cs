@@ -475,11 +475,13 @@ public class CodeGenerator
     /// <summary>
     /// Appends the attribute that runs a static registration method at startup. Unity compiles
     /// [ModuleInitializer] but never calls it, so Unity builds (which define UNITY_5_3_OR_NEWER)
-    /// get Unity's earliest startup hook instead. The same file works in both kinds of project.
+    /// get Unity's earliest startup hook instead. An assembly with Unity's "No Engine References" still
+    /// defines UNITY_5_3_OR_NEWER but cannot see UnityEngine, so it defines GUM_NO_UNITY_ENGINE to take the
+    /// [ModuleInitializer] branch. The same file works in all three kinds of project.
     /// </summary>
     private static void AppendStartupInitializerAttribute(StringBuilder builder, string tabs, string moduleInitializerAttribute)
     {
-        builder.AppendLine(tabs + "#if UNITY_5_3_OR_NEWER");
+        builder.AppendLine(tabs + "#if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE");
         builder.AppendLine(tabs + "[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]");
         builder.AppendLine(tabs + "#else");
         builder.AppendLine(tabs + moduleInitializerAttribute);
@@ -768,8 +770,30 @@ public class CodeGenerator
             header += " : " + inheritance;
         }
 
+        if (EmitsGumElementLink(context))
+        {
+            // The Forms type this class registers as the default visual for, so game code that creates that
+            // control (new Button()) roots this element too.
+            string? formsType = GetDefaultFormsTemplateType(context.Element);
+            string formsTypeArgument = formsType == null ? "" : $", FormsType = typeof({formsType})";
+            context.StringBuilder.AppendLine(context.Tabs + $"[global::Gum.DataTypes.GumElement(\"{context.Element.Name}\"{formsTypeArgument})]");
+        }
         context.StringBuilder.AppendLine(context.Tabs + header);
     }
+
+    /// <summary>
+    /// Syntax version 7 added <c>GumElementAttribute</c> and <c>ObjectFinder.GetRequiredElementSave</c>,
+    /// which the Gum Forms and unified-runtime output use to link a class to its element.
+    /// </summary>
+    private static bool EmitsGumElementLink(CodeGenerationContext context) =>
+        context.ResolvedSyntaxVersion >= 7
+        && (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms
+            || UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary));
+
+    private static string GetElementLookup(CodeGenerationContext context, ElementSave element) =>
+        EmitsGumElementLink(context)
+            ? $"ObjectFinder.Self.GetRequiredElementSave(\"{element.Name}\")"
+            : $"ObjectFinder.Self.GetElementSave(\"{element.Name}\") ?? throw new System.InvalidOperationException(\"Could not find an element named {element.Name} - did you forget to load a Gum project?\")";
     
     /// <returns>
     /// The corresponding class name, or <c>null</c> if that type couldn't be found.
@@ -1342,6 +1366,14 @@ public class CodeGenerator
                         hasGetter = false;
                     }
 
+                    // A shader parameter is no property of the runtime: it is only reachable by name through
+                    // SetProperty, so the exposed property is write-only.
+                    bool isShaderParameter = !string.IsNullOrEmpty(rootVariable?.ShaderParameter);
+                    if (isShaderParameter)
+                    {
+                        hasGetter = false;
+                    }
+
                     // See if this is an exposed variable:
                     InstanceSave? instance = context.Instance;
                     ElementSave? instanceElement = null;
@@ -1376,6 +1408,10 @@ public class CodeGenerator
                     {
                         var rightSide = $"{sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
+                    }
+                    else if (isShaderParameter)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value);");
                     }
                     else
                     {
@@ -2039,8 +2075,7 @@ public class CodeGenerator
             }
 
 
-            builder.AppendLine(context.Tabs +
-                $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\") ?? throw new System.InvalidOperationException(\"Could not find an element named {context.Element.Name} - did you forget to load a Gum project?\");");
+            builder.AppendLine(context.Tabs + $"var element = {GetElementLookup(context, context.Element)};");
 
 
             builder.AppendLine(context.Tabs +
@@ -3726,11 +3761,20 @@ public class CodeGenerator
                 if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
                 {
 
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
+                    if (EmitsGumElementLink(context))
+                    {
+                        context.StringBuilder.AppendLine(context.Tabs + $"var element = {GetElementLookup(context, element)};");
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            "element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                    }
+                    else
+                    {
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
 
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                    }
 
                     // March 8, 2025
                     // This is not needed
@@ -5169,7 +5213,7 @@ public class CodeGenerator
                     foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
                     {
                         context.StringBuilder.AppendLine(context.Tabs + $"new System.Numerics.Vector2(" +
-                            $"{point.X.ToString(CultureInfo.InvariantCulture)}f, {point.Y.ToString(CultureInfo.InvariantCulture)}f),");
+                            $"{FloatToCode(point.X)}, {FloatToCode(point.Y)}),");
                     }
                     context.TabCount--;
                     context.StringBuilder.AppendLine(context.Tabs + "});");
@@ -5201,7 +5245,7 @@ public class CodeGenerator
     {
         if (value is float asFloat)
         {
-            return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
+            return FloatToCode(asFloat);
         }
         else if (value is string asString)
         {
@@ -5287,6 +5331,14 @@ public class CodeGenerator
         }
     }
 
+    /// <summary>
+    /// A float literal; NaN and the infinities have no literal (NaNf does not compile), so they use the float constants.
+    /// </summary>
+    private static string FloatToCode(float value) =>
+        float.IsFinite(value)
+            ? value.ToString(CultureInfo.InvariantCulture) + "f"
+            : "float." + (float.IsNaN(value) ? "NaN" : value > 0 ? "PositiveInfinity" : "NegativeInfinity");
+
     private static string? ToInvariantString(object? value) =>
         value == null ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
 
@@ -5297,7 +5349,7 @@ public class CodeGenerator
             // X and Y go to PixelX and PixelY
             if (rootName == "X" || rootName == "Y")
             {
-                return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
+                return FloatToCode(asFloat);
             }
             else if (rootName == "CornerRadius")
             {
@@ -6016,6 +6068,22 @@ public class CodeGenerator
             return $"{context.CodePrefixNoTabs}.{GetGumVariableName(variable, context)} = {referenceInCode};";
         }
         #endregion
+        #region Shader parameter value
+
+        // A saved shader parameter value (Holder.Outline_Thickness) is no property of the runtime, only a name
+        // SetProperty routes to the container's shader parameters, the same call the loader makes. Exposed
+        // parameters carry no value and never get here. An override of an exposed parameter carries the same
+        // marker but is a typed property of the instance, which the regular assignment writes.
+        else if (instance != null && IsShaderParameterVariable(variable) && !IsExposedOnInstance(instance, rootName))
+        {
+            string? valueInCode = VariableValueToGumCodeValue(variable, context);
+            if (valueInCode == null)
+            {
+                return " ";
+            }
+            return $"{context.CodePrefixNoTabs}.SetProperty(\"{rootName}\", {valueInCode});";
+        }
+        #endregion
         #region SourceShaderFile
 
         // SourceShaderFile is a plain string file reference (e.g. a .fx path) on a render-target
@@ -6029,6 +6097,22 @@ public class CodeGenerator
                 return " ";
             }
             // Non-empty: fall through to the default string-assignment path.
+        }
+        #endregion
+        #region ShaderParameters
+
+        // ShaderParameters is the saved Name=value text for a render-target Container's shader. There
+        // is no property of that name on the runtime; the text goes through SetProperty, which parses
+        // it the same way the loader does, so default and state assignments both work.
+        else if (rootName == "ShaderParameters")
+        {
+            string shaderParametersText = variable.Value as string ?? "";
+            if (shaderParametersText.Length == 0)
+            {
+                return " ";
+            }
+            string verbatimText = "@\"" + shaderParametersText.Replace("\"", "\"\"") + "\"";
+            return $"{context.CodePrefixNoTabs}.SetProperty(\"ShaderParameters\", {verbatimText});";
         }
         #endregion
         // ignored variables:
@@ -6051,7 +6135,7 @@ public class CodeGenerator
             VariableSave? rootVariable = null;
             if (instance != null)
             {
-                rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
+                rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance, context.Element);
             }
             else
             {
@@ -6194,6 +6278,12 @@ public class CodeGenerator
     }
 
 
+    private static bool IsExposedOnInstance(InstanceSave instance, string rootName) =>
+        ObjectFinder.Self.GetElementSave(instance)?.DefaultState?.GetVariableRecursive(rootName)?.ExposedAsName == rootName;
+
+    private static bool IsShaderParameterVariable(VariableSave variable) =>
+        ShaderParameterMarker.TryParse(variable.ShaderParameter, out _);
+
     private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement, OutputLibrary outputLibrary)
     {
         var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
@@ -6233,8 +6323,10 @@ public class CodeGenerator
 
         if (shouldInclude)
         {
-            var foundVariable = baseRecursiveVariableFinder.GetVariable(item.GetRootName());
-            shouldInclude = foundVariable != null;
+            // A shader parameter value is declared by the container that saved it (its marker), not by the
+            // instance's type, so the type does not have it.
+            shouldInclude = IsShaderParameterVariable(item) ||
+                baseRecursiveVariableFinder.GetVariable(item.GetRootName()) != null;
         }
 
         if (shouldInclude)
@@ -6386,9 +6478,7 @@ public class CodeGenerator
                 return true;
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
 
         return false;
@@ -6412,9 +6502,7 @@ public class CodeGenerator
                 return typeof(Gum.Forms.Controls.FrameworkElement).Assembly.GetType(formsType.Replace("global::", string.Empty));
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
 
         // No Forms behavior: GetInheritance derives such a class from FrameworkElement.
@@ -6450,9 +6538,7 @@ public class CodeGenerator
                 }
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
     }
 
@@ -6498,9 +6584,7 @@ public class CodeGenerator
             else if (target == typeof(float))
             {
                 float asFloat = Convert.ToSingle(value, CultureInfo.InvariantCulture);
-                return float.IsFinite(asFloat)
-                    ? asFloat.ToString(CultureInfo.InvariantCulture) + "f"
-                    : "float." + (float.IsNaN(asFloat) ? "NaN" : asFloat > 0 ? "PositiveInfinity" : "NegativeInfinity");
+                return FloatToCode(asFloat);
             }
             else if (target == typeof(double))
             {
@@ -6745,7 +6829,7 @@ public class CodeGenerator
             ElementSave? baseElement = null;
             if (!string.IsNullOrEmpty(element.BaseType))
             {
-                baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+                baseElement = ObjectFinder.Self.GetBaseElement(element);
             }
 
             var baseHasMain = baseElement != null &&

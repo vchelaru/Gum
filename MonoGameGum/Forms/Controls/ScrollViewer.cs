@@ -330,7 +330,7 @@ public class ScrollViewer :
                             childAsInputReceiver = interactiveGue.FormsControlAsObject as IInputReceiver;
                         }
 
-                        if (childAsInputReceiver != null)
+                        if (childAsInputReceiver != null && this.InnerPanel.Children[i].AbsoluteVisible)
                         {
                             InteractiveGue.CurrentInputReceiver = childAsInputReceiver;
                             break;
@@ -728,6 +728,51 @@ public class ScrollViewer :
         {
             verticalScrollBar.Value += rowBottom - viewBottom;
         }
+    }
+
+    /// <summary>
+    /// Scrolls both axes by the least amount that shows all of <paramref name="descendant"/>, an element
+    /// inside <see cref="InnerPanel"/>. An element larger than the view gets its leading edge aligned.
+    /// Does nothing when the viewer is hidden, the element is not inside the inner panel, or an axis
+    /// has no scroll range.
+    /// </summary>
+    internal void ScrollDescendantIntoView(GraphicalUiElement descendant)
+    {
+        if (innerPanel == null || clipContainer == null || !Visual.AbsoluteVisible)
+        {
+            return;
+        }
+
+        GraphicalUiElement? ancestor = descendant.Parent;
+        while (ancestor != null && ancestor != innerPanel)
+        {
+            ancestor = ancestor.Parent;
+        }
+        if (ancestor == null)
+        {
+            return;
+        }
+
+        if (verticalScrollBar is { Maximum: > 0 })
+        {
+            verticalScrollBar.Value += GetAmountToShow(
+                descendant.AbsoluteTop, descendant.AbsoluteBottom, clipContainer.AbsoluteTop, clipContainer.AbsoluteBottom);
+        }
+        if (horizontalScrollBar is { Maximum: > 0 })
+        {
+            horizontalScrollBar.Value += GetAmountToShow(
+                descendant.AbsoluteLeft, descendant.AbsoluteRight, clipContainer.AbsoluteLeft, clipContainer.AbsoluteRight);
+        }
+    }
+
+    private static double GetAmountToShow(float start, float end, float viewStart, float viewEnd)
+    {
+        bool isLargerThanView = end - start > viewEnd - viewStart;
+        if (start < viewStart || isLargerThanView)
+        {
+            return start - viewStart;
+        }
+        return end > viewEnd ? end - viewEnd : 0;
     }
 
     private void HandleMouseWheelScroll(object? sender, RoutedEventArgs args)
@@ -1166,6 +1211,19 @@ public class ScrollViewer :
     {
         // todo - check for ESC and return handled, steal focus from children
 #if !FRB
+        // Previews run outermost first. An open drop-down closes on Escape before this ScrollViewer takes it.
+        if (InteractiveGue.CurrentInputReceiver is ComboBox { IsDropDownOpen: true })
+        {
+            return;
+        }
+
+        // A focused text box owns Escape so it can raise EditCancelled; taking focus here would end the edit
+        // before the box saw the key.
+        if (InteractiveGue.CurrentInputReceiver is TextBoxBase)
+        {
+            return;
+        }
+
         foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             // eventually we want to support combos but for now use esc:
@@ -1216,7 +1274,7 @@ public class ScrollViewer :
 
             ApplyGamepadStickScroll(gamepad);
 
-            if (gamepad.ButtonPushed(GamepadButton.A))
+            if (IsEnabled && gamepad.ButtonPushed(GamepadButton.A))
             {
                 DoItemsHaveFocus = true;
             }
@@ -1252,7 +1310,7 @@ public class ScrollViewer :
         {
             foreach (var keyCombo in FrameworkElement.ClickCombos)
             {
-                if (keyCombo.IsComboPushed())
+                if (IsEnabled && keyCombo.IsComboPushed())
                 {
                     DoItemsHaveFocus = true;
                     break;

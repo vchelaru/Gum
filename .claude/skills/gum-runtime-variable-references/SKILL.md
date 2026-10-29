@@ -77,7 +77,14 @@ Rows on a component or screen that read a variable re-evaluate when it changes: 
 
 All three work in a game that calls `GumExpressionService.Initialize()`. The `GraphicalUiElement` overload of `ApplyVariableReferencesOnSpecificOwner` rewrites `@` through `ResolveOwnerPrefix`, and `Index` reads the element's own instance order when no live tree is passed. Without Gum.Expressions, `@Width` still resolves as a plain lookup, but `%`, `Index` and every other operator need it (see `gum-tool-variable-references`).
 
+## Circular references (#6871)
+
+Rows that read each other (or their own result) never freeze or overflow on any path (`ReferenceCycleFreezeTests`, `ReferenceCycleToolFreezeTests`). One rule for the tool, creation and `ApplyAllVariableReferences`: cyclic rows (`VariableReferenceGraph.CyclicRows`) are skipped everywhere and keep their stored values, so applying again is idempotent. The tool reports the loop as GUM0013 (`HeadlessErrorChecker`). The runtime reports it under `FULL_DIAGNOSTICS` only, once per loop: each separate loop in each state gets its own message, deduped per `ElementSave` by state and rows (`ReportCyclicRows`, from both apply overloads, through the shared `RaiseReferenceError` channel; a reloaded project has new elements and reports again). The message names the element and the state holding the loop (`in Panel (Default):`, like GUM0013). A loop made only of one base's rows (`ReferenceRow.DeclaredIn`) is reported on that base, once, not again on each derived element; a loop mixing base and derived rows is reported on the derived element, and stays silent and allocation-free otherwise. Test: `ReferenceCycleDiagnosticTests`.
+
 ## One analysis of which rows read what
 
 `VariableReferenceGraph.ScanReads` is the only place that decides what a row reads. `ReferenceDependencies` builds on it for cross-element questions, and `ApplyAllVariableReferences`, `ObjectFinder.GetElementReferencesToThis` and the tool's `VariableReferenceLogic.ApplyReferencesToElement` all call it. Match references through it, not by string prefix. `ApplyVariableReferences(ElementSave, StateSave)` runs a state's rows in `VariableReferenceGraph.LoadOrderRows` order, so written order does not matter.
 
+## A fresh load applies references like a reload (#6881)
+
+A service that loads a project from files (`GumService.FinishInitialize`, `GumServiceSkiaBase`) calls `ApplyAllVariableReferencesBeforeFirstBuild()`; the project's rows are applied once, in `ElementSave.ToGraphicalUiElement`'s outermost build, to whichever project is then in `ObjectFinder`. It waits for the first build because games call `GumExpressionService.Initialize()` after `GumService.Initialize()`. A project built in code or by the tool is never flagged, so a build does not change it. Tests: `FreshLoadReferenceChainTests`, `GumServiceFreshLoadReferenceChainTests`.

@@ -56,6 +56,7 @@ public class ExclusionsLogic
             case "Alpha":
             case "Blend":
             case "SourceShaderFile":
+            case "ShaderParameters":
                 return GetIfRenderTargetOnlyVariableIsExcluded(finder);
             case "AutoGridHorizontalCells":
             case "AutoGridVerticalCells":
@@ -138,7 +139,7 @@ public class ExclusionsLogic
         }
     }
 
-    // Alpha, Blend, and SourceShaderFile only have an effect on a render-target Container, so hide
+    // Alpha, Blend, SourceShaderFile, and ShaderParameters only have an effect on a render-target Container, so hide
     // them on a non-render-target Container (mirroring how the runtime ignores them there).
     private bool GetIfRenderTargetOnlyVariableIsExcluded(RecursiveVariableFinder finder)
     {

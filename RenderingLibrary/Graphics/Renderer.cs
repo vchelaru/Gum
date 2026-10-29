@@ -101,12 +101,10 @@ public class Renderer : IRenderer
     private GumBatchDrawMode _immediateModeDrawMode = GumBatchDrawMode.Immediate;
     private readonly List<IRenderableIpso> _deferredImmediateModeRoots = new();
     private readonly List<DrawCommand> _deferredImmediateModeCommands = new();
-#if !FNA
-    // Set at the start of each immediate-mode Begin/End cycle (Renderer.Begin/Draw/End, the path
-    // GumBatch wraps) so End can take the same before/after GraphicsDevice.Metrics.DrawCount delta
-    // that Draw(SystemManagers) takes for the layered path. See RenderStateChangeStatistics.DrawCallCount remarks.
-    private long _immediateModeDrawCountBeforeCycle;
-#endif
+    // One entry per open immediate-mode Begin (Renderer.Begin/Draw/End, the path GumBatch wraps), so
+    // End can take the same before/after GraphicsDevice.Metrics.DrawCount delta that Draw(SystemManagers)
+    // takes for the layered path. See RenderStateChangeStatistics.DrawCallCount remarks.
+    private readonly Stack<long> _immediateModeDrawCountStarts = new Stack<long>();
     Camera mCamera;
 
     // Set immediately before every renderable.Render(managers) call (both the legacy recursive
@@ -672,30 +670,56 @@ public class Renderer : IRenderer
     public void Draw(SystemManagers managers)
     {
         ClearPerformanceRecordingVariables();
+        // Already reset for this frame, so a render-target bake's Begin must not reset again.
+        _perfStatsResetForHostFrame = true;
+        // The frame root: a Begin left open by an earlier exception must not swallow this frame's counts.
+        _drawCountScopeDepth = 0;
+        _immediateModeDrawCountStarts.Clear();
 
         if (managers == null)
         {
             managers = OwnManagers;
         }
 
-#if !FNA
-        // GraphicsDevice.Metrics only resets on Present (never mid-pass, e.g. from the Clear calls
-        // render-target baking issues), so a before/after delta across this whole pass is safe even
-        // when the pass bakes render targets. See RenderStateChangeStatistics.DrawCallCount remarks.
-        // FNA's GraphicsDevice has no Metrics API (confirmed against FNA-XNA/FNA source), so this is
-        // MonoGame/KNI-only; DrawCallCount stays at 0 on FNA until it's wired some other way.
-        long drawCountBefore = GraphicsDevice?.Metrics.DrawCount ?? 0;
-#endif
-
-        Draw(managers, _layers);
-
-        ForceEnd();
-        EndFrame();
-
-#if !FNA
-        if (GraphicsDevice != null)
+        long drawCountStart = EnterDrawCountScope();
+        try
         {
-            RenderStateChangeStatistics.AddDrawCalls((int)(InitializedGraphicsDevice.Metrics.DrawCount - drawCountBefore));
+            Draw(managers, _layers);
+
+            ForceEnd();
+            EndFrame();
+        }
+        finally
+        {
+            ExitDrawCountScope(drawCountStart);
+        }
+    }
+
+    // Draw calls are summed from a before/after delta of GraphicsDevice.Metrics.DrawCount, which only
+    // resets on Present (never mid-pass, e.g. from the Clear calls render-target baking issues), so a
+    // delta across a whole pass is safe even when the pass bakes render targets. Only the outermost
+    // scope records, so a render-target bake's own Begin/End (or a Draw(Layer) inside a bigger scope)
+    // does not add the same draw calls a second time (#6841). FNA's GraphicsDevice has no Metrics API
+    // (confirmed against FNA-XNA/FNA source), so DrawCallCount stays at 0 on FNA until wired some other way.
+    private int _drawCountScopeDepth;
+
+    private long EnterDrawCountScope()
+    {
+        _drawCountScopeDepth++;
+#if !FNA
+        return GraphicsDevice?.Metrics.DrawCount ?? 0;
+#else
+        return 0;
+#endif
+    }
+
+    private void ExitDrawCountScope(long drawCountStart)
+    {
+        _drawCountScopeDepth--;
+#if !FNA
+        if (_drawCountScopeDepth == 0 && GraphicsDevice != null)
+        {
+            RenderStateChangeStatistics.AddDrawCalls((int)(InitializedGraphicsDevice.Metrics.DrawCount - drawCountStart));
         }
 #endif
     }
@@ -714,30 +738,47 @@ public class Renderer : IRenderer
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {
-            mCamera.ClientWidth = InitializedGraphicsDevice.Viewport.Width;
-            mCamera.ClientHeight = InitializedGraphicsDevice.Viewport.Height;
-            mCamera.ClientLeft = InitializedGraphicsDevice.Viewport.X;
-            mCamera.ClientTop = InitializedGraphicsDevice.Viewport.Y;
-
-            TrySweepUnusedRenderTargetsAtFrameBoundary();
-
-            var oldSampler = InitializedGraphicsDevice.SamplerStates[0];
-
-            mRenderStateVariables.BlendState = Renderer.NormalBlendState;
-            mRenderStateVariables.Wrap = false;
-
-            TryPreRenderAllLayersForHostFrame();
-
-            SetFilteringForLayer(layer);
-            PreRender(layer.Renderables);
-
-            SetFilteringForLayer(layer);
-            RenderLayer(managers, layer, prerender:false);
-
-            if (oldSampler != null)
+            // This path has no per-frame Clear of its own, so the first layer drawn in a host frame
+            // starts the frame's counters. Without it LastFrameDrawStates and the draw-state counters
+            // grew for the life of the process (#6841).
+            TryResetPerformanceStatsForHostFrame();
+            long drawCountStart = EnterDrawCountScope();
+            try
             {
-                InitializedGraphicsDevice.SamplerStates[0] = oldSampler;
+                DrawLayerCore(managers, layer);
             }
+            finally
+            {
+                ExitDrawCountScope(drawCountStart);
+            }
+        }
+    }
+
+    private void DrawLayerCore(SystemManagers managers, Layer layer)
+    {
+        mCamera.ClientWidth = InitializedGraphicsDevice.Viewport.Width;
+        mCamera.ClientHeight = InitializedGraphicsDevice.Viewport.Height;
+        mCamera.ClientLeft = InitializedGraphicsDevice.Viewport.X;
+        mCamera.ClientTop = InitializedGraphicsDevice.Viewport.Y;
+
+        TrySweepUnusedRenderTargetsAtFrameBoundary();
+
+        var oldSampler = InitializedGraphicsDevice.SamplerStates[0];
+
+        mRenderStateVariables.BlendState = Renderer.NormalBlendState;
+        mRenderStateVariables.Wrap = false;
+
+        TryPreRenderAllLayersForHostFrame();
+
+        SetFilteringForLayer(layer);
+        PreRender(layer.Renderables);
+
+        SetFilteringForLayer(layer);
+        RenderLayer(managers, layer, prerender:false);
+
+        if (oldSampler != null)
+        {
+            InitializedGraphicsDevice.SamplerStates[0] = oldSampler;
         }
     }
 
@@ -792,7 +833,6 @@ public class Renderer : IRenderer
             PreRender(layer.Renderables);
         }
 
-        SpriteBatchStack.PerformStartOfLayerRenderingLogic();
 
         spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera, null);
 
@@ -856,11 +896,9 @@ public class Renderer : IRenderer
     {
         _immediateModeDrawMode = mode;
         TryResetPerformanceStatsForHostFrame();
-#if !FNA
-        _immediateModeDrawCountBeforeCycle = GraphicsDevice?.Metrics.DrawCount ?? 0;
-#endif
+        // A stack, so nested Begin/End cycles each close their own scope; only the outermost records.
+        _immediateModeDrawCountStarts.Push(EnterDrawCountScope());
 
-        SpriteBatchStack.PerformStartOfLayerRenderingLogic();
         spriteRenderer.ForcedMatrix = spriteBatchMatrix;
         spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera, null);
     }
@@ -920,6 +958,12 @@ public class Renderer : IRenderer
 
     public void End()
     {
+        // Checked before any flush or draw-count bookkeeping so a stray End leaves no state behind.
+        if (spriteRenderer.RenderStateStackDepth == 0)
+        {
+            throw new InvalidOperationException(SpriteBatchStack.EndWithoutBeginMessage);
+        }
+
         if (_deferredImmediateModeRoots.Count > 0)
         {
             try
@@ -959,13 +1003,12 @@ public class Renderer : IRenderer
         // inherit a stale matrix from this one.
         spriteRenderer.ForcedMatrix = null;
 
-#if !FNA
-        if (GraphicsDevice != null)
+        // Only the outermost scope records, so a nested Begin/End or a render-target bake during
+        // Draw(SystemManagers) does not add draw calls the enclosing delta already contains.
+        if (_immediateModeDrawCountStarts.Count > 0)
         {
-            RenderStateChangeStatistics.AddDrawCalls(
-                (int)(InitializedGraphicsDevice.Metrics.DrawCount - _immediateModeDrawCountBeforeCycle));
+            ExitDrawCountScope(_immediateModeDrawCountStarts.Pop());
         }
-#endif
     }
 
 
@@ -1493,9 +1536,9 @@ public class Renderer : IRenderer
         // IRenderTargetRenderable interface (implemented by the runtime's RenderableBase containers
         // AND the editor's LineRectangle containers), so read it directly off the renderable, or off
         // the wrapper's contained RenderableComponent.
-        var renderTargetEffect = ((renderable as IRenderTargetRenderable)
-            ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable))
-            ?.RenderTargetEffect as Effect;
+        IRenderTargetRenderable? effectOwner = (renderable as IRenderTargetRenderable)
+            ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable);
+        var renderTargetEffect = effectOwner?.RenderTargetEffect as Effect;
 
         // The blit must composite with a premultiplied blend since the target's contents are
         // premultiplied by construction (see the `color` comment above). Only the container's own
@@ -1521,11 +1564,131 @@ public class Renderer : IRenderer
                 mRenderStateVariables.BlendState = compositeBlendState;
             }
 
+            // Set before BeginSpriteBatch: a shared effect keeps the last container's values until
+            // SpriteBatch applies them when this batch ends.
+            ApplyShaderParameters(effectOwner?.ShaderParameters, renderTargetEffect);
+            // One canvas pixel in the texture's UV space: the target is baked at the camera zoom, so it has
+            // zoom times more texels per canvas pixel.
+            if (effectOwner?.ShaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
+            {
+                renderTargetEffect?.Parameters[ShaderParameterCollection.TexelSizeName]?.SetValue(
+                    new Vector2(Camera.Zoom / renderTarget.Width, Camera.Zoom / renderTarget.Height));
+            }
+
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
             Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: rotation, objectCausingRendering: renderable);
 
             mRenderStateVariables.BlendState = previousBlendState;
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable);
+        }
+    }
+
+    /// <summary>
+    /// Copies a container's shader parameter values onto its effect. A name the effect does not
+    /// declare is skipped, so one parameter set can drive effects that use different subsets.
+    /// </summary>
+    internal static void ApplyShaderParameters(ShaderParameterCollection? parameters, Effect? effect)
+    {
+        if (effect == null)
+        {
+            return;
+        }
+
+        // A shared effect keeps the last values written to it, so what an earlier container set and
+        // this one did not goes back to the value the effect held before Gum first wrote it (its compiled
+        // default, or what the application set since) before this container's values go on.
+        ShaderParameterHistory history = ShaderParameterHistory.For(effect);
+        foreach (KeyValuePair<string, ShaderParameterValue> stale in history.TakeStale(parameters))
+        {
+            EffectParameter? staleParameter = effect.Parameters[stale.Key];
+            if (staleParameter != null)
+            {
+                // Observe before asking for the restore value: a game change since Gum's last write must
+                // become the baseline first, or the old baseline would be written over it.
+                ObserveLive(history, stale.Key, staleParameter);
+                SetEffectParameter(staleParameter, history.GetRestoreValue(stale.Key, stale.Value));
+                RecordHeld(history, stale.Key, staleParameter);
+            }
+        }
+
+        if (parameters == null)
+        {
+            return;
+        }
+
+        foreach (KeyValuePair<string, ShaderParameterValue> pair in parameters)
+        {
+            EffectParameter? parameter = effect.Parameters[pair.Key];
+            if (parameter == null)
+            {
+                continue;
+            }
+
+            string isSetName = ShaderParameterCollection.GetIsSetName(pair.Key);
+            EffectParameter? isSetParameter = effect.Parameters[isSetName];
+            if (isSetParameter != null)
+            {
+                WriteTracked(history, isSetName, isSetParameter, ShaderParameterValue.FromFloat(1f));
+            }
+            history.Record(isSetName, ShaderParameterValue.FromFloat(1f));
+            history.Record(pair.Key, pair.Value);
+            WriteTracked(history, pair.Key, parameter, pair.Value);
+        }
+    }
+
+    // Writes one parameter and keeps the history current: what the effect holds just before is the baseline (or a
+    // new one, when the application changed it since Gum's last write), and what it holds just after is what the
+    // next write is compared against. A parameter that cannot be read is only written.
+    private static void WriteTracked(ShaderParameterHistory history, string name, EffectParameter parameter, ShaderParameterValue value)
+    {
+        ObserveLive(history, name, parameter);
+        SetEffectParameter(parameter, value);
+        RecordHeld(history, name, parameter);
+    }
+
+    private static void ObserveLive(ShaderParameterHistory history, string name, EffectParameter parameter)
+    {
+        if (EffectShaderParameters.TryReadValue(parameter, out ShaderParameterValue live))
+        {
+            history.ObserveLive(name, live);
+        }
+    }
+
+    private static void RecordHeld(ShaderParameterHistory history, string name, EffectParameter parameter)
+    {
+        if (EffectShaderParameters.TryReadValue(parameter, out ShaderParameterValue held))
+        {
+            history.RecordHeld(name, held);
+        }
+    }
+
+    private static void SetEffectParameter(EffectParameter parameter, ShaderParameterValue value)
+    {
+        switch (value.Kind)
+        {
+            case ShaderParameterKind.Int:
+                parameter.SetValue((int)value.X);
+                break;
+            case ShaderParameterKind.Bool:
+                parameter.SetValue(value.X != 0f);
+                break;
+            default:
+                switch (value.Count)
+                {
+                    case 1:
+                        parameter.SetValue(value.X);
+                        break;
+                    case 2:
+                        parameter.SetValue(new Vector2(value.X, value.Y));
+                        break;
+                    case 3:
+                        parameter.SetValue(new Vector3(value.X, value.Y, value.Z));
+                        break;
+                    default:
+                        parameter.SetValue(new Vector4(value.X, value.Y, value.Z, value.W));
+                        break;
+                }
+                break;
         }
     }
 
@@ -1929,8 +2092,15 @@ public class Renderer : IRenderer
     /// </summary>
     public void ForceEnd()
     {
-        this.spriteRenderer.End();
-
+        long drawCountStart = EnterDrawCountScope();
+        try
+        {
+            this.spriteRenderer.End();
+        }
+        finally
+        {
+            ExitDrawCountScope(drawCountStart);
+        }
     }
 }
 

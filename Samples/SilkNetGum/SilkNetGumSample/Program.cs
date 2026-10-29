@@ -113,9 +113,13 @@ unsafe class Program
 
         // Issue #3998: Gum core ships no shader loader, so the app registers a resolver that turns a
         // ContainerRuntime.SourceShaderFile (.sksl path) into a compiled SKRuntimeEffect. With no
-        // resolver registered, SourceShaderFile is a graceful no-op.
+        // resolver registered, a SourceShaderFile fails like a missing file.
         SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
             SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
+
+        // Adds .fx and .slang files to SourceShaderFile (ShadowDusk converts them to SkSL); the .sksl
+        // resolver above keeps handling .sksl files.
+        GumUI.UseShadowDusk();
 
         // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
         GumUI.UseKeyboardDefaults();

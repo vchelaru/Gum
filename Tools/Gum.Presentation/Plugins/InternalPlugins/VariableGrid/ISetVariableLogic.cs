@@ -38,4 +38,10 @@ public interface ISetVariableLogic
     /// Pass null to clear the batch decision and restore per-file dialog prompts.
     /// </summary>
     void SetBatchFileCopyDecision(bool? shouldCopy);
+
+    /// <summary>
+    /// Why <paramref name="value"/> cannot be a SourceFile for <paramref name="instance"/> (or the
+    /// element itself when null), or null when it can: the same check a committed SourceFile passes.
+    /// </summary>
+    string? GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave? instance, string changedMember);
 }

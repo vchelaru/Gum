@@ -22,7 +22,10 @@
       "Tests\\Gum.ProjectServices.Raylib.Tests\\Gum.ProjectServices.Raylib.Tests.csproj",
       "Tests\\Gum.ProjectServices.MonoGame.Tests\\Gum.ProjectServices.MonoGame.Tests.csproj",
       "Tests\\MonoGameGum.IntegrationTests\\MonoGameGum.IntegrationTests.csproj",
-      "Tests\\MonoGameGum.Shapes.Tests\\MonoGameGum.Shapes.Tests.csproj"
+      "Tests\\MonoGameGum.Shapes.Tests\\MonoGameGum.Shapes.Tests.csproj",
+      "Tests\\GumShadowDusk.Tests.MonoGameWindowsDX\\GumShadowDusk.Tests.MonoGameWindowsDX.csproj",
+      "Tests\\GumShadowDusk.Tests.KniWindowsDX\\GumShadowDusk.Tests.KniWindowsDX.csproj",
+      "Tests\\GumShadowDusk.Tests.KniDesktopGL\\GumShadowDusk.Tests.KniDesktopGL.csproj"
     ]
   }
 }

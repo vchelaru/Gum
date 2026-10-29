@@ -252,7 +252,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
     /// <inheritdoc/>
     // This head renders through KNI's SDL2/GL backend, so shaders compile to the OpenGL target.
     protected override Func<string, object?>? CreateRenderTargetShaderResolver() =>
-        RenderTargetShaderResolver.For(ShadowDusk.Core.PlatformTarget.OpenGL);
+        RenderTargetShaderResolver.For(ShadowDusk.Core.PlatformTarget.OpenGL, ReportShaderError, ShaderIncludes);
 
     /// <inheritdoc/>
     protected override bool IsContextMenuOpen => _contextMenu.IsOpen;

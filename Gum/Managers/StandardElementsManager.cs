@@ -347,6 +347,9 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceShaderFile", IsFile = true, Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion,
                 DetailText = "A .fx post-process shader applied to this container's contents when it is drawn to the screen." });
 
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "ShaderParameters", Category = "Rendering",
+                MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion });
+
             var alphaValue = CreateAlphaVariable();
             stateSave.Variables.Add(alphaValue);
 
@@ -573,6 +576,14 @@ public class StandardElementsManager
             borderScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .01m;
 
             stateSave.Variables.Add(borderScaleVariable);
+
+            // Issue #6983 - per-side overrides for BorderScale, mirroring the runtime's
+            // CustomBorderScale* properties (null falls back to BorderScale, 0 draws no border on that
+            // side). The variable grid collapses BorderScale and these into one linked/unlinked row.
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleLeft", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides the left border's scale. Leave blank to use Border Scale." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleTop", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides the top border's scale. Leave blank to use Border Scale." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleRight", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides the right border's scale. Leave blank to use Border Scale." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleBottom", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides the bottom border's scale. Leave blank to use Border Scale." });
 
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });

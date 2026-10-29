@@ -7,7 +7,7 @@
   <UseFontCharacterFile>false</UseFontCharacterFile>
   <AutoSizeFontOutputs>false</AutoSizeFontOutputs>
   <FontGenerator>KernSmith</FontGenerator>
-  <Version>6</Version>
+  <Version>7</Version>
   <DefaultCanvasWidth>1024</DefaultCanvasWidth>
   <DefaultCanvasHeight>768</DefaultCanvasHeight>
   <CustomCanvasSizes>
@@ -74,13 +74,13 @@
   <ComponentReference Name="Bubblegum/Controls/PasswordBox" />
   <ComponentReference Name="Bubblegum/Controls/RadioButton" />
   <ComponentReference Name="Bubblegum/Controls/ScrollBar" />
+  <ComponentReference Name="Bubblegum/Controls/ScrollBarThumb" />
   <ComponentReference Name="Bubblegum/Controls/ScrollViewer" />
   <ComponentReference Name="Bubblegum/Controls/Slider" />
   <ComponentReference Name="Bubblegum/Controls/SliderThumb" />
   <ComponentReference Name="Bubblegum/Controls/Splitter" />
   <ComponentReference Name="Bubblegum/Controls/StackPanel" />
   <ComponentReference Name="Bubblegum/Controls/TextBox" />
-  <ComponentReference Name="Bubblegum/Controls/Thumb" />
   <ComponentReference Name="Bubblegum/Controls/Toast" />
   <ComponentReference Name="Bubblegum/Controls/UserControl" />
   <ComponentReference Name="Bubblegum/Controls/Window" />

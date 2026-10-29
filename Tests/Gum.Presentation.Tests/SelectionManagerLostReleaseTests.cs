@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
@@ -65,7 +66,8 @@ public class SelectionManagerLostReleaseTests : BaseTestClass
             Mock.Of<IGuiCommands>(),
             factory.Object,
             Mock.Of<INineSliceCoordinateRefresher>(),
-            Mock.Of<IPreciseHitTester>());
+            Mock.Of<IPreciseHitTester>(),
+            Mock.Of<IMessenger>());
 
         _selectionManager.Initialize(
             new Layer(),

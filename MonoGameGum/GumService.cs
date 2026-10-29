@@ -676,6 +676,7 @@ public partial class GumService : IGumService
             StandardElementsManager.Self.RegisterExtendedDefaultStates();
 
             gumProject.Initialize();
+            gumProject.ApplyAllVariableReferencesBeforeFirstBuild();
             ApplyProjectTextureFilter(gumProject);
             Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 

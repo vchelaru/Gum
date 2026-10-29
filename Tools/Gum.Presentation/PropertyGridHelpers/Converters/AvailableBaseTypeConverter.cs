@@ -78,6 +78,12 @@ namespace Gum.PropertyGridHelpers.Converters
                     //var shouldShow = element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType;
                     var shouldShow = effectiveElement == null || effectiveElement.Name != componentSave.Name || effectiveElement.Name == instance?.BaseType;
 
+                    // A component deriving from the element being edited would close a BaseType cycle.
+                    if (shouldShow && instance == null && effectiveElement != null && ObjectFinder.Self.GetBaseElements(componentSave).Contains(effectiveElement))
+                    {
+                        shouldShow = false;
+                    }
+
                     if (shouldShow)
                     {
                         values.Add(componentSave.Name);

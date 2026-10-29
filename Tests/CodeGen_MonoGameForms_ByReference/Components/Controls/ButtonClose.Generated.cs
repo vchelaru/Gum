@@ -10,9 +10,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/ButtonClose")]
 partial class ButtonClose : global::Gum.Forms.Controls.Button
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -22,7 +23,7 @@ partial class ButtonClose : global::Gum.Forms.Controls.Button
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonClose") ?? throw new System.InvalidOperationException("Could not find an element named Controls/ButtonClose - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/ButtonClose");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ButtonClose(visual);
             return visual;

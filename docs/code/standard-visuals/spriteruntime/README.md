@@ -4,6 +4,8 @@
 
 The SpriteRuntime object can be used to draw a Texture2D to screen. It supports drawing the entire texture or a portion. It also provides the ability to scale according to the source texture size and aspect ratio.
 
+For the image formats each runtime loads, see [Supported Files](../../files-and-fonts/supported-files.md#image-formats).
+
 ### Code Example
 
 The following code can be used to instantiate a Sprite which uses a Texture (png file) named BearTexture.png.

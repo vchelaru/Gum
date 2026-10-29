@@ -2,7 +2,7 @@
 
 ### Introduction
 
-A typical Gum project references many file types. Aside from the files created by the Gum tool (such as a .gumj file), a Gum project also references .png files and .fnt files.
+A typical Gum project references many file types. Aside from the files created by the Gum tool (such as a .gumj file), a Gum project also references image and font files. See [Supported Files](supported-files.md) for every file type Gum loads on each runtime.
 
 Files referenced by your Gum project (as created in the Gum UI tool) automatically load their necessary dependencies assuming the files are part of the built file system. Usually your project game project should copy all Gum XML, PNG, and FNT files to the output folder. Gum does not use the MonoGame content pipeline.
 
@@ -61,11 +61,11 @@ It's recommended practice to set the RelativeDirectory to your Gum project's loc
 In addition to loose files, Gum can load a project from a single-file `.gumpkg` bundle produced by [`gumcli pack`](../../cli/pack.md). The path you hand to `GumService.Initialize` decides which one you get:
 
 * A path ending in `.gumj` (or `.gumx`) loads loose files. This is the dev-time path, and hot reload works in this mode.
-* A path ending in `.gumpkg` reads element XML, textures, and fonts from inside the bundle via `FileManager.CustomGetStreamFromFile`. No loose copy is needed in the output directory. MonoGame, KNI, FNA, and raylib load bundles; SkiaGum and Silk.NET read loose files only.
+* A path ending in `.gumpkg` reads element XML, textures, and fonts from inside the bundle via `FileManager.CustomGetStreamFromFile`. No loose copy is needed in the output directory. See [Supported Files](supported-files.md) for the runtimes that load bundles.
 
 "Fonts" here covers both kinds: the baked `FontCache` `.fnt` and `.png` pages, and a `.ttf` the project rasterizes at runtime.
 
-This means a published build can ship a single `.gumpkg` next to the executable instead of a folder tree of `.gusx`/`.gucx`/`.png`/`.fnt` files. See the [pack](../../cli/pack.md) page for the producer side and the runtime contract.
+This means a published build can ship a single `.gumpkg` next to the executable instead of a folder tree of `.gusx`/`.gucx`/`.png`/`.fnt` files. See the [pack](../../cli/pack.md) page for the producer side and the runtime contract, including `--shake`, which leaves out elements nothing in the project uses.
 
 ### Serving Files From Your Own Source
 

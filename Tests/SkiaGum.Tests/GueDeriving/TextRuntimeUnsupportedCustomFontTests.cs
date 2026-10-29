@@ -20,7 +20,7 @@ namespace SkiaGum.Tests.GueDeriving;
 /// #6499: Skia renders only .ttf/.otf custom fonts, so a .fnt CustomFontFile reports an error naming
 /// the element and the file, once per element and file, and the text keeps drawing with the default font.
 /// </summary>
-public class TextRuntimeUnsupportedCustomFontTests : IDisposable
+public class TextRuntimeUnsupportedCustomFontTests : BaseTestClass
 {
     private readonly List<string> _reported = new();
     private readonly Action<string> _handler;
@@ -29,15 +29,18 @@ public class TextRuntimeUnsupportedCustomFontTests : IDisposable
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
         GumService.Default.Initialize(surface.Canvas, 200, 100);
+        // Initialize defaults to ThrowException (#6889); these tests are about the reported (silent) case.
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
         _handler = message => _reported.Add(message);
         CustomSetPropertyOnRenderable.PropertyAssignmentError += _handler;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
-        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
         CustomSetPropertyOnRenderable.PropertyAssignmentError -= _handler;
         ObjectFinder.Self.GumProjectSave = null;
+        // Restores MissingFileBehavior (and the rest of the process-wide state) to what the previous test left.
+        base.Dispose();
     }
 
     [Fact]

@@ -89,6 +89,18 @@ namespace Gum.Graphics.Animation
         /// </summary>
         public bool Loop { get; set; } = true;
 
+        /// <summary>
+        /// Whether this chain plays forward then mirrored back, for a cycle of twice its
+        /// <see cref="TotalLength"/>. See <see cref="PlaybackTimeline"/>.
+        /// </summary>
+        public bool PingPong { get; set; }
+
+        /// <summary>
+        /// Whether this chain plays its forward timeline mirrored (last frame first). See
+        /// <see cref="PlaybackTimeline"/>.
+        /// </summary>
+        public bool IsReversed { get; set; }
+
         private string? mParentAchxFileName;
         public string? ParentAchxFileName
         {
@@ -165,6 +177,9 @@ namespace Gum.Graphics.Animation
             animationChain.IndexInLoadedAchx = IndexInLoadedAchx;
 
             animationChain.mName = this.mName;
+            animationChain.Loop = Loop;
+            animationChain.PingPong = PingPong;
+            animationChain.IsReversed = IsReversed;
 
             return animationChain;
         }
@@ -257,6 +272,12 @@ namespace Gum.Graphics.Animation
 
         public static Gum.Graphics.Animation.AnimationChain ToAnimationChain(this AnimationChainSave animationChainSave, TimeMeasurementUnit timeMeasurementUnit, TextureCoordinateType coordinateType)
         {
+            return animationChainSave.ToAnimationChain(timeMeasurementUnit, coordinateType, new System.Collections.Generic.HashSet<string>());
+        }
+
+        /// <param name="failedTextures">The files that already failed to load during the same load of an .achx (#6899).</param>
+        internal static Gum.Graphics.Animation.AnimationChain ToAnimationChain(this AnimationChainSave animationChainSave, TimeMeasurementUnit timeMeasurementUnit, TextureCoordinateType coordinateType, System.Collections.Generic.HashSet<string> failedTextures)
+        {
             if (!string.IsNullOrEmpty(animationChainSave.ParentFile))
             {
                 throw new NotImplementedException();
@@ -268,6 +289,8 @@ namespace Gum.Graphics.Animation
 
                 animationChain.Name = animationChainSave.Name;
                 animationChain.Loop = animationChainSave.Loop;
+                animationChain.PingPong = animationChainSave.PingPong;
+                animationChain.IsReversed = animationChainSave.Reverse;
 
                 float divisor = 1;
 
@@ -278,7 +301,7 @@ namespace Gum.Graphics.Animation
                 {
                     // process the AnimationFrame and add it to the newly-created AnimationChain
                     bool loadTexture = true;
-                    AnimationFrame frame = save.ToAnimationFrame(loadTexture, coordinateType);
+                    AnimationFrame frame = save.ToAnimationFrame(loadTexture, coordinateType, failedTextures);
 
                     frame.FrameLength /= divisor;
                     animationChain.Add(frame);

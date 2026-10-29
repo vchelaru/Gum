@@ -58,6 +58,12 @@ public class AvaloniaHeadStartup : IHeadStartup
         // Lists the composed plugins in the Output tab; Plugins > Manage Plugins shows the same list.
         string names = string.Join(", ", pluginManager.InitializedPlugins.Select(plugin => plugin.FriendlyName).OrderBy(name => name));
         _services.GetRequiredService<IOutputManager>().AddOutput($"Loaded {pluginManager.InitializedPlugins.Count()} plugin(s): {names}");
+
+        // AddOutput, not AddError: a stale build is routine while developing and must not steal the tab.
+        if (StagedContentStalenessCheck.FindWarning(AppContext.BaseDirectory) is string staleWarning)
+        {
+            _services.GetRequiredService<IOutputManager>().AddOutput(staleWarning);
+        }
     }
 
     /// <inheritdoc/>

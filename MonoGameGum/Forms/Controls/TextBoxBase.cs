@@ -438,6 +438,26 @@ public abstract class TextBoxBase :
     /// </summary>
     public event EventHandler? SelectionChanged;
     protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Raised when the user presses Enter while this control is focused and Enter does not add a line break:
+    /// always for a <see cref="PasswordBox"/>, and for a <see cref="TextBox"/> when <see cref="AcceptsReturn"/>
+    /// is <c>false</c>. Raised from the keyboard only; text added in code or by an on-screen keyboard does not
+    /// raise it. The control keeps focus; the handler decides where focus goes.
+    /// </summary>
+    public event EventHandler? EditCommitted;
+
+    /// <summary>
+    /// Raised when the user presses Escape while this control is focused. Raised from the keyboard only. The
+    /// control keeps focus and its text; the handler decides what to restore and where focus goes.
+    /// </summary>
+    public event EventHandler? EditCancelled;
+
+    /// <summary>
+    /// Whether Enter ends the edit (raises <see cref="EditCommitted"/>) rather than adding a line break.
+    /// </summary>
+    protected virtual bool EnterEndsEdit => !AcceptsReturn;
+
     protected virtual TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {
         var args = new TextCompositionEventArgs(newText);
@@ -664,8 +684,7 @@ public abstract class TextBoxBase :
         if (MainCursor.PrimaryDoublePush)
         {
             indexPushed = null;
-            selectionStart = 0;
-            SelectionLength = DisplayedText?.Length ?? 0;
+            SetSelectionRange(0, DisplayedText?.Length ?? 0);
         }
         else
         {
@@ -730,8 +749,7 @@ public abstract class TextBoxBase :
 
                 var maxIndex = System.Math.Max(currentIndex, indexPushed.Value);
 
-                selectionStart = minIndex;
-                SelectionLength = maxIndex - minIndex;
+                SetSelectionRange(minIndex, maxIndex - minIndex);
             }
         }
         if (MainCursor.LastInputDevice == InputDevice.TouchScreen)
@@ -795,13 +813,13 @@ public abstract class TextBoxBase :
         var lineHeight = EffectiveLineHeightInPixels;
         var topOfText = this.textComponent.GetAbsoluteTop() + VerticalAlignmentOffset;
 
-        return TextHitTesting.GetIndexInWrappedLines(
+        return WrappedToTextIndex(DisplayedText, TextHitTesting.GetIndexInWrappedLines(
             coreTextObject.WrappedText,
             cursorOffset,
             screenY - topOfText,
             lineHeight,
             GetLineXOffsetForHorizontalAlignment,
-            GetIndex);
+            GetIndex));
     }
 
     // Walks characters accumulating their X-advance until we pass cursorOffset, then returns
@@ -818,12 +836,19 @@ public abstract class TextBoxBase :
         float distanceMeasuredSoFar = 0;
         var fontScale = coreTextObject.FontScale;
 
-        for (int i = 0; i < textToUse.Length; i++)
+        for (int i = 0; i < textToUse.Length; )
         {
+            // A surrogate pair is one character, so the cursor lands before or after both halves.
+            int charLength = IsSurrogatePairAt(textToUse, i) ? 2 : 1;
+
             // GetCharacterAdvance returns raw glyph-pixel width; the rendered glyph is
             // FontScale-wider, so the hit-test must scale to match the screen-space
             // cursor offset coming in.
-            float advance = coreTextObject.GetCharacterAdvance(textToUse[i]) * fontScale;
+            float advance = 0;
+            for (int j = 0; j < charLength; j++)
+            {
+                advance += coreTextObject.GetCharacterAdvance(textToUse[i + j]) * fontScale;
+            }
 
             distanceMeasuredSoFar += advance;
 
@@ -837,10 +862,12 @@ public abstract class TextBoxBase :
                 }
                 else
                 {
-                    index = i + 1;
+                    index = i + charLength;
                 }
                 break;
             }
+
+            i += charLength;
         }
         return index;
     }
@@ -866,6 +893,12 @@ public abstract class TextBoxBase :
         //////////////////////////Early Out////////////////////////
         if (!isFocused) return;
         /////////////////////////End Early Out/////////////////////
+        // A caret inside a CRLF (set from code) acts as the one before the break for the navigation keys, so
+        // End there does not "move" and select the lone CR.
+        if (key is Keys.Home or Keys.End or Keys.Up or Keys.Down or Keys.Left or Keys.Right)
+        {
+            SnapCaretToCharacterStart();
+        }
         var oldIndex = caretIndex;
 
         switch (key)
@@ -888,11 +921,11 @@ public abstract class TextBoxBase :
                         // 12 34
                         // If the cursor is at 4, pressing left moves the cursor
                         // before the 3 but after the space.
-                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(caretIndex - 1);
+                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(StepLeft(CaretStepText, caretIndex));
                         if (letterToMoveToFromCtrl != null)
                         {
 
-                            if (letterToMoveToFromCtrl == caretIndex - 1)
+                            if (letterToMoveToFromCtrl == StepLeft(CaretStepText, caretIndex))
                             {
                                 letterToMoveToFromCtrl = null;
                             }
@@ -903,7 +936,7 @@ public abstract class TextBoxBase :
                         }
                     }
 
-                    caretIndex = letterToMoveToFromCtrl ?? (caretIndex - 1);
+                    caretIndex = letterToMoveToFromCtrl ?? StepLeft(CaretStepText, caretIndex);
                 }
                 break;
             case Keys.Home:
@@ -920,15 +953,17 @@ public abstract class TextBoxBase :
                     }
                     else
                     {
-                        this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
+                        GetWrappedLineNumber(caretIndex, out int lineNumber, out int _, out int _);
                         if(lineNumber == coreTextObject.WrappedText.Count-1)
                         {
                             caretIndex = (DisplayedText?.Length ?? 0);
                         }
                         else
                         {
-                            var startofIndex = GetAbsoluteCharacterIndexForLine(lineNumber + 1);
-                            caretIndex = startofIndex - 1;
+                            // The last position on the line is the one before its '\n', which in Text
+                            // is before the '\r' of a "\r\n" too.
+                            var startOfNextLine = GetWrappedStartOfLine(lineNumber + 1);
+                            caretIndex = WrappedToTextIndex(DisplayedText, startOfNextLine - 1);
                         }
                     }
                 }
@@ -951,14 +986,14 @@ public abstract class TextBoxBase :
 
                     if (isCtrlDown)
                     {
-                        letterToMoveToFromCtrl = GetSpaceIndexAfter(caretIndex + 1);
+                        letterToMoveToFromCtrl = GetSpaceIndexAfter(StepRight(CaretStepText, caretIndex));
                         if (letterToMoveToFromCtrl != null)
                         {
 
                             // match Visual Studio behavior, and go after the last space
-                            if (letterToMoveToFromCtrl != caretIndex + 1)
+                            if (letterToMoveToFromCtrl != StepRight(CaretStepText, caretIndex))
                             {
-                                letterToMoveToFromCtrl++;
+                                letterToMoveToFromCtrl = StepRight(CaretStepText, letterToMoveToFromCtrl.Value);
                             }
                             else
                             {
@@ -971,7 +1006,7 @@ public abstract class TextBoxBase :
                         }
                     }
 
-                    caretIndex = letterToMoveToFromCtrl ?? (caretIndex + 1);
+                    caretIndex = letterToMoveToFromCtrl ?? StepRight(CaretStepText, caretIndex);
 
                 }
                 break;
@@ -1011,6 +1046,7 @@ public abstract class TextBoxBase :
                 {
                     if (isShortcutDown)
                     {
+                        SnapCaretToCharacterStart();
                         HandlePaste();
                     }
                 }
@@ -1021,6 +1057,16 @@ public abstract class TextBoxBase :
                 {
                     SelectAll();
                 }
+                break;
+            case Keys.Enter:
+                // Raised here, not from HandleCharEntered: the key path is gated on focus and runs once per press.
+                if (EnterEndsEdit)
+                {
+                    EditCommitted?.Invoke(this, EventArgs.Empty);
+                }
+                break;
+            case Keys.Escape:
+                EditCancelled?.Invoke(this, EventArgs.Empty);
                 break;
         }
 
@@ -1047,7 +1093,7 @@ public abstract class TextBoxBase :
     // edge and moves to the middle of the adjacent line, so rotation never enters the math (#6607).
     private void MoveCaretToAdjacentLine(int direction)
     {
-        GetLineNumber(caretIndex, out int lineNumber, out _, out int relativeIndexOnLine);
+        GetWrappedLineNumber(caretIndex, out int lineNumber, out _, out int relativeIndexOnLine);
         var lines = coreTextObject.WrappedText;
         int targetLine = lineNumber + direction;
 
@@ -1070,13 +1116,13 @@ public abstract class TextBoxBase :
                     + GetLineXOffsetForHorizontalAlignment(line);
             }
             var lineHeight = EffectiveLineHeightInPixels;
-            CaretIndex = TextHitTesting.GetIndexInWrappedLines(
+            CaretIndex = WrappedToTextIndex(DisplayedText, TextHitTesting.GetIndexInWrappedLines(
                 lines,
                 caretXOffset,
                 (targetLine + 0.5f) * lineHeight,
                 lineHeight,
                 GetLineXOffsetForHorizontalAlignment,
-                GetIndex);
+                GetIndex));
         }
     }
 
@@ -1103,10 +1149,7 @@ public abstract class TextBoxBase :
 
             if (SelectionLength == 0)
             {
-                // set the field (doesn't update the selection visuals)...
-                selectionStart = System.Math.Min(oldIndex, newIndex);
-                // ...now set the property to update the visuals.
-                SelectionLength = System.Math.Abs(oldIndex - newIndex);
+                SetSelectionRange(System.Math.Min(oldIndex, newIndex), System.Math.Abs(oldIndex - newIndex));
             }
             else
             {
@@ -1123,8 +1166,7 @@ public abstract class TextBoxBase :
                     rightMost = System.Math.Max(selectionStart, newIndex);
                 }
 
-                selectionStart = leftMost;
-                SelectionLength = rightMost - leftMost;
+                SetSelectionRange(leftMost, rightMost - leftMost);
             }
         }
         else
@@ -1133,11 +1175,39 @@ public abstract class TextBoxBase :
         }
     }
 
+    // Sets both values and always redraws. Assigning the field and then SelectionLength skips the
+    // redraw when the length is unchanged but the start moved, which leaves the old rectangles.
+    private void SetSelectionRange(int start, int length)
+    {
+        int oldStart = selectionStart;
+        int oldLength = selectionLength;
+        selectionStart = start;
+        SelectionLength = length;
+        if (selectionLength == oldLength && selectionStart != oldStart)
+        {
+            UpdateToSelection();
+        }
+    }
+
     public abstract void HandleBackspace(bool isCtrlDown = false);
 
     protected abstract void HandleDelete();
 
     public abstract void HandleCharEntered(char character);
+
+    /// <summary>
+    /// Whether <paramref name="character"/> adds text (and so replaces a selection). Backspace, delete and escape
+    /// are handled by <see cref="HandleKeyDown(Keys, bool, bool, bool)"/>, and Enter adds nothing unless it adds a
+    /// line break, so none of them may edit the text or the selection from <see cref="HandleCharEntered"/>.
+    /// </summary>
+    protected bool CharacterAddsText(char character)
+    {
+        if (character == '\b' || character == (char)127 || character == (char)27)
+        {
+            return false;
+        }
+        return !((character == '\r' || character == '\n') && EnterEndsEdit);
+    }
 
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {
@@ -1162,7 +1232,7 @@ public abstract class TextBoxBase :
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(GamepadButton.A))
+            if (IsEnabled && gamepad.ButtonPushed(GamepadButton.A))
             {
                 this.Visual.CallClick();
 
@@ -1218,6 +1288,12 @@ public abstract class TextBoxBase :
     {
 #if !FRB
         ReceiveInput();
+
+        // A disabled control can hold focus (AllowFocusWhenDisabled) but does not take typing.
+        if (!IsEnabled)
+        {
+            return;
+        }
 
         var shift = keyboard.IsShiftDown;
         var ctrl = keyboard.IsCtrlDown;
@@ -1349,7 +1425,11 @@ public abstract class TextBoxBase :
         }
     }
 
-    public int GetAbsoluteCharacterIndexForLine(int lineNumber)
+    public int GetAbsoluteCharacterIndexForLine(int lineNumber) =>
+        WrappedToTextIndex(DisplayedText, GetWrappedStartOfLine(lineNumber));
+
+    // Start of the line as an index into the wrapped text (see WrappedToTextIndex).
+    private int GetWrappedStartOfLine(int lineNumber)
     {
         int absoluteIndex = 0;
 
@@ -1360,6 +1440,115 @@ public abstract class TextBoxBase :
         return absoluteIndex;
     }
 
+    // The wrapped text has "\r\n" collapsed to "\n", so an index into Text (CaretIndex, SelectionStart)
+    // is not an index into the wrapped lines when Text has a CRLF. These two convert between them. A
+    // position between the '\r' and '\n' maps to the position before the break.
+    internal static int TextToWrappedIndex(string? text, int textIndex)
+    {
+        if (text == null) return textIndex;
+        int removed = 0;
+        int end = System.Math.Min(textIndex, text.Length);
+        for (int i = 0; i < end; i++)
+        {
+            if (text[i] == '\r' && i + 1 < text.Length && text[i + 1] == '\n')
+            {
+                removed++;
+            }
+        }
+        return textIndex - removed;
+    }
+
+    internal static int WrappedToTextIndex(string? text, int wrappedIndex)
+    {
+        if (text == null) return wrappedIndex;
+        int textIndex = 0;
+        int wrapped = 0;
+        while (wrapped < wrappedIndex && textIndex < text.Length)
+        {
+            textIndex += text[textIndex] == '\r' && textIndex + 1 < text.Length && text[textIndex + 1] == '\n' ? 2 : 1;
+            wrapped++;
+        }
+        return textIndex + System.Math.Max(0, wrappedIndex - wrapped);
+    }
+
+    // A "\r\n" and a surrogate pair (an emoji) are each one character stored as two chars. Every caret
+    // step, delete and click lands on the edges of those pairs, never between the halves. Indexes stay
+    // UTF-16 indexes. Grapheme clusters (flags, ZWJ sequences, combining marks) are not handled yet.
+    internal static bool IsSurrogatePairAt(string text, int index) =>
+        index >= 0 && index + 1 < text.Length && char.IsHighSurrogate(text[index]) && char.IsLowSurrogate(text[index + 1]);
+
+    // True when index is between the two halves of a "\r\n" or of a surrogate pair.
+    internal static bool IsInsideCharacter(string? text, int index) =>
+        text != null && index > 0 && index < text.Length &&
+        ((text[index - 1] == '\r' && text[index] == '\n') || IsSurrogatePairAt(text, index - 1));
+
+    // One caret step left or right moves over a whole character.
+    internal static int StepLeft(string? text, int index)
+    {
+        int result = index - 1;
+        return IsInsideCharacter(text, result) ? result - 1 : result;
+    }
+
+    internal static int StepRight(string? text, int index)
+    {
+        int result = index + 1;
+        return IsInsideCharacter(text, result) ? result + 1 : result;
+    }
+
+    // Where a backward delete (Backspace, Ctrl+Backspace) ends: the caret, or the end of the character it is inside.
+    internal static int GetBackspaceEnd(string? text, int caretIndex) =>
+        IsInsideCharacter(text, caretIndex) ? caretIndex + 1 : caretIndex;
+
+    // A caret inside a character (set from code) moves to the start of it before an edit that inserts, so
+    // typing and pasting never split the character. Navigation keys do the same.
+    protected void SnapCaretToCharacterStart()
+    {
+        if (IsInsideCharacter(CaretStepText, caretIndex))
+        {
+            caretIndex--;
+        }
+    }
+
+    // The part of the text Backspace removes with no selection: the whole character before the caret.
+    // A caret between the halves of a character (a programmatic CaretIndex) removes that character.
+    internal static (int Start, int Length) GetBackspaceRange(string? text, int caretIndex)
+    {
+        int end = GetBackspaceEnd(text, caretIndex);
+        int start = StepLeft(text, end);
+        return (start, end - start);
+    }
+
+    // The part of the text Delete removes with no selection: the whole character after the caret.
+    internal static (int Start, int Length) GetDeleteRange(string? text, int caretIndex)
+    {
+        int start = IsInsideCharacter(text, caretIndex) ? caretIndex - 1 : caretIndex;
+        return (start, StepRight(text, start) - start);
+    }
+
+    // Widens a selection so neither edge is between the halves of a character.
+    internal static void ExpandToWholeCharacters(string? text, ref int start, ref int length)
+    {
+        if (IsInsideCharacter(text, start))
+        {
+            start--;
+            length++;
+        }
+        if (IsInsideCharacter(text, start + length))
+        {
+            length++;
+        }
+    }
+
+    // The length to keep when cutting text to maxLength: a surrogate pair is dropped whole, not halved.
+    internal static int GetTruncatedLength(string text, int maxLength) =>
+        maxLength > 0 && IsSurrogatePairAt(text, maxLength - 1) ? maxLength - 1 : maxLength;
+
+    /// <summary>
+    /// The text the caret steps over. It is the displayed text, except where that is a mask (PasswordBox)
+    /// that does not show which characters are two chars.
+    /// </summary>
+    protected virtual string? CaretStepText => DisplayedText;
+
     /// <summary>
     /// Returns the line number, start of the line, and relative index into the line given an absolute character index
     /// </summary>
@@ -1369,6 +1558,16 @@ public abstract class TextBoxBase :
     /// <param name="relativeIndexOnLine">The relative index in the line, where 0 is the first character in the line.</param>
     public void GetLineNumber(int absoluteCharacterIndex, out int lineNumber, out int absoluteStartOfLine, out int relativeIndexOnLine)
     {
+        GetWrappedLineNumber(absoluteCharacterIndex, out lineNumber, out int wrappedStartOfLine, out relativeIndexOnLine);
+        absoluteStartOfLine = WrappedToTextIndex(DisplayedText, wrappedStartOfLine);
+    }
+
+    // As GetLineNumber, but absoluteStartOfLine is an index into the wrapped lines, which is what
+    // relativeIndexOnLine and the line strings are measured in. A CRLF in Text is one character there.
+    private void GetWrappedLineNumber(int absoluteCharacterIndex, out int lineNumber, out int absoluteStartOfLine, out int relativeIndexOnLine)
+    {
+        absoluteCharacterIndex = TextToWrappedIndex(DisplayedText, absoluteCharacterIndex);
+
         // This is a copy of the method in TextExtensions.cs, but since that
         // requires a Text and not an IText, that can't be referenced here.
         // Doing so would require a little more refactoring. If this method 
@@ -1444,7 +1643,7 @@ public abstract class TextBoxBase :
         }
         else
         {
-            GetLineNumber(caretIndex, out int lineNumber, out int _, out int relativeIndexOnLine);
+            GetWrappedLineNumber(caretIndex, out int lineNumber, out int _, out int relativeIndexOnLine);
 
             // A wrapped line exists only once there is text on it, so in the moment after
             // typing the space that ends a line there is no next line for the caret to move
@@ -1894,14 +2093,20 @@ public abstract class TextBoxBase :
 
         if (!IsRenderedAsSingleLine)
         {
-            GetLineNumber(selectionStart, out int startLineNumber, out int absoluteStartOfFirstLine, out int startRelativeIndexInLine);
+            GetWrappedLineNumber(selectionStart, out int startLineNumber, out int absoluteStartOfFirstLine, out int startRelativeIndexInLine);
 
-            GetLineNumber(selectionStart + selectionLength, out int endLineNumber, out int absoluteStartOfLastLine, out int endRelativeIndexInLine);
+            GetWrappedLineNumber(selectionStart + selectionLength, out int endLineNumber, out int absoluteStartOfLastLine, out int endRelativeIndexInLine);
 
             int absoluteStartOfCurrentLine = absoluteStartOfFirstLine;
 
             for (int i = startLineNumber; i < endLineNumber + 1; i++)
             {
+                // A selection that ends exactly at the start of a line does not touch that line.
+                if (i == endLineNumber && i > startLineNumber && endRelativeIndexInLine == 0)
+                {
+                    break;
+                }
+
                 var lineOfText = this.coreTextObject.WrappedText[i];
 
                 int startOfSelectionInThisLineAbsolute = 0;
@@ -2441,9 +2646,14 @@ public abstract class TextBoxBase :
 
     #region Utilities
 
+    // The word helpers take and return indexes into Text, but scan the text with "\r\n" collapsed to "\n"
+    // so a CRLF behaves as the single whitespace character the wrapped text treats it as.
+    private string? NormalizedDisplayedText => DisplayedText?.Replace("\r\n", "\n");
+
+    // The two helpers below take and return indexes into the normalized text (see above).
     protected int? GetCtrlBeforeTarget(int index)
     {
-        var afterRemovingSpaces = GetNonSpaceIndexAtOrBefore(index);
+        var afterRemovingSpaces = GetNonSpaceIndexAtOrBefore(TextToWrappedIndex(DisplayedText, index));
 
         if (afterRemovingSpaces != null)
         {
@@ -2451,7 +2661,7 @@ public abstract class TextBoxBase :
 
             if (nextSpace != null)
             {
-                return nextSpace.Value + 1;
+                return WrappedToTextIndex(DisplayedText, nextSpace.Value + 1);
             }
         }
 
@@ -2461,12 +2671,13 @@ public abstract class TextBoxBase :
     int? GetNonSpaceIndexAtOrBefore(int index)
     {
         // first get non-space index at or before:
-        if (DisplayedText != null)
+        var text = NormalizedDisplayedText;
+        if (text != null)
         {
-            index = System.Math.Min(index, DisplayedText.Length - 1);
+            index = System.Math.Min(index, text.Length - 1);
             for (int i = index; i > 0; i--)
             {
-                var isNotSpace = !Char.IsWhiteSpace(DisplayedText[i]);
+                var isNotSpace = !Char.IsWhiteSpace(text[i]);
 
                 if (isNotSpace)
                 {
@@ -2481,11 +2692,12 @@ public abstract class TextBoxBase :
 
     int? GetSpaceIndexAtOrBefore(int index)
     {
-        if (DisplayedText != null)
+        var text = NormalizedDisplayedText;
+        if (text != null)
         {
             for (int i = index - 1; i > 0; i--)
             {
-                var isSpace = Char.IsWhiteSpace(DisplayedText[i]);
+                var isSpace = Char.IsWhiteSpace(text[i]);
 
                 if (isSpace)
                 {
@@ -2517,15 +2729,16 @@ public abstract class TextBoxBase :
 
     protected int? GetSpaceIndexAfter(int index)
     {
-        if (DisplayedText != null)
+        var text = NormalizedDisplayedText;
+        if (text != null)
         {
-            for (int i = index; i < DisplayedText.Length; i++)
+            for (int i = TextToWrappedIndex(DisplayedText, index); i < text.Length; i++)
             {
-                var isSpace = Char.IsWhiteSpace(DisplayedText[i]);
+                var isSpace = Char.IsWhiteSpace(text[i]);
 
                 if (isSpace)
                 {
-                    return i;
+                    return WrappedToTextIndex(DisplayedText, i);
                 }
             }
         }

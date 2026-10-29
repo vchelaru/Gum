@@ -527,6 +527,28 @@ public class NineSlice : SpriteBatchRenderableBase,
         }
     }
 
+    /// <summary>Left border scale override; <c>null</c> falls back to <see cref="BorderScale"/>. 0 draws no left border.</summary>
+    public float? CustomBorderScaleLeft { get; set; }
+
+    /// <summary>Top border scale override; <c>null</c> falls back to <see cref="BorderScale"/>. 0 draws no top border.</summary>
+    public float? CustomBorderScaleTop { get; set; }
+
+    /// <summary>Right border scale override; <c>null</c> falls back to <see cref="BorderScale"/>. 0 draws no right border.</summary>
+    public float? CustomBorderScaleRight { get; set; }
+
+    /// <summary>Bottom border scale override; <c>null</c> falls back to <see cref="BorderScale"/>. 0 draws no bottom border.</summary>
+    public float? CustomBorderScaleBottom { get; set; }
+
+    float EffectiveBorderScaleLeft => CustomBorderScaleLeft ?? _borderScale;
+    float EffectiveBorderScaleTop => CustomBorderScaleTop ?? _borderScale;
+    float EffectiveBorderScaleRight => CustomBorderScaleRight ?? _borderScale;
+    float EffectiveBorderScaleBottom => CustomBorderScaleBottom ?? _borderScale;
+
+    NineSliceBorders GetBorders() => NineSliceBorders.Compute(
+        _fullOutsideTexturePixelWidth, _fullOutsideTexturePixelHeight,
+        EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
+        Width, Height);
+
 
     float IAspectRatio.AspectRatio
     {
@@ -695,11 +717,13 @@ public class NineSlice : SpriteBatchRenderableBase,
                         RenderTiled(top, systemManagers, spriteRenderer, layout, topX, 0,
                             center.Width,
                             top.Height,
-                            tileHorizontally: true, tileVertically: false);
+                            tileHorizontally: true, tileVertically: false,
+                            EffectiveBorderScaleTop, EffectiveBorderScaleTop);
                         RenderTiled(bottom, systemManagers, spriteRenderer, layout, bottomX, bottomY,
                             center.Width,
                             bottom.Height,
-                            tileHorizontally: true, tileVertically: false);
+                            tileHorizontally: true, tileVertically: false,
+                            EffectiveBorderScaleBottom, EffectiveBorderScaleBottom);
                     }
                     else
                     {
@@ -714,7 +738,8 @@ public class NineSlice : SpriteBatchRenderableBase,
                             RenderTiled(center, systemManagers, spriteRenderer, layout, centerX, middleY,
                                 center.Width,
                                 center.Height,
-                                tileHorizontally: true, tileVertically: true);
+                                tileHorizontally: true, tileVertically: true,
+                                _borderScale, _borderScale);
                         }
                         else
                         {
@@ -730,11 +755,13 @@ public class NineSlice : SpriteBatchRenderableBase,
                         RenderTiled(left, systemManagers, spriteRenderer, layout, 0, middleY,
                             left.Width,
                             center.Height,
-                            tileHorizontally: false, tileVertically: true);
+                            tileHorizontally: false, tileVertically: true,
+                            EffectiveBorderScaleLeft, EffectiveBorderScaleLeft);
                         RenderTiled(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer, layout, rightX, middleY,
                             mSprites[(int)NineSliceSections.Right].Width,
                             center.Height,
-                            tileHorizontally: false, tileVertically: true);
+                            tileHorizontally: false, tileVertically: true,
+                            EffectiveBorderScaleRight, EffectiveBorderScaleRight);
                     }
                     else
                     {
@@ -786,51 +813,26 @@ public class NineSlice : SpriteBatchRenderableBase,
             else
             {
                 // single source file for each part of the NineSlice:
-                var fullBorderWidth = _fullOutsideTexturePixelWidth * 2 * _borderScale;
+                NineSliceBorders borders = GetBorders();
 
-                if (Width >= fullBorderWidth)
-                {
-                    desiredMiddleWidth = this.Width - fullBorderWidth;
+                desiredMiddleWidth = System.Math.Max(0, Width - borders.DestLeft - borders.DestRight);
+                desiredMiddleHeight = System.Math.Max(0, Height - borders.DestTop - borders.DestBottom);
 
-                    mSprites[(int)NineSliceSections.TopLeft].Width = 
-                        mSprites[(int)NineSliceSections.TopRight].Width = 
-                        mSprites[(int)NineSliceSections.Left].Width = 
-                        mSprites[(int)NineSliceSections.Right].Width =
-                        mSprites[(int)NineSliceSections.BottomLeft].Width = 
-                        mSprites[(int)NineSliceSections.BottomRight].Width = _fullOutsideTexturePixelWidth*_borderScale;
-                }
-                else
-                {
-                    desiredMiddleWidth = 0;
-                    mSprites[(int)NineSliceSections.TopLeft].Width = 
-                        mSprites[(int)NineSliceSections.TopRight].Width = 
-                        mSprites[(int)NineSliceSections.Left].Width = 
-                        mSprites[(int)NineSliceSections.Right].Width =
-                        mSprites[(int)NineSliceSections.BottomLeft].Width = 
-                        mSprites[(int)NineSliceSections.BottomRight].Width = Width / 2.0f;
-                }
+                mSprites[(int)NineSliceSections.TopLeft].Width =
+                    mSprites[(int)NineSliceSections.Left].Width =
+                    mSprites[(int)NineSliceSections.BottomLeft].Width = borders.DestLeft;
 
-                float fullBorderHeight = _fullOutsideTexturePixelHeight * 2 * _borderScale;
-                if (Height >= fullBorderHeight)
-                {
-                    desiredMiddleHeight = this.Height - fullBorderHeight;
-                    mSprites[(int)NineSliceSections.TopLeft].Height = 
-                        mSprites[(int)NineSliceSections.Top].Height =
-                        mSprites[(int)NineSliceSections.TopRight].Height =
-                        mSprites[(int)NineSliceSections.BottomLeft].Height =
-                        mSprites[(int)NineSliceSections.Bottom].Height =
-                        mSprites[(int)NineSliceSections.BottomRight].Height = _fullOutsideTexturePixelHeight * _borderScale;
-                }
-                else
-                {
-                    desiredMiddleHeight = 0;
-                    mSprites[(int)NineSliceSections.TopLeft].Height =
-                        mSprites[(int)NineSliceSections.Top].Height =
-                        mSprites[(int)NineSliceSections.TopRight].Height =
-                        mSprites[(int)NineSliceSections.BottomLeft].Height =
-                        mSprites[(int)NineSliceSections.Bottom].Height =
-                        mSprites[(int)NineSliceSections.BottomRight].Height = Height/2.0f;
-                }
+                mSprites[(int)NineSliceSections.TopRight].Width =
+                    mSprites[(int)NineSliceSections.Right].Width =
+                    mSprites[(int)NineSliceSections.BottomRight].Width = borders.DestRight;
+
+                mSprites[(int)NineSliceSections.TopLeft].Height =
+                    mSprites[(int)NineSliceSections.Top].Height =
+                    mSprites[(int)NineSliceSections.TopRight].Height = borders.DestTop;
+
+                mSprites[(int)NineSliceSections.BottomLeft].Height =
+                    mSprites[(int)NineSliceSections.Bottom].Height =
+                    mSprites[(int)NineSliceSections.BottomRight].Height = borders.DestBottom;
             }
         }
         else
@@ -932,13 +934,11 @@ public class NineSlice : SpriteBatchRenderableBase,
                 _fullInsideTexturePixelWidth = usedWidth - (_fullOutsideTexturePixelWidth * 2);
                 _fullInsideTexturePixelHeight = usedHeight - (_fullOutsideTexturePixelHeight * 2);
 
-                int outsideTexturePixelWidth = System.Math.Min(_fullOutsideTexturePixelWidth, 
-                    RenderingLibrary.Math.MathFunctions.RoundToInt(Width / (BorderScale * 2)));
-                int outsideTexturePixelHeight = System.Math.Min(_fullOutsideTexturePixelHeight,
-                    RenderingLibrary.Math.MathFunctions.RoundToInt(Height / (BorderScale * 2)));
-
-                int topHeight = outsideTexturePixelHeight;
-                int bottomHeight = outsideTexturePixelHeight;
+                NineSliceBorders borders = GetBorders();
+                int leftWidth = borders.SourceLeft;
+                int rightWidth = borders.SourceRight;
+                int topHeight = borders.SourceTop;
+                int bottomHeight = borders.SourceBottom;
 
                 int insideWidth = _fullInsideTexturePixelWidth;
                 int insideHeight = _fullInsideTexturePixelHeight;
@@ -954,49 +954,49 @@ public class NineSlice : SpriteBatchRenderableBase,
                 mSprites[(int)NineSliceSections.TopLeft].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
                     topCoordinate + 0,
-                    outsideTexturePixelWidth,
+                    leftWidth,
                     topHeight);
                 mSprites[(int)NineSliceSections.Top].SourceRectangle = new Rectangle(
-                    leftCoordinate + outsideTexturePixelWidth,
+                    leftCoordinate + leftWidth,
                     topCoordinate + 0,
                     insideWidth,
                     topHeight);
                 mSprites[(int)NineSliceSections.TopRight].SourceRectangle = new Rectangle(
-                    rightCoordinate - outsideTexturePixelWidth,
+                    rightCoordinate - rightWidth,
                     topCoordinate + 0,
-                    outsideTexturePixelWidth,
+                    rightWidth,
                     topHeight);
 
                 mSprites[(int)NineSliceSections.Left].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
-                    topCoordinate + outsideTexturePixelHeight,
-                    outsideTexturePixelWidth,
+                    topCoordinate + topHeight,
+                    leftWidth,
                     insideHeight);
                 mSprites[(int)NineSliceSections.Center].SourceRectangle = new Rectangle(
-                    leftCoordinate + outsideTexturePixelWidth,
-                    topCoordinate + outsideTexturePixelHeight,
+                    leftCoordinate + leftWidth,
+                    topCoordinate + topHeight,
                     insideWidth,
                     insideHeight);
                 mSprites[(int)NineSliceSections.Right].SourceRectangle = new Rectangle(
-                    rightCoordinate - outsideTexturePixelWidth,
-                    topCoordinate + outsideTexturePixelHeight,
-                    outsideTexturePixelWidth,
+                    rightCoordinate - rightWidth,
+                    topCoordinate + topHeight,
+                    rightWidth,
                     insideHeight);
 
                 mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
                     bottomCoordinate - bottomHeight,
-                    outsideTexturePixelWidth,
+                    leftWidth,
                     bottomHeight);
                 mSprites[(int)NineSliceSections.Bottom].SourceRectangle = new Rectangle(
-                    leftCoordinate + outsideTexturePixelWidth,
+                    leftCoordinate + leftWidth,
                     bottomCoordinate - bottomHeight,
                     insideWidth,
                     bottomHeight);
                 mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = new Rectangle(
-                    rightCoordinate - outsideTexturePixelWidth,
+                    rightCoordinate - rightWidth,
                     bottomCoordinate - bottomHeight,
-                    outsideTexturePixelWidth,
+                    rightWidth,
                     bottomHeight);
             }            
         }
@@ -1122,6 +1122,12 @@ public class NineSlice : SpriteBatchRenderableBase,
         float originalWidth = sprite.Width;
         float originalHeight = sprite.Height;
 
+        if (originalWidth <= 0 || originalHeight <= 0)
+        {
+            // A border side scaled to 0 collapses to nothing.
+            return;
+        }
+
         layout.Place(sprite, localX, localY, originalWidth, originalHeight);
         Render(sprite, systemManagers, spriteRenderer);
 
@@ -1139,7 +1145,9 @@ public class NineSlice : SpriteBatchRenderableBase,
         float fillWidth,
         float fillHeight,
         bool tileHorizontally,
-        bool tileVertically)
+        bool tileVertically,
+        float tileScaleX,
+        float tileScaleY)
     {
         if (sprite.Texture == null || sprite.SourceRectangle == null)
         {
@@ -1153,10 +1161,10 @@ public class NineSlice : SpriteBatchRenderableBase,
         float originalHeight = sprite.Height;
 
         float tileRenderWidth = tileHorizontally
-            ? originalSourceRect.Width * _borderScale
+            ? originalSourceRect.Width * tileScaleX
             : fillWidth;
         float tileRenderHeight = tileVertically
-            ? originalSourceRect.Height * _borderScale
+            ? originalSourceRect.Height * tileScaleY
             : fillHeight;
 
         if (tileRenderWidth <= 0 || tileRenderHeight <= 0)
@@ -1274,19 +1282,17 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     void ApplyAnimationFrame(AnimationFrame frame)
     {
-        if (frame.Texture == null)
-        {
-            throw new InvalidOperationException(
-                $"The animation {AnimationLogic.CurrentChain?.Name} has a frame with a null texture. Frames must have a texture");
-        }
-
+        // A frame whose texture failed to load draws nothing, as on a Sprite, instead of throwing from Update (#6897).
         SetSingleTexture(frame.Texture);
 
-        var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
-        var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
-        var top = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
-        var height = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - top;
-        SourceRectangle = new Rectangle(left, top, width, height);
+        if (frame.Texture != null)
+        {
+            var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
+            var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
+            var top = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
+            var height = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - top;
+            SourceRectangle = new Rectangle(left, top, width, height);
+        }
 
         FlipHorizontal = frame.FlipHorizontal;
         FlipVertical = frame.FlipVertical;

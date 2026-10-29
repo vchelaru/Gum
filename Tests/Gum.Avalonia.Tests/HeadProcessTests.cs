@@ -94,6 +94,39 @@ public class HeadProcessTests
         run.Errors.ShouldNotContain("Startup failed");
     }
 
+    // The tool's device caps texture size; a sprite whose image is within the 8192 px cap must load (#6838).
+    [SkippableTheory]
+    [InlineData(5000)]
+    [InlineData(8192)]
+    public async Task UnattendedRun_SpriteWithATextureUpTo8192Pixels_LoadsWithoutAnError(int textureWidth)
+    {
+        Skip.IfNot(CanRunTheHead, SkipReason);
+        using ScratchProject scratch = ScratchProject.Create();
+        scratch.AddSpriteScreen("BigTextureScreen", "SpriteInstance", "BigTexture.png", textureWidth, 8);
+
+        HeadRun run = await RunHead(scratch.Project, "--exit-after", "90", "--select", "BigTextureScreen#SpriteInstance",
+            "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
+
+        run.ExitCode.ShouldBe(0, run.Errors);
+        run.Errors.ShouldNotContain("Error setting SourceFile");
+    }
+
+    // Above the cap the sprite cannot load, and the error names the file and the limit instead of failing silently (#6838).
+    [SkippableFact]
+    public async Task UnattendedRun_SpriteWithATextureOver8192Pixels_ReportsTheLimit()
+    {
+        Skip.IfNot(CanRunTheHead, SkipReason);
+        using ScratchProject scratch = ScratchProject.Create();
+        scratch.AddSpriteScreen("BigTextureScreen", "SpriteInstance", "BigTexture.png", 8193, 8);
+
+        HeadRun run = await RunHead(scratch.Project, "--exit-after", "90", "--select", "BigTextureScreen#SpriteInstance",
+            "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
+
+        run.ExitCode.ShouldBe(0, run.Errors);
+        run.Errors.ShouldContain("BigTexture.png");
+        run.Errors.ShouldContain("maximum Texture2D size of 8192");
+    }
+
     private static async Task<HeadRun> RunHead(params string[] arguments)
     {
         string configuration = new DirectoryInfo(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).Parent!.Name;
@@ -215,9 +248,97 @@ public class HeadProcessTests
                 </ScreenSave>
                 """);
 
+            AddScreenReference(screenName);
+        }
+
+        /// <summary>Adds a screen holding one Sprite that shows a flat-color PNG of the given size, written beside the project.</summary>
+        public void AddSpriteScreen(string screenName, string instanceName, string textureFileName, int textureWidth, int textureHeight)
+        {
+            WriteFlatPng(Path.Combine(_projectDirectory, textureFileName), textureWidth, textureHeight);
+
+            File.WriteAllText(Path.Combine(_projectDirectory, "Screens", screenName + ".gusx"),
+                $"""
+                <?xml version="1.0" encoding="utf-8"?>
+                <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                  <Name>{screenName}</Name>
+                  <State>
+                    <Name>Default</Name>
+                    <Variable>
+                      <IsFile>true</IsFile>
+                      <Type>string</Type>
+                      <Name>{instanceName}.SourceFile</Name>
+                      <Value xsi:type="xsd:string">{textureFileName}</Value>
+                      <SetsValue>true</SetsValue>
+                    </Variable>
+                  </State>
+                  <Instance>
+                    <Name>{instanceName}</Name>
+                    <BaseType>Sprite</BaseType>
+                    <DefinedByBase>false</DefinedByBase>
+                  </Instance>
+                </ScreenSave>
+                """);
+
+            AddScreenReference(screenName);
+        }
+
+        private void AddScreenReference(string screenName)
+        {
             string gumx = File.ReadAllText(Project);
             File.WriteAllText(Project, gumx.Replace("<ScreenReference Name=\"TestScreen\" />",
                 $"<ScreenReference Name=\"TestScreen\" />\n  <ScreenReference Name=\"{screenName}\" />"));
+        }
+
+        // An 8-bit RGB PNG of one color; it compresses to almost nothing, so any size is cheap to write.
+        private static void WriteFlatPng(string path, int width, int height)
+        {
+            static void WriteChunk(Stream stream, string type, byte[] data)
+            {
+                byte[] typeBytes = System.Text.Encoding.ASCII.GetBytes(type);
+                byte[] length = new byte[4];
+                System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(length, data.Length);
+                stream.Write(length);
+                stream.Write(typeBytes);
+                stream.Write(data);
+                uint crc = 0xFFFFFFFF;
+                foreach (byte value in typeBytes.Concat(data))
+                {
+                    crc ^= value;
+                    for (int bit = 0; bit < 8; bit++)
+                    {
+                        crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320 : crc >> 1;
+                    }
+                }
+                byte[] crcBytes = new byte[4];
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(crcBytes, ~crc);
+                stream.Write(crcBytes);
+            }
+
+            byte[] header = new byte[13];
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(0, 4), width);
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4, 4), height);
+            header[8] = 8;
+            header[9] = 2;
+
+            using MemoryStream compressed = new MemoryStream();
+            using (System.IO.Compression.ZLibStream zlib = new System.IO.Compression.ZLibStream(compressed, System.IO.Compression.CompressionLevel.Optimal, leaveOpen: true))
+            {
+                byte[] row = new byte[1 + width * 3];
+                for (int x = 0; x < width; x++)
+                {
+                    row[1 + x * 3] = 200;
+                }
+                for (int y = 0; y < height; y++)
+                {
+                    zlib.Write(row);
+                }
+            }
+
+            using FileStream file = File.Create(path);
+            file.Write(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A });
+            WriteChunk(file, "IHDR", header);
+            WriteChunk(file, "IDAT", compressed.ToArray());
+            WriteChunk(file, "IEND", Array.Empty<byte>());
         }
 
         public void Dispose()

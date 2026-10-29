@@ -6,6 +6,7 @@ using Gum.GueDeriving;
 using Gum.Managers;
 #if RAYLIB
 using Raylib_cs;
+using RenderingLibrary.Graphics;
 using static Raylib_cs.Raylib;
 using Color = Raylib_cs.Color;
 using EffectType = Raylib_cs.Shader;
@@ -14,11 +15,6 @@ using SkiaSharp;
 using Color = SkiaSharp.SKColor;
 using EffectType = SkiaSharp.SKRuntimeEffect;
 #else
-using System.Linq;
-using RenderingLibrary;
-using ShadowDusk.Compiler;
-using ShadowDusk.Compiler.Slang;
-using ShadowDusk.Core;
 using Color = Microsoft.Xna.Framework.Color;
 using EffectType = Microsoft.Xna.Framework.Graphics.Effect;
 #endif
@@ -42,13 +38,14 @@ namespace MonoGameGumInCode.Screens;
 /// <see cref="ContainerRuntime.RenderTargetEffect"/>.</item>
 /// <item>Right cell — reference the shader file by path via
 /// <see cref="ContainerRuntime.SourceShaderFile"/>. Gum resolves the path through the
-/// app-registered <c>RenderTargetEffectResolver</c> (wired in each sample's entry point); Gum core
+/// registered <c>RenderTargetEffectResolver</c> (wired in each sample's entry point); Gum core
 /// itself neither compiles nor loads the shader.</item>
 /// </list>
 /// All cells share the same grayscale logic, authored per-platform in the shading language each
-/// backend needs: MonoGame compiles HLSL at runtime via ShadowDusk (no content pipeline,
-/// <c>Content/Grayscale.fx</c>); raylib loads GLSL directly (no compiler dependency,
-/// <c>resources/Grayscale.fs</c>); Skia compiles hand-authored SkSL via
+/// backend needs: MonoGame compiles HLSL at runtime via the Gum.MonoGame.ShadowDusk package's
+/// <c>UseShadowDusk()</c> (no content pipeline, <c>Content/Grayscale.fx</c>); raylib loads GLSL directly
+/// (no compiler dependency, <c>resources/Grayscale.fs</c>) and takes <c>.slang</c> through
+/// Gum.raylib.ShadowDusk; Skia compiles hand-authored SkSL via
 /// <c>SKRuntimeEffect.CreateShader</c> (<c>resources/Grayscale.sksl</c>). Left is the unmodified
 /// bear for comparison. A fourth, MonoGame-only cell (<c>Content/Grayscale.slang</c>) repeats the
 /// SourceShaderFile wiring style for Slang input instead of raw HLSL (issue #4677) — ShadowDusk's
@@ -56,6 +53,9 @@ namespace MonoGameGumInCode.Screens;
 /// (issue #4679) adds two more single-pass Slang examples the same way: <c>Content/Blur.slang</c>
 /// (fixed radius — Gum's render-target-effect blit sets no shader parameters, so the blur amount
 /// is a compile-time constant, not host-adjustable) and <c>Content/Sepia.slang</c>.
+/// <para>The second row, on all three backends, runs one Slang file (<c>Outline.slang</c>) that
+/// outlines whatever the container draws. ShadowDusk converts it for each backend and
+/// <see cref="ContainerRuntime.SetShaderParameter(string, float)"/> sets its thickness and color (the pixel size is filled in by Gum).</para>
 /// </summary>
 internal class RenderTargetShaderScreen : FrameworkElement
 {
@@ -79,6 +79,13 @@ internal class RenderTargetShaderScreen : FrameworkElement
     // adjustable blur isn't possible without new engine work.
     private const string BlurSlangShaderFileName = "Blur.slang";
     private const string SepiaSlangShaderFileName = "Sepia.slang";
+#endif
+
+    // The same Outline.slang on every backend; only the folder it is copied to differs.
+#if RAYLIB || SKIA
+    private const string OutlineShaderFileName = "resources/Outline.slang";
+#else
+    private const string OutlineShaderFileName = "Outline.slang";
 #endif
 
     public RenderTargetShaderScreen() : base(new ContainerRuntime())
@@ -136,6 +143,21 @@ internal class RenderTargetShaderScreen : FrameworkElement
             effect: null,
             sourceShaderFile: inCodeEffect != null ? ShaderFileName : null));
 
+        // Second row, every backend: one Slang outline shader, with its thickness and color set from
+        // code through SetShaderParameter. Both cells share the shader and differ only in values.
+        var outlineRow = new ContainerRuntime();
+        outlineRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        outlineRow.StackSpacing = 48;
+        outlineRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        outlineRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        outlineRow.Width = 0;
+        outlineRow.Height = 0;
+        root.AddChild(outlineRow);
+
+        outlineRow.AddChild(BuildOutlineCell("Outline.slang (2 px, yellow)", thickness: 2, red: 1f, green: 0.85f, blue: 0.1f));
+        outlineRow.AddChild(BuildOutlineCell("Outline.slang (6 px, cyan)", thickness: 6, red: 0.1f, green: 0.9f, blue: 1f));
+        outlineRow.AddChild(BuildOutlineCell("Bear + circle (follows cursor), slider sets thickness", thickness: 3, red: 1f, green: 1f, blue: 1f, interactive: true));
+
 #if !RAYLIB && !SKIA
         // Fourth cell, XNA-like only: the same effect authored in Slang (Content/Grayscale.slang)
         // instead of raw HLSL, referenced the same way via SourceShaderFile — proves the Slang
@@ -167,6 +189,115 @@ internal class RenderTargetShaderScreen : FrameworkElement
         return BuildCell(caption, effect: null, sourceShaderFile: effect != null ? slangFileName : null);
     }
 #endif
+
+    // A bear in a render target container, outlined by the shipped Outline.slang. Thickness is in
+    // render target pixels; the pixel size comes from Gum. The interactive cell also draws a circle overlapping
+    // the bear, so the outline wraps the combined shape, and a slider sets the thickness. A shader
+    // that fails to convert or compile throws from the SourceShaderFile assignment on some backends,
+    // so the failure is shown in the cell.
+    private static ContainerRuntime BuildOutlineCell(
+        string caption, float thickness, float red, float green, float blue, bool interactive = false)
+    {
+        // Transparent margin around the content, so the outline has room to draw (8 px at most).
+        float cellSize = interactive ? 176 : 144;
+        float margin = interactive ? 16 : 8;
+
+        var cell = new ContainerRuntime();
+        cell.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        cell.StackSpacing = 6;
+        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
+        cell.Width = 0;
+        cell.Height = 0;
+
+        AddLabel(cell, caption);
+
+        var holder = new ContainerRuntime();
+        holder.Width = cellSize;
+        holder.Height = cellSize;
+        holder.IsRenderTarget = true;
+
+        var bear = new SpriteRuntime();
+#if RAYLIB
+        bear.SourceFileName = "resources\\BearTexture.png";
+#else
+        bear.SourceFileName = "BearTexture.png";
+#endif
+        bear.WidthUnits = DimensionUnitType.Absolute;
+        bear.HeightUnits = DimensionUnitType.Absolute;
+        bear.X = margin;
+        bear.Y = margin;
+        bear.Width = cellSize - 2 * margin;
+        bear.Height = cellSize - 2 * margin;
+        holder.AddChild(bear);
+
+        if (interactive)
+        {
+            // Overlaps the bear's lower right and sticks out past it, so the outline has to follow
+            // both shapes as one. It has no stroke of its own, so the only outline is the shader's.
+            const float circleSize = 72;
+            const float edgeRoom = 8;
+            var circle = new CircleRuntime();
+            circle.IsFilled = true;
+            circle.StrokeWidth = 0;
+            circle.FillColor = Rgba(255, 120, 60, 255);
+            circle.X = cellSize - margin - circleSize;
+            circle.Y = cellSize - margin - circleSize;
+            circle.Width = circleSize;
+            circle.Height = circleSize;
+            holder.AddChild(circle);
+
+            // The circle follows the cursor while it is over the container, kept 8 px from the edge
+            // so the largest outline still fits.
+            holder.HasEvents = true;
+            holder.RollOver += (_, _) =>
+            {
+                float cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds() - holder.AbsoluteLeft;
+                float cursorY = FrameworkElement.MainCursor.YRespectingGumZoomAndBounds() - holder.AbsoluteTop;
+                float farthest = cellSize - circleSize - edgeRoom;
+                circle.X = System.Math.Max(edgeRoom, System.Math.Min(farthest, cursorX - circleSize / 2));
+                circle.Y = System.Math.Max(edgeRoom, System.Math.Min(farthest, cursorY - circleSize / 2));
+            };
+        }
+
+        holder.SetShaderParameter("Thickness", thickness);
+        // The shipped Outline shader takes its color as three 0 to 255 channels.
+        holder.SetShaderParameter("OutlineRed", red * 255f);
+        holder.SetShaderParameter("OutlineGreen", green * 255f);
+        holder.SetShaderParameter("OutlineBlue", blue * 255f);
+
+        try
+        {
+            holder.SourceShaderFile = OutlineShaderFileName;
+        }
+        catch (System.Exception e)
+        {
+            AddLabel(cell, "OUTLINE SHADER FAILED: " + e.Message);
+        }
+
+        cell.AddChild(holder);
+
+        if (interactive)
+        {
+            TextRuntime thicknessLabel = AddLabel(cell, "Thickness: " + thickness.ToString("0") + " px");
+
+            var slider = new Slider();
+            slider.Minimum = 0;
+            slider.Maximum = 8;
+            slider.TicksFrequency = 1;
+            slider.IsSnapToTickEnabled = true;
+            slider.Value = thickness;
+            slider.Width = cellSize;
+            slider.ValueChanged += (_, _) =>
+            {
+                holder.SetShaderParameter("Thickness", (float)slider.Value);
+                thicknessLabel.Text = "Thickness: " + slider.Value.ToString("0") + " px";
+            };
+            cell.Children.Add(slider.Visual);
+        }
+
+        return cell;
+    }
 
     // Portable color construction across the three backends' Color aliases (XNA / Raylib_cs /
     // SKColor all expose a (byte,byte,byte,byte) form), matching RenderTargetScreen's Rgba helper.
@@ -217,9 +348,10 @@ internal class RenderTargetShaderScreen : FrameworkElement
 
     /// <summary>
     /// Loads/compiles the shader at <paramref name="path"/> into a platform effect, or returns null
-    /// on failure. This is also the body of the app-registered <c>RenderTargetEffectResolver</c>
-    /// (wired in each sample's entry point), so a container's
-    /// <see cref="ContainerRuntime.SourceShaderFile"/> resolves through exactly this code.
+    /// on failure, for the cell that assigns the effect in code. On MonoGame it goes through the
+    /// registered <c>RenderTargetEffectResolver</c> (<c>UseShadowDusk()</c>), the same code a container's
+    /// <see cref="ContainerRuntime.SourceShaderFile"/> resolves through. On raylib this is the sample's
+    /// <c>.fs</c> resolver, and ShadowDusk handles <c>.slang</c> after it.
     /// </summary>
     public static EffectType? CompileEffectFromFile(string path) => CompileEffectFromFile(path, out _);
 
@@ -228,8 +360,7 @@ internal class RenderTargetShaderScreen : FrameworkElement
 #if RAYLIB
         // LoadShader returns a default (id 0) shader if the file is missing; the grayscale still
         // degrades to a pass-through rather than crashing. raylib loads GLSL directly with no
-        // compiler dependency, so unlike MonoGame/Skia (which compile shader source at runtime),
-        // there's no compile-error diagnostic to surface here.
+        // compiler dependency, so there's no compile-error diagnostic to surface here.
         EffectType shader = LoadShader(null, path);
         status = "Grayscale GLSL post-process. Middle and right bears render grayscale; left is the original.";
         return shader;
@@ -250,78 +381,25 @@ internal class RenderTargetShaderScreen : FrameworkElement
         status = "SkSL shader compiled. Middle and right bears render grayscale.";
         return effect;
 #else
-        var graphicsDevice = SystemManagers.Default.Renderer.GraphicsDevice;
-        if (graphicsDevice == null)
-        {
-            status = "SHADER COMPILE FAILED: GraphicsDevice not available.";
-            return null;
-        }
-
-        if (!File.Exists(path))
-        {
-            status = "SHADER FILE NOT FOUND: " + path;
-            return null;
-        }
-
+        // The resolver Game1 registered with UseShadowDusk() compiles the file. Calling it here shows a
+        // failed compile in the status label; assigning SourceShaderFile reports it through Gum instead.
         try
         {
-            string fxSource = ResolveFxSource(path);
-
-            var compiler = new EffectCompiler();
-            Result<CompiledShader, ShaderError[]> result =
-                compiler.Compile(fxSource, new CompilerOptions { Target = PlatformTarget.OpenGL });
-
-            if (result.IsSuccess)
-            {
-                status = "Shader compiled at runtime (ShadowDusk). Middle and right bears render grayscale.";
-                return new EffectType(graphicsDevice, result.Value.Data);
-            }
-
-            status = "SHADER COMPILE FAILED:\n" + string.Join("\n", result.Error.Select(e => e.Message));
-            return null;
+            EffectType? effect = Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver?.Invoke(path) as EffectType;
+            status = effect != null
+                ? "Shader compiled at runtime (ShadowDusk). Middle and right bears render grayscale."
+                : "SHADER NOT LOADED: no RenderTargetEffectResolver is registered.";
+            return effect;
         }
         catch (System.Exception e)
         {
-            // A thrown error here is typically a missing/unloadable native compiler asset, or a
-            // Slang→.fx conversion failure (see ResolveFxSource), rather than a shader-syntax
-            // problem; surface it instead of taking down the screen.
-            status = "SHADER COMPILE THREW: " + e.GetType().Name + ": " + e.Message;
+            status = "SHADER COMPILE FAILED:\n" + e.Message;
             return null;
         }
 #endif
     }
 
-#if !RAYLIB && !SKIA
-    /// <summary>
-    /// Returns ordinary <c>.fx</c> effect text for <paramref name="path"/>. A <c>.slang</c> file is
-    /// converted first via ShadowDusk's Slang frontend (Slang has no technique/pass concept, so it
-    /// can't go through <see cref="EffectCompiler.Compile"/> directly); every other extension is
-    /// assumed to already be <c>.fx</c> source and passed through unchanged.
-    /// </summary>
-    private static string ResolveFxSource(string path)
-    {
-        string sourceText = File.ReadAllText(path);
-        if (!string.Equals(System.IO.Path.GetExtension(path), SlangFrontend.Extension, System.StringComparison.OrdinalIgnoreCase))
-        {
-            return sourceText;
-        }
-
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            sourceText,
-            new SlangConvertOptions { SourceName = path });
-
-        if (conversion.IsFailure)
-        {
-            throw new System.InvalidOperationException(
-                "ShadowDusk could not convert the Slang render-target shader '" + path + "':\n" +
-                string.Join("\n", conversion.Error.Select(e => e.Message)));
-        }
-
-        return conversion.Value.FxText;
-    }
-#endif
-
-    private static void AddLabel(ContainerRuntime container, string text)
+    private static TextRuntime AddLabel(ContainerRuntime container, string text)
     {
         var label = new TextRuntime();
         label.Text = text;
@@ -331,5 +409,6 @@ internal class RenderTargetShaderScreen : FrameworkElement
         label.Width = 0;
         label.Height = 0;
         container.AddChild(label);
+        return label;
     }
 }

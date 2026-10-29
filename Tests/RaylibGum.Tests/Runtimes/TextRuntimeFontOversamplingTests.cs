@@ -241,6 +241,74 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // Issue #6816: the raster must include FontScale, or scaled text draws each atlas pixel larger than
+    // one screen pixel. The drawn scale times the zoom is the screen pixels per atlas pixel.
+    [Theory]
+    [InlineData(1.5f, 2f, 60)]
+    [InlineData(2f, 1f, 40)]
+    [InlineData(0.5f, 4f, 40)]
+    public void UpdateAutomaticFontOversampling_WithFontScale_RasterizesAtScaledSizeSoEachAtlasPixelIsOneScreenPixel(
+        float fontScale, float zoom, int expectedRasterSize)
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = fontScale;
+
+            textRuntime.UpdateAutomaticFontOversampling(zoom).ShouldBeTrue();
+
+            Text text = (Text)textRuntime.RenderableComponent!;
+            text.Font.BaseSize.ShouldBe(expectedRasterSize);
+            (text.FontScale * text.OversampleCompensationScale * zoom).ShouldBe(1f, tolerance: 0.0001f);
+            text.FontScale.ShouldBe(fontScale);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WhenFontScaleChanges_RegeneratesOnTheSameOnePixelRuleAsZoom()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 2f;
+            textRuntime.UpdateAutomaticFontOversampling(1f).ShouldBeTrue(); // raster = 40px
+
+            // 20 * 2.02 = 40.4, under 1px from the 40px raster.
+            textRuntime.FontScale = 2.02f;
+            textRuntime.UpdateAutomaticFontOversampling(1f).ShouldBeFalse();
+
+            // 20 * 2.5 = 50, 10px past it.
+            textRuntime.FontScale = 2.5f;
+            textRuntime.UpdateAutomaticFontOversampling(1f).ShouldBeTrue();
+            Text text = (Text)textRuntime.RenderableComponent!;
+            text.Font.BaseSize.ShouldBe(50);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     [Fact]
     public void FontSize_WhenChangedAfterOversampling_ResetsCompensationSoDrawnWidthMatchesNewNativeSize()
     {

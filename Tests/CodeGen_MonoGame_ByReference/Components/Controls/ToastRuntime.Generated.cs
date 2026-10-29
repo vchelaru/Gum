@@ -9,9 +9,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/Toast")]
 partial class ToastRuntime : ContainerRuntime
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -27,8 +28,8 @@ partial class ToastRuntime : ContainerRuntime
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/Toast");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/Toast");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

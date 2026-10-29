@@ -10,9 +10,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Elements;
+[global::Gum.DataTypes.GumElement("Elements/DividerVertical")]
 partial class DividerVerticalRuntime : ContainerRuntime
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -29,8 +30,8 @@ partial class DividerVerticalRuntime : ContainerRuntime
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Elements/DividerVertical");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("Elements/DividerVertical");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

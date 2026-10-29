@@ -139,6 +139,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+		<!-- Compiles a container's SourceShaderFile (.fx or .slang) at runtime; see PreviewShaderResolver. -->
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<!-- MonoGame's SDL window loads Icon.bmp from the entry assembly and falls back to the MonoGame logo. -->
@@ -149,6 +151,7 @@
 		     referenced so this host stays free of the tool's plugin assemblies. -->
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="PreviewSelectionMessage.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionFile.cs" Link="PreviewSelectionFile.cs" />
+		<Compile Include="..\EditorTabPlugin.Core\Services\ShaderSourceCompiler.cs" Link="ShaderSourceCompiler.cs" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />

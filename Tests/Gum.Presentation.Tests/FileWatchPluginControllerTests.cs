@@ -147,6 +147,41 @@ public class FileWatchPluginControllerTests
         fileWatchManager.Verify(m => m.Disable(), Times.Never);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void HandleVariableSet_ForgetsWhichFilesTheProjectReferences_WhateverVariableChanged(bool isFullCommit)
+    {
+        // The file a variable names is not known to be one until the walk runs again.
+        var (controller, fileWatchManager, _, _) = CreateSut();
+        var element = new ComponentSave();
+        element.States.Add(new StateSave());
+
+        controller.HandleVariableSet(element, instance: null, variableName: "X", oldValue: null, isFullCommit: isFullCommit);
+
+        fileWatchManager.Verify(m => m.InvalidateReferencedFiles(), Times.Once);
+    }
+
+    [Fact]
+    public void HandleReferencesMayHaveChanged_ForgetsWhichFilesTheProjectReferences()
+    {
+        var (controller, fileWatchManager, _, _) = CreateSut();
+
+        controller.HandleReferencesMayHaveChanged();
+
+        fileWatchManager.Verify(m => m.InvalidateReferencedFiles(), Times.Once);
+    }
+
+    [Fact]
+    public void HandleProjectLoad_ForgetsWhichFilesTheProjectReferences()
+    {
+        var (controller, fileWatchManager, _, _) = CreateSut();
+
+        controller.HandleProjectLoad(new GumProjectSave());
+
+        fileWatchManager.Verify(m => m.InvalidateReferencedFiles(), Times.Once);
+    }
+
     [Fact]
     public void HandleProjectLocationSet_RefreshesProjectLoadedState()
     {

@@ -202,6 +202,14 @@ When a range is not valid, the font is still created but without the characters 
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## Text Outside Its Font Range (GUM0012)
+
+A font only has the characters in its ranges. When a Text's value, in any state, has a character its font's ranges leave out, the Gum tool reports a **GUM0012** warning in the [Errors tab](../editor-tab.md), naming the Text and the character codes. At runtime the character draws as `?`. To resolve it, add the codes to the font's range on the [Fonts](../fonts.md#character-ranges) page. Line breaks and tabs are not checked, and neither is a Text that uses a pre-built `.fnt` file. `gumcli check` reports GUM0012 too.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

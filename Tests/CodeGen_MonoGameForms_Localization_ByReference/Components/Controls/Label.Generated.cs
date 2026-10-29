@@ -9,9 +9,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/Label")]
 partial class Label : global::Gum.Forms.Controls.Label
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -21,7 +22,7 @@ partial class Label : global::Gum.Forms.Controls.Label
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.TextRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/Label") ?? throw new System.InvalidOperationException("Could not find an element named Controls/Label - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/Label");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Label(visual);
             return visual;

@@ -48,7 +48,16 @@ public class AddInstanceLogic : IAddInstanceLogic
     {
         object? container = _addDestinationTracker.Destination
             ?? (object?)_selectedState.SelectedInstance
-            ?? _selectedState.SelectedElement;
+            ?? (object?)_selectedState.SelectedElement
+            ?? _selectedState.SelectedBehavior;
+
+        // A behavior's required instances are a flat list, so one cannot be a parent; the add goes
+        // to the behavior that holds it.
+        if (container is InstanceSave { ParentContainer: null } requiredInstance &&
+            ObjectFinder.Self.GetBehaviorContainerOf(requiredInstance) is { } behavior)
+        {
+            container = behavior;
+        }
 
         return AddInstance(elementToAdd, container, name);
     }

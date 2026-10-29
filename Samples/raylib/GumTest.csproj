@@ -15,6 +15,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+    <!-- Converts Outline.slang to a raylib GLSL fragment shader at runtime (GumService.UseShadowDusk). -->
+    <ProjectReference Include="..\..\Runtimes\RaylibGum.ShadowDusk\RaylibGum.ShadowDusk.csproj" />
     <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
   </ItemGroup>
 
@@ -35,6 +37,10 @@
 
   <ItemGroup>
     <None Update="resources\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- The one Outline.slang that MonoGameGumInCode, raylib and SilkNetGum all run. -->
+    <None Include="..\..\Gum\Content\Shaders\Outline.slang" Link="resources\Outline.slang">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

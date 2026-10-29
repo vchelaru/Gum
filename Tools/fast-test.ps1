@@ -40,6 +40,7 @@ $repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
 . (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1')
 . (Join-Path $PSScriptRoot 'TestProjects.ps1')
+. (Join-Path $PSScriptRoot 'IncludeIndex.ps1')
 
 $requests = @($Tests | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
@@ -88,14 +89,20 @@ foreach ($line in (git grep --untracked -nIE $classPattern -- '*.cs')) {
     $file = $Matches.file
     $name = $Matches.name
     if ($name -notin $classNames) { continue }
-    $owner = $projectDirs | Where-Object { $file.StartsWith($_.Dir) } | Sort-Object { $_.Dir.Length } -Descending | Select-Object -First 1
-    if (-not $owner) { continue }
+    # The project whose directory holds the file, plus every test project that links it in with
+    # <Compile Include> (a shared test folder compiled into several projects), as verify.ps1 maps it.
+    $owners = @($projectDirs | Where-Object { $file.StartsWith($_.Dir) } | Sort-Object { $_.Dir.Length } -Descending | Select-Object -First 1 | ForEach-Object { $_.Project })
+    $linked = Find-IndirectProjects $file
+    $owners += @($linked.Keys | ForEach-Object { [System.IO.Path]::GetRelativePath($repo, $_) -replace '\\', '/' } | Where-Object { $_ -in $testProjects -and $_ -notin $owners })
+    if ($owners.Count -eq 0) { continue }
     $namespaceMatch = Select-String -Path (Join-Path $repo $file) -Pattern '^\s*namespace\s+([\w.]+)' -List
     $namespace = if ($namespaceMatch) { $namespaceMatch.Matches[0].Groups[1].Value } else { '' }
     if (-not $found.ContainsKey($name)) { $found[$name] = @() }
-    $existing = $found[$name] | Where-Object { $_.Project -eq $owner.Project -and $_.Namespace -eq $namespace }
-    if ($existing) { $existing.Files += $file }
-    else { $found[$name] += @{ Project = $owner.Project; Namespace = $namespace; Files = @($file) } }
+    foreach ($ownerProject in $owners) {
+        $existing = $found[$name] | Where-Object { $_.Project -eq $ownerProject -and $_.Namespace -eq $namespace }
+        if ($existing) { $existing.Files += $file }
+        else { $found[$name] += @{ Project = $ownerProject; Namespace = $namespace; Files = @($file) } }
+    }
 }
 Write-Host ("resolved      {0,4:N0}s  {1} request(s) against {2} test project(s)" -f $sw.Elapsed.TotalSeconds, $requests.Count, $testProjects.Count)
 
@@ -141,6 +148,7 @@ if ($ListOnly) {
 }
 
 $failed = $false
+$results = [System.Collections.Generic.List[string]]::new()
 
 function Invoke-Timed {
     param([string]$Name, [string[]]$Command, [int]$TimeoutSeconds)
@@ -173,19 +181,27 @@ function Invoke-Timed {
             }
         }
     }
+    $script:results.Add(("{0,-8} {1}" -f $status, $Name))
     if ($status -ne 'ok') { $script:failed = $true }
+    return $status
 }
 
 foreach ($project in $filters.Keys | Sort-Object) {
     $full = Join-Path $repo $project
     $extra = @("-p:SolutionDir=$repo\")
     if (-not $NoBuild) {
-        Invoke-Timed -Name "build $project" -Command (@('build', $full, '-nologo', '-v:q') + $extra) -TimeoutSeconds $BuildTimeoutSeconds
-        if ($failed) { break }
+        # A failed build skips only this project's tests; the other projects still build and run.
+        $buildStatus = Invoke-Timed -Name "build $project" -Command (@('build', $full, '-nologo', '-v:q') + $extra) -TimeoutSeconds $BuildTimeoutSeconds
+        if ($buildStatus -ne 'ok') {
+            Write-Host "skipped        test  $project`: its build failed"
+            $results.Add("skipped  test  $project")
+            continue
+        }
     }
     $filter = ($filters[$project] | Sort-Object -Unique) -join '|'
-    Invoke-Timed -Name "test  $project" -Command (@('test', $full, '--no-build', '-nologo', '-v:m', '--filter', $filter) + $extra) -TimeoutSeconds $TestTimeoutSeconds
+    $null = Invoke-Timed -Name "test  $project" -Command (@('test', $full, '--no-build', '-nologo', '-v:m', '--filter', $filter) + $extra) -TimeoutSeconds $TestTimeoutSeconds
 }
 
+if ($results.Count -gt 1) { Write-Host "`nResults:"; $results | ForEach-Object { Write-Host "  $_" } }
 if ($failed) { Write-Host "`nFAST-TEST FAILED"; exit 1 }
 Write-Host "`nFAST-TEST OK"

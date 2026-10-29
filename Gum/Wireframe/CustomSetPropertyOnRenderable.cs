@@ -265,12 +265,23 @@ public partial class CustomSetPropertyOnRenderable
     /// <c>Raylib.LoadShader</c> on raylib. The returned object is boxed into the backend-agnostic
     /// <see cref="RenderableBase.RenderTargetEffect"/> slot (a
     /// <c>Microsoft.Xna.Framework.Graphics.Effect</c> on xnalike, a <c>Raylib_cs.Shader</c> on
-    /// raylib). If null, assigning a shader file is a graceful no-op and the container renders
-    /// unshaded. Return null to signal a failed load (missing file / compile error); resolution then
+    /// raylib). If null, assigning a shader file is a load failure, reported like a missing file, whose
+    /// message names the ShadowDusk package to add; the container renders unshaded only under
+    /// <see cref="MissingFileBehavior.ConsumeSilently"/>. Return null to signal a failed load (missing file / compile error); resolution then
     /// honors <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring sprite source-file
     /// handling.
     /// </summary>
     public static Func<string, object?>? RenderTargetEffectResolver { get; set; }
+
+#if RAYLIB
+    private const string ShadowDuskPackageId = "Gum.raylib.ShadowDusk";
+#elif KNI
+    private const string ShadowDuskPackageId = "Gum.KNI.ShadowDusk";
+#elif FNA
+    private const string ShadowDuskPackageId = "Gum.FNA.ShadowDusk";
+#else
+    private const string ShadowDuskPackageId = "Gum.MonoGame.ShadowDusk";
+#endif
 
     /// <summary>
     /// Additional logic to perform before falling back to reflection.
@@ -446,6 +457,9 @@ public partial class CustomSetPropertyOnRenderable
             case "SourceShaderFile":
                 AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
                 return true;
+            case "ShaderParameters":
+                AssignShaderParametersOnContainer(invisibleRenderable, graphicalUiElement, value as string);
+                return true;
             case "Alpha":
                 {
                     int alpha = InvisibleRenderable.NormalizeDispatchedAlpha(value);
@@ -459,9 +473,29 @@ public partial class CustomSetPropertyOnRenderable
                     }
                     return true;
                 }
+            default:
+                // A saved shader parameter variable such as Outline_Thickness (#7010).
+                return ShaderParameterVariables.TrySetVariable(invisibleRenderable, propertyName, value);
         }
+    }
 
-        return false;
+    /// <summary>
+    /// Replaces the container's shader parameters with the values in the saved <c>ShaderParameters</c>
+    /// text (see <see cref="ShaderParameterText"/>). An entry that cannot be read is skipped and
+    /// reported without dropping the rest.
+    /// </summary>
+    public static void AssignShaderParametersOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
+    {
+        string? error = ShaderParameterVariables.AssignText(effectOwner, value);
+        if (error != null)
+        {
+            string message = "Error setting ShaderParameters on Container";
+            if (graphicalUiElement.Tag != null)
+            {
+                message += $" in {graphicalUiElement.Tag}";
+            }
+            RaisePropertyAssignmentError(message + "\n" + error);
+        }
     }
 
     /// <summary>
@@ -472,22 +506,33 @@ public partial class CustomSetPropertyOnRenderable
     /// <see cref="AssignSourceFileOnSprite"/>: the resolved effect is cached in
     /// <see cref="LoaderManager"/> by normalized path so a shader referenced by multiple containers
     /// loads once, and a failed resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>.
-    /// With no resolver registered this is a graceful no-op (the container renders unshaded),
-    /// matching how a missing texture degrades. Called internally by the string property path.
+    /// With no resolver registered, or one that returns null, the file fails like a missing file whatever its
+    /// extension (the message names the ShadowDusk package); under ConsumeSilently the container renders
+    /// unshaded and the error is reported through PropertyAssignmentError. Called internally by the string property path.
     /// </summary>
     public static void AssignSourceShaderFileOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
+        // First, so the container's shader variables follow the file whatever happens below (#7010).
+        ShaderParameterVariables.SetShaderFile(effectOwner, value);
+
         if (string.IsNullOrEmpty(value))
         {
             effectOwner.RenderTargetEffect = null;
             return;
         }
 
-        // No resolver registered: render unshaded rather than crash. A separate opt-in library
-        // (the shader equivalent of Gum.Shapes) or the consumer registers the resolver — e.g. doing
-        // Raylib.LoadShader on raylib.
+        // No resolver registered: a shader that cannot load fails like a missing file (#7053) rather than
+        // silently rendering unshaded. The consumer registers a resolver (the ShadowDusk package for the
+        // runtime, or their own, e.g. Raylib.LoadShader on raylib).
         if (RenderTargetEffectResolver == null)
         {
+            string noResolverMessage = ShaderResolverRequirement.BuildNoResolverMessage(value, graphicalUiElement.Tag, ShadowDuskPackageId);
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                throw new System.IO.FileNotFoundException(noResolverMessage);
+            }
+            effectOwner.RenderTargetEffect = null;
+            RaisePropertyAssignmentError(noResolverMessage);
             return;
         }
 
@@ -536,6 +581,12 @@ public partial class CustomSetPropertyOnRenderable
             message += $"\n{value}";
             message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
             message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+            if (resolveException == null)
+            {
+                // The resolver returned nothing without throwing (the ShadowDusk loaders throw when they
+                // fail), so no resolver in the chain handled the file.
+                message += "\n" + ShaderResolverRequirement.BuildDeclinedHint(ShadowDuskPackageId);
+            }
             if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
@@ -674,6 +725,40 @@ public partial class CustomSetPropertyOnRenderable
             }
             handled = true;
         }
+#if !FRB
+        else if(propertyName == "CustomBorderScaleLeft")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleLeft = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleTop")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleTop = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleRight")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleRight = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleBottom")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleBottom = (float?)value;
+            }
+            handled = true;
+        }
+#endif
         else if(propertyName == nameof(NineSlice.IsTilingMiddleSections))
         {
             if (nineSliceRuntime != null)
@@ -1016,6 +1101,9 @@ public partial class CustomSetPropertyOnRenderable
         }
 
         textRenderable.InlineVariables.Clear();
+#if !FRB
+        textRenderable.ParsedBbCodeTags = null;
+#endif
         if (valueAsString?.Contains("[") == true)
         {
             textRenderable.StoredMarkupText = valueAsString;
@@ -1675,6 +1763,30 @@ public partial class CustomSetPropertyOnRenderable
 
     static List<TagInfo> allTags = new List<TagInfo>();
 
+    // BbCodeParser recognizes tag names ignoring case and carries a name as written, but the apply code
+    // below switches on the PascalCase variable names (also the InlineVariable names the renderers read),
+    // so a lowercase [color=Red] was stripped and never applied (#7106).
+    private static readonly Dictionary<string, string> CanonicalTagNames =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Red"] = "Red",
+            ["Green"] = "Green",
+            ["Blue"] = "Blue",
+            ["Color"] = "Color",
+            ["FontScale"] = "FontScale",
+            ["Custom"] = "Custom",
+            ["State"] = "State",
+            ["Font"] = "Font",
+            ["FontSize"] = "FontSize",
+            ["OutlineThickness"] = "OutlineThickness",
+            ["IsItalic"] = "IsItalic",
+            ["IsBold"] = "IsBold",
+            ["HasDropshadow"] = "HasDropshadow",
+        };
+
+    private static string CanonicalTagName(string name) =>
+        CanonicalTagNames.TryGetValue(name, out string? canonicalName) ? canonicalName : name;
+
     /// <summary>
     /// Variable names a <c>[state=Name]</c> BBCode tag is allowed to apply to the substring it wraps -
     /// exactly the set already wired for per-run application elsewhere in this file (the direct-value
@@ -1731,9 +1843,9 @@ public partial class CustomSetPropertyOnRenderable
 
         foreach (FoundTag tag in results)
         {
-            if (tag.Name == "State")
+            if (CanonicalTagName(tag.Name) == "State")
             {
-                expanded ??= new List<FoundTag>(results.Where(item => item.Name != "State"));
+                expanded ??= new List<FoundTag>(results.Where(item => CanonicalTagName(item.Name) != "State"));
 
                 if (graphicalUiElement.TryGetStateByName(tag.Open.Argument ?? string.Empty,
                         out Gum.DataTypes.Variables.StateSave? state))
@@ -1792,12 +1904,18 @@ public partial class CustomSetPropertyOnRenderable
         // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes.
         // Parsing and stripping from the same normalized string keeps InlineVariable indexes aligned
         // with the RawText the renderer sees.
-        var normalized = bbcode.Replace("\r\n", "\n");
+        // [Glyph=...] tags become their character first so every other tag's indexes are computed
+        // against the final text.
+        var normalized = BbCodeParser.ReplaceGlyphTags(bbcode.Replace("\r\n", "\n"));
 
         var results = BbCodeParser.Parse(normalized, Tags);
         var strippedText = BbCodeParser.RemoveTags(normalized, results);
 
         asText.RawText = strippedText;
+#if !FRB
+        // Kept as parsed (before ExpandStateTags) so TextRuntime.GetTagAtIndex can find a tag by its range.
+        asText.ParsedBbCodeTags = results;
+#endif
 
         // Must happen after RemoveTags (see ExpandStateTags) - expanded entries are for value
         // application only, not text stripping.
@@ -1809,7 +1927,8 @@ public partial class CustomSetPropertyOnRenderable
         {
             object? castedValue = item.Open.Argument;
             var shouldApply = false;
-            switch (item.Name)
+            string canonicalName = CanonicalTagName(item.Name);
+            switch (canonicalName)
             {
                 case "Red":
                 case "Green":
@@ -1890,7 +2009,7 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
                     StartIndex = item.Open.StartStrippedIndex,
-                    VariableName = item.Name,
+                    VariableName = canonicalName,
                     // shouldApply is only set alongside a parsed value.
                     Value = castedValue!
                 });
@@ -2010,7 +2129,7 @@ public partial class CustomSetPropertyOnRenderable
             // creator wired - the raw pixel size as a float (ResolveRunFont then scales the base atlas).
             object? castedValue = null;
             string convertedName = "BitmapFont"; // shared historical run-marker name (see ResolvedFont note).
-            switch (tag.Name)
+            switch (CanonicalTagName(tag.Name))
             {
                 case "Font":
                     if (!string.IsNullOrEmpty(tag.Argument))
@@ -3146,6 +3265,16 @@ public partial class CustomSetPropertyOnRenderable
             // (the runtime's InvisibleRenderable path does the same in TrySetPropertyOnContainer).
             AssignSourceShaderFileOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
             handled = true;
+        }
+        else if (propertyName == "ShaderParameters")
+        {
+            AssignShaderParametersOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
+            handled = true;
+        }
+        else
+        {
+            // A saved shader parameter variable such as Outline_Thickness (#7010).
+            handled = ShaderParameterVariables.TrySetVariable((LineRectangle)mContainedObjectAsIpso, propertyName, value);
         }
 
         return handled;

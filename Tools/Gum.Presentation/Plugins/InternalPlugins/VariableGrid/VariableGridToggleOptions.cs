@@ -192,23 +192,31 @@ public class VariableGridToggleOptions
 }
 
 /// <summary>
-/// The value logic of the corner-radius composite editor: formatting and parsing its fields and
-/// composing the uniform radius and four optional per-corner overrides from them.
+/// Field formatting and parsing shared by the composite editors that pair one uniform value with four
+/// optional overrides (corner radius, border scale): values floor at 0, and an empty override inherits
+/// the uniform value.
 /// </summary>
-public class CornerRadiusDisplayLogic
+public abstract class UniformWithOverridesDisplayLogic
 {
-    /// <summary>A radius as field text.</summary>
+    /// <summary>A value as field text.</summary>
     public string FormatFloat(float value) => value.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture);
 
-    /// <summary>An optional corner radius as field text; empty when it inherits the uniform value.</summary>
+    /// <summary>An optional override as field text; empty when it inherits the uniform value.</summary>
     public string FormatNullableFloat(float? value) => value == null ? string.Empty : FormatFloat(value.Value);
 
-    /// <summary>Field text as a radius floored at 0, or null when it is not a number.</summary>
+    /// <summary>Field text as a value floored at 0, or null when it is not a number.</summary>
     public float? ParseFloat(string? text) =>
         float.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsed)
             ? Math.Max(parsed, 0f)
             : null;
+}
 
+/// <summary>
+/// The value logic of the corner-radius composite editor: composing the uniform radius and four
+/// optional per-corner overrides from its fields.
+/// </summary>
+public class CornerRadiusDisplayLogic : UniformWithOverridesDisplayLogic
+{
     /// <summary>
     /// The composite for the fields: linked uses only the uniform radius; unlinked adds each corner
     /// (empty corners inherit). An unparseable uniform field keeps <paramref name="current"/>'s.
@@ -222,5 +230,27 @@ public class CornerRadiusDisplayLogic
             ? new CornerRadiusComposite(uniform, null, null, null, null)
             : new CornerRadiusComposite(uniform, ParseFloat(topLeftText), ParseFloat(topRightText),
                 ParseFloat(bottomLeftText), ParseFloat(bottomRightText));
+    }
+}
+
+/// <summary>
+/// The value logic of the NineSlice border-scale composite editor: composing the uniform scale and four
+/// optional per-side overrides from its fields.
+/// </summary>
+public class BorderScaleDisplayLogic : UniformWithOverridesDisplayLogic
+{
+    /// <summary>
+    /// The composite for the fields: linked uses only the uniform scale; unlinked adds each side
+    /// (empty sides inherit). An unparseable uniform field keeps <paramref name="current"/>'s.
+    /// </summary>
+    public BorderScaleComposite Compose(bool isLinked, string? uniformText, string? leftText, string? topText,
+        string? rightText, string? bottomText, BorderScaleComposite current)
+    {
+        float uniform = ParseFloat(uniformText) ?? current.Uniform;
+
+        return isLinked
+            ? new BorderScaleComposite(uniform, null, null, null, null)
+            : new BorderScaleComposite(uniform, ParseFloat(leftText), ParseFloat(topText),
+                ParseFloat(rightText), ParseFloat(bottomText));
     }
 }

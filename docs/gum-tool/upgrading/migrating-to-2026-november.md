@@ -37,6 +37,44 @@ using Gum.Input;
 Cursor cursor = GumService.Default.Cursor;
 ```
 
+### raylib Throws When an Image Cannot Be Decoded
+
+raylib now treats an image it cannot decode like a missing file. A `.jpg` Source File, for example, loaded as an empty texture before and now throws when the Sprite loads, because the stock raylib native has no JPEG decoder. This follows the `MissingFileBehavior` change from `2026 October`, which raylib sets to throw by default.
+
+This affects you only on raylib, and only if your project references an image raylib cannot decode. Convert the image to PNG, or register an `IImageDecoder` for its extension before Gum loads the project. See [Custom Image Formats](../../code/files-and-fonts/custom-image-formats.md).
+
+To keep the old behavior, set `MissingFileBehavior` after Gum initializes:
+
+```csharp
+// Initialize
+Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
+    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+```
+
+### SkiaGum Throws When a File Is Missing or an Image Cannot Be Decoded
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+SkiaGum now defaults `MissingFileBehavior` to `ThrowException`, the same as MonoGame, KNI, FNA and raylib. A missing Sprite or NineSlice image, a missing font file, an image SkiaSharp cannot decode (the case [raylib](#raylib-throws-when-an-image-cannot-be-decoded) already covers), and a missing or unparseable Svg or LottieAnimation file now throw a `FileNotFoundException` naming the file when the element is created. Before, a missing image or Svg threw an `ArgumentException`, an unparseable Svg threw an `XmlException`, a missing font file was reported only, and an undecodable image or unparseable Lottie file drew nothing.
+
+Fix the path, or keep the old silent behavior by setting `ConsumeSilently` after Gum initializes. A Sprite then has a null `Texture` (an `SvgRuntime` a null `Texture`, a `LottieAnimationRuntime` a null `Animation`) and `PropertyAssignmentError` is raised with the file name, as described for an [.achx frame texture](#an-achx-frame-texture-that-fails-to-load-is-a-blank-frame).
+
+```csharp
+// Initialize
+Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
+    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+```
+
+### An .achx Frame Texture That Fails to Load Is a Blank Frame
+
+A frame texture that is missing or cannot be decoded follows `MissingFileBehavior` the same way on every runtime. With `ConsumeSilently`, that frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name, once per texture per load even when many frames share it. With `ThrowException`, loading throws on the first texture that failed, and the `FileNotFoundException` that names it is the `InnerException`. A `NineSliceRuntime` plays a blank frame instead of throwing from `Update`.
+
+On MonoGame, KNI, and FNA, a missing frame texture was silent under the default `ThrowException`. It now throws when the `.achx` loads, so fix the texture path or set `ConsumeSilently`.
+
+Under `ConsumeSilently`, `AnimationChains` is no longer null after a frame texture fails to load. Check `Texture` on the frames instead.
+
 ### Shapes Package Types Moved to Gum.Renderables and Gum.Content
 
 The `Gum.Shapes.MonoGame` and `Gum.Shapes.KNI` packages now put their public types in the unified `Gum` namespaces:
@@ -564,6 +602,12 @@ circle.FillColor = SkiaSharp.SKColors.Red;
 
 The `KernSmith.GumCommon` and `KernSmith.MonoGameGum` packages also add iOS and Android builds. These use the `StbTrueType` rasterizer by default instead of FreeType, and you can pass a backend to `GumFontGenerator` to choose another. When you build these projects from source, pass `-p:IncludeIOS=true` or `-p:IncludeAndroid=true` to include the mobile builds.
 
+### Generated Visuals Throw When Their Element Is Not Loaded
+
+At [syntax version 7](syntax-versions.md), a generated MonoGame, raylib, or Silk.NET runtime class throws an exception from its constructor when the loaded project has no element by its name. Before this, the constructor created an empty visual with no children.
+
+This affects you only if your code creates generated visuals before loading the Gum project, such as in unit tests. Load the project first.
+
 ### References That Cannot Be Applied Are Reported
 
 A reference whose result does not fit the variable on the left is now reported, and the variable keeps its current value. This includes `NaN` or infinity into a `float` or `double` variable (before, some builds threw and others wrote the value), and with `Gum.Expressions` a `bool` or text into a number or a number outside the range of an `int` (before, silently dropped).
@@ -571,3 +615,57 @@ A reference whose result does not fit the variable on the left is now reported, 
 `MinWidth`, `MaxWidth`, `MinHeight` and `MaxHeight` are the exception: `NaN` or infinity now means no limit, where `MinWidth` or `MinHeight` set to positive infinity gave an infinite size or threw.
 
 See [Casting and Type Considerations](../../code/styling/runtime-variable-references.md#casting-and-type-considerations).
+
+### SvgRuntime Throws When Its SVG Cannot Be Loaded
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+On MonoGame and KNI, an `SvgRuntime` whose `SourceFile` is missing or is not an SVG Gum can read now follows `MissingFileBehavior` like a Sprite image does. Before, it drew nothing and reported nothing. With the default `ThrowException`, assigning the file throws a `FileNotFoundException` naming it. The same applies to `ShapeSvgLoader.Load`.
+
+Fix the path, or set `ConsumeSilently` as described for [SkiaGum](#skiagum-throws-when-a-file-is-missing-or-an-image-cannot-be-decoded). The `SvgRuntime` then has a null `Texture` and `PropertyAssignmentError` is raised with the file name.
+
+### A Hidden Control Refuses Focus
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+Setting `IsFocused` to `true` on a control that is not visible, because it or any of its parents has `IsVisible` set to `false`, now leaves `IsFocused` as `false`. A hidden control cannot take focus, the same as a disabled one. Gamepad, keyboard, and tab navigation already skipped hidden controls.
+
+This affects you only if your code sets `IsFocused` before it shows the control. Show the control first, then focus it.
+
+❌ Old:
+```csharp
+// Initialize
+okButton.IsFocused = true;
+dialog.IsVisible = true;
+```
+
+✅ New:
+```csharp
+// Initialize
+dialog.IsVisible = true;
+okButton.IsFocused = true;
+```
+
+### ListBox Left and Right No Longer Step a Vertical List
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+When a `ListBox` has item-level focus (`DoListItemsHaveFocus` is `true`), the axis the list does not use now leaves the list, like the perpendicular axis of a `Slider`. In a vertical list, left and right used to act as up and down on the d-pad and left stick. In a horizontal list, up and down used to act as left and right. Now they do what they do when the list has top-level focus: with `GamepadNavigationMode.Spatial` focus moves to the nearest control in that direction, with the default tab order left and up move to the previous control and right and down move to the next. An explicit `SpatialNavigationLeft`, `SpatialNavigationRight`, `SpatialNavigationUp` or `SpatialNavigationDown` on the `ListBox` is honored. Leaving sets `DoListItemsHaveFocus` to `false` and keeps `SelectedIndex`.
+
+This affects you if players stepped through a vertical list with left and right, or through a horizontal list with up and down. Use the list's own axis instead. The up and down arrow keys, a wrapping list, and the drop-down list of a `ComboBox` are unchanged.
+
+### Hot Reload Keeps Values Your Code Set
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+A [hot reload](../../code/debugging/hot-reload.md) now applies only the variables the project changed. Before, it applied the whole default state of a component instance, so a `Width` your code set on a tool-authored `Button` went back to the component's value on every reload, while the same `Width` on a plain `ColoredRectangle` stayed. Now both keep the value your code set until the project changes that variable.
+
+This affects you if your game relied on a reload resetting a value it set in code. Set the value again in `HotReloadCompleted`, or change the variable in the Gum project.

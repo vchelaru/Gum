@@ -10,9 +10,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/TextBox", FormsType = typeof(global::Gum.Forms.Controls.TextBox))]
 partial class TextBox : global::Gum.Forms.Controls.TextBox
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -22,7 +23,7 @@ partial class TextBox : global::Gum.Forms.Controls.TextBox
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/TextBox") ?? throw new System.InvalidOperationException("Could not find an element named Controls/TextBox - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/TextBox");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new TextBox(visual);
             return visual;

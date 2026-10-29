@@ -406,7 +406,7 @@ public class CompositeMemberLogic
     private string? GetRootVariableName(InstanceMember member, ElementSave element, InstanceSave? instance)
     {
         VariableSave? rootVariable = instance != null
-            ? _objectFinder.GetRootVariable(member.Name, instance)
+            ? _objectFinder.GetRootVariable(member.Name, instance, element)
             : _objectFinder.GetRootVariable(member.Name, element);
 
         return rootVariable?.Name;

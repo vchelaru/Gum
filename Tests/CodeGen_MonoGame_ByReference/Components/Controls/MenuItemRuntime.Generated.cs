@@ -9,9 +9,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/MenuItem", FormsType = typeof(global::Gum.Forms.Controls.MenuItem))]
 partial class MenuItemRuntime : ContainerRuntime
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -66,8 +67,8 @@ partial class MenuItemRuntime : ContainerRuntime
         _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/MenuItem");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/MenuItem");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

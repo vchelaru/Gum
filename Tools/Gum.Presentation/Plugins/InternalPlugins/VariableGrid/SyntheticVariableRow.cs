@@ -21,6 +21,12 @@ public class SyntheticVariableRow
 
     public Type ValueType { get; init; } = typeof(string);
 
+    /// <summary>Whether the row shows its default, so it gets no "set on this instance" marker. Null counts as not default.</summary>
+    public Func<bool>? IsDefault { get; init; }
+
+    /// <summary>Clears what the row stored, back to its default; the row's "Make Default". Null when it has none.</summary>
+    public Action? ResetToDefault { get; init; }
+
     public VariableDisplayerKind? PreferredDisplayerKindOverride { get; init; }
 
     public string? DetailText { get; init; }

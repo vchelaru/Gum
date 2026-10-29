@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using RenderingLibrary.Graphics;
 using ShadowDusk.Compiler.Sksl;
+using SkiaGum.Content;
 using SkiaSharp;
 
 namespace Gum;
@@ -55,6 +57,27 @@ internal static class ShadowDuskEffectLoader
             throw new InvalidOperationException($"The SkSL ShadowDusk produced for '{path}' did not compile:\n{compileErrors}");
         }
 
+        RegisterDeclaredDefaults(effect, conversion);
         return effect;
+    }
+
+    // SkSL declares every uniform without a value, so the defaults the .fx or .slang declares are
+    // handed to SkiaGum, which writes them for a parameter a container did not set.
+    private static void RegisterDeclaredDefaults(SKRuntimeEffect effect, SkslConversion conversion)
+    {
+        ShaderUniformDefaults defaults = new ShaderUniformDefaults();
+        foreach (SkslUniform uniform in conversion.Uniforms)
+        {
+            ShaderUniformDefault? declared = ShaderUniformDefault.FromTypeName(
+                uniform.Name, uniform.SkslType, uniform.ArrayLength, uniform.DefaultValue);
+            if (declared != null)
+            {
+                defaults.Add(declared);
+            }
+        }
+        if (defaults.Count > 0)
+        {
+            SkiaRuntimeEffectDefaults.Set(effect, defaults);
+        }
     }
 }

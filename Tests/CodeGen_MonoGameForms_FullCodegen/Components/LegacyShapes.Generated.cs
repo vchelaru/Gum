@@ -9,9 +9,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components;
+[global::Gum.DataTypes.GumElement("LegacyShapes")]
 partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -21,7 +22,7 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("LegacyShapes") ?? throw new System.InvalidOperationException("Could not find an element named LegacyShapes - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("LegacyShapes");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new LegacyShapes(visual);
             return visual;

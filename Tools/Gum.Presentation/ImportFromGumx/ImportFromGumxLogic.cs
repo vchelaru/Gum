@@ -39,6 +39,7 @@ public class ImportFromGumxLogic : IImportFromGumxLogic
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
     private readonly IFileWatchIgnoreList _fileWatch;
+    private readonly IFileWatchManager? _fileWatchManager;
 
     public ImportFromGumxLogic(
         IProjectState projectState,
@@ -46,8 +47,10 @@ public class ImportFromGumxLogic : IImportFromGumxLogic
         IFileCommands fileCommands,
         IDialogService dialogService,
         IDispatcher dispatcher,
-        IFileWatchIgnoreList fileWatch)
+        IFileWatchIgnoreList fileWatch,
+        IFileWatchManager? fileWatchManager = null)
     {
+        _fileWatchManager = fileWatchManager;
         _fileWatch = fileWatch;
         _projectState = projectState;
         _importLogic = importLogic;
@@ -65,7 +68,7 @@ public class ImportFromGumxLogic : IImportFromGumxLogic
         GumxSourceService sourceService = new();
         GumxDependencyResolver dependencyResolver = new();
         ImportVersionGate versionGate = new();
-        GumxImportService importService = new(_importLogic, _projectState, _fileCommands, sourceService, versionGate, _fileWatch);
+        GumxImportService importService = new(_importLogic, _projectState, _fileCommands, sourceService, versionGate, _fileWatch, _fileWatchManager);
 
         return new ImportFromGumxViewModel(
             sourceService,

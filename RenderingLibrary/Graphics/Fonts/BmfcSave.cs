@@ -249,8 +249,7 @@ public class BmfcSave
     /// This is a pure suffix check, not a path-shape check -- a bare filename with no directory
     /// (e.g. "MyFont.ttf") counts as a file path just as much as "fonts/MyFont.ttf" does. There is
     /// no slash/path-separator detection involved. A pre-baked ".fnt" is deliberately not a match.
-    /// The tool and KernSmith read all four formats; a runtime whose rasterizer cannot read one
-    /// (SkiaSharp 4.x loads .ttf/.otf/.ttc but not .woff) falls back to the default font.
+    /// The tool, KernSmith and SkiaGum read all four formats; SkiaGum unwraps .woff itself (WoffConverter).
     /// </remarks>
     /// <param name="fontValue">The font value to check (e.g., "Arial" or "fonts/MyFont.ttf").</param>
     /// <returns>True if the value ends with a supported font extension (case-insensitive); false if null, empty, or anything else.</returns>

@@ -211,6 +211,7 @@ public class SliderTests : BaseTestClass
         wasRaised.ShouldBeTrue();
     }
 
+#if !SKIA_LINKED_TESTS // uses Microsoft.Xna GamePadState; Skia twin in GamepadLinkedGapTests
     [Fact]
     public void Slider_DPadRightPressed_RaisesValueChangedByUi()
     {
@@ -248,6 +249,7 @@ public class SliderTests : BaseTestClass
         slider.Value.ShouldBe(55);
         wasRaised.ShouldBeTrue();
     }
+#endif
 
     [Fact]
     public void ApplyValueConsideringSnapping_ShouldSnap_WhenCalledThroughRangeBase()

@@ -23,7 +23,7 @@ function Assert-Plan([string]$name, [string]$request, [string[]]$expected) {
 
 try {
     foreach ($dir in 'Tools', 'A.Tests', 'B.Tests', 'Outside.Tests', 'Lib.TestsCommon', 'GumToolUnitTests') { New-Item -ItemType Directory -Force -Path (Join-Path $scratch $dir) | Out-Null }
-    Copy-Item (Join-Path $PSScriptRoot 'fast-test.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1') (Join-Path $scratch 'Tools')
+    Copy-Item (Join-Path $PSScriptRoot 'fast-test.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1'), (Join-Path $PSScriptRoot 'IncludeIndex.ps1') (Join-Path $scratch 'Tools')
     # A test project is one with IsTestProject true or a Microsoft.NET.Test.Sdk reference; a library
     # named *Tests* (shared test scaffolding) is not.
     $isTestProject = '<Project><PropertyGroup><IsTestProject>true</IsTestProject></PropertyGroup></Project>'
@@ -99,6 +99,31 @@ try {
     $name = 'a failed test prints its whole message, including the because text, without the stack trace'
     if ($output -match 'because 6724' -and $output -match 'Additional Info:' -and $output -notmatch 'stack frame 6724') { Write-Host "pass  $name" }
     else { Write-Host "FAIL  $name`n  output:`n    $($output -replace "`n", "`n    ")"; $failures++ }
+
+    # One project's failure never skips another project's steps: a failed test leaves the next
+    # project's tests to run, and a failed build skips only that project's own tests.
+    function Assert-Continues([string]$name, [string]$failingStep, [string[]]$expected) {
+        Set-Content (Join-Path $scratch 'Tools/Invoke-Dotnet.ps1') (@'
+function Invoke-Dotnet {
+    param([string[]]$Command, [int]$TimeoutSeconds)
+    $step = "$($Command[0]) $(Split-Path -Leaf $Command[1])"
+    if ($step -eq 'FAILING_STEP') { return @{ Output = @('Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1'); Exit = 1; TimedOut = $false } }
+    @{ Output = @('Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1'); Exit = 0; TimedOut = $false }
+}
+'@ -replace 'FAILING_STEP', $failingStep)
+        $output = @(& pwsh -NoProfile -File (Join-Path $scratch 'Tools/fast-test.ps1') 'DupTests' 2>&1 6>&1 | ForEach-Object { "$_" })
+        $exit = $LASTEXITCODE
+        $actual = @($output | Where-Object { $_ -match '^(ok|FAILED|NOTESTS|TIMEDOUT|skipped)\s' -or $_ -match '^FAST-TEST' } |
+            ForEach-Object { ($_ -replace '\s+\d+s\s+', ' ' -replace '\s+', ' ').Trim() })
+        if (($actual -join "`n") -ceq ($expected -join "`n") -and $exit -eq 1) { Write-Host "pass  $name" }
+        else { Write-Host "FAIL  $name (exit $exit)`n  expected:`n    $($expected -join "`n    ")`n  output:`n    $($output -join "`n    ")"; $script:failures++ }
+    }
+    Assert-Continues 'a failed test in one project still runs the next project''s tests' 'test A.Tests.csproj' `
+        @('ok build A.Tests/A.Tests.csproj', 'FAILED test A.Tests/A.Tests.csproj',
+          'ok build B.Tests/B.Tests.csproj', 'ok test B.Tests/B.Tests.csproj', 'FAST-TEST FAILED')
+    Assert-Continues 'a failed build skips only that project''s tests' 'build A.Tests.csproj' `
+        @('FAILED build A.Tests/A.Tests.csproj', 'skipped test A.Tests/A.Tests.csproj: its build failed',
+          'ok build B.Tests/B.Tests.csproj', 'ok test B.Tests/B.Tests.csproj', 'FAST-TEST FAILED')
 }
 finally { Remove-Item -Recurse -Force $scratch -ErrorAction SilentlyContinue }
 

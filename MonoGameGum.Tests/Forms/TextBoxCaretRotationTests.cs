@@ -1,4 +1,4 @@
-using Gum.Forms.Controls;
+﻿using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -8,7 +8,11 @@ using Shouldly;
 using System;
 using System.Linq;
 using Xunit;
+#if SKIA_LINKED_TESTS
+using Text = SkiaGum.Text;
+#else
 using Text = RenderingLibrary.Graphics.Text;
+#endif
 
 namespace MonoGameGum.Tests.Forms;
 

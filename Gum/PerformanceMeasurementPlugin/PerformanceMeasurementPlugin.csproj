@@ -41,5 +41,7 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Plugins/$(TargetName)" />
 		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Tool/Gum.Avalonia/bin/$(ConfigurationName)/net10.0/Plugins/$(TargetName)" />
+		<!-- A copy keeps the source file's timestamp; stamping it lets the head tell a plugin rebuilt by this build from one a head-only build left behind. -->
+		<Touch Files="$(SolutionDir)Tool/Gum.Avalonia/bin/$(ConfigurationName)/net10.0/Plugins/$(TargetName)/$(TargetFileName)" />
 	</Target>
 </Project>

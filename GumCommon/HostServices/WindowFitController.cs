@@ -94,6 +94,17 @@ public class WindowFitController
         ApplyCurrentFit();
     }
 
+    /// <summary>
+    /// Whether a fit policy is currently enabled.
+    /// </summary>
+    public bool IsActive => _fitPolicy != FitPolicy.None;
+
+    /// <summary>
+    /// Re-reads the window size and applies the active fit policy immediately, without waiting for the
+    /// next <see cref="PollAndApplyFit"/>. Does nothing when no policy is enabled.
+    /// </summary>
+    public void ReapplyFit() => ApplyCurrentFit();
+
     private void ApplyCurrentFit()
     {
         if (_fitPolicy == FitPolicy.None)

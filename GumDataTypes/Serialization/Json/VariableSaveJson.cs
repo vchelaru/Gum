@@ -34,6 +34,8 @@ internal sealed class VariableSaveJson
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsCustomVariable { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? ShaderParameter { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Description { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
@@ -66,6 +68,7 @@ internal static class VariableSaveJsonMapper
             IsFont = source.IsFont,
             IsHiddenInPropertyGrid = source.IsHiddenInPropertyGrid,
             IsCustomVariable = source.IsCustomVariable,
+            ShaderParameter = string.IsNullOrEmpty(source.ShaderParameter) ? null : source.ShaderParameter,
             Description = source.Description,
         };
 
@@ -101,6 +104,7 @@ internal static class VariableSaveJsonMapper
             IsFont = dto.IsFont,
             IsHiddenInPropertyGrid = dto.IsHiddenInPropertyGrid,
             IsCustomVariable = dto.IsCustomVariable,
+            ShaderParameter = dto.ShaderParameter,
             Description = dto.Description,
             Value = BoxedValueJson.Read(
                 dto.ValueAsString,

@@ -1,3 +1,4 @@
+using System;
 using GumFormsPlugin.Services;
 using Gum.Services.Dialogs;
 
@@ -8,6 +9,7 @@ public class AddFormsViewModel : DialogViewModel
     #region Fields/Properties
 
     private readonly IFormsThemeImporter _themeImporter;
+    private readonly IDialogService _dialogService;
 
     public ThemeSelectionViewModel ThemeSelection { get; }
 
@@ -22,15 +24,25 @@ public class AddFormsViewModel : DialogViewModel
 
     #endregion
 
-    public AddFormsViewModel(ThemeSelectionViewModel themeSelection, IFormsThemeImporter themeImporter)
+    public AddFormsViewModel(ThemeSelectionViewModel themeSelection, IFormsThemeImporter themeImporter, IDialogService dialogService)
     {
+        _dialogService = dialogService;
         ThemeSelection = themeSelection;
         _themeImporter = themeImporter;
     }
 
     public override async void OnAffirmative()
     {
-        await _themeImporter.ImportThemeAsync(ThemeSelection.GetSelectedThemeOrDefault(), IsIncludeDemoScreenGum);
+        try
+        {
+            await _themeImporter.ImportThemeAsync(ThemeSelection.GetSelectedThemeOrDefault(), IsIncludeDemoScreenGum);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // async void: an escaping exception is unobserved. The importer reports its own failures;
+            // this is for one it lets through.
+            _dialogService.ShowMessage("Add Forms failed: " + exception.Message);
+        }
 
         base.OnAffirmative();
     }

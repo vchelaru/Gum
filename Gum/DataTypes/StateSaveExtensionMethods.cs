@@ -220,7 +220,7 @@ public static class StateSaveExtensionMethods
                 if (!string.IsNullOrEmpty(elementContainingState.BaseType))
                 {
                     // eventually pass the state, but for now use default
-                    value = TryToGetValueFromInheritance(variableName, elementContainingState.BaseType);
+                    value = TryToGetValueFromInheritance(variableName, ObjectFinder.Self.GetBaseElement(elementContainingState));
                 }
 
                 if (value == null)
@@ -252,11 +252,9 @@ public static class StateSaveExtensionMethods
     }
 
 
-    private static object? TryToGetValueFromInheritance(string variableName, string baseType)
+    private static object? TryToGetValueFromInheritance(string variableName, ElementSave? baseElement)
     {
         object? foundValue = null;
-
-        var baseElement = ObjectFinder.Self.GetElementSave(baseType);
 
         if (baseElement?.DefaultState != null)
         {
@@ -268,9 +266,9 @@ public static class StateSaveExtensionMethods
             }
         }
 
-        if (foundValue == null && !string.IsNullOrEmpty(baseElement?.BaseType))
+        if (foundValue == null && baseElement != null && !string.IsNullOrEmpty(baseElement.BaseType))
         {
-            foundValue = TryToGetValueFromInheritance(variableName, baseElement.BaseType);
+            foundValue = TryToGetValueFromInheritance(variableName, ObjectFinder.Self.GetBaseElement(baseElement));
         }
 
         return foundValue;
@@ -296,7 +294,7 @@ public static class StateSaveExtensionMethods
         }
         else
         {
-            baseElement = ObjectFinder.Self.GetElementSave(parent.BaseType);
+            baseElement = ObjectFinder.Self.GetBaseElement(parent);
         }
         return baseElement;
     }
@@ -379,7 +377,7 @@ public static class StateSaveExtensionMethods
 
                 if (shouldGoToBaseType)
                 {
-                    var baseElement = ObjectFinder.Self.GetElementSave(elementContainingState.BaseType);
+                    var baseElement = ObjectFinder.Self.GetBaseElement(elementContainingState);
 
                     if (baseElement != null)
                     {
@@ -526,7 +524,7 @@ public static class StateSaveExtensionMethods
 
                 if (shouldGoToBaseType)
                 {
-                    var baseElement = ObjectFinder.Self.GetElementSave(elementContainingState.BaseType);
+                    var baseElement = ObjectFinder.Self.GetBaseElement(elementContainingState);
 
                     if (baseElement != null)
                     {
@@ -607,6 +605,12 @@ public static class StateSaveExtensionMethods
                 rootVariable = ObjectFinder.Self.GetRootVariable(variableName, element);
             }
 
+            if (rootVariable == null && instanceSave != null && stateSave.ParentContainer != null)
+            {
+                // The state's element can derive from the instance's and have saved the shader parameter entry.
+                rootVariable = ObjectFinder.Self.GetRootVariable(variableName, instanceSave, stateSave.ParentContainer);
+            }
+
             string? exposedVariableSourceName = null;
             if (!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
             {
@@ -629,6 +633,13 @@ public static class StateSaveExtensionMethods
 
                 variableSave.IsFont = rootVariable?.IsFont == true;
                 variableSave.IsFile = isFile;
+
+                // Only a definition saved by a shader parameter row carries the marker.
+                if (string.IsNullOrEmpty(variableSave.ShaderParameter)
+                    && global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(rootVariable?.ShaderParameter, out global::RenderingLibrary.Graphics.ShaderParameterMarker marker))
+                {
+                    variableSave.ShaderParameter = marker.Format();
+                }
 
                 if (!string.IsNullOrEmpty(exposedVariableSourceName))
                 {

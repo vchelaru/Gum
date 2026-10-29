@@ -27,10 +27,10 @@ Posted reaction (UI thread)
     - Verifies file's directory is being watched
     - Adds to ChangedFilesWaitingForFlush, records LastFileChange
     ↓
-PeriodicUiTimer (2s interval, GumStartupSequence.cs)
-    - Calls FileWatchManager.Flush() every 2 seconds
+PeriodicUiTimer (500ms interval, GumStartupSequence.cs)
+    - Calls FileWatchManager.Flush() every 500ms
     ↓
-Flush() early-outs if TimeToNextFlush > 0 (waits 2s after last change)
+Flush() early-outs if TimeToNextFlush > 0 (waits 500ms after last change)
     ↓
 FileChangeReactionLogic.ReactToFileChanged(file) per queued file
     ↓
@@ -46,7 +46,7 @@ A second `PeriodicUiTimer` at 200ms drives the File Watch debug panel UI only �
 2. Adding the gum project's own directory
 3. Adding localization and font-character-file directories if configured
 
-**Deduplication**: If directory A is already a root of directory B, B is not added separately. Subdirectories of a watched root are covered automatically (`IncludeSubdirectories = true`).
+**Deduplication**: the project directory is added last, so a final pass in `GetFileWatchRootDirectories` removes every root nested under another; each folder gets one watcher, and subdirectories are covered by `IncludeSubdirectories = true`. A nested root left in the set would raise a copy of every event.
 
 `RefreshRootDirectory()` is called on project load and whenever a variable that `IsFile == true` changes value.
 
@@ -79,19 +79,20 @@ during `ProjectLoad` are ignored (`IsNotifyingProjectLoad`).
 - `AnimationCollectionViewModelManager.cs` — animation save
 - `TextureCoordinateSelectionPlugin` — sprite sheet edits
 
-The ignore list (`FileWatchIgnoreList`) is time-based only.
+The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path that also calls `RecordWrittenContent(path)` after the write (element and behavior saves in `FileCommands`, the project and element files in `ProjectManager.SaveProject`) adds a content check: inside the window an event is ignored only while the file still holds the bytes the tool wrote, so an outside edit shortly after a save still reloads. `IgnoreNextChangeUntil` clears the record, so events during the next save are ignored by time until that write is recorded. Other callers (JSON conversion, theme/gumx import, font generation, animation and sprite-sheet saves) are time-only; add `RecordWrittenContent` after their write when it can be followed by an outside edit.
 
 ## ReactToFileChanged Extension Dispatch
 
 | Extension | Action |
 |-----------|--------|
-| `png`, `gif`, `tga`, `bmp` | Refresh wireframe if referenced by selected element |
-| `achx` | Reload animation chain if referenced by selected element |
-| `fnt` | Reload font (also looks up page PNGs) |
-| `gusx`, `gutx`, `gucx` | Reload element from disk, refresh tree + wireframe |
+| Any file a container's `SourceShaderFile` names (any extension) | Drop the cached effect and rebuild the shown element if any element references the shader (`FileChangeReactionLogic.IsShaderFile`: named by a `SourceShaderFile` variable; `slang`/`fx` also count, so an unreferenced one stays untouched) |
+| A file a shader `#include`s (any extension, nested too) | Same reaction for each recorded shader that an element references. The canvas's `RenderTargetShaderResolver` records what each shader read in `IShaderIncludeMap` when it compiles (a failed compile too); `IsReferencedFile` admits those files so the watcher queues them. An entry lives until that shader compiles again. An extensionless include is not seen by the watcher |
+| Any other file (images, svg, lottie json, `achx`, `fnt`, a decoder plugin's format), except the types below that keep their own reaction | If an element references it (see below) or the canvas cached it, drop the whole `LoaderManager` cache and reload the canvas and Variables tab |
+| `gusx`, `gutx`, `gucx` (and JSON siblings) | Reload element from disk, refresh tree + wireframe, then re-apply the references that read it (see below) |
 | `gumx` | Reload entire project |
-| `ganx` | Print warning — Gum does not support runtime reload of animation collections |
-| `behx` | Reload behavior definition |
+| `ganx`, `ganj` | The StateAnimationPlugin reloads the Animations tab when it is the selected element's sidecar |
+| `gumfcs` (font character file) | `MainFontsPlugin` regenerates the ranges and missing fonts |
+| `behx`, `behj` | Reload behavior definition, then re-apply its tool-only references to implementing components and elements holding their instances (see below) |
 | `csv`, `resx` | Reload localization file (RESX also matches satellites via `IsLocalizationFileThatShouldTriggerReload`) |
 | `ProjectCodeSettings.codsj` | Handled by the code output plugin's `ReactToFileChanged` (`CodeOutputPluginBase.HandleFileChanged`): reload only, never regenerate or migrate; an unreadable file keeps the current settings and makes the Code tab read-only until a readable version arrives or the user resets it |
 
@@ -108,13 +109,19 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 
 ## Non-Obvious Behaviors
 
-**Double-event prevention for Gum XML files**: When `FileSystemWatcher` fires a `Created` event for `.gumx`/`.gusx`/`.gutx`/`.gucx`/`.ganx`/`.behx` files, it is ignored. These formats trigger both `Changed` and `Created` on save; only `Changed` is processed to avoid duplicates. Non-Gum files (e.g., PNG) _do_ process `Created`.
+**Created for Gum files**: a `Created` for a Gum file (`.gumx`/`.gusx`/`.gutx`/`.gucx`/`.ganx`/`.behx` and their JSON siblings) queues only when the project already contains that file (`FileChangeReactionLogic.IsKnownToProject`: a loaded element or its `*Animations` sidecar, a behavior, the project file) or Gum's ignore list holds it. macOS reports an atomic swap over the target (`renamex_np` with `RENAME_SWAP`, the safe-save pattern of NSDocument apps such as TextEdit) as `Created` with no `Changed` and no `Renamed`, so dropping every Created loses real edits. A repeat event for the same path collapses in the queue, so Created plus Changed reloads once. A Created for a file nothing has loaded (a new file dropped in) is skipped. Non-Gum files (e.g., PNG) always process `Created`.
 
-**Renames are routed for every reacted-to extension**: `ReactToRename` forwards renames for the extensions in its list (images, Gum files, `.csv`, `.resx`, `.codsj`, ...). Many editors (Vim, JetBrains, some VS Code modes) save by writing a temp file and renaming it over the target, so a type missing from that list silently misses external edits.
+**Dropped events can print a reason**: with "Print file changes to output" on (File Watch tab), a skipped Gum file prints at once as `File change skipped (<reason>): <path>` (own save, unknown Created, temp file). Skips of other files are counted per reason and printed once per flush (`x300, e.g. a, b, c`), and a rename or delete of a type Gum does not react to prints nothing, so a build touching hundreds of files stays readable. A save that prints nothing never reached the manager, so look at the OS events first.
 
-**Delete only reacts for element files**: `ReactToDelete` queues a deleted element file like a change, so the flush can flag the element's source as missing. Other deletes are ignored.
+**Referenced files follow the project, not an extension list**: every file a variable names (`IsFile`), an animation chain's frames and a font's pages is reached through `FileChangeReactionLogic.IsReferencedFile` (referenced or cached by the canvas, and not a type with its own reaction: `ganx`, `ganj`, `gumfcs`, `codsj`, which the project walk lists too). A new file-backed type needs no change here. The project walk parses every referenced `.achx` and `.fnt`, so `IProjectReferencedFiles` keeps its result and the rename, delete and flush checks read that set; the walk runs once until something calls `FileWatchManager.InvalidateReferencedFiles` (the File Watch plugin does for element, instance, state, category and variable edits, undo and canvas refreshes; an edit that adds a file reference without firing one of those events leaves the set stale, so a new add path must fire its `*Add` event, and `GumxImportService` invalidates when an import ends) or a reload here changes what is referenced. A walk per event freezes the UI when a build touches hundreds of files. Everything the canvas loads by path sits in `LoaderManager`, so a change drops the whole cache and reloads even when the shown element does not use the file itself: a per-element file walk misses nested instances, base types and frame textures, and an element selected later would draw the cached copy. A flush of several such files reloads once, when `DeferDependentUpdates` closes, and their check against the set also waits for that point, so element reloads interleaved with picture edits walk the project once. Shaders (the files a `SourceShaderFile` variable names, whatever the extension) are the exception and drop only their own cache entry.
 
-**Flush debounce is cumulative**: `TimeToNextFlush = (LastFileChange + 2s) - Now`. Every new file change resets `LastFileChange`, pushing the flush window out by another 2 seconds. Rapid successive changes delay flushing until things settle.
+**Renames are routed for every reacted-to extension**: `ReactToRename` forwards renames for the extensions in its list (images, Gum files, `.csv`, `.resx`, `.codsj`, ...) and for any file an element references. Many editors (Vim, JetBrains, some VS Code modes) save by writing a temp file and renaming it over the target, so a type missing from that list silently misses external edits.
+
+**Delete reacts for element files, shaders and referenced files**: `ReactToDelete` queues them like a change, so the flush can flag the element's source as missing or rebuild the canvas to report the missing file. Other deletes are ignored.
+
+**A reloaded element updates the elements that read it, after the whole flush is reloaded**: `ReactToElementSaveChanged` calls `IVariableReferenceLogic.ApplyReferencesToElement(element, trySave: true)`, the cascade an in-tool edit runs, so readers get new materialized values, are saved (Auto Save on) and the canvas and Variables tab refresh. `FileWatchManager.Flush` wraps its loop in `FileChangeReactionLogic.DeferDependentUpdates()`, so a reader that is itself in the batch is reloaded before any save of it; saving it first would overwrite the external edit still waiting in the queue. The reloaded element is never saved by this path. Readers keep their object and undo history, so `IUndoManager.RebaseStoredValues` writes the changed values into every snapshot of them; otherwise a later Ctrl+Z restores the replaced value and saves it.
+
+**Flush debounce is cumulative**: `TimeToNextFlush = (LastFileChange + 500ms) - Now`. Every new file change resets `LastFileChange`, pushing the flush window out by another 500ms. Rapid successive changes delay flushing until things settle.
 
 **Watcher callbacks only check the ignore list, then post to the UI thread**: `HandleFileSystemChange`/`HandleRename`/`HandleFileSystemDelete` run on a watcher thread and hand their work to the UI thread through `IDispatcher`. New callback code goes inside the posted reaction; anything else runs off the UI thread against UI-owned state.
 
@@ -131,7 +138,9 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 | `Tools/Gum.Presentation/Managers/FileChangeReactionLogic.cs` | Dispatches flushed files to reload handlers |
 | `Tools/Gum.Presentation/FileWatchPlugin/MainFileWatchPlugin.cs` | Plugin entry point (shared by both heads); owns tab/menu-item wiring only |
 | `Tools/Gum.Presentation/Services/PeriodicUiTimer.cs` | UI-thread-safe periodic timer used for both flush and display |
-| `Tools/Gum.Presentation/Startup/GumStartupSequence.cs` | Creates the 2s flush timer and calls `fileWatchManager.Flush()` |
+| `Tools/Gum.Presentation/Startup/GumStartupSequence.cs` | Creates the 500ms flush timer and calls `fileWatchManager.Flush()` |
 | `Tools/Gum.Presentation/Commands/FileCommands.cs` | Calls `IgnoreNextChangeUntil` before saving elements |
 | `Tools/Gum.Presentation/Managers/ProjectManager.cs` | Calls `IgnoreNextChangeUntil` before saving project |
 | `Tools/Gum.Presentation/Services/Fonts/FontManager.cs` | Calls `IgnoreNextChangeUntil` before generating fonts |
+
+**Tool-only references are re-applied after a reload**: a behavior's `ToolOnlyVariableReferences` are materialized into the default state of each implementing component and of every element holding an instance of one (`BehaviorToolOnlyReferencesApplier.Apply`), so a reload alone leaves them at what the old reference produced. A reloaded behavior calls `IVariableReferenceLogic.ReapplyToolOnlyReferences(behavior, trySave: true)`; a reloaded element calls the `ElementSave` overload. Changed elements are saved (Auto Save on) and their readers cascade; both run in the same deferred batch as the element cascade above. A variable a removed reference line (or a behavior the component no longer implements) wrote is removed from the component and its instances; a component whose reference now resolves to the resting value gets that value written over the stale one (shared with in-tool edits). Undo snapshots are not rebased for these values (no reference row feeds them).

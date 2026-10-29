@@ -665,7 +665,7 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         SyntaxVersionResult result = sut.Detect(settings, gameDir);
 
         result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
-        result.Version.ShouldBe(6);
+        result.Version.ShouldBe(SyntaxVersionDetectionService.LatestSyntaxVersion);
     }
 
     [Fact]
@@ -737,7 +737,7 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         SyntaxVersionResult result = sut.Detect(settings, gameDir);
 
         result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
-        result.Version.ShouldBe(6);
+        result.Version.ShouldBe(SyntaxVersionDetectionService.LatestSyntaxVersion);
     }
 
     [Fact]
@@ -773,13 +773,13 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     // moves one makes that output stale (CI's Codegen Drift Check): rerun
     // Tests/GenerateAllCodeGenProjects.bat, commit the diff, then update the pin here.
     [Theory]
-    [InlineData("CodeGen_Maui_FullCodegen/Content/GumProject", 6)]
-    [InlineData("CodeGen_MonoGame_ByReference/Content/GumProject", 6)]
-    [InlineData("CodeGen_MonoGameForms_ByReference/Content/GumProject", 6)]
-    [InlineData("CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject", 6)]
-    [InlineData("CodeGen_MonoGameForms_FullCodegen/Content", 6)]
-    [InlineData("CodeGen_Raylib_ByReference/Content/GumProject", 6)]
-    [InlineData("CodeGen_Skia_ByReference/Content/GumProject", 6)]
+    [InlineData("CodeGen_Maui_FullCodegen/Content/GumProject", 7)]
+    [InlineData("CodeGen_MonoGame_ByReference/Content/GumProject", 7)]
+    [InlineData("CodeGen_MonoGameForms_ByReference/Content/GumProject", 7)]
+    [InlineData("CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject", 7)]
+    [InlineData("CodeGen_MonoGameForms_FullCodegen/Content", 7)]
+    [InlineData("CodeGen_Raylib_ByReference/Content/GumProject", 7)]
+    [InlineData("CodeGen_Skia_ByReference/Content/GumProject", 7)]
     public void Detect_CodeGenHarnessProject_MatchesTheVersionItsOutputWasGeneratedAt(string gumProjectRelativePath, int expectedVersion)
     {
         string gumProjectDir = Path.Combine(FindRepoRoot(), "Tests", gumProjectRelativePath);
@@ -806,6 +806,10 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     [InlineData("Runtimes/SkiaGum.Standalone/SkiaGum.Standalone.csproj", "SkiaGum.Standalone")]
     [InlineData("Runtimes/SkiaGum.Maui/SkiaGum.Maui.csproj", "SkiaGum.Maui")]
     [InlineData("Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj", "SkiaGum.ShadowDusk")]
+    [InlineData("Runtimes/GumShadowDusk/MonoGameGum.ShadowDusk.csproj", "MonoGameGum.ShadowDusk")]
+    [InlineData("Runtimes/GumShadowDusk/KniGum.ShadowDusk.csproj", "KniGum.ShadowDusk")]
+    [InlineData("Runtimes/GumShadowDusk/FnaGum.ShadowDusk.csproj", "FnaGum.ShadowDusk")]
+    [InlineData("Runtimes/RaylibGum.ShadowDusk/RaylibGum.ShadowDusk.csproj", "RaylibGum.ShadowDusk")]
     [InlineData("Runtimes/SkiaGum.Wpf/SkiaGum.Wpf.csproj", "SkiaGum.Wpf")]
     public void Detect_ProjectReferenceToRepoRuntime_ReadsItsStamp(string csprojRelativePath, string projectName)
     {
@@ -833,6 +837,10 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     [InlineData("Gum.SkiaSharp.Standalone", "SkiaGum.Standalone")]
     [InlineData("Gum.SkiaSharp.Maui", "SkiaGum.Maui")]
     [InlineData("Gum.SkiaSharp.ShadowDusk", "SkiaGum.ShadowDusk")]
+    [InlineData("Gum.MonoGame.ShadowDusk", "MonoGameGum.ShadowDusk")]
+    [InlineData("Gum.KNI.ShadowDusk", "KniGum.ShadowDusk")]
+    [InlineData("Gum.FNA.ShadowDusk", "FnaGum.ShadowDusk")]
+    [InlineData("Gum.raylib.ShadowDusk", "RaylibGum.ShadowDusk")]
     public void Detect_NuGetPackage_SkiaHost_ReadsSyntaxVersion(string packageId, string assemblyName)
     {
         string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
@@ -1012,7 +1020,7 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
         SyntaxVersionResult result = sut.Detect(settings, gameDir);
 
         result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
-        result.Version.ShouldBe(6);
+        result.Version.ShouldBe(SyntaxVersionDetectionService.LatestSyntaxVersion);
     }
 
     [Theory]

@@ -887,9 +887,9 @@ jobs:
       # opengl32.dll by name, and Windows resolves that from the test host's own
       # directory BEFORE System32, so dropping Mesa's opengl32.dll (+ its gallium/
       # glapi siblings) next to the built test binaries overrides the GL-less system
-      # stub with a working software implementation. An earlier macOS probe (#3233)
-      # HUNG at window creation (GLFW/Cocoa needs the main thread); Win32 window
-      # creation is not main-thread-coupled, so it works headless here.
+      # stub with a working software implementation. The project runs on the xunit v3
+      # main-thread host (GLFW/Cocoa only creates a window on the main thread, #6987),
+      # which is harmless on Windows.
       #
       # This is a BLOCKING Bucket-A suite (promoted from an advisory probe in #3250
       # after a clean 351/351 run). The install step feeds that blocking gate, so
@@ -910,6 +910,7 @@ jobs:
             Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0
             Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0
             Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0
+            Tests/GumShadowDusk.Tests.KniDesktopGL/bin/Release/net8.0
 
       # Moved here (after Mesa is installed) because ScreenshotCommandTests and
       # DiffScreenshotsCommandTests exercise `gumcli screenshot --backend raylib` and

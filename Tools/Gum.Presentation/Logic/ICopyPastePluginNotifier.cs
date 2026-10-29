@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 
 namespace Gum.Logic;
 
@@ -14,4 +15,10 @@ public interface ICopyPastePluginNotifier
     void InstanceAdd(ElementSave elementSave, InstanceSave instance);
 
     void ElementDuplicate(ElementSave oldElement, ElementSave newElement);
+
+    /// <summary>A state was pasted into a category.</summary>
+    void StateAdd(StateSave stateSave);
+
+    /// <summary>A state category was pasted into an element.</summary>
+    void CategoryAdd(StateSaveCategory category);
 }

@@ -410,7 +410,15 @@ public class VariableReferenceLogicTests : BaseTestClass
             ElementSaveExtensions.VariableChangedThroughReference = null!;
         }
 
-        notifications.ShouldContain((button, isFullCommit));
+        if (isFullCommit)
+        {
+            notifications.ShouldContain((button, isFullCommit));
+        }
+        else
+        {
+            // A tick of a drag runs no cascade; the full commit that ends it does (#6888).
+            notifications.ShouldBeEmpty();
+        }
     }
 
     [Fact]
@@ -526,6 +534,78 @@ public class VariableReferenceLogicTests : BaseTestClass
 
         varList.Value[0].ShouldNotStartWith("//");
         defaultState.GetValue(ownerName + ".X").ShouldBe(42f);
+    }
+
+    [Theory]
+    [InlineData("Thickness", true)]
+    [InlineData(null, false)]
+    public void DoVariableReferenceReaction_ShaderParameterOnLeftSide_IsAcceptedOnlyWhenSaved(string? marker, bool accepted)
+    {
+        // The parameter is declared by no type: only the container's saved, marked entry defines it (#7010).
+        ComponentSave element = new() { Name = "MyComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+        InstanceSave icon = new() { Name = "Icon", BaseType = "Container", ParentContainer = element };
+        element.Instances.Add(icon);
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "Icon.Outline_Thickness", Type = "float", SetsValue = false, ShaderParameter = marker
+        });
+
+        VariableListSave<string> varList = new() { Type = "string", Name = "Icon.VariableReferences" };
+        varList.Value.Add("Outline_Thickness = 3");
+        defaultState.VariableLists.Add(varList);
+
+        GumProjectSave project = new();
+        project.StandardElements.Add(new StandardElementSave { Name = "Container", States = { new StateSave { Name = "Default" } } });
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: element,
+            leftSideInstance: icon,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "Icon.VariableReferences",
+            trySave: false);
+
+        varList.Value[0].StartsWith("//").ShouldBe(!accepted);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ShaderParameterOfBaseInstance_IsAcceptedWhenDerivedElementSavedIt()
+    {
+        ComponentSave baseElement = new() { Name = "BaseComp" };
+        baseElement.States.Add(new StateSave { Name = "Default", ParentContainer = baseElement });
+        InstanceSave icon = new() { Name = "Icon", BaseType = "Container", ParentContainer = baseElement };
+        baseElement.Instances.Add(icon);
+
+        ComponentSave derived = new() { Name = "DerivedComp", BaseType = "BaseComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = derived };
+        derived.States.Add(defaultState);
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "Icon.Outline_Thickness", Type = "float", SetsValue = false, ShaderParameter = "Thickness"
+        });
+        VariableListSave<string> varList = new() { Type = "string", Name = "Icon.VariableReferences" };
+        varList.Value.Add("Outline_Thickness = 3");
+        defaultState.VariableLists.Add(varList);
+
+        GumProjectSave project = new();
+        project.StandardElements.Add(new StandardElementSave { Name = "Container", States = { new StateSave { Name = "Default" } } });
+        project.Components.Add(baseElement);
+        project.Components.Add(derived);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: derived,
+            leftSideInstance: icon,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "Icon.VariableReferences",
+            trySave: false);
+
+        varList.Value[0].StartsWith("//").ShouldBeFalse();
     }
 
     [Fact]

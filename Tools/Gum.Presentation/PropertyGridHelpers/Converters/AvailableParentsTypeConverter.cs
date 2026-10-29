@@ -133,7 +133,7 @@ public class AvailableParentsTypeConverter : TypeConverter
         // Recursively add instances from base elements
         if (!string.IsNullOrEmpty(element.BaseType))
         {
-            var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+            var baseElement = ObjectFinder.Self.GetBaseElement(element);
             if (baseElement != null)
             {
                 instances.AddRange(GetAllInstancesFromElementAndBase(baseElement));
@@ -166,7 +166,7 @@ public class AvailableParentsTypeConverter : TypeConverter
             // Move to base element
             if (!string.IsNullOrEmpty(currentElement.BaseType))
             {
-                currentElement = ObjectFinder.Self.GetElementSave(currentElement.BaseType);
+                currentElement = ObjectFinder.Self.GetBaseElement(currentElement);
             }
             else
             {

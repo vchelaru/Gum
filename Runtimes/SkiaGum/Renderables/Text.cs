@@ -343,6 +343,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
             else
             {
+                // Never stop between the halves of a surrogate pair.
+                if (char.IsHighSurrogate(line[remaining - 1]))
+                {
+                    remaining++;
+                }
                 revealed.Add(line.Substring(0, remaining));
                 remaining = 0;
             }
@@ -396,15 +401,43 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return lines;
         }
 
+        // Start/Length count code points, so a surrogate pair (an emoji) is one unit there but two
+        // chars in the string (#7086). Walk the string once, advancing in step with the lines.
+        int utf16Position = 0;
+        int codePointPosition = 0;
         foreach (var line in textBlock.Lines)
         {
-            if (line.Start + line.Length <= source.Length)
+            int start = AdvanceCodePoints(source, ref utf16Position, ref codePointPosition, line.Start);
+            int end = AdvanceCodePoints(source, ref utf16Position, ref codePointPosition, line.Start + line.Length);
+            if (start >= 0 && end >= 0)
             {
-                lines.Add(source.Substring(line.Start, line.Length));
+                lines.Add(source.Substring(start, end - start));
             }
         }
 
         return lines;
+    }
+
+    /// <summary>
+    /// Moves a forward-only cursor over <paramref name="source"/> to <paramref name="targetCodePoint"/>
+    /// and returns the matching UTF-16 index, or -1 when the string ends first (or the target is
+    /// behind the cursor).
+    /// </summary>
+    private static int AdvanceCodePoints(string source, ref int utf16Position, ref int codePointPosition, int targetCodePoint)
+    {
+        if (targetCodePoint < codePointPosition)
+        {
+            return -1;
+        }
+
+        while (codePointPosition < targetCodePoint && utf16Position < source.Length)
+        {
+            bool isPair = char.IsHighSurrogate(source[utf16Position]) && utf16Position + 1 < source.Length;
+            utf16Position += isPair ? 2 : 1;
+            codePointPosition++;
+        }
+
+        return codePointPosition == targetCodePoint ? utf16Position : -1;
     }
 
     /// <summary>
@@ -437,7 +470,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         var hitTestResult = textBlock.HitTest(screenX - absoluteX, screenY - absoluteY);
 
-        return hitTestResult.ClosestCodePointIndex;
+        // ClosestCodePointIndex counts code points; WrappedText is indexed in UTF-16 chars (#7086).
+        int utf16Position = 0;
+        int codePointPosition = 0;
+        int utf16Index = AdvanceCodePoints(_layoutText ?? string.Empty, ref utf16Position, ref codePointPosition, hitTestResult.ClosestCodePointIndex);
+        return utf16Index >= 0 ? utf16Index : hitTestResult.ClosestCodePointIndex;
     }
 
     /// <inheritdoc/>
@@ -1082,6 +1119,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // True when a run changes the size ([FontSize], [FontScale]) or the font family ([Font]), set by ParseMarkup.
     private bool _hasHeightRun;
     private string? _layoutText;
+
+    /// <summary>
+    /// The tags found in the markup text, with indexes into <see cref="_layoutText"/>. Null when the text has no
+    /// markup. Replaced, never mutated, each time the text is parsed. Read by <c>TextRuntime.GetTagAtIndex</c>.
+    /// </summary>
+    internal List<FoundTag>? ParsedBbCodeTags { get; private set; }
     private List<InlineVariable> _inlineVariables = new();
     private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
 
@@ -1111,6 +1154,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         "outlinethickness",
         "custom",
         "hasdropshadow",
+        // [Link=id]: kept as a range for TextRuntime.GetTagAtIndex, no styling.
+        "link",
     };
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
@@ -1148,7 +1193,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             ? Height
             : (float?)null;
 
-    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(mRawText, forcedWidth, allowMarkup: true);
+    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(_layoutText, forcedWidth, allowMarkup: true);
 
     /// <summary>
     /// Builds a RichTextKit <c>TextBlock</c> for the given text (normally <see cref="RawText"/>, but
@@ -1207,7 +1252,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     customLettersByStart ??= new();
                     customLettersByStart[codePointIndex] = run;
                 }
-                codePointIndex += run.Text.Length;
+                for (int i = 0; i < run.Text.Length; i++)
+                {
+                    if (!char.IsLowSurrogate(run.Text[i]))
+                    {
+                        codePointIndex++;
+                    }
+                }
             }
             switch (HorizontalAlignment)
             {
@@ -1476,7 +1527,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if (!_hasMarkup || string.IsNullOrEmpty(_layoutText))
         {
-            runs.Add(new StyledTextRun((_hasMarkup ? _layoutText : mRawText) ?? string.Empty, GetStyle()));
+            runs.Add(new StyledTextRun(_layoutText ?? string.Empty, GetStyle()));
             return runs;
         }
 
@@ -1997,32 +2048,45 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and <see cref="_inlineVariables"/>. Plain text (no recognized tags) leaves _layoutText equal to
     /// mRawText so the render/measure path is byte-for-byte unchanged. Called whenever RawText changes.
     /// </summary>
+    // Control characters become spaces one for one (so indexes into RawText still line up) to match
+    // MonoGame's blank glyph (#6835). A tab is kept: RichTextKit gives it its own tab stop.
+    // Callers have already turned "\r\n" into "\n", so a "\r\n" left here (from "\r\r\n") would be
+    // read by RichTextKit as one character; blank its '\r' so the length stays one per char (#6991).
+    private static string? BlankControlCharacters(string? text) =>
+        text == null ? null : ControlCharacterBlanker.Blank(text, expandTabs: false).Replace("\r\n", " \n");
+
     private void ParseMarkup()
     {
         _inlineVariables.Clear();
         _hasHeightRun = false;
+        ParsedBbCodeTags = null;
 
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
             _hasMarkup = false;
-            _layoutText = mRawText;
+            // CRLF counts as one character everywhere (#6991), as on MonoGame/Raylib.
+            _layoutText = BlankControlCharacters(mRawText?.Replace("\r\n", "\n"));
             return;
         }
+
+        // [Glyph=...] tags become their character first, as in the MonoGame/Raylib SetBbCodeText path.
+        string withGlyphs = BbCodeParser.ReplaceGlyphTags(mRawText);
 
         // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes,
         // mirroring the MonoGame/Raylib SetBbCodeText path. Parsing and stripping from the same
         // normalized string keeps InlineVariable indexes aligned with the layout text.
-        var normalized = mRawText.Replace("\r\n", "\n");
+        var normalized = withGlyphs.Replace("\r\n", "\n");
         var tags = BbCodeParser.Parse(normalized, SupportedTags);
+        ParsedBbCodeTags = tags;
         if (tags.Count == 0)
         {
             _hasMarkup = false;
-            _layoutText = mRawText;
+            _layoutText = BlankControlCharacters(normalized);
             return;
         }
 
         _hasMarkup = true;
-        _layoutText = BbCodeParser.RemoveTags(normalized, tags);
+        _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags));
         BuildInlineVariables(tags);
         foreach (InlineVariable variable in _inlineVariables)
         {

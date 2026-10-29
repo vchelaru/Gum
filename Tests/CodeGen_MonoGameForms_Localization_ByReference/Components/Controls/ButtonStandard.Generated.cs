@@ -9,9 +9,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/ButtonStandard", FormsType = typeof(global::Gum.Forms.Controls.Button))]
 partial class ButtonStandard : global::Gum.Forms.Controls.Button
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -21,7 +22,7 @@ partial class ButtonStandard : global::Gum.Forms.Controls.Button
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandard") ?? throw new System.InvalidOperationException("Could not find an element named Controls/ButtonStandard - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/ButtonStandard");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ButtonStandard(visual);
             return visual;

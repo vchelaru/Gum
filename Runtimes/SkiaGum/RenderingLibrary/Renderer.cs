@@ -2,6 +2,7 @@
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Math;
+using SkiaGum.Content;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
@@ -118,6 +119,11 @@ namespace RenderingLibrary.Graphics
         // Sprite pulling its RenderTargetTextureSource.
         readonly Dictionary<IRenderableIpso, SKImage> _bakedImages = new Dictionary<IRenderableIpso, SKImage>();
 
+        // The camera zoom each baked image was drawn at. An image is zoom times larger than its
+        // container in pixels, so the composite shrinks it back to the container's canvas-unit
+        // rectangle and the zoomed canvas draws it 1:1 (#6985).
+        readonly Dictionary<IRenderableIpso, float> _bakedZooms = new Dictionary<IRenderableIpso, float>();
+
         // Cache owners of render-target containers referenced by a visible Sprite's
         // RenderTargetTextureSource, so an invisible-but-referenced container still bakes (#1643).
         readonly HashSet<IRenderableIpso> _referencedRenderTargetOwners = new HashSet<IRenderableIpso>();
@@ -214,7 +220,7 @@ namespace RenderingLibrary.Graphics
         {
             _referencedRenderTargetOwners.Clear();
             // Before the camera transform is applied to the screen canvas.
-            BakeRenderTargets(whatToRender, managers);
+            BakeRenderTargets(whatToRender, managers, layer);
 
             ApplyCamera(managers.Canvas, layer, matrix: null);
             try
@@ -421,7 +427,7 @@ namespace RenderingLibrary.Graphics
                 TryStartHostFrameForBatch();
                 // Adds to this frame's referenced owners rather than replacing them, like MonoGame,
                 // so a sprite in an earlier call keeps its invisible source baking in a later one.
-                BakeRenderTargets(_preRenderRootsBuffer, OwnManagers);
+                BakeRenderTargets(_preRenderRootsBuffer, OwnManagers, layer: null);
             }
             finally
             {
@@ -602,6 +608,7 @@ namespace RenderingLibrary.Graphics
                 image?.Dispose();
             }
             _bakedImages.Clear();
+            _bakedZooms.Clear();
         }
 
         // Populates _referencedRenderTargetOwners with the cache owner of every render-target
@@ -665,7 +672,7 @@ namespace RenderingLibrary.Graphics
         // Post-order (innermost-first) bake of every render-target container, so a nested inner
         // target is baked before its outer one; the outer bake then composites the inner's finished
         // texture while walking its children.
-        private void BakeRenderTargetsInSubtree(IList<IRenderableIpso> renderables, SystemManagers managers)
+        private void BakeRenderTargetsInSubtree(IList<IRenderableIpso> renderables, SystemManagers managers, float zoom)
         {
             for (int i = 0; i < renderables.Count; i++)
             {
@@ -678,12 +685,12 @@ namespace RenderingLibrary.Graphics
 
                 if (renderable.Children != null)
                 {
-                    BakeRenderTargetsInSubtree(renderable.Children, managers);
+                    BakeRenderTargetsInSubtree(renderable.Children, managers, zoom);
                 }
 
                 if (renderable.IsRenderTarget)
                 {
-                    BakeRenderTarget(renderable, managers);
+                    BakeRenderTarget(renderable, managers, zoom);
                 }
             }
         }
@@ -692,14 +699,20 @@ namespace RenderingLibrary.Graphics
         // then snapshots it for this frame. Children draw in the surface's local pixel space via an
         // offset translate; content outside the surface is clipped, truncating overflow to the
         // render-target size. A non-positive size bakes nothing (the composite then draws nothing).
-        private void BakeRenderTarget(IRenderableIpso container, SystemManagers managers)
+        private void BakeRenderTarget(IRenderableIpso container, SystemManagers managers, float zoom)
         {
-            int width = MathFunctions.RoundToInt(container.Width);
-            int height = MathFunctions.RoundToInt(container.Height);
-            if (width <= 0 || height <= 0)
+            if (MathFunctions.RoundToInt(container.Width) <= 0 || MathFunctions.RoundToInt(container.Height) <= 0)
             {
                 return;
             }
+
+            // The surface holds the container at the camera's zoom, so it is zoom times its size in
+            // canvas units (rounded up so the last partial pixel is not cut off).
+            // The fraction keeps the container's fractional device-pixel offset inside the surface so
+            // the composite lands on whole pixels, the way the same content draws without a render target.
+            GetDevicePixelFraction(container, zoom, out float fractionX, out float fractionY);
+            int width = (int)System.Math.Ceiling(container.Width * zoom + fractionX);
+            int height = (int)System.Math.Ceiling(container.Height * zoom + fractionY);
 
             IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
             SkiaRenderTarget? renderTarget = _renderTargetService.GetFor(owner, width, height);
@@ -714,6 +727,11 @@ namespace RenderingLibrary.Graphics
             SKCanvas offscreenCanvas = renderTarget.Surface.Canvas;
             offscreenCanvas.Clear(SKColors.Transparent);
             offscreenCanvas.Save();
+            offscreenCanvas.Translate(fractionX, fractionY);
+            if (zoom != 1)
+            {
+                offscreenCanvas.Scale(zoom);
+            }
             offscreenCanvas.Translate(-left, -top);
             // Children draw turned by the container's absolute rotation; turning them back about the
             // container's origin bakes them upright, and the composite turns the whole image (#6588).
@@ -742,18 +760,25 @@ namespace RenderingLibrary.Graphics
                 previous?.Dispose();
             }
             _bakedImages[owner] = renderTarget.Surface.Snapshot();
+            _bakedZooms[owner] = zoom;
         }
 
         // Bakes every render-target container's subtree under whatToRender into its offscreen
         // surface, marking it used so the next sweep keeps it. Render-target containers referenced
         // by a visible Sprite are collected first, so an invisible-but-referenced container still
         // bakes (#1643). Each bake swaps managers.Canvas to its own offscreen canvas and restores it.
-        private void BakeRenderTargets(IList<IRenderableIpso> whatToRender, SystemManagers managers)
+        private void BakeRenderTargets(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
         {
             CollectReferencedRenderTargets(whatToRender);
             if (HasAnyRenderTarget(whatToRender))
             {
-                BakeRenderTargetsInSubtree(whatToRender, managers);
+                // The zoom the layer will draw at, so the bake has one pixel per screen pixel.
+                float zoom = Camera.Zoom;
+                if (layer != null)
+                {
+                    layer.GetEffectiveCamera(Camera, out _, out _, out zoom);
+                }
+                BakeRenderTargetsInSubtree(whatToRender, managers, zoom > 0 ? zoom : 1);
             }
         }
 
@@ -775,6 +800,9 @@ namespace RenderingLibrary.Graphics
                 return;
             }
 
+            // The image is zoom times larger than the container, so it covers image / zoom canvas units.
+            float zoom = _bakedZooms.TryGetValue(owner, out float bakedZoom) ? bakedZoom : 1;
+
             // Skia surfaces are premultiplied, so the baked color composites with the same blend a
             // shape with that Blend uses (ApplyBlend; Normal is the default SrcOver, which needs no
             // straight-vs-premultiplied correction unlike the XNA/raylib bake blend handling). An
@@ -788,7 +816,10 @@ namespace RenderingLibrary.Graphics
 
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
-            SKRect destination = new SKRect(left, top, left + width, top + height);
+            GetDevicePixelFraction(container, zoom, out float fractionX, out float fractionY);
+            float imageLeft = left - fractionX / zoom;
+            float imageTop = top - fractionY / zoom;
+            SKRect destination = new SKRect(imageLeft, imageTop, imageLeft + image.Width / zoom, imageTop + image.Height / zoom);
 
             // The bake is upright, so turn the composite by the container's absolute rotation about
             // its origin (#6588). The shaded path's child shader stays in this local space too.
@@ -797,7 +828,7 @@ namespace RenderingLibrary.Graphics
             canvas.RotateDegrees(-container.GetAbsoluteRotation(), left, top);
             try
             {
-                DrawRenderTargetImage(image, destination, paint, owner, left, top, width, height, canvas);
+                DrawRenderTargetImage(image, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas);
             }
             finally
             {
@@ -805,8 +836,25 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        // The part of the container's device-pixel position (absolute position times zoom) past a whole
+        // pixel. A rotated container has no pixel grid to align to, so it gets none.
+        private static void GetDevicePixelFraction(IRenderableIpso container, float zoom, out float fractionX, out float fractionY)
+        {
+            if (container.GetAbsoluteRotation() != 0)
+            {
+                fractionX = 0;
+                fractionY = 0;
+                return;
+            }
+
+            float deviceX = container.GetAbsoluteX() * zoom;
+            float deviceY = container.GetAbsoluteY() * zoom;
+            fractionX = deviceX - (float)System.Math.Floor(deviceX);
+            fractionY = deviceY - (float)System.Math.Floor(deviceY);
+        }
+
         private static void DrawRenderTargetImage(SKImage image, SKRect destination, SKPaint paint,
-            IRenderableIpso owner, float left, float top, int width, int height, SKCanvas canvas)
+            IRenderableIpso owner, float left, float top, int width, int height, float zoom, SKCanvas canvas)
         {
             // Optional post-process shader (ContainerRuntime.RenderTargetEffect / SourceShaderFile,
             // #3998). The effect is image-independent (declares a `uniform shader SpriteTexture`
@@ -829,8 +877,12 @@ namespace RenderingLibrary.Graphics
             // container's absolute (left, top), so the child shader needs a matching translation;
             // without it, any non-origin container reads the wrong (typically out-of-bounds,
             // edge-clamped) region of the baked image instead of its own contents (#4001).
+            // The draw happens in the image's own space (the canvas is translated to its corner), so the
+            // coordinate the effect receives, and the UV a converted shader derives from it, run from 0
+            // at the container's top left whatever its position.
             using SKShader imageShader = image.ToShader(
-                SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, SKMatrix.CreateTranslation(left, top));
+                SKShaderTileMode.Clamp, SKShaderTileMode.Clamp,
+                SKMatrix.CreateScale(1 / zoom, 1 / zoom));
             using SKRuntimeEffectUniforms uniforms = new SKRuntimeEffectUniforms(effect);
             using SKRuntimeEffectChildren children = new SKRuntimeEffectChildren(effect);
             children["SpriteTexture"] = imageShader;
@@ -846,9 +898,132 @@ namespace RenderingLibrary.Graphics
             {
                 uniforms["ShadowDusk_Resolution"] = new float[] { width, height };
             }
+            ShaderParameterCollection? shaderParameters = (owner as IRenderTargetRenderable)?.ShaderParameters;
+            ZeroUnsetUniforms(effect, uniforms, shaderParameters);
+            ApplyShaderParameters(shaderParameters, effect, uniforms);
+            if (effect.Uniforms.Contains(ShaderParameterCollection.TexelSizeName) &&
+                shaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
+            {
+                // One container pixel as a fraction, for shaders that step whole pixels.
+                uniforms[ShaderParameterCollection.TexelSizeName] = new float[] { 1f / width, 1f / height };
+            }
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
-            canvas.DrawRect(destination, paint);
+            canvas.Save();
+            canvas.Translate(left, top);
+            canvas.DrawRect(new SKRect(0, 0, destination.Width, destination.Height), paint);
+            canvas.Restore();
+        }
+
+        // A new uniform block starts with whatever bytes the allocator returned. An unset parameter reads
+        // as the default its shader declares (SkiaGum.SkiaRuntimeEffectDefaults, registered by the loader
+        // that compiled the effect), or as zero when it declares none, the same as the tool shows it.
+        // The ShadowDusk_ uniforms Gum already filled are skipped.
+        private static void ZeroUnsetUniforms(
+            SKRuntimeEffect effect, SKRuntimeEffectUniforms uniforms, ShaderParameterCollection? parameters)
+        {
+            ShaderUniformDefaults? defaults = SkiaRuntimeEffectDefaults.TryGet(effect);
+            foreach (string name in effect.Uniforms)
+            {
+                if (name.StartsWith("ShadowDusk_", System.StringComparison.Ordinal) ||
+                    (parameters != null && parameters.TryGetValue(name, out _)))
+                {
+                    continue;
+                }
+
+                if (defaults != null && defaults.TryGetValue(name, out ShaderUniformDefault? declared) && declared != null)
+                {
+                    WriteDefault(uniforms, declared);
+                    continue;
+                }
+
+                // The component count is not exposed, so the one whose size the uniform accepts wins.
+                for (int count = 1; count <= 4; count++)
+                {
+                    try
+                    {
+                        if (count == 1)
+                        {
+                            uniforms[name] = 0f;
+                        }
+                        else
+                        {
+                            uniforms[name] = new float[count];
+                        }
+                        break;
+                    }
+                    catch (System.Exception)
+                    {
+                    }
+                }
+            }
+        }
+
+        private static void WriteDefault(SKRuntimeEffectUniforms uniforms, ShaderUniformDefault declared)
+        {
+            float[] values = declared.Values;
+            if (declared.Kind == ShaderParameterKind.Int)
+            {
+                int[] ints = new int[values.Length];
+                for (int i = 0; i < ints.Length; i++)
+                {
+                    ints[i] = (int)values[i];
+                }
+                if (ints.Length == 1) uniforms[declared.Name] = ints[0];
+                else uniforms[declared.Name] = ints;
+            }
+            else if (values.Length == 1)
+            {
+                uniforms[declared.Name] = values[0];
+            }
+            else
+            {
+                uniforms[declared.Name] = values;
+            }
+        }
+
+        // Copies the container's own values into this blit's uniforms. A name the effect does not
+        // declare is skipped, so one parameter set can drive effects that use different subsets.
+        private static void ApplyShaderParameters(
+            ShaderParameterCollection? parameters, SKRuntimeEffect effect, SKRuntimeEffectUniforms uniforms)
+        {
+            if (parameters == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, ShaderParameterValue> pair in parameters)
+            {
+                if (!effect.Uniforms.Contains(pair.Key))
+                {
+                    continue;
+                }
+
+                string isSetName = ShaderParameterCollection.GetIsSetName(pair.Key);
+                if (effect.Uniforms.Contains(isSetName))
+                {
+                    uniforms[isSetName] = 1f;
+                }
+
+                ShaderParameterValue value = pair.Value;
+                if (value.Kind == ShaderParameterKind.Float && value.Count == 1)
+                {
+                    uniforms[pair.Key] = value.X;
+                }
+                else if (value.Kind == ShaderParameterKind.Float)
+                {
+                    uniforms[pair.Key] = value.Count switch
+                    {
+                        2 => new float[] { value.X, value.Y },
+                        3 => new float[] { value.X, value.Y, value.Z },
+                        _ => new float[] { value.X, value.Y, value.Z, value.W },
+                    };
+                }
+                else
+                {
+                    uniforms[pair.Key] = (int)value.X;
+                }
+            }
         }
 
         // For a nested render-target container the walk hands the GraphicalUiElement wrapper; for a
@@ -892,7 +1067,7 @@ namespace RenderingLibrary.Graphics
             {
                 // MonoGame's PreRender bakes render targets too. The bake draws on its own offscreen
                 // canvas, so it is safe in the middle of the outer layer's walk.
-                BakeRenderTargets(layer.Renderables, skiaManagers);
+                BakeRenderTargets(layer.Renderables, skiaManagers, layer);
             }
 
             if (_bakeDepth > 0)

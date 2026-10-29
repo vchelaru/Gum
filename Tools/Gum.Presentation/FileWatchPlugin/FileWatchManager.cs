@@ -238,11 +238,15 @@ public class FileWatchManager : IFileWatchManager
         // Renamed event rather than a Changed event, so we forward renames for
         // every extension we know how to react to.
         var extension = fileName.Extension;
-        if(extension is "png" or "csv" or "resx"
+        if(ImageFileExtensions.Contains(extension)
+            || extension is "csv" or "resx"
             or "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj" or "gucx" or "gucj"
             or "ganx" or "ganj" or "behx" or "behj" or "fnt"
-            or "achx" or "achj" or "gif" or "tga" or "bmp"
-            or "codsj")
+            or "achx" or "achj"
+            or "codsj"
+            // Any other file an element references or the canvas cached (a shader in any extension, svg, lottie json,
+            // a decoder plugin's format, ...).
+            || _fileChangeReactionLogic.IsReferencedFile(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -254,9 +258,10 @@ public class FileWatchManager : IFileWatchManager
         // Detect deletion of an element file so the tool can flag the element's source as missing
         // (red "!" / GUM0004) instead of silently diverging from disk (issue #3367). Enqueue it
         // like a change - the flush re-checks existence, so a delete-then-recreate (atomic save)
-        // within the debounce window collapses back into a normal reload. Non-element deletes are
-        // left unhandled, as before.
-        if (IsElementFileExtension(fileName))
+        // within the debounce window collapses back into a normal reload. A file an element references or the
+        // canvas cached (picture, svg, font, shader, ...) is queued the same way so the canvas stops showing the cached
+        // copy; other deletes are left unhandled.
+        if (IsElementFileExtension(fileName) || _fileChangeReactionLogic.IsReferencedFile(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -279,28 +284,87 @@ public class FileWatchManager : IFileWatchManager
         var fileName = new FilePath(e.FullPath);
         var extension = fileName.Extension;
 
-        var isGum = extension is "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj"
-            or "gucx" or "gucj" or "ganx" or "ganj" or "behx" or "behj";
+        var isGum = IsGumFileExtension(extension);
 
-        // for some reason if we include created here, we'll get double-adds for XML files like screens...
         if (e.ChangeType != WatcherChangeTypes.Created || !isGum)
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
-        // ...except when the Created file is the reappearance of an element we previously flagged
-        // missing (issue #3367). A restore (e.g. Explorer's undo-delete) fires only a Created - no
-        // Change - so without this the red "!" / GUM0004 would never clear. Limiting it to flagged
-        // elements keeps normal saves (which Gum ignore-lists anyway) on the suppressed path.
-        else if (_fileChangeReactionLogic.IsReappearanceOfMissingSourceElement(fileName))
+        // A Created for a Gum file the project holds is an edit like any other: macOS reports an atomic
+        // swap over the target (TextEdit's safe save) as Created with no Changed and no Renamed, and a
+        // delete-then-create save ends in a Created too. A repeat of the same path (Created plus Changed
+        // for one save) collapses in the queue, so it reloads once. The ignore list is checked first,
+        // so Gum's own saves still reload nothing.
+        else if (isOnIgnoreList || _fileChangeReactionLogic.IsKnownToProject(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
+        }
+        // A Created for a Gum file nothing has loaded (a new file dropped into the folder) has
+        // nothing to reload.
+        else
+        {
+            PrintSkipped("Created event for a Gum file the project does not contain", fileName);
+        }
+    }
+
+    private static bool IsGumFileExtension(string extension) =>
+        extension is "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj"
+            or "gucx" or "gucj" or "ganx" or "ganj" or "behx" or "behj";
+
+    private readonly object _skippedSummaryLock = new();
+    private readonly Dictionary<string, (int Count, List<FilePath> Examples)> _skippedSummary = new();
+
+    /// <summary>
+    /// Reports a skipped event while "Print file changes" is on. A skipped Gum file prints at once, since
+    /// that is the line that explains a save that never reloaded. Everything else (a build touching
+    /// hundreds of files) is counted per reason and printed once per flush.
+    /// </summary>
+    private void PrintSkipped(string reason, FilePath fileName)
+    {
+        if (!PrintFileChangesToOutput)
+        {
+            return;
+        }
+
+        if (IsGumFileExtension(fileName.Extension))
+        {
+            _guiCommands.PrintOutput($"File change skipped ({reason}): {fileName}");
+            return;
+        }
+
+        lock (_skippedSummaryLock)
+        {
+            _skippedSummary.TryGetValue(reason, out var entry);
+            entry.Examples ??= new List<FilePath>();
+            entry.Count++;
+            if (entry.Examples.Count < 3)
+            {
+                entry.Examples.Add(fileName);
+            }
+            _skippedSummary[reason] = entry;
+        }
+    }
+
+    private void PrintSkippedSummaries()
+    {
+        List<string> lines;
+        lock (_skippedSummaryLock)
+        {
+            lines = _skippedSummary
+                .Select(pair => $"File change skipped ({pair.Key}) x{pair.Value.Count}, e.g. {string.Join(", ", pair.Value.Examples)}")
+                .ToList();
+            _skippedSummary.Clear();
+        }
+        foreach (string line in lines)
+        {
+            _guiCommands.PrintOutput(line);
         }
     }
 
     private void HandleFileSystemChange(FilePath fileName, bool isOnIgnoreList)
     {
         bool wasIgnored = isOnIgnoreList;
-        string? skipReason = wasIgnored ? "on ignore list" : null;
+        string? skipReason = wasIgnored ? "Gum saved this file itself" : null;
 
         if(!wasIgnored && IsTransientTempFile(fileName))
         {
@@ -337,10 +401,7 @@ public class FileWatchManager : IFileWatchManager
 
         if (wasIgnored)
         {
-            if (PrintFileChangesToOutput)
-            {
-                _guiCommands.PrintOutput($"File change skipped ({skipReason}): {fileName}");
-            }
+            PrintSkipped(skipReason!, fileName);
         }
         else
         {
@@ -351,6 +412,12 @@ public class FileWatchManager : IFileWatchManager
 
     public void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null)
         => _ignoreList.IgnoreNextChangeUntil(filePath, time);
+
+    public void RecordWrittenContent(FilePath filePath)
+        => _ignoreList.RecordWrittenContent(filePath);
+
+    public void InvalidateReferencedFiles()
+        => _fileChangeReactionLogic.InvalidateReferencedFiles();
 
     public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromMilliseconds(500)) - DateTime.Now;
 
@@ -419,12 +486,14 @@ public class FileWatchManager : IFileWatchManager
         }
         // endif
 
+        PrintSkippedSummaries();
+
         IsFlushing = true;
         try
         {
             var candidateFiles = _changedFilesWaitingForFlush.Keys.ToList();
             var filesToProcess = new List<FilePath>();
-            var deletedElementFiles = new List<FilePath>();
+            var deletedFiles = new List<FilePath>();
             foreach (var file in candidateFiles)
             {
                 var readiness = GetFileReadiness(file);
@@ -440,57 +509,66 @@ public class FileWatchManager : IFileWatchManager
                     // Drop usually means an atomic-save temp that was renamed away. But an element
                     // file that's still gone at flush time is a real deletion the user should see
                     // (issue #3367) — route it to the delete reaction instead of dropping silently.
-                    if (IsElementFileExtension(file) && !IsTransientTempFile(file))
+                    if (!IsTransientTempFile(file)
+                        && (IsElementFileExtension(file) || _fileChangeReactionLogic.IsReferencedFile(file)))
                     {
-                        deletedElementFiles.Add(file);
+                        deletedFiles.Add(file);
                     }
                 }
                 // else Locked: leave in queue and retry next cycle (e.g. git is writing it).
             }
 
-            foreach (var file in filesToProcess)
+            // Readers of the reloaded elements are updated once every file in the batch is back in memory.
+            using (_fileChangeReactionLogic.DeferDependentUpdates())
             {
-                try
+                foreach (var file in filesToProcess)
                 {
-                    if (PrintFileChangesToOutput)
+                    try
                     {
-                        var stopwatch = Stopwatch.StartNew();
-                        _fileChangeReactionLogic.ReactToFileChanged(file);
-                        stopwatch.Stop();
-                        _guiCommands.PrintOutput($"File change processed: {file} (took {stopwatch.ElapsedMilliseconds}ms)");
+                        if (PrintFileChangesToOutput)
+                        {
+                            var stopwatch = Stopwatch.StartNew();
+                            _fileChangeReactionLogic.ReactToFileChanged(file);
+                            stopwatch.Stop();
+                            _guiCommands.PrintOutput($"File change processed: {file} (took {stopwatch.ElapsedMilliseconds}ms)");
+                        }
+                        else
+                        {
+                            _fileChangeReactionLogic.ReactToFileChanged(file);
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        _fileChangeReactionLogic.ReactToFileChanged(file);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // One bad reload must not poison the rest of the queue.
-                    // Only surface this when the user has opted in to file-change
-                    // diagnostics; otherwise it would just be noise.
-                    if (PrintFileChangesToOutput)
-                    {
-                        _guiCommands.PrintOutput($"Error reacting to file change for {file}: {ex.Message}");
+                        // One bad reload must not poison the rest of the queue.
+                        // Only surface this when the user has opted in to file-change
+                        // diagnostics; otherwise it would just be noise.
+                        if (PrintFileChangesToOutput)
+                        {
+                            _guiCommands.PrintOutput($"Error reacting to file change for {file}: {ex.Message}");
+                        }
                     }
                 }
             }
 
-            foreach (var file in deletedElementFiles)
+            // Deleting a folder of pictures reloads the canvas once, not once per picture.
+            using (_fileChangeReactionLogic.DeferDependentUpdates())
             {
-                try
+                foreach (var file in deletedFiles)
                 {
-                    _fileChangeReactionLogic.ReactToFileDeleted(file);
-                    if (PrintFileChangesToOutput)
+                    try
                     {
-                        _guiCommands.PrintOutput($"Element file deletion processed: {file}");
+                        _fileChangeReactionLogic.ReactToFileDeleted(file);
+                        if (PrintFileChangesToOutput)
+                        {
+                            _guiCommands.PrintOutput($"File deletion processed: {file}");
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    if (PrintFileChangesToOutput)
+                    catch (Exception ex)
                     {
-                        _guiCommands.PrintOutput($"Error reacting to file deletion for {file}: {ex.Message}");
+                        if (PrintFileChangesToOutput)
+                        {
+                            _guiCommands.PrintOutput($"Error reacting to file deletion for {file}: {ex.Message}");
+                        }
                     }
                 }
             }

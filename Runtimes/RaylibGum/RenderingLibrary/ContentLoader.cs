@@ -43,6 +43,9 @@ public sealed class ContentLoader : IContentLoader
     /// </summary>
     internal static Action<Texture2D, Raylib_cs.TextureFilter> TextureFilterApplier { get; set; } = SetTextureFilter;
 
+    // Test seam: sees the RGBA bytes uploaded for a decoder's image (#6829). Null in normal use.
+    internal static Action<byte[]>? DecodedPixelsUploaded { get; set; }
+
     /// <inheritdoc/>
     /// <remarks>
     /// A <see cref="Raylib_cs.Font"/> loaded from a font file or system family name (not a .fnt) has no size to
@@ -277,25 +280,90 @@ public sealed class ContentLoader : IContentLoader
         return toReturn;
     }
 
-    private static Texture2D LoadTextureFromFile(string fileName)
+    // Decodes with raylib's native, which picks its decoder from the extension. An empty image means the
+    // native build leaves the format out or the data is corrupt; that throws FileNotFoundException so
+    // callers' MissingFileBehavior applies (#6847), and no empty texture is ever created or cached.
+    private static unsafe Image DecodeImageOrThrow(string path, byte[] fileData)
     {
-        // Route through FileManager.GetStreamForFile so the FileManager.CustomGetStreamFromFile
-        // hook is honored on Raylib the same way it is on the MonoGame-family loader. Handing the
-        // path straight to raylib's path-based LoadImage bypassed the hook entirely, so .gumpkg
-        // bundles, the GumFromZipFile sample, mobile TitleContainer redirection, and any
-        // in-memory/encrypted asset store silently failed on Raylib (#3033). raylib's in-memory
-        // LoadImageFromMemory takes the file extension (with the leading dot) to pick its decoder.
-        string fileType = "." + FileManager.GetExtension(fileName);
+        string extension = FileManager.GetExtension(path).ToLowerInvariant();
+        if (fileData.Length > 0)
+        {
+            Image image = LoadImageFromMemory("." + extension, fileData);
+            if (image.Data != null && image.Width > 0 && image.Height > 0)
+            {
+                return image;
+            }
+            UnloadImage(image);
+        }
 
-        byte[] fileData;
+        // The stock raylib native has no decoder for these.
+        string message = extension is "jpg" or "jpeg" or "tga"
+            ? $"Could not load '{path}': the stock raylib native does not decode .{extension}. " +
+              $"Convert it to PNG, or add an IImageDecoder for .{extension} to LoaderManager.Self.ImageDecoders " +
+              "before GumService.Initialize loads the project."
+            : extension.Length == 0
+                ? $"Could not load '{path}': its data could not be decoded, and without a file extension raylib cannot pick a decoder."
+                : $"Could not load '{path}': its data could not be decoded as .{extension}.";
+        throw new FileNotFoundException(message, path);
+    }
+
+    // Routes through FileManager.GetStreamForFile so the FileManager.CustomGetStreamFromFile hook is
+    // honored on Raylib the same way it is on the MonoGame-family loader. Handing the path straight to
+    // raylib's path-based LoadImage bypassed the hook entirely, so .gumpkg bundles, the GumFromZipFile
+    // sample, mobile TitleContainer redirection, and any in-memory/encrypted asset store silently
+    // failed on Raylib (#3033).
+    private static byte[] ReadFileBytes(string fileName)
+    {
         using (var stream = FileManager.GetStreamForFile(fileName))
         using (var memoryStream = new MemoryStream())
         {
             stream.CopyTo(memoryStream);
-            fileData = memoryStream.ToArray();
+            return memoryStream.ToArray();
+        }
+    }
+
+    // Offers the bytes to the registered IImageDecoders (#6829) before raylib's native decoder, for
+    // sprite textures and bitmap font pages alike (#6891). Null means none claimed the file. The result
+    // is straight alpha, which is what raylib draws, so a premultiplied decode is converted back.
+    private static DecodedImage? TryDecodeWithRegisteredDecoders(string fileName, byte[] fileData)
+    {
+        DecodedImage? decoded;
+        Stream decoderStream = new MemoryStream(fileData, writable: false);
+        try
+        {
+            decoded = LoaderManager.Self.ImageDecoders.TryDecode(fileName, ref decoderStream);
+        }
+        finally
+        {
+            decoderStream.Dispose();
+        }
+        if (decoded == null)
+        {
+            return null;
         }
 
-        Image image = LoadImageFromMemory(fileType, fileData);
+        DecodedImage straight = decoded.ToStraightAlpha();
+        if (!ReferenceEquals(straight, decoded))
+        {
+            System.Diagnostics.Trace.TraceWarning(DecodedImage.GetUnpremultipliedWarning(fileName));
+        }
+        return straight;
+    }
+
+    private static Texture2D LoadTextureFromFile(string fileName)
+    {
+        byte[] fileData = ReadFileBytes(fileName);
+
+        DecodedImage? decoded = TryDecodeWithRegisteredDecoders(fileName, fileData);
+        if (decoded != null)
+        {
+            DecodedPixelsUploaded?.Invoke(decoded.Rgba);
+            Texture2D decodedTexture = UploadRgbaTexture(decoded.Rgba, decoded.Width, decoded.Height);
+            TextureFilterApplier(decodedTexture, DefaultTextureFilter);
+            return decodedTexture;
+        }
+
+        Image image = DecodeImageOrThrow(fileName, fileData);
         // LoadTextureFromImage uploads to the GPU; the CPU-side Image is no longer needed after.
         var toReturn = LoadTextureFromImage(image);
         // Apply the project's texture filter (issue #3199). raylib defaults new textures to point
@@ -434,25 +502,23 @@ public sealed class ContentLoader : IContentLoader
         return BuildFont(parsedFontFile, atlasTexture, layout.PageYOffsets);
     }
 
-    // Reads an image through FileManager.GetStreamForFile (so the stream hook is honored, as in
-    // LoadTextureFromFile) and returns its pixels as RGBA, whatever the file's own format was.
+    // Reads an image through the same hook and decoder path as LoadTextureFromFile and returns its
+    // pixels as RGBA, whatever the file's own format was.
     private static unsafe byte[] LoadPageRgba(string pagePath, out int width, out int height)
     {
-        byte[] fileData;
-        using (var stream = FileManager.GetStreamForFile(pagePath))
-        using (var memoryStream = new MemoryStream())
+        byte[] fileData = ReadFileBytes(pagePath);
+
+        DecodedImage? decoded = TryDecodeWithRegisteredDecoders(pagePath, fileData);
+        if (decoded != null)
         {
-            stream.CopyTo(memoryStream);
-            fileData = memoryStream.ToArray();
+            width = decoded.Width;
+            height = decoded.Height;
+            return decoded.Rgba;
         }
 
-        Image image = LoadImageFromMemory("." + FileManager.GetExtension(pagePath), fileData);
+        Image image = DecodeImageOrThrow(pagePath, fileData);
         try
         {
-            if (image.Data == null || image.Width <= 0 || image.Height <= 0)
-            {
-                throw new InvalidOperationException($"Could not decode font page '{pagePath}'");
-            }
             Raylib.ImageFormat(ref image, Raylib_cs.PixelFormat.UncompressedR8G8B8A8);
             width = image.Width;
             height = image.Height;

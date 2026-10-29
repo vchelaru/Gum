@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
@@ -31,6 +32,7 @@ public class ElementUndoStrategy : IUndoStrategy
     private readonly IUndoPluginNotifier _pluginNotifier;
     private readonly IAnimationUndoProvider _animationUndoProvider;
     private readonly IReferenceFinderProjectProvider _projectProvider;
+    private readonly Lazy<IVariableReferenceLogic> _variableReferenceLogic;
     private readonly Func<bool> _areUndoLocksActive;
     private readonly Action<UndoOperation> _raiseUndosChanged;
 
@@ -80,6 +82,7 @@ public class ElementUndoStrategy : IUndoStrategy
         IUndoPluginNotifier pluginNotifier,
         IAnimationUndoProvider animationUndoProvider,
         IReferenceFinderProjectProvider projectProvider,
+        Lazy<IVariableReferenceLogic> variableReferenceLogic,
         Func<bool> areUndoLocksActive,
         Action<UndoOperation> raiseUndosChanged)
     {
@@ -91,6 +94,7 @@ public class ElementUndoStrategy : IUndoStrategy
         _pluginNotifier = pluginNotifier;
         _animationUndoProvider = animationUndoProvider;
         _projectProvider = projectProvider;
+        _variableReferenceLogic = variableReferenceLogic;
         _areUndoLocksActive = areUndoLocksActive;
         _raiseUndosChanged = raiseUndosChanged;
         _pendingCrossElementChanges = new List<CrossElementVariableChange>();
@@ -501,6 +505,7 @@ public class ElementUndoStrategy : IUndoStrategy
 
         if (toApplyTo != null)
         {
+            ElementSave beforeRestore = CloneWithFixedEnumerations(toApplyTo);
             addedAndRemovedInstances = ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true,
                 out bool shouldRefreshWireframe,
                 out bool shouldRefreshStateTreeView,
@@ -543,7 +548,7 @@ public class ElementUndoStrategy : IUndoStrategy
             elementHistory.UndoIndex = newIndex;
             DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView,
                 shouldRefreshBehaviorView,
-                addedAndRemovedInstances);
+                addedAndRemovedInstances, beforeRestore, undoSnapshot.RedoState?.Element);
         }
     }
 
@@ -551,8 +556,16 @@ public class ElementUndoStrategy : IUndoStrategy
         bool shouldRefreshWireframe,
         bool shouldRefreshStateTreeView,
         bool shouldRefreshBehaviorView,
-        AddedAndRemovedInstances? addedAndRemovedInstances)
+        AddedAndRemovedInstances? addedAndRemovedInstances,
+        ElementSave beforeRestore,
+        ElementSave? otherSide)
     {
+        // An undo or redo has the same effect on the rest of the app as typing the value: whatever the
+        // snapshot held for a variable a reference row feeds, the row's followers re-read their sources
+        // (#6868). Before the baseline, so the next edit starts from the cascaded values, and with no undo
+        // lock held, so no history entry is added.
+        _variableReferenceLogic.Value.ReapplyReferences(toApplyTo, beforeRestore, otherSide);
+
         CaptureBaseline();
 
         _raiseUndosChanged(UndoOperation.Undo);
@@ -642,6 +655,7 @@ public class ElementUndoStrategy : IUndoStrategy
 
         if (toApplyTo != null)
         {
+            ElementSave beforeRestore = CloneWithFixedEnumerations(toApplyTo);
             addedAndRemoved = ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true,
                 out bool shouldRefreshWireframe,
                 out bool shouldRefreshStateTreeView,
@@ -669,7 +683,7 @@ public class ElementUndoStrategy : IUndoStrategy
             DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe,
                 shouldRefreshStateTreeView,
                 shouldRefreshBehaviorView,
-                addedAndRemoved);
+                addedAndRemoved, beforeRestore, actionToRedo!.UndoState.Element);
 
         }
 
@@ -1126,6 +1140,114 @@ public class ElementUndoStrategy : IUndoStrategy
         }
 
         return new AddedAndRemovedInstances(added, removed);
+    }
+
+    /// <summary>
+    /// Writes each change into every snapshot taken of its element (the baseline, the targeted baseline and
+    /// both sides of every history action), so applying one later restores the new value.
+    /// </summary>
+    public void RebaseStoredValues(IReadOnlyList<StoredValueChange> changes)
+    {
+        foreach (StoredValueChange change in changes)
+        {
+            if (recordedSnapshot != null && _baselineElement == change.Element)
+            {
+                Rebase(recordedSnapshot.Element, change);
+            }
+            if (_targetedBaselines.TryGetValue(change.Element, out UndoSnapshot? targeted))
+            {
+                Rebase(targeted.Element, change);
+            }
+            if (mUndos.TryGetValue(change.Element, out ElementHistory? history))
+            {
+                foreach (HistoryAction action in history.Actions)
+                {
+                    Rebase(action.UndoState.Element, change);
+                    if (action.RedoState != null)
+                    {
+                        Rebase(action.RedoState.Element, change);
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="newName"/> over <paramref name="oldName"/> in the behavior references of every
+    /// snapshot taken of every element (the baseline, the targeted baselines, both sides of every history
+    /// action and each history's final state), so replaying an older step after a behavior was renamed
+    /// does not bring the old name back (#7019).
+    /// </summary>
+    public void RenameBehaviorInSnapshots(string oldName, string newName)
+    {
+        void Rename(ElementSave? snapshotElement)
+        {
+            // A snapshot's Behaviors is null when its action did not change them.
+            foreach (ElementBehaviorReference reference in snapshotElement?.Behaviors ?? new List<ElementBehaviorReference>())
+            {
+                if (reference.BehaviorName == oldName)
+                {
+                    reference.BehaviorName = newName;
+                }
+            }
+        }
+
+        Rename(recordedSnapshot?.Element);
+        foreach (UndoSnapshot targeted in _targetedBaselines.Values)
+        {
+            Rename(targeted.Element);
+        }
+        foreach (ElementHistory history in mUndos.Values)
+        {
+            Rename(history.FinalState);
+            foreach (HistoryAction action in history.Actions)
+            {
+                Rename(action.UndoState.Element);
+                Rename(action.RedoState?.Element);
+            }
+        }
+    }
+
+    // A snapshot's States and Categories are null when its action did not change them, so there is
+    // nothing stale to fix there.
+    private static void Rebase(ElementSave snapshotElement, StoredValueChange change)
+    {
+        IEnumerable<StateSave>? states = change.CategoryName == null
+            ? snapshotElement.States
+            : snapshotElement.Categories?.FirstOrDefault(item => item.Name == change.CategoryName)?.States;
+        StateSave? state = states?.FirstOrDefault(item => item.Name == change.StateName);
+        if (state == null)
+        {
+            return;
+        }
+
+        // A snapshot from before the reference row existed has no row to give the variable a value, and
+        // restoring it must take the variable away again.
+        if (!HasReferenceRowFor(state, change.VariableName))
+        {
+            return;
+        }
+
+        VariableSave? variable = state.Variables.FirstOrDefault(item => item.Name == change.VariableName);
+        if (variable == null)
+        {
+            variable = new VariableSave { Name = change.VariableName, Type = change.VariableType ?? "float" };
+            state.Variables.Add(variable);
+        }
+        variable.Value = change.Value;
+        variable.SetsValue = true;
+    }
+
+    // The row list of a variable's owner: "Background.Red" is fed by "Background.VariableReferences",
+    // "Width" by "VariableReferences".
+    private static bool HasReferenceRowFor(StateSave state, string variableName)
+    {
+        int dot = variableName.IndexOf('.');
+        string owner = dot < 0 ? string.Empty : variableName.Substring(0, dot);
+        return state.VariableLists.Any(list =>
+            list.GetRootName() == "VariableReferences" &&
+            (list.SourceObject ?? string.Empty) == owner &&
+            list.ValueAsIList?.Count > 0);
     }
 
     public void Clear()

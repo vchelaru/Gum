@@ -85,7 +85,11 @@ public class RadioButtonTests : BaseTestClass
         ObjectFinder.Self.GumProjectSave = gumProject;
         FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
+#if SKIA_LINKED_TESTS
+        GraphicalUiElement screenGue = GumRuntime.ElementSaveExtensions.ToGraphicalUiElement(screen, RenderingLibrary.SystemManagers.Default, addToManagers: false);
+#else
         GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+#endif
 
         InteractiveGue radioGue = (InteractiveGue)screenGue.Children.OfType<object>().First();
         RadioButton radioButton = radioGue.FormsControlAsObject as RadioButton;
@@ -94,7 +98,6 @@ public class RadioButtonTests : BaseTestClass
         radioButton.IsChecked.ShouldBe(false);
         radioGue.Width.ShouldBe(50f, "because IsChecked is false, the visual should have EnabledOff applied");
     }
-
     [Fact]
     public void Visual_HasEvents_ShouldBeTrue()
     {

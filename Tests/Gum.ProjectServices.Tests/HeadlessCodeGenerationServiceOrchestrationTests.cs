@@ -93,6 +93,42 @@ public class HeadlessCodeGenerationServiceOrchestrationTests : BaseTestClass
         File.Exists(Path.Combine(_tempDirectory, "Components", "Button.cs")).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(OutputLibrary.GumForms)]
+    [InlineData(OutputLibrary.MonoGame)]
+    public void GenerateCodeForElement_RowsReadingEachOther_FinishesWithoutFreezing(OutputLibrary library)
+    {
+        ComponentSave panel = AddComponent("Panel");
+        ComponentSave other = AddComponent("Other");
+        foreach ((ComponentSave component, string instance, string row) in new[]
+        {
+            (panel, "A", "Width = B.Width + 1"),
+            (panel, "B", "Width = A.Width + 1"),
+            (panel, "C", "Width = Components/Other.D.Width + 1"),
+            (other, "D", "Width = Components/Panel.C.Width + 1"),
+        })
+        {
+            component.Instances.Add(new InstanceSave { Name = instance, BaseType = "Container", ParentContainer = component });
+            component.DefaultState!.VariableLists.Add(new VariableListSave<string>
+            {
+                Name = instance + ".VariableReferences",
+                Type = "string",
+                Value = new List<string> { row }
+            });
+        }
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = library;
+        HeadlessCodeGenerationService service = CreateService();
+
+        foreach (ComponentSave component in new[] { panel, other })
+        {
+            System.Threading.Tasks.Task generated = System.Threading.Tasks.Task.Run(() =>
+                service.GenerateCodeForElement(component, new CodeOutputElementSettings(), settings, checkForMissing: false));
+            generated.Wait(5000).ShouldBeTrue("code generation froze on a circular reference (#6871)");
+            generated.GetAwaiter().GetResult();
+        }
+    }
+
     [Fact]
     public void GenerateCodeForElement_WritesCustomStubToCustomFolder_AndGeneratedFileToGeneratedFolder()
     {

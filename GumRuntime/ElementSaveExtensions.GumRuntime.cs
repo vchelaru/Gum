@@ -254,7 +254,7 @@ namespace GumRuntime
 
                 if(!string.IsNullOrEmpty(baseTypeName))
                 {
-                    var baseElement = ObjectFinder.Self.GetElementSave(baseTypeName);
+                    var baseElement = ObjectFinder.Self.GetBaseElement(elementSave);
 
                     if(baseElement != null)
                     {
@@ -343,6 +343,10 @@ namespace GumRuntime
             // With two or more services, set IGumService.Default to the service these managers belong to before
             // calling this: the build resolves its registrations and project through the default.
             bool isOutermostBuild = _buildDepth == 0;
+            if (isOutermostBuild)
+            {
+                ApplyReferencesOfProjectAwaitingFirstBuild();
+            }
             _buildDepth++;
             try
             {
@@ -351,6 +355,31 @@ namespace GumRuntime
             finally
             {
                 _buildDepth--;
+            }
+        }
+
+        // Projects a service loaded from files, whose references have not been applied yet. A file edited by hand
+        // (a text editor, a git merge) leaves a reader holding the value it was saved with, and a hot reload shows
+        // the end of the chain (#6853), so a fresh load does too (#6881). Applied at the first build rather than at
+        // load because the game installs Gum.Expressions after it initializes Gum, and the rows need it to evaluate.
+        private static readonly ConditionalWeakTable<GumProjectSave, object> ProjectsAwaitingFirstBuild =
+            new ConditionalWeakTable<GumProjectSave, object>();
+
+        /// <summary>
+        /// Applies <see cref="ApplyAllVariableReferences"/> to the project the first time a visual is built from it.
+        /// Called by each service after it loads a project from files.
+        /// </summary>
+        internal static void ApplyAllVariableReferencesBeforeFirstBuild(this GumProjectSave project)
+        {
+            ProjectsAwaitingFirstBuild.AddOrUpdate(project, project);
+        }
+
+        private static void ApplyReferencesOfProjectAwaitingFirstBuild()
+        {
+            GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+            if (project != null && ProjectsAwaitingFirstBuild.Remove(project))
+            {
+                project.ApplyAllVariableReferences();
             }
         }
 
@@ -396,7 +425,7 @@ namespace GumRuntime
             }
             if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
-                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetBaseElement(elementSave);
                 if (baseElementSave != null)
                 {
                     graphicalElement.AddStatesAndCategoriesRecursivelyToGue(baseElementSave);
@@ -462,7 +491,7 @@ namespace GumRuntime
             }
             else if (containedObject == null && !string.IsNullOrEmpty(elementSave.BaseType))
             {
-                var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElement = ObjectFinder.Self.GetBaseElement(elementSave);
 
                 if (baseElement != null)
                 {
@@ -475,7 +504,7 @@ namespace GumRuntime
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
-                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetBaseElement(elementSave);
                 if (baseElementSave != null)
                 {
                     graphicalElement.AddExposedVariablesRecursively(baseElementSave);
@@ -513,7 +542,7 @@ namespace GumRuntime
             {
                 if (!string.IsNullOrEmpty(elementSave.BaseType))
                 {
-                    var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                    var baseElementSave = Gum.Managers.ObjectFinder.Self.GetBaseElement(elementSave);
                     if (baseElementSave != null)
                     {
                         graphicalElement.SetVariablesRecursively(baseElementSave, baseElementSave.DefaultState!);
@@ -579,25 +608,34 @@ namespace GumRuntime
             // An element that reads another is applied after it. Elements in a cycle keep project order.
             List<ElementSave> sorted = ReferenceDependencies.OrderByDependency(allElements);
 
-            foreach (var element in sorted)
+            // The rows do not change during the pass, so loops through other elements are looked up once.
+            VariableReferenceGraph.BeginBatch();
+            try
             {
-                foreach (var state in element.AllStates)
+                foreach (var element in sorted)
                 {
-                    bool hasVariableReferences = false;
-                    foreach (var variableList in state.VariableLists)
+                    foreach (var state in element.AllStates)
                     {
-                        if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                        bool hasVariableReferences = false;
+                        foreach (var variableList in state.VariableLists)
                         {
-                            hasVariableReferences = true;
-                            break;
+                            if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                            {
+                                hasVariableReferences = true;
+                                break;
+                            }
+                        }
+
+                        if (hasVariableReferences)
+                        {
+                            element.ApplyVariableReferences(state);
                         }
                     }
-
-                    if (hasVariableReferences)
-                    {
-                        element.ApplyVariableReferences(state);
-                    }
                 }
+            }
+            finally
+            {
+                VariableReferenceGraph.EndBatch();
             }
         }
 
@@ -789,14 +827,24 @@ namespace GumRuntime
         // edit from an intermediate one produced while the user is still dragging.
         // notifyChanges: false skips VariableChangedThroughReference, for callers that apply
         // references only to read the result and restore the state afterwards (#5736).
+        // onlyRows: when given, only the rows with the same owner and text are applied (still in dependency order); the tool uses it
+        // to re-read just the rows a restored undo snapshot affects.
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave, GraphicalUiElement? liveRoot = null,
-            bool isFullCommit = true, bool notifyChanges = true)
+            bool isFullCommit = true, bool notifyChanges = true, ICollection<ReferenceRow>? onlyRows = null)
         {
             // Rows run in dependency order, so a row that reads another row's result sees it whatever
             // order they are written in. Rows in a cycle run last, in written order.
             VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, stateSave);
+#if FULL_DIAGNOSTICS
+            ReportCyclicRows(element, stateSave, graph);
+#endif
             foreach (ReferenceRow row in graph.LoadOrderRows)
             {
+                // Matched by text because a graph built per state creates its own row objects.
+                if (onlyRows != null && !onlyRows.Any(item => item.Line == row.Line && item.SourceObject == row.SourceObject))
+                {
+                    continue;
+                }
                 // this applies the variable and returns info about the application:
                 var result = ApplyVariableReferencesOnSpecificOwner(row.Instance, row.Line, stateSave, liveRoot);
                 // In the gum tool, we need to check if the applicatoin actually changed the value
@@ -827,6 +875,7 @@ namespace GumRuntime
         /// <param name="stateSave">The current state, such as the argument graphicalElement's default state</param>
         public static void ApplyVariableReferences(this GraphicalUiElement graphicalElement, StateSave stateSave)
         {
+            HashSet<string>? cyclicRows = GetCyclicRowKeys(stateSave);
             foreach (var variableList in stateSave.VariableLists)
             {
                 if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
@@ -838,6 +887,10 @@ namespace GumRuntime
                         {
                             foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
                             {
+                                if (cyclicRows?.Contains(CyclicRowKey(null, expandedReferenceString)) == true)
+                                {
+                                    continue;
+                                }
                                 ApplyVariableReferencesOnSpecificOwner(graphicalElement, expandedReferenceString, stateSave, graphicalElement);
                             }
                         }
@@ -866,6 +919,10 @@ namespace GumRuntime
                             {
                                 foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
                                 {
+                                    if (cyclicRows?.Contains(CyclicRowKey(variableList.SourceObject, expandedReferenceString)) == true)
+                                    {
+                                        continue;
+                                    }
                                     ApplyVariableReferencesOnSpecificOwner(instance, expandedReferenceString, stateSave, graphicalElement);
                                 }
                             }
@@ -874,6 +931,119 @@ namespace GumRuntime
                 }
             }
         }
+
+        // Rows that read each other keep their stored values (#6871); null when the state has no loop.
+        private static HashSet<string>? GetCyclicRowKeys(StateSave stateSave)
+        {
+            ElementSave? element = stateSave.ParentContainer;
+            if (element == null)
+            {
+                return null;
+            }
+            VariableReferenceGraph graph = VariableReferenceGraph.GetForApply(element, stateSave);
+            if (graph.CyclicRows.Count == 0)
+            {
+                return null;
+            }
+#if FULL_DIAGNOSTICS
+            ReportCyclicRows(element, stateSave, graph);
+#endif
+            HashSet<string> keys = new HashSet<string>();
+            foreach (ReferenceRow row in graph.CyclicRows)
+            {
+                keys.Add(CyclicRowKey(row.SourceObject, row.Line));
+            }
+            return keys;
+        }
+
+        private static string CyclicRowKey(string? sourceObject, string line) => sourceObject + "|" + line;
+
+#if FULL_DIAGNOSTICS
+        // Rows in a loop are skipped (#6871), so a game would otherwise never learn of the loop. The element that declares
+        // a loop reports each of its loops once, however often its references are applied and however many elements are
+        // built on it, so a reload of the project (new elements) reports again.
+        private static readonly ConditionalWeakTable<ElementSave, HashSet<string>> ReportedCycles = new ConditionalWeakTable<ElementSave, HashSet<string>>();
+
+        private static void ReportCyclicRows(ElementSave element, StateSave state, VariableReferenceGraph graph)
+        {
+            IReadOnlyList<ReferenceRow> cyclic = graph.CyclicRows;
+            if (cyclic.Count == 0)
+            {
+                return;
+            }
+
+            // A loop made only of one base element's rows belongs to that base, which may never be built itself;
+            // a loop that mixes rows of several elements exists only for the element being applied.
+            int[] group = new int[cyclic.Count];
+            for (int i = 0; i < group.Length; i++)
+            {
+                group[i] = i;
+            }
+            for (int reader = 0; reader < group.Length; reader++)
+            {
+                foreach (string read in cyclic[reader].ReadNames)
+                {
+                    for (int writer = 0; writer < group.Length; writer++)
+                    {
+                        if (cyclic[writer].WrittenName == read)
+                        {
+                            int readerRoot = FindGroup(group, reader);
+                            int writerRoot = FindGroup(group, writer);
+                            group[Math.Max(readerRoot, writerRoot)] = Math.Min(readerRoot, writerRoot);
+                        }
+                    }
+                }
+            }
+
+            for (int first = 0; first < group.Length; first++)
+            {
+                if (FindGroup(group, first) != first)
+                {
+                    continue;
+                }
+                ElementSave owner = cyclic[first].DeclaredIn ?? element;
+                List<string> rows = new List<string>();
+                for (int i = first; i < group.Length; i++)
+                {
+                    if (FindGroup(group, i) == first)
+                    {
+                        ReferenceRow row = cyclic[i];
+                        rows.Add(string.IsNullOrEmpty(row.SourceObject) ? row.Line : row.SourceObject + "." + row.Line);
+                        if ((row.DeclaredIn ?? element) != owner)
+                        {
+                            owner = element;
+                        }
+                    }
+                }
+
+                // Each loop is reported once, by its state and rows, so another state's loop or a second loop in the
+                // same state is still reported.
+                string[] sortedRows = rows.ToArray();
+                Array.Sort(sortedRows, StringComparer.Ordinal);
+                string loopKey = state.Name + "\n" + string.Join("\n", sortedRows);
+                lock (ReportedCycles)
+                {
+                    HashSet<string> reported = ReportedCycles.GetOrCreateValue(owner);
+                    if (!reported.Add(loopKey))
+                    {
+                        continue;
+                    }
+                }
+
+                RaiseReferenceError($"Circular variable reference in {owner.Name} ({state.Name}): {string.Join("; ", rows)}. " +
+                    "These rows are not evaluated and keep their stored values; remove one of them to break the loop.");
+            }
+        }
+
+        private static int FindGroup(int[] group, int index)
+        {
+            while (group[index] != index)
+            {
+                index = group[index];
+            }
+            return index;
+        }
+#endif
 
         static char[] equalsArray = new char[] { '=' };
 
@@ -925,6 +1095,11 @@ namespace GumRuntime
             {
                 "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
                 "CustomRadiusBottomLeft", "CustomRadiusBottomRight"
+            }),
+            new CompositeReferenceDescriptor("BorderScale", new[]
+            {
+                "BorderScale", "CustomBorderScaleLeft", "CustomBorderScaleTop",
+                "CustomBorderScaleRight", "CustomBorderScaleBottom"
             }),
         };
 
@@ -1414,7 +1589,40 @@ namespace GumRuntime
                     mismatchReported = true;
                 }
             }
+
+            if (value == null && !mismatchReported
+                && ReportedTrimmedSource(referenceString, leftVariableName, stateSave, liveRoot))
+            {
+                mismatchReported = true;
+            }
             return true;
+        }
+
+        // A row reading an element that gumcli pack --shake left out of the bundle finds nothing to read. That is
+        // reported once per row and owner rather than skipped silently, naming the --keep that brings it back.
+        private static bool ReportedTrimmedSource(string referenceString, string leftVariableName, StateSave stateSave,
+            GraphicalUiElement? liveRoot)
+        {
+            List<string>? trimmed = ObjectFinder.Self.GumProjectSave?.TrimmedElements;
+            if (trimmed == null || trimmed.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (string elementName in trimmed)
+            {
+                if (ReferenceDependencies.RowReadsElement(referenceString, ElementReference.ComponentSubfolder + "/" + elementName)
+                    || ReferenceDependencies.RowReadsElement(referenceString, ElementReference.ScreenSubfolder + "/" + elementName))
+                {
+                    if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
+                    {
+                        ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot,
+                            $"it reads {elementName}, which gumcli pack --shake trimmed; pack with --keep {elementName}.");
+                    }
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static bool IsNonFiniteNumber(object value)
@@ -1446,7 +1654,7 @@ namespace GumRuntime
                         }
                     }
                 }
-                element = ObjectFinder.Self.GetElementSave(element.BaseType);
+                element = ObjectFinder.Self.GetBaseElement(element);
             }
             return null;
         }

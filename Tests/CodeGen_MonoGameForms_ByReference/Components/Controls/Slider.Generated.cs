@@ -10,9 +10,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/Slider", FormsType = typeof(global::Gum.Forms.Controls.Slider))]
 partial class Slider : global::Gum.Forms.Controls.Slider
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -22,7 +23,7 @@ partial class Slider : global::Gum.Forms.Controls.Slider
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/Slider") ?? throw new System.InvalidOperationException("Could not find an element named Controls/Slider - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/Slider");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Slider(visual);
             return visual;

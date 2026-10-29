@@ -4,6 +4,7 @@ using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.RenderingLibrary;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
@@ -20,6 +21,8 @@ namespace Gum.Wireframe;
 
 public partial class WireframeObjectManager : IWireframeObjectManager
 {
+    private readonly ReDrivenReferenceRowTracker _reDrivenReferenceRowTracker;
+
     #region Properties
 
     public List<GraphicalUiElement> AllIpsos { get; private set; } = new List<GraphicalUiElement>();
@@ -69,6 +72,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         _projectState = projectState;
 
         gueManager = new GraphicalUiElementManager();
+        _reDrivenReferenceRowTracker = new ReDrivenReferenceRowTracker(new SelectedStateReferenceMerger());
     }
 
     // This method will eventually move up to the constructor, but we can't do it yet until we get rid of all Self usages
@@ -138,15 +142,22 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     {
         bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
 
+        if (elementSave != ElementShowing)
+        {
+            _reDrivenReferenceRowTracker.Clear();
+        }
+
         if (elementSave == null || elementSave.IsSourceFileMissing)
         {
             ClearAll();
             RootGue = null;
+            DisposeCachedContentIfReloading(forceReloadTextures);
         }
         else if(elementSave is ComponentSave && string.IsNullOrEmpty(elementSave.BaseType))
         {
             ClearAll();
             RootGue = null;
+            DisposeCachedContentIfReloading(forceReloadTextures);
             _guiCommands.PrintOutput($"Error - cannot create representation for Component {elementSave.Name} because its BaseType is not set.");
         }
         else if (forceLayout || forceReloadTextures)
@@ -222,7 +233,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     var stateForReferences = GetStateForReferences(elementSave);
                     if (stateForReferences != null)
                     {
-                        RootGue.ApplyVariableReferences(stateForReferences);
+                        ApplyReferencesInDependencyOrder(elementSave, RootGue, stateForReferences, GetStatesOnTopOfDefault(elementSave));
                     }
 
                     gueManager.Add(RootGue);
@@ -246,41 +257,124 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     }
 
     /// <summary>
-    /// The state variable references are evaluated against. A state other than the default (such as a
-    /// categorized state) inherits everything it doesn't set from the default state, references
-    /// included, so those are evaluated against the default state with the selected state's values on top.
+    /// With nothing built there is nothing holding the cached textures, fonts and effects, so a content
+    /// reload (a file changed on disk, #7027) still drops them; the next element shown loads from disk.
     /// </summary>
-    private StateSave? GetStateForReferences(ElementSave elementSave)
+    private static void DisposeCachedContentIfReloading(bool forceReloadTextures)
     {
-        StateSave? selected = _selectedState.SelectedStateSave;
-        StateSave? defaultState = elementSave.DefaultState;
-
-        if (selected == null || defaultState == null || selected == defaultState)
+        if (forceReloadTextures)
         {
-            return selected ?? defaultState;
+            LoaderManager.Self.DisposeAndClear();
         }
-
-        StateSave selectedOverDefault = defaultState.Clone();
-        selectedOverDefault.MergeIntoThis(selected);
-        return selectedOverDefault;
     }
 
     /// <summary>
-    /// Applies the selected state to a freshly created wireframe root. The default state was
-    /// already applied by <c>ToGraphicalUiElement</c> (SetInitialState) inside
-    /// CreateGraphicalUiElement, so it must not be applied a second time here.
+    /// Evaluates the state's reference rows on the live <paramref name="root"/> in dependency order, so a
+    /// row that reads another row's result sees it whatever order the rows are written in (#6856). Rows
+    /// in a cycle are skipped and keep their stored values (#6871). Results are
+    /// written to a copy of the state, where later rows read them; the project's data is not changed.
+    /// </summary>
+    private static void ApplyReferencesInDependencyOrder(ElementSave elementSave, GraphicalUiElement root, StateSave state, IReadOnlyList<StateSave> statesOnTop)
+    {
+        List<StateSave> states = new List<StateSave>();
+        List<ElementSave> baseElements = ObjectFinder.Self.GetBaseElements(elementSave);
+        for (int i = baseElements.Count - 1; i >= 0; i--)
+        {
+            if (baseElements[i].DefaultState != null)
+            {
+                states.Add(baseElements[i].DefaultState!);
+            }
+        }
+        states.Add(state);
+
+        VariableReferenceGraph graph = VariableReferenceGraph.Create(elementSave, states);
+        if (!graph.HasRows)
+        {
+            return;
+        }
+
+        // Rows a base component owns stay in the graph so a row reading their result is ordered after them,
+        // as when the element was created. Unlike the element's own rows, the merger has not dropped the
+        // ones the selected state overrides, so they are dropped here.
+        HashSet<string> ownRows = new HashSet<string>();
+        VariableReferenceGraph ownGraph = VariableReferenceGraph.GetForState(elementSave, state);
+        foreach (ReferenceRow row in ownGraph.OrderedRows.Concat(ownGraph.CyclicRows))
+        {
+            ownRows.Add(SelectedStateReferenceMerger.GetRowKey(row.WrittenName, row.Line));
+        }
+        HashSet<string> setBySelected = new HashSet<string>();
+        foreach (StateSave stateOnTop in statesOnTop)
+        {
+            setBySelected.UnionWith(SelectedStateReferenceMerger.GetVariablesSetBy(stateOnTop));
+        }
+
+        List<ReferenceRow> rows = graph.OrderedRows
+            .Where(row => row.IsLiveEvaluable &&
+                (ownRows.Contains(SelectedStateReferenceMerger.GetRowKey(row.WrittenName, row.Line)) || !setBySelected.Contains(row.WrittenName)))
+            .ToList();
+        VariableReferenceGraph.Evaluate(rows, state.Clone(), root);
+    }
+
+    /// <summary>
+    /// The state variable references are evaluated against. A state other than the default (such as a
+    /// categorized state) inherits everything it doesn't set from the default state, references
+    /// included, so those are evaluated against the default state with the selected state's values on top.
+    /// The selected state wins for what it sets (#6851) unless the source of a row it overrides changed
+    /// since the state was shown, as in a running game (#6861), see <see cref="ReDrivenReferenceRowTracker"/>.
+    /// </summary>
+    private StateSave? GetStateForReferences(ElementSave elementSave)
+    {
+        StateSave? defaultState = elementSave.DefaultState;
+        if (defaultState == null)
+        {
+            return _selectedState.SelectedStateSave;
+        }
+
+        return _reDrivenReferenceRowTracker.Merge(elementSave, defaultState, GetStatesOnTopOfDefault(elementSave));
+    }
+
+    /// <summary>
+    /// The states layered on the default state: the clicked state, or with Default selected the category
+    /// states a running game applies on top of it, chosen by the Forms values (#6857).
+    /// </summary>
+    private IReadOnlyList<StateSave> GetStatesOnTopOfDefault(ElementSave elementSave)
+    {
+        StateSave? selected = _selectedState.SelectedStateSave;
+        if (selected != null && selected != elementSave.DefaultState)
+        {
+            return new[] { selected };
+        }
+
+        return BehaviorToolOnlyReferencesApplier.GetActiveCategoryStates(elementSave);
+    }
+
+    /// <summary>
+    /// Applies the selected state to a freshly created wireframe root. The default state was already applied
+    /// by <c>ToGraphicalUiElement</c> (SetInitialState) inside CreateGraphicalUiElement, so it must not be
+    /// applied a second time here.
     /// </summary>
     internal void ApplySelectedStateAfterCreation(GraphicalUiElement rootGue, ElementSave elementSave)
     {
-        // The default state was already applied by ToGraphicalUiElement (SetInitialState) inside
-        // CreateGraphicalUiElement above, so it must NOT be re-applied here — doing so applied every
-        // default-state variable twice per rebuild (issue #3212). Only the selected state needs
-        // applying, and only when it differs from the default.
-        var selectedState = _selectedState.SelectedStateSave;
-        if (selectedState != null && selectedState != elementSave.DefaultState)
+        // Re-applying the default state applied every default-state variable twice per rebuild (issue #3212).
+        StateSave? selected = _selectedState.SelectedStateSave;
+        if (selected == null || selected == elementSave.DefaultState)
         {
-            rootGue.ApplyState(selectedState);
+            // The Default state is never in effect alone: a control is always enabled or disabled, so the
+            // category state its Forms values choose sits on top (#6857).
+            foreach (StateSave categoryState in BehaviorToolOnlyReferencesApplier.GetActiveCategoryStates(elementSave))
+            {
+                rootGue.ApplyState(categoryState);
+            }
+            return;
         }
+
+        rootGue.ApplyState(selected);
+
+        // An instance's Forms values win over visual state values: a state of this element that sets an
+        // instance's category state (or the Forms property it derives from) must not beat them (#6860).
+        // Viewed on its own, the clicked state wins, which is why only instances are reasserted.
+        HashSet<string> setBySelected = SelectedStateReferenceMerger.GetVariablesSetBy(selected);
+        rootGue.ApplyState(BehaviorToolOnlyReferencesApplier.GetInstanceValuesToReassert(elementSave, selected, setBySelected));
     }
 
 

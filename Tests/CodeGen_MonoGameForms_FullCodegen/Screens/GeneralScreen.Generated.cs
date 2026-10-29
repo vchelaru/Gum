@@ -10,9 +10,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Screens;
+[global::Gum.DataTypes.GumElement("GeneralScreen")]
 partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -22,7 +23,7 @@ partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("GeneralScreen") ?? throw new System.InvalidOperationException("Could not find an element named GeneralScreen - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("GeneralScreen");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new GeneralScreen(visual);
             visual.Width = 0;

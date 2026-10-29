@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -94,7 +95,8 @@ public class SelectionManagerEditorFactoryTests : BaseTestClass
             Mock.Of<IGuiCommands>(),
             _mockFactory.Object,
             Mock.Of<INineSliceCoordinateRefresher>(),
-            Mock.Of<IPreciseHitTester>());
+            Mock.Of<IPreciseHitTester>(),
+            Mock.Of<IMessenger>());
 
         _selectionManager.Initialize(
             new Layer(),

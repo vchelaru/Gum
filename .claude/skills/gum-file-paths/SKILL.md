@@ -30,12 +30,20 @@ macOS and Linux. Convert every saved path through `FilePath` or `FileManager.Sta
 I/O, and check existence with `FileManager.FileExists`, not `File.Exists`. Content loads
 (`FileManager.GetStreamForFile`) ask `FileManager.CustomGetStreamFromFile` first, then fall back to disk.
 
-## `..` is collapsed, `.` is not
+## `.`, `..` and doubled separators are collapsed
 
-A `CodeProjectRoot` of `"./"` yields paths like `C:\Proj\.\Screens\X.cs`, which never compare equal to
-what `Directory.EnumerateFiles` returns. Any code diffing computed paths against enumerated ones must
-run both sides through `Path.GetFullPath` first. `CodeGenerationFileLocationsService` output is the
-usual source of the computed side.
+`FileManager.RemoveDotDotSlash` (and so `FilePath` and the content loaders' cache keys; `Standardize` calls
+it only for a path containing `..`)
+collapses every `.`, `..` and empty segment and keeps the leading separators, so `dir/./a.png`,
+`dir//a.png` and `dir/a.png` are one key. A **leading** `./` is kept: on mobile it marks an
+already-resolved path (#4548). To decide whether two spellings are one file, run
+both through `FilePath.StandardizedCaseSensitive`, and fold case only where the file system ignores it
+(Windows, macOS, iOS), never via `Standardized` (see above); `AnimationFrame.GetTextureIdentity` is the example.
+
+Paths built without `RemoveDotDotSlash` still keep a `.`: a `CodeProjectRoot` of `"./"` yields
+`C:\Proj\.\Screens\X.cs`, which never compares equal to what `Directory.EnumerateFiles` returns. Code diffing
+computed paths against enumerated ones must run both sides through `Path.GetFullPath` first.
+`CodeGenerationFileLocationsService` output is the usual source of the computed side.
 
 ## `File.Move` on a case-only rename is platform-divergent
 

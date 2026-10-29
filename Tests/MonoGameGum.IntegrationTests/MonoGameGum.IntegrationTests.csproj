@@ -26,7 +26,7 @@
 		<PackageReference Include="xunit.v3" VersionOverride="3.2.2" />
 		<PackageReference Include="xunit.runner.visualstudio" VersionOverride="3.1.5" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" VersionOverride="3.8.4.1" />
-		<PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.20.0" />
+		<PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.22.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,6 +34,8 @@
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<ProjectReference Include="..\Gum.Automation\Gum.Automation.csproj" />
 		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+		<!-- The Gum.MonoGame.ShadowDusk package: GumService.UseShadowDusk() (#7053). -->
+		<ProjectReference Include="..\..\Runtimes\GumShadowDusk\MonoGameGum.ShadowDusk.csproj" />
 		<!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
 		     generation -> MonoGame Texture2D upload -> BitmapFont), mirroring RaylibGum.Tests. -->
 		<ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
@@ -55,6 +57,10 @@
 		<!-- Seed-driven test order for the weekly shuffled-order workflow (#6106). The xunit v3 orderers, not the v2 ones. -->
 		<Compile Include="..\TestOrdering\TestShuffle.cs" Link="TestOrdering\TestShuffle.cs" />
 		<Compile Include="..\TestOrdering\Xunit3\ShuffledTestCaseOrderer.cs" Link="TestOrdering\ShuffledTestCaseOrderer.cs" />
+		<!-- The Preview window's shader resolver, linked because GumPreview is an executable. -->
+		<Compile Include="..\..\Tool\GumPreview\PreviewShaderResolver.cs" Link="GumPreview\PreviewShaderResolver.cs" />
+		<Compile Include="..\..\Tool\EditorTabPlugin.Core\Services\ShaderSourceCompiler.cs" Link="GumPreview\ShaderSourceCompiler.cs" />
+		<Compile Include="..\..\Tool\GumPreview\PreviewDeviceSettings.cs" Link="GumPreview\PreviewDeviceSettings.cs" />
 		<!-- A real code-generated runtime component (a ContainerRuntime), for the wrong-service ownership test. -->
 		<Compile Include="..\..\Samples\GumFormsSample\GumFormsSampleCommon\Components\Controls\ButtonStandardRuntime.cs" Link="GeneratedSample\ButtonStandardRuntime.cs" />
 		<Compile Include="..\..\Samples\GumFormsSample\GumFormsSampleCommon\Components\Controls\ButtonStandardRuntime.Generated.cs" Link="GeneratedSample\ButtonStandardRuntime.Generated.cs" />
@@ -64,6 +70,8 @@
 		<!-- A real .ttf for the KernSmith font-registration tests, which read it back both through
 		     a CustomGetStreamFromFile hook and off disk. -->
 		<None Include="Content\Fonts\Orbitron-Black.ttf" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The shader the samples ship, so the tests run exactly that file. -->
+		<None Include="..\..\Gum\Content\Shaders\Outline.slang" Link="Outline.slang" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -76,6 +84,9 @@
     <Compile Include="..\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />
     <Compile Include="..\Shared\GraphicalUiElementState.cs" Link="Shared\GraphicalUiElementState.cs" />
     <Compile Include="..\Shared\GraphicalUiElementStateAssert.cs" Link="Shared\GraphicalUiElementStateAssert.cs" />
+    <Compile Include="..\Shared\CrossRuntime\NineSliceCases.cs" Link="Shared\CrossRuntime\NineSliceCases.cs" />
+		<Compile Include="..\Shared\CrossRuntime\NineSliceKnownDifferences.cs" Link="Shared\CrossRuntime\NineSliceKnownDifferences.cs" />
+		<Compile Include="..\Shared\CrossRuntime\NineSliceOutlineOracle.cs" Link="Shared\CrossRuntime\NineSliceOutlineOracle.cs" />
   </ItemGroup>
 
 </Project>

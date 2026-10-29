@@ -9,9 +9,10 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/SplitterStandard", FormsType = typeof(global::Gum.Forms.Controls.Splitter))]
 partial class SplitterStandardRuntime : ContainerRuntime
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -30,8 +31,8 @@ partial class SplitterStandardRuntime : ContainerRuntime
         _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/SplitterStandard");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/SplitterStandard");
+            element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
 

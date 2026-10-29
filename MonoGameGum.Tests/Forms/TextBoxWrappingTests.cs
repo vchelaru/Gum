@@ -1,9 +1,14 @@
-using Gum.Forms.Controls;
+﻿using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Shouldly;
 using System.Linq;
 using Xunit;
+#if SKIA_LINKED_TESTS
+using Text = SkiaGum.Text;
+#else
+using Text = RenderingLibrary.Graphics.Text;
+#endif
 
 namespace MonoGameGum.Tests.Forms;
 
@@ -29,9 +34,9 @@ public class TextBoxWrappingTests : BaseTestClass
         return textBox;
     }
 
-    static RenderingLibrary.Graphics.Text GetCoreText(TextBox textBox) =>
-        (RenderingLibrary.Graphics.Text)((TextBoxBaseVisual)textBox.Visual)
-            .TextInstance.RenderableComponent;
+    static Text GetCoreText(TextBox textBox) =>
+        (Text)((TextBoxBaseVisual)textBox.Visual)
+            .TextInstance.RenderableComponent!;
 
     // The full TextWrapping x AcceptsReturn matrix documented on TextBoxBase.TextWrapping.
     // Wrapping and horizontal scrolling are two sides of one decision: text that wraps has
@@ -151,6 +156,7 @@ public class TextBoxWrappingTests : BaseTestClass
         }
     }
 
+#if !SKIA_LINKED_TESTS // uses the MonoGame Gum.Clipboard seam
     [Fact]
     public void Paste_ShouldNotScrollHorizontally_WhenVisualWrapsAutomatically()
     {
@@ -173,6 +179,7 @@ public class TextBoxWrappingTests : BaseTestClass
         visual.TextInstance.X.ShouldBe(restingTextX,
             "because pasted text that wraps stays inside the container horizontally");
     }
+#endif
 
     [Fact]
     public void MultiLineTextInSingleLineMode_ShouldMapClickOnSecondLineToThatLine()

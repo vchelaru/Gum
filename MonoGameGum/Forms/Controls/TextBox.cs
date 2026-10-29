@@ -53,9 +53,9 @@ public class TextBox : TextBoxBase
         set
         {
             bool isChange = value != Text;
-            if (isChange && value?.Length > MaxLength)
+            if (isChange)
             {
-                value = value.Substring(0, MaxLength.Value);
+                value = TruncateTextToMaxLength(value);
             }
 
             _textSetInCode.Record(value, translate: true);
@@ -82,9 +82,9 @@ public class TextBox : TextBoxBase
     public void SetTextNoTranslate(string? value)
     {
         bool isChange = value != Text;
-        if (isChange && value?.Length > MaxLength)
+        if (isChange)
         {
-            value = value.Substring(0, MaxLength.Value);
+            value = TruncateTextToMaxLength(value);
         }
 
         // Typing, paste and delete come through here, so user input survives RefreshStyles too.
@@ -210,10 +210,12 @@ public class TextBox : TextBoxBase
         //if(IsFocused)
         if(!IsReadOnly)
         {
-            if (selectionLength != 0)
+            if (selectionLength != 0 && CharacterAddsText(character))
             {
                 DeleteSelection();
             }
+
+            SnapCaretToCharacterStart();
 
             // If text is null force it to be an empty string so we can add characters
             string textAfterAdd = Text ?? "";
@@ -294,25 +296,28 @@ public class TextBox : TextBoxBase
             }
             else if (isCtrlDown)
             {
-                var indexBeforeNullable = GetCtrlBeforeTarget(caretIndex);
+                // A caret inside a character (a programmatic CaretIndex) takes the whole character with the word.
+                int end = GetBackspaceEnd(Text, caretIndex);
+                var indexBeforeNullable = GetCtrlBeforeTarget(end);
 
                 var indexToDeleteTo = indexBeforeNullable ?? 0;
 
                 // Use SetTextFromUi because this is user-initiated editing
-                SetTextFromUi(Text.Remove(indexToDeleteTo, caretIndex - indexToDeleteTo));
+                SetTextFromUi(Text.Remove(indexToDeleteTo, end - indexToDeleteTo));
 
                 caretIndex = indexToDeleteTo;
                 RefreshCaretAfterEdit();
             }
             else
             {
-                var whereToRemoveFrom = caretIndex - 1;
-                // Move the caret left one before removing from the text. Otherwise, if the
+                // A caret inside a CRLF or an emoji (a programmatic CaretIndex) removes the whole character.
+                var (whereToRemoveFrom, lengthToRemove) = GetBackspaceRange(Text, caretIndex);
+                // Move the caret left before removing from the text. Otherwise, if the
                 // caret is at the end of the word, modifying the word will shift the caret to
                 // the left, and that could cause it to shift over two times.
-                caretIndex--;
+                caretIndex = whereToRemoveFrom;
                 // Use SetTextFromUi because this is user-initiated editing
-                SetTextFromUi(this.Text.Remove(whereToRemoveFrom, 1));
+                SetTextFromUi(this.Text.Remove(whereToRemoveFrom, lengthToRemove));
                 RefreshCaretAfterEdit();
             }
         }
@@ -328,7 +333,10 @@ public class TextBox : TextBoxBase
         else if (Text is { } text && caretIndex < text.Length)
         {
             // Use SetTextFromUi because this is user-initiated editing
-            SetTextFromUi(text.Remove(caretIndex, 1));
+            // A caret inside a CRLF or an emoji (a programmatic CaretIndex) removes the whole character.
+            var (whereToRemoveFrom, lengthToRemove) = GetDeleteRange(text, caretIndex);
+            caretIndex = whereToRemoveFrom;
+            SetTextFromUi(text.Remove(whereToRemoveFrom, lengthToRemove));
             RefreshCaretAfterEdit();
         }
     }
@@ -384,16 +392,13 @@ public class TextBox : TextBoxBase
             {
                 DeleteSelection();
             }
-            foreach (var character in whatToPaste)
-            {
-                // Use SetTextFromUi because this is user-pasted input.
-                // Text may legitimately be null (e.g. explicitly cleared), so guard it
-                // the same way HandleCharEntered does (#4099).
-                SetTextFromUi((this.Text ?? "").Insert(caretIndex, "" + character));
-                caretIndex++;
-            }
-
-            TruncateTextToMaxLength();
+            // Insert the whole paste, then cut to MaxLength from the end, the way typing does. Text may
+            // legitimately be null (e.g. explicitly cleared), so guard it the same way HandleCharEntered does (#4099).
+            string textAfterPaste = TruncateTextToMaxLength((Text ?? "").Insert(caretIndex, whatToPaste)) ?? "";
+            // Set caretIndex before assigning Text so that the events are raised with the new caretIndex value.
+            caretIndex = System.Math.Min(caretIndex + whatToPaste.Length, textAfterPaste.Length);
+            // Use SetTextFromUi because this is user-pasted input.
+            SetTextFromUi(textAfterPaste);
             RefreshCaretAfterEdit();
         }
     }
@@ -409,6 +414,8 @@ public class TextBox : TextBoxBase
         {
             lengthToRemove = text.Length - selectionStart;
         }
+        // An edge of the selection inside a CRLF or an emoji takes the whole character, so no half is left behind.
+        ExpandToWholeCharacters(text, ref selectionStart, ref lengthToRemove);
         // Use SetTextFromUi because this is user-initiated editing
         SetTextFromUi(text.Remove(selectionStart, lengthToRemove));
         CaretIndex = selectionStart;
@@ -445,7 +452,7 @@ public class TextBox : TextBoxBase
     {
         if (text != null && MaxLength is int maxLength && text.Length > maxLength)
         {
-            text = text.Substring(0, maxLength);
+            text = text.Substring(0, GetTruncatedLength(text, maxLength));
         }
 
         return text;

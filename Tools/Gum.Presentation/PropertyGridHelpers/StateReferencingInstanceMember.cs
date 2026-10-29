@@ -53,6 +53,7 @@ public class StateReferencingInstanceMember : InstanceMember
     /// </summary>
     internal void Retarget(VariableGridEntry newEntry)
     {
+        RaiseRetargeting();
         bool wasReadOnly = _entry.IsReadOnly;
 
         _entry = newEntry;
@@ -71,7 +72,7 @@ public class StateReferencingInstanceMember : InstanceMember
 
         this.Instance = _entry.Instance;
         // The grid looks rows up by their instance-qualified name (Label.X, not Box.X).
-        this.Name = _entry.Name;
+        this.Name = _entry.GridName ?? _entry.Name;
         this.DisplayName = _entry.DisplayName;
         this.DetailText = _entry.DetailText;
         this.DetailLink = _entry.DetailLink;
@@ -265,7 +266,7 @@ public class StateReferencingInstanceMember : InstanceMember
         // entry.StateSave is genuinely null for a behavior's required-instance entries (Name/BaseType
         // only). InstanceMember.Instance already tolerates a null Instance elsewhere in its own logic
         // (see its "Instance != null" checks), so this is a real, accepted null - not an assertion.
-        base(entry.Name, entry.StateSave!)
+        base(entry.GridName ?? entry.Name, entry.StateSave!)
     {
         _entry = entry;
 

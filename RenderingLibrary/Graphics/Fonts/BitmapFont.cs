@@ -48,6 +48,10 @@ public class BitmapFont : IDisposable
     // itself be out of range for a font whose character table is smaller than 33 entries.
     private BitmapCharacterInfo _defaultCharacterInfo;
 
+    // What a character the font doesn't have draws and measures as (issue #6818): the font's '?'
+    // glyph, or the space when the font has no '?' either. Control characters stay blank.
+    private BitmapCharacterInfo _missingCharacterInfo;
+
     // Codepoints this font actually has real glyph data for (issue #4542) -- distinct from
     // mCharacterInfo's array bounds, since every slot in that array is pre-filled with the space
     // glyph as a rendering fallback (GetCharacterInfo), giving no way to tell "really has this
@@ -404,8 +408,8 @@ public class BitmapFont : IDisposable
     }
 
     /// <summary>
-    /// Gets the UV texture coordinates for a character's glyph. Falls back to the space character
-    /// if the requested character is outside the font's character range.
+    /// Gets the UV texture coordinates for a character's glyph. A character the font doesn't have
+    /// uses the font's '?' glyph (see <see cref="GetCharacterInfo(int)"/>).
     /// </summary>
     public void AssignCharacterTextureCoordinates(int asciiNumber, out float tVTop, out float tVBottom,
         out float tULeft, out float tURight)
@@ -418,8 +422,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            // Just return the coordinates for the space character
-            characterInfo = _defaultCharacterInfo;
+            characterInfo = _missingCharacterInfo;
         }
 
         tVTop = characterInfo.TVTop;
@@ -439,7 +442,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            characterInfo = _defaultCharacterInfo;
+            characterInfo = _missingCharacterInfo;
         }
 
         return characterInfo.DistanceFromTopOfLine;
@@ -447,8 +450,8 @@ public class BitmapFont : IDisposable
 
     /// <summary>
     /// Returns the <see cref="BitmapCharacterInfo"/> for the given character code.
-    /// Falls back to the space character if the code is outside the font's range,
-    /// or returns null if the font has no characters at all.
+    /// A character the font doesn't have returns the font's '?' glyph (the space when '?' is missing
+    /// too, and for control characters), or null if the font has no characters at all.
     /// </summary>
     public BitmapCharacterInfo? GetCharacterInfo(int asciiNumber)
     {
@@ -462,7 +465,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            return _defaultCharacterInfo;
+            return _missingCharacterInfo;
         }
     }
 
@@ -481,7 +484,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            return _defaultCharacterInfo.ScaleY * 2;
+            return _missingCharacterInfo.ScaleY * 2;
         }
     }
 
@@ -493,7 +496,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            return _defaultCharacterInfo.ScaleX;
+            return _missingCharacterInfo.ScaleX;
 
         }
     }
@@ -506,7 +509,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            return _defaultCharacterInfo.Spacing;
+            return _missingCharacterInfo.Spacing;
         }
     }
 
@@ -525,7 +528,7 @@ public class BitmapFont : IDisposable
     /// and kerning pairs. Normally reads texture dimensions from the loaded textures; the forced
     /// parameters allow overriding this when textures are not yet loaded.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mCharacterInfo), nameof(_defaultCharacterInfo))]
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mCharacterInfo), nameof(_defaultCharacterInfo), nameof(_missingCharacterInfo))]
     public void SetFontPattern(int? forcedTextureWidth = null, int? forcedTextureHeight = null)
     {
 
@@ -594,6 +597,7 @@ public class BitmapFont : IDisposable
         // Tentative fallback for a font too small to have an index 32 at all (see the
         // final assignment below, which takes precedence once the array is fully populated).
         _defaultCharacterInfo = space;
+        _missingCharacterInfo = space;
 
         for (int i = 0; i < charArraySize; i++)
         {
@@ -645,6 +649,7 @@ public class BitmapFont : IDisposable
         {
             _defaultCharacterInfo = mCharacterInfo[' '];
         }
+        RefreshMissingCharacterSlots();
 
         foreach (var kerning in parsedData.Kernings)
         {
@@ -673,7 +678,7 @@ public class BitmapFont : IDisposable
             Array.Copy(mCharacterInfo, grown, mCharacterInfo.Length);
             for (int i = mCharacterInfo.Length; i < grown.Length; i++)
             {
-                grown[i] = _defaultCharacterInfo;
+                grown[i] = IsBlank(i) ? _defaultCharacterInfo : _missingCharacterInfo;
             }
             mCharacterInfo = grown;
         }
@@ -686,7 +691,29 @@ public class BitmapFont : IDisposable
         {
             _defaultCharacterInfo = filled;
         }
+        if (charInfo.Id == (int)'?' || charInfo.Id == (int)' ')
+        {
+            RefreshMissingCharacterSlots();
+        }
     }
+
+    // Points every slot the font has no glyph for at the placeholder, so drawing and measuring a
+    // missing character both use the '?' glyph's rectangle and advance.
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_missingCharacterInfo))]
+    private void RefreshMissingCharacterSlots()
+    {
+        _missingCharacterInfo = mKnownCharacterIds.Contains('?') ? mCharacterInfo['?'] : _defaultCharacterInfo;
+        for (int i = 0; i < mCharacterInfo.Length; i++)
+        {
+            if (!mKnownCharacterIds.Contains(i))
+            {
+                mCharacterInfo[i] = IsBlank(i) ? _defaultCharacterInfo : _missingCharacterInfo;
+            }
+        }
+    }
+
+    // The space (synthesized when a font lacks it) and control characters are layout, never '?'.
+    private static bool IsBlank(int codepoint) => codepoint == ' ' || char.IsControl((char)codepoint);
 
     /// <summary>
     /// Whether this font has real glyph data for <paramref name="codepoint"/> -- as opposed to
@@ -796,7 +823,7 @@ public class BitmapFont : IDisposable
     /// Loads a .fnt file from disk and re-parses the font data, replacing the current character layout.
     /// Does not reload textures.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mCharacterInfo), nameof(_defaultCharacterInfo), nameof(_ParsedFontFile))]
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mCharacterInfo), nameof(_defaultCharacterInfo), nameof(_missingCharacterInfo), nameof(_ParsedFontFile))]
     public void SetFontPatternFromFile(string fntFileName)
     {
         // standardize before doing anything else
@@ -1508,6 +1535,11 @@ public class BitmapFont : IDisposable
 
         for (int i = characterIndex; i <= (int)'9'; i++)
         {
+            // A missing digit shares the placeholder glyph, which must not be resized.
+            if (!HasCharacter(i))
+            {
+                continue;
+            }
             var characterInfo = Characters[i];
 
             var xAdvanceDifference = character0.XAdvance - characterInfo.XAdvance;

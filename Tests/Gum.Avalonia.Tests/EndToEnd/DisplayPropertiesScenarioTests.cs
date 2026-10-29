@@ -18,6 +18,7 @@ using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.SettingsWindow;
@@ -45,6 +46,53 @@ public class DisplayPropertiesScenarioTests
     private static IServiceProvider Services => TestAppBuilder.Services;
 
     #region Variables tab editors
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileDropdown_ListsTheImagesTheProjectReferences_PickingOneSavesIt_AndUndoRestoresTheFiles()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        string content = Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png");
+        Directory.CreateDirectory(Path.Combine(tree.Project.ProjectFolder, "Art"));
+        File.Copy(content, Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        File.Copy(content, Path.Combine(tree.Project.ProjectFolder, "Art", "Banner.png"));
+        File.WriteAllText(Path.Combine(tree.Project.ProjectFolder, "Label.fnt"), "");
+        InstanceSave icon = tree.Project.AddInstance(button, "Icon", "Sprite");
+        InstanceSave hero = tree.Project.AddInstance(button, "Hero", "Sprite");
+        InstanceSave banner = tree.Project.AddInstance(button, "Banner", "Sprite");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        StateSave state = button.GetDefaultStateOrThrow();
+        state.SetValue("Hero.SourceFile", "Hero.png", "string");
+        state.SetValue("Banner.SourceFile", "Art/Banner.png", "string");
+        state.SetValue("Label.UseCustomFont", true, "bool");
+        state.SetValue("Label.CustomFontFile", "Label.fnt", "string");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(icon));
+        VariableGridHarness grid = tree.Grid;
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        ComboBox combo = grid.Combo("SourceFile");
+        combo.IsDropDownOpen = true;
+        grid.Settle();
+
+        combo.Items.Cast<object?>().ShouldBe(new object[] { "Art/Banner.png", "Hero.png" }, "images the project references, not the font");
+        combo.IsEditable.ShouldBeTrue("a path can also be typed");
+
+        grid.PickComboItem("SourceFile", "Art/Banner.png");
+
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Icon.SourceFile").ShouldBe("Art/Banner.png");
+        grid.Combo("SourceFile").SelectedItem.ShouldBe("Art/Banner.png");
+
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the pick should restore the files");
+        grid.Combo("SourceFile").SelectedItem.ShouldBeNull();
+
+        tree.Redo();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Icon.SourceFile").ShouldBe("Art/Banner.png");
+
+        tree.AssertOracles();
+    }
 
     [AvaloniaFact]
     [Trait("Feature", "DISP-008")]
@@ -638,6 +686,96 @@ public class DisplayPropertiesScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "PAL-001")]
+    public void ClickOnAChip_WithABehaviorSelected_AddsARequiredInstance_AndUndoRestoresTheFiles()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave behavior = AddBehavior(tree, "Clickable");
+        tree.Click(tree.NodeFor(behavior));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Input.Click(Chip(tree, "Container"));
+        tree.ThrowIfCrashed();
+
+        tree.Dialogs.Messages.ShouldBeEmpty();
+        BehaviorInstanceSave added = behavior.RequiredInstances.ShouldHaveSingleItem();
+        added.BaseType.ShouldBe("Container");
+        tree.SelectedState.SelectedInstance.ShouldBeSameAs(added);
+        tree.SelectedState.SelectedBehavior.ShouldBeSameAs(behavior);
+        tree.ChildTexts(tree.NodeFor(behavior)).ShouldBe(new[] { added.Name });
+        SavedBehaviorText(tree, "Clickable").ShouldContain(added.Name);
+
+        tree.Undo();
+        behavior.RequiredInstances.ShouldBeEmpty();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the click should restore the files");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
+    public void ClickOnAChip_WithARequiredInstanceSelected_AddsToTheBehavior()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave behavior = AddBehavior(tree, "Clickable");
+        tree.Click(tree.NodeFor(behavior));
+        tree.Input.Click(Chip(tree, "Container"));
+        BehaviorInstanceSave container = behavior.RequiredInstances.ShouldHaveSingleItem();
+        tree.Click(tree.NodeFor(behavior).Nodes.Single(node => node.Tag == container));
+        tree.SelectedState.SelectedInstance.ShouldBeSameAs(container);
+
+        // Required instances are a flat list: the add goes to the behavior, not under the instance,
+        // and a repeated type is named uniquely.
+        tree.Input.Click(Chip(tree, "Container"));
+        tree.ThrowIfCrashed();
+
+        tree.Dialogs.Messages.ShouldBeEmpty();
+        behavior.RequiredInstances.Select(instance => instance.Name).Distinct().Count().ShouldBe(2);
+        tree.SelectedState.SelectedBehavior.ShouldBeSameAs(behavior);
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-002")]
+    public void AddToCurrent_OnAChip_WithABehaviorSelected_NamesTheBehavior_AndAddsARequiredInstance()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave behavior = AddBehavior(tree, "Clickable");
+        tree.Click(tree.NodeFor(behavior));
+
+        tree.Input.RightClick(Chip(tree, "Sprite"));
+        tree.Input.ContextMenuHeaders().ShouldBe(new[] { "Add to Clickable", "Edit defaults..." });
+        tree.Input.PickContextMenuItem("Add to Clickable");
+        tree.ThrowIfCrashed();
+
+        behavior.RequiredInstances.ShouldHaveSingleItem().BaseType.ShouldBe("Sprite");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-002")]
+    public void AddObjectMenuAndAddInstanceDialog_WithABehaviorSelected_AddRequiredInstances()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BehaviorSave behavior = AddBehavior(tree, "Clickable");
+        tree.Click(tree.NodeFor(behavior));
+
+        tree.RightClick(tree.NodeFor(behavior));
+        tree.PickMenu("Add object to Clickable", "Circle");
+        behavior.RequiredInstances.ShouldHaveSingleItem().BaseType.ShouldBe("Circle");
+
+        tree.Click(tree.NodeFor(behavior));
+        tree.Dialogs.AnswerNext<AddInstanceDialogViewModel>(dialog => { dialog.TypeToCreate = "Sprite"; dialog.Value = "Icon"; return true; });
+        tree.PickMainMenu("Edit", "Add", "Instance");
+        behavior.RequiredInstances.Select(instance => instance.Name).ShouldContain("Icon");
+        behavior.RequiredInstances.Count.ShouldBe(2);
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
     [Trait("Feature", "PAL-004")]
     public void DraggingAChip_OnlyDrops_AndDoesNotAlsoAddToTheSelectedElement()
     {
@@ -739,6 +877,18 @@ public class DisplayPropertiesScenarioTests
     #endregion
 
     #region Helpers
+
+    /// <summary>Adds a behavior from the Behaviors menu, which saves it while Auto Save is on.</summary>
+    private static BehaviorSave AddBehavior(ProjectTreeHarness tree, string name)
+    {
+        tree.Dialogs.AnswerNextUserString(name);
+        tree.RightClick(tree.RootNode("Behaviors"));
+        tree.PickMenu("Add Behavior");
+        return tree.Project.Project.Behaviors.Single(behavior => behavior.Name == name);
+    }
+
+    private static string SavedBehaviorText(ProjectTreeHarness tree, string name) =>
+        File.ReadAllText(Path.Combine(tree.Project.ProjectFolder, "Behaviors", name + ".behx"));
 
     private static ComponentSave Component(ProjectTreeHarness tree, string name) =>
         tree.Project.Project.Components.Single(component => component.Name == name);

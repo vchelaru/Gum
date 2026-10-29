@@ -208,6 +208,9 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
     // LineRectangle, so a render-target Container's post-process shader has to live here too.
     public object? RenderTargetEffect { get; set; }
 
+    /// <inheritdoc/>
+    public ShaderParameterCollection? ShaderParameters { get; set; }
+
 
     public int Alpha => Color.A;
 

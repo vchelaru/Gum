@@ -49,6 +49,8 @@ public class SetVariableLogic : ISetVariableLogic
         {"TextureAddress",                                         VariableRefreshType.FullGridRefresh   },
         {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
         {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
+        // The shader's parameters are listed as rows, so choosing a different shader changes the rows.
+        {"SourceShaderFile",                                       VariableRefreshType.FullGridRefresh   },
         {"TextOverflowVerticalMode",                               VariableRefreshType.FullGridRefresh   },
         // These four gate which gradient / dropshadow / stroke channels are visible on
         // shape elements (Circle/Rectangle/ColoredCircle/RoundedRectangle/Arc/Line/etc.).
@@ -409,6 +411,14 @@ public class SetVariableLogic : ISetVariableLogic
                 {
                     _fileCommands.TryAutoSaveObject(instanceContainer);
                 }
+            }
+            else if (instanceContainer is ElementSave element && ObjectFinder.Self.GetBaseTypeCycle(element).Count > 0)
+            {
+                // The base picker leaves out elements deriving from this one, but its box accepts typed names.
+                _dialogService.ShowMessage("This assignment would create a circular reference, which is not allowed.");
+                element.BaseType = string.IsNullOrEmpty((string?)oldValue) ? null : (string?)oldValue;
+                _guiCommands.PrintOutput($"BaseType assignment on {element.Name} is not allowed - reverting to previous value");
+                _guiCommands.RefreshVariables(force: true);
             }
         }
     }
@@ -827,7 +837,7 @@ public class SetVariableLogic : ISetVariableLogic
         return GeneralResponse.SuccessfulResponse;
     }
 
-    internal string? GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave? instance, string changedMember)
+    public string? GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave? instance, string changedMember)
     {
 
         ////////////////early out//////////////////////
@@ -842,10 +852,7 @@ public class SetVariableLogic : ISetVariableLogic
         string? whyInvalid = null;
 
         var extension = FileManager.GetExtension(value);
-        bool isValidExtension = extension == "gif" ||
-            extension == "jpg" ||
-            extension == "png" ||
-            extension == "bmp" ||
+        bool isValidExtension = ImageFileExtensions.Contains(extension) ||
             extension == "achx" ||
             extension == "achj";
 

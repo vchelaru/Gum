@@ -99,6 +99,28 @@ public class KernSmithFontCreatorTests : BaseTestClass
         pixels.Any(p => p.A > 0 && p.A < 255 && p.R > p.A).ShouldBeTrue("because straight-alpha edge texels keep full color");
     }
 
+    // Issue #6811: two fonts can share a FontCacheFileName (a native font and an oversampled one at the
+    // same raster size, which differ only in atlas size). Growing one must not touch the other's growth state.
+    [Fact]
+    public void TryAddGlyphs_TwoFontsWithTheSameCacheName_GrowIndependently()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        KernSmithFontCreator creator = new KernSmithFontCreator(game.GraphicsDevice);
+        string fontPath = System.IO.Path.Combine(System.AppContext.BaseDirectory, "Content", "Fonts", "Orbitron-Black.ttf");
+        BmfcSave nativeSave = new BmfcSave { FontFile = fontPath, FontSize = 40, Ranges = "65", OutputWidth = 512, OutputHeight = 512 };
+        BmfcSave oversampledSave = new BmfcSave { FontFile = fontPath, FontSize = 40, Ranges = "65", OutputWidth = 4096, OutputHeight = 4096 };
+        nativeSave.FontCacheFileName.ShouldBe(oversampledSave.FontCacheFileName);
+        BitmapFont nativeFont = creator.TryCreateFont(nativeSave)!;
+        BitmapFont oversampledFont = creator.TryCreateFont(oversampledSave)!;
+
+        creator.TryAddGlyphs(oversampledFont, oversampledSave, "B");
+        creator.TryAddGlyphs(nativeFont, nativeSave, "B");
+
+        nativeFont.HasCharacter('B').ShouldBeTrue();
+        oversampledFont.HasCharacter('B').ShouldBeTrue();
+    }
+
     private static Color[] CreateAtlasPixels(KernSmithFontCreator creator, MinimalGame game)
     {
         BmfcSave bmfcSave = new BmfcSave

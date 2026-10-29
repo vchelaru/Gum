@@ -74,6 +74,7 @@ public class Game1 : Game
         // uses a Shader Model 4 effect, which requires HiDef - Reach cannot load it and shapes
         // silently fail to draw.
         _graphics.GraphicsProfile = GraphicsProfile.HiDef;
+        _graphics.PreparingDeviceSettings += PreviewDeviceSettings.PreserveBackBufferContents;
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
@@ -96,6 +97,10 @@ public class Game1 : Game
         // Must come after GumService.Default.Initialize - ShapeRenderer.Initialize reads the
         // initialized GumService/GraphicsDevice.
         ShapeRenderer.Self.Initialize();
+
+        // Registered before the project's elements are built so a container's SourceShaderFile
+        // resolves as it loads.
+        PreviewShaderResolver.Register(GraphicsDevice);
 
         // The window is sized for the backing scale on the first Update, once it is showing; a resize
         // here is undone when MonoGame shows it.

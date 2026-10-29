@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Gum.ProjectServices;
@@ -28,6 +30,53 @@ public class ErrorDocsRegistryTests
         string? url = _sut.GetUrl("GUM0001");
         url.ShouldNotBeNull();
         url.ShouldStartWith("https://docs.flatredball.com/gum/");
+    }
+
+    [Fact]
+    public void GetDocPath_ShouldPointAtBaseTypeDocs_ForCircularBaseTypeCode()
+    {
+        string? path = _sut.GetDocPath("GUM0014");
+        path.ShouldNotBeNull();
+        path.ShouldBe("gum-tool/gum-elements/general-properties/base-type-inheritance#circular-base-types-gum0014");
+    }
+
+    [Fact]
+    public void EveryCodeTheToolEmits_ShouldBeRegistered()
+    {
+        string repoRoot = Directory.GetParent(FindDocsRoot())!.FullName;
+        Regex emittedCode = new Regex(@"\b(?:Code|ErrorCode)\s*=\s*""(GUM\d{4})""");
+        HashSet<string> unregistered = new HashSet<string>();
+        int emittedCount = 0;
+
+        foreach (string folder in new[] { "Tools", "Tool", "Gum", "GumCommon" })
+        {
+            string folderPath = Path.Combine(repoRoot, folder);
+            foreach (string file in Directory.EnumerateFiles(folderPath, "*.cs", SearchOption.AllDirectories))
+            {
+                string relative = Path.GetRelativePath(repoRoot, file);
+                string[] segments = relative.Split(Path.DirectorySeparatorChar);
+                bool skip = segments.Any(segment =>
+                    segment == "bin" || segment == "obj" || segment == "Tests" || segment.EndsWith(".Tests"));
+                if (skip)
+                {
+                    continue;
+                }
+
+                foreach (Match match in emittedCode.Matches(File.ReadAllText(file)))
+                {
+                    emittedCount++;
+                    string code = match.Groups[1].Value;
+                    if (_sut.GetDocPath(code) == null)
+                    {
+                        unregistered.Add(code);
+                    }
+                }
+            }
+        }
+
+        emittedCount.ShouldBeGreaterThan(10, "the scan found almost no error codes, so it is looking in the wrong place");
+        unregistered.ShouldBeEmpty(
+            "these codes are emitted by the tool but have no entry in ErrorDocsRegistry: " + string.Join(", ", unregistered));
     }
 
     [Fact]

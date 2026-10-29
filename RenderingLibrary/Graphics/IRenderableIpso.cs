@@ -66,6 +66,12 @@ public interface IRenderTargetRenderable
     /// means the container is blitted unshaded.
     /// </summary>
     object? RenderTargetEffect { get; set; }
+
+    /// <summary>
+    /// Shader parameter values applied to <see cref="RenderTargetEffect"/> just before each blit.
+    /// Null until the first parameter is set, so containers without one pay nothing.
+    /// </summary>
+    ShaderParameterCollection? ShaderParameters { get; set; }
 }
 
 /// <summary>

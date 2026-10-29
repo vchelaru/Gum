@@ -159,6 +159,16 @@ public class VariableSave
     public bool IsCustomVariable { get; set; }
     public bool ShouldSerializeIsCustomVariable() => IsCustomVariable;
 
+    /// <summary>
+    /// Set when this variable holds the saved value of a shader parameter (#7010): the text of a
+    /// <c>ShaderParameterMarker</c>, <c>Param</c> for a scalar or <c>Param#index/count</c> for one
+    /// component of a vector. Null for every other variable, and then not serialized, so a project
+    /// that never uses shader variables saves the same bytes it always did. Build and read it with
+    /// <c>ShaderParameterMarker</c>; the variable name comes from <c>ShaderVariableNaming</c>.
+    /// </summary>
+    public string? ShaderParameter { get; set; }
+    public bool ShouldSerializeShaderParameter() => !string.IsNullOrEmpty(ShaderParameter);
+
     [XmlIgnore]
     public List<object> ExcludedValuesForEnum
     {
@@ -227,7 +237,7 @@ public class VariableSave
     /// <summary>
     /// Transient, runtime-only display hint shown in the variable grid for this variable's
     /// row. Populated by tool/plugin code based on the current project state — e.g.
-    /// <c>"bmfont cannot generate from font files. Switch to KernSmith in Project Properties."</c>
+    /// <c>"bmfont cannot generate from font files. Switch to KernSmith in Edit > Settings... > Fonts."</c>
     /// shown when the active font configuration is incompatible. Not serialized.
     /// </summary>
     /// <remarks>

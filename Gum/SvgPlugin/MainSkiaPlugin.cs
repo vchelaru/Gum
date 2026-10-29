@@ -32,19 +32,11 @@ namespace SkiaPlugin
 
         public override Version Version => new Version(1, 1);
         
-        private readonly ISelectedState _selectedState;
-        private readonly IWireframeCommands _wireframeCommands;
-
         #endregion
 
         [ImportingConstructor]
-        public MainSkiaPlugin(
-            ISelectedState selectedState,
-            IWireframeCommands wireframeCommands,
-            IDialogService dialogService)
+        public MainSkiaPlugin(IDialogService dialogService)
         {
-            _selectedState = selectedState;
-            _wireframeCommands = wireframeCommands;
             _dialogService = dialogService;
         }
         
@@ -139,32 +131,8 @@ namespace SkiaPlugin
             // (#2929/#2933/#2931 promoted those vars to plain Circle/Rectangle, so the
             // gating is no longer Skia-specific). The corresponding grid-refresh triggers
             // moved to SetVariableLogic.VariablesRequiringRefresh.
-            ReactToFileChanged += HandleFileChanged;
+            // An svg or lottie file changed on disk is reloaded by FileChangeReactionLogic like any referenced file.
             IsExtensionValid += HandleIsExtensionValid;
-        }
-
-        private void HandleFileChanged(FilePath filePath)
-        {
-            var isSvg = filePath.Extension == "svg";
-            var currentElement = _selectedState.SelectedElement;
-
-            ///////////////////Early Out///////////////////////
-            if(!isSvg || currentElement == null)
-            {
-                return;
-            }
-
-            /////////////////End Early Out/////////////////////
-
-            var referencedFiles = ObjectFinder.Self
-                .GetFilesReferencedBy(currentElement)
-                .Select(item => new FilePath(item))
-                .ToList();
-
-            if (referencedFiles.Contains(filePath))
-            {
-                _wireframeCommands.Refresh(true, true);
-            }
         }
 
         private bool HandleIsExtensionValid(string arg1, ElementSave arg2, InstanceSave? arg3, string arg4)

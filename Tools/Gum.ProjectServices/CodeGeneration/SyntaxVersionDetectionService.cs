@@ -70,7 +70,11 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         "Gum.KniSkia",
         "Gum.SkiaSharp.Standalone",
         "Gum.SkiaSharp.Maui",
-        "Gum.SkiaSharp.ShadowDusk"
+        "Gum.SkiaSharp.ShadowDusk",
+        "Gum.MonoGame.ShadowDusk",
+        "Gum.KNI.ShadowDusk",
+        "Gum.FNA.ShadowDusk",
+        "Gum.raylib.ShadowDusk"
     };
 
     // The subset of the runtimes above that shipped before the namespace unification. Only these can

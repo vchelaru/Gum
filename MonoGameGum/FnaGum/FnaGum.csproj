@@ -51,6 +51,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" Link="Animation\AnimationChainLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\KeyframeCurve.cs" Link="Animation\KeyframeCurve.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\KeyframeEvaluator.cs" Link="Animation\KeyframeEvaluator.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\PlaybackTimeline.cs" Link="Animation\PlaybackTimeline.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BitmapCharacterInfo.cs" Link="Renderables\Fonts\BitmapCharacterInfo.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\BitmapFont.cs" Link="Renderables\Fonts\BitmapFont.cs" />
@@ -59,6 +60,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\NineSliceBorders.cs" Link="Renderables\NineSliceBorders.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderableCloneLogic.cs" Link="RenderingLibrary\RenderableCloneLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" Link="RenderingLibrary\BatchKeyGroupedOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BatchOrchestrator.cs" Link="RenderingLibrary\BatchOrchestrator.cs" />
@@ -66,6 +68,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\DrawStateSummary.cs" Link="RenderingLibrary\DrawStateSummary.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\HierarchicalOrderer.cs" Link="RenderingLibrary\HierarchicalOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\IRenderableOrderer.cs" Link="RenderingLibrary\IRenderableOrderer.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\EffectShaderParameters.cs" Link="RenderingLibrary\EffectShaderParameters.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderStateChangeStatistics.cs" Link="RenderingLibrary\RenderStateChangeStatistics.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderTargetService.cs" Link="RenderingLibrary\RenderTargetService.cs" />

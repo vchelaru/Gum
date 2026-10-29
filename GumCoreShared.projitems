@@ -9,6 +9,8 @@
     <Import_RootNamespace>GumCoreShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\GumElementAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\GumElementRootAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\BundleGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\CompositeGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\DependencyWarning.cs" />
@@ -131,6 +133,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\KeyframeCurve.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\KeyframeEvaluator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\PlaybackTimeline.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BatchOrchestrator.cs" />
@@ -146,6 +149,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HierarchicalOrderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IWrappedText.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NonFiniteCheck.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameters.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameterText.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameterMarker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderVariableNaming.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameterVariables.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderResolverRequirement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableCloneLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HorizontalAlignment.cs" />
@@ -171,7 +180,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\LayerCameraSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\LetterCellScale.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NineSlice.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NineSliceBorders.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NineSliceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\EffectShaderParameters.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Renderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderStateChangeStatistics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderTargetService.cs" />

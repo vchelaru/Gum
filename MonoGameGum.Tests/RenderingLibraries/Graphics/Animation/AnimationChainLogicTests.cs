@@ -1,4 +1,4 @@
-using Gum.Graphics.Animation;
+﻿using Gum.Graphics.Animation;
 using RenderingLibrary.Graphics.Animation;
 using Shouldly;
 using Xunit;
@@ -100,7 +100,7 @@ public class AnimationChainLogicTests
     }
 
     [Fact]
-    public void CurrentChainName_Set_ShouldClampFrameIndex_WhenNewChainIsShorter()
+    public void CurrentChainName_SetToDifferentChain_ShouldRestartAtFirstFrame()
     {
         AnimationChain longChain = new() { Name = "Long" };
         longChain.Add(new AnimationFrame { FrameLength = 1 });
@@ -120,9 +120,26 @@ public class AnimationChainLogicTests
 
         sut.CurrentChainName = "Short";
 
+        sut.CurrentFrameIndex.ShouldBe(0);
+        sut.TimeIntoAnimation.ShouldBe(0);
+        applied.ShouldBeSameAs(shortChain[0]);
+    }
+
+    [Fact]
+    public void CurrentChainName_SetToSameChain_ShouldKeepPlaybackAndNotReapply()
+    {
+        AnimationChainList chains = MakeChainWithFrameLengths(1, 1, 1);
+        int applied = 0;
+        AnimationChainLogic sut = new() { AnimationChains = chains, ApplyFrame = _ => applied++ };
+        sut.CurrentChainName = "Chain";
+        sut.TimeIntoAnimation = 1.5;
+        applied = 0;
+
+        sut.CurrentChainName = "Chain";
+
         sut.CurrentFrameIndex.ShouldBe(1);
-        sut.TimeIntoAnimation.ShouldBe(1);
-        applied.ShouldBeSameAs(shortChain[1]);
+        sut.TimeIntoAnimation.ShouldBe(1.5);
+        applied.ShouldBe(0);
     }
 
     [Fact]
@@ -379,4 +396,123 @@ public class AnimationChainLogicTests
         originalFinished.ShouldBe(0);
         originalCycled.ShouldBe(0);
     }
-}
+
+    // Three frames of 1s each. The frame under test is read back via CurrentFrameIndex.
+    private static AnimationChainLogic MakeMirrored(bool pingPong, bool reverse, bool loop = true)
+    {
+        AnimationChainList chains = MakeChainWithFrameLengths(1, 1, 1);
+        chains[0].PingPong = pingPong;
+        chains[0].IsReversed = reverse;
+        chains[0].Loop = loop;
+        AnimationChainLogic sut = new() { AnimationChains = chains };
+        sut.CurrentChainName = "Chain";
+        sut.Animate = true;
+        return sut;
+    }
+
+    [Theory]
+    [InlineData(0.5, 2)]
+    [InlineData(1.5, 1)]
+    [InlineData(2.5, 0)]
+    public void AnimateSelf_Reverse_ShouldShowFramesLastToFirst(double seconds, int expectedFrame)
+    {
+        AnimationChainLogic sut = MakeMirrored(pingPong: false, reverse: true);
+
+        sut.AnimateSelf(seconds);
+
+        sut.CurrentFrameIndex.ShouldBe(expectedFrame);
+    }
+
+    [Theory]
+    [InlineData(0.5, 0)]
+    [InlineData(2.5, 2)]
+    [InlineData(3.5, 2)] // end frame shows across the turnaround
+    [InlineData(4.5, 1)]
+    [InlineData(5.5, 0)]
+    public void AnimateSelf_PingPong_ShouldPlayForwardThenBack(double seconds, int expectedFrame)
+    {
+        AnimationChainLogic sut = MakeMirrored(pingPong: true, reverse: false);
+
+        sut.AnimateSelf(seconds);
+
+        sut.CurrentFrameIndex.ShouldBe(expectedFrame);
+    }
+
+    [Theory]
+    [InlineData(0.5, 2)]
+    [InlineData(2.5, 0)]
+    [InlineData(3.5, 0)]
+    [InlineData(5.5, 2)]
+    public void AnimateSelf_PingPongAndReverse_ShouldStartWithMirroredHalf(double seconds, int expectedFrame)
+    {
+        AnimationChainLogic sut = MakeMirrored(pingPong: true, reverse: true);
+
+        sut.AnimateSelf(seconds);
+
+        sut.CurrentFrameIndex.ShouldBe(expectedFrame);
+    }
+
+    [Fact]
+    public void AnimateSelf_PingPong_ShouldNotApplyFrameAtTurnaround()
+    {
+        AnimationChainLogic sut = MakeMirrored(pingPong: true, reverse: false);
+        sut.AnimateSelf(2.9);
+        int applied = 0;
+        sut.ApplyFrame = _ => applied++;
+
+        sut.AnimateSelf(0.2); // crosses T = 3
+
+        applied.ShouldBe(0);
+    }
+
+    [Fact]
+    public void AnimateSelf_PingPong_ShouldCycleOncePerDoubleLength()
+    {
+        AnimationChainLogic sut = MakeMirrored(pingPong: true, reverse: false);
+        int cycled = 0;
+        sut.AnimationChainCycled += () => cycled++;
+
+        sut.AnimateSelf(3.5);
+        cycled.ShouldBe(0);
+        sut.AnimateSelf(3.0); // 6.5 crosses 2T = 6
+
+        cycled.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AnimateSelf_PingPongNotLooping_ShouldStopAfterFullCycleOnFirstFrame()
+    {
+        AnimationChainLogic sut = MakeMirrored(pingPong: true, reverse: false, loop: false);
+        int finished = 0;
+        sut.AnimationChainFinished += () => finished++;
+
+        sut.AnimateSelf(5.0);
+        sut.Animate.ShouldBeTrue();
+        sut.AnimateSelf(2.0);
+
+        sut.Animate.ShouldBeFalse();
+        finished.ShouldBe(1);
+        sut.CurrentFrameIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void AnimateSelf_ReverseNotLooping_ShouldStopOnFirstFrame()
+    {
+        AnimationChainLogic sut = MakeMirrored(pingPong: false, reverse: true, loop: false);
+
+        sut.AnimateSelf(5.0);
+
+        sut.Animate.ShouldBeFalse();
+        sut.CurrentFrameIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void CurrentFrameIndex_SetOnReverseChain_ShouldRoundTrip()
+    {
+        AnimationChainLogic sut = MakeMirrored(pingPong: false, reverse: true);
+
+        sut.CurrentFrameIndex = 1;
+
+        sut.CurrentFrameIndex.ShouldBe(1);
+        sut.TimeIntoAnimation.ShouldBe(1.0);
+    }}

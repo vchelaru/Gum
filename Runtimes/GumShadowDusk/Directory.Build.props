@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Keep the repo-wide Directory.Build.props settings; this file would otherwise shadow it. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" Condition="Exists($([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')))" />
+
+  <PropertyGroup>
+    <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'MonoGameGum.ShadowDusk'">obj\MonoGame\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition="'$(MSBuildProjectName)' == 'MonoGameGum.ShadowDusk'">bin\MonoGame\</BaseOutputPath>
+
+    <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'KniGum.ShadowDusk'">obj\KNI\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition="'$(MSBuildProjectName)' == 'KniGum.ShadowDusk'">bin\KNI\</BaseOutputPath>
+
+    <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'FnaGum.ShadowDusk'">obj\FNA\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition="'$(MSBuildProjectName)' == 'FnaGum.ShadowDusk'">bin\FNA\</BaseOutputPath>
+
+    <!--
+      The three projects share this one folder, so each one's default item globs would otherwise pick up
+      the OTHER projects' generated sources (see Runtimes/GumShapes/Directory.Build.props).
+    -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!--
+    Shared package metadata for the XNA-like ShadowDusk packages (Gum.MonoGame.ShadowDusk,
+    Gum.KNI.ShadowDusk, Gum.FNA.ShadowDusk). They compile the same sources (this folder) against
+    their own engine and are released together, so Version lives here. PackageId and the engine
+    references stay in each csproj.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>2026.4.5.1</Version>
+    <NoWarn>1591</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 0.22.1 reports the declared defaults on the SkSL and raylib routes; the XNA-like route needs 0.19.0+ for the .slang frontend. -->
+    <PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
+  </ItemGroup>
+
+  <!-- Collision guard for a consumer assembly named like the package's assembly (see #4311). -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
 using GumFormsPlugin.ViewModels;
@@ -14,12 +15,15 @@ public class GumFormsLogic
     private readonly IFormsFileService _formsFileService;
     private readonly IFormsThemeImporter _themeImporter;
     private readonly IProjectState _projectState;
+    private readonly IDialogService _dialogService;
 
     public GumFormsLogic(
         IFormsFileService formsFileService,
         IFormsThemeImporter themeImporter,
-        IProjectState projectState)
+        IProjectState projectState,
+        IDialogService dialogService)
     {
+        _dialogService = dialogService;
         _formsFileService = formsFileService;
         _themeImporter = themeImporter;
         _projectState = projectState;
@@ -56,7 +60,7 @@ public class GumFormsLogic
             return false;
         }
 
-        viewModel = new AddFormsViewModel(new ThemeSelectionViewModel(_formsFileService, _projectState), _themeImporter);
+        viewModel = new AddFormsViewModel(new ThemeSelectionViewModel(_formsFileService, _projectState), _themeImporter, _dialogService);
         blockedMessage = null;
         return true;
     }

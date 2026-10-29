@@ -1,5 +1,7 @@
+﻿using Gum.Graphics.Animation;
 using System;
 using System.IO;
+using System.Xml.Serialization;
 using Gum.Content.AnimationChain;
 using Shouldly;
 using Xunit;
@@ -290,6 +292,118 @@ public class AnimationChainListSaveAchjTests
             AnimationChainListSave save = AnimationChainListSave.FromFile(path);
 
             save.AnimationChains[0].Loop.ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchxExtension_PingPongAndReverse_Parse()
+    {
+        WithTempFile(".achx", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <AnimationChainArraySave>
+          <AnimationChain>
+            <Name>Bounce</Name>
+            <PingPong>true</PingPong>
+            <Reverse>true</Reverse>
+          </AnimationChain>
+        </AnimationChainArraySave>
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].PingPong.ShouldBeTrue();
+            save.AnimationChains[0].Reverse.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchxExtension_ChainOmitsPingPongAndReverse_DefaultsToFalse()
+    {
+        WithTempFile(".achx", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <AnimationChainArraySave>
+          <AnimationChain>
+            <Name>Walk</Name>
+          </AnimationChain>
+        </AnimationChainArraySave>
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].PingPong.ShouldBeFalse();
+            save.AnimationChains[0].Reverse.ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchjExtension_PingPongAndReverse_Parse()
+    {
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            { "name": "Bounce", "pingPong": true, "reverse": true, "frames": [] }
+          ]
+        }
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].PingPong.ShouldBeTrue();
+            save.AnimationChains[0].Reverse.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchjExtension_ChainOmitsPingPongAndReverse_DefaultsToFalse()
+    {
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            { "name": "Walk", "frames": [] }
+          ]
+        }
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].PingPong.ShouldBeFalse();
+            save.AnimationChains[0].Reverse.ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void ToAnimationChain_ShouldCarryPingPongAndReverse()
+    {
+        AnimationChainSave save = new() { Name = "Bounce", PingPong = true, Reverse = true };
+
+        Gum.Graphics.Animation.AnimationChain chain = save.ToAnimationChain(TimeMeasurementUnit.Second);
+
+        chain.PingPong.ShouldBeTrue();
+        chain.IsReversed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Achx_Save_ShouldRoundTripPingPongAndReverseAndOmitThemWhenFalse()
+    {
+        AnimationChainListSave list = new();
+        list.AnimationChains.Add(new AnimationChainSave { Name = "A", PingPong = true, Reverse = true });
+        list.AnimationChains.Add(new AnimationChainSave { Name = "B" });
+        XmlSerializer serializer = new(typeof(AnimationChainListSave));
+        using StringWriter writer = new();
+        serializer.Serialize(writer, list);
+        // StringWriter declares utf-16, but the file is written as UTF-8.
+        string xml = writer.ToString().Replace("utf-16", "utf-8");
+
+        xml.Split("<PingPong>").Length.ShouldBe(2);
+        xml.Split("<Reverse>").Length.ShouldBe(2);
+        WithTempFile(".achx", xml, path =>
+        {
+            AnimationChainListSave loaded = AnimationChainListSave.FromFile(path);
+
+            loaded.AnimationChains[0].PingPong.ShouldBeTrue();
+            loaded.AnimationChains[0].Reverse.ShouldBeTrue();
+            loaded.AnimationChains[1].PingPong.ShouldBeFalse();
+            loaded.AnimationChains[1].Reverse.ShouldBeFalse();
         });
     }
 

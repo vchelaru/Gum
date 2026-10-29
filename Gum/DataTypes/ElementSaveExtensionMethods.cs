@@ -307,7 +307,7 @@ namespace Gum.DataTypes
 
             if (!string.IsNullOrEmpty(element.BaseType))
             {
-                var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+                var baseElement = ObjectFinder.Self.GetBaseElement(element);
 
                 // The base can be missing from the project (e.g. deleted), which the tool tolerates.
                 return baseElement?.GetStateSaveRecursively(stateName);
@@ -341,7 +341,7 @@ namespace Gum.DataTypes
 
             if (stateContainer is ElementSave elementSave && !string.IsNullOrEmpty(elementSave.BaseType))
             {
-                var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElement = ObjectFinder.Self.GetBaseElement(elementSave);
 
                 if(baseElement == null)
                 {

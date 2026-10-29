@@ -439,6 +439,9 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     private void ShowInternal(string text, bool forceImmediatePrint)
     {
+        // Every show path ends here, so Glyph tags become their character before letters are counted.
+        text = BbCodeParser.ReplaceGlyphTags(text);
+
         IsVisible = true;
 
         currentPageText = text;
@@ -537,6 +540,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     private string[] ConvertToPages(string text)
     {
+        // Glyph tags become their character first so pagination measures the real text.
+        text = BbCodeParser.ReplaceGlyphTags(text);
 
         var limitsLines = 
             this.CoreTextObject.MaxNumberOfLines != null || 
@@ -771,6 +776,14 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public void OnFocusUpdate()
     {
+#if !FRB
+        // A disabled control can hold focus (AllowFocusWhenDisabled) but does not act on input.
+        if (!IsEnabled)
+        {
+            FocusUpdate?.Invoke(this);
+            return;
+        }
+#endif
         if(AdvancePageInputPredicate != null)
         {
             if(AdvancePageInputPredicate())

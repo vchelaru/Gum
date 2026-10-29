@@ -1,6 +1,7 @@
 using Apos.Shapes;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using GumRuntime;
 using Gum.Content;
 using Gum.Renderables;
@@ -98,13 +99,21 @@ public class SvgRuntimeTests : RegistrationIsolatedTest
     }
 
     [Fact]
-    public void Load_UrlThatCannotBeReached_ReturnsNullRatherThanThrowing()
+    public void Load_UrlThatCannotBeReached_ConsumeSilently_ReturnsNull()
     {
         // Bind then release a port so nothing is listening on it.
         using HttpListener listener = StartListener(out string baseUrl);
         listener.Close();
-
-        ShapeSvgLoader.Load($"{baseUrl}missing").ShouldBeNull();
+        var previous = GraphicalUiElement.MissingFileBehavior;
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        try
+        {
+            ShapeSvgLoader.Load($"{baseUrl}missing").ShouldBeNull();
+        }
+        finally
+        {
+            GraphicalUiElement.MissingFileBehavior = previous;
+        }
     }
 
     private static HttpListener StartListener(out string baseUrl)
@@ -141,11 +150,19 @@ public class SvgRuntimeTests : RegistrationIsolatedTest
     }
 
     [Fact]
-    public void Load_MissingFile_ReturnsNullRatherThanThrowing()
+    public void Load_MissingFile_ConsumeSilently_ReturnsNull()
     {
         var missing = Path.Combine(Path.GetTempPath(), $"gum-svg-missing-{Guid.NewGuid():N}.svg");
-
-        ShapeSvgLoader.Load(missing).ShouldBeNull();
+        var previous = GraphicalUiElement.MissingFileBehavior;
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        try
+        {
+            ShapeSvgLoader.Load(missing).ShouldBeNull();
+        }
+        finally
+        {
+            GraphicalUiElement.MissingFileBehavior = previous;
+        }
     }
 
     // MaintainFileAspectRatio layout reads IRenderableIpso's IAspectRatio, so a wrong value here

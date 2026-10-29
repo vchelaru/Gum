@@ -144,6 +144,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
+        errors.AddRange(GetCircularBaseTypeErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
@@ -151,7 +152,10 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
         errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
         errors.AddRange(GetUnresolvableVariableReferenceErrorsFor(element));
+        errors.AddRange(GetCircularVariableReferenceErrorsFor(element));
+        errors.AddRange(GetCrossElementCircularVariableReferenceErrorsFor(element));
         errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
+        errors.AddRange(GetTextOutsideFontRangeErrorsFor(element, project));
 
         foreach (var source in _additionalErrorSources)
         {
@@ -174,8 +178,21 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         return errors;
     }
 
+    // A row in a loop is skipped, so it sets nothing and cannot disagree with a stored value (GUM0013
+    // reports the loop).
+    private static HashSet<string> GetLoopRowKeys(ElementSave element, StateSave state)
+    {
+        var keys = new HashSet<string>();
+        foreach (var row in VariableReferenceGraph.GetForApply(element, state).CyclicRows)
+        {
+            keys.Add(row.SourceObject + "|" + row.Line);
+        }
+        return keys;
+    }
+
     private static void CheckLocalReferenceConflicts(ElementSave element, StateSave state, List<ErrorResult> errors)
     {
+        HashSet<string>? loopRows = null;
         foreach (var variableList in state.VariableLists)
         {
             if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList.Count == 0)
@@ -191,6 +208,11 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 // channels first, the same way ApplyVariableReferences does at apply time.
                 foreach (string expandedReferenceString in ElementSaveExtensions.ExpandCompositeReferenceLine(referenceString, channelOwner))
                 {
+                    loopRows ??= GetLoopRowKeys(element, state);
+                    if (loopRows.Contains(sourceObject + "|" + expandedReferenceString))
+                    {
+                        continue;
+                    }
                     if (TryParseReference(expandedReferenceString, sourceObject, out string qualifiedLeft, out string right))
                     {
                         EmitConflictIfPresent(element, state, state, qualifiedLeft, right, sourceObject, expandedReferenceString, errors);
@@ -345,6 +367,134 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     #endregion
 
+    #region GUM0013 — Circular variable reference
+
+    /// <summary>
+    /// Flags rows of one state that read each other in a loop (<c>A = B + 1</c> and <c>B = A + 1</c>, or a
+    /// row reading its own result). A cycle has no order to evaluate in, so its rows are skipped and keep
+    /// their stored values. A loop through other elements is <see cref="GetCrossElementCircularVariableReferenceErrorsFor"/>.
+    /// </summary>
+    private static List<ErrorResult> GetCircularVariableReferenceErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+        foreach (var state in element.AllStates)
+        {
+            if (!state.VariableLists.Any(list => list.GetRootName() == "VariableReferences"))
+            {
+                continue;
+            }
+
+            var cyclic = VariableReferenceGraph.GetForState(element, state).CyclicRows;
+            var reported = new HashSet<ReferenceRow>();
+            foreach (var start in cyclic)
+            {
+                if (reported.Contains(start))
+                {
+                    continue;
+                }
+                var loop = FindCycleThrough(start, cyclic);
+                if (loop == null)
+                {
+                    continue;
+                }
+                foreach (var row in loop)
+                {
+                    reported.Add(row);
+                }
+                var path = string.Join(" -> ", loop.Concat(new[] { loop[0] }).Select(row => element.Name + "." + row.WrittenName));
+                errors.Add(new ErrorResult
+                {
+                    ElementName = element.Name,
+                    Code = "GUM0013",
+                    Severity = ErrorSeverity.Warning,
+                    Message = $"{state.Name}: Circular variable reference: {path}. These rows are not evaluated and keep their stored values."
+                });
+            }
+        }
+        return errors;
+    }
+
+    /// <summary>
+    /// Flags a loop that runs through the default-state rows of two or more elements
+    /// (<c>Panel.A</c> reads <c>Other.B</c>, which reads <c>Panel.A</c>). Reported on every element
+    /// that holds a row in the loop, naming each variable in it. A loop through a categorized state of
+    /// another element is not detected.
+    /// </summary>
+    private static List<ErrorResult> GetCrossElementCircularVariableReferenceErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+        if (element.DefaultState == null)
+        {
+            return errors;
+        }
+
+        var reported = new HashSet<ReferenceRow>();
+        foreach (var start in VariableReferenceGraph.GetForState(element, element.DefaultState).CyclicRows)
+        {
+            if (reported.Contains(start) || start.ElementReads.Count == 0)
+            {
+                continue;
+            }
+            var loop = VariableReferenceGraph.FindCrossElementLoop(element, start);
+            if (loop == null)
+            {
+                continue;
+            }
+            foreach (var step in loop)
+            {
+                reported.Add(step.Value);
+            }
+            var names = loop.Select(step => ElementReference.GetQualifiedName(step.Key, step.Key.Name) + "." + step.Value.WrittenName).ToList();
+            names.Add(names[0]);
+            errors.Add(new ErrorResult
+            {
+                ElementName = element.Name,
+                Code = "GUM0013",
+                Severity = ErrorSeverity.Warning,
+                Message = $"Default: Circular variable reference: {string.Join(" -> ", names)}. These rows are not evaluated and keep their stored values."
+            });
+        }
+        return errors;
+    }
+
+    // The rows of a loop that contains `start`, each reading the variable the next one writes, or null
+    // when `start` only leads into a loop.
+    private static List<ReferenceRow>? FindCycleThrough(ReferenceRow start, IReadOnlyList<ReferenceRow> rows)
+    {
+        var path = new List<ReferenceRow>();
+        var visited = new HashSet<ReferenceRow>();
+        return Search(start);
+
+        List<ReferenceRow>? Search(ReferenceRow current)
+        {
+            path.Add(current);
+            visited.Add(current);
+            foreach (var next in rows)
+            {
+                if (!current.Reads.Contains(next.WrittenName))
+                {
+                    continue;
+                }
+                if (next == start)
+                {
+                    return new List<ReferenceRow>(path);
+                }
+                if (!visited.Contains(next))
+                {
+                    var found = Search(next);
+                    if (found != null)
+                    {
+                        return found;
+                    }
+                }
+            }
+            path.RemoveAt(path.Count - 1);
+            return null;
+        }
+    }
+
+    #endregion
+
     #region GUM0009 — Variable reference reads from something the project does not have
 
     // An element-qualified path such as "Components/Folder/Styles.Primary.Red". Group 1 is the
@@ -458,7 +608,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 }
                 else if (variablePath.Length > 0 && !VariableExists(referencedElement, variablePath))
                 {
-                    problem = $"\"{variablePath}\" from {qualifiedElementName}, which has no such variable";
+                    problem = $"\"{variablePath}\" from {qualifiedElementName}, which has no such variable{GetSavedShaderNameHint(referencedElement, variablePath)}";
                 }
             }
             return " ";
@@ -473,7 +623,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             string referencedName = ElementSaveExtensions.DecodeOwnerName(match.Value);
             if (!ReferenceKeywords.Contains(referencedName) && !VariableExists(owner, referencedName))
             {
-                return $"\"{referencedName}\", which {owner.Name} does not have";
+                return $"\"{referencedName}\", which {owner.Name} does not have{GetSavedShaderNameHint(owner, referencedName)}";
             }
         }
         return null;
@@ -507,7 +657,12 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
             ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
             // A missing instance type is already reported as a missing base type.
-            return instanceType == null || VariableExists(instanceType, variablePath.Substring(dot + 1));
+            if (instanceType == null || VariableExists(instanceType, variablePath.Substring(dot + 1)))
+            {
+                return true;
+            }
+            // A shader parameter is declared by no type; it exists only where something saved it.
+            return ObjectFinder.Self.GetShaderParameterDefinition(variablePath, element) != null;
         }
 
         if (RuntimeComputedVariableNames.Contains(variablePath)
@@ -546,6 +701,37 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         return false;
     }
 
+    /// <summary>
+    /// When <paramref name="variablePath"/> names a shader parameter by its plain name (<c>Icon.Thickness</c>) and
+    /// the element saved it under its full name, returns text naming the saved form; otherwise an empty string.
+    /// </summary>
+    private static string GetSavedShaderNameHint(ElementSave element, string variablePath)
+    {
+        int dot = variablePath.IndexOf('.');
+        if (dot <= 0)
+        {
+            return string.Empty;
+        }
+        string instancePrefix = variablePath.Substring(0, dot + 1);
+        string plainName = variablePath.Substring(dot + 1);
+
+        List<string> savedNames = new List<string>();
+        foreach (ElementSave inChain in SelfAndBaseElements(element))
+        {
+            foreach (VariableSave variable in inChain.DefaultState?.Variables ?? new List<VariableSave>())
+            {
+                if (variable.Name.StartsWith(instancePrefix, StringComparison.Ordinal)
+                    && ShaderParameterMarker.TryParse(variable.ShaderParameter, out ShaderParameterMarker marker)
+                    && marker.Parameter == plainName
+                    && !savedNames.Contains(variable.Name))
+                {
+                    savedNames.Add(variable.Name);
+                }
+            }
+        }
+        return savedNames.Count == 0 ? string.Empty : $" (it is saved as {string.Join(", ", savedNames)})";
+    }
+
     private static InstanceSave? FindInstanceInInheritance(ElementSave element, string instanceName)
     {
         foreach (ElementSave inChain in SelfAndBaseElements(element))
@@ -561,12 +747,12 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     private static IEnumerable<ElementSave> SelfAndBaseElements(ElementSave element)
     {
-        var visited = new HashSet<ElementSave>();
+        // GetBaseElement ends the walk at a BaseType cycle (GUM0014).
         ElementSave? current = element;
-        while (current != null && visited.Add(current))
+        while (current != null)
         {
             yield return current;
-            current = string.IsNullOrEmpty(current.BaseType) ? null : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
     }
 
@@ -1045,6 +1231,105 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     #endregion
 
+    #region GUM0012 — Literal Text value has characters outside its font's ranges
+
+    /// <summary>
+    /// Warns, once per Text, about characters a literal <c>Text</c> value (in any state) uses that its
+    /// font's ranges leave out. The font is generated without them, so at runtime they draw as '?'.
+    /// The font comes from the same state, else the default state. A pre-baked .fnt and an invalid
+    /// range (GUM0011) are skipped, since the ranges don't say what that font holds.
+    /// </summary>
+    private static List<ErrorResult> GetTextOutsideFontRangeErrorsFor(ElementSave element, GumProjectSave project)
+    {
+        var errors = new List<ErrorResult>();
+        StateSave? defaultState = element.DefaultState;
+        if (defaultState == null)
+        {
+            return errors;
+        }
+
+        // Owner name ("" for the element itself) -> font -> missing code points, in first-seen order.
+        var missingByOwner = new Dictionary<string, (string Font, List<int> CodePoints)>();
+        var codePointsByRanges = new Dictionary<string, HashSet<int>>();
+
+        foreach (StateSave state in element.AllStates)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (!variable.SetsValue || variable.Value is not string text || text.Length == 0 || variable.GetRootName() != "Text")
+                {
+                    continue;
+                }
+                string owner = variable.SourceObject ?? "";
+                string prefix = owner.Length > 0 ? owner + "." : "";
+                object? GetValue(string name) => state.GetValueRecursive(prefix + name) ?? defaultState.GetValueRecursive(prefix + name);
+
+                string? font = GetValue("Font") as string;
+                if (font == null)
+                {
+                    continue;
+                }
+                if (GetValue("UseCustomFont") as bool? == true)
+                {
+                    font = BmfcSave.ResolveTtfSourcePath(useCustomFont: true, GetValue("CustomFontFile") as string, font);
+                    if (font == null)
+                    {
+                        continue;
+                    }
+                }
+
+                string ranges = project.GetFontRanges(font) ?? BmfcSave.GetEffectiveDefaultRanges();
+                if (!BmfcSave.GetIfIsValidRange(ranges))
+                {
+                    continue;
+                }
+                if (!codePointsByRanges.TryGetValue(ranges, out HashSet<int>? inRange))
+                {
+                    inRange = new HashSet<int>(BmfcSave.ParseCharRanges(BmfcSave.EnsureRangesContainSpace(ranges)));
+                    codePointsByRanges[ranges] = inRange;
+                }
+
+                // A [Glyph=...] tag draws as its character, so that is the character the font needs.
+                foreach (System.Text.Rune rune in Gum.Wireframe.BbCodeParser.ReplaceGlyphTags(text).EnumerateRunes())
+                {
+                    // Line breaks and tabs are layout, not glyphs.
+                    if (System.Text.Rune.IsControl(rune) || inRange.Contains(rune.Value))
+                    {
+                        continue;
+                    }
+                    if (!missingByOwner.TryGetValue(owner, out var entry))
+                    {
+                        entry = (font, new List<int>());
+                        missingByOwner[owner] = entry;
+                    }
+                    if (!entry.CodePoints.Contains(rune.Value))
+                    {
+                        entry.CodePoints.Add(rune.Value);
+                    }
+                }
+            }
+        }
+
+        foreach (KeyValuePair<string, (string Font, List<int> CodePoints)> pair in missingByOwner)
+        {
+            string textName = pair.Key.Length > 0 ? pair.Key : element.Name;
+            string characters = string.Join(", ", pair.Value.CodePoints.Select(c => $"'{char.ConvertFromUtf32(c)}' (U+{c:X4})"));
+            string codes = string.Join(",", pair.Value.CodePoints);
+            errors.Add(new ErrorResult
+            {
+                ElementName = element.Name,
+                Code = "GUM0012",
+                Severity = ErrorSeverity.Warning,
+                Message = $"Text '{textName}' uses {characters}, which the ranges of font '{pair.Value.Font}' leave out, " +
+                    $"so they draw as '?'. Add {codes} to the font's ranges on the Fonts page."
+            });
+        }
+
+        return errors;
+    }
+
+    #endregion
+
     #region Element BaseType Errors
 
     private static List<ErrorResult> GetMissingElementBaseTypeErrorFor(ElementSave elementSave)
@@ -1062,6 +1347,28 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     Message = $"{elementSave.Name} has a base type of {elementSave.BaseType} which does not exist"
                 });
             }
+        }
+
+        return errors;
+    }
+
+    // GUM0014: an element whose BaseType chain comes back to itself. The tool treats every element in the cycle as
+    // having no base until the cycle is broken, so each one gets the row and names the whole cycle.
+    private static List<ErrorResult> GetCircularBaseTypeErrorFor(ElementSave elementSave)
+    {
+        IReadOnlyList<ElementSave> cycle = ObjectFinder.Self.GetBaseTypeCycle(elementSave);
+        List<ErrorResult> errors = new List<ErrorResult>();
+
+        if (cycle.Count > 0)
+        {
+            string path = string.Join(" -> ", cycle.Concat(new[] { cycle[0] }).Select(item => item.Name));
+            errors.Add(new ErrorResult
+            {
+                ElementName = elementSave.Name,
+                Code = "GUM0014",
+                Severity = ErrorSeverity.Error,
+                Message = $"Circular base type: {path}. These elements are treated as having no base type until the cycle is broken."
+            });
         }
 
         return errors;

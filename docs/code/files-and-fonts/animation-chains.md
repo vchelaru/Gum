@@ -65,6 +65,17 @@ sprite.CurrentChainName = "Animation1";
 sprite.Animate = true;
 ```
 
+### Frame Textures That Fail to Load
+
+A frame texture that cannot be loaded, whether the file is missing or the image cannot be decoded, follows `GraphicalUiElement.MissingFileBehavior` the same way on every runtime. See [Migrating to 2026 October](../../gum-tool/upgrading/migrating-to-2026-october.md#raylib-throws-when-a-file-is-missing) for the defaults.
+
+* With `ConsumeSilently`, the frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name. Frames that share a texture that fails raise it once per load, not once per frame.
+* With `ThrowException`, loading throws on the first texture that failed. The outer exception does not name the texture; its `InnerException` is a `FileNotFoundException` that does.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ### File Caching
 
 Both loading paths go through `LoaderManager`, so an `.achx` loaded from the same path more than once is only read from disk once when `LoaderManager.Self.CacheTextures` is `true` (the default). See [File Loading](file-loading.md#file-caching) for the general caching rules, which apply here the same way they do to textures and fonts.
@@ -118,13 +129,17 @@ Texture loading works the same as anywhere else in Gum — see [File Loading](fi
 
 ## Playback
 
-Once `AnimationChains` is populated, set `CurrentChainName` to the chain you want to play and set `Animate` to `true`. From there, the chain advances on its own — every call to `GumService.Default.Update` drives the animation for the entire visual tree, so you don't need to advance frames yourself.
+Once `AnimationChains` is populated, set `CurrentChainName` to the chain you want to play and set `Animate` to `true`. Setting it to a different chain starts that chain from the beginning; setting it to the chain already playing changes nothing. From there, the chain advances on its own — every call to `GumService.Default.Update` drives the animation for the entire visual tree, so you don't need to advance frames yourself.
 
 {% hint style="warning" %}
 Screenshot/GIF needed: an animated GIF showing a `SpriteRuntime` playing back an `.achx` chain frame-by-frame.
 {% endhint %}
 
 If you need lower-level control — for example, driving animation outside of `GumService.Default.Update` — see the [AnimateSelf](../gum-code-reference/graphicaluielement/animateself.md) page.
+
+### PingPong and Reverse
+
+A chain in an `.achx`/`.achj` file can set `PingPong` and `Reverse` (`pingPong`/`reverse` in `.achj`). Reverse plays the chain last frame to first. PingPong plays it forward then backward, so one cycle is twice the chain's length, and the end frames show for double their length across the turnaround. With both, the backward half plays first. `AnimationChainCycled` is raised once per full cycle, and a non-looping PingPong chain stops after one full cycle. Frame changes are only reported when the shown frame changes, so the turnaround raises nothing.
 
 ### Looping and End of Chain Events
 

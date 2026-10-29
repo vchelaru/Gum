@@ -1,7 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.VisualTree;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using AvaloniaDataUi.Controls;
 using Shouldly;
 using WpfDataUi;
@@ -238,6 +240,246 @@ public class CompositeEditorTests : IDisposable
         fixture.File.ShouldBe("/fonts/a.ttf");
         picker.LastFilter.ShouldBe("TrueType Font|*.ttf");
         display.TextBox.Text.ShouldBe("/fonts/a.ttf");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_ListsThemWhenOpened_AndPickingOneWritesIt()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.png" };
+        string? shownCurrentValue = null;
+        FileSelectionDisplay display = new FileSelectionDisplay
+        {
+            FileChoices = current =>
+            {
+                shownCurrentValue = current;
+                return new[] { "b.png", "old.png", "z.png" };
+            }
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.IsVisible.ShouldBeTrue();
+        display.ChoiceBox.IsEditable.ShouldBeTrue();
+        display.ChoiceBox.SelectedItem.ShouldBe("old.png");
+
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        shownCurrentValue.ShouldBe("old.png");
+        display.ChoiceBox.Items.Cast<object?>().ShouldBe(new object[] { "b.png", "old.png", "z.png" });
+        display.ChoiceBox.SelectedItem.ShouldBe("old.png");
+        fixture.File.ShouldBe("old.png", "listing the choices does not write anything");
+
+        display.ChoiceBox.SelectedItem = "z.png";
+
+        fixture.File.ShouldBe("z.png", "a pick from the open list commits at once");
+        display.TextBox.Text.ShouldBe("z.png");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithBuiltInChoices_ListsThemUnderTheirOwnHeader_AndPickingOneCopiesItAndWritesTheCopy()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.slang" };
+        IReadOnlyList<string>? heldByTheProject = null;
+        string? imported = null;
+        FileSelectionDisplay display = new FileSelectionDisplay
+        {
+            FileChoices = _ => new[] { "Shaders/Mine.slang", "old.slang" },
+            BuiltInChoices = held =>
+            {
+                heldByTheProject = held;
+                return new[] { "Blur.slang", "Sepia.slang" };
+            },
+            ImportBuiltIn = name =>
+            {
+                imported = name;
+                return "Shaders/" + name;
+            },
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        heldByTheProject.ShouldBe(new[] { "Shaders/Mine.slang", "old.slang" });
+        display.ChoiceBox.Items.Cast<object?>().Select(item => item?.ToString()).ShouldBe(
+            new[] { "Project", "Shaders/Mine.slang", "old.slang", "Built-in", "Blur.slang", "Sepia.slang" });
+        display.ChoiceBox.SelectedItem.ShouldBe("old.slang");
+        fixture.File.ShouldBe("old.slang", "listing the choices does not copy or write anything");
+        imported.ShouldBeNull();
+
+        display.ChoiceBox.SelectedItem = display.ChoiceBox.Items.Cast<object?>().Single(item => item?.ToString() == "Blur.slang");
+        Dispatcher.UIThread.RunJobs();
+
+        imported.ShouldBe("Blur.slang");
+        fixture.File.ShouldBe("Shaders/Blur.slang");
+        display.TextBox.Text.ShouldBe("Shaders/Blur.slang");
+        display.ChoiceBox.SelectedItem.ShouldBe("Shaders/Blur.slang");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithBuiltInChoices_PickingOneImportsAfterTheDropDownHasClosed()
+    {
+        // The import can open a prompt, which must not open under the still-open drop-down popup.
+        EditorFixture fixture = new EditorFixture { File = "old.slang" };
+        bool? dropDownOpenWhenImporting = null;
+        FileSelectionDisplay? display = null;
+        display = new FileSelectionDisplay
+        {
+            FileChoices = _ => new[] { "old.slang" },
+            BuiltInChoices = _ => new[] { "Blur.slang" },
+            ImportBuiltIn = name =>
+            {
+                dropDownOpenWhenImporting = display!.ChoiceBox.IsDropDownOpen;
+                return "Shaders/" + name;
+            },
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.ChoiceBox.SelectedItem = display.ChoiceBox.Items.Cast<object?>().Single(item => item?.ToString() == "Blur.slang");
+
+        dropDownOpenWhenImporting.ShouldBeNull("the pick is still routing");
+        display.ChoiceBox.IsDropDownOpen = false;
+        Dispatcher.UIThread.RunJobs();
+        dropDownOpenWhenImporting.ShouldBe(false);
+        fixture.File.ShouldBe("Shaders/Blur.slang");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithBuiltInChoices_ACopyThatCannotBeMade_LeavesTheValueAlone()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.slang" };
+        FileSelectionDisplay display = new FileSelectionDisplay
+        {
+            FileChoices = _ => new[] { "old.slang" },
+            BuiltInChoices = _ => new[] { "Blur.slang" },
+            ImportBuiltIn = _ => null,
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.ChoiceBox.SelectedItem = display.ChoiceBox.Items.Cast<object?>().Single(item => item?.ToString() == "Blur.slang");
+        Dispatcher.UIThread.RunJobs();
+
+        fixture.File.ShouldBe("old.slang");
+        display.ChoiceBox.SelectedItem.ShouldBe("old.slang");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithBuiltInChoices_NothingToOffer_ShowsNoHeaders_AndAnEmptyProjectListHasNoProjectHeader()
+    {
+        EditorFixture fixture = new EditorFixture { File = "" };
+        List<string> builtIn = new List<string>();
+        FileSelectionDisplay display = new FileSelectionDisplay
+        {
+            FileChoices = _ => new[] { "old.slang" },
+            BuiltInChoices = _ => builtIn,
+            ImportBuiltIn = name => name,
+        };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.IsDropDownOpen = true;
+        display.ChoiceBox.Items.Cast<object?>().ShouldBe(new object[] { "old.slang" });
+
+        display.FileChoices = _ => Array.Empty<string>();
+        builtIn.Add("Blur.slang");
+        display.ChoiceBox.IsDropDownOpen = false;
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.ChoiceBox.Items.Cast<object?>().Select(item => item?.ToString()).ShouldBe(new[] { "Built-in", "Blur.slang" });
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_AValueNobodyReferencesStillShows_AndAnEmptyListHasNoSelection()
+    {
+        EditorFixture fixture = new EditorFixture { File = "lonely.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay { FileChoices = current => current == null ? new string[0] : new[] { current } };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.SelectedItem.ShouldBe("lonely.png");
+
+        fixture.File = "";
+        display.Refresh();
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.ChoiceBox.SelectedItem.ShouldBeNull();
+        display.ChoiceBox.Items.Count.ShouldBe(0);
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_TypedTextCommitsOnEnterOrFocusLoss_AndEmptyClears()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay { FileChoices = _ => new[] { "old.png" } };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.Text = "https://example.com/typed.png";
+        fixture.File.ShouldBe("old.png", "typing alone commits nothing");
+        display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        fixture.File.ShouldBe("https://example.com/typed.png");
+
+        display.ChoiceBox.Text = "other/typed.png";
+        display.ChoiceBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+        fixture.File.ShouldBe("other/typed.png");
+
+        display.ChoiceBox.Text = "";
+        display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        fixture.File.ShouldBe("");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_EscapeRevertsTypedText()
+    {
+        EditorFixture fixture = new EditorFixture { File = "old.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay { FileChoices = _ => new[] { "old.png" } };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.ChoiceBox.Text = "half-typed";
+        display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
+        display.ChoiceBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+
+        display.ChoiceBox.Text.ShouldBe("old.png");
+        fixture.File.ShouldBe("old.png");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithoutChoices_ButtonsAreAsTallAsTheTextBox()
+    {
+        EditorFixture fixture = new EditorFixture { File = "a.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.File)) };
+        display.Refresh();
+        Window window = new Window { Content = display, Width = 400, Height = 100 };
+        window.Show();
+        try
+        {
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            foreach (Button button in display.GetVisualDescendants().OfType<Button>())
+            {
+                button.Bounds.Height.ShouldBe(display.TextBox.Bounds.Height, 0.5, $"the {button.Content} button");
+            }
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithoutChoices_StaysATextBox()
+    {
+        EditorFixture fixture = new EditorFixture { File = "a.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay();
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.TextBox.Parent.ShouldNotBeNull();
+        display.ChoiceBox.Parent.ShouldBeNull("the drop-down is not part of a plain file row");
     }
 
     [AvaloniaFact]

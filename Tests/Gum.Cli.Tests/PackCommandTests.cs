@@ -319,6 +319,172 @@ public class PackCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Pack_with_shake_bundles_only_reachable_elements_and_records_the_trimmed_ones()
+    {
+        string projectPath = CreateShakeProject("Shake");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        string rootsPath = Path.Combine(projectDir, "roots.txt");
+        File.WriteAllText(rootsPath, "# created from code\nFromRootsFile\n");
+        string bundlePath = Path.Combine(projectDir, "Shake.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath,
+            "--shake", "--roots", rootsPath, "--keep", "FromKeep");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        result.StandardOutput.ShouldContain("Kept 4 of 5 Screens and Components; trimmed 1: SpriteHolder");
+        Dictionary<string, byte[]> entries = ReadBundleEntries(bundlePath);
+        entries.Keys.ShouldContain("Screens/Game.gusx");
+        entries.Keys.ShouldContain("Components/Kept.gucx");
+        entries.Keys.ShouldContain("Components/FromRootsFile.gucx");
+        entries.Keys.ShouldContain("Components/FromKeep.gucx");
+        entries.Keys.ShouldNotContain("Components/SpriteHolder.gucx");
+        entries.Keys.ShouldNotContain("Textures/bg.png");
+        ProjectResolution resolution = GumBundleLoader.Resolve(bundlePath);
+        GumProjectSave? loaded = GumProjectSave.Load(resolution.ResolvedGumxPath, out GumLoadResult loadResult);
+        loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+        loaded!.TrimmedElements.ShouldBe(new[] { "SpriteHolder" });
+        loaded.Components.Select(component => component.Name)
+            .ShouldBe(new[] { "FromKeep", "FromRootsFile", "Kept" }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void Pack_with_shake_keeps_the_roots_recorded_in_a_game_assembly()
+    {
+        // This test assembly carries [assembly: GumElementRoot("FromAssembly")] (TestAssemblyInitialize.cs),
+        // the attribute the Gum.Analyzers generator writes into a game assembly.
+        string projectPath = CreateShakeProject("ShakeAssembly", "FromAssembly");
+        string bundlePath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath,
+            "--shake", "--keep", "FromKeep,FromRootsFile", "--roots-assembly", typeof(PackCommandTests).Assembly.Location);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(bundlePath);
+        entries.Keys.ShouldContain("Components/FromAssembly.gucx");
+        entries.Keys.ShouldNotContain("Components/SpriteHolder.gucx");
+    }
+
+    [Fact]
+    public void Pack_reads_GumElementRoot_attributes_from_a_compiled_assembly_and_ignores_lookalikes()
+    {
+        string projectPath = CreateShakeProject("ShakeCompiled", "CompiledRoot", "Decoy");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        const string source = """
+            [assembly: Gum.DataTypes.GumElementRoot("CompiledRoot")]
+            [assembly: Other.GumElementRoot("Decoy")]
+            [assembly: System.Reflection.AssemblyDescription("Decoy")]
+            namespace Other
+            {
+                [System.AttributeUsage(System.AttributeTargets.Assembly)]
+                public sealed class GumElementRootAttribute : System.Attribute { public GumElementRootAttribute(string name) { } }
+            }
+            """;
+        string assemblyPath = Path.Combine(projectDir, "Game.dll");
+        using FileStream assemblyStream = File.Create(assemblyPath);
+        Microsoft.CodeAnalysis.Emit.EmitResult emit = Microsoft.CodeAnalysis.CSharp.CSharpCompilation.Create(
+                "Game",
+                new[] { Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(source) },
+                new[]
+                {
+                    Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                    Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(Path.Combine(Path.GetDirectoryName(typeof(object).Assembly.Location)!, "System.Runtime.dll")),
+                    Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(typeof(GumElementRootAttribute).Assembly.Location),
+                },
+                new Microsoft.CodeAnalysis.CSharp.CSharpCompilationOptions(Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary))
+            .Emit(assemblyStream);
+        emit.Success.ShouldBeTrue(string.Join(Environment.NewLine, emit.Diagnostics));
+        assemblyStream.Dispose();
+        string bundlePath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath,
+            "--shake", "--keep", "FromKeep,FromRootsFile", "--roots-assembly", assemblyPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(bundlePath);
+        entries.Keys.ShouldContain("Components/CompiledRoot.gucx");
+        entries.Keys.ShouldNotContain("Components/Decoy.gucx");
+    }
+
+    [Theory]
+    [InlineData("--keep", "Kept")]
+    [InlineData("--roots", "roots.txt")]
+    [InlineData("--roots-assembly", "Game.dll")]
+    public void Pack_without_shake_exits_with_2_when_a_root_option_is_given(string option, string value)
+    {
+        string projectPath = CreateShakeProject("RootsWithoutShake" + option.Replace("-", ""));
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, option, value);
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("only apply with --shake");
+        File.Exists(outputPath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Pack_with_shake_exits_with_2_when_a_root_names_no_element()
+    {
+        string projectPath = CreateShakeProject("ShakeMisspelled");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--shake", "--keep", "Kep");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("'Kep'");
+        File.Exists(outputPath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Pack_without_shake_keeps_every_element()
+    {
+        string projectPath = CreateShakeProject("NoShake");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
+        entries.Keys.ShouldContain("Components/SpriteHolder.gucx");
+        entries.Keys.ShouldContain("Textures/bg.png");
+        entries["NoShake.gumx"].ShouldBe(File.ReadAllBytes(projectPath));
+    }
+
+    // A Game screen holding a Kept instance, two components reachable only as roots (FromRootsFile,
+    // FromKeep), and SpriteHolder, which nothing reaches and which references Textures/bg.png.
+    private string CreateShakeProject(string name, params string[] extraComponents)
+    {
+        string projectPath = CreateProjectWithSpriteAndFont(name);
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        Directory.CreateDirectory(Path.Combine(projectDir, "Screens"));
+        File.WriteAllText(Path.Combine(projectDir, "Screens", "Game.gusx"),
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>Game</Name>
+              <State><Name>Default</Name></State>
+              <Instance Name="KeptInstance" BaseType="Kept" />
+            </ScreenSave>
+            """);
+        foreach (string component in new[] { "Kept", "FromRootsFile", "FromKeep" }.Concat(extraComponents))
+        {
+            File.WriteAllText(Path.Combine(projectDir, "Components", component + ".gucx"),
+                $$"""
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                  <Name>{{component}}</Name>
+                  <BaseType>Container</BaseType>
+                  <State><Name>Default</Name></State>
+                </ComponentSave>
+                """);
+            AppendComponentReference(projectPath, component);
+        }
+        string gumxContent = File.ReadAllText(projectPath);
+        File.WriteAllText(projectPath, gumxContent.Replace("</GumProjectSave>",
+            "  <ScreenReference Name=\"Game\" />\n</GumProjectSave>"));
+        return projectPath;
+    }
+
+    [Fact]
     public void Pack_writes_output_to_default_path_when_no_dash_o()
     {
         string projectPath = CreateCleanProject("DefaultOut");

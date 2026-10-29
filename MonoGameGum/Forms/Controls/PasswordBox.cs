@@ -115,6 +115,10 @@ public class PasswordBox : TextBoxBase
     /// </summary>
     public event EventHandler? PasswordChanged;
 
+    // The mask has one character per UTF-16 char, so the caret steps over the password itself to keep
+    // an emoji (two chars) whole.
+    protected override string? CaretStepText => Password;
+
     protected override string DisplayedText
     {
         get
@@ -134,6 +138,9 @@ public class PasswordBox : TextBoxBase
     public PasswordBox() : base() { }
 
     public PasswordBox(InteractiveGue visual) : base(visual) { }
+
+    /// <summary>A password never contains a line break, so Enter always ends the edit.</summary>
+    protected override bool EnterEndsEdit => true;
 
     protected override void ReactToVisualChanged()
     {
@@ -165,10 +172,12 @@ public class PasswordBox : TextBoxBase
         //if (HasFocus) // See TextBox on why we don't check IsFocused
         if (!IsReadOnly)
         {
-            if (selectionLength != 0)
+            if (selectionLength != 0 && CharacterAddsText(character))
             {
                 DeleteSelection();
             }
+
+            SnapCaretToCharacterStart();
 
             // We handle these actions in TextBoxBase.HandleKeyDown based on Keyboard.GetState()
             if (character == '\b'           // BACKSPACE key
@@ -184,8 +193,10 @@ public class PasswordBox : TextBoxBase
                 var passwordBinding = PropertyRegistry.GetBindingExpression(nameof(Password));
                 passwordBinding?.UpdateSource();
             }
-            else if (caretIndex >= MaxLength)
+            else if (caretIndex >= MaxLength && !CompletesSurrogatePair(character))
             {
+                // The second half of an emoji is let through so TruncateTextToMaxLength drops the pair whole,
+                // as TextBox does, instead of leaving the first half stored alone.
                 // If they enter more than the allowed characters, SecrueString.InsertAt will thow an error, so prevent that
                 // throw new ArgumentOutOfRangeException(nameof(index), SR.ArgumentOutOfRange_IndexString);
             }
@@ -199,9 +210,13 @@ public class PasswordBox : TextBoxBase
         }
     }
 
+    private bool CompletesSurrogatePair(char character) =>
+        char.IsLowSurrogate(character) && caretIndex > 0 && caretIndex <= SecurePassword.Length && char.IsHighSurrogate(Password[caretIndex - 1]);
+
     private void CallMethodsInResponseToPasswordChanged()
     {
         TruncateTextToMaxLength();
+        caretIndex = System.Math.Min(caretIndex, SecurePassword.Length);
         UpdateCaretPositionFromCaretIndex();
         OffsetTextToKeepCaretInView();
         UpdateDisplayedCharacters();
@@ -225,33 +240,37 @@ public class PasswordBox : TextBoxBase
             }
             else if (isCtrlDown)
             {
-                for (int i = caretIndex - 1; i > -1; i--)
-                {
-                    SecurePassword.RemoveAt(i);
-                }
+                // A caret inside a character (a programmatic CaretIndex) takes the whole character with it.
+                RemoveRange(0, GetBackspaceEnd(Password, caretIndex));
 
                 caretIndex = 0;
             }
             else
             {
-                var whereToRemoveFrom = caretIndex - 1;
-                // Move the caret to the left one before removing from the text. Otherwise, if the
+                var (whereToRemoveFrom, lengthToRemove) = GetBackspaceRange(Password, caretIndex);
+                // Move the caret to the left before removing from the text. Otherwise, if the
                 // caret is at the end of the word, modifying the word will shift the caret to the left, 
                 // and that could cause it to shift over two times.
-                caretIndex--;
-                SecurePassword.RemoveAt(whereToRemoveFrom);
+                caretIndex = whereToRemoveFrom;
+                RemoveRange(whereToRemoveFrom, lengthToRemove);
             }
             CallMethodsInResponseToPasswordChanged();
         }
     }
 
+    private void RemoveRange(int start, int length)
+    {
+        for (int i = 0; i < length; i++)
+        {
+            SecurePassword.RemoveAt(start);
+        }
+    }
+
     public void DeleteSelection()
     {
-        for (int i = 0; i < SelectionLength; i++)
-        {
-            SecurePassword.RemoveAt(selectionStart);
-
-        }
+        int lengthToRemove = selectionLength;
+        ExpandToWholeCharacters(Password, ref selectionStart, ref lengthToRemove);
+        RemoveRange(selectionStart, lengthToRemove);
         CallMethodsInResponseToPasswordChanged();
 
         CaretIndex = selectionStart;
@@ -262,7 +281,9 @@ public class PasswordBox : TextBoxBase
     {
         if (caretIndex < SecurePassword.Length && selectionLength == 0)
         {
-            SecurePassword.RemoveAt(caretIndex);
+            var (whereToRemoveFrom, lengthToRemove) = GetDeleteRange(Password, caretIndex);
+            caretIndex = whereToRemoveFrom;
+            RemoveRange(whereToRemoveFrom, lengthToRemove);
 
             CallMethodsInResponseToPasswordChanged();
         }
@@ -327,9 +348,17 @@ public class PasswordBox : TextBoxBase
 
     protected override void TruncateTextToMaxLength()
     {
-        while (SecurePassword.Length > MaxLength)
+        if (SecurePassword.Length > MaxLength)
         {
-            SecurePassword.RemoveAt(SecurePassword.Length - 1);
+            // Cut by the password text so an emoji that straddles MaxLength is dropped whole.
+            int lengthToKeep = GetTruncatedLength(Password, MaxLength.Value);
+            while (SecurePassword.Length > lengthToKeep)
+            {
+                SecurePassword.RemoveAt(SecurePassword.Length - 1);
+            }
+
+            // A caret that was past the cut text (a paste that overflowed) would index past the end.
+            caretIndex = System.Math.Min(caretIndex, SecurePassword.Length);
         }
     }
 }
