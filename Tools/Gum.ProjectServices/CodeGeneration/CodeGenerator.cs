@@ -5245,7 +5245,7 @@ public class CodeGenerator
     {
         if (value is float asFloat)
         {
-            return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
+            return FloatToCode(asFloat);
         }
         else if (value is string asString)
         {
@@ -5331,6 +5331,14 @@ public class CodeGenerator
         }
     }
 
+    /// <summary>
+    /// A float literal; NaN and the infinities have no literal (NaNf does not compile), so they use the float constants.
+    /// </summary>
+    private static string FloatToCode(float value) =>
+        float.IsFinite(value)
+            ? value.ToString(CultureInfo.InvariantCulture) + "f"
+            : "float." + (float.IsNaN(value) ? "NaN" : value > 0 ? "PositiveInfinity" : "NegativeInfinity");
+
     private static string? ToInvariantString(object? value) =>
         value == null ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
 
@@ -5341,7 +5349,7 @@ public class CodeGenerator
             // X and Y go to PixelX and PixelY
             if (rootName == "X" || rootName == "Y")
             {
-                return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
+                return FloatToCode(asFloat);
             }
             else if (rootName == "CornerRadius")
             {
@@ -6576,9 +6584,7 @@ public class CodeGenerator
             else if (target == typeof(float))
             {
                 float asFloat = Convert.ToSingle(value, CultureInfo.InvariantCulture);
-                return float.IsFinite(asFloat)
-                    ? asFloat.ToString(CultureInfo.InvariantCulture) + "f"
-                    : "float." + (float.IsNaN(asFloat) ? "NaN" : asFloat > 0 ? "PositiveInfinity" : "NegativeInfinity");
+                return FloatToCode(asFloat);
             }
             else if (target == typeof(double))
             {
