@@ -356,6 +356,96 @@ public class ContainerShaderVariablesTests : BaseTestClass
         (GetParameters(sut)?.Count ?? 0).ShouldBe(0);
     }
 
+    [Theory]
+    [InlineData("Shaders/outline.FX", "Outline_Thickness")]
+    [InlineData("Shaders/Outline.fx", "outline_Thickness")]
+    [InlineData("Shaders/OUTLINE.fx", "Outline_Thickness")]
+    public void SetProperty_StemMatchIgnoresCase(string shaderFile, string variableName)
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", shaderFile);
+
+        sut.SetProperty(variableName, 6f);
+
+        Get(sut, "Thickness").X.ShouldBe(6f);
+    }
+
+    [Fact]
+    public void SetProperty_ParameterCaseIsKept()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", "Shaders/outline.fx");
+
+        sut.SetProperty("Outline_Thickness", 6f);
+
+        Has(sut, "Thickness").ShouldBeTrue();
+        Has(sut, "thickness").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SetProperty_VariableNamesDifferingOnlyInStemCase_AddressTheSameParameter()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+
+        sut.SetProperty("Outline_Thickness", 1f);
+        sut.SetProperty("outline_Thickness", 2f);
+
+        Get(sut, "Thickness").X.ShouldBe(2f);
+        GetParameters(sut)!.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SetProperty_ParameterNameEndingInUnderscore_IsRouted()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+
+        sut.SetProperty("Outline_Foo_", 3f);
+
+        Get(sut, "Foo_").X.ShouldBe(3f);
+    }
+
+    [Fact]
+    public void SetProperty_NullVariable_KeepsAValueSetInCodeWhileTheVariableDroveIt()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+        sut.SetProperty("Outline_Thickness", 5f);
+        sut.SetShaderParameter("Thickness", 8f);
+
+        sut.SetProperty("Outline_Thickness", null);
+
+        Get(sut, "Thickness").X.ShouldBe(8f);
+    }
+
+    [Fact]
+    public void SetProperty_ChangingTheShaderFile_KeepsAValueSetInCodeWhileTheVariableDroveIt()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("ShaderParameters", "Thickness=2.0");
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+        sut.SetProperty("Outline_Thickness", 5f);
+        sut.SetShaderParameter("Thickness", 8f);
+
+        sut.SetProperty("SourceShaderFile", "Shaders/Glow.fx");
+
+        Get(sut, "Thickness").X.ShouldBe(8f);
+    }
+
+    [Fact]
+    public void SetProperty_CodeValueThenClearedInCode_IsNotBroughtBackByTheVariableGoingAway()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+        sut.SetProperty("Outline_Thickness", 5f);
+        sut.ClearShaderParameters();
+
+        sut.SetProperty("Outline_Thickness", null);
+
+        Has(sut, "Thickness").ShouldBeFalse();
+    }
+
     [Fact]
     public void SetPropertyOnRenderable_LineRectangle_TheEditorsContainer_RoutesTheSameWay()
     {

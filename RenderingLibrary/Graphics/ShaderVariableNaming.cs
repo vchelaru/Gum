@@ -180,7 +180,8 @@ public static class ShaderVariableNaming
 
     /// <summary>
     /// The inverse of <see cref="GetVariableName(string?, string, int, int)"/>: recovers the parameter
-    /// and component from a variable name of the given shader. The name does not carry the component
+    /// and component from a variable name of the given shader (the stem is matched ignoring case; the
+    /// parameter is returned as written). The name does not carry the component
     /// count; that is in the <see cref="ShaderParameterMarker"/> saved with the variable.
     /// </summary>
     /// <param name="shaderFile">The shader the variable belongs to; names are only unique per shader.</param>
@@ -198,7 +199,10 @@ public static class ShaderVariableNaming
         }
 
         string prefix = GetSanitizedStem(shaderFile) + "_";
-        if (!variableName.StartsWith(prefix, StringComparison.Ordinal))
+        // The stem is compared ignoring case: Windows file names are case-insensitive and the tool's
+        // duplicate-name check is too, so "outline.FX" and "Outline_Thickness" name the same shader's
+        // parameter. The parameter keeps the case it has in the variable name.
+        if (!variableName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }

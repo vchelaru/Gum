@@ -95,4 +95,15 @@ public class ContainerShaderVariablesTests : IDisposable
 
         ((IRenderTargetRenderable)sut.RenderableComponent).ShaderParameters.ShouldBeNull();
     }
+
+    [Fact]
+    public void SetProperty_StemMatchIgnoresCase()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", "Shaders/outline.SKSL");
+
+        sut.SetProperty("Outline_Thickness", 6f);
+
+        Get(sut, "Thickness").X.ShouldBe(6f);
+    }
 }

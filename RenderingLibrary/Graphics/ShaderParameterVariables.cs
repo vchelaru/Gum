@@ -13,16 +13,19 @@ namespace RenderingLibrary.Graphics;
 /// The runtime sees only a name and a value, and the variable, <c>SourceShaderFile</c> and the text can
 /// arrive in any order (a state applies its variables sorted by name, and an exposed or referenced
 /// variable arrives on its own). So each container keeps a small layer: the raw variable values, the
-/// shader file, and a snapshot of the parameters that were there before any variable was applied. A
-/// parameter is recomputed from those whenever one of them changes, so every order gives the same result.
+/// shader file, and for every parameter a variable drives, the value it covered. A parameter is
+/// recomputed from those whenever one of them changes, so every order gives the same result.
 /// </para>
 /// <para>
 /// Per parameter the variable wins over the text. A parameter only the text names still applies. A
 /// variable whose name does not carry the current shader's stem is kept but inert, and applies if
-/// <c>SourceShaderFile</c> later changes to that shader. A vector parameter is assembled from its
+/// <c>SourceShaderFile</c> later changes to that shader. The stem is matched ignoring case (file names
+/// and the tool's duplicate-name check are case-insensitive), so variable names that differ only in the
+/// case of the stem address the same parameter. A vector parameter is assembled from its
 /// component variables; a missing component is zero, and the count is the highest component present
 /// (at least two). Values set in code with <c>SetShaderParameter</c> write the collection directly, so
-/// the latest writer wins as before; <see cref="ShaderParameterText.Assign"/> is unchanged and is
+/// the latest writer wins as before, and a code value written over a driven parameter is kept when the
+/// variable goes away; <see cref="ShaderParameterText.Assign"/> is unchanged and is
 /// still what replaces the collection when the text is assigned.
 /// </para>
 /// </remarks>
@@ -36,17 +39,24 @@ public static class ShaderParameterVariables
         /// <summary>The shader file last assigned, or null for none.</summary>
         public string? ShaderFile;
 
-        /// <summary>Every candidate variable value, keyed by full variable name, whatever its stem.</summary>
-        public readonly Dictionary<string, object> Variables = new Dictionary<string, object>();
+        /// <summary>Every candidate variable value, keyed by full variable name (case-insensitive), whatever its stem.</summary>
+        public readonly Dictionary<string, object> Variables =
+            new Dictionary<string, object>(System.StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// A copy of the parameters as they were when the layer was created or the text last replaced
-        /// them, used to put a value back when a variable stops covering it.
-        /// </summary>
-        public ShaderParameterCollection? Fallback;
+        /// <summary>The parameters currently written from variables, and what each one covered.</summary>
+        public readonly Dictionary<string, Driver> Driven = new Dictionary<string, Driver>();
+    }
 
-        /// <summary>The parameter names currently written from variables.</summary>
-        public readonly HashSet<string> Driven = new HashSet<string>();
+    private struct Driver
+    {
+        /// <summary>The value this layer last wrote.</summary>
+        public ShaderParameterValue Written;
+
+        /// <summary>Whether the parameter had a value before the variable drove it.</summary>
+        public bool HadBefore;
+
+        /// <summary>That value, put back when the variable stops driving the parameter.</summary>
+        public ShaderParameterValue Before;
     }
 
     /// <summary>
@@ -57,9 +67,7 @@ public static class ShaderParameterVariables
     /// </summary>
     public static bool TrySetVariable(IRenderTargetRenderable owner, string variableName, object? value)
     {
-        // Every shader variable name is <stem>_<parameter>, so a name without an underscore after the
-        // first character never is one. This keeps the check free for the common case.
-        if (variableName == null || variableName.IndexOf('_') < 1)
+        if (!CouldBeShaderVariableName(variableName))
         {
             return false;
         }
@@ -71,7 +79,8 @@ public static class ShaderParameterVariables
             {
                 return false;
             }
-            layer = CreateLayer(owner);
+            layer = new Layer();
+            _layers.Add(owner, layer);
         }
 
         if (value == null)
@@ -109,7 +118,8 @@ public static class ShaderParameterVariables
             {
                 return;
             }
-            layer = CreateLayer(owner);
+            layer = new Layer();
+            _layers.Add(owner, layer);
         }
 
         layer.ShaderFile = file;
@@ -126,7 +136,6 @@ public static class ShaderParameterVariables
 
         if (_layers.TryGetValue(owner, out Layer? layer))
         {
-            layer.Fallback = Copy(owner.ShaderParameters);
             // The assignment replaced the collection, so nothing in it came from a variable any more.
             layer.Driven.Clear();
             RecomputeAll(owner, layer);
@@ -135,32 +144,29 @@ public static class ShaderParameterVariables
         return error;
     }
 
-    private static Layer CreateLayer(IRenderTargetRenderable owner)
+    /// <summary>
+    /// A cheap test that keeps names that can never be shader variable names (no underscore after the
+    /// first character, or nothing after the first underscore, or an instance path or a space) from
+    /// creating a layer on a container. It cannot be stricter without the shader file: a stem may hold
+    /// underscores and a parameter may end in one.
+    /// </summary>
+    private static bool CouldBeShaderVariableName(string? variableName)
     {
-        Layer layer = new Layer();
-        layer.Fallback = Copy(owner.ShaderParameters);
-        _layers.Add(owner, layer);
-        return layer;
-    }
-
-    private static ShaderParameterCollection? Copy(ShaderParameterCollection? source)
-    {
-        if (source == null)
+        if (variableName == null)
         {
-            return null;
+            return false;
         }
 
-        ShaderParameterCollection copy = new ShaderParameterCollection();
-        foreach (KeyValuePair<string, ShaderParameterValue> pair in source)
-        {
-            copy.Set(pair.Key, pair.Value);
-        }
-        return copy;
+        int underscore = variableName.IndexOf('_');
+        return underscore >= 1
+            && underscore < variableName.Length - 1
+            && variableName.IndexOf('.') < 0
+            && variableName.IndexOf(' ') < 0;
     }
 
     private static void RecomputeAll(IRenderTargetRenderable owner, Layer layer)
     {
-        HashSet<string> parameters = new HashSet<string>(layer.Driven);
+        HashSet<string> parameters = new HashSet<string>(layer.Driven.Keys);
         if (layer.ShaderFile != null)
         {
             foreach (string variableName in layer.Variables.Keys)
@@ -180,25 +186,59 @@ public static class ShaderParameterVariables
 
     private static void ApplyParameter(IRenderTargetRenderable owner, Layer layer, string parameter)
     {
+        ShaderParameterValue current = default;
+        bool hasCurrent = owner.ShaderParameters != null && owner.ShaderParameters.TryGetValue(parameter, out current);
+        bool isDriven = layer.Driven.TryGetValue(parameter, out Driver driver);
+
         if (layer.ShaderFile != null && TryAssemble(layer, parameter, out ShaderParameterValue value))
         {
+            if (!isDriven)
+            {
+                driver = new Driver { HadBefore = hasCurrent, Before = current };
+            }
+            else if (!hasCurrent)
+            {
+                // Cleared in code since the last write: nothing to put back later.
+                driver.HadBefore = false;
+            }
+            else if (!Same(current, driver.Written))
+            {
+                // Replaced in code since the last write: that value is what comes back later.
+                driver.HadBefore = true;
+                driver.Before = current;
+            }
+
+            driver.Written = value;
+            layer.Driven[parameter] = driver;
             owner.ShaderParameters ??= new ShaderParameterCollection();
             owner.ShaderParameters.Set(parameter, value);
-            layer.Driven.Add(parameter);
         }
-        else if (layer.Driven.Remove(parameter))
+        else if (isDriven)
         {
-            if (layer.Fallback != null && layer.Fallback.TryGetValue(parameter, out ShaderParameterValue fallback))
+            layer.Driven.Remove(parameter);
+
+            // Anything other than what this layer wrote was put there in code, and stays.
+            if (hasCurrent && Same(current, driver.Written))
             {
-                owner.ShaderParameters ??= new ShaderParameterCollection();
-                owner.ShaderParameters.Set(parameter, fallback);
-            }
-            else
-            {
-                owner.ShaderParameters?.Remove(parameter);
+                if (driver.HadBefore)
+                {
+                    owner.ShaderParameters!.Set(parameter, driver.Before);
+                }
+                else
+                {
+                    owner.ShaderParameters!.Remove(parameter);
+                }
             }
         }
     }
+
+    private static bool Same(ShaderParameterValue first, ShaderParameterValue second) =>
+        first.Kind == second.Kind
+        && first.Count == second.Count
+        && first.X == second.X
+        && first.Y == second.Y
+        && first.Z == second.Z
+        && first.W == second.W;
 
     private static bool TryAssemble(Layer layer, string parameter, out ShaderParameterValue value)
     {
