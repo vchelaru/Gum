@@ -268,8 +268,8 @@ public class PasswordBox : TextBoxBase
 
     public void DeleteSelection()
     {
-        int lengthToRemove = selectionLength;
-        ExpandToWholeCharacters(Password, ref selectionStart, ref lengthToRemove);
+        var (start, lengthToRemove) = GetWholeCharacterSelection(Password, selectionStart, selectionLength);
+        selectionStart = start;
         RemoveRange(selectionStart, lengthToRemove);
         CallMethodsInResponseToPasswordChanged();
 
