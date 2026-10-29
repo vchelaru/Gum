@@ -1107,8 +1107,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <summary>What the manager remembers between reloads about definitions the diff cannot apply.</summary>
     private sealed class ReloadMemory
     {
-        // The base type, exposed variables and inherited content each changed element's visuals were
-        // built with. The diff re-points a visual at the new element, so without this the next reload
+        // The base type and exposed variables each changed element's visuals were built with. The diff re-points a visual at the new element, so without this the next reload
         // would see no change and stop listing a tree that is still stale.
         public Dictionary<string, DefinitionShape> BuiltShapes { get; } = new Dictionary<string, DefinitionShape>();
 
@@ -1116,47 +1115,22 @@ public class GumHotReloadManager : IGumHotReloadManager
         public HashSet<string> MissingElements { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
 
-    /// <summary>
-    /// What a reload cannot apply to visuals that already exist: the base type, the exposed variables
-    /// and the content inherited through the base chain (so a switch between two identical bases is not a change).
-    /// </summary>
-    private sealed record DefinitionShape(string BaseType, string Exposed, string Inherited)
+    /// <summary>What a reload cannot apply to visuals that already exist: the base type and exposed variables.</summary>
+    private sealed record DefinitionShape(string BaseType, string Exposed)
     {
-        public static DefinitionShape Of(ElementSave element, Func<string, ElementSave?> lookup) => new DefinitionShape(
+        public static DefinitionShape Of(ElementSave element) => new DefinitionShape(
             element.BaseType ?? "",
             string.Join(";", (element.DefaultState?.Variables ?? new List<VariableSave>())
                 .Where(variable => !string.IsNullOrEmpty(variable.ExposedAsName))
                 .Select(variable => variable.Name + "=" + variable.ExposedAsName)
-                .OrderBy(entry => entry, StringComparer.Ordinal)),
-            InheritedContent(element, lookup));
-
-        private static string InheritedContent(ElementSave element, Func<string, ElementSave?> lookup)
-        {
-            System.Text.StringBuilder text = new System.Text.StringBuilder();
-            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            string? name = element.BaseType;
-            while (!string.IsNullOrEmpty(name) && seen.Add(name) && lookup(name) is ElementSave layer)
-            {
-                text.Append("vars:").Append(string.Join(",", (layer.DefaultState?.Variables ?? new List<VariableSave>())
-                    .Where(AppliesAValue)
-                    .Select(variable => variable.Name + "=" + Convert.ToString(variable.Value, System.Globalization.CultureInfo.InvariantCulture))
-                    .OrderBy(entry => entry, StringComparer.Ordinal)));
-                text.Append(";instances:").Append(string.Join(",", layer.Instances
-                    .Select(instance => instance.Name + ":" + instance.BaseType)
-                    .OrderBy(entry => entry, StringComparer.Ordinal)));
-                text.Append(";states:").Append(string.Join(",", layer.AllStates
-                    .Select(state => state.Name)
-                    .OrderBy(entry => entry, StringComparer.Ordinal)));
-                text.Append('|');
-                name = layer.BaseType;
-            }
-            return text.ToString();
-        }
+                .OrderBy(entry => entry, StringComparer.Ordinal)));
     }
 
     // Visuals are built with the element's base type and exposed variables, and the diff does not
     // rebuild them. The element is listed for as long as its definition differs from the one the
-    // visuals were built with, and dropped from the list when an edit puts it back.
+    // visuals were built with, and dropped from the list when an edit puts it back. Any change of the
+    // base type counts, whatever the two bases contain: deciding that two bases are equivalent has
+    // missed real differences, and a needless report costs one reload on a rare edit.
     private static void ReportDefinitionChanges(ElementSave? previous, ElementSave current, ReloadContext context)
     {
         if (!context.CheckedDefinitions.Add(current.Name))
@@ -1164,19 +1138,15 @@ public class GumHotReloadManager : IGumHotReloadManager
             return;
         }
 
-        ElementSave? InNewProject(string name) => ObjectFinder.Self.GetElementSave(name);
-        ElementSave? InOldProject(string name) =>
-            context.OldByName.TryGetValue(name, out ElementSave? old) ? old : ObjectFinder.Self.GetElementSave(name);
+        DefinitionShape now = DefinitionShape.Of(current);
+        bool wasListed = context.Memory.BuiltShapes.TryGetValue(current.Name, out DefinitionShape? kept);
+        DefinitionShape builtFrom = kept ?? (previous != null ? DefinitionShape.Of(previous) : now);
 
-        DefinitionShape now = DefinitionShape.Of(current, InNewProject);
-        DefinitionShape builtFrom = context.Memory.BuiltShapes.TryGetValue(current.Name, out DefinitionShape? kept)
-            ? kept
-            : previous != null ? DefinitionShape.Of(previous, InOldProject) : now;
-
-        // Content inherited under the same base type is edited through the normal diff, so it only
-        // counts when the base type changed or the base is gone.
-        bool baseGone = now.BaseType.Length > 0 && InNewProject(now.BaseType) == null && builtFrom.Inherited != now.Inherited;
-        bool baseChanged = builtFrom.BaseType != now.BaseType && builtFrom.Inherited != now.Inherited;
+        // A base that is missing now but that the visuals were built with (the old project had it).
+        bool baseGone = now.BaseType.Length > 0
+            && ObjectFinder.Self.GetElementSave(now.BaseType) == null
+            && (wasListed || context.OldByName.ContainsKey(now.BaseType));
+        bool baseChanged = builtFrom.BaseType != now.BaseType;
         bool exposedChanged = builtFrom.Exposed != now.Exposed;
         if (!baseGone && !baseChanged && !exposedChanged)
         {
