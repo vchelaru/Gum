@@ -182,6 +182,56 @@ public class PropertyGridManagerShaderParametersTests : BaseTestClass, IDisposab
         sut.HaveShaderParametersChanged().ShouldBeFalse();
     }
 
+    private PropertyGridManager GivenRowsBuiltFor(params ShaderParameterInfo[] parameters)
+    {
+        GivenTheHolderIsTheOnlySelection();
+        GivenTheHolderHasAnEffect(true);
+        GivenTheCompiledEffectDeclares(parameters);
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+        sut.AdjustShaderParameters(new List<MemberCategory> { BuildRenderingCategory() }, _holder);
+        sut.HaveShaderParametersChanged().ShouldBeFalse();
+        return sut;
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsTrueWhenTheCompiledDefaultChangesForTheSameParameters()
+    {
+        // Editing the default in the shader file recompiles the effect; the rows must show the new default.
+        PropertyGridManager sut = GivenRowsBuiltFor(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1f)));
+
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(3f)));
+
+        sut.HaveShaderParametersChanged().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsFalseWhenTheParametersAndTheirDefaultsAreUnchanged()
+    {
+        PropertyGridManager sut = GivenRowsBuiltFor(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1.5f)),
+            new ShaderParameterInfo("Offset", ShaderParameterKind.Float, 2, ShaderParameterValue.FromVector2(0.25f, 4f)));
+
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1.5f)),
+            new ShaderParameterInfo("Offset", ShaderParameterKind.Float, 2, ShaderParameterValue.FromVector2(0.25f, 4f)));
+
+        sut.HaveShaderParametersChanged().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsTrueWhenOnlyOneComponentOfAVectorDefaultChanges()
+    {
+        PropertyGridManager sut = GivenRowsBuiltFor(
+            new ShaderParameterInfo("OutlineColor", ShaderParameterKind.Float, 4, ShaderParameterValue.FromVector4(0f, 0f, 0f, 1f)));
+
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("OutlineColor", ShaderParameterKind.Float, 4, ShaderParameterValue.FromVector4(0f, 0f, 0f, 0.5f)));
+
+        sut.HaveShaderParametersChanged().ShouldBeTrue();
+    }
+
     [Fact]
     public void HaveShaderParametersChanged_IsFalseWhenSeveralInstancesAreSelected()
     {

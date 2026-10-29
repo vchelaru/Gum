@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Gum.ToolStates;
@@ -1159,8 +1160,15 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         return ShaderParameterReader.Read(effect);
     }
 
+    // Includes each default, so a recompiled effect with the same parameters but a new default is noticed.
+    // Formatted invariantly so the comparison never depends on the user's culture.
     private static string GetShaderParametersSignature(IReadOnlyList<ShaderParameterInfo> parameters) =>
-        string.Join(";", parameters.Select(parameter => parameter.Name + ":" + parameter.Kind + ":" + parameter.Count));
+        string.Join(";", parameters.Select(parameter =>
+        {
+            ShaderParameterValue value = parameter.DefaultValue;
+            return string.Create(CultureInfo.InvariantCulture,
+                $"{parameter.Name}:{parameter.Kind}:{parameter.Count}={value.Kind}:{value.Count}:{value.X}:{value.Y}:{value.Z}:{value.W}");
+        }));
 
     /// <summary>
     /// True when the selected instance's compiled shader declares different parameters than the rows
