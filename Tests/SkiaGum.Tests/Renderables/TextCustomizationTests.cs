@@ -437,6 +437,31 @@ public class TextCustomizationTests : BaseTestClass
             runs.ShouldBe(expectedRuns, $"MaxLettersToShow {maxLetters}");
         }
     }
+    // A surrogate is half of a pair only when a high one is followed by a low one; anywhere else it is a code point of
+    // its own, in the layout, the line mapping and the reveal alike.
+    [Fact]
+    public void GetVisibleStyledRuns_LoneSurrogate_CountsAsOneCodePoint()
+    {
+        // (layout text, its code point count). Lone surrogates are kept out of InlineData, which xunit cannot round-trip.
+        (string LayoutText, int CodePoints)[] cases =
+        {
+            ("x\uD83Dc", 3),
+            ("xc\uD83D", 3),
+            ("x\uDE00c", 3),
+            ("x\uD83D\uD83D\uDE00", 3),
+        };
+        Text.Customizations["Mask"] = (index, block) => new LetterCustomization { ReplacementCharacter = '*' };
+
+        foreach ((string layoutText, int codePoints) in cases)
+        {
+            Text text = MakeText();
+            text.RawText = $"[Custom=Mask]{layoutText}[/Custom]";
+
+            string.Concat(text.GetStyledRuns().Select(r => r.Text)).ShouldBe(new string('*', codePoints), layoutText);
+            string.Concat(text.WrappedText).ShouldBe(layoutText);
+            string.Concat(text.GetVisibleStyledRuns().Select(r => r.Text)).ShouldBe(new string('*', codePoints), layoutText);
+        }
+    }
     // A lone surrogate has nothing to pair with, so it stays one run per UTF-16 unit as before.
     [Fact]
     public void GetStyledRuns_CustomSpanWithLoneSurrogate_StaysOneRunPerCharacter()
