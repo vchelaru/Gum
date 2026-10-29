@@ -5,7 +5,7 @@ description: Screenshots of the Gum tool (Avalonia head) to check or show a UI c
 
 # Screenshots of the Gum tool
 
-Pick the route by what has to be on screen. Load this before the first attempt, not after the first empty image.
+Pick the route by what has to be on screen. Load this before the first attempt.
 
 | To see | Use |
 |---|---|

@@ -6,7 +6,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// <summary>
 /// The grid member for a <see cref="SyntheticVariableRow"/>. It reports the row's own default state, so
 /// the row shows the "set on this instance" marker only when a value is stored, and "Make Default"
-/// clears the stored value.
+/// clears the stored value. A row with no reset delegate keeps the base behavior.
 /// </summary>
 internal class SyntheticInstanceMember : InstanceMember
 {
@@ -24,7 +24,18 @@ internal class SyntheticInstanceMember : InstanceMember
         get => _isDefault?.Invoke() ?? false;
         set
         {
-            if (value && _resetToDefault != null)
+            if (!value)
+            {
+                return;
+            }
+
+            if (_resetToDefault == null)
+            {
+                // No reset of its own (behavior property and remove-button rows): "Make Default"
+                // sets the value to the type's default, as for any other member.
+                base.IsDefault = value;
+            }
+            else
             {
                 _resetToDefault();
                 SimulateValueChanged();
