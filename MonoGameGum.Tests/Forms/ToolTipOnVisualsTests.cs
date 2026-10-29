@@ -149,6 +149,45 @@ public class ToolTipOnVisualsTests : BaseTestClass
     }
 
     [Fact]
+    public void SetToolTip_WithAForeignDelegateAsObject_ThrowsArgumentExceptionImmediately_AndKeepsThePreviousTooltip()
+    {
+        ContainerRuntime row = CreateContainerInRoot();
+        ToolTipService.SetToolTip(row, "kept");
+        Func<int> wrongReturnType = () => 42;
+        object asObject = wrongReturnType;
+
+        ArgumentException exception = Should.Throw<ArgumentException>(() => ToolTipService.SetToolTip(row, asObject));
+
+        exception.Message.ShouldContain("Func<string?>");
+        ToolTipService.GetTooltip(row)!.Content.ShouldBe("kept");
+    }
+
+    [Fact]
+    public void SetToolTip_WithAFuncOfObjectAsObject_ThrowsArgumentException()
+    {
+        ContainerRuntime row = CreateContainerInRoot();
+        Func<object?> funcOfObject = () => "text";
+
+        Should.Throw<ArgumentException>(() => ToolTipService.SetToolTip(row, (object)funcOfObject));
+    }
+
+    [Fact]
+    public void SetToolTip_WithAFuncOfStringAsObject_IsTreatedAsAContentCallback()
+    {
+        int calls = 0;
+        ContainerRuntime row = CreateContainerInRoot();
+        Func<string?> provider = () => { calls++; return "from callback"; };
+        Mock<ICursor> cursor = ToolTipTestHarness.SetupCursor();
+
+        ToolTipService.SetToolTip(row, (object)provider);
+        calls.ShouldBe(0);
+        ToolTipTestHarness.HoverUntilOpen(cursor, row);
+
+        calls.ShouldBe(1);
+        ToolTipService.GetTooltip(row)!.Content.ShouldBe("from callback");
+    }
+
+    [Fact]
     public void SetToolTip_WithANullVisual_Throws()
     {
         Should.Throw<ArgumentNullException>(() => ToolTipService.SetToolTip(null!, "x"));
@@ -174,7 +213,7 @@ public class ToolTipOnVisualsTests : BaseTestClass
         ContainerRuntime row = CreateContainerInRoot();
         ToolTipService.SetToolTip(row, () => "a row");
 
-        ToolTipService.SetToolTip(row, (Func<object?>?)null);
+        ToolTipService.SetToolTip(row, (Func<string?>?)null);
 
         ToolTipService.GetTooltip(row).ShouldBeNull();
     }
@@ -306,20 +345,6 @@ public class ToolTipOnVisualsTests : BaseTestClass
 
         OpenCount.ShouldBe(0);
         calls.ShouldBe(1);
-    }
-
-    [Fact]
-    public void Callback_ReturningNonString_ThrowsNotSupportedAndLeavesNothingOpen()
-    {
-        ContainerRuntime row = CreateContainerInRoot();
-        ToolTipService.SetToolTip(row, () => 42);
-        Mock<ICursor> cursor = ToolTipTestHarness.SetupCursor();
-        ToolTipTestHarness.Over(cursor, row);
-        ToolTipTestHarness.TickTo(0.0);
-
-        Should.Throw<NotSupportedException>(() => ToolTipTestHarness.TickTo(0.6));
-
-        OpenCount.ShouldBe(0);
     }
 
     [Fact]

@@ -51,14 +51,14 @@ public static class ToolTipService
     /// </summary>
     private sealed class Registration
     {
-        public Registration(Tooltip tooltip, Func<object?>? contentProvider)
+        public Registration(Tooltip tooltip, Func<string?>? contentProvider)
         {
             Tooltip = tooltip;
             ContentProvider = contentProvider;
         }
 
         public Tooltip Tooltip { get; }
-        public Func<object?>? ContentProvider { get; }
+        public Func<string?>? ContentProvider { get; }
     }
 
     // Keyed by the host, which is a FrameworkElement (Forms controls, so a control keeps its tooltip
@@ -85,12 +85,16 @@ public static class ToolTipService
     /// <param name="visual">The visual to attach the tooltip to. It must receive cursor events to be
     /// hovered, see the remarks.</param>
     /// <param name="content">
-    /// A <see cref="string"/> (shown in a default <see cref="Tooltip"/>), a <see cref="Tooltip"/>
-    /// instance (used as is), or a <see cref="Func{TResult}"/> that returns the string to show and is
-    /// called each time the tooltip opens (see <see cref="SetToolTip(InteractiveGue, Func{object?}?)"/>).
-    /// Null removes the tooltip.
+    /// A <see cref="string"/> (shown in a default <see cref="Tooltip"/>) or a <see cref="Tooltip"/>
+    /// instance (used as is), matching <see cref="FrameworkElement.ToolTip"/>. Null removes the tooltip.
+    /// A <c>Func&lt;string?&gt;</c> passed as an <see cref="object"/> is accepted and treated as a content
+    /// callback, the same as the <see cref="SetToolTip(InteractiveGue, Func{string?}?)"/> overload,
+    /// which is the one to call.
     /// </param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="visual"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown immediately for a delegate of any other type (for
+    /// example a <c>Func&lt;int&gt;</c> stored in an <see cref="object"/> variable), so the mistake
+    /// shows up here instead of when the cursor hovers. The previous tooltip, if any, is kept.</exception>
     /// <exception cref="NotSupportedException">Thrown for any other kind of content, matching
     /// <see cref="FrameworkElement.ToolTip"/>. The previous tooltip, if any, is kept.</exception>
     /// <remarks>
@@ -118,10 +122,18 @@ public static class ToolTipService
             throw new ArgumentNullException(nameof(visual));
         }
 
-        if (content is Func<object?> provider)
+        if (content is Func<string?> provider)
         {
             Register(visual, new Registration(new Tooltip(), provider));
             return;
+        }
+
+        if (content is Delegate)
+        {
+            throw new ArgumentException(
+                $"A tooltip content callback must be a Func<string?>. Got {content.GetType()}. " +
+                "Pass a Func<string?> (for example a lambda that returns a string) or a string.",
+                nameof(content));
         }
 
         Tooltip? tooltip = ToTooltip(content, memberName: nameof(SetToolTip) + " content");
@@ -139,13 +151,13 @@ public static class ToolTipService
     /// <remarks>
     /// The callback runs when the tooltip is about to open (after the initial delay) and again on every
     /// later open, never while it is open or during the delay. Returning null opens nothing for that
-    /// hover. A non-string result throws <see cref="NotSupportedException"/>, as
-    /// <see cref="Tooltip.Content"/> only supports strings today. If the callback throws, the exception
+    /// hover. The callback returns a string because <see cref="Tooltip.Content"/> only supports text
+    /// today. If the callback throws, the exception
     /// propagates out of <c>GumService.Update</c> (a bug in the callback should be visible), nothing is
     /// shown, and the callback is not asked again until the cursor leaves the host and returns, so one
     /// failure does not throw every frame.
     /// </remarks>
-    public static void SetToolTip(InteractiveGue visual, Func<object?>? contentProvider)
+    public static void SetToolTip(InteractiveGue visual, Func<string?>? contentProvider)
     {
         SetToolTip(visual, (object?)contentProvider);
     }
@@ -289,7 +301,7 @@ public static class ToolTipService
             {
                 // Marked before the call so a callback that throws is not called again every frame.
                 _openDeclinedForThisHover = true;
-                object? content = registration.ContentProvider();
+                string? content = registration.ContentProvider();
                 if (content == null)
                 {
                     return;
