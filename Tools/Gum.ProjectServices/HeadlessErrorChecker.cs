@@ -810,7 +810,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     #endregion
 
-    #region GUM0015 — Category name collides with generated code
+    #region GUM0018 — Category name collides with generated code
 
     private static readonly CodeGeneration.CodeGenerationNameVerifier CategoryNameVerifier =
         new CodeGeneration.CodeGenerationNameVerifier(new NameRules());
@@ -848,7 +848,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     errors.Add(new ErrorResult
                     {
                         ElementName = element.Name,
-                        Code = "GUM0015",
+                        Code = "GUM0018",
                         Severity = ErrorSeverity.Error,
                         Message = $"Category \"{category.Name}\" generates {description} named \"{name}\", which is also the name of " +
                             $"{existing}, so the generated code cannot compile. Rename the category or the element."

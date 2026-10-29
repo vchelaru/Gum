@@ -52,7 +52,7 @@ The tree's "!" follows every full check through `ErrorsChecked`, including the E
 | `GetMissingExternalFileErrorsFor` | GUM0006: referenced texture/font file missing (via `GumProjectDependencyWalker`); GUM0008 for a case-only difference |
 | `GetFontRangeEntryErrors` | Project-level warnings: GUM0010 a font-specific `FontRangeEntries` entry no Text's font reaches, GUM0011 an entry whose range `BmfcSave.GetIfIsValidRange` rejects (BMFont bakes the default, KernSmith drops the unreadable parts). GUM0010 runs `FontReferenceCollector` (through `FontRangeEntryChecker`, which the Fonts settings page also uses) over the project only when such an entry exists |
 | `GetTextOutsideFontRangeErrorsFor` | GUM0012 (warning): a literal `Text` value in any state has characters its font's ranges (`GetFontRanges`) leave out; skips pre-baked `.fnt` and GUM0011-invalid ranges |
-| `GetCategoryNameCollisionErrorsFor` | GUM0015 (error): a category's generated enum or `<Category>State` property has the generated class's name or repeats another category's; Standards skipped |
+| `GetCategoryNameCollisionErrorsFor` | GUM0018 (error): a category's generated enum or `<Category>State` property has the generated class's name or repeats another category's; Standards skipped |
 | `GetUnresolvableVariableReferenceErrorsFor` | GUM0009 (warning): a `VariableReferences` line reads an element, instance or variable the project doesn't have, so it never applies. The end-to-end oracles fail on it despite the warning severity |
 
 ## Key Files

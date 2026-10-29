@@ -121,7 +121,7 @@ public class GeneratedMemberNameCollisionTests : BaseTestClass
     [InlineData(ObjectInstantiationType.FullyInCode)]
     public void Codegen_CategoryNamedLikeItsComponent_IsBlockedByAnErrorAndGeneratesNothingForIt(ObjectInstantiationType instantiationType)
     {
-        // The nested enum is the public type of the ModeState property, so it is reported (GUM0015) rather than renamed.
+        // The nested enum is the public type of the ModeState property, so it is reported (GUM0018) rather than renamed.
         string gumx = CreateGame(instantiationType);
         EditProject(gumx, project =>
         {
@@ -147,7 +147,7 @@ public class GeneratedMemberNameCollisionTests : BaseTestClass
         CliTestHelper result = CliTestHelper.Run("check", gumx, "--json");
 
         result.ExitCode.ShouldBe(1);
-        result.StandardOutput.ShouldContain("GUM0015");
+        result.StandardOutput.ShouldContain("GUM0018");
     }
 
     #region Harness
