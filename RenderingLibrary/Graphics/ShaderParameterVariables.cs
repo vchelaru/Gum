@@ -39,12 +39,22 @@ public static class ShaderParameterVariables
         /// <summary>The shader file last assigned, or null for none.</summary>
         public string? ShaderFile;
 
-        /// <summary>Every candidate variable value, keyed by full variable name (case-insensitive), whatever its stem.</summary>
-        public readonly Dictionary<string, object> Variables =
-            new Dictionary<string, object>(System.StringComparer.OrdinalIgnoreCase);
+        /// <summary>Every candidate variable value, keyed by full variable name as written, whatever its stem.</summary>
+        public readonly Dictionary<string, Entry> Variables = new Dictionary<string, Entry>();
+
+        /// <summary>Counts writes, so the latest of two names that address one parameter wins.</summary>
+        public long WriteCount;
 
         /// <summary>The parameters currently written from variables, and what each one covered.</summary>
         public readonly Dictionary<string, Driver> Driven = new Dictionary<string, Driver>();
+    }
+
+    private struct Entry
+    {
+        public object Value;
+
+        /// <summary>The <see cref="Layer.WriteCount"/> when the value was set.</summary>
+        public long Sequence;
     }
 
     private struct Driver
@@ -67,7 +77,7 @@ public static class ShaderParameterVariables
     /// </summary>
     public static bool TrySetVariable(IRenderTargetRenderable owner, string variableName, object? value)
     {
-        if (!CouldBeShaderVariableName(variableName))
+        if (!ShaderVariableNaming.IsPossibleVariableName(variableName))
         {
             return false;
         }
@@ -89,7 +99,7 @@ public static class ShaderParameterVariables
         }
         else
         {
-            layer.Variables[variableName] = value;
+            layer.Variables[variableName] = new Entry { Value = value, Sequence = ++layer.WriteCount };
         }
 
         if (layer.ShaderFile == null
@@ -142,26 +152,6 @@ public static class ShaderParameterVariables
         }
 
         return error;
-    }
-
-    /// <summary>
-    /// A cheap test that keeps names that can never be shader variable names (no underscore after the
-    /// first character, or nothing after the first underscore, or an instance path or a space) from
-    /// creating a layer on a container. It cannot be stricter without the shader file: a stem may hold
-    /// underscores and a parameter may end in one.
-    /// </summary>
-    private static bool CouldBeShaderVariableName(string? variableName)
-    {
-        if (variableName == null)
-        {
-            return false;
-        }
-
-        int underscore = variableName.IndexOf('_');
-        return underscore >= 1
-            && underscore < variableName.Length - 1
-            && variableName.IndexOf('.') < 0
-            && variableName.IndexOf(' ') < 0;
     }
 
     private static void RecomputeAll(IRenderTargetRenderable owner, Layer layer)
@@ -243,23 +233,43 @@ public static class ShaderParameterVariables
     private static bool TryAssemble(Layer layer, string parameter, out ShaderParameterValue value)
     {
         string? file = layer.ShaderFile;
-        float x = 0, y = 0, z = 0, w = 0;
-        int highest = -1;
 
-        for (int index = 0; index < ShaderParameterMarker.MaximumComponentCount; index++)
+        // Names are parsed with ShaderVariableNaming, so only canonical ones count: the stem matches
+        // ignoring case, the parameter and the component suffix match exactly. When several names
+        // address the same slot (stems differing only in case), the latest write wins.
+        System.Span<float> components = stackalloc float[ShaderParameterMarker.MaximumComponentCount];
+        System.Span<long> componentSequences = stackalloc long[ShaderParameterMarker.MaximumComponentCount];
+        componentSequences.Fill(-1);
+        int highest = -1;
+        long scalarSequence = -1;
+        object? scalar = null;
+
+        foreach (KeyValuePair<string, Entry> pair in layer.Variables)
         {
-            string componentName = ShaderVariableNaming.GetVariableName(
-                file, parameter, index, ShaderParameterMarker.MaximumComponentCount);
-            if (layer.Variables.TryGetValue(componentName, out object? raw) && TryToFloat(raw, out float component))
+            if (!ShaderVariableNaming.TryParseVariableName(file, pair.Key, out string name, out int? componentIndex)
+                || !string.Equals(name, parameter, System.StringComparison.Ordinal))
             {
-                switch (index)
+                continue;
+            }
+
+            Entry entry = pair.Value;
+            if (componentIndex.HasValue)
+            {
+                int index = componentIndex.Value;
+                if (entry.Sequence > componentSequences[index] && TryToFloat(entry.Value, out float component))
                 {
-                    case 0: x = component; break;
-                    case 1: y = component; break;
-                    case 2: z = component; break;
-                    default: w = component; break;
+                    components[index] = component;
+                    componentSequences[index] = entry.Sequence;
+                    if (index > highest)
+                    {
+                        highest = index;
+                    }
                 }
-                highest = index;
+            }
+            else if (entry.Sequence > scalarSequence)
+            {
+                scalar = entry.Value;
+                scalarSequence = entry.Sequence;
             }
         }
 
@@ -268,31 +278,27 @@ public static class ShaderParameterVariables
             int count = System.Math.Max(highest + 1, ShaderParameterMarker.MinimumComponentCount);
             switch (count)
             {
-                case 2: value = ShaderParameterValue.FromVector2(x, y); break;
-                case 3: value = ShaderParameterValue.FromVector3(x, y, z); break;
-                default: value = ShaderParameterValue.FromVector4(x, y, z, w); break;
+                case 2: value = ShaderParameterValue.FromVector2(components[0], components[1]); break;
+                case 3: value = ShaderParameterValue.FromVector3(components[0], components[1], components[2]); break;
+                default: value = ShaderParameterValue.FromVector4(components[0], components[1], components[2], components[3]); break;
             }
             return true;
         }
 
-        string scalarName = ShaderVariableNaming.GetVariableName(file, parameter);
-        if (layer.Variables.TryGetValue(scalarName, out object? scalar))
+        switch (scalar)
         {
-            switch (scalar)
-            {
-                case float floatValue:
-                    value = ShaderParameterValue.FromFloat(floatValue);
-                    return true;
-                case double doubleValue:
-                    value = ShaderParameterValue.FromFloat((float)doubleValue);
-                    return true;
-                case int intValue:
-                    value = ShaderParameterValue.FromInt(intValue);
-                    return true;
-                case bool boolValue:
-                    value = ShaderParameterValue.FromBool(boolValue);
-                    return true;
-            }
+            case float floatValue:
+                value = ShaderParameterValue.FromFloat(floatValue);
+                return true;
+            case double doubleValue:
+                value = ShaderParameterValue.FromFloat((float)doubleValue);
+                return true;
+            case int intValue:
+                value = ShaderParameterValue.FromInt(intValue);
+                return true;
+            case bool boolValue:
+                value = ShaderParameterValue.FromBool(boolValue);
+                return true;
         }
 
         value = default;

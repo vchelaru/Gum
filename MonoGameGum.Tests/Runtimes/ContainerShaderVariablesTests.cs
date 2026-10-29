@@ -446,6 +446,94 @@ public class ContainerShaderVariablesTests : BaseTestClass
         Has(sut, "Thickness").ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData("Shaders/_Glow.fx", "_Glow_Thickness", true)]
+    [InlineData("Shaders/_Glow.fx", "_Glow_Thickness", false)]
+    [InlineData("Shaders/1abc.fx", "_1abc_Thickness", true)]
+    [InlineData("Shaders/1abc.fx", "_1abc_Thickness", false)]
+    public void SetProperty_StemStartingWithAnUnderscore_IsRoutedInEitherOrder(string shaderFile, string variableName, bool fileFirst)
+    {
+        ContainerRuntime sut = new();
+        if (fileFirst)
+        {
+            sut.SetProperty("SourceShaderFile", shaderFile);
+        }
+
+        sut.SetProperty(variableName, 6f);
+
+        if (!fileFirst)
+        {
+            sut.SetProperty("SourceShaderFile", shaderFile);
+        }
+        Get(sut, "Thickness").X.ShouldBe(6f);
+    }
+
+    [Fact]
+    public void SetProperty_StemStartingWithAnUnderscore_ComponentVariableBeforeTheFile_Assembles()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("_1abc_Tint__X", 0.5f);
+        sut.SetProperty("_1abc_Tint__Y", 1f);
+
+        sut.SetProperty("SourceShaderFile", "Shaders/1abc.fx");
+
+        Get(sut, "Tint").Count.ShouldBe(2);
+        Get(sut, "Tint").X.ShouldBe(0.5f);
+    }
+
+    [Fact]
+    public void SetProperty_ParametersDifferingOnlyInCase_AreDistinctAndSurviveAShaderChange()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", "Shaders/Tint.fx");
+        sut.SetProperty("Tint_foo", 3f);
+        sut.SetProperty("Tint_Foo", 5f);
+        Get(sut, "foo").X.ShouldBe(3f);
+        Get(sut, "Foo").X.ShouldBe(5f);
+
+        sut.SetProperty("SourceShaderFile", "Shaders/Other.fx");
+        sut.SetProperty("SourceShaderFile", "Shaders/Tint.fx");
+
+        Get(sut, "foo").X.ShouldBe(3f);
+        Get(sut, "Foo").X.ShouldBe(5f);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SetProperty_LowercaseComponentSuffix_IsNeverAComponent_InEitherOrder(bool invalidFirst)
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", "Shaders/Tint.fx");
+
+        if (invalidFirst)
+        {
+            sut.SetProperty("Tint_Tint__x", 0.5f);
+            sut.SetProperty("Tint_Tint__Y", 1f);
+        }
+        else
+        {
+            sut.SetProperty("Tint_Tint__Y", 1f);
+            sut.SetProperty("Tint_Tint__x", 0.5f);
+        }
+
+        ShaderParameterValue tint = Get(sut, "Tint");
+        tint.Count.ShouldBe(2);
+        tint.X.ShouldBe(0f);
+        tint.Y.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void SetProperty_LowercaseComponentSuffixAlone_SetsNothing()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", "Shaders/Tint.fx");
+
+        sut.SetProperty("Tint_Tint__x", 0.5f);
+
+        Has(sut, "Tint").ShouldBeFalse();
+    }
+
     [Fact]
     public void SetPropertyOnRenderable_LineRectangle_TheEditorsContainer_RoutesTheSameWay()
     {

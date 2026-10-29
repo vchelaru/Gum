@@ -228,6 +228,61 @@ public static class ShaderVariableNaming
     }
 
     /// <summary>
+    /// Whether <paramref name="variableName"/> could be a canonical name of some shader: a non-empty stem
+    /// (which may start with an underscore), a separating underscore, and a supported parameter name,
+    /// optionally followed by a component suffix. It needs no shader, so it is the cheap test for a name
+    /// that arrives before the container's shader file is known; for a given shader
+    /// <see cref="TryParseVariableName"/> decides. Never false for a name <see cref="GetVariableName(string?, string)"/>
+    /// can produce. Does not allocate.
+    /// </summary>
+    public static bool IsPossibleVariableName(string? variableName)
+    {
+        if (variableName == null)
+        {
+            return false;
+        }
+
+        int end = variableName.Length;
+        if (end >= ComponentSeparator.Length + 2
+            && ComponentLetters.IndexOf(variableName[end - 1]) >= 0
+            && string.CompareOrdinal(variableName, end - 3, ComponentSeparator, 0, ComponentSeparator.Length) == 0)
+        {
+            end -= 3;
+        }
+
+        // The separator is an underscore that leaves a non-empty stem before it and a supported
+        // parameter name after it. The stem may hold underscores and the parameter may end in one, so
+        // every underscore from the second character on is a candidate.
+        for (int separator = 1; separator < end - 1; separator++)
+        {
+            if (variableName[separator] == '_' && IsSupportedParameterRange(variableName, separator + 1, end))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool IsSupportedParameterRange(string name, int start, int end)
+    {
+        for (int i = start; i < end; i++)
+        {
+            char character = name[i];
+            bool isAsciiLetter = (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z');
+            bool isDigit = character >= '0' && character <= '9';
+            if (!isAsciiLetter && !isDigit && character != '_')
+            {
+                return false;
+            }
+            if (character == '_' && i + 1 < end && name[i + 1] == '_')
+            {
+                return false;
+            }
+        }
+        return end > start;
+    }
+
+    /// <summary>
     /// Whether <paramref name="variableName"/> ends in a component suffix (<c>__X</c> to <c>__W</c>)
     /// after at least one other character. Needs no shader; a name that passes is a component name of
     /// some shader.
