@@ -7,6 +7,7 @@ using Gum.Managers;
 #if RAYLIB
 using System.Linq;
 using Raylib_cs;
+using RenderingLibrary.Graphics;
 using ShadowDusk.Compiler.Raylib;
 using ShadowDusk.Core;
 using static Raylib_cs.Raylib;
@@ -379,7 +380,22 @@ internal class RenderTargetShaderScreen : FrameworkElement
             }
 
             status = "Slang converted to GLSL by ShadowDusk.";
-            return LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+            Shader converted = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+
+            // GLSL declares uniforms without a value, so hand Gum the defaults the .slang declares
+            // (float Thickness = 1.0;) for a parameter a container does not set.
+            ShaderUniformDefaults defaults = new ShaderUniformDefaults();
+            foreach (RaylibUniform uniform in conversion.Value.Uniforms)
+            {
+                ShaderUniformDefault? declared = ShaderUniformDefault.FromTypeName(
+                    uniform.Name, uniform.GlslType, uniform.ArrayLength, uniform.DefaultValue);
+                if (declared != null)
+                {
+                    defaults.Add(declared);
+                }
+            }
+            RaylibShaderDefaults.Set(converted, defaults);
+            return converted;
         }
 
         EffectType shader = LoadShader(null, path);

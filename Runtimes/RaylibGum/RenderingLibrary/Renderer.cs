@@ -780,14 +780,31 @@ public class Renderer : IRenderer
     private static void ApplyShaderParameters(ShaderParameterCollection? parameters, Raylib_cs.Shader shader)
     {
         // A shared shader keeps the last values written to it, so what an earlier container set and
-        // this one did not goes back to zero (the unset value) before this container's values go on.
+        // this one did not goes back to its unset value before this container's values go on. The
+        // unset value is the default the shader declares (RaylibShaderDefaults), or zero when it
+        // declares none.
+        ShaderUniformDefaults? defaults = RaylibShaderDefaults.TryGet(shader);
         ShaderParameterHistory history = ShaderParameterHistory.For(HistoryKey(shader.Id));
         foreach (KeyValuePair<string, ShaderParameterValue> stale in history.TakeStale(parameters))
         {
             int staleLocation = Raylib.GetShaderLocation(shader, stale.Key);
-            if (staleLocation >= 0)
+            if (staleLocation >= 0 && defaults?.TryGetValue(stale.Key, out _) != true)
             {
                 SetShaderUniform(shader, staleLocation, ShaderParameterValue.ZeroLike(stale.Value));
+            }
+        }
+
+        // A uniform nothing has written yet is zero in GLSL, so every declared default this container
+        // does not set is written, including the first time the shader draws.
+        if (defaults != null)
+        {
+            foreach (ShaderUniformDefault declared in defaults)
+            {
+                int defaultLocation = Raylib.GetShaderLocation(shader, declared.Name);
+                if (defaultLocation >= 0 && parameters?.TryGetValue(declared.Name, out _) != true)
+                {
+                    RaylibShaderDefaults.Write(shader, defaultLocation, declared);
+                }
             }
         }
 
