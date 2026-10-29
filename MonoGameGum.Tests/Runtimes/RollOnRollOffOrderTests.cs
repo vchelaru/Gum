@@ -450,6 +450,44 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
     #endregion
 
+    #region Handlers that write cursor.VisualOver
+
+    // These pin a pathological case where the new order differs from the old one: RollOff now runs before
+    // RollOn, so what a RollOff handler writes to cursor.VisualOver is what the RollOn handler reads.
+
+    [Fact]
+    public void Walk_ShouldLetRollOnSeeWhatRollOffWrote_WhenARollOffHandlerSetsVisualOver()
+    {
+        InteractiveGue buttonA = AddRoot("A", 0, 0, 10);
+        InteractiveGue buttonB = AddRoot("B", 10, 0, 10);
+        buttonA.RollOff += (_, _) => _cursor.Object.VisualOver = null;
+        InteractiveGue? seenByRollOn = null;
+        buttonB.RollOn += (_, _) => seenByRollOn = _cursor.Object.VisualOver;
+        Frame(5, 5);
+
+        Frame(15, 5).ShouldBe(new[] { "RollOff A", "RollOn B" });
+
+        seenByRollOn.ShouldBeNull("the RollOff handler ran first and cleared VisualOver; before #7057 RollOn saw B");
+    }
+
+    [Fact]
+    public void Walk_ShouldRaiseRollOffThenRollOnEachFrame_WhenARollOnHandlerClearsVisualOver()
+    {
+        // Before #7057 RollOff A never fired in this case, because the walk restored VisualOver to A afterward.
+        // Now RollOff A fires before RollOn B runs. RollOn B still repeats every frame, as it did before,
+        // because the handler clears VisualOver each time. It settles: no further RollOff is raised.
+        AddRoot("A", 0, 0, 10);
+        InteractiveGue buttonB = AddRoot("B", 10, 0, 10);
+        buttonB.RollOn += (_, _) => _cursor.Object.VisualOver = null;
+        Frame(5, 5);
+
+        Frame(15, 5).ShouldBe(new[] { "RollOff A", "RollOn B" });
+        Frame(15, 5).ShouldBe(new[] { "RollOn B" });
+        Frame(15, 5).ShouldBe(new[] { "RollOn B" });
+    }
+
+    #endregion
+
     #region Two cursors
 
     [Fact]
