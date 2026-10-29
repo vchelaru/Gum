@@ -3993,6 +3993,13 @@ public class CodeGenerator
 
     #region Top Level Methods
 
+    /// <summary>
+    /// The contents of the element's <c>.Generated.cs</c> file: the <c>//Code for</c> header line followed by
+    /// <see cref="GetGeneratedCodeForElement"/>, with CRLF line endings throughout (see <see cref="GeneratedCodeText"/>).
+    /// </summary>
+    public string GetGeneratedFileText(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings) =>
+        GeneratedCodeText.ToCrLf($"//Code for {element}\n{GetGeneratedCodeForElement(element, elementSettings, projectSettings)}");
+
     public string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
     {
         AssertSupportedCombination(projectSettings);

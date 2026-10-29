@@ -192,8 +192,7 @@ public class CodeGenerationService
 
 
 
-        string contents = _codeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-        contents = $"//Code for {selectedElement.ToString()}\r\n{contents}";
+        string contents = _codeGenerator.GetGeneratedFileText(selectedElement, elementSettings, codeOutputProjectSettings);
 
         string message = string.Empty;
 
@@ -235,7 +234,7 @@ public class CodeGenerationService
                         System.IO.Directory.CreateDirectory(directory);
                     }
                     var customCodeContents = _customCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
+                    System.IO.File.WriteAllText(customCodeFileName, GeneratedCodeText.ToCrLf(customCodeContents));
                 }
             }
 
