@@ -4247,6 +4247,8 @@ public class CodeGenerator
         }
         foreach (StateSaveCategory category in element.Categories)
         {
+            // The category's nested enum and its state property are both members of the class.
+            reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name));
             reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name) + "State");
         }
         return _codeGenerationNameVerifier.ReserveMemberNames(reserved);

@@ -155,6 +155,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetCircularVariableReferenceErrorsFor(element));
         errors.AddRange(GetCrossElementCircularVariableReferenceErrorsFor(element));
         errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
+        errors.AddRange(GetCategoryNameCollisionErrorsFor(element));
         errors.AddRange(GetTextOutsideFontRangeErrorsFor(element, project));
 
         foreach (var source in _additionalErrorSources)
@@ -805,6 +806,74 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         return errors;
+    }
+
+    #endregion
+
+    #region GUM0015 — Category name collides with generated code
+
+    private static readonly CodeGeneration.CodeGenerationNameVerifier CategoryNameVerifier =
+        new CodeGeneration.CodeGenerationNameVerifier(new NameRules());
+
+    /// <summary>
+    /// Codegen writes each category as a nested enum named like it plus a <c>&lt;Category&gt;State</c> property.
+    /// Neither may take the generated class's own name (CS0542) or repeat another of these names (CS0102).
+    /// Both are public API, so this reports the clash instead of renaming one the way instance and variable members are.
+    /// Standards are never generated, so they are skipped.
+    /// </summary>
+    private static List<ErrorResult> GetCategoryNameCollisionErrorsFor(ElementSave element)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+        if (element is StandardElementSave || element.Categories.Count == 0)
+        {
+            return errors;
+        }
+
+        Dictionary<string, string> declaredBy = new Dictionary<string, string>(StringComparer.Ordinal);
+        string className = ToGeneratedCSharpName(element.Name.Substring(element.Name.LastIndexOfAny(new[] { '/', '\\' }) + 1));
+        declaredBy[className] = "the generated class of this element";
+
+        foreach (StateSaveCategory category in element.Categories)
+        {
+            string enumName = ToGeneratedCSharpName(category.Name);
+            foreach ((string name, string description) in new[]
+            {
+                (enumName, $"the enum of category \"{category.Name}\""),
+                (enumName + "State", $"the state property of category \"{category.Name}\""),
+            })
+            {
+                if (declaredBy.TryGetValue(name, out string? existing))
+                {
+                    // One row per category is enough to point at the fix.
+                    errors.Add(new ErrorResult
+                    {
+                        ElementName = element.Name,
+                        Code = "GUM0015",
+                        Severity = ErrorSeverity.Error,
+                        Message = $"Category \"{category.Name}\" generates {description} named \"{name}\", which is also the name of " +
+                            $"{existing}, so the generated code cannot compile. Rename the category or the element."
+                    });
+                    break;
+                }
+
+                declaredBy[name] = description;
+            }
+        }
+
+        return errors;
+    }
+
+    private static string ToGeneratedCSharpName(string name)
+    {
+        try
+        {
+            return CategoryNameVerifier.ToCSharpName(name).TrimStart('@');
+        }
+        catch (NotImplementedException)
+        {
+            // A name codegen can't convert fails there with its own message; compare the plain spelling here.
+            return name.Replace(" ", "_");
+        }
     }
 
     #endregion
