@@ -52,7 +52,7 @@ The 200 ms debounce coalesces the Gum tool's multi-file save burst into one relo
 2. `GumProjectSave.Load` + `Initialize`; swap into `ObjectFinder.Self.GumProjectSave`.
 3. Reload animations: enumerate `*Animations.ganx` under the source directory via a `LooseFileGumFileProvider` and load each through `GumService.LoadAnimationsFromProvider` into the new project (no `RelativeDirectory` swap — the provider is rooted at the source dir).
 4. `ApplyDiff(roots, newProject, SystemManagers.Default)` — applies the in-place reconciliation walk described below.
-5. Fire `ReloadCompleted`.
+5. Fire `ReloadCompleted` (only when the reload applied), then `ReloadFinished` with a `HotReloadResult` (every attempt, applied or not). See "Reload Result" below.
 
 ## ApplyDiff — In-Place Reconciliation Walk
 
@@ -69,6 +69,12 @@ Defined on `GumHotReloadManager` and exposed `public static` for direct test use
 3. `SetChangedVariablesRecursively(element, newEs, context)` — applies the default-state values the project changed, layer by layer down the base types: a variable is set only when its value differs from the old project's (`ReloadContext.OldByName`, from the `oldProject` argument or the visuals' own `ElementSave`s), the old project has no such variable, or an earlier layer or rebuilt instance in this reload reset it (`ReloadContext.Applied`/`Recreated`); every other variable keeps its runtime value (#6980). A layer with no old version, or edited in place, is applied in full. `ResetRemovedVariables` runs per layer. Qualified-name variables (`MyInstance.X`, `MyInstance.Parent`, etc.) flow into the children by `Name`, which also handles reparenting and animates new instances into position.
    - Then `ReorderDesignTimeChildren` reorders, per container (the element, or any instance an instance is parented to), only the slots held by this element's own instances (matched by `InstanceSave` reference against `newEs.Instances`), so `newEs.Instances` order wins. It runs after variables so `Parent` has settled. A move inside an ItemsControl `InnerPanel` relies on the control syncing its collections (see `gum-forms-itemscontrol`).
 4. Recurse into runtime-added children (no `InstanceSave` tag). Design-time instances are recursed into *before* step 3, at any depth, so an edit to a component's own default state or instances reaches every instance of it, and this element's qualified-name overrides then win over the component's defaults. Standard-element instances are not recursed into. A design-time child is only diffed against the element that owns its `InstanceSave` (`ParentContainer.Name`): a screen instance parented under a component instance sits in that visual's `Children` but belongs to the screen.
+
+## Reload Result
+
+`HotReloadResult` / `HotReloadIssue` / `HotReloadIssueKind` (`GumCommon/HostServices/HotReloadResult.cs`) are what `ReloadFinished` raises, forwarded by `GumService.HotReloadFinished`. Each place that used to print a problem now adds a `HotReloadIssue` and prints its `Message`: the walk adds them to `ReloadContext` (`Report`/`ReportOnce`), and `TryLoadProject`, `HandleFailedReload` and `TryReload` add the rest. A new problem kind is a new enum value plus its `MatchesRestart` rule, not a bare `ReportError`.
+
+**Landmine: `_reportedProblems` is the memory for printing only.** It must never filter what goes into a result, or a subscriber misses a state that is still stale. Only `PrintIssues` reads it.
 
 ## Non-Obvious Behaviors / Gotchas
 
@@ -93,4 +99,4 @@ Defined on `GumHotReloadManager` and exposed `public static` for direct test use
 
 - For new watched extensions: add to `HandleFileChange`'s extension check. If the asset type has a cache, add eviction to `PerformReload` (follow the font pattern — copy source→bin, then `LoaderManager.Dispose` the standardized path).
 - Prefer injecting a custom `IGumHotReloadManager` rather than adding game-specific logic to `GumHotReloadManager`. (Currently `EnableHotReload` hardcodes `new GumHotReloadManager()` — if a test/custom manager seam is needed, add an overload accepting an `IGumHotReloadManager`.)
-- Subscribe to `ReloadCompleted` from game code to reapply runtime state after a rebuild.
+- Subscribe to `ReloadCompleted` from game code to reapply runtime state after a rebuild, or to `ReloadFinished` to react to what the reload could not do.

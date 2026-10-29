@@ -50,6 +50,8 @@ Hot reload matches each screen or component your game is showing to the project 
 
 An instance of a deleted component inside a screen or another component is treated differently. The tool keeps the instance in the file, and a restarted game would not create it, so Gum removes the instance and its children from the running UI to match. It reports this once as well, for example `Hot reload: 'Card1' in 'Main' is a 'Card', which is not in the project any more`.
 
+An instance whose component was renamed, moved to another folder, or changed to another type is rebuilt, since its visual is made from the new component. The running tree is right, but code references and Forms handlers you held on the old visual are stale. Gum reports this once per pair of components in each reload, for example `Hot reload: 'Card1' in 'Main' is now a 'Card2' (was 'Card')`. The removal and the rebuild are also issues in the result of [`HotReloadFinished`](#reacting-to-a-reload).
+
 ### What Is Not Reloaded
 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
@@ -136,6 +138,48 @@ Common things to re-apply in a `HotReloadCompleted` handler:
 * Event handler subscriptions on buttons or other interactive elements, if they were attached to specific instances rather than registered through Forms.
 
 If your game has a single screen-level "apply current state to UI" method, calling it from `HotReloadCompleted` is usually the simplest approach.
+
+## Reacting to a Reload
+
+`HotReloadFinished` fires after every reload attempt, including one that failed, and gives you a `HotReloadResult` listing what the reload could not do exactly. `HotReloadCompleted` still fires after a reload that was applied.
+
+```csharp
+// Initialize
+GumUI.HotReloadFinished += result =>
+{
+    if (result.IsClean)
+    {
+        return;
+    }
+
+    foreach (HotReloadIssue issue in result.Issues)
+    {
+        Console.WriteLine($"{issue.Kind}: {issue.Message}");
+    }
+
+    if (!result.MatchesRestart)
+    {
+        Console.WriteLine("The running UI differs from what a restart would show.");
+    }
+};
+```
+
+Every reload's result lists every issue that reload had, including one an earlier reload had too. Only the console output is once-only. A project that could not be read is retried once, so a failed attempt can be followed by a clean one.
+
+| `HotReloadIssueKind`  | Meaning                                                                                             | `MatchesRestart` |
+| --------------------- | --------------------------------------------------------------------------------------------------- | ---------------- |
+| `MissingFile`         | The project lists a file that is not on disk. The reload went on without it.                        | `false`          |
+| `FontFailure`         | A changed font file could not be copied. It is tried again on the next reload.                      | `false`          |
+| `ReloadFailed`        | The project could not be read, or applying it threw. The UI is unchanged or partly updated.         | `false`          |
+| `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
+| `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |
+| `InstanceRebuilt`     | An instance's component changed or was renamed, so its visual was rebuilt. References and handlers on it are stale. | `true` |
+
+`MatchesRestart` is `true` when the running tree equals what restarting the game with the same project would show. On the result it is `true` only if every issue's `MatchesRestart` is `true`, so a clean result matches. An issue with `MatchesRestart` set to `true` can still need attention from your code, for example `InstanceRebuilt`.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Disabling Hot Reload
 

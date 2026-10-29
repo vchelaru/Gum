@@ -160,10 +160,46 @@ public class ToolSaveHotReloadScenarioTests
         world.Find("Badge1")!.ElementSave!.Name.ShouldBe("Controls/Tag");
         world.Find("Badge1")!.GetGraphicalUiElementByName("Label").ShouldNotBeNull();
 
-        world.ErrorOutput.ShouldBeEmpty();
+        // Each rename rebuilt Badge1's visual, and the game is told so
+        world.ErrorOutput.ShouldContain("'Badge1' in 'Main' is now a 'Tag' (was 'Badge')");
+        world.ErrorOutput.ShouldContain("'Badge1' in 'Main' is now a 'Controls/Tag' (was 'Tag')");
         ToolSaveRuntimeWorld.Describe(world.Screen).ShouldBe(world.DescribeAFreshLoad(), "the running tree should match what a restart would show");
         tree.AssertOracles();
     }
+
+    [AvaloniaFact]
+    public void ComponentRenamedInTheTool_ReportsOneRebuiltInstance_AndTheTreeStillMatchesARestart()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (ComponentSave card, ScreenSave main) = Build(tree);
+        using ToolSaveRuntimeWorld world = new ToolSaveRuntimeWorld(tree.Project.ProjectFilePath, "Main");
+
+        tree.Click(tree.NodeFor(card));
+        tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "Panel"; return true; });
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+        world.WaitForReload(_reloadBudget).ShouldBeTrue("a component rename should reach the running game");
+        world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
+
+        List<HotReloadIssue> issues = world.Results.SelectMany(result => result.Issues).ToList();
+        HotReloadIssue rebuilt = issues.Single(issue => issue.Kind == HotReloadIssueKind.InstanceRebuilt);
+        rebuilt.ElementName.ShouldBe("Main");
+        rebuilt.InstanceName.ShouldBe("Card1");
+        rebuilt.Message.ShouldContain("is now a 'Panel' (was 'Card')");
+        world.Results.ShouldAllBe(result => result.MatchesRestart);
+        world.ErrorOutput.ShouldContain(rebuilt.Message);
+        world.Find("Card1")!.ElementSave!.Name.ShouldBe("Panel");
+        world.Find("Card1")!.GetGraphicalUiElementByName("Title").ShouldNotBeNull();
+        world.Screen.Children.Select(child => child.Name).ShouldBe(new[] { "Card1", "Heading", "Spacer" });
+
+        // An ordinary edit afterwards is clean again
+        tree.Click(tree.NodeFor(main.GetInstance("Heading")!));
+        tree.Grid.TypeAndLeave("Text", "After");
+        ShouldReloadWithinTheDebounceBudget(world, "a Text edit");
+        world.Results[world.Results.Count - 1].IsClean.ShouldBeTrue();
+        tree.AssertOracles();
+    }
+
     [AvaloniaFact]
     public void ManyEditsThenSaveAll_AndTwoQuickSaves_LeaveTheRunningTreeOnTheLastSave()
     {
