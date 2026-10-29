@@ -163,7 +163,8 @@ public partial class GumService : IGumService
     // per-family type.
 
 #if !IOS && !ANDROID
-    private IGumHotReloadManager? _hotReloadManager;
+    // internal so a test can stop the watcher it started without uninitializing the shared service.
+    internal IGumHotReloadManager? _hotReloadManager;
 #endif
 
     /// <summary>
@@ -408,6 +409,7 @@ public partial class GumService : IGumService
         _hotReloadManager = new GumHotReloadManager(
             ApplyProjectTextureFilter, GumAnimationLoader.LoadAnimationsFromProvider, path => LoaderManager.Self.Dispose(path));
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
+        _hotReloadManager.ReloadFinished += result => HotReloadFinished?.Invoke(result);
         _hotReloadManager.Start(absoluteGumxSourcePath);
     }
 
@@ -418,6 +420,12 @@ public partial class GumService : IGumService
     /// touched by the in-place patch.
     /// </summary>
     public event Action? HotReloadCompleted;
+
+    /// <summary>
+    /// Raised after every hot-reload attempt, successful or not, with the issues that reload had and
+    /// whether the running tree matches what a restart would show. See <see cref="HotReloadResult"/>.
+    /// </summary>
+    public event Action<HotReloadResult>? HotReloadFinished;
 #endif
 
     /// <summary>

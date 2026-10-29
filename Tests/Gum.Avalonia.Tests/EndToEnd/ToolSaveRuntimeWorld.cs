@@ -53,6 +53,7 @@ internal sealed class ToolSaveRuntimeWorld : IDisposable
 
         _manager = new GumHotReloadManager(_ => { }, (_, _) => 0, _ => { });
         _manager.ReloadCompleted += () => Reloads++;
+        _manager.ReloadFinished += Results.Add;
         _manager.Start(gumxPath);
     }
 
@@ -60,6 +61,9 @@ internal sealed class ToolSaveRuntimeWorld : IDisposable
     public string ScreenName { get; }
     public GraphicalUiElement Screen { get; private set; } = null!;
     public int Reloads { get; private set; }
+
+    /// <summary>The result of every reload attempt, in order.</summary>
+    public List<HotReloadResult> Results { get; } = new List<HotReloadResult>();
 
     /// <summary>What the runtime wrote to the error console (<c>[Gum] ...</c> lines) since the world was built.</summary>
     public string ErrorOutput => _errors.ToString();

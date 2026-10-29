@@ -31,6 +31,13 @@ public interface IGumHotReloadManager
     event Action? ReloadCompleted;
 
     /// <summary>
+    /// Raised after every reload attempt, successful or not, right after <see cref="ReloadCompleted"/>
+    /// when that is raised. The result lists every issue present in that reload, even one an earlier
+    /// reload already had; only the console output is once-only.
+    /// </summary>
+    event Action<HotReloadResult>? ReloadFinished;
+
+    /// <summary>
     /// Starts watching the directory containing the specified .gumx project file for changes.
     /// This is not typically called directly — use <c>GumServiceSkiaBase.EnableHotReload</c>
     /// or the MonoGame/Raylib GumService's equivalent instead.
@@ -81,9 +88,14 @@ public class GumHotReloadManager : IGumHotReloadManager
     private readonly object _pendingReloadLock = new object();
     // Consecutive reloads that failed to read the project; reset by any new file change.
     private int _failedAttempts;
-    // Problems the last reload reported (a visual whose element is gone). A problem is said once,
-    // not on every later save, and said again if it goes away and comes back; game thread only.
+    // Problems the last reload printed (a visual whose element is gone). A problem is printed once,
+    // not on every later save, and printed again if it goes away and comes back; game thread only.
+    // It never filters a reload's result, which lists every issue of that reload.
     private readonly HashSet<string> _reportedProblems = new HashSet<string>();
+    // The base type and exposed variables each element's visuals were built with, kept for an element
+    // whose definition has since changed. The diff re-points a visual at the new element, so without
+    // this the next reload would see no change and stop listing a tree that is still stale.
+    private readonly ReloadMemory _memory = new ReloadMemory();
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
@@ -132,6 +144,9 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     /// <inheritdoc/>
     public event Action? ReloadCompleted;
+
+    /// <inheritdoc/>
+    public event Action<HotReloadResult>? ReloadFinished;
 
     /// <inheritdoc/>
     public void Start(string absoluteGumxSourcePath)
@@ -402,22 +417,84 @@ public class GumHotReloadManager : IGumHotReloadManager
     // FileSystemWatcher + debounce. ApplyDiff is exposed for tests for the same reason.
     internal void PerformReload(IEnumerable<GraphicalUiElement> roots)
     {
+        List<HotReloadIssue> issues = new List<HotReloadIssue>();
+
         // Materialize so we can iterate twice and so the caller's collection
         // is safe from us modifying it via the rebuild step.
-        var rootList = roots.ToList();
+        bool applied = TryReload(roots.ToList(), issues, out bool willRetry);
 
+        // An attempt that is tried again says nothing: only the end of the chain is a result.
+        if (willRetry)
+        {
+            return;
+        }
+
+        // A subscriber that throws must not break Update or keep the others from hearing.
+        if (applied)
+        {
+            RaiseIsolated(ReloadCompleted, nameof(ReloadCompleted));
+        }
+        RaiseIsolated(ReloadFinished, new HotReloadResult(issues), nameof(ReloadFinished));
+    }
+
+    private static void RaiseIsolated(Action? handlers, string eventName)
+    {
+        if (handlers == null)
+        {
+            return;
+        }
+
+        foreach (Delegate handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((Action)handler)();
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                ReportError($"Hot reload: a {eventName} subscriber threw: {exception}");
+            }
+        }
+    }
+
+    private static void RaiseIsolated<T>(Action<T>? handlers, T argument, string eventName)
+    {
+        if (handlers == null)
+        {
+            return;
+        }
+
+        foreach (Delegate handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((Action<T>)handler)(argument);
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                ReportError($"Hot reload: a {eventName} subscriber threw: {exception}");
+            }
+        }
+    }
+
+    // Returns whether the reload was applied; every issue the attempt had is added to issues.
+    // willRetry is true when the attempt failed and will be tried again after the debounce.
+    private bool TryReload(List<GraphicalUiElement> rootList, List<HotReloadIssue> issues, out bool willRetry)
+    {
+        willRetry = false;
         string? fontFailure = CopyAndUnloadChangedFonts();
 
         // The whole project is read into a temporary first. A file caught half written, locked by the
         // editor or unparsable leaves the running tree and ObjectFinder exactly as they were (#6978).
-        GumProjectSave? newProject = TryLoadProject(out string? loadFailure);
+        GumProjectSave? newProject = TryLoadProject(issues, out string? loadFailure);
         if (newProject == null)
         {
-            HandleFailedReload(loadFailure, fontFailure);
-            return;
+            willRetry = HandleFailedReload(loadFailure, fontFailure, issues);
+            return false;
         }
 
         GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
+        List<HotReloadIssue> diffIssues = new List<HotReloadIssue>();
         try
         {
             newProject.Initialize();
@@ -437,7 +514,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
             _loadAnimationsFromProvider(newProject, animationProvider);
 
-            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems);
+            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems, diffIssues, _memory);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -446,24 +523,30 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 _applyProjectTextureFilter(previousProject);
             }
-            HandleFailedReload(
+
+            // What the walk found before it threw was not printed yet.
+            PrintIssues(diffIssues, printedProblems: null);
+            issues.AddRange(diffIssues);
+            willRetry = HandleFailedReload(
                 $"Hot reload failed while applying {_projectSourcePath}: {exception.Message}\nThe UI may be partially updated; the next complete save reloads.",
                 fontFailure,
+                issues,
                 uiUnchanged: false);
-            return;
+            return false;
         }
 
+        issues.AddRange(diffIssues);
         if (fontFailure != null)
         {
-            ReportError(fontFailure.Trim());
+            Report(issues, new HotReloadIssue(HotReloadIssueKind.FontFailure, fontFailure.Trim()));
         }
 
-        ReloadCompleted?.Invoke();
+        return true;
     }
 
     // Returns null with a description when the project cannot be read. Files the project lists but that
     // are gone (a git checkout between branches) are reported and left out, so the rest still reloads.
-    private GumProjectSave? TryLoadProject(out string? failure)
+    private GumProjectSave? TryLoadProject(List<HotReloadIssue> issues, out string? failure)
     {
         failure = null;
         GumProjectSave? project;
@@ -488,17 +571,36 @@ public class GumHotReloadManager : IGumHotReloadManager
             return null;
         }
 
+        _memory.MissingElements.Clear();
         if (result.MissingFiles?.Count > 0)
         {
-            ReportError("Hot reload left out missing file(s): " + string.Join(", ", result.MissingFiles));
+            foreach (string missingFile in result.MissingFiles)
+            {
+                _memory.MissingElements.Add(ElementNameOf(missingFile));
+            }
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.MissingFile,
+                "Hot reload left out missing file(s): " + string.Join(", ", result.MissingFiles)));
         }
 
         return project;
     }
 
+    // "<project>/Components/Widgets/Widget.gucx" is the element "Widgets/Widget".
+    private string ElementNameOf(string file)
+    {
+        string? directory = Path.GetDirectoryName(_projectSourcePath);
+        string relative = string.IsNullOrEmpty(directory) ? file : Path.GetRelativePath(directory, file);
+        string[] segments = relative.Replace('\\', '/').Split('/');
+        string name = string.Join("/", segments.Skip(1));
+        return Path.ChangeExtension(name, null);
+    }
+
     // A failed read is tried once more after the debounce, since the writer may still have had the file
     // open; a second failure is reported and waits for the next save.
-    private void HandleFailedReload(string? failure, string? fontFailure, bool uiUnchanged = true)
+    // Returns whether the attempt will be tried again.
+    private bool HandleFailedReload(
+        string? failure, string? fontFailure, List<HotReloadIssue> issues, bool uiUnchanged = true)
     {
         bool retry;
         lock (_pendingReloadLock)
@@ -512,11 +614,21 @@ public class GumHotReloadManager : IGumHotReloadManager
             }
         }
 
-        if (!retry)
+        if (retry)
         {
-            string prefix = uiUnchanged ? "Hot reload skipped, the running UI is unchanged. " : "";
-            ReportError((prefix + failure + fontFailure).Trim());
+            return true;
         }
+
+        string prefix = uiUnchanged ? "Hot reload skipped, the running UI is unchanged. " : "";
+        Report(issues, new HotReloadIssue(HotReloadIssueKind.ReloadFailed, (prefix + failure + fontFailure).Trim()));
+        return false;
+    }
+
+    // Adds the issue to the reload's result and prints it.
+    private static void Report(List<HotReloadIssue> issues, HotReloadIssue issue)
+    {
+        issues.Add(issue);
+        ReportError(issue.Message);
     }
 
     private static void ReportError(string message)
@@ -549,12 +661,12 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <c>ObjectFinder.Self.GumProjectSave</c> is <paramref name="newProject"/>; the previous project is
     /// restored when it returns, so the caller decides afterward which project the finder holds.
     /// </summary>
-    public static void ApplyDiff(
+    public static HotReloadResult ApplyDiff(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers)
     {
-        ApplyDiff(roots, newProject, systemManagers, ObjectFinder.Self.GumProjectSave);
+        return ApplyDiff(roots, newProject, systemManagers, ObjectFinder.Self.GumProjectSave);
     }
 
     /// <summary>
@@ -564,22 +676,27 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// (null, or the same object as the new project) the comparison uses what the visuals still
     /// hold of the old project, and an element it cannot find an old version of is applied in full.
     /// </summary>
-    public static void ApplyDiff(
+    public static HotReloadResult ApplyDiff(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers,
         GumProjectSave? oldProject)
     {
-        ApplyDiff(roots, newProject, systemManagers, oldProject, reportedProblems: null);
+        List<HotReloadIssue> issues = new List<HotReloadIssue>();
+        ApplyDiff(roots, newProject, systemManagers, oldProject, printedProblems: null, issues, memory: null);
+        return new HotReloadResult(issues);
     }
 
-    // reportedProblems is the manager's memory of what it already said; null reports every problem.
+    // printedProblems is the manager's memory of what it already printed; null prints every problem.
+    // It only decides what is printed: every issue of this walk lands in issues either way.
     private static void ApplyDiff(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers,
         GumProjectSave? oldProject,
-        HashSet<string>? reportedProblems)
+        HashSet<string>? printedProblems,
+        List<HotReloadIssue> issues,
+        ReloadMemory? memory)
     {
         // References and base types resolve through ObjectFinder, so for this call it holds the new
         // project whatever it held before, and the caller's project is put back afterward.
@@ -587,7 +704,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         ObjectFinder.Self.GumProjectSave = newProject;
         try
         {
-            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject, reportedProblems);
+            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject, printedProblems, issues, memory);
         }
         finally
         {
@@ -600,7 +717,9 @@ public class GumHotReloadManager : IGumHotReloadManager
         GumProjectSave newProject,
         ISystemManagers systemManagers,
         GumProjectSave? oldProject,
-        HashSet<string>? reportedProblems)
+        HashSet<string>? printedProblems,
+        List<HotReloadIssue> issues,
+        ReloadMemory? memory)
     {
         // A file the tool did not save together with the files that read it (a text-editor edit of one
         // swatch) leaves the readers holding the value they were saved with. A reference sets the final
@@ -616,7 +735,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         List<GraphicalUiElement> rootList = roots.ToList();
 
-        ReloadContext context = new ReloadContext(byName, oldProject, newProject, rootList);
+        ReloadContext context = new ReloadContext(byName, oldProject, newProject, rootList, issues, memory ?? new ReloadMemory());
 
         // The same three passes RefreshStyles runs, so a control keeps what it holds in code and the
         // state it is in: save before anything is re-applied, restore after everything is (#6855).
@@ -643,23 +762,32 @@ public class GumHotReloadManager : IGumHotReloadManager
             root.RestoreFormsRuntimePropertiesRecursive();
         }
 
-        ReportProblems(context.Problems, reportedProblems);
+        PrintIssues(issues, printedProblems);
     }
 
-    private static void ReportProblems(Dictionary<string, string> problems, HashSet<string>? reported)
+    // Printing is the only place that remembers what was already said: a shown element that stays gone
+    // is printed on the first reload and not on every later save, but it is an issue of each result.
+    private static void PrintIssues(List<HotReloadIssue> issues, HashSet<string>? printedProblems)
     {
-        foreach (KeyValuePair<string, string> problem in problems)
+        HashSet<string> current = new HashSet<string>();
+        foreach (HotReloadIssue issue in issues)
         {
-            if (reported == null || !reported.Contains(problem.Key))
+            string? key = issue.Persists ? issue.Kind + ":" + issue.ElementName : null;
+            if (key != null)
             {
-                ReportError(problem.Value);
+                current.Add(key);
+            }
+
+            if (key == null || printedProblems == null || !printedProblems.Contains(key))
+            {
+                ReportError(issue.Message);
             }
         }
 
-        if (reported != null)
+        if (printedProblems != null)
         {
-            reported.Clear();
-            reported.UnionWith(problems.Keys);
+            printedProblems.Clear();
+            printedProblems.UnionWith(current);
         }
     }
 
@@ -729,7 +857,16 @@ public class GumHotReloadManager : IGumHotReloadManager
             // component's defaults.
             foreach (GraphicalUiElement instance in ContainedAndChildren(element))
             {
-                if (instance.Tag is InstanceSave && instance.ElementSave is not StandardElementSave)
+                if (instance.Tag is not InstanceSave)
+                {
+                    continue;
+                }
+
+                if (instance.ElementSave is StandardElementSave builtFromStandard)
+                {
+                    ReportStandardChange(builtFromStandard, byName, context);
+                }
+                else
                 {
                     ApplyDiffRecursive(instance, byName, systemManagers, context);
                 }
@@ -760,10 +897,12 @@ public class GumHotReloadManager : IGumHotReloadManager
             // Nothing in the new project says what this visual should become. There is no identity
             // across a rename or a move to another folder, so it stays as it is and the game is told.
             string kind = KindOf(goneElement);
-            context.Problems["gone:" + name] =
+            context.ReportOnce("gone:" + name, new HotReloadIssue(
+                HotReloadIssueKind.ShownElementGone,
                 $"Hot reload: the {kind} '{name}' the game is showing is not in the project any more " +
                 "(renamed, moved to another folder or deleted). It stays on screen as it was, and edits " +
-                $"to it, or to what replaced it, will not reach the game until you restart it.";
+                $"to it, or to what replaced it, will not reach the game until you restart it.",
+                elementName: name));
         }
 
         foreach (GraphicalUiElement child in element.Children.ToList())
@@ -793,8 +932,15 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         public HashSet<GraphicalUiElement> Recreated { get; } = new HashSet<GraphicalUiElement>();
 
-        // What this reload could not do, keyed so the same problem is not said twice.
-        public Dictionary<string, string> Problems { get; } = new Dictionary<string, string>();
+        // What this walk found, for the reload's result. The same problem is added once per walk.
+        private readonly List<HotReloadIssue> _issues;
+
+        // See the manager's _memory; a static ApplyDiff call gets a fresh one.
+        public ReloadMemory Memory { get; }
+
+        // Elements whose definition was already compared in this walk.
+        public HashSet<string> CheckedDefinitions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _issueKeys = new HashSet<string>();
 
         public Dictionary<GraphicalUiElement, HashSet<string>> Applied { get; } =
             new Dictionary<GraphicalUiElement, HashSet<string>>();
@@ -803,8 +949,12 @@ public class GumHotReloadManager : IGumHotReloadManager
             Dictionary<string, ElementSave> newByName,
             GumProjectSave? oldProject,
             GumProjectSave newProject,
-            List<GraphicalUiElement> roots)
+            List<GraphicalUiElement> roots,
+            List<HotReloadIssue> issues,
+            ReloadMemory memory)
         {
+            _issues = issues;
+            Memory = memory;
             if (oldProject != null && !ReferenceEquals(oldProject, newProject))
             {
                 foreach (ElementSave element in oldProject.AllElements)
@@ -843,6 +993,17 @@ public class GumHotReloadManager : IGumHotReloadManager
             foreach (GraphicalUiElement child in ContainedAndChildren(element))
             {
                 CollectOldElements(child, newByName, visited);
+            }
+        }
+
+        public void Report(HotReloadIssue issue) => _issues.Add(issue);
+
+        // Adds the issue unless this walk already added one with the same key.
+        public void ReportOnce(string key, HotReloadIssue issue)
+        {
+            if (_issueKeys.Add(key))
+            {
+                _issues.Add(issue);
             }
         }
 
@@ -895,6 +1056,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             if (context.OldByName.TryGetValue(es.Name, out ElementSave? oldEs)
                 && !ReferenceEquals(oldEs, es))
             {
+                ReportDefinitionChanges(oldEs, es, context);
                 oldState = oldEs.DefaultState;
                 // Lower layers were applied first, so a variable this layer dropped falls back to
                 // what the layers below it say.
@@ -919,6 +1081,12 @@ public class GumHotReloadManager : IGumHotReloadManager
                 }
             }
 
+            if (es is not StandardElementSave && context.Memory.BuiltShapes.ContainsKey(es.Name))
+            {
+                // Edited back or not, the check compares with what the visuals were built from.
+                ReportDefinitionChanges(null, es, context);
+            }
+
             element.ApplyVariableReferences(state);
 
             if (es is not StandardElementSave)
@@ -933,6 +1101,120 @@ public class GumHotReloadManager : IGumHotReloadManager
         finally
         {
             element.EndReferenceLoad();
+        }
+    }
+
+    /// <summary>What the manager remembers between reloads about definitions the diff cannot apply.</summary>
+    private sealed class ReloadMemory
+    {
+        // The base type and exposed variables each changed element's visuals were built with. The diff re-points a visual at the new element, so without this the next reload
+        // would see no change and stop listing a tree that is still stale.
+        public Dictionary<string, DefinitionShape> BuiltShapes { get; } = new Dictionary<string, DefinitionShape>();
+
+        // Elements whose file is missing in the reload being applied; the missing file is their one issue.
+        public HashSet<string> MissingElements { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>What a reload cannot apply to visuals that already exist: the base type and exposed variables.</summary>
+    private sealed record DefinitionShape(string BaseType, string Exposed)
+    {
+        public static DefinitionShape Of(ElementSave element) => new DefinitionShape(
+            element.BaseType ?? "",
+            string.Join(";", (element.DefaultState?.Variables ?? new List<VariableSave>())
+                .Where(variable => !string.IsNullOrEmpty(variable.ExposedAsName))
+                .Select(variable => variable.Name + "=" + variable.ExposedAsName)
+                .OrderBy(entry => entry, StringComparer.Ordinal)));
+    }
+
+    // Visuals are built with the element's base type and exposed variables, and the diff does not
+    // rebuild them. The element is listed for as long as its definition differs from the one the
+    // visuals were built with, and dropped from the list when an edit puts it back. Any change of the
+    // base type counts, whatever the two bases contain: deciding that two bases are equivalent has
+    // missed real differences, and a needless report costs one reload on a rare edit.
+    private static void ReportDefinitionChanges(ElementSave? previous, ElementSave current, ReloadContext context)
+    {
+        if (!context.CheckedDefinitions.Add(current.Name))
+        {
+            return;
+        }
+
+        DefinitionShape now = DefinitionShape.Of(current);
+        bool wasListed = context.Memory.BuiltShapes.TryGetValue(current.Name, out DefinitionShape? kept);
+        DefinitionShape builtFrom = kept ?? (previous != null ? DefinitionShape.Of(previous) : now);
+
+        // A base that is missing now but that the visuals were built with (the old project had it).
+        bool baseGone = now.BaseType.Length > 0
+            && ObjectFinder.Self.GetElementSave(now.BaseType) == null
+            && (wasListed || context.OldByName.ContainsKey(now.BaseType));
+        bool baseChanged = builtFrom.BaseType != now.BaseType;
+        bool exposedChanged = builtFrom.Exposed != now.Exposed;
+        if (!baseGone && !baseChanged && !exposedChanged)
+        {
+            context.Memory.BuiltShapes.Remove(current.Name);
+            return;
+        }
+
+        context.Memory.BuiltShapes[current.Name] = builtFrom;
+        if (context.Memory.MissingElements.Contains(current.Name))
+        {
+            // Emptied because its file is missing; the missing file is the one issue.
+            return;
+        }
+
+        if (baseGone)
+        {
+            context.ReportOnce("basegone:" + current.Name, new HotReloadIssue(
+                HotReloadIssueKind.BaseElementMissing,
+                $"Hot reload: '{current.Name}' derives from '{now.BaseType}', which is not in the project. " +
+                "What it inherited from it stays as it was until you restart.",
+                current.Name));
+        }
+        else if (baseChanged)
+        {
+            context.ReportOnce("base:" + current.Name, new HotReloadIssue(
+                HotReloadIssueKind.ComponentBaseTypeChanged,
+                $"Hot reload: '{current.Name}' changed its base type; edits to what it inherits do not reach " +
+                "the running UI until you restart.",
+                current.Name));
+        }
+        if (exposedChanged)
+        {
+            context.ReportOnce("exposed:" + current.Name, new HotReloadIssue(
+                HotReloadIssueKind.ExposedVariableChanged,
+                $"Hot reload: '{current.Name}' changed which variables it exposes; instances already on screen " +
+                "keep the exposure they were built with until you restart.",
+                current.Name));
+        }
+    }
+
+    // A visual keeps the standard element it was built from, so comparing it with the new project's
+    // version of that element finds a default the file changed since.
+    private static void ReportStandardChange(
+        StandardElementSave builtFrom, Dictionary<string, ElementSave> byName, ReloadContext context)
+    {
+        if (!byName.TryGetValue(builtFrom.Name, out ElementSave? current)
+            || ReferenceEquals(current, builtFrom)
+            || !context.CheckedDefinitions.Add("standard:" + builtFrom.Name))
+        {
+            return;
+        }
+
+        Dictionary<string, object?> Defaults(ElementSave element) =>
+            (element.DefaultState?.Variables ?? new List<VariableSave>())
+                .Where(AppliesAValue)
+                .ToDictionary(variable => variable.Name, variable => variable.Value, StringComparer.Ordinal);
+
+        Dictionary<string, object?> before = Defaults(builtFrom);
+        Dictionary<string, object?> after = Defaults(current);
+        bool same = before.Count == after.Count
+            && before.All(entry => after.TryGetValue(entry.Key, out object? value) && ValuesMatch(entry.Value, value));
+        if (!same)
+        {
+            context.ReportOnce("standard:" + builtFrom.Name, new HotReloadIssue(
+                HotReloadIssueKind.StandardElementChanged,
+                $"Hot reload: the default of the standard element '{builtFrom.Name}' changed; instances already " +
+                "on screen keep their old values until you restart.",
+                builtFrom.Name));
         }
     }
 
@@ -1138,13 +1420,30 @@ public class GumHotReloadManager : IGumHotReloadManager
             newInstances.Where(i => i.Name != null).Select(i => i.Name!),
             StringComparer.OrdinalIgnoreCase);
 
+        void Forget(string name)
+        {
+            designTimeByName.Remove(name);
+            anyByName.Remove(name);
+        }
+
+        GraphicalUiElement? CreateAndTrack(InstanceSave instance)
+        {
+            GraphicalUiElement? created = CreateAndAttach(parent, instance, systemManagers);
+            if (created != null)
+            {
+                context.Recreated.Add(created);
+                designTimeByName[instance.Name!] = created;
+                anyByName[instance.Name!] = created;
+            }
+            return created;
+        }
+
         foreach (KeyValuePair<string, GraphicalUiElement> kvp in designTimeByName.ToList())
         {
             if (!newNames.Contains(kvp.Key))
             {
                 DetachAndRemove(kvp.Value);
-                designTimeByName.Remove(kvp.Key);
-                anyByName.Remove(kvp.Key);
+                Forget(kvp.Key);
             }
         }
 
@@ -1163,11 +1462,13 @@ public class GumHotReloadManager : IGumHotReloadManager
                 if (designTimeByName.TryGetValue(newInstance.Name, out GraphicalUiElement? orphan))
                 {
                     DetachAndRemove(orphan);
-                    designTimeByName.Remove(newInstance.Name);
-                    anyByName.Remove(newInstance.Name);
-                    ReportError(
+                    Forget(newInstance.Name);
+                    context.Report(new HotReloadIssue(
+                        HotReloadIssueKind.InstanceRemoved,
                         $"Hot reload: '{newInstance.Name}' in '{newEs.Name}' is a '{newInstance.BaseType}', " +
-                        "which is not in the project any more. It was removed from the running UI, as a restart would.");
+                        "which is not in the project any more. It was removed from the running UI, as a restart would.",
+                        newEs.Name,
+                        newInstance.Name));
                 }
                 continue;
             }
@@ -1181,14 +1482,10 @@ public class GumHotReloadManager : IGumHotReloadManager
                 if (!string.Equals(existingBaseTypeName, newInstance.BaseType, StringComparison.Ordinal))
                 {
                     DetachAndRemove(existingChild);
-                    designTimeByName.Remove(newInstance.Name);
-                    anyByName.Remove(newInstance.Name);
-                    GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
-                    if (created != null)
+                    Forget(newInstance.Name);
+                    if (CreateAndTrack(newInstance) != null)
                     {
-                        context.Recreated.Add(created);
-                        designTimeByName[newInstance.Name] = created;
-                        anyByName[newInstance.Name] = created;
+                        ReportRebuilt(context, newEs, newInstance, existingBaseTypeName);
                     }
                 }
                 else
@@ -1206,15 +1503,26 @@ public class GumHotReloadManager : IGumHotReloadManager
             }
             else
             {
-                GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
-                if (created != null)
-                {
-                    context.Recreated.Add(created);
-                    designTimeByName[newInstance.Name] = created;
-                    anyByName[newInstance.Name] = created;
-                }
+                CreateAndTrack(newInstance);
             }
         }
+    }
+
+    // A component rename or a retype rebuilds the instance's visual. The tree is right, but code
+    // references and Forms handlers on the old visual are stale, so the game is told once per pair
+    // of components however many instances changed.
+    private static void ReportRebuilt(
+        ReloadContext context, ElementSave owner, InstanceSave instance, string? oldBaseType)
+    {
+        string was = string.IsNullOrEmpty(oldBaseType) ? "" : $" (was '{oldBaseType}')";
+        context.ReportOnce(
+            $"rebuilt:{oldBaseType}->{instance.BaseType}",
+            new HotReloadIssue(
+                HotReloadIssueKind.InstanceRebuilt,
+                $"Hot reload: '{instance.Name}' in '{owner.Name}' is now a '{instance.BaseType}'{was}. " +
+                "Its visual was rebuilt, so code references and Forms handlers on it are stale.",
+                owner.Name,
+                instance.Name));
     }
 
     // An instance with a Parent variable is in ContainedElements without being a direct child.
