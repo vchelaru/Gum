@@ -401,15 +401,43 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return lines;
         }
 
+        // Start/Length count code points, so a surrogate pair (an emoji) is one unit there but two
+        // chars in the string (#7086). Walk the string once, advancing in step with the lines.
+        int utf16Position = 0;
+        int codePointPosition = 0;
         foreach (var line in textBlock.Lines)
         {
-            if (line.Start + line.Length <= source.Length)
+            int start = AdvanceCodePoints(source, ref utf16Position, ref codePointPosition, line.Start);
+            int end = AdvanceCodePoints(source, ref utf16Position, ref codePointPosition, line.Start + line.Length);
+            if (start >= 0 && end >= 0)
             {
-                lines.Add(source.Substring(line.Start, line.Length));
+                lines.Add(source.Substring(start, end - start));
             }
         }
 
         return lines;
+    }
+
+    /// <summary>
+    /// Moves a forward-only cursor over <paramref name="source"/> to <paramref name="targetCodePoint"/>
+    /// and returns the matching UTF-16 index, or -1 when the string ends first (or the target is
+    /// behind the cursor).
+    /// </summary>
+    private static int AdvanceCodePoints(string source, ref int utf16Position, ref int codePointPosition, int targetCodePoint)
+    {
+        if (targetCodePoint < codePointPosition)
+        {
+            return -1;
+        }
+
+        while (codePointPosition < targetCodePoint && utf16Position < source.Length)
+        {
+            bool isPair = char.IsHighSurrogate(source[utf16Position]) && utf16Position + 1 < source.Length;
+            utf16Position += isPair ? 2 : 1;
+            codePointPosition++;
+        }
+
+        return codePointPosition == targetCodePoint ? utf16Position : -1;
     }
 
     /// <summary>
@@ -442,7 +470,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         var hitTestResult = textBlock.HitTest(screenX - absoluteX, screenY - absoluteY);
 
-        return hitTestResult.ClosestCodePointIndex;
+        // ClosestCodePointIndex counts code points; WrappedText is indexed in UTF-16 chars (#7086).
+        int utf16Position = 0;
+        int codePointPosition = 0;
+        int utf16Index = AdvanceCodePoints(_layoutText ?? string.Empty, ref utf16Position, ref codePointPosition, hitTestResult.ClosestCodePointIndex);
+        return utf16Index >= 0 ? utf16Index : hitTestResult.ClosestCodePointIndex;
     }
 
     /// <inheritdoc/>
