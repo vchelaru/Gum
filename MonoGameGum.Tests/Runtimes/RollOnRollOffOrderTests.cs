@@ -112,7 +112,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
     [Fact]
     public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesBetweenAdjacentSiblingsInOneFrame()
     {
-        InteractiveGue buttonA = AddRoot("A", 0, 0, 10);
+        AddRoot("A", 0, 0, 10);
         InteractiveGue buttonB = AddRoot("B", 10, 0, 10);
         Frame(5, 5).ShouldBe(new[] { "RollOn A" });
 
@@ -120,7 +120,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         events.ShouldBe(new[] { "RollOn B", "RollOff A" });
         _cursor.Object.VisualOver.ShouldBe(buttonB);
-        buttonA.ShouldNotBeNull();
+    }
 
     [Fact]
     public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesBackFromBToA()
