@@ -113,6 +113,25 @@ public class HotReloadDeletedComponentTests : BaseTestClass
     }
 
     [Fact]
+    public void InstanceOfDeletedComponent_ProducesExactlyOneMessage_NotTheShownElementOneToo()
+    {
+        GumProjectSave project = NewProject();
+        ComponentSave card = AddComponent(project, "Card");
+        ScreenSave screen = new ScreenSave { Name = "Main" };
+        NewDefaultState(screen);
+        project.Screens.Add(screen);
+        AddInstance(screen, "Card1", "Card");
+        GraphicalUiElement screenGue = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+
+        project.Components.Remove(card);
+        GumHotReloadManager.ApplyDiff(new[] { screenGue }, project, SystemManagers.Default);
+
+        _errors.Count.ShouldBe(1);
+        _errors[0].ShouldContain("It was removed");
+        _errors[0].ShouldNotContain("the game is showing");
+    }
+
+    [Fact]
     public void ComponentDeletedFromAnotherComponent_InstanceInsideItIsRemoved()
     {
         GumProjectSave project = NewProject();
