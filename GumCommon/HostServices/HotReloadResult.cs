@@ -30,7 +30,25 @@ public enum HotReloadIssueKind
     /// An instance's component was changed or renamed, so its visual was rebuilt. The tree is right,
     /// but references and Forms handlers the game holds on the old visual are stale.
     /// </summary>
-    InstanceRebuilt
+    InstanceRebuilt,
+
+    /// <summary>
+    /// A screen or component changed its base type. The visuals already on screen keep what they
+    /// inherited from the old base until a restart.
+    /// </summary>
+    ComponentBaseTypeChanged,
+
+    /// <summary>
+    /// A component changed which variables it exposes. Instances already on screen keep the exposure
+    /// they were built with until a restart.
+    /// </summary>
+    ExposedVariableChanged,
+
+    /// <summary>
+    /// The default state of a standard element changed. Instances already on screen keep their old
+    /// values until a restart.
+    /// </summary>
+    StandardElementChanged
 }
 
 /// <summary>One thing a reload reported, with the same text that is written to the console.</summary>
@@ -60,6 +78,12 @@ public sealed class HotReloadIssue
     /// True when the running tree is the same as a restart of the project would show, even with this issue.
     /// </summary>
     public bool MatchesRestart => Kind is HotReloadIssueKind.InstanceRemoved or HotReloadIssueKind.InstanceRebuilt;
+
+    // Whether the problem lasts after this reload, so every later reload lists it again.
+    internal bool Persists => Kind is HotReloadIssueKind.ShownElementGone
+        or HotReloadIssueKind.ComponentBaseTypeChanged
+        or HotReloadIssueKind.ExposedVariableChanged
+        or HotReloadIssueKind.StandardElementChanged;
 }
 
 /// <summary>The outcome of one reload attempt, raised through <see cref="IGumHotReloadManager.ReloadFinished"/>.</summary>
