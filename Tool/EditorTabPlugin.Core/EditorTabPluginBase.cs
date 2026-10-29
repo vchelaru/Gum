@@ -205,6 +205,12 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     /// </summary>
     protected abstract Func<string, object?>? CreateRenderTargetShaderResolver();
 
+    /// <summary>
+    /// Where a head's shader resolver records the files each shader <c>#include</c>s, so editing one reloads the
+    /// shader (#7034). Read when the resolver is created, which is after the host has composed.
+    /// </summary>
+    protected static IShaderIncludeMap ShaderIncludes => Locator.GetRequiredService<IShaderIncludeMap>();
+
     /// <summary>Whether the head's canvas context menu is showing.</summary>
     protected abstract bool IsContextMenuOpen { get; }
 
