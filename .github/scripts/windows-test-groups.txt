@@ -32,6 +32,7 @@ headless Tests/GumShadowDusk.Tests.KniWindowsDX
 mesa-1 Tests/MonoGameGum.IntegrationTests 15 --logger "console;verbosity=normal"
 mesa-1 Tests/MonoGameGum.Shapes.Tests 10
 mesa-1 Tests/GumShadowDusk.Tests.KniDesktopGL 10
+mesa-1 Tests/SkiaGum.GpuTests 10
 
 mesa-2 Tests/Gum.Cli.Tests
 mesa-2 Tests/RaylibGum.Tests 10
