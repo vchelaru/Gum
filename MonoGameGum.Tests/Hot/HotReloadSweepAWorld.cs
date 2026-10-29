@@ -43,6 +43,13 @@ internal sealed record SweepSpec
     public int ExposedValue { get; init; } = 150;
     public float? RectWidth { get; init; }
     public string? LabelParent { get; init; }
+    public string? ScreenBase { get; init; }
+    public bool BaseBLikeA { get; init; }
+    public bool WithBaseScreens { get; init; }
+    public string BaseName { get; init; } = "Widgets/Base";
+    public bool OmitBaseComponent { get; init; }
+    public bool WithMid { get; init; }
+    public bool WithNewBase { get; init; }
 }
 
 /// <summary>
@@ -125,7 +132,7 @@ internal sealed class SweepWorld : IDisposable
         SetRed(styles.DefaultState!, "Accent", spec.Accent);
         project.Components.Add(styles);
 
-        ComponentSave baseComponent = NewComponent("Widgets/Base");
+        ComponentSave baseComponent = NewComponent(spec.BaseName);
         if (!spec.OmitBaseX)
         {
             Set(baseComponent.DefaultState!, "X", "float", spec.BaseX);
@@ -135,7 +142,22 @@ internal sealed class SweepWorld : IDisposable
             AddInstance(baseComponent, "BaseDot", "ColoredRectangle");
             SetRed(baseComponent.DefaultState!, "BaseDot", 77);
         }
-        project.Components.Add(baseComponent);
+        if (!spec.OmitBaseComponent)
+        {
+            project.Components.Add(baseComponent);
+        }
+        if (spec.WithMid)
+        {
+            ComponentSave mid = NewComponent("Widgets/Mid", spec.BaseName);
+            Set(mid.DefaultState!, "Y", "float", 4f);
+            project.Components.Add(mid);
+        }
+        if (spec.WithNewBase)
+        {
+            ComponentSave newBase = NewComponent("Widgets/NewBase");
+            Set(newBase.DefaultState!, "Y", "float", 3f);
+            project.Components.Add(newBase);
+        }
 
         if (spec.WithWidget)
         {
@@ -174,7 +196,25 @@ internal sealed class SweepWorld : IDisposable
             project.Behaviors.Add(new BehaviorSave { Name = "ExtraBehavior" });
         }
 
-        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        // Two screens a shown screen can derive from. B differs from A unless BaseBLikeA.
+        foreach ((string baseName, string instance, float x) in spec.WithBaseScreens
+                     ? new[]
+                     {
+                         ("BaseA", "FromA", 10f),
+                         ("BaseB", spec.BaseBLikeA ? "FromA" : "FromB", spec.BaseBLikeA ? 10f : 20f)
+                     }
+                     : Array.Empty<(string, string, float)>())
+        {
+            ScreenSave baseScreen = new ScreenSave { Name = baseName };
+            StateSave baseDefault = new StateSave { Name = "Default", ParentContainer = baseScreen };
+            baseScreen.States.Add(baseDefault);
+            AddInstance(baseScreen, instance, "ColoredRectangle");
+            Set(baseDefault, instance + ".X", "float", x);
+            Set(baseDefault, "X", "float", x);
+            project.Screens.Add(baseScreen);
+        }
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen", BaseType = spec.ScreenBase };
         StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
         screen.States.Add(screenDefault);
         AddInstance(screen, "Box", spec.BoxType);

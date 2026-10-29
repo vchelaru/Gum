@@ -95,7 +95,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     // The base type and exposed variables each element's visuals were built with, kept for an element
     // whose definition has since changed. The diff re-points a visual at the new element, so without
     // this the next reload would see no change and stop listing a tree that is still stale.
-    private readonly Dictionary<string, DefinitionShape> _builtShapes = new Dictionary<string, DefinitionShape>();
+    private readonly ReloadMemory _memory = new ReloadMemory();
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
@@ -514,7 +514,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
             _loadAnimationsFromProvider(newProject, animationProvider);
 
-            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems, diffIssues, _builtShapes);
+            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems, diffIssues, _memory);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -571,14 +571,29 @@ public class GumHotReloadManager : IGumHotReloadManager
             return null;
         }
 
+        _memory.MissingElements.Clear();
         if (result.MissingFiles?.Count > 0)
         {
+            foreach (string missingFile in result.MissingFiles)
+            {
+                _memory.MissingElements.Add(ElementNameOf(missingFile));
+            }
             Report(issues, new HotReloadIssue(
                 HotReloadIssueKind.MissingFile,
                 "Hot reload left out missing file(s): " + string.Join(", ", result.MissingFiles)));
         }
 
         return project;
+    }
+
+    // "<project>/Components/Widgets/Widget.gucx" is the element "Widgets/Widget".
+    private string ElementNameOf(string file)
+    {
+        string? directory = Path.GetDirectoryName(_projectSourcePath);
+        string relative = string.IsNullOrEmpty(directory) ? file : Path.GetRelativePath(directory, file);
+        string[] segments = relative.Replace('\\', '/').Split('/');
+        string name = string.Join("/", segments.Skip(1));
+        return Path.ChangeExtension(name, null);
     }
 
     // A failed read is tried once more after the debounce, since the writer may still have had the file
@@ -668,7 +683,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         GumProjectSave? oldProject)
     {
         List<HotReloadIssue> issues = new List<HotReloadIssue>();
-        ApplyDiff(roots, newProject, systemManagers, oldProject, printedProblems: null, issues, builtShapes: null);
+        ApplyDiff(roots, newProject, systemManagers, oldProject, printedProblems: null, issues, memory: null);
         return new HotReloadResult(issues);
     }
 
@@ -681,7 +696,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         GumProjectSave? oldProject,
         HashSet<string>? printedProblems,
         List<HotReloadIssue> issues,
-        Dictionary<string, DefinitionShape>? builtShapes)
+        ReloadMemory? memory)
     {
         // References and base types resolve through ObjectFinder, so for this call it holds the new
         // project whatever it held before, and the caller's project is put back afterward.
@@ -689,7 +704,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         ObjectFinder.Self.GumProjectSave = newProject;
         try
         {
-            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject, printedProblems, issues, builtShapes);
+            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject, printedProblems, issues, memory);
         }
         finally
         {
@@ -704,7 +719,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         GumProjectSave? oldProject,
         HashSet<string>? printedProblems,
         List<HotReloadIssue> issues,
-        Dictionary<string, DefinitionShape>? builtShapes)
+        ReloadMemory? memory)
     {
         // A file the tool did not save together with the files that read it (a text-editor edit of one
         // swatch) leaves the readers holding the value they were saved with. A reference sets the final
@@ -720,7 +735,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         List<GraphicalUiElement> rootList = roots.ToList();
 
-        ReloadContext context = new ReloadContext(byName, oldProject, newProject, rootList, issues, builtShapes);
+        ReloadContext context = new ReloadContext(byName, oldProject, newProject, rootList, issues, memory ?? new ReloadMemory());
 
         // The same three passes RefreshStyles runs, so a control keeps what it holds in code and the
         // state it is in: save before anything is re-applied, restore after everything is (#6855).
@@ -920,8 +935,8 @@ public class GumHotReloadManager : IGumHotReloadManager
         // What this walk found, for the reload's result. The same problem is added once per walk.
         private readonly List<HotReloadIssue> _issues;
 
-        // See the manager's _builtShapes; a static ApplyDiff call gets a fresh one.
-        public Dictionary<string, DefinitionShape> BuiltShapes { get; }
+        // See the manager's _memory; a static ApplyDiff call gets a fresh one.
+        public ReloadMemory Memory { get; }
 
         // Elements whose definition was already compared in this walk.
         public HashSet<string> CheckedDefinitions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -936,10 +951,10 @@ public class GumHotReloadManager : IGumHotReloadManager
             GumProjectSave newProject,
             List<GraphicalUiElement> roots,
             List<HotReloadIssue> issues,
-            Dictionary<string, DefinitionShape>? builtShapes)
+            ReloadMemory memory)
         {
             _issues = issues;
-            BuiltShapes = builtShapes ?? new Dictionary<string, DefinitionShape>();
+            Memory = memory;
             if (oldProject != null && !ReferenceEquals(oldProject, newProject))
             {
                 foreach (ElementSave element in oldProject.AllElements)
@@ -1066,7 +1081,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 }
             }
 
-            if (es is not StandardElementSave && context.BuiltShapes.ContainsKey(es.Name))
+            if (es is not StandardElementSave && context.Memory.BuiltShapes.ContainsKey(es.Name))
             {
                 // Edited back or not, the check compares with what the visuals were built from.
                 ReportDefinitionChanges(null, es, context);
@@ -1089,15 +1104,54 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
     }
 
-    /// <summary>What a reload cannot apply to visuals that already exist: the base type and exposed variables.</summary>
-    private sealed record DefinitionShape(string BaseType, string Exposed)
+    /// <summary>What the manager remembers between reloads about definitions the diff cannot apply.</summary>
+    private sealed class ReloadMemory
     {
-        public static DefinitionShape Of(ElementSave element) => new DefinitionShape(
+        // The base type, exposed variables and inherited content each changed element's visuals were
+        // built with. The diff re-points a visual at the new element, so without this the next reload
+        // would see no change and stop listing a tree that is still stale.
+        public Dictionary<string, DefinitionShape> BuiltShapes { get; } = new Dictionary<string, DefinitionShape>();
+
+        // Elements whose file is missing in the reload being applied; the missing file is their one issue.
+        public HashSet<string> MissingElements { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// What a reload cannot apply to visuals that already exist: the base type, the exposed variables
+    /// and the content inherited through the base chain (so a switch between two identical bases is not a change).
+    /// </summary>
+    private sealed record DefinitionShape(string BaseType, string Exposed, string Inherited)
+    {
+        public static DefinitionShape Of(ElementSave element, Func<string, ElementSave?> lookup) => new DefinitionShape(
             element.BaseType ?? "",
             string.Join(";", (element.DefaultState?.Variables ?? new List<VariableSave>())
                 .Where(variable => !string.IsNullOrEmpty(variable.ExposedAsName))
                 .Select(variable => variable.Name + "=" + variable.ExposedAsName)
-                .OrderBy(entry => entry, StringComparer.Ordinal)));
+                .OrderBy(entry => entry, StringComparer.Ordinal)),
+            InheritedContent(element, lookup));
+
+        private static string InheritedContent(ElementSave element, Func<string, ElementSave?> lookup)
+        {
+            System.Text.StringBuilder text = new System.Text.StringBuilder();
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string? name = element.BaseType;
+            while (!string.IsNullOrEmpty(name) && seen.Add(name) && lookup(name) is ElementSave layer)
+            {
+                text.Append("vars:").Append(string.Join(",", (layer.DefaultState?.Variables ?? new List<VariableSave>())
+                    .Where(AppliesAValue)
+                    .Select(variable => variable.Name + "=" + Convert.ToString(variable.Value, System.Globalization.CultureInfo.InvariantCulture))
+                    .OrderBy(entry => entry, StringComparer.Ordinal)));
+                text.Append(";instances:").Append(string.Join(",", layer.Instances
+                    .Select(instance => instance.Name + ":" + instance.BaseType)
+                    .OrderBy(entry => entry, StringComparer.Ordinal)));
+                text.Append(";states:").Append(string.Join(",", layer.AllStates
+                    .Select(state => state.Name)
+                    .OrderBy(entry => entry, StringComparer.Ordinal)));
+                text.Append('|');
+                name = layer.BaseType;
+            }
+            return text.ToString();
+        }
     }
 
     // Visuals are built with the element's base type and exposed variables, and the diff does not
@@ -1110,18 +1164,42 @@ public class GumHotReloadManager : IGumHotReloadManager
             return;
         }
 
-        DefinitionShape now = DefinitionShape.Of(current);
-        DefinitionShape builtFrom = context.BuiltShapes.TryGetValue(current.Name, out DefinitionShape? kept)
+        ElementSave? InNewProject(string name) => ObjectFinder.Self.GetElementSave(name);
+        ElementSave? InOldProject(string name) =>
+            context.OldByName.TryGetValue(name, out ElementSave? old) ? old : ObjectFinder.Self.GetElementSave(name);
+
+        DefinitionShape now = DefinitionShape.Of(current, InNewProject);
+        DefinitionShape builtFrom = context.Memory.BuiltShapes.TryGetValue(current.Name, out DefinitionShape? kept)
             ? kept
-            : previous != null ? DefinitionShape.Of(previous) : now;
-        if (builtFrom == now)
+            : previous != null ? DefinitionShape.Of(previous, InOldProject) : now;
+
+        // Content inherited under the same base type is edited through the normal diff, so it only
+        // counts when the base type changed or the base is gone.
+        bool baseGone = now.BaseType.Length > 0 && InNewProject(now.BaseType) == null && builtFrom.Inherited != now.Inherited;
+        bool baseChanged = builtFrom.BaseType != now.BaseType && builtFrom.Inherited != now.Inherited;
+        bool exposedChanged = builtFrom.Exposed != now.Exposed;
+        if (!baseGone && !baseChanged && !exposedChanged)
         {
-            context.BuiltShapes.Remove(current.Name);
+            context.Memory.BuiltShapes.Remove(current.Name);
             return;
         }
 
-        context.BuiltShapes[current.Name] = builtFrom;
-        if (builtFrom.BaseType != now.BaseType)
+        context.Memory.BuiltShapes[current.Name] = builtFrom;
+        if (context.Memory.MissingElements.Contains(current.Name))
+        {
+            // Emptied because its file is missing; the missing file is the one issue.
+            return;
+        }
+
+        if (baseGone)
+        {
+            context.ReportOnce("basegone:" + current.Name, new HotReloadIssue(
+                HotReloadIssueKind.BaseElementMissing,
+                $"Hot reload: '{current.Name}' derives from '{now.BaseType}', which is not in the project. " +
+                "What it inherited from it stays as it was until you restart.",
+                current.Name));
+        }
+        else if (baseChanged)
         {
             context.ReportOnce("base:" + current.Name, new HotReloadIssue(
                 HotReloadIssueKind.ComponentBaseTypeChanged,
@@ -1129,7 +1207,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 "the running UI until you restart.",
                 current.Name));
         }
-        if (builtFrom.Exposed != now.Exposed)
+        if (exposedChanged)
         {
             context.ReportOnce("exposed:" + current.Name, new HotReloadIssue(
                 HotReloadIssueKind.ExposedVariableChanged,
