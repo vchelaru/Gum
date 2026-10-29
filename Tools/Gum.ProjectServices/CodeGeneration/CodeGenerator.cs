@@ -6060,6 +6060,22 @@ public class CodeGenerator
             return $"{context.CodePrefixNoTabs}.{GetGumVariableName(variable, context)} = {referenceInCode};";
         }
         #endregion
+        #region Shader parameter value
+
+        // A saved shader parameter value (Holder.Outline_Thickness) is no property of the runtime, only a name
+        // SetProperty routes to the container's shader parameters, the same call the loader makes. Exposed
+        // parameters carry no value and never get here. An override of an exposed parameter carries the same
+        // marker but is a typed property of the instance, which the regular assignment writes.
+        else if (instance != null && IsShaderParameterVariable(variable) && !IsExposedOnInstance(instance, rootName))
+        {
+            string? valueInCode = VariableValueToGumCodeValue(variable, context);
+            if (valueInCode == null)
+            {
+                return " ";
+            }
+            return $"{context.CodePrefixNoTabs}.SetProperty(\"{rootName}\", {valueInCode});";
+        }
+        #endregion
         #region SourceShaderFile
 
         // SourceShaderFile is a plain string file reference (e.g. a .fx path) on a render-target
@@ -6254,6 +6270,12 @@ public class CodeGenerator
     }
 
 
+    private static bool IsExposedOnInstance(InstanceSave instance, string rootName) =>
+        ObjectFinder.Self.GetElementSave(instance)?.DefaultState?.GetVariableRecursive(rootName)?.ExposedAsName == rootName;
+
+    private static bool IsShaderParameterVariable(VariableSave variable) =>
+        ShaderParameterMarker.TryParse(variable.ShaderParameter, out _);
+
     private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement, OutputLibrary outputLibrary)
     {
         var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
@@ -6293,8 +6315,10 @@ public class CodeGenerator
 
         if (shouldInclude)
         {
-            var foundVariable = baseRecursiveVariableFinder.GetVariable(item.GetRootName());
-            shouldInclude = foundVariable != null;
+            // A shader parameter value is declared by the container that saved it (its marker), not by the
+            // instance's type, so the type does not have it.
+            shouldInclude = IsShaderParameterVariable(item) ||
+                baseRecursiveVariableFinder.GetVariable(item.GetRootName()) != null;
         }
 
         if (shouldInclude)
