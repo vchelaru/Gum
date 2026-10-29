@@ -144,8 +144,10 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
+        errors.AddRange(GetMissingComponentBaseTypeErrorFor(element));
         errors.AddRange(GetCircularBaseTypeErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
+        errors.AddRange(GetUnprefixedInstanceVariableErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
         errors.AddRange(GetInvalidEnumValueErrorsFor(element));
@@ -1372,6 +1374,138 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         return errors;
+    }
+
+    // GUM0015: a component with no BaseType loads fine, but codegen then writes a class with no base class.
+    // Screens and standards legitimately have none.
+    private static List<ErrorResult> GetMissingComponentBaseTypeErrorFor(ElementSave elementSave)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+
+        if (elementSave is ComponentSave && string.IsNullOrWhiteSpace(elementSave.BaseType))
+        {
+            errors.Add(new ErrorResult
+            {
+                ElementName = elementSave.Name,
+                Code = "GUM0015",
+                Severity = ErrorSeverity.Error,
+                Message = $"Component {elementSave.Name} has no BaseType, so generated code gives its class no base class. " +
+                    "Set <BaseType> in its .gucx file to Container, or to the component it derives from."
+            });
+        }
+
+        return errors;
+    }
+
+    #endregion
+
+    #region GUM0017 — Variable of an instance set without the instance prefix
+
+    // An undotted variable the element does not have (not a root variable of its standard type, not exposed,
+    // not a declared custom variable, not a category state) sets nothing, or throws at runtime
+    // (e.g. Forms ReportMissingTextInstance). It is reported only when an instance of the element has a
+    // variable of that name, because then the prefix is the likely mistake and the fix is known.
+    private static List<ErrorResult> GetUnprefixedInstanceVariableErrorsFor(ElementSave elementSave)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+
+        if (elementSave is StandardElementSave || elementSave.Instances.Count == 0)
+        {
+            return errors;
+        }
+
+        HashSet<string> availableOnElement = GetRootVariableNames(elementSave);
+        HashSet<string> reported = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (StateSave state in elementSave.AllStates)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                string name = variable.Name;
+                if (string.IsNullOrEmpty(name) || name.Contains('.') || availableOnElement.Contains(name) || reported.Contains(name))
+                {
+                    continue;
+                }
+
+                List<string> owners = elementSave.Instances
+                    .Where(instance => InstanceHasVariable(instance, name))
+                    .Select(instance => instance.Name)
+                    .ToList();
+
+                if (owners.Count == 0 || variable.IsState(elementSave))
+                {
+                    continue;
+                }
+
+                reported.Add(name);
+                string suggestions = string.Join(" or ", owners.Select(owner => $"'{owner}.{name}'"));
+                errors.Add(new ErrorResult
+                {
+                    ElementName = elementSave.Name,
+                    Code = "GUM0017",
+                    Severity = ErrorSeverity.Error,
+                    Message = $"{elementSave.Name} sets the variable '{name}', but {elementSave.Name} has no variable with that name. " +
+                        $"It belongs to an instance, so write it with the instance prefix: {suggestions}."
+                });
+            }
+        }
+
+        return errors;
+    }
+
+    private static bool InstanceHasVariable(InstanceSave instance, string variableName)
+    {
+        ElementSave? instanceElement = ObjectFinder.Self.GetElementSave(instance);
+        return instanceElement != null && GetRootVariableNames(instanceElement).Contains(variableName);
+    }
+
+    // The undotted variable names an element has: its standard type's variables, anything exposed or declared
+    // custom on it or its bases.
+    private static HashSet<string> GetRootVariableNames(ElementSave element)
+    {
+        HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
+
+        List<ElementSave> chain = new List<ElementSave> { element };
+        chain.AddRange(ObjectFinder.Self.GetBaseElements(element));
+
+        foreach (ElementSave link in chain)
+        {
+            StateSave? defaultState = link.DefaultState;
+            if (defaultState == null)
+            {
+                continue;
+            }
+
+            foreach (VariableSave variable in defaultState.Variables)
+            {
+                if (!string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    names.Add(variable.ExposedAsName);
+                }
+                if (string.IsNullOrEmpty(variable.SourceObject) && (link is StandardElementSave || variable.IsCustomVariable))
+                {
+                    names.Add(variable.Name);
+                }
+            }
+        }
+
+        string? rootName = ObjectFinder.Self.GetRootStandardElementSave(element)?.Name;
+        string[] defaultTypes = new[] { rootName, element is ComponentSave ? "Component" : null, element is ScreenSave ? "Screen" : null }
+            .Where(type => !string.IsNullOrEmpty(type))
+            .ToArray()!;
+        foreach (string type in defaultTypes)
+        {
+            StateSave? standardDefaults = StandardElementsManager.Self.GetDefaultStateFor(type, throwExceptionOnMissing: false);
+            if (standardDefaults != null)
+            {
+                foreach (VariableSave variable in standardDefaults.Variables)
+                {
+                    names.Add(variable.Name);
+                }
+            }
+        }
+
+        return names;
     }
 
     #endregion

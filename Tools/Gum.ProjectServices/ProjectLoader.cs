@@ -51,6 +51,10 @@ public class ProjectLoader : IProjectLoader
             }
             else
             {
+                // Initialize repairs a derived element that lacks its base's instances, silently. Doing it
+                // first lets check say that the file on disk is out of date (GUM0016).
+                List<MissingBaseInstanceRepair> missingBaseInstances = new List<MissingBaseInstanceRepair>();
+                project.RepairMissingDefinedByBaseInstances(missingBaseInstances);
                 project.Initialize();
                 StripRemovedVariables(project);
 
@@ -70,6 +74,8 @@ public class ProjectLoader : IProjectLoader
                     ConvertMissingFiles(gumLoadResult.MissingFiles, projectDirectory));
                 result.LoadErrors.AddRange(
                     DetectSilentlyDroppedContent(project, projectDirectory));
+                result.LoadErrors.AddRange(
+                    missingBaseInstances.Select(ToMissingBaseInstanceError));
             }
         }
         catch (Exception ex)
@@ -78,6 +84,22 @@ public class ProjectLoader : IProjectLoader
         }
 
         return result;
+    }
+
+    // GUM0016. The loader already adds the missing instance in memory, so nothing breaks at runtime
+    // or in codegen; the row exists because the file on disk is out of date.
+    private static ErrorResult ToMissingBaseInstanceError(MissingBaseInstanceRepair repair)
+    {
+        return new ErrorResult
+        {
+            ElementName = repair.Element.Name,
+            Code = "GUM0016",
+            Severity = ErrorSeverity.Warning,
+            Message = $"{repair.Element.Name} derives from {repair.OwnerName} but does not list its instance " +
+                $"'{repair.InstanceName}' ({repair.InstanceBaseType}) with DefinedByBase true, so Gum adds it in memory at load. " +
+                $"Add an <Instance> named '{repair.InstanceName}' with <DefinedByBase>true</DefinedByBase> to the file, " +
+                $"or run gumcli resave to write it."
+        };
     }
 
     /// <summary>
