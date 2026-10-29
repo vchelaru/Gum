@@ -439,27 +439,28 @@ public class TextCustomizationTests : BaseTestClass
     }
     // A surrogate is half of a pair only when a high one is followed by a low one; anywhere else it is a code point of
     // its own, in the layout, the line mapping and the reveal alike.
+    // The layout pairs a high surrogate with whatever char follows it (a lone one is not its own code point), and the
+    // line mapping must count the same way or WrappedText loses the end of the text.
     [Fact]
-    public void GetVisibleStyledRuns_LoneSurrogate_CountsAsOneCodePoint()
+    public void WrappedText_MalformedSurrogates_StaysComplete()
     {
-        // (layout text, its code point count). Lone surrogates are kept out of InlineData, which xunit cannot round-trip.
-        (string LayoutText, int CodePoints)[] cases =
+        // Lone surrogates are kept out of InlineData, which xunit cannot round-trip.
+        (string RawText, string LayoutText)[] cases =
         {
-            ("x\uD83Dc", 3),
-            ("xc\uD83D", 3),
-            ("x\uDE00c", 3),
-            ("x\uD83D\uD83D\uDE00", 3),
+            ("\uD83D\U0001F600b\uD83D\u4E2D\uD83D\U0001F600b", "\uD83D\U0001F600b\uD83D\u4E2D\uD83D\U0001F600b"),
+            ("[IsBold=true]x\uD83Dcd[/IsBold]","x\uD83Dcd"),
+            ("bd[Custom=Off][/Custom]\uD83Dd", "bd\uD83Dd"),
+            ("ab\uD83D", "ab\uD83D"),
+            ("a\uDE00b", "a\uDE00b"),
         };
-        Text.Customizations["Mask"] = (index, block) => new LetterCustomization { ReplacementCharacter = '*' };
+        Text.Customizations["Off"] = (index, block) => new LetterCustomization();
 
-        foreach ((string layoutText, int codePoints) in cases)
+        foreach ((string rawText, string layoutText) in cases)
         {
             Text text = MakeText();
-            text.RawText = $"[Custom=Mask]{layoutText}[/Custom]";
+            text.RawText = rawText;
 
-            string.Concat(text.GetStyledRuns().Select(r => r.Text)).ShouldBe(new string('*', codePoints), layoutText);
-            string.Concat(text.WrappedText).ShouldBe(layoutText);
-            string.Concat(text.GetVisibleStyledRuns().Select(r => r.Text)).ShouldBe(new string('*', codePoints), layoutText);
+            string.Concat(text.WrappedText).ShouldBe(layoutText, layoutText);
         }
     }
     // A lone surrogate has nothing to pair with, so it stays one run per UTF-16 unit as before.

@@ -1251,7 +1251,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     customLettersByStart ??= new();
                     customLettersByStart[codePointIndex] = run;
                 }
-                codePointIndex += CountCodePoints(run.Text);
+                for (int i = 0; i < run.Text.Length; i++)
+                {
+                    if (!char.IsLowSurrogate(run.Text[i]))
+                    {
+                        codePointIndex++;
+                    }
+                }
             }
             switch (HorizontalAlignment)
             {
@@ -1791,10 +1797,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return metrics.LineHeightForHeight(lineHeightFactor * metrics.PlainHeight);
     }
 
-    /// <summary>The number of UTF-16 chars of the code point at <paramref name="index"/>: 2 for a surrogate pair (an emoji),
-    /// else 1, so a lone surrogate is a code point of its own.</summary>
+    /// <summary>The number of UTF-16 chars of the code point at <paramref name="index"/>, counted the way the layout counts
+    /// them: a high surrogate and the char after it are one code point (an emoji; a lone high surrogate takes its neighbor
+    /// with it), else 1. The line mapping must follow this rule or WrappedText loses the end of a malformed text.</summary>
     private static int CodePointLength(string text, int index) =>
-        char.IsHighSurrogate(text[index]) && index + 1 < text.Length && char.IsLowSurrogate(text[index + 1]) ? 2 : 1;
+        char.IsHighSurrogate(text[index]) && index + 1 < text.Length ? 2 : 1;
 
     private static int CountCodePoints(string text)
     {
@@ -2193,7 +2200,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                             for (int i = 0; i < taggedSubstring.Length; i += letterLength)
                             {
                                 // A surrogate pair (an emoji) is one letter: splitting it in two draws two glyphs (issue #7108).
-                                letterLength = CodePointLength(taggedSubstring, i);
+                                letterLength = char.IsHighSurrogate(taggedSubstring[i])
+                                    && i + 1 < taggedSubstring.Length
+                                    && char.IsLowSurrogate(taggedSubstring[i + 1]) ? 2 : 1;
                                 _inlineVariables.Add(new InlineVariable
                                 {
                                     VariableName = "Custom",
