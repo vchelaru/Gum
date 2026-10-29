@@ -336,18 +336,16 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     // Returns a description of the fonts that could not be copied (a file the editor still has open),
     // which stay queued for the next reload; null when every font copied.
-    private string? CopyAndUnloadChangedFonts()
+    // fontsEvicted is true when a font was dropped from the cache, so Text that already holds it (or
+    // fell back to the default font while it was missing) has to resolve its font again.
+    private string? CopyAndUnloadChangedFonts(out bool fontsEvicted)
     {
+        fontsEvicted = false;
         List<string> changedFonts;
         lock (_fontFileLock)
         {
             changedFonts = new List<string>(_changedFontFiles);
             _changedFontFiles.Clear();
-        }
-
-        if (changedFonts.Count == 0)
-        {
-            return null;
         }
 
         var sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
@@ -362,12 +360,19 @@ public class GumHotReloadManager : IGumHotReloadManager
             return null;
         }
 
+        AddFontsChangedWithoutNotice(changedFonts, sourceFontCache);
+        if (changedFonts.Count == 0)
+        {
+            return null;
+        }
+
         string? failures = null;
         foreach (var sourceFntPath in changedFonts)
         {
             try
             {
                 CopyAndUnloadFont(sourceFntPath, sourceFontCache);
+                fontsEvicted = true;
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
@@ -384,15 +389,51 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     // A game that loads its content from the folder the tool saves into (Preview) has the file where
     // the runtime reads it; copying a file onto itself throws.
-    private static void CopyUnlessSameFile(string source, string destination)
+    private static bool IsSameFile(string first, string second)
     {
         StringComparison comparison = _isFileSystemCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (string.Equals(Path.GetFullPath(source), Path.GetFullPath(destination), comparison))
+        return string.Equals(Path.GetFullPath(first), Path.GetFullPath(second), comparison);
+    }
+
+    // The copy keeps the source's write time, which is how a later reload tells a copy that is current
+    // from one that is not.
+    private static void CopyUnlessSameFile(string source, string destination)
+    {
+        if (IsSameFile(source, destination))
         {
             return;
         }
 
         File.Copy(source, destination, overwrite: true);
+        File.SetLastWriteTimeUtc(destination, File.GetLastWriteTimeUtc(source));
+    }
+
+    // A watcher drops events when its buffer overflows, so a font the load folder still holds in an older
+    // version than the source folder is also changed, whether or not a notification arrived.
+    private void AddFontsChangedWithoutNotice(List<string> changedFonts, string sourceFontCache)
+    {
+        string destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
+        if (!Directory.Exists(destinationFontCache))
+        {
+            return;
+        }
+
+        HashSet<string> queued = new HashSet<string>(changedFonts.Select(Path.GetFileName)!);
+        foreach (string sourceFnt in Directory.GetFiles(sourceFontCache, "*.fnt"))
+        {
+            string fileName = Path.GetFileName(sourceFnt);
+            string destination = Path.Combine(destinationFontCache, fileName);
+            if (queued.Contains(fileName) || !File.Exists(destination) || IsSameFile(sourceFnt, destination))
+            {
+                continue;
+            }
+
+            if (File.GetLastWriteTimeUtc(sourceFnt) != File.GetLastWriteTimeUtc(destination)
+                || new FileInfo(sourceFnt).Length != new FileInfo(destination).Length)
+            {
+                changedFonts.Add(sourceFnt);
+            }
+        }
     }
 
     private void CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
@@ -498,7 +539,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     private bool TryReload(List<GraphicalUiElement> rootList, List<HotReloadIssue> issues, out bool willRetry)
     {
         willRetry = false;
-        string? fontFailure = CopyAndUnloadChangedFonts();
+        string? fontFailure = CopyAndUnloadChangedFonts(out bool fontsEvicted);
 
         // The whole project is read into a temporary first. A file caught half written, locked by the
         // editor or unparsable leaves the running tree and ObjectFinder exactly as they were (#6978).
@@ -531,6 +572,11 @@ public class GumHotReloadManager : IGumHotReloadManager
             _loadAnimationsFromProvider(newProject, animationProvider);
 
             ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems, diffIssues, _memory);
+
+            if (fontsEvicted)
+            {
+                ReapplyFonts(rootList);
+            }
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -558,6 +604,27 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
 
         return true;
+    }
+
+    // The diff only touches Text whose font variables changed. A font file that changed under the same
+    // name, or arrived after the project that asks for it, is a different font for Text whose variables
+    // did not, so every Text resolves its font from its properties again (a cache hit when its font was
+    // not evicted).
+    private static void ReapplyFonts(List<GraphicalUiElement> roots)
+    {
+        List<GraphicalUiElement> visited = new List<GraphicalUiElement>();
+        foreach (GraphicalUiElement root in roots)
+        {
+            CollectDescendants(root, visited);
+        }
+
+        foreach (GraphicalUiElement element in visited)
+        {
+            if (element.RenderableComponent is IText)
+            {
+                element.UpdateToFontValues();
+            }
+        }
     }
 
     // Returns null with a description when the project cannot be read. Files the project lists but that
