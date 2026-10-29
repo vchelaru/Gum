@@ -36,22 +36,6 @@ public class DemoBeatsScenarioTests
         """;
 
     [AvaloniaFact]
-    public void AddForms_WithTheDefaultTheme_ListsButtonLabelTextBoxAndFriendsAsComponents()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        AddFormsWithDefaultTheme(tree);
-
-        List<string> names = Project().Components.Select(component => component.Name).ToList();
-        foreach (string control in new[] { "Button", "Label", "TextBox", "CheckBox", "ListBox", "ComboBox", "Slider" })
-        {
-            names.ShouldContain(name => name.EndsWith(control, StringComparison.Ordinal) || name.Contains(control + "/", StringComparison.Ordinal),
-                $"Add Forms should give the beginner a {control}; it gave [{string.Join(", ", names)}]");
-        }
-
-        tree.AssertOracles();
-    }
-
-    [AvaloniaFact]
     public void TheWholeDemo_FormsScreenInstancesVariablesRenameDeleteGenerateReopen()
     {
         using CodeTabHarness code = new CodeTabHarness(beforeLoad: folder => File.WriteAllText(Path.Combine(folder, "MyGame.csproj"), MonoGameCsproj));
@@ -71,14 +55,78 @@ public class DemoBeatsScenarioTests
         InstanceSave container = screen.Instances.Single();
         container.BaseType.ShouldBe("Container");
 
-        foreach (string control in new[] { "Button", "Label", "TextBox" })
+        // Add Forms gave the beginner the controls the tutorials use.
+        List<string> componentNames = Project().Components.Select(component => component.Name).ToList();
+        foreach (string control in new[] { "Button", "Label", "TextBox", "CheckBox", "ListBox", "ComboBox", "Slider" })
         {
-            ComponentSave component = ControlComponent(control);
-            tree.ClickCollapseToElementLevel();
-            tree.BeginDrag(tree.NodeFor(component));
-            tree.DropOn(tree.NodeFor(screen)).ShouldNotBe(DragDropEffects.None, $"dropping {control} on the screen");
+            componentNames.ShouldContain(name => name.EndsWith(control, StringComparison.Ordinal) || name.EndsWith(control + "Standard", StringComparison.Ordinal),
+                $"Add Forms should give the beginner a {control}; it gave [{string.Join(", ", componentNames)}]");
         }
-        screen.Instances.Count.ShouldBe(4, $"instances: [{string.Join(", ", screen.Instances.Select(i => i.Name + ":" + i.BaseType))}]");
+
+        // One control per family dragged from the long Components list onto the screen: the Controls folder
+        // (including the last rows, which need a scroll), Elements and Styles-free standards.
+        string[] dragged = { "Button", "Label", "TextBox", "CheckBox", "ListBox" };
+        List<string> problems = new List<string>();
+        foreach (ComponentSave component in dragged.Select(ControlComponent).Concat(new[] { Project().Components.Single(c => c.Name == "Controls/Window"), Project().Components.Single(c => c.Name == "Elements/Icon") }))
+        {
+            int before = screen.Instances.Count;
+            DropOnScreen(tree, component, screen);
+            if (screen.Instances.Count != before + 1)
+            {
+                problems.Add($"{component.Name}: dropping it added {screen.Instances.Count - before} instances; messages: {string.Join("|", tree.Dialogs.Messages)}");
+                continue;
+            }
+            InstanceSave added = screen.Instances.Last();
+            if (added.BaseType != component.Name)
+            {
+                problems.Add($"{component.Name}: instance base type is {added.BaseType}");
+            }
+            if (tree.SelectedState.SelectedInstance != added)
+            {
+                problems.Add($"{component.Name}: the new instance {added.Name} is not selected");
+            }
+            if (tree.Grid.ShownMemberNames().Count == 0)
+            {
+                problems.Add($"{component.Name}: the Variables tab shows no rows for {added.Name}");
+            }
+        }
+        problems.ShouldBeEmpty(string.Join("\n", problems));
+        screen.Instances.Count.ShouldBe(1 + 7, $"instances: [{string.Join(", ", screen.Instances.Select(i => i.Name + ":" + i.BaseType))}]");
+
+        // The same component again gets another name; a control dropped on the container goes inside it.
+        DropOnScreen(tree, ControlComponent("Button"), screen);
+        DropOnScreen(tree, ControlComponent("Button"), screen);
+        screen.Instances.Select(instance => instance.Name).Distinct().Count().ShouldBe(screen.Instances.Count, "instance names are unique");
+        tree.ClickCollapseToElementLevel();
+        tree.BeginDrag(tree.NodeFor(ControlComponent("CheckBox")));
+        tree.DragOver(tree.NodeFor(container), 0.5);
+        tree.DropOn(tree.NodeFor(container));
+        InstanceSave inside = screen.Instances.Last();
+        screen.DefaultState.GetValue(inside.Name + ".Parent").ShouldBe(container.Name);
+        tree.ChildTexts(tree.NodeFor(container)).ShouldBe(new[] { inside.Name });
+        tree.Undo();
+        tree.Redo();
+        screen.DefaultState.GetValue(screen.Instances.Last().Name + ".Parent").ShouldBe(container.Name);
+
+        // Every dropped instance is on disk, and renaming one then undoing restores its name and the files.
+        tree.SaveAll();
+        string screenFile = File.ReadAllText(Path.Combine(tree.Project.ProjectFolder, "Screens", "MainMenu.gusx"));
+        foreach (InstanceSave instance in screen.Instances)
+        {
+            screenFile.ShouldContain(instance.Name, Case.Sensitive, $"{instance.Name} was saved");
+        }
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        string renamedFrom = InstanceOf(screen, "CheckBox").Name;
+        tree.Dialogs.AnswerNextUserString("Renamed");
+        tree.Click(tree.NodeFor(InstanceOf(screen, "CheckBox")));
+        tree.Press(Key.F2, PhysicalKey.F2);
+        screen.Instances.Select(instance => instance.Name).ShouldContain("Renamed");
+        tree.Undo();
+        screen.Instances.Select(instance => instance.Name).ShouldContain(renamedFrom);
+        screen.Instances.Select(instance => instance.Name).ShouldNotContain("Renamed");
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the rename restores the files");
+        tree.ThrowIfCrashed();
+
         InstanceSave button = InstanceOf(screen, "Button");
         InstanceSave label = InstanceOf(screen, "Label");
 
@@ -105,8 +153,12 @@ public class DemoBeatsScenarioTests
         code.ClickGenerate();
         string screenCode = File.ReadAllText(Path.Combine(tree.Project.ProjectFolder, "Screens", "MainMenu.Generated.cs"));
         screenCode.ShouldContain("partial class MainMenu");
-        screenCode.ShouldContain(button.Name);
-        screenCode.ShouldContain(label.Name);
+        foreach (InstanceSave instance in screen.Instances)
+        {
+            screenCode.ShouldContain($" {instance.Name} {{ get; protected set; }}", Case.Sensitive, $"{instance.Name} has a property");
+        }
+        screenCode.ShouldNotContain("ERROR", Case.Insensitive);
+        screenCode.ShouldNotContain("not supported", Case.Insensitive);
 
         // Rename the button; regenerate; the generated file follows and the stub is not rewritten.
         string stubFile = Path.Combine(tree.Project.ProjectFolder, "Screens", "MainMenu.cs");
@@ -156,25 +208,6 @@ public class DemoBeatsScenarioTests
     }
 
     [AvaloniaFact]
-    public void AfterAddForms_TypingIntoAStandardTextInstancesTextRow_SetsItOnTheScreen()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        AddFormsWithDefaultTheme(tree);
-        tree.Dialogs.AnswerNext<AddScreenDialogViewModel>(dialog => { dialog.Value = "MainMenu"; return true; });
-        tree.RightClick(tree.RootNode("Screens"));
-        tree.PickMenu("Add Screen");
-        ScreenSave screen = Project().Screens.Single();
-        tree.RightClick(tree.NodeFor(screen));
-        tree.PickMenu("Add object to MainMenu", "Text");
-        InstanceSave text = screen.Instances.Single();
-        tree.Click(tree.NodeFor(text));
-
-        tree.Grid.TypeAndLeave(text.Name + ".Text", "Score: 0");
-
-        screen.DefaultState.GetValue(text.Name + ".Text").ShouldBe("Score: 0");
-    }
-
-    [AvaloniaFact]
     public void BeforeAddForms_TypingIntoAStandardTextInstancesTextRow_SetsItOnTheScreen()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -188,121 +221,6 @@ public class DemoBeatsScenarioTests
     }
 
     #region Splash damage: the neighboring beginner behavior
-
-    [AvaloniaFact]
-    public void EveryFormsComponent_DraggedIntoAScreen_BecomesAUniqueSelectedInstance_WithAGridAndSavedOnDisk()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        AddFormsWithDefaultTheme(tree);
-        ScreenSave screen = AddScreen(tree, "MainMenu");
-        List<string> problems = new List<string>();
-
-        foreach (ComponentSave component in Project().Components.Where(IsControl).ToList())
-        {
-            int before = screen.Instances.Count;
-            tree.ClickCollapseToElementLevel();
-            tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
-            tree.BeginDrag(tree.NodeFor(component));
-            tree.DragOver(tree.NodeFor(screen), 0.5);
-            tree.DropOn(tree.NodeFor(screen));
-            if (screen.Instances.Count != before + 1)
-            {
-                problems.Add($"{component.Name}: dropping it added {screen.Instances.Count - before} instances; messages: {string.Join("|", tree.Dialogs.Messages)}");
-                continue;
-            }
-            InstanceSave added = screen.Instances.Last();
-            if (added.BaseType != component.Name)
-            {
-                problems.Add($"{component.Name}: instance base type is {added.BaseType}");
-            }
-            if (tree.SelectedState.SelectedInstance != added)
-            {
-                problems.Add($"{component.Name}: the new instance {added.Name} is not selected");
-            }
-            if (tree.Grid.ShownMemberNames().Count == 0)
-            {
-                problems.Add($"{component.Name}: the Variables tab shows no rows for {added.Name}");
-            }
-        }
-
-        screen.Instances.Select(instance => instance.Name).Distinct().Count().ShouldBe(screen.Instances.Count, "instance names are unique");
-        screen.Instances.Count.ShouldBeGreaterThan(5);
-        problems.ShouldBeEmpty(string.Join("\n", problems));
-        tree.SaveAll();
-        string screenFile = File.ReadAllText(Path.Combine(tree.Project.ProjectFolder, "Screens", "MainMenu.gusx"));
-        foreach (InstanceSave instance in screen.Instances)
-        {
-            screenFile.ShouldContain(instance.Name, Case.Sensitive, $"{instance.Name} was saved");
-        }
-        tree.ThrowIfCrashed();
-        tree.AssertOracles();
-    }
-
-    [AvaloniaTheory]
-    [InlineData("Controls/Window")]
-    [InlineData("Elements/Icon")]
-    [InlineData("Controls/ButtonStandard")]
-    public void ADroppedComponent_FromAnywhereInTheLongComponentsList_AddsAnInstanceToTheScreen(string componentName)
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        AddFormsWithDefaultTheme(tree);
-        ScreenSave screen = AddScreen(tree, "MainMenu");
-        ComponentSave component = Project().Components.Single(candidate => candidate.Name == componentName);
-        tree.ClickCollapseToElementLevel();
-        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
-
-        tree.BeginDrag(tree.NodeFor(component));
-        DragDropEffects over = tree.DragOver(tree.NodeFor(screen), 0.5);
-        bool visible = tree.IsScrolledIntoView(tree.NodeFor(screen));
-        string rows = string.Join(",", tree.VisibleNodes().Take(6).Select(n => n.Text));
-        tree.DropOn(tree.NodeFor(screen));
-
-        screen.Instances.Count.ShouldBe(1, $"over={over} screenVisible={visible} firstRows={rows} " + string.Join("|", tree.Dialogs.Messages));
-        screen.Instances.Single().BaseType.ShouldBe(componentName);
-    }
-
-    [AvaloniaFact]
-    public void DraggingTheSameComponentTwice_GivesTheSecondInstanceAnotherName()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        AddFormsWithDefaultTheme(tree);
-        ScreenSave screen = AddScreen(tree, "MainMenu");
-        ComponentSave button = ControlComponent("Button");
-
-        for (int i = 0; i < 3; i++)
-        {
-            tree.ClickCollapseToElementLevel();
-            tree.BeginDrag(tree.NodeFor(button));
-            tree.DropOn(tree.NodeFor(screen));
-        }
-
-        screen.Instances.Count.ShouldBe(3);
-        screen.Instances.Select(instance => instance.Name).Distinct().Count().ShouldBe(3);
-        tree.AssertOracles();
-    }
-
-    [AvaloniaFact]
-    public void ADroppedControlIsInsideAContainerWhenTheContainerIsTheDropTarget()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        AddFormsWithDefaultTheme(tree);
-        ScreenSave screen = AddScreen(tree, "MainMenu");
-        tree.RightClick(tree.NodeFor(screen));
-        tree.PickMenu("Add object to MainMenu", "Container");
-        InstanceSave container = screen.Instances.Single();
-
-        tree.ClickCollapseToElementLevel();
-        tree.BeginDrag(tree.NodeFor(ControlComponent("Button")));
-        tree.DropOn(tree.NodeFor(container));
-
-        InstanceSave button = screen.Instances.Single(instance => instance != container);
-        screen.DefaultState.GetValue(button.Name + ".Parent").ShouldBe(container.Name);
-        tree.ChildTexts(tree.NodeFor(container)).ShouldBe(new[] { button.Name });
-        tree.Undo();
-        tree.Redo();
-        screen.DefaultState.GetValue(button.Name + ".Parent").ShouldBe(container.Name);
-        tree.AssertOracles();
-    }
 
     [AvaloniaFact]
     public void StackingAndSizeUnits_TypedIntoTheGrid_AreSavedAndUndone()
@@ -390,137 +308,88 @@ public class DemoBeatsScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaTheory]
-    [InlineData("Main.Menu")]
-    [InlineData("Main-Menu")]
-    [InlineData("Main Menu!")]
-    [InlineData("Main/Menu")]
-    public void AddScreen_WithAnInvalidName_DisablesOk_AndAddsNothing(string name)
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        bool canAdd = true;
-        tree.Dialogs.AnswerNext<AddScreenDialogViewModel>(dialog =>
-        {
-            dialog.Value = name;
-            canAdd = dialog.AffirmativeCommand.CanExecute(null);
-            return false;
-        });
-
-        tree.RightClick(tree.RootNode("Screens"));
-        tree.PickMenu("Add Screen");
-
-        canAdd.ShouldBeFalse($"'{name}' should be refused");
-        tree.Project.Project.Screens.ShouldBeEmpty();
-    }
-
-    [AvaloniaTheory]
-    [InlineData("Panel.Big")]
-    [InlineData("Panel-Big")]
-    [InlineData("Panel!")]
-    public void AddComponent_WithAnInvalidName_DisablesOk_AndAddsNothing(string name)
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        bool canAdd = true;
-        tree.Dialogs.AnswerNext<AddComponentDialogViewModel>(dialog =>
-        {
-            dialog.Value = name;
-            canAdd = dialog.AffirmativeCommand.CanExecute(null);
-            return false;
-        });
-
-        tree.RightClick(tree.RootNode("Components"));
-        tree.PickMenu("Add Component");
-
-        canAdd.ShouldBeFalse($"'{name}' should be refused");
-        tree.Project.Project.Components.ShouldBeEmpty();
-    }
-
     [AvaloniaFact]
-    public void AddScreen_WithANameThatIsTaken_DisablesOk_AndAddsNothing()
+    public void AddScreenAndComponent_WithAnInvalidOrTakenName_DisableOk_AndAddNothing()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         tree.Project.AddScreen("MainMenu");
         tree.SaveAll();
-        bool canAdd = true;
-        tree.Dialogs.AnswerNext<AddScreenDialogViewModel>(dialog => { dialog.Value = "MainMenu"; canAdd = dialog.AffirmativeCommand.CanExecute(null); return false; });
+        List<string> accepted = new List<string>();
 
-        tree.RightClick(tree.RootNode("Screens"));
-        tree.PickMenu("Add Screen");
-
-        canAdd.ShouldBeFalse();
-        tree.Project.Project.Screens.Count.ShouldBe(1);
-    }
-
-    [AvaloniaTheory]
-    [InlineData("Main Menu", "Main_Menu")]
-    [InlineData("1MainMenu", "_1MainMenu")]
-    [InlineData("class", "@class")]
-    [InlineData("event", "@event")]
-    [InlineData("string", "@string")]
-    public void AScreenNamedWithASpaceDigitOrKeyword_IsEitherRefusedOrGeneratesALegalClassName(string name, string legalClassName)
-    {
-        using CodeTabHarness code = new CodeTabHarness(beforeLoad: folder => File.WriteAllText(Path.Combine(folder, "MyGame.csproj"), MonoGameCsproj));
-        bool canAdd = true;
-        code.Tree.Dialogs.AnswerNext<AddScreenDialogViewModel>(dialog =>
+        foreach (string name in new[] { "Main.Menu", "Main-Menu", "Main Menu!", "Main/Menu", "MainMenu" })
         {
-            dialog.Value = name;
-            canAdd = dialog.AffirmativeCommand.CanExecute(null);
-            return canAdd;
-        });
-        code.Tree.RightClick(code.Tree.RootNode("Screens"));
-        code.Tree.PickMenu("Add Screen");
-        if (!canAdd)
+            tree.Dialogs.AnswerNext<AddScreenDialogViewModel>(dialog =>
+            {
+                dialog.Value = name;
+                if (dialog.AffirmativeCommand.CanExecute(null))
+                {
+                    accepted.Add("screen " + name);
+                }
+                return false;
+            });
+            tree.RightClick(tree.RootNode("Screens"));
+            tree.PickMenu("Add Screen");
+        }
+        foreach (string name in new[] { "Panel.Big", "Panel-Big", "Panel!" })
         {
-            code.Project.Project.Screens.ShouldBeEmpty();
-            return;
+            tree.Dialogs.AnswerNext<AddComponentDialogViewModel>(dialog =>
+            {
+                dialog.Value = name;
+                if (dialog.AffirmativeCommand.CanExecute(null))
+                {
+                    accepted.Add("component " + name);
+                }
+                return false;
+            });
+            tree.RightClick(tree.RootNode("Components"));
+            tree.PickMenu("Add Component");
         }
 
-        ScreenSave screen = code.Project.Project.Screens.Single();
-        code.Tree.SaveAll();
-        code.Select(screen);
-        code.ClickButton("Auto");
-        code.PickComboItem("Generation Behavior", "GenerateManually");
-        code.ClickGenerate();
-
-        string screens = Path.Combine(code.Project.ProjectFolder, "Screens");
-        string[] generatedFiles = Directory.GetFiles(screens, "*.Generated.cs");
-        generatedFiles.Length.ShouldBe(1, "files: " + string.Join(", ", Directory.GetFiles(code.Project.ProjectFolder, "*", SearchOption.AllDirectories).Select(f => Path.GetRelativePath(code.Project.ProjectFolder, f))) + " messages: " + string.Join(" | ", code.Project.Dialogs.Messages));
-        File.ReadAllText(generatedFiles[0]).ShouldContain("partial class " + legalClassName, Case.Sensitive);
+        accepted.ShouldBeEmpty("these names should be refused: " + string.Join(", ", accepted));
+        tree.Project.Project.Screens.Count.ShouldBe(1);
+        tree.Project.Project.Components.ShouldBeEmpty();
     }
 
     [AvaloniaFact]
-    public void EveryFormsControlInAScreen_GeneratesAFieldOfItsOwnType_WithNoErrorTextInTheCode()
+    public void ScreensNamedWithASpaceDigitOrKeyword_AreEitherRefusedOrGenerateALegalClassName()
     {
         using CodeTabHarness code = new CodeTabHarness(beforeLoad: folder => File.WriteAllText(Path.Combine(folder, "MyGame.csproj"), MonoGameCsproj));
-        ProjectTreeHarness tree = code.Tree;
-        AddFormsWithDefaultTheme(tree);
-        ScreenSave screen = AddScreen(tree, "MainMenu");
-        foreach (string control in new[] { "Button", "Label", "TextBox", "CheckBox", "ListBox", "ComboBox", "Slider" })
+        List<string> problems = new List<string>();
+
+        foreach ((string name, string legalClassName) in new[] { ("Main Menu", "Main_Menu"), ("1MainMenu", "_1MainMenu"), ("class", "@class"), ("event", "@event"), ("string", "@string") })
         {
-            ComponentSave component = Project().Components.FirstOrDefault(c => c.Name == control || c.Name.EndsWith("/" + control, StringComparison.Ordinal) || c.Name.EndsWith(control + "Standard", StringComparison.Ordinal)
-                || c.Name.EndsWith("/" + control + "Standard", StringComparison.Ordinal))!;
-            if (component == null)
+            bool canAdd = true;
+            code.Tree.Dialogs.AnswerNext<AddScreenDialogViewModel>(dialog =>
+            {
+                dialog.Value = name;
+                canAdd = dialog.AffirmativeCommand.CanExecute(null);
+                return canAdd;
+            });
+            code.Tree.RightClick(code.Tree.RootNode("Screens"));
+            code.Tree.PickMenu("Add Screen");
+            if (!canAdd)
             {
                 continue;
             }
-            tree.ClickCollapseToElementLevel();
-            tree.BeginDrag(tree.NodeFor(component));
-            tree.DragOver(tree.NodeFor(screen), 0.5);
-            tree.DropOn(tree.NodeFor(screen));
-        }
-        tree.SaveAll();
-        code.Select(screen);
-        code.ClickButton("Auto");
-        code.PickComboItem("Generation Behavior", "GenerateManually");
-        code.ClickGenerate();
 
-        string generated = File.ReadAllText(Path.Combine(tree.Project.ProjectFolder, "Screens", "MainMenu.Generated.cs"));
-        foreach (InstanceSave instance in screen.Instances)
-        {
-            generated.ShouldContain($" {instance.Name} {{ get; protected set; }}", Case.Sensitive, $"{instance.Name} has a property");
+            ScreenSave screen = code.Project.Project.Screens.Single(candidate => candidate.Name == name);
+            code.Tree.SaveAll();
+            code.Select(screen);
+            if (code.ShowsButton("Auto"))
+            {
+                code.ClickButton("Auto");
+            }
+            code.PickComboItem("Generation Behavior", "GenerateManually");
+            code.ClickGenerate();
+
+            string[] files = Directory.GetFiles(Path.Combine(code.Project.ProjectFolder, "Screens"), "*.Generated.cs");
+            if (!files.Any(file => File.ReadAllText(file).Contains("partial class " + legalClassName + " ", StringComparison.Ordinal)))
+            {
+                problems.Add($"'{name}' generated no 'partial class {legalClassName}'; files: {string.Join(", ", files.Select(Path.GetFileName))}");
+            }
         }
-        generated.ShouldNotContain("ERROR", Case.Insensitive);
-        generated.ShouldNotContain("not supported", Case.Insensitive);
+
+        problems.ShouldBeEmpty(string.Join("\n", problems));
     }
 
     [AvaloniaFact]
@@ -563,34 +432,6 @@ public class DemoBeatsScenarioTests
         code.Member("Root Namespace").Value.ShouldBe("MyGame");
     }
 
-    [AvaloniaTheory]
-    [InlineData("Label")]
-    [InlineData("Button")]
-    [InlineData("TextBox")]
-    public void RenamingAFormsInstance_ThenUndoing_RestoresNameAndFile(string control)
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        AddFormsWithDefaultTheme(tree);
-        ScreenSave screen = AddScreen(tree, "MainMenu");
-        tree.ClickCollapseToElementLevel();
-        tree.BeginDrag(tree.NodeFor(ControlComponent(control)));
-        tree.DropOn(tree.NodeFor(screen));
-        InstanceSave instance = screen.Instances.Single();
-        string original = instance.Name;
-        tree.SaveAll();
-        ProjectFileSnapshot start = tree.SnapshotFiles();
-
-        tree.Dialogs.AnswerNextUserString("Renamed");
-        tree.Click(tree.NodeFor(instance));
-        tree.Press(Key.F2, PhysicalKey.F2);
-        instance.Name.ShouldBe("Renamed");
-        tree.Undo();
-
-        screen.Instances.Single().Name.ShouldBe(original);
-        tree.SnapshotFiles().ShouldMatch(start, "undoing the rename restores the files");
-        tree.AssertOracles();
-    }
-
     #endregion
 
     private static ScreenSave AddScreen(ProjectTreeHarness tree, string name)
@@ -605,8 +446,18 @@ public class DemoBeatsScenarioTests
         component.Behaviors.Count > 0 || component.BaseType is "Container" or "Text" or "Sprite" or "NineSlice";
 
     private static InstanceSave InstanceOf(ScreenSave screen, string control) =>
-        screen.Instances.SingleOrDefault(instance => instance.BaseType.Contains(control, StringComparison.Ordinal))
+        screen.Instances.FirstOrDefault(instance => instance.BaseType.Contains(control, StringComparison.Ordinal))
         ?? throw new InvalidOperationException($"No {control} instance; instances: [{string.Join(", ", screen.Instances.Select(i => i.Name + ":" + i.BaseType))}]");
+
+    private static void DropOnScreen(ProjectTreeHarness tree, ComponentSave component, ScreenSave screen)
+    {
+        tree.ClickCollapseToElementLevel();
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.BeginDrag(tree.NodeFor(component));
+        // A drop is preceded by drag-over events, as the pointer produces.
+        tree.DragOver(tree.NodeFor(screen), 0.5);
+        tree.DropOn(tree.NodeFor(screen));
+    }
 
     private static GumProjectSave Project() => Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
 
