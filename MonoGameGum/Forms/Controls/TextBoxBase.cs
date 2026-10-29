@@ -866,6 +866,8 @@ public abstract class TextBoxBase :
                 }
                 break;
             }
+
+            i += charLength;
         }
         return index;
     }
