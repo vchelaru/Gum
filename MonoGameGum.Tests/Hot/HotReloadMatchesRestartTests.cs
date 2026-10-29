@@ -5,6 +5,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using RenderingLibrary;
 using Shouldly;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -207,4 +208,116 @@ public class HotReloadMatchesRestartTests : BaseTestClass
 
         result.IsClean.ShouldBeTrue();
     }
+
+    private static SweepSpec Screens(string? screenBase, bool baseBLikeA = false) =>
+        new SweepSpec { WithBaseScreens = true, ScreenBase = screenBase, BaseBLikeA = baseBLikeA };
+
+    [Fact]
+    public void ScreenBaseSwitchedBetweenScreensWithDifferentContent_IsListed()
+    {
+        HotReloadResult result = Edit(Screens("BaseA"), Screens("BaseB"));
+
+        ShouldHaveOneIssue(result, HotReloadIssueKind.ComponentBaseTypeChanged).ElementName.ShouldBe("MainScreen");
+        SweepWorld.Describe(_world.Screen).ShouldNotBe(_world.DescribeAFreshLoad(), "sanity: the oracle can tell");
+    }
+
+    [Fact]
+    public void ScreenBaseSwitchedBetweenScreensWithTheSameContent_IsClean()
+    {
+        HotReloadResult result = Edit(Screens("BaseA", baseBLikeA: true), Screens("BaseB", baseBLikeA: true));
+
+        result.IsClean.ShouldBeTrue();
+        SweepWorld.Describe(_world.Screen).ShouldBe(_world.DescribeAFreshLoad());
+    }
+
+    [Fact]
+    public void ScreenBaseAddedAndRemoved_AreListed()
+    {
+        ShouldHaveOneIssue(Edit(Screens(null), Screens("BaseA")), HotReloadIssueKind.ComponentBaseTypeChanged);
+        SweepWorld.Describe(_world.Screen).ShouldNotBe(_world.DescribeAFreshLoad(), "sanity: the oracle can tell");
+    }
+
+    [Fact]
+    public void BaseComponentDeleted_ListsTheDerivedComponentAndPrintsItOnce()
+    {
+        HotReloadResult first = Edit(new SweepSpec(), new SweepSpec { OmitBaseComponent = true });
+
+        HotReloadIssue issue = ShouldHaveOneIssue(first, HotReloadIssueKind.BaseElementMissing);
+        issue.ElementName.ShouldBe("Widgets/Widget");
+        issue.Message.ShouldContain("'Widgets/Base'");
+        _printed.ShouldBe(new[] { issue.Message });
+
+        SaveAndReload(new SweepSpec { OmitBaseComponent = true, BoxX = 9 });
+
+        ShouldHaveOneIssue(_results.Last(), HotReloadIssueKind.BaseElementMissing);
+        _printed.Count.ShouldBe(1);
+
+        SaveAndReload(new SweepSpec { BoxX = 9 });
+
+        _results.Last().IsClean.ShouldBeTrue("the base is back");
+        SweepWorld.Describe(_world.Screen).ShouldBe(_world.DescribeAFreshLoad());
+    }
+
+    [Fact]
+    public void BaseOfABaseDeleted_AtDepthThree_ListsTheLayerThatLostItsBase()
+    {
+        HotReloadResult result = Edit(
+            new SweepSpec { WithMid = true, WidgetBase = "Widgets/Mid" },
+            new SweepSpec { WithMid = true, WidgetBase = "Widgets/Mid", OmitBaseComponent = true });
+
+        ShouldHaveOneIssue(result, HotReloadIssueKind.BaseElementMissing).ElementName.ShouldBe("Widgets/Mid");
+        SweepWorld.Describe(_world.Screen).ShouldNotBe(_world.DescribeAFreshLoad(), "sanity: the oracle can tell");
+    }
+
+    [Fact]
+    public void BaseRenamedWithoutUpdatingTheDerivedComponent_IsListedAsMissing() =>
+        ShouldHaveOneIssue(
+            Edit(new SweepSpec(), new SweepSpec { BaseName = "Widgets/Base2" }),
+            HotReloadIssueKind.BaseElementMissing);
+
+    [Fact]
+    public void BaseRenamedAndTheDerivedComponentUpdated_IsListedAsABaseTypeChange()
+    {
+        // The renamed base has the same content, so the visuals are not stale.
+        HotReloadResult result = Edit(new SweepSpec(), new SweepSpec { BaseName = "Widgets/Base2", WidgetBase = "Widgets/Base2" });
+
+        result.IsClean.ShouldBeTrue();
+        SweepWorld.Describe(_world.Screen).ShouldBe(_world.DescribeAFreshLoad());
+    }
+
+    [Fact]
+    public void BaseReplacedByAComponentThatDoesNotExistYet_IsListedUntilItIsAdded()
+    {
+        HotReloadResult first = Edit(new SweepSpec(), new SweepSpec { WidgetBase = "Widgets/NewBase" });
+
+        ShouldHaveOneIssue(first, HotReloadIssueKind.BaseElementMissing);
+
+        SaveAndReload(new SweepSpec { WidgetBase = "Widgets/NewBase", WithNewBase = true });
+
+        ShouldHaveOneIssue(_results.Last(), HotReloadIssueKind.ComponentBaseTypeChanged);
+        SweepWorld.Describe(_world.Screen).ShouldNotBe(_world.DescribeAFreshLoad(), "sanity: the oracle can tell");
+    }
+
+    [Fact]
+    public void ComponentWhoseFileIsMissing_ListsOnlyTheMissingFile()
+    {
+        _world.Boot(Reader());
+        _world.Manager.ReloadFinished += _results.Add;
+        File.Delete(_world.WidgetFile);
+        _world.EditInPlace(_world.ScreenFile, _world.ElementText(Reader() with { BoxX = 50 }, "MainScreen"));
+
+        _world.NotifyAndSettle(_world.ScreenFile);
+        _world.NotifyAndSettle(_world.ScreenFile);
+
+        _results.Count.ShouldBe(2);
+        _results.ShouldAllBe(result => result.Issues.Count == 1 && result.Issues[0].Kind == HotReloadIssueKind.MissingFile);
+        _printed.Count.ShouldBe(2, "the missing file is printed on every reload, nothing else");
+
+        _world.SaveAll(Reader());
+        _world.NotifyAndSettle(_world.Gumx, _world.ScreenFile, _world.WidgetFile);
+
+        _results.Last().IsClean.ShouldBeTrue("the file is back, and the base type is the one the visuals were built with");
+    }
+
+    private static SweepSpec Reader() => new SweepSpec { BoxReadsStyle = true };
 }

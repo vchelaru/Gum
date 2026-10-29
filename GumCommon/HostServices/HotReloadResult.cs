@@ -48,7 +48,13 @@ public enum HotReloadIssueKind
     /// The default state of a standard element changed. Instances already on screen keep their old
     /// values until a restart.
     /// </summary>
-    StandardElementChanged
+    StandardElementChanged,
+
+    /// <summary>
+    /// A screen or component derives from an element that is not in the project. Visuals already on
+    /// screen keep what they inherited from it until a restart.
+    /// </summary>
+    BaseElementMissing
 }
 
 /// <summary>One thing a reload reported, with the same text that is written to the console.</summary>
@@ -83,7 +89,8 @@ public sealed class HotReloadIssue
     internal bool Persists => Kind is HotReloadIssueKind.ShownElementGone
         or HotReloadIssueKind.ComponentBaseTypeChanged
         or HotReloadIssueKind.ExposedVariableChanged
-        or HotReloadIssueKind.StandardElementChanged;
+        or HotReloadIssueKind.StandardElementChanged
+        or HotReloadIssueKind.BaseElementMissing;
 }
 
 /// <summary>The outcome of one reload attempt, raised through <see cref="IGumHotReloadManager.ReloadFinished"/>.</summary>
