@@ -350,6 +350,146 @@ public class FileChangeReferencedFileCostTests : BaseTestClass
         _reaction.IsReferencedByProject(newFrame).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("ganx")]
+    [InlineData("ganj")]
+    [InlineData("gumfcs")]
+    [InlineData("codsj")]
+    public void AFileOfATypeWithItsOwnReaction_NeverReloadsTheCanvas_EvenWhenAnElementNamesIt(string extension)
+    {
+        // The Animations tab, the Fonts tab and the code output plugin read these themselves.
+        ScreenSave screen = AddScreen("Main");
+        AddPicture(screen, "Item", "Files/Thing." + extension);
+        _selectedState.Setup(s => s.SelectedElement).Returns(screen);
+        string file = WriteFile("Files/Thing." + extension);
+        _reaction.IsReferencedByProject(new FilePath(file)).ShouldBeTrue("the project lists it, so only the type keeps it out");
+
+        _reaction.IsReferencedFile(new FilePath(file)).ShouldBeFalse();
+        _reaction.ReactToFileChanged(new FilePath(file));
+        _reaction.ReactToFileDeleted(new FilePath(file));
+
+        _wireframe.Verify(w => w.RefreshAll(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never());
+    }
+
+    /// <summary>Saves and reloads a project of <paramref name="count"/> components, each with its own picture.</summary>
+    private string ArrangeProjectOfCardsWithPictures(int count)
+    {
+        string folder = Path.Combine(_root, "Interleaved");
+        Directory.CreateDirectory(Path.Combine(folder, "Textures"));
+        GumProjectSave authored = new GumProjectSave { FullFileName = Path.Combine(folder, "Project.gumj") };
+        for (int i = 0; i < count; i++)
+        {
+            ComponentSave card = new ComponentSave { Name = "Card" + i, BaseType = "Container" };
+            card.States.Add(new StateSave { Name = "Default", ParentContainer = card });
+            AddPicture(card, "Item", $"Textures/P{i}.png");
+            authored.Components.Add(card);
+            authored.ComponentReferences.Add(new ElementReference { Name = card.Name, ElementType = ElementType.Component });
+            File.WriteAllText(Path.Combine(folder, "Textures", $"P{i}.png"), "picture");
+        }
+        ObjectFinder.Self.GumProjectSave = authored;
+        authored.Initialize();
+        authored.Save(authored.FullFileName, saveElements: true);
+        File.WriteAllText(Path.Combine(folder, "Textures", "New.png"), "picture");
+        GumProjectSave loaded = GumProjectSave.Load(authored.FullFileName);
+        ObjectFinder.Self.GumProjectSave = loaded;
+        loaded.Initialize();
+        return folder;
+    }
+
+    private FileChangeReactionLogic NewReactionOnProjectAt(
+        string folder, IProjectReferencedFiles references, IVariableReferenceLogic? variableReferences = null,
+        IOutputManager? outputManager = null)
+    {
+        Mock<IFileCommands> fileCommands = new();
+        fileCommands.Setup(f => f.ProjectDirectory).Returns(new FilePath(folder + Path.DirectorySeparatorChar));
+        Mock<IProjectState> projectState = new();
+        projectState.Setup(p => p.GumProjectSave).Returns(ObjectFinder.Self.GumProjectSave);
+        return new FileChangeReactionLogic(
+            _selectedState.Object, new Mock<IWireframeCommands>().Object, new Mock<IGuiCommands>().Object,
+            fileCommands.Object, outputManager ?? new Mock<IOutputManager>().Object, _wireframe.Object,
+            projectState.Object, new Mock<IStandardElementsManagerGumTool>().Object, new Mock<IPluginManager>().Object,
+            new Mock<Gum.Services.Dialogs.IDialogService>().Object, new UnsavedChangesTracker(),
+            variableReferences ?? new Mock<IVariableReferenceLogic>().Object, new Mock<Gum.Undo.IUndoManager>().Object, references);
+    }
+
+    [Fact]
+    public void AFlushThatInterleavesElementReloadsAndPictureEdits_WalksTheProjectOnce()
+    {
+        // A git checkout reloads elements and rewrites pictures in whatever order the files come. An element
+        // reload forgets the set, so a picture checked right after it walked the project again: once per pair.
+        const int count = 6;
+        string folder = ArrangeProjectOfCardsWithPictures(count);
+        SpyReferencedFiles references = new SpyReferencedFiles();
+        FileChangeReactionLogic reaction = NewReactionOnProjectAt(folder, references);
+
+        using (reaction.DeferDependentUpdates())
+        {
+            for (int i = 0; i < count; i++)
+            {
+                reaction.ReactToFileChanged(new FilePath(Path.Combine(folder, "Components", $"Card{i}.gucj")));
+                reaction.ReactToFileChanged(new FilePath(Path.Combine(folder, "Textures", $"P{i}.png")));
+            }
+        }
+
+        references.Walks.ShouldBeLessThanOrEqualTo(1);
+        _wireframe.Verify(w => w.RefreshAll(true, true), Times.AtLeastOnce());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void APictureOnlyAReloadedElementNames_CountsAsReferenced_WhicheverOfTheTwoFilesComesFirst(bool pictureFirst)
+    {
+        string folder = ArrangeProjectOfCardsWithPictures(2);
+        SpyReferencedFiles references = new SpyReferencedFiles();
+        FileChangeReactionLogic reaction = NewReactionOnProjectAt(folder, references);
+        ComponentSave edited = ObjectFinder.Self.GumProjectSave!.Components[0];
+        AddPicture(edited, "Item2", "Textures/New.png");
+        string elementFile = Path.Combine(folder, "Components", "Card0.gucj");
+        edited.Save(elementFile);
+        FilePath picture = new FilePath(Path.Combine(folder, "Textures", "New.png"));
+        FilePath element = new FilePath(elementFile);
+
+        using (reaction.DeferDependentUpdates())
+        {
+            reaction.ReactToFileChanged(pictureFirst ? picture : element);
+            reaction.ReactToFileChanged(pictureFirst ? element : picture);
+        }
+
+        references.Walks.ShouldBeLessThanOrEqualTo(1);
+        _wireframe.Verify(w => w.RefreshAll(true, true), Times.AtLeastOnce());
+    }
+
+    /// <summary>Asking whether a file is referenced fails, as a corrupt animation chain file can make the walk do.</summary>
+    private sealed class ThrowingReferencedFiles : IProjectReferencedFiles
+    {
+        public bool Contains(FilePath file) => throw new IOException("unreadable chain");
+        public void Invalidate() { }
+    }
+
+    [Fact]
+    public void AFailedCheckOfAChangedFile_StillUpdatesTheElementsThatReadAReloadedOne_AndClosesTheBatch()
+    {
+        string folder = ArrangeProjectOfCardsWithPictures(1);
+        Mock<IVariableReferenceLogic> variableReferences = new();
+        Mock<IOutputManager> output = new();
+        FileChangeReactionLogic reaction = NewReactionOnProjectAt(
+            folder, new ThrowingReferencedFiles(), variableReferences.Object, output.Object);
+
+        Should.NotThrow(() =>
+        {
+            using (reaction.DeferDependentUpdates())
+            {
+                reaction.ReactToFileChanged(new FilePath(Path.Combine(folder, "Components", "Card0.gucj")));
+                reaction.ReactToFileChanged(new FilePath(Path.Combine(folder, "Textures", "P0.png")));
+            }
+        });
+
+        variableReferences.Verify(v => v.ApplyReferencesToElement(It.IsAny<ElementSave>(), true, It.IsAny<bool>()), Times.Once());
+        output.Verify(o => o.AddError(It.Is<string>(message => message.Contains("unreadable chain"))), Times.Once());
+    }
+
+
     #region Invalidation by a reload of an element, behavior or the project
 
     private string _loadedFolder = "";

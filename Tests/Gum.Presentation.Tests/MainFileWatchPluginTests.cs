@@ -70,6 +70,7 @@ public class MainFileWatchPluginTests
         yield return new object[] { "InstanceDelete", (Action<PluginBase>)(p => p.CallInstanceDelete(component, instance)) };
         yield return new object[] { "InstancesDelete", (Action<PluginBase>)(p => p.CallInstancesDelete(component, new[] { instance })) };
         yield return new object[] { "StateAdd", (Action<PluginBase>)(p => p.CallStateAdd(state)) };
+        yield return new object[] { "CategoryAdd", (Action<PluginBase>)(p => p.CallStateCategoryAdd(new StateSaveCategory { Name = "Mood" })) };
         yield return new object[] { "StateDelete", (Action<PluginBase>)(p => p.CallStateDelete(state)) };
         yield return new object[] { "VariableAdd", (Action<PluginBase>)(p => p.CallVariableAdd(component, "Item.SourceFile")) };
         yield return new object[] { "VariableDelete", (Action<PluginBase>)(p => p.CallVariableDelete(component, "Item.SourceFile")) };

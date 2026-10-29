@@ -33,6 +33,7 @@ public class GumxImportService : IGumxImportService
     private readonly IGumxSourceService _sourceService;
     private readonly IImportVersionGate _versionGate;
     private readonly IFileWatchIgnoreList _fileWatch;
+    private readonly IFileWatchManager? _fileWatchManager;
 
     public GumxImportService(
         IImportLogic importLogic,
@@ -40,8 +41,10 @@ public class GumxImportService : IGumxImportService
         IFileCommands fileCommands,
         IGumxSourceService sourceService,
         IImportVersionGate versionGate,
-        IFileWatchIgnoreList fileWatch)
+        IFileWatchIgnoreList fileWatch,
+        IFileWatchManager? fileWatchManager = null)
     {
+        _fileWatchManager = fileWatchManager;
         _fileWatch = fileWatch;
         _importLogic = importLogic;
         _projectState = projectState;
@@ -293,6 +296,13 @@ public class GumxImportService : IGumxImportService
             // The import writes in place (the project's own save and the registration of each
             // element are not stageable), so a failure leaves the files written so far.
             throw new ImportFailedException(exception, result.WrittenFiles);
+        }
+        finally
+        {
+            // Elements registered, files written and Standards or fonts changed by the import may name files the
+            // File Watch's kept set does not list. A reload tells it too, but Auto Save off and a failed import
+            // skip that, and neither fires an event of its own for what the import wrote.
+            _fileWatchManager?.InvalidateReferencedFiles();
         }
 
         return result;
