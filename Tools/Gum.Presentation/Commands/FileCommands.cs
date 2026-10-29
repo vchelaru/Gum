@@ -446,12 +446,6 @@ public class FileCommands : IFileCommands
             fileName = Path.GetFullPath(fileName);
         }
 
-        if (!string.IsNullOrEmpty(fileName) && !File.Exists(fileName))
-        {
-            // The load shows a dialog too, but an unattended run never answers it and the Output tab outlasts it.
-            _outputManager.AddError($"Project file not found: {fileName}");
-        }
-
         return _projectManager.LoadProjectAsync(fileName);
     }
 

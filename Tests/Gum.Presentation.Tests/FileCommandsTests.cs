@@ -105,16 +105,6 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
-    public async Task LoadProjectAsync_ReportsInTheOutput_WhenTheProjectFileDoesNotExist()
-    {
-        string relative = Path.Combine("NoSuchFolder", "Missing.gumx");
-
-        await _fileCommands.LoadProjectAsync(relative);
-
-        _errorCalls.ShouldContain(e => e.Contains(Path.GetFullPath(relative)) && e.Contains("not found"));
-    }
-
-    [Fact]
     public void TryAutoSave_WhilePluginsReceiveTheLoadedProject_NeitherSavesNorMarksUnsaved()
     {
         // A plugin's ProjectLoad handler filling in a default is not the user's edit (#5412).
