@@ -177,8 +177,7 @@ public static class CodegenCommand
         }
 
         // Build the codegen pipeline
-        INameVerifier nameVerifier = new HeadlessNameVerifier();
-        var codeGenNameVerifier = new CodeGenerationNameVerifier(nameVerifier);
+        var codeGenNameVerifier = new CodeGenerationNameVerifier(new NameRules());
         var elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         var localizationService = new Gum.Localization.LocalizationService();
         IHeadlessLocalizationLoader localizationLoader = new HeadlessLocalizationLoader(logger);
