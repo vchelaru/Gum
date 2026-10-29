@@ -321,4 +321,42 @@ public class TextCustomizationTests : BaseTestClass
 
         blended.ShouldBe(unblended);
     }
+
+    [Theory]
+    [InlineData("\U0001F600[Custom=EmojiBump]X[/Custom]", 1)]
+    [InlineData("a\U0001F600b[Custom=EmojiBump]cd[/Custom]", 3)]
+    public void GetTextBlock_CustomTagAfterEmoji_MovesOnlyTheTaggedGlyphs(string rawText, int firstTaggedCodePoint)
+    {
+        Text.Customizations["EmojiBump"] = (index, block) => new LetterCustomization
+        {
+            YOffset = 50,
+        };
+        Text plain = MakeText();
+        plain.RawText = rawText.Replace("[Custom=EmojiBump]", "").Replace("[/Custom]", "");
+        Text customized = MakeText();
+        customized.RawText = rawText;
+
+        List<float> plainYs = GlyphYsInOrder(plain.GetTextBlock());
+        List<float> customizedYs = GlyphYsInOrder(customized.GetTextBlock());
+
+        customizedYs.Count.ShouldBe(plainYs.Count);
+        for (int i = 0; i < plainYs.Count; i++)
+        {
+            float expected = i >= firstTaggedCodePoint ? 50f : 0f;
+            (customizedYs[i] - plainYs[i]).ShouldBe(expected, tolerance: 0.01, $"code point {i}");
+        }
+    }
+
+    private static List<float> GlyphYsInOrder(TextBlock block)
+    {
+        List<float> ys = new();
+        foreach (FontRun fontRun in block.FontRuns.OrderBy(r => r.Start))
+        {
+            foreach (SKPoint glyph in fontRun.GlyphPositions)
+            {
+                ys.Add(glyph.Y);
+            }
+        }
+        return ys;
+    }
 }
