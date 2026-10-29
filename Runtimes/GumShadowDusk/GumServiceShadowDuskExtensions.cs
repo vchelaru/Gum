@@ -13,28 +13,33 @@ public static class GumServiceShadowDuskExtensions
 {
     /// <summary>
     /// Lets <c>SourceShaderFile</c> point at an <c>.fx</c> or <c>.slang</c> file, which ShadowDusk compiles
-    /// at runtime into an <see cref="Effect"/> on the service's <see cref="GraphicsDevice"/>. Call once at
-    /// startup. Other extensions keep loading through whatever resolver was registered before this call.
+    /// at runtime into an <see cref="Effect"/> on the service's <see cref="GraphicsDevice"/>, for the graphics
+    /// backend that device uses. Call once at startup. Other extensions keep loading through whatever resolver
+    /// was registered before this call.
     /// </summary>
     /// <param name="gumService">The service whose graphics device the effects are created on. It does not
     /// need to be initialized yet; the device is read when the first shader loads.</param>
-    /// <param name="target">The graphics backend to compile for. When null, FNA compiles for FNA and
-    /// MonoGame and KNI compile for OpenGL (DesktopGL). Pass <c>PlatformTarget.DirectX</c> for a
-    /// WindowsDX build.</param>
-    public static void UseShadowDusk(this GumService gumService, PlatformTarget? target = null)
+    public static void UseShadowDusk(this GumService gumService)
     {
         if (gumService == null)
         {
             throw new ArgumentNullException(nameof(gumService));
         }
 
-        PlatformTarget platformTarget = target ?? ShadowDuskEffectLoader.DefaultTarget;
         Func<string, object?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectResolver;
+        PlatformTarget? target = null;
 
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path =>
-            ShadowDuskEffectLoader.CanLoad(path)
-                ? ShadowDuskEffectLoader.Load(GetGraphicsDevice(gumService), path, platformTarget)
-                : previousResolver?.Invoke(path);
+        {
+            if (!ShadowDuskEffectLoader.CanLoad(path))
+            {
+                return previousResolver?.Invoke(path);
+            }
+
+            GraphicsDevice graphicsDevice = GetGraphicsDevice(gumService);
+            target ??= ShadowDuskTargetDetector.Detect(graphicsDevice);
+            return ShadowDuskEffectLoader.Load(graphicsDevice, path, target.Value);
+        };
     }
 
     private static GraphicsDevice GetGraphicsDevice(GumService gumService)

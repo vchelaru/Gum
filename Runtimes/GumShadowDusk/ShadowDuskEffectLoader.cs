@@ -13,13 +13,6 @@ namespace Gum;
 /// </summary>
 internal static class ShadowDuskEffectLoader
 {
-#if FNA
-    // One D3D9 .fxb serves every FNA backend.
-    public const PlatformTarget DefaultTarget = PlatformTarget.Fna;
-#else
-    public const PlatformTarget DefaultTarget = PlatformTarget.OpenGL;
-#endif
-
     public static bool CanLoad(string path)
     {
         string extension = Path.GetExtension(path);
