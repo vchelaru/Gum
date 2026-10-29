@@ -83,6 +83,7 @@
     <Compile Include="..\Shared\GraphicalUiElementStateAssert.cs" Link="Shared\GraphicalUiElementStateAssert.cs" />
     <Compile Include="..\Shared\CrossRuntime\NineSliceCases.cs" Link="Shared\CrossRuntime\NineSliceCases.cs" />
 		<Compile Include="..\Shared\CrossRuntime\NineSliceKnownDifferences.cs" Link="Shared\CrossRuntime\NineSliceKnownDifferences.cs" />
+		<Compile Include="..\Shared\CrossRuntime\NineSliceOutlineOracle.cs" Link="Shared\CrossRuntime\NineSliceOutlineOracle.cs" />
   </ItemGroup>
 
 </Project>
