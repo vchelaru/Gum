@@ -1135,6 +1135,9 @@ public class GumHotReloadManager : IGumHotReloadManager
         // What this walk found, for the reload's result. The same problem is added once per walk.
         private readonly List<HotReloadIssue> _issues;
 
+        // The project the visuals were built from, when the caller gave it.
+        public GumProjectSave? OldProject { get; }
+
         // See the manager's _memory; a static ApplyDiff call gets a fresh one.
         public ReloadMemory Memory { get; }
 
@@ -1155,6 +1158,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             _issues = issues;
             Memory = memory;
+            OldProject = oldProject;
             if (oldProject != null && !ReferenceEquals(oldProject, newProject))
             {
                 foreach (ElementSave element in oldProject.AllElements)
@@ -1346,7 +1350,8 @@ public class GumHotReloadManager : IGumHotReloadManager
         bool baseGone = now.BaseType.Length > 0
             && ObjectFinder.Self.GetElementSave(now.BaseType) == null
             && (wasListed || context.OldByName.ContainsKey(now.BaseType));
-        bool baseChanged = builtFrom.BaseType != now.BaseType;
+        bool baseChanged = builtFrom.BaseType != now.BaseType
+            && !IsPureRename(builtFrom.BaseType, now.BaseType, context);
         bool exposedChanged = builtFrom.Exposed != now.Exposed;
         if (!baseGone && !baseChanged && !exposedChanged)
         {
@@ -1385,6 +1390,51 @@ public class GumHotReloadManager : IGumHotReloadManager
                 "keep the exposure they were built with until you restart.",
                 current.Name));
         }
+    }
+
+    // A base change from A to B is a pure rename, and the tree already equals a restart, when A is gone
+    // from the new project, B is new, and the old A and the new B serialize to the same text once
+    // each one's name is replaced by a placeholder. The serializer is the project's own, so no field
+    // can be forgotten. Anything else, including a missing old project, is a change.
+    private static bool IsPureRename(string oldBase, string newBase, ReloadContext context)
+    {
+        GumProjectSave? oldProject = context.OldProject;
+        if (oldBase.Length == 0 || newBase.Length == 0 || oldProject == null
+            || ReferenceEquals(oldProject, ObjectFinder.Self.GumProjectSave))
+        {
+            return false;
+        }
+
+        ElementSave? oldDefinition = oldProject.AllElements.FirstOrDefault(
+            element => string.Equals(element.Name, oldBase, StringComparison.OrdinalIgnoreCase));
+        ElementSave? newDefinition = ObjectFinder.Self.GetElementSave(newBase);
+        if (oldDefinition == null || newDefinition == null
+            || ObjectFinder.Self.GetElementSave(oldBase) != null
+            || oldProject.AllElements.Any(element => string.Equals(element.Name, newBase, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        try
+        {
+            return NormalizedDefinition(oldDefinition, oldBase) == NormalizedDefinition(newDefinition, newBase);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            return false;
+        }
+    }
+
+    // The element as the project serializes it, with its name, and every reference to it, replaced.
+    private static string NormalizedDefinition(ElementSave element, string name)
+    {
+        string text = Gum.DataTypes.Serialization.Json.GumJsonFileSerializer.SerializeElement(element);
+        string encodedName = System.Text.Json.JsonEncodedText.Encode(name).ToString();
+        return System.Text.RegularExpressions.Regex.Replace(
+            text,
+            "(?<![A-Za-z0-9_])" + System.Text.RegularExpressions.Regex.Escape(encodedName) + "(?![A-Za-z0-9_])",
+            "\u0001",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 
     // A visual keeps the standard element it was built from, so comparing it with the new project's
