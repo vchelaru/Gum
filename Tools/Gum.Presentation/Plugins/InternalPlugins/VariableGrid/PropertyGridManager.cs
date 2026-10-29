@@ -1135,18 +1135,85 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         int index = category.Members.IndexOf(textMember);
         category.Members.RemoveAt(index);
 
-        List<SyntheticVariableRow> rows = ShaderParameterRows.Build(
-            parameters,
-            () => textMember.Value as string,
-            text => textMember.Value = text);
+        StateSave? stateSave = _selectedState.SelectedStateSave ?? instance?.ParentContainer?.DefaultState;
+        ElementSave? element = _selectedState.SelectedElement ?? instance?.ParentContainer;
+        string? shaderFile = instance == null ? null : stateSave?.GetValueRecursive(instance.Name + ".SourceShaderFile") as string;
 
-        foreach (SyntheticVariableRow row in rows)
+        foreach (ShaderParameterInfo parameter in parameters)
         {
-            InstanceMember member = CreateInstanceMember(row);
-            member.IsReadOnly = textMember.IsReadOnly;
-            category.Members.Insert(index, member);
-            index++;
+            InstanceMember? variableMember = instance != null && stateSave != null && element != null
+                ? CreateShaderParameterVariableMember(parameter, shaderFile, instance, element, stateSave, textMember.IsReadOnly)
+                : null;
+
+            if (variableMember != null)
+            {
+                category.Members.Insert(index, variableMember);
+                index++;
+                continue;
+            }
+
+            // A vector, or a parameter no variable name can stand for, stays on the saved text.
+            foreach (SyntheticVariableRow row in ShaderParameterRows.Build(
+                new[] { parameter }, () => textMember.Value as string, text => textMember.Value = text))
+            {
+                InstanceMember member = CreateInstanceMember(row);
+                member.IsReadOnly = textMember.IsReadOnly;
+                category.Members.Insert(index, member);
+                index++;
+            }
         }
+    }
+
+    /// <summary>
+    /// The row for a single valued shader parameter, backed by the real saved variable
+    /// <c>Instance.&lt;shader file&gt;_&lt;Parameter&gt;</c>; null when the parameter is a vector, Gum fills it in
+    /// itself, or no variable name can stand for it (no shader file, or an unsupported parameter name).
+    /// </summary>
+    private InstanceMember? CreateShaderParameterVariableMember(ShaderParameterInfo parameter, string? shaderFile,
+        InstanceSave instance, ElementSave element, StateSave stateSave, bool isReadOnly)
+    {
+        if (parameter.Count != 1 || ShaderParameterRows.IsHiddenParameter(parameter) || string.IsNullOrEmpty(shaderFile) ||
+            !ShaderVariableNaming.IsSupportedParameterName(parameter.Name))
+        {
+            return null;
+        }
+
+        ShaderParameterVariableBinding binding = new ShaderParameterVariableBinding(parameter, instance.Name + ".ShaderParameters");
+        string variableName = instance.Name + "." + ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name);
+
+        VariableGridEntry entry = new VariableGridEntry(
+            attributes: null,
+            converter: null,
+            componentType: binding.ValueType,
+            isReadOnly: isReadOnly,
+            isAssignedByReference: false,
+            isVariable: true,
+            stateSave,
+            stateSaveCategory: null,
+            variableName,
+            instance,
+            element,
+            _selectedState,
+            _undoManager,
+            _guiCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _wireframeObjectManager,
+            _pluginManager,
+            _hotkeyManager,
+            _deleteVariableService,
+            _exposeVariableService,
+            _editVariableService,
+            _typeManager,
+            _clipboardService)
+        {
+            ShaderParameter = binding,
+            GridName = parameter.Name,
+            DisplayName = parameter.Name,
+        };
+        entry.DefaultValueFallback = () => binding.GetFallbackValue(stateSave);
+
+        return new StateReferencingInstanceMember(entry);
     }
 
     // The parameters the last-built rows were made from, so a shader that finishes compiling after the
