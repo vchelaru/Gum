@@ -181,6 +181,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
+    private readonly IAddDestinationTracker _addDestinationTracker;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -222,7 +223,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IFileSystemRevealService fileSystemRevealService,
         IClipboardService clipboardService,
         IElementTreeViewFactory viewFactory,
-        IAddInstanceLogic addInstanceLogic)
+        IAddInstanceLogic addInstanceLogic,
+        IAddDestinationTracker addDestinationTracker)
     {
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
@@ -253,6 +255,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _clipboardService = clipboardService;
         _viewFactory = viewFactory;
         _addInstanceLogic = addInstanceLogic;
+        _addDestinationTracker = addDestinationTracker;
         _contextMenuItems = new List<ContextMenuItemViewModel>();
     }
 
@@ -406,7 +409,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         View.CurrentElementNameProvider = () =>
             _selectedState.SelectedElement is { } element && element is not StandardElementSave
                 ? element.Name
-                : null;
+                : _selectedState.SelectedBehavior?.Name;
 
         View.AddStandardToCurrentRequested += AddStandardAtDestination;
 
@@ -1137,7 +1140,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     // Node not found (object may have been deleted). Fall back to the
                     // state-based path, which preserves the existing restoration behavior.
                     if (mRecordedSelectedObject is InstanceSave instanceSave)
-                        _selectedState.SelectedInstance = instanceSave;
+                    {
+                        // A required instance the refresh dropped (undo/redo replaced it with a
+                        // clone, or it was removed) must not be selected: selecting it clears the
+                        // behavior, since a behavior is found through its required instances.
+                        // The behavior stays selected instead.
+                        BehaviorSave? behaviorOfStaleInstance = GetBehaviorOfStaleInstance(instanceSave, mRecordedSelectedContainer);
+                        if (behaviorOfStaleInstance != null)
+                            _selectedState.SelectedBehavior = behaviorOfStaleInstance;
+                        else
+                            _selectedState.SelectedInstance = instanceSave;
+                    }
                     else if (mRecordedSelectedObject is ElementSave elementSave)
                         _selectedState.SelectedElement = elementSave;
                     else if (mRecordedSelectedObject is BehaviorSave behaviorSave)
@@ -1170,6 +1183,19 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
         return nodes;
+    }
+
+    /// <summary>
+    /// The behavior to select in place of <paramref name="instance"/> after a tree refresh found no
+    /// node for it, or null when the behavior still holds that very instance or the instance was
+    /// not selected in a behavior. <paramref name="recordedContainer"/> is the behavior that was
+    /// selected with the instance.
+    /// </summary>
+    internal static BehaviorSave? GetBehaviorOfStaleInstance(InstanceSave instance, object? recordedContainer)
+    {
+        return recordedContainer is BehaviorSave behavior && !behavior.RequiredInstances.Contains(instance)
+            ? behavior
+            : null;
     }
 
     private ITreeNode? FindTreeNodeForRecordedObject() =>
@@ -1694,6 +1720,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 nodeForInstance.Expand();
             }
 
+            // An instance in elementSave.Instances belongs to elementSave, whatever its back reference
+            // says. A clone of a base's instance keeps the base as its ParentContainer, and the sibling
+            // and parent lookups below read the container's lists, not elementSave's (#7005).
+            if (!ReferenceEquals(instance.ParentContainer, elementSave))
+            {
+                instance.ParentContainer = elementSave;
+            }
+
             var siblingInstances = siblingLists.FirstOrDefault(item => item.Contains(instance));
             if (siblingInstances == null)
             {
@@ -1703,7 +1737,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             var desiredIndex = siblingInstances.IndexOf(instance);
 
             // Every instance here comes from elementSave.Instances, so elementSave is its container.
-            var container = instance.ParentContainer ?? elementSave;
+            var container = elementSave;
             var defaultState = container.DefaultState;
             var thisParentValue = defaultState?.GetValueRecursive($"{instance.Name}.Parent") as string;
 
@@ -1733,7 +1767,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 ((ITreeNodeMutable)desiredParentNode).AddChild((ITreeNodeMutable)nodeForInstance);
             }
 
-            ((ITreeNodeMutable)nodeForInstance).MoveToIndex(desiredIndex);
+            if (desiredIndex >= 0)
+            {
+                ((ITreeNodeMutable)nodeForInstance).MoveToIndex(desiredIndex);
+            }
+            else
+            {
+                // One misplaced instance must not take the whole tree down.
+                _guiCommands.PrintOutput($"The tree could not find {instance.Name} among the instances of {elementSave.Name}; it is left where it is.");
+            }
 
             var element = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
@@ -1990,6 +2032,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void ObjectTreeView_AfterClickSelect(GumTreeNode? node)
     {
+        // A click or key press on a node picks it as the add destination even when it was already
+        // selected, which raises no selection change for the tracker to hear (#7003).
+        _addDestinationTracker.MarkSelectionChanged();
         OnSelect(Selection.SelectedNode);
     }
 
@@ -2137,6 +2182,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         var backingObject = vm?.BackingObject;
         if(backingObject != null)
         {
+            // Choosing a result picks it as the add destination even when it is already selected (#7003).
+            _addDestinationTracker.MarkSelectionChanged();
+
             if (backingObject is ScreenSave asScreen)
                 _selectedState.SelectedElement = asScreen;
             else if (backingObject is ComponentSave asComponent)

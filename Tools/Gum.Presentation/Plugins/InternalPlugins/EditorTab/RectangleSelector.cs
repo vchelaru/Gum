@@ -156,6 +156,10 @@ public class RectangleSelector
             _selectionManager.Select(elementsInBounds);
         }
 
+        // A marquee picks whatever it covers, even nothing or what is already selected, which
+        // raises no selection change (#7007).
+        _selectionManager.NotifySelectionPicked();
+
         // Refresh UI
         _guiCommands.RefreshVariables();
 

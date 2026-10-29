@@ -876,9 +876,12 @@ namespace RenderingLibrary.Graphics
             // container's absolute (left, top), so the child shader needs a matching translation;
             // without it, any non-origin container reads the wrong (typically out-of-bounds,
             // edge-clamped) region of the baked image instead of its own contents (#4001).
+            // The draw happens in the image's own space (the canvas is translated to its corner), so the
+            // coordinate the effect receives, and the UV a converted shader derives from it, run from 0
+            // at the container's top left whatever its position.
             using SKShader imageShader = image.ToShader(
                 SKShaderTileMode.Clamp, SKShaderTileMode.Clamp,
-                SKMatrix.CreateScaleTranslation(1 / zoom, 1 / zoom, left, top));
+                SKMatrix.CreateScale(1 / zoom, 1 / zoom));
             using SKRuntimeEffectUniforms uniforms = new SKRuntimeEffectUniforms(effect);
             using SKRuntimeEffectChildren children = new SKRuntimeEffectChildren(effect);
             children["SpriteTexture"] = imageShader;
@@ -894,10 +897,57 @@ namespace RenderingLibrary.Graphics
             {
                 uniforms["ShadowDusk_Resolution"] = new float[] { width, height };
             }
-            ApplyShaderParameters((owner as IRenderTargetRenderable)?.ShaderParameters, effect, uniforms);
+            ShaderParameterCollection? shaderParameters = (owner as IRenderTargetRenderable)?.ShaderParameters;
+            ZeroUnsetUniforms(effect, uniforms, shaderParameters);
+            ApplyShaderParameters(shaderParameters, effect, uniforms);
+            if (effect.Uniforms.Contains(ShaderParameterCollection.TexelSizeName) &&
+                shaderParameters?.TryGetValue(ShaderParameterCollection.TexelSizeName, out _) != true)
+            {
+                // One container pixel as a fraction, for shaders that step whole pixels.
+                uniforms[ShaderParameterCollection.TexelSizeName] = new float[] { 1f / width, 1f / height };
+            }
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
-            canvas.DrawRect(destination, paint);
+            canvas.Save();
+            canvas.Translate(left, top);
+            canvas.DrawRect(new SKRect(0, 0, destination.Width, destination.Height), paint);
+            canvas.Restore();
+        }
+
+        // A new uniform block starts with whatever bytes the allocator returned, but a shader (and the
+        // tool, which shows an unset parameter as zero) expects an unset parameter to read as zero.
+        // The ShadowDusk_ uniforms Gum already filled are skipped.
+        private static void ZeroUnsetUniforms(
+            SKRuntimeEffect effect, SKRuntimeEffectUniforms uniforms, ShaderParameterCollection? parameters)
+        {
+            foreach (string name in effect.Uniforms)
+            {
+                if (name.StartsWith("ShadowDusk_", System.StringComparison.Ordinal) ||
+                    (parameters != null && parameters.TryGetValue(name, out _)))
+                {
+                    continue;
+                }
+
+                // The component count is not exposed, so the one whose size the uniform accepts wins.
+                for (int count = 1; count <= 4; count++)
+                {
+                    try
+                    {
+                        if (count == 1)
+                        {
+                            uniforms[name] = 0f;
+                        }
+                        else
+                        {
+                            uniforms[name] = new float[count];
+                        }
+                        break;
+                    }
+                    catch (System.Exception)
+                    {
+                    }
+                }
+            }
         }
 
         // Copies the container's own values into this blit's uniforms. A name the effect does not
@@ -915,6 +965,12 @@ namespace RenderingLibrary.Graphics
                 if (!effect.Uniforms.Contains(pair.Key))
                 {
                     continue;
+                }
+
+                string isSetName = ShaderParameterCollection.GetIsSetName(pair.Key);
+                if (effect.Uniforms.Contains(isSetName))
+                {
+                    uniforms[isSetName] = 1f;
                 }
 
                 ShaderParameterValue value = pair.Value;

@@ -83,7 +83,7 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <!-- The one Outline.slang that MonoGameGumInCode, raylib and SilkNetGum all run. -->
-	  <None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\Outline.slang" Link="resources\Outline.slang">
+	  <None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="resources\Outline.slang">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="libEGL.dll">

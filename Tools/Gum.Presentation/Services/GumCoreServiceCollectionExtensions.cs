@@ -231,7 +231,8 @@ public static class GumCoreServiceCollectionExtensions
             provider.GetRequiredService<IProjectState>(),
             provider.GetRequiredService<IDialogService>(),
             provider.GetRequiredService<IOutputManager>(),
-            Path.Combine(AppContext.BaseDirectory, "Content", "Shaders")));
+            Path.Combine(AppContext.BaseDirectory, "Content", "Shaders"),
+            provider.GetRequiredService<Lazy<IFileWatchManager>>()));
         services.AddSingleton<IInstalledFontProvider, SkiaInstalledFontProvider>();
         services.AddSingleton<VariableGridToggleOptions>();
         services.AddSingleton<PropertyGridManager>();

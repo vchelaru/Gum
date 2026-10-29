@@ -17,27 +17,50 @@ public static class ShaderParameterRows
 
     /// <summary>
     /// Creates the rows for <paramref name="parameters"/>. <paramref name="getText"/> reads the saved
-    /// text and <paramref name="setText"/> stores the text after a row changes.
+    /// text and <paramref name="setText"/> stores the text after a row changes. A row shows the saved
+    /// value, else the default in <paramref name="sourceDefaults"/> (what the shader's source declares,
+    /// see <see cref="ShaderSourceDefaults"/>) when it has the parameter's kind and size, else the
+    /// default of the compiled effect.
     /// </summary>
     public static List<SyntheticVariableRow> Build(
-        IReadOnlyList<ShaderParameterInfo> parameters, Func<string?> getText, Action<string> setText)
+        IReadOnlyList<ShaderParameterInfo> parameters, Func<string?> getText, Action<string> setText,
+        IReadOnlyDictionary<string, ShaderParameterValue>? sourceDefaults = null)
     {
         List<SyntheticVariableRow> rows = new List<SyntheticVariableRow>();
         foreach (ShaderParameterInfo info in parameters)
         {
+            // Gum fills these (the texel size and the <Name>IsSet markers) in itself, so there is nothing to set.
+            if (info.Name == ShaderParameterCollection.TexelSizeName || ShaderParameterCollection.IsIsSetName(info.Name))
+            {
+                continue;
+            }
+
+            ShaderParameterInfo shown = WithSourceDefault(info, sourceDefaults);
             if (info.Count == 1)
             {
-                rows.Add(CreateRow(info, componentIndex: 0, info.Name, getText, setText));
+                rows.Add(CreateRow(shown, componentIndex: 0, info.Name, getText, setText));
             }
             else
             {
                 for (int i = 0; i < info.Count; i++)
                 {
-                    rows.Add(CreateRow(info, i, info.Name + " " + ComponentNames[i], getText, setText));
+                    rows.Add(CreateRow(shown, i, info.Name + " " + ComponentNames[i], getText, setText));
                 }
             }
         }
         return rows;
+    }
+
+    private static ShaderParameterInfo WithSourceDefault(
+        ShaderParameterInfo info, IReadOnlyDictionary<string, ShaderParameterValue>? sourceDefaults)
+    {
+        if (sourceDefaults != null &&
+            sourceDefaults.TryGetValue(info.Name, out ShaderParameterValue declared) &&
+            declared.Kind == info.Kind && declared.Count == info.Count)
+        {
+            return new ShaderParameterInfo(info.Name, info.Kind, info.Count, declared);
+        }
+        return info;
     }
 
     private static SyntheticVariableRow CreateRow(

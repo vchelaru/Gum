@@ -1,10 +1,12 @@
 using System.Text;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
 using Shouldly;
+using ToolsUtilities;
 
 namespace Gum.Presentation.Tests.VariableGrid;
 
@@ -193,6 +195,37 @@ public class BuiltInShaderFilesTests : BaseTestClass
         File.ReadAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang")).ShouldBe("shipped");
         VerifyAskedTimes(Times.Once());
         _shown.Single().Message.ShouldContain("Shaders/Blur.slang");
+    }
+
+    [Fact]
+    public void CopyIntoProject_ReplacingADifferingCopy_TellsTheWatcherToIgnoreTheWrite()
+    {
+        File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
+        Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
+        string copyPath = Path.Combine(_projectDirectory, "Shaders", "Blur.slang");
+        File.WriteAllText(copyPath, "old copy");
+        AnswerPrompt(MessageDialogResult.Affirmative);
+        Mock<IFileWatchManager> watch = new Mock<IFileWatchManager>();
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder, new Lazy<IFileWatchManager>(() => watch.Object));
+
+        sut.CopyIntoProject("Blur.slang");
+
+        watch.Verify(w => w.IgnoreNextChangeUntil(new FilePath(Path.GetFullPath(copyPath)), It.IsAny<DateTime?>()), Times.Once);
+    }
+
+    [Fact]
+    public void CopyIntoProject_KeepingADifferingCopy_DoesNotTouchTheWatcher()
+    {
+        File.WriteAllText(Path.Combine(_builtInFolder, "Blur.slang"), "shipped");
+        Directory.CreateDirectory(Path.Combine(_projectDirectory, "Shaders"));
+        File.WriteAllText(Path.Combine(_projectDirectory, "Shaders", "Blur.slang"), "old copy");
+        AnswerPrompt(MessageDialogResult.Negative);
+        Mock<IFileWatchManager> watch = new Mock<IFileWatchManager>();
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(_projectState.Object, _dialogService.Object, _outputManager.Object, _builtInFolder, new Lazy<IFileWatchManager>(() => watch.Object));
+
+        sut.CopyIntoProject("Blur.slang");
+
+        watch.Verify(w => w.IgnoreNextChangeUntil(It.IsAny<FilePath>(), It.IsAny<DateTime?>()), Times.Never);
     }
 
     [Theory]

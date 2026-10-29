@@ -6432,9 +6432,7 @@ public class CodeGenerator
                 return true;
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
 
         return false;
@@ -6458,9 +6456,7 @@ public class CodeGenerator
                 return typeof(Gum.Forms.Controls.FrameworkElement).Assembly.GetType(formsType.Replace("global::", string.Empty));
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
 
         // No Forms behavior: GetInheritance derives such a class from FrameworkElement.
@@ -6496,9 +6492,7 @@ public class CodeGenerator
                 }
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
     }
 
@@ -6791,7 +6785,7 @@ public class CodeGenerator
             ElementSave? baseElement = null;
             if (!string.IsNullOrEmpty(element.BaseType))
             {
-                baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+                baseElement = ObjectFinder.Self.GetBaseElement(element);
             }
 
             var baseHasMain = baseElement != null &&

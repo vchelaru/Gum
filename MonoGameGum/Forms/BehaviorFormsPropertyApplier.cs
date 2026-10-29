@@ -128,7 +128,7 @@ internal static class BehaviorFormsPropertyApplier
             {
                 yield break;
             }
-            current = ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
     }
 }

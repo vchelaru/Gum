@@ -1,7 +1,7 @@
 # Dot-sourced by Tools/verify.ps1 and Tools/fast-test.ps1.
 #
-# Runs dotnet with a hard time limit. A hung test host (for example RaylibGum.Tests on macOS, whose
-# host spins at 100% CPU) otherwise stalls the whole run silently; on timeout the process tree is
+# Runs dotnet with a hard time limit. A hung test host (for example a raylib or MonoGame test that opens its
+# window off the main thread on macOS, which spins at 100% CPU) otherwise stalls the whole run silently; on timeout the process tree is
 # killed and the step is reported as TIMED OUT, which is not the same as a failing test.
 function Invoke-Dotnet {
     param([string[]]$Command, [int]$TimeoutSeconds)

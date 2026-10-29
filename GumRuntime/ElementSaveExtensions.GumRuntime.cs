@@ -254,7 +254,7 @@ namespace GumRuntime
 
                 if(!string.IsNullOrEmpty(baseTypeName))
                 {
-                    var baseElement = ObjectFinder.Self.GetElementSave(baseTypeName);
+                    var baseElement = ObjectFinder.Self.GetBaseElement(elementSave);
 
                     if(baseElement != null)
                     {
@@ -425,7 +425,7 @@ namespace GumRuntime
             }
             if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
-                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetBaseElement(elementSave);
                 if (baseElementSave != null)
                 {
                     graphicalElement.AddStatesAndCategoriesRecursivelyToGue(baseElementSave);
@@ -491,7 +491,7 @@ namespace GumRuntime
             }
             else if (containedObject == null && !string.IsNullOrEmpty(elementSave.BaseType))
             {
-                var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElement = ObjectFinder.Self.GetBaseElement(elementSave);
 
                 if (baseElement != null)
                 {
@@ -504,7 +504,7 @@ namespace GumRuntime
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
-                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetBaseElement(elementSave);
                 if (baseElementSave != null)
                 {
                     graphicalElement.AddExposedVariablesRecursively(baseElementSave);
@@ -542,7 +542,7 @@ namespace GumRuntime
             {
                 if (!string.IsNullOrEmpty(elementSave.BaseType))
                 {
-                    var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                    var baseElementSave = Gum.Managers.ObjectFinder.Self.GetBaseElement(elementSave);
                     if (baseElementSave != null)
                     {
                         graphicalElement.SetVariablesRecursively(baseElementSave, baseElementSave.DefaultState!);
@@ -1654,7 +1654,7 @@ namespace GumRuntime
                         }
                     }
                 }
-                element = ObjectFinder.Self.GetElementSave(element.BaseType);
+                element = ObjectFinder.Self.GetBaseElement(element);
             }
             return null;
         }

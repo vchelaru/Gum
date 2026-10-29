@@ -68,6 +68,9 @@
     <None Update="Content\**\*.slang">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- The Outline shader the tool ships (Shader File drop-down, Built-in); one file, linked, so the
+         sample runs exactly what users get. -->
+    <None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="Content\Outline.slang" CopyToOutputDirectory="PreserveNewest" />
     <!-- #3670/#3703 CustomFontFile=.ttf demo -->
     <None Update="Content\**\*.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -26,7 +26,8 @@ public interface IAddInstanceLogic
 
     /// <summary>
     /// Adds an instance of <paramref name="elementToAdd"/> into the remembered add destination,
-    /// else under the selected instance, else at the selected element's root.
+    /// else under the selected instance, else at the selected element's root, else as a required
+    /// instance of the selected behavior (also when a behavior's required instance is selected).
     /// </summary>
     InstanceSave? AddInstanceAtDestination(ElementSave elementToAdd, string? name = null);
 }

@@ -144,6 +144,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
+        errors.AddRange(GetCircularBaseTypeErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
@@ -710,12 +711,12 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     private static IEnumerable<ElementSave> SelfAndBaseElements(ElementSave element)
     {
-        var visited = new HashSet<ElementSave>();
+        // GetBaseElement ends the walk at a BaseType cycle (GUM0014).
         ElementSave? current = element;
-        while (current != null && visited.Add(current))
+        while (current != null)
         {
             yield return current;
-            current = string.IsNullOrEmpty(current.BaseType) ? null : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
     }
 
@@ -1310,6 +1311,28 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     Message = $"{elementSave.Name} has a base type of {elementSave.BaseType} which does not exist"
                 });
             }
+        }
+
+        return errors;
+    }
+
+    // GUM0014: an element whose BaseType chain comes back to itself. The tool treats every element in the cycle as
+    // having no base until the cycle is broken, so each one gets the row and names the whole cycle.
+    private static List<ErrorResult> GetCircularBaseTypeErrorFor(ElementSave elementSave)
+    {
+        IReadOnlyList<ElementSave> cycle = ObjectFinder.Self.GetBaseTypeCycle(elementSave);
+        List<ErrorResult> errors = new List<ErrorResult>();
+
+        if (cycle.Count > 0)
+        {
+            string path = string.Join(" -> ", cycle.Concat(new[] { cycle[0] }).Select(item => item.Name));
+            errors.Add(new ErrorResult
+            {
+                ElementName = elementSave.Name,
+                Code = "GUM0014",
+                Severity = ErrorSeverity.Error,
+                Message = $"Circular base type: {path}. These elements are treated as having no base type until the cycle is broken."
+            });
         }
 
         return errors;

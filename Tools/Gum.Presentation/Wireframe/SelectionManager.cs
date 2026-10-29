@@ -1,7 +1,9 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Messages;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -62,6 +64,7 @@ public class SelectionManager : ISelectionManager
     private readonly IWireframeEditorFactory _wireframeEditorFactory;
     private readonly INineSliceCoordinateRefresher _nineSliceCoordinateRefresher;
     private readonly IPreciseHitTester _preciseHitTester;
+    private readonly IMessenger _messenger;
 
     // Set by Initialize, which the canvas calls before any selection activity.
     private Layer _overlayLayer = null!;
@@ -230,7 +233,8 @@ public class SelectionManager : ISelectionManager
         IGuiCommands guiCommands,
         IWireframeEditorFactory wireframeEditorFactory,
         INineSliceCoordinateRefresher nineSliceCoordinateRefresher,
-        IPreciseHitTester preciseHitTester)
+        IPreciseHitTester preciseHitTester,
+        IMessenger messenger)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -242,6 +246,7 @@ public class SelectionManager : ISelectionManager
         _wireframeEditorFactory = wireframeEditorFactory;
         _nineSliceCoordinateRefresher = nineSliceCoordinateRefresher;
         _preciseHitTester = preciseHitTester;
+        _messenger = messenger;
     }
 
     /// <summary>
@@ -383,6 +388,9 @@ public class SelectionManager : ISelectionManager
             SelectedGues = selectedGues;
         }
     }
+
+    /// <inheritdoc/>
+    public void NotifySelectionPicked() => _messenger.Send(new SelectionPickedMessage());
 
     /// <summary>
     /// Toggles the selection state of the specified element.
@@ -1285,6 +1293,10 @@ public class SelectionManager : ISelectionManager
                         SelectedGue = representation as GraphicalUiElement;
                     }
                 }
+
+                // A click picks what it lands on even when that is already selected, which raises
+                // no selection change (#7007).
+                NotifySelectionPicked();
             }
         }
         catch (Exception e)

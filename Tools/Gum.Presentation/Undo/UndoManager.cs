@@ -73,7 +73,8 @@ public class UndoManager : IUndoManager
         _elementStrategy = new ElementUndoStrategy(selectedState, renameLogic, guiCommands, fileCommands,
             messenger, pluginNotifier, animationUndoProvider, projectProvider, variableReferenceLogic, AreUndoLocksActive, InvokeUndosChanged);
         _behaviorStrategy = new BehaviorUndoStrategy(selectedState, guiCommands, fileCommands,
-            messenger, pluginNotifier, AreUndoLocksActive, InvokeUndosChanged);
+            messenger, renameLogic, pluginNotifier, AreUndoLocksActive, InvokeUndosChanged,
+            _elementStrategy.RenameBehaviorInSnapshots);
 
         // Order matters: behavior first, element last (the fallback). See ActiveStrategy.
         _strategies = new IUndoStrategy[] { _behaviorStrategy, _elementStrategy };

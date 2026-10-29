@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -38,20 +39,23 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
     private const string ProjectFolder = "Shaders";
     private const string ReplaceKey = "replace";
     private const string KeepKey = "keep";
-    private static readonly string[] ShaderExtensions = { ".slang", ".fx" };
 
     private readonly IProjectState _projectState;
     private readonly IDialogService _dialogService;
     private readonly IOutputManager _outputManager;
     private readonly string _builtInFolder;
+    private readonly Lazy<IFileWatchManager>? _fileWatchManager;
 
     /// <param name="builtInFolder">The folder the shipped shaders are staged in.</param>
-    public BuiltInShaderFiles(IProjectState projectState, IDialogService dialogService, IOutputManager outputManager, string builtInFolder)
+    /// <param name="fileWatchManager">Told about the copy the tool writes (new or replaced), so the watcher does not
+    /// report it back as an outside edit. Lazy because the watcher's reaction reaches this class's consumers.</param>
+    public BuiltInShaderFiles(IProjectState projectState, IDialogService dialogService, IOutputManager outputManager, string builtInFolder, Lazy<IFileWatchManager>? fileWatchManager = null)
     {
         _projectState = projectState;
         _dialogService = dialogService;
         _outputManager = outputManager;
         _builtInFolder = builtInFolder;
+        _fileWatchManager = fileWatchManager;
     }
 
     /// <inheritdoc/>
@@ -86,6 +90,7 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
         if (!File.Exists(copyPath))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(copyPath)!);
+            _fileWatchManager?.Value.IgnoreNextChangeUntil(new FilePath(copyPath));
             File.Copy(shippedPath, copyPath);
         }
         else
@@ -122,6 +127,7 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
 
         try
         {
+            _fileWatchManager?.Value.IgnoreNextChangeUntil(new FilePath(copyPath));
             File.Copy(shippedPath, copyPath, overwrite: true);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
@@ -174,7 +180,7 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
 
         return Directory.EnumerateFiles(_builtInFolder)
             .Select(file => Path.GetFileName(file))
-            .Where(name => ShaderExtensions.Contains(Path.GetExtension(name), StringComparer.OrdinalIgnoreCase))
+            .Where(name => ShaderFileExtensions.Contains(Path.GetExtension(name).TrimStart('.')))
             .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(name => name, StringComparer.Ordinal);
     }

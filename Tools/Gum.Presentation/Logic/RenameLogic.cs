@@ -30,6 +30,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
     private readonly IReferenceFinder _referenceFinder;
     // Lazy: UndoManager depends on this class through IUndoRenameLogic.
     private readonly Lazy<IUndoManager> _undoManager;
+    private readonly BehaviorRenamer _behaviorRenamer;
 
     public RenameLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -54,7 +55,16 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _referenceFinder = referenceFinder;
         _undoManager = undoManager;
+        _behaviorRenamer = new BehaviorRenamer(referenceFinder,
+            () => renameProjectProvider.GumProjectSave ?? throw new InvalidOperationException("No Gum project is loaded."),
+            fileCommands, guiCommands);
     }
+
+    #region Behavior
+
+    public void RenameBehavior(BehaviorSave behavior, string newName) => _behaviorRenamer.Rename(behavior, newName);
+
+    #endregion
 
     #region StateSave
 

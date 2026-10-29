@@ -331,7 +331,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _guiCommands,
             _wireframeEditorFactory,
             new NineSliceCoordinateRefresher(),
-            new PreciseHitTester());
+            new PreciseHitTester(),
+            messenger);
 
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
         _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService, _backgroundManager, _editorRenderableFactory);
@@ -412,21 +413,25 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _guiCommands.PrintOutput(obj);
     }
 
+    /// <summary>
+    /// Where a head's shader resolver reports a shader that stopped compiling while the preview keeps
+    /// the last version that worked (the Output tab).
+    /// </summary>
+    protected void ReportShaderError(string message) => ShaderReporter.ReportError(message);
+
+    private RenderTargetShaderReporter? _shaderReporter;
+
+    private RenderTargetShaderReporter ShaderReporter =>
+        _shaderReporter ??= new RenderTargetShaderReporter(message => _guiCommands.PrintOutput(message));
+
     // Compiles the .fx via the tool-side resolver and, on success, reports it to the Output window.
     // The resolver only ever logs failures (it throws, which AssignSourceShaderFileOnContainer turns
     // into a PropertyAssignmentError), so a working shader would otherwise compile silently. A
     // successful return is logged here; failures keep propagating to the existing error path. Note
     // the underlying effect is cached by path in LoaderManager, so this fires once per actual
     // compile (a cache hit skips the resolver), which is exactly the "it compiled" signal we want.
-    private object? ResolveAndReportRenderTargetShader(string absolutePath)
-    {
-        object? effect = _renderTargetShaderResolver?.Invoke(absolutePath);
-        if (effect != null)
-        {
-            _guiCommands.PrintOutput($"Compiled render-target shader for the preview:\n{absolutePath}");
-        }
-        return effect;
-    }
+    private object? ResolveAndReportRenderTargetShader(string absolutePath) =>
+        ShaderReporter.ResolveAndReport(_renderTargetShaderResolver, absolutePath);
 
     private void AssignEvents()
     {
