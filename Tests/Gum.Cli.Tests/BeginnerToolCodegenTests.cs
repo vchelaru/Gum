@@ -58,6 +58,17 @@ public class BeginnerToolCodegenTests : BaseTestClass
     }
 
     [Fact]
+    public void Codegen_InstanceNamedLikeItsOwnComponent_GeneratesCompilableClass()
+    {
+        string gumx = CreateGame();
+        EditProject(gumx, project => AddComponent(project, "Score", "Container", ("Score", "Text")));
+
+        Codegen(gumx).ExitCode.ShouldBe(0);
+
+        Compile().ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Codegen_InstancesNamedLikeMembersOfTheFormsBaseClass_GeneratesCompilableClass()
     {
         // The tool rejects names of standard variables (Width, Visible, Parent, Name); these it accepts.
@@ -355,6 +366,32 @@ public class BeginnerToolCodegenTests : BaseTestClass
 
         result.ExitCode.ShouldBe(0, result.StandardError);
         File.Exists(Path.Combine(TempDirectory, "Screens", "MainMenu.Generated.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Codegen_GeneratedFilesAndStubs_UseOneLineEndingEach()
+    {
+        string gumx = CreateGame();
+        EditProject(gumx, project =>
+        {
+            AddScreen(project, "MainMenu", ("PlayText", "Text"));
+            AddComponent(project, "Card", "Container", ("Title", "Text"));
+        });
+
+        Codegen(gumx).ExitCode.ShouldBe(0);
+
+        List<string> mixed = new List<string>();
+        foreach (string path in Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories))
+        {
+            string text = File.ReadAllText(path);
+            int crlf = Regex.Matches(text, "\r\n").Count;
+            int lf = Regex.Matches(text, "(?<!\r)\n").Count;
+            if (crlf > 0 && lf > 0)
+            {
+                mixed.Add($"{Path.GetRelativePath(TempDirectory, path)}: {crlf} CRLF, {lf} LF");
+            }
+        }
+        mixed.ShouldBeEmpty();
     }
 
     [Fact]

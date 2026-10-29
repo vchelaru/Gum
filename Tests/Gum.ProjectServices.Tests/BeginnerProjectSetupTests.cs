@@ -30,10 +30,12 @@ public class BeginnerProjectSetupTests : BaseTestClass
     #region Namespace from the game's project file
 
     [Theory]
+    [InlineData("2DPlatformer")]
     [InlineData("My Game")]
     [InlineData("my-game")]
     [InlineData("Space Shooter 2")]
     [InlineData("Game.Client")]
+    [InlineData("3D-Maze.Game")]
     [InlineData("Café")]
     public void Run_CsprojNamedTheWayABeginnerNamesAGame_DerivesANamespaceTheGeneratedCodeCanUse(string csprojName)
     {
