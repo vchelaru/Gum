@@ -79,6 +79,25 @@ public class TextBoxCopyCutSurrogatePairTests : BaseTestClass
         passwordBox.Password.ShouldBe("a" + Emoji + "b");
     }
 
+    // A selection set from code can start before the text or run past it (the setters do not clamp the
+    // start). The range is intersected with the text, never shifted: [-1, 2) is just "ab".
+    [Theory]
+    [InlineData("abc", -1, 3, 0, 2)]
+    [InlineData("x" + Emoji, -1, 1, 0, 0)]
+    [InlineData("abc", -5, 2, 0, 0)]
+    [InlineData("abc", 1, 10, 1, 2)]
+    [InlineData("abc", 5, 2, 3, 0)]
+    [InlineData("a" + Emoji + "b", -1, 3, 0, 3)]
+    public void GetWholeCharacterSelection_ShouldIntersectTheSelectionWithTheText(
+        string text, int selectionStart, int selectionLength, int expectedStart, int expectedLength)
+    {
+        var (start, length) = TextBoxBase.GetWholeCharacterSelection(text, selectionStart, selectionLength);
+
+        start.ShouldBe(expectedStart);
+        length.ShouldBe(expectedLength);
+    }
+
+
     static TextBox CreateTextBox(string text)
     {
         TextBox textBox = new();

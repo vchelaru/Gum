@@ -1544,8 +1544,10 @@ public abstract class TextBoxBase :
     internal static (int Start, int Length) GetWholeCharacterSelection(string? text, int selectionStart, int selectionLength)
     {
         int textLength = text?.Length ?? 0;
+        // Intersect [selectionStart, selectionStart + selectionLength) with the text; never shift it.
+        int end = System.Math.Min(textLength, selectionStart + selectionLength);
         int start = System.Math.Max(0, System.Math.Min(selectionStart, textLength));
-        int length = System.Math.Max(0, System.Math.Min(selectionLength, textLength - start));
+        int length = System.Math.Max(0, end - start);
         ExpandToWholeCharacters(text, ref start, ref length);
         return (start, length);
     }
