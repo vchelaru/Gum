@@ -24,7 +24,7 @@ GumService.Default.Draw()
 GumService.Default.Uninitialize()
 ```
 
-`Initialize` throws if called twice without an intervening `Uninitialize`. A failed `Initialize` (missing `.gumx`) rolls itself back, so the service can be initialized again. `Draw()`/`Update()` on an uninitialized service throw `InvalidOperationException`; `Draw()` on a service that was never initialized draws `SystemManagers.Default`.
+`Initialize` throws if called twice without an intervening `Uninitialize`. A failed `Initialize` (missing `.gumx`) rolls itself back, so the service can be initialized again. `Draw()` with no `SystemManagers` throws `InvalidOperationException` ("not been initialized"), except that a never-initialized service draws `SystemManagers.Default` when a host assigned one by hand. `Update()` has no service check of its own: it throws `InvalidOperationException` only because `FormsUtilities.Update` finds no cursor or keyboard, so it does not throw once those are installed without `Initialize` (the unit-test base class does this) while `Draw()` still does.
 
 `Draw()` draws everything through `SystemManagers.Default` in one call — for manual control over what's drawn when/to-which-target (e.g. compositing onto multiple `RenderTarget2D`s in one frame), use `GumBatch`'s immediate-mode `Begin`/`Draw`/`End` instead (`docs/code/rendering/gumbatch.md`; internals in the **gum-monogame-rendering** skill).
 

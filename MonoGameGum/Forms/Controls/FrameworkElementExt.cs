@@ -104,7 +104,7 @@ public static class FrameworkElementExt
                 "Cannot call AddToRoot because IGumService.Default is not initialized — " +
                 "did you remember to initialize Gum first (GumService.Default.Initialize)?");
         }
-        IGumService.Default.Root.Children.Add(element.Visual);
+        IGumService.Default.Root.AddChild(element.Visual);
 #endif
     }
 
@@ -153,7 +153,7 @@ public static class FrameworkElementExt
 
     public static void AddChild(this GraphicalUiElement element, FrameworkElement child)
     {
-        element.Children.Add(child.Visual);
+        element.AddChild(child.Visual);
     }
 
     public static void RemoveChild(this GraphicalUiElement element, FrameworkElement child)

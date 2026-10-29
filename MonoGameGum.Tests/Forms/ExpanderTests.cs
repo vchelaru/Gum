@@ -1,3 +1,4 @@
+using System.Linq;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Forms.Controls;
@@ -52,5 +53,26 @@ public class ExpanderTests : BaseTestClass
             visual.Children!.Add(header);
             return visual;
         }
+    }
+
+    [Fact]
+    public void AddContent_AddsOnce_WhenCalledTwice()
+    {
+        InteractiveGue visual = new(new InvisibleRenderable());
+        InteractiveGue header = new(new InvisibleRenderable()) { Name = "HeaderContainer" };
+        InteractiveGue content = new(new InvisibleRenderable()) { Name = "ContentContainer" };
+        visual.Children!.Add(header);
+        visual.Children.Add(content);
+        Expander sut = new(visual);
+        Button button = new();
+        InteractiveGue runtime = new(new InvisibleRenderable());
+
+        sut.AddContent(button);
+        sut.AddContent(button);
+        sut.AddContent(runtime);
+        sut.AddContent(runtime);
+
+        content.Children!.Count(c => c == button.Visual).ShouldBe(1);
+        content.Children!.Count(c => c == runtime).ShouldBe(1);
     }
 }

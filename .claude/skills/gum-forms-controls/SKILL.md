@@ -110,3 +110,5 @@ FrameworkElement
 **`ReactToVisualChanged` can fire before child references exist.** If `Visual` is reassigned at runtime, all `GetGraphicalUiElementByName` lookups re-run. Code that caches Visual children must refresh inside `ReactToVisualChanged`, not in the constructor.
 
 **`ParentFrameworkElement` walks the Visual parent chain**, skipping non-Forms Gue nodes, until it finds a Gue whose `FormsControlAsObject` is a `FrameworkElement`. It does not just return the direct parent.
+
+**Re-adding a child is safe through the helpers, not through the raw collection.** `AddToRoot`, `GraphicalUiElement.AddChild` (both overloads), `FrameworkElementExt.AddChild`, and `Window`/`ScrollViewer.AddChild` do nothing when the child is already under that parent, and move it when it is under another. They all funnel through `GraphicalUiElement.AddChild(GraphicalUiElement)`; a raw `Children.Add` of an existing child still duplicates it.
