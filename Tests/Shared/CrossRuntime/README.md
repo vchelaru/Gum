@@ -4,9 +4,11 @@ Draws the same elements with MonoGame and with Skia and compares the pictures, s
 drifts from MonoGame shows up as a failing cell. MonoGame is the reference; Skia (which Unity uses) is
 compared against it.
 
-- `NineSliceCases.cs` (linked into both test projects): the cases, a deterministic texture (every texel
-  its own color) and the contact-sheet layout (`CellSize` square cells, `Columns` per row). A new
-  element type adds its own `*Cases.cs` beside it.
+- `NineSliceCases.cs` (linked into both test projects; `Gum.Presentation.Tests` and `Gum.Avalonia.Tests` glob
+  `Tests/Shared/**` and exclude this folder, since they render nothing): the cases, a deterministic texture (every texel
+  its own color) and the contact-sheet layout (`CellSize` square cells, `Columns` per row). Case names
+  are written with the invariant culture because `KnownDifferences` keys on them. A new element type adds
+  its own `*Cases.cs` beside it.
 - `NineSliceBaselines/*.png`: the MonoGame render of each sheet. Written and kept true by
   `MonoGameGum.IntegrationTests` `NineSliceCrossRuntimeSheetTests`, which fails when MonoGame stops
   producing them. Regenerate only for an intended MonoGame change:
@@ -21,3 +23,14 @@ compared against it.
 Pictures: set `GUM_COMPARE_OUT=<folder>` on the Skia test run to get `overview.png`, `sheets/<sheet>.png`
 (MonoGame | Skia | difference) and `differences/<sheet>/<case>.png` for every differing cell. The same
 variable on the MonoGame run also writes its sheets to `<folder>/monogame`.
+
+MonoGame's odd-height rule (`NineSlice.cs`: `Height <= 2 * frame && Height % 2 == 1` shortens the bottom band by
+one texel row) reaches more than the 1 high cells. Disabling it changed MonoGame's output for 7 `zoom` cells
+and 10 `frame3-9x9` cells (odd heights 1, 3 and 5 up to twice the frame), and for 7 of the `frame3-9x9` cells
+Skia matches only with the rule on. In the 4 height-1 `zoom` cells at zoom 2 and 3 the rule is the whole
+difference: with it off MonoGame matches Skia. In `frame3-9x9` 5x3, 3x5 and 5x5 and `zoom` 6x6-f2-3x3 at
+zoom 2 and 3 the cell differs from Skia with the rule on and off; those are listed as a sampling tie where
+the rule also plays a part.
+
+The MonoGame sheet test compares exact RGB on a real GL device, so it runs in the `mesa-1` stream of the full
+CI (software OpenGL) and not under the `fast-ci` label.

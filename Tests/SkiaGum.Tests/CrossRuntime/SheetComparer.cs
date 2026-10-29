@@ -117,7 +117,7 @@ public static class SheetComparer
                 using SKFont font = new() { Size = 14 };
                 canvas.DrawText(
                     $"{sheetName} {difference.Name}   MonoGame | Skia | diff ({difference.DifferingPixels} px)",
-                    10, 20, font, paint);
+                    10, 20, SKTextAlign.Left, font, paint);
             }
             string safeName = string.Concat(difference.Name.Select(c => char.IsLetterOrDigit(c) || c is '.' or '-' ? c : '_'));
             SavePng(Path.Combine(outputDirectory, "differences", sheetName, safeName + ".png"), picture);
@@ -138,7 +138,7 @@ public static class SheetComparer
                 int y = 0;
                 foreach (SKBitmap picture in pictures)
                 {
-                    canvas.DrawBitmap(picture, 0, y);
+                    canvas.DrawBitmap(picture, 0, y, new SKSamplingOptions());
                     y += picture.Height;
                 }
             }

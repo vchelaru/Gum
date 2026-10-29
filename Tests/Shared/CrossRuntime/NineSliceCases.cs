@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using static System.FormattableString;
 
 namespace CrossRuntimeTests;
 
@@ -60,7 +61,9 @@ public static class NineSliceCases
 
     public static (int X, int Y) CellOrigin(int index) => (index % Columns * CellSize, index / Columns * CellSize);
 
-    private static List<NineSliceSheet> BuildSheets()
+    // Case names key the KnownDifferences lists, so floats in them are written with the invariant culture
+    // (Invariant($"...")); a machine that writes 1,5 would otherwise fail every fractional case.
+    public static List<NineSliceSheet> BuildSheets()
     {
         List<NineSliceSheet> sheets = new();
 
@@ -87,11 +90,11 @@ public static class NineSliceCases
         {
             foreach ((float w, float h) in new[] { (3f, 1f), (3f, 2f), (3f, 3f), (5f, 5f), (2f, 1f) })
             {
-                zoom.Add(new NineSliceCase($"3x16-f1-{w}x{h}-z{z}", 3, 16, 1, w, h, Zoom: z));
+                zoom.Add(new NineSliceCase(Invariant($"3x16-f1-{w}x{h}-z{z}"), 3, 16, 1, w, h, Zoom: z));
             }
             foreach (float s in new[] { 3f, 4f, 5f })
             {
-                zoom.Add(new NineSliceCase($"6x6-f2-{s}x{s}-z{z}", 6, 6, 2, s, s, Zoom: z));
+                zoom.Add(new NineSliceCase(Invariant($"6x6-f2-{s}x{s}-z{z}"), 6, 6, 2, s, s, Zoom: z));
             }
         }
         sheets.Add(new NineSliceSheet("zoom", zoom));
@@ -102,16 +105,16 @@ public static class NineSliceCases
         {
             foreach (float h in fractions)
             {
-                fractional.Add(new NineSliceCase($"3x3-f1-{w}x{h}", 3, 3, 1, w, h));
+                fractional.Add(new NineSliceCase(Invariant($"3x3-f1-{w}x{h}"), 3, 3, 1, w, h));
             }
         }
         foreach (float s in fractions)
         {
-            fractional.Add(new NineSliceCase($"3x3-f1-{s}x{s}-at2.5", 3, 3, 1, s, s, X: 2.5f, Y: 2.5f));
+            fractional.Add(new NineSliceCase(Invariant($"3x3-f1-{s}x{s}-at2.5"), 3, 3, 1, s, s, X: 2.5f, Y: 2.5f));
         }
         foreach (float s in new[] { 1.5f, 2.5f, 3.5f })
         {
-            fractional.Add(new NineSliceCase($"3x3-f1-{s}x{s}-z1.5", 3, 3, 1, s, s, X: 2.5f, Y: 2.5f, Zoom: 1.5f));
+            fractional.Add(new NineSliceCase(Invariant($"3x3-f1-{s}x{s}-z1.5"), 3, 3, 1, s, s, X: 2.5f, Y: 2.5f, Zoom: 1.5f));
         }
         sheets.Add(new NineSliceSheet("fractional", fractional));
 
@@ -133,7 +136,7 @@ public static class NineSliceCases
         {
             foreach (float width in widths)
             {
-                cases.Add(new NineSliceCase($"{width}x{height}", textureWidth, textureHeight, frame, width, height,
+                cases.Add(new NineSliceCase(Invariant($"{width}x{height}"), textureWidth, textureHeight, frame, width, height,
                     Tiling: tiling, BorderScale: borderScale));
             }
         }
