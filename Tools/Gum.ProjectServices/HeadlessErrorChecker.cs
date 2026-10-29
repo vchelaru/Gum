@@ -1391,7 +1391,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 Code = "GUM0015",
                 Severity = ErrorSeverity.Error,
                 Message = $"Component {elementSave.Name} has no BaseType, so generated code gives its class no base class. " +
-                    "Set <BaseType> in its .gucx file to Container, or to the component it derives from."
+                    "In the Gum tool, pick a Base Type (for example Container) in the BaseType dropdown, or set <BaseType> in its .gucx file to Container or to the component it derives from."
             });
         }
 

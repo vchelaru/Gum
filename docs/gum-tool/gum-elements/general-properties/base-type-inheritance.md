@@ -107,7 +107,7 @@ Available in November 2026, or now if building Gum from source.
 
 A component file with an empty `<BaseType>` loads, but code generation then writes a class with no base class. `gumcli check` reports **GUM0015** as an error on each such component. Screens and standard elements are not checked, since they legitimately have no `Base Type`.
 
-To resolve it, set `<BaseType>` in the component's `.gucx` file to `Container`, or to the component it derives from.
+To resolve it, open the component in the Gum tool and pick a `Base Type` (for example `Container`) in the `Base Type` dropdown, or set `<BaseType>` in the component's `.gucx` file to `Container` or to the component it derives from.
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
