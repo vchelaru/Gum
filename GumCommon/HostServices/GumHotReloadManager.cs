@@ -213,7 +213,11 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
         if (reload)
         {
-            PerformReload(rootList);
+            PerformReload(rootList, otherFiles);
+        }
+        else if (otherFiles.Count > 0)
+        {
+            PerformFileReload(rootList, otherFiles);
         }
     }
 
@@ -280,21 +284,8 @@ public class GumHotReloadManager : IGumHotReloadManager
                 continue;
             }
 
-            string? cacheKey = null;
-            try
+            if (!TryResolveReference(shaderFile, out string cacheKey, out string standardized) || !changed.Contains(standardized))
             {
-                cacheKey = ToolsUtilities.FileManager.IsRelative(shaderFile) && !ToolsUtilities.FileManager.IsUrl(shaderFile)
-                    ? ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + shaderFile)
-                    : shaderFile;
-                string standardized = ToolsUtilities.FileManager.Standardize(cacheKey, preserveCase: false, makeAbsolute: true);
-                if (!changed.Contains(standardized))
-                {
-                    continue;
-                }
-            }
-            catch (ArgumentException)
-            {
-                // An invalid path in a variable cannot be the file that changed.
                 continue;
             }
 
@@ -302,6 +293,27 @@ public class GumHotReloadManager : IGumHotReloadManager
             _disposeCachedAsset(cacheKey);
             _disposeCachedAsset(shaderFile);
             element.SetProperty("SourceShaderFile", shaderFile);
+        }
+    }
+
+    // The key the content cache stores a file reference under (a relative reference resolves against the
+    // game's content folder) and its standardized form for comparing with a changed file's path.
+    private static bool TryResolveReference(string reference, out string cacheKey, out string standardized)
+    {
+        cacheKey = reference;
+        standardized = "";
+        try
+        {
+            cacheKey = ToolsUtilities.FileManager.IsRelative(reference) && !ToolsUtilities.FileManager.IsUrl(reference)
+                ? ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + reference)
+                : reference;
+            standardized = ToolsUtilities.FileManager.Standardize(cacheKey, preserveCase: false, makeAbsolute: true);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            // An invalid path in a variable cannot be the file that changed.
+            return false;
         }
     }
 
@@ -415,20 +427,56 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     // internal (not private) so tests can drive a reload deterministically without the
     // FileSystemWatcher + debounce. ApplyDiff is exposed for tests for the same reason.
-    internal void PerformReload(IEnumerable<GraphicalUiElement> roots)
+    internal void PerformReload(IEnumerable<GraphicalUiElement> roots, IReadOnlyCollection<string>? changedFiles = null)
     {
         List<HotReloadIssue> issues = new List<HotReloadIssue>();
+        List<GraphicalUiElement> rootList = roots.ToList();
+        changedFiles ??= Array.Empty<string>();
+
+        // What the changed files are showing now; the reload may point visuals at other files.
+        List<ChangedReference> shownBefore = FindChangedReferences(rootList, changedFiles);
 
         // Materialize so we can iterate twice and so the caller's collection
         // is safe from us modifying it via the rebuild step.
-        bool applied = TryReload(roots.ToList(), issues, out bool willRetry);
+        bool applied = TryReload(rootList, issues, out bool willRetry);
 
-        // An attempt that is tried again says nothing: only the end of the chain is a result.
+        // An attempt that is tried again says nothing: only the end of the chain is a result. The files
+        // that changed beside the project are looked at again with it.
         if (willRetry)
         {
+            lock (_pendingReloadLock)
+            {
+                _lastOtherChangeTime = _utcNow();
+                _changedOtherFiles.UnionWith(changedFiles);
+            }
             return;
         }
 
+        if (applied)
+        {
+            ApplyChangedFiles(rootList, changedFiles, issues, shownBefore);
+        }
+
+        RaiseResult(applied, issues);
+    }
+
+    // A change to files the project does not own (localization, animation chains, images) with no project
+    // save beside it. Raises a result only when something was applied or has to be reported.
+    internal void PerformFileReload(IEnumerable<GraphicalUiElement> roots, IReadOnlyCollection<string> changedFiles)
+    {
+        List<HotReloadIssue> issues = new List<HotReloadIssue>();
+        List<GraphicalUiElement> rootList = roots.ToList();
+
+        bool applied = ApplyChangedFiles(rootList, changedFiles, issues);
+
+        if (applied || issues.Count > 0)
+        {
+            RaiseResult(applied, issues);
+        }
+    }
+
+    private void RaiseResult(bool applied, List<HotReloadIssue> issues)
+    {
         // A subscriber that throws must not break Update or keep the others from hearing.
         if (applied)
         {
@@ -542,6 +590,172 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
 
         return true;
+    }
+
+    private sealed class ChangedReference
+    {
+        public ChangedReference(GraphicalUiElement element, string sourceFile, string cacheKey, string standardized, string changedFile)
+        {
+            Element = element;
+            SourceFile = sourceFile;
+            CacheKey = cacheKey;
+            Standardized = standardized;
+            ChangedFile = changedFile;
+        }
+
+        public GraphicalUiElement Element { get; }
+        public string SourceFile { get; }
+        public string CacheKey { get; }
+        public string Standardized { get; }
+        public string ChangedFile { get; }
+        public bool IsAnimationChain => Path.GetExtension(SourceFile).ToLowerInvariant() is ".achx" or ".achj";
+    }
+
+    // The visuals whose SourceFile is one of the changed files.
+    private List<ChangedReference> FindChangedReferences(List<GraphicalUiElement> roots, IReadOnlyCollection<string> changedFiles)
+    {
+        List<ChangedReference> references = new List<ChangedReference>();
+        if (changedFiles.Count == 0)
+        {
+            return references;
+        }
+
+        Dictionary<string, string> changedByStandardizedPath = new Dictionary<string, string>();
+        foreach (string file in changedFiles)
+        {
+            foreach (string candidate in WithBinCounterpart(file))
+            {
+                try
+                {
+                    changedByStandardizedPath[ToolsUtilities.FileManager.Standardize(candidate, preserveCase: false, makeAbsolute: true)] = file;
+                }
+                catch (ArgumentException)
+                {
+                    // Not a path that can name a file a visual references.
+                }
+            }
+        }
+
+        List<GraphicalUiElement> visited = new List<GraphicalUiElement>();
+        foreach (GraphicalUiElement root in roots)
+        {
+            CollectDescendants(root, visited);
+        }
+
+        foreach (GraphicalUiElement element in visited)
+        {
+            string? sourceFile = element.AssignedSourceFile;
+            if (sourceFile != null
+                && TryResolveReference(sourceFile, out string cacheKey, out string standardized)
+                && changedByStandardizedPath.TryGetValue(standardized, out string? changedFile))
+            {
+                references.Add(new ChangedReference(element, sourceFile, cacheKey, standardized, changedFile));
+            }
+        }
+
+        return references;
+    }
+
+    // Applies the files that changed beside the project to the visuals showing them. An animation chain
+    // file is evicted from the content cache and assigned again, so every Sprite and NineSlice playing it
+    // picks up the new frames. An image is not: a replaced image keeps its cached copy until a restart,
+    // which the result says. A file that no visual showed before this reload (one the same save just
+    // pointed a visual at) was loaded fresh by it and needs nothing: pass what FindChangedReferences found
+    // before the reload as shownBefore. Returns whether any visual was changed.
+    private bool ApplyChangedFiles(
+        List<GraphicalUiElement> roots, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues,
+        List<ChangedReference>? shownBefore = null)
+    {
+        HashSet<string>? shownBeforePaths = shownBefore == null
+            ? null
+            : new HashSet<string>(shownBefore.Select(reference => reference.Standardized));
+
+        bool applied = false;
+        HashSet<string> handled = new HashSet<string>();
+        foreach (ChangedReference reference in FindChangedReferences(roots, changedFiles))
+        {
+            if (shownBeforePaths != null && !shownBeforePaths.Contains(reference.Standardized))
+            {
+                continue;
+            }
+
+            if (reference.IsAnimationChain)
+            {
+                if (handled.Add(reference.CacheKey))
+                {
+                    CopyToBin(reference.ChangedFile, issues);
+                    _disposeCachedAsset(reference.CacheKey);
+                }
+                try
+                {
+                    reference.Element.SetProperty("SourceFile", reference.SourceFile);
+                    applied = true;
+                }
+                catch (Exception exception) when (exception is not OutOfMemoryException)
+                {
+                    Report(issues, new HotReloadIssue(
+                        HotReloadIssueKind.ReloadFailed,
+                        $"Hot reload could not load the changed animation file {reference.ChangedFile}: {exception.Message}"));
+                }
+            }
+            else if (handled.Add(reference.Standardized))
+            {
+                Report(issues, new HotReloadIssue(
+                    HotReloadIssueKind.ReloadFailed,
+                    $"Hot reload cannot apply the changed file {reference.ChangedFile}: images stay cached until the game restarts."));
+            }
+        }
+
+        return applied;
+    }
+
+    // The file and, when the game loads from a copy of the project (bin) apart from the source folder
+    // the editor writes to, the copy's path.
+    private IEnumerable<string> WithBinCounterpart(string sourceFile)
+    {
+        yield return sourceFile;
+        string? binFile = BinCounterpart(sourceFile);
+        if (binFile != null)
+        {
+            yield return binFile;
+        }
+    }
+
+    private string? BinCounterpart(string sourceFile)
+    {
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        if (string.IsNullOrEmpty(sourceDirectory) || string.IsNullOrEmpty(_binGumDirectory))
+        {
+            return null;
+        }
+
+        string relative = Path.GetRelativePath(sourceDirectory, sourceFile);
+        return relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative)
+            ? null
+            : Path.Combine(_binGumDirectory, relative);
+    }
+
+    private void CopyToBin(string sourceFile, List<HotReloadIssue> issues)
+    {
+        string? binFile = BinCounterpart(sourceFile);
+        if (binFile == null
+            || ToolsUtilities.FileManager.Standardize(binFile, preserveCase: false, makeAbsolute: true)
+                == ToolsUtilities.FileManager.Standardize(sourceFile, preserveCase: false, makeAbsolute: true))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(binFile)!);
+            File.Copy(sourceFile, binFile, overwrite: true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.ReloadFailed,
+                $"Hot reload could not copy {sourceFile}: {exception.Message}"));
+        }
     }
 
     // Returns null with a description when the project cannot be read. Files the project lists but that

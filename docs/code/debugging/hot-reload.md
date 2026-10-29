@@ -42,6 +42,8 @@ When any of these files change, Gum reloads the project in place: it diffs the n
 
 Children added at runtime by your game code are left untouched. Hot reload identifies "design-time" children by their `Tag` — when Gum creates a visual from an `InstanceSave`, it stores the `InstanceSave` in `Tag`. Anything without an `InstanceSave` `Tag` is treated as runtime-owned and skipped.
 
+Animation chain files (`.achx`, `.achj`) are reloaded when a Sprite or NineSlice uses one as its `SourceFile`: Gum drops the cached chains, reads the file again and assigns it to every visual using it. A chain file no visual uses is ignored.
+
 When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files from the source project's `FontCache/` directory to the bin-side `FontCache/` directory, and evicts cached fonts so they are reloaded from disk.
 
 ### Renamed or Deleted Screens and Components
@@ -57,7 +59,7 @@ An instance whose component was renamed, moved to another folder, or changed to 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
 
 * **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader imports or includes is not tracked.
-* **Textures and images** — If you change a `.png` file, the cached texture is still used. Restart the game to pick up texture changes.
+* **Textures and images** — If you change a `.png` file that a Sprite or NineSlice shows, the cached texture is still used. Restart the game to pick up texture changes. Gum reports the file as a `ReloadFailed` issue, so `MatchesRestart` is `false`.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
 
@@ -170,7 +172,7 @@ Every reload's result lists every issue that reload had, including one an earlie
 | --------------------- | --------------------------------------------------------------------------------------------------- | ---------------- |
 | `MissingFile`         | The project lists a file that is not on disk. The reload went on without it.                        | `false`          |
 | `FontFailure`         | A changed font file could not be copied. It is tried again on the next reload.                      | `false`          |
-| `ReloadFailed`        | The project could not be read, or applying it threw. The UI is unchanged or partly updated.         | `false`          |
+| `ReloadFailed`        | The project could not be read, applying it threw, or a changed file cannot be applied while the game runs (a replaced image). The UI is unchanged or partly updated. | `false`          |
 | `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
 | `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |
 | `InstanceRebuilt`     | An instance's component changed or was renamed, so its visual was rebuilt. References and handlers on it are stale. | `true` |

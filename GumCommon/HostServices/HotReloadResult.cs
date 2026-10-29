@@ -17,7 +17,10 @@ public enum HotReloadIssueKind
     /// <summary>A changed font file could not be copied. It is tried again on the next reload.</summary>
     FontFailure,
 
-    /// <summary>The project could not be read, or applying it threw. The UI is unchanged or partly updated.</summary>
+    /// <summary>
+    /// The project could not be read, or applying it threw, or a changed file cannot be applied while the
+    /// game runs (a replaced image). The UI is unchanged or partly updated.
+    /// </summary>
     ReloadFailed,
 
     /// <summary>The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was.</summary>
