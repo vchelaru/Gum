@@ -449,4 +449,47 @@ public class HotReloadResultTests : BaseTestClass
         second.Issues.Single().Kind.ShouldBe(HotReloadIssueKind.ShownElementGone);
         _printed.Count.ShouldBe(2);
     }
+
+    // D derives from B1, which exposes Fill.X as "Tint", or from B2, which exposes it as "Tint2".
+    // The screen sets W.Tint, so a restart ignores it under B2 while the running tree keeps it.
+    private static GumProjectSave ExposureProject(string derivedBase)
+    {
+        GumProjectSave project = NewProject();
+        foreach ((string name, string exposedAs) in new[] { ("B1", "Tint"), ("B2", "Tint2") })
+        {
+            ComponentSave component = AddComponent(project, name);
+            AddInstance(component, "Fill", "Container");
+            component.DefaultState!.Variables.Add(new VariableSave
+            {
+                Name = "Fill.X", Type = "float", Value = 0f, SetsValue = true, ExposedAsName = exposedAs
+            });
+        }
+        ComponentSave derived = AddComponent(project, "D");
+        derived.BaseType = derivedBase;
+        ScreenSave main = new ScreenSave { Name = "Main" };
+        StateSave mainDefault = NewDefaultState(main);
+        project.Screens.Add(main);
+        AddInstance(main, "W", "D");
+        mainDefault.Variables.Add(new VariableSave { Name = "W.Tint", Type = "float", Value = 150f, SetsValue = true });
+        project.Initialize();
+        return project;
+    }
+
+    [Fact]
+    public void BaseSwitchedToOneThatExposesTheVariableUnderAnotherName_IsListed()
+    {
+        GumProjectSave oldProject = ExposureProject("B1");
+        GraphicalUiElement screenGue = oldProject.Screens.Single().ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        GumProjectSave newProject = ExposureProject("B2");
+
+        HotReloadResult result = GumHotReloadManager.ApplyDiff(new[] { screenGue }, newProject, SystemManagers.Default, oldProject);
+
+        static float FillX(GraphicalUiElement screen) =>
+            screen.GetGraphicalUiElementByName("W")!.ContainedElements.Single(child => child.Name == "Fill").X;
+        float hot = FillX(screenGue);
+        float fresh = FillX(newProject.Screens.Single().ToGraphicalUiElement(SystemManagers.Default, addToManagers: false));
+        hot.ShouldNotBe(fresh, "sanity: the oracle can tell");
+        result.Issues.Single().Kind.ShouldBe(HotReloadIssueKind.ComponentBaseTypeChanged);
+        result.MatchesRestart.ShouldBeFalse();
+    }
 }
