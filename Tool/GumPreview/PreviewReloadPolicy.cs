@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using Gum;
 
 namespace GumPreview;
@@ -7,25 +5,19 @@ namespace GumPreview;
 /// <summary>
 /// Decides when Preview rebuilds what it shows after a hot reload. A reload whose tree matches what a
 /// restart would show (<see cref="HotReloadResult.MatchesRestart"/>) is left as it is; one that does
-/// not asks for a full rebuild, so Preview ends up as a fresh launch would. The rebuild happens later,
-/// at a safe point of the game loop (<see cref="TryTakePendingReload"/>), never inside the reload's own
-/// callback.
+/// not asks for a rebuild, so Preview ends up as a fresh launch of the saved project would. The
+/// rebuild happens later, at a safe point of the game loop (<see cref="TryTakePendingReload"/>),
+/// never inside the reload's own callback.
 /// </summary>
 /// <remarks>
-/// Loop guard: a full rebuild does not touch the watched files, so it cannot start another reload by
-/// itself. What can repeat is a problem that outlasts the rebuild (a missing texture file stays missing
-/// on every save). The issues of the last rebuild are remembered; a result whose non-matching issues
-/// are identical asks for nothing, since a rebuild just made the tree fresh and the live reload that
-/// followed hit the same problem. The memory clears when a result matches a restart, so the problem
-/// coming back rebuilds again, and when a rebuild fails, so the next result retries. While the shown
-/// element is missing, every finished reload rebuilds once, whatever it reports: a rebuild is only
-/// started by a reload, so an element that stays missing cannot loop.
+/// No loop guard is needed: a rebuild only reads the project and touches no watched file, so it
+/// cannot start a reload. Some issues are listed again in every later result until an edit reverts
+/// them, and each of those saves still needs its own rebuild, so a repeated result is never skipped.
+/// A rebuild is asked for at most once per finished reload.
 /// </remarks>
 internal sealed class PreviewReloadPolicy
 {
     private bool _isReloadPending;
-    private string? _pendingSignature;
-    private string? _lastReloadedSignature;
 
     /// <summary>True when a rebuild has been asked for and not yet taken.</summary>
     public bool IsReloadPending => _isReloadPending;
@@ -34,30 +26,14 @@ internal sealed class PreviewReloadPolicy
     /// <param name="result">What the reload reported.</param>
     /// <param name="isShownElementMissing">
     /// True while Preview shows nothing because the selected element did not exist when it was last
-    /// shown. The reload may have added it (the tool selects a new name before the save lands), and a
-    /// reload with an empty tree reports nothing wrong, so any finished reload asks for a rebuild.
+    /// shown, or its last rebuild failed. The reload may have added the element (the tool selects a new
+    /// name before the save lands), and a reload with an empty tree reports nothing wrong, so any
+    /// finished reload asks for a rebuild.
     /// </param>
     public void OnReloadFinished(HotReloadResult result, bool isShownElementMissing = false)
     {
-        if (result.MatchesRestart)
-        {
-            // The newest result describes the tree, so a rebuild asked for by an older one is moot.
-            _isReloadPending = isShownElementMissing;
-            _pendingSignature = null;
-            _lastReloadedSignature = null;
-            return;
-        }
-
-        string signature = SignatureOf(result);
-        if (signature == _lastReloadedSignature && !isShownElementMissing)
-        {
-            _isReloadPending = false;
-            _pendingSignature = null;
-            return;
-        }
-
-        _isReloadPending = true;
-        _pendingSignature = signature;
+        // The newest result describes the tree, so it replaces what an older one asked for.
+        _isReloadPending = !result.MatchesRestart || isShownElementMissing;
     }
 
     /// <summary>
@@ -66,23 +42,8 @@ internal sealed class PreviewReloadPolicy
     /// </summary>
     public bool TryTakePendingReload()
     {
-        if (!_isReloadPending)
-        {
-            return false;
-        }
+        bool wasPending = _isReloadPending;
         _isReloadPending = false;
-        _lastReloadedSignature = _pendingSignature;
-        _pendingSignature = null;
-        return true;
+        return wasPending;
     }
-
-    /// <summary>The rebuild just taken did not complete; the next non-matching result tries again.</summary>
-    public void NotifyReloadFailed() => _lastReloadedSignature = null;
-
-    // Only the issues that make the tree differ from a restart; the ones that don't can come and go.
-    private static string SignatureOf(HotReloadResult result) =>
-        string.Join("\n", result.Issues
-            .Where(issue => !issue.MatchesRestart)
-            .Select(issue => $"{issue.Kind}|{issue.ElementName}|{issue.InstanceName}|{issue.Message}")
-            .OrderBy(line => line, StringComparer.Ordinal));
 }

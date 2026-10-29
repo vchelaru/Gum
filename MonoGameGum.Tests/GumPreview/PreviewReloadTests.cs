@@ -100,7 +100,7 @@ public class PreviewReloadTests : BaseTestClass
     private static void Describe(GraphicalUiElement element, int depth, StringBuilder text)
     {
         text.Append(new string(' ', depth * 2)).Append(element.Name).Append(" <").Append(element.ElementSave?.Name).Append("> x=")
-            .Append(element.X);
+            .Append(element.X).Append(" w=").Append(element.Width);
         if (element is ColoredRectangleRuntime rectangle)
         {
             text.Append(" red=").Append(rectangle.Red);
@@ -198,23 +198,41 @@ public class PreviewReloadTests : BaseTestClass
     }
 
     [Fact]
-    public void AMissingFileThatStaysMissing_RebuildsOncePerProblem_NotOnEverySave()
+    public void AMissingFileThatStaysMissing_RebuildsOncePerSave_WithoutLooping()
     {
         StartPreview(Spec with { WithGadget = true });
         File.Delete(_world.GadgetFile);
 
         Save(_world.Gumx);
         _rebuilds.ShouldBe(1);
-        string afterFirst = Describe();
 
         _world.SaveAll(Spec with { WithGadget = true, BoxX = 12 });
         File.Delete(_world.GadgetFile);
         Save(_world.Gumx, _world.ScreenFile);
-        Save(_world.Gumx, _world.ScreenFile);
+        _rebuilds.ShouldBe(2);
+        Frame();
+        Frame();
 
-        _rebuilds.ShouldBe(1);
+        _rebuilds.ShouldBe(2);
         Describe().ShouldBe(DescribeAFreshLaunch());
-        afterFirst.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void TwoConsecutiveStandardElementEdits_EachEndEqualToAFreshLaunch()
+    {
+        StartPreview(Spec);
+
+        _world.SaveAll(Spec with { RectWidth = 77 });
+        Save(_world.Gumx);
+        string afterFirst = Describe();
+        afterFirst.ShouldBe(DescribeAFreshLaunch());
+
+        _world.SaveAll(Spec with { RectWidth = 88 });
+        Save(_world.Gumx);
+
+        _rebuilds.ShouldBe(2);
+        Describe().ShouldBe(DescribeAFreshLaunch());
+        Describe().ShouldNotBe(afterFirst);
     }
 
     [Fact]

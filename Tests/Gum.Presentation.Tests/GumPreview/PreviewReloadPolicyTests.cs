@@ -60,18 +60,6 @@ public class PreviewReloadPolicyTests
     }
 
     [Fact]
-    public void SeveralNonMatchingResultsBeforeTheRebuild_AskForOnlyOne()
-    {
-        PreviewReloadPolicy policy = new PreviewReloadPolicy();
-
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed, "first")));
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ShownElementGone)));
-
-        policy.TryTakePendingReload().ShouldBeTrue();
-        policy.TryTakePendingReload().ShouldBeFalse();
-    }
-
-    [Fact]
     public void ANewerMatchingResult_CancelsTheRebuildAnOlderOneAskedFor()
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
@@ -80,80 +68,6 @@ public class PreviewReloadPolicyTests
         policy.OnReloadFinished(Result());
 
         policy.TryTakePendingReload().ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TheSameProblemAfterARebuild_DoesNotRebuildAgain()
-    {
-        PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")));
-        policy.TryTakePendingReload().ShouldBeTrue();
-
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")));
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")));
-
-        policy.TryTakePendingReload().ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TheSameProblemWithMatchingIssuesComingAndGoing_DoesNotRebuildAgain()
-    {
-        PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")));
-        policy.TryTakePendingReload().ShouldBeTrue();
-
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png"), Issue(HotReloadIssueKind.InstanceRebuilt, "Button")));
-
-        policy.TryTakePendingReload().ShouldBeFalse();
-    }
-
-    [Fact]
-    public void ADifferentProblemAfterARebuild_RebuildsAgain()
-    {
-        PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")));
-        policy.TryTakePendingReload().ShouldBeTrue();
-
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png"), Issue(HotReloadIssueKind.ShownElementGone, "Main")));
-
-        policy.TryTakePendingReload().ShouldBeTrue();
-    }
-
-    [Fact]
-    public void TheProblemComingBackAfterAMatchingResult_RebuildsAgain()
-    {
-        PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")));
-        policy.TryTakePendingReload().ShouldBeTrue();
-        policy.OnReloadFinished(Result());
-
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")));
-
-        policy.TryTakePendingReload().ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ARebuildThatFailed_IsRetriedByTheNextSameResult()
-    {
-        PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed, "locked")));
-        policy.TryTakePendingReload().ShouldBeTrue();
-        policy.NotifyReloadFailed();
-
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed, "locked")));
-
-        policy.TryTakePendingReload().ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ASameResultWhileARebuildIsStillPending_KeepsItPending()
-    {
-        PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ShownElementGone)));
-
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ShownElementGone)));
-
-        policy.TryTakePendingReload().ShouldBeTrue();
     }
 
     [Fact]
@@ -191,26 +105,40 @@ public class PreviewReloadPolicyTests
     }
 
     [Fact]
-    public void ARepeatedNonMatchingResult_WhileTheElementIsMissing_StillRebuilds()
+    public void TheSameNonMatchingResultOnConsecutiveReloads_AsksForARebuildEachTime()
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")), isShownElementMissing: true);
-        policy.TryTakePendingReload().ShouldBeTrue();
+        HotReloadIssue sticky = Issue(HotReloadIssueKind.StandardElementChanged, "Text changed");
 
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")), isShownElementMissing: true);
+        policy.OnReloadFinished(Result(sticky));
+        policy.TryTakePendingReload().ShouldBeTrue();
+        policy.OnReloadFinished(Result(sticky));
+        policy.TryTakePendingReload().ShouldBeTrue();
+        policy.OnReloadFinished(Result(sticky));
 
         policy.TryTakePendingReload().ShouldBeTrue();
     }
 
     [Fact]
-    public void ARepeatedNonMatchingResult_OnceTheElementIsShown_DoesNotRebuild()
+    public void SeveralResultsBeforeTheRebuild_AskForOnlyOne()
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")), isShownElementMissing: true);
+
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed, "first")));
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ShownElementGone)));
+
+        policy.TryTakePendingReload().ShouldBeTrue();
+        policy.TryTakePendingReload().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void NoRebuildWithoutAFinishedReload()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile)), isShownElementMissing: true);
         policy.TryTakePendingReload().ShouldBeTrue();
 
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")), isShownElementMissing: false);
-
+        policy.TryTakePendingReload().ShouldBeFalse();
         policy.TryTakePendingReload().ShouldBeFalse();
     }
 }
