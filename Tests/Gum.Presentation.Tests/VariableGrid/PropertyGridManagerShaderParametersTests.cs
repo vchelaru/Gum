@@ -182,6 +182,56 @@ public class PropertyGridManagerShaderParametersTests : BaseTestClass, IDisposab
         sut.HaveShaderParametersChanged().ShouldBeFalse();
     }
 
+    private PropertyGridManager GivenRowsBuiltFor(params ShaderParameterInfo[] parameters)
+    {
+        GivenTheHolderIsTheOnlySelection();
+        GivenTheHolderHasAnEffect(true);
+        GivenTheCompiledEffectDeclares(parameters);
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+        sut.AdjustShaderParameters(new List<MemberCategory> { BuildRenderingCategory() }, _holder);
+        sut.HaveShaderParametersChanged().ShouldBeFalse();
+        return sut;
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsTrueWhenTheCompiledDefaultChangesForTheSameParameters()
+    {
+        // Editing the default in the shader file recompiles the effect; the rows must show the new default.
+        PropertyGridManager sut = GivenRowsBuiltFor(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1f)));
+
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(3f)));
+
+        sut.HaveShaderParametersChanged().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsFalseWhenTheParametersAndTheirDefaultsAreUnchanged()
+    {
+        PropertyGridManager sut = GivenRowsBuiltFor(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1.5f)),
+            new ShaderParameterInfo("Offset", ShaderParameterKind.Float, 2, ShaderParameterValue.FromVector2(0.25f, 4f)));
+
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1.5f)),
+            new ShaderParameterInfo("Offset", ShaderParameterKind.Float, 2, ShaderParameterValue.FromVector2(0.25f, 4f)));
+
+        sut.HaveShaderParametersChanged().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HaveShaderParametersChanged_IsTrueWhenOnlyOneComponentOfAVectorDefaultChanges()
+    {
+        PropertyGridManager sut = GivenRowsBuiltFor(
+            new ShaderParameterInfo("OutlineColor", ShaderParameterKind.Float, 4, ShaderParameterValue.FromVector4(0f, 0f, 0f, 1f)));
+
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("OutlineColor", ShaderParameterKind.Float, 4, ShaderParameterValue.FromVector4(0f, 0f, 0f, 0.5f)));
+
+        sut.HaveShaderParametersChanged().ShouldBeTrue();
+    }
+
     [Fact]
     public void HaveShaderParametersChanged_IsFalseWhenSeveralInstancesAreSelected()
     {
@@ -209,11 +259,15 @@ public class PropertyGridManagerShaderParametersTests : BaseTestClass, IDisposab
         _component.DefaultState.GetValueRecursive("Holder.ShaderParameters").ShouldBe("Thickness=3.0");
     }
 
+    private static void GivenTheCompiledEffectDeclares(params ShaderParameterInfo[] parameters) =>
+        ShaderParameterReader.Reader = _ => parameters.ToList();
+
     [Fact]
-    public void AdjustShaderParameters_RowShowsTheDefaultDeclaredInTheShaderSource()
+    public void AdjustShaderParameters_RowShowsTheCompiledEffectDefault_WhenNothingIsSaved()
     {
         GivenTheHolderHasAnEffect(true);
-        GivenTheHolderUsesShaderSource("float Thickness = 1.0;");
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1f)));
         MemberCategory category = BuildRenderingCategory();
         PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
 
@@ -223,10 +277,11 @@ public class PropertyGridManagerShaderParametersTests : BaseTestClass, IDisposab
     }
 
     [Fact]
-    public void AdjustShaderParameters_RowShowsAnExplicitZero_WhenTheSourceDeclaresOne()
+    public void AdjustShaderParameters_RowShowsTheSavedValue_NotTheCompiledEffectDefault()
     {
         GivenTheHolderHasAnEffect(true);
-        GivenTheHolderUsesShaderSource("float Thickness = 1.0;");
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1f)));
         _component.DefaultState.SetValue("Holder.ShaderParameters", "Thickness=0.0");
         MemberCategory category = BuildRenderingCategory();
         PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
@@ -237,74 +292,32 @@ public class PropertyGridManagerShaderParametersTests : BaseTestClass, IDisposab
     }
 
     [Fact]
-    public void AdjustShaderParameters_RowShowsTheDeclaredDefaultOfEachVectorComponent()
+    public void AdjustShaderParameters_RowShowsTheCompiledDefault_OfAParameterDeclaredInAFormWithParentheses()
     {
         GivenTheHolderHasAnEffect(true);
-        GivenTheHolderUsesShaderSource("float4 OutlineColor = float4(1.0, 0.5, 0.25, 1.0);");
+        GivenTheHolderUsesShaderSource("float Wrapped = (2.5);");
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("Wrapped", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(2.5f)));
         MemberCategory category = BuildRenderingCategory();
         PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
 
         sut.AdjustShaderParameters(new List<MemberCategory> { category }, _holder);
 
-        category.Members.Where(member => member.Name.StartsWith("OutlineColor ")).Select(member => member.Value).ToArray()
-            .ShouldBe(new object?[] { 1f, 0.5f, 0.25f, 1f });
-    }
-
-    [Theory]
-    [InlineData("float Thickness;")]
-    [InlineData("float Thickness = Other * 2.0;")]
-    [InlineData("")]
-    public void AdjustShaderParameters_RowKeepsTheCompiledDefault_WhenTheSourceHasNoReadableDefault(string source)
-    {
-        GivenTheHolderHasAnEffect(true);
-        GivenTheHolderUsesShaderSource(source);
-        MemberCategory category = BuildRenderingCategory();
-        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
-
-        sut.AdjustShaderParameters(new List<MemberCategory> { category }, _holder);
-
-        category.Members.Single(member => member.Name == "Thickness").Value.ShouldBe(0f);
+        category.Members.Single(member => member.Name == "Wrapped").Value.ShouldBe(2.5f);
     }
 
     [Fact]
-    public void AdjustShaderParameters_RowKeepsTheCompiledDefault_WhenTheSourceFileIsMissing()
+    public void AdjustShaderParameters_CompiledEffectIsTheOnlySourceOfDefaults_TheShaderFileIsNotRead()
     {
         GivenTheHolderHasAnEffect(true);
-        GivenTheHolderUsesShaderSource(source: null);
+        GivenTheHolderUsesShaderSource("float Thickness = 9.0;");
+        GivenTheCompiledEffectDeclares(
+            new ShaderParameterInfo("Thickness", ShaderParameterKind.Float, 1, ShaderParameterValue.FromFloat(1f)));
         MemberCategory category = BuildRenderingCategory();
         PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
 
         sut.AdjustShaderParameters(new List<MemberCategory> { category }, _holder);
 
-        category.Members.Single(member => member.Name == "Thickness").Value.ShouldBe(0f);
-    }
-
-    [Fact]
-    public void AdjustShaderParameters_RowKeepsTheCompiledDefault_WhenTheShaderFileIsNotAReadablePath()
-    {
-        GivenTheHolderHasAnEffect(true);
-        GivenTheHolderUsesShaderSource("float Thickness = 1.0;", shaderFile: "Shaders/Outline.slang");
-        _component.DefaultState.SetValue("Holder.SourceShaderFile", "Shaders/bad\0name?.slang");
-        MemberCategory category = BuildRenderingCategory();
-        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
-
-        sut.AdjustShaderParameters(new List<MemberCategory> { category }, _holder);
-
-        category.Members.Single(member => member.Name == "Thickness").Value.ShouldBe(0f);
-    }
-
-    [Fact]
-    public void HaveShaderParametersChanged_IsTrueWhenTheShaderSourceDefaultIsEditedAfterTheRowsWereBuilt()
-    {
-        GivenTheHolderIsTheOnlySelection();
-        GivenTheHolderHasAnEffect(true);
-        GivenTheHolderUsesShaderSource("float Thickness = 1.0;");
-        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
-        sut.AdjustShaderParameters(new List<MemberCategory> { BuildRenderingCategory() }, _holder);
-        sut.HaveShaderParametersChanged().ShouldBeFalse();
-
-        File.WriteAllText(Path.Combine(_projectDirectory!, "Shaders/Outline.slang"), "float Thickness = 3.0;");
-
-        sut.HaveShaderParametersChanged().ShouldBeTrue();
+        category.Members.Single(member => member.Name == "Thickness").Value.ShouldBe(1f);
     }
 }
