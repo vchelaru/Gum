@@ -28,7 +28,7 @@ public class SourceShaderFileResolverTests : BaseTestClass
         CustomSetPropertyOnRenderable.PropertyAssignmentError += _handler;
     }
 
-    public new void Dispose()
+    public override void Dispose()
     {
         CustomSetPropertyOnRenderable.PropertyAssignmentError -= _handler;
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _previousResolver;
@@ -43,7 +43,7 @@ public class SourceShaderFileResolverTests : BaseTestClass
     }
 
     private static object? GetEffect(ContainerRuntime container) =>
-        ((IRenderTargetRenderable)container.RenderableComponent).RenderTargetEffect;
+        ((IRenderTargetRenderable)container.RenderableComponent!).RenderTargetEffect;
 
     [Fact]
     public void SourceShaderFile_ReportsNothing_WhenNoResolverAndNoFile()
@@ -107,7 +107,7 @@ public class SourceShaderFileResolverTests : BaseTestClass
         container.SourceShaderFile = "Shaders/Outline.fx";
         container.SetProperty("Outline_Thickness", 3f);
 
-        ((IRenderTargetRenderable)container.RenderableComponent).ShaderParameters.ShouldNotBeNull();
+        ((IRenderTargetRenderable)container.RenderableComponent!).ShaderParameters.ShouldNotBeNull();
     }
 
     [Fact]
