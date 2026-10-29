@@ -94,6 +94,7 @@ public static class SheetComparer
             Magnify(canvas, diff, 30 + expected.Width * sheetScale * 2, 10, sheetScale);
         }
         SavePng(Path.Combine(outputDirectory, "sheets", sheetName + ".png"), overview);
+        WriteOverview(outputDirectory);
 
         const int cellScale = 10;
         foreach (CellDifference difference in differences)
@@ -120,6 +121,32 @@ public static class SheetComparer
             }
             string safeName = string.Concat(difference.Name.Select(c => char.IsLetterOrDigit(c) || c is '.' or '-' ? c : '_'));
             SavePng(Path.Combine(outputDirectory, "differences", sheetName, safeName + ".png"), picture);
+        }
+    }
+
+    // Stacks every sheet picture written so far into overview.png, so one image shows the whole matrix.
+    private static void WriteOverview(string outputDirectory)
+    {
+        string[] files = Directory.GetFiles(Path.Combine(outputDirectory, "sheets"), "*.png").OrderBy(f => f).ToArray();
+        List<SKBitmap> pictures = files.Select(file => SKBitmap.Decode(file)).ToList();
+        try
+        {
+            using SKBitmap overview = new(pictures.Max(p => p.Width), pictures.Sum(p => p.Height));
+            using (SKCanvas canvas = new(overview))
+            {
+                canvas.Clear(new SKColor(40, 40, 40));
+                int y = 0;
+                foreach (SKBitmap picture in pictures)
+                {
+                    canvas.DrawBitmap(picture, 0, y);
+                    y += picture.Height;
+                }
+            }
+            SavePng(Path.Combine(outputDirectory, "overview.png"), overview);
+        }
+        finally
+        {
+            pictures.ForEach(p => p.Dispose());
         }
     }
 

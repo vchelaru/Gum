@@ -22,7 +22,46 @@ public class NineSliceCrossRuntimeTests : BaseTestClass
     /// that looks wrong), by "sheet/case". The test requires this list to be exactly the cases that
     /// differ, so a fix must remove its entry. Each entry has the reason beside it.
     /// </summary>
-    private static readonly Dictionary<string, string> KnownDifferences = new();
+    private static readonly Dictionary<string, string> KnownDifferences = BuildKnownDifferences();
+
+    // A band stretched or shrunk so that a destination pixel center lands exactly on a texel
+    // boundary: MonoGame (GPU) picks the texel above/left of it, Skia's CPU raster the other. Read
+    // from the pictures; not isolated to a Skia setting.
+    private const string SamplingTie = "Nearest sampling tie on a texel boundary";
+
+    // MonoGame draws the bottom band with 0 texels for an odd Height (NineSlice.cs, "Height % 2 == 1"),
+    // counted in world units not pixels, so at zoom 2 or more a 1 high nine-slice draws half its height.
+    private const string MonoGameOddHeight = "MonoGame drops the bottom band for an odd world Height at any zoom";
+
+    // At zoom 1.5 the nine-slice is 4.5 pixels; MonoGame draws 4 and Skia 5 pixels with different
+    // edge texels. Which is right is undecided.
+    private const string FractionalEdges = "Fractional pixel edges at zoom 1.5";
+
+    private static Dictionary<string, string> BuildKnownDifferences()
+    {
+        Dictionary<string, string> known = new();
+        void Add(string sheet, string reason, params string[] cases)
+        {
+            foreach (string name in cases)
+            {
+                known[$"{sheet}/{name}"] = reason;
+            }
+        }
+
+        Add("frame1-3x16", SamplingTie, "1x3", "2x3", "3x3", "5x3", "1x5", "2x5", "3x5", "5x5");
+        Add("frame2-6x6", SamplingTie, "5x1", "5x2", "5x3", "5x4", "1x5", "2x5", "3x5", "4x5", "5x5", "6x5", "9x5", "5x6", "5x9");
+        Add("frame3-9x9", SamplingTie, "5x1", "5x3", "3x5", "5x5", "3x6", "5x6", "3x7", "5x7", "3x12", "5x12");
+        Add("borderscale0.5-6x6", SamplingTie,
+            "2x1", "3x1", "4x1", "6x1", "1x2", "2x2", "3x2", "4x2", "6x2", "1x3", "2x3", "3x3", "4x3", "6x3",
+            "1x4", "2x4", "3x4", "4x4", "6x4", "1x6", "2x6", "3x6", "4x6", "6x6");
+        Add("zoom", SamplingTie, "3x16-f1-3x3-z1", "3x16-f1-5x5-z1", "6x6-f2-5x5-z1",
+            "6x6-f2-3x3-z2", "3x16-f1-5x5-z3", "6x6-f2-3x3-z3", "6x6-f2-5x5-z3");
+        Add("zoom", MonoGameOddHeight, "3x16-f1-3x1-z2", "3x16-f1-2x1-z2", "3x16-f1-3x1-z3", "3x16-f1-2x1-z3");
+        Add("zoom", FractionalEdges, "3x16-f1-3x1-z1.5", "3x16-f1-3x2-z1.5", "3x16-f1-3x3-z1.5", "3x16-f1-5x5-z1.5",
+            "3x16-f1-2x1-z1.5", "6x6-f2-3x3-z1.5", "6x6-f2-4x4-z1.5", "6x6-f2-5x5-z1.5");
+        Add("fractional", FractionalEdges, "3x3-f1-2.5x2.5-z1.5", "3x3-f1-3.5x3.5-z1.5");
+        return known;
+    }
 
     public static IEnumerable<object[]> SheetNames => NineSliceCases.Sheets.Select(sheet => new object[] { sheet.Name });
 
