@@ -127,7 +127,15 @@ namespace Gum.Managers
                     {
                         shouldRefresh = true;
                     }
+                }
+                catch (Exception ex)
+                {
+                    // A file that can't be judged (an unreadable animation chain) must not skip the update below.
+                    _owner._outputManager.AddError("Could not check which changed files the project references: " + ex.Message);
+                }
 
+                try
+                {
                     if (reloaded != null && _owner.UpdateDependentsOf(reloaded, reloadedBehaviors ?? new Dictionary<string, BehaviorSave>()))
                     {
                         shouldRefresh = true;
