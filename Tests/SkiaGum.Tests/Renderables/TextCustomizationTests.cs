@@ -372,19 +372,71 @@ public class TextCustomizationTests : BaseTestClass
     [Fact]
     public void GetTextBlock_CustomSpanContainingEmojiAndWrapping_KeepsTheEmojiOneGlyph()
     {
-        Text.Customizations["SpanOffset"] = (index, block) => new LetterCustomization { YOffset = 10 + index };
+        List<int> indexes = new();
+        Text.Customizations["SpanOffset"] = (index, block) =>
+        {
+            indexes.Add(index);
+            return new LetterCustomization { YOffset = 10 + index };
+        };
 
+        // "aaaa " is 5 units, so the tagged letters start at UTF-16 index 5; the emoji is the 5th tagged letter (index 9, 2 units).
         (List<SKPoint> plain, List<SKPoint> customized) =
             MeasureAgainstPlain("aaaa [Custom=SpanOffset]bbbb\U0001F600cccc dddd[/Custom]", width: 90);
 
         plain.Select(p => p.Y).Distinct().Count().ShouldBeGreaterThan(1, "the text must wrap for this test to mean anything");
         customized.Count.ShouldBe(plain.Count);
+        List<int> expectedIndexes = new() { 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
+        indexes.Distinct().ToList().ShouldBe(expectedIndexes);
         for (int i = 0; i < plain.Count; i++)
         {
             (customized[i].X - plain[i].X).ShouldBe(0f, tolerance: 0.01, $"glyph {i} x");
+            // Glyph i is code point i; the first 5 are untagged, the rest sit at expectedIndexes[i - 5].
+            float expectedY = i < 5 ? 0f : 10 + expectedIndexes[i - 5];
+            (customized[i].Y - plain[i].Y).ShouldBe(expectedY, tolerance: 0.01, $"glyph {i} y");
         }
     }
 
+    // A replacement character replaces a whole code point, so the layout (whose lines count code points) is unchanged:
+    // an emoji becomes one replacement character, not two.
+    [Fact]
+    public void GetStyledRuns_CustomSpanReplacingAnEmoji_ReplacesThePairWithOneCharacter()
+    {
+        Text.Customizations["Mask"] = (index, block) => new LetterCustomization { ReplacementCharacter = '*' };
+        Text text = MakeText();
+        text.RawText = "[Custom=Mask]a\U0001F600b[/Custom]";
+
+        text.GetStyledRuns().Select(r => r.Text).ToList().ShouldBe(new List<string> { "*", "*", "*" });
+        text.WrappedText.ShouldBe(new List<string> { "a\U0001F600b" });
+    }
+
+    [Theory]
+    [InlineData("a\U0001F600b", false)]
+    [InlineData("[Custom=Plain]a\U0001F600b[/Custom]", false)]
+    [InlineData("[Custom=Mask]a\U0001F600b[/Custom]", true)]
+    public void GetVisibleStyledRuns_EmojiWithMaxLettersToShow_RevealsTheSameLettersAsTheWrappedLines(string rawText, bool isMasked)
+    {
+        Text.Customizations["Mask"] = (index, block) => new LetterCustomization { ReplacementCharacter = '*' };
+        Text.Customizations["Plain"] = (index, block) => new LetterCustomization();
+        string full = "a\U0001F600b";
+
+        for (int maxLetters = 0; maxLetters <= 4; maxLetters++)
+        {
+            Text text = MakeText();
+            text.RawText = rawText;
+            text.MaxLettersToShow = maxLetters;
+
+            // Run on a worker so a loop that stops advancing fails the test instead of hanging the run.
+            var task = System.Threading.Tasks.Task.Run(() =>
+                (string.Concat(text.GetVisibleStyledRuns().Select(r => r.Text)), string.Concat(text.GetVisibleWrappedText())));
+            task.Wait(10000).ShouldBeTrue($"MaxLettersToShow {maxLetters} did not finish");
+
+            // The emoji is never cut in half, so 2 letters already reveal it whole.
+            (string runs, string wrapped) = task.Result;
+            wrapped.ShouldBe(full.Substring(0, new[] { 0, 1, 3, 3, 4 }[maxLetters]), $"MaxLettersToShow {maxLetters}");
+            string expectedRuns = isMasked ? new string('*', new[] { 0, 1, 2, 2, 3 }[maxLetters]) : wrapped;
+            runs.ShouldBe(expectedRuns, $"MaxLettersToShow {maxLetters}");
+        }
+    }
     // A lone surrogate has nothing to pair with, so it stays one run per UTF-16 unit as before.
     [Fact]
     public void GetStyledRuns_CustomSpanWithLoneSurrogate_StaysOneRunPerCharacter()
