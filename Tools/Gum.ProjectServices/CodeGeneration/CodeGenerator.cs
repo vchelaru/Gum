@@ -1056,6 +1056,54 @@ public class CodeGenerator
         return string.IsNullOrEmpty(gumFormsType) ? GetUnsupportedFormsBaseTypeMessage(element) : null;
     }
 
+    /// <summary>
+    /// Returns the message explaining why <paramref name="element"/>'s categories cannot be generated, or null
+    /// when they can. A category writes a nested enum named like it and a <c>&lt;Category&gt;State</c> property,
+    /// so neither may take the generated class's name (CS0542, which depends on the output library: the legacy
+    /// runtime classes end in <c>Runtime</c>) or repeat another category's enum or property name (CS0102).
+    /// Both are public API, so the element is reported instead of renamed the way instance and variable
+    /// members are. <see cref="CategoryNameCollisionErrorSource"/> reports it to <c>gumcli codegen</c>.
+    /// </summary>
+    public string? GetCategoryNameCollisionError(ElementSave element, CodeOutputProjectSettings projectSettings)
+    {
+        if (element is StandardElementSave || element.Categories.Count == 0)
+        {
+            return null;
+        }
+
+        CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        context.CodeOutputProjectSettings = projectSettings;
+        context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
+        string? className = GetClassNameForType(element, GetVisualApiForElement(element), context);
+
+        Dictionary<string, string> declaredBy = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!string.IsNullOrEmpty(className))
+        {
+            declaredBy[className!.TrimStart('@')] = "the generated class of this element";
+        }
+
+        foreach (StateSaveCategory category in element.Categories)
+        {
+            string enumName = _codeGenerationNameVerifier.ToCSharpName(category.Name).TrimStart('@');
+            foreach ((string name, string description) in new[]
+            {
+                (enumName, $"the enum of category \"{category.Name}\""),
+                (enumName + "State", $"the state property of category \"{category.Name}\""),
+            })
+            {
+                if (declaredBy.TryGetValue(name, out string? existing))
+                {
+                    return $"Category \"{category.Name}\" generates {description} named \"{name}\", which is also the name of " +
+                        $"{existing}, so the generated code cannot compile. Rename the category or the element.";
+                }
+
+                declaredBy[name] = description;
+            }
+        }
+
+        return null;
+    }
+
     private static string GetUnsupportedFormsBaseTypeMessage(ElementSave element) =>
         $"Invalid inheritance - When using Forms codegen, {element.Name} must either inherit from Container, or must have Forms behaviors. It currently inherits from {element.BaseType}.";
 
@@ -4254,6 +4302,8 @@ public class CodeGenerator
         }
         foreach (StateSaveCategory category in element.Categories)
         {
+            // The category's nested enum and its state property are both members of the class.
+            reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name));
             reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name) + "State");
         }
         return _codeGenerationNameVerifier.ReserveMemberNames(reserved);

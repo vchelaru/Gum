@@ -113,9 +113,10 @@ public class CodeGenerationService
 
         //////////////////////////////////////End Early Out//////////////////////////
 
-        // Same check gumcli codegen runs (FormsCodegenBaseTypeErrorSource): without it the error
-        // sentence is written into the file as the class's base type.
-        string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings);
+        // Same checks gumcli codegen runs (FormsCodegenBaseTypeErrorSource, CategoryNameCollisionErrorSource):
+        // without the first the error sentence is written into the file as the class's base type.
+        string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings) ??
+            _codeGenerator.GetCategoryNameCollisionError(selectedElement, codeOutputProjectSettings);
         if (baseTypeError != null)
         {
             if (showPopups)

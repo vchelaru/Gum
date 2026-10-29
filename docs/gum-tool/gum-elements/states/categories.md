@@ -153,3 +153,14 @@ Remove the self-referential selector variable from the category's states. The se
 ### Detection scope
 
 The check fires on every Screen and Component, for any state inside a category that sets that same category's selector. A state setting a *child instance's* selector (e.g. `Border.ColorCategoryState`, which carries a source object) is the intended cascade and is not flagged.
+
+## Category Names That Clash With Generated Code
+
+Each category generates a nested enum named like it and a `<CategoryName>State` property in the element's [generated code](../../code-tab/README.md). C# does not allow a member named like its own class, or two members with one name, so two kinds of category names produce code that does not compile:
+
+* A category named like its element when the class is named like the element. A component `Mode` with a category `Mode` fails with CS0542 under Gum Forms, where the class is `Mode`. It compiles under the legacy MonoGame, Raylib and Skia outputs, where the class is `ModeRuntime`.
+* A category whose enum or `<CategoryName>State` property repeats the name another category generates, such as categories `Mode` and `ModeState` (the property `ModeState` and the enum `ModeState`). This fails with every output library.
+
+The Gum tool only refuses a category whose name is exactly its element's full name, so a component `Folder/Mode` can still get a category `Mode`, and it does not compare a category with another category's `<CategoryName>State` property. Projects edited by hand, written by a script or AI agent, or where the element was renamed after the category was added can also reach these names. The Code tab and `gumcli codegen` report the element with an error naming the category and skip it. Rename the category or the element; the enum and the property are public, so Gum does not rename them for you. `gumcli check` does not report it, because whether the names clash depends on the output library. Elements set to **Never Generate** are not checked.
+
+An instance, exposed variable or custom variable named like a category is different: its generated field or property gets a trailing `_`, so nothing public changes.

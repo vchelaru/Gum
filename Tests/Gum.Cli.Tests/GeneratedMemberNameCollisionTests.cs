@@ -80,9 +80,135 @@ public class GeneratedMemberNameCollisionTests : BaseTestClass
         Compile().ShouldBeEmpty();
     }
 
+    [Theory]
+    [InlineData(ObjectInstantiationType.FindByName)]
+    [InlineData(ObjectInstantiationType.FullyInCode)]
+    public void Codegen_InstanceAndVariablesNamedLikeACategory_GeneratesCompilableClass(ObjectInstantiationType instantiationType)
+    {
+        // The category generates a nested enum named "Size"; a member of the same name would collide with it (CS0102).
+        string gumx = CreateGame(instantiationType);
+        EditProject(gumx, project =>
+        {
+            ComponentSave panel = AddComponent(project, "Panel", "Container", ("Size", "Text"), ("Label", "Text"));
+            AddCategory(panel, "Size", "Small", "Large");
+            AddCategory(panel, "Mode", "On", "Off");
+            AddCategory(panel, "Level", "Low", "High");
+            panel.DefaultState!.Variables.Add(new VariableSave
+            {
+                Name = "Label.Text", Type = "string", ExposedAsName = "Mode", SetsValue = false,
+            });
+            panel.DefaultState.Variables.Add(new VariableSave { Name = "Level", Type = "int", Value = 3, SetsValue = true, IsCustomVariable = true });
+        });
+
+        Codegen(gumx).ExitCode.ShouldBe(0);
+
+        Compile().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Codegen_StateNamedLikeItsCategory_GeneratesCompilableClass()
+    {
+        string gumx = CreateGame(ObjectInstantiationType.FullyInCode);
+        EditProject(gumx, project => AddCategory(AddComponent(project, "Panel", "Container", ("Label", "Text")), "Mode", "Mode", "Other"));
+
+        Codegen(gumx).ExitCode.ShouldBe(0);
+
+        Compile().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(ObjectInstantiationType.FindByName)]
+    [InlineData(ObjectInstantiationType.FullyInCode)]
+    public void Codegen_CategoryNamedLikeItsComponent_BlocksThatElementUnderGumForms(ObjectInstantiationType instantiationType)
+    {
+        // Gum Forms names the class "Mode", so the nested enum "Mode" is CS0542. The enum is the public type of the
+        // ModeState property, so the element is reported instead of renamed.
+        string gumx = CreateGame(instantiationType);
+        EditProject(gumx, project =>
+        {
+            AddCategory(AddComponent(project, "Mode", "Container", ("Label", "Text")), "Mode", "On", "Off");
+            AddComponent(project, "Fine", "Container", ("Label", "Text"));
+        });
+
+        CliTestHelper result = Codegen(gumx);
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("error: Mode: Category \"Mode\" generates");
+        Directory.GetFiles(TempDirectory, "Mode.Generated.cs", SearchOption.AllDirectories).ShouldBeEmpty();
+        Directory.GetFiles(TempDirectory, "Fine.Generated.cs", SearchOption.AllDirectories).ShouldNotBeEmpty();
+        Compile().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Codegen_CategoryNamedLikeItsComponent_StillGeneratesWhereTheClassHasARuntimeSuffix()
+    {
+        // The legacy MonoGame output names the class "ModeRuntime", so the enum "Mode" compiles and must not be blocked.
+        string gumx = CreateGame(ObjectInstantiationType.FindByName, OutputLibrary.MonoGame);
+        EditProject(gumx, project => AddCategory(AddComponent(project, "Mode", "Container", ("Label", "Text")), "Mode", "On", "Off"));
+
+        Codegen(gumx).ExitCode.ShouldBe(0);
+
+        Compile().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Codegen_CategoryNamedLikeItsComponentThatIsNeverGenerated_IsNotReported()
+    {
+        string gumx = CreateGame(ObjectInstantiationType.FullyInCode);
+        EditProject(gumx, project => AddCategory(AddComponent(project, "Mode", "Container"), "Mode", "On"));
+        string gumFolder = Path.GetDirectoryName(gumx)! + Path.DirectorySeparatorChar;
+        ComponentSave mode = GumProjectSave.Load(gumx, out _)!.Components.Single();
+        new CodeOutputElementSettingsManager(new FixedProjectDirectoryProvider(gumFolder))
+            .WriteSettingsForElement(mode, new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.NeverGenerate });
+
+        Codegen(gumx).ExitCode.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(OutputLibrary.GumForms, ObjectInstantiationType.FullyInCode, "Mode", "ModeState")]
+    [InlineData(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, "Mode", "ModeState")]
+    public void Codegen_TwoCategoriesGeneratingTheSameName_BlocksTheElement(
+        OutputLibrary library, ObjectInstantiationType instantiationType, string firstCategory, string secondCategory)
+    {
+        // Category "Mode" generates the property ModeState and category "ModeState" an enum of that name (CS0102).
+        string gumx = CreateGame(instantiationType, library);
+        EditProject(gumx, project =>
+        {
+            ComponentSave panel = AddComponent(project, "Panel", "Container", ("Label", "Text"));
+            AddCategory(panel, firstCategory, "On");
+            AddCategory(panel, secondCategory, "On");
+        });
+
+        CliTestHelper result = Codegen(gumx);
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("error: Panel: Category");
+        Directory.GetFiles(TempDirectory, "Panel.Generated.cs", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Check_CategoryNamedLikeItsComponent_IsNotReported()
+    {
+        // Whether the name clashes depends on the output library, which only codegen knows.
+        string gumx = CreateGame(ObjectInstantiationType.FullyInCode);
+        EditProject(gumx, project => AddCategory(AddComponent(project, "Mode", "Container"), "Mode", "On"));
+
+        CliTestHelper.Run("check", gumx).ExitCode.ShouldBe(0);
+    }
+
     #region Harness
 
-    private string CreateGame(ObjectInstantiationType instantiationType)
+    private static void AddCategory(ComponentSave component, string categoryName, params string[] stateNames)
+    {
+        StateSaveCategory category = new StateSaveCategory { Name = categoryName };
+        foreach (string stateName in stateNames)
+        {
+            category.States.Add(new StateSave { Name = stateName, ParentContainer = component });
+        }
+        component.Categories.Add(category);
+    }
+
+    private string CreateGame(ObjectInstantiationType instantiationType, OutputLibrary outputLibrary = OutputLibrary.GumForms)
     {
         File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><RootNamespace>MyGame</RootNamespace></PropertyGroup>" +
@@ -95,7 +221,7 @@ public class GeneratedMemberNameCollisionTests : BaseTestClass
         CodeOutputProjectSettingsManager settingsManager = new CodeOutputProjectSettingsManager(
             new SilentLogger(), new FixedProjectDirectoryProvider(gumFolder));
         CodeOutputProjectSettings settings = settingsManager.CreateOrLoadSettingsForProject();
-        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.OutputLibrary = outputLibrary;
         settings.ObjectInstantiationType = instantiationType;
         settingsManager.WriteSettingsForProject(settings);
         return gumx;
