@@ -1087,6 +1087,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // True when a run changes the size ([FontSize], [FontScale]) or the font family ([Font]), set by ParseMarkup.
     private bool _hasHeightRun;
     private string? _layoutText;
+
+    /// <summary>
+    /// The tags found in the markup text, with indexes into <see cref="_layoutText"/>. Null when the text has no
+    /// markup. Replaced, never mutated, each time the text is parsed. Read by <c>TextRuntime.GetTagAtIndex</c>.
+    /// </summary>
+    internal List<FoundTag>? ParsedBbCodeTags { get; private set; }
     private List<InlineVariable> _inlineVariables = new();
     private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
 
@@ -1116,6 +1122,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         "outlinethickness",
         "custom",
         "hasdropshadow",
+        // [Link=id]: kept as a range for TextRuntime.GetTagAtIndex, no styling.
+        "link",
     };
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
@@ -2013,6 +2021,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         _inlineVariables.Clear();
         _hasHeightRun = false;
+        ParsedBbCodeTags = null;
 
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
@@ -2030,6 +2039,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // normalized string keeps InlineVariable indexes aligned with the layout text.
         var normalized = withGlyphs.Replace("\r\n", "\n");
         var tags = BbCodeParser.Parse(normalized, SupportedTags);
+        ParsedBbCodeTags = tags;
         if (tags.Count == 0)
         {
             _hasMarkup = false;

@@ -1887,6 +1887,44 @@ public class TextRuntime : InteractiveGue
     /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
     /// <returns>The index in the WrappedText</returns>
     public int GetCharacterIndexAtPosition(float screenX, float screenY) => ContainedText.GetCharacterIndexAtPosition(screenX, screenY);
+
+    /// <summary>
+    /// Returns the BBCode tag named <paramref name="tagName"/> that contains the character at
+    /// <paramref name="index"/>, or null if there is none. The index is in the text as displayed (BBCode
+    /// removed), the same index <see cref="GetCharacterIndexAtPosition"/> returns, so the two combine to
+    /// find the tag under the cursor: <c>text.GetTagAtIndex("Link", text.GetCharacterIndexAtPosition(x, y))</c>.
+    /// </summary>
+    /// <remarks>
+    /// If tags of the same name are nested, the innermost one is returned. Only tags the parser
+    /// recognizes (see <see cref="BbCodeParser.KnownTags"/>) can be found, and a tag needs its closing
+    /// tag to be found.
+    /// </remarks>
+    /// <param name="tagName">The tag name, such as "Link". Case is ignored.</param>
+    /// <param name="index">The index in the text as displayed.</param>
+    /// <returns>The tag's name, argument, and range, or null if no such tag contains the index.</returns>
+    public TextTagSpan? GetTagAtIndex(string tagName, int index)
+    {
+        List<FoundTag>? tags = ContainedText.ParsedBbCodeTags;
+        if (tags == null)
+        {
+            return null;
+        }
+
+        // Tags are ordered by where they open, so the last match is the innermost.
+        TextTagSpan? innermost = null;
+        for (int i = 0; i < tags.Count; i++)
+        {
+            FoundTag tag = tags[i];
+            int start = tag.Open.StartStrippedIndex;
+            int end = tag.Close.StartStrippedIndex;
+            if (index >= start && index < end && string.Equals(tag.Name, tagName, StringComparison.OrdinalIgnoreCase))
+            {
+                innermost = new TextTagSpan(tag.Name, tag.Open.Argument, start, end);
+            }
+        }
+
+        return innermost;
+    }
 }
 
 /// <summary>

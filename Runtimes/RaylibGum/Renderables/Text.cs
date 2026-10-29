@@ -733,6 +733,8 @@ public class Text : IVisible, IRenderableIpso,
             if (mRawText != value)
             {
                 mRawText = value;
+                // The tags belong to the previous text. The markup path sets them again after assigning RawText.
+                ParsedBbCodeTags = null;
                 UpdateWrappedText();
 
                 UpdatePreRenderDimensions();
@@ -1021,6 +1023,13 @@ public class Text : IVisible, IRenderableIpso,
     /// (<c>CustomSetPropertyOnRenderable</c>) so font/style changes can re-parse the markup.
     /// </summary>
     public string? StoredMarkupText { get; set; }
+
+    /// <summary>
+    /// The tags found in the markup text assigned to this Text, with indexes into the text as displayed
+    /// (tags removed). Null when the text has no markup. Replaced, never mutated, each time the text
+    /// changes. Read by <c>TextRuntime.GetTagAtIndex</c>.
+    /// </summary>
+    internal List<Gum.Wireframe.FoundTag>? ParsedBbCodeTags { get; set; }
 
     /// <summary>
     /// The inline styling variables (Color / FontScale runs, plus resolved-font "BitmapFont" runs for the
