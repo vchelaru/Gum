@@ -68,6 +68,7 @@
     <Compile Include="..\MonoGameGum.IntegrationTests\MainThreadTestHost.cs" Link="MainThreadTestHost.cs" />
     <Compile Include="..\TestOrdering\TestShuffle.cs" Link="TestOrdering\TestShuffle.cs" />
     <Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
+    <Compile Include="..\Shared\CrossRuntime\NineSliceOutlineOracle.cs" Link="Shared\CrossRuntime\NineSliceOutlineOracle.cs" />
     <Compile Include="..\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
     <Compile Include="..\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
     <Compile Include="..\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
