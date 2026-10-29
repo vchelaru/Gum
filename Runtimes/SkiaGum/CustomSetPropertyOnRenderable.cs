@@ -1142,7 +1142,7 @@ public partial class CustomSetPropertyOnRenderable
 #endif
                 case "ShaderParameters":
                     {
-                        string? error = RenderingLibrary.Graphics.ShaderParameterText.Assign(asInvisibleRenderable, value as string);
+                        string? error = RenderingLibrary.Graphics.ShaderParameterVariables.AssignText(asInvisibleRenderable, value as string);
                         if (error != null)
                         {
                             RaisePropertyAssignmentError("Error setting ShaderParameters on Container\n" + error);
@@ -1156,6 +1156,11 @@ public partial class CustomSetPropertyOnRenderable
                         containerRuntime.Alpha = InvisibleRenderable.NormalizeDispatchedAlpha(value);
                     }
                     handled = true;
+                    break;
+                default:
+                    // A saved shader parameter variable such as Outline_Thickness (#7010).
+                    handled = RenderingLibrary.Graphics.ShaderParameterVariables.TrySetVariable(
+                        asInvisibleRenderable, propertyName, value);
                     break;
             }
         }
@@ -1299,6 +1304,9 @@ public partial class CustomSetPropertyOnRenderable
     private static void AssignSourceShaderFileOnContainer(
         RenderingLibrary.Graphics.InvisibleRenderable effectOwner, string? value)
     {
+        // First, so the container's shader variables follow the file whatever happens below (#7010).
+        RenderingLibrary.Graphics.ShaderParameterVariables.SetShaderFile(effectOwner, value);
+
         if (string.IsNullOrEmpty(value))
         {
             effectOwner.RenderTargetEffect = null;

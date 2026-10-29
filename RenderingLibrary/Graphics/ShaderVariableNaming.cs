@@ -180,7 +180,8 @@ public static class ShaderVariableNaming
 
     /// <summary>
     /// The inverse of <see cref="GetVariableName(string?, string, int, int)"/>: recovers the parameter
-    /// and component from a variable name of the given shader. The name does not carry the component
+    /// and component from a variable name of the given shader (the stem is matched ignoring case; the
+    /// parameter is returned as written). The name does not carry the component
     /// count; that is in the <see cref="ShaderParameterMarker"/> saved with the variable.
     /// </summary>
     /// <param name="shaderFile">The shader the variable belongs to; names are only unique per shader.</param>
@@ -198,7 +199,10 @@ public static class ShaderVariableNaming
         }
 
         string prefix = GetSanitizedStem(shaderFile) + "_";
-        if (!variableName.StartsWith(prefix, StringComparison.Ordinal))
+        // The stem is compared ignoring case: Windows file names are case-insensitive and the tool's
+        // duplicate-name check is too, so "outline.FX" and "Outline_Thickness" name the same shader's
+        // parameter. The parameter keeps the case it has in the variable name.
+        if (!variableName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
@@ -221,6 +225,69 @@ public static class ShaderVariableNaming
         }
         parameter = remainder;
         return true;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="variableName"/> could be a canonical name of some shader: a non-empty stem
+    /// (which may start with an underscore), a separating underscore, and a supported parameter name,
+    /// optionally followed by a component suffix. It needs no shader, so it is the cheap test for a name
+    /// that arrives before the container's shader file is known; for a given shader
+    /// <see cref="TryParseVariableName"/> decides. Never false for a name <see cref="GetVariableName(string?, string)"/>
+    /// can produce. Does not allocate.
+    /// </summary>
+    public static bool IsPossibleVariableName(string? variableName)
+    {
+        if (variableName == null)
+        {
+            return false;
+        }
+
+        int length = variableName.Length;
+
+        // A trailing __X to __W is a component suffix, but it is also a legal ending of a scalar
+        // parameter (stem "B_" and parameter "Z" give "B__Z"), so both readings are tried.
+        if (length >= ComponentSeparator.Length + 2
+            && ComponentLetters.IndexOf(variableName[length - 1]) >= 0
+            && string.CompareOrdinal(variableName, length - 3, ComponentSeparator, 0, ComponentSeparator.Length) == 0
+            && HasSeparatorBefore(variableName, length - 3))
+        {
+            return true;
+        }
+        return HasSeparatorBefore(variableName, length);
+    }
+
+    // The separator is an underscore that leaves a non-empty stem before it and a supported parameter
+    // name between it and end. The stem may hold underscores and the parameter may end in one, so every
+    // underscore from the second character on is a candidate.
+    private static bool HasSeparatorBefore(string name, int end)
+    {
+        for (int separator = 1; separator < end - 1; separator++)
+        {
+            if (name[separator] == '_' && IsSupportedParameterRange(name, separator + 1, end))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool IsSupportedParameterRange(string name, int start, int end)
+    {
+        for (int i = start; i < end; i++)
+        {
+            char character = name[i];
+            bool isAsciiLetter = (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z');
+            bool isDigit = character >= '0' && character <= '9';
+            if (!isAsciiLetter && !isDigit && character != '_')
+            {
+                return false;
+            }
+            if (character == '_' && i + 1 < end && name[i + 1] == '_')
+            {
+                return false;
+            }
+        }
+        return end > start;
     }
 
     /// <summary>
