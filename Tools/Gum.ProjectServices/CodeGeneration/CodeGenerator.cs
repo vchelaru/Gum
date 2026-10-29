@@ -3993,6 +3993,13 @@ public class CodeGenerator
 
     #region Top Level Methods
 
+    /// <summary>
+    /// The contents of the element's <c>.Generated.cs</c> file: the <c>//Code for</c> header line followed by
+    /// <see cref="GetGeneratedCodeForElement"/>, with CRLF line endings throughout (see <see cref="GeneratedCodeText"/>).
+    /// </summary>
+    public string GetGeneratedFileText(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings) =>
+        GeneratedCodeText.ToCrLf($"//Code for {element}\n{GetGeneratedCodeForElement(element, elementSettings, projectSettings)}");
+
     public string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
     {
         AssertSupportedCombination(projectSettings);
@@ -4250,6 +4257,38 @@ public class CodeGenerator
             reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name) + "State");
         }
         return _codeGenerationNameVerifier.ReserveMemberNames(reserved);
+    }
+
+    /// <summary>
+    /// A C# literal for <paramref name="value"/>. A value with a line break becomes a regular literal with
+    /// <c>\n</c> and <c>\r</c> escaped, because a raw line break inside a verbatim literal changes the
+    /// string's value whenever the file's line endings are converted (editor, git, <see cref="GeneratedCodeText"/>).
+    /// </summary>
+    internal static string ToStringLiteral(string value)
+    {
+        if (value.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' }) < 0)
+        {
+            return "@\"" + value.Replace("\"", "\"\"") + "\"";
+        }
+
+        StringBuilder literal = new StringBuilder(value.Length + 8);
+        literal.Append('"');
+        foreach (char c in value)
+        {
+            literal.Append(c switch
+            {
+                '\\' => "\\\\",
+                '"' => "\\\"",
+                '\r' => "\\r",
+                '\n' => "\\n",
+                '\u0085' => "\\u0085",
+                '\u2028' => "\\u2028",
+                '\u2029' => "\\u2029",
+                _ => c.ToString(),
+            });
+        }
+        literal.Append('"');
+        return literal.ToString();
     }
 
     public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
@@ -5310,7 +5349,7 @@ public class CodeGenerator
             }
             else
             {
-                return $"@\"{asString}\"";
+                return ToStringLiteral(asString);
             }
         }
         else if (value is bool asBool)
@@ -5442,7 +5481,7 @@ public class CodeGenerator
             }
             else
             {
-                return "\"" + asString.Replace("\n", "\\n").Replace("\"", "\\\"") + "\"";
+                return "\"" + asString.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\"", "\\\"") + "\"";
             }
         }
         else if (value is bool asBool)
@@ -6136,7 +6175,7 @@ public class CodeGenerator
             {
                 return " ";
             }
-            string verbatimText = "@\"" + shaderParametersText.Replace("\"", "\"\"") + "\"";
+            string verbatimText = ToStringLiteral(shaderParametersText);
             return $"{context.CodePrefixNoTabs}.SetProperty(\"ShaderParameters\", {verbatimText});";
         }
         #endregion
@@ -6596,7 +6635,7 @@ public class CodeGenerator
             }
             else if (target == typeof(string))
             {
-                return "@\"" + Convert.ToString(value, CultureInfo.InvariantCulture)?.Replace("\"", "\"\"") + "\"";
+                return ToStringLiteral(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
             }
             else if (target == typeof(int))
             {

@@ -108,6 +108,37 @@ public class CodeGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void GenerateCodeForElement_WritesGeneratedAndCustomFilesWithOneLineEnding()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumCodeGenerationServiceTests_" + Guid.NewGuid().ToString("N")) + Path.DirectorySeparatorChar;
+        _retryService
+            .Setup(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()))
+            .Callback<Action, int>((action, _) => action());
+        ComponentSave component = CreateComponent();
+        CodeOutputProjectSettings settings = new() { CodeProjectRoot = root, OutputLibrary = OutputLibrary.MonoGame };
+        try
+        {
+            _codeGenerationService.GenerateCodeForElement(component, new CodeOutputElementSettings(), settings, showPopups: false);
+
+            string[] files = Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories);
+            files.Length.ShouldBe(2);
+            foreach (string path in files)
+            {
+                string text = File.ReadAllText(path);
+                text.ShouldContain("\r\n", customMessage: path);
+                text.Replace("\r\n", string.Empty).ShouldNotContain("\n", customMessage: path);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void GenerateCodeForAllElements_WhenAnElementCannotBeGenerated_DoesNotCountIt()
     {
         ComponentSave component = CreateBehaviorlessSpriteComponent();
