@@ -85,7 +85,7 @@ Assert-FastTest 'fast-test: Project:Class picks one project for a linked class' 
 $scratch = Join-Path ([System.IO.Path]::GetTempPath()) "verify-tests-$PID"
 try {
     New-Item -ItemType Directory -Force -Path (Join-Path $scratch 'Tools'), (Join-Path $scratch 'A'), (Join-Path $scratch 'B') | Out-Null
-    Copy-Item (Join-Path $PSScriptRoot 'verify.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1'), (Join-Path $PSScriptRoot 'IncludeIndex.ps1'), (Join-Path $PSScriptRoot 'IncludeIndex.ps1') (Join-Path $scratch 'Tools')
+    Copy-Item (Join-Path $PSScriptRoot 'verify.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1'), (Join-Path $PSScriptRoot 'IncludeIndex.ps1') (Join-Path $scratch 'Tools')
     Set-Content (Join-Path $scratch 'A/A.csproj') '<Project />'
     Set-Content (Join-Path $scratch 'B/B.csproj') '<Project />'
     $git = { git -C $scratch -c user.name=t -c user.email=t@t -c core.autocrlf=false @args 2>&1 | Out-Null }
