@@ -81,6 +81,9 @@ public class GumHotReloadManager : IGumHotReloadManager
     private readonly object _pendingReloadLock = new object();
     // Consecutive reloads that failed to read the project; reset by any new file change.
     private int _failedAttempts;
+    // Problems the last reload reported (a visual whose element is gone). A problem is said once,
+    // not on every later save, and said again if it goes away and comes back; game thread only.
+    private readonly HashSet<string> _reportedProblems = new HashSet<string>();
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
@@ -290,7 +293,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     private static void CollectDescendants(GraphicalUiElement element, List<GraphicalUiElement> into)
     {
         into.Add(element);
-        foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children).Distinct().ToList())
+        foreach (GraphicalUiElement child in ContainedAndChildren(element))
         {
             CollectDescendants(child, into);
         }
@@ -434,7 +437,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
             _loadAnimationsFromProvider(newProject, animationProvider);
 
-            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject);
+            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -567,13 +570,24 @@ public class GumHotReloadManager : IGumHotReloadManager
         ISystemManagers systemManagers,
         GumProjectSave? oldProject)
     {
+        ApplyDiff(roots, newProject, systemManagers, oldProject, reportedProblems: null);
+    }
+
+    // reportedProblems is the manager's memory of what it already said; null reports every problem.
+    private static void ApplyDiff(
+        IEnumerable<GraphicalUiElement> roots,
+        GumProjectSave newProject,
+        ISystemManagers systemManagers,
+        GumProjectSave? oldProject,
+        HashSet<string>? reportedProblems)
+    {
         // References and base types resolve through ObjectFinder, so for this call it holds the new
         // project whatever it held before, and the caller's project is put back afterward.
         GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
         ObjectFinder.Self.GumProjectSave = newProject;
         try
         {
-            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject);
+            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject, reportedProblems);
         }
         finally
         {
@@ -585,7 +599,8 @@ public class GumHotReloadManager : IGumHotReloadManager
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers,
-        GumProjectSave? oldProject)
+        GumProjectSave? oldProject,
+        HashSet<string>? reportedProblems)
     {
         // A file the tool did not save together with the files that read it (a text-editor edit of one
         // swatch) leaves the readers holding the value they were saved with. A reference sets the final
@@ -627,7 +642,33 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             root.RestoreFormsRuntimePropertiesRecursive();
         }
+
+        ReportProblems(context.Problems, reportedProblems);
     }
+
+    private static void ReportProblems(Dictionary<string, string> problems, HashSet<string>? reported)
+    {
+        foreach (KeyValuePair<string, string> problem in problems)
+        {
+            if (reported == null || !reported.Contains(problem.Key))
+            {
+                ReportError(problem.Value);
+            }
+        }
+
+        if (reported != null)
+        {
+            reported.Clear();
+            reported.UnionWith(problems.Keys);
+        }
+    }
+
+    private static string KindOf(ElementSave element) => element switch
+    {
+        ScreenSave => "screen",
+        ComponentSave => "component",
+        _ => "element"
+    };
 
     /// <summary>
     /// Points the visual's state and category dictionaries at the new element's save objects. A
@@ -686,7 +727,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             // default state or its own instances) has to reach it too, however deeply nested.
             // Innermost first: this element's overrides are applied next and must win over the
             // component's defaults.
-            foreach (GraphicalUiElement instance in element.ContainedElements.Concat(element.Children).Distinct().ToList())
+            foreach (GraphicalUiElement instance in ContainedAndChildren(element))
             {
                 if (instance.Tag is InstanceSave && instance.ElementSave is not StandardElementSave)
                 {
@@ -713,6 +754,16 @@ public class GumHotReloadManager : IGumHotReloadManager
                     newEs.Instances.Select(i => i.Name).Where(n => n != null)!,
                     StringComparer.OrdinalIgnoreCase);
             }
+        }
+        else if (name != null && element.ElementSave is ElementSave goneElement and not StandardElementSave)
+        {
+            // Nothing in the new project says what this visual should become. There is no identity
+            // across a rename or a move to another folder, so it stays as it is and the game is told.
+            string kind = KindOf(goneElement);
+            context.Problems["gone:" + name] =
+                $"Hot reload: the {kind} '{name}' the game is showing is not in the project any more " +
+                "(renamed, moved to another folder or deleted). It stays on screen as it was, and edits " +
+                $"to it, or to what replaced it, will not reach the game until you restart it.";
         }
 
         foreach (GraphicalUiElement child in element.Children.ToList())
@@ -741,6 +792,9 @@ public class GumHotReloadManager : IGumHotReloadManager
             new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
 
         public HashSet<GraphicalUiElement> Recreated { get; } = new HashSet<GraphicalUiElement>();
+
+        // What this reload could not do, keyed so the same problem is not said twice.
+        public Dictionary<string, string> Problems { get; } = new Dictionary<string, string>();
 
         public Dictionary<GraphicalUiElement, HashSet<string>> Applied { get; } =
             new Dictionary<GraphicalUiElement, HashSet<string>>();
@@ -786,7 +840,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 OldByName[elementSave.Name] = elementSave;
             }
 
-            foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children).ToList())
+            foreach (GraphicalUiElement child in ContainedAndChildren(element))
             {
                 CollectOldElements(child, newByName, visited);
             }
@@ -1063,7 +1117,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, GraphicalUiElement> anyByName =
             new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
-        foreach (GraphicalUiElement child in parent.ContainedElements.Concat(parent.Children).ToList())
+        foreach (GraphicalUiElement child in ContainedAndChildren(parent))
         {
             // Only this element's own instances: a child that the screen parented under a
             // component instance carries the screen's InstanceSave, not the component's.
@@ -1146,6 +1200,10 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
     }
 
+    // An instance with a Parent variable is in ContainedElements without being a direct child.
+    private static List<GraphicalUiElement> ContainedAndChildren(GraphicalUiElement element) =>
+        element.ContainedElements.Concat(element.Children).Distinct().ToList();
+
     private static void DetachAndRemove(GraphicalUiElement child)
     {
         child.Parent = null;
@@ -1188,7 +1246,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
 
         HashSet<GraphicalUiElement> containers = new HashSet<GraphicalUiElement>();
-        foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children))
+        foreach (GraphicalUiElement child in ContainedAndChildren(element))
         {
             if (child.Tag is InstanceSave instance
                 && orderByInstance.ContainsKey(instance)

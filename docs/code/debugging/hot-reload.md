@@ -53,6 +53,10 @@ Hot reload is focused on Gum element definitions. The following are **not** auto
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
 
+### Renamed or Deleted Screens
+
+Hot reload matches the screen your game is showing to the project by name. If you rename it, move it to another folder, or delete it in the tool, the running screen has nothing to match. It stays on screen as it was, and a line like `Hot reload: the screen 'MainScreen' the game is showing is not in the project any more` goes to `PropertyAssignmentError` and the console, once. Edits to that screen, or to the one that replaced it, do not reach the game until you restart it. If you undo the rename, the screen is matched again and edits arrive.
+
 ### Known Limitation: Cleared Tags
 
 If your code clears (`= null`) or replaces the `Tag` on a visual that was created from an `InstanceSave`, hot reload can no longer recognize it as a design-time child. It is treated as runtime-owned: not removed, not retyped, and not duplicated when the corresponding `InstanceSave` is still present in the project. The parent's qualified-name variables (`MyInstance.X`, etc.) still flow through to it by `Name`, so visible variables continue to update.
