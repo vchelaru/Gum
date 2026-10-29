@@ -823,6 +823,32 @@ technique SpriteDrawing
         }
     }
 
+    // Hot reload: each edit of the file compiles a new shader, and the superseded one must be unloaded or one
+    // GL program leaks per edit.
+    [Fact]
+    public void UseShadowDusk_RepeatedEdits_UnloadSupersededShaders()
+    {
+        string shaderPath = WriteTempShader(GrayscaleSlang, ".slang");
+        ShadowDuskShaderLoader loader = new ShadowDuskShaderLoader();
+        try
+        {
+            for (int edit = 1; edit <= 5; edit++)
+            {
+                File.WriteAllText(shaderPath, GrayscaleSlang + $"\n// edit {edit}\n");
+                File.SetLastWriteTimeUtc(shaderPath, DateTime.UtcNow.AddMinutes(edit));
+                loader.Load(shaderPath);
+            }
+
+            // The current shader, plus the one before it, which a container may still draw with until its
+            // SourceShaderFile is reassigned.
+            loader.LoadedShaderCount.ShouldBeLessThanOrEqualTo(2);
+        }
+        finally
+        {
+            File.Delete(shaderPath);
+        }
+    }
+
     private static string WriteTempShader(string source, string extension = ".fs")
     {
         string path = Path.Combine(Path.GetTempPath(), "GumRaylibShaderTest_" + Guid.NewGuid().ToString("N") + extension);
