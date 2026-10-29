@@ -12,8 +12,8 @@ namespace MonoGameGum.Tests.Runtimes;
 
 /// <summary>
 /// The order and the conditions in which the cursor walk raises RollOn, RollOff, HoverOver and RollOver
-/// when the element under the cursor changes (#7057). Characterizes the order before the change: when the cursor
-/// moves straight from one element to another, RollOn on the new element is raised before RollOff on the old one.
+/// when the element under the cursor changes (#7057). When the cursor moves straight from one element
+/// to another, RollOff on the old element is raised before RollOn on the new one (leave, then enter).
 /// </summary>
 public class RollOnRollOffOrderTests : BaseTestClass
 {
@@ -110,7 +110,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
     #region Moving between two elements (#7057)
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesBetweenAdjacentSiblingsInOneFrame()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenCursorMovesBetweenAdjacentSiblingsInOneFrame()
     {
         AddRoot("A", 0, 0, 10);
         InteractiveGue buttonB = AddRoot("B", 10, 0, 10);
@@ -118,33 +118,33 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         List<string> events = Frame(15, 5);
 
-        events.ShouldBe(new[] { "RollOn B", "RollOff A" });
+        events.ShouldBe(new[] { "RollOff A", "RollOn B" });
         _cursor.Object.VisualOver.ShouldBe(buttonB);
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesBackFromBToA()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenCursorMovesBackFromBToA()
     {
         AddRoot("A", 0, 0, 10);
         AddRoot("B", 10, 0, 10);
         Frame(5, 5);
         Frame(15, 5);
 
-        Frame(5, 5).ShouldBe(new[] { "RollOn A", "RollOff B" });
+        Frame(5, 5).ShouldBe(new[] { "RollOff B", "RollOn A" });
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenTheElementsAreFarApart()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenTheElementsAreFarApart()
     {
         AddRoot("A", 0, 0, 10);
         AddRoot("B", 100, 0, 10);
         Frame(5, 5);
 
-        Frame(105, 5).ShouldBe(new[] { "RollOn B", "RollOff A" });
+        Frame(105, 5).ShouldBe(new[] { "RollOff A", "RollOn B" });
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenTheNewElementIsTheChildOfAnotherContainer()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenTheNewElementIsTheChildOfAnotherContainer()
     {
         AddRoot("A", 0, 0, 10);
         ContainerRuntime container = new();
@@ -160,18 +160,18 @@ public class RollOnRollOffOrderTests : BaseTestClass
         _roots.Add(container);
         Frame(5, 5);
 
-        Frame(115, 5).ShouldBe(new[] { "RollOn B", "RollOff A" });
+        Frame(115, 5).ShouldBe(new[] { "RollOff A", "RollOn B" });
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenOverlappingRootsHandOverTheCursor()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenOverlappingRootsHandOverTheCursor()
     {
         // B is the later root so it is tested first and takes the cursor where they overlap.
         AddRoot("A", 0, 0, 20);
         AddRoot("B", 10, 0, 20);
         Frame(5, 5).ShouldBe(new[] { "RollOn A" });
 
-        Frame(15, 5).ShouldBe(new[] { "RollOn B", "RollOff A" });
+        Frame(15, 5).ShouldBe(new[] { "RollOff A", "RollOn B" });
     }
 
     [Fact]
@@ -195,7 +195,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         List<string> events = Frame(15, 5, xChange: 10);
 
-        events.ShouldBe(new[] { "RollOn B", "HoverOver B", "RollOver B", "RollOff A" });
+        events.ShouldBe(new[] { "RollOff A", "RollOn B", "HoverOver B", "RollOver B" });
     }
 
     [Fact]
@@ -206,7 +206,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         Frame(5, 5, xChange: 5).ShouldBe(new[] { "RollOn A", "HoverOver A", "RollOver A" });
         Frame(7, 5, xChange: 2).ShouldBe(new[] { "HoverOver A", "RollOver A" });
-        Frame(15, 5, xChange: 8).ShouldBe(new[] { "RollOn B", "HoverOver B", "RollOver B", "RollOff A" });
+        Frame(15, 5, xChange: 8).ShouldBe(new[] { "RollOff A", "RollOn B", "HoverOver B", "RollOver B" });
         Frame(15, 5, xChange: 0).ShouldBe(new[] { "HoverOver B" });
         Frame(50, 5, xChange: 35).ShouldBe(new[] { "RollOff B" });
         Frame(50, 5, xChange: 0).ShouldBeEmpty();
@@ -261,7 +261,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
     #region Parent and child
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesFromAParentToItsChild()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenCursorMovesFromAParentToItsChild()
     {
         InteractiveGue parent = AddRoot("Parent", 0, 0, 30);
         InteractiveGue child = CreateBox(10, 0, 10);
@@ -269,11 +269,11 @@ public class RollOnRollOffOrderTests : BaseTestClass
         Track(child, "Child");
         Frame(5, 5).ShouldBe(new[] { "RollOn Parent" });
 
-        Frame(15, 5).ShouldBe(new[] { "RollOn Child", "RollOff Parent" });
+        Frame(15, 5).ShouldBe(new[] { "RollOff Parent", "RollOn Child" });
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesFromAChildToItsParent()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenCursorMovesFromAChildToItsParent()
     {
         InteractiveGue parent = AddRoot("Parent", 0, 0, 30);
         InteractiveGue child = CreateBox(10, 0, 10);
@@ -281,11 +281,11 @@ public class RollOnRollOffOrderTests : BaseTestClass
         Track(child, "Child");
         Frame(15, 5);
 
-        Frame(5, 5).ShouldBe(new[] { "RollOn Parent", "RollOff Child" });
+        Frame(5, 5).ShouldBe(new[] { "RollOff Child", "RollOn Parent" });
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesBetweenTwoSiblingChildren()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenCursorMovesBetweenTwoSiblingChildren()
     {
         InteractiveGue parent = AddRoot("Parent", 0, 0, 30);
         InteractiveGue childC = CreateBox(0, 0, 10);
@@ -296,11 +296,11 @@ public class RollOnRollOffOrderTests : BaseTestClass
         Track(childD, "D");
         Frame(5, 5).ShouldBe(new[] { "RollOn C" });
 
-        Frame(15, 5).ShouldBe(new[] { "RollOn D", "RollOff C" });
+        Frame(15, 5).ShouldBe(new[] { "RollOff C", "RollOn D" });
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesFromAChildToAnUnrelatedRoot()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenCursorMovesFromAChildToAnUnrelatedRoot()
     {
         InteractiveGue parent = AddRoot("Parent", 0, 0, 30);
         InteractiveGue child = CreateBox(0, 0, 10);
@@ -309,11 +309,11 @@ public class RollOnRollOffOrderTests : BaseTestClass
         AddRoot("Other", 100, 0, 10);
         Frame(5, 5).ShouldBe(new[] { "RollOn Child" });
 
-        Frame(105, 5).ShouldBe(new[] { "RollOn Other", "RollOff Child" });
+        Frame(105, 5).ShouldBe(new[] { "RollOff Child", "RollOn Other" });
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenCursorMovesFromAParentToAnUnrelatedSiblingOfItsChild()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenCursorMovesFromAParentToAnUnrelatedSiblingOfItsChild()
     {
         InteractiveGue parent = AddRoot("Parent", 0, 0, 30);
         InteractiveGue child = CreateBox(20, 0, 10);
@@ -322,7 +322,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
         AddRoot("Other", 100, 0, 10);
         Frame(5, 5).ShouldBe(new[] { "RollOn Parent" });
 
-        Frame(105, 5).ShouldBe(new[] { "RollOn Other", "RollOff Parent" });
+        Frame(105, 5).ShouldBe(new[] { "RollOff Parent", "RollOn Other" });
     }
 
     #endregion
@@ -341,7 +341,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenTheHoveredElementIsHiddenRevealingAnotherUnderIt()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenTheHoveredElementIsHiddenRevealingAnotherUnderIt()
     {
         InteractiveGue buttonA = AddRoot("A", 0, 0, 10);
         AddRoot("Under", 0, 0, 10);
@@ -351,11 +351,11 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         buttonA.Visible = false;
 
-        Frame(5, 5).ShouldBe(new[] { "RollOn Under", "RollOff A" });
+        Frame(5, 5).ShouldBe(new[] { "RollOff A", "RollOn Under" });
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenTheHoveredElementIsRemovedRevealingAnotherUnderIt()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenTheHoveredElementIsRemovedRevealingAnotherUnderIt()
     {
         InteractiveGue buttonA = AddRoot("A", 0, 0, 10);
         AddRoot("Under", 0, 0, 10);
@@ -364,7 +364,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         _roots.Remove(buttonA);
 
-        Frame(5, 5).ShouldBe(new[] { "RollOn Under", "RollOff A" });
+        Frame(5, 5).ShouldBe(new[] { "RollOff A", "RollOn Under" });
     }
 
     [Fact]
@@ -390,7 +390,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
     }
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOff_WhenHasEventsIsTurnedOffRevealingAnotherUnderIt()
+    public void Walk_ShouldRaiseRollOffBeforeRollOn_WhenHasEventsIsTurnedOffRevealingAnotherUnderIt()
     {
         InteractiveGue buttonA = AddRoot("A", 0, 0, 10);
         AddRoot("Under", 0, 0, 10);
@@ -399,7 +399,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         buttonA.HasEvents = false;
 
-        Frame(5, 5).ShouldBe(new[] { "RollOn Under", "RollOff A" });
+        Frame(5, 5).ShouldBe(new[] { "RollOff A", "RollOn Under" });
     }
 
     [Fact]
@@ -411,7 +411,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
         buttonA.IsEnabled = false;
 
         Frame(5, 5).ShouldBe(new[] { "RollOn A" });
-        Frame(15, 5).ShouldBe(new[] { "RollOn B", "RollOff A" });
+        Frame(15, 5).ShouldBe(new[] { "RollOff A", "RollOn B" });
     }
 
     #endregion
@@ -419,7 +419,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
     #region Pushed (dragging with the button held)
 
     [Fact]
-    public void Walk_ShouldRaiseRollOnThenRollOffThenLosePush_WhenDraggingFromThePushedElementOntoAnother()
+    public void Walk_ShouldRaiseRollOffThenLosePushThenRollOn_WhenDraggingFromThePushedElementOntoAnother()
     {
         InteractiveGue buttonA = AddRoot("A", 0, 0, 10, all: true);
         AddRoot("B", 10, 0, 10, all: true);
@@ -430,7 +430,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         List<string> events = Frame(15, 5, xChange: 10);
 
-        events.ShouldBe(new[] { "RollOn B", "HoverOver B", "RollOver B", "RollOff A", "LosePush A", "Dragging A" });
+        events.ShouldBe(new[] { "RollOff A", "LosePush A", "RollOn B", "HoverOver B", "RollOver B", "Dragging A" });
         _cursor.Object.WindowPushed.ShouldBe(buttonA);
     }
 
@@ -443,8 +443,8 @@ public class RollOnRollOffOrderTests : BaseTestClass
         Frame(5, 5);
         SetButtons(_cursor, push: false, down: true);
 
-        Frame(15, 5).ShouldBe(new[] { "RollOn B", "HoverOver B", "RollOff A", "LosePush A", "Dragging A" });
-        Frame(5, 5).ShouldBe(new[] { "RollOn A", "HoverOver A", "RollOff B", "Dragging A" });
+        Frame(15, 5).ShouldBe(new[] { "RollOff A", "LosePush A", "RollOn B", "HoverOver B", "Dragging A" });
+        Frame(5, 5).ShouldBe(new[] { "RollOff B", "RollOn A", "HoverOver A", "Dragging A" });
         _cursor.Object.WindowPushed.ShouldBe(buttonA);
     }
 
@@ -462,7 +462,7 @@ public class RollOnRollOffOrderTests : BaseTestClass
 
         // The second cursor enters B, then A while the mouse is still on A: the element has no hover count.
         Frame(touch, 15, 5).ShouldBe(new[] { "RollOn B" });
-        Frame(touch, 5, 5).ShouldBe(new[] { "RollOn A", "RollOff B" });
+        Frame(touch, 5, 5).ShouldBe(new[] { "RollOff B", "RollOn A" });
         Frame(_cursor, 5, 5).ShouldBeEmpty();
         touch.Object.VisualOver.ShouldBe(buttonA);
         _cursor.Object.VisualOver.ShouldBe(buttonA);

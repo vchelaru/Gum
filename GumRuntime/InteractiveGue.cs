@@ -346,14 +346,16 @@ public partial class InteractiveGue : GraphicalUiElement
     public event EventHandler? RightClick;
 
     /// <summary>
-    /// Event raised when the cursor first leaves this object.
+    /// Event raised when the cursor first leaves this object. When the cursor moves straight onto another
+    /// InteractiveGue, this is raised before the other object's RollOn.
     /// </summary>
     public event EventHandler? RollOff;
 
     /// <summary>
     /// Event raised when the cursor first moves over this object. This is only received if the
     /// cursor is moved directly over this object. If it is instead moved over a child object
-    /// which has its own events, then the parent will receive this event.
+    /// which has its own events, then the parent will receive this event. When the cursor moves here straight
+    /// from another InteractiveGue, that object's RollOff is raised first.
     /// </summary>
     public event EventHandler? RollOn;
 
@@ -1713,6 +1715,27 @@ public static class GueInteractiveExtensionMethods
         DoUiActivityOnRoots(gues, cursor, ref actions);
 
         var visualOverAsInteractive = cursor.VisualOver as InteractiveGue;
+
+        if (!actions.SetVisualOver)
+        {
+            cursor.VisualOver = null;
+        }
+        else if(cursor.VisualOver == null)
+        {
+            cursor.VisualOver = visualOverBefore;
+        }
+
+        // RollOff on the element the cursor left is raised before RollOn on the one it entered, as WPF raises
+        // MouseLeave before MouseEnter, so a handler that sets state on roll on and clears it on roll off works
+        // when the cursor moves straight from one element to another.
+        if(visualOverBefore != cursor.VisualOver)
+        {
+            if (visualOverBefore is InteractiveGue interactiveBefore)
+            {
+                interactiveBefore.TryCallRollOff(cursor);
+            }
+        }
+
         if (visualOverAsInteractive != null)
         {
             if (lastVisualOver != visualOverAsInteractive)
@@ -1727,22 +1750,6 @@ public static class GueInteractiveExtensionMethods
             }
         }
 
-        if (!actions.SetVisualOver)
-        {
-            cursor.VisualOver = null;
-        }
-        else if(cursor.VisualOver == null)
-        {
-            cursor.VisualOver = visualOverBefore;
-        }
-
-        if(visualOverBefore != cursor.VisualOver)
-        {
-            if (visualOverBefore is InteractiveGue interactiveBefore)
-            {
-                interactiveBefore.TryCallRollOff(cursor);
-            }
-        }
         if(windowPushedBefore != cursor.WindowPushed || 
             (windowPushedBefore != null && cursor.PrimaryDown == false))
         {

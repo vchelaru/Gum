@@ -124,7 +124,7 @@ public class RollOnRollOffFormsConsumerTests : BaseTestClass
     }
 
     [Fact]
-    public void Button_ShouldApplyTheNewButtonsStateThenTheOldButtonsState_WhenCursorMovesBetweenAdjacentButtons()
+    public void Button_ShouldApplyTheOldButtonsStateThenTheNewButtonsState_WhenCursorMovesBetweenAdjacentButtons()
     {
         InstallCursor();
         Button buttonA = Place(new Button(), x: 0);
@@ -137,7 +137,7 @@ public class RollOnRollOffFormsConsumerTests : BaseTestClass
 
         MoveCursorOver(buttonB.Visual);
 
-        states.ShouldBe(new[] { "B Highlighted", "A Enabled" });
+        states.ShouldBe(new[] { "A Enabled", "B Highlighted" });
     }
 
     [Fact]
