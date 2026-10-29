@@ -99,8 +99,22 @@ public class GumHotReloadManager : IGumHotReloadManager
     private static readonly bool _isFileSystemCaseInsensitive =
         System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
         || System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
-    private readonly List<string> _changedFontFiles = new List<string>();
+    // Most font files one reload copies; the rest wait for the next reload.
+    private const int MaxFontsPerReload = 500;
+    // Reloads in a row that only font files asked for, before the manager stops believing they are
+    // changes. A copy that raises events for the files it reads would otherwise reload forever.
+    private const int MaxFontOnlyReloads = 5;
+    private readonly HashSet<string> _changedFontFiles;
     private readonly object _fontFileLock = new object();
+    // Failed copies of a font since it last changed: the first is reported and retried, the second is dropped.
+    private readonly Dictionary<string, int> _fontCopyFailures;
+    // Set by the watcher thread (under _fontFileLock) when a file other than a font changed, so a reload
+    // with no such change and a font queue is known to have been asked for by fonts alone.
+    private bool _projectFileChangedSinceReload;
+    private bool _fontQueueContinues;
+    private int _fontOnlyReloads;
+    private bool _fontEventsIgnored;
+    private HotReloadIssue? _loopIssue;
     // Changed files that are not project/element/font files. Each is checked against what the loaded
     // visuals reference once the debounce passes; guarded by _pendingReloadLock.
     private readonly HashSet<string> _changedOtherFiles = new HashSet<string>();
@@ -143,6 +157,9 @@ public class GumHotReloadManager : IGumHotReloadManager
         _loadAnimationsFromProvider = loadAnimationsFromProvider;
         _disposeCachedAsset = disposeCachedAsset;
         _utcNow = utcNow;
+        StringComparer comparer = _isFileSystemCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        _changedFontFiles = new HashSet<string>(comparer);
+        _fontCopyFailures = new Dictionary<string, int>(comparer);
     }
 
     /// <inheritdoc/>
@@ -226,14 +243,41 @@ public class GumHotReloadManager : IGumHotReloadManager
     // FileSystemWatcher.
     internal void NotifyFileChanged(string fullPath)
     {
+        // The game's own build folder under the project folder holds copies; a change there is not an edit.
+        if (IsInsideNestedLoadFolder(fullPath))
+        {
+            return;
+        }
+
         string extension = Path.GetExtension(fullPath).ToLowerInvariant();
         if (IsWatchedExtension(extension))
         {
             if (extension == ".fnt")
             {
+                // macOS reports a copy as a change of the file it read, so a font the load folder
+                // already holds in this version is the manager's own copy, not an edit.
+                if (IsCopyCurrent(fullPath))
+                {
+                    return;
+                }
+
                 lock (_fontFileLock)
                 {
+                    if (_fontEventsIgnored)
+                    {
+                        return;
+                    }
+
                     _changedFontFiles.Add(fullPath);
+                    _fontCopyFailures.Remove(fullPath);
+                }
+            }
+            else
+            {
+                lock (_fontFileLock)
+                {
+                    _projectFileChangedSinceReload = true;
+                    _fontEventsIgnored = false;
                 }
             }
 
@@ -334,18 +378,25 @@ public class GumHotReloadManager : IGumHotReloadManager
             or ".behx" or ".behj"
             or ".fnt";
 
-    // Returns a description of the fonts that could not be copied (a file the editor still has open),
-    // which stay queued for the next reload; null when every font copied.
+    // Returns a description of the fonts that could not be copied (a file the editor still has open); null
+    // when every font copied. A failed copy is tried once more by the next reload and then dropped, so a
+    // file that stays locked is reported once, not on every reload.
     // fontsEvicted is true when a font was dropped from the cache, so Text that already holds it (or
     // fell back to the default font while it was missing) has to resolve its font again.
     private string? CopyAndUnloadChangedFonts(out bool fontsEvicted)
     {
         fontsEvicted = false;
         List<string> changedFonts;
+        bool projectFileChanged;
+        bool continuation;
         lock (_fontFileLock)
         {
             changedFonts = new List<string>(_changedFontFiles);
             _changedFontFiles.Clear();
+            projectFileChanged = _projectFileChangedSinceReload;
+            _projectFileChangedSinceReload = false;
+            continuation = _fontQueueContinues;
+            _fontQueueContinues = false;
         }
 
         var sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
@@ -363,7 +414,28 @@ public class GumHotReloadManager : IGumHotReloadManager
         AddFontsChangedWithoutNotice(changedFonts, sourceFontCache);
         if (changedFonts.Count == 0)
         {
+            _fontOnlyReloads = 0;
             return null;
+        }
+
+        if (!projectFileChanged && !continuation)
+        {
+            _fontOnlyReloads++;
+            if (_fontOnlyReloads > MaxFontOnlyReloads)
+            {
+                StopBelievingFontEvents();
+                return null;
+            }
+        }
+        else if (projectFileChanged)
+        {
+            _fontOnlyReloads = 0;
+        }
+
+        if (changedFonts.Count > MaxFontsPerReload)
+        {
+            RequeueFonts(changedFonts.Skip(MaxFontsPerReload));
+            changedFonts = changedFonts.Take(MaxFontsPerReload).ToList();
         }
 
         string? failures = null;
@@ -371,103 +443,198 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             try
             {
-                CopyAndUnloadFont(sourceFntPath, sourceFontCache);
-                fontsEvicted = true;
+                fontsEvicted |= CopyAndUnloadFont(sourceFntPath, sourceFontCache);
+                lock (_fontFileLock)
+                {
+                    _fontCopyFailures.Remove(sourceFntPath);
+                }
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
+                bool firstFailure;
                 lock (_fontFileLock)
                 {
-                    _changedFontFiles.Add(sourceFntPath);
+                    firstFailure = !_fontCopyFailures.ContainsKey(sourceFntPath);
+                    _fontCopyFailures[sourceFntPath] = 1;
                 }
-                failures += $"\nCould not copy font file {sourceFntPath}: {exception.Message}";
+
+                if (firstFailure)
+                {
+                    RequeueFonts(new[] { sourceFntPath });
+                    failures += $"\nCould not copy font file {sourceFntPath}: {exception.Message}";
+                }
             }
         }
 
         return failures;
     }
 
-    // A game that loads its content from the folder the tool saves into (Preview) has the file where
-    // the runtime reads it; copying a file onto itself throws.
-    private static bool IsSameFile(string first, string second)
-    {
-        StringComparison comparison = _isFileSystemCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        return string.Equals(Path.GetFullPath(first), Path.GetFullPath(second), comparison);
-    }
-
-    // The copy keeps the source's write time, which is how a later reload tells a copy that is current
-    // from one that is not.
-    private static void CopyUnlessSameFile(string source, string destination)
-    {
-        if (IsSameFile(source, destination))
-        {
-            return;
-        }
-
-        File.Copy(source, destination, overwrite: true);
-        File.SetLastWriteTimeUtc(destination, File.GetLastWriteTimeUtc(source));
-    }
-
-    // A watcher drops events when its buffer overflows, so a font the load folder still holds in an older
+    // A watcher drops events when its buffer overflows, so a font the load folder holds in another
     // version than the source folder is also changed, whether or not a notification arrived.
     private void AddFontsChangedWithoutNotice(List<string> changedFonts, string sourceFontCache)
     {
-        string destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
-        if (!Directory.Exists(destinationFontCache))
+        string destinationFontCache = Path.Combine(LoadFolder, "FontCache");
+        if (!Directory.Exists(destinationFontCache) || IsSameFile(sourceFontCache, destinationFontCache))
         {
             return;
         }
 
-        HashSet<string> queued = new HashSet<string>(changedFonts.Select(Path.GetFileName)!);
+        StringComparer comparer = _isFileSystemCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        HashSet<string> queued = new HashSet<string>(changedFonts, comparer);
         foreach (string sourceFnt in Directory.GetFiles(sourceFontCache, "*.fnt"))
         {
-            string fileName = Path.GetFileName(sourceFnt);
-            string destination = Path.Combine(destinationFontCache, fileName);
-            if (queued.Contains(fileName) || !File.Exists(destination) || IsSameFile(sourceFnt, destination))
-            {
-                continue;
-            }
-
-            if (File.GetLastWriteTimeUtc(sourceFnt) != File.GetLastWriteTimeUtc(destination)
-                || new FileInfo(sourceFnt).Length != new FileInfo(destination).Length)
+            string destination = Path.Combine(destinationFontCache, Path.GetFileName(sourceFnt));
+            if (!queued.Contains(sourceFnt) && File.Exists(destination) && !IsCurrent(sourceFnt, destination))
             {
                 changedFonts.Add(sourceFnt);
             }
         }
     }
 
-    private void CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
+    // Puts fonts back and asks for a reload after the debounce to process them.
+    private void RequeueFonts(IEnumerable<string> fonts)
     {
-        var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
+        lock (_fontFileLock)
+        {
+            foreach (string font in fonts)
+            {
+                _changedFontFiles.Add(font);
+            }
+            _fontQueueContinues = true;
+        }
+
+        lock (_pendingReloadLock)
+        {
+            _lastChangeTime = _utcNow();
+            _pendingReload = true;
+        }
+    }
+
+    private void StopBelievingFontEvents()
+    {
+        _fontOnlyReloads = 0;
+        lock (_fontFileLock)
+        {
+            _fontEventsIgnored = true;
+            _fontCopyFailures.Clear();
+        }
+
+        _loopIssue = new HotReloadIssue(
+            HotReloadIssueKind.ReloadFailed,
+            "Hot reload stopped queueing font files: they kept changing with no change to the project, "
+            + "which usually means the game's own copy of them is being reported as an edit. A change to the project restarts it.");
+    }
+
+    private static bool IsSameFile(string first, string second)
+    {
+        StringComparison comparison = _isFileSystemCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return string.Equals(
+            Path.GetFullPath(first).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            Path.GetFullPath(second).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            comparison);
+    }
+
+    // The destination holds this file as it is now: the same length and write time (copies keep the
+    // source's write time). A file that is its own destination (Preview) is never "current".
+    private static bool IsCurrent(string source, string destination)
+    {
+        try
+        {
+            if (IsSameFile(source, destination) || !File.Exists(destination))
+            {
+                return false;
+            }
+
+            return new FileInfo(source).Length == new FileInfo(destination).Length
+                && File.GetLastWriteTimeUtc(source) == File.GetLastWriteTimeUtc(destination);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private string FontCopyDestination(string sourceFile) => Path.Combine(LoadFolder, "FontCache", Path.GetFileName(sourceFile));
+
+    private bool IsCopyCurrent(string sourceFnt) => IsCurrent(sourceFnt, FontCopyDestination(sourceFnt));
+
+    private string LoadFolder => string.IsNullOrEmpty(_binGumDirectory) ? "." : _binGumDirectory;
+
+    // The game's load folder sits inside the project folder (a build folder under the project).
+    private bool IsInsideNestedLoadFolder(string path)
+    {
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        if (string.IsNullOrEmpty(sourceDirectory) || IsSameFile(sourceDirectory, LoadFolder))
+        {
+            return false;
+        }
+
+        return IsInside(sourceDirectory, LoadFolder) && IsInside(LoadFolder, path);
+    }
+
+    private static bool IsInside(string folder, string file)
+    {
+        string relative = Path.GetRelativePath(folder, file);
+        return !relative.StartsWith("..", StringComparison.Ordinal) && !Path.IsPathRooted(relative);
+    }
+
+    // A game that loads its content from the folder the tool saves into (Preview) has the file where
+    // the runtime reads it, so there is nothing to copy. The copy keeps the source's write time, which
+    // is how IsCurrent tells a copy that is up to date. Returns whether the file was copied.
+    private static bool CopyUnlessCurrent(string source, string destination)
+    {
+        if (IsSameFile(source, destination) || IsCurrent(source, destination))
+        {
+            return false;
+        }
+
+        File.Copy(source, destination, overwrite: true);
+        File.SetLastWriteTimeUtc(destination, File.GetLastWriteTimeUtc(source));
+        return true;
+    }
+
+    // The font and its pages are dropped from the cache only when something changed: a font the load
+    // folder already holds, or that is loaded from where it is (Preview, where a change is the event
+    // itself), must not make Text load it again for nothing.
+    // Returns whether the font was dropped from the cache.
+    private bool CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
+    {
+        var destinationFontCache = Path.Combine(LoadFolder, "FontCache");
         Directory.CreateDirectory(destinationFontCache);
 
         var fileName = Path.GetFileName(sourceFntPath);
+        bool loadedFromSource = IsSameFile(sourceFntPath, Path.Combine(destinationFontCache, fileName));
 
-        // Copy the .fnt file
         var destinationFile = Path.Combine(destinationFontCache, fileName);
-        CopyUnlessSameFile(sourceFntPath, destinationFile);
+        bool changed = CopyUnlessCurrent(sourceFntPath, destinationFile) || loadedFromSource;
 
         // Copy associated .png texture pages (same name prefix)
         var baseName = Path.GetFileNameWithoutExtension(fileName);
-        var copiedPngs = new List<string>();
+        var changedPngs = new List<string>();
         foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
         {
             var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
-            CopyUnlessSameFile(pngFile, pngDestination);
-            copiedPngs.Add(pngDestination);
+            if (CopyUnlessCurrent(pngFile, pngDestination) || loadedFromSource)
+            {
+                changedPngs.Add(pngDestination);
+            }
+        }
+
+        if (!changed && changedPngs.Count == 0)
+        {
+            return false;
         }
 
         // Unload the cached font so it gets reloaded from the new file
-        var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
-        var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
-        _disposeCachedAsset(standardizedFont);
+        _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(destinationFile, preserveCase: true, makeAbsolute: true));
 
         // Unload the cached texture pages so they get reloaded too
-        foreach (var pngPath in copiedPngs)
+        foreach (var pngPath in changedPngs)
         {
-            var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
-            _disposeCachedAsset(standardizedPng);
+            _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true));
         }
+
+        return true;
     }
 
     // internal (not private) so tests can drive a reload deterministically without the
@@ -540,6 +707,11 @@ public class GumHotReloadManager : IGumHotReloadManager
     {
         willRetry = false;
         string? fontFailure = CopyAndUnloadChangedFonts(out bool fontsEvicted);
+        if (_loopIssue != null)
+        {
+            Report(issues, _loopIssue);
+            _loopIssue = null;
+        }
 
         // The whole project is read into a temporary first. A file caught half written, locked by the
         // editor or unparsable leaves the running tree and ObjectFinder exactly as they were (#6978).
