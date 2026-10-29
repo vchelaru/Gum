@@ -20,6 +20,10 @@ public class ShaderVariableNamingPossibleNameTests
     [InlineData("_1abc_Tint__W")]
     [InlineData("__P")]
     [InlineData("My_Outline_Line_Width")]
+    [InlineData("B__Z")]
+    [InlineData("Shader__Z")]
+    [InlineData("Z__W")]
+    [InlineData("b__W")]
     public void IsPossibleVariableName_NamesSomeShaderCouldProduce_ReturnsTrue(string name)
     {
         ShaderVariableNaming.IsPossibleVariableName(name).ShouldBeTrue();
@@ -30,6 +34,9 @@ public class ShaderVariableNamingPossibleNameTests
     [InlineData("")]
     [InlineData("Thickness")]
     [InlineData("_Thickness")]
+    [InlineData("Some_")]
+    [InlineData("_Name")]
+    [InlineData("a_b.c")]
     [InlineData("Outline_")]
     [InlineData("Outline_Out line")]
     [InlineData("Outline.Thickness")]
@@ -55,5 +62,55 @@ public class ShaderVariableNamingPossibleNameTests
                     ShaderVariableNaming.GetVariableName(shaderFile, parameter, index, 4)).ShouldBeTrue();
             }
         }
+    }
+
+    [Fact]
+    public void IsPossibleVariableName_IsTrueForEveryNameTryParseVariableNameAccepts_BoundedSweep()
+    {
+        // Every string over a small alphabet up to length 7, against shader files whose stems include a
+        // trailing underscore, a leading underscore and the component letters.
+        string[] shaderFiles = { "B_.fx", "B.fx", "_.fx", "Z.fx", "_Z.fx", "Shader.fx", "a_b_.fx" };
+        char[] alphabet = { 'a', '_', 'Z', 'X', 'W' };
+        int disagreements = 0;
+        string? first = null;
+
+        for (int length = 1; length <= 7; length++)
+        {
+            int total = 1;
+            for (int i = 0; i < length; i++) total *= alphabet.Length;
+            for (int code = 0; code < total; code++)
+            {
+                char[] characters = new char[length];
+                int remaining = code;
+                for (int i = 0; i < length; i++)
+                {
+                    characters[i] = alphabet[remaining % alphabet.Length];
+                    remaining /= alphabet.Length;
+                }
+                string name = new string(characters);
+
+                foreach (string shaderFile in shaderFiles)
+                {
+                    if (ShaderVariableNaming.TryParseVariableName(shaderFile, name, out _, out _)
+                        && !ShaderVariableNaming.IsPossibleVariableName(name))
+                    {
+                        disagreements++;
+                        first ??= shaderFile + " / " + name;
+                    }
+                }
+            }
+        }
+
+        disagreements.ShouldBe(0, "first disagreement: " + first);
+    }
+
+    [Theory]
+    [InlineData("B_.fx", "Z")]
+    [InlineData("B.fx", "_Z")]
+    [InlineData("Z.fx", "W")]
+    [InlineData("b_.fx", "W")]
+    public void IsPossibleVariableName_ScalarWhoseNameLooksLikeAComponent_IsTrue(string shaderFile, string parameter)
+    {
+        ShaderVariableNaming.IsPossibleVariableName(ShaderVariableNaming.GetVariableName(shaderFile, parameter)).ShouldBeTrue();
     }
 }

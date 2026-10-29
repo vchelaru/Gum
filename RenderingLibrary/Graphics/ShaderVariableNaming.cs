@@ -242,20 +242,28 @@ public static class ShaderVariableNaming
             return false;
         }
 
-        int end = variableName.Length;
-        if (end >= ComponentSeparator.Length + 2
-            && ComponentLetters.IndexOf(variableName[end - 1]) >= 0
-            && string.CompareOrdinal(variableName, end - 3, ComponentSeparator, 0, ComponentSeparator.Length) == 0)
-        {
-            end -= 3;
-        }
+        int length = variableName.Length;
 
-        // The separator is an underscore that leaves a non-empty stem before it and a supported
-        // parameter name after it. The stem may hold underscores and the parameter may end in one, so
-        // every underscore from the second character on is a candidate.
+        // A trailing __X to __W is a component suffix, but it is also a legal ending of a scalar
+        // parameter (stem "B_" and parameter "Z" give "B__Z"), so both readings are tried.
+        if (length >= ComponentSeparator.Length + 2
+            && ComponentLetters.IndexOf(variableName[length - 1]) >= 0
+            && string.CompareOrdinal(variableName, length - 3, ComponentSeparator, 0, ComponentSeparator.Length) == 0
+            && HasSeparatorBefore(variableName, length - 3))
+        {
+            return true;
+        }
+        return HasSeparatorBefore(variableName, length);
+    }
+
+    // The separator is an underscore that leaves a non-empty stem before it and a supported parameter
+    // name between it and end. The stem may hold underscores and the parameter may end in one, so every
+    // underscore from the second character on is a candidate.
+    private static bool HasSeparatorBefore(string name, int end)
+    {
         for (int separator = 1; separator < end - 1; separator++)
         {
-            if (variableName[separator] == '_' && IsSupportedParameterRange(variableName, separator + 1, end))
+            if (name[separator] == '_' && IsSupportedParameterRange(name, separator + 1, end))
             {
                 return true;
             }

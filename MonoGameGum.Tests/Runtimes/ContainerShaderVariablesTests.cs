@@ -534,6 +534,27 @@ public class ContainerShaderVariablesTests : BaseTestClass
         Has(sut, "Tint").ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SetProperty_ScalarWhoseNameLooksLikeAComponent_IsRoutedInEitherOrder(bool fileFirst)
+    {
+        ContainerRuntime sut = new();
+        if (fileFirst)
+        {
+            sut.SetProperty("SourceShaderFile", "Shaders/B_.fx");
+        }
+
+        sut.SetProperty("B__Z", 4f);
+
+        if (!fileFirst)
+        {
+            sut.SetProperty("SourceShaderFile", "Shaders/B_.fx");
+        }
+        Get(sut, "Z").Count.ShouldBe(1);
+        Get(sut, "Z").X.ShouldBe(4f);
+    }
+
     [Fact]
     public void SetPropertyOnRenderable_LineRectangle_TheEditorsContainer_RoutesTheSameWay()
     {
