@@ -365,6 +365,38 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
     }
 
+    // A fraction of a texel, far above the GPU's sampling error and far below anything visible.
+    private const float PointSamplingTieBreak = 1f / 64f;
+
+    /// <summary>
+    /// Draws <paramref name="sourceRectangle"/> of the Image or Texture into <paramref name="boundingRect"/>.
+    /// With Point (nearest) filtering the source rectangle is nudged a fraction of a texel so that a sample
+    /// landing exactly on a texel boundary resolves to the texel inside the rectangle. At a half screen pixel the
+    /// first pixel center of every sprite lands exactly on the left (or top) edge of its source rectangle, and a
+    /// GPU surface (Ganesh, so Unity and the other SkiaGameRendering hosts) picked the texel just outside it,
+    /// leaving a one pixel seam between sprites drawn end to end (#7030). SkiaSharp's DrawImage and DrawBitmap
+    /// do not expose Skia's strict source-rectangle constraint, which would clamp this. A flipped axis is drawn
+    /// mirrored, so its nudge points the other way.
+    /// </summary>
+    private void DrawSourceRectangle(SKCanvas canvas, SKRect sourceRectangle, SKRect boundingRect, SKPaint paint, bool isFlippedHorizontal, bool isFlippedVertical)
+    {
+        if (Renderer.TextureFilter == SKFilterMode.Nearest)
+        {
+            sourceRectangle.Offset(
+                isFlippedHorizontal ? -PointSamplingTieBreak : PointSamplingTieBreak,
+                isFlippedVertical ? -PointSamplingTieBreak : PointSamplingTieBreak);
+        }
+
+        if (Image != null)
+        {
+            canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
+        }
+        else
+        {
+            canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
+        }
+    }
+
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         // Render-target pull (#3988): display the baked texture of the referenced container instead of
@@ -438,28 +470,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
                         right, 
                         bottom);
 
-                    if(Image != null)
-                    {
-                        canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
-                    }
-                    else
-                    {
-                        canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
-                    }
-
+                    DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint, isFlippedHorizontal, isFlippedVertical);
                 }
 
             }
             else
             {
-                if(Image != null)
-                {
-                    canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
-                }
-                else
-                {
-                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
-                }
+                DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint, false, false);
             }
 
         }
