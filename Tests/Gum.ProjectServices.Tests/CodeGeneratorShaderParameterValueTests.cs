@@ -192,4 +192,78 @@ public class CodeGeneratorShaderParameterValueTests : BaseTestClass
         code.ShouldContain("this.Holder.SetProperty(\"Outline_Thickness\", 3f);");
         code.ShouldContain("set => Holder.SetProperty(\"Outline_Steps\", value);");
     }
+
+    [Theory]
+    [InlineData(OutputLibrary.GumForms)]
+    [InlineData(OutputLibrary.MonoGame)]
+    [InlineData(OutputLibrary.Skia)]
+    public void FullyInCode_ScreenOverridingAnExposedShaderParameter_AssignsTheTypedExposedProperty(OutputLibrary library)
+    {
+        ComponentSave component = CreateComponent();
+        AddShaderVariable(component, "Outline_Thickness", "Thickness", null, "float", exposedAs: "OutlineThickness");
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        InstanceSave comp1 = new InstanceSave { Name = "Comp1", BaseType = "ShaderComponent", ParentContainer = screen };
+        screen.Instances.Add(comp1);
+        Project.Screens.Add(screen);
+
+        ObjectFinder.Self.GumProjectSave = Project;
+        string code;
+        try
+        {
+            screen.DefaultState.SetValue("Comp1.OutlineThickness", 5f, comp1, "float");
+            // The real SetValue path saves the override with the marker of the parameter it forwards to.
+            screen.DefaultState.Variables.First(item => item.Name == "Comp1.OutlineThickness").ShaderParameter.ShouldBe("Thickness");
+
+            code = CreateCodeGenerator().GetGeneratedCodeForElement(
+                screen,
+                elementSettings: null!,
+                new CodeOutputProjectSettings
+                {
+                    OutputLibrary = library,
+                    RootNamespace = "MyGame",
+                    ObjectInstantiationType = ObjectInstantiationType.FullyInCode,
+                });
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+
+        code.ShouldContain("Comp1.OutlineThickness = 5");
+        code.ShouldNotContain("SetProperty(\"OutlineThickness\"");
+    }
+
+    /// <summary>
+    /// Documents a limitation that predates #7080: a derived component's generated code never assigns the variables it
+    /// overrides on instances its base owns. An ordinary variable (IsRenderTarget) is dropped exactly like a shader
+    /// parameter, so a shader parameter override is not special-cased here.
+    /// </summary>
+    [Fact]
+    public void FullyInCode_DerivedComponentOverridingABaseInstanceVariable_EmitsNothingForOrdinaryAndShaderParameterAlike()
+    {
+        ComponentSave baseComponent = CreateComponent();
+        AddShaderVariable(baseComponent, "Outline_Thickness", "Thickness", 2f, "float");
+
+        ComponentSave derived = new ComponentSave { Name = "DerivedShader", BaseType = "ShaderComponent" };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        Project.Components.Add(derived);
+
+        ObjectFinder.Self.GumProjectSave = Project;
+        try
+        {
+            derived.DefaultState.SetValue("Holder.Outline_Thickness", 7f, null, "float");
+            derived.DefaultState.SetValue("Holder.IsRenderTarget", false, null, "bool");
+
+            string code = GetComponentCode(derived, OutputLibrary.GumForms, ObjectInstantiationType.FullyInCode);
+
+            code.ShouldNotContain("IsRenderTarget");
+            code.ShouldNotContain("Outline_Thickness");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
 }

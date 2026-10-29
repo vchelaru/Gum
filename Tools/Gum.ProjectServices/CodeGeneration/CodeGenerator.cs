@@ -6064,8 +6064,9 @@ public class CodeGenerator
 
         // A saved shader parameter value (Holder.Outline_Thickness) is no property of the runtime, only a name
         // SetProperty routes to the container's shader parameters, the same call the loader makes. Exposed
-        // parameters carry no value and never get here.
-        else if (instance != null && IsShaderParameterVariable(variable))
+        // parameters carry no value and never get here. An override of an exposed parameter carries the same
+        // marker but is a typed property of the instance, which the regular assignment writes.
+        else if (instance != null && IsShaderParameterVariable(variable) && !IsExposedOnInstance(instance, rootName))
         {
             string? valueInCode = VariableValueToGumCodeValue(variable, context);
             if (valueInCode == null)
@@ -6268,6 +6269,9 @@ public class CodeGenerator
         return true;
     }
 
+
+    private static bool IsExposedOnInstance(InstanceSave instance, string rootName) =>
+        ObjectFinder.Self.GetElementSave(instance)?.DefaultState?.GetVariableRecursive(rootName)?.ExposedAsName == rootName;
 
     private static bool IsShaderParameterVariable(VariableSave variable) =>
         ShaderParameterMarker.TryParse(variable.ShaderParameter, out _);
