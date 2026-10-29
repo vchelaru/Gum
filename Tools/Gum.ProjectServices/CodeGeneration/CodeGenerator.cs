@@ -197,7 +197,7 @@ public class CodeGenerationContext
             }
             else
             {
-                string instanceNameInCode = _nameVerifier.ToCSharpName(Instance.Name);
+                string instanceNameInCode = _nameVerifier.ToCSharpMemberName(Instance.Name);
                 if (_isInstanceFormsObject == true)
                 {
                     string visualAccess = string.IsNullOrEmpty(ThisPrefix)
@@ -1091,7 +1091,7 @@ public class CodeGenerator
             if (variable.IsCustomVariable)
             {
                 var type = variable.Type;
-                var name = _codeGenerationNameVerifier.ToCSharpName(variable.Name);
+                var name = _codeGenerationNameVerifier.ToCSharpMemberName(variable.Name);
                 // Backed by a field (rather than a bare auto-property) so the setter can raise a
                 // property-changed notification, matching every other generated/hand-written
                 // property - otherwise it never fires for a custom variable, whether it's set
@@ -1165,8 +1165,8 @@ public class CodeGenerator
 
         var bindingBehavior = GetBindingBehavior(container, sourceObject);
 
-        var name = _codeGenerationNameVerifier.ToCSharpName(exposedVariable.ExposedAsName!);
-        var instanceName = _codeGenerationNameVerifier.ToCSharpName(sourceObject);
+        var name = _codeGenerationNameVerifier.ToCSharpMemberName(exposedVariable.ExposedAsName!);
+        var instanceName = _codeGenerationNameVerifier.ToCSharpMemberName(sourceObject);
         var type = exposedVariable.Type;
 
         if(type == nameof(PositionUnitType))
@@ -1301,7 +1301,7 @@ public class CodeGenerator
                         type = GetRuntimePropertyTypeOverride(rootVariable.Name, context.CodeOutputProjectSettings.OutputLibrary) ?? type;
                     }
 
-                    string sourceObjectCSharpName = _codeGenerationNameVerifier.ToCSharpName(sourceObject);
+                    string sourceObjectCSharpName = _codeGenerationNameVerifier.ToCSharpMemberName(sourceObject);
                     string? sourceObjectCast = null;
                     string rootVariableCodeName = GetExposedRootVariableCodeName(rootVariable, foundInstance, context);
 
@@ -1631,7 +1631,7 @@ public class CodeGenerator
         
         // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
         //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
-        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {_codeGenerationNameVerifier.ToCSharpName(instance.Name)} {{ get; protected set; }}");
+        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} {{ get; protected set; }}");
     }
     
     #endregion
@@ -1872,13 +1872,13 @@ public class CodeGenerator
                 if (context.ResolvedSyntaxVersion >= 1)
                 {
                     context.StringBuilder.AppendLine(
-                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = " +
+                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = " +
                         $"global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<{classNameString}>(this.Visual,\"{instance.Name}\");");
                 }
                 else
                 {
                     context.StringBuilder.AppendLine(
-                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = " +
+                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = " +
                         $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{instance.Name}\");");
                 }
             }
@@ -1888,7 +1888,7 @@ public class CodeGenerator
                 if (className == null) return;
                 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = this.Visual?.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = this.Visual?.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     $"global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.{className};");
             }
         }
@@ -1898,7 +1898,7 @@ public class CodeGenerator
             if(isStandardElement)
             {
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     $"global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.{GetClassNameForType(instance, context.VisualApi, context)};");
 
             }
@@ -1908,7 +1908,7 @@ public class CodeGenerator
                 if (className == null) return;
                 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     // do not prefix global::MonoGameGum... because this is a custom component
                     $"{className};");
             }
@@ -1927,7 +1927,7 @@ public class CodeGenerator
             return;
         }
         //////////////////////End Early Out///////////////////////////
-        var instanceName = _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+        var instanceName = _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
 
         var strippedType = instance.BaseType;
         if (strippedType.Contains("/"))
@@ -3424,7 +3424,7 @@ public class CodeGenerator
         ////////////////////////////////////////////////////////////
 
         var container = context.Element;
-        var instanceNameInCode = _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+        var instanceNameInCode = _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
         //context.Instance, context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings;
 
         // Some history on this:
@@ -3488,7 +3488,7 @@ public class CodeGenerator
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});");
                     }
                     else if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
                     {
@@ -3498,11 +3498,11 @@ public class CodeGenerator
                         // could never take its else branch. The constructor now always assigns a
                         // contained object before this runs (see GenerateConstructors), so Children
                         // is guaranteed to be a real, writable collection here.
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});");
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});");
                     }
                 }
                 else
@@ -3515,7 +3515,7 @@ public class CodeGenerator
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});");
                     }
                 }
             }
@@ -3960,8 +3960,8 @@ public class CodeGenerator
                         context.StringBuilder.AppendLine("// This hurts performance a little but it's needed because of an iOS MAUI bug where these do not behave the same as in Android");
                         if(context.Instance != null)
                         {
-                            context.StringBuilder.AppendLine(context.Tabs + _codeGenerationNameVerifier.ToCSharpName(context.Instance.Name) + ".ForceGumLayout();");
-                            context.StringBuilder.AppendLine(context.Tabs + _codeGenerationNameVerifier.ToCSharpName(context.Instance.Name) + ".UpdateDimensionsFromAutoSize();");
+                            context.StringBuilder.AppendLine(context.Tabs + _codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name) + ".ForceGumLayout();");
+                            context.StringBuilder.AppendLine(context.Tabs + _codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name) + ".UpdateDimensionsFromAutoSize();");
                         }
                     }
                 }
@@ -4008,6 +4008,7 @@ public class CodeGenerator
         context.ElementSettings = elementSettings;
         context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
         context.UseFileScopedNamespace = ResolveUseFileScopedNamespace(projectSettings);
+        using IDisposable memberNames = ReserveMemberNames(element, context);
 
         var stringBuilder = context.StringBuilder;
 
@@ -4228,6 +4229,29 @@ public class CodeGenerator
         return stringBuilder.ToString();
     }
 
+    // Methods the generator declares on every class it writes; an instance or variable of the same name would collide.
+    private static readonly string[] GeneratedMethodNames =
+    {
+        "CustomInitialize", "InitializeInstances", "InitializeInstancesFromVisual", "AssignParents",
+        "AssignGumReferences", "ApplyDefaultVariables", "ApplyLocalization", "ApplyState", "AfterFullCreation",
+        "ReactToVisualChanged", "ReactToGeneratedVisual", "RegisterRuntimeType",
+    };
+
+    private IDisposable ReserveMemberNames(ElementSave element, CodeGenerationContext context)
+    {
+        List<string> reserved = new List<string>(GeneratedMethodNames);
+        string? className = GetClassNameForType(element, context.VisualApi, context);
+        if (className != null)
+        {
+            reserved.Add(className);
+        }
+        foreach (StateSaveCategory category in element.Categories)
+        {
+            reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name) + "State");
+        }
+        return _codeGenerationNameVerifier.ReserveMemberNames(reserved);
+    }
+
     public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
     {
 
@@ -4235,6 +4259,7 @@ public class CodeGenerator
         context.Instance = instance;
         context.CodeOutputProjectSettings = codeOutputProjectSettings;
         context.ResolvedSyntaxVersion = ResolveSyntaxVersion(codeOutputProjectSettings);
+        using IDisposable memberNames = ReserveMemberNames(element, context);
         var stringBuilder = context.StringBuilder;
 
         FillWithInstanceDeclaration(context);
@@ -4293,7 +4318,7 @@ public class CodeGenerator
                 if (instanceVisualApi == VisualApi.Gum)
                 {
                     // todo - will need Forms too, but we'll do this for now:
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{_codeGenerationNameVerifier.ToCSharpName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
                 }
             }
         }
@@ -4366,7 +4391,7 @@ public class CodeGenerator
                 continue;
             }
 
-            var fieldName = _codeGenerationNameVerifier.ToCSharpName(animation.Name);
+            var fieldName = _codeGenerationNameVerifier.ToCSharpMemberName(animation.Name);
             context.StringBuilder.AppendLine(context.Tabs + $"public AnimationRuntime {fieldName} {{get; protected set;}}");
         }
 
@@ -4392,7 +4417,7 @@ public class CodeGenerator
                 continue;
             }
 
-            var fieldName = _codeGenerationNameVerifier.ToCSharpName(animation.Name);
+            var fieldName = _codeGenerationNameVerifier.ToCSharpMemberName(animation.Name);
             var animationName = animation.Name;
             context.StringBuilder.AppendLine(context.Tabs + $"{fieldName} = this.Visual.GetAnimation(\"{animationName}\");");
         }
@@ -4520,11 +4545,11 @@ public class CodeGenerator
                 {
                     if (item.BaseType.EndsWith("/SkiaSharpCanvasView"))
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpName(item.Name)}.InvalidateSurface();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpMemberName(item.Name)}.InvalidateSurface();");
                     }
                     else if (GetVisualApiForInstance(item, element) == VisualApi.Gum)
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpName(item.Name)}.EffectiveManagers?.InvalidateSurface();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpMemberName(item.Name)}.EffectiveManagers?.InvalidateSurface();");
                     }
                 }
                 if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
@@ -5060,7 +5085,7 @@ public class CodeGenerator
 
                 if (forceSetDirectlyOnInstance)
                 {
-                    return $"this.{_codeGenerationNameVerifier.ToCSharpName(context.Instance!.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    return $"this.{_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance!.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
                 }
                 else
                 {
@@ -5208,7 +5233,7 @@ public class CodeGenerator
 
                 if (isPolygon)
                 {
-                    context.StringBuilder.AppendLine(context.Tabs + $"this.{_codeGenerationNameVerifier.ToCSharpName(instance.Name)}.SetPoints(new System.Numerics.Vector2[]{{");
+                    context.StringBuilder.AppendLine(context.Tabs + $"this.{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)}.SetPoints(new System.Numerics.Vector2[]{{");
                     context.TabCount++;
                     foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
                     {
@@ -5562,7 +5587,7 @@ public class CodeGenerator
 
                 if (contextInstance != null)
                 {
-                    var standardizedParentName = _codeGenerationNameVerifier.ToCSharpName(parentName!);
+                    var standardizedParentName = _codeGenerationNameVerifier.ToCSharpMemberName(parentName!);
                     if (IsTabControl(parentInstance))
                     {
                         var stringBuilder = new StringBuilder();
@@ -5586,19 +5611,19 @@ public class CodeGenerator
 
                         stringBuilder.AppendLine($"{tabs}var tabItem = new {tabViewType}();");
                         stringBuilder.AppendLine($"{tabs}tabItem.{textProperty} = \"Tab Text\";");
-                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {_codeGenerationNameVerifier.ToCSharpName(contextInstance.Name)};");
-                        stringBuilder.AppendLine($"{tabs}{_codeGenerationNameVerifier.ToCSharpName(parentInstance.Name)}.{tabItemsProperty}.Add(tabItem);");
+                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {_codeGenerationNameVerifier.ToCSharpMemberName(contextInstance.Name)};");
+                        stringBuilder.AppendLine($"{tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(parentInstance.Name)}.{tabItemsProperty}.Add(tabItem);");
                         tabs = tabs.Substring(4);
                         stringBuilder.AppendLine($"{tabs}}}");
                         return stringBuilder.ToString();
                     }
                     else if (hasContent)
                     {
-                        return $"{standardizedParentName}.Content = {_codeGenerationNameVerifier.ToCSharpName(contextInstance.Name)};";
+                        return $"{standardizedParentName}.Content = {_codeGenerationNameVerifier.ToCSharpMemberName(contextInstance.Name)};";
                     }
                     else
                     {
-                        return $"{standardizedParentName}.Children.Add({_codeGenerationNameVerifier.ToCSharpName(contextInstance.Name)});";
+                        return $"{standardizedParentName}.Children.Add({_codeGenerationNameVerifier.ToCSharpMemberName(contextInstance.Name)});";
                     }
                 }
 
@@ -5789,7 +5814,7 @@ public class CodeGenerator
             {
                 if(string.IsNullOrEmpty( variable.SourceObject))
                 {
-                    context.StringBuilder.AppendLine($"{context.Tabs}this.{_codeGenerationNameVerifier.ToCSharpName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
+                    context.StringBuilder.AppendLine($"{context.Tabs}this.{_codeGenerationNameVerifier.ToCSharpMemberName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
                 }
                 else
                 {
@@ -5844,7 +5869,7 @@ public class CodeGenerator
                 context.StringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
                 context.TabCount++;
                 context.StringBuilder.AppendLine(context.Tabs +
-                    $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({_codeGenerationNameVerifier.ToCSharpName(context.Instance.Name)}, {screenOrComponent}.DefaultState);");
+                    $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name)}, {screenOrComponent}.DefaultState);");
                 context.TabCount--;
 
             }
@@ -5996,11 +6021,11 @@ public class CodeGenerator
             var ownerName = variable.Value as string;
             var owner = string.IsNullOrEmpty(ownerName)
                 ? "this"
-                : _codeGenerationNameVerifier.ToCSharpName(ownerName);
+                : _codeGenerationNameVerifier.ToCSharpMemberName(ownerName);
 
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
-                var child = _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+                var child = _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
 
                 // Syntax version 3+ generated code imports Gum instead of MonoGameGum, so the
                 // legacy MonoGameGum.GraphicalUiElementExtensionMethods.AddChild(GraphicalUiElement,
@@ -6026,7 +6051,7 @@ public class CodeGenerator
             }
             else
             {
-                return $"{owner}.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});";
+                return $"{owner}.Children.Add({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});";
             }
         }
         #endregion
@@ -6054,7 +6079,7 @@ public class CodeGenerator
                 return " ";
             }
 
-            var referenceInCode = "this." + _codeGenerationNameVerifier.ToCSharpName(referencedInstanceName);
+            var referenceInCode = "this." + _codeGenerationNameVerifier.ToCSharpMemberName(referencedInstanceName);
 
             // RenderTargetTextureSource is an IRenderableIpso. For GumForms a non-standard
             // instance's field is the Forms wrapper, so reach its underlying visual.
@@ -6392,7 +6417,7 @@ public class CodeGenerator
 
         string target = instance == null
             ? "this"
-            : "this." + _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+            : "this." + _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
 
         foreach (VariableSave declaration in GetFormsPropertyDeclarations(controlElement))
         {
@@ -6669,7 +6694,7 @@ public class CodeGenerator
 
             if (instanceComponentSettings?.LocalizeElement == true)
             {
-                stringBuilder.AppendLine(context.Tabs + $"{_codeGenerationNameVerifier.ToCSharpName(instance.Name)}.ApplyLocalization();");
+                stringBuilder.AppendLine(context.Tabs + $"{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)}.ApplyLocalization();");
 
             }
         }
@@ -6756,7 +6781,7 @@ public class CodeGenerator
         {
             if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject != null)
             {
-                var instanceName = _codeGenerationNameVerifier.ToCSharpName(variable.SourceObject);
+                var instanceName = _codeGenerationNameVerifier.ToCSharpMemberName(variable.SourceObject);
                 // make sure this instance is a XamForms object otherwise we don't need to set the binding
                 var isXamForms = (element.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
 
