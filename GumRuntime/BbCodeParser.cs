@@ -273,38 +273,48 @@ public static class BbCodeParser
                 }
                 else if(activeTags.Count > 0)
                 {
-                    // October 17, 2025 - need to do
-                    // LastOrDefault so we pop the last 
-                    // index of this tag rather that the 
+                    // October 17, 2025 - need to pop the last
+                    // index of this tag rather that the
                     // first, or else they do not stack properly.
-                    //Tag foundTag = activeTags.FirstOrDefault(
-                    Tag foundTag = activeTags.LastOrDefault(
-                        item => item.Name.Equals(tag.Name, StringComparison.InvariantCultureIgnoreCase));
-                    if(foundTag.Name == tag.Name)
+                    // Names are compared ignoring case, the same as when a tag is recognized,
+                    // so [Color=Red]a[/color] pairs (#7094).
+                    int foundIndex = -1;
+                    for (int i = activeTags.Count - 1; i >= 0; i--)
                     {
-                        // Matching closing tag was at the top of the stack
+                        if (activeTags[i].Name.Equals(tag.Name, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            foundIndex = i;
+                            break;
+                        }
+                    }
+
+                    if(foundIndex >= 0)
+                    {
+                        Tag foundTag = activeTags[foundIndex];
+                        // Both tags carry the opening tag's name: consumers push on the open tag's Name
+                        // and pop on the close tag's Name, so the two must be identical.
                         var open = new TagInfo()
                         {
                             StartIndex = foundTag.StartIndex,
                             Count = foundTag.Count,
                             Argument = foundTag.Argument,
-                            Name = tag.Name
+                            Name = foundTag.Name
                         };
 
                         var close = new TagInfo()
                         {
                             StartIndex = tag.StartIndex,
                             Count = tag.Count,
-                            Name = tag.Name
+                            Name = foundTag.Name
                         };
                         results.Add(new FoundTag
                         {
-                            Name = tag.Name,
+                            Name = foundTag.Name,
                             Open = open,
                             Close = close,
                         });
 
-                        activeTags.Remove(foundTag);
+                        activeTags.RemoveAt(foundIndex);
                     }
                 }
 
