@@ -366,4 +366,95 @@ public class VariableGridEntryTests : BaseTestClass
 
         sut.LastOldFullCommitValue.ShouldBe(3);
     }
+
+    [Fact]
+    public void SupportsMakeDefault_ShouldBeFalse_WhenRowIsAComponentsBaseType()
+    {
+        // #7149: a component has to keep a base type, so its BaseType row has no "default" to go back to.
+        ComponentSave component = CreateComponent("MyComponent");
+        component.BaseType = "Container";
+
+        VariableGridEntry sut = CreateSut("BaseType", component.DefaultState, component);
+
+        sut.SupportsMakeDefault.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SupportsMakeDefault_ShouldBeFalse_WhenRowIsAnInstancesBaseType()
+    {
+        ComponentSave component = CreateComponent("MyComponent");
+        InstanceSave instance = new() { Name = "Box", BaseType = "Container" };
+        component.Instances.Add(instance);
+
+        VariableGridEntry sut = CreateSut("BaseType", component.DefaultState, component, instance);
+
+        sut.SupportsMakeDefault.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SupportsMakeDefault_ShouldBeTrue_WhenRowIsAScreensBaseType()
+    {
+        // Screens legitimately have no base type, so Make Default stays available.
+        ScreenSave screen = new() { Name = "MyScreen", BaseType = "SomeBase" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+
+        VariableGridEntry sut = CreateSut("BaseType", screen.DefaultState, screen);
+
+        sut.SupportsMakeDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ResetToDefault_ShouldKeepComponentBaseType_WhenRowIsTheComponentsBaseType()
+    {
+        ComponentSave component = CreateComponent("MyComponent");
+        component.BaseType = "Container";
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedElement).Returns(component);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(component.DefaultState);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
+
+        VariableGridEntry sut = CreateSut("BaseType", component.DefaultState, component);
+
+        sut.ResetToDefault();
+
+        component.BaseType.ShouldBe("Container");
+        _mocker.GetMock<IUndoManager>().Verify(x => x.RecordUndo(), Times.Never);
+    }
+
+    [Fact]
+    public void ResetToDefault_ShouldKeepOwnerAndInstanceBaseType_WhenRowIsAnInstancesBaseType()
+    {
+        ComponentSave component = CreateComponent("MyComponent");
+        component.BaseType = "Container";
+        InstanceSave instance = new() { Name = "Box", BaseType = "Sprite" };
+        component.Instances.Add(instance);
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedElement).Returns(component);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(component.DefaultState);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedInstance).Returns(instance);
+
+        VariableGridEntry sut = CreateSut("BaseType", component.DefaultState, component, instance);
+
+        sut.ResetToDefault();
+
+        component.BaseType.ShouldBe("Container", "resetting an instance's row must not touch the owning component.");
+        instance.BaseType.ShouldBe("Sprite");
+    }
+
+    [Fact]
+    public void ResetToDefault_ShouldClearScreenBaseType_WhenRowIsAScreensBaseType()
+    {
+        ScreenSave screen = new() { Name = "MyScreen", BaseType = "SomeBase" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedElement).Returns(screen);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
+
+        VariableGridEntry sut = CreateSut("BaseType", screen.DefaultState, screen);
+
+        sut.ResetToDefault();
+
+        screen.BaseType.ShouldBeNull();
+    }
 }

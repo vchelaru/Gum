@@ -661,6 +661,7 @@ public class DataUiGridModel
             multiSelectInstanceMember.PreferredDisplayer = templateMember.PreferredDisplayer;
             multiSelectInstanceMember.InstanceMembers = membersToAdd;
             multiSelectInstanceMember.IsReadOnly = membersToAdd.Any(item => item.IsReadOnly);
+            multiSelectInstanceMember.SupportsMakeDefault = membersToAdd.All(item => item.SupportsMakeDefault);
             return multiSelectInstanceMember;
         }
         else

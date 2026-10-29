@@ -115,7 +115,14 @@ public class VariableGridEntry
     /// <summary>Desired sort order among sibling rows (lower sorts first). Defaults to <see cref="int.MaxValue"/> (unsorted/last).</summary>
     public int SortValue { get; set; } = int.MaxValue;
 
-    /// <summary>Whether the row's context menu should offer "Make Default" (false for the Name variable and reference-assigned rows).</summary>
+    /// <summary>
+    /// True for the BaseType row of a component or an instance: both need a base type, so clearing it
+    /// leaves a base-less element (an instance's row would also clear its owner's base type).
+    /// Screens legitimately have none, so their row is not covered.
+    /// </summary>
+    private readonly bool _isBaseTypeThatMustKeepAValue;
+
+    /// <summary>Whether the row's context menu should offer "Make Default" (false for the Name variable, reference-assigned rows, and the BaseType row of a component or instance).</summary>
     public bool SupportsMakeDefault { get; }
 
     /// <summary>Whether this row's value comes from a <c>VariableReferences</c> assignment rather than being authored directly.</summary>
@@ -363,7 +370,10 @@ public class VariableGridEntry
 
         IsAssignedByReference = isAssignedByReference;
 
-        SupportsMakeDefault = variableName != "Name" && !IsAssignedByReference;
+        _isBaseTypeThatMustKeepAValue = RootVariableName == "BaseType"
+            && (instanceSave != null || stateListCategoryContainer is ComponentSave);
+
+        SupportsMakeDefault = variableName != "Name" && !IsAssignedByReference && !_isBaseTypeThatMustKeepAValue;
 
         var alreadyHasSpaces = RootVariableName.Contains(' ');
         DisplayName = alreadyHasSpaces
@@ -829,6 +839,12 @@ public class VariableGridEntry
     /// </summary>
     public void ResetToDefault()
     {
+        if (_isBaseTypeThatMustKeepAValue)
+        {
+            // Reached by a multi-select, where the wrapper does not read SupportsMakeDefault.
+            return;
+        }
+
         string variableName = Name;
 
         bool shouldReset = false;

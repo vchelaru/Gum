@@ -212,4 +212,31 @@ public class VariableMenuScenarioTests
 
         grid.RowMenu("X").ShouldContain("Make Default (0)");
     }
+
+    [AvaloniaFact]
+    public void BaseTypeRowMenu_OnAComponent_OffersNoMakeDefault()
+    {
+        // #7149: Make Default would leave the component without a base type.
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        grid.Select(button);
+
+        // With Make Default gone the row has no menu entries at all, so no menu opens on right-click.
+        grid.Member("BaseType").SupportsMakeDefault.ShouldBeFalse();
+        Should.Throw<InvalidOperationException>(() => grid.RowMenu("BaseType"));
+        button.BaseType.ShouldBe("Container");
+    }
+
+    [AvaloniaFact]
+    public void BaseTypeRowMenu_OnAnInstance_OffersNoMakeDefault()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave label = grid.Project.AddInstance(button, "Label", "Text");
+        grid.Select(label);
+
+        List<string> menu = grid.RowMenu("BaseType");
+
+        menu.ShouldNotContain(header => header.StartsWith("Make Default"));
+    }
 }
