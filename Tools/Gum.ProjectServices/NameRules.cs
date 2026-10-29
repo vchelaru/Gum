@@ -131,8 +131,15 @@ public class NameRules
     /// </summary>
     public static string ToCSharpIdentifier(string? name)
     {
-        StringBuilder builder = new StringBuilder(name?.Length ?? 1);
-        foreach (Rune rune in (name ?? string.Empty).EnumerateRunes())
+        name ??= string.Empty;
+        // An identifier already escaped as @name stays as it is.
+        if (name.Length > 1 && name[0] == '@' && ToCSharpIdentifier(name.Substring(1)) is string inner && (inner == name || inner == name.Substring(1)))
+        {
+            return name;
+        }
+
+        StringBuilder builder = new StringBuilder(name.Length + 1);
+        foreach (Rune rune in name.EnumerateRunes())
         {
             builder.Append(IsCSharpIdentifierPart(rune) ? rune.ToString() : "_");
         }
@@ -151,7 +158,12 @@ public class NameRules
         return CSharpReservedKeywords.Contains(identifier) ? "@" + identifier : identifier;
     }
 
-    private static bool StartsLikeCSharpIdentifier(string name) => name[0] == '_' || char.IsLetter(name[0]);
+    private static bool StartsLikeCSharpIdentifier(string name)
+    {
+        // A letter outside the basic plane is a surrogate pair, so the first character alone is not a letter.
+        Rune first = name.EnumerateRunes().First();
+        return first.Value == '_' || Rune.IsLetter(first);
+    }
 
     private static bool IsCSharpIdentifierPart(Rune rune)
     {

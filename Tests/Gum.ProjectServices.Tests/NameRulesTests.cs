@@ -34,6 +34,37 @@ public class NameRulesTests
     }
 
     [Theory]
+    [InlineData("\U0001D49C")]
+    [InlineData("\U00020000")]
+    [InlineData("a\U00020000b")]
+    [InlineData("@class")]
+    [InlineData("@Score")]
+    public void ToCSharpIdentifier_OnAnAlreadyValidIdentifier_ReturnsItUnchanged(string name)
+    {
+        NameRules.ToCSharpIdentifier(name).ShouldBe(name);
+    }
+
+    [Fact]
+    public void ToCSharpIdentifier_OnSeededRandomText_NeverChangesAValidIdentifierAndIsIdempotent()
+    {
+        string[] pieces = { "a", "Z", "_", "7", "\U0001D49C", "\U00020000", "\u00e9", "\u6e38", " ", "-", ".", "+", "@", "class", "while" };
+        Random random = new Random(7133);
+        for (int index = 0; index < 2000; index++)
+        {
+            string name = string.Concat(Enumerable.Range(0, random.Next(1, 6)).Select(_ => pieces[random.Next(pieces.Length)]));
+            string result = NameRules.ToCSharpIdentifier(name);
+
+            NameRules.ToCSharpIdentifier(result).ShouldBe(result, $"idempotent for '{name}'");
+            bool isAlreadyIdentifier = new NameRules().IsValidCSharpName(name, out _, out _)
+                && name.EnumerateRunes().All(rune => char.IsLetterOrDigit(rune.ToString(), 0) || rune.Value == '_');
+            if (isAlreadyIdentifier)
+            {
+                result.ShouldBe(name, $"valid identifier '{name}' changed");
+            }
+        }
+    }
+
+    [Theory]
     [InlineData("2DPlatformer")]
     [InlineData("a b-c.d")]
     [InlineData("\u00e9\u00e8")]
