@@ -980,22 +980,22 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
         // Kahn's topological sort with a "stay on the current batch key" tiebreaker.
         // Among items with indegree 0, prefer one whose (BatchKey, BatchSortKey) matches the
-        // last emitted exactly (keeps same-texture runs contiguous); failing that, one whose
-        // BatchKey alone matches (keeps the coarser SpriteBatch/Apos.Shapes grouping
-        // BatchOrchestrator relies on, even when BatchSortKey differs or is unset); failing that,
-        // a free container (Entry.IsFreeContainer) — emitting one submits nothing and leaves the
+        // last emitted exactly (keeps same-texture runs contiguous); failing that, a free
+        // container (Entry.IsFreeContainer) — emitting one submits nothing and leaves the
         // running key alone, so it is strictly better than committing to a real key change, and
         // it unblocks the container's children while the running key may still be worth
-        // continuing. Ties within a tier break by smallest DFS index for determinism. No match at
-        // all → smallest DFS overall.
+        // continuing; failing that, one whose BatchKey alone matches (keeps the coarser
+        // SpriteBatch/Apos.Shapes grouping BatchOrchestrator relies on, even when BatchSortKey
+        // differs or is unset). Ties within a tier break by smallest DFS index for determinism.
+        // No match at all → smallest DFS overall.
         //
         // The free-container tier is what makes same-key runs merge across sibling instances of
         // the same Gum component (#4579): each instance's root is a transparent wrapper whose
         // bounds encompass its children, so those children have a precedence edge from it and stay
-        // unavailable until it is chosen. Without this tier a wrapper is only ever reached via the
-        // last-resort smallest-DFS tier — by which point the first instance's non-matching items
-        // have already been drained and the running key has moved on, so nothing merges across
-        // instances no matter how many identical, non-overlapping ones exist.
+        // unavailable until it is chosen. It sits above the BatchKey-only tier (#7032): on
+        // MonoGame every sprite, nine-slice and text reports the same BatchKey, so a key-only
+        // match is nearly always available and, ahead of the wrappers, committed the run to the
+        // font texture before the next instance's background could join the running one.
         EnsurePickCapacity(n);
         AssignBuckets(window, n, indegree, out int runningBucket, out int runningKey);
 
@@ -1006,13 +1006,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             {
                 chosen = _bucketHeaps[runningBucket].PeekUndrawn(drawn, ref _pickSteps);
             }
-            if (chosen == -1 && runningKey != -1)
-            {
-                chosen = _keyHeaps[runningKey].PeekUndrawn(drawn, ref _pickSteps);
-            }
             if (chosen == -1)
             {
                 chosen = _freeContainerHeap.PeekUndrawn(drawn, ref _pickSteps);
+            }
+            if (chosen == -1 && runningKey != -1)
+            {
+                chosen = _keyHeaps[runningKey].PeekUndrawn(drawn, ref _pickSteps);
             }
             if (chosen == -1)
             {

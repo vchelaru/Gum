@@ -170,11 +170,11 @@ internal sealed class LegacyPairwiseBatchOrderer
             int chosen = Pick(window, available, e => e.BatchKey == _runningBatchKey && Equals(e.BatchSortKey, _runningSortKey));
             if (chosen == -1)
             {
-                chosen = Pick(window, available, e => e.BatchKey == _runningBatchKey);
+                chosen = Pick(window, available, e => e.IsFreeContainer);
             }
             if (chosen == -1)
             {
-                chosen = Pick(window, available, e => e.IsFreeContainer);
+                chosen = Pick(window, available, e => e.BatchKey == _runningBatchKey);
             }
             if (chosen == -1)
             {
