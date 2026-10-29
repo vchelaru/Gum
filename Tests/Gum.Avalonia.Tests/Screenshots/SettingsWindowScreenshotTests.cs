@@ -1,4 +1,14 @@
+using Avalonia;
+using Avalonia.Controls;
+using System;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using CodeOutputPlugin;
+using Gum.Avalonia.Settings;
+using Gum.ProjectServices.CodeGeneration;
+using System.Linq;
+using System.Reflection;
 using Gum.Avalonia.Tests.EndToEnd;
 using Gum.Avalonia.Tests.Harness;
 using Gum.SettingsWindow;
@@ -52,6 +62,124 @@ public class SettingsWindowScreenshotTests
         viewModel.SelectPage(SettingsPageIds.Canvas);
         window.Save("settings-project-canvas-light");
     });
+
+    [SkippableFact]
+    public void CodeGeneration_Light() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Light);
+
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+        window.Save("settings-project-code-generation-light");
+    });
+
+    [SkippableFact]
+    public void CodeGeneration_ScrolledToTheEnd_Dark() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+        ScrollToEnd(window);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-code-generation-end");
+    });
+
+    [SkippableFact]
+    public void CodeGeneration_LegacyLibrary_ShowsTheCollapsedAndExpandedLegacySection() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+
+        // The legacy rows exist only for a legacy library, which the project does not use by default.
+        CodeGenerationSettingsPageView page = window.Find<CodeGenerationSettingsPageView>();
+        EditSettings(page, settings => settings.OutputLibrary = OutputLibrary.Maui);
+
+        ScrollToEnd(window);
+        window.Save("settings-project-code-generation-legacy-collapsed");
+        page.Grid.Categories.Last().IsExpanded = true;
+        ScrollToEnd(window);
+        window.Save("settings-project-code-generation-legacy-expanded");
+    });
+
+    [SkippableFact]
+    public void CodeGeneration_WithFolders_ShowsWhereFilesResolve() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+
+        EditSettings(window.Find<CodeGenerationSettingsPageView>(), settings =>
+        {
+            settings.CodeProjectRoot = "../MyGame/";
+            settings.GeneratedCodeFolder = "Gum/Generated";
+            settings.CustomCodeFolder = "Gum/Custom";
+            settings.RootNamespace = "MyGame.Gum";
+        });
+        ScrollToResolves(window);
+        window.Save("settings-project-code-generation-resolves");
+    });
+
+    [SkippableTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CodeGeneration_MarkGeneratedFolderRow_ShowsEnabledAndDisabled(bool dark) => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, dark ? ThemeVariant.Dark : ThemeVariant.Light);
+        viewModel.SelectPage(SettingsPageIds.CodeGeneration);
+        string theme = dark ? "dark" : "light";
+
+        EditSettings(window.Find<CodeGenerationSettingsPageView>(), settings =>
+        {
+            settings.CodeProjectRoot = "../MyGame/";
+            settings.GeneratedCodeFolder = "Gum/Generated";
+            settings.CustomCodeFolder = "Gum/Custom";
+            settings.MarkGeneratedCodeFolder = true;
+        });
+        ScrollToResolves(window);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-mark-generated-folder-enabled-" + theme);
+
+        EditSettings(window.Find<CodeGenerationSettingsPageView>(), settings => settings.CustomCodeFolder = string.Empty);
+        ScrollToResolves(window);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-mark-generated-folder-disabled-" + theme);
+    });
+
+    private static void EditSettings(CodeGenerationSettingsPageView page, Action<CodeOutputProjectSettings> edit)
+    {
+        CodeGenerationSettingsViewModel pageModel = (CodeGenerationSettingsViewModel)page.DataContext!;
+        CodeOutputSettingsMembers members = (CodeOutputSettingsMembers)typeof(CodeGenerationSettingsViewModel)
+            .GetField("_members", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(pageModel)!;
+        edit(members.ProjectSettings!);
+        pageModel.Reload();
+    }
+
+    private static void ScrollToResolves(ScreenshotWindow window)
+    {
+        CodeGenerationSettingsPageView page = window.Find<CodeGenerationSettingsPageView>();
+        ScrollViewer scroller = page.GetVisualAncestors().OfType<ScrollViewer>().First();
+        Dispatcher.UIThread.RunJobs();
+        scroller.Offset = new Vector(0, 300);
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    private static void ScrollToEnd(ScreenshotWindow window)
+    {
+        CodeGenerationSettingsPageView page = window.Find<CodeGenerationSettingsPageView>();
+        ScrollViewer scroller = page.GetVisualAncestors().OfType<ScrollViewer>().First();
+        // Spacing is applied after the first layout pass, so the extent grows once more before the end is final.
+        for (int pass = 0; pass < 3; pass++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            window.Window.UpdateLayout();
+            scroller.ScrollToEnd();
+        }
+    }
 
     [SkippableFact]
     public void Search_NarrowsThePageList() => PrScreenshot.Run(() =>

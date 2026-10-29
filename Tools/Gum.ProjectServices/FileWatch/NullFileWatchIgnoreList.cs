@@ -18,5 +18,8 @@ public class NullFileWatchIgnoreList : IFileWatchIgnoreList
     public void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null) { }
 
     /// <inheritdoc/>
+    public void RecordWrittenContent(FilePath filePath) { }
+
+    /// <inheritdoc/>
     public bool TryGetIgnoreFileChange(FilePath fileName) => false;
 }

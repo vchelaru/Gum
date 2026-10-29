@@ -10,6 +10,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Screens;
+[global::Gum.DataTypes.GumElement("Spaced Screen")]
 partial class Spaced_Screen : global::Gum.Forms.Controls.FrameworkElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -22,7 +23,7 @@ partial class Spaced_Screen : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Spaced Screen") ?? throw new System.InvalidOperationException("Could not find an element named Spaced Screen - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Spaced Screen");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Spaced_Screen(visual);
             visual.Width = 0;

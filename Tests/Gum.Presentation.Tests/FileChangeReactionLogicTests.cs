@@ -80,7 +80,9 @@ public class FileChangeReactionLogicTests : BaseTestClass
             new Mock<IStandardElementsManagerGumTool>().Object,
             pluginManagerMock.Object,
             dialogService,
-            unsavedChangesTracker);
+            unsavedChangesTracker,
+            new Mock<IVariableReferenceLogic>().Object,
+            new Mock<Gum.Undo.IUndoManager>().Object);
     }
 
     [Fact]
@@ -443,6 +445,49 @@ public class FileChangeReactionLogicTests : BaseTestClass
         projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
         ObjectFinder.Self.GumProjectSave = project;
         return sut;
+    }
+
+    [Theory]
+    [InlineData("Textures/Photo.jpg")]
+    [InlineData("Textures/Photo.jpeg")]
+    public void ReactToFileChanged_ShouldRefreshWireframe_WhenJpegReferencedBySelectedElementChanges(string relativeFile)
+    {
+        FileChangeReactionLogic sut = BuildSut(
+            out _,
+            out _,
+            out _,
+            out _,
+            out Mock<ISelectedState> selectedStateMock,
+            out Mock<IWireframeObjectManager> wireframeObjectManagerMock);
+
+        GumProjectSave project = new GumProjectSave { FullFileName = @"C:\proj\Project.gumx" };
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+        InstanceSave spriteInstance = new InstanceSave { Name = "MySprite", BaseType = "Sprite", ParentContainer = screen };
+        screen.Instances.Add(spriteInstance);
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "MySprite.SourceFile",
+            Type = "string",
+            Value = relativeFile,
+            IsFile = true,
+            SetsValue = true,
+        });
+        project.Screens.Add(screen);
+
+        ObjectFinder.Self.GumProjectSave = project;
+        selectedStateMock.Setup(s => s.SelectedElement).Returns(screen);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(@"C:\proj\" + relativeFile));
+
+            wireframeObjectManagerMock.Verify(w => w.RefreshAll(true, true), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
     }
 
     [Fact]

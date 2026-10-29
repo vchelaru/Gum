@@ -12,6 +12,8 @@ public class AddDestinationTracker : IAddDestinationTracker
     public AddDestinationTracker(IMessenger messenger)
     {
         messenger.Register<SelectionChangedMessage>(this, (_, _) => MarkSelectionChanged());
+        // A pick on what is already selected changes nothing, but it still names the destination (#7007).
+        messenger.Register<SelectionPickedMessage>(this, (_, _) => MarkSelectionChanged());
     }
 
     /// <inheritdoc/>

@@ -25,3 +25,27 @@ ButtonInstance.Click += (_,_) =>
     GumService.Default.Cursor.ClearInputValues();
 };
 ```
+
+### Focusing Disabled Controls
+
+A disabled control (`IsEnabled` set to `false`) cannot take focus by default. Tab order and gamepad or keyboard navigation skip it, and setting `IsFocused` to `true` does nothing. Set `AllowFocusWhenDisabled` to `true` on a control to change this. For example, a shop menu can let a gamepad player reach an upgrade they cannot afford yet to read its description.
+
+```csharp
+// Initialize
+UpgradeButton.IsEnabled = false;
+UpgradeButton.AllowFocusWhenDisabled = true;
+```
+
+A focused disabled control shows its **DisabledFocused** state and ignores confirm, click, typing, and value changes just as it does when unfocused. Focus can still move away from it with the d-pad, arrow keys, or tab. The property applies to each control individually and is not inherited, and a control inside a disabled parent stays out of navigation. See [Moving Focus](../../events-and-interactivity/tabbing-moving-focus.md) for how navigation picks the next control.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+### Hiding a Focused Control
+
+Setting `IsVisible` to `false` on a focused control, or on any of its parents, removes its focus, the same as removing it from the root. A hidden control no longer receives gamepad or keyboard input, so closing a menu from a focused button stops later presses from clicking that button. Showing the control again does not restore focus; set `IsFocused` to `true` to focus it. A control that is not visible cannot take focus, so show a panel before focusing a control inside it.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}

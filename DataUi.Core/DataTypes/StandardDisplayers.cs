@@ -11,6 +11,18 @@ public static class StandardDisplayers
     /// <summary>Single-line text; the fallback for any type without a better editor.</summary>
     public sealed class TextBox { private TextBox() { } }
 
+    /// <summary>
+    /// A read-only, label-less box of code file paths, one per line: a line ending in <c>.Generated.cs</c> is
+    /// drawn in one color and any other path in a second. Avalonia head only.
+    /// </summary>
+    public sealed class CodeFilePaths { private CodeFilePaths() { } }
+
+    /// <summary>
+    /// A read-only value in a muted field with a small chip beside it (<see cref="InstanceMember.ChipText"/>),
+    /// such as a detected version and where it came from. Avalonia head only.
+    /// </summary>
+    public sealed class ReadOnlyValueWithChip { private ReadOnlyValueWithChip() { } }
+
     /// <summary>Multi-line text.</summary>
     public sealed class MultiLineTextBox { private MultiLineTextBox() { } }
 

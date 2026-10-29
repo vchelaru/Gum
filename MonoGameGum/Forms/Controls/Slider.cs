@@ -450,17 +450,24 @@ public class Slider : RangeBase, IInputReceiver
         {
             var gamepad = gamepads[i];
 
+#if !FRB
+            // An explicit SpatialNavigation override wins over changing the Value (issue #6937).
+            bool isOverridePressed = IsSpatialNavigationOverridePressed(gamepad);
+#else
+            const bool isOverridePressed = false;
+#endif
             HandleGamepadNavigation(gamepad);
 
             var valueBeforeGamepad = Value;
 
-            if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
+            // A disabled control can hold focus (AllowFocusWhenDisabled) but does not change its value.
+            if (IsEnabled && !isOverridePressed && (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left)))
             {
                 this.Value -= this.SmallChange;
             }
-            else if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
+            else if (IsEnabled && !isOverridePressed && (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right)))
             {
                 this.Value += this.SmallChange;
             }
@@ -530,16 +537,18 @@ public class Slider : RangeBase, IInputReceiver
 
 #if !FRB
 
+        bool isKeyboardOverridePressed = IsSpatialNavigationOverridePressedByKeyboard();
+
         foreach (var keyboard in KeyboardsForUiControl)
         {
             var valueBeforeKeyboard = Value;
 
             // Fully qualified so this compiles regardless of the file-level `using Keys = ...` alias.
-            if(keyboard.KeyTyped(Gum.Forms.Input.Keys.Right) == true)
+            if(!isKeyboardOverridePressed && keyboard.KeyTyped(Gum.Forms.Input.Keys.Right) == true)
             {
                 this.Value += SmallChange;
             }
-            if(keyboard.KeyTyped(Gum.Forms.Input.Keys.Left) == true)
+            if(!isKeyboardOverridePressed && keyboard.KeyTyped(Gum.Forms.Input.Keys.Left) == true)
             {
                 this.Value -= SmallChange;
             }

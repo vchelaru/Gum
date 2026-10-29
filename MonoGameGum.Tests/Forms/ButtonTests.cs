@@ -163,6 +163,7 @@ public class ButtonTests : BaseTestClass
         wasPushed.ShouldBeTrue();
     }
 
+#if !SKIA_LINKED_TESTS // uses Microsoft.Xna GamePadState; Skia twin in GamepadLinkedGapTests
     [Fact]
     public void OnFocusUpdate_ShouldPushOnGamepadClickButton()
     {
@@ -192,6 +193,7 @@ public class ButtonTests : BaseTestClass
 
         wasPushed.ShouldBeTrue();
     }
+#endif
 
     [Fact]
     public void OnFocusUpdate_ShouldNotClick_OnNonEnterKeyboardPresses()

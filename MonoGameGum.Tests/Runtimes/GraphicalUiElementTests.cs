@@ -2139,6 +2139,7 @@ public class GraphicalUiElementTests : BaseTestClass
         "mExposedVariables",
         "mStates",
         "mCategories",
+        "_appliedCategoryStates",
         "<StackedRowOrColumnDimensions>k__BackingField",
         "<Animations>k__BackingField",
         "_animationController",
@@ -2184,6 +2185,32 @@ public class GraphicalUiElementTests : BaseTestClass
         "RollOver",
         "RollOverBubbling",
     };
+
+    [Fact]
+    public void Clone_AfterACategoricalStateWasApplied_StartsWithItAndApplyingAnotherOnTheCloneLeavesTheSource()
+    {
+        ContainerRuntime source = new();
+        StateSaveCategory category = new StateSaveCategory { Name = "MyCategory" };
+        StateSave stateA = new StateSave { Name = "A" };
+        stateA.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 10f, SetsValue = true });
+        StateSave stateB = new StateSave { Name = "B" };
+        stateB.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 20f, SetsValue = true });
+        category.States.Add(stateA);
+        category.States.Add(stateB);
+        source.AddCategory(category);
+        source.SetProperty("MyCategoryState", "A");
+
+        GraphicalUiElement clone = source.Clone();
+        clone.Width = 0;
+        clone.ReapplyAppliedCategoryStatesRecursive();
+        clone.Width.ShouldBe(10f);
+
+        clone.SetProperty("MyCategoryState", "B");
+        source.Width = 0;
+        source.ReapplyAppliedCategoryStatesRecursive();
+
+        source.Width.ShouldBe(10f);
+    }
 
     [Fact]
     public void Clone_ShouldNotShareAnyPerElementReferenceWithSource()

@@ -438,7 +438,7 @@ Width = global::Localization.CurrentLanguage == 2 ? 220 : 160
 
 The `global::` prefix is required, and the name is case sensitive. Because the value is a number, it is most often compared in a ternary expression as shown above.
 
-Changing the **Language** in the project properties updates the preview in the tool. See [Localization](../../localization.md) for adding a localization file and selecting a language.
+Changing the **Language** on the **Localization** page of the Settings window updates the preview in the tool. See [Localization](../../localization.md) for adding a localization file and selecting a language.
 
 {% hint style="info" %}
 At runtime, a reference which reads the current language needs `Gum.Expressions`. It updates when the language changes. See [Runtime Variable References](../../../code/styling/runtime-variable-references.md).
@@ -469,6 +469,16 @@ A variable reference can read from something the project does not have: an eleme
 Gum reports a **GUM0009** warning in the [Errors tab](../../editor-tab.md) for each of these lines, naming the element, the state, the line, and what it reads that is missing. `gumcli check` reports the same warning. To resolve it, add or import the missing element, or change the reference to point at one the project has.
 
 Renaming an element in Gum updates the references to it, so this usually happens after editing files outside of Gum or importing only part of another project.
+
+## Circular References (GUM0013)
+
+Rows that read each other in a loop, such as `A.Width = B.Width + 1` with `B.Width = A.Width + 1`, a row that reads its own result, or a loop through rows of two elements (`Panel.A` reads `Other.B`, which reads `Panel.A`), have no order to evaluate in. Gum reports a **GUM0013** warning in the [Errors tab](../../editor-tab.md) and in `gumcli check`, on every element that holds a row in the loop, naming the loop (`Panel.A.Width -> Panel.B.Width -> Panel.A.Width`).
+
+Rows in a loop are not evaluated, in the tool or in a game: they keep their stored values, so nothing freezes and applying references again changes nothing. To resolve it, remove one of the rows. A loop through a categorized state of another element is not reported.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Variable References in the Property Grid
 

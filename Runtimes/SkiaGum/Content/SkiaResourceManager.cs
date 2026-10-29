@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
+using RenderingLibrary.Content;
 using SkiaSharp;
 using SkiaSharp.Skottie;
 using Svg.Skia;
@@ -42,30 +43,30 @@ public static class SkiaResourceManager
 
     private static void CacheSvg(string resourceName)
     {
-        using Stream? fileStream = TryOpenFile(resourceName);
-        if (fileStream != null)
-        {
-            SKSvg svg = new SKSvg();
-            svg.Load(fileStream);
-            svgCache[resourceName] = svg;
-        }
-        else
-        {
-            using (Stream stream = GetManifestResourceStream(
-                resourceName, ResourceAssembly))
-            {
-                SKSvg svg = new SKSvg();
+        using Stream stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
+            resourceName, ResourceAssembly);
 
-                try
-                {
-                    svg.Load(stream);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception($"Error loading SVG {resourceName}\n{e}");
-                }
-                svgCache[resourceName] = svg;
+        // A document that does not parse is a load failure like a missing file, and is not cached, so a later
+        // call can succeed once the file is fixed (#6903).
+        svgCache[resourceName] = ParseSvg(resourceName, stream);
+    }
+
+    private static SKSvg ParseSvg(string resourceName, Stream stream)
+    {
+        SKSvg svg = new SKSvg();
+        try
+        {
+            // The parser throws on malformed XML and on a root that is not an svg element (a
+            // NullReferenceException), and returns null for a document it reads but cannot draw.
+            if (svg.Load(stream) != null && svg.Picture != null)
+            {
+                return svg;
             }
+            throw new InvalidDataException($"The parser returned no picture for {resourceName}.");
+        }
+        catch (Exception e)
+        {
+            throw new FileNotFoundException(DescribeUnparseable("SVG", resourceName, "an SVG document"), resourceName, e);
         }
     }
 
@@ -78,7 +79,7 @@ public static class SkiaResourceManager
 
     #region Lottie Animation Caching
 
-    private static ConcurrentDictionary<string, Animation?> animationCache = new ConcurrentDictionary<string, Animation?>();
+    private static ConcurrentDictionary<string, Animation> animationCache = new ConcurrentDictionary<string, Animation>();
 
     public static Animation? GetLottieAnimation(string resourceName)
     {
@@ -90,21 +91,13 @@ public static class SkiaResourceManager
 
     private static void CacheAnimation(string resourceName)
     {
-        using (Stream stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
-            resourceName, ResourceAssembly))
-        {
-            Animation? animation = null;
+        using Stream stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
+            resourceName, ResourceAssembly);
 
-            try
-            {
-                animation = Animation.Create(stream);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"Error loading Animation {resourceName}\n{e}");
-            }
-            animationCache[resourceName] = animation;
-        }
+        // Skottie returns null for a file it cannot parse. That is a load failure like a missing file, and is
+        // not cached, so a later call can succeed once the file is fixed (#6903).
+        animationCache[resourceName] = Animation.Create(stream)
+            ?? throw new FileNotFoundException(DescribeUnparseable("Lottie animation", resourceName, "a Lottie JSON file"), resourceName);
     }
 
     #endregion
@@ -162,7 +155,7 @@ public static class SkiaResourceManager
             if (stream != null)
             {
                 // Don't cache a failed decode, so a later call (e.g. a retried download) can succeed.
-                skBitmapCache[resourceName] = Decode(stream, resourceName)
+                skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream)
                     ?? throw new InvalidDataException($"Could not decode an image for {resourceName}.");
             }
             else
@@ -197,30 +190,67 @@ public static class SkiaResourceManager
     {
         using var stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
             resourceName, ResourceAssembly);
-        // A file that does not decode has always been cached as null here (the stream overload throws
-        // instead); kept as-is.
-        skBitmapCache[resourceName] = Decode(stream, resourceName)!;
+        // A file Skia cannot decode is a load failure like a missing file, and is not cached, so a later
+        // call can succeed once the file is fixed (#6889).
+        skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream)
+            ?? throw new FileNotFoundException(DescribeUndecodableImage(resourceName), resourceName);
     }
 
-    /// <summary>
-    /// Decodes an encoded image, or wraps a gumcli-packed raw texture (#6514) without decoding.
-    /// Skia draws premultiplied alpha, so a straight package is premultiplied here, with the same
-    /// one-time warning as the other runtimes (repacking with --premultiplied-alpha avoids it).
-    /// </summary>
-    private static SKBitmap? Decode(Stream stream, string resourceName)
+    private static string DescribeUndecodableImage(string resourceName)
     {
-        Stream seekable = global::Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
-        byte[]? rawTexture = global::Gum.Bundle.GumRawTexture.ReadForRuntime(seekable, resourceName,
+        string extension = Path.GetExtension(resourceName);
+        string format = string.IsNullOrEmpty(extension) ? "an unknown format" : $"the {extension} format";
+        return $"The image {resourceName} exists but could not be decoded. It may be corrupt, empty, or in a format " +
+            $"Skia does not support ({format}); use a supported format such as PNG, or register an IImageDecoder.";
+    }
+
+    private static string DescribeUnparseable(string kind, string resourceName, string expected) =>
+        $"The {kind} {resourceName} exists but could not be parsed. It may be corrupt, empty, or not {expected}.";
+
+    /// <summary>
+    /// Decodes <paramref name="stream"/> with the registered <see cref="LoaderManager.ImageDecoders"/>
+    /// first, then <see cref="SKBitmap.Decode(Stream)"/>. Returns null when Skia cannot decode it.
+    /// A gumcli-packed raw texture (#6514) is wrapped without decoding: Skia draws premultiplied
+    /// alpha, so a straight package is premultiplied, with the same one-time warning as the other
+    /// runtimes (repacking with --premultiplied-alpha avoids it).
+    /// </summary>
+    private static SKBitmap? DecodeBitmap(string resourceName, Stream stream)
+    {
+        stream = global::Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+        byte[]? rawTexture = global::Gum.Bundle.GumRawTexture.ReadForRuntime(stream, resourceName,
             runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "SkiaGum draws premultiplied alpha",
             bleedTransparentEdges: false,
             out global::Gum.Bundle.GumRawTextureHeader header);
-        if (rawTexture == null)
+        if (rawTexture != null)
         {
-            return SKBitmap.Decode(seekable);
+            SKBitmap rawBitmap = new SKBitmap(new SKImageInfo(header.Width, header.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+            System.Runtime.InteropServices.Marshal.Copy(rawTexture, 0, rawBitmap.GetPixels(), rawTexture.Length);
+            return rawBitmap;
         }
 
-        SKBitmap bitmap = new SKBitmap(new SKImageInfo(header.Width, header.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
-        System.Runtime.InteropServices.Marshal.Copy(rawTexture, 0, bitmap.GetPixels(), rawTexture.Length);
+        Stream original = stream;
+        try
+        {
+            DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(resourceName, ref stream);
+            return decoded != null ? ToBitmap(decoded) : SKBitmap.Decode(stream);
+        }
+        finally
+        {
+            // TryDecode replaces a non-seekable stream with an in-memory copy; the caller disposes the original.
+            if (!ReferenceEquals(stream, original))
+            {
+                stream.Dispose();
+            }
+        }
+    }
+
+    // Skia draws either alpha type, so the decoder's flag is passed through instead of converting.
+    internal static SKBitmap ToBitmap(DecodedImage decoded)
+    {
+        var info = new SKImageInfo(decoded.Width, decoded.Height, SKColorType.Rgba8888,
+            decoded.IsPremultiplied ? SKAlphaType.Premul : SKAlphaType.Unpremul);
+        var bitmap = new SKBitmap(info);
+        System.Runtime.InteropServices.Marshal.Copy(decoded.Rgba, 0, bitmap.GetPixels(), decoded.Rgba.Length);
         return bitmap;
     }
 

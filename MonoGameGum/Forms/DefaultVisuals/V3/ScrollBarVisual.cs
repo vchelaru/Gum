@@ -251,9 +251,9 @@ public class ScrollBarVisual : InteractiveGue
         TrackInstance.HasEvents = false;
         ThumbContainer.AddChild(TrackInstance);
 
-        // The Thumb template is a theme's hook for restyling thumbs. A template that is not built on
-        // ButtonVisual cannot back this property, so fall back to the stock thumb.
-        ThumbInstance = new Thumb().Visual as ButtonVisual ?? new ThumbVisual();
+        // The ScrollBarThumb (then Thumb) template is a theme's hook for restyling scroll bar thumbs. A
+        // template that is not built on ButtonVisual cannot back this property, so fall back to the stock thumb.
+        ThumbInstance = new ScrollBarThumb().Visual as ButtonVisual ?? CreateStockThumb();
         ThumbInstance.Name = "ThumbInstance";
         ThumbInstance.TextInstance.Text = String.Empty;
         ThumbInstance.Width = 0f;
@@ -361,6 +361,13 @@ public class ScrollBarVisual : InteractiveGue
         {
             this.FormsControlAsObject = new ScrollBar(this);
         }
+    }
+
+    private static ButtonVisual CreateStockThumb()
+    {
+        ThumbVisual visual = new ThumbVisual(tryCreateFormsObject: false);
+        visual.FormsControlAsObject = new ScrollBarThumb(visual);
+        return visual;
     }
 
     /// <summary>

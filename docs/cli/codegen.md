@@ -10,7 +10,7 @@ Generates C# code for elements in a Gum project. Runs error checks before genera
 
 - `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
 - `--element <name>` — Generate code only for the named element. Can be specified multiple times. Supports folder-qualified names.
-- `--prune` — After generating, delete `.Generated.cs` files under the code output folder (`CodeProjectRoot`, plus `GeneratedCodeFolder` when set; `GeneratedCodeFolderPrefix` changes the Screens and Components folders inside it) that no element in the project accounts for.
+- `--prune` — After generating, delete `.Generated.cs` files under the code output folder (`CodeProjectRoot`, plus `GeneratedCodeFolder` when set; custom `.cs` files go to `CustomCodeFolder` when set; `GeneratedCodeFolderPrefix` changes the Screens and Components folders inside it) that no element in the project accounts for.
 
 ## Examples
 
@@ -37,6 +37,9 @@ Generated code for 11 element(s).
 
 ## Notes
 
+- `codegen` uses the same settings as the Gum tool, read from `ProjectCodeSettings.codsj`: the Output Library, Code Project Root, Generated Code Folder, Custom Code Folder, Folder Prefix and namespace options. Edit them on the **Code generation** page of **Edit > Settings...** in the tool, or in the file. See the [Code tab](../gum-tool/code-tab/README.md) for what each does.
+- When **Mark Generated Folder** is on, `codegen` writes the `.editorconfig` into the Generated Code Folder, and reports it if an existing `.editorconfig` that Gum did not write is left alone.
+- Unlike the tool, `codegen` never asks before writing. It does not move files after a folder setting changes; run it with `--prune` to remove generated files left at the old location.
 - Requires `ProjectCodeSettings.codsj` with `CodeProjectRoot` configured. If the file is missing, `codegen` attempts auto-detection first and writes it before continuing. Exit code 2 only if auto-detection also fails — in that case, run [`codegen-init`](codegen-init.md) first.
 - Only Screens and Components are generated. StandardElements are excluded.
 - Elements marked `NeverGenerate` in their per-element settings are silently skipped.

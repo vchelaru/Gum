@@ -29,7 +29,7 @@
     <!-- Runtime HLSL .fx/.slang compiler used by RenderTargetShaderScreen to build a post-process
          shader at runtime without the content pipeline (issue #816). 0.19.0+ is required for the
          .slang input frontend (ShadowDusk.Compiler.Slang.SlangFrontend). -->
-    <PackageReference Include="ShadowDusk.Compiler" Version="0.20.0" />
+    <PackageReference Include="ShadowDusk.Compiler" Version="0.22.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
@@ -68,6 +68,9 @@
     <None Update="Content\**\*.slang">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- The Outline shader the tool ships (Shader File drop-down, Built-in); one file, linked, so the
+         sample runs exactly what users get. -->
+    <None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="Content\Outline.slang" CopyToOutputDirectory="PreserveNewest" />
     <!-- #3670/#3703 CustomFontFile=.ttf demo -->
     <None Update="Content\**\*.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

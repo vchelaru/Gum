@@ -263,6 +263,9 @@ namespace Gum.Graphics.Animation
 
             string oldRelativeDirectory = FileManager.RelativeDirectory;
 
+            // Frames across all chains share the texture files that failed, so each is reported once (#6899).
+            HashSet<string> failedTextures = new HashSet<string>();
+
             try
             {
                 if (animationChainListSave.FileRelativeTextures)
@@ -275,7 +278,7 @@ namespace Gum.Graphics.Animation
                 {
                     try
                     {
-                        Gum.Graphics.Animation.AnimationChain newChain = animationChain.ToAnimationChain(animationChainListSave.TimeMeasurementUnit, animationChainListSave.CoordinateType);
+                        Gum.Graphics.Animation.AnimationChain newChain = animationChain.ToAnimationChain(animationChainListSave.TimeMeasurementUnit, animationChainListSave.CoordinateType, failedTextures);
 
                         newChain.IndexInLoadedAchx = list.Count;
 

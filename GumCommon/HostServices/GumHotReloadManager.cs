@@ -78,6 +78,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     private bool _pendingReload;
     private DateTime _lastChangeTime;
     private readonly object _pendingReloadLock = new object();
+    // Consecutive reloads that failed to read the project; reset by any new file change.
+    private int _failedAttempts;
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
 
@@ -190,6 +192,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 _lastChangeTime = now;
                 _pendingReload = true;
+                _failedAttempts = 0;
             }
         }
     }
@@ -211,7 +214,9 @@ public class GumHotReloadManager : IGumHotReloadManager
             or ".behx" or ".behj"
             or ".fnt";
 
-    private void CopyAndUnloadChangedFonts()
+    // Returns a description of the fonts that could not be copied (a file the editor still has open),
+    // which stay queued for the next reload; null when every font copied.
+    private string? CopyAndUnloadChangedFonts()
     {
         List<string> changedFonts;
         lock (_fontFileLock)
@@ -222,53 +227,72 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         if (changedFonts.Count == 0)
         {
-            return;
+            return null;
         }
 
         var sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
         if (sourceDirectory == null)
         {
-            return;
+            return null;
         }
 
         var sourceFontCache = Path.Combine(sourceDirectory, "FontCache");
         if (!Directory.Exists(sourceFontCache))
         {
-            return;
+            return null;
         }
 
+        string? failures = null;
+        foreach (var sourceFntPath in changedFonts)
+        {
+            try
+            {
+                CopyAndUnloadFont(sourceFntPath, sourceFontCache);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                lock (_fontFileLock)
+                {
+                    _changedFontFiles.Add(sourceFntPath);
+                }
+                failures += $"\nCould not copy font file {sourceFntPath}: {exception.Message}";
+            }
+        }
+
+        return failures;
+    }
+
+    private void CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
+    {
         var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
         Directory.CreateDirectory(destinationFontCache);
 
-        foreach (var sourceFntPath in changedFonts)
+        var fileName = Path.GetFileName(sourceFntPath);
+
+        // Copy the .fnt file
+        var destinationFile = Path.Combine(destinationFontCache, fileName);
+        File.Copy(sourceFntPath, destinationFile, overwrite: true);
+
+        // Copy associated .png texture pages (same name prefix)
+        var baseName = Path.GetFileNameWithoutExtension(fileName);
+        var copiedPngs = new List<string>();
+        foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
         {
-            var fileName = Path.GetFileName(sourceFntPath);
+            var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
+            File.Copy(pngFile, pngDestination, overwrite: true);
+            copiedPngs.Add(pngDestination);
+        }
 
-            // Copy the .fnt file
-            var destinationFile = Path.Combine(destinationFontCache, fileName);
-            File.Copy(sourceFntPath, destinationFile, overwrite: true);
+        // Unload the cached font so it gets reloaded from the new file
+        var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
+        var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
+        _disposeCachedAsset(standardizedFont);
 
-            // Copy associated .png texture pages (same name prefix)
-            var baseName = Path.GetFileNameWithoutExtension(fileName);
-            var copiedPngs = new List<string>();
-            foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
-            {
-                var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
-                File.Copy(pngFile, pngDestination, overwrite: true);
-                copiedPngs.Add(pngDestination);
-            }
-
-            // Unload the cached font so it gets reloaded from the new file
-            var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
-            var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
-            _disposeCachedAsset(standardizedFont);
-
-            // Unload the cached texture pages so they get reloaded too
-            foreach (var pngPath in copiedPngs)
-            {
-                var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
-                _disposeCachedAsset(standardizedPng);
-            }
+        // Unload the cached texture pages so they get reloaded too
+        foreach (var pngPath in copiedPngs)
+        {
+            var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
+            _disposeCachedAsset(standardizedPng);
         }
     }
 
@@ -280,29 +304,136 @@ public class GumHotReloadManager : IGumHotReloadManager
         // is safe from us modifying it via the rebuild step.
         var rootList = roots.ToList();
 
-        CopyAndUnloadChangedFonts();
+        string? fontFailure = CopyAndUnloadChangedFonts();
 
-        GumProjectSave newProject = GumProjectSave.Load(_projectSourcePath);
-        newProject.Initialize();
-        ObjectFinder.Self.GumProjectSave = newProject;
+        // The whole project is read into a temporary first. A file caught half written, locked by the
+        // editor or unparsable leaves the running tree and ObjectFinder exactly as they were (#6978).
+        GumProjectSave? newProject = TryLoadProject(out string? loadFailure);
+        if (newProject == null)
+        {
+            HandleFailedReload(loadFailure, fontFailure);
+            return;
+        }
 
-        // Re-apply the project's texture filter so editing it in the tool carries over on reload
-        // (issue #3199). On XNALIKE this takes effect on the next Draw; on raylib it affects
-        // textures loaded after this point (already-cached textures keep their prior filter).
-        _applyProjectTextureFilter(newProject);
+        GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
+        try
+        {
+            newProject.Initialize();
+            ObjectFinder.Self.GumProjectSave = newProject;
 
-        // Reload animations from the source project directory (loose files on disk) by enumerating
-        // its *Animations.ganx files. Hot reload only ever runs against a real filesystem, so a
-        // LooseFileGumFileProvider rooted at the source directory is the right seam — no need to
-        // mutate FileManager.RelativeDirectory the way the old per-element probe did.
-        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
-        Gum.Bundle.LooseFileGumFileProvider animationProvider = new Gum.Bundle.LooseFileGumFileProvider(
-            string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
-        _loadAnimationsFromProvider(newProject, animationProvider);
+            // Re-apply the project's texture filter so editing it in the tool carries over on reload
+            // (issue #3199). On XNALIKE this takes effect on the next Draw; on raylib it affects
+            // textures loaded after this point (already-cached textures keep their prior filter).
+            _applyProjectTextureFilter(newProject);
 
-        ApplyDiff(rootList, newProject, ISystemManagers.Default!);
+            // Reload animations from the source project directory (loose files on disk) by enumerating
+            // its *Animations.ganx files. Hot reload only ever runs against a real filesystem, so a
+            // LooseFileGumFileProvider rooted at the source directory is the right seam - no need to
+            // mutate FileManager.RelativeDirectory the way the old per-element probe did.
+            string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+            Gum.Bundle.LooseFileGumFileProvider animationProvider = new Gum.Bundle.LooseFileGumFileProvider(
+                string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
+            _loadAnimationsFromProvider(newProject, animationProvider);
+
+            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            ObjectFinder.Self.GumProjectSave = previousProject;
+            if (previousProject != null)
+            {
+                _applyProjectTextureFilter(previousProject);
+            }
+            HandleFailedReload(
+                $"Hot reload failed while applying {_projectSourcePath}: {exception.Message}\nThe UI may be partially updated; the next complete save reloads.",
+                fontFailure,
+                uiUnchanged: false);
+            return;
+        }
+
+        if (fontFailure != null)
+        {
+            ReportError(fontFailure.Trim());
+        }
 
         ReloadCompleted?.Invoke();
+    }
+
+    // Returns null with a description when the project cannot be read. Files the project lists but that
+    // are gone (a git checkout between branches) are reported and left out, so the rest still reloads.
+    private GumProjectSave? TryLoadProject(out string? failure)
+    {
+        failure = null;
+        GumProjectSave? project;
+        GumLoadResult result;
+        try
+        {
+            project = GumProjectSave.Load(_projectSourcePath, out result);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            failure = $"Could not read {_projectSourcePath}: {exception.Message}";
+            return null;
+        }
+
+        if (project == null || !string.IsNullOrEmpty(result.ErrorMessage))
+        {
+            failure = $"Could not read {_projectSourcePath}: {result.ErrorMessage?.Trim()}";
+            if (result.MissingFiles?.Count > 0)
+            {
+                failure += "\nMissing: " + string.Join(", ", result.MissingFiles);
+            }
+            return null;
+        }
+
+        if (result.MissingFiles?.Count > 0)
+        {
+            ReportError("Hot reload left out missing file(s): " + string.Join(", ", result.MissingFiles));
+        }
+
+        return project;
+    }
+
+    // A failed read is tried once more after the debounce, since the writer may still have had the file
+    // open; a second failure is reported and waits for the next save.
+    private void HandleFailedReload(string? failure, string? fontFailure, bool uiUnchanged = true)
+    {
+        bool retry;
+        lock (_pendingReloadLock)
+        {
+            _failedAttempts++;
+            retry = _failedAttempts < 2;
+            if (retry)
+            {
+                _lastChangeTime = _utcNow();
+                _pendingReload = true;
+            }
+        }
+
+        if (!retry)
+        {
+            string prefix = uiUnchanged ? "Hot reload skipped, the running UI is unchanged. " : "";
+            ReportError((prefix + failure + fontFailure).Trim());
+        }
+    }
+
+    private static void ReportError(string message)
+    {
+        try
+        {
+            if (ElementSaveExtensions.ReportPropertyAssignmentError != null)
+            {
+                ElementSaveExtensions.ReportPropertyAssignmentError(message);
+            }
+            else
+            {
+                Console.Error.WriteLine($"[Gum] {message}");
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting a hot reload failure: {exception}");
+        }
     }
 
     /// <summary>
@@ -312,29 +443,134 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <see cref="InstanceSave"/>) are added, removed, retyped, and reordered to match the
     /// project's <c>Instances</c> list, and the new default-state variables are re-applied.
     /// Runtime-added children (no <c>InstanceSave</c> tag) are left untouched. Primarily
-    /// called by <see cref="PerformReload"/>; exposed publicly for tests.
+    /// called by <see cref="PerformReload"/>; exposed publicly for tests. While it runs,
+    /// <c>ObjectFinder.Self.GumProjectSave</c> is <paramref name="newProject"/>; the previous project is
+    /// restored when it returns, so the caller decides afterward which project the finder holds.
     /// </summary>
     public static void ApplyDiff(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers)
     {
+        ApplyDiff(roots, newProject, systemManagers, ObjectFinder.Self.GumProjectSave);
+    }
+
+    /// <summary>
+    /// Same as the three-argument overload, with the project the live visuals were built from.
+    /// A reload compares it with <paramref name="newProject"/> to decide which variables the file
+    /// changed; a variable it did not change keeps the value the game gave it (#6980). Without it
+    /// (null, or the same object as the new project) the comparison uses what the visuals still
+    /// hold of the old project, and an element it cannot find an old version of is applied in full.
+    /// </summary>
+    public static void ApplyDiff(
+        IEnumerable<GraphicalUiElement> roots,
+        GumProjectSave newProject,
+        ISystemManagers systemManagers,
+        GumProjectSave? oldProject)
+    {
+        // References and base types resolve through ObjectFinder, so for this call it holds the new
+        // project whatever it held before, and the caller's project is put back afterward.
+        GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
+        ObjectFinder.Self.GumProjectSave = newProject;
+        try
+        {
+            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = previousProject;
+        }
+    }
+
+    private static void ApplyDiffToNewProject(
+        IEnumerable<GraphicalUiElement> roots,
+        GumProjectSave newProject,
+        ISystemManagers systemManagers,
+        GumProjectSave? oldProject)
+    {
+        // A file the tool did not save together with the files that read it (a text-editor edit of one
+        // swatch) leaves the readers holding the value they were saved with. A reference sets the final
+        // value, so the rows are evaluated in dependency order against the new project first, the way
+        // a tool save does, and a reference that reads another reference sees the end of the chain (#6853).
+        newProject.ApplyAllVariableReferences();
+
         Dictionary<string, ElementSave> byName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
         foreach (ElementSave element in newProject.AllElements)
         {
             byName[element.Name] = element;
         }
 
-        foreach (GraphicalUiElement root in roots.ToList())
+        List<GraphicalUiElement> rootList = roots.ToList();
+
+        ReloadContext context = new ReloadContext(byName, oldProject, newProject, rootList);
+
+        // The same three passes RefreshStyles runs, so a control keeps what it holds in code and the
+        // state it is in: save before anything is re-applied, restore after everything is (#6855).
+        foreach (GraphicalUiElement root in rootList)
         {
-            ApplyDiffRecursive(root, byName, systemManagers);
+            root.SaveFormsRuntimePropertiesRecursive();
         }
+
+        foreach (GraphicalUiElement root in rootList)
+        {
+            ApplyDiffRecursive(root, byName, systemManagers, context);
+        }
+
+        // Re-applying a default state overwrites what a categorical state set, so each visual goes
+        // back into the state it was in: first the ones code drove by name, then the Forms controls,
+        // which work out their own state (disabled, hovered, checked) and restore what code assigned.
+        foreach (GraphicalUiElement root in rootList)
+        {
+            root.ReapplyAppliedCategoryStatesRecursive();
+        }
+
+        foreach (GraphicalUiElement root in rootList)
+        {
+            root.RestoreFormsRuntimePropertiesRecursive();
+        }
+    }
+
+    /// <summary>
+    /// Points the visual's state and category dictionaries at the new element's save objects. A
+    /// visual keeps the instances it was created with, so without this a state applied after the
+    /// reload (a mouse over, then off) would use the values from before the edit. Entries that came
+    /// from an element of the replaced project and are gone from the new file are removed; entries
+    /// added in code, which belong to no project element, are kept.
+    /// </summary>
+    private static void RefreshStatesAndCategories(
+        GraphicalUiElement element,
+        ElementSave newEs,
+        Dictionary<string, ElementSave> byName)
+    {
+        bool IsFromReplacedElement(ElementSave? owner) =>
+            owner != null
+            && !(byName.TryGetValue(owner.Name, out ElementSave? current) && ReferenceEquals(current, owner));
+
+        foreach (KeyValuePair<string, StateSaveCategory> category in element.Categories.ToList())
+        {
+            if (IsFromReplacedElement(category.Value.States.FirstOrDefault()?.ParentContainer))
+            {
+                element.Categories.Remove(category.Key);
+            }
+        }
+
+        foreach (KeyValuePair<string, StateSave> state in element.States.ToList())
+        {
+            if (IsFromReplacedElement(state.Value.ParentContainer))
+            {
+                element.States.Remove(state.Key);
+            }
+        }
+
+        // Resolves base types through ObjectFinder, which a reload has already pointed at the new project.
+        element.AddStatesAndCategoriesRecursivelyToGue(newEs);
     }
 
     private static void ApplyDiffRecursive(
         GraphicalUiElement element,
         Dictionary<string, ElementSave> byName,
-        ISystemManagers systemManagers)
+        ISystemManagers systemManagers,
+        ReloadContext context)
     {
         string? name = element.ElementSave?.Name;
         HashSet<string>? designTimeChildNames = null;
@@ -343,8 +579,9 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             ElementSave? oldEs = element.ElementSave;
             element.ElementSave = newEs;
+            RefreshStatesAndCategories(element, newEs, byName);
 
-            DiffDesignTimeChildren(element, newEs, systemManagers);
+            DiffDesignTimeChildren(element, newEs, systemManagers, context);
 
             // An instance is built from its own element, so an edit to that element (a component's
             // default state or its own instances) has to reach it too, however deeply nested.
@@ -354,17 +591,17 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 if (instance.Tag is InstanceSave && instance.ElementSave is not StandardElementSave)
                 {
-                    ApplyDiffRecursive(instance, byName, systemManagers);
+                    ApplyDiffRecursive(instance, byName, systemManagers, context);
                 }
             }
 
             if (newEs.DefaultState != null)
             {
-                if (oldEs != null)
+                if (oldEs != null && !ReferenceEquals(oldEs, newEs))
                 {
-                    ResetRemovedVariables(element, oldEs, newEs);
+                    context.OldByName[newEs.Name] = oldEs;
                 }
-                element.SetVariablesRecursively(newEs, newEs.DefaultState);
+                SetChangedVariablesRecursively(element, newEs, context);
             }
 
             // After variables, so Parent variables have already moved each instance to its
@@ -390,8 +627,234 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 continue;
             }
-            ApplyDiffRecursive(child, byName, systemManagers);
+            ApplyDiffRecursive(child, byName, systemManagers, context);
         }
+    }
+
+    /// <summary>
+    /// What one reload knows while it walks the tree: the elements of the project the visuals were
+    /// built from, the visuals it has rebuilt, and the variables it has already applied to each
+    /// visual so a value the file did not change but a lower layer just reset can be put back.
+    /// </summary>
+    private sealed class ReloadContext
+    {
+        public Dictionary<string, ElementSave> OldByName { get; } =
+            new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
+
+        public HashSet<GraphicalUiElement> Recreated { get; } = new HashSet<GraphicalUiElement>();
+
+        public Dictionary<GraphicalUiElement, HashSet<string>> Applied { get; } =
+            new Dictionary<GraphicalUiElement, HashSet<string>>();
+
+        public ReloadContext(
+            Dictionary<string, ElementSave> newByName,
+            GumProjectSave? oldProject,
+            GumProjectSave newProject,
+            List<GraphicalUiElement> roots)
+        {
+            if (oldProject != null && !ReferenceEquals(oldProject, newProject))
+            {
+                foreach (ElementSave element in oldProject.AllElements)
+                {
+                    OldByName[element.Name] = element;
+                }
+            }
+
+            // What the visuals still hold of the old project fills in when the caller did not give it.
+            HashSet<GraphicalUiElement> visited = new HashSet<GraphicalUiElement>();
+            foreach (GraphicalUiElement root in roots)
+            {
+                CollectOldElements(root, newByName, visited);
+            }
+        }
+
+        private void CollectOldElements(
+            GraphicalUiElement element,
+            Dictionary<string, ElementSave> newByName,
+            HashSet<GraphicalUiElement> visited)
+        {
+            if (!visited.Add(element))
+            {
+                return;
+            }
+
+            ElementSave? elementSave = element.ElementSave;
+            if (elementSave != null
+                && !OldByName.ContainsKey(elementSave.Name)
+                && newByName.TryGetValue(elementSave.Name, out ElementSave? current)
+                && !ReferenceEquals(current, elementSave))
+            {
+                OldByName[elementSave.Name] = elementSave;
+            }
+
+            foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children).ToList())
+            {
+                CollectOldElements(child, newByName, visited);
+            }
+        }
+
+        public void RecordApplied(GraphicalUiElement element, VariableSave variable)
+        {
+            if (!Applied.TryGetValue(element, out HashSet<string>? names))
+            {
+                names = new HashSet<string>(StringComparer.Ordinal);
+                Applied[element] = names;
+            }
+            names.Add(variable.Name);
+            names.Add(variable.GetRootName());
+            if (!string.IsNullOrEmpty(variable.ExposedAsName))
+            {
+                names.Add(variable.ExposedAsName!);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies <paramref name="es"/>'s default state (and its base types') to <paramref name="element"/>
+    /// the way <c>SetVariablesRecursively</c> does, except that a variable is only set when the file
+    /// changed it: its value differs from the previous project's, it is new, or something earlier in
+    /// this reload reset the live value (a lower layer or a rebuilt instance). Any other variable keeps
+    /// what the game gave it. A layer with no previous version is applied in full. References are
+    /// evaluated as ever, since a reference's source may have changed (#6980).
+    /// </summary>
+    private static void SetChangedVariablesRecursively(
+        GraphicalUiElement element, ElementSave es, ReloadContext context)
+    {
+        StateSave? state = es.DefaultState;
+        if (state == null)
+        {
+            return;
+        }
+
+        element.BeginReferenceLoad();
+        try
+        {
+            if (!string.IsNullOrEmpty(es.BaseType))
+            {
+                ElementSave? baseElementSave = ObjectFinder.Self.GetBaseElement(es);
+                if (baseElementSave != null)
+                {
+                    SetChangedVariablesRecursively(element, baseElementSave, context);
+                }
+            }
+
+            StateSave? oldState = null;
+            if (context.OldByName.TryGetValue(es.Name, out ElementSave? oldEs)
+                && !ReferenceEquals(oldEs, es))
+            {
+                oldState = oldEs.DefaultState;
+                // Lower layers were applied first, so a variable this layer dropped falls back to
+                // what the layers below it say.
+                ResetRemovedVariables(element, oldEs, es, context);
+            }
+
+            if (oldState == null || ReferenceEquals(oldState, state))
+            {
+                element.ApplyState(state);
+                foreach (VariableSave variable in state.Variables.Where(v => v.SetsValue && v.Value != null))
+                {
+                    context.RecordApplied(element, variable);
+                }
+            }
+            else
+            {
+                StateSave changed = CreateChangedState(element, state, oldState, context);
+                element.ApplyState(changed);
+                foreach (VariableSave variable in changed.Variables)
+                {
+                    context.RecordApplied(element, variable);
+                }
+            }
+
+            element.ApplyVariableReferences(state);
+
+            if (es is not StandardElementSave)
+            {
+                VariableReferenceGraph graph = VariableReferenceGraph.GetFor(es);
+                if (graph.HasChains || graph.HasInheritedRows)
+                {
+                    graph.ApplyAll(es, element);
+                }
+            }
+        }
+        finally
+        {
+            element.EndReferenceLoad();
+        }
+    }
+
+    private static StateSave CreateChangedState(
+        GraphicalUiElement element, StateSave state, StateSave oldState, ReloadContext context)
+    {
+        Dictionary<string, VariableSave> oldByName = new Dictionary<string, VariableSave>(StringComparer.Ordinal);
+        foreach (VariableSave oldVariable in oldState.Variables)
+        {
+            if (AppliesAValue(oldVariable))
+            {
+                oldByName[oldVariable.Name] = oldVariable;
+            }
+        }
+
+        context.Applied.TryGetValue(element, out HashSet<string>? appliedToElement);
+
+        StateSave changed = new StateSave { Name = state.Name, ParentContainer = state.ParentContainer };
+        foreach (VariableSave variable in state.Variables)
+        {
+            if (!variable.SetsValue)
+            {
+                continue;
+            }
+
+            // A reparent is cheap and keeps the tree right after instances were rebuilt or moved.
+            bool applies = !oldByName.TryGetValue(variable.Name, out VariableSave? oldVariable)
+                || !ValuesMatch(oldVariable.Value, variable.Value)
+                || variable.GetRootName() == "Parent";
+
+            if (!applies)
+            {
+                string rootName = variable.GetRootName();
+                if (string.IsNullOrEmpty(variable.SourceObject))
+                {
+                    // A lower layer (the base type) set this on the element earlier in this reload.
+                    applies = appliedToElement != null && appliedToElement.Contains(rootName);
+                }
+                else
+                {
+                    GraphicalUiElement? target = element.GetGraphicalUiElementByName(variable.SourceObject);
+                    applies = target != null
+                        && (context.Recreated.Contains(target)
+                            || (context.Applied.TryGetValue(target, out HashSet<string>? appliedToTarget)
+                                && appliedToTarget.Contains(rootName)));
+                }
+            }
+
+            if (applies)
+            {
+                changed.Variables.Add(variable);
+            }
+        }
+
+        // Lists (variable references) are applied as ever.
+        changed.VariableLists.AddRange(state.VariableLists);
+        return changed;
+    }
+
+    private static bool ValuesMatch(object? oldValue, object? newValue)
+    {
+        if (Equals(oldValue, newValue))
+        {
+            return true;
+        }
+        if (oldValue == null || newValue == null || oldValue is string || newValue is string)
+        {
+            return false;
+        }
+        // A number read back from a file can arrive as another numeric type.
+        return oldValue is IConvertible && newValue is IConvertible
+            && string.Equals(
+                Convert.ToString(oldValue, System.Globalization.CultureInfo.InvariantCulture),
+                Convert.ToString(newValue, System.Globalization.CultureInfo.InvariantCulture),
+                StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -402,7 +865,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// than the visuals, so a value assigned in code, which is in neither, is never touched.
     /// Runs before the new state is applied, so the new file's values win.
     /// </summary>
-    private static void ResetRemovedVariables(GraphicalUiElement element, ElementSave oldEs, ElementSave newEs)
+    private static void ResetRemovedVariables(
+        GraphicalUiElement element, ElementSave oldEs, ElementSave newEs, ReloadContext context)
     {
         StateSave? oldState = oldEs.DefaultState;
         StateSave? newState = newEs.DefaultState;
@@ -452,6 +916,15 @@ public class GumHotReloadManager : IGumHotReloadManager
             if (defaultValue != null)
             {
                 element.SetProperty(variable.Name, defaultValue);
+
+                // Layers above this one may still set the variable; they apply it again.
+                GraphicalUiElement? owner = string.IsNullOrEmpty(variable.SourceObject)
+                    ? element
+                    : element.GetGraphicalUiElementByName(variable.SourceObject);
+                if (owner != null)
+                {
+                    context.RecordApplied(owner, variable);
+                }
             }
         }
     }
@@ -478,7 +951,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     private static void DiffDesignTimeChildren(
         GraphicalUiElement parent,
         ElementSave newEs,
-        ISystemManagers systemManagers)
+        ISystemManagers systemManagers,
+        ReloadContext context)
     {
         // Two lookup tables: one for design-time children (Tag is InstanceSave) so we can do
         // typed operations like retype/remove, and one keyed by Name across ALL children so
@@ -542,6 +1016,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                     GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
                     if (created != null)
                     {
+                        context.Recreated.Add(created);
                         designTimeByName[newInstance.Name] = created;
                         anyByName[newInstance.Name] = created;
                     }
@@ -564,6 +1039,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
                 if (created != null)
                 {
+                    context.Recreated.Add(created);
                     designTimeByName[newInstance.Name] = created;
                     anyByName[newInstance.Name] = created;
                 }

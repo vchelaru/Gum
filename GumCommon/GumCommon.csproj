@@ -28,6 +28,11 @@
 		<RootNamespace>Gum</RootNamespace>
 	</PropertyGroup>
 
+	<!-- Makes the GumShake property visible to the Gum.Analyzers generator in every game that uses a runtime package. -->
+	<ItemGroup>
+		<None Include="build\FlatRedBall.GumCommon.props" Pack="true" PackagePath="buildTransitive\FlatRedBall.GumCommon.props" Visible="false" />
+	</ItemGroup>
+
 	<!-- Compile-time Native AOT guard (#5460): a new unannotated caller of FileManager's XML methods
 	     (XmlSerializer) or another dynamic-code API reports IL3050 here, not only in a consumer's AOT
 	     publish. Not IsAotCompatible: that also sets IsTrimmable, which changes how consumers' trimmed
@@ -152,6 +157,11 @@
 		<Compile Include="..\RenderingLibrary\Graphics\IText.cs" Link="RenderingLibrary\IText.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\LetterCellScale.cs" Link="RenderingLibrary\LetterCellScale.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IWrappedText.cs" Link="RenderingLibrary\IWrappedText.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\ShaderParameters.cs" Link="RenderingLibrary\ShaderParameters.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\ShaderParameterText.cs" Link="RenderingLibrary\ShaderParameterText.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\ShaderParameterMarker.cs" Link="RenderingLibrary\ShaderParameterMarker.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\ShaderVariableNaming.cs" Link="RenderingLibrary\ShaderVariableNaming.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\ShaderParameterVariables.cs" Link="RenderingLibrary\ShaderParameterVariables.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ITextureCoordinate.cs" Link="RenderingLibrary\ITextureCoordinate.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="RenderingLibrary\NineSliceExtensions.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NonFiniteCheck.cs" Link="RenderingLibrary\NonFiniteCheck.cs" />

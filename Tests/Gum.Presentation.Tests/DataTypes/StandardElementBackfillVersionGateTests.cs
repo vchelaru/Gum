@@ -387,6 +387,32 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
             "A v5 project should get ColorOperation back-filled into its standard.");
     }
 
+    // ShaderParameters (#6988) is absent from older runtimes, so a project saved before it existed
+    // must not have it back-filled into its Container standard.
+    [Fact]
+    public void Initialize_DoesNotInjectShaderParameters_IntoPreV7Container()
+    {
+        GumProjectSave project = MakeProjectWithBareStandard(
+            "Container", (int)GumProjectSave.GumxVersions.FontCachePathHash, "Width", "Height", "Visible");
+
+        StateSave defaultState = DefaultStateAfterInitialize(project, "Container");
+
+        defaultState.Variables.Any(v => v.Name == "ShaderParameters").ShouldBeFalse(
+            "A pre-v7 project must not have ShaderParameters back-filled into its Container.");
+    }
+
+    [Fact]
+    public void Initialize_InjectsShaderParameters_IntoV7Container()
+    {
+        GumProjectSave project = MakeProjectWithBareStandard(
+            "Container", (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, "Width", "Height", "Visible");
+
+        StateSave defaultState = DefaultStateAfterInitialize(project, "Container");
+
+        defaultState.Variables.Any(v => v.Name == "ShaderParameters").ShouldBeTrue(
+            "A v7 project should get ShaderParameters back-filled into its Container.");
+    }
+
     [Fact]
     public void FixStandardVariables_DoesNotThrow_WhenGatedVariablesAreAbsent_OnPreV3Project()
     {

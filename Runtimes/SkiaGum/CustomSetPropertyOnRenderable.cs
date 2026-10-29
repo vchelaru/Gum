@@ -1140,6 +1140,16 @@ public partial class CustomSetPropertyOnRenderable
                     handled = true;
                     break;
 #endif
+                case "ShaderParameters":
+                    {
+                        string? error = RenderingLibrary.Graphics.ShaderParameterVariables.AssignText(asInvisibleRenderable, value as string);
+                        if (error != null)
+                        {
+                            RaisePropertyAssignmentError("Error setting ShaderParameters on Container\n" + error);
+                        }
+                        handled = true;
+                        break;
+                    }
                 case "Alpha":
                     if (containerRuntime != null)
                     {
@@ -1147,8 +1157,26 @@ public partial class CustomSetPropertyOnRenderable
                     }
                     handled = true;
                     break;
+                default:
+                    // A saved shader parameter variable such as Outline_Thickness (#7010).
+                    handled = RenderingLibrary.Graphics.ShaderParameterVariables.TrySetVariable(
+                        asInvisibleRenderable, propertyName, value);
+                    break;
             }
         }
+#if !SKIA
+        else if (containedObjectAsIpso is Svg)
+        {
+            // An SvgRuntime takes SourceFile through its own setter. Left to the reflection fallback it would
+            // surface a load failure as a TargetInvocationException instead of the FileNotFoundException a
+            // Sprite throws (#6917).
+            if (propertyName == "SourceFile" && graphicalUiElement is SvgRuntime svgRuntime)
+            {
+                svgRuntime.SourceFile = value as string;
+                handled = true;
+            }
+        }
+#endif
 #if SKIA
         else if (containedObjectAsIpso is Text asText)
         {
@@ -1171,6 +1199,13 @@ public partial class CustomSetPropertyOnRenderable
             {
                 handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
             }
+        }
+        else if(containedObjectAsIpso is LottieAnimation && propertyName == "SourceFile" && graphicalUiElement is LottieAnimationRuntime lottieRuntime)
+        {
+            // Through the runtime's own setter, as for SvgRuntime above. The reflection fallback below would wrap a
+            // missing file's FileNotFoundException in a TargetInvocationException (#6903).
+            lottieRuntime.SourceFile = value as string;
+            handled = true;
         }
         else if(containedObjectAsIpso is Sprite asSprite)
         {
@@ -1269,6 +1304,9 @@ public partial class CustomSetPropertyOnRenderable
     private static void AssignSourceShaderFileOnContainer(
         RenderingLibrary.Graphics.InvisibleRenderable effectOwner, string? value)
     {
+        // First, so the container's shader variables follow the file whatever happens below (#7010).
+        RenderingLibrary.Graphics.ShaderParameterVariables.SetShaderFile(effectOwner, value);
+
         if (string.IsNullOrEmpty(value))
         {
             effectOwner.RenderTargetEffect = null;
@@ -1426,6 +1464,34 @@ public partial class CustomSetPropertyOnRenderable
                     return true;
                 }
                 break;
+            case nameof(NineSliceRuntime.CustomBorderScaleLeft):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomBorderScaleLeft = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomBorderScaleTop):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomBorderScaleTop = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomBorderScaleRight):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomBorderScaleRight = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomBorderScaleBottom):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomBorderScaleBottom = (float?)value;
+                    return true;
+                }
+                break;
             case nameof(NineSliceRuntime.IsTilingMiddleSections):
                 if (nineSliceRuntime != null)
                 {
@@ -1456,8 +1522,8 @@ public partial class CustomSetPropertyOnRenderable
         }
         else
         {
-            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-            asNineSlice.Texture = loaderManager.LoadContent<SKBitmap>(value);
+            // The MonoGame/raylib NineSlice falls back to a placeholder or no texture and raises no event, so none here either.
+            asNineSlice.Texture = SourceFileLoading.Load<SKBitmap>(value, graphicalUiElement, nameof(NineSlice), raiseError: false);
         }
     }
 
@@ -1510,8 +1576,7 @@ public partial class CustomSetPropertyOnRenderable
                         AssignAnimationChainSourceFile(asString, asSprite.AnimationLogic, asSprite, graphicalUiElement);
                         return true;
                     }
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    image = loaderManager.LoadContent<SKBitmap>(asString);
+                    image = SourceFileLoading.Load<SKBitmap>(asString, graphicalUiElement, nameof(Sprite));
                 }
                 // Through the runtime when there is one, so its Texture setter re-runs
                 // PercentageOfSourceFile layout.
@@ -1618,16 +1683,7 @@ public partial class CustomSetPropertyOnRenderable
         switch(propertyName) 
         {
             case "SourceFile":
-                var asString = value as string;
-
-                if(!string.IsNullOrEmpty(asString))
-                {
-                    asSvg.Texture = RenderingLibrary.Content.ContentLoader.LoadSvg(asString);
-                }
-                else
-                {
-                    asSvg.Texture = null;
-                }
+                asSvg.Texture = SourceFileLoading.Load<Svg.Skia.SKSvg>(value as string, graphicalUiElement, "Svg");
                 graphicalUiElement.UpdateLayout();
                 return true;
         }

@@ -200,7 +200,7 @@ namespace Gum.DataTypes
                 }
                 else if (!string.IsNullOrEmpty(instanceBase.BaseType))
                 {
-                    ElementSave? element = ObjectFinder.Self.GetElementSave(instanceBase.BaseType);
+                    ElementSave? element = ObjectFinder.Self.GetBaseElement(instanceBase);
 
                     if (element != null)
                     {

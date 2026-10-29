@@ -14,6 +14,9 @@ public static class GumDisplayers
     /// <summary>The linked/unlinked corner-radius composite.</summary>
     public sealed class CornerRadius { private CornerRadius() { } }
 
+    /// <summary>The linked/unlinked NineSlice border-scale composite.</summary>
+    public sealed class BorderScale { private BorderScale() { } }
+
     /// <summary>A button that removes the row's variable from its category.</summary>
     public sealed class RemoveButton { private RemoveButton() { } }
 

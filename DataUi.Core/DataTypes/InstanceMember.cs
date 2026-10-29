@@ -386,6 +386,72 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        bool isSpaciousRow;
+        /// <summary>
+        /// Opts the row into the roomier Settings look: padding and a divider around the row, taller fields,
+        /// a larger hint aligned with the field, and a callout for a warning. Off for every other grid.
+        /// </summary>
+        public bool IsSpaciousRow
+        {
+            get => isSpaciousRow;
+            set
+            {
+                if (isSpaciousRow != value)
+                {
+                    isSpaciousRow = value;
+                    OnPropertyChanged(nameof(IsSpaciousRow));
+                }
+            }
+        }
+
+        string? warningText;
+        /// <summary>
+        /// A caveat the user could get wrong by ignoring (a file move, an experimental mode), which a spacious
+        /// row draws as a callout under its hint instead of a muted line. Null or empty shows none.
+        /// </summary>
+        public string? WarningText
+        {
+            get => warningText;
+            set
+            {
+                if (warningText != value)
+                {
+                    warningText = value;
+                    OnPropertyChanged(nameof(WarningText));
+                }
+            }
+        }
+
+        string? toggleText;
+        /// <summary>The short caption beside a spacious toggle's box ("Write an .editorconfig"); the label column names the setting and <see cref="DetailText"/> goes under it. Null shows the box alone.</summary>
+        public string? ToggleText
+        {
+            get => toggleText;
+            set
+            {
+                if (toggleText != value)
+                {
+                    toggleText = value;
+                    OnPropertyChanged(nameof(ToggleText));
+                }
+            }
+        }
+
+        string? chipText;
+        /// <summary>A short note drawn as a small chip beside a read-only value, such as where it was detected from.</summary>
+        public string? ChipText
+        {
+            get => chipText;
+            set
+            {
+                if (chipText != value)
+                {
+                    chipText = value;
+                    OnPropertyChanged(nameof(ChipText));
+                }
+            }
+        }
+
         DetailTextLink? detailLink;
         /// <summary>The part of <see cref="DetailText"/> shown as a clickable link, or null.</summary>
         public DetailTextLink? DetailLink
@@ -475,6 +541,15 @@ namespace WpfDataUi.DataTypes
         /// Instance class as a field or property. The parameters are (owner, setPropertyArgs)
         /// </summary>
         public event Action<object?, SetPropertyArgs>? CustomSetPropertyEvent;
+
+        /// <summary>
+        /// Raised just before the row is re-pointed at another instance in place, while it still
+        /// belongs to the old one, so an editor can finish a drag against the member it began on.
+        /// </summary>
+        public event EventHandler? Retargeting;
+
+        /// <summary>Raises <see cref="Retargeting"/>; called by the code that re-points the row.</summary>
+        public void RaiseRetargeting() => Retargeting?.Invoke(this, EventArgs.Empty);
 
         /// <summary>
         /// Allows the InstanceMenber to define its own custom logic for getting a value.

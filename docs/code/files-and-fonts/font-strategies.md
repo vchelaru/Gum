@@ -233,7 +233,7 @@ text.AddToRoot();
 `CustomFontFile` accepts a `.ttf` path the same way when `UseCustomFont` is `true`. Both properties resolve their paths relative to `FileManager.RelativeDirectory`, which is your **Content** folder, or the folder holding your `.gumj` project. This is the same starting point every other Gum asset uses, including `RegisterFont`'s `filePath` overload. See [File Loading](file-loading.md).
 
 {% hint style="info" %}
-Gum recognizes only the `.ttf` extension here. It reads an `.otf` value as a family name, so an `.otf` path will not resolve. Register `.otf` files under a family name with `RegisterFont` instead.
+Gum detects a font file from its extension. See [Supported Files](supported-files.md#font-files) for the extensions each runtime accepts.
 {% endhint %}
 
 ### Where a .ttf Can Live
@@ -345,7 +345,7 @@ SkiaGum reads the file the same way it reads any other asset, so a `.ttf` served
 For a font you already hold as bytes, an embedded resource for example, call `SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(familyName, fontBytes)` and then assign `Font = familyName`. That method also takes an optional style name, so you can register a bold or italic version alongside the regular one.
 
 {% hint style="info" %}
-`Font`/`CustomFontFile` is detected as a file path purely by whether the string ends in `.ttf` — not by whether it looks like a path. A bare filename with no directory (`"MyFont.ttf"`) is loaded from disk the same as a full path; there's no slash detection involved, and it never falls through to an OS font-name lookup. Only the `.ttf` extension is recognized — `.otf` files are not auto-routed through this path today and resolve as a (likely-missing) system font family name instead.
+`Font`/`CustomFontFile` is detected as a file path purely by whether the string ends in a font file extension, not by whether it looks like a path. A bare filename with no directory (`"MyFont.ttf"`) is loaded from disk the same as a full path, and it never falls through to an OS font-name lookup. See [Supported Files](supported-files.md#font-files) for the extensions each runtime accepts.
 {% endhint %}
 
 ### Bold and Italic on SkiaGum

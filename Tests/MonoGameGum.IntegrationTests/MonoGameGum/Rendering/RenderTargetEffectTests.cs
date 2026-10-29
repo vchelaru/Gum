@@ -205,6 +205,399 @@ technique SpriteDrawing
         Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
     }
 
+    // Writes the Strength parameter into the red channel, so the sampled red shows which value the
+    // blit applied.
+    private const string StrengthFx = @"
+#if OPENGL
+    #define PS_SHADERMODEL ps_3_0
+#else
+    #define PS_SHADERMODEL ps_4_0_level_9_1
+#endif
+
+Texture2D SpriteTexture;
+
+sampler2D SpriteTextureSampler = sampler_state
+{
+    Texture = <SpriteTexture>;
+};
+
+float Strength;
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+float4 MainPS(VertexShaderOutput input) : COLOR0
+{
+    float4 color = tex2D(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
+    return float4(Strength * color.a, 0, 0, color.a);
+}
+
+technique SpriteDrawing
+{
+    pass P0
+    {
+        PixelShader = compile PS_SHADERMODEL MainPS();
+    }
+};
+";
+
+    // Two containers share one Effect instance (as SourceShaderFile does through the cache) and set
+    // different values for the same parameter, so each blit must apply its own container's value.
+    [Fact]
+    public void ShaderParameter_AppliesEachContainersOwnValue_WhenEffectIsShared()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(StrengthFx, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
+        using Effect shared = new(gd, compileResult.Value.Data);
+
+        ContainerRuntime dim = BuildRedRenderTarget(0f);
+        dim.RenderTargetEffect = shared;
+        dim.SetShaderParameter("Strength", 0.25f);
+        ContainerRuntime bright = BuildRedRenderTarget(64f);
+        bright.RenderTargetEffect = shared;
+        bright.SetShaderParameter("Strength", 0.75f);
+
+        dim.AddToManagers(managers, null);
+        bright.AddToManagers(managers, null);
+        dim.UpdateLayout();
+        bright.UpdateLayout();
+
+        Color[] data = RenderToCapture(gd, renderer, managers);
+
+        Math.Abs(data[(20 * CaptureSize) + 20].R - 64).ShouldBeLessThan(12);
+        Math.Abs(data[(20 * CaptureSize) + 84].R - 191).ShouldBeLessThan(12);
+    }
+
+    // Runs the Outline.slang file the samples ship through the Slang frontend and the OpenGL
+    // compiler, so a break in the shader or the conversion shows up here and not only by eye.
+    [Fact]
+    public void Outline_SampleSlangShader_DrawsTheColorJustOutsideTheContent_AndStopsAtThickness()
+    {
+        Color[] data = RenderOutlinedSquare(container =>
+        {
+            container.SetShaderParameter("Thickness", 2f);
+            container.SetShaderParameter("OutlineBlue", 255f);
+        });
+        Color Pixel(int x, int y) => data[(y * CaptureSize) + x];
+
+        // Inside the square is still red.
+        Pixel(24, 24).R.ShouldBeGreaterThan((byte)200);
+        Pixel(24, 24).B.ShouldBeLessThan((byte)60);
+
+        // One and two pixels outside the left edge (the square starts at x = 12) are the blue
+        // outline, three pixels out is not.
+        Pixel(11, 24).B.ShouldBeGreaterThan((byte)200);
+        Pixel(11, 24).R.ShouldBeLessThan((byte)60);
+        Pixel(10, 24).B.ShouldBeGreaterThan((byte)200);
+        Pixel(9, 24).B.ShouldBeLessThan((byte)30);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithNothingSet_DrawsAOnePixelBlackOutline()
+    {
+        // On white, so a black outline can be told from the cleared target.
+        Color[] data = RenderOutlinedSquare(setParameters: null, background: Color.White);
+        Color Pixel(int x, int y) => data[(y * CaptureSize) + x];
+
+        Pixel(24, 24).R.ShouldBeGreaterThan((byte)200);
+        Pixel(11, 24).R.ShouldBeLessThan((byte)30);
+        Pixel(11, 24).G.ShouldBeLessThan((byte)30);
+        Pixel(11, 11).R.ShouldBeLessThan((byte)30);
+        Pixel(10, 24).R.ShouldBe((byte)255);
+        Pixel(10, 10).R.ShouldBe((byte)255);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithThicknessSetToZero_DrawsNoOutline_AtAnyPixelSize()
+    {
+        Color[] data = RenderOutlinedSquare(container =>
+        {
+            container.SetShaderParameter("Thickness", 0f);
+            container.SetShaderParameter("PixelSize", 3f);
+        }, Color.White);
+
+        data[(24 * CaptureSize) + 24].R.ShouldBeGreaterThan((byte)200);
+        data[(24 * CaptureSize) + 11].R.ShouldBe((byte)255);
+        data[(11 * CaptureSize) + 11].R.ShouldBe((byte)255);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithPixelSizeThree_OutlinesThreePixelsIncludingTheDiagonal()
+    {
+        Color[] data = RenderOutlinedSquare(container => container.SetShaderParameter("PixelSize", 3f), Color.White);
+
+        data[(24 * CaptureSize) + 9].R.ShouldBeLessThan((byte)30);
+        data[(24 * CaptureSize) + 8].R.ShouldBe((byte)255);
+        data[(9 * CaptureSize) + 9].R.ShouldBeLessThan((byte)30);
+        data[(8 * CaptureSize) + 8].R.ShouldBe((byte)255);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithThicknessTwo_OutlinesTheDiagonalCorner()
+    {
+        Color[] data = RenderOutlinedSquare(container => container.SetShaderParameter("Thickness", 2f), Color.White);
+
+        data[(10 * CaptureSize) + 10].R.ShouldBeLessThan((byte)30);
+        data[(9 * CaptureSize) + 9].R.ShouldBe((byte)255);
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_WithHalfAlpha_FadesTheOutline()
+    {
+        Color[] data = RenderOutlinedSquare(container => container.Alpha = 128, Color.White);
+
+        // Black at half alpha over white is mid gray.
+        data[(24 * CaptureSize) + 11].R.ShouldBeInRange((byte)115, (byte)140);
+    }
+
+    // The outline is measured in canvas pixels, so it grows and shrinks with the camera zoom exactly
+    // like the content: Thickness * PixelSize canvas pixels is that many times zoom screen pixels.
+    [Theory]
+    [InlineData(1f, 1f, 1f)]
+    [InlineData(2f, 1f, 1f)]
+    [InlineData(0.5f, 1f, 1f)]
+    [InlineData(1.5f, 1f, 1f)]
+    [InlineData(2f, 2f, 1f)]
+    [InlineData(2f, 1f, 3f)]
+    public void Outline_SampleSlangShader_ScalesWithCameraZoom(float zoom, float thickness, float pixelSize)
+    {
+        Color[] data = RenderOutlinedSquare(container =>
+        {
+            container.SetShaderParameter("Thickness", thickness);
+            container.SetShaderParameter("PixelSize", pixelSize);
+        }, Color.White, zoom);
+
+        // Count the dark outline pixels left of the square on its middle row (the square is white-free red).
+        int row = (int)(24 * zoom);
+        int squareLeft = (int)(12 * zoom);
+        int outlineWidth = 0;
+        for (int x = squareLeft - 1; x >= 0 && data[(row * CaptureSize) + x].R < 128; x--)
+        {
+            outlineWidth++;
+        }
+
+        float expected = thickness * pixelSize * zoom;
+        outlineWidth.ShouldBeInRange((int)System.Math.Floor(expected), (int)System.Math.Ceiling(expected));
+    }
+
+    // Two render-target containers share one effect, A at x = 0 and B at x = 64, each with a 24x24 red
+    // square 12 pixels in. Draws a frame, applies changeAfterFirstFrame to A, and returns the last frame
+    // on white so a black outline can be measured.
+    private Color[] RenderSharedEffect(
+        System.Action<ContainerRuntime> setA, System.Action<ContainerRuntime> setB, System.Action<ContainerRuntime>? changeAfterFirstFrame = null, float squareOffset = 12)
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
+        conversion.IsSuccess.ShouldBeTrue();
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue();
+        using Effect outline = new(gd, compileResult.Value.Data);
+
+        ContainerRuntime Build(float x, System.Action<ContainerRuntime> set)
+        {
+            ContainerRuntime container = new() { X = x, Y = 0, Width = 48, Height = 48, IsRenderTarget = true };
+#pragma warning disable CS0618
+            ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+            square.X = squareOffset;
+            square.Y = squareOffset;
+            square.Width = 24;
+            square.Height = 24;
+            square.Color = Color.Red;
+            container.AddChild(square);
+            container.RenderTargetEffect = outline;
+            set(container);
+            container.AddToManagers(managers, null);
+            container.UpdateLayout();
+            return container;
+        }
+
+        ContainerRuntime a = Build(0, setA);
+        Build(64, setB);
+
+        Color[] data = RenderToCapture(gd, renderer, managers, Color.White);
+        if (changeAfterFirstFrame != null)
+        {
+            changeAfterFirstFrame(a);
+            data = RenderToCapture(gd, renderer, managers, Color.White);
+        }
+        return data;
+    }
+
+    [Fact]
+    public void Outline_SampleSlangShader_OfASpriteTouchingTheRightAndBottomEdges_DrawsNothingOnTheOppositeEdges()
+    {
+        Color[] data = RenderSharedEffect(a => { }, b => { }, null, squareOffset: 24);
+
+        data[(36 * CaptureSize) + 0].R.ShouldBe((byte)255);
+        data[(0 * CaptureSize) + 36].R.ShouldBe((byte)255);
+    }
+
+    // Dark pixels immediately left of a square whose left edge is at squareLeft, on its middle row.
+    private static int OutlineWidthLeftOf(Color[] data, int squareLeft)
+    {
+        int width = 0;
+        for (int x = squareLeft - 1; x >= 0 && data[(24 * CaptureSize) + x].R < 128; x--)
+        {
+            width++;
+        }
+        return width;
+    }
+
+    [Fact]
+    public void Outline_SharedEffect_AfterAThicknessZeroContainer_AnUnsetContainerDrawsOnePixel()
+    {
+        Color[] data = RenderSharedEffect(a => a.SetShaderParameter("Thickness", 0f), b => { });
+
+        OutlineWidthLeftOf(data, 11).ShouldBe(0);
+        OutlineWidthLeftOf(data, 76).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Outline_SharedEffect_AfterAThicknessThreeContainer_AContainerSettingOneDrawsOnePixel()
+    {
+        Color[] data = RenderSharedEffect(a => a.SetShaderParameter("Thickness", 3f), b => b.SetShaderParameter("Thickness", 1f));
+
+        OutlineWidthLeftOf(data, 12).ShouldBe(3);
+        OutlineWidthLeftOf(data, 76).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Outline_ClearingTheParameters_RevertsToTheUnsetOnePixel()
+    {
+        Color[] data = RenderSharedEffect(a => a.SetShaderParameter("Thickness", 3f), b => { }, a => a.ClearShaderParameters());
+
+        OutlineWidthLeftOf(data, 12).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Outline_ASetTexelSize_WinsOverTheOneGumFillsIn()
+    {
+        // Two pixels per step instead of the one Gum would fill in.
+        Color[] data = RenderSharedEffect(a => a.SetShaderParameter("TexelSize", 2f / 48f, 2f / 48f), b => { });
+
+        OutlineWidthLeftOf(data, 12).ShouldBe(2);
+        OutlineWidthLeftOf(data, 76).ShouldBe(1);
+    }
+
+    private Color[] RenderOutlinedSquare(System.Action<ContainerRuntime>? setParameters, Color? background = null, float zoom = 1f)
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
+        conversion.IsSuccess.ShouldBeTrue(
+            conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
+
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
+        using Effect outline = new(gd, compileResult.Value.Data);
+
+        // A 24x24 red square in the middle of a 48x48 render target, outlined in blue.
+        ContainerRuntime container = new();
+        container.X = 0;
+        container.Y = 0;
+        container.Width = 48;
+        container.Height = 48;
+        container.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+        ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+        square.X = 12;
+        square.Y = 12;
+        square.Width = 24;
+        square.Height = 24;
+        square.Color = Color.Red;
+        container.AddChild(square);
+
+        container.RenderTargetEffect = outline;
+        setParameters?.Invoke(container);
+        renderer.Camera.Zoom = zoom;
+
+        container.AddToManagers(managers, null);
+        container.UpdateLayout();
+
+        return RenderToCapture(gd, renderer, managers, background);
+    }
+
+    // The tool lists a shader's parameters from the compiled effect, so the names, kinds and sizes
+    // must come out as the shader declared them (Outline.slang declares TexelSize, Thickness,
+    // PixelSize and the three color channels besides the texture it samples).
+    [Fact]
+    public void EffectShaderParameters_Read_ListsTheParametersTheShaderDeclares()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
+        conversion.IsSuccess.ShouldBeTrue();
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue();
+        using Effect outline = new(game.GraphicsDevice, compileResult.Value.Data);
+
+        System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> parameters = EffectShaderParameters.Read(outline);
+
+        parameters.Select(parameter => parameter.Name).OrderBy(name => name)
+            .ShouldBe(new[] { "OutlineBlue", "OutlineGreen", "OutlineRed", "PixelSize", "TexelSize", "Thickness", "ThicknessIsSet" });
+        ShaderParameterInfo thickness = parameters.Single(parameter => parameter.Name == "Thickness");
+        thickness.Kind.ShouldBe(ShaderParameterKind.Float);
+        thickness.Count.ShouldBe(1);
+        parameters.Single(parameter => parameter.Name == "TexelSize").Count.ShouldBe(2);
+    }
+
+    private static ContainerRuntime BuildRedRenderTarget(float x)
+    {
+        ContainerRuntime container = new();
+        container.X = x;
+        container.Y = 0;
+        container.Width = 40;
+        container.Height = 40;
+        container.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+        ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+        red.Width = 40;
+        red.Height = 40;
+        red.Color = Color.Red;
+        container.AddChild(red);
+        return container;
+    }
+
     [Fact]
     public void RenderTargetEffect_GrayscaleShader_GraysThePixels_UnderCameraZoom()
     {
@@ -697,26 +1090,32 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
     /// frame's one-time render-target setup doesn't skew the captured pixels, then returns a
     /// pixel sampled from inside the 64x64 container at the top-left.
     /// </summary>
+    private const int CaptureSize = 128;
+
     private static Color RenderToCaptureAndSample(GraphicsDevice gd, Renderer renderer, SystemManagers managers)
     {
-        const int w = 128;
-        const int h = 128;
+        // Container sits at (0,0) sized 64x64; sample well inside it.
+        return RenderToCapture(gd, renderer, managers)[(20 * CaptureSize) + 20];
+    }
+
+    private static Color[] RenderToCapture(GraphicsDevice gd, Renderer renderer, SystemManagers managers, Color? background = null)
+    {
+        const int w = CaptureSize;
+        const int h = CaptureSize;
         using RenderTarget2D capture = new(gd, w, h, false, SurfaceFormat.Color, DepthFormat.None, 0,
             RenderTargetUsage.PreserveContents);
 
         for (int i = 0; i < 2; i++)
         {
             gd.SetRenderTarget(capture);
-            gd.Clear(Color.Black);
+            gd.Clear(background ?? Color.Black);
             renderer.Draw(managers);
         }
         gd.SetRenderTarget(null);
 
         Color[] data = new Color[w * h];
         capture.GetData(data);
-
-        // Container sits at (0,0) sized 64x64; sample well inside it.
-        return data[(20 * w) + 20];
+        return data;
     }
 
     /// <summary>

@@ -9,11 +9,24 @@ namespace Gum.ProjectServices.CodeGeneration;
 
 public class CodeGenerationNameVerifier
 {
-    INameVerifier _nameVerifier;
+    private delegate bool IsValidCSharpNameCheck(string name, out string? whyNotValid, out CommonValidationError commonValidationError);
 
+    private readonly IsValidCSharpNameCheck _isValidCSharpName;
+
+    /// <summary>
+    /// Uses the tool's name verifier, which answers with the shared <see cref="NameRules"/>.
+    /// </summary>
     public CodeGenerationNameVerifier(INameVerifier nameVerifier)
     {
-        _nameVerifier = nameVerifier;
+        _isValidCSharpName = nameVerifier.IsValidCSharpName;
+    }
+
+    /// <summary>
+    /// Uses the shared <see cref="NameRules"/> directly, for hosts (the CLI) with no <see cref="INameVerifier"/>.
+    /// </summary>
+    public CodeGenerationNameVerifier(NameRules nameRules)
+    {
+        _isValidCSharpName = nameRules.IsValidCSharpName;
     }
 
     internal string ToCSharpName(string name) => ToCSharpName(name, out _);
@@ -22,7 +35,7 @@ public class CodeGenerationNameVerifier
     {
         isPrefixed = false;
 
-        if (!_nameVerifier.IsValidCSharpName(name, out string? whyNotValid, out CommonValidationError validationError))
+        if (!_isValidCSharpName(name, out string? whyNotValid, out CommonValidationError validationError))
         {
             if (validationError == CommonValidationError.InvalidStartingCharacterForCSharp)
             {

@@ -4,15 +4,14 @@
 The Unity package is experimental. It supports Windows x64 and macOS (Intel and Apple silicon). Linux, Android, iOS, and WebGL are not supported yet.
 {% endhint %}
 
-Gum for Unity draws Gum UI (layout, Forms controls, and `.gumj` projects) with SkiaSharp. It needs two Unity packages: Gum, and SkiaGameRendering, which supplies SkiaSharp.
+Gum for Unity draws Gum UI (layout, Forms controls, and `.gumj` projects) with SkiaSharp. It needs two Unity packages: Gum, and SkiaGameRendering (v0.20.0 or newer), which supplies SkiaSharp.
 
 ## Quick Start
 
 1. Install the two packages (see **Install the Packages** below). Gum requires Unity 6 or newer.
-2. In **Edit > Project Settings > Player**, set **Active Input Handling** to **Input System Package (New)** or **Both**.
-3. In your scene, create an empty GameObject (**GameObject > Create Empty**) and name it `Gum`.
-4. Select the `Gum` GameObject. In the Inspector, click **Add Component** and add `GumRenderer`, then add `GumInput`.
-5. With the `Gum` GameObject still selected, click **Add Component > New script**, name it `GumExample`, and replace its contents with:
+2. In your scene, create an empty GameObject (**GameObject > Create Empty**) and name it `Gum`.
+3. Select the `Gum` GameObject. In the Inspector, click **Add Component** and add `GumRenderer`, then add `GumInput`.
+4. With the `Gum` GameObject still selected, click **Add Component > New script**, name it `GumExample`, and replace its contents with:
 
 ```csharp
 using Gum.Forms.Controls;
@@ -29,7 +28,7 @@ public class GumExample : MonoBehaviour
 }
 ```
 
-6. Press **Play**. A button labeled "Click me" appears in the Game view.
+5. Press **Play**. A button labeled "Click me" appears in the Game view.
 
 `GumRenderer` sets up Gum in `Awake`, so your own code can create UI from `Start` or later.
 
@@ -64,6 +63,14 @@ To stay on a specific Gum version, end the Gum URL with `#upm/v<version>` instea
 
 * `GumRenderer` sets up Gum and draws the UI over the screen.
 * `GumInput` passes Unity's mouse, touch, keyboard, and gamepad input to Gum each frame. It belongs on the same GameObject as `GumRenderer`.
+
+## Input
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+The Input System package is optional. If your project uses it and **Edit > Project Settings > Player > Active Input Handling** is **Input System Package (New)** or **Both**, `GumInput` reads it for the mouse, touch, keyboard, and gamepads. If **Active Input Handling** is **Input Manager (Old)**, `GumInput` reads Unity's legacy `Input` class for the mouse, touch, and keyboard. Gamepads are not available with the legacy Input Manager.
 
 Mouse and touch work right away. To move between Forms controls with the keyboard or a gamepad, call `GumService.Default.UseKeyboardDefaults()` or `GumService.Default.UseGamepadDefaults()` in your script.
 

@@ -530,7 +530,7 @@ public partial class ElementTreeViewManager
             {
                 if (ObjectFinder.Self.GetStandardElement(type) is { } standardElement)
                 {
-                    _addInstanceLogic.AddInstance(standardElement, _selectedState.SelectedBehavior);
+                    _addInstanceLogic.AddInstanceAtDestination(standardElement);
                 }
             };
         }

@@ -144,6 +144,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
+
+    /// <summary>The toolbar's view model, for tests; null until <c>StartUp</c> has run.</summary>
+    internal EditorViewModel Editor => _editorViewModel;
     private IGridSnapWarningService _gridSnapWarningService;
     private readonly FileLocations _fileLocations;
     private readonly IThemingService _themingService;
@@ -328,7 +331,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _guiCommands,
             _wireframeEditorFactory,
             new NineSliceCoordinateRefresher(),
-            new PreciseHitTester());
+            new PreciseHitTester(),
+            messenger);
 
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
         _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService, _backgroundManager, _editorRenderableFactory);
@@ -387,6 +391,11 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // silent and users can't tell it actually compiled.
         _renderTargetShaderResolver = CreateRenderTargetShaderResolver();
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = ResolveAndReportRenderTargetShader;
+        // The Variables tab lists the parameters a container's compiled shader declares.
+        global::RenderingLibrary.Graphics.ShaderParameterReader.Reader = effect =>
+            effect is Microsoft.Xna.Framework.Graphics.Effect xnaEffect
+                ? global::RenderingLibrary.Graphics.EffectShaderParameters.Read(xnaEffect)
+                : new List<global::RenderingLibrary.Graphics.ShaderParameterInfo>();
         CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
         AssignEvents();
@@ -404,21 +413,25 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _guiCommands.PrintOutput(obj);
     }
 
+    /// <summary>
+    /// Where a head's shader resolver reports a shader that stopped compiling while the preview keeps
+    /// the last version that worked (the Output tab).
+    /// </summary>
+    protected void ReportShaderError(string message) => ShaderReporter.ReportError(message);
+
+    private RenderTargetShaderReporter? _shaderReporter;
+
+    private RenderTargetShaderReporter ShaderReporter =>
+        _shaderReporter ??= new RenderTargetShaderReporter(message => _guiCommands.PrintOutput(message));
+
     // Compiles the .fx via the tool-side resolver and, on success, reports it to the Output window.
     // The resolver only ever logs failures (it throws, which AssignSourceShaderFileOnContainer turns
     // into a PropertyAssignmentError), so a working shader would otherwise compile silently. A
     // successful return is logged here; failures keep propagating to the existing error path. Note
     // the underlying effect is cached by path in LoaderManager, so this fires once per actual
     // compile (a cache hit skips the resolver), which is exactly the "it compiled" signal we want.
-    private object? ResolveAndReportRenderTargetShader(string absolutePath)
-    {
-        object? effect = _renderTargetShaderResolver?.Invoke(absolutePath);
-        if (effect != null)
-        {
-            _guiCommands.PrintOutput($"Compiled render-target shader for the preview:\n{absolutePath}");
-        }
-        return effect;
-    }
+    private object? ResolveAndReportRenderTargetShader(string absolutePath) =>
+        ShaderReporter.ResolveAndReport(_renderTargetShaderResolver, absolutePath);
 
     private void AssignEvents()
     {
@@ -1009,6 +1022,14 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void HandleInstanceSelected(ElementSave? element, InstanceSave? instance)
     {
+        // Selecting an instance with no element selected changes the selected element without
+        // raising ElementSelected, so the Preview button hears about it here (#6990). A cleared
+        // instance is followed by ElementSelected when an element remains selected.
+        if (instance != null)
+        {
+            _editorViewModel.UpdateHasSelectedElement(element);
+        }
+
         _wireframeObjectManager.RefreshAll(forceLayout: false);
         _editingManager.RefreshContextMenu();
         _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
+using Gum.DataTypes;
 using Gum.Bundle;
 using Gum.Expressions;
 using Gum.Managers;
@@ -40,12 +42,35 @@ public static class PackCommand
             description: "Store PNG textures with premultiplied alpha, for games that set Renderer.UsePremultipliedAlpha " +
                 "to true and for SkiaGum. Off by default (straight alpha).");
 
+        var shakeOption = new Option<bool>(
+            aliases: new[] { "--shake" },
+            description: "Leave out every Screen and Component that no Screen or root reaches, with the files only they use.");
+
+        var rootsOption = new Option<string[]>(
+            aliases: new[] { "--roots" },
+            getDefaultValue: () => Array.Empty<string>(),
+            description: "With --shake: a text file of element names to keep (one per line, # starts a comment), such as elements created only from code.");
+
+        var keepOption = new Option<string[]>(
+            aliases: new[] { "--keep" },
+            getDefaultValue: () => Array.Empty<string>(),
+            description: "With --shake: element names to keep, comma-separated or repeated.");
+
+        var rootsAssemblyOption = new Option<string[]>(
+            aliases: new[] { "--roots-assembly" },
+            getDefaultValue: () => Array.Empty<string>(),
+            description: "With --shake: a built game assembly whose [assembly: GumElementRoot] attributes (written by the Gum.Analyzers generator) name elements to keep.");
+
         var command = new Command("pack", "Pack a Gum project into a .gumpkg bundle.")
         {
             projectArgument,
             outputOption,
             includeOption,
-            premultipliedAlphaOption
+            premultipliedAlphaOption,
+            shakeOption,
+            rootsOption,
+            keepOption,
+            rootsAssemblyOption
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -54,13 +79,21 @@ public static class PackCommand
             string? outputPath = context.ParseResult.GetValueForOption(outputOption);
             string includeFlags = context.ParseResult.GetValueForOption(includeOption) ?? "core,fontcache,external";
             bool premultipliedAlpha = context.ParseResult.GetValueForOption(premultipliedAlphaOption);
-            context.ExitCode = Execute(projectPath, outputPath, includeFlags, premultipliedAlpha);
+            ShakeOptions shake = new ShakeOptions(
+                context.ParseResult.GetValueForOption(shakeOption),
+                context.ParseResult.GetValueForOption(rootsOption) ?? Array.Empty<string>(),
+                context.ParseResult.GetValueForOption(keepOption) ?? Array.Empty<string>(),
+                context.ParseResult.GetValueForOption(rootsAssemblyOption) ?? Array.Empty<string>());
+            context.ExitCode = Execute(projectPath, outputPath, includeFlags, premultipliedAlpha, shake);
         });
 
         return command;
     }
 
-    private static int Execute(string projectPath, string? outputPath, string includeFlags, bool premultipliedAlpha)
+    private sealed record ShakeOptions(bool Enabled, string[] RootFiles, string[] Keep, string[] RootAssemblies);
+
+    private static int Execute(string projectPath, string? outputPath, string includeFlags, bool premultipliedAlpha,
+        ShakeOptions shake)
     {
         string fullPath = Path.GetFullPath(projectPath);
 
@@ -76,6 +109,12 @@ public static class PackCommand
         if (!TryParseInclusion(includeFlags, out GumBundleInclusion inclusion, out string? parseError))
         {
             Console.Error.WriteLine(parseError);
+            return 2;
+        }
+
+        if (!shake.Enabled && (shake.RootFiles.Length > 0 || shake.Keep.Length > 0 || shake.RootAssemblies.Length > 0))
+        {
+            Console.Error.WriteLine("--roots, --keep and --roots-assembly only apply with --shake.");
             return 2;
         }
 
@@ -96,8 +135,29 @@ public static class PackCommand
             ? Path.GetFullPath(outputPath)
             : Path.Combine(projectDirectory, Path.GetFileNameWithoutExtension(fullPath) + ".gumpkg");
 
+        GumProjectSave project = loadResult.Project!;
+        GumElementReachabilityResult? reachability = null;
+        if (shake.Enabled)
+        {
+            if (!TryReadRoots(shake, out List<string> roots, out string? rootsError))
+            {
+                Console.Error.WriteLine(rootsError);
+                return 2;
+            }
+            reachability = new GumElementReachability().Compute(project, roots);
+            if (reachability.UnknownRoots.Count > 0)
+            {
+                foreach (string unknownRoot in reachability.UnknownRoots)
+                {
+                    Console.Error.WriteLine($"Root '{unknownRoot}' names no Screen or Component in the project.");
+                }
+                return 2;
+            }
+        }
+
         GumProjectDependencyWalker walker = new GumProjectDependencyWalker();
-        WalkResult walkResult = walker.Walk(loadResult.Project!, projectDirectory, inclusion);
+        WalkResult walkResult = walker.Walk(project, projectDirectory, inclusion,
+            reachability == null ? null : new HashSet<string>(reachability.KeptElementNames, StringComparer.OrdinalIgnoreCase));
 
         if (walkResult.MissingFiles.Count > 0)
         {
@@ -134,6 +194,11 @@ public static class PackCommand
                 Console.Error.WriteLine($"missing: {relativePath}");
                 return 1;
             }
+            if (reachability != null && reachability.TrimmedElementNames.Count > 0
+                && string.Equals(relativePath, Path.GetFileName(fullPath), StringComparison.Ordinal))
+            {
+                bytes = WriteProjectWithoutTrimmedElements(project, fullPath, reachability.TrimmedElementNames);
+            }
 
             if (IsPng(relativePath))
             {
@@ -159,6 +224,13 @@ public static class PackCommand
         long compressedBytes = new FileInfo(resolvedOutputPath).Length;
         double ratio = uncompressedBytes == 0 ? 0.0 : (double)compressedBytes / uncompressedBytes * 100.0;
 
+        if (reachability != null)
+        {
+            int total = project.Screens.Count + project.Components.Count;
+            int trimmedCount = reachability.TrimmedElementNames.Count;
+            string trimmedList = trimmedCount == 0 ? "" : ": " + string.Join(", ", reachability.TrimmedElementNames);
+            Console.WriteLine($"Kept {total - trimmedCount} of {total} Screens and Components; trimmed {trimmedCount}{trimmedList}");
+        }
         Console.WriteLine($"Packed {entries.Count} files into {resolvedOutputPath}");
         Console.WriteLine($"  Core:          {walkResult.CoreFiles.Count}");
         Console.WriteLine($"  FontCache:     {walkResult.FontCacheFiles.Count}");
@@ -192,6 +264,66 @@ public static class PackCommand
             global::RenderingLibrary.Content.RgbaPixels.BleedTransparentEdges(rgba, image.Width, image.Height);
         }
         return GumRawTexture.Encode(image.Width, image.Height, rgba, premultiply);
+    }
+
+    private static bool TryReadRoots(ShakeOptions shake, out List<string> roots, out string? error)
+    {
+        roots = new List<string>();
+        error = null;
+        foreach (string rootFile in shake.RootFiles)
+        {
+            if (!File.Exists(rootFile))
+            {
+                error = $"Roots file '{rootFile}' was not found.";
+                return false;
+            }
+            foreach (string line in File.ReadAllLines(rootFile))
+            {
+                string trimmed = line.Trim();
+                if (trimmed.Length > 0 && !trimmed.StartsWith("#", StringComparison.Ordinal))
+                {
+                    roots.Add(trimmed);
+                }
+            }
+        }
+        foreach (string rootAssembly in shake.RootAssemblies)
+        {
+            if (!File.Exists(rootAssembly))
+            {
+                error = $"Roots assembly '{rootAssembly}' was not found.";
+                return false;
+            }
+            roots.AddRange(GumElementRootAssemblyReader.Read(rootAssembly));
+        }
+        foreach (string keep in shake.Keep)
+        {
+            roots.AddRange(keep.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
+        return true;
+    }
+
+    // The bundled project file lists only the kept elements, since GumProjectSave.Load fails on a
+    // reference whose file is missing, and records the trimmed names so the runtime can say an
+    // element was trimmed rather than misspelled.
+    private static byte[] WriteProjectWithoutTrimmedElements(GumProjectSave project, string projectFilePath,
+        IReadOnlyList<string> trimmedElementNames)
+    {
+        HashSet<string> trimmed = new HashSet<string>(trimmedElementNames, StringComparer.OrdinalIgnoreCase);
+        project.ScreenReferences.RemoveAll(reference => trimmed.Contains(reference.Name));
+        project.ComponentReferences.RemoveAll(reference => trimmed.Contains(reference.Name));
+        project.TrimmedElements = trimmedElementNames.ToList();
+
+        string tempPath = Path.Combine(Path.GetTempPath(),
+            "gumcli-pack-" + Path.GetRandomFileName() + Path.GetExtension(projectFilePath));
+        try
+        {
+            project.Save(tempPath, saveElements: false);
+            return File.ReadAllBytes(tempPath);
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
     }
 
     private static bool TryParseInclusion(string includeFlags, out GumBundleInclusion inclusion, out string? error)

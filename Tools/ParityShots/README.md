@@ -37,7 +37,15 @@ Avalonia head options: no path starts empty; `--select "Controls/DialogBox#NineS
 selects an element (and instance) once loaded; `--theme light|dark` shows a variant without saving
 it; `--exit-after 60 --screenshot out.png` runs unattended and writes a screenshot of the window once
 the project has loaded and the canvas has drawn (60 s is the upper bound; a run not ready by then
-exits nonzero without a screenshot). The window opens off-screen at 1280x720 without taking focus,
+exits nonzero without a screenshot). That capture fires on the first drawn canvas frame, so the
+side panels (Variables, States) can still be empty in it: it shows the canvas, not the tabs. To see
+the Variables tab, use the headless grid harness (`Tests/Gum.Avalonia.Tests/VariableGrid/README.md`,
+`PrScreenshot`; it can type into the filter box), which has no real graphics device on macOS, so a
+check that needs a compiled `Effect` (shader parameter rows) needs the real head, and `--screenshot`
+has no flag yet to wait for the panels (a temporary delay before `capture` in `UnattendedRun` works). Open a project at the current `.gumx` version (copy
+`Tools/Gum.ProjectServices/Templates/Default`): a version 1 project, which most of `Samples/` and the
+CodeGen fixtures are, lacks the newer standard variables (`ShaderParameters`), so those rows never
+appear. The window opens off-screen at 1280x720 without taking focus,
 so don't use `--exit-after` for a run the driver needs to see or click. `--zoom-to-fit` frames the
 selected element before the screenshot and prints the applied camera to stdout, and
 `--user-data <folder>` keeps that run's settings (last project, recent list) out of the user's own.

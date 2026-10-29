@@ -9,6 +9,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/Toast")]
 partial class Toast : global::Gum.Forms.Controls.FrameworkElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -21,7 +22,7 @@ partial class Toast : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/Toast") ?? throw new System.InvalidOperationException("Could not find an element named Controls/Toast - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/Toast");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Toast(visual);
             return visual;

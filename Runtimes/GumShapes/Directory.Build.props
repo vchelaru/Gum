@@ -56,8 +56,11 @@
 
       Bumped from 0.8.1 to 0.8.6 for issue #5168 (0.8.6 applies SVG `style` element rules, so
       Illustrator exports that color paths through classes no longer draw black).
+
+      Bumped from 0.8.6 to 0.9.1 for issue #6797 (0.9.0 splits the shader into variants that
+      compile lazily, so a cold WebGL page shows its first shape in ~5 s instead of ~35 s).
     -->
-    <AposShapesVersion>0.8.6</AposShapesVersion>
+    <AposShapesVersion>0.9.1</AposShapesVersion>
   </PropertyGroup>
 
   <!--

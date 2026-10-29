@@ -100,6 +100,27 @@ using System.Linq;
     public bool ShouldSerializeGeneratedCodeFolder() => !string.IsNullOrEmpty(GeneratedCodeFolder);
 
     /// <summary>
+    /// Optional folder, relative to <see cref="CodeProjectRoot"/>, that the user-editable custom code (.cs)
+    /// files are written under, mirroring the Screens/Components layout of the generated folder. Empty
+    /// (the default) keeps each custom file beside its generated file. Namespaces still come from the Gum
+    /// folder path, so both halves of a partial class keep one namespace whichever folders they sit in.
+    /// </summary>
+    public string CustomCodeFolder { get; set; } = string.Empty;
+
+    /// <summary>Leaves the field out of the .codsj while unset, like <see cref="ShouldSerializeGeneratedCodeFolder"/>.</summary>
+    public bool ShouldSerializeCustomCodeFolder() => !string.IsNullOrEmpty(CustomCodeFolder);
+
+    /// <summary>
+    /// When true, Gum writes an <c>.editorconfig</c> marking the generated code folder as generated code
+    /// (see <see cref="GeneratedFolderEditorConfig"/>). Off by default, and only applies when the generated
+    /// folder is separate from the custom code folder and the project root (#6776).
+    /// </summary>
+    public bool MarkGeneratedCodeFolder { get; set; }
+
+    /// <summary>Leaves the field out of the .codsj while false, like <see cref="ShouldSerializeCustomCodeFolder"/>.</summary>
+    public bool ShouldSerializeMarkGeneratedCodeFolder() => MarkGeneratedCodeFolder;
+
+    /// <summary>
     /// Optional text put in front of the <c>Screens</c> and <c>Components</c> folder names, under the
     /// generated code folder. A prefix ending in a slash (<c>GumCodeGen/</c>) makes a folder that holds
     /// both (<c>GumCodeGen/Screens</c>); one without (<c>Gum</c>) renames them (<c>GumScreens</c>,

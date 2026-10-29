@@ -295,6 +295,23 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
     /// </summary>
     public float BorderScale { get; set; } = 1f;
 
+    /// <summary>Left border scale override; null falls back to <see cref="BorderScale"/>. 0 draws no left border.</summary>
+    public float? CustomBorderScaleLeft { get; set; }
+
+    /// <summary>Top border scale override; null falls back to <see cref="BorderScale"/>. 0 draws no top border.</summary>
+    public float? CustomBorderScaleTop { get; set; }
+
+    /// <summary>Right border scale override; null falls back to <see cref="BorderScale"/>. 0 draws no right border.</summary>
+    public float? CustomBorderScaleRight { get; set; }
+
+    /// <summary>Bottom border scale override; null falls back to <see cref="BorderScale"/>. 0 draws no bottom border.</summary>
+    public float? CustomBorderScaleBottom { get; set; }
+
+    private float EffectiveBorderScaleLeft => CustomBorderScaleLeft ?? BorderScale;
+    private float EffectiveBorderScaleTop => CustomBorderScaleTop ?? BorderScale;
+    private float EffectiveBorderScaleRight => CustomBorderScaleRight ?? BorderScale;
+    private float EffectiveBorderScaleBottom => CustomBorderScaleBottom ?? BorderScale;
+
     public override void Render(ISystemManagers managers)
     {
         if (!Visible || Texture == null) return;
@@ -313,7 +330,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
         bool isFlipped = FlipHorizontal || FlipVertical || FlipDiagonal;
         void DrawOnce()
         {
-            if (!IsTilingMiddleSections && BorderScale == 1f && CustomFrameTextureCoordinateWidth == null && !isFlipped)
+            if (CanUseNinePatch(isFlipped))
             {
                 RenderNinePatch(nonNullText, absoluteRotation, animationOffset);
             }
@@ -347,6 +364,20 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             counter.EndShaderMode();
         }
     }
+
+    // Raylib's built-in nine-patch draw can only express the plain, uniform, untiled, unflipped case.
+    internal bool CanUseNinePatch(bool isFlipped) =>
+        !IsTilingMiddleSections && BorderScale == 1f && CustomFrameTextureCoordinateWidth == null && !isFlipped
+        && CustomBorderScaleLeft == null && CustomBorderScaleTop == null
+        && CustomBorderScaleRight == null && CustomBorderScaleBottom == null;
+
+    // The sections RenderSections draws, with each side's effective scale wired in.
+    internal List<NineSliceDrawSection> GetDrawSections(int srcLeft, int srcTop, int srcRight, int srcBottom) =>
+        ComputeDrawSections(
+            srcLeft, srcTop, srcRight, srcBottom,
+            this.Width, this.Height,
+            BorderScale, EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
+            CustomFrameTextureCoordinateWidth, IsTilingMiddleSections);
 
     private void RenderNinePatch(Texture2D texture, float absoluteRotation, (float X, float Y) animationOffset)
     {
@@ -415,10 +446,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             srcBottom = texture.Height;
         }
 
-        var sections = ComputeDrawSections(
-            srcLeft, srcTop, srcRight, srcBottom,
-            this.Width, this.Height,
-            BorderScale, CustomFrameTextureCoordinateWidth, IsTilingMiddleSections);
+        var sections = GetDrawSections(srcLeft, srcTop, srcRight, srcBottom);
 
         // raylib's DrawTexturePro rotates each destination rect around its own top-left
         // (origin = Vector2.Zero). To keep the sections contiguous and rotate the whole
@@ -501,6 +529,25 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
         float borderScale, float? customFrameTextureCoordinateWidth,
         bool isTilingMiddleSections)
     {
+        return ComputeDrawSections(
+            srcLeft, srcTop, srcRight, srcBottom, destWidth, destHeight,
+            borderScale, borderScale, borderScale, borderScale, borderScale,
+            customFrameTextureCoordinateWidth, isTilingMiddleSections);
+    }
+
+    /// <summary>
+    /// Same as the uniform overload, with each side's effective border scale (the
+    /// <c>CustomBorderScale*</c> override, or <paramref name="borderScale"/> when unset).
+    /// <paramref name="borderScale"/> itself sizes the center's tiles.
+    /// </summary>
+    internal static List<NineSliceDrawSection> ComputeDrawSections(
+        int srcLeft, int srcTop, int srcRight, int srcBottom,
+        float destWidth, float destHeight,
+        float borderScale,
+        float scaleLeft, float scaleTop, float scaleRight, float scaleBottom,
+        float? customFrameTextureCoordinateWidth,
+        bool isTilingMiddleSections)
+    {
         var sections = new List<NineSliceDrawSection>();
 
         int usedWidth = srcRight - srcLeft;
@@ -526,74 +573,62 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
         int insideTextureW = usedWidth - (fullOutsideW * 2);
         int insideTextureH = usedHeight - (fullOutsideH * 2);
 
-        // Destination corner thickness, scaled by BorderScale and clamped so two opposing
-        // corners never overlap the available width/height.
-        float destCornerW = Math.Min(fullOutsideW * borderScale, destWidth / 2f);
-        float destCornerH = Math.Min(fullOutsideH * borderScale, destHeight / 2f);
+        // Per-side destination thickness (clamped so opposing bands never overlap) and the texels
+        // each band samples, shared with every other runtime.
+        NineSliceBorders borders = NineSliceBorders.Compute(
+            fullOutsideW, fullOutsideH, scaleLeft, scaleTop, scaleRight, scaleBottom, destWidth, destHeight);
 
-        // Texture-pixel corner thickness must shrink in lockstep when destCorner has been
-        // clamped, otherwise the corner draw would sample more pixels than fit on screen.
-        int srcCornerW = borderScale > 0 ? (int)Math.Round(destCornerW / borderScale) : fullOutsideW;
-        int srcCornerH = borderScale > 0 ? (int)Math.Round(destCornerH / borderScale) : fullOutsideH;
-        if (srcCornerW > fullOutsideW)
-        {
-            srcCornerW = fullOutsideW;
-        }
-        if (srcCornerH > fullOutsideH)
-        {
-            srcCornerH = fullOutsideH;
-        }
+        float destLeft = borders.DestLeft;
+        float destTop = borders.DestTop;
+        float destRight = borders.DestRight;
+        float destBottom = borders.DestBottom;
+        int srcL = borders.SourceLeft;
+        int srcT = borders.SourceTop;
+        int srcR = borders.SourceRight;
+        int srcB = borders.SourceBottom;
 
-        float destInsideW = destWidth - destCornerW * 2;
-        float destInsideH = destHeight - destCornerH * 2;
-        if (destInsideW < 0)
-        {
-            destInsideW = 0;
-        }
-        if (destInsideH < 0)
-        {
-            destInsideH = 0;
-        }
+        float destInsideW = Math.Max(0f, destWidth - destLeft - destRight);
+        float destInsideH = Math.Max(0f, destHeight - destTop - destBottom);
 
         // Corners.
         AddSection(sections,
-            srcLeft, srcTop, srcCornerW, srcCornerH,
-            0, 0, destCornerW, destCornerH);
+            srcLeft, srcTop, srcL, srcT,
+            0, 0, destLeft, destTop);
         AddSection(sections,
-            srcRight - srcCornerW, srcTop, srcCornerW, srcCornerH,
-            destWidth - destCornerW, 0, destCornerW, destCornerH);
+            srcRight - srcR, srcTop, srcR, srcT,
+            destWidth - destRight, 0, destRight, destTop);
         AddSection(sections,
-            srcLeft, srcBottom - srcCornerH, srcCornerW, srcCornerH,
-            0, destHeight - destCornerH, destCornerW, destCornerH);
+            srcLeft, srcBottom - srcB, srcL, srcB,
+            0, destHeight - destBottom, destLeft, destBottom);
         AddSection(sections,
-            srcRight - srcCornerW, srcBottom - srcCornerH, srcCornerW, srcCornerH,
-            destWidth - destCornerW, destHeight - destCornerH, destCornerW, destCornerH);
+            srcRight - srcR, srcBottom - srcB, srcR, srcB,
+            destWidth - destRight, destHeight - destBottom, destRight, destBottom);
 
-        // Top / bottom edges.
+        // Top / bottom edges tile at their own side's scale.
         AddMiddleSections(sections,
-            srcLeft + srcCornerW, srcTop, insideTextureW, srcCornerH,
-            destCornerW, 0, destInsideW, destCornerH,
-            tileHorizontally: isTilingMiddleSections, tileVertically: false, borderScale);
+            srcLeft + srcL, srcTop, insideTextureW, srcT,
+            destLeft, 0, destInsideW, destTop,
+            tileHorizontally: isTilingMiddleSections, tileVertically: false, scaleTop, scaleTop);
         AddMiddleSections(sections,
-            srcLeft + srcCornerW, srcBottom - srcCornerH, insideTextureW, srcCornerH,
-            destCornerW, destHeight - destCornerH, destInsideW, destCornerH,
-            tileHorizontally: isTilingMiddleSections, tileVertically: false, borderScale);
+            srcLeft + srcL, srcBottom - srcB, insideTextureW, srcB,
+            destLeft, destHeight - destBottom, destInsideW, destBottom,
+            tileHorizontally: isTilingMiddleSections, tileVertically: false, scaleBottom, scaleBottom);
 
         // Left / right edges.
         AddMiddleSections(sections,
-            srcLeft, srcTop + srcCornerH, srcCornerW, insideTextureH,
-            0, destCornerH, destCornerW, destInsideH,
-            tileHorizontally: false, tileVertically: isTilingMiddleSections, borderScale);
+            srcLeft, srcTop + srcT, srcL, insideTextureH,
+            0, destTop, destLeft, destInsideH,
+            tileHorizontally: false, tileVertically: isTilingMiddleSections, scaleLeft, scaleLeft);
         AddMiddleSections(sections,
-            srcRight - srcCornerW, srcTop + srcCornerH, srcCornerW, insideTextureH,
-            destWidth - destCornerW, destCornerH, destCornerW, destInsideH,
-            tileHorizontally: false, tileVertically: isTilingMiddleSections, borderScale);
+            srcRight - srcR, srcTop + srcT, srcR, insideTextureH,
+            destWidth - destRight, destTop, destRight, destInsideH,
+            tileHorizontally: false, tileVertically: isTilingMiddleSections, scaleRight, scaleRight);
 
         // Center.
         AddMiddleSections(sections,
-            srcLeft + srcCornerW, srcTop + srcCornerH, insideTextureW, insideTextureH,
-            destCornerW, destCornerH, destInsideW, destInsideH,
-            tileHorizontally: isTilingMiddleSections, tileVertically: isTilingMiddleSections, borderScale);
+            srcLeft + srcL, srcTop + srcT, insideTextureW, insideTextureH,
+            destLeft, destTop, destInsideW, destInsideH,
+            tileHorizontally: isTilingMiddleSections, tileVertically: isTilingMiddleSections, borderScale, borderScale);
 
         return sections;
     }
@@ -614,7 +649,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
     private static void AddMiddleSections(List<NineSliceDrawSection> sections,
         int srcX, int srcY, int srcW, int srcH,
         float destX, float destY, float destW, float destH,
-        bool tileHorizontally, bool tileVertically, float borderScale)
+        bool tileHorizontally, bool tileVertically, float tileScaleX, float tileScaleY)
     {
         if (destW <= 0 || destH <= 0 || srcW <= 0 || srcH <= 0)
         {
@@ -627,8 +662,8 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             return;
         }
 
-        float tileDestW = tileHorizontally ? srcW * borderScale : destW;
-        float tileDestH = tileVertically ? srcH * borderScale : destH;
+        float tileDestW = tileHorizontally ? srcW * tileScaleX : destW;
+        float tileDestH = tileVertically ? srcH * tileScaleY : destH;
         if (tileDestW <= 0 || tileDestH <= 0)
         {
             return;

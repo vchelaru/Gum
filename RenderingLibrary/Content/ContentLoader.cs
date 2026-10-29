@@ -157,32 +157,102 @@ public sealed class ContentLoader : IContentLoader
         }
     }
 
+#if !FRB
     /// <summary>
-    /// Creates a texture from an encoded image stream. <paramref name="isProcessedOnLoad"/> is true
-    /// when the pixels already went through <see cref="ProcessLoadedPixels"/>.
+    /// The load-time fix-up for pixels an <see cref="IImageDecoder"/> produced. Straight pixels get
+    /// <see cref="ProcessLoadedPixels"/>. Premultiplied pixels are left alone when the renderer is
+    /// premultiplied, otherwise converted to straight alpha (then edge-bled when that is on).
     /// </summary>
-    private static Texture2D CreateTextureFromStream(GraphicsDevice device, System.IO.Stream stream,
-        string name, out bool isProcessedOnLoad)
+    /// <returns>The decoder's image when nothing changes, otherwise a fixed-up copy. The out value
+    /// is true when the pixels were un-premultiplied, which the caller reports as a warning.</returns>
+    internal static DecodedImage PrepareDecodedPixels(DecodedImage image, bool usePremultipliedAlpha,
+        bool bleedTransparentEdges, out bool unpremultiplied)
     {
+        unpremultiplied = false;
+        if (image.IsPremultiplied && usePremultipliedAlpha)
+        {
+            return image;
+        }
+        if (!image.IsPremultiplied && !usePremultipliedAlpha && !bleedTransparentEdges)
+        {
+            return image;
+        }
+
+        // Work on a copy: a decoder may hand back a cached instance, which must not be changed.
+        DecodedImage owned = image.IsPremultiplied
+            ? image.ToStraightAlpha()
+            : new DecodedImage((byte[])image.Rgba.Clone(), image.Width, image.Height);
+        unpremultiplied = image.IsPremultiplied;
+        ProcessLoadedPixels(owned.Rgba, owned.Width, owned.Height, usePremultipliedAlpha, bleedTransparentEdges);
+        return owned;
+    }
+#endif
+
+    /// <summary>
+    /// Creates a texture from an encoded image stream: the registered
+    /// <c>LoaderManager.ImageDecoders</c> first, then the built-in decoding.
+    /// <paramref name="isProcessedOnLoad"/> is true when the pixels already went through the load-time fix-up.
+    /// </summary>
+    private static Texture2D CreateTextureFromStream(GraphicsDevice device, string fileName, System.IO.Stream stream,
+        out bool isProcessedOnLoad)
+    {
+        bool usePremultipliedAlpha = Graphics.Renderer.UsePremultipliedAlpha;
+        bool bleedTransparentEdges = Graphics.Renderer.BleedTransparentTextureEdgesOnLoad;
+
         stream = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
 
         // A gumcli-packed texture (#6514): already decoded, so convert the alpha mode if the
         // package's differs and upload, with no image decode and no GetData readback.
-        byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(stream, name,
-            Graphics.Renderer.UsePremultipliedAlpha,
-            Graphics.Renderer.UsePremultipliedAlpha
+        byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(stream, fileName,
+            usePremultipliedAlpha,
+            usePremultipliedAlpha
                 ? "Renderer.UsePremultipliedAlpha is true"
                 : "Renderer.UsePremultipliedAlpha is false",
-            Graphics.Renderer.BleedTransparentTextureEdgesOnLoad,
+            bleedTransparentEdges,
             out Gum.Bundle.GumRawTextureHeader header);
         if (rawTexture != null)
         {
-            var rawTexture2D = new Texture2D(device, header.Width, header.Height, false, SurfaceFormat.Color);
-            rawTexture2D.SetData(rawTexture);
             isProcessedOnLoad = true;
-            return rawTexture2D;
+            return CreateTextureFromRgba(device, rawTexture, header.Width, header.Height);
         }
 
+#if !FRB
+        System.IO.Stream original = stream;
+        try
+        {
+            DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(fileName, ref stream);
+            if (decoded != null)
+            {
+                DecodedImage prepared = PrepareDecodedPixels(decoded, usePremultipliedAlpha,
+                    bleedTransparentEdges, out bool unpremultiplied);
+                if (unpremultiplied)
+                {
+                    System.Diagnostics.Trace.TraceWarning(DecodedImage.GetUnpremultipliedWarning(fileName));
+                }
+                isProcessedOnLoad = true;
+                return CreateTextureFromRgba(device, prepared.Rgba, prepared.Width, prepared.Height);
+            }
+
+            return CreateTextureFromEncodedStream(device, fileName, stream, usePremultipliedAlpha,
+                bleedTransparentEdges, out isProcessedOnLoad);
+        }
+        finally
+        {
+            // TryDecode replaces a non-seekable stream with an in-memory copy; the caller disposes the original.
+            if (!ReferenceEquals(stream, original))
+            {
+                stream.Dispose();
+            }
+        }
+#else
+        return CreateTextureFromEncodedStream(device, fileName, stream, usePremultipliedAlpha,
+            bleedTransparentEdges, out isProcessedOnLoad);
+#endif
+    }
+
+    private static Texture2D CreateTextureFromEncodedStream(GraphicsDevice device, string fileName,
+        System.IO.Stream stream, bool usePremultipliedAlpha, bool bleedTransparentEdges, out bool isProcessedOnLoad)
+    {
 #if KNI && !FRB
         if (OperatingSystem.IsBrowser())
         {
@@ -190,17 +260,35 @@ public sealed class ContentLoader : IContentLoader
             // GetData readback. Switch to Texture2D.FromStream with a color processor once a KNI
             // release has it: https://github.com/kniEngine/kni/pull/2740
             byte[] rgba = StbTextureDecoder.Decode(stream, out int width, out int height);
-            ProcessLoadedPixels(rgba, width, height,
-                Graphics.Renderer.UsePremultipliedAlpha,
-                Graphics.Renderer.BleedTransparentTextureEdgesOnLoad);
-            var texture = new Texture2D(device, width, height, false, SurfaceFormat.Color);
-            texture.SetData(rgba);
+            ProcessLoadedPixels(rgba, width, height, usePremultipliedAlpha, bleedTransparentEdges);
             isProcessedOnLoad = true;
-            return texture;
+            return CreateTextureFromRgba(device, rgba, width, height);
         }
 #endif
         isProcessedOnLoad = false;
-        return Texture2D.FromStream(device, stream);
+        try
+        {
+            return Texture2D.FromStream(device, stream);
+        }
+        catch (Exception exception) when (!IsBuiltInImageExtension(FileManager.GetExtension(fileName)))
+        {
+            string extension = FileManager.GetExtension(fileName);
+            throw new InvalidOperationException(
+                $"Could not load {fileName}: no image decoder handled the .{extension} format, and Gum does not " +
+                $"load it on its own. Add an IImageDecoder for .{extension} to LoaderManager.Self.ImageDecoders " +
+                "before GumService.Initialize loads the project.", exception);
+        }
+    }
+
+    // The formats Texture2D.FromStream loads on every XNA-like backend.
+    private static bool IsBuiltInImageExtension(string extension) =>
+        extension is "png" or "jpg" or "jpeg" or "bmp" or "gif" or "tga" or "tif" or "tiff" or "dds";
+
+    private static Texture2D CreateTextureFromRgba(GraphicsDevice device, byte[] rgba, int width, int height)
+    {
+        var texture = new Texture2D(device, width, height, false, SurfaceFormat.Color);
+        texture.SetData(rgba);
+        return texture;
     }
 
     public static string StandardizeCaseSensitive(string fileName)
@@ -230,7 +318,7 @@ public sealed class ContentLoader : IContentLoader
         using (var stream = GetUrlStream(fileName))
         {
             // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
-            texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, fileNameStandardized, out isProcessedOnLoad);
+            texture = CreateTextureFromStream(renderer.GraphicsDevice!, fileName, stream, out isProcessedOnLoad);
 
             texture.Name = fileNameStandardized;
         }
@@ -307,67 +395,14 @@ public sealed class ContentLoader : IContentLoader
             renderer = managers.Renderer;
         }
         
-        if (extension == "tga")
-        {
-#if RENDERING_LIB_SUPPORTS_TGA
-                if (renderer.GraphicsDevice == null)
-                {
-                    throw new Exception("The renderer is null - did you forget to call Initialize?");
-                }
-
-                Paloma.TargaImage tgaImage = new Paloma.TargaImage(fileName);
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    tgaImage.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-                    stream.Seek(0, SeekOrigin.Begin); //must do this, or error is thrown in next line
-                    toReturn = Texture2D.FromStream(renderer.GraphicsDevice, stream);
-                    toReturn.Name = fileName;
-                }
-#else
-            throw new NotImplementedException();
-#endif
-        }
-#if HAS_SYSTEM_DRAWING_IMAGE
-
-        else if (extension == "bmp")
-        {
-            var image = System.Drawing.Image.FromFile(fileNameStandardized);
-            var bitmap = new System.Drawing.Bitmap(image);
-            
-            var texture = new Texture2D(renderer.GraphicsDevice, bitmap.Width, bitmap.Height, false, SurfaceFormat.Color);
-            var pixels = new Microsoft.Xna.Framework.Color[bitmap.Width * bitmap.Height];
-            var index = 0;
-            for (var y = 0; y < bitmap.Height; y++)
-            {
-                for (var x = 0; x < bitmap.Width; x++)
-                {
-                    var color = bitmap.GetPixel(x, y);
-                    var r = color.R;
-                    var g = color.G;
-                    var b = color.B;
-                    var a = color.A;
-                    pixels[index] = new Microsoft.Xna.Framework.Color(r, g, b, a);
-                    index++;
-                }
-            }
-            
-            texture.SetData(pixels);
-            texture.Name = fileNameStandardized;
-
-            toReturn = texture;
-        }
-#endif
-
 #if XNALIKE && !FRB
-        else if (string.IsNullOrEmpty(extension) && XnaContentManager != null)
+        if (string.IsNullOrEmpty(extension) && XnaContentManager != null)
         {
             toReturn = LoadFromContentManager(fileName, fileNameStandardized);
             isFromContentManager = true;
         }
-#endif
-
-
         else
+#endif
         {
             // This file could be a reference from a .fnt file (with extension),
             // but the file could be a content pipeline file. If so, we need to tolerate
@@ -403,7 +438,7 @@ public sealed class ContentLoader : IContentLoader
             using (stream)
             {
                 // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
-                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, stream, fileNameStandardized, out isProcessedOnLoad);
+                Texture2D texture = CreateTextureFromStream(renderer.GraphicsDevice!, fileNameStandardized, stream, out isProcessedOnLoad);
 
                 texture.Name = fileNameStandardized;
 

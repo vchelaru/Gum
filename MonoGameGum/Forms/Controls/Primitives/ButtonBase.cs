@@ -320,7 +320,7 @@ public class ButtonBase :
 
             foreach (var combo in FrameworkElement.ClickCombos)
             {
-                if (combo.IsComboPushed())
+                if (IsEnabled && combo.IsComboPushed())
                 {
                     wasPushed = true;
                     break;
@@ -378,7 +378,7 @@ public class ButtonBase :
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
-        if(keyboard != null)
+        if(keyboard != null && IsEnabled)
         {
             foreach(Keys key in keyboard.KeysTyped)
             {

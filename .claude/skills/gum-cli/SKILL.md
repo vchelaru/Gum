@@ -29,7 +29,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 | `gumcli screenshot <project.gumx> <element> [--output] [--width] [--height] [--backend monogame\|raylib] [--background hex]` | Render a Screen or Component to a PNG via MonoGame DesktopGL (default) or raylib. Pixel-accurate; cross-platform. `--background` clears to an opaque RRGGBB/RRGGBBAA hex color instead of the default transparent, for a more representative visual comparison. It never generates fonts: a font missing from the project's `FontCache/` renders as the default font (logged as "No usable font could be resolved"), so run `GumProjectFontGenerator` on a scratch copy first when text size matters. |
 | `gumcli svg <project.gumx> <element> [--output] [--width] [--height]` | Render a Screen or Component to a vector SVG via SkiaGum's `SKSvgCanvas`. Bitmaps embed as base64. |
 | `gumcli diff-screenshots <project.gumx>` | Render every Screen and Component through both MonoGame and raylib and report pixel-level mismatches. |
-| `gumcli pack <project.gumx>` | Pack a project into a `.gumpkg` bundle. |
+| `gumcli pack <project.gumx> [--include] [--shake] [--roots <file>] [--keep <names>] [--roots-assembly <dll>]` | Pack a project into a `.gumpkg` bundle. `--shake` (opt-in) keeps only the Screens and Components that `GumElementReachability` (`GumCommon/Bundle`) reaches from every Screen plus the roots, and drops the files only trimmed elements use; Standards and behaviors are always kept. `--roots-assembly` reads the `[assembly: GumElementRoot]` attributes that the `GumElementRootGenerator` in `Tools/Gum.Analyzers` writes into a game assembly. A root that names no element exits 2. |
 | `gumcli stage-forms-behaviors <project.gumx> <destination>` | Resolve a Forms theme's behaviors (following shared-file links and overrides) and write them flat into a destination folder. |
 
 **Exit codes:** 0 = success, 1 = errors found / generation blocked, 2 = load failure, bad args, or non-Windows (fonts).
@@ -54,7 +54,6 @@ Each command class has a static `Create()` returning a `System.CommandLine` `Com
 
 **CLI-specific adapters:**
 - `ConsoleCodeGenLogger` — implements `ICodeGenLogger`, writes to stdout/stderr
-- `HeadlessNameVerifier` — implements `INameVerifier` for C# name validation
 
 ## Gum.ProjectServices
 
@@ -65,6 +64,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 | Type | Role |
 |------|------|
 | `ProjectLoader` / `IProjectLoader` | Loads `.gumx`; detects malformed XML; returns `ProjectLoadResult` with fatal errors and non-fatal `LoadErrors` |
+| `NameRules` | Pure name-validation rules shared by the tool's `NameVerifier` and the CLI |
 | `HeadlessErrorChecker` / `IHeadlessErrorChecker` | Validates base types, behaviors, parent refs, variable types. Delegates from tool's `ErrorChecker`. |
 | `ProjectCreator` / `IProjectCreator` | Creates blank projects with subfolder structure |
 | `FormsTemplateCreator` / `IFormsTemplateCreator` | Extracts embedded Forms template resources |
@@ -82,7 +82,7 @@ Any command that runs `HeadlessErrorChecker` must call `GumExpressionService.Ini
 
 `HeadlessErrorChecker` accepts a second constructor overload taking `IEnumerable<IAdditionalErrorSource>` for extensibility; the CLI uses the single-argument overload.
 
-`HeadlessNameVerifier` only implements real logic in `IsValidCSharpName`; all other `INameVerifier` methods return `true` unconditionally. This is intentional — the CLI only needs C# name validation for codegen.
+`NameRules` holds the name rules that need no tool service (common name check, C# name and keywords, Windows reserved file names, Android file names, `Standardize`, duplicate behavior names). The tool's `NameVerifier` delegates to it and keeps only the checks that need tool services; `CodegenCommand` passes a `NameRules` straight to `CodeGenerationNameVerifier`. A new name rule that needs only the name (or a list of existing names) goes in `NameRules` so the tool and the CLI cannot disagree.
 
 `ProjectLoader` runs `DetectSilentlyDroppedContent` after deserialization to catch incorrect XML element names (e.g., `<States>` instead of `<State>`, `<InstanceSave>` instead of `<Instance>`) that `XmlSerializer` silently ignores. Without this, AI-generated files with wrong structure load as empty elements with no error.
 
@@ -97,6 +97,8 @@ Any command that runs `HeadlessErrorChecker` must call `GumExpressionService.Ini
 Font files are named like `Font18Arial.fnt` and `Font18Arial_0.png` (size+name convention, zero-indexed). Always use `gumcli fonts <project.gumx>` to generate missing bitmap fonts — never create `.fnt` files manually.
 
 The checked-in `Templates/FormsTemplate/GumProject.gumx` carries `BehaviorReference.SourcePath` on most shared behaviors (e.g. `"../FormsBehaviors/ButtonBehavior.behx"`), meant only for `Gum.FormsStaging`'s build-time flattening into the shipped tool's `Content/FormsThemes` folder. `FormsTemplateCreator.Create` always extracts every manifest-listed `.behx` locally into the new project's own `Behaviors/` folder, so a `SourcePath` surviving into the extracted `.gumx` is stale the moment a real project exists (`BehaviorReference.GetRelativeFilePath` prefers `SourcePath` when set, and it never resolves relative to a real project — `ToBehaviorSave` then silently returns an empty `IsSourceFileMissing` stub with no error). `FormsTemplateCreator.StripStaleBehaviorSourcePaths` clears `SourcePath` on every extracted `BehaviorReference` right after extraction to prevent this.
+
+**A shaken bundle's project file is rewritten.** `GumProjectSave.Load` fails on a reference whose file is missing, so `pack --shake` saves the project without the trimmed references and lists them in `GumProjectSave.TrimmedElements`. The runtime reads that list to tell a trimmed element from a misspelled one: `ObjectFinder.GetRequiredElementSave` (used by generated code from syntax version 7) and the variable-reference error both name `--keep`. `ObjectFinder.GetElementSave` still returns null, because Gum probes it internally.
 
 ## Codegen Flow (non-obvious details)
 

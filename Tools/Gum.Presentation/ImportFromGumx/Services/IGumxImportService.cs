@@ -14,8 +14,47 @@ namespace ImportFromGumxPlugin.Services;
 public class ImportResult
 {
     public List<string> CopiedAssets { get; } = new();
-    /// <summary>Elements that were not imported because one or more of their required asset files could not be found.</summary>
+    /// <summary>
+    /// Everything the import could not bring over (elements, behaviors, standards, animation files), by name.
+    /// <see cref="SkippedReasons"/> says why. Nothing is dropped without an entry here.
+    /// </summary>
     public List<string> SkippedElements { get; } = new();
+    /// <summary>Why each <see cref="SkippedElements"/> entry was not imported, keyed by that entry.</summary>
+    public Dictionary<string, string> SkippedReasons { get; } = new();
+
+    /// <summary>Records that <paramref name="name"/> was not imported, and why. The first reason for a name wins.</summary>
+    public void AddSkipped(string name, string reason)
+    {
+        if (!SkippedElements.Contains(name))
+        {
+            SkippedElements.Add(name);
+        }
+        SkippedReasons.TryAdd(name, reason);
+    }
+
+    /// <summary>Every file the import wrote before it finished (or failed), in order. Only files seen on disk.</summary>
+    public List<string> WrittenFiles { get; } = new();
+
+    /// <summary>
+    /// Files of elements handed to <see cref="IImportLogic"/>, which writes them itself and reports a
+    /// failed write only in a dialog. They join <see cref="WrittenFiles"/> once seen on disk.
+    /// </summary>
+    internal List<string> RegisteredFiles { get; } = new();
+
+    /// <summary>
+    /// The lines joined one per line, with all but the first <paramref name="max"/> collapsed into
+    /// "(and N more)". Every list of skipped items shown to the user goes through this.
+    /// </summary>
+    public static string CapLines(IReadOnlyList<string> lines, int max = 5)
+    {
+        string text = string.Join("\n", lines.Take(max));
+        return lines.Count > max ? text + $"\n(and {lines.Count - max} more)" : text;
+    }
+
+    /// <summary>One line per skipped item: its name, then its reason when known.</summary>
+    public List<string> DescribeSkipped() => SkippedElements
+        .Select(name => SkippedReasons.TryGetValue(name, out string? reason) ? $"{name}: {reason}" : name)
+        .ToList();
     /// <summary>Elements whose destination files already exist. When non-empty the import was cancelled.</summary>
     public List<string> ConflictingElements { get; } = new();
     /// <summary>Why the import was refused because the source project is newer than the destination; null when it was not.</summary>
@@ -49,6 +88,13 @@ public class ImportSelections
     public List<StandardElementSave> Standards { get; init; } = new();
 
     /// <summary>
+    /// Which items the source lists but did not load (<see cref="GumxSourceProblems"/>) the import
+    /// reports as skipped. Null reports all of them; a caller that imports only part of a source
+    /// sets this to that part, and the rest is ignored.
+    /// </summary>
+    public Func<SourceProblem, bool>? ReportSourceProblem { get; init; }
+
+    /// <summary>
     /// A copy without the given components, screens and behaviors (matched by reference);
     /// Standards are always kept.
     /// </summary>
@@ -59,6 +105,7 @@ public class ImportSelections
         TransitiveComponents = TransitiveComponents.Where(c => !unchanged.Contains(c)).ToList(),
         Behaviors = Behaviors.Where(b => !unchanged.Contains(b)).ToList(),
         Standards = Standards,
+        ReportSourceProblem = ReportSourceProblem,
     };
 }
 
@@ -111,4 +158,25 @@ public interface IGumxImportService
         ConflictResolution conflictResolution = ConflictResolution.Cancel,
         Action? beforeImport = null,
         bool replaceStandardAnimations = true);
+}
+
+/// <summary>
+/// The import failed partway (for example a disk error), after <see cref="WrittenFiles"/> were
+/// already written. The import writes in place, so those files are left behind.
+/// </summary>
+public class ImportFailedException : Exception
+{
+    public IReadOnlyList<string> WrittenFiles { get; }
+
+    public ImportFailedException(Exception cause, IReadOnlyList<string> writtenFiles)
+        : base(BuildMessage(cause, writtenFiles), cause)
+    {
+        WrittenFiles = writtenFiles;
+    }
+
+    private static string BuildMessage(Exception cause, IReadOnlyList<string> writtenFiles) =>
+        writtenFiles.Count == 0
+            ? $"{cause.Message.Split('\n')[0].Trim()}; nothing had been written yet."
+            : $"{cause.Message.Split('\n')[0].Trim()}; {writtenFiles.Count} file(s) were already written:\n"
+              + ImportResult.CapLines(writtenFiles);
 }

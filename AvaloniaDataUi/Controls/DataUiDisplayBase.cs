@@ -31,6 +31,17 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         // hit-tests only where something is drawn. Text boxes give up their own edit flyout, which
         // would otherwise open in the row menu's place.
         Background = Brushes.Transparent;
+        // The spacious row's divider and callout colors depend on the theme, known only once the row is on screen.
+        ActualThemeVariantChanged += (_, _) =>
+        {
+            if (IsSpacious)
+            {
+                _areFieldsStyled = false;
+                ApplyRowStyle();
+                Refresh();
+            }
+        };
+        AddSpaciousFieldStyles();
         DataUiContextMenus.Attach(this, this);
         Styles.Add(new Style(x => x.OfType<TextBox>()) { Setters = { new Setter(ContextFlyoutProperty, null) } });
         AddHandler(PointerMovedEvent, HandleHintPointerMoved);
@@ -46,12 +57,15 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             bool changed = _instanceMember != value;
             if (_instanceMember != null && changed)
             {
+                OnInstanceMemberChanging();
                 _instanceMember.PropertyChanged -= HandleMemberPropertyChanged;
+                _instanceMember.Retargeting -= HandleMemberRetargeting;
             }
             _instanceMember = value;
             if (_instanceMember != null && changed)
             {
                 _instanceMember.PropertyChanged += HandleMemberPropertyChanged;
+                _instanceMember.Retargeting += HandleMemberRetargeting;
             }
 
             if (changed)
@@ -90,6 +104,17 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     /// <inheritdoc/>
     public abstract ApplyValueResult TrySetValueOnUi(object? value);
 
+    /// <summary>
+    /// Raised just before a different member replaces the current one, while <see cref="InstanceMember"/>
+    /// still returns the current one; a drag in progress ends here so its full commit reaches that member.
+    /// </summary>
+    public event EventHandler? InstanceMemberChanging;
+
+    /// <summary>Called before a different member replaces the current one; <see cref="InstanceMember"/> is still the current one.</summary>
+    protected virtual void OnInstanceMemberChanging() => InstanceMemberChanging?.Invoke(this, EventArgs.Empty);
+
+    private void HandleMemberRetargeting(object? sender, EventArgs e) => OnInstanceMemberChanging();
+
     /// <summary>Called when a different member is assigned, before the refresh; clear per-member state here.</summary>
     protected virtual void OnInstanceMemberChanged()
     {
@@ -98,8 +123,22 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     /// <summary>Refreshes on value and detail-text changes.</summary>
     protected virtual void HandleMemberPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.FirstGridLength))
+        {
+            // A page that sizes its label column to the font changes it after the row is built.
+            OnInstanceMemberChanged();
+            // OnInstanceMemberChanged clears per-row colors, so the spacious look is applied again.
+            _areFieldsStyled = false;
+            ApplyRowStyle();
+        }
+
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.FirstGridLength) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsSpaciousRow) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.WarningText) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.ChipText) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.ToggleText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailAction))
         {
@@ -238,11 +277,183 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         textBlock.Bind(TextBlock.FontSizeProperty, textBlock.GetResourceObservable("Frb.FontSize.Caption"));
     }
 
+    private bool _isRowStyled;
+    private bool _areFieldsStyled;
+    private bool _isHintStyled;
+    private StackPanel? _hintHost;
+    private Border? _callout;
+    private TextBlock? _calloutText;
+
+    private const string SpaciousFieldClass = "spaciousField";
+    private const string SpaciousLightClass = "spaciousLight";
+
+    // Sunken fields with a hairline border, as in the Settings mock: dark by default, light under the class.
+    private void AddSpaciousFieldStyles()
+    {
+        Styles.Add(CreateFieldStyle<TextBox>(light: false, background: "#171717", border: "#2E2E2E"));
+        Styles.Add(CreateFieldStyle<TextBox>(light: true, background: "#FFFFFF", border: "#C8C8C8"));
+        Styles.Add(CreateFieldStyle<ComboBox>(light: false, background: "#171717", border: "#2E2E2E"));
+        Styles.Add(CreateFieldStyle<ComboBox>(light: true, background: "#FFFFFF", border: "#C8C8C8"));
+    }
+
+    private static Style CreateFieldStyle<T>(bool light, string background, string border) where T : TemplatedControl
+    {
+        Style style = new Style(x => light
+            ? x.OfType<T>().Class(SpaciousFieldClass).Class(SpaciousLightClass)
+            : x.OfType<T>().Class(SpaciousFieldClass).Not(y => y.Class(SpaciousLightClass)));
+        style.Setters.Add(new Setter(TemplatedControl.BackgroundProperty, new SolidColorBrush(Color.Parse(background))));
+        style.Setters.Add(new Setter(TemplatedControl.BorderBrushProperty, new SolidColorBrush(Color.Parse(border))));
+        style.Setters.Add(new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(1)));
+        style.Setters.Add(new Setter(TemplatedControl.CornerRadiusProperty, new CornerRadius(3)));
+        style.Setters.Add(new Setter(TemplatedControl.PaddingProperty, new Thickness(8, 4)));
+        return style;
+    }
+
+    /// <summary>Whether the member opted into the spacious Settings look.</summary>
+    protected bool IsSpacious => InstanceMember?.IsSpaciousRow == true;
+
+    /// <inheritdoc/>
+    protected override void OnAttachedToVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        ApplyRowStyle();
+    }
+
+    // The spacious Settings look, for a member that opts in: a divider and padding around the row, taller
+    // fields and wider buttons with a 4px gap. Rows that do not opt in are never touched.
+    private void ApplyRowStyle()
+    {
+        if (IsSpacious)
+        {
+            _isRowStyled = true;
+            bool isLight = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+            Padding = new Thickness(10, 8, 10, 2);
+            BorderThickness = new Thickness(0, 0, 0, 1);
+            BorderBrush = new SolidColorBrush(Color.Parse(isLight ? "#E0E0E0" : "#303030"));
+            // Applied once: validation colors set on a field later must not be reset by every refresh.
+            foreach (Control control in _areFieldsStyled ? Enumerable.Empty<Control>() : global::Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(this).OfType<Control>())
+            {
+                if (control is TextBox || control is ComboBox)
+                {
+                    // A sunken field with a hairline border, as in the Settings mock.
+                    control.MinHeight = 26;
+                    // Through a style, so the grid's own default-value highlight can still override the color.
+                    control.Classes.Add(SpaciousFieldClass);
+                    control.Classes.Set(SpaciousLightClass, isLight);
+                }
+                else if (control is Button button && button.Parent is Grid)
+                {
+                    button.MinWidth = 28;
+                    button.MinHeight = 26;
+                    button.VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center;
+                    button.HorizontalContentAlignment = global::Avalonia.Layout.HorizontalAlignment.Center;
+                    button.Margin = new Thickness(4, 0, 0, 0);
+                }
+            }
+            _areFieldsStyled = true;
+        }
+        else if (_isRowStyled)
+        {
+            _isRowStyled = false;
+            ClearValue(PaddingProperty);
+            ClearValue(BorderThicknessProperty);
+            ClearValue(BorderBrushProperty);
+        }
+    }
+
+    // A spacious row's hint is bigger, quieter and lined up with the field, with room above and below; a
+    // warning is a card with an amber bar on its left under the hint. Other rows keep the compact hint.
+    private void ApplyHintStyle(TextBlock hint)
+    {
+        if (!IsSpacious)
+        {
+            if (_isHintStyled)
+            {
+                _isHintStyled = false;
+                SetHintHost(hint, null, 0);
+                hint.ClearValue(TextBlock.MarginProperty);
+                hint.Opacity = 0.8;
+                BindCaptionFontSize(hint);
+            }
+            return;
+        }
+
+        string? warning = InstanceMember!.WarningText;
+        bool hasWarning = !string.IsNullOrEmpty(warning);
+        double left = InstanceMember.FirstGridLength;
+        if (!_isHintStyled)
+        {
+            _isHintStyled = true;
+            hint.Bind(TextBlock.FontSizeProperty, hint.GetResourceObservable("ControlContentThemeFontSize"));
+        }
+        hint.Opacity = 0.65;
+        hint.Margin = new Thickness(0, 3, 4, 7);
+        SetHintHost(hint, hasWarning ? warning : null, left);
+        if (!hasWarning)
+        {
+            hint.Margin = new Thickness(left, 3, 4, 7);
+        }
+    }
+
+    private void SetHintHost(TextBlock hint, string? warning, double left)
+    {
+        if (warning != null)
+        {
+            bool isLight = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+            if (_hintHost == null && hint.Parent is Panel panel)
+            {
+                _hintHost = new StackPanel();
+                _calloutText = new TextBlock { TextWrapping = TextWrapping.Wrap };
+                _calloutText.Bind(TextBlock.FontSizeProperty, _calloutText.GetResourceObservable("ControlContentThemeFontSize"));
+                _callout = new Border
+                {
+                    BorderThickness = new Thickness(3, 0, 0, 0),
+                    Padding = new Thickness(10, 6),
+                    Margin = new Thickness(0, 6, 4, 8),
+                    Child = _calloutText,
+                };
+                int index = panel.Children.IndexOf(hint);
+                Grid.SetRow(_hintHost, Grid.GetRow(hint));
+                Grid.SetColumn(_hintHost, Grid.GetColumn(hint));
+                Grid.SetRowSpan(_hintHost, Grid.GetRowSpan(hint));
+                Grid.SetColumnSpan(_hintHost, Grid.GetColumnSpan(hint));
+                panel.Children.RemoveAt(index);
+                _hintHost.Children.Add(hint);
+                _hintHost.Children.Add(_callout);
+                panel.Children.Insert(index, _hintHost);
+            }
+            if (_hintHost != null && _callout != null && _calloutText != null)
+            {
+                _hintHost.Margin = new Thickness(left, 0, 0, 0);
+                _calloutText.Text = warning;
+                _calloutText.Foreground = new SolidColorBrush(Color.Parse(isLight ? "#5C4000" : "#E8D9B0"));
+                _callout.BorderBrush = new SolidColorBrush(Color.Parse(isLight ? "#C77700" : "#E0A63B"));
+                _callout.Background = new SolidColorBrush(Color.Parse(isLight ? "#F7EBD0" : "#2E2A1F"));
+            }
+        }
+        else if (_hintHost != null && _hintHost.Parent is Panel hostPanel)
+        {
+            int index = hostPanel.Children.IndexOf(_hintHost);
+            Grid.SetRow(hint, Grid.GetRow(_hintHost));
+            Grid.SetColumn(hint, Grid.GetColumn(_hintHost));
+            Grid.SetRowSpan(hint, Grid.GetRowSpan(_hintHost));
+            Grid.SetColumnSpan(hint, Grid.GetColumnSpan(_hintHost));
+            _hintHost.Children.Clear();
+            hostPanel.Children.RemoveAt(index);
+            hostPanel.Children.Insert(index, hint);
+            _hintHost = null;
+            _callout = null;
+            _calloutText = null;
+        }
+    }
+
     /// <summary>Shows the member's detail text in <paramref name="hint"/>, hiding it when empty.</summary>
     protected void RefreshHint(TextBlock hint)
     {
         string? detailText = InstanceMember?.DetailText;
         string? displayed = detailText;
+        ApplyRowStyle();
+        ApplyHintStyle(hint);
         List<HintLink> links = new List<HintLink>();
 
         if (detailText != null)

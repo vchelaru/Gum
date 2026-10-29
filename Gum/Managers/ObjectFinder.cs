@@ -67,6 +67,21 @@ public interface IObjectFinder
     List<ElementSave> GetBaseElements(ElementSave elementSave);
 
     /// <summary>
+    /// The element named by <paramref name="element"/>'s <see cref="ElementSave.BaseType"/>, or null when it
+    /// has no base type, the base is missing, or <paramref name="element"/> is part of a <c>BaseType</c> cycle
+    /// (see <see cref="GetBaseTypeCycle"/>). Every walk up a base chain takes its next step through this method
+    /// so a cycle ends the walk instead of overflowing the stack.
+    /// </summary>
+    ElementSave? GetBaseElement(ElementSave element);
+
+    /// <summary>
+    /// The elements of the <c>BaseType</c> cycle <paramref name="element"/> belongs to, starting with
+    /// <paramref name="element"/> and following each base in turn (an element that is its own base returns just
+    /// itself). Empty when <paramref name="element"/> is not part of a cycle, including when it only derives from one.
+    /// </summary>
+    IReadOnlyList<ElementSave> GetBaseTypeCycle(ElementSave element);
+
+    /// <summary>
     /// Returns true if <paramref name="variableName"/> appears in <see cref="ElementSave.VariablesHiddenFromInstances"/>
     /// on <paramref name="elementSave"/> or any of its base types.
     /// </summary>
@@ -414,6 +429,30 @@ public class ObjectFinder : IObjectFinder
     }
 
     /// <summary>
+    /// Returns the element named <paramref name="elementName"/>, or throws when the loaded project has
+    /// none. The message says whether <c>gumcli pack --shake</c> trimmed it (listed in
+    /// <see cref="GumProjectSave.TrimmedElements"/>) or it was never there. Generated code uses this;
+    /// <see cref="GetElementSave(string?)"/> keeps returning null for callers that probe.
+    /// </summary>
+    public ElementSave GetRequiredElementSave(string elementName)
+    {
+        ElementSave? element = GetElementSave(elementName);
+        if (element != null)
+        {
+            return element;
+        }
+
+        if (GumProjectSave?.TrimmedElements.Contains(elementName) == true)
+        {
+            throw new InvalidOperationException(
+                $"'{elementName}' was trimmed by gumcli pack --shake because nothing in the project reaches it. " +
+                $"Pack with --keep {elementName}, or list it in the --roots file.");
+        }
+        throw new InvalidOperationException(
+            $"Could not find an element named {elementName} - did you forget to load a Gum project?");
+    }
+
+    /// <summary>
     /// Returns a list of Elements that include InstanceSaves that use the argument
     /// elementSave as their BaseType, or that use an ElementSave deriving from elementSave
     /// as their BaseType.
@@ -708,7 +747,7 @@ public class ObjectFinder : IObjectFinder
         }
         while (!(elementSave is StandardElementSave) && !string.IsNullOrEmpty(elementSave?.BaseType))
         {
-            elementSave = GetElementSave(elementSave.BaseType);
+            elementSave = GetBaseElement(elementSave);
         }
 
         return elementSave as StandardElementSave;
@@ -741,8 +780,9 @@ public class ObjectFinder : IObjectFinder
 
         if(element is ScreenSave)
         {
+            // An element in a BaseType cycle has no base, so nothing inherits through it.
             var screensInheriting = GumProjectSave.Screens
-                .Where(item => item.BaseType == element.Name)
+                .Where(item => item.BaseType == element.Name && !IsInBaseTypeCycle(item))
                 .ToArray();
 
             listToAddTo.AddRange(screensInheriting);
@@ -755,7 +795,7 @@ public class ObjectFinder : IObjectFinder
         else
         {
             var componentsInheriting = GumProjectSave.Components
-                .Where(item => item.BaseType == element.Name)
+                .Where(item => item.BaseType == element.Name && !IsInBaseTypeCycle(item))
                 .ToArray();
 
             listToAddTo.AddRange(componentsInheriting);
@@ -770,15 +810,73 @@ public class ObjectFinder : IObjectFinder
 
     private void FillListWithBaseElements(ElementSave element, List<ElementSave> listToAddTo)
     {
-        var baseElement = !string.IsNullOrWhiteSpace(element.BaseType) ? GetElementSave(element.BaseType) : null;
+        // An element in a BaseType cycle has no base, so this ends even for a circular project.
+        ElementSave? baseElement = GetBaseElement(element);
 
-        if (baseElement != null)
+        while (baseElement != null)
         {
             listToAddTo.Add(baseElement);
 
-            FillListWithBaseElements(baseElement, listToAddTo);
+            baseElement = GetBaseElement(baseElement);
         }
-        
+    }
+
+    /// <inheritdoc/>
+    public ElementSave? GetBaseElement(ElementSave element)
+    {
+        if (string.IsNullOrWhiteSpace(element.BaseType))
+        {
+            return null;
+        }
+
+        ElementSave? baseElement = GetElementSave(element.BaseType);
+
+        return baseElement != null && !IsInBaseTypeCycle(element) ? baseElement : null;
+    }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<ElementSave> GetBaseTypeCycle(ElementSave element)
+    {
+        List<ElementSave> cycle = new List<ElementSave>();
+
+        if (IsInBaseTypeCycle(element))
+        {
+            ElementSave? current = element;
+            do
+            {
+                cycle.Add(current!);
+                current = GetElementSave(current!.BaseType);
+            }
+            while (current != null && current != element);
+        }
+
+        return cycle;
+    }
+
+    private bool IsInBaseTypeCycle(ElementSave element)
+    {
+        // Following BaseType from an element on a cycle returns to the element within as many steps as the
+        // project has elements; a walk that has not returned by then is on a tail leading into a cycle.
+        int maxSteps = GumProjectSave != null
+            ? GumProjectSave.Screens.Count + GumProjectSave.Components.Count + GumProjectSave.StandardElements.Count
+            : 0;
+
+        ElementSave? current = element;
+        for (int step = 0; step <= maxSteps; step++)
+        {
+            current = string.IsNullOrWhiteSpace(current!.BaseType) ? null : GetElementSave(current.BaseType);
+
+            if (current == null)
+            {
+                return false;
+            }
+            if (current == element)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -819,7 +917,7 @@ public class ObjectFinder : IObjectFinder
                 }
             }
 
-            current = !string.IsNullOrEmpty(current.BaseType) ? GetElementSave(current.BaseType) : null;
+            current = GetBaseElement(current);
         }
 
         return false;
@@ -835,7 +933,7 @@ public class ObjectFinder : IObjectFinder
             {
                 return true;
             }
-            current = !string.IsNullOrEmpty(current.BaseType) ? GetElementSave(current.BaseType) : null;
+            current = GetBaseElement(current);
         }
         return false;
     }
@@ -1170,6 +1268,18 @@ public class ObjectFinder : IObjectFinder
     /// <returns>The root VariableSave</returns>
     public VariableSave? GetRootVariable(string name, InstanceSave instance)
     {
+        return GetRootVariable(name, instance, null);
+    }
+
+    /// <summary>
+    /// Returns the root variable for the argument instance, also finding a shader parameter variable saved by
+    /// <paramref name="editingElement"/>, which can derive from the element that owns the instance.
+    /// </summary>
+    /// <param name="name">The name, qualified with the instance ("Icon.X") or the root name ("X").</param>
+    /// <param name="instance">The instance the variable belongs to.</param>
+    /// <param name="editingElement">The element whose state is being read or edited, if it is not the instance's container.</param>
+    public VariableSave? GetRootVariable(string name, InstanceSave instance, ElementSave? editingElement)
+    {
         // This could be referencing an invalid type
         var instanceElement = GetElementSave(instance.BaseType);
         var afterDot = name.Substring(name.IndexOf('.') + 1);
@@ -1179,8 +1289,102 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            return GetRootVariable(afterDot, instanceElement);
+            VariableSave? declaredByType = GetRootVariable(afterDot, instanceElement);
+
+            if (declaredByType == null)
+            {
+                // A shader parameter is not declared by the instance's type; the container that saved it under
+                // "Instance.Parameter" is the only place that knows it. A derived element can save the entry
+                // for an instance its base owns, so the editing element's chain is searched first.
+                string savedName = instance.Name + "." + afterDot;
+                ElementSave? searchFrom = editingElement ?? instance.ParentContainer;
+                VariableSave? definition = searchFrom == null ? null : GetShaderParameterDefinition(savedName, searchFrom);
+                if (definition == null && instance.ParentContainer != null && instance.ParentContainer != searchFrom)
+                {
+                    definition = GetShaderParameterDefinition(savedName, instance.ParentContainer);
+                }
+                return definition;
+            }
+
+            return declaredByType;
         }
+    }
+
+    // A helper rather than a lambda: a lambda capturing the instance name allocates its closure on every call of
+    // GetRootVariable, including the hot path for ordinary variables.
+    private bool BaseElementOwnsInstance(ElementSave element, string instanceName)
+    {
+        foreach (ElementSave baseElement in GetBaseElements(element))
+        {
+            if (baseElement.GetInstance(instanceName) != null)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the definition of a shader parameter variable saved on <paramref name="container"/> or one of its
+    /// base elements, or null when none is saved.
+    /// </summary>
+    /// <param name="qualifiedVariableName">The saved name, such as <c>Icon.Outline_Thickness</c>.</param>
+    /// <param name="container">The element to start searching from.</param>
+    public VariableSave? GetShaderParameterDefinition(string qualifiedVariableName, ElementSave container)
+    {
+        int dot = qualifiedVariableName.IndexOf('.');
+        if (dot <= 0)
+        {
+            return null;
+        }
+
+        VariableSave? saved = FindMarkedVariable(container, qualifiedVariableName);
+        if (saved == null)
+        {
+            foreach (ElementSave baseElement in GetBaseElements(container))
+            {
+                saved = FindMarkedVariable(baseElement, qualifiedVariableName);
+                if (saved != null)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (saved == null)
+        {
+            return null;
+        }
+
+        // FindMarkedVariable only returns entries whose marker parses.
+        global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(saved.ShaderParameter, out global::RenderingLibrary.Graphics.ShaderParameterMarker marker);
+
+        // Shaped like a variable the instance's type declares: the root name, not the saved one.
+        return new VariableSave
+        {
+            Name = qualifiedVariableName.Substring(dot + 1),
+            Type = saved.Type,
+            ShaderParameter = marker.Format()
+        };
+    }
+
+    private static VariableSave? FindMarkedVariable(ElementSave element, string savedName)
+    {
+        List<VariableSave>? variables = element.DefaultState?.Variables;
+        if (variables == null)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < variables.Count; i++)
+        {
+            VariableSave variable = variables[i];
+            if (variable.Name == savedName && global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(variable.ShaderParameter, out _))
+            {
+                return variable;
+            }
+        }
+        return null;
     }
 
     public VariableListSave? GetRootVariableList(string name, ElementSave element)
@@ -1202,7 +1406,7 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            var baseElement = GetElementSave(element.BaseType);
+            var baseElement = GetBaseElement(element);
 
             if (baseElement != null)
             {
@@ -1253,7 +1457,14 @@ public class ObjectFinder : IObjectFinder
 
             if(instance != null)
             {
-                return GetRootVariable(effectiveName, instance);
+                return GetRootVariable(effectiveName, instance, element);
+            }
+
+            // GetInstance only sees this element's own instances. A derived element can still save a shader
+            // parameter entry for an instance its base owns.
+            if (BaseElementOwnsInstance(element, beforeDot))
+            {
+                return GetShaderParameterDefinition(effectiveName, element);
             }
             // this has a dot, but no instance, so it's a bad variable...
         }
@@ -1268,7 +1479,7 @@ public class ObjectFinder : IObjectFinder
             }
             else
             {
-                var baseElement = GetElementSave(element.BaseType);
+                var baseElement = GetBaseElement(element);
 
                 // Give the base a chance first since we want the root-most
                 if(baseElement != null)
@@ -1394,7 +1605,7 @@ public class ObjectFinder : IObjectFinder
             }
             else
             {
-                var baseElement = ObjectFinder.Self.GetElementSave(container.BaseType);
+                var baseElement = GetBaseElement(container);
                 if(baseElement == null)
                 {
                     return false;
@@ -1424,31 +1635,24 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            var baseType = element.BaseType;
-
-            var baseElement = GetElementSave(baseType);
+            var baseElement = GetBaseElement(element);
 
             if(baseElement is StandardElementSave)
             {
                 return false;
             }
-            else if(baseType == null)
+            else if(element.BaseType == null)
             {
                 // this would be a screen...
                 return false;
             }
+            else if(baseElement != null)
+            {
+                return IsInstanceRecursivelyReferencingElement(instance, baseElement);
+            }
             else
             {
-                var baseElementSave = GetElementSave(baseType);
-                if(baseElementSave != null)
-                {
-                    return IsInstanceRecursivelyReferencingElement(instance, baseElementSave);
-
-                }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
         }
     }

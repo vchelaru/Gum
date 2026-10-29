@@ -168,6 +168,9 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         StandardElementsManager.Self.CustomGetDefaultState =
             CombineGetDefaultState(StandardElementsManager.Self.CustomGetDefaultState);
 
+        // Removed first so a registration after UninitializeRuntimeTypes does not add the hook a second time.
+        CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable -=
+            MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderableFunc;
         CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable +=
             MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderableFunc;
     }

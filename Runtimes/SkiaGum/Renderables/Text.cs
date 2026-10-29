@@ -343,6 +343,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
             else
             {
+                // Never stop between the halves of a surrogate pair.
+                if (char.IsHighSurrogate(line[remaining - 1]))
+                {
+                    remaining++;
+                }
                 revealed.Add(line.Substring(0, remaining));
                 remaining = 0;
             }
@@ -1148,7 +1153,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             ? Height
             : (float?)null;
 
-    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(mRawText, forcedWidth, allowMarkup: true);
+    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(_layoutText, forcedWidth, allowMarkup: true);
 
     /// <summary>
     /// Builds a RichTextKit <c>TextBlock</c> for the given text (normally <see cref="RawText"/>, but
@@ -1476,7 +1481,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if (!_hasMarkup || string.IsNullOrEmpty(_layoutText))
         {
-            runs.Add(new StyledTextRun((_hasMarkup ? _layoutText : mRawText) ?? string.Empty, GetStyle()));
+            runs.Add(new StyledTextRun(_layoutText ?? string.Empty, GetStyle()));
             return runs;
         }
 
@@ -1997,6 +2002,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and <see cref="_inlineVariables"/>. Plain text (no recognized tags) leaves _layoutText equal to
     /// mRawText so the render/measure path is byte-for-byte unchanged. Called whenever RawText changes.
     /// </summary>
+    // Control characters become spaces one for one (so indexes into RawText still line up) to match
+    // MonoGame's blank glyph (#6835). A tab is kept: RichTextKit gives it its own tab stop.
+    // Callers have already turned "\r\n" into "\n", so a "\r\n" left here (from "\r\r\n") would be
+    // read by RichTextKit as one character; blank its '\r' so the length stays one per char (#6991).
+    private static string? BlankControlCharacters(string? text) =>
+        text == null ? null : ControlCharacterBlanker.Blank(text, expandTabs: false).Replace("\r\n", " \n");
+
     private void ParseMarkup()
     {
         _inlineVariables.Clear();
@@ -2005,24 +2017,28 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
             _hasMarkup = false;
-            _layoutText = mRawText;
+            // CRLF counts as one character everywhere (#6991), as on MonoGame/Raylib.
+            _layoutText = BlankControlCharacters(mRawText?.Replace("\r\n", "\n"));
             return;
         }
+
+        // [Glyph=...] tags become their character first, as in the MonoGame/Raylib SetBbCodeText path.
+        string withGlyphs = BbCodeParser.ReplaceGlyphTags(mRawText);
 
         // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes,
         // mirroring the MonoGame/Raylib SetBbCodeText path. Parsing and stripping from the same
         // normalized string keeps InlineVariable indexes aligned with the layout text.
-        var normalized = mRawText.Replace("\r\n", "\n");
+        var normalized = withGlyphs.Replace("\r\n", "\n");
         var tags = BbCodeParser.Parse(normalized, SupportedTags);
         if (tags.Count == 0)
         {
             _hasMarkup = false;
-            _layoutText = mRawText;
+            _layoutText = BlankControlCharacters(normalized);
             return;
         }
 
         _hasMarkup = true;
-        _layoutText = BbCodeParser.RemoveTags(normalized, tags);
+        _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags));
         BuildInlineVariables(tags);
         foreach (InlineVariable variable in _inlineVariables)
         {

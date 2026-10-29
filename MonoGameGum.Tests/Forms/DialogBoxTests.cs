@@ -52,6 +52,40 @@ public class DialogBoxTests : BaseTestClass
         ((IUpdateEveryFrame)dialogBox).Activity(secondDifference);
 
     [Fact]
+    public void OnFocusUpdate_DisabledFocused_GamepadBDoesNotRevealText()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.Show("hello");
+        dialogBox.IsEnabled = false;
+        dialogBox.AllowFocusWhenDisabled = true;
+        dialogBox.IsFocused = true;
+        var gamepad = new Gum.Input.GamePad();
+        gamepad.SetButtonState(Gum.Input.GamepadButton.B, true);
+        gamepad.Activity(1);
+        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        ((Gum.Wireframe.IInputReceiver)dialogBox).OnFocusUpdate();
+
+        visual.TextInstance.MaxLettersToShow.ShouldNotBe(5);
+    }
+
+    [Fact]
+    public void OnFocusUpdate_DisabledFocused_AdvancePredicateIsNotConsulted()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.Show("hello");
+        dialogBox.IsEnabled = false;
+        dialogBox.AllowFocusWhenDisabled = true;
+        dialogBox.IsFocused = true;
+        bool consulted = false;
+        dialogBox.AdvancePageInputPredicate = () => { consulted = true; return true; };
+
+        ((Gum.Wireframe.IInputReceiver)dialogBox).OnFocusUpdate();
+
+        consulted.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Constructor_ShouldWireUpDialogBoxToVisual()
     {
         var (dialogBox, visual) = CreateDialogBox();
@@ -96,6 +130,29 @@ public class DialogBoxTests : BaseTestClass
         dialogBox.Show("hello");
 
         visual.TextInstance.MaxLettersToShow.ShouldBe(5);
+    }
+
+    [Fact]
+    public void Show_WithGlyphTag_ShouldCountGlyphAsOneLetter()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show("A[Glyph=0xE000]B");
+
+        visual.TextInstance.MaxLettersToShow.ShouldBe(3);
+    }
+
+    [Fact]
+    public void ShowAsync_WithGlyphTagInDialogPageTask_ShouldCountGlyphAsOneLetter()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 0;
+
+        // The first page is shown before the first await, so the task is left running.
+        _ = dialogBox.ShowAsync(new DialogPageTask[] { "A[Glyph=0x1F600]B" });
+
+        visual.TextInstance.MaxLettersToShow.ShouldBe(4);
     }
 
     [Fact]
@@ -307,8 +364,8 @@ public class DialogBoxTests : BaseTestClass
         dialogBox.FinishedShowing += (_, _) =>
         {
             // Typical chained-dialog usage: show the next dialog from the handler.
-            dialogBox.IsFocused = true;
             dialogBox.Show(new[] { "second A", "second B" });
+            dialogBox.IsFocused = true;
         };
 
         dialogBox.Dismiss();

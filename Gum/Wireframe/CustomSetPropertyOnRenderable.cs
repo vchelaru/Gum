@@ -446,6 +446,9 @@ public partial class CustomSetPropertyOnRenderable
             case "SourceShaderFile":
                 AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
                 return true;
+            case "ShaderParameters":
+                AssignShaderParametersOnContainer(invisibleRenderable, graphicalUiElement, value as string);
+                return true;
             case "Alpha":
                 {
                     int alpha = InvisibleRenderable.NormalizeDispatchedAlpha(value);
@@ -459,9 +462,10 @@ public partial class CustomSetPropertyOnRenderable
                     }
                     return true;
                 }
+            default:
+                // A saved shader parameter variable such as Outline_Thickness (#7010).
+                return ShaderParameterVariables.TrySetVariable(invisibleRenderable, propertyName, value);
         }
-
-        return false;
     }
 
     /// <summary>
@@ -475,8 +479,30 @@ public partial class CustomSetPropertyOnRenderable
     /// With no resolver registered this is a graceful no-op (the container renders unshaded),
     /// matching how a missing texture degrades. Called internally by the string property path.
     /// </summary>
+    /// <summary>
+    /// Replaces the container's shader parameters with the values in the saved <c>ShaderParameters</c>
+    /// text (see <see cref="ShaderParameterText"/>). An entry that cannot be read is skipped and
+    /// reported without dropping the rest.
+    /// </summary>
+    public static void AssignShaderParametersOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
+    {
+        string? error = ShaderParameterVariables.AssignText(effectOwner, value);
+        if (error != null)
+        {
+            string message = "Error setting ShaderParameters on Container";
+            if (graphicalUiElement.Tag != null)
+            {
+                message += $" in {graphicalUiElement.Tag}";
+            }
+            RaisePropertyAssignmentError(message + "\n" + error);
+        }
+    }
+
     public static void AssignSourceShaderFileOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
+        // First, so the container's shader variables follow the file whatever happens below (#7010).
+        ShaderParameterVariables.SetShaderFile(effectOwner, value);
+
         if (string.IsNullOrEmpty(value))
         {
             effectOwner.RenderTargetEffect = null;
@@ -674,6 +700,40 @@ public partial class CustomSetPropertyOnRenderable
             }
             handled = true;
         }
+#if !FRB
+        else if(propertyName == "CustomBorderScaleLeft")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleLeft = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleTop")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleTop = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleRight")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleRight = (float?)value;
+            }
+            handled = true;
+        }
+        else if(propertyName == "CustomBorderScaleBottom")
+        {
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomBorderScaleBottom = (float?)value;
+            }
+            handled = true;
+        }
+#endif
         else if(propertyName == nameof(NineSlice.IsTilingMiddleSections))
         {
             if (nineSliceRuntime != null)
@@ -1792,7 +1852,9 @@ public partial class CustomSetPropertyOnRenderable
         // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes.
         // Parsing and stripping from the same normalized string keeps InlineVariable indexes aligned
         // with the RawText the renderer sees.
-        var normalized = bbcode.Replace("\r\n", "\n");
+        // [Glyph=...] tags become their character first so every other tag's indexes are computed
+        // against the final text.
+        var normalized = BbCodeParser.ReplaceGlyphTags(bbcode.Replace("\r\n", "\n"));
 
         var results = BbCodeParser.Parse(normalized, Tags);
         var strippedText = BbCodeParser.RemoveTags(normalized, results);
@@ -3146,6 +3208,16 @@ public partial class CustomSetPropertyOnRenderable
             // (the runtime's InvisibleRenderable path does the same in TrySetPropertyOnContainer).
             AssignSourceShaderFileOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
             handled = true;
+        }
+        else if (propertyName == "ShaderParameters")
+        {
+            AssignShaderParametersOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
+            handled = true;
+        }
+        else
+        {
+            // A saved shader parameter variable such as Outline_Thickness (#7010).
+            handled = ShaderParameterVariables.TrySetVariable((LineRectangle)mContainedObjectAsIpso, propertyName, value);
         }
 
         return handled;

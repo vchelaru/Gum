@@ -53,6 +53,7 @@ public class StateReferencingInstanceMember : InstanceMember
     /// </summary>
     internal void Retarget(VariableGridEntry newEntry)
     {
+        RaiseRetargeting();
         bool wasReadOnly = _entry.IsReadOnly;
 
         _entry = newEntry;

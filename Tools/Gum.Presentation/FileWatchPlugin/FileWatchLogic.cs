@@ -151,6 +151,14 @@ public class FileWatchLogic
             }
         }
 
+        // The project directory goes in last, so folders added before it are still nested under it.
+        // Each nested root is another FileSystemWatcher raising a copy of every event the root raises.
+        List<FilePath> nested = directories.Where(directory => directories.Any(other => other.IsRootOf(directory))).ToList();
+        foreach (FilePath directory in nested)
+        {
+            directories.Remove(directory);
+        }
+
         return directories;
     }
 

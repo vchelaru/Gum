@@ -1,6 +1,7 @@
 
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
@@ -96,6 +97,112 @@ public static class BbCodeParser
         {
             return $"{(IsOpening ? "Open" : "Close")} {Name} {Argument}";
         }
+    }
+
+    /// <summary>
+    /// Replaces every <c>[Glyph=...]</c> tag with the character for its code point: decimal
+    /// (<c>[Glyph=57344]</c>) or hex with a 0x prefix (<c>[Glyph=0xE000]</c>). A code point above U+FFFF
+    /// becomes a surrogate pair. A tag whose value is not a valid code point is removed, along with a <c>[/Glyph]</c> that follows it. Call this on the
+    /// text before <see cref="Parse"/> so the indexes of the other tags are computed against the
+    /// final text. Whether the character draws depends on the font.
+    /// </summary>
+    /// <param name="text">The text which may contain Glyph tags.</param>
+    /// <returns>The text with Glyph tags replaced, or the same string if it has none.</returns>
+    public static string ReplaceGlyphTags(string text)
+    {
+        if (text.IndexOf("glyph", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return text;
+        }
+
+        StringBuilder? builder = null;
+        int copiedUpTo = 0;
+        int openTagsAwaitingClose = 0;
+        int searchFrom = 0;
+
+        while (searchFrom < text.Length)
+        {
+            int tagIndex = text.IndexOf('[', searchFrom);
+            if (tagIndex < 0)
+            {
+                break;
+            }
+
+            int closeIndex = text.IndexOf(']', tagIndex);
+            if (closeIndex < 0)
+            {
+                break;
+            }
+
+            // A '[' inside the brackets means this one does not start a tag.
+            if (text.IndexOf('[', tagIndex + 1, closeIndex - tagIndex - 1) >= 0)
+            {
+                searchFrom = tagIndex + 1;
+                continue;
+            }
+
+            string inner = text.Substring(tagIndex + 1, closeIndex - tagIndex - 1);
+            bool isCloseTag = inner.StartsWith("/", StringComparison.Ordinal);
+            int equalsIndex = inner.IndexOf('=');
+            string name = isCloseTag
+                ? inner.Substring(1)
+                : (equalsIndex < 0 ? inner : inner.Substring(0, equalsIndex));
+
+            bool isGlyphTag = name.Equals("glyph", StringComparison.OrdinalIgnoreCase) &&
+                (!isCloseTag || equalsIndex < 0);
+
+            // Like any other orphan close tag, a close with no open before it stays as text.
+            if (!isGlyphTag || (isCloseTag && openTagsAwaitingClose == 0))
+            {
+                searchFrom = tagIndex + 1;
+                continue;
+            }
+
+            builder ??= new StringBuilder(text.Length);
+            builder.Append(text, copiedUpTo, tagIndex - copiedUpTo);
+            copiedUpTo = closeIndex + 1;
+            searchFrom = closeIndex + 1;
+
+            if (isCloseTag)
+            {
+                openTagsAwaitingClose--;
+            }
+            else
+            {
+                openTagsAwaitingClose++;
+                string argument = equalsIndex < 0 ? "" : inner.Substring(equalsIndex + 1);
+                if (TryParseGlyphCodePoint(argument, out int codePoint))
+                {
+                    builder.Append(char.ConvertFromUtf32(codePoint));
+                }
+            }
+        }
+
+        if (builder == null)
+        {
+            return text;
+        }
+
+        builder.Append(text, copiedUpTo, text.Length - copiedUpTo);
+        return builder.ToString();
+    }
+
+    private static bool TryParseGlyphCodePoint(string argument, out int codePoint)
+    {
+        string number = argument.Trim();
+        NumberStyles styles = NumberStyles.None;
+        if (number.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            number = number.Substring(2);
+            styles = NumberStyles.AllowHexSpecifier;
+        }
+
+        bool isSurrogateHalf(int value) => value >= 0xD800 && value <= 0xDFFF;
+
+        return int.TryParse(number, styles, CultureInfo.InvariantCulture, out codePoint) &&
+            codePoint > 0 &&
+            codePoint <= 0x10FFFF &&
+            !isSurrogateHalf(codePoint);
     }
 
     /// <summary>

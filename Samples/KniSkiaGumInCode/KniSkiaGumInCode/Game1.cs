@@ -46,6 +46,11 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
+        // The screens load their files (Content/..., resources/...) relative to the working directory.
+        // Visual Studio starts the sample in its output folder, but `dotnet run` keeps the folder it
+        // was run from.
+        Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
         // The graphics device exists once the base Initialize has run.
         base.Initialize();
 
@@ -58,6 +63,10 @@ public class Game1 : Game
         // ContainerRuntime.SourceShaderFile (.sksl path) into a compiled SKRuntimeEffect.
         SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
             RenderTargetShaderScreen.CompileEffectFromFile;
+
+        // Adds .fx and .slang files to SourceShaderFile (ShadowDusk converts them to SkSL); the .sksl
+        // resolver above keeps handling .sksl files.
+        GumService.Default.UseShadowDusk();
 
         GumService.Default.UseKeyboardDefaults();
 

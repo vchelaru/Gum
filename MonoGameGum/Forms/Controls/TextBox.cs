@@ -306,13 +306,16 @@ public class TextBox : TextBoxBase
             }
             else
             {
-                var whereToRemoveFrom = caretIndex - 1;
-                // Move the caret left one before removing from the text. Otherwise, if the
+                // A caret inside a CRLF (a programmatic CaretIndex) removes the whole break.
+                var removeEnd = IsInsideCrlf(Text, caretIndex) ? caretIndex + 1 : caretIndex;
+                var whereToRemoveFrom = StepLeft(Text, removeEnd);
+                var lengthToRemove = removeEnd - whereToRemoveFrom;
+                // Move the caret left before removing from the text. Otherwise, if the
                 // caret is at the end of the word, modifying the word will shift the caret to
                 // the left, and that could cause it to shift over two times.
-                caretIndex--;
+                caretIndex = whereToRemoveFrom;
                 // Use SetTextFromUi because this is user-initiated editing
-                SetTextFromUi(this.Text.Remove(whereToRemoveFrom, 1));
+                SetTextFromUi(this.Text.Remove(whereToRemoveFrom, lengthToRemove));
                 RefreshCaretAfterEdit();
             }
         }
@@ -328,7 +331,12 @@ public class TextBox : TextBoxBase
         else if (Text is { } text && caretIndex < text.Length)
         {
             // Use SetTextFromUi because this is user-initiated editing
-            SetTextFromUi(text.Remove(caretIndex, 1));
+            // A caret inside a CRLF (a programmatic CaretIndex) removes the whole break.
+            if (IsInsideCrlf(text, caretIndex))
+            {
+                caretIndex--;
+            }
+            SetTextFromUi(text.Remove(caretIndex, StepRight(text, caretIndex) - caretIndex));
             RefreshCaretAfterEdit();
         }
     }
@@ -408,6 +416,16 @@ public class TextBox : TextBoxBase
         if (selectionStart + lengthToRemove > text.Length)
         {
             lengthToRemove = text.Length - selectionStart;
+        }
+        // An edge of the selection inside a CRLF takes the whole break, so no half of one is left behind.
+        if (IsInsideCrlf(text, selectionStart))
+        {
+            selectionStart--;
+            lengthToRemove++;
+        }
+        if (IsInsideCrlf(text, selectionStart + lengthToRemove))
+        {
+            lengthToRemove++;
         }
         // Use SetTextFromUi because this is user-initiated editing
         SetTextFromUi(text.Remove(selectionStart, lengthToRemove));

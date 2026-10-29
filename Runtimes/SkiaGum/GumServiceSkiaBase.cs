@@ -5,6 +5,7 @@ using Gum.Forms.Controls;
 using Gum.Managers;
 using Gum.Threading;
 using Gum.Wireframe;
+using GumRuntime;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -293,15 +294,18 @@ public abstract class GumServiceSkiaBase : IGumService
             Root.UpdateLayout();
         });
 
+    // The size the host last reported (Initialize or HandleResize). The fit policies read this as the
+    // window, never the canvas: the canvas is what a fit writes, so reading it back would divide an
+    // already-divided size again every frame (issue #6944).
+    private (int width, int height)? _hostWindowSize;
+
     /// <summary>
     /// Returns the current window size used as the fit-policy reference. This render-only base has
-    /// no OS window of its own — the caller owns it and reports resizes via <see cref="HandleResize"/>
-    /// — so the default reports the current canvas size, making <see cref="EnableZoomToWindow"/> and
-    /// <see cref="EnableExpandToWindow"/> degenerate (canvas and "window" are the same value) unless a
-    /// subclass that does own a real window overrides this.
+    /// no OS window of its own, so it reports the size the host last gave to <c>Initialize</c> or
+    /// <see cref="HandleResize"/>. A subclass that owns a real window can override this.
     /// </summary>
     protected virtual (int width, int height) GetWindowSize() =>
-        ((int)GraphicalUiElement.CanvasWidth, (int)GraphicalUiElement.CanvasHeight);
+        _hostWindowSize ?? ((int)GraphicalUiElement.CanvasWidth, (int)GraphicalUiElement.CanvasHeight);
 
     /// <inheritdoc cref="WindowFitController.EnableZoomToWindow"/>
     public void EnableZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f) =>
@@ -492,6 +496,7 @@ public abstract class GumServiceSkiaBase : IGumService
         // something to resolve against.
         GraphicalUiElement.CanvasWidth = width;
         GraphicalUiElement.CanvasHeight = height;
+        _hostWindowSize = (width, height);
         SetCameraClientSize(width, height);
 
         Root = new ContainerRuntime
@@ -558,6 +563,7 @@ public abstract class GumServiceSkiaBase : IGumService
             }
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
+            gumProject.ApplyAllVariableReferencesBeforeFirstBuild();
             ApplyProjectTextureFilter(gumProject);
             // Overrides the code-only defaults registered above with the project's own
             // Forms-behavior visuals, where the project defines one.
@@ -670,6 +676,7 @@ public abstract class GumServiceSkiaBase : IGumService
         GraphicalUiElement.CanvasHeight = 0;
 
         _windowFit?.Reset();
+        _hostWindowSize = null;
 
         SystemManagers.Default = null!;
         IGumService.Default = null;
@@ -695,9 +702,18 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="height">The new canvas height.</param>
     public void HandleResize(int width, int height)
     {
+        _hostWindowSize = (width, height);
+        SetCameraClientSize(width, height);
+
+        if (_windowFit != null && _windowFit.IsActive)
+        {
+            // A fit policy owns the canvas size: it derives it from the new window size.
+            _windowFit.ReapplyFit();
+            return;
+        }
+
         GraphicalUiElement.CanvasWidth = width;
         GraphicalUiElement.CanvasHeight = height;
-        SetCameraClientSize(width, height);
         Root?.UpdateLayout();
     }
 

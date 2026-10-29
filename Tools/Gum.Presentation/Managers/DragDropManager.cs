@@ -105,12 +105,11 @@ public class DragDropManager : IDragDropManager
     {
         get
         {
-            yield return "png";
-            yield return "jpg";
-            yield return "tga";
-            yield return "gif";
+            foreach (string extension in ImageFileExtensions.All)
+            {
+                yield return extension;
+            }
             yield return "svg";
-            yield return "bmp";
             yield return "achx";
             yield return "achj";
         }

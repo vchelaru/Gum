@@ -22,11 +22,23 @@ public class CodeGenerationFileLocationsService
         _projectDirectoryProvider = projectDirectoryProvider;
     }
 
+    /// <summary>The Gum project directory relative paths resolve against, or null when no project is loaded.</summary>
+    public string? ProjectDirectory => _projectDirectoryProvider.ProjectDirectory;
+
     /// <summary>
     /// Gets the generated (.Generated.cs) file path for an element.
     /// </summary>
     public FilePath? GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null)
+        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null) =>
+        ResolveFileName(selectedElement, elementSettings, codeOutputProjectSettings, visualApi, forcedElementName,
+            folderOverride: null, suffix: ".Generated.cs");
+
+    // The one place the default path (folder + code subfolder + Gum folders + class name) is built, for
+    // both halves of an element: the generated file under the generated folder, the custom file under
+    // the custom folder. A per-element GeneratedFileName always wins and applies to the generated file only.
+    private FilePath? ResolveFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
+        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName,
+        string? folderOverride, string suffix)
     {
         ///////////////////Early Out///////////////////
         if (codeOutputProjectSettings.CodeProjectRoot == null)
@@ -64,9 +76,9 @@ public class CodeGenerationFileLocationsService
 
                 var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(fileName);
 
-                string folder = GetCodeOutputFolder(codeOutputProjectSettings)!;
+                string folder = folderOverride ?? GetCodeOutputFolder(codeOutputProjectSettings)!;
 
-                generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
+                generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + suffix;
             }
         }
 
@@ -92,7 +104,27 @@ public class CodeGenerationFileLocationsService
     /// Gum project directory when relative. Returns null when
     /// <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> isn't configured.
     /// </summary>
-    public string? GetCodeOutputFolder(CodeOutputProjectSettings codeOutputProjectSettings)
+    public string? GetCodeOutputFolder(CodeOutputProjectSettings codeOutputProjectSettings) =>
+        ResolveSubfolder(codeOutputProjectSettings, codeOutputProjectSettings.GeneratedCodeFolder);
+
+    /// <summary>
+    /// The folder custom code (.cs) files are written under: <see cref="CodeOutputProjectSettings.CustomCodeFolder"/>
+    /// resolved like the generated code folder, or the same folder as <see cref="GetCodeOutputFolder"/>
+    /// when it is empty. Returns null when <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> isn't configured.
+    /// </summary>
+    public string? GetCustomCodeOutputFolder(CodeOutputProjectSettings codeOutputProjectSettings) =>
+        string.IsNullOrEmpty(codeOutputProjectSettings.CustomCodeFolder)
+            ? GetCodeOutputFolder(codeOutputProjectSettings)
+            : ResolveSubfolder(codeOutputProjectSettings, codeOutputProjectSettings.CustomCodeFolder);
+
+    private string? ResolveSubfolder(CodeOutputProjectSettings codeOutputProjectSettings, string subfolder) =>
+        ResolveFolder(_projectDirectoryProvider.ProjectDirectory, codeOutputProjectSettings, subfolder);
+
+    /// <summary>
+    /// <paramref name="subfolder"/> under the Code Project Root, absolute with a trailing separator, resolved
+    /// against <paramref name="projectDirectory"/> when relative. Null when the root isn't configured.
+    /// </summary>
+    public static string? ResolveFolder(string? projectDirectory, CodeOutputProjectSettings codeOutputProjectSettings, string subfolder)
     {
         string folder = codeOutputProjectSettings.CodeProjectRoot;
         if (string.IsNullOrEmpty(folder))
@@ -102,15 +134,14 @@ public class CodeGenerationFileLocationsService
 
         if (FileManager.IsRelative(folder))
         {
-            folder = _projectDirectoryProvider.ProjectDirectory + folder;
+            folder = projectDirectory + folder;
         }
 
-        string generatedCodeFolder = codeOutputProjectSettings.GeneratedCodeFolder;
-        if (!string.IsNullOrEmpty(generatedCodeFolder))
+        if (!string.IsNullOrEmpty(subfolder))
         {
-            folder = FileManager.IsRelative(generatedCodeFolder)
-                ? WithTrailingSeparator(folder) + generatedCodeFolder
-                : generatedCodeFolder;
+            folder = FileManager.IsRelative(subfolder)
+                ? WithTrailingSeparator(folder) + subfolder
+                : subfolder;
             folder = WithTrailingSeparator(folder);
         }
 
@@ -162,6 +193,12 @@ public class CodeGenerationFileLocationsService
     public FilePath? GetCustomCodeFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
         CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null)
     {
+        if (!string.IsNullOrEmpty(codeOutputProjectSettings.CustomCodeFolder) && string.IsNullOrEmpty(elementSettings.GeneratedFileName))
+        {
+            return ResolveFileName(selectedElement, elementSettings, codeOutputProjectSettings, visualApi, forcedElementName,
+                GetCustomCodeOutputFolder(codeOutputProjectSettings), ".cs");
+        }
+
         var generatedFileName = GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings, visualApi, forcedElementName);
         if (generatedFileName == null)
         {

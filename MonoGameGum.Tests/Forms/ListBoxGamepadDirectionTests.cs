@@ -2,25 +2,26 @@ using Gum.Forms.Controls;
 using MonoGameGum.Tests.Input;
 using Shouldly;
 using Xunit;
+#if SKIA_LINKED_TESTS
+using XnaButtons = SkiaGum.Tests.Forms.Linked.PadButtons;
+#else
 using XnaButtons = Microsoft.Xna.Framework.Input.Buttons;
+#endif
 
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
 /// Pins how ListBox reads the gamepad D-pad and left stick while its items have focus. The reading is
-/// shared with Menu through FrameworkElement.GetRepeatedGamepadDirection (#6696).
+/// shared with Menu through FrameworkElement.GetRepeatedGamepadDirection (#6696). Left and right do not step
+/// a vertical list (#6938, see ListBoxPerpendicularExitTests).
 /// </summary>
 public class ListBoxGamepadDirectionTests : BaseTestClass
 {
     [Theory]
     [InlineData(XnaButtons.DPadDown, 0f, 0f, 2)]
-    [InlineData(XnaButtons.DPadRight, 0f, 0f, 2)]
     [InlineData(XnaButtons.DPadUp, 0f, 0f, 0)]
-    [InlineData(XnaButtons.DPadLeft, 0f, 0f, 0)]
     [InlineData((XnaButtons)0, 0f, -1f, 2)]
-    [InlineData((XnaButtons)0, 1f, 0f, 2)]
     [InlineData((XnaButtons)0, 0f, 1f, 0)]
-    [InlineData((XnaButtons)0, -1f, 0f, 0)]
     public void Direction_WithItemFocused_MovesFocusToNeighborRow(
         XnaButtons buttons, float leftStickX, float leftStickY, int expectedRow)
     {
@@ -35,6 +36,9 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
         listBox.ListBoxItems[1].IsFocused = true;
 
         Gum.Input.GamePad gamepad = new();
+#if SKIA_LINKED_TESTS
+        SkiaGum.Tests.Forms.Linked.SkiaPadHelper.Apply(gamepad, buttons, leftStickX, leftStickY);
+#else
         gamepad.Activity(
             new Microsoft.Xna.Framework.Input.GamePadState(
                 new Microsoft.Xna.Framework.Vector2(leftStickX, leftStickY),
@@ -42,6 +46,7 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
                 0, 0,
                 buttons),
             0);
+#endif
         FrameworkElement.GamePadsForUiControl.Add(gamepad);
 
         listBox.OnFocusUpdate();
@@ -51,7 +56,7 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
     }
 
     [Fact]
-    public void LeftAndDownHeldTogether_LeftWins()
+    public void LeftAndDownHeldTogether_DownWins()
     {
         ListBox listBox = new ListBox();
         listBox.AddToRoot();
@@ -64,6 +69,9 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
         listBox.ListBoxItems[1].IsFocused = true;
 
         Gum.Input.GamePad gamepad = new();
+#if SKIA_LINKED_TESTS
+        SkiaGum.Tests.Forms.Linked.SkiaPadHelper.Apply(gamepad, XnaButtons.DPadLeft | XnaButtons.DPadDown, 0, 0);
+#else
         gamepad.Activity(
             new Microsoft.Xna.Framework.Input.GamePadState(
                 Microsoft.Xna.Framework.Vector2.Zero,
@@ -71,10 +79,12 @@ public class ListBoxGamepadDirectionTests : BaseTestClass
                 0, 0,
                 XnaButtons.DPadLeft | XnaButtons.DPadDown),
             0);
+#endif
         FrameworkElement.GamePadsForUiControl.Add(gamepad);
 
         listBox.OnFocusUpdate();
 
-        listBox.SelectedIndex.ShouldBe(0);
+        // Left is the axis the list does not use (#6938), so the held Down steps.
+        listBox.SelectedIndex.ShouldBe(2);
     }
 }

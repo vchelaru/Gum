@@ -22,8 +22,9 @@ Each Gum release publishes the package to the `upm` branch, so `#upm` works once
 with it has shipped; until then, install from a Gum checkout with a `file:` path to this folder. To
 pin a version, use `#upm/v<version>` (for example `#upm/v2026.10.1`) instead of `#upm`.
 
-Gum's package brings in `com.unity.inputsystem`; set Player Settings > Active Input Handling to
-Input System Package (or Both).
+The package targets SkiaGameRendering v0.20.0 or newer (`SkiaRenderTarget2D`); `#upm` resolves to the newest release.
+
+The Input System package is optional. With it installed and Player Settings > Active Input Handling set to Input System Package (or Both), `GumInput` reads it for the mouse, touches, keyboard and gamepads. On Input Manager (Old), `GumInput` reads the legacy `UnityEngine.Input` instead, which covers the mouse, touches and keyboard but not gamepads.
 
 ## Use
 

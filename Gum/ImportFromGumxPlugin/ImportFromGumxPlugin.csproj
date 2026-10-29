@@ -69,5 +69,7 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Plugins/$(TargetName)" />
 		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(AvaloniaHeadDir)Plugins/$(TargetName)" />
+		<!-- A copy keeps the source file's timestamp; stamping it lets the head tell a plugin rebuilt by this build from one a head-only build left behind. -->
+		<Touch Files="$(AvaloniaHeadDir)Plugins/$(TargetName)/$(TargetFileName)" />
 	</Target>
 </Project>

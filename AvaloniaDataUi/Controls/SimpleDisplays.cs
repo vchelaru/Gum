@@ -39,6 +39,9 @@ public class CheckBoxDisplay : DataUiDisplayBase
 {
     private readonly CheckBox _checkBox;
     private readonly TextBlock _hint;
+    private readonly StackPanel _panel;
+    private Grid? _spaciousGrid;
+    private TextBlock? _spaciousLabel;
 
     /// <summary>Builds the displayer.</summary>
     public CheckBoxDisplay()
@@ -47,10 +50,39 @@ public class CheckBoxDisplay : DataUiDisplayBase
         _checkBox.IsCheckedChanged += HandleCheckedChanged;
         _hint = CreateHintTextBlock();
 
-        StackPanel panel = new StackPanel();
-        panel.Children.Add(_checkBox);
-        panel.Children.Add(_hint);
-        Content = panel;
+        _panel = new StackPanel();
+        _panel.Children.Add(_checkBox);
+        _panel.Children.Add(_hint);
+        Content = _panel;
+    }
+
+    // A spacious row names the setting in the label column, puts the box beside it with an optional short
+    // caption (InstanceMember.ToggleText), and describes it under the box like every other spacious row.
+    private void ApplySpaciousLayout()
+    {
+        if (_spaciousGrid == null)
+        {
+            // The same 4px inset the other spacious labels have, so the label column lines up.
+            _spaciousLabel = new TextBlock { Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            _spaciousGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("100,*"),
+                RowDefinitions = new RowDefinitions("Auto,Auto"),
+            };
+            _panel.Children.Clear();
+            Grid.SetColumn(_checkBox, 1);
+            Grid.SetRow(_hint, 1);
+            Grid.SetColumnSpan(_hint, 2);
+            _spaciousGrid.Children.Add(_spaciousLabel);
+            _spaciousGrid.Children.Add(_checkBox);
+            _spaciousGrid.Children.Add(_hint);
+            _checkBox.Margin = new Thickness(0, 4, 0, 4);
+            Content = _spaciousGrid;
+        }
+        DataUiRowLayout.ConfigureLabelColumn(_spaciousGrid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
+        _spaciousLabel!.Text = InstanceMember?.DisplayName;
+        // The text goes through an access-key parser, where "_" marks the key and "__" is a literal underscore.
+        _checkBox.Content = string.IsNullOrEmpty(InstanceMember?.ToggleText) ? null : InstanceMember!.ToggleText!.Replace("_", "__");
     }
 
     /// <summary>The check box, for tests.</summary>
@@ -60,6 +92,10 @@ public class CheckBoxDisplay : DataUiDisplayBase
     protected override void OnInstanceMemberChanged()
     {
         _checkBox.ClearValue(ForegroundProperty);
+        if (IsSpacious)
+        {
+            ApplySpaciousLayout();
+        }
     }
 
     /// <inheritdoc/>
@@ -80,7 +116,14 @@ public class CheckBoxDisplay : DataUiDisplayBase
                 _checkBox.IsChecked = false;
             }
         }
-        _checkBox.Content = InstanceMember.DisplayName;
+        if (IsSpacious)
+        {
+            ApplySpaciousLayout();
+        }
+        else
+        {
+            _checkBox.Content = InstanceMember.DisplayName;
+        }
         RefreshHint(_hint);
         RefreshForeground();
         RefreshIsEnabled();

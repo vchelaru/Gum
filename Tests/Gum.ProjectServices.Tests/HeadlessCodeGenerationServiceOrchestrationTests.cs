@@ -81,6 +81,120 @@ public class HeadlessCodeGenerationServiceOrchestrationTests : BaseTestClass
         };
 
     [Fact]
+    public void GenerateCodeForElement_WritesCustomStubBesideGeneratedFile_WhenCustomFolderIsEmpty()
+    {
+        ComponentSave button = AddComponent("Button");
+
+        CodeOutputProjectSettings forms = CreateProjectSettings();
+        forms.OutputLibrary = OutputLibrary.GumForms;
+        CreateService().GenerateCodeForElement(button, new CodeOutputElementSettings(), forms, checkForMissing: false);
+
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Button.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Button.cs")).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(OutputLibrary.GumForms)]
+    [InlineData(OutputLibrary.MonoGame)]
+    public void GenerateCodeForElement_RowsReadingEachOther_FinishesWithoutFreezing(OutputLibrary library)
+    {
+        ComponentSave panel = AddComponent("Panel");
+        ComponentSave other = AddComponent("Other");
+        foreach ((ComponentSave component, string instance, string row) in new[]
+        {
+            (panel, "A", "Width = B.Width + 1"),
+            (panel, "B", "Width = A.Width + 1"),
+            (panel, "C", "Width = Components/Other.D.Width + 1"),
+            (other, "D", "Width = Components/Panel.C.Width + 1"),
+        })
+        {
+            component.Instances.Add(new InstanceSave { Name = instance, BaseType = "Container", ParentContainer = component });
+            component.DefaultState!.VariableLists.Add(new VariableListSave<string>
+            {
+                Name = instance + ".VariableReferences",
+                Type = "string",
+                Value = new List<string> { row }
+            });
+        }
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = library;
+        HeadlessCodeGenerationService service = CreateService();
+
+        foreach (ComponentSave component in new[] { panel, other })
+        {
+            System.Threading.Tasks.Task generated = System.Threading.Tasks.Task.Run(() =>
+                service.GenerateCodeForElement(component, new CodeOutputElementSettings(), settings, checkForMissing: false));
+            generated.Wait(5000).ShouldBeTrue("code generation froze on a circular reference (#6871)");
+            generated.GetAwaiter().GetResult();
+        }
+    }
+
+    [Fact]
+    public void GenerateCodeForElement_WritesCustomStubToCustomFolder_AndGeneratedFileToGeneratedFolder()
+    {
+        ComponentSave button = AddComponent("Button");
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.GeneratedCodeFolder = "Gen/";
+        settings.CustomCodeFolder = "Mine/";
+
+        CreateService().GenerateCodeForElement(button, new CodeOutputElementSettings(), settings, checkForMissing: false);
+
+        File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Mine", "Components", "Button.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.cs")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GenerateCodeForElement_DoesNotCreateADuplicateStub_WhenTheUserAlreadyMovedTheCustomFile()
+    {
+        ComponentSave button = AddComponent("Button");
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.GeneratedCodeFolder = "Gen/";
+        settings.CustomCodeFolder = "Mine/";
+        string mine = Path.Combine(_tempDirectory, "Mine", "Components", "Button.cs");
+        Directory.CreateDirectory(Path.GetDirectoryName(mine)!);
+        File.WriteAllText(mine, "// user code");
+
+        CreateService().GenerateCodeForElement(button, new CodeOutputElementSettings(), settings, checkForMissing: false);
+
+        File.ReadAllText(mine).ShouldBe("// user code");
+        File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.cs")).ShouldBeFalse();
+    }
+
+
+    [Fact]
+    public void GenerateCodeForElements_WritesNoEditorConfig_WhenTheOptionIsOff()
+    {
+        AddComponent("Button");
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.GeneratedCodeFolder = "Gen/";
+        settings.CustomCodeFolder = "Mine/";
+
+        CreateService().GenerateCodeForElements(Project, settings);
+
+        File.Exists(Path.Combine(_tempDirectory, "Gen", "Components", "Button.Generated.cs")).ShouldBeTrue();
+        Directory.GetFiles(_tempDirectory, ".editorconfig", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GenerateCodeForElements_WritesTheEditorConfigIntoTheGeneratedFolder_WhenTheOptionIsOn()
+    {
+        AddComponent("Button");
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.GeneratedCodeFolder = "Gen/";
+        settings.CustomCodeFolder = "Mine/";
+        settings.MarkGeneratedCodeFolder = true;
+
+        CreateService().GenerateCodeForElements(Project, settings);
+
+        File.ReadAllText(Path.Combine(_tempDirectory, "Gen", ".editorconfig")).ShouldBe(GeneratedFolderEditorConfig.Contents);
+        File.Exists(Path.Combine(_tempDirectory, "Mine", ".editorconfig")).ShouldBeFalse();
+    }
+    [Fact]
     public void GenerateCodeForElements_WithNoSubset_GeneratesScreensThenComponentsAndWritesFallbackFile()
     {
         AddScreen("MainMenu");

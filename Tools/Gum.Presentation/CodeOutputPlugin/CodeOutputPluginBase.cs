@@ -137,7 +137,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         _messenger = messenger;
         _codeOutputFileCommands = fileCommands;
-        _locationWatcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
+        _locationWatcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange(), _codeGenerationService.EditorConfig);
 
         var codeGenLogger = new ToolCodeGenLogger(outputManager);
         _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(
@@ -231,7 +231,8 @@ public abstract class CodeOutputPluginBase : PluginBase
                 page.Reload();
             },
             Keywords = new[] { "namespace", "usings" },
-            SearchTerms = () => page.BuildCategories().SelectMany(category => category.Members).Select(member => member.Name),
+            SearchTerms = () => page.BuildCategories().SelectMany(category => category.Members)
+                .SelectMany(member => new[] { member.DisplayName, member.DetailText ?? string.Empty }).Where(term => term.Length > 0),
         });
     }
 

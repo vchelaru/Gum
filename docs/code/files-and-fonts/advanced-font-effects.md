@@ -200,18 +200,33 @@ This replaces the character set entirely. To extend the default set instead on `
 
 ## Custom Glyphs
 
-`CustomGlyphs` lets you inject raw pixel data for specific codepoints — handy for inserting button-prompt icons (gamepad face buttons, key glyphs) into a normal text run so they flow inline with the surrounding text:
+`CustomGlyphs` embeds a picture in the font as the glyph for a code point, such as a gamepad button or key icon that flows inline with the surrounding text. Use a code point from the private use area (U+E000 to U+F8FF), which regular text never uses. KernSmith takes raw RGBA bytes rather than an encoded PNG, so decode the picture first. This example reads the bytes from a `Texture2D`:
 
 ```csharp
 // Initialize
+Texture2D iconTexture = Content.Load<Texture2D>("JumpButton");
+byte[] pixels = new byte[iconTexture.Width * iconTexture.Height * 4];
+iconTexture.GetData(pixels);
+
 var options = KernSmith.Gum.GumFontGenerator.BuildOptions(bmfcSave);
 options.CustomGlyphs = new Dictionary<int, KernSmith.CustomGlyph>
 {
-    [0xE000] = new KernSmith.CustomGlyph(/* raw pixel data, width, height, etc. */),
+    [0xE000] = new KernSmith.CustomGlyph(
+        iconTexture.Width, iconTexture.Height, pixels, KernSmith.PixelFormat.Rgba32,
+        XAdvance: iconTexture.Width),
 };
+
+KernSmith.BmFontResult result =
+    KernSmith.BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
+
+var text = new TextRuntime();
+text.BitmapFont = bitmapFont;
+text.Text = "Press [Glyph=0xE000] to jump";
+text.AddToRoot();
 ```
 
-See the `KernSmith.CustomGlyph` type for the exact constructor surface — it expects raw pixel bytes, not an encoded PNG.
+The [`Glyph` BBCode tag](../standard-visuals/textruntime/bbcode.md#inline-glyphs) puts the character in the text, so you do not need to type a private use character. The picture is multiplied by the `TextRuntime` color: white text keeps the picture's colors, and any other color tints it.
 
 ## Color Fonts (Emoji)
 

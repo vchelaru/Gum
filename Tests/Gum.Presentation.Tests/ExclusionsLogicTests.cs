@@ -124,6 +124,19 @@ public class ExclusionsLogicTests : BaseTestClass
         _logic.GetIfVariableIsExcluded(variable, finder).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public void ShaderParameters_IsHiddenUnlessTheContainerIsARenderTarget(bool isRenderTarget, bool expectedExcluded)
+    {
+        _selectedState.Setup(s => s.SelectedElement).Returns(new StandardElementSave { Name = "Container" });
+        _selectedState.Setup(s => s.SelectedInstance).Returns((InstanceSave?)null);
+        RecursiveVariableFinder finder = MakeFinder(("IsRenderTarget", isRenderTarget));
+        VariableSave variable = new() { Name = "ShaderParameters" };
+
+        _logic.GetIfVariableIsExcluded(variable, finder).ShouldBe(expectedExcluded);
+    }
+
     [Fact]
     public void RenderTargetOnlyVariable_ShownOnRenderTargetContainer()
     {

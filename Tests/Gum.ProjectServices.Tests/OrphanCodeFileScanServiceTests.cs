@@ -314,6 +314,21 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         orphans.ShouldBeEmpty();
     }
 
+
+    [Fact]
+    public void Scan_ShouldNotFlagTheEditorConfigGumWrote_InTheGeneratedFolder()
+    {
+        GumProjectSave project = Project;
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gum/Generated/";
+        projectSettings.CustomCodeFolder = "Mine/";
+        projectSettings.MarkGeneratedCodeFolder = true;
+        WriteFile("Gum/Generated/.editorconfig", GeneratedFolderEditorConfig.Contents);
+
+        OrphanCodeFileScanResult result = CreateService().Scan(project, projectSettings);
+
+        result.Orphans.ShouldBeEmpty();
+    }
     [Fact]
     public void Scan_ShouldNotFlagStandardElementsFallbackFile()
     {
@@ -492,6 +507,117 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
 
         withPrevious.Select(orphan => orphan.FilePath.FileNameNoPath).ShouldBe(new[] { "Card.Generated.cs", "Card.cs" });
         withoutPrevious.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Scan_ShouldFlagCustomFileInCustomFolder_WhenElementWasDeleted()
+    {
+        GumProjectSave project = Project;
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gen/";
+        projectSettings.CustomCodeFolder = "Mine/";
+        WriteGeneratedFile("Gen/Components/Sub/Gone.Generated.cs", "Sub/Gone");
+        WriteFile("Mine/Components/Sub/Gone.cs", "partial class Gone { }");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Single(item => item.Kind == OrphanCodeFileKind.CustomCode).FilePath.ShouldBe(
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "Mine", "Components", "Sub", "Gone.cs")));
+    }
+
+    [Fact]
+    public void Scan_ShouldFlagCustomFileBesideGeneratedFile_WhenCustomFolderWasJustSet()
+    {
+        // The element still exists; its custom file is left at the old place, so migration can move it.
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("Menu"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.CustomCodeFolder = "Mine/";
+        WriteGeneratedFile("Screens/Menu.Generated.cs", "Menu");
+        WriteFile("Screens/Menu.cs", "partial class Menu { }");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        OrphanCodeFile orphan = orphans.Single();
+        orphan.Kind.ShouldBe(OrphanCodeFileKind.CustomCode);
+        orphan.ElementName.ShouldBe("Menu");
+    }
+
+    [Fact]
+    public void Scan_ShouldFlagCustomFileInOldCustomFolder_WhenCustomFolderWasCleared()
+    {
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("Menu"));
+        CodeOutputProjectSettings previous = CreateProjectSettings();
+        previous.CustomCodeFolder = "Mine/";
+        CodeOutputProjectSettings current = CreateProjectSettings();
+        WriteGeneratedFile("Screens/Menu.Generated.cs", "Menu");
+        WriteFile("Mine/Screens/Menu.cs", "partial class Menu { }");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, current, previous).Orphans;
+
+        orphans.Single().FilePath.ShouldBe(
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "Mine", "Screens", "Menu.cs")));
+    }
+
+    [Fact]
+    public void Scan_ShouldFindNothing_WhenCustomFolderIsEmptyAndFilesAreBeside()
+    {
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("Menu"));
+        WriteGeneratedFile("Screens/Menu.Generated.cs", "Menu");
+        WriteFile("Screens/Menu.cs", "partial class Menu { }");
+
+        CreateService().Scan(project, CreateProjectSettings()).Orphans.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Scan_ShouldFlagCustomFileInCustomFolder_WhenCustomFolderIsNestedInsideTheGeneratedFolder()
+    {
+        GumProjectSave project = Project;
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gen/";
+        projectSettings.CustomCodeFolder = "Gen/Mine/";
+        WriteGeneratedFile("Gen/Screens/Gone.Generated.cs", "Gone");
+        WriteFile("Gen/Mine/Screens/Gone.cs", "partial class Gone { }");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Single(item => item.Kind == OrphanCodeFileKind.CustomCode).FilePath.ShouldBe(
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "Gen", "Mine", "Screens", "Gone.cs")));
+    }
+
+    [Fact]
+    public void Scan_ShouldFindNothing_WhenCustomFolderIsNestedInsideTheGeneratedFolderAndFilesBelong()
+    {
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("Menu"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gen/";
+        projectSettings.CustomCodeFolder = "Gen/Mine/";
+        WriteGeneratedFile("Gen/Screens/Menu.Generated.cs", "Menu");
+        WriteFile("Gen/Mine/Screens/Menu.cs", "partial class Menu { }");
+
+        CreateService().Scan(project, projectSettings).Orphans.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Scan_ShouldKeepTheCustomFileBesideAnOverriddenGeneratedFile_WhenACustomFolderIsSet()
+    {
+        // A per-element GeneratedFileName puts both halves together and wins over the custom folder.
+        GumProjectSave project = Project;
+        ScreenSave screen = CreateScreen("Menu");
+        project.Screens.Add(screen);
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Screens"));
+        new CodeOutputElementSettingsManager(new FixedProjectDirectoryProvider(_tempDirectory + Path.DirectorySeparatorChar))
+            .WriteSettingsForElement(screen, new CodeOutputElementSettings { GeneratedFileName = "Gen/Screens/Menu.Generated.cs" });
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gen/";
+        projectSettings.CustomCodeFolder = "Mine/";
+        WriteGeneratedFile("Gen/Screens/Menu.Generated.cs", "Menu");
+        WriteFile("Gen/Screens/Menu.cs", "partial class Menu { }");
+
+        CreateService().Scan(project, projectSettings).Orphans.ShouldBeEmpty();
     }
 
     #region Helpers

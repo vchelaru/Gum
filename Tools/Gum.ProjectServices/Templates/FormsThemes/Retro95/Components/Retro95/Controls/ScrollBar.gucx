@@ -415,7 +415,7 @@
   <Instance Name="DownButtonInstance" BaseType="Retro95/Controls/ScrollBarButton" />
   <Instance Name="TrackInstance" BaseType="Container" />
   <Instance Name="TrackFill" BaseType="Rectangle" />
-  <Instance Name="ThumbInstance" BaseType="Retro95/Controls/Thumb" />
+  <Instance Name="ThumbInstance" BaseType="Retro95/Controls/ScrollBarThumb" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ScrollBarBehavior</BehaviorName>

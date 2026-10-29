@@ -38,4 +38,4 @@ This lets you, for example, keep crisp Point filtering for a pixel-art game worl
 
 ## Relationship to the Tool's Texture Filter Setting
 
-The Gum tool exposes the same Point/Linear choice as a **Texture Filter** project property — see [Project Properties](../../gum-tool/project-properties.md). To apply texture filtering at runtime, set `Renderer.TextureFilter` (or a per-layer override) in code as shown above.
+The Gum tool exposes the same Point/Linear choice as a **Texture Filter** project setting. See [Project Settings](../../gum-tool/project-properties.md). To apply texture filtering at runtime, set `Renderer.TextureFilter` (or a per-layer override) in code as shown above.

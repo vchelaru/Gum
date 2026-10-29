@@ -206,6 +206,16 @@ public class FrameworkElement : INotifyPropertyChanged
 
     protected bool isFocused;
     protected double timeFocused;
+
+    /// <summary>
+    /// Whether this element can take focus while <see cref="IsEnabled"/> is false. Defaults to false.
+    /// When true, setting <see cref="IsFocused"/> from code, tab order, and gamepad and keyboard
+    /// spatial navigation all include this element, and it shows its DisabledFocused state. It still
+    /// ignores confirm and other input, and a disabled parent container still keeps it out of
+    /// navigation.
+    /// </summary>
+    public bool AllowFocusWhenDisabled { get; set; }
+
     /// <summary>
     /// Whether this element has input focus. If true, the element shows its focused
     /// state and receives input from keyboards and gamepads.
@@ -215,9 +225,19 @@ public class FrameworkElement : INotifyPropertyChanged
         get { return isFocused; }
         set
         {
+            // A control that is not visible, itself or through an ancestor, refuses focus (#6956).
+            if (value && !isFocused && Visual?.AbsoluteVisible == false)
+            {
+                return;
+            }
+
             if (value != isFocused)
             {
-                isFocused = value && IsEnabled;
+                isFocused = value && (IsEnabled || AllowFocusWhenDisabled);
+
+#if !FRB
+                if (isFocused) { WatchVisibilityWhileFocused(); } else { StopWatchingVisibility(); }
+#endif
 
                 if (isFocused && this is IInputReceiver inputReceiver)
                 {
@@ -232,6 +252,9 @@ public class FrameworkElement : INotifyPropertyChanged
                 {
                     timeFocused = InteractiveGue.CurrentGameTime;
                     GotFocus?.Invoke(this, EventArgs.Empty);
+#if !FRB
+                    ScrollAncestorViewersToShowThis();
+#endif
                 }
                 else
                 {
@@ -254,6 +277,102 @@ public class FrameworkElement : INotifyPropertyChanged
 
         }
     }
+
+#if !FRB
+    // Focus moved by gamepad, keyboard, tab or code scrolls each ScrollViewer holding this element,
+    // innermost first. Focus the mouse itself caused does not: while the cursor is pushing, holding or
+    // clicking, an element the cursor is over (this one, or related to it by its visuals) is already
+    // under the cursor. Code or Tab focusing some other element during a click still scrolls (#6939).
+    void ScrollAncestorViewersToShowThis()
+    {
+        // A render-only host has no cursor (#5406), so nothing is mouse-caused.
+        ICursor? cursor = MainCursor;
+        if (cursor != null && (cursor.PrimaryPush || cursor.PrimaryDown || cursor.PrimaryClick) && IsCursorOverThisOrRelated(cursor))
+        {
+            return;
+        }
+
+        for (GraphicalUiElement? current = Visual.Parent; current != null; current = current.Parent)
+        {
+            if (current is InteractiveGue { FormsControlAsObject: ScrollViewer viewer } && viewer != this)
+            {
+                viewer.ScrollDescendantIntoView(Visual);
+            }
+        }
+    }
+
+    bool IsCursorOverThisOrRelated(ICursor cursor)
+    {
+        GraphicalUiElement? target = cursor.WindowPushed ?? cursor.VisualOver;
+        if (target == null)
+        {
+            return false;
+        }
+        for (GraphicalUiElement? current = target; current != null; current = current.Parent)
+        {
+            if (current == Visual) return true;
+        }
+        for (GraphicalUiElement? current = Visual; current != null; current = current.Parent)
+        {
+            if (current == target) return true;
+        }
+        return false;
+    }
+#endif
+
+#if !FRB
+    // A focused control that becomes hidden, itself or through any ancestor, loses focus like one removed
+    // from a root (#6934). Event based: while focused, the Visual and each ancestor are listened to for
+    // visibility and parent changes, so nothing runs per frame.
+    List<GraphicalUiElement>? _visibilityWatched;
+
+    void WatchVisibilityWhileFocused()
+    {
+        StopWatchingVisibility();
+        _visibilityWatched ??= new List<GraphicalUiElement>();
+        GraphicalUiElement? current = Visual;
+        while (current != null)
+        {
+            current.VisibleChanged += HandleFocusedVisibilityChanged;
+            current.ParentChanged += HandleFocusedParentChanged;
+            _visibilityWatched.Add(current);
+            current = current.Parent;
+        }
+    }
+
+    void StopWatchingVisibility()
+    {
+        if (_visibilityWatched == null) return;
+        for (int i = 0; i < _visibilityWatched.Count; i++)
+        {
+            _visibilityWatched[i].VisibleChanged -= HandleFocusedVisibilityChanged;
+            _visibilityWatched[i].ParentChanged -= HandleFocusedParentChanged;
+        }
+        _visibilityWatched.Clear();
+    }
+
+    void HandleFocusedVisibilityChanged(object? sender, EventArgs args)
+    {
+        if (isFocused && Visual?.AbsoluteVisible == false)
+        {
+            IsFocused = false;
+        }
+    }
+
+    void HandleFocusedParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs args)
+    {
+        if (!isFocused) return;
+        if (Visual?.AbsoluteVisible == false)
+        {
+            IsFocused = false;
+        }
+        else
+        {
+            // Moved to another parent: the ancestors to listen to changed.
+            WatchVisibilityWhileFocused();
+        }
+    }
+#endif
 
     [Obsolete] 
     protected Dictionary<string, string> vmPropsToUiProps = null!;
@@ -602,6 +721,9 @@ public class FrameworkElement : INotifyPropertyChanged
                     visual.InheritedBindingContextChanged -= OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange -= HandleEnabledChanged;
                     visual.ParentChanged -= HandleParentChanged;
+#if !FRB
+                    StopWatchingVisibility();
+#endif
                     ReactToVisualRemoved();
 
                     // The detached Visual no longer belongs to this control, so it can be assigned again later.
@@ -632,6 +754,9 @@ public class FrameworkElement : INotifyPropertyChanged
                     visual.InheritedBindingContextChanged += OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange += HandleEnabledChanged;
                     visual.ParentChanged += HandleParentChanged;
+#if !FRB
+                    if (isFocused) { WatchVisibilityWhileFocused(); }
+#endif
 
                     // A disabled control stays disabled when its visual is replaced. Only disable
                     // here: an enabled control must not override a visual authored as disabled.
@@ -1355,33 +1480,75 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     internal static RepositionDirections? GetRepeatedGamepadDirection(GamePadForNavigation gamepad)
     {
-        RepositionDirections? direction = null;
+        ReadRepeatedGamepadDirections(gamepad, out bool up, out bool down, out bool left, out bool right);
 
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down))
+        RepositionDirections? direction = null;
+        if (down)
         {
             direction = RepositionDirections.Down;
         }
-
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
+        if (right)
         {
             direction = RepositionDirections.Right;
         }
-
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up))
+        if (up)
         {
             direction = RepositionDirections.Up;
         }
-
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
+        if (left)
         {
             direction = RepositionDirections.Left;
         }
 
         return direction;
+    }
+
+    /// <summary>
+    /// Like <see cref="GetRepeatedGamepadDirection(GamePadForNavigation)"/> for a control that steps along one
+    /// axis only (<paramref name="singleAxis"/>; null steps in every direction). The other axis does not step:
+    /// when it is pushed and the control's own axis is not, <paramref name="leavesList"/> is true and the
+    /// result is null, so the caller moves focus away as the control does at its top level.
+    /// </summary>
+    internal static RepositionDirections? GetRepeatedGamepadDirection(GamePadForNavigation gamepad,
+        Orientation? singleAxis, out bool leavesList)
+    {
+        leavesList = false;
+        if (singleAxis == null)
+        {
+            return GetRepeatedGamepadDirection(gamepad);
+        }
+
+        ReadRepeatedGamepadDirections(gamepad, out bool up, out bool down, out bool left, out bool right);
+
+        bool isVertical = singleAxis == Orientation.Vertical;
+        if (isVertical ? up : left)
+        {
+            return isVertical ? RepositionDirections.Up : RepositionDirections.Left;
+        }
+        if (isVertical ? down : right)
+        {
+            return isVertical ? RepositionDirections.Down : RepositionDirections.Right;
+        }
+
+        leavesList = isVertical ? (left || right) : (up || down);
+        return null;
+    }
+
+    /// <summary>
+    /// Reads which of the four directions the gamepad's D-pad or left stick is pushing this frame, repeating
+    /// while held. Several can be true at once.
+    /// </summary>
+    internal static void ReadRepeatedGamepadDirections(GamePadForNavigation gamepad,
+        out bool up, out bool down, out bool left, out bool right)
+    {
+        down = gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down);
+        right = gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right);
+        up = gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up);
+        left = gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left);
     }
 
     protected void HandleGamepadNavigation(GamePadForNavigation gamepad)
@@ -1774,11 +1941,29 @@ public class FrameworkElement : INotifyPropertyChanged
         return didChildHandle;
     }
 
+    private static bool AreAncestorsEnabled(InteractiveGue visual)
+    {
+        return visual.Parent is not InteractiveGue parent || parent.IsEnabledRecursively;
+    }
+
+    /// <summary>
+    /// Gives focus to <paramref name="target"/> and takes it from this element only if the target
+    /// accepted it (a target that refuses focus, such as a disabled control, must not leave nothing focused).
+    /// </summary>
+    private void MoveFocusTo(FrameworkElement target)
+    {
+        target.IsFocused = true;
+        if (target.IsFocused)
+        {
+            this.IsFocused = false;
+        }
+    }
+
     internal static bool CanElementBeFocused(FrameworkElement? element)
     {
         return element is IInputReceiver &&
                     ((IVisible)element.Visual).AbsoluteVisible == true &&
-                    element.IsEnabled &&
+                    (element.IsEnabled || (element.AllowFocusWhenDisabled && AreAncestorsEnabled(element.Visual))) &&
                     element.Visual.HasEvents &&
                     element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
     }
@@ -1816,8 +2001,7 @@ public class FrameworkElement : INotifyPropertyChanged
             // unconditionally setting IsFocused true then false on the same object nets to false.
             if (explicitOverride != this)
             {
-                explicitOverride.IsFocused = true;
-                this.IsFocused = false;
+                MoveFocusTo(explicitOverride);
             }
             return;
         }
@@ -1834,8 +2018,7 @@ public class FrameworkElement : INotifyPropertyChanged
         FrameworkElement? best = Gum.Forms.SpatialNavigationService.FindBestCandidate(this, angle.Value, candidates);
         if (best != null)
         {
-            best.IsFocused = true;
-            this.IsFocused = false;
+            MoveFocusTo(best);
         }
     }
 
@@ -1865,10 +2048,13 @@ public class FrameworkElement : INotifyPropertyChanged
     // existing index-based path (HandleGamepadNavigation above) — a control that disables it
     // (e.g. Slider, which uses Left/Right for its own value adjustment) must keep that exclusion
     // under spatial navigation too, or the same press would both navigate and act on the control.
-    private DigitalDirectionState GetDigitalDirectionState(IGamePad gamepad)
+    // ignoreLeftRightMask is used only to look up explicit overrides: an override the game set on a
+    // control wins over that control's own use of Left/Right (issue #6937).
+    private DigitalDirectionState GetDigitalDirectionState(IGamePad gamepad, bool ignoreLeftRightMask = false)
     {
-        bool right = IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonDown(GamepadButton.DPadRight);
-        bool left = IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonDown(GamepadButton.DPadLeft);
+        bool useLeftRight = ignoreLeftRightMask || IsUsingLeftAndRightGamepadDirectionsForNavigation;
+        bool right = useLeftRight && gamepad.ButtonDown(GamepadButton.DPadRight);
+        bool left = useLeftRight && gamepad.ButtonDown(GamepadButton.DPadLeft);
         bool down = gamepad.ButtonDown(GamepadButton.DPadDown);
         bool up = gamepad.ButtonDown(GamepadButton.DPadUp);
 
@@ -1916,24 +2102,98 @@ public class FrameworkElement : INotifyPropertyChanged
     // GetCardinalOverride) so overrides help stick-driven navigation the same way they help the DPad.
     private FrameworkElement? TryGetExplicitDirectionOverride(IGamePad gamepad)
     {
-        DigitalDirectionState state = GetDigitalDirectionState(gamepad);
-        if (state.ShouldFire)
+        // Overrides are looked up before the Left/Right mask applies, so an explicit override on a
+        // control that reserves Left/Right for its own value (e.g. Slider) still wins (issue #6937).
+        DigitalDirectionState overrideState = GetDigitalDirectionState(gamepad, ignoreLeftRightMask: true);
+        if (overrideState.ShouldFire)
         {
-            return GetExplicitDirectionOverride(state);
+            FrameworkElement? digitalOverride = GetExplicitDirectionOverride(overrideState);
+            if (digitalOverride != null)
+            {
+                return digitalOverride;
+            }
+        }
+
+        if (GetDigitalDirectionState(gamepad).ShouldFire)
+        {
+            return null;
         }
 
         if (gamepad.LeftStick.RadialPushedRepeatRate())
         {
+            float rawX = gamepad.LeftStick.X;
+            float rawY = gamepad.LeftStick.Y;
+            if (rawX != 0f || rawY != 0f)
+            {
+                FrameworkElement? stickOverride = GetCardinalOverride(MathF.Atan2(-rawY, rawX));
+                if (stickOverride != null)
+                {
+                    return stickOverride;
+                }
+            }
+
             (float stickX, float stickY) = GetEffectiveStickPosition(gamepad);
             if (stickX == 0f && stickY == 0f)
             {
                 return null;
             }
-            float stickAngle = MathF.Atan2(-stickY, stickX);
-            return GetCardinalOverride(stickAngle);
+            return GetCardinalOverride(MathF.Atan2(-stickY, stickX));
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Whether the gamepad's current directional press selects an explicit SpatialNavigation override
+    /// on this element. Controls that use Left/Right for their own value (e.g. Slider) skip that
+    /// action on such a press, because the override wins (issue #6937).
+    /// </summary>
+    internal bool IsSpatialNavigationOverridePressed(IGamePad gamepad)
+    {
+        (GamepadNavigationMode mode, GraphicalUiElement? spatialRoot) = ResolveGamepadNavigationMode();
+        if (mode != Controls.GamepadNavigationMode.Spatial || spatialRoot == null)
+        {
+            return false;
+        }
+
+        if (IsHorizontalOverrideSelected(GetDigitalDirectionState(gamepad, ignoreLeftRightMask: true)))
+        {
+            return true;
+        }
+
+        if (GetDigitalDirectionState(gamepad).ShouldFire || !gamepad.LeftStick.RadialPushedRepeatRate())
+        {
+            return false;
+        }
+
+        float x = gamepad.LeftStick.X;
+        float y = gamepad.LeftStick.Y;
+        if (x == 0f && y == 0f)
+        {
+            return false;
+        }
+        float twoPi = MathF.PI * 2f;
+        float normalized = ((MathF.Atan2(-y, x) % twoPi) + twoPi) % twoPi;
+        int cardinal = (int)MathF.Round(normalized / (MathF.PI / 2f)) % 4;
+        return (cardinal == 0 && SpatialNavigationRight != null) || (cardinal == 2 && SpatialNavigationLeft != null);
+    }
+
+    /// <summary>
+    /// Keyboard counterpart to <see cref="IsSpatialNavigationOverridePressed(IGamePad)"/>.
+    /// </summary>
+    internal bool IsSpatialNavigationOverridePressedByKeyboard()
+    {
+        (GamepadNavigationMode mode, GraphicalUiElement? spatialRoot) = ResolveGamepadNavigationMode();
+        return mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null &&
+            IsHorizontalOverrideSelected(GetDigitalDirectionStateFromKeyCombos(ignoreLeftRightMask: true));
+    }
+
+    // Only a Left/Right override suppresses a Slider's value change; an Up/Down override firing on a
+    // diagonal leaves a held Left/Right acting on the Value exactly as it did before overrides won.
+    private bool IsHorizontalOverrideSelected(DigitalDirectionState state)
+    {
+        return state.ShouldFire &&
+            ((state.Right && SpatialNavigationRight != null) || (state.Left && SpatialNavigationLeft != null));
     }
 
     // Zeroes the stick's horizontal axis when IsUsingLeftAndRightGamepadDirectionsForNavigation is
@@ -2005,10 +2265,11 @@ public class FrameworkElement : INotifyPropertyChanged
     // already uses), so a held combo only triggers on its own push/repeat pulses. Right/Left reuse
     // IsUsingLeftAndRightGamepadDirectionsForNavigation -- the same flag a control like Slider
     // already sets false to keep Left/Right for its own value instead of navigation.
-    private DigitalDirectionState GetDigitalDirectionStateFromKeyCombos()
+    private DigitalDirectionState GetDigitalDirectionStateFromKeyCombos(bool ignoreLeftRightMask = false)
     {
-        bool right = IsUsingLeftAndRightGamepadDirectionsForNavigation && AnyComboDown(RightKeyCombos);
-        bool left = IsUsingLeftAndRightGamepadDirectionsForNavigation && AnyComboDown(LeftKeyCombos);
+        bool useLeftRight = ignoreLeftRightMask || IsUsingLeftAndRightGamepadDirectionsForNavigation;
+        bool right = useLeftRight && AnyComboDown(RightKeyCombos);
+        bool left = useLeftRight && AnyComboDown(LeftKeyCombos);
         bool down = AnyComboDown(DownKeyCombos);
         bool up = AnyComboDown(UpKeyCombos);
 
@@ -2060,20 +2321,18 @@ public class FrameworkElement : INotifyPropertyChanged
 
         if (mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null)
         {
-            DigitalDirectionState state = GetDigitalDirectionStateFromKeyCombos();
-
-            FrameworkElement? explicitOverride = GetExplicitDirectionOverride(state);
+            FrameworkElement? explicitOverride = GetExplicitDirectionOverride(GetDigitalDirectionStateFromKeyCombos(ignoreLeftRightMask: true));
             if (explicitOverride != null)
             {
                 // See the matching self-reference guard in HandleGamepadSpatialNavigation.
                 if (explicitOverride != this)
                 {
-                    explicitOverride.IsFocused = true;
-                    this.IsFocused = false;
+                    MoveFocusTo(explicitOverride);
                 }
                 return;
             }
 
+            DigitalDirectionState state = GetDigitalDirectionStateFromKeyCombos();
             float? angle = GetRequestedDirectionAngle(state);
             if (angle == null)
             {
@@ -2086,8 +2345,7 @@ public class FrameworkElement : INotifyPropertyChanged
             FrameworkElement? best = Gum.Forms.SpatialNavigationService.FindBestCandidate(this, angle.Value, candidates);
             if (best != null)
             {
-                best.IsFocused = true;
-                this.IsFocused = false;
+                MoveFocusTo(best);
             }
             return;
         }

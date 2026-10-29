@@ -64,7 +64,7 @@ public static class ElementSaveExtensionMethodsGumTool
 
         if (!string.IsNullOrEmpty(element.BaseType))
         {
-            var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+            var baseElement = ObjectFinder.Self.GetBaseElement(element);
             if (baseElement != null)
             {
                 FillWithDefaultRecursively(baseElement, stateSave);

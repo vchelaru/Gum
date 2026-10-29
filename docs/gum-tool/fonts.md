@@ -1,17 +1,15 @@
-# Font Settings
+# Fonts
 
 ## Introduction
 
-The Font Settings tab controls how Gum bakes bitmap fonts for the whole project: which characters each font includes, which program generates the font files, and how the letters are spaced. These settings used to sit in the Project Properties tab.
+The **Fonts** page of the [Settings window](settings-window.md) controls how Gum bakes bitmap fonts for the whole project: which characters each font includes, which program generates the font files, and how the letters are spaced. Gum saves these settings in the project file.
 
-To open the Font Settings tab, select Edit -> Font Settings.
+To open the page, select **Edit** -> **Settings...** and pick **Fonts** under **Project**.
 
-{% hint style="warning" %}
-Screenshot needed: the Font Settings tab showing the Character Ranges table and the Generation settings.
-{% endhint %}
+<figure><img src="../.gitbook/assets/25_08 00 07.png" alt=""><figcaption><p>Project > Fonts page with the Character Ranges and Generation sections</p></figcaption></figure>
 
 {% hint style="info" %}
-The Font Settings tab is available in November 2026, or now if building Gum from source. Before then, these settings are in the Project Properties tab and a project can hold only one Font Ranges value.
+The Settings window is available in November 2026, or now if building Gum from source. Before then, these settings were in the Project Properties and Font Settings tabs.
 {% endhint %}
 
 ## Character Ranges
@@ -28,9 +26,11 @@ Ranges can be modified to add or remove characters from a .fnt file. The format 
 
 Changing a range immediately refreshes the page. Note that all fonts are re-created so this operation can take some time.
 
-The following animation shows the Ā character being included and excluded from the default range, causing it to appear and disappear in the displayed text.
+The following images show the same Text with the default range `32-126,160-255`, which has no Ā character, and with `32-126,160-255,256-383` added, which includes it.
 
-![](<../.gitbook/assets/14_16 04 36.gif>)
+<figure><img src="../.gitbook/assets/25_08 10 01.png" alt=""><figcaption><p>Range 32-126,160-255: the Ā character is missing</p></figcaption></figure>
+
+<figure><img src="../.gitbook/assets/25_08 10 02.png" alt=""><figcaption><p>Range 32-126,160-255,256-383: the Ā character is displayed</p></figcaption></figure>
 
 Note that expanding the character set results in larger font PNG files which can impact the size and performance of games using the Gum files.
 
@@ -90,7 +90,7 @@ The Font Generator property controls which tool Gum uses to bake `.fnt` files an
 * **KernSmith**: a standalone font generator that Gum integrates with. This is the default for new projects.
 * **BMFont**: [Bitmap Font Generator](https://www.angelcode.com/products/bmfont/), a separate external tool.
 
-You can change the setting at any time in the **Font Settings** tab. The next FontCache rebuild uses the chosen generator.
+You can change the setting at any time in the **Generation** section of the **Fonts** page. The next FontCache rebuild uses the chosen generator.
 
 BMFont runs only on Windows. On macOS and Linux, Gum generates fonts with KernSmith even when a project is set to BMFont, and the Font Generator property is read-only. The project keeps its BMFont setting, so fonts generated on Windows still use BMFont.
 

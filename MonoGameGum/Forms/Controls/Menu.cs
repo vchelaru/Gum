@@ -321,6 +321,12 @@ public class Menu : ItemsControl
                 continue;
             }
 
+            if (!IsEnabled)
+            {
+                // A disabled menu can hold focus (AllowFocusWhenDisabled) but does not act on input.
+                continue;
+            }
+
             HandleNavigation(direction,
                 confirm: gamepad.ButtonPushed(GamepadButton.A),
                 back: gamepad.ButtonPushed(GamepadButton.B),
@@ -329,7 +335,7 @@ public class Menu : ItemsControl
         }
 
 #if !FRB
-        if (IsFocused && KeyboardsForUiControl.Count > 0)
+        if (IsFocused && IsEnabled && KeyboardsForUiControl.Count > 0)
         {
             // Read every keyboard first and navigate once: ClickCombos already looks at all keyboards, so
             // navigating per keyboard would apply one Enter several times.

@@ -30,3 +30,23 @@ public class TextDropshadowFontGeneratorWarningLogicTests
         _sut.GetWarningIfApplicable(rootStandardTypeName, FontGeneratorType.BmFont).ShouldBeNull();
     }
 }
+
+public class FontGeneratorWarningTextTests
+{
+    [Fact]
+    public void Warnings_PointAtSettingsFontsPage_NotTheRemovedFontSettingsMenu()
+    {
+        string[] warnings =
+        [
+            FontGeneratorWarningText.CannotGenerateFromFontFiles,
+            FontGeneratorWarningText.CannotBakeDropshadows,
+            new TextDropshadowFontGeneratorWarningLogic().GetWarningIfApplicable("Text", FontGeneratorType.BmFont)!,
+        ];
+
+        foreach (string warning in warnings)
+        {
+            warning.ShouldContain("Edit > Settings... > Fonts");
+            warning.ShouldNotContain("Font Settings");
+        }
+    }
+}

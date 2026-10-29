@@ -768,8 +768,30 @@ public class CodeGenerator
             header += " : " + inheritance;
         }
 
+        if (EmitsGumElementLink(context))
+        {
+            // The Forms type this class registers as the default visual for, so game code that creates that
+            // control (new Button()) roots this element too.
+            string? formsType = GetDefaultFormsTemplateType(context.Element);
+            string formsTypeArgument = formsType == null ? "" : $", FormsType = typeof({formsType})";
+            context.StringBuilder.AppendLine(context.Tabs + $"[global::Gum.DataTypes.GumElement(\"{context.Element.Name}\"{formsTypeArgument})]");
+        }
         context.StringBuilder.AppendLine(context.Tabs + header);
     }
+
+    /// <summary>
+    /// Syntax version 7 added <c>GumElementAttribute</c> and <c>ObjectFinder.GetRequiredElementSave</c>,
+    /// which the Gum Forms and unified-runtime output use to link a class to its element.
+    /// </summary>
+    private static bool EmitsGumElementLink(CodeGenerationContext context) =>
+        context.ResolvedSyntaxVersion >= 7
+        && (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms
+            || UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary));
+
+    private static string GetElementLookup(CodeGenerationContext context, ElementSave element) =>
+        EmitsGumElementLink(context)
+            ? $"ObjectFinder.Self.GetRequiredElementSave(\"{element.Name}\")"
+            : $"ObjectFinder.Self.GetElementSave(\"{element.Name}\") ?? throw new System.InvalidOperationException(\"Could not find an element named {element.Name} - did you forget to load a Gum project?\")";
     
     /// <returns>
     /// The corresponding class name, or <c>null</c> if that type couldn't be found.
@@ -2039,8 +2061,7 @@ public class CodeGenerator
             }
 
 
-            builder.AppendLine(context.Tabs +
-                $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\") ?? throw new System.InvalidOperationException(\"Could not find an element named {context.Element.Name} - did you forget to load a Gum project?\");");
+            builder.AppendLine(context.Tabs + $"var element = {GetElementLookup(context, context.Element)};");
 
 
             builder.AppendLine(context.Tabs +
@@ -3726,11 +3747,20 @@ public class CodeGenerator
                 if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
                 {
 
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
+                    if (EmitsGumElementLink(context))
+                    {
+                        context.StringBuilder.AppendLine(context.Tabs + $"var element = {GetElementLookup(context, element)};");
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            "element.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                    }
+                    else
+                    {
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
 
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                        context.StringBuilder.AppendLine(context.Tabs +
+                            "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                    }
 
                     // March 8, 2025
                     // This is not needed
@@ -4164,7 +4194,10 @@ public class CodeGenerator
         stringBuilder.AppendLine(indent + "        XmlSerializer serializer = GumFileSerializer.GetCompactSerializer(typeof(List<StandardElementSave>));");
         stringBuilder.AppendLine(indent + "        string xml = @\"" + escapedXml + "\";");
         stringBuilder.AppendLine(indent + "        using StringReader reader = new StringReader(xml);");
-        stringBuilder.AppendLine(indent + "        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(reader);");
+        // Deserialize(TextReader) trips CA5369 even in generated files; an XmlReader (DTD processing
+        // prohibited by default) is what the analyzer asks for.
+        stringBuilder.AppendLine(indent + "        using System.Xml.XmlReader xmlReader = System.Xml.XmlReader.Create(reader);");
+        stringBuilder.AppendLine(indent + "        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(xmlReader);");
         stringBuilder.AppendLine(indent + "        foreach (StandardElementSave standard in standards)");
         stringBuilder.AppendLine(indent + "        {");
         stringBuilder.AppendLine(indent + "            standard.Initialize(defaultState: null, tolerateMissingDefaultStates: true);");
@@ -4421,6 +4454,12 @@ public class CodeGenerator
         string categoryName = _codeGenerationNameVerifier.ToCSharpName(category.Name);
         string enumDeclarator = categoryName + "?"; // Enum types need to be nullable because there could be no category set
 
+        // The state property deliberately replaces a same-named member on the base Forms
+        // control (MenuItem declares a MenuItemCategoryState constant), so say so explicitly.
+        string possibleNew = GetIfNameHidesFormsBaseMember($"{categoryName}State", element, codeProjectSettings)
+            ? "new "
+            : string.Empty;
+
         if (codeProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
 
@@ -4448,16 +4487,7 @@ public class CodeGenerator
                 context.TabCount = tabCount;
                 context.CodeOutputProjectSettings = codeProjectSettings;
 
-                AddAssignFromElement(context, stringBuilder);
-
-                stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
-                stringBuilder.AppendLine(context.Tabs + "{");
-                context.TabCount++;
-
-                CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
-
-                context.TabCount--;
-                stringBuilder.AppendLine(context.Tabs + "}");
+                AddStateApplication(context, stringBuilder, category);
 
                 // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
                 // Update November 29, 2022
@@ -4509,7 +4539,7 @@ public class CodeGenerator
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"private {enumDeclarator} _{categoryFieldName}State;");
 
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {enumDeclarator} {categoryName}State");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleNew}{enumDeclarator} {categoryName}State");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
@@ -4524,16 +4554,7 @@ public class CodeGenerator
                 context.CodeOutputProjectSettings = codeProjectSettings;
                 context.ResolvedSyntaxVersion = resolvedSyntaxVersion;
 
-                AddAssignFromElement(context, stringBuilder);
-
-                stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
-                stringBuilder.AppendLine(context.Tabs + "{");
-                context.TabCount++;
-
-                CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
-
-                context.TabCount--;
-                stringBuilder.AppendLine(context.Tabs + "}");
+                AddStateApplication(context, stringBuilder, category);
 
 
                 context.TabCount--;
@@ -4559,11 +4580,6 @@ public class CodeGenerator
             stringBuilder.AppendLine(ToTabs(tabCount) + $"{categoryName}? {fieldName};");
 
 
-            // The state property deliberately replaces a same-named member on the base Forms
-            // control (MenuItem declares a MenuItemCategoryState constant), so say so explicitly.
-            string possibleNew = GetIfNameHidesFormsBaseMember(propertyName, element, codeProjectSettings)
-                ? "new "
-                : string.Empty;
             stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleNew}{categoryName}? {propertyName}");
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -4628,6 +4644,36 @@ public class CodeGenerator
         }
 
         return tabCount;
+    }
+
+    /// <summary>
+    /// Writes the body of a state property setter that applies the state's variables. A category
+    /// without states has nothing to switch on (an empty switch is CS1522), so only the dynamic
+    /// state lookup is written, and only when it applies.
+    /// </summary>
+    private void AddStateApplication(CodeGenerationContext context, StringBuilder stringBuilder, StateSaveCategory category)
+    {
+        bool hasStates = category.States.Count > 0;
+        if (!hasStates && !context.CodeOutputProjectSettings.GenerateGumDataTypes)
+        {
+            return;
+        }
+
+        AddAssignFromElement(context, stringBuilder);
+
+        if (!hasStates)
+        {
+            return;
+        }
+
+        stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
+        stringBuilder.AppendLine(context.Tabs + "{");
+        context.TabCount++;
+
+        CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
+
+        context.TabCount--;
+        stringBuilder.AppendLine(context.Tabs + "}");
     }
 
     private static void AddAssignFromElement(CodeGenerationContext context, StringBuilder stringBuilder)
@@ -6015,6 +6061,22 @@ public class CodeGenerator
             // Non-empty: fall through to the default string-assignment path.
         }
         #endregion
+        #region ShaderParameters
+
+        // ShaderParameters is the saved Name=value text for a render-target Container's shader. There
+        // is no property of that name on the runtime; the text goes through SetProperty, which parses
+        // it the same way the loader does, so default and state assignments both work.
+        else if (rootName == "ShaderParameters")
+        {
+            string shaderParametersText = variable.Value as string ?? "";
+            if (shaderParametersText.Length == 0)
+            {
+                return " ";
+            }
+            string verbatimText = "@\"" + shaderParametersText.Replace("\"", "\"\"") + "\"";
+            return $"{context.CodePrefixNoTabs}.SetProperty(\"ShaderParameters\", {verbatimText});";
+        }
+        #endregion
         // ignored variables:
         else if (rootName == "IsXamarinFormsControl" ||
             rootName == "ExposeChildrenEvents" ||
@@ -6035,7 +6097,7 @@ public class CodeGenerator
             VariableSave? rootVariable = null;
             if (instance != null)
             {
-                rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
+                rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance, context.Element);
             }
             else
             {
@@ -6370,9 +6432,7 @@ public class CodeGenerator
                 return true;
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
 
         return false;
@@ -6396,9 +6456,7 @@ public class CodeGenerator
                 return typeof(Gum.Forms.Controls.FrameworkElement).Assembly.GetType(formsType.Replace("global::", string.Empty));
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
 
         // No Forms behavior: GetInheritance derives such a class from FrameworkElement.
@@ -6434,9 +6492,7 @@ public class CodeGenerator
                 }
             }
 
-            current = string.IsNullOrEmpty(current.BaseType)
-                ? null
-                : ObjectFinder.Self.GetElementSave(current.BaseType);
+            current = ObjectFinder.Self.GetBaseElement(current);
         }
     }
 
@@ -6729,7 +6785,7 @@ public class CodeGenerator
             ElementSave? baseElement = null;
             if (!string.IsNullOrEmpty(element.BaseType))
             {
-                baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+                baseElement = ObjectFinder.Self.GetBaseElement(element);
             }
 
             var baseHasMain = baseElement != null &&

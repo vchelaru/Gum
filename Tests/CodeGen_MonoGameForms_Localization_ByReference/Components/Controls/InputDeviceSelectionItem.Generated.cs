@@ -11,6 +11,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
+[global::Gum.DataTypes.GumElement("Controls/InputDeviceSelectionItem")]
 partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkElement
 {
     #if UNITY_5_3_OR_NEWER
@@ -23,7 +24,7 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/InputDeviceSelectionItem") ?? throw new System.InvalidOperationException("Could not find an element named Controls/InputDeviceSelectionItem - did you forget to load a Gum project?");
+            var element = ObjectFinder.Self.GetRequiredElementSave("Controls/InputDeviceSelectionItem");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new InputDeviceSelectionItem(visual);
             return visual;

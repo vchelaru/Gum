@@ -3,6 +3,12 @@ using AvaloniaDataUi;
 using Avalonia;
 using Avalonia.VisualTree;
 using CodeOutputPlugin;
+using Avalonia.Media;
+using Avalonia.Reactive;
+using Avalonia.Threading;
+using System.Linq;
+using System;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Avalonia.Settings;
 
@@ -12,16 +18,27 @@ namespace Gum.Avalonia.Settings;
 /// </summary>
 public sealed class CodeGenerationSettingsPageView : DockPanel
 {
+    private const double DefaultFontSize = 12;
+    private double _fontSize = DefaultFontSize;
     private CodeGenerationSettingsViewModel? _viewModel;
     private bool _isListening;
 
     /// <summary>Builds the view.</summary>
     public CodeGenerationSettingsPageView()
     {
-        Grid = new DataUiGrid { HideLoneCategoryHeader = true };
+        Grid = new DataUiGrid { HideLoneCategoryHeader = true, AlternatesRowBackgrounds = false };
         Children.Add(Grid);
 
         DataContextChanged += (_, _) => HandleDataContextChanged();
+
+        // The label column is sized for the default font; a larger font (zoom) widens it in proportion
+        // so labels stay on one line.
+        this.GetResourceObservable("ControlContentThemeFontSize").Subscribe(new AnonymousObserver<object?>(size =>
+        {
+            _fontSize = size is double fontSize && fontSize > 0 ? fontSize : DefaultFontSize;
+            ScaleLabelColumns();
+        }));
+        this.GetObservable(BoundsProperty).Subscribe(new AnonymousObserver<Rect>(_ => ScaleLabelColumns()));
     }
 
     /// <summary>The property grid.</summary>
@@ -77,6 +94,45 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
         if (_viewModel != null)
         {
             Grid.SetCategories(_viewModel.BuildCategories());
+            ScaleLabelColumns();
+            Dispatcher.UIThread.Post(SpaceSectionBars);
+        }
+    }
+
+    // The section bars sit closer together in the shared grid; on this page each one starts a new group.
+    private void SpaceSectionBars()
+    {
+        bool isFirst = true;
+        foreach (DataUiCategoryView view in Grid.GetVisualDescendants().OfType<DataUiCategoryView>())
+        {
+            view.Margin = new Thickness(0, isFirst ? 4 : 14, 0, 2);
+            view.Header.Padding = new Thickness(0, 2);
+            foreach (TextBlock name in view.Header.GetVisualDescendants().OfType<TextBlock>())
+            {
+                name.FontWeight = FontWeight.SemiBold;
+            }
+            isFirst = false;
+        }
+    }
+
+    private void ScaleLabelColumns()
+    {
+        double width = Math.Round(CodeOutputSettingsMembers.ProjectLabelColumnWidth * _fontSize / DefaultFontSize);
+        // At a large zoom the label column must not take the page: keep room for the field.
+        if (Bounds.Width > 0)
+        {
+            width = Math.Min(width, Math.Max(CodeOutputSettingsMembers.ProjectLabelColumnWidth, Math.Round(Bounds.Width * 0.38)));
+        }
+        if (Grid.Categories.SelectMany(category => category.Members).FirstOrDefault()?.FirstGridLength == width)
+        {
+            return;
+        }
+        foreach (MemberCategory category in Grid.Categories)
+        {
+            foreach (InstanceMember member in category.Members)
+            {
+                member.FirstGridLength = width;
+            }
         }
     }
 }

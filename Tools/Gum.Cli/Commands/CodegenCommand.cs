@@ -170,10 +170,14 @@ public static class CodegenCommand
             }
         }
         Console.WriteLine($"Generating code into {resolvedOutputFolder}");
+        if (!string.IsNullOrEmpty(projectSettings.CustomCodeFolder))
+        {
+            string customCodeFolder = projectSettings.CustomCodeFolder.Replace('\\', Path.DirectorySeparatorChar);
+            Console.WriteLine($"Custom code files into {Path.GetFullPath(Path.Combine(resolvedCodeProjectRoot, customCodeFolder))}");
+        }
 
         // Build the codegen pipeline
-        INameVerifier nameVerifier = new HeadlessNameVerifier();
-        var codeGenNameVerifier = new CodeGenerationNameVerifier(nameVerifier);
+        var codeGenNameVerifier = new CodeGenerationNameVerifier(new NameRules());
         var elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         var localizationService = new Gum.Localization.LocalizationService();
         IHeadlessLocalizationLoader localizationLoader = new HeadlessLocalizationLoader(logger);

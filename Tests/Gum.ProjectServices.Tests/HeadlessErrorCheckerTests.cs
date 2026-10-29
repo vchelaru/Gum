@@ -1578,7 +1578,126 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         errors.ShouldContain(e => e.Code == "GUM0010");
     }
 
-    private void AddComponentWithTextFont(string componentName, string font)
+    #region GUM0012 — Literal Text value has characters outside its font's ranges
+
+    [Fact]
+    public void GetErrorsFor_ShouldWarn_WhenALiteralTextHasCharactersOutsideItsFontRanges()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126,160-255";
+        ComponentSave component = AddComponentWithTextFont("PriceLabel", "Arial");
+        // 'é' (233) is in range; '€' (8364) and 'Ω' (937) are not.
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Café €5 Ω€", Type = "string", SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0012");
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+        error.ElementName.ShouldBe("PriceLabel");
+        error.Message.ShouldContain("MyText");
+        error.Message.ShouldContain("Arial");
+        error.Message.ShouldContain("U+20AC");
+        error.Message.ShouldContain("8364,937");
+        error.Message.ShouldNotContain("U+00E9");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldWarnFromACategoryState_UsingTheDefaultStateFont()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        ComponentSave component = AddComponentWithTextFont("Banner", "Arial");
+        StateSaveCategory category = new StateSaveCategory { Name = "Language" };
+        StateSave french = new StateSave { Name = "French", ParentContainer = component };
+        french.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Été", Type = "string", SetsValue = true });
+        category.States.Add(french);
+        component.Categories.Add(category);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0012");
+        error.Message.ShouldContain("201,233");
+    }
+
+    [Theory]
+    [InlineData("Arial", "Line one\nline two\tend")]
+    [InlineData("Arial", "Price: 5€")]
+    public void GetErrorsFor_ShouldNotWarn_WhenEveryCharacterIsInRangeOrIsLayout(string font, string text)
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = font, Ranges = "32-126,8364" });
+        ComponentSave component = AddComponentWithTextFont("Label", font);
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = text, Type = "string", SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("32-126", "Price [Glyph=0x20AC]5", true)]
+    [InlineData("32-126", "Price [Glyph=8364]5", true)]
+    [InlineData("32-126,8364", "Price [Glyph=0x20AC]5", false)]
+    [InlineData("32-126", "Price [Glyph=65]5 [Glyph=abc]", false)]
+    public void GetErrorsFor_ShouldCheckTheCharacterOfAGlyphTag_AgainstTheFontRanges(string ranges, string text, bool shouldWarn)
+    {
+        Project.FontRangeEntries.Single().Ranges = ranges;
+        ComponentSave component = AddComponentWithTextFont("Label", "Arial");
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = text, Type = "string", SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        if (shouldWarn)
+        {
+            ErrorResult error = errors.ShouldHaveSingleItem();
+            error.Code.ShouldBe("GUM0012");
+            error.Message.ShouldContain("U+20AC");
+        }
+        else
+        {
+            errors.ShouldBeEmpty();
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotWarn_ForAPrebakedFntCustomFont()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        ComponentSave component = AddComponentWithTextFont("Label", "Arial");
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.UseCustomFont", Value = true, Type = "bool", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.CustomFontFile", Value = "Fonts/Baked.fnt", Type = "string", SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "€", Type = "string", SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldNotContain(e => e.Code == "GUM0012");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldWarnOncePerText_WhenSeveralStatesHaveCharactersOutsideRange()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        ComponentSave component = AddComponentWithTextFont("Banner", "Arial");
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "€", Type = "string", SetsValue = true });
+        StateSaveCategory category = new StateSaveCategory { Name = "Language" };
+        StateSave greek = new StateSave { Name = "Greek", ParentContainer = component };
+        greek.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Ω€", Type = "string", SetsValue = true });
+        StateSave english = new StateSave { Name = "English", ParentContainer = component };
+        english.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "Hi", Type = "string", SetsValue = true });
+        category.States.Add(greek);
+        category.States.Add(english);
+        component.Categories.Add(category);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0012");
+        error.Message.ShouldContain("8364,937");
+    }
+
+    #endregion
+
+    private ComponentSave AddComponentWithTextFont(string componentName, string font)
     {
         ComponentSave component = new ComponentSave { Name = componentName };
         component.Instances.Add(new InstanceSave { Name = "MyText", BaseType = "Text" });
@@ -1587,6 +1706,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         defaultState.Variables.Add(new VariableSave { Name = "MyText.FontSize", Value = 18, Type = "int", SetsValue = true });
         component.States.Add(defaultState);
         Project.Components.Add(component);
+        return component;
     }
 
     #endregion
@@ -1737,6 +1857,149 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
         errors.ShouldNotContain(item => item.Code == "GUM0007");
+    }
+
+    #endregion
+
+    #region GUM0013 — Circular variable reference
+
+    private ComponentSave AddComponentWithRowsOnInstances(string name, params (string Instance, string Line)[] rows)
+    {
+        ComponentSave component = new ComponentSave { Name = name, BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        foreach ((string instance, string line) in rows)
+        {
+            if (component.GetInstance(instance) == null)
+            {
+                component.Instances.Add(new InstanceSave { Name = instance, BaseType = "Container", ParentContainer = component });
+            }
+            VariableListSave<string> references = new VariableListSave<string>
+            {
+                Name = instance + ".VariableReferences",
+                Type = "string"
+            };
+            references.Value.Add(line);
+            state.VariableLists.Add(references);
+        }
+        Project.Components.Add(component);
+        return component;
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013NamingTheLoop_WhenTwoRowsReadEachOther()
+    {
+        ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem();
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+        error.ElementName.ShouldBe("Panel");
+        error.Message.ShouldContain("Circular variable reference: Panel.A.Width -> Panel.B.Width -> Panel.A.Width");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013_WhenARowReadsItsOwnResult()
+    {
+        ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = A.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem()
+            .Message.ShouldContain("Circular variable reference: Panel.A.Width -> Panel.A.Width");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013OnEveryElementHoldingARow_WhenRowsLoopAcrossTwoElements()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+        ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.A.Width + 1"));
+
+        foreach (ComponentSave holder in new[] { panel, other })
+        {
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(holder, Project);
+
+            ErrorResult error = errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem();
+            error.ElementName.ShouldBe(holder.Name);
+            error.Message.ShouldContain("Components/Panel.A.Width");
+            error.Message.ShouldContain("Components/Other.B.Width");
+        }
+        _sut.GetAllErrors(Project).Count(item => item.Code == "GUM0013").ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0013_WhenALoopMixesRowsOfTheSameElementAndAnotherElement()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel",
+            ("A", "Width = Components/Other.B.Width + 1"), ("C", "Width = A.Width + 1"));
+        AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.C.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(panel, Project);
+
+        errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem()
+            .Message.ShouldContain("Components/Other.B.Width");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0013_WhenRowsChainAcrossElementsWithoutLooping()
+    {
+        ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+        ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = 5"));
+
+        _sut.GetErrorsFor(panel, Project).Where(item => item.Code == "GUM0013").ShouldBeEmpty();
+        _sut.GetErrorsFor(other, Project).Where(item => item.Code == "GUM0013").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0002_WhenTheRowsAreInALoop()
+    {
+        // The stored 10 differs from what A = B + 1 would give, but a row in a loop sets nothing.
+        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType, liveRoot) => 11f;
+        try
+        {
+            ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1"));
+            component.DefaultState!.Variables.Add(new VariableSave { Name = "A.Width", Type = "float", Value = 10f, SetsValue = true });
+            component.DefaultState.Variables.Add(new VariableSave { Name = "B.Width", Type = "float", Value = 10f, SetsValue = true });
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            errors.Where(item => item.Code == "GUM0002").ShouldBeEmpty();
+            errors.Where(item => item.Code == "GUM0013").ShouldHaveSingleItem();
+        }
+        finally
+        {
+            ElementSaveExtensions.CustomEvaluateExpression = null;
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0002_WhenTheRowsLoopAcrossTwoElements()
+    {
+        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType, liveRoot) => 11f;
+        try
+        {
+            ComponentSave panel = AddComponentWithRowsOnInstances("Panel", ("A", "Width = Components/Other.B.Width + 1"));
+            ComponentSave other = AddComponentWithRowsOnInstances("Other", ("B", "Width = Components/Panel.A.Width + 1"));
+            panel.DefaultState!.Variables.Add(new VariableSave { Name = "A.Width", Type = "float", Value = 10f, SetsValue = true });
+            other.DefaultState!.Variables.Add(new VariableSave { Name = "B.Width", Type = "float", Value = 10f, SetsValue = true });
+
+            _sut.GetErrorsFor(panel, Project).Where(item => item.Code == "GUM0002").ShouldBeEmpty();
+        }
+        finally
+        {
+            ElementSaveExtensions.CustomEvaluateExpression = null;
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0013_WhenRowsFormAChain()
+    {
+        ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = C.Width + 1"));
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0013").ShouldBeEmpty();
     }
 
     #endregion
@@ -1926,6 +2189,116 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
         errors.ShouldHaveSingleItem().Message.ShouldContain("from Components/Styles, which the project does not have");
+    }
+
+    private ComponentSave AddLabelReadingShaderParameter(string line, string? marker, bool saved = true, string? exposedAs = null)
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, line);
+        component.Instances.Add(new InstanceSave { Name = "Icon", BaseType = "Container", ParentContainer = component });
+        if (saved)
+        {
+            component.DefaultState!.Variables.Add(new VariableSave
+            {
+                Name = "Icon.Outline_Thickness",
+                Type = "float",
+                SetsValue = false,
+                ShaderParameter = marker,
+                ExposedAsName = exposedAs
+            });
+        }
+        return component;
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceReadsSavedShaderParameter()
+    {
+        ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Outline_Thickness * 2", marker: "Thickness");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceReadsSavedShaderParameterOfElementBase()
+    {
+        // The derived element overrides a parameter of an instance its base owns.
+        ComponentSave baseLabel = AddLabelReadingShaderParameter("Width = 1", marker: "Thickness");
+        baseLabel.Name = "BaseLabel";
+        ComponentSave reader = AddComponentWithReferences("Reader", sourceObject: null, "Width = Components/DerivedLabel.Icon.Outline_Thickness");
+        ComponentSave derived = new ComponentSave { Name = "DerivedLabel", BaseType = "BaseLabel" };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        Project.Components.Add(derived);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(reader, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenDerivedElementSavedEntryForBaseInstance()
+    {
+        ComponentSave baseLabel = AddComponentWithReferences("BaseLabel", sourceObject: null, "Width = 1");
+        baseLabel.Instances.Add(new InstanceSave { Name = "Icon", BaseType = "Container", ParentContainer = baseLabel });
+        ComponentSave derived = new ComponentSave { Name = "DerivedLabel", BaseType = "BaseLabel" };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        derived.DefaultState!.Variables.Add(new VariableSave { Name = "Icon.Outline_Derived", Type = "float", SetsValue = false, ShaderParameter = "Derived" });
+        Project.Components.Add(derived);
+        ComponentSave reader = AddComponentWithReferences("Reader", sourceObject: null, "Width = Components/DerivedLabel.Icon.Outline_Derived");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(reader, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenReferenceReadsShaderParameterNothingNamed()
+    {
+        ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Outline_Thickness", marker: null, saved: false);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Message.ShouldContain("Icon.Outline_Thickness");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenSavedEntryHasNoMarker()
+    {
+        ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Outline_Thickness", marker: null);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldHaveSingleItem().Code.ShouldBe("GUM0009");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameSavedForm_WhenReferenceUsesPlainParameterName()
+    {
+        ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Thickness", marker: "Thickness");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Message.ShouldContain("Icon.Thickness");
+        error.Message.ShouldContain("Icon.Outline_Thickness");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameEveryComponent_WhenReferenceUsesPlainVectorParameterName()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, "Width = Icon.Tint");
+        component.Instances.Add(new InstanceSave { Name = "Icon", BaseType = "Container", ParentContainer = component });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "Icon.Outline_Tint__X", Type = "float", SetsValue = false, ShaderParameter = "Tint#0/2" });
+        component.DefaultState.Variables.Add(new VariableSave { Name = "Icon.Outline_Tint__Y", Type = "float", SetsValue = false, ShaderParameter = "Tint#1/2" });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Message.ShouldContain("Icon.Outline_Tint__X");
+        error.Message.ShouldContain("Icon.Outline_Tint__Y");
     }
 
     private ComponentSave AddStylesComponent(string name, string colorInstanceName)

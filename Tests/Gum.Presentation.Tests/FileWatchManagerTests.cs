@@ -71,7 +71,9 @@ public class FileWatchManagerTests : IDisposable
             new Mock<IStandardElementsManagerGumTool>().Object,
             pluginManagerMock.Object,
             new Mock<Gum.Services.Dialogs.IDialogService>().Object,
-            new UnsavedChangesTracker());
+            new UnsavedChangesTracker(),
+            new Mock<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceLogic>().Object,
+            new Mock<Gum.Undo.IUndoManager>().Object);
 
         return new FileWatchManager(
             guiCommandsMock.Object,
@@ -241,6 +243,28 @@ public class FileWatchManagerTests : IDisposable
             "a rename onto a .gucj file should be treated like any other recognized Gum file change");
     }
 
+    [Theory]
+    [InlineData("Photo.jpg")]
+    [InlineData("Photo.jpeg")]
+    public void EnableWithDirectories_ShouldReactToJpegRenamedIntoWatchedDirectory(string fileName)
+    {
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        FileWatchManager sut = BuildSut(
+            out _,
+            out _,
+            out _,
+            watchedDirectory);
+
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+
+        string tempName = Path.Combine(_tempDirectory, fileName + ".tmp");
+        File.WriteAllText(tempName, "");
+        FilePath renamedFile = new FilePath(Path.Combine(_tempDirectory, fileName));
+        File.Move(tempName, renamedFile.FullPath);
+
+        PollUntil(() => sut.ChangedFilesWaitingForFlush.Contains(renamedFile)).ShouldBeTrue();
+    }
+
     [Fact]
     public void EnableWithDirectories_ThenFlush_ShouldReactToProjectCodeSettingsRenamedIntoWatchedDirectory()
     {
@@ -389,7 +413,7 @@ public class FileWatchManagerTests : IDisposable
         ignoreListMock.Setup(i => i.TryGetIgnoreFileChange(It.IsAny<FilePath>())).Returns(true);
         var failure = new InvalidOperationException("reaction failed");
         guiCommandsMock.Setup(g => g.PrintOutput(It.Is<string>(s => s.StartsWith("File change skipped")))).Throws(failure);
-        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Texture.png");
+        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Comp.gucx");
 
         Should.NotThrow(() => sut.HandleFileSystemChange(null, args));
 

@@ -164,6 +164,17 @@ public class GumProjectSave
         /// the name looked up. See <see cref="GumProjectSave.UsesPathHashedFontCacheNames"/>.
         /// </summary>
         FontCachePathHash = 6,
+
+        /// <summary>
+        /// Reserves a version slot for the Container standard element's <c>ShaderParameters</c>
+        /// variable (#6988). Files saved at this version use the same XML format as
+        /// <see cref="FontCachePathHash"/>; the bump exists purely so the back-fill gate
+        /// (<see cref="Gum.DataTypes.Variables.VariableSave.MinimumGumxVersion"/>) can tell an older
+        /// project apart from a newer one and skip injecting the variable into the older one, whose
+        /// pinned runtime lacks the property. The NineSlice <c>CustomBorderScaleLeft/Top/Right/Bottom</c>
+        /// variables (#6983) share this slot because both landed before version 7 shipped.
+        /// </summary>
+        ShaderParametersExpansion = 7,
     }
 
     /// <summary>
@@ -180,7 +191,7 @@ public class GumProjectSave
     /// explicitly stamp this version. Marking them at the native version is honest — the project
     /// genuinely uses those features — and lets the gate show those variables immediately.
     /// </remarks>
-    public const int NativeVersion = (int)GumxVersions.FontCachePathHash;
+    public const int NativeVersion = (int)GumxVersions.ShaderParametersExpansion;
 
     #region Fields
 
@@ -453,6 +464,14 @@ public class GumProjectSave
 
     public List<string> FavoriteComponents { get; set; } = new List<string>();
     public bool ShouldSerializeFavoriteComponents() => FavoriteComponents.Count > 0;
+
+    /// <summary>
+    /// Names of the Screens and Components <c>gumcli pack --shake</c> left out of a bundle because
+    /// nothing reached them. Lets the runtime tell a trimmed element from a misspelled one. Empty
+    /// for every project the tool saves.
+    /// </summary>
+    public List<string> TrimmedElements { get; set; } = new List<string>();
+    public bool ShouldSerializeTrimmedElements() => TrimmedElements.Count > 0;
 
     /// <summary>
     /// The folder of the root of the parent project if this Gum project is part of a larger project (like a game project or android app).

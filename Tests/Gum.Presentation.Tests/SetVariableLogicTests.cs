@@ -61,6 +61,37 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenARegisteredImageDecoderDeclaresTheExtension()
+    {
+        ComponentSave element = new ComponentSave();
+        InstanceSave instance = new InstanceSave();
+        WebpDeclaringDecoder decoder = new WebpDeclaringDecoder();
+        global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Add(decoder);
+        try
+        {
+            string? result = _setVariableLogic.GetWhySourcefileIsInvalid(
+                "photo.WEBP", element, instance, "SourceFile");
+
+            result.ShouldBeNull();
+        }
+        finally
+        {
+            global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Remove(decoder);
+        }
+    }
+
+    private sealed class WebpDeclaringDecoder : global::RenderingLibrary.Content.IImageDecoder
+    {
+        public System.Collections.Generic.IEnumerable<string>? SupportedExtensions => new[] { ".webp" };
+
+        public bool TryDecode(string fileName, System.IO.Stream stream, out global::RenderingLibrary.Content.DecodedImage? image)
+        {
+            image = null;
+            return false;
+        }
+    }
+
+    [Fact]
     public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenExtensionIsJpg()
     {
         ComponentSave element = new ComponentSave();
@@ -92,6 +123,21 @@ public class SetVariableLogicTests : BaseTestClass
 
         string result = _setVariableLogic.GetWhySourcefileIsInvalid(
             "animation.achx", element, instance, "SourceFile");
+
+        result.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("image.jpeg")]
+    [InlineData("image.bmp")]
+    [InlineData("image.gif")]
+    public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenExtensionIsLoadableImage(string fileName)
+    {
+        ComponentSave element = new ComponentSave();
+        InstanceSave instance = new InstanceSave();
+
+        string result = _setVariableLogic.GetWhySourcefileIsInvalid(
+            fileName, element, instance, "SourceFile");
 
         result.ShouldBeNull();
     }

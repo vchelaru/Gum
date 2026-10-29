@@ -7,6 +7,7 @@ using Gum.Logic;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Undo;
 using Moq;
 using Shouldly;
@@ -102,7 +103,8 @@ public class UndoManagerTests : BaseTestClass
             _messenger.Object,
             _pluginNotifier.Object,
             _animationUndoProvider,
-            _projectProvider.Object
+            _projectProvider.Object,
+            new Lazy<IVariableReferenceLogic>(() => new Mock<IVariableReferenceLogic>().Object)
             );
     }
 

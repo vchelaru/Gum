@@ -707,42 +707,96 @@ namespace ToolsUtilities
 
         }
 
+        /// <summary>
+        /// Converts every separator to <see cref="Path.DirectorySeparatorChar"/> and collapses ".", ".." and empty
+        /// segments, so two spellings of one file give one string ("content/a/../b.png" is "content/b.png").
+        /// The leading separators are kept, a ".." above a root is dropped, a ".." a relative path cannot resolve
+        /// stays, and a path that names a directory through a trailing "." or ".." ends with a separator.
+        /// A leading "./" stays, because on mobile it marks a path that is already resolved (#4548). A URL only
+        /// has its separators converted.
+        /// </summary>
         public static string RemoveDotDotSlash(string fileNameToFix)
         {
-            fileNameToFix = fileNameToFix.Replace('\\', Path.DirectorySeparatorChar)
-                .Replace('/', Path.DirectorySeparatorChar);
+            char separator = Path.DirectorySeparatorChar;
+            fileNameToFix = fileNameToFix.Replace('\\', separator).Replace('/', separator);
 
-            if (fileNameToFix.Contains(".."))
+            // Every segment that needs collapsing follows a separator or starts the path.
+            if (!fileNameToFix.StartsWith(".", StringComparison.Ordinal) &&
+                fileNameToFix.IndexOf(separator + ".", StringComparison.Ordinal) < 0 &&
+                fileNameToFix.IndexOf(new string(separator, 2), StringComparison.Ordinal) < 0)
             {
+                return fileNameToFix;
+            }
+            if (IsUrl(fileNameToFix))
+            {
+                return fileNameToFix;
+            }
 
-                // First let's get rid of any ..'s that are in the middle
-                // for example:
-                //
-                // "content/zones/area1/../../background/outdoorsanim/outdoorsanim.achx"
-                //
-                // would become
-                // 
-                // "content/background/outdoorsanim/outdoorsanim.achx"
+            int prefixLength = 0;
+            while (prefixLength < fileNameToFix.Length && fileNameToFix[prefixLength] == separator)
+            {
+                prefixLength++;
+            }
+            bool isRooted = prefixLength > 0;
+            string[] segments = fileNameToFix.Substring(prefixLength).Split(separator);
 
-                var dotDotSlash = ".." + Path.DirectorySeparatorChar;
-
-                int indexOfNextDotDotSlash = fileNameToFix.IndexOf(dotDotSlash);
-
-                bool shouldLoop = indexOfNextDotDotSlash > 0;
-
-                while (shouldLoop)
+            List<string> kept = new List<string>(segments.Length);
+            // The leading "./" marker or a drive ("C:") is never removed by a "..".
+            int unremovableCount = 0;
+            bool endsInDirectory = false;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                string segment = segments[i];
+                endsInDirectory = false;
+                if (segment.Length == 0)
                 {
-                    int indexOfPreviousDirectory = fileNameToFix.LastIndexOf(Path.DirectorySeparatorChar, indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
-
-                    fileNameToFix = fileNameToFix.Remove(indexOfPreviousDirectory + 1, indexOfNextDotDotSlash - indexOfPreviousDirectory + 2);
-
-                    indexOfNextDotDotSlash = fileNameToFix.IndexOf(dotDotSlash);
-
-                    shouldLoop = indexOfNextDotDotSlash > 0;
+                    endsInDirectory = true;
+                }
+                else if (segment == ".")
+                {
+                    if (i == 0 && !isRooted)
+                    {
+                        kept.Add(segment);
+                        unremovableCount = 1;
+                    }
+                    else
+                    {
+                        endsInDirectory = true;
+                    }
+                }
+                else if (segment == "..")
+                {
+                    if (kept.Count > unremovableCount && kept[kept.Count - 1] != "..")
+                    {
+                        kept.RemoveAt(kept.Count - 1);
+                        endsInDirectory = true;
+                    }
+                    else if (isRooted)
+                    {
+                        endsInDirectory = true;
+                    }
+                    else
+                    {
+                        kept.Add(segment);
+                    }
+                }
+                else
+                {
+                    if (i == 0 && !isRooted && segment.Length == 2 && segment[1] == ':')
+                    {
+                        isRooted = true;
+                        unremovableCount = 1;
+                    }
+                    kept.Add(segment);
                 }
             }
 
-            return fileNameToFix;
+            string result = fileNameToFix.Substring(0, prefixLength) + string.Join(separator.ToString(), kept);
+            if (endsInDirectory && kept.Count > 0)
+            {
+                result += separator;
+            }
+            return result;
         }
 
         #region XML Docs

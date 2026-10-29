@@ -226,6 +226,8 @@ public class DataUiGrid : UserControl, IDataUiGrid
         DisplayerRegistry registry = new DisplayerRegistry();
         registry.Register(typeof(StandardDisplayers.TextBox), typeof(TextBoxDisplay));
         registry.Register(typeof(StandardDisplayers.MultiLineTextBox), typeof(MultiLineTextBoxDisplay));
+        registry.Register(typeof(StandardDisplayers.CodeFilePaths), typeof(CodeFilePathsDisplay));
+        registry.Register(typeof(StandardDisplayers.ReadOnlyValueWithChip), typeof(ReadOnlyValueWithChipDisplay));
         registry.Register(typeof(StandardDisplayers.CheckBox), typeof(CheckBoxDisplay));
         registry.Register(typeof(StandardDisplayers.NullableBool), typeof(NullableBoolDisplay));
         registry.Register(typeof(StandardDisplayers.ComboBox), typeof(ComboBoxDisplay));

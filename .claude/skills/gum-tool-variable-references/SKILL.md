@@ -117,9 +117,15 @@ Variable references write **hard values** into the `StateSave`. This means at ga
 
 When a variable changes, `DoVariableReferenceReaction` finds all elements that reference the changed element via `ObjectFinder.GetElementReferencesToThis` (filtered to `ReferenceType.VariableReference`). It then applies variable references on those elements too, creating a cascade. Modified elements are auto-saved.
 
+A typed edit also re-reads the rows of the element's other states (Highlighted, Disabled) that read the changed variables, through the same row selection undo uses (`FindRowsToApply`), so a typed edit, an undo and a redo leave a categorized state's followers the same. A row in a loop is not evaluated.
+
 ### Deep Propagation
 
 `DoVariableReferenceReactionOnInstanceVariableSet` handles a subtler case: when an instance's base element has variable references internally, and the changed variable tunnels through. It walks the reference graph to find which inner-instance variables need updating and writes the values directly into the container's state.
+
+## Circular References
+
+Rows in a loop are skipped by the canvas and by `ApplyVariableReferences` and keep their stored values, so repeated applies change nothing. GUM0013 in `HeadlessErrorChecker` names the loop on each element holding a row in it (Errors tab, `gumcli check`), including loops across two elements' default states.
 
 ## Validation
 
@@ -138,6 +144,8 @@ Invalid lines are auto-commented with `//` prefix and a message is shown to the 
 A separate variable-reference flavor lives on `BehaviorSave.ToolOnlyVariableReferences` (a `List<string>`, not a `VariableListSave`). Used by Forms property promotion (#2637 v2): a behavior declares e.g. `ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled"` so the design-time wireframe reflects authored `FormsProperty` values. **Strictly tool-only** — applied by `BehaviorToolOnlyReferencesApplier` invoked from `VariableReferenceLogic.DoVariableReferenceReaction` immediately after the state-level apply. The runtime never traverses this list; the wrapped Forms control's setter (e.g. `FrameworkElement.IsEnabled` → `UpdateState()`) owns the visual at runtime, so applying the reference there would double-write. See `gum-forms-behaviors` for the property-promotion pipeline.
 
 The applier passes a `fallback` resolver into `EvaluatedSyntax.FromSyntaxNode` so identifiers not authored on state fall back to the behavior's `FormsProperty.Value` declarations (mirrors WPF DependencyProperty default values). Plumbed through `RecursiveVariableFinder.Fallback` — any caller that needs the same "default-when-state-empty" shape can use it.
+
+**Precedence between a clicked state and Forms values.** Viewing the component itself, a state clicked in the States tab wins over what a Forms property derives (`IsEnabled` to `ButtonCategoryState`), because the user is authoring how that state looks; `WireframeObjectManager.GetStateForReferences` (via `SelectedStateReferenceMerger`) makes the selected state's values and rows beat the default state's reference rows. Viewing an instance of that component (inside a screen or another component), the instance's Forms values win over visual state values: the applier writes the derived category state into the containing element's default state and removes an authored one that disagrees. The merger only ever sees the containing element's rows, so the component-view rule cannot reach an instance's Forms variables. On an instance, `WireframeObjectManager.ApplySelectedStateAfterCreation` also reapplies the derived value (`BehaviorToolOnlyReferencesApplier.GetInstanceValuesToReassert`) after a non-default container state when an authored Forms value feeds it. `Tests/Gum.Presentation.Tests/StateSelectionCanvasSplashInstanceTests.cs` pins both views.
 
 **Evaluating "defaults-only" (footgun):** To ask "what would this resolve to with *nothing* authored?", do **not** pass an empty `StateSave` to `FromSyntaxNode` — `RecursiveVariableFinder` resolves by name through `ParentContainer`, so an empty state owned by a real element still leaks that element's authored values (routes to its `DefaultState`). Call `EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly(node, fallback)` instead; it owns the state with a throwaway empty element so every identifier falls through to the `fallback`. The applier uses this for the "skip if equal to resting wireframe" check (issue #3082).
 

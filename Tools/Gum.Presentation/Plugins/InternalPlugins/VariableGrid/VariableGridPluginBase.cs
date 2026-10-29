@@ -67,6 +67,17 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         this.InstanceAdd += (element, _) => _variableReferenceLogic.ReapplySiblingDependentReferences(element);
         this.InstanceDelete += (element, _) => ReapplySiblingDependentReferencesOn(element);
         this.InstanceReordered += _ => ReapplySiblingDependentReferencesOn(null);
+        this.WireframeRefreshed += HandleWireframeRefreshed;
+    }
+
+    // A container's shader parameters come from the effect the editor compiles when it creates its
+    // objects, which can happen after the grid for the selection was built.
+    private void HandleWireframeRefreshed()
+    {
+        if (_propertyGridManager.HaveShaderParametersChanged())
+        {
+            _propertyGridManager.RefreshEntireGrid(force: true);
+        }
     }
 
     // Index (position among siblings) goes stale when a structural change moves instances around.
@@ -115,12 +126,7 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
 
     private void HandleAfterUndo()
     {
-        // References in other elements hold values read from the undone element; they follow it
-        // back as they followed the edit.
-        if (_selectedState.SelectedElement is { } element)
-        {
-            _variableReferenceLogic.ApplyReferencesToElement(element, trySave: true);
-        }
+        // The undo itself already re-read the references (ElementUndoStrategy), before this event.
         // An undo can result in variables added or removed, so do a full refresh.
         _propertyGridManager.RefreshEntireGrid(force: true);
     }

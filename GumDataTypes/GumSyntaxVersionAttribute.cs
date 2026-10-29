@@ -36,6 +36,8 @@ public class GumSyntaxVersionAttribute : Attribute
     /// with. See PR #4342 / issue #4341.
     /// Version 5 lets codegen assign <c>ColorOperation</c> on <c>SpriteRuntime</c>/<c>NineSliceRuntime</c>
     /// (the tool-editable Sprite/NineSlice variable). See issue #4880.
+    /// Version 7 adds <c>GumElementAttribute</c> and <c>ObjectFinder.GetRequiredElementSave</c>, which
+    /// generated classes use to name and fetch their element. See issue #6817.
     /// </summary>
     public int Version;
 }

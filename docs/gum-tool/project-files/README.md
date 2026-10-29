@@ -41,7 +41,7 @@ The layout above uses the JSON format (`.gumj`), which new projects use. Project
 
 The `.gumj` file is the main project file opened by the Gum tool. It is a JSON file containing project-wide settings such as canvas size, font ranges, and display options. It also contains references to all screens, components, and standard elements in the project. Older projects use an XML project file with the `.gumx` extension, which holds the same data.
 
-For details on project settings, see the [Project Properties](../project-properties.md) page.
+For details on project settings, see the [Project Settings](../project-properties.md) page.
 
 ## Element Files
 
@@ -107,7 +107,7 @@ A JSON file storing per-user UI state such as which tree nodes are expanded in t
 
 ## Font Character Set File (.gumfcs)
 
-A text file containing the set of Unicode characters to include when generating bitmap fonts. This file is automatically created with default characters (ASCII 32-126 and Latin Supplement 160-255) when the project is saved. The **Use Font Character File (.gumfcs)** option in [Project Properties](../project-properties.md) controls whether the Gum tool reads this file to determine font character ranges.
+A text file containing the set of Unicode characters to include when generating bitmap fonts. This file is automatically created with default characters (ASCII 32-126 and Latin Supplement 160-255) when the project is saved. The **Use Font Character File (.gumfcs)** option on the **Fonts** page of the [Settings window](../fonts.md) controls whether the Gum tool reads this file to determine font character ranges.
 
 If customized, this file should be committed to version control so all team members generate fonts with the same character set.
 
@@ -186,7 +186,7 @@ A project file can hold a character range for one specific font, in the `FontRan
 
 An entry applies only when a Text uses the font it names. A font file matches by its whole path, so `Fonts/Icon.ttf` does not match a Text that uses `Fonts/Icons.ttf`, and an absolute path does not match a relative one. The direction of the slashes does not matter. An installed font matches by family name, ignoring letter case.
 
-When no Text uses the font an entry names, the Gum tool reports a **GUM0010** warning in the [Errors tab](../editor-tab.md), naming the entry. The entry has no effect until it matches a font, so a typo looks the same as the setting doing nothing. To resolve it, correct the `FontFamily` to match the name or path the Text uses, or remove the entry. The [Font Settings](../fonts.md#ranges-for-one-font) tab edits these entries and shows the same warning on the row. `gumcli check` reports GUM0010 too.
+When no Text uses the font an entry names, the Gum tool reports a **GUM0010** warning in the [Errors tab](../editor-tab.md), naming the entry. The entry has no effect until it matches a font, so a typo looks the same as the setting doing nothing. To resolve it, correct the `FontFamily` to match the name or path the Text uses, or remove the entry. The [Fonts](../fonts.md#ranges-for-one-font) page edits these entries and shows the same warning on the row. `gumcli check` reports GUM0010 too.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
@@ -196,7 +196,15 @@ Available in November 2026, or now if building Gum from source.
 
 A font range is a comma separated list of characters and ranges, such as `32-126,160-255`. Each item is either a single character code or a `start-end` pair, written as numbers with no spaces. A value like `50-40`, where the end comes before the start, `abc`, or `32-126, 160-255` with a space is not valid.
 
-When a range is not valid, the font is still created but without the characters you asked for. The BMFont font generator uses the default range instead, and the KernSmith font generator skips each part it cannot read, which can leave the font with no characters from that entry. The Gum tool reports a **GUM0011** warning in the [Errors tab](../editor-tab.md), naming the font and the range it found. The project-wide range is checked as well as each font's own entry. To resolve it, correct the range in the [Font Settings](../fonts.md#character-ranges) tab or in the project file. `gumcli check` reports GUM0011 too.
+When a range is not valid, the font is still created but without the characters you asked for. The BMFont font generator uses the default range instead, and the KernSmith font generator skips each part it cannot read, which can leave the font with no characters from that entry. The Gum tool reports a **GUM0011** warning in the [Errors tab](../editor-tab.md), naming the font and the range it found. The project-wide range is checked as well as each font's own entry. To resolve it, correct the range on the [Fonts](../fonts.md#character-ranges) page or in the project file. `gumcli check` reports GUM0011 too.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Text Outside Its Font Range (GUM0012)
+
+A font only has the characters in its ranges. When a Text's value, in any state, has a character its font's ranges leave out, the Gum tool reports a **GUM0012** warning in the [Errors tab](../editor-tab.md), naming the Text and the character codes. At runtime the character draws as `?`. To resolve it, add the codes to the font's range on the [Fonts](../fonts.md#character-ranges) page. Line breaks and tabs are not checked, and neither is a Text that uses a pre-built `.fnt` file. `gumcli check` reports GUM0012 too.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.

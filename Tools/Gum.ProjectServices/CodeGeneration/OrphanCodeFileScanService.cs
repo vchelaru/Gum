@@ -102,8 +102,25 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
             codeRoot, expectedGenerated, expectedCustom, elementSettingsDirectories, expectedElementSettings)
         {
             AdditionalCodeRoots = additionalCodeRoots,
+            CurrentMapping = CreateMapping(projectSettings),
+            PreviousMapping = previousSettings == null ? null : CreateMapping(previousSettings),
         };
     }
+
+    private CustomCodeMapping? CreateMapping(CodeOutputProjectSettings settings)
+    {
+        string? generatedFolder = _fileLocationsService.GetCodeOutputFolder(settings);
+        string? customFolder = _fileLocationsService.GetCustomCodeOutputFolder(settings);
+        if (generatedFolder == null || customFolder == null)
+        {
+            return null;
+        }
+        return new CustomCodeMapping(
+            WithSeparator(Normalize(generatedFolder).FullPath), WithSeparator(Normalize(customFolder).FullPath));
+    }
+
+    private static string WithSeparator(string folder) =>
+        Path.EndsInDirectorySeparator(folder) ? folder : folder + Path.DirectorySeparatorChar;
 
     /// <inheritdoc/>
     public OrphanCodeFileScanResult Execute(OrphanCodeFileScanPlan plan, CancellationToken cancellationToken)
@@ -113,11 +130,13 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
 
         if (plan.CodeRoot != null)
         {
-            isTruncated = AddCodeFileOrphans(plan, plan.CodeRoot, orphans, cancellationToken);
+            isTruncated = AddCodeFileOrphans(plan, plan.CodeRoot, orphans, cancellationToken,
+                new[] { plan.CurrentMapping, plan.PreviousMapping });
         }
         foreach (string additionalRoot in plan.AdditionalCodeRoots)
         {
-            isTruncated |= AddCodeFileOrphans(plan, additionalRoot, orphans, cancellationToken);
+            isTruncated |= AddCodeFileOrphans(plan, additionalRoot, orphans, cancellationToken,
+                new[] { plan.PreviousMapping });
         }
         AddElementSettingsOrphans(plan, orphans, cancellationToken);
 
@@ -174,7 +193,9 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
             if (generatedFileName != null)
             {
                 expectedGenerated.Add(Normalize(generatedFileName));
-                expectedCustom.Add(Normalize(GetCustomCodePathFor(generatedFileName)));
+                FilePath? customFileName = _fileLocationsService.GetCustomCodeFileName(
+                    element, elementSettings, projectSettings, visualApi);
+                expectedCustom.Add(Normalize(customFileName ?? GetCustomCodePathFor(generatedFileName)));
             }
         }
 
@@ -191,7 +212,7 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
     /// custom siblings. Returns whether the walk stopped at <see cref="MaxCodeRootDirectories"/>.
     /// </summary>
     private static bool AddCodeFileOrphans(OrphanCodeFileScanPlan plan, string root, List<OrphanCodeFile> orphans,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, CustomCodeMapping?[] mappings)
     {
         GeneratedFileWalk walk = WalkGeneratedFiles(
             root,
@@ -200,12 +221,20 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
             MaxCodeRootDirectories,
             cancellationToken);
 
+        // With custom code in its own folder, an expected generated file can still have a custom file
+        // left beside it (or in an old custom folder) that no longer belongs there. Only then is the
+        // header of an expected file worth reading.
+        bool checksStrayCustomCode = mappings.Any(mapping => mapping != null && mapping.IsSplit);
+        HashSet<FilePath> reportedCustom = new HashSet<FilePath>(
+            orphans.Where(orphan => orphan.Kind == OrphanCodeFileKind.CustomCode).Select(orphan => orphan.FilePath));
+
         foreach (string file in walk.Files)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             FilePath generatedPath = Normalize(file);
-            if (plan.ExpectedGenerated.Contains(generatedPath) || IsInBuildOutputFolder(generatedPath))
+            bool isExpected = plan.ExpectedGenerated.Contains(generatedPath);
+            if (IsInBuildOutputFolder(generatedPath) || (isExpected && !checksStrayCustomCode))
             {
                 continue;
             }
@@ -213,16 +242,32 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
             string? elementName = TryReadGeneratedHeaderElementName(generatedPath);
             if (elementName == null)
             {
-                // Not written by Gum's code generation - leave it alone.
+                // Not written by Gum code generation - leave it alone.
                 continue;
             }
 
-            orphans.Add(new OrphanCodeFile(generatedPath, OrphanCodeFileKind.Generated, elementName));
-
-            FilePath customCodePath = GetCustomCodePathFor(generatedPath);
-            if (!plan.ExpectedCustom.Contains(customCodePath) && File.Exists(customCodePath.FullPath))
+            if (!isExpected)
             {
-                orphans.Add(new OrphanCodeFile(customCodePath, OrphanCodeFileKind.CustomCode, elementName));
+                orphans.Add(new OrphanCodeFile(generatedPath, OrphanCodeFileKind.Generated, elementName));
+            }
+
+            List<FilePath> candidates = new List<FilePath> { GetCustomCodePathFor(generatedPath) };
+            foreach (CustomCodeMapping? mapping in mappings)
+            {
+                if (mapping != null)
+                {
+                    candidates.Add(mapping.CustomFor(generatedPath));
+                }
+            }
+
+            foreach (FilePath candidate in candidates)
+            {
+                FilePath customCodePath = Normalize(candidate);
+                if (!plan.ExpectedCustom.Contains(customCodePath) && File.Exists(customCodePath.FullPath)
+                    && reportedCustom.Add(customCodePath))
+                {
+                    orphans.Add(new OrphanCodeFile(customCodePath, OrphanCodeFileKind.CustomCode, elementName));
+                }
             }
         }
 

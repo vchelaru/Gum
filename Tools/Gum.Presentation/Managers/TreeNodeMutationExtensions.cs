@@ -14,7 +14,8 @@ public static class TreeNodeMutationExtensions
 {
     /// <summary>
     /// Moves <paramref name="node"/> to <paramref name="desiredIndex"/> among its current parent's
-    /// children. No-op if it is already there, or if it currently has no parent.
+    /// children (an index past the end moves it last). No-op if it is already there, if the index is
+    /// negative, or if it currently has no parent.
     /// </summary>
     /// <remarks>
     /// Shared by ElementTreeViewManager's element/instance and behavior-instance reorder paths
@@ -24,13 +25,15 @@ public static class TreeNodeMutationExtensions
     public static void MoveToIndex(this ITreeNodeMutable node, int desiredIndex)
     {
         ITreeNodeMutable? parent = node.Parent;
-        if (parent == null || parent.IndexOfChild(node) == desiredIndex)
+        // A negative index means the caller could not find where the node belongs (#7005); leave it
+        // where it is rather than detach it and fail to reinsert it.
+        if (parent == null || desiredIndex < 0 || parent.IndexOfChild(node) == desiredIndex)
         {
             return;
         }
 
         parent.RemoveChild(node);
-        parent.InsertChild(desiredIndex, node);
+        parent.InsertChild(Math.Min(desiredIndex, parent.ChildCount), node);
     }
 
     /// <summary>

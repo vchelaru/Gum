@@ -46,6 +46,12 @@ The following table shows the available variables that can be used for inline st
 
 Note that changing Font and FontSize results in new Fonts created in the Font Cache. States must exist on the Text standard definition to be used.
 
+The `Glyph` tag inserts a character that has no key. For example, `[Glyph=57344]` inserts the character U+E000, which draws when the font has it.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 BBCode can span multiple lines, whether the newlines happen due to line wrapping or through the addition of newlines in the text.
 
 <figure><img src="../../../.gitbook/assets/MultiLineStyledText.png" alt=""><figcaption><p>Text object with inline styling and explicit line breaks</p></figcaption></figure>

@@ -11,8 +11,22 @@ Available in September 2026, or now if building Gum from source.
 ## What the Scan Reports
 
 * **Generated code files** (`MyScreen.Generated.cs`) with no matching element. These are recreated exactly by regenerating the element, so deleting one loses nothing. The **Delete File** button moves it to the Recycle Bin immediately.
-* **Custom code files** (`MyScreen.cs`) sitting next to an orphaned generated file. These contain your own code, so Gum asks you to confirm before moving the file to the Recycle Bin.
+* **Custom code files** (`MyScreen.cs`) belonging to an orphaned generated file, in the same folder or in the Custom Code Folder at the matching path. These contain your own code, so Gum asks you to confirm before moving the file to the Recycle Bin.
 * **Element code settings files** (`MyScreen.codsj`) alongside the element XML, holding the per-element settings shown on the **Code** tab. Gum confirms before removing these too.
+
+## Renames, Moves and Deletes
+
+Renaming an element, moving it to another folder in the Gum project, or changing its base type renames or moves its code files to match:
+
+* The old `.Generated.cs` is deleted and regenerated at the new path.
+* The custom `.cs` is moved, with its `namespace` and `partial class` lines rewritten to match. If a file is already at the destination, Gum asks before replacing it, and the replaced file goes to the Recycle Bin.
+* The element's `.codsj` settings file moves with it.
+
+When you delete an element, Gum removes its `.Generated.cs` and `.codsj` files. The custom `.cs` file has its own **Delete custom code file (contains your code)** checkbox, which is unchecked by default and only appears when the file holds code beyond the empty stub. Everything Gum removes goes to the Recycle Bin. Deleting several elements or a folder shows one dialog for the whole batch. Elements set to `NeverGenerate` keep their files in every case.
+
+## Files Left at an Old Location
+
+A code settings change (see [When a Folder Setting Changes](README.md#when-a-folder-setting-changes)), or an element you renamed outside Gum, can leave files at a path the current settings no longer use. If the element still exists, the entry offers **Migrate** instead of **Delete File**. Migrating moves the files to where the current settings put them, keeps a backup, and can be undone with **Content > Restore Last Code File Migration**.
 
 ## What the Scan Does Not Report
 

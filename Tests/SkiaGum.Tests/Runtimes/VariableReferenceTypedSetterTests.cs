@@ -41,6 +41,8 @@ public class VariableReferenceTypedSetterTests : BaseTestClass
     {
         // The first Initialize in the process wires the Skia renderable factory and property setter.
         _systemManagers.Initialize();
+        // Initialize defaults to ThrowException (#6889); the sweep assigns fonts and files that do not exist.
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
         StandardElementsManager.Self.Initialize();
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;

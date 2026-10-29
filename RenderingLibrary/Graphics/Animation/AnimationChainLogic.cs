@@ -26,6 +26,8 @@ public class AnimationChainLogic
     bool _animate;
     bool _justCycled;
     string? _desiredChainName;
+    // The chain object last named, so a replaced list holding the same name counts as a new naming.
+    AnimationChain? _namedChain;
     AnimationChainList? _chains;
 
     public AnimationChainList? AnimationChains
@@ -44,14 +46,43 @@ public class AnimationChainLogic
         get => CurrentChain?.Name;
         set
         {
+            // Matches FlatRedBall: the chain already playing keeps playing, and a different chain
+            // restarts at time 0, showing the frame there (the last frame of a Reverse chain).
+            if (CurrentChain != null && CurrentChain.Name == value)
+            {
+                // Naming the chain already playing (even the implicit first one) keeps its
+                // playback (time is kept), but the first naming still seeds looping from the chain
+                // and applies the frame shown at the current time, as naming a chain always has.
+                // A different chain object with the same name (a replaced list) counts as a new naming.
+                if (value != _desiredChainName || !ReferenceEquals(CurrentChain, _namedChain))
+                {
+                    _desiredChainName = value;
+                    _namedChain = CurrentChain;
+                    _isLooping = CurrentChain.Loop;
+                    if (_timeIntoAnimation >= 0)
+                    {
+                        UpdateFrameBasedOffOfTimeIntoAnimation();
+                    }
+                    UpdateToCurrentAnimationFrame();
+                }
+                return;
+            }
             _desiredChainName = value;
             _currentChainIndex = -1;
             if (_chains != null && _chains.Count > 0)
             {
+                // Only a name that resolves restarts; a missing or empty name leaves time and frame as they were.
+                if (ContainsChainNamed(value))
+                {
+                    _timeIntoAnimation = 0;
+                    _currentFrameIndex = 0;
+                }
                 RefreshCurrentChainToDesiredName();
                 if (CurrentChain != null)
                 {
+                    _namedChain = CurrentChain;
                     _isLooping = CurrentChain.Loop;
+                    UpdateFrameBasedOffOfTimeIntoAnimation();
                 }
                 UpdateToCurrentAnimationFrame();
             }
@@ -93,6 +124,11 @@ public class AnimationChainLogic
         {
             time += chain[i].FrameLength;
         }
+        if (chain.IsReversed)
+        {
+            // A mirrored timeline reaches the frame at its end first.
+            time = PlaybackTimeline.ToCycleTime(time + chain[_currentFrameIndex].FrameLength, chain.TotalLength, true);
+        }
         _timeIntoAnimation = time;
     }
 
@@ -118,10 +154,6 @@ public class AnimationChainLogic
             if (value < 0)
             {
                 SeekToFrame(chain, 0);
-            }
-            else if (!_isLooping && value >= chain.TotalLength)
-            {
-                _currentFrameIndex = chain.Count - 1;
             }
             else
             {
@@ -209,7 +241,7 @@ public class AnimationChainLogic
             }
             if (KeyframeEvaluator.HasOffsetKeyframes(chain))
             {
-                return KeyframeEvaluator.EvaluateOffset(chain, _isLooping, _currentFrameIndex, ElapsedInCurrentFrame(chain));
+                return KeyframeEvaluator.EvaluateOffset(chain, GlidesAcrossLoop(chain), _currentFrameIndex, ElapsedInCurrentFrame(chain));
             }
             AnimationFrame frame = chain[_currentFrameIndex];
             return (frame.RelativeX, frame.RelativeY);
@@ -244,14 +276,30 @@ public class AnimationChainLogic
         {
             frameStart += chain[i].FrameLength;
         }
-        return System.Math.Max(0, _timeIntoAnimation - frameStart);
+        double forwardTime = GetTimelinePoint(chain).ForwardTime;
+        return System.Math.Clamp(forwardTime - frameStart, 0, chain[System.Math.Min(_currentFrameIndex, chain.Count - 1)].FrameLength);
     }
+
+    // The position on the chain's forward timeline that the current cycle time shows. A looping chain
+    // wraps a time past the end of the cycle; a non-looping one holds the end.
+    TimelinePoint GetTimelinePoint(AnimationChain chain)
+    {
+        double cycleLength = PlaybackTimeline.CycleLength(chain.TotalLength, chain.PingPong);
+        double cycleTime = _timeIntoAnimation;
+        if (_isLooping && cycleLength > 0 && cycleTime >= cycleLength)
+        {
+            cycleTime %= cycleLength;
+        }
+        return PlaybackTimeline.Map(cycleTime, chain.TotalLength, chain.PingPong, chain.IsReversed);
+    }
+
+    bool GlidesAcrossLoop(AnimationChain chain) => PlaybackTimeline.GlidesAcrossLoop(_isLooping, chain.PingPong);
 
     void InvokeApplyKeyframeColor(AnimationChain chain)
     {
         if (ApplyKeyframeColor != null && KeyframeEvaluator.HasColorKeyframes(chain))
         {
-            ApplyKeyframeColor(KeyframeEvaluator.EvaluateColor(chain, _isLooping, _currentFrameIndex, ElapsedInCurrentFrame(chain)));
+            ApplyKeyframeColor(KeyframeEvaluator.EvaluateColor(chain, GlidesAcrossLoop(chain), _currentFrameIndex, ElapsedInCurrentFrame(chain)));
         }
     }
 
@@ -283,13 +331,14 @@ public class AnimationChainLogic
         }
 
         int frameBefore = _currentFrameIndex;
+        double cycleLength = PlaybackTimeline.CycleLength(animationChain.TotalLength, animationChain.PingPong);
         double advance = secondDifference * _animationSpeed;
         _timeIntoAnimation += advance;
         bool justFinished = false;
 
         if (_isLooping)
         {
-            _timeIntoAnimation = MathFunctions.Loop(_timeIntoAnimation, animationChain.TotalLength, out _justCycled);
+            _timeIntoAnimation = MathFunctions.Loop(_timeIntoAnimation, cycleLength, out _justCycled);
         }
         else
         {
@@ -301,9 +350,9 @@ public class AnimationChainLogic
                 _timeIntoAnimation = 0;
                 justFinished = advance < 0;
             }
-            else if (_timeIntoAnimation >= animationChain.TotalLength)
+            else if (_timeIntoAnimation >= cycleLength)
             {
-                _timeIntoAnimation = animationChain.TotalLength;
+                _timeIntoAnimation = cycleLength;
                 justFinished = true;
             }
         }
@@ -318,15 +367,7 @@ public class AnimationChainLogic
             _animate = false;
         }
 
-        if (justFinished && _timeIntoAnimation > 0)
-        {
-            // The end time is past the last frame, so the frame lookup would wrap to frame 0.
-            _currentFrameIndex = animationChain.Count - 1;
-        }
-        else
-        {
-            UpdateFrameBasedOffOfTimeIntoAnimation();
-        }
+        UpdateFrameBasedOffOfTimeIntoAnimation();
 
         bool didApplyFrame = _currentFrameIndex != frameBefore && UpdateToCurrentAnimationFrame();
         if (!didApplyFrame)
@@ -367,28 +408,48 @@ public class AnimationChainLogic
 
     void UpdateFrameBasedOffOfTimeIntoAnimation()
     {
-        double timeIntoAnimation = _timeIntoAnimation;
-        if (timeIntoAnimation < 0)
+        if (_timeIntoAnimation < 0)
         {
             throw new ArgumentException("The timeIntoAnimation argument must be 0 or positive");
         }
-        if (CurrentChain == null || CurrentChain.Count == 0 || CurrentChain.TotalLength == 0)
+        AnimationChain? chain = CurrentChain;
+        if (chain == null || chain.Count == 0 || chain.TotalLength == 0)
         {
             return;
         }
 
-        int frameIndex = 0;
-        while (timeIntoAnimation >= 0)
+        TimelinePoint point = GetTimelinePoint(chain);
+        // On a frame boundary the frame being entered shows: the later one going forward, the
+        // earlier one going backward. The end of the timeline is the last frame going forward and
+        // the first going backward.
+        double frameEnd = 0;
+        int frameIndex = chain.Count - 1;
+        for (int i = 0; i < chain.Count; i++)
         {
-            double frameTime = CurrentChain[frameIndex].FrameLength;
-            if (timeIntoAnimation < frameTime)
+            frameEnd += chain[i].FrameLength;
+            if (point.IsBackward ? point.ForwardTime <= frameEnd : point.ForwardTime < frameEnd)
             {
-                _currentFrameIndex = frameIndex;
+                frameIndex = i;
                 break;
             }
-            timeIntoAnimation -= frameTime;
-            frameIndex = (frameIndex + 1) % CurrentChain.Count;
         }
+        _currentFrameIndex = frameIndex;
+    }
+
+    bool ContainsChainNamed(string? name)
+    {
+        if (_chains == null)
+        {
+            return false;
+        }
+        for (int i = 0; i < _chains.Count; i++)
+        {
+            if (_chains[i].Name == name)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void RefreshCurrentChainToDesiredName()
@@ -402,7 +463,14 @@ public class AnimationChainLogic
         {
             if (_chains[i].Name == _desiredChainName)
             {
+                bool isNewlyResolved = _currentChainIndex != i;
                 _currentChainIndex = i;
+                if (isNewlyResolved)
+                {
+                    // A chain resolved after its name was set shows the frame at the current time,
+                    // as a restart does (the last frame of a Reverse chain at time 0).
+                    UpdateFrameBasedOffOfTimeIntoAnimation();
+                }
                 break;
             }
         }

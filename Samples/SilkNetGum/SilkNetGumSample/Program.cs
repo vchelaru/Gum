@@ -117,6 +117,10 @@ unsafe class Program
         SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
             SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
 
+        // Adds .fx and .slang files to SourceShaderFile (ShadowDusk converts them to SkSL); the .sksl
+        // resolver above keeps handling .sksl files.
+        GumUI.UseShadowDusk();
+
         // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
         GumUI.UseKeyboardDefaults();
 

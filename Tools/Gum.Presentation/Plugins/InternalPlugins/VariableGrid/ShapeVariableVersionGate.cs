@@ -97,6 +97,12 @@ internal class ShapeVariableVersionGate
             ["LocalizeText"] = (int)GumProjectSave.GumxVersions.LocalizeTextExpansion,
             // Issue #4880 - Sprite/NineSlice ColorOperation, gated at v5.
             ["ColorOperation"] = (int)GumProjectSave.GumxVersions.ColorOperationExpansion,
+            // Issue #6983 - NineSlice per-side border scale overrides, gated at v7 with ShaderParameters
+            // (both landed before v7 shipped, so they share the one slot).
+            ["CustomBorderScaleLeft"] = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion,
+            ["CustomBorderScaleTop"] = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion,
+            ["CustomBorderScaleRight"] = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion,
+            ["CustomBorderScaleBottom"] = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion,
         };
     }
 

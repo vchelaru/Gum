@@ -104,7 +104,7 @@ public class CodeOutputPluginSettingsPageTests : BaseTestClass
     {
         SettingsPage page = _registry.Pages.ShouldHaveSingleItem();
 
-        page.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Output Library");
+        page.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Output library");
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public class CodeOutputPluginSettingsPageTests : BaseTestClass
         page.Activated!.Invoke();
 
         // The density rows exist only for the libraries that use them, so they show the page reads the loaded settings.
-        ((CodeGenerationSettingsViewModel)page.Content).BuildCategories()[0].Members
+        ((CodeGenerationSettingsViewModel)page.Content).BuildCategories().SelectMany(category => category.Members)
             .Select(member => member.Name).ShouldContain("Adjust Pixel Values for Density");
     }
 

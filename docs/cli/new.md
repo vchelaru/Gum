@@ -6,13 +6,13 @@ gumcli new [<path>] [--template <name>] [--platform <name>] [--source-linked] [-
 
 Creates a new Gum project. The path is optional — when omitted, a `GumProject` subdirectory is created in the current directory.
 
-Add `--platform` to also create a runnable game project for MonoGame, KNI, raylib, Stride, or Silk.NET. Without it, only a Gum project is created.
+Add `--platform` to also create a runnable game project for MonoGame, KNI, KNI with Skia, raylib, Stride, or Silk.NET. Without it, only a Gum project is created.
 
 ## Options
 
 - `<path>` *(optional)* — Path for the new project. Pass a `.gumj` (JSON) or `.gumx` (XML) extension to choose the format. If no extension is given, creates `<path>/<name>.gumj` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumj`. With `--platform`, the path names the game project folder instead, and defaults to `MyGumGame`.
 - `--template` / `-t` — Template to use. Default: `forms`.
-- `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `raylib`, `stride`, `silknet`.
+- `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `kniskia`, `raylib`, `stride`, `silknet`.
 - `--source-linked`: With `--platform`, references the platform's runtime project in a Gum source checkout instead of the NuGet package. See [Linking to Gum Source](#linking-to-gum-source).
 - `--no-restore`: With `--platform`, skips the `dotnet restore` that otherwise runs after the project is created.
 
@@ -69,6 +69,10 @@ The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCo
 `--platform` and `--source-linked` are available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+{% hint style="warning" %}
+`kniskia` creates a KNI game that draws Gum through Skia. Its default package reference to `Gum.KniSkia` restores only once that package is on NuGet, planned for December 2026. Until then, create the project with `--source-linked`.
+{% endhint %}
+
 ## Linking to Gum Source
 
 ```
@@ -89,6 +93,7 @@ gumcli new MyProject --template forms
 gumcli new MyProject -t empty
 gumcli new MyGame --platform monogame
 gumcli new MyGame -p kni
+gumcli new MyGame -p kniskia --source-linked
 gumcli new MyGame -p raylib -t empty
 gumcli new MyGame -p silknet
 gumcli new MyGame -p silknet --source-linked

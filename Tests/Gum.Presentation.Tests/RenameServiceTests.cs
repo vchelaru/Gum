@@ -273,6 +273,38 @@ public class RenameServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleRename_WithACustomFolder_MovesEachHalfWithinItsOwnFolder()
+    {
+        GivenFile("Mine/Components/OldName.cs",
+            "namespace MyGame.Components\r\n" +
+            "{\r\n" +
+            "    partial class OldName\r\n" +
+            "    {\r\n" +
+            "        partial void CustomInitialize()\r\n" +
+            "        {\r\n" +
+            "            HandWrittenMarker();\r\n" +
+            "        }\r\n" +
+            "    }\r\n" +
+            "}\r\n");
+        GivenFile("Gen/Components/OldName.Generated.cs", "//stale generated file");
+
+        ComponentSave element = GivenComponentInProject("NewName");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+        projectSettings.GeneratedCodeFolder = "Gen";
+        projectSettings.CustomCodeFolder = "Mine";
+
+        _renameService.HandleRename(element, oldName: "OldName", projectSettings, VisualApi.Gum);
+
+        File.Exists(Path.Combine(_codeProjectRoot, "Mine", "Components", "OldName.cs")).ShouldBeFalse();
+        File.Exists(Path.Combine(_codeProjectRoot, "Gen", "Components", "OldName.Generated.cs")).ShouldBeFalse();
+        string movedCustomCode = File.ReadAllText(Path.Combine(_codeProjectRoot, "Mine", "Components", "NewName.cs"));
+        movedCustomCode.ShouldContain("partial class NewName");
+        movedCustomCode.ShouldContain("HandWrittenMarker();");
+        File.Exists(Path.Combine(_codeProjectRoot, "Gen", "Components", "NewName.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_codeProjectRoot, "Gen", "Components", "NewName.cs")).ShouldBeFalse("the custom file never lands beside the generated one");
+    }
+
+    [Fact]
     public void HandleRename_WithAPrefix_RenamesAnElementInPlace()
     {
         GivenFile("GumComponents/OldName.cs",

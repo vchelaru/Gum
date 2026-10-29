@@ -72,6 +72,20 @@ public class FormsThemeImporter : IFormsThemeImporter
     /// <inheritdoc/>
     public async Task<bool> ImportThemeAsync(string themeName, bool isIncludeDemoScreenGum)
     {
+        try
+        {
+            return await ImportThemeCoreAsync(themeName, isIncludeDemoScreenGum);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // The dialog's handler is async void, so nothing past here would see it.
+            _dialogService.ShowMessage("Add Forms failed: " + exception.Message);
+            return false;
+        }
+    }
+
+    private async Task<bool> ImportThemeCoreAsync(string themeName, bool isIncludeDemoScreenGum)
+    {
         // Prerequisites have already been surfaced to the user (inline in the Add Forms dialog,
         // or implicitly by opting in to Forms at project creation) — no separate confirmation popup.
         if (_projectState.GumProjectSave is not { } project)
@@ -103,6 +117,21 @@ public class FormsThemeImporter : IFormsThemeImporter
 
         bool isDefaultTheme = string.Equals(themeName, _formsFileService.DefaultThemeName, StringComparison.OrdinalIgnoreCase);
         ImportSelections selections = BuildSelections(theme, isDefaultTheme, isIncludeDemoScreenGum);
+
+        // A theme is one unit: importing around a file it lists for this request but cannot supply
+        // leaves components pointing at behaviors the project never gets, so nothing is written.
+        // Files outside this request (a Standard of a non-default theme, a demo screen not asked for)
+        // do not matter.
+        List<string> unloadable = GumxSourceProblems.Find(theme)
+            .Where(selections.ReportSourceProblem!)
+            .Select(problem => $"{problem.Name}: {problem.Reason}")
+            .ToList();
+        if (unloadable.Count > 0)
+        {
+            _dialogService.ShowMessage(
+                $"The {themeName} theme is incomplete, so nothing was added:\n\n" + ImportResult.CapLines(unloadable));
+            return false;
+        }
 
         ImportDecision decision = GetImportDecision(theme, selections, isDefaultTheme);
         if (decision == ImportDecision.PickWhatToImport)
@@ -138,8 +167,7 @@ public class FormsThemeImporter : IFormsThemeImporter
         if (result.SkippedElements.Count > 0)
         {
             _dialogService.ShowMessage(
-                "These were not added because files they use could not be found:\n\n" +
-                string.Join("\n", result.SkippedElements));
+                "These were not added:\n\n" + ImportResult.CapLines(result.DescribeSkipped()));
         }
         if (result.NeedsManualSave)
         {
@@ -164,11 +192,19 @@ public class FormsThemeImporter : IFormsThemeImporter
             DirectScreens = isIncludeDemoScreenGum ? theme.Screens.Where(IsDemoScreen).ToList() : new List<ScreenSave>(),
             Behaviors = theme.Behaviors.ToList(),
             Standards = isDefaultTheme ? theme.StandardElements.ToList() : new List<StandardElementSave>(),
+            ReportSourceProblem = problem => problem.Kind switch
+            {
+                ElementItemType.Standard => isDefaultTheme,
+                ElementItemType.Screen => isIncludeDemoScreenGum && IsDemoScreen(problem.Name),
+                _ => true,
+            },
         };
     }
 
-    private static bool IsDemoScreen(ScreenSave screen) =>
-        screen.Name == DemoScreenName || screen.Name.EndsWith("/" + DemoScreenName, StringComparison.Ordinal);
+    private static bool IsDemoScreen(ScreenSave screen) => IsDemoScreen(screen.Name);
+
+    private static bool IsDemoScreen(string name) =>
+        name == DemoScreenName || name.EndsWith("/" + DemoScreenName, StringComparison.Ordinal);
 
     /// <summary>
     /// Opens the Import from .gumx dialog on the theme's own project so the user picks items one by

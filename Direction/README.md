@@ -34,6 +34,8 @@ at most once.
   of significant decisions. See `decisions/README.md`.
 - **`ui-decoupling-plan.md`** — the phased UI/logic decoupling plan behind ADR-0003 (Phases 0–4b,
   now largely complete). Living; its Phase 5 "bet" was decided by ADR-0017.
+- **`settings-design/`** — the design language for Settings window pages (page and row shape, hints,
+  search-ready rules) with the mock and screenshots. Read before building or changing a Settings page.
 - **`avalonia-migration/`** — the execution plan for ADR-0017: `README.md` (primary plan),
   `foundation.md` (what is already done on `main`), `coverage-matrix.md` (every Windows-only
   dependency in the tool graph and the phase that removes it), and one `phase-NN-*.md` per

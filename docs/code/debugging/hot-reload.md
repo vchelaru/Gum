@@ -50,7 +50,7 @@ Hot reload is focused on Gum element definitions. The following are **not** auto
 
 * **Textures and images** — If you change a `.png` file, the cached texture is still used. Restart the game to pick up texture changes.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
-* **Runtime state on existing instances** — Any properties set programmatically at runtime (e.g., changing `Text` or `Width` in code) are overwritten when the corresponding design-time variables are re-applied. Only values defined in the Gum project are restored. See [Preserving Runtime State](#preserving-runtime-state) below for the recommended pattern.
+* **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
 
 ### Known Limitation: Cleared Tags
 
@@ -79,15 +79,23 @@ When `EnableHotReload` is called, Gum creates a `FileSystemWatcher` on the direc
 
 1. The change is detected and a 200ms debounce timer starts. Additional changes within that window reset the timer, so rapid saves (such as the Gum tool writing multiple files at once) are coalesced into a single reload.
 2. On the next `GumService.Update` call after the debounce window, Gum reloads the project from disk.
-3. Gum walks the live visual tree and, for each visual that matches a project element by name, reconciles its design-time children with the new `Instances` list (adding, removing, retyping, and reordering as needed) and re-applies the new default-state variables. Runtime-added children are left in place.
+3. Gum walks the live visual tree and, for each visual that matches a project element by name, reconciles its design-time children with the new `Instances` list (adding, removing, retyping, and reordering as needed) and applies the default-state variables the project changed. Runtime-added children are left in place.
 
-{% hint style="warning" %}
-Re-applying design-time variables overwrites values your code set on those same properties at runtime. If your game writes to UI elements after creation (e.g., populating a label with a score, hiding a panel), that code needs to run again after a reload.
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+A variable the reload does not find changed keeps the value your code gave it. Changing a variable in the Gum tool, or the default of the component an instance is built from, applies the new value over a value your code set. A variable the control's current state also sets is applied again with the state, so a value your code set on it is reset.
+
+A project file that cannot be read during a reload (half written or locked by the editor) leaves the running UI as it was, and the file name and reason are reported through `CustomSetPropertyOnRenderable.PropertyAssignmentError` and the console. Gum retries once after the debounce, and the next complete save reloads normally. An element file that was deleted while the project still lists it is reported and left out, and the rest reloads. A failure while applying a file that loaded is reported the same way and the next complete save reloads.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 ## Preserving Runtime State
 
-Hot reload rebuilds elements from the Gum project, so values your code wrote at runtime are not preserved. The recommended pattern is to subscribe to the `HotReloadCompleted` event and re-apply any runtime state your game relies on.
+Values your code set stay as long as the project does not change those variables. When the project does change a variable, the reload applies it, including to state your game derives from it, such as text computed from a variable. Subscribe to the `HotReloadCompleted` event to set that state again.
 
 `HotReloadCompleted` fires after Gum has finished rebuilding the element tree but before the next frame draws, so changes made in the handler are visible immediately.
 

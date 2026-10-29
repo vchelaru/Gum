@@ -2,7 +2,7 @@
 
 ## Introduction
 
-A font only has the characters you baked into it. If your game shows text you didn't plan for ahead of time — a player's name, a localized string with an accented letter, a currency symbol — a character missing from the font quietly falls back to a blank space. Automatic glyph growth fixes this: when `Text` is assigned a character the current font doesn't have, Gum adds that character to the live font's texture on the spot, and the text renders it immediately.
+A font only has the characters you baked into it. If your game shows text you didn't plan for ahead of time — a player's name, a localized string with an accented letter, a currency symbol — a character missing from the font draws as `?`. Automatic glyph growth fixes this: when `Text` is assigned a character the current font doesn't have, Gum adds that character to the live font's texture on the spot, and the text renders it immediately.
 
 {% hint style="info" %}
 Works on MonoGame, KNI, FNA, and Raylib.

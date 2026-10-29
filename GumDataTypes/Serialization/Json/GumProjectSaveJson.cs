@@ -41,6 +41,9 @@ internal sealed class GumProjectSaveJson
     public bool RestrictFileNamesForAndroid { get; set; }
     public List<GuideRectangle> Guides { get; set; } = new List<GuideRectangle>();
     public List<string> FavoriteComponents { get; set; } = new List<string>();
+    /// <summary>Null (and so omitted) unless <c>gumcli pack --shake</c> trimmed elements.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public List<string>? TrimmedElements { get; set; }
     public string ParentProjectRoot { get; set; } = "";
     public List<string> LocalizationFiles { get; set; } = new List<string>();
     public bool ShowLocalizationInGum { get; set; }
@@ -90,6 +93,7 @@ internal static class GumProjectSaveJsonMapper
             RestrictFileNamesForAndroid = source.RestrictFileNamesForAndroid,
             Guides = new List<GuideRectangle>(source.Guides),
             FavoriteComponents = new List<string>(source.FavoriteComponents),
+            TrimmedElements = source.TrimmedElements.Count > 0 ? new List<string>(source.TrimmedElements) : null,
             ParentProjectRoot = source.ParentProjectRoot,
             LocalizationFiles = new List<string>(source.LocalizationFiles),
             ShowLocalizationInGum = source.ShowLocalizationInGum,
@@ -133,6 +137,7 @@ internal static class GumProjectSaveJsonMapper
             RestrictFileNamesForAndroid = dto.RestrictFileNamesForAndroid,
             Guides = new List<GuideRectangle>(dto.Guides),
             FavoriteComponents = new List<string>(dto.FavoriteComponents),
+            TrimmedElements = dto.TrimmedElements != null ? new List<string>(dto.TrimmedElements) : new List<string>(),
             ParentProjectRoot = dto.ParentProjectRoot,
             ShowLocalizationInGum = dto.ShowLocalizationInGum,
             CurrentLanguageIndex = dto.CurrentLanguageIndex,

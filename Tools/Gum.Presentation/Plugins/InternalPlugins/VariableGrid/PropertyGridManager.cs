@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using Gum.ToolStates;
 using Gum.DataTypes;
@@ -44,6 +46,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly IFileCommands _fileCommands;
     private readonly ObjectFinder _objectFinder;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly ReferencedFileChoices _referencedFileChoices;
+    private readonly IBuiltInShaderFiles _builtInShaderFiles;
     private readonly IDialogService _dialogService;
     private readonly LocalizationService _localizationService;
     private readonly ITabManager _tabManager;
@@ -141,8 +145,10 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         IVariableSaveLogic variableSaveLogic,
         IClipboardService clipboardService,
         IStateEditingIndicatorService stateEditingIndicatorService,
-        IVariableGridHead variableGridHead)
+        IVariableGridHead variableGridHead,
+        IBuiltInShaderFiles builtInShaderFiles)
     {
+        _builtInShaderFiles = builtInShaderFiles;
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
         _undoManager = undoManager;
@@ -157,6 +163,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _typeManager = typeManager;
         _pluginManager = pluginManager;
         _projectState = projectState;
+        _referencedFileChoices = new ReferencedFileChoices(projectState);
         _compositeMemberRegistry = compositeMemberRegistry;
         _nameVerifier = nameVerifier;
         _deleteVariableService = deleteVariableService;
@@ -1034,32 +1041,38 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
             foreach (var row in descriptor.Members)
             {
-                var instanceMember = new InstanceMember
-                {
-                    Name = row.Name,
-                    DetailText = row.DetailText
-                };
-                instanceMember.CustomGetTypeEvent += (_) => row.ValueType;
-                instanceMember.CustomGetEvent += (_) => row.Get();
-                if (row.Set != null)
-                {
-                    instanceMember.CustomSetPropertyEvent += (_, args) => row.Set(args.Value);
-                }
-                if (row.CustomOptions != null)
-                {
-                    instanceMember.CustomOptions = row.CustomOptions;
-                }
-                if (row.PreferredDisplayerKindOverride == VariableDisplayerKind.RemoveButton)
-                {
-                    instanceMember.PreferredDisplayer = typeof(GumDisplayers.RemoveButton);
-                }
-
-                category.Members.Add(instanceMember);
+                category.Members.Add(CreateInstanceMember(row));
             }
 
             categories.Add(category);
         }
         return categories;
+    }
+
+    /// <summary>Materializes one headless <see cref="SyntheticVariableRow"/> into a plain <see cref="InstanceMember"/>.</summary>
+    private static InstanceMember CreateInstanceMember(SyntheticVariableRow row)
+    {
+        var instanceMember = new SyntheticInstanceMember(row.IsDefault, row.ResetToDefault)
+        {
+            Name = row.Name,
+            DetailText = row.DetailText
+        };
+        instanceMember.CustomGetTypeEvent += (_) => row.ValueType;
+        instanceMember.CustomGetEvent += (_) => row.Get();
+        if (row.Set != null)
+        {
+            instanceMember.CustomSetPropertyEvent += (_, args) => row.Set(args.Value);
+        }
+        if (row.CustomOptions != null)
+        {
+            instanceMember.CustomOptions = row.CustomOptions;
+        }
+        if (row.PreferredDisplayerKindOverride == VariableDisplayerKind.RemoveButton)
+        {
+            instanceMember.PreferredDisplayer = typeof(GumDisplayers.RemoveButton);
+        }
+
+        return instanceMember;
     }
 
     private List<MemberCategory> GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave? instance, StateSave stateSave, StateSaveCategory? stateSaveCategory)
@@ -1091,11 +1104,86 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         _compositeMemberLogic.Apply(categories, element, instance);
 
-        UpdateFileFilters(categories);
+        UpdateFileFilters(categories, element, instance);
 
         AdjustFontSourceToggle(categories, stateSave, instance);
 
         AdjustDropshadowFontGeneratorWarning(categories, element, instance);
+
+        AdjustShaderParameters(categories, instance);
+    }
+
+    /// <summary>
+    /// Replaces the saved <c>ShaderParameters</c> text row with one row per parameter the container's
+    /// shader declares, read from the effect the editor compiled for it. With no shader, or one that
+    /// failed to compile, no rows are shown and the saved values are kept.
+    /// </summary>
+    internal void AdjustShaderParameters(List<MemberCategory> categories, InstanceSave? instance)
+    {
+        IReadOnlyList<ShaderParameterInfo> parameters = GetShaderParameters(instance);
+        _shaderParametersSignature = GetShaderParametersSignature(parameters);
+
+        MemberCategory? category = categories.FirstOrDefault(item => item.Name == "Rendering");
+        StateReferencingInstanceMember? textMember = category?.Members
+            .OfType<StateReferencingInstanceMember>()
+            .FirstOrDefault(item => item.RootVariableName == "ShaderParameters");
+        if (category == null || textMember == null)
+        {
+            return;
+        }
+
+        int index = category.Members.IndexOf(textMember);
+        category.Members.RemoveAt(index);
+
+        List<SyntheticVariableRow> rows = ShaderParameterRows.Build(
+            parameters,
+            () => textMember.Value as string,
+            text => textMember.Value = text);
+
+        foreach (SyntheticVariableRow row in rows)
+        {
+            InstanceMember member = CreateInstanceMember(row);
+            member.IsReadOnly = textMember.IsReadOnly;
+            category.Members.Insert(index, member);
+            index++;
+        }
+    }
+
+    // The parameters the last-built rows were made from, so a shader that finishes compiling after the
+    // grid was built (the editor creates its objects after the selection event) is noticed.
+    private string _shaderParametersSignature = "";
+
+    private IReadOnlyList<ShaderParameterInfo> GetShaderParameters(InstanceSave? instance)
+    {
+        GraphicalUiElement? representation = instance == null ? null : _wireframeObjectManager.GetRepresentation(instance);
+        object? effect = (representation?.RenderableComponent as IRenderTargetRenderable)?.RenderTargetEffect;
+        return ShaderParameterReader.Read(effect);
+    }
+
+    // Includes each default, so a recompiled effect with the same parameters but a new default is noticed.
+    // Formatted invariantly so the comparison never depends on the user's culture.
+    private static string GetShaderParametersSignature(IReadOnlyList<ShaderParameterInfo> parameters) =>
+        string.Join(";", parameters.Select(parameter =>
+        {
+            ShaderParameterValue value = parameter.DefaultValue;
+            return string.Create(CultureInfo.InvariantCulture,
+                $"{parameter.Name}:{parameter.Kind}:{parameter.Count}={value.Kind}:{value.Count}:{value.X}:{value.Y}:{value.Z}:{value.W}");
+        }));
+
+    /// <summary>
+    /// True when the selected instance's compiled shader declares different parameters than the rows
+    /// currently shown were built from, so the grid should be rebuilt. Always false for a
+    /// multi-selection, which has no shader rows.
+    /// </summary>
+    public bool HaveShaderParametersChanged()
+    {
+        if (_selectedState.SelectedInstances.Count() != 1)
+        {
+            return false;
+        }
+
+        string current = GetShaderParametersSignature(GetShaderParameters(_selectedState.SelectedInstance));
+        return current != _shaderParametersSignature;
     }
 
     private readonly TextDropshadowFontGeneratorWarningLogic _textDropshadowFontGeneratorWarningLogic = new();
@@ -1129,7 +1217,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
     }
 
-    private void UpdateFileFilters(List<MemberCategory> categories)
+    internal void UpdateFileFilters(List<MemberCategory> categories, ElementSave element, InstanceSave? instance)
     {
         foreach (var category in categories)
         {
@@ -1139,9 +1227,52 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 var filter = GetFileFilterForRootVariableName(rootVariableName);
                 if (filter != null)
                 {
-                    member.PropertiesToSetOnDisplayer["Filter"] = filter;
+                    SetDisplayerProperty(member, "Filter", filter);
+                    SetFileChoices(member, ReferencedFileChoices.AcceptingExtensions(filter));
+                    if (rootVariableName == "SourceShaderFile")
+                    {
+                        // The shipped shaders are listed after the project's own; picking one copies it in.
+                        SetDisplayerProperty(member, "BuiltInChoices", (Func<IReadOnlyList<string>, IReadOnlyList<string>>)_builtInShaderFiles.GetOffered);
+                        SetDisplayerProperty(member, "ImportBuiltIn", (Func<string, string?>)_builtInShaderFiles.CopyIntoProject);
+                    }
+                }
+                else if (rootVariableName == "SourceFile")
+                {
+                    // The picker has no filter here; the list offers what a committed SourceFile accepts.
+                    SetFileChoices(member, file => _setVariableLogic.GetWhySourcefileIsInvalid(file, element, instance, "SourceFile") == null);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Turns a file row's text box into a drop-down of the files the project already references
+    /// that <paramref name="isAccepted"/> allows. The list is read when the drop-down opens.
+    /// </summary>
+    private void SetFileChoices(InstanceMember member, Func<string, bool> isAccepted)
+    {
+        SetDisplayerProperty(member, "FileChoices",
+            (Func<string?, IReadOnlyList<string>>)(current => _referencedFileChoices.GetChoices(isAccepted, current)));
+    }
+
+    // A row shown for one instance is retargeted onto the next instance's entry (see
+    // StateReferencingInstanceMember.Retarget), which carries its own displayer properties; setting
+    // them on the member alone would lose them as soon as another instance is selected.
+    private static void SetDisplayerProperty(InstanceMember member, string key, object value)
+    {
+        member.PropertiesToSetOnDisplayer[key] = value;
+        if (member is StateReferencingInstanceMember row)
+        {
+            row.Entry.PropertiesToSetOnDisplayer[key] = value;
+        }
+    }
+
+    private static void RemoveDisplayerProperty(InstanceMember member, string key)
+    {
+        member.PropertiesToSetOnDisplayer.Remove(key);
+        if (member is StateReferencingInstanceMember row)
+        {
+            row.Entry.PropertiesToSetOnDisplayer.Remove(key);
         }
     }
 
@@ -1191,13 +1322,14 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         if (isTtfMode)
         {
             fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
-            fontMember.PropertiesToSetOnDisplayer["Filter"] = FontFileFilter;
+            SetDisplayerProperty(fontMember, "Filter", FontFileFilter);
+            SetFileChoices(fontMember, ReferencedFileChoices.AcceptingExtensions(FontFileFilter));
 
             // Warn if project uses bmfont.exe, which can't handle .ttf file fonts
             var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
             if (fontGenerator == DataTypes.FontGeneratorType.BmFont)
             {
-                fontMember.DetailText = "bmfont cannot generate from font files. Switch to KernSmith in Edit > Font Settings.";
+                fontMember.DetailText = FontGeneratorWarningText.CannotGenerateFromFontFiles;
             }
         }
 
@@ -1223,13 +1355,14 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 isTtfMode = true;
                 // Swap Font row to FileSelectionDisplay
                 fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
-                fontMember.PropertiesToSetOnDisplayer["Filter"] = FontFileFilter;
+                SetDisplayerProperty(fontMember, "Filter", FontFileFilter);
+                SetFileChoices(fontMember, ReferencedFileChoices.AcceptingExtensions(FontFileFilter));
 
                 // Warn if project uses bmfont.exe
                 var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
                 if (fontGenerator == DataTypes.FontGeneratorType.BmFont)
                 {
-                    fontMember.DetailText = "bmfont cannot generate from font files. Switch to KernSmith in Edit > Font Settings.";
+                    fontMember.DetailText = FontGeneratorWarningText.CannotGenerateFromFontFiles;
                 }
 
                 // Force container recreation by remove + reinsert
@@ -1247,7 +1380,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 fontMember.Value = "Arial";
                 // Swap Font row back to ComboBox
                 fontMember.PreferredDisplayer = null;
-                fontMember.PropertiesToSetOnDisplayer.Remove("Filter");
+                RemoveDisplayerProperty(fontMember, "Filter");
+                RemoveDisplayerProperty(fontMember, "FileChoices");
                 fontMember.DetailText = null;
 
                 // Force container recreation

@@ -70,7 +70,6 @@ public class FontRealizationAllocationTests : BaseTestClass
                     // change-record lists, the per-frame draw-state list) does not accumulate across
                     // iterations — a real frame does this reset, and it isolates the measurement to the
                     // Text/BitmapFont realization work this test targets.
-                    SpriteBatchStack.PerformStartOfLayerRenderingLogic();
                     renderer.ClearPerformanceRecordingVariables();
 
                     text.SetNeedsRefreshToTrue();

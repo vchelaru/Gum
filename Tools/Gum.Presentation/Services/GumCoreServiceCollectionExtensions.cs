@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -226,6 +227,12 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFilePickingFolderProvider, FilePickingFolderProvider>();
         services.AddSingleton<IVariableTypeConverterProvider, VariableTypeConverterProvider>();
         services.AddSingleton<ICompositeMemberRegistry, CompositeMemberRegistry>();
+        services.AddSingleton<IBuiltInShaderFiles>(provider => new BuiltInShaderFiles(
+            provider.GetRequiredService<IProjectState>(),
+            provider.GetRequiredService<IDialogService>(),
+            provider.GetRequiredService<IOutputManager>(),
+            Path.Combine(AppContext.BaseDirectory, "Content", "Shaders"),
+            provider.GetRequiredService<Lazy<IFileWatchManager>>()));
         services.AddSingleton<IInstalledFontProvider, SkiaInstalledFontProvider>();
         services.AddSingleton<VariableGridToggleOptions>();
         services.AddSingleton<PropertyGridManager>();
@@ -236,6 +243,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IPathCaseSensitivity, PathCaseSensitivity>();
         services.AddSingleton<IUnsavedChangesTracker, UnsavedChangesTracker>();
         services.AddSingleton<IProjectLoadFills, ProjectLoadFills>();
+        services.AddSingleton<IProjectReferencedFiles>(_ => new ProjectReferencedFiles());
         services.AddSingleton<FileChangeReactionLogic>();
         services.AddSingleton<ProjectCommands>();
         // ICopyPasteProjectCommands: narrow headless port (ADR-0005 Phase 3). Resolves to the same ProjectCommands singleton.

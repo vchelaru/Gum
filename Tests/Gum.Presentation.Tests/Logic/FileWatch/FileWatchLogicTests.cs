@@ -117,6 +117,41 @@ public class FileWatchLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void RefreshRootDirectory_WatchesOnlyOutermostRoots_WhenFolderIsInsideTheProjectDirectory()
+    {
+        // A folder under the project directory is already covered by the project directory's watcher
+        // (IncludeSubdirectories); a second watcher on it only repeats every event.
+        string root = OperatingSystem.IsWindows() ? "C:/" : "/";
+        GumProjectSave project = new GumProjectSave { FullFileName = root + "FakeGumProject/MyProject.gumx" };
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Sprite1", BaseType = "Sprite", ParentContainer = screen });
+        screen.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Sprite1.SourceFile",
+            Type = "string",
+            Value = root + "FakeGumProject/Textures/Deep/bg.png",
+            IsFile = true,
+            SetsValue = true,
+        });
+        project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = project;
+        _projectManager.SetupGet(m => m.GumProjectSave).Returns(project);
+        _projectState.SetupGet(m => m.GumProjectSave).Returns(project);
+        HashSet<FilePath>? watched = null;
+        _fileWatchManager
+            .Setup(m => m.EnableWithDirectories(It.IsAny<HashSet<FilePath>>()))
+            .Callback<HashSet<FilePath>>(directories => watched = directories);
+
+        _fileWatchLogic.RefreshRootDirectory();
+        RunPostedAction();
+
+        watched.ShouldNotBeNull();
+        watched.ShouldContain(new FilePath(root + "FakeGumProject/"));
+        watched.ShouldNotContain(new FilePath(root + "FakeGumProject/Textures/Deep/"));
+    }
+
+    [Fact]
     public void RefreshRootDirectory_Disables_WhenNoProjectLoaded()
     {
         // GumProjectSave defaults to null on the mock, so GumProjectSave?.FullFileName

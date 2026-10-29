@@ -8,7 +8,8 @@
 #
 # SkiaSharp.dll and its natives are left out: the SkiaGameRendering package ships them for the same
 # platforms, and Unity refuses two copies of one assembly. So are assemblies Unity's .NET Standard 2.1
-# profile already has. HarfBuzzSharp is Gum's dependency, not SkiaGameRendering's, so it ships here.
+# profile already has. System.Runtime.CompilerServices.Unsafe is not in that profile (Unity 6000.3 has no
+# copy), so it ships here. HarfBuzzSharp is Gum's dependency, not SkiaGameRendering's, so it ships here.
 param(
     [string]$Configuration = 'Release'
 )
@@ -25,7 +26,6 @@ $excluded = @(
     'System.Buffers.dll',
     'System.Memory.dll',
     'System.Numerics.Vectors.dll',
-    'System.Runtime.CompilerServices.Unsafe.dll',
     'System.Threading.Tasks.Extensions.dll',
     'Microsoft.CSharp.dll',
     'System.Data.DataSetExtensions.dll'
@@ -174,6 +174,16 @@ foreach ($entry in $natives) { Write-NativeMeta $entry.Path (Get-PluginKey $entr
 # The binaries carry their own licenses, which redistribution has to include: Gum's own, plus each
 # NuGet package's license as its .nuspec declares it.
 Copy-Item (Join-Path $repo 'LICENSE') (Join-Path $package 'LICENSE.md')
+# Without its .meta, Unity logs "has no meta file, but it's in an immutable folder" on every import.
+@"
+fileFormatVersion: 2
+guid: $(Get-StableGuid 'LICENSE.md')
+TextScriptImporter:
+  externalObjects: {}
+  userData:
+  assetBundleName:
+  assetBundleVariant:
+"@ | Set-Content (Join-Path $package 'LICENSE.md.meta')
 $notices = Join-Path $package 'ThirdPartyNotices~'
 if (Test-Path $notices) { Remove-Item -LiteralPath $notices -Recurse -Force }
 New-Item -ItemType Directory -Force $notices | Out-Null
@@ -192,5 +202,7 @@ foreach ($library in $libraries | Sort-Object) {
     }
 }
 $lines | Set-Content (Join-Path $notices 'PACKAGES.txt')
+
+& (Join-Path $PSScriptRoot 'check-package.ps1') -Path $package
 
 Write-Host "Unity package binaries written to $plugins"

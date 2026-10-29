@@ -24,6 +24,14 @@ for(int i = 0; i < 10; i++)
 ComboBox's internal ListBox is hidden until the dropdown opens, so Gum automatically skips layout when adding items. This means adding hundreds of items to a ComboBox is fast without any extra code. If you are adding many items to a visible ListBox or other ItemsControl, see [Reducing Layout Calls](../performance-and-optimization/measuring-layout-calls.md#reducing-layout-calls) for how to suspend layout during bulk adds.
 {% endhint %}
 
+## Closing the Drop-Down
+
+Pressing Escape closes an open drop-down and keeps the current selection. This works however the drop-down was opened. Escape pressed while the drop-down is closed is left for other controls to use.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Adjusting the Drop-Down ListBox
 
 `ComboBox` provides a `ListBox` property which can be used to customize the ListBox instance.
