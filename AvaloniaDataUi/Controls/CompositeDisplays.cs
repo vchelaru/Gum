@@ -12,6 +12,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using WpfDataUi;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
@@ -947,16 +948,23 @@ public class FileSelectionDisplay : DataUiDisplayBase
         }
         else if (_choiceBox.SelectedItem is BuiltInFileChoice builtIn)
         {
-            // The copy's path becomes the value; a copy that cannot be made leaves the row as it was.
-            string? copiedPath = ImportBuiltIn?.Invoke(builtIn.Name);
-            if (copiedPath != null)
-            {
-                Commit(copiedPath);
-            }
-            else
-            {
-                ShowValue();
-            }
+            // The import can open a prompt (a differing copy), which a still-open popup's light-dismiss
+            // would swallow the first click into, so it runs once the pick has finished routing.
+            Dispatcher.UIThread.Post(() => ImportAndCommit(builtIn.Name));
+        }
+    }
+
+    // The copy's path becomes the value; a copy that cannot be made leaves the row as it was.
+    private void ImportAndCommit(string name)
+    {
+        string? copiedPath = ImportBuiltIn?.Invoke(name);
+        if (copiedPath != null)
+        {
+            Commit(copiedPath);
+        }
+        else
+        {
+            ShowValue();
         }
     }
 

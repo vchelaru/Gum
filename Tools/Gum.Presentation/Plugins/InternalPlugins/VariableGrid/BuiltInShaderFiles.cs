@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using ToolsUtilities;
 
@@ -24,8 +25,10 @@ public interface IBuiltInShaderFiles
 
     /// <summary>
     /// Copies the shipped shader <paramref name="name"/> into the project's Shaders folder and returns
-    /// its project-relative path. A copy already there is kept as is, since the user may have edited
-    /// it. Null when the project has not been saved yet or the shader is not shipped.
+    /// its project-relative path. A copy already there that differs from the shipped file (line endings
+    /// aside) is replaced only if the user picks "Replace with built-in"; otherwise, and when it is
+    /// the same, it is kept as is. Closing the prompt keeps the copy.
+    /// Null when the project has not been saved yet or the shader is not shipped.
     /// </summary>
     string? CopyIntoProject(string name);
 }
@@ -34,17 +37,23 @@ public interface IBuiltInShaderFiles
 public class BuiltInShaderFiles : IBuiltInShaderFiles
 {
     private const string ProjectFolder = "Shaders";
+    private const string ReplaceKey = "replace";
+    private const string KeepKey = "keep";
 
     private readonly IProjectState _projectState;
+    private readonly IDialogService _dialogService;
+    private readonly IOutputManager _outputManager;
     private readonly string _builtInFolder;
     private readonly Lazy<IFileWatchManager>? _fileWatchManager;
 
     /// <param name="builtInFolder">The folder the shipped shaders are staged in.</param>
-    /// <param name="fileWatchManager">Told about the copy the tool writes, so the watcher does not
+    /// <param name="fileWatchManager">Told about the copy the tool writes (new or replaced), so the watcher does not
     /// report it back as an outside edit. Lazy because the watcher's reaction reaches this class's consumers.</param>
-    public BuiltInShaderFiles(IProjectState projectState, string builtInFolder, Lazy<IFileWatchManager>? fileWatchManager = null)
+    public BuiltInShaderFiles(IProjectState projectState, IDialogService dialogService, IOutputManager outputManager, string builtInFolder, Lazy<IFileWatchManager>? fileWatchManager = null)
     {
         _projectState = projectState;
+        _dialogService = dialogService;
+        _outputManager = outputManager;
         _builtInFolder = builtInFolder;
         _fileWatchManager = fileWatchManager;
     }
@@ -77,14 +86,86 @@ public class BuiltInShaderFiles : IBuiltInShaderFiles
         }
 
         string copyPath = GetCopyPath(projectDirectory, name);
+        string shippedPath = Path.Combine(_builtInFolder, name);
         if (!File.Exists(copyPath))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(copyPath)!);
             _fileWatchManager?.Value.IgnoreNextChangeUntil(new FilePath(copyPath));
-            File.Copy(Path.Combine(_builtInFolder, name), copyPath);
+            File.Copy(shippedPath, copyPath);
+        }
+        else
+        {
+            ReplaceCopyIfUserAgrees(name, copyPath, shippedPath);
         }
 
         return ProjectFolder + "/" + name;
+    }
+
+    // A copy that cannot be read or written is kept and reported; the shader is still assigned.
+    private void ReplaceCopyIfUserAgrees(string name, string copyPath, string shippedPath)
+    {
+        string relativePath = ProjectFolder + "/" + name;
+        try
+        {
+            byte[] copyBytes = File.ReadAllBytes(copyPath);
+            byte[] shippedBytes = File.ReadAllBytes(shippedPath);
+            if (WithoutCarriageReturnLineFeeds(copyBytes).AsSpan().SequenceEqual(WithoutCarriageReturnLineFeeds(shippedBytes)))
+            {
+                return;
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _outputManager.AddError($"Could not compare {relativePath} with the built-in, so it was left as is: {e.Message}");
+            return;
+        }
+
+        if (!UserWantsBuiltIn(name, relativePath))
+        {
+            return;
+        }
+
+        try
+        {
+            _fileWatchManager?.Value.IgnoreNextChangeUntil(new FilePath(copyPath));
+            File.Copy(shippedPath, copyPath, overwrite: true);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _outputManager.AddError($"Could not replace {relativePath} with the built-in, so it was left as is: {e.Message}");
+        }
+    }
+
+    // "Keep my copy" is listed first so it is the choice Enter confirms; closing the dialog is also a keep.
+    private bool UserWantsBuiltIn(string name, string relativePath)
+    {
+        DialogChoices<string> choices = new()
+        {
+            [KeepKey] = "Keep my copy",
+            [ReplaceKey] = "Replace with built-in",
+        };
+        string message =
+            $"Your project's {relativePath} differs from the built-in {name}.\n\n" +
+            "Replace with built-in: overwrites your file with the built-in one.\n" +
+            "Keep my copy: uses your file as it is.\n\n" +
+            "The shader is assigned either way.";
+
+        return _dialogService.ShowChoices(message, choices, title: "Built-in shader differs", canCancel: true) == ReplaceKey;
+    }
+
+    // Compares equal for files that differ only in CRLF against LF. Other bytes, including a lone CR, are kept.
+    private static byte[] WithoutCarriageReturnLineFeeds(byte[] bytes)
+    {
+        List<byte> result = new List<byte>(bytes.Length);
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            if (bytes[i] == (byte)'\r' && i + 1 < bytes.Length && bytes[i + 1] == (byte)'\n')
+            {
+                continue;
+            }
+            result.Add(bytes[i]);
+        }
+        return result.ToArray();
     }
 
     private static string GetCopyPath(string projectDirectory, string name) =>

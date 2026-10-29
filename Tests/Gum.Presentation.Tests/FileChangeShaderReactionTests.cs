@@ -6,6 +6,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
@@ -371,7 +372,7 @@ public class FileChangeShaderReactionTests : BaseTestClass
         Mock<IProjectState> projectState = new();
         projectState.SetupGet(p => p.ProjectDirectory).Returns(_projectFolder + "/");
         Mock<IFileWatchManager> watch = new();
-        BuiltInShaderFiles sut = new BuiltInShaderFiles(projectState.Object, builtIn, new Lazy<IFileWatchManager>(() => watch.Object));
+        BuiltInShaderFiles sut = new BuiltInShaderFiles(projectState.Object, new Mock<IDialogService>().Object, new Mock<IOutputManager>().Object, builtIn, new Lazy<IFileWatchManager>(() => watch.Object));
 
         sut.CopyIntoProject("Blur.slang");
 
