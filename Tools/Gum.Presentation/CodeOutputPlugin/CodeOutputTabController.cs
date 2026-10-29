@@ -162,7 +162,8 @@ public class CodeOutputTabController
                         }
                         else if (selectedElement is not StandardElementSave)
                         {
-                            string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings);
+                            string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings) ??
+                                _codeGenerator.GetCategoryNameCollisionError(selectedElement, codeOutputProjectSettings);
                             if (baseTypeError != null)
                             {
                                 _viewModel.Code = $"// {baseTypeError}";

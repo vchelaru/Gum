@@ -16,7 +16,7 @@ namespace Gum.Cli.Tests;
 /// </summary>
 internal static class GeneratedGameHarness
 {
-    public static string CreateGame(string tempDirectory, ObjectInstantiationType instantiationType)
+    public static string CreateGame(string tempDirectory, ObjectInstantiationType instantiationType, OutputLibrary outputLibrary = OutputLibrary.GumForms)
     {
         File.WriteAllText(Path.Combine(tempDirectory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><RootNamespace>MyGame</RootNamespace></PropertyGroup>" +
@@ -29,7 +29,7 @@ internal static class GeneratedGameHarness
         CodeOutputProjectSettingsManager settingsManager = new CodeOutputProjectSettingsManager(
             new SilentLogger(), new FixedProjectDirectoryProvider(gumFolder));
         CodeOutputProjectSettings settings = settingsManager.CreateOrLoadSettingsForProject();
-        settings.OutputLibrary = OutputLibrary.GumForms;
+        settings.OutputLibrary = outputLibrary;
         settings.ObjectInstantiationType = instantiationType;
         settingsManager.WriteSettingsForProject(settings);
         return gumx;

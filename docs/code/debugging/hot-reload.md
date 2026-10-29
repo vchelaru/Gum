@@ -44,6 +44,12 @@ Children added at runtime by your game code are left untouched. Hot reload ident
 
 When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files from the source project's `FontCache/` directory to the bin-side `FontCache/` directory, and evicts cached fonts so they are reloaded from disk.
 
+### Renamed or Deleted Screens and Components
+
+Hot reload matches each screen or component your game is showing to the project by name. If you rename one, move it to another folder, or delete it in the tool, the running visual has nothing to match. It stays on screen as it was, and Gum reports it once to `PropertyAssignmentError` and the console, for example `Hot reload: the screen 'MainScreen' the game is showing is not in the project any more`. A component reads `the component 'Name'` instead. Edits to it, or to what replaced it, do not reach the game until you restart it. If you undo the rename, Gum matches it again and edits arrive.
+
+An instance of a deleted component inside a screen or another component is treated differently. The tool keeps the instance in the file, and a restarted game would not create it, so Gum removes the instance and its children from the running UI to match. It reports this once as well, for example `Hot reload: 'Card1' in 'Main' is a 'Card', which is not in the project any more`.
+
 ### What Is Not Reloaded
 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
@@ -53,9 +59,6 @@ Hot reload is focused on Gum element definitions. The following are **not** auto
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
 
-### Renamed or Deleted Screens and Components
-
-Hot reload matches each screen or component your game is showing to the project by name. If you rename one, move it to another folder, or delete it in the tool, the running visual has nothing to match. It stays on screen as it was, and Gum reports it once to `PropertyAssignmentError` and the console, for example `Hot reload: the screen 'MainScreen' the game is showing is not in the project any more`. A component reads `the component 'Name'` instead. Edits to it, or to what replaced it, do not reach the game until you restart it. If you undo the rename, Gum matches it again and edits arrive.
 
 ### Known Limitation: Cleared Tags
 

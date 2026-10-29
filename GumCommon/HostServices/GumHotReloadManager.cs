@@ -1155,6 +1155,23 @@ public class GumHotReloadManager : IGumHotReloadManager
                 continue;
             }
 
+            if (!string.IsNullOrEmpty(newInstance.BaseType)
+                && ObjectFinder.Self.GetElementSave(newInstance.BaseType) == null)
+            {
+                // The file keeps an instance of a component that was deleted, and a restart cannot
+                // build it. Without this the visual matches itself by its old element's name and stays.
+                if (designTimeByName.TryGetValue(newInstance.Name, out GraphicalUiElement? orphan))
+                {
+                    DetachAndRemove(orphan);
+                    designTimeByName.Remove(newInstance.Name);
+                    anyByName.Remove(newInstance.Name);
+                    ReportError(
+                        $"Hot reload: '{newInstance.Name}' in '{newEs.Name}' is a '{newInstance.BaseType}', " +
+                        "which is not in the project any more. It was removed from the running UI, as a restart would.");
+                }
+                continue;
+            }
+
             if (designTimeByName.TryGetValue(newInstance.Name, out GraphicalUiElement? existingChild))
             {
                 // The existing visual's ElementSave reflects what it was actually built from;

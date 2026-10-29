@@ -213,7 +213,11 @@ public static class CodegenCommand
         GumExpressionService.Initialize();
         ITypeResolver typeResolver = new DefaultTypeResolver();
         IHeadlessErrorChecker errorChecker = new HeadlessErrorChecker(
-            typeResolver, new IAdditionalErrorSource[] { new FormsCodegenBaseTypeErrorSource(projectSettings) });
+            typeResolver, new IAdditionalErrorSource[]
+            {
+                new FormsCodegenBaseTypeErrorSource(projectSettings),
+                new CategoryNameCollisionErrorSource(codeGenerator, projectSettings),
+            });
 
         // --element narrows the run to those elements (which also leaves the project-wide
         // Standard Elements fallback file alone, issue #6042); otherwise the whole project.
