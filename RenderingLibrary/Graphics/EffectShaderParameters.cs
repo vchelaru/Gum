@@ -28,9 +28,24 @@ public static class EffectShaderParameters
 
     private static ShaderParameterInfo? ToInfo(EffectParameter parameter)
     {
-        if (parameter.Elements.Count > 0)
+        if (!TryReadValue(parameter, out ShaderParameterValue value))
         {
             return null;
+        }
+        return new ShaderParameterInfo(parameter.Name, value.Kind, value.Count, value);
+    }
+
+    /// <summary>
+    /// Reads the value <paramref name="parameter"/> holds right now, as the kind and size it was declared with.
+    /// Returns false for the kinds <c>SetShaderParameter</c> cannot set (textures, matrices, arrays, structs).
+    /// Does not allocate.
+    /// </summary>
+    public static bool TryReadValue(EffectParameter parameter, out ShaderParameterValue value)
+    {
+        value = default;
+        if (parameter.Elements.Count > 0)
+        {
+            return false;
         }
 
         if (parameter.ParameterClass == EffectParameterClass.Scalar)
@@ -38,16 +53,16 @@ public static class EffectShaderParameters
             switch (parameter.ParameterType)
             {
                 case EffectParameterType.Single:
-                    return new ShaderParameterInfo(parameter.Name, ShaderParameterKind.Float, 1,
-                        ShaderParameterValue.FromFloat(parameter.GetValueSingle()));
+                    value = ShaderParameterValue.FromFloat(parameter.GetValueSingle());
+                    return true;
                 case EffectParameterType.Int32:
-                    return new ShaderParameterInfo(parameter.Name, ShaderParameterKind.Int, 1,
-                        ShaderParameterValue.FromInt(parameter.GetValueInt32()));
+                    value = ShaderParameterValue.FromInt(parameter.GetValueInt32());
+                    return true;
                 case EffectParameterType.Bool:
-                    return new ShaderParameterInfo(parameter.Name, ShaderParameterKind.Bool, 1,
-                        ShaderParameterValue.FromBool(parameter.GetValueBoolean()));
+                    value = ShaderParameterValue.FromBool(parameter.GetValueBoolean());
+                    return true;
             }
-            return null;
+            return false;
         }
 
         if (parameter.ParameterClass == EffectParameterClass.Vector &&
@@ -58,25 +73,25 @@ public static class EffectShaderParameters
             {
                 case 2:
                     {
-                        Microsoft.Xna.Framework.Vector2 value = parameter.GetValueVector2();
-                        return new ShaderParameterInfo(parameter.Name, ShaderParameterKind.Float, 2,
-                            ShaderParameterValue.FromVector2(value.X, value.Y));
+                        Microsoft.Xna.Framework.Vector2 v = parameter.GetValueVector2();
+                        value = ShaderParameterValue.FromVector2(v.X, v.Y);
+                        return true;
                     }
                 case 3:
                     {
-                        Microsoft.Xna.Framework.Vector3 value = parameter.GetValueVector3();
-                        return new ShaderParameterInfo(parameter.Name, ShaderParameterKind.Float, 3,
-                            ShaderParameterValue.FromVector3(value.X, value.Y, value.Z));
+                        Microsoft.Xna.Framework.Vector3 v = parameter.GetValueVector3();
+                        value = ShaderParameterValue.FromVector3(v.X, v.Y, v.Z);
+                        return true;
                     }
                 case 4:
                     {
-                        Microsoft.Xna.Framework.Vector4 value = parameter.GetValueVector4();
-                        return new ShaderParameterInfo(parameter.Name, ShaderParameterKind.Float, 4,
-                            ShaderParameterValue.FromVector4(value.X, value.Y, value.Z, value.W));
+                        Microsoft.Xna.Framework.Vector4 v = parameter.GetValueVector4();
+                        value = ShaderParameterValue.FromVector4(v.X, v.Y, v.Z, v.W);
+                        return true;
                     }
             }
         }
 
-        return null;
+        return false;
     }
 }

@@ -1587,7 +1587,7 @@ public class Renderer : IRenderer
     /// Copies a container's shader parameter values onto its effect. A name the effect does not
     /// declare is skipped, so one parameter set can drive effects that use different subsets.
     /// </summary>
-    private static void ApplyShaderParameters(ShaderParameterCollection? parameters, Effect? effect)
+    internal static void ApplyShaderParameters(ShaderParameterCollection? parameters, Effect? effect)
     {
         if (effect == null)
         {
@@ -1595,14 +1595,15 @@ public class Renderer : IRenderer
         }
 
         // A shared effect keeps the last values written to it, so what an earlier container set and
-        // this one did not goes back to zero (the unset value) before this container's values go on.
+        // this one did not goes back to the value the effect held before Gum first wrote it (its compiled
+        // default) before this container's values go on.
         ShaderParameterHistory history = ShaderParameterHistory.For(effect);
         foreach (KeyValuePair<string, ShaderParameterValue> stale in history.TakeStale(parameters))
         {
             EffectParameter? staleParameter = effect.Parameters[stale.Key];
             if (staleParameter != null)
             {
-                SetEffectParameter(staleParameter, ShaderParameterValue.ZeroLike(stale.Value));
+                SetEffectParameter(staleParameter, history.GetRestoreValue(stale.Key, stale.Value));
             }
         }
 
@@ -1620,10 +1621,24 @@ public class Renderer : IRenderer
             }
 
             string isSetName = ShaderParameterCollection.GetIsSetName(pair.Key);
-            effect.Parameters[isSetName]?.SetValue(1f);
+            EffectParameter? isSetParameter = effect.Parameters[isSetName];
+            CaptureBaseline(history, isSetName, isSetParameter);
+            CaptureBaseline(history, pair.Key, parameter);
+            isSetParameter?.SetValue(1f);
             history.Record(isSetName, ShaderParameterValue.FromFloat(1f));
             history.Record(pair.Key, pair.Value);
             SetEffectParameter(parameter, pair.Value);
+        }
+    }
+
+    // Reads what the effect holds before Gum's first write of this name, once, so a later container that
+    // does not set it gets that back instead of zero.
+    private static void CaptureBaseline(ShaderParameterHistory history, string name, EffectParameter? parameter)
+    {
+        if (parameter != null && !history.HasBaseline(name) &&
+            EffectShaderParameters.TryReadValue(parameter, out ShaderParameterValue baseline))
+        {
+            history.SetBaseline(name, baseline);
         }
     }
 
