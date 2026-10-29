@@ -51,6 +51,45 @@ public struct FoundTag
     }
 }
 
+/// <summary>
+/// A BBCode tag's range in the text as displayed (tags removed), returned by
+/// <c>TextRuntime.GetTagAtIndex</c>. The indexes are in the same space as
+/// <c>TextRuntime.GetCharacterIndexAtPosition</c>.
+/// </summary>
+public readonly struct TextTagSpan
+{
+    /// <summary>
+    /// The tag name as written in the text, such as "Link" for <c>[Link=shop]</c>.
+    /// </summary>
+    public string Name { get; }
+
+    /// <summary>
+    /// The text after the equals sign, such as "shop" for <c>[Link=shop]</c>, or null if the tag has none.
+    /// </summary>
+    public string? Argument { get; }
+
+    /// <summary>
+    /// The index of the first character inside the tag.
+    /// </summary>
+    public int StartIndex { get; }
+
+    /// <summary>
+    /// The index just past the last character inside the tag (exclusive), so a character index
+    /// is inside the tag when <c>index &gt;= StartIndex &amp;&amp; index &lt; EndIndex</c>.
+    /// </summary>
+    public int EndIndex { get; }
+
+    public TextTagSpan(string name, string? argument, int startIndex, int endIndex)
+    {
+        Name = name;
+        Argument = argument;
+        StartIndex = startIndex;
+        EndIndex = endIndex;
+    }
+
+    public override string ToString() => $"{Name}={Argument} [{StartIndex}, {EndIndex})";
+}
+
 public static class BbCodeParser
 {
     /// <summary>
@@ -82,6 +121,7 @@ public static class BbCodeParser
         "custom",
         "state",
         "hasdropshadow",
+        "link",
     };
 
     private struct Tag

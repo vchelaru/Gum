@@ -1076,6 +1076,9 @@ public partial class CustomSetPropertyOnRenderable
         }
 
         textRenderable.InlineVariables.Clear();
+#if !FRB
+        textRenderable.ParsedBbCodeTags = null;
+#endif
         if (valueAsString?.Contains("[") == true)
         {
             textRenderable.StoredMarkupText = valueAsString;
@@ -1860,6 +1863,10 @@ public partial class CustomSetPropertyOnRenderable
         var strippedText = BbCodeParser.RemoveTags(normalized, results);
 
         asText.RawText = strippedText;
+#if !FRB
+        // Kept as parsed (before ExpandStateTags) so TextRuntime.GetTagAtIndex can find a tag by its range.
+        asText.ParsedBbCodeTags = results;
+#endif
 
         // Must happen after RemoveTags (see ExpandStateTags) - expanded entries are for value
         // application only, not text stripping.

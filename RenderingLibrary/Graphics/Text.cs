@@ -439,6 +439,13 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public string? StoredMarkupText { get; set; }
 
+    /// <summary>
+    /// The tags found in the markup text assigned to this Text, with indexes into the text as displayed
+    /// (tags removed). Null when the text has no markup. Replaced, never mutated, each time the text
+    /// changes. Read by <c>TextRuntime.GetTagAtIndex</c>.
+    /// </summary>
+    internal List<Gum.Wireframe.FoundTag>? ParsedBbCodeTags { get; set; }
+
     public List<string> WrappedText => mWrappedText;
 
     public float X
