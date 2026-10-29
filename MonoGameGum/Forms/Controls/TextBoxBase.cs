@@ -895,9 +895,9 @@ public abstract class TextBoxBase :
         /////////////////////////End Early Out/////////////////////
         // A caret inside a CRLF (set from code) acts as the one before the break for the navigation keys, so
         // End there does not "move" and select the lone CR.
-        if (key is Keys.Home or Keys.End or Keys.Up or Keys.Down or Keys.Left or Keys.Right && IsInsideCharacter(CaretStepText, caretIndex))
+        if (key is Keys.Home or Keys.End or Keys.Up or Keys.Down or Keys.Left or Keys.Right)
         {
-            caretIndex--;
+            SnapCaretToCharacterStart();
         }
         var oldIndex = caretIndex;
 
@@ -1046,6 +1046,7 @@ public abstract class TextBoxBase :
                 {
                     if (isShortcutDown)
                     {
+                        SnapCaretToCharacterStart();
                         HandlePaste();
                     }
                 }
@@ -1494,11 +1495,25 @@ public abstract class TextBoxBase :
         return IsInsideCharacter(text, result) ? result + 1 : result;
     }
 
+    // Where a backward delete (Backspace, Ctrl+Backspace) ends: the caret, or the end of the character it is inside.
+    internal static int GetBackspaceEnd(string? text, int caretIndex) =>
+        IsInsideCharacter(text, caretIndex) ? caretIndex + 1 : caretIndex;
+
+    // A caret inside a character (set from code) moves to the start of it before an edit that inserts, so
+    // typing and pasting never split the character. Navigation keys do the same.
+    protected void SnapCaretToCharacterStart()
+    {
+        if (IsInsideCharacter(CaretStepText, caretIndex))
+        {
+            caretIndex--;
+        }
+    }
+
     // The part of the text Backspace removes with no selection: the whole character before the caret.
     // A caret between the halves of a character (a programmatic CaretIndex) removes that character.
     internal static (int Start, int Length) GetBackspaceRange(string? text, int caretIndex)
     {
-        int end = IsInsideCharacter(text, caretIndex) ? caretIndex + 1 : caretIndex;
+        int end = GetBackspaceEnd(text, caretIndex);
         int start = StepLeft(text, end);
         return (start, end - start);
     }

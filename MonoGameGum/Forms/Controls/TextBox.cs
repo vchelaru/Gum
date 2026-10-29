@@ -215,6 +215,8 @@ public class TextBox : TextBoxBase
                 DeleteSelection();
             }
 
+            SnapCaretToCharacterStart();
+
             // If text is null force it to be an empty string so we can add characters
             string textAfterAdd = Text ?? "";
             string? newlyAddedText = null;
@@ -294,12 +296,14 @@ public class TextBox : TextBoxBase
             }
             else if (isCtrlDown)
             {
-                var indexBeforeNullable = GetCtrlBeforeTarget(caretIndex);
+                // A caret inside a character (a programmatic CaretIndex) takes the whole character with the word.
+                int end = GetBackspaceEnd(Text, caretIndex);
+                var indexBeforeNullable = GetCtrlBeforeTarget(end);
 
                 var indexToDeleteTo = indexBeforeNullable ?? 0;
 
                 // Use SetTextFromUi because this is user-initiated editing
-                SetTextFromUi(Text.Remove(indexToDeleteTo, caretIndex - indexToDeleteTo));
+                SetTextFromUi(Text.Remove(indexToDeleteTo, end - indexToDeleteTo));
 
                 caretIndex = indexToDeleteTo;
                 RefreshCaretAfterEdit();
