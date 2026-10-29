@@ -411,17 +411,17 @@ public class NameVerifierTests : BaseTestClass
     }
 
     [Theory]
-    [InlineData("Score", "Score")]
-    [InlineData("Hud/Score", "Score")]
-    [InlineData("Hud/Score Panel", "Score_Panel")]
-    public void IsInstanceNameValid_ShouldReturnFalse_IfSameAsTheNameOfTheClassGeneratedForItsContainer(string elementName, string instanceName)
+    [InlineData("Score", "Score", "Score")]
+    [InlineData("Hud/Score", "Score", "Score")]
+    [InlineData("Hud/Score Panel", "Score_Panel", "Score Panel")]
+    public void IsInstanceNameValid_ShouldReturnFalse_IfSameAsTheNameOfTheClassGeneratedForItsContainer(string elementName, string instanceName, string expectedName)
     {
         var element = new ComponentSave { Name = elementName };
 
         var isValid = _nameVerifier.IsInstanceNameValid(instanceName, null, element, out string whyNotValid);
 
         isValid.ShouldBeFalse();
-        whyNotValid.ShouldContain("is named");
+        whyNotValid.ShouldBe($"The element is named '{expectedName}', so choose a different name.");
     }
 
     [Fact]
@@ -433,7 +433,7 @@ public class NameVerifierTests : BaseTestClass
         var isValid = _nameVerifier.IsElementNameValid("Score", "Hud", element, out string? whyNotValid);
 
         isValid.ShouldBeFalse();
-        whyNotValid.ShouldBe("The element has an instance named 'Score'");
+        whyNotValid.ShouldBe("The element has an instance named 'Score', so rename or delete the instance first.");
     }
 
     [Fact]

@@ -58,7 +58,7 @@ public class NameVerifier : INameVerifier
                 _rules.Standardize(item.Name) == _rules.Standardize(componentNameWithoutFolder));
             if (sameNamed != null)
             {
-                whyNotValid = $"The element has an instance named '{sameNamed.Name}'";
+                whyNotValid = $"The element has an instance named '{sameNamed.Name}', so rename or delete the instance first.";
             }
         }
         return string.IsNullOrEmpty(whyNotValid);
@@ -297,7 +297,7 @@ public class NameVerifier : INameVerifier
         string containerNameWithoutFolder = instanceContainer.Name.Substring(instanceContainer.Name.LastIndexOfAny(new[] { '/', '\\' }) + 1);
         if (objectToIgnore != instanceContainer && _rules.Standardize(name) == _rules.Standardize(containerNameWithoutFolder))
         {
-            whyNotValid = $"The element is named '{containerNameWithoutFolder}'";
+            whyNotValid = $"The element is named '{containerNameWithoutFolder}', so choose a different name.";
         }
         var instance = instanceContainer.Instances.FirstOrDefault(item => item != objectToIgnore && _rules.Standardize(item.Name) == _rules.Standardize(name));
         if (instance != null)

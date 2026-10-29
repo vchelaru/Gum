@@ -4318,7 +4318,7 @@ public class CodeGenerator
                 if (instanceVisualApi == VisualApi.Gum)
                 {
                     // todo - will need Forms too, but we'll do this for now:
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{_codeGenerationNameVerifier.ToCSharpName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
                 }
             }
         }
@@ -4545,11 +4545,11 @@ public class CodeGenerator
                 {
                     if (item.BaseType.EndsWith("/SkiaSharpCanvasView"))
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpName(item.Name)}.InvalidateSurface();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpMemberName(item.Name)}.InvalidateSurface();");
                     }
                     else if (GetVisualApiForInstance(item, element) == VisualApi.Gum)
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpName(item.Name)}.EffectiveManagers?.InvalidateSurface();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpMemberName(item.Name)}.EffectiveManagers?.InvalidateSurface();");
                     }
                 }
                 if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
