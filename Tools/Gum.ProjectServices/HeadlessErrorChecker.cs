@@ -627,7 +627,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             {
                 string? brokenCause = DescribeBrokenExposedVariable(owner, referencedName);
                 return brokenCause != null
-                    ? $"\"{referencedName}\", which {owner.Name} {brokenCause}"
+                    ? $"\"{referencedName}\", which {owner.Name} exposes as {brokenCause.Substring("exposes ".Length)}"
                     : $"\"{referencedName}\", which {owner.Name} does not have{GetSavedShaderNameHint(owner, referencedName)}";
             }
         }
@@ -735,7 +735,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         string? nested = instanceType == null ? null : DescribeBrokenExposedVariable(instanceType, instanceVariable);
         string typeText = $"{instanceName}'s type ({instance.BaseType})";
         return nested != null
-            ? $"exposes {target}, but {typeText} {nested}"
+            ? $"exposes {target}, and {typeText} {nested}"
             : $"exposes {target}, but {typeText} has no {instanceVariable} variable";
     }
 

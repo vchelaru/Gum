@@ -2366,7 +2366,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
         string message = GetGum0009Message("Text = Components/Card.CaptionText");
 
-        message.ShouldBe("Default: the VariableReferences line \"Text = Components/Card.CaptionText\" reads \"CaptionText\" from Components/Card, which exposes Caption.Text, but Caption's type (Inner) exposes Sub.Text, but Sub's type (Container) has no Text variable, so it never applies.");
+        message.ShouldBe("Default: the VariableReferences line \"Text = Components/Card.CaptionText\" reads \"CaptionText\" from Components/Card, which exposes Caption.Text, and Caption's type (Inner) exposes Sub.Text, but Sub's type (Container) has no Text variable, so it never applies.");
     }
 
     [Fact]
@@ -2392,7 +2392,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
         string message = _sut.GetErrorsFor(card, Project).ShouldHaveSingleItem().Message;
 
-        message.ShouldBe("Default: the VariableReferences line \"Width = CaptionText\" reads \"CaptionText\", which Card exposes Caption.Text, but Caption's type (Container) has no Text variable, so it never applies.");
+        message.ShouldBe("Default: the VariableReferences line \"Width = CaptionText\" reads \"CaptionText\", which Card exposes as Caption.Text, but Caption's type (Container) has no Text variable, so it never applies.");
     }
 
     [Fact]

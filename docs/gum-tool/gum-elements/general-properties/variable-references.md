@@ -468,9 +468,9 @@ A variable reference can read from something the project does not have: an eleme
 
 Gum reports a **GUM0009** warning in the [Errors tab](../../editor-tab.md) for each of these lines, naming the element, the state, the line, and what it reads that is missing. `gumcli check` reports the same warning. To resolve it, add or import the missing element, or change the reference to point at one the project has.
 
-A component can still list an exposed variable after its instance changed type, for example `CaptionText` exposes `Caption.Text` and `Caption` changed from Text to Container. The reference still does not apply, and the warning names the instance and the variable its type lacks. To resolve it, change the instance back or point the reference at a variable that exists.
-
 Renaming an element in Gum updates the references to it, so this usually happens after editing files outside of Gum or importing only part of another project.
+
+A component can still list an exposed variable after its instance changed type, for example `CaptionText` exposes `Caption.Text` and `Caption` changed from Text to Container. The reference still does not apply, and the warning names the instance and the variable its type lacks. To resolve it, change the instance's type back or point the reference at a variable that exists.
 
 ## Circular References (GUM0013)
 
