@@ -341,8 +341,12 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
             .Returns(answer);
         Mock<IFileCommands> fileCommands = new();
         Mock<IPluginManager> pluginManager = new();
+        Mock<IRenameLogic> renameLogic = new();
+        renameLogic
+            .Setup(x => x.GetChangesForRenamedVariable(It.IsAny<ElementSave>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(new VariableChangeResponse());
         ExposeVariableService service = new ExposeVariableService(
-            undoManager, _mocker.Get<IGuiCommands>(), fileCommands.Object, new Mock<IRenameLogic>().Object,
+            undoManager, _mocker.Get<IGuiCommands>(), fileCommands.Object, renameLogic.Object,
             _mocker.Get<ISelectedState>(), new Mock<INameVerifier>().Object, dialogService.Object,
             new Mock<IVariableSaveLogic>().Object, pluginManager.Object,
             new InstanceOverrideRemover(undoManager, fileCommands.Object, pluginManager.Object));
@@ -412,6 +416,22 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
     }
 
     [Fact]
+    public void Expose_WhenTheServiceCannotExpose_RemovesThePlaceholderAndLeavesTheLegacyValue()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f));
+        _component.DefaultState.SetValue("Holder.ShaderParameters", "Thickness=4.0");
+        UseRealExposeService(UseRealUndoManager());
+        // With no selected element the service shows a message and exposes nothing.
+        _mocker.GetMock<ISelectedState>().Setup(state => state.SelectedElement).Returns((ElementSave?)null);
+        MemberCategory category = BuildRows();
+
+        Expose(Row(category, "Thickness"));
+
+        _component.DefaultState.Variables.Any(variable => variable.Name == VariableName).ShouldBeFalse();
+        ((string?)_component.DefaultState.GetVariableSave("Holder.ShaderParameters")!.Value).ShouldContain("Thickness");
+    }
+
+    [Fact]
     public void Expose_OnARowAlreadyEdited_KeepsItsValue()
     {
         GivenTheEffectDeclares(Float("Thickness", 2f));
@@ -446,6 +466,76 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
         restored.ExposedAsName.ShouldBe(ExposedName);
         restored.ShaderParameter.ShouldBe("Thickness");
         restored.SetsValue.ShouldBeFalse();
+    }
+
+    private static void Unexpose(InstanceMember row) =>
+        row.ContextMenuEvents.Single(item => item.Key.StartsWith("Un-expose Variable")).Value.Invoke(row, EventArgs.Empty);
+
+    [Fact]
+    public void Unexpose_OfAnUntouchedParameter_PrunesThePlaceholder()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f));
+        UseRealExposeService(UseRealUndoManager());
+        Expose(Row(BuildRows(), "Thickness"));
+
+        Unexpose(Row(BuildRows(), "Thickness"));
+
+        _component.DefaultState.Variables.Any(variable => variable.Name == VariableName).ShouldBeFalse("nothing names the parameter any more");
+    }
+
+    [Fact]
+    public void Unexpose_OfAParameterWithAValue_KeepsTheVariable()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f));
+        UseRealExposeService(UseRealUndoManager());
+        MemberCategory category = BuildRows();
+        Row(category, "Thickness").Value = 3f;
+        Expose(Row(category, "Thickness"));
+
+        Unexpose(Row(BuildRows(), "Thickness"));
+
+        VariableSave kept = _component.DefaultState.GetVariableSave(VariableName).ShouldNotBeNull();
+        kept.ExposedAsName.ShouldBeNull();
+        kept.Value.ShouldBe(3f);
+    }
+
+    [Fact]
+    public void Unexpose_OfAParameterAnotherStateSets_KeepsTheVariable()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f));
+        UseRealExposeService(UseRealUndoManager());
+        Expose(Row(BuildRows(), "Thickness"));
+        StateSaveCategory stateCategory = new StateSaveCategory { Name = "Look" };
+        StateSave highlighted = new StateSave { Name = "Highlighted", ParentContainer = _component };
+        highlighted.SetValue(VariableName, 7f, _holder, "float");
+        stateCategory.States.Add(highlighted);
+        _component.Categories.Add(stateCategory);
+
+        Unexpose(Row(BuildRows(), "Thickness"));
+
+        _component.DefaultState.GetVariableSave(VariableName).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Unexpose_UndoAndRedo_RestoreAndRemoveThePlaceholder()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f));
+        UndoManager undoManager = UseRealUndoManager();
+        UseRealExposeService(undoManager);
+        Expose(Row(BuildRows(), "Thickness"));
+        MemberCategory category = BuildRows();
+
+        undoManager.RecordState();
+        Unexpose(Row(category, "Thickness"));
+        _component.DefaultState.Variables.Any(variable => variable.Name == VariableName).ShouldBeFalse();
+        undoManager.PerformUndo();
+
+        VariableSave restored = _component.DefaultState.GetVariableSave(VariableName).ShouldNotBeNull("undo should bring the exposed placeholder back");
+        restored.ExposedAsName.ShouldBe(ExposedName);
+
+        undoManager.PerformRedo();
+
+        _component.DefaultState.Variables.Any(variable => variable.Name == VariableName).ShouldBeFalse();
     }
 
     [Fact]

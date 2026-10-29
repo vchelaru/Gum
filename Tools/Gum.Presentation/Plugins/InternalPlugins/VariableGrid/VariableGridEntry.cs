@@ -1308,7 +1308,9 @@ public class VariableGridEntry
         StateSave defaultState = ElementSave.GetDefaultStateOrThrow();
         using var undoLock = _undoManager.RequestLock();
         VariableSave? placeholder = ShaderBinding.AddNamedPlaceholder(defaultState, Name);
-        bool exposed = _exposeVariableService.HandleExposeVariableClick(selectedInstance, RootVariableName).Succeeded;
+        // The service reports success without an attempt when it refuses (for example no selected element).
+        OptionallyAttemptedGeneralResponse<VariableSave> response = _exposeVariableService.HandleExposeVariableClick(selectedInstance, RootVariableName);
+        bool exposed = response.Succeeded && response.DidAttempt;
         if (!exposed)
         {
             if (placeholder != null)
