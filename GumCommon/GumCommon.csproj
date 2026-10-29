@@ -162,6 +162,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\ShaderParameterMarker.cs" Link="RenderingLibrary\ShaderParameterMarker.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ShaderVariableNaming.cs" Link="RenderingLibrary\ShaderVariableNaming.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ShaderParameterVariables.cs" Link="RenderingLibrary\ShaderParameterVariables.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\ShaderResolverRequirement.cs" Link="RenderingLibrary\ShaderResolverRequirement.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ITextureCoordinate.cs" Link="RenderingLibrary\ITextureCoordinate.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="RenderingLibrary\NineSliceExtensions.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NonFiniteCheck.cs" Link="RenderingLibrary\NonFiniteCheck.cs" />

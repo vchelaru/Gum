@@ -1066,7 +1066,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
     }
 
     [Fact]
-    public void SourceShaderFile_IsNoOp_WhenNoResolverRegistered()
+    public void SourceShaderFile_ReportsErrorAndRendersUnshaded_WhenNoResolverRegistered()
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -1096,9 +1096,26 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         container.AddToManagers(managers, null);
         container.UpdateLayout();
 
-        // With no resolver the assignment is a graceful no-op (no crash); the container renders
-        // unshaded, so the pixel stays red.
-        container.SourceShaderFile = "Shaders/DoesNotMatter.fx";
+        // With no resolver a .fx file is a reported load failure (#7053; it was a silent no-op), and
+        // with ConsumeSilently it does not throw: the container renders unshaded, so the pixel stays red.
+        MissingFileBehavior previousBehavior = GraphicalUiElement.MissingFileBehavior;
+        string? reportedError = null;
+        Action<string> handler = message => reportedError = message;
+        try
+        {
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+
+            container.SourceShaderFile = "Shaders/DoesNotMatter.fx";
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+            GraphicalUiElement.MissingFileBehavior = previousBehavior;
+        }
+
+        reportedError.ShouldNotBeNull();
+        reportedError.ShouldContain("ShadowDusk");
         Color result = RenderToCaptureAndSample(gd, renderer, managers);
 
         result.R.ShouldBeGreaterThan((byte)150);
