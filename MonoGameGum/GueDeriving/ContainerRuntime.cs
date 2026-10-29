@@ -124,11 +124,13 @@ public class ContainerRuntime : InteractiveGue
     /// active backend's registered resolver (XNA-like/raylib:
     /// <c>Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver</c>; Skia:
     /// <c>SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver</c>) and assigns the
-    /// result to <see cref="RenderTargetEffect"/>. With no resolver registered, a <c>.fx</c> or
-    /// <c>.slang</c> file fails like a missing file (honoring <c>GraphicalUiElement.MissingFileBehavior</c>)
-    /// and the message names the ShadowDusk package to add (for example <c>Gum.MonoGame.ShadowDusk</c>,
-    /// then call <c>UseShadowDusk()</c> once at startup); any other extension is a graceful no-op (the
-    /// container renders unshaded). Only has an effect when
+    /// result to <see cref="RenderTargetEffect"/>. With no resolver registered (or one that returns null
+    /// for the file), whatever the extension, the assignment fails like a missing file: it honors
+    /// <c>GraphicalUiElement.MissingFileBehavior</c> (throwing by default once the GumService is
+    /// initialized; <c>ConsumeSilently</c> reports through <c>PropertyAssignmentError</c> and renders
+    /// unshaded) and the message suggests registering a resolver, for example the ShadowDusk package for
+    /// the runtime (<c>Gum.MonoGame.ShadowDusk</c>, then <c>UseShadowDusk()</c> once at startup, before
+    /// creating any element that uses a SourceShaderFile). Only has an effect when
     /// <see cref="IsRenderTarget"/> is true. Write-only: there is no backing field; the resolved
     /// effect is read back via <see cref="RenderTargetEffect"/>.
     /// </summary>

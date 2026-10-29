@@ -9,9 +9,10 @@ using System.IO;
 namespace SkiaGum.Tests.GueDeriving;
 
 /// <summary>
-/// #7053: what assigning <c>SourceShaderFile</c> does when the shader cannot load. SkiaGum compiles
-/// <c>.sksl</c> itself, so only <c>.fx</c> and <c>.slang</c> need the Gum.SkiaSharp.ShadowDusk package;
-/// without a resolver they are reported like a missing file (<see cref="GraphicalUiElement.MissingFileBehavior"/>).
+/// #7053: what assigning <c>SourceShaderFile</c> does when the shader cannot load. SkiaGum has a default
+/// resolver that compiles <c>.sksl</c>, and setting the resolver to null is the documented opt-out (#3998),
+/// so only a registered resolver that does not handle the file is a loud failure here (it is reported like a
+/// missing file, <see cref="GraphicalUiElement.MissingFileBehavior"/>, whatever the extension).
 /// The twin of <c>MonoGameGum.Tests.Runtimes.SourceShaderFileResolverTests</c>.
 /// </summary>
 public class SourceShaderFileResolverTests : IDisposable
@@ -38,56 +39,21 @@ public class SourceShaderFileResolverTests : IDisposable
         GraphicalUiElement.MissingFileBehavior = _previousBehavior;
     }
 
-    [Fact]
-    public void SourceShaderFile_ReportsNothing_WhenNoResolverAndExtensionIsSksl()
-    {
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
-        ContainerRuntime container = new();
-
-        container.SetProperty("SourceShaderFile", "Shaders/Outline.sksl");
-
-        _reported.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void SourceShaderFile_ReportsNothing_WhenNoResolverAndNoFile()
-    {
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
-        ContainerRuntime container = new();
-
-        container.SetProperty("SourceShaderFile", "");
-
-        _reported.ShouldBeEmpty();
-    }
-
+    // The documented opt-out (#3998): null ignores SourceShaderFile, with every MissingFileBehavior.
     [Theory]
-    [InlineData("Shaders/Outline.fx")]
-    [InlineData("Shaders/Outline.slang")]
-    public void SourceShaderFile_ReportsError_WhenNoResolverAndShadowDuskExtensionAndMissingFileBehaviorIsConsumeSilently(string file)
+    [InlineData("Shaders/Outline.sksl", false)]
+    [InlineData("Shaders/Outline.fx", false)]
+    [InlineData("Shaders/Outline.fx", true)]
+    [InlineData("", false)]
+    public void SourceShaderFile_ReportsNothing_WhenResolverIsSetToNull(string file, bool throwBehavior)
     {
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
-        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        GraphicalUiElement.MissingFileBehavior = throwBehavior ? MissingFileBehavior.ThrowException : MissingFileBehavior.ConsumeSilently;
         ContainerRuntime container = new();
 
         container.SetProperty("SourceShaderFile", file);
 
-        _reported.Count.ShouldBe(1);
-        _reported[0].ShouldContain(file);
-        _reported[0].ShouldContain("no shader resolver is registered");
-        _reported[0].ShouldContain("Gum.SkiaSharp.ShadowDusk");
-    }
-
-    [Fact]
-    public void SourceShaderFile_Throws_WhenNoResolverAndShadowDuskExtensionAndMissingFileBehaviorIsThrow()
-    {
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
-        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
-        ContainerRuntime container = new();
-
-        FileNotFoundException exception = Should.Throw<FileNotFoundException>(
-            () => container.SetProperty("SourceShaderFile", "Shaders/Outline.fx"));
-
-        exception.Message.ShouldContain("Gum.SkiaSharp.ShadowDusk");
+        _reported.ShouldBeEmpty();
     }
 
     // The default resolver compiles .sksl only; its exception already names the package.
@@ -116,29 +82,36 @@ public class SourceShaderFileResolverTests : IDisposable
         exception.InnerException.ShouldBeOfType<NotSupportedException>();
     }
 
-    [Fact]
-    public void SourceShaderFile_ReportsFailure_WhenResolverReturnsNull()
+    [Theory]
+    [InlineData("Shaders/Outline.sksl")]
+    [InlineData("Shaders/Outline.fx")]
+    [InlineData("Shaders/Custom.glsl")]
+    public void SourceShaderFile_ReportsFailureNamingThePackage_WhenResolverReturnsNull(string file)
     {
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => null;
         ContainerRuntime container = new();
+
+        container.SetProperty("SourceShaderFile", file);
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldContain("Check if the file exists");
+        _reported[0].ShouldContain("did not handle this file");
+        _reported[0].ShouldContain("Gum.SkiaSharp.ShadowDusk");
+        _reported[0].ShouldContain("before creating any element");
+        _reported[0].ShouldContain("does not retry");
+    }
+
+    [Fact]
+    public void SourceShaderFile_MessageNamesTheElementTag_WhenResolverReturnsNull()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => null;
+        ContainerRuntime container = new();
+        container.Tag = "MyShadedContainer";
 
         container.SetProperty("SourceShaderFile", "Shaders/Outline.sksl");
 
         _reported.Count.ShouldBe(1);
-        _reported[0].ShouldContain("Check if the file exists");
-    }
-
-    // A resolver that returns null for .fx declined it; the message names the package that handles it.
-    [Fact]
-    public void SourceShaderFile_ReportsFailureNamingThePackage_WhenResolverReturnsNullForFx()
-    {
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => null;
-        ContainerRuntime container = new();
-
-        container.SetProperty("SourceShaderFile", "Shaders/Outline.fx");
-
-        _reported.Count.ShouldBe(1);
-        _reported[0].ShouldContain("Gum.SkiaSharp.ShadowDusk");
+        _reported[0].ShouldContain(" in MyShadedContainer");
     }
 
     [Fact]
@@ -161,31 +134,6 @@ public class SourceShaderFileResolverTests : IDisposable
 
         _reported.Count.ShouldBe(1);
         _reported[0].ShouldContain("compile failed");
-    }
-
-    [Fact]
-    public void SourceShaderFile_MessageSaysToCallUseShadowDuskBeforeCreatingElements_WhenNoResolver()
-    {
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
-        ContainerRuntime container = new();
-
-        container.SetProperty("SourceShaderFile", "Shaders/Outline.fx");
-
-        _reported.Count.ShouldBe(1);
-        _reported[0].ShouldContain("before any element or screen");
-        _reported[0].ShouldContain("does not retry");
-    }
-
-    [Fact]
-    public void SourceShaderFile_MessageNamesTheElementTag_WhenNoResolver()
-    {
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
-        ContainerRuntime container = new();
-        container.Tag = "MyShadedContainer";
-
-        container.SetProperty("SourceShaderFile", "Shaders/Outline.fx");
-
-        _reported.Count.ShouldBe(1);
-        _reported[0].ShouldContain(" in MyShadedContainer");
+        _reported[0].ShouldNotContain("did not handle this file");
     }
 }

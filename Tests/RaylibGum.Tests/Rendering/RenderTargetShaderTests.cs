@@ -636,7 +636,7 @@ void main()
     }
 
     [Fact]
-    public void Draw_SourceShaderFile_IsNoOp_WhenNoResolverRegistered()
+    public void Draw_SourceShaderFile_ReportsErrorAndRendersUnshaded_WhenNoResolverRegistered()
     {
         // No resolver registered (clear any leakage from a prior test).
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
@@ -646,9 +646,25 @@ void main()
         GumService.Default.Root.Children.Add(outer);
         GumService.Default.Root.UpdateLayout();
 
-        // With no resolver the assignment is a graceful no-op (no crash); the container renders
-        // unshaded, so the composited pixel stays red.
-        inner.SourceShaderFile = "resources/DoesNotMatter.fs";
+        // With no resolver the assignment is a reported load failure (#7053; it was a silent no-op). Under
+        // ConsumeSilently it does not throw: the container renders unshaded, so the composited pixel stays red.
+        MissingFileBehavior previousBehavior = GraphicalUiElement.MissingFileBehavior;
+        string? reportedError = null;
+        Action<string> handler = message => reportedError = message;
+        try
+        {
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+            inner.SourceShaderFile = "resources/DoesNotMatter.fs";
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+            GraphicalUiElement.MissingFileBehavior = previousBehavior;
+        }
+
+        reportedError.ShouldNotBeNull();
+        reportedError.ShouldContain("no shader resolver is registered");
         DrawOnce();
 
         Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);

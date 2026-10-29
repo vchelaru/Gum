@@ -265,9 +265,9 @@ public partial class CustomSetPropertyOnRenderable
     /// <c>Raylib.LoadShader</c> on raylib. The returned object is boxed into the backend-agnostic
     /// <see cref="RenderableBase.RenderTargetEffect"/> slot (a
     /// <c>Microsoft.Xna.Framework.Graphics.Effect</c> on xnalike, a <c>Raylib_cs.Shader</c> on
-    /// raylib). If null, assigning a <c>.fx</c> or <c>.slang</c> file is a load failure that names the
-    /// ShadowDusk package to add (other extensions stay a graceful no-op and the container renders
-    /// unshaded). Return null to signal a failed load (missing file / compile error); resolution then
+    /// raylib). If null, assigning a shader file is a load failure, reported like a missing file, whose
+    /// message names the ShadowDusk package to add; the container renders unshaded only under
+    /// <see cref="MissingFileBehavior.ConsumeSilently"/>. Return null to signal a failed load (missing file / compile error); resolution then
     /// honors <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring sprite source-file
     /// handling.
     /// </summary>
@@ -506,9 +506,9 @@ public partial class CustomSetPropertyOnRenderable
     /// <see cref="AssignSourceFileOnSprite"/>: the resolved effect is cached in
     /// <see cref="LoaderManager"/> by normalized path so a shader referenced by multiple containers
     /// loads once, and a failed resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>.
-    /// With no resolver registered, a <c>.fx</c> or <c>.slang</c> file fails like a missing file (it
-    /// needs the ShadowDusk package; the message names it), and any other extension is a graceful
-    /// no-op (the container renders unshaded). Called internally by the string property path.
+    /// With no resolver registered, or one that returns null, the file fails like a missing file whatever its
+    /// extension (the message names the ShadowDusk package); under ConsumeSilently the container renders
+    /// unshaded and the error is reported through PropertyAssignmentError. Called internally by the string property path.
     /// </summary>
     public static void AssignSourceShaderFileOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
@@ -521,21 +521,18 @@ public partial class CustomSetPropertyOnRenderable
             return;
         }
 
-        // No resolver registered. A .fx or .slang file can only load through the ShadowDusk package, so
-        // report it like a missing file (#7053) rather than silently rendering unshaded. Anything else
-        // is for a resolver the consumer registers (e.g. Raylib.LoadShader on raylib).
+        // No resolver registered: a shader that cannot load fails like a missing file (#7053) rather than
+        // silently rendering unshaded. The consumer registers a resolver (the ShadowDusk package for the
+        // runtime, or their own, e.g. Raylib.LoadShader on raylib).
         if (RenderTargetEffectResolver == null)
         {
-            if (ShaderResolverRequirement.NeedsShadowDusk(value))
+            string noResolverMessage = ShaderResolverRequirement.BuildNoResolverMessage(value, graphicalUiElement.Tag, ShadowDuskPackageId);
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
             {
-                string noResolverMessage = ShaderResolverRequirement.BuildNoResolverMessage(value, graphicalUiElement.Tag, ShadowDuskPackageId);
-                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-                {
-                    throw new System.IO.FileNotFoundException(noResolverMessage);
-                }
-                effectOwner.RenderTargetEffect = null;
-                RaisePropertyAssignmentError(noResolverMessage);
+                throw new System.IO.FileNotFoundException(noResolverMessage);
             }
+            effectOwner.RenderTargetEffect = null;
+            RaisePropertyAssignmentError(noResolverMessage);
             return;
         }
 
@@ -584,11 +581,11 @@ public partial class CustomSetPropertyOnRenderable
             message += $"\n{value}";
             message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
             message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
-            if (resolveException == null && ShaderResolverRequirement.NeedsShadowDusk(value))
+            if (resolveException == null)
             {
-                // Nothing in the registered resolver chain handled the file (the ShadowDusk loaders throw
-                // when they fail), so the package is missing.
-                message += "\n" + ShaderResolverRequirement.BuildFix(ShadowDuskPackageId);
+                // The resolver returned nothing without throwing (the ShadowDusk loaders throw when they
+                // fail), so no resolver in the chain handled the file.
+                message += "\n" + ShaderResolverRequirement.BuildDeclinedHint(ShadowDuskPackageId);
             }
             if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
             {

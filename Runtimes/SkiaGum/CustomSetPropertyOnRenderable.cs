@@ -1285,8 +1285,8 @@ public partial class CustomSetPropertyOnRenderable
     /// compiled <see cref="SKRuntimeEffect"/>. Defaults to <see cref="SkiaGum.Content.SkSlRuntimeEffectLoader.Load"/>,
     /// which compiles <c>.sksl</c> files. Assign a different resolver to load other formats (the
     /// Gum.SkiaSharp.ShadowDusk package adds <c>.fx</c> and <c>.slang</c>), or assign null to turn
-    /// <c>SourceShaderFile</c> into a graceful no-op for <c>.sksl</c> files (issue #3998); with null, a
-    /// <c>.fx</c> or <c>.slang</c> file fails like a missing file and names the package (#7053).
+    /// <c>SourceShaderFile</c> into a graceful no-op (issue #3998). A resolver that returns null for a
+    /// file is a load failure that names the package (#7053).
     /// </summary>
     public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver { get; set; } =
         SkiaGum.Content.SkSlRuntimeEffectLoader.Load;
@@ -1301,9 +1301,8 @@ public partial class CustomSetPropertyOnRenderable
     /// normalized path so a shader referenced by multiple containers compiles once, and a failed
     /// resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>. That XNA-like/raylib
     /// dispatcher lives in a separate assembly graph SkiaGum doesn't reference, so it can't be called
-    /// directly -- this is a parallel copy, not a shared call. With no resolver registered, a <c>.fx</c>
-    /// or <c>.slang</c> file fails like a missing file, and any other extension is a graceful no-op
-    /// (the container renders unshaded).
+    /// directly -- this is a parallel copy, not a shared call. With the resolver set to null, this is a
+    /// graceful no-op (the container renders unshaded).
     /// </summary>
     private static void AssignSourceShaderFileOnContainer(
         RenderingLibrary.Graphics.InvisibleRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
@@ -1317,20 +1316,10 @@ public partial class CustomSetPropertyOnRenderable
             return;
         }
 
-        // Skia compiles .sksl itself, so only .fx and .slang need the ShadowDusk package; without a
-        // resolver they fail like a missing file (#7053) instead of silently rendering unshaded.
+        // Unlike the other runtimes, null here is a choice, not a missing package: the default resolver
+        // compiles .sksl, so the game that clears it opted out of SourceShaderFile (issue #3998).
         if (RenderTargetEffectResolver == null)
         {
-            if (RenderingLibrary.Graphics.ShaderResolverRequirement.NeedsShadowDusk(value))
-            {
-                string noResolverMessage = RenderingLibrary.Graphics.ShaderResolverRequirement.BuildNoResolverMessage(value!, graphicalUiElement.Tag, ShadowDuskPackageId);
-                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-                {
-                    throw new System.IO.FileNotFoundException(noResolverMessage);
-                }
-                effectOwner.RenderTargetEffect = null;
-                RaisePropertyAssignmentError(noResolverMessage);
-            }
             return;
         }
 
@@ -1383,11 +1372,11 @@ public partial class CustomSetPropertyOnRenderable
             message += $"\n{value}";
             message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
             message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
-            if (resolveException == null && RenderingLibrary.Graphics.ShaderResolverRequirement.NeedsShadowDusk(value))
+            if (resolveException == null)
             {
-                // Nothing in the registered resolver chain handled the file (the ShadowDusk loaders throw
-                // when they fail), so the package is missing.
-                message += "\n" + RenderingLibrary.Graphics.ShaderResolverRequirement.BuildFix(ShadowDuskPackageId);
+                // The resolver returned nothing without throwing (the ShadowDusk loaders throw when they
+                // fail), so no resolver in the chain handled the file.
+                message += "\n" + RenderingLibrary.Graphics.ShaderResolverRequirement.BuildDeclinedHint(ShadowDuskPackageId);
             }
             if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
             {

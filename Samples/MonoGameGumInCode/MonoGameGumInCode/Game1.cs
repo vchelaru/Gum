@@ -71,7 +71,7 @@ namespace MonoGameGumInCode
 
             // Gum core ships no shader loader. The Gum.MonoGame.ShadowDusk package registers one that
             // compiles a ContainerRuntime.SourceShaderFile (.fx or .slang path) at runtime (#3206, #7053).
-            // With no resolver registered, a .fx or .slang SourceShaderFile fails like a missing file
+            // With no resolver registered, a SourceShaderFile fails like a missing file
             // (call UseShadowDusk() before building any screen that uses one).
             GumService.Default.UseShadowDusk();
 
