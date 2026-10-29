@@ -162,4 +162,30 @@ public class SourceShaderFileResolverTests : IDisposable
         _reported.Count.ShouldBe(1);
         _reported[0].ShouldContain("compile failed");
     }
+
+    [Fact]
+    public void SourceShaderFile_MessageSaysToCallUseShadowDuskBeforeCreatingElements_WhenNoResolver()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+        ContainerRuntime container = new();
+
+        container.SetProperty("SourceShaderFile", "Shaders/Outline.fx");
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldContain("before any element or screen");
+        _reported[0].ShouldContain("does not retry");
+    }
+
+    [Fact]
+    public void SourceShaderFile_MessageNamesTheElementTag_WhenNoResolver()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+        ContainerRuntime container = new();
+        container.Tag = "MyShadedContainer";
+
+        container.SetProperty("SourceShaderFile", "Shaders/Outline.fx");
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldContain(" in MyShadedContainer");
+    }
 }

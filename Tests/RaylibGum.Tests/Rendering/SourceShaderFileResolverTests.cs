@@ -101,4 +101,28 @@ public class SourceShaderFileResolverTests : BaseTestClass
 
         exception.InnerException.ShouldBeOfType<InvalidOperationException>();
     }
+
+    [Fact]
+    public void SourceShaderFile_MessageSaysToCallUseShadowDuskBeforeCreatingElements_WhenNoResolver()
+    {
+        ContainerRuntime container = new();
+
+        container.SourceShaderFile = "resources/Outline.fx";
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldContain("before any element or screen");
+        _reported[0].ShouldContain("does not retry");
+    }
+
+    [Fact]
+    public void SourceShaderFile_MessageNamesTheElementTag_WhenNoResolver()
+    {
+        ContainerRuntime container = new();
+        container.Tag = "MyShadedContainer";
+
+        container.SourceShaderFile = "resources/Outline.fx";
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldContain(" in MyShadedContainer");
+    }
 }

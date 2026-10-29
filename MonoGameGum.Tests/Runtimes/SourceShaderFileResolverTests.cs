@@ -171,4 +171,28 @@ public class SourceShaderFileResolverTests : BaseTestClass
         GetEffect(container).ShouldBeSameAs(effect);
         _reported.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void SourceShaderFile_MessageSaysToCallUseShadowDuskBeforeCreatingElements_WhenNoResolver()
+    {
+        ContainerRuntime container = CreateContainer();
+
+        container.SourceShaderFile = "Shaders/Outline.fx";
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldContain("before any element or screen");
+        _reported[0].ShouldContain("does not retry");
+    }
+
+    [Fact]
+    public void SourceShaderFile_MessageNamesTheElementTag_WhenNoResolver()
+    {
+        ContainerRuntime container = CreateContainer();
+        container.Tag = "MyShadedContainer";
+
+        container.SourceShaderFile = "Shaders/Outline.fx";
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldContain(" in MyShadedContainer");
+    }
 }

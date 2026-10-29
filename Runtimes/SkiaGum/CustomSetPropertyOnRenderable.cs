@@ -1136,7 +1136,7 @@ public partial class CustomSetPropertyOnRenderable
                     // this case is unreachable (never assigned) in the Apos.Shapes / non-SKIA
                     // build of this shared file -- guarded here purely so that build, which has no
                     // SkiaSharp reference, still compiles.
-                    AssignSourceShaderFileOnContainer(asInvisibleRenderable, value as string);
+                    AssignSourceShaderFileOnContainer(asInvisibleRenderable, graphicalUiElement, value as string);
                     handled = true;
                     break;
 #endif
@@ -1306,7 +1306,7 @@ public partial class CustomSetPropertyOnRenderable
     /// (the container renders unshaded).
     /// </summary>
     private static void AssignSourceShaderFileOnContainer(
-        RenderingLibrary.Graphics.InvisibleRenderable effectOwner, string? value)
+        RenderingLibrary.Graphics.InvisibleRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
         // First, so the container's shader variables follow the file whatever happens below (#7010).
         RenderingLibrary.Graphics.ShaderParameterVariables.SetShaderFile(effectOwner, value);
@@ -1323,7 +1323,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             if (RenderingLibrary.Graphics.ShaderResolverRequirement.NeedsShadowDusk(value))
             {
-                string noResolverMessage = RenderingLibrary.Graphics.ShaderResolverRequirement.BuildNoResolverMessage(value!, null, ShadowDuskPackageId);
+                string noResolverMessage = RenderingLibrary.Graphics.ShaderResolverRequirement.BuildNoResolverMessage(value!, graphicalUiElement.Tag, ShadowDuskPackageId);
                 if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                 {
                     throw new System.IO.FileNotFoundException(noResolverMessage);
@@ -1375,7 +1375,12 @@ public partial class CustomSetPropertyOnRenderable
         {
             // Resolver registered but couldn't produce an effect (missing file or compile error).
             // Mirror Sprite source-file handling: honor MissingFileBehavior, else report the error.
-            string message = $"Error setting SourceShaderFile on Container\n{value}";
+            string message = "Error setting SourceShaderFile on Container";
+            if (graphicalUiElement.Tag != null)
+            {
+                message += $" in {graphicalUiElement.Tag}";
+            }
+            message += $"\n{value}";
             message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
             message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
             if (resolveException == null && RenderingLibrary.Graphics.ShaderResolverRequirement.NeedsShadowDusk(value))

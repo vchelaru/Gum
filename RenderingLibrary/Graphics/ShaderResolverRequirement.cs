@@ -47,6 +47,6 @@ internal static class ShaderResolverRequirement
     /// </summary>
     public static string BuildFix(string packageId)
     {
-        return $"Loading .fx and .slang files needs the {packageId} package: add it and call UseShadowDusk() on the GumService once at startup.";
+        return $"Loading .fx and .slang files needs the {packageId} package: add it and call UseShadowDusk() on the GumService once at startup, before any element or screen that uses these files is created: a .fx or .slang file assigned before a resolver exists fails right then, and calling UseShadowDusk() later does not retry it (for example call Initialize, then UseShadowDusk(), then ToGraphicalUiElement).";
     }
 }
