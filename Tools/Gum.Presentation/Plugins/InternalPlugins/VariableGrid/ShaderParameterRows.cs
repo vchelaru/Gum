@@ -26,8 +26,7 @@ public static class ShaderParameterRows
         List<SyntheticVariableRow> rows = new List<SyntheticVariableRow>();
         foreach (ShaderParameterInfo info in parameters)
         {
-            // Gum fills these (the texel size and the <Name>IsSet markers) in itself, so there is nothing to set.
-            if (info.Name == ShaderParameterCollection.TexelSizeName || ShaderParameterCollection.IsIsSetName(info.Name))
+            if (IsHiddenParameter(info))
             {
                 continue;
             }
@@ -46,6 +45,10 @@ public static class ShaderParameterRows
         }
         return rows;
     }
+
+    /// <summary>Whether Gum fills the parameter in itself (the texel size and the &lt;Name&gt;IsSet markers), so there is nothing to set.</summary>
+    internal static bool IsHiddenParameter(ShaderParameterInfo info) =>
+        info.Name == ShaderParameterCollection.TexelSizeName || ShaderParameterCollection.IsIsSetName(info.Name);
 
     private static SyntheticVariableRow CreateRow(
         ShaderParameterInfo info, int componentIndex, string rowName, Func<string?> getText, Action<string> setText)
@@ -100,14 +103,14 @@ public static class ShaderParameterRows
         _ => value.W,
     };
 
-    private static object ToDisplayValue(ShaderParameterKind kind, float component) => kind switch
+    internal static object ToDisplayValue(ShaderParameterKind kind, float component) => kind switch
     {
         ShaderParameterKind.Int => (int)component,
         ShaderParameterKind.Bool => component != 0f,
         _ => component,
     };
 
-    private static bool TryConvert(ShaderParameterKind kind, object? value, out float component)
+    internal static bool TryConvert(ShaderParameterKind kind, object? value, out float component)
     {
         component = 0f;
         try
