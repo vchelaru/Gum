@@ -62,4 +62,61 @@ public class ShaderParameterHistoryTests
         sut.HasBaseline("Thickness").ShouldBeTrue();
         sut.GetRestoreValue("Thickness", ShaderParameterValue.FromFloat(3f)).X.ShouldBe(1f);
     }
+
+    [Fact]
+    public void ObserveLive_TheFirstTime_StoresTheValueAsTheBaseline()
+    {
+        ShaderParameterHistory sut = new();
+
+        sut.ObserveLive("Level", ShaderParameterValue.FromFloat(0.5f));
+
+        sut.GetRestoreValue("Level", ShaderParameterValue.FromFloat(1f)).X.ShouldBe(0.5f);
+    }
+
+    [Fact]
+    public void ObserveLive_WhenTheValueIsTheOneGumLeft_KeepsTheBaseline()
+    {
+        ShaderParameterHistory sut = new();
+        sut.ObserveLive("Level", ShaderParameterValue.FromFloat(0.5f));
+        sut.RecordHeld("Level", ShaderParameterValue.FromFloat(1f));
+
+        sut.ObserveLive("Level", ShaderParameterValue.FromFloat(1f));
+
+        sut.GetRestoreValue("Level", ShaderParameterValue.FromFloat(1f)).X.ShouldBe(0.5f);
+    }
+
+    [Fact]
+    public void ObserveLive_WhenTheValueDiffersFromTheOneGumLeft_ReplacesTheBaseline()
+    {
+        ShaderParameterHistory sut = new();
+        sut.ObserveLive("Level", ShaderParameterValue.FromFloat(0.5f));
+        sut.RecordHeld("Level", ShaderParameterValue.FromFloat(1f));
+
+        sut.ObserveLive("Level", ShaderParameterValue.FromFloat(0.9f));
+
+        sut.GetRestoreValue("Level", ShaderParameterValue.FromFloat(1f)).X.ShouldBe(0.9f);
+    }
+
+    [Fact]
+    public void ObserveLive_WhenGumHasNotRecordedAWrite_KeepsTheBaseline()
+    {
+        ShaderParameterHistory sut = new();
+        sut.SetBaseline("Level", ShaderParameterValue.FromFloat(0.5f));
+
+        sut.ObserveLive("Level", ShaderParameterValue.FromFloat(0.9f));
+
+        sut.GetRestoreValue("Level", ShaderParameterValue.FromFloat(1f)).X.ShouldBe(0.5f);
+    }
+
+    [Fact]
+    public void ObserveLive_WhenOnlyTheComponentCountDiffers_ReplacesTheBaseline()
+    {
+        ShaderParameterHistory sut = new();
+        sut.ObserveLive("Vec", ShaderParameterValue.FromVector2(0f, 0f));
+        sut.RecordHeld("Vec", ShaderParameterValue.FromVector2(1f, 0f));
+
+        sut.ObserveLive("Vec", ShaderParameterValue.FromVector2(1f, 0.5f));
+
+        sut.GetRestoreValue("Vec", ShaderParameterValue.FromVector2(1f, 0f)).Y.ShouldBe(0.5f);
+    }
 }

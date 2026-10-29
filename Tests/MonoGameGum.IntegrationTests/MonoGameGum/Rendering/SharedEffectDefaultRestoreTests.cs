@@ -116,6 +116,72 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         ShouldBeNear(Channel(data, 1, 'R'), 230);
     }
 
+    // The baseline is "what the application left on the effect", not only the compiled default (#7047): a game
+    // that changes a parameter after Gum's first write must see its value on a container that does not set it.
+    [Fact]
+    public void SharedEffect_WhenTheGameChangesAFloatAfterGumWroteIt_AnUnsetContainerReadsTheGamesValue()
+    {
+        Color[] data = Render(
+            Containers(b => { }, a => a.SetShaderParameter("Level", 1f)),
+            afterFirstFrame: (effect, _) => effect.Parameters["Level"]!.SetValue(0.9f));
+
+        ShouldBeNear(Channel(data, 0, 'R'), 230);
+        Channel(data, 1, 'R').ShouldBe(255);
+    }
+
+    [Fact]
+    public void SharedEffect_WhenTheGameChangesAVectorAfterGumWroteIt_AnUnsetContainerReadsTheGamesValue()
+    {
+        Color[] data = Render(
+            Containers(b => { }, a => a.SetShaderParameter("Vec", 1f, 0f)),
+            afterFirstFrame: (effect, _) => effect.Parameters["Vec"]!.SetValue(new Vector2(0.8f, 0.2f)));
+
+        ShouldBeNear(Channel(data, 0, 'G'), 204);
+        ShouldBeNear(Channel(data, 0, 'B'), 51);
+    }
+
+    [Fact]
+    public void SharedEffect_WhenTheGameChangesTheValueTwice_AnUnsetContainerReadsTheLatestOne()
+    {
+        Color[] data = Render(
+            Containers(b => { }, a => a.SetShaderParameter("Level", 1f)),
+            afterFirstFrame: (effect, _) =>
+            {
+                effect.Parameters["Level"]!.SetValue(0.9f);
+            },
+            afterSecondFrame: (effect, _) => effect.Parameters["Level"]!.SetValue(0.2f));
+
+        ShouldBeNear(Channel(data, 0, 'R'), 51);
+    }
+
+    // The history belongs to the Effect instance, so an effect that replaces another (a reload) is read afresh.
+    [Fact]
+    public void SharedEffect_WhenTheEffectIsReplaced_TheNewEffectsOwnValueIsTheBaseline()
+    {
+        Effect? reloaded = null;
+        try
+        {
+            Color[] data = Render(
+                Containers(b => { }, a => a.SetShaderParameter("Level", 1f)),
+                afterFirstFrame: (effect, containers) =>
+                {
+                    reloaded = CompileDefaultsEffect(effect.GraphicsDevice);
+                    reloaded.Parameters["Level"]!.SetValue(0.3f);
+                    foreach (ContainerRuntime container in containers)
+                    {
+                        container.RenderTargetEffect = reloaded;
+                    }
+                });
+
+            ShouldBeNear(Channel(data, 0, 'R'), 77);
+            Channel(data, 1, 'R').ShouldBe(255);
+        }
+        finally
+        {
+            reloaded?.Dispose();
+        }
+    }
+
     // ApplyShaderParameters runs for every container with an effect on every draw: once the baselines are
     // captured, applying and restoring must not allocate.
     [Fact]
@@ -170,7 +236,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 
     private static Action<ContainerRuntime>[] Containers(params Action<ContainerRuntime>[] setters) => setters;
 
-    private Color[] Render(Action<ContainerRuntime>[] setters, Action<ContainerRuntime>? changeAfterFirstFrame = null, float? gameSetsLevel = null)
+    private Color[] Render(Action<ContainerRuntime>[] setters, Action<ContainerRuntime>? changeAfterFirstFrame = null, float? gameSetsLevel = null,
+        Action<Effect, ContainerRuntime[]>? afterFirstFrame = null, Action<Effect, ContainerRuntime[]>? afterSecondFrame = null)
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -211,6 +278,16 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         if (changeAfterFirstFrame != null)
         {
             changeAfterFirstFrame(containers[0]);
+            data = RenderToCapture(gd, renderer, managers);
+        }
+        if (afterFirstFrame != null)
+        {
+            afterFirstFrame(effect, containers);
+            data = RenderToCapture(gd, renderer, managers);
+        }
+        if (afterSecondFrame != null)
+        {
+            afterSecondFrame(effect, containers);
             data = RenderToCapture(gd, renderer, managers);
         }
         return data;

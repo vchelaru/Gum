@@ -1596,14 +1596,14 @@ public class Renderer : IRenderer
 
         // A shared effect keeps the last values written to it, so what an earlier container set and
         // this one did not goes back to the value the effect held before Gum first wrote it (its compiled
-        // default) before this container's values go on.
+        // default, or what the application set since) before this container's values go on.
         ShaderParameterHistory history = ShaderParameterHistory.For(effect);
         foreach (KeyValuePair<string, ShaderParameterValue> stale in history.TakeStale(parameters))
         {
             EffectParameter? staleParameter = effect.Parameters[stale.Key];
             if (staleParameter != null)
             {
-                SetEffectParameter(staleParameter, history.GetRestoreValue(stale.Key, stale.Value));
+                WriteTracked(history, stale.Key, staleParameter, history.GetRestoreValue(stale.Key, stale.Value));
             }
         }
 
@@ -1622,23 +1622,29 @@ public class Renderer : IRenderer
 
             string isSetName = ShaderParameterCollection.GetIsSetName(pair.Key);
             EffectParameter? isSetParameter = effect.Parameters[isSetName];
-            CaptureBaseline(history, isSetName, isSetParameter);
-            CaptureBaseline(history, pair.Key, parameter);
-            isSetParameter?.SetValue(1f);
+            if (isSetParameter != null)
+            {
+                WriteTracked(history, isSetName, isSetParameter, ShaderParameterValue.FromFloat(1f));
+            }
             history.Record(isSetName, ShaderParameterValue.FromFloat(1f));
             history.Record(pair.Key, pair.Value);
-            SetEffectParameter(parameter, pair.Value);
+            WriteTracked(history, pair.Key, parameter, pair.Value);
         }
     }
 
-    // Reads what the effect holds before Gum's first write of this name, once, so a later container that
-    // does not set it gets that back instead of zero.
-    private static void CaptureBaseline(ShaderParameterHistory history, string name, EffectParameter? parameter)
+    // Writes one parameter and keeps the history current: what the effect holds just before is the baseline (or a
+    // new one, when the application changed it since Gum's last write), and what it holds just after is what the
+    // next write is compared against. A parameter that cannot be read is only written.
+    private static void WriteTracked(ShaderParameterHistory history, string name, EffectParameter parameter, ShaderParameterValue value)
     {
-        if (parameter != null && !history.HasBaseline(name) &&
-            EffectShaderParameters.TryReadValue(parameter, out ShaderParameterValue baseline))
+        if (EffectShaderParameters.TryReadValue(parameter, out ShaderParameterValue live))
         {
-            history.SetBaseline(name, baseline);
+            history.ObserveLive(name, live);
+        }
+        SetEffectParameter(parameter, value);
+        if (EffectShaderParameters.TryReadValue(parameter, out ShaderParameterValue held))
+        {
+            history.RecordHeld(name, held);
         }
     }
 
