@@ -46,8 +46,7 @@ namespace Gum.Managers
         /// </summary>
         private Dictionary<string, BehaviorSave>? _behaviorsReloadedWhileDeferring;
 
-        /// <summary>The project's referenced files, walked once for the files of an open flush; null otherwise.</summary>
-        private HashSet<FilePath>? _referencedFilesInFlush;
+        private readonly IProjectReferencedFiles _referencedFiles;
 
         /// <summary>A referenced file changed while a scope was open, so closing it reloads the canvas once.</summary>
         private bool _contentReloadPending;
@@ -65,8 +64,10 @@ namespace Gum.Managers
             IDialogService dialogService,
             IUnsavedChangesTracker unsavedChangesTracker,
             IVariableReferenceLogic variableReferenceLogic,
-            IUndoManager undoManager)
+            IUndoManager undoManager,
+            IProjectReferencedFiles? referencedFiles = null)
         {
+            _referencedFiles = referencedFiles ?? new ProjectReferencedFiles();
             _variableReferenceLogic = variableReferenceLogic;
             _undoManager = undoManager;
             _dialogService = dialogService;
@@ -108,7 +109,6 @@ namespace Gum.Managers
                 bool shouldRefresh = _owner._contentReloadPending;
                 _owner._reloadedWhileDeferring = null;
                 _owner._behaviorsReloadedWhileDeferring = null;
-                _owner._referencedFilesInFlush = null;
                 _owner._contentReloadPending = false;
                 try
                 {
@@ -458,7 +458,7 @@ namespace Gum.Managers
 
         private void ReactToProjectChanged(FilePath file)
         {
-            _referencedFilesInFlush = null;
+            _referencedFiles.Invalidate();
 
             // Reloading the project replaces every element and behavior, so any unsaved edit
             // anywhere in it would be lost (#5388).
@@ -514,9 +514,15 @@ namespace Gum.Managers
         /// </summary>
         private void ReactToReferencedFileChanged(FilePath file)
         {
-            if (!IsCachedByCanvas(file) && !IsReferencedByProject(file))
+            if (!IsReferencedFile(file))
             {
                 return;
+            }
+
+            if (ListsOtherFiles(file))
+            {
+                // What the project references includes the pictures this file names, which the edit changed.
+                _referencedFiles.Invalidate();
             }
 
             if (_reloadedWhileDeferring != null)
@@ -528,6 +534,27 @@ namespace Gum.Managers
                 RefreshCanvasAndVariables();
             }
         }
+
+        /// <summary>
+        /// True when <paramref name="file"/> is one the tool refreshes through the referenced-file reaction: an
+        /// element in the project references it, or the canvas cached it. A file with a reaction of its own is
+        /// never one, whatever the project lists. The answer comes from the kept set of referenced files and
+        /// the canvas's cache, so it is cheap to ask for every file event: the project is walked once until
+        /// something changes what it references.
+        /// </summary>
+        public bool IsReferencedFile(FilePath file) =>
+            !HasItsOwnReaction(file.Extension) && (IsReferencedByProject(file) || IsCachedByCanvas(file));
+
+        /// <summary>
+        /// Files another reaction owns, which the project's walk lists anyway: the State Animation plugin reloads
+        /// animation collections, and the Fonts tab and code output plugins read their own files. Reloading the
+        /// canvas for them as well would redo that work.
+        /// </summary>
+        private static bool HasItsOwnReaction(string extension) =>
+            extension is "ganx" or "ganj" or "gumfcs" or "codsj";
+
+        /// <summary>Files that name other files the project then references (an animation chain's pictures, a font's pages).</summary>
+        private static bool ListsOtherFiles(FilePath file) => file.Extension is "achx" or "achj" or "fnt";
 
         private static bool IsCachedByCanvas(FilePath file) =>
             LoaderManager.Self.CachedDisposables.Keys.Any(key => IsSameFile(key, file));
@@ -572,6 +599,12 @@ namespace Gum.Managers
 
         private static bool IsSameFile(string path, FilePath file)
         {
+            // Most keys are other files; comparing the names first avoids building a path for each of them.
+            if (!path.EndsWith(System.IO.Path.GetFileName(file.FullPath), StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
             try
             {
                 return new FilePath(path) == file;
@@ -586,39 +619,20 @@ namespace Gum.Managers
         /// <summary>
         /// True when some element in the project references <paramref name="file"/> (a variable's value, an
         /// animation chain's frame, a font's page), wherever it lives. The walk of the whole project is kept
-        /// while a flush is open, until a reloaded element changes what is referenced.
+        /// until <see cref="InvalidateReferencedFiles"/>.
         /// </summary>
-        public bool IsReferencedByProject(FilePath file)
-        {
-            HashSet<FilePath>? referenced = _referencedFilesInFlush;
-            if (referenced == null)
-            {
-                referenced = new HashSet<FilePath>();
-                foreach (string path in ObjectFinder.Self.GetAllFilesInProject(
-                    Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles))
-                {
-                    try
-                    {
-                        referenced.Add(new FilePath(path));
-                    }
-                    catch
-                    {
-                        // An invalid path in a variable cannot be the file that changed.
-                    }
-                }
+        public bool IsReferencedByProject(FilePath file) => _referencedFiles.Contains(file);
 
-                if (_reloadedWhileDeferring != null)
-                {
-                    _referencedFilesInFlush = referenced;
-                }
-            }
-            return referenced.Contains(file);
-        }
+        /// <summary>
+        /// Forgets the kept set of referenced files. Called whenever what the project references may have
+        /// changed: an element, behavior or project reload here, and an edit made in the tool.
+        /// </summary>
+        public void InvalidateReferencedFiles() => _referencedFiles.Invalidate();
 
         private void ReactToElementSaveChanged(FilePath file)
         {
             // What the project references may have changed.
-            _referencedFilesInFlush = null;
+            _referencedFiles.Invalidate();
 
             var projectDirectory = _fileCommands.ProjectDirectory;
             var relativeToFolderForType = GetElementNameForElementFile(file, projectDirectory);
@@ -760,7 +774,7 @@ namespace Gum.Managers
 
         private void ReactToBehaviorChanged(FilePath file)
         {
-            _referencedFilesInFlush = null;
+            _referencedFiles.Invalidate();
             // File changes are only watched while a project is open.
             var gumProject = _projectState.GetLoadedProject();
             var behavior = gumProject.Behaviors.FirstOrDefault(item =>

@@ -245,8 +245,8 @@ public class FileWatchManager : IFileWatchManager
             or "achx" or "achj"
             or "codsj"
             || ShaderFileExtensions.Contains(extension)
-            // Any other file an element references (svg, lottie json, a decoder plugin's format, ...).
-            || _fileChangeReactionLogic.IsReferencedByProject(fileName))
+            // Any other file an element references or the canvas cached (svg, lottie json, a decoder plugin's format, ...).
+            || _fileChangeReactionLogic.IsReferencedFile(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -258,10 +258,10 @@ public class FileWatchManager : IFileWatchManager
         // Detect deletion of an element file so the tool can flag the element's source as missing
         // (red "!" / GUM0004) instead of silently diverging from disk (issue #3367). Enqueue it
         // like a change - the flush re-checks existence, so a delete-then-recreate (atomic save)
-        // within the debounce window collapses back into a normal reload. A file an element references
-        // (picture, svg, font, ...) is queued the same way so the canvas stops showing the cached copy;
-        // other deletes are left unhandled.
-        if (IsElementFileExtension(fileName) || IsShaderFileExtension(fileName) || _fileChangeReactionLogic.IsReferencedByProject(fileName))
+        // within the debounce window collapses back into a normal reload. A file an element references or the
+        // canvas cached (picture, svg, font, ...) is queued the same way so the canvas stops showing the cached
+        // copy; other deletes are left unhandled.
+        if (IsElementFileExtension(fileName) || IsShaderFileExtension(fileName) || _fileChangeReactionLogic.IsReferencedFile(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -420,6 +420,9 @@ public class FileWatchManager : IFileWatchManager
     public void RecordWrittenContent(FilePath filePath)
         => _ignoreList.RecordWrittenContent(filePath);
 
+    public void InvalidateReferencedFiles()
+        => _fileChangeReactionLogic.InvalidateReferencedFiles();
+
     public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromMilliseconds(500)) - DateTime.Now;
 
     private enum FileReadiness
@@ -511,7 +514,7 @@ public class FileWatchManager : IFileWatchManager
                     // file that's still gone at flush time is a real deletion the user should see
                     // (issue #3367) — route it to the delete reaction instead of dropping silently.
                     if (!IsTransientTempFile(file)
-                        && (IsElementFileExtension(file) || IsShaderFileExtension(file) || _fileChangeReactionLogic.IsReferencedByProject(file)))
+                        && (IsElementFileExtension(file) || IsShaderFileExtension(file) || _fileChangeReactionLogic.IsReferencedFile(file)))
                     {
                         deletedFiles.Add(file);
                     }
