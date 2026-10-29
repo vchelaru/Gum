@@ -8,7 +8,7 @@ namespace SkiaGum.GpuTests;
 /// Ganesh sampling path. Windows only; on a machine without a GPU or on another OS it throws, so a test fails
 /// loudly instead of passing without having tested anything.
 /// </summary>
-public sealed class WglGpuContext
+public sealed class WglGpuContext : IDisposable
 {
     [StructLayout(LayoutKind.Sequential)]
     struct PixelFormatDescriptor
@@ -29,27 +29,28 @@ public sealed class WglGpuContext
     [DllImport("gdi32")] static extern bool SetPixelFormat(IntPtr dc, int format, ref PixelFormatDescriptor pfd);
     [DllImport("opengl32")] static extern IntPtr wglCreateContext(IntPtr dc);
     [DllImport("opengl32")] static extern bool wglMakeCurrent(IntPtr dc, IntPtr rc);
+    [DllImport("opengl32")] static extern bool wglDeleteContext(IntPtr rc);
+    [DllImport("user32")] static extern int ReleaseDC(IntPtr hwnd, IntPtr dc);
+    [DllImport("user32")] static extern bool DestroyWindow(IntPtr hwnd);
 
-    static readonly Lazy<WglGpuContext> LazyInstance = new(() => new WglGpuContext());
     // xunit runs tests on arbitrary threads; the GL context is current on one thread at a time.
     static readonly object Lock = new();
 
-    public static WglGpuContext Instance => LazyInstance.Value;
-
+    readonly IntPtr _hwnd;
     readonly IntPtr _dc;
     readonly IntPtr _rc;
     readonly GRContext _grContext;
 
-    WglGpuContext()
+    public WglGpuContext()
     {
         if (!OperatingSystem.IsWindows())
         {
             throw new PlatformNotSupportedException("SkiaGum.GpuTests creates its GL context with WGL and runs on Windows only.");
         }
         // Style 0x80000000 is WS_POPUP and the window is never shown.
-        IntPtr hwnd = CreateWindowExW(0, "STATIC", "SkiaGum.GpuTests", 0x80000000, 0, 0, 64, 64,
+        _hwnd = CreateWindowExW(0, "STATIC", "SkiaGum.GpuTests", 0x80000000, 0, 0, 64, 64,
             IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
-        _dc = GetDC(hwnd);
+        _dc = GetDC(_hwnd);
         var pfd = new PixelFormatDescriptor
         {
             nSize = (ushort)Marshal.SizeOf<PixelFormatDescriptor>(),
@@ -65,6 +66,19 @@ public sealed class WglGpuContext
         MakeCurrent();
         _grContext = GRContext.CreateGl(GRGlInterface.Create())
             ?? throw new InvalidOperationException("GRContext.CreateGl failed; this machine has no usable OpenGL GPU.");
+    }
+
+    public void Dispose()
+    {
+        lock (Lock)
+        {
+            MakeCurrent();
+            _grContext.Dispose();
+            wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
+            wglDeleteContext(_rc);
+            ReleaseDC(_hwnd, _dc);
+            DestroyWindow(_hwnd);
+        }
     }
 
     void MakeCurrent()
