@@ -67,7 +67,8 @@ public class ReferenceReevaluationAllocationTests : BaseTestClass
 
     // Bytes per frame the two valid rows below allocate on a live update, measured before the type check existed.
     // The check must add nothing: a game runs this every time a read variable changes.
-    private const long ValidRowBytesPerFrame = 8480;
+    // Includes 24 bytes for VariableSave.ShaderParameter: three VariableSaves per frame, each 8 bytes larger.
+    private const long ValidRowBytesPerFrame = 8504;
 
     [Fact]
     public void SetProperty_VariableAValidPlainReferenceReads_AllocatesNoMoreThanTheRowsDid()
