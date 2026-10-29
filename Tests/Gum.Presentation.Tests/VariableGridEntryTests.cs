@@ -457,4 +457,84 @@ public class VariableGridEntryTests : BaseTestClass
 
         screen.BaseType.ShouldBeNull();
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    [InlineData("<None>")]
+    public void SetValue_ShouldRefuseAndKeepComponentBaseType_WhenCommittingAnEmptyBaseType(string? emptyValue)
+    {
+        ComponentSave component = CreateComponent("MyComponent");
+        component.BaseType = "Container";
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(component.DefaultState);
+        VariableGridEntry sut = CreateSut("BaseType", component.DefaultState, component);
+
+        GeneralResponse response = sut.SetValue(component, emptyValue, VariablePropertyCommitType.Full);
+
+        response.Succeeded.ShouldBeFalse();
+        component.BaseType.ShouldBe("Container");
+        _mocker.GetMock<ISetVariableLogic>().VerifyNoOtherCalls();
+        _mocker.GetMock<IUndoManager>().Verify(x => x.RecordUndo(), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    public void SetValue_ShouldRefuseAndKeepInstanceBaseType_WhenCommittingAnEmptyBaseType(string? emptyValue)
+    {
+        ComponentSave component = CreateComponent("MyComponent");
+        InstanceSave instance = new() { Name = "Box", BaseType = "Sprite", ParentContainer = component };
+        component.Instances.Add(instance);
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(component.DefaultState);
+        VariableGridEntry sut = CreateSut("BaseType", component.DefaultState, component, instance);
+
+        GeneralResponse response = sut.SetValue(instance, emptyValue, VariablePropertyCommitType.Full);
+
+        response.Succeeded.ShouldBeFalse();
+        instance.BaseType.ShouldBe("Sprite");
+        _mocker.GetMock<ISetVariableLogic>().VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void SetValue_ShouldAcceptUnknownBaseTypeName_WhenCommittingToAComponent()
+    {
+        // Unchanged on purpose: a base component that is not loaded yet can be named deliberately.
+        ComponentSave component = CreateComponent("MyComponent");
+        component.BaseType = "Container";
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(component.DefaultState);
+        _mocker.GetMock<ISetVariableLogic>()
+            .Setup(x => x.PropertyValueChanged(
+                It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<InstanceSave>(), It.IsAny<StateSave>(),
+                It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
+            .Returns(GeneralResponse.SuccessfulResponse);
+        VariableGridEntry sut = CreateSut("BaseType", component.DefaultState, component);
+
+        sut.SetValue(component, "NoSuchThing", VariablePropertyCommitType.Full);
+
+        component.BaseType.ShouldBe("NoSuchThing");
+    }
+
+    [Fact]
+    public void SetValue_ShouldAllowEmptyBaseType_WhenCommittingToAScreen()
+    {
+        ScreenSave screen = new() { Name = "MyScreen", BaseType = "SomeBase" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+        _mocker.GetMock<ISetVariableLogic>()
+            .Setup(x => x.PropertyValueChanged(
+                It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<InstanceSave>(), It.IsAny<StateSave>(),
+                It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
+            .Returns(GeneralResponse.SuccessfulResponse);
+        VariableGridEntry sut = CreateSut("BaseType", screen.DefaultState, screen);
+
+        sut.SetValue(screen, "", VariablePropertyCommitType.Full);
+
+        screen.BaseType.ShouldBeNullOrEmpty();
+    }
 }

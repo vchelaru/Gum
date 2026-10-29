@@ -239,4 +239,22 @@ public class VariableMenuScenarioTests
 
         menu.ShouldNotContain(header => header.StartsWith("Make Default"));
     }
+
+    [AvaloniaFact]
+    public void ClearingAComponentsBaseTypeCombo_AndPressingEnter_RevertsToThePreviousBaseType()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        grid.Select(button);
+
+        global::Avalonia.Controls.ComboBox combo = grid.Combo("BaseType");
+        grid.Input.Click(combo);
+        grid.Input.Press(Key.A, PhysicalKey.A, RawInputModifiers.Control);
+        grid.Input.Press(Key.Delete, PhysicalKey.Delete);
+        grid.Input.Press(Key.Enter, PhysicalKey.Enter);
+        grid.Settle();
+
+        button.BaseType.ShouldBe("Container");
+        grid.ComboText("BaseType").ShouldBe("Container");
+    }
 }

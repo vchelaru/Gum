@@ -816,6 +816,13 @@ public class VariableGridEntry
 
     private bool CanSetValue(object? newValue)
     {
+        // The BaseType combo is editable, so select-all + Delete commits an empty value. Refusing
+        // it makes the cell revert to the previous value. Unknown names are still accepted.
+        if (_isBaseTypeThatMustKeepAValue && (newValue is null || string.IsNullOrWhiteSpace(newValue.ToString()) || newValue is "<None>"))
+        {
+            return false;
+        }
+
         if (RootVariableName == "Points")
         {
             var value = newValue as List<System.Numerics.Vector2>;
