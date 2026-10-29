@@ -2301,6 +2301,110 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         error.Message.ShouldContain("Icon.Outline_Tint__Y");
     }
 
+    private ComponentSave AddCardExposing(string name, string instanceName, string instanceBaseType, string exposedName, string exposedVariable)
+    {
+        ComponentSave card = new ComponentSave { Name = name, BaseType = "Container" };
+        card.States.Add(new StateSave { Name = "Default", ParentContainer = card });
+        if (instanceName != string.Empty)
+        {
+            card.Instances.Add(new InstanceSave { Name = instanceName, BaseType = instanceBaseType, ParentContainer = card });
+        }
+        card.DefaultState!.Variables.Add(new VariableSave { Name = exposedVariable, ExposedAsName = exposedName, Type = "string", Value = "Hi", SetsValue = true });
+        Project.Components.Add(card);
+        return card;
+    }
+
+    private string GetGum0009Message(string line)
+    {
+        ComponentSave reader = AddComponentWithReferences("Reader", sourceObject: null, line);
+        return _sut.GetErrorsFor(reader, Project).ShouldHaveSingleItem().Message;
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameMissingElement_WhenReferencedElementDoesNotExist()
+    {
+        string message = GetGum0009Message("Text = Components/Card.CaptionText");
+
+        message.ShouldBe("Default: the VariableReferences line \"Text = Components/Card.CaptionText\" reads from Components/Card, which the project does not have, so it never applies.");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldSayNoSuchVariable_WhenElementHasNoSuchVariableAtAll()
+    {
+        AddCardExposing("Card", "Caption", "Text", "CaptionText", "Caption.Text");
+
+        string message = GetGum0009Message("Text = Components/Card.Nope");
+
+        message.ShouldBe("Default: the VariableReferences line \"Text = Components/Card.Nope\" reads \"Nope\" from Components/Card, which has no such variable, so it never applies.");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameInstanceType_WhenExposedVariableInstanceTypeLostTheVariable_Issue7151()
+    {
+        AddCardExposing("Card", "Caption", "Container", "CaptionText", "Caption.Text");
+
+        string message = GetGum0009Message("Text = Components/Card.CaptionText");
+
+        message.ShouldBe("Default: the VariableReferences line \"Text = Components/Card.CaptionText\" reads \"CaptionText\" from Components/Card, which exposes Caption.Text, but Caption's type (Container) has no Text variable, so it never applies.");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameMissingInstance_WhenExposedVariableInstanceIsGone_Issue7151()
+    {
+        AddCardExposing("Card", instanceName: "", "Text", "CaptionText", "Caption.Text");
+
+        string message = GetGum0009Message("Text = Components/Card.CaptionText");
+
+        message.ShouldBe("Default: the VariableReferences line \"Text = Components/Card.CaptionText\" reads \"CaptionText\" from Components/Card, which exposes Caption.Text, but Card has no instance Caption, so it never applies.");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldFollowExposedChain_WhenInnerComponentExposedVariableLostItsType_Issue7151()
+    {
+        AddCardExposing("Inner", "Sub", "Container", "Text", "Sub.Text");
+        AddCardExposing("Card", "Caption", "Inner", "CaptionText", "Caption.Text");
+
+        string message = GetGum0009Message("Text = Components/Card.CaptionText");
+
+        message.ShouldBe("Default: the VariableReferences line \"Text = Components/Card.CaptionText\" reads \"CaptionText\" from Components/Card, which exposes Caption.Text, but Caption's type (Inner) exposes Sub.Text, but Sub's type (Container) has no Text variable, so it never applies.");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameInstanceType_WhenExposedVariableIsOnBaseOfReferencedComponent_Issue7151()
+    {
+        AddCardExposing("Card", "Caption", "Container", "CaptionText", "Caption.Text");
+        ComponentSave derived = new ComponentSave { Name = "FancyCard", BaseType = "Card" };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        Project.Components.Add(derived);
+
+        string message = GetGum0009Message("Text = Components/FancyCard.CaptionText");
+
+        message.ShouldBe("Default: the VariableReferences line \"Text = Components/FancyCard.CaptionText\" reads \"CaptionText\" from Components/FancyCard, which exposes Caption.Text, but Caption's type (Container) has no Text variable, so it never applies.");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameInstanceType_WhenLocalReferenceReadsBrokenExposedVariable_Issue7151()
+    {
+        ComponentSave card = AddCardExposing("Card", "Caption", "Container", "CaptionText", "Caption.Text");
+        VariableListSave<string> references = new VariableListSave<string> { Name = "VariableReferences", Type = "string" };
+        references.Value.Add("Width = CaptionText");
+        card.DefaultState!.VariableLists.Add(references);
+
+        string message = _sut.GetErrorsFor(card, Project).ShouldHaveSingleItem().Message;
+
+        message.ShouldBe("Default: the VariableReferences line \"Width = CaptionText\" reads \"CaptionText\", which Card exposes Caption.Text, but Caption's type (Container) has no Text variable, so it never applies.");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportNothing_WhenExposedVariableInstanceTypeIsMissing()
+    {
+        // The missing type is reported once, as a missing base type, not again per reference.
+        AddCardExposing("Card", "Caption", "Components/Gone", "CaptionText", "Caption.Text");
+        ComponentSave reader = AddComponentWithReferences("Reader", sourceObject: null, "Text = Components/Card.CaptionText");
+
+        _sut.GetErrorsFor(reader, Project).Where(item => item.Code == "GUM0009").ShouldBeEmpty();
+    }
+
     private ComponentSave AddStylesComponent(string name, string colorInstanceName)
     {
         ComponentSave styles = new ComponentSave { Name = name, BaseType = "Container" };

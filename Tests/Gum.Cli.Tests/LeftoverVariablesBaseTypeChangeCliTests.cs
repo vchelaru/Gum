@@ -61,18 +61,19 @@ public class LeftoverVariablesBaseTypeChangeCliTests : BaseTestClass
     }
 
     [Fact]
-    public void Check_ReferenceToExposedLeftover_ReportsMisleadingNoSuchVariableWarning_Issue7151()
+    public void Check_ReferenceToExposedLeftover_NamesInstanceTypeInWarning_Issue7151()
     {
-        // The only result on a project with leftovers: GUM0009 claims Card has no CaptionText, though the
-        // exposed variable is still in Card's file and in the Variables tab. Filed as #7151; when it is
-        // fixed this expectation changes, and nothing else may start to be reported.
+        // The only result on a project with leftovers: GUM0009 for the reference that no longer applies. It
+        // names the real cause (Caption's type lost Text), not that Card lacks CaptionText, which is still in
+        // Card's file and in the Variables tab. Nothing else may start to be reported.
         CheckResults(CreateProject(typeChanged: false)).ShouldBeEmpty();
 
         string gumx = CreateProject(typeChanged: true);
 
         List<(string Element, string? Code, string Severity)> results = CheckResults(gumx);
         results.ShouldBe(new[] { ("Reader", (string?)"GUM0009", "Warning") });
-        CliTestHelper.Run("check", gumx).StandardOutput.ShouldContain("which has no such variable");
+        CliTestHelper.Run("check", gumx).StandardOutput
+            .ShouldContain("which exposes Caption.Text, but Caption's type (Container) has no Text variable");
         GumProjectSave.Load(gumx, out _)!.Components.Single(c => c.Name == "Card")
             .DefaultState!.Variables.ShouldContain(variable => variable.ExposedAsName == "CaptionText");
     }
