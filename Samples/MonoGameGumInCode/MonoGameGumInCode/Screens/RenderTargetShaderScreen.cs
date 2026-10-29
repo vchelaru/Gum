@@ -5,11 +5,8 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
 #if RAYLIB
-using System.Linq;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
-using ShadowDusk.Compiler.Raylib;
-using ShadowDusk.Core;
 using static Raylib_cs.Raylib;
 using Color = Raylib_cs.Color;
 using EffectType = Raylib_cs.Shader;
@@ -18,11 +15,6 @@ using SkiaSharp;
 using Color = SkiaSharp.SKColor;
 using EffectType = SkiaSharp.SKRuntimeEffect;
 #else
-using System.Linq;
-using RenderingLibrary;
-using ShadowDusk.Compiler;
-using ShadowDusk.Compiler.Slang;
-using ShadowDusk.Core;
 using Color = Microsoft.Xna.Framework.Color;
 using EffectType = Microsoft.Xna.Framework.Graphics.Effect;
 #endif
@@ -46,13 +38,14 @@ namespace MonoGameGumInCode.Screens;
 /// <see cref="ContainerRuntime.RenderTargetEffect"/>.</item>
 /// <item>Right cell — reference the shader file by path via
 /// <see cref="ContainerRuntime.SourceShaderFile"/>. Gum resolves the path through the
-/// app-registered <c>RenderTargetEffectResolver</c> (wired in each sample's entry point); Gum core
+/// registered <c>RenderTargetEffectResolver</c> (wired in each sample's entry point); Gum core
 /// itself neither compiles nor loads the shader.</item>
 /// </list>
 /// All cells share the same grayscale logic, authored per-platform in the shading language each
-/// backend needs: MonoGame compiles HLSL at runtime via ShadowDusk (no content pipeline,
-/// <c>Content/Grayscale.fx</c>); raylib loads GLSL directly (no compiler dependency,
-/// <c>resources/Grayscale.fs</c>); Skia compiles hand-authored SkSL via
+/// backend needs: MonoGame compiles HLSL at runtime via the Gum.MonoGame.ShadowDusk package's
+/// <c>UseShadowDusk()</c> (no content pipeline, <c>Content/Grayscale.fx</c>); raylib loads GLSL directly
+/// (no compiler dependency, <c>resources/Grayscale.fs</c>) and takes <c>.slang</c> through
+/// Gum.raylib.ShadowDusk; Skia compiles hand-authored SkSL via
 /// <c>SKRuntimeEffect.CreateShader</c> (<c>resources/Grayscale.sksl</c>). Left is the unmodified
 /// bear for comparison. A fourth, MonoGame-only cell (<c>Content/Grayscale.slang</c>) repeats the
 /// SourceShaderFile wiring style for Slang input instead of raw HLSL (issue #4677) — ShadowDusk's
@@ -355,9 +348,10 @@ internal class RenderTargetShaderScreen : FrameworkElement
 
     /// <summary>
     /// Loads/compiles the shader at <paramref name="path"/> into a platform effect, or returns null
-    /// on failure. This is also the body of the app-registered <c>RenderTargetEffectResolver</c>
-    /// (wired in each sample's entry point), so a container's
-    /// <see cref="ContainerRuntime.SourceShaderFile"/> resolves through exactly this code.
+    /// on failure, for the cell that assigns the effect in code. On MonoGame it goes through the
+    /// registered <c>RenderTargetEffectResolver</c> (<c>UseShadowDusk()</c>), the same code a container's
+    /// <see cref="ContainerRuntime.SourceShaderFile"/> resolves through. On raylib this is the sample's
+    /// <c>.fs</c> resolver, and ShadowDusk handles <c>.slang</c> after it.
     /// </summary>
     public static EffectType? CompileEffectFromFile(string path) => CompileEffectFromFile(path, out _);
 
@@ -366,38 +360,7 @@ internal class RenderTargetShaderScreen : FrameworkElement
 #if RAYLIB
         // LoadShader returns a default (id 0) shader if the file is missing; the grayscale still
         // degrades to a pass-through rather than crashing. raylib loads GLSL directly with no
-        // compiler dependency, so unlike MonoGame/Skia (which compile shader source at runtime),
-        // there's no compile-error diagnostic to surface here.
-        if (string.Equals(Path.GetExtension(path), ".slang", System.StringComparison.OrdinalIgnoreCase))
-        {
-            // A .slang file is converted to GLSL by ShadowDusk, then loaded like any raylib shader.
-            Result<RaylibShader, ShaderError[]> conversion =
-                RaylibConverter.ConvertSlang(File.ReadAllText(path), new RaylibConvertOptions());
-            if (conversion.IsFailure)
-            {
-                status = "SHADER CONVERT FAILED:\n" + string.Join("\n", conversion.Error.Select(e => e.Message));
-                return null;
-            }
-
-            status = "Slang converted to GLSL by ShadowDusk.";
-            Shader converted = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
-
-            // GLSL declares uniforms without a value, so hand Gum the defaults the .slang declares
-            // (float Thickness = 1.0;) for a parameter a container does not set.
-            ShaderUniformDefaults defaults = new ShaderUniformDefaults();
-            foreach (RaylibUniform uniform in conversion.Value.Uniforms)
-            {
-                ShaderUniformDefault? declared = ShaderUniformDefault.FromTypeName(
-                    uniform.Name, uniform.GlslType, uniform.ArrayLength, uniform.DefaultValue);
-                if (declared != null)
-                {
-                    defaults.Add(declared);
-                }
-            }
-            RaylibShaderDefaults.Set(converted, defaults);
-            return converted;
-        }
-
+        // compiler dependency, so there's no compile-error diagnostic to surface here.
         EffectType shader = LoadShader(null, path);
         status = "Grayscale GLSL post-process. Middle and right bears render grayscale; left is the original.";
         return shader;
@@ -418,76 +381,23 @@ internal class RenderTargetShaderScreen : FrameworkElement
         status = "SkSL shader compiled. Middle and right bears render grayscale.";
         return effect;
 #else
-        var graphicsDevice = SystemManagers.Default.Renderer.GraphicsDevice;
-        if (graphicsDevice == null)
-        {
-            status = "SHADER COMPILE FAILED: GraphicsDevice not available.";
-            return null;
-        }
-
-        if (!File.Exists(path))
-        {
-            status = "SHADER FILE NOT FOUND: " + path;
-            return null;
-        }
-
+        // The resolver Game1 registered with UseShadowDusk() compiles the file. Calling it here shows a
+        // failed compile in the status label; assigning SourceShaderFile reports it through Gum instead.
         try
         {
-            string fxSource = ResolveFxSource(path);
-
-            var compiler = new EffectCompiler();
-            Result<CompiledShader, ShaderError[]> result =
-                compiler.Compile(fxSource, new CompilerOptions { Target = PlatformTarget.OpenGL });
-
-            if (result.IsSuccess)
-            {
-                status = "Shader compiled at runtime (ShadowDusk). Middle and right bears render grayscale.";
-                return new EffectType(graphicsDevice, result.Value.Data);
-            }
-
-            status = "SHADER COMPILE FAILED:\n" + string.Join("\n", result.Error.Select(e => e.Message));
-            return null;
+            EffectType? effect = Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver?.Invoke(path) as EffectType;
+            status = effect != null
+                ? "Shader compiled at runtime (ShadowDusk). Middle and right bears render grayscale."
+                : "SHADER NOT LOADED: no RenderTargetEffectResolver is registered.";
+            return effect;
         }
         catch (System.Exception e)
         {
-            // A thrown error here is typically a missing/unloadable native compiler asset, or a
-            // Slang→.fx conversion failure (see ResolveFxSource), rather than a shader-syntax
-            // problem; surface it instead of taking down the screen.
-            status = "SHADER COMPILE THREW: " + e.GetType().Name + ": " + e.Message;
+            status = "SHADER COMPILE FAILED:\n" + e.Message;
             return null;
         }
 #endif
     }
-
-#if !RAYLIB && !SKIA
-    /// <summary>
-    /// Returns ordinary <c>.fx</c> effect text for <paramref name="path"/>. A <c>.slang</c> file is
-    /// converted first via ShadowDusk's Slang frontend (Slang has no technique/pass concept, so it
-    /// can't go through <see cref="EffectCompiler.Compile"/> directly); every other extension is
-    /// assumed to already be <c>.fx</c> source and passed through unchanged.
-    /// </summary>
-    private static string ResolveFxSource(string path)
-    {
-        string sourceText = File.ReadAllText(path);
-        if (!string.Equals(System.IO.Path.GetExtension(path), SlangFrontend.Extension, System.StringComparison.OrdinalIgnoreCase))
-        {
-            return sourceText;
-        }
-
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            sourceText,
-            new SlangConvertOptions { SourceName = path });
-
-        if (conversion.IsFailure)
-        {
-            throw new System.InvalidOperationException(
-                "ShadowDusk could not convert the Slang render-target shader '" + path + "':\n" +
-                string.Join("\n", conversion.Error.Select(e => e.Message)));
-        }
-
-        return conversion.Value.FxText;
-    }
-#endif
 
     private static TextRuntime AddLabel(ContainerRuntime container, string text)
     {

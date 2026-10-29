@@ -34,6 +34,8 @@
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<ProjectReference Include="..\Gum.Automation\Gum.Automation.csproj" />
 		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+		<!-- The Gum.MonoGame.ShadowDusk package: GumService.UseShadowDusk() (#7053). -->
+		<ProjectReference Include="..\..\Runtimes\GumShadowDusk\MonoGameGum.ShadowDusk.csproj" />
 		<!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
 		     generation -> MonoGame Texture2D upload -> BitmapFont), mirroring RaylibGum.Tests. -->
 		<ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />

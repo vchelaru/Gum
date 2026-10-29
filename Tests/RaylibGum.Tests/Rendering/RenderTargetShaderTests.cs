@@ -1,3 +1,4 @@
+using Gum;
 using System;
 using System.IO;
 using Gum.GueDeriving;
@@ -657,9 +658,213 @@ void main()
         GumService.Default.Root.Children.Clear();
     }
 
-    private static string WriteTempShader(string source)
+    // #7053: GumService.UseShadowDusk() (the Gum.raylib.ShadowDusk package) is the resolver a game registers
+    // for .fx and .slang files. These are the same grayscale shaders the MonoGame and Skia tests use.
+    private const string GrayscaleSlang = @"
+Texture2D SpriteTexture;
+SamplerState SpriteTextureSampler;
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+[shader(""fragment"")]
+float4 MainPS(VertexShaderOutput input) : COLOR0
+{
+    float4 color = SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
+    float gray = dot(color.rgb, float3(0.299, 0.587, 0.114));
+    return float4(gray, gray, gray, color.a);
+}
+";
+
+    private const string GrayscaleFx = @"
+Texture2D SpriteTexture;
+
+sampler2D SpriteTextureSampler = sampler_state
+{
+    Texture = <SpriteTexture>;
+};
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+float4 MainPS(VertexShaderOutput input) : COLOR0
+{
+    float4 color = tex2D(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
+    float gray = dot(color.rgb, float3(0.299, 0.587, 0.114));
+    return float4(gray, gray, gray, color.a);
+}
+
+technique SpriteDrawing
+{
+    pass P0
     {
-        string path = Path.Combine(Path.GetTempPath(), "GumRaylibShaderTest_" + Guid.NewGuid().ToString("N") + ".fs");
+        PixelShader = compile ps_3_0 MainPS();
+    }
+};
+";
+
+    private static void AssertCenterIsGray(string shaderPath)
+    {
+        (ContainerRuntime outer, ContainerRuntime inner) = BuildNestedRedRenderTarget();
+        try
+        {
+            Gum.GumService.Default.Root.Children.Add(outer);
+            Gum.GumService.Default.Root.UpdateLayout();
+
+            inner.SourceShaderFile = shaderPath;
+            DrawOnce();
+
+            Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+            Math.Abs(center.R - center.G).ShouldBeLessThan(25);
+            Math.Abs(center.R - center.B).ShouldBeLessThan(25);
+            // Gray, not the black an unbound shader would draw.
+            center.R.ShouldBeGreaterThan((byte)40);
+        }
+        finally
+        {
+            Gum.GumService.Default.Root.Children.Clear();
+        }
+    }
+
+    [Theory]
+    [InlineData(".fx", GrayscaleFx)]
+    [InlineData(".slang", GrayscaleSlang)]
+    public void UseShadowDusk_SourceShaderFile_GraysTheCompositedPixels(string extension, string source)
+    {
+        string shaderPath = WriteTempShader(source, extension);
+        try
+        {
+            Gum.GumService.Default.UseShadowDusk();
+
+            AssertCenterIsGray(shaderPath);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(shaderPath);
+        }
+    }
+
+    [Fact]
+    public void UseShadowDusk_OtherExtensions_StillGoToThePreviousResolver()
+    {
+        string shaderPath = WriteTempShader(GrayscaleFragmentShader);
+        try
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path => LoadShader(null, path);
+            Gum.GumService.Default.UseShadowDusk();
+
+            AssertCenterIsGray(shaderPath);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(shaderPath);
+        }
+    }
+
+    [Fact]
+    public void UseShadowDusk_InvalidSlang_ThrowsNamingTheFileAndTheConverterErrors()
+    {
+        string shaderPath = WriteTempShader("this is not a shader", ".slang");
+        try
+        {
+            Gum.GumService.Default.UseShadowDusk();
+
+            InvalidOperationException exception = Should.Throw<InvalidOperationException>(
+                () => CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath));
+
+            exception.Message.ShouldContain(shaderPath);
+            exception.Message.ShouldContain("SD");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(shaderPath);
+        }
+    }
+
+    // A raylib Shader is a struct, which Gum's own file cache cannot hold, so the package keeps the shaders it
+    // loaded: containers sharing a file share one shader, and a changed file loads again.
+    [Fact]
+    public void UseShadowDusk_SameFileTwice_LoadsOnce_AndAChangedFileLoadsAgain()
+    {
+        string shaderPath = WriteTempShader(GrayscaleSlang, ".slang");
+        Shader first = default;
+        Shader changed = default;
+        try
+        {
+            Gum.GumService.Default.UseShadowDusk();
+            first = (Shader)CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath)!;
+            Shader second = (Shader)CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath)!;
+
+            second.Id.ShouldBe(first.Id);
+
+            File.WriteAllText(shaderPath, GrayscaleSlang + "\n// edited\n");
+            File.SetLastWriteTimeUtc(shaderPath, DateTime.UtcNow.AddMinutes(5));
+            changed = (Shader)CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath)!;
+
+            changed.Id.ShouldNotBe(first.Id);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(shaderPath);
+            if (first.Id != 0) { UnloadShader(first); }
+            if (changed.Id != 0) { UnloadShader(changed); }
+        }
+    }
+
+    // Hot reload compiles a new shader per edit, but a container keeps drawing with the Shader it was given until
+    // its SourceShaderFile is assigned again. A superseded shader is never unloaded (an unloaded one draws black
+    // with no error), so a container that has not been reassigned after two edits still draws correctly.
+    [Fact]
+    public void UseShadowDusk_ContainerHoldingAnOldShader_KeepsDrawingAfterTwoEdits()
+    {
+        string shaderPath = WriteTempShader(GrayscaleSlang, ".slang");
+        (ContainerRuntime outer, ContainerRuntime inner) = BuildNestedRedRenderTarget();
+        try
+        {
+            Gum.GumService.Default.UseShadowDusk();
+            Shader held = (Shader)CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath)!;
+
+            for (int edit = 1; edit <= 2; edit++)
+            {
+                File.WriteAllText(shaderPath, GrayscaleSlang + $"\n// edit {edit}\n");
+                File.SetLastWriteTimeUtc(shaderPath, DateTime.UtcNow.AddMinutes(edit));
+                Shader replacement = (Shader)CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath)!;
+                replacement.Id.ShouldNotBe(held.Id);
+            }
+
+            inner.RenderTargetEffect = held;
+            Gum.GumService.Default.Root.Children.Add(outer);
+            Gum.GumService.Default.Root.UpdateLayout();
+            DrawOnce();
+
+            Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+            Math.Abs(center.R - center.G).ShouldBeLessThan(25);
+            Math.Abs(center.R - center.B).ShouldBeLessThan(25);
+            center.R.ShouldBeGreaterThan((byte)40);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            Gum.GumService.Default.Root.Children.Clear();
+            File.Delete(shaderPath);
+        }
+    }
+
+    private static string WriteTempShader(string source, string extension = ".fs")
+    {
+        string path = Path.Combine(Path.GetTempPath(), "GumRaylibShaderTest_" + Guid.NewGuid().ToString("N") + extension);
         File.WriteAllText(path, source);
         return path;
     }

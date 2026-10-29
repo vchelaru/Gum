@@ -23,11 +23,15 @@ headless Tests/KniSkiaGum.Tests
 headless Tests/UnityGum.Tests
 headless Tests/StrideGum.Tests
 headless Tests/Gum.ProjectServices.SkiaGum.Tests
+# Real DirectX 11 devices on a window that is never shown; skips itself where the runner has no DirectX 11 adapter.
+headless Tests/GumShadowDusk.Tests.MonoGameWindowsDX
+headless Tests/GumShadowDusk.Tests.KniWindowsDX
 
 # console;verbosity=normal streams every test's duration as it finishes, so a timeout still shows
 # where the time went (#6078).
 mesa-1 Tests/MonoGameGum.IntegrationTests 15 --logger "console;verbosity=normal"
 mesa-1 Tests/MonoGameGum.Shapes.Tests 10
+mesa-1 Tests/GumShadowDusk.Tests.KniDesktopGL 10
 
 mesa-2 Tests/Gum.Cli.Tests
 mesa-2 Tests/RaylibGum.Tests 10

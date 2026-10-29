@@ -806,6 +806,10 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     [InlineData("Runtimes/SkiaGum.Standalone/SkiaGum.Standalone.csproj", "SkiaGum.Standalone")]
     [InlineData("Runtimes/SkiaGum.Maui/SkiaGum.Maui.csproj", "SkiaGum.Maui")]
     [InlineData("Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj", "SkiaGum.ShadowDusk")]
+    [InlineData("Runtimes/GumShadowDusk/MonoGameGum.ShadowDusk.csproj", "MonoGameGum.ShadowDusk")]
+    [InlineData("Runtimes/GumShadowDusk/KniGum.ShadowDusk.csproj", "KniGum.ShadowDusk")]
+    [InlineData("Runtimes/GumShadowDusk/FnaGum.ShadowDusk.csproj", "FnaGum.ShadowDusk")]
+    [InlineData("Runtimes/RaylibGum.ShadowDusk/RaylibGum.ShadowDusk.csproj", "RaylibGum.ShadowDusk")]
     [InlineData("Runtimes/SkiaGum.Wpf/SkiaGum.Wpf.csproj", "SkiaGum.Wpf")]
     public void Detect_ProjectReferenceToRepoRuntime_ReadsItsStamp(string csprojRelativePath, string projectName)
     {
@@ -833,6 +837,10 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     [InlineData("Gum.SkiaSharp.Standalone", "SkiaGum.Standalone")]
     [InlineData("Gum.SkiaSharp.Maui", "SkiaGum.Maui")]
     [InlineData("Gum.SkiaSharp.ShadowDusk", "SkiaGum.ShadowDusk")]
+    [InlineData("Gum.MonoGame.ShadowDusk", "MonoGameGum.ShadowDusk")]
+    [InlineData("Gum.KNI.ShadowDusk", "KniGum.ShadowDusk")]
+    [InlineData("Gum.FNA.ShadowDusk", "FnaGum.ShadowDusk")]
+    [InlineData("Gum.raylib.ShadowDusk", "RaylibGum.ShadowDusk")]
     public void Detect_NuGetPackage_SkiaHost_ReadsSyntaxVersion(string packageId, string assemblyName)
     {
         string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
