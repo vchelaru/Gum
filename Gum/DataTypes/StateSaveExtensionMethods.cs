@@ -605,6 +605,12 @@ public static class StateSaveExtensionMethods
                 rootVariable = ObjectFinder.Self.GetRootVariable(variableName, element);
             }
 
+            if (rootVariable == null && instanceSave != null && stateSave.ParentContainer != null)
+            {
+                // The state's element can derive from the instance's and have saved the shader parameter entry.
+                rootVariable = ObjectFinder.Self.GetRootVariable(variableName, instanceSave, stateSave.ParentContainer);
+            }
+
             string? exposedVariableSourceName = null;
             if (!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
             {

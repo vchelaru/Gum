@@ -573,6 +573,42 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void DoVariableReferenceReaction_ShaderParameterOfBaseInstance_IsAcceptedWhenDerivedElementSavedIt()
+    {
+        ComponentSave baseElement = new() { Name = "BaseComp" };
+        baseElement.States.Add(new StateSave { Name = "Default", ParentContainer = baseElement });
+        InstanceSave icon = new() { Name = "Icon", BaseType = "Container", ParentContainer = baseElement };
+        baseElement.Instances.Add(icon);
+
+        ComponentSave derived = new() { Name = "DerivedComp", BaseType = "BaseComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = derived };
+        derived.States.Add(defaultState);
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "Icon.Outline_Thickness", Type = "float", SetsValue = false, ShaderParameter = "Thickness"
+        });
+        VariableListSave<string> varList = new() { Type = "string", Name = "Icon.VariableReferences" };
+        varList.Value.Add("Outline_Thickness = 3");
+        defaultState.VariableLists.Add(varList);
+
+        GumProjectSave project = new();
+        project.StandardElements.Add(new StandardElementSave { Name = "Container", States = { new StateSave { Name = "Default" } } });
+        project.Components.Add(baseElement);
+        project.Components.Add(derived);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: derived,
+            leftSideInstance: icon,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "Icon.VariableReferences",
+            trySave: false);
+
+        varList.Value[0].StartsWith("//").ShouldBeFalse();
+    }
+
+    [Fact]
     public void ReactIfChangedMemberIsVariableReference_AtPrefixOnInstanceRow_IsNotQualifiedWithInstanceName()
     {
         // "@Index" means "the instance that owns this row", so it must stay verbatim to survive duplication.

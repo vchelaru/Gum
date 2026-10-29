@@ -1268,6 +1268,18 @@ public class ObjectFinder : IObjectFinder
     /// <returns>The root VariableSave</returns>
     public VariableSave? GetRootVariable(string name, InstanceSave instance)
     {
+        return GetRootVariable(name, instance, null);
+    }
+
+    /// <summary>
+    /// Returns the root variable for the argument instance, also finding a shader parameter variable saved by
+    /// <paramref name="editingElement"/>, which can derive from the element that owns the instance.
+    /// </summary>
+    /// <param name="name">The name, qualified with the instance ("Icon.X") or the root name ("X").</param>
+    /// <param name="instance">The instance the variable belongs to.</param>
+    /// <param name="editingElement">The element whose state is being read or edited, if it is not the instance's container.</param>
+    public VariableSave? GetRootVariable(string name, InstanceSave instance, ElementSave? editingElement)
+    {
         // This could be referencing an invalid type
         var instanceElement = GetElementSave(instance.BaseType);
         var afterDot = name.Substring(name.IndexOf('.') + 1);
@@ -1279,11 +1291,19 @@ public class ObjectFinder : IObjectFinder
         {
             VariableSave? declaredByType = GetRootVariable(afterDot, instanceElement);
 
-            if (declaredByType == null && instance.ParentContainer != null)
+            if (declaredByType == null)
             {
-                // A shader parameter is not declared by the instance's type; the container that saved it
-                // under "Instance.Parameter" is the only place that knows it.
-                return GetShaderParameterDefinition(instance.Name + "." + afterDot, instance.ParentContainer);
+                // A shader parameter is not declared by the instance's type; the container that saved it under
+                // "Instance.Parameter" is the only place that knows it. A derived element can save the entry
+                // for an instance its base owns, so the editing element's chain is searched first.
+                string savedName = instance.Name + "." + afterDot;
+                ElementSave? searchFrom = editingElement ?? instance.ParentContainer;
+                VariableSave? definition = searchFrom == null ? null : GetShaderParameterDefinition(savedName, searchFrom);
+                if (definition == null && instance.ParentContainer != null && instance.ParentContainer != searchFrom)
+                {
+                    definition = GetShaderParameterDefinition(savedName, instance.ParentContainer);
+                }
+                return definition;
             }
 
             return declaredByType;
@@ -1420,7 +1440,14 @@ public class ObjectFinder : IObjectFinder
 
             if(instance != null)
             {
-                return GetRootVariable(effectiveName, instance);
+                return GetRootVariable(effectiveName, instance, element);
+            }
+
+            // GetInstance only sees this element's own instances. A derived element can still save a shader
+            // parameter entry for an instance its base owns.
+            if (GetBaseElements(element).Any(baseElement => baseElement.GetInstance(beforeDot) != null))
+            {
+                return GetShaderParameterDefinition(effectiveName, element);
             }
             // this has a dot, but no instance, so it's a bad variable...
         }

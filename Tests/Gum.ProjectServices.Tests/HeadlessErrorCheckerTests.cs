@@ -2236,6 +2236,22 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenDerivedElementSavedEntryForBaseInstance()
+    {
+        ComponentSave baseLabel = AddComponentWithReferences("BaseLabel", sourceObject: null, "Width = 1");
+        baseLabel.Instances.Add(new InstanceSave { Name = "Icon", BaseType = "Container", ParentContainer = baseLabel });
+        ComponentSave derived = new ComponentSave { Name = "DerivedLabel", BaseType = "BaseLabel" };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        derived.DefaultState!.Variables.Add(new VariableSave { Name = "Icon.Outline_Derived", Type = "float", SetsValue = false, ShaderParameter = "Derived" });
+        Project.Components.Add(derived);
+        ComponentSave reader = AddComponentWithReferences("Reader", sourceObject: null, "Width = Components/DerivedLabel.Icon.Outline_Derived");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(reader, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldReportGum0009_WhenReferenceReadsShaderParameterNothingNamed()
     {
         ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Outline_Thickness", marker: null, saved: false);

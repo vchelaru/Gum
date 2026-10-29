@@ -205,6 +205,109 @@ public class ShaderParameterDefinitionHookTests : BaseTestClass
 
     #endregion
 
+    #region Instance owned by a base element, entry saved by a derived one
+
+    [Fact]
+    public void GetRootVariable_ShouldReturnDefinition_WhenEditingElementIsDerivedAndSavedTheEntry()
+    {
+        ComponentSave derived = AddComponent("DerivedPanel", "Panel");
+        AddVariable(derived, "Icon.Outline_Derived", "Derived", setsValue: false);
+
+        VariableSave? definition = ObjectFinder.Self.GetRootVariable("Icon.Outline_Derived", _icon, derived);
+
+        definition.ShouldNotBeNull();
+        definition.Name.ShouldBe("Outline_Derived");
+        definition.Type.ShouldBe("float");
+    }
+
+    [Fact]
+    public void GetRootVariable_ShouldStillFindEntryOfInstancesOwnContainer_WhenEditingElementIsGiven()
+    {
+        ComponentSave derived = AddComponent("DerivedPanel", "Panel");
+        AddVariable(_panel, SavedName, "Thickness", setsValue: false);
+
+        ObjectFinder.Self.GetRootVariable(SavedName, _icon, derived).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetRootVariable_ShouldPreferDerivedEntry_WhenBothSavedOne()
+    {
+        ComponentSave derived = AddComponent("DerivedPanel", "Panel");
+        AddVariable(_panel, SavedName, "Thickness", setsValue: false).Type = "float";
+        AddVariable(derived, SavedName, "Thickness", setsValue: false).Type = "int";
+
+        ObjectFinder.Self.GetRootVariable(SavedName, _icon, derived)!.Type.ShouldBe("int");
+    }
+
+    [Fact]
+    public void GetRootVariable_ShouldReturnNull_WhenOnlyTheInstanceIsGiven_AndTheDerivedElementSavedTheEntry()
+    {
+        // Without the editing element the instance's own container chain is all that is known.
+        ComponentSave derived = AddComponent("DerivedPanel", "Panel");
+        AddVariable(derived, "Icon.Outline_Derived", "Derived", setsValue: false);
+
+        ObjectFinder.Self.GetRootVariable("Icon.Outline_Derived", _icon).ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetRootVariable_ShouldReturnDefinition_WhenElementOverloadIsGivenDerivedElementAndBaseInstance()
+    {
+        // ElementSave.GetInstance ignores base instances, so the element overload finds the instance in the chain.
+        ComponentSave derived = AddComponent("DerivedPanel", "Panel");
+        AddVariable(derived, "Icon.Outline_Derived", "Derived", setsValue: false);
+
+        ObjectFinder.Self.GetRootVariable("Icon.Outline_Derived", derived).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetRootVariable_ShouldReturnNull_WhenElementOverloadNamesNoInstanceInTheChain()
+    {
+        ComponentSave derived = AddComponent("DerivedPanel", "Panel");
+        AddVariable(derived, "Ghost.Outline_Derived", "Derived", setsValue: false);
+
+        ObjectFinder.Self.GetRootVariable("Ghost.Outline_Derived", derived).ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetValue_ShouldStampMarker_WhenDerivedCategoricalStateWritesBaseInstanceEntryTheDerivedDefaultSaved()
+    {
+        ComponentSave derived = AddComponent("DerivedPanel", "Panel");
+        AddVariable(derived, "Icon.Outline_Derived", "Derived", setsValue: false);
+        StateSaveCategory category = new StateSaveCategory { Name = "Look" };
+        StateSave state = new StateSave { Name = "Bold", ParentContainer = derived };
+        category.States.Add(state);
+        derived.Categories.Add(category);
+
+        state.SetValue("Icon.Outline_Derived", 5f, _icon, "float");
+
+        state.GetVariableSave("Icon.Outline_Derived")!.ShaderParameter.ShouldBe("Derived");
+    }
+
+    #endregion
+
+    #region Unqualified names
+
+    [Fact]
+    public void GetRootVariable_ShouldTakeRootName_WhenInstanceOverloadIsGivenUnqualifiedName()
+    {
+        // The instance overload takes the instance's variable either qualified or by root name: callers such as
+        // codegen and the variable grid hand it root names, and the instance supplies the prefix.
+        AddVariable(_panel, SavedName, "Thickness", setsValue: false);
+
+        ObjectFinder.Self.GetRootVariable("Outline_Thickness", _icon).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetRootVariable_ShouldReturnNull_WhenElementOverloadIsGivenUnqualifiedName()
+    {
+        // The element has no instance to prefix, so a bare root name names nothing.
+        AddVariable(_panel, SavedName, "Thickness", setsValue: false);
+
+        ObjectFinder.Self.GetRootVariable("Outline_Thickness", _panel).ShouldBeNull();
+    }
+
+    #endregion
+
     #region Existing lookups stay the same
 
     [Fact]
