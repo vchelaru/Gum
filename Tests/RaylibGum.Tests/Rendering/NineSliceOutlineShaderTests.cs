@@ -19,8 +19,7 @@ namespace RaylibGum.Tests.Rendering;
 /// first: the outline must follow the nine-slice's alpha with no seams between the slices, no
 /// clipping at the container bounds (the container has exactly Thickness of transparent margin), at
 /// whole and fractional sizes, tiled and stretched, at different zoom levels. The same cases run
-/// against MonoGame (MonoGameGum.IntegrationTests) and Skia (SkiaGum.Tests); the 40.5 x 27.5 stretched
-/// case at zoom 1 is left out here because it fails on raylib (see the red branch named in #6984).
+/// against MonoGame (MonoGameGum.IntegrationTests) and Skia (SkiaGum.Tests).
 /// </summary>
 public class NineSliceOutlineShaderTests : BaseTestClass
 {
@@ -138,6 +137,7 @@ public class NineSliceOutlineShaderTests : BaseTestClass
     [InlineData(41f, 29f, true, 1f, 1f, 1f)]
     [InlineData(40f, 28f, false, 2f, 1f, 1f)]
     [InlineData(40f, 28f, true, 2f, 2f, 1f)]
+    [InlineData(40.5f, 27.5f, false, 1f, 1f, 1f)]
     [InlineData(40.5f, 27.5f, true, 1f, 2f, 1f)]
     [InlineData(40f, 28f, false, 1f, 1f, 2f)]
     [InlineData(40f, 28f, true, 1f, 2f, 2f)]
