@@ -462,9 +462,10 @@ public partial class CustomSetPropertyOnRenderable
                     }
                     return true;
                 }
+            default:
+                // A saved shader parameter variable such as Outline_Thickness (#7010).
+                return ShaderParameterVariables.TrySetVariable(invisibleRenderable, propertyName, value);
         }
-
-        return false;
     }
 
     /// <summary>
@@ -485,7 +486,7 @@ public partial class CustomSetPropertyOnRenderable
     /// </summary>
     public static void AssignShaderParametersOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
-        string? error = ShaderParameterText.Assign(effectOwner, value);
+        string? error = ShaderParameterVariables.AssignText(effectOwner, value);
         if (error != null)
         {
             string message = "Error setting ShaderParameters on Container";
@@ -499,6 +500,9 @@ public partial class CustomSetPropertyOnRenderable
 
     public static void AssignSourceShaderFileOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
+        // First, so the container's shader variables follow the file whatever happens below (#7010).
+        ShaderParameterVariables.SetShaderFile(effectOwner, value);
+
         if (string.IsNullOrEmpty(value))
         {
             effectOwner.RenderTargetEffect = null;
@@ -3209,6 +3213,11 @@ public partial class CustomSetPropertyOnRenderable
         {
             AssignShaderParametersOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
             handled = true;
+        }
+        else
+        {
+            // A saved shader parameter variable such as Outline_Thickness (#7010).
+            handled = ShaderParameterVariables.TrySetVariable((LineRectangle)mContainedObjectAsIpso, propertyName, value);
         }
 
         return handled;

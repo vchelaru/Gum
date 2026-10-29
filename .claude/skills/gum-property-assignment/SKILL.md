@@ -138,6 +138,15 @@ to one file. So textures (`SourceFile` → `AssignSourceFileOnSprite`) and rende
 assignment — no dirty flag, no deferral. Both cache the resolved asset in `LoaderManager` by
 normalized path so a file referenced by multiple elements loads once.
 
+**Shader parameter variables (#7010).** A Container variable named `<stem>_<Param>` (or `..__X`..`__W`
+per component, `ShaderVariableNaming`) is claimed by the container dispatch's default branch and
+routed by `ShaderParameterVariables` onto the renderable's `ShaderParameters`. It sees only a name
+and value, so it keeps a per-container layer (raw variable values, shader file, fallback copy of the
+parameters) and recomputes per parameter whenever a variable, `SourceShaderFile` or the legacy
+`ShaderParameters` text changes: any arrival order gives the same result, the variable beats the text
+for its parameter, and a variable with another shader's stem is inert. Never call
+`ShaderParameterText.Assign` from a dispatcher; call `ShaderParameterVariables.AssignText`.
+
 ---
 
 ## Key Files
