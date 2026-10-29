@@ -590,7 +590,7 @@ public class GumProjectDependencyWalker
         // (Sprite/SourceFile, Svg/SourceFile, LottieAnimation/SourceFile, Text/CustomFontFile).
         VariableSave? rootVariable = instance == null
             ? ObjectFinder.Self.GetRootVariable(leafName, element)
-            : ObjectFinder.Self.GetRootVariable(variable.Name, instance);
+            : ObjectFinder.Self.GetRootVariable(variable.Name, instance, element);
 
         return rootVariable?.IsFile == true;
     }

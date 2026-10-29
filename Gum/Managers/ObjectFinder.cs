@@ -1268,6 +1268,18 @@ public class ObjectFinder : IObjectFinder
     /// <returns>The root VariableSave</returns>
     public VariableSave? GetRootVariable(string name, InstanceSave instance)
     {
+        return GetRootVariable(name, instance, null);
+    }
+
+    /// <summary>
+    /// Returns the root variable for the argument instance, also finding a shader parameter variable saved by
+    /// <paramref name="editingElement"/>, which can derive from the element that owns the instance.
+    /// </summary>
+    /// <param name="name">The name, qualified with the instance ("Icon.X") or the root name ("X").</param>
+    /// <param name="instance">The instance the variable belongs to.</param>
+    /// <param name="editingElement">The element whose state is being read or edited, if it is not the instance's container.</param>
+    public VariableSave? GetRootVariable(string name, InstanceSave instance, ElementSave? editingElement)
+    {
         // This could be referencing an invalid type
         var instanceElement = GetElementSave(instance.BaseType);
         var afterDot = name.Substring(name.IndexOf('.') + 1);
@@ -1277,8 +1289,102 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            return GetRootVariable(afterDot, instanceElement);
+            VariableSave? declaredByType = GetRootVariable(afterDot, instanceElement);
+
+            if (declaredByType == null)
+            {
+                // A shader parameter is not declared by the instance's type; the container that saved it under
+                // "Instance.Parameter" is the only place that knows it. A derived element can save the entry
+                // for an instance its base owns, so the editing element's chain is searched first.
+                string savedName = instance.Name + "." + afterDot;
+                ElementSave? searchFrom = editingElement ?? instance.ParentContainer;
+                VariableSave? definition = searchFrom == null ? null : GetShaderParameterDefinition(savedName, searchFrom);
+                if (definition == null && instance.ParentContainer != null && instance.ParentContainer != searchFrom)
+                {
+                    definition = GetShaderParameterDefinition(savedName, instance.ParentContainer);
+                }
+                return definition;
+            }
+
+            return declaredByType;
         }
+    }
+
+    // A helper rather than a lambda: a lambda capturing the instance name allocates its closure on every call of
+    // GetRootVariable, including the hot path for ordinary variables.
+    private bool BaseElementOwnsInstance(ElementSave element, string instanceName)
+    {
+        foreach (ElementSave baseElement in GetBaseElements(element))
+        {
+            if (baseElement.GetInstance(instanceName) != null)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the definition of a shader parameter variable saved on <paramref name="container"/> or one of its
+    /// base elements, or null when none is saved.
+    /// </summary>
+    /// <param name="qualifiedVariableName">The saved name, such as <c>Icon.Outline_Thickness</c>.</param>
+    /// <param name="container">The element to start searching from.</param>
+    public VariableSave? GetShaderParameterDefinition(string qualifiedVariableName, ElementSave container)
+    {
+        int dot = qualifiedVariableName.IndexOf('.');
+        if (dot <= 0)
+        {
+            return null;
+        }
+
+        VariableSave? saved = FindMarkedVariable(container, qualifiedVariableName);
+        if (saved == null)
+        {
+            foreach (ElementSave baseElement in GetBaseElements(container))
+            {
+                saved = FindMarkedVariable(baseElement, qualifiedVariableName);
+                if (saved != null)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (saved == null)
+        {
+            return null;
+        }
+
+        // FindMarkedVariable only returns entries whose marker parses.
+        global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(saved.ShaderParameter, out global::RenderingLibrary.Graphics.ShaderParameterMarker marker);
+
+        // Shaped like a variable the instance's type declares: the root name, not the saved one.
+        return new VariableSave
+        {
+            Name = qualifiedVariableName.Substring(dot + 1),
+            Type = saved.Type,
+            ShaderParameter = marker.Format()
+        };
+    }
+
+    private static VariableSave? FindMarkedVariable(ElementSave element, string savedName)
+    {
+        List<VariableSave>? variables = element.DefaultState?.Variables;
+        if (variables == null)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < variables.Count; i++)
+        {
+            VariableSave variable = variables[i];
+            if (variable.Name == savedName && global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(variable.ShaderParameter, out _))
+            {
+                return variable;
+            }
+        }
+        return null;
     }
 
     public VariableListSave? GetRootVariableList(string name, ElementSave element)
@@ -1351,7 +1457,14 @@ public class ObjectFinder : IObjectFinder
 
             if(instance != null)
             {
-                return GetRootVariable(effectiveName, instance);
+                return GetRootVariable(effectiveName, instance, element);
+            }
+
+            // GetInstance only sees this element's own instances. A derived element can still save a shader
+            // parameter entry for an instance its base owns.
+            if (BaseElementOwnsInstance(element, beforeDot))
+            {
+                return GetShaderParameterDefinition(effectiveName, element);
             }
             // this has a dot, but no instance, so it's a bad variable...
         }

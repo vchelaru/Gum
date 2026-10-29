@@ -6097,7 +6097,7 @@ public class CodeGenerator
             VariableSave? rootVariable = null;
             if (instance != null)
             {
-                rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
+                rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance, context.Element);
             }
             else
             {
