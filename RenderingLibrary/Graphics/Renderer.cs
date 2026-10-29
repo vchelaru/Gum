@@ -1587,7 +1587,7 @@ public class Renderer : IRenderer
     /// Copies a container's shader parameter values onto its effect. A name the effect does not
     /// declare is skipped, so one parameter set can drive effects that use different subsets.
     /// </summary>
-    private static void ApplyShaderParameters(ShaderParameterCollection? parameters, Effect? effect)
+    internal static void ApplyShaderParameters(ShaderParameterCollection? parameters, Effect? effect)
     {
         if (effect == null)
         {

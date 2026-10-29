@@ -26,8 +26,8 @@ public class SharedEffectDefaultRestoreTests : BaseTestClass
 Texture2D SpriteTexture;
 SamplerState SpriteTextureSampler;
 
-float Level = 0.5;
 float2 Vec = float2(0.25, 0.75);
+float Level = 0.5;
 
 struct VertexShaderOutput
 {
@@ -58,7 +58,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         Color[] data = Render(Containers(a => a.SetShaderParameter("Level", 1f), b => { }));
 
         Channel(data, 0, 'R').ShouldBe(255);
-        Channel(data, 1, 'R').ShouldBe(DefaultLevel, 2);
+        ShouldBeNear(Channel(data, 1, 'R'), DefaultLevel);
     }
 
     [Fact]
@@ -68,8 +68,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 
         Channel(data, 0, 'G').ShouldBe(255);
         Channel(data, 0, 'B').ShouldBe(0);
-        Channel(data, 1, 'G').ShouldBe(DefaultVecX, 2);
-        Channel(data, 1, 'B').ShouldBe(DefaultVecY, 2);
+        ShouldBeNear(Channel(data, 1, 'G'), DefaultVecX);
+        ShouldBeNear(Channel(data, 1, 'B'), DefaultVecY);
     }
 
     [Fact]
@@ -79,8 +79,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
             Containers(a => a.SetShaderParameter("Level", 1f), b => { }),
             changeAfterFirstFrame: a => a.SetShaderParameter("Level", 0.8f));
 
-        Channel(data, 0, 'R').ShouldBe(204, 2);
-        Channel(data, 1, 'R').ShouldBe(DefaultLevel, 2);
+        ShouldBeNear(Channel(data, 0, 'R'), 204);
+        ShouldBeNear(Channel(data, 1, 'R'), DefaultLevel);
     }
 
     [Fact]
@@ -92,8 +92,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
             c => { }));
 
         Channel(data, 0, 'R').ShouldBe(255);
-        Channel(data, 1, 'R').ShouldBe(51, 2);
-        Channel(data, 2, 'R').ShouldBe(DefaultLevel, 2);
+        ShouldBeNear(Channel(data, 1, 'R'), 51);
+        ShouldBeNear(Channel(data, 2, 'R'), DefaultLevel);
     }
 
     [Fact]
@@ -103,8 +103,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
             Containers(a => a.SetShaderParameter("Level", 1f), b => { }),
             changeAfterFirstFrame: a => a.ClearShaderParameters());
 
-        Channel(data, 0, 'R').ShouldBe(DefaultLevel, 2);
-        Channel(data, 1, 'R').ShouldBe(DefaultLevel, 2);
+        ShouldBeNear(Channel(data, 0, 'R'), DefaultLevel);
+        ShouldBeNear(Channel(data, 1, 'R'), DefaultLevel);
     }
 
     [Fact]
@@ -112,9 +112,55 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
     {
         Color[] data = Render(Containers(a => { }, b => { }), gameSetsLevel: 0.9f);
 
-        Channel(data, 0, 'R').ShouldBe(230, 2);
-        Channel(data, 1, 'R').ShouldBe(230, 2);
+        ShouldBeNear(Channel(data, 0, 'R'), 230);
+        ShouldBeNear(Channel(data, 1, 'R'), 230);
     }
+
+    // ApplyShaderParameters runs for every container with an effect on every draw: once the baselines are
+    // captured, applying and restoring must not allocate.
+    [Fact]
+    public void ApplyShaderParameters_InTheSteadyState_DoesNotAllocate()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Effect effect = CompileDefaultsEffect(game.GraphicsDevice);
+
+        ShaderParameterCollection setsBoth = new();
+        setsBoth.Set("Level", ShaderParameterValue.FromFloat(1f));
+        setsBoth.Set("Vec", ShaderParameterValue.FromVector2(1f, 0f));
+        ShaderParameterCollection setsNothing = new();
+
+        for (int i = 0; i < 10; i++)
+        {
+            Renderer.ApplyShaderParameters(setsBoth, effect);
+            Renderer.ApplyShaderParameters(setsNothing, effect);
+        }
+
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < 1000; i++)
+        {
+            Renderer.ApplyShaderParameters(setsBoth, effect);
+            Renderer.ApplyShaderParameters(setsNothing, effect);
+        }
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        allocated.ShouldBe(0);
+    }
+
+    private static Effect CompileDefaultsEffect(GraphicsDevice gd)
+    {
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            DefaultsSlang, new SlangConvertOptions { SourceName = "Defaults.slang" });
+        conversion.IsSuccess.ShouldBeTrue(conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue(compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
+        return new Effect(gd, compileResult.Value.Data);
+    }
+
+    private static void ShouldBeNear(int actual, int expected) =>
+        Math.Abs(actual - expected).ShouldBeLessThanOrEqualTo(2, $"expected about {expected}, got {actual}");
 
     private static int Channel(Color[] data, int containerIndex, char channel)
     {
@@ -132,14 +178,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         SystemManagers managers = SystemManagers.Default;
         Renderer renderer = managers.Renderer;
 
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            DefaultsSlang, new SlangConvertOptions { SourceName = "Defaults.slang" });
-        conversion.IsSuccess.ShouldBeTrue(conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
-        EffectCompiler compiler = new();
-        Result<CompiledShader, ShaderError[]> compileResult =
-            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
-        compileResult.IsSuccess.ShouldBeTrue(compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
-        using Effect effect = new(gd, compileResult.Value.Data);
+        using Effect effect = CompileDefaultsEffect(gd);
 
         // The compiled defaults are what the whole fix rests on.
         effect.Parameters["Level"]!.GetValueSingle().ShouldBe(0.5f);
