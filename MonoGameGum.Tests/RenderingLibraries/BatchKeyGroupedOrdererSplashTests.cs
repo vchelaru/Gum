@@ -732,6 +732,90 @@ public class BatchKeyGroupedOrdererSplashTests : BaseTestClass
         AssertDrawListIsPixelEquivalent(roots, grouped, $"{profileName} seed {seed}");
     }
 
+    /// <summary>
+    /// Key runs including the forced breaks: entering a clip sets the running key silently, leaving
+    /// one and drawing a render target force the next real draw to count whatever its key is, and
+    /// free containers cost nothing.
+    /// </summary>
+    private static int ForcedAwareRuns(List<DrawCommand> commands)
+    {
+        int runs = 0;
+        string? key = null;
+        object? sortKey = null;
+        bool forcedPending = false;
+        foreach (DrawCommand command in commands)
+        {
+            OrdererFake item = (OrdererFake)command.Target;
+            if (command.Kind == DrawCommandKind.BeginClip)
+            {
+                key = item.BatchKey;
+                sortKey = item.BatchSortKey;
+                forcedPending = false;
+                continue;
+            }
+            if (command.Kind == DrawCommandKind.EndClip)
+            {
+                forcedPending = true;
+                continue;
+            }
+            if (item.BatchKey.Length == 0 && !item.IsRenderTarget && !item.ClipsChildren)
+            {
+                continue;
+            }
+
+            bool forced = forcedPending || item.IsRenderTarget;
+            forcedPending = item.IsRenderTarget;
+            if (forced || key == null || key != item.BatchKey || !Equals(sortKey, item.BatchSortKey))
+            {
+                runs++;
+            }
+            key = item.BatchKey;
+            sortKey = item.BatchSortKey;
+        }
+        return runs;
+    }
+
+    // The no-boundary sweep above cannot see forced breaks (clip exits, render targets), and
+    // KeyRuns ignores them. This one prices them in (#7051).
+    [Theory]
+    [InlineData("Clipped")]
+    [InlineData("RenderTargets")]
+    [InlineData("Everything")]
+    public void RandomScenes_WithHardBoundaries_NeverCostMoreForcedAwareRunsThanHierarchical(string profileName)
+    {
+        Profile profile = GetProfile(profileName);
+
+        int cases = SweepScale.Cases(300);
+        for (int seed = 0; seed < cases; seed++)
+        {
+            List<DrawCommand> grouped = new List<DrawCommand>();
+            List<DrawCommand> hierarchical = new List<DrawCommand>();
+            new BatchKeyGroupedOrderer().BuildDrawList(BuildLayer(RandomScene(profile, seed)), grouped);
+            HierarchicalOrderer.Instance.BuildDrawList(BuildLayer(RandomScene(profile, seed)), hierarchical);
+
+            ForcedAwareRuns(grouped).ShouldBeLessThanOrEqualTo(ForcedAwareRuns(hierarchical), $"{profileName} seed {seed}");
+        }
+    }
+
+    // Free containers cost nothing, so pulling the second one forward (so both backgrounds share a
+    // run) ties the depth-first order on key runs. A tie must keep the greedy order: that is what
+    // lets sibling components merge their runs once anything else in the window splits them.
+    [Fact]
+    public void WhenGreedyAndDepthFirstCostTheSame_GreedyOrderIsEmitted()
+    {
+        OrdererFake first = new OrdererFake("first", "") { X = 0, Y = 0, Width = 50, Height = 50 };
+        AddChild(first, "firstBg", Sprites, 0, 0, 50, 50, TexBg);
+        OrdererFake second = new OrdererFake("second", "") { X = 0, Y = 100, Width = 50, Height = 50 };
+        AddChild(second, "secondBg", Sprites, 0, 0, 50, 50, TexBg);
+
+        List<DrawCommand> grouped = Build(new IRenderableIpso[] { first, second }, out _);
+        List<DrawCommand> hierarchical = new List<DrawCommand>();
+        HierarchicalOrderer.Instance.BuildDrawList(BuildLayer(new IRenderableIpso[] { first, second }), hierarchical);
+
+        KeyRuns(grouped).ShouldBe(KeyRuns(hierarchical));
+        Names(grouped).ShouldBe(new[] { "first", "second", "firstBg", "secondBg" });
+    }
+
     [Theory]
     [MemberData(nameof(ProfileNames))]
     public void RandomScenes_WithoutHardBoundaries_BreakGroupsReconcileWithRunCount(string profileName)
