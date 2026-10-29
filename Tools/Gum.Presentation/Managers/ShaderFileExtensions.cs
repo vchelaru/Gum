@@ -5,8 +5,9 @@ namespace Gum.Managers;
 
 /// <summary>
 /// The shader source extensions (lowercase, without the leading dot) a container's SourceShaderFile
-/// accepts: raw HLSL <c>.fx</c> and <c>.slang</c>. The Shader File drop-down, the built-in shader copy and
-/// the file watcher all read this list so they stay in agreement.
+/// offers to pick: raw HLSL <c>.fx</c> and <c>.slang</c>. The built-in shader copy reads this list. The file
+/// watcher reloads a shader in any extension that an element references; it reads this list only to leave an
+/// unreferenced <c>.slang</c>/<c>.fx</c> alone (#7034).
 /// </summary>
 public static class ShaderFileExtensions
 {
