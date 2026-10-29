@@ -1364,6 +1364,14 @@ public class CodeGenerator
                         hasGetter = false;
                     }
 
+                    // A shader parameter is no property of the runtime: it is only reachable by name through
+                    // SetProperty, so the exposed property is write-only.
+                    bool isShaderParameter = !string.IsNullOrEmpty(rootVariable?.ShaderParameter);
+                    if (isShaderParameter)
+                    {
+                        hasGetter = false;
+                    }
+
                     // See if this is an exposed variable:
                     InstanceSave? instance = context.Instance;
                     ElementSave? instanceElement = null;
@@ -1398,6 +1406,10 @@ public class CodeGenerator
                     {
                         var rightSide = $"{sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
+                    }
+                    else if (isShaderParameter)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value);");
                     }
                     else
                     {

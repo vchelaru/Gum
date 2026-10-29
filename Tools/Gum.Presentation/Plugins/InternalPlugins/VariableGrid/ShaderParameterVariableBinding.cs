@@ -87,6 +87,29 @@ public sealed class ShaderParameterVariableBinding
         RemoveLegacyValue(state);
     }
 
+    /// <summary>
+    /// Saves a marked placeholder (no value) for this parameter on <paramref name="defaultState"/> when none exists, so
+    /// something that names the parameter, such as exposing it, can find it. Returns the placeholder it added, or null
+    /// when the variable was already saved.
+    /// </summary>
+    public VariableSave? AddNamedPlaceholder(StateSave defaultState, string variableName)
+    {
+        if (defaultState.GetVariableSave(variableName) != null)
+        {
+            return null;
+        }
+
+        VariableSave placeholder = new VariableSave
+        {
+            Name = variableName,
+            Type = VariableType,
+            ShaderParameter = Marker.Format(),
+            SetsValue = false,
+        };
+        defaultState.Variables.Add(placeholder);
+        return placeholder;
+    }
+
     /// <summary>Removes this parameter from the legacy text on <paramref name="state"/>; true when it was there.</summary>
     public bool RemoveLegacyValue(StateSave state)
     {
