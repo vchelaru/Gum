@@ -124,4 +124,111 @@ public class BBCodeParserTests : BaseTestClass
         parsedTags[0].Open.StartStrippedIndex.ShouldBe(12);
         parsedTags[0].Close.StartStrippedIndex.ShouldBe(13);
     }
+
+    // #7094: a closing tag pairs with its opener ignoring case, the way tag names are recognized.
+    [Theory]
+    [InlineData("[Color=Red]a[/color]b", "ab")]
+    [InlineData("[Color=Red]a[/COLOR]b", "ab")]
+    [InlineData("[link=x]a[/LINK]", "a")]
+    [InlineData("[Color=Red]a[Link=x]b[/LINK]c[/color]", "abc")]
+    [InlineData("[Color=Red]a[color=Blue]b[/Color]c[/COLOR]", "abc")]
+    public void Parse_ShouldPairCloseTagIgnoringCase(string text, string expectedStripped)
+    {
+        List<FoundTag> parsedTags = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
+
+        BbCodeParser.RemoveTags(text, parsedTags).ShouldBe(expectedStripped);
+    }
+
+    [Fact]
+    public void Parse_ShouldKeepOpeningTagNameForBothTags_WhenCloseCaseDiffers()
+    {
+        // ApplyFontVariables pushes on the open tag's Name and pops on the close tag's Name.
+        List<FoundTag> parsedTags = BbCodeParser.Parse("[Color=Red]a[/color]", BbCodeParser.KnownTags);
+
+        parsedTags.Count.ShouldBe(1);
+        parsedTags[0].Name.ShouldBe("Color");
+        parsedTags[0].Open.Name.ShouldBe("Color");
+        parsedTags[0].Close.Name.ShouldBe("Color");
+        parsedTags[0].Open.Argument.ShouldBe("Red");
+        parsedTags[0].Open.StartStrippedIndex.ShouldBe(0);
+        parsedTags[0].Close.StartStrippedIndex.ShouldBe(1);
+    }
+
+    // Guards the #7094 change: when every tag in a string is written in one case, pairing must be exactly
+    // what a case-sensitive nearest-opener match gives. The oracle below is that matching, written against
+    // the generated token list rather than by scanning the text.
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Parse_ShouldMatchCaseSensitiveOracle_ForStringsWithOneCaseStyle(int caseStyle)
+    {
+        string[] names = { "Color", "Link", "Red", "FontScale" };
+        Random random = new Random(7094 + caseStyle);
+
+        for (int iteration = 0; iteration < 800; iteration++)
+        {
+            StringBuilder text = new StringBuilder();
+            // (isOpening, name, startIndex, count)
+            List<(bool IsOpening, string Name, int Start, int Count)> tokens = new();
+            int tokenCount = random.Next(1, 9);
+            for (int t = 0; t < tokenCount; t++)
+            {
+                if (random.Next(3) == 0)
+                {
+                    text.Append((char)('a' + random.Next(26)));
+                    continue;
+                }
+
+                string name = names[random.Next(names.Length)];
+                name = caseStyle == 0 ? name.ToLowerInvariant() : caseStyle == 1 ? name.ToUpperInvariant() : name;
+                bool isOpening = random.Next(2) == 0;
+                string tag = isOpening ? $"[{name}=1]" : $"[/{name}]";
+                tokens.Add((isOpening, name, text.Length, tag.Length));
+                text.Append(tag);
+            }
+
+            string s = text.ToString();
+            List<FoundTag> parsed = BbCodeParser.Parse(s, BbCodeParser.KnownTags);
+
+            // Oracle: nearest earlier unmatched opener with the identical name.
+            List<(string Name, int Open, int OpenCount, int Close, int CloseCount)> expected = new();
+            List<(string Name, int Start, int Count)> stack = new();
+            foreach (var token in tokens)
+            {
+                if (token.IsOpening)
+                {
+                    stack.Add((token.Name, token.Start, token.Count));
+                }
+                else
+                {
+                    int found = stack.FindLastIndex(item => item.Name == token.Name);
+                    if (found >= 0)
+                    {
+                        expected.Add((token.Name, stack[found].Start, stack[found].Count, token.Start, token.Count));
+                        stack.RemoveAt(found);
+                    }
+                }
+            }
+
+            parsed.Count.ShouldBe(expected.Count, s);
+            var actual = parsed
+                .Select(item => (item.Name, item.Open.StartIndex, item.Open.Count, item.Close.StartIndex, item.Close.Count))
+                .OrderBy(item => item.Item2).ThenBy(item => item.Item4).ToList();
+            var sortedExpected = expected.OrderBy(item => item.Item2).ThenBy(item => item.Item4).ToList();
+            for (int i = 0; i < actual.Count; i++)
+            {
+                actual[i].ShouldBe(sortedExpected[i], s);
+            }
+
+            // Stripping removes exactly the matched tags' text.
+            StringBuilder oracleStripped = new StringBuilder(s);
+            foreach (var pair in expected.SelectMany(item => new[] { (item.Open, item.OpenCount), (item.Close, item.CloseCount) })
+                .OrderByDescending(item => item.Item1))
+            {
+                oracleStripped.Remove(pair.Item1, pair.Item2);
+            }
+            BbCodeParser.RemoveTags(s, parsed).ShouldBe(oracleStripped.ToString(), s);
+        }
+    }
 }

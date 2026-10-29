@@ -319,4 +319,28 @@ public class TextRuntimeBbCodeLinkTagTests
         span.StartIndex.ShouldBe(9);
         span.EndIndex.ShouldBe(10);
     }
+
+    // #7094: a closing tag pairs with its opener ignoring case, the way tag names are recognized.
+    [Theory]
+    [InlineData("[Color=Red]a[/color]b", "ab")]
+    [InlineData("[Color=Red]a[/COLOR]b", "ab")]
+    [InlineData("[link=x]a[/LINK]", "a")]
+    [InlineData("[Color=Red]a[Link=x]b[/LINK]c[/color]", "abc")]
+    public void Text_WithDifferentCaseCloseTag_PairsAndStripsBothTags(string markup, string expected)
+    {
+        TextRuntime textRuntime = Make(markup);
+
+        Drawn(textRuntime).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void GetTagAtIndex_WithDifferentCaseCloseTag_FindsTheLink()
+    {
+        TextRuntime textRuntime = Make("a [Link=x]bc[/LINK] d");
+
+        TextTagSpan span = textRuntime.GetTagAtIndex("Link", 2)!.Value;
+        span.Argument.ShouldBe("x");
+        span.StartIndex.ShouldBe(2);
+        span.EndIndex.ShouldBe(4);
+    }
 }
