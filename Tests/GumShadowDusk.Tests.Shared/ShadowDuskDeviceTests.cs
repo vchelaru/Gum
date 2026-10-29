@@ -210,9 +210,11 @@ technique SpriteDrawing
             {
                 return new DeviceHost(form, new GraphicsDevice(GraphicsAdapter.DefaultAdapter, GraphicsProfile.HiDef, parameters));
             }
-            catch (NoSuitableGraphicsDeviceException exception)
+            catch (Exception exception) when (exception is NoSuitableGraphicsDeviceException
+                or DllNotFoundException or PlatformNotSupportedException)
             {
-                // A machine with no DirectX 11 adapter at all (some CI runners); a machine with one must pass.
+                // A machine with no usable DirectX 11 adapter or native library (some CI runners): only these exceptions skip,
+                // so a real failure on a machine that has an adapter still fails.
                 form.Dispose();
                 Assert.Skip("No DirectX 11 graphics device on this machine: " + exception.Message);
                 throw;

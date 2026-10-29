@@ -823,28 +823,41 @@ technique SpriteDrawing
         }
     }
 
-    // Hot reload: each edit of the file compiles a new shader, and the superseded one must be unloaded or one
-    // GL program leaks per edit.
+    // Hot reload compiles a new shader per edit, but a container keeps drawing with the Shader it was given until
+    // its SourceShaderFile is assigned again. A superseded shader is never unloaded (an unloaded one draws black
+    // with no error), so a container that has not been reassigned after two edits still draws correctly.
     [Fact]
-    public void UseShadowDusk_RepeatedEdits_UnloadSupersededShaders()
+    public void UseShadowDusk_ContainerHoldingAnOldShader_KeepsDrawingAfterTwoEdits()
     {
         string shaderPath = WriteTempShader(GrayscaleSlang, ".slang");
-        ShadowDuskShaderLoader loader = new ShadowDuskShaderLoader();
+        (ContainerRuntime outer, ContainerRuntime inner) = BuildNestedRedRenderTarget();
         try
         {
-            for (int edit = 1; edit <= 5; edit++)
+            Gum.GumService.Default.UseShadowDusk();
+            Shader held = (Shader)CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath)!;
+
+            for (int edit = 1; edit <= 2; edit++)
             {
                 File.WriteAllText(shaderPath, GrayscaleSlang + $"\n// edit {edit}\n");
                 File.SetLastWriteTimeUtc(shaderPath, DateTime.UtcNow.AddMinutes(edit));
-                loader.Load(shaderPath);
+                Shader replacement = (Shader)CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath)!;
+                replacement.Id.ShouldNotBe(held.Id);
             }
 
-            // The current shader, plus the one before it, which a container may still draw with until its
-            // SourceShaderFile is reassigned.
-            loader.LoadedShaderCount.ShouldBeLessThanOrEqualTo(2);
+            inner.RenderTargetEffect = held;
+            Gum.GumService.Default.Root.Children.Add(outer);
+            Gum.GumService.Default.Root.UpdateLayout();
+            DrawOnce();
+
+            Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+            Math.Abs(center.R - center.G).ShouldBeLessThan(25);
+            Math.Abs(center.R - center.B).ShouldBeLessThan(25);
+            center.R.ShouldBeGreaterThan((byte)40);
         }
         finally
         {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            Gum.GumService.Default.Root.Children.Clear();
             File.Delete(shaderPath);
         }
     }

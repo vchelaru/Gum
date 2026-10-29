@@ -23,12 +23,6 @@ internal sealed class ShadowDuskShaderLoader
     // the file is unchanged, so a hot reload of the file loads the new text.
     private readonly Dictionary<string, CachedShader> _cache = new Dictionary<string, CachedShader>();
 
-    // The shader each file had before its current one, unloaded when the next edit supersedes it.
-    private readonly Dictionary<string, Shader> _retired = new Dictionary<string, Shader>();
-
-    /// <summary>How many shaders this loader has loaded and not unloaded.</summary>
-    internal int LoadedShaderCount { get; private set; }
-
     public static bool CanLoad(string path)
     {
         string extension = Path.GetExtension(path);
@@ -52,32 +46,13 @@ internal sealed class ShadowDuskShaderLoader
         }
 
         Shader shader = Convert(path);
-        LoadedShaderCount++;
 
-        // The shader this one replaces may still be drawing: a container keeps the Shader it was given until its
-        // SourceShaderFile is assigned again, and a hot reload does that one container at a time, within one
-        // update and before the next draw. So the replaced shader is only retired here, and the one it retired
-        // (two edits ago, assigned again long since) is the one unloaded. At most one superseded shader per file
-        // stays loaded. The limit: a container that is not reassigned across two edits of the file would draw
-        // with an unloaded shader; hot reload reassigns every container that names the file.
-        if (_cache.TryGetValue(path, out CachedShader superseded))
-        {
-            if (_retired.TryGetValue(path, out Shader oldest))
-            {
-                Unload(oldest);
-            }
-            _retired[path] = superseded.Shader;
-        }
-
+        // The shader this one replaces is deliberately never unloaded, and its declared defaults stay registered. A
+        // container keeps drawing with the Shader it was given until its SourceShaderFile is assigned again, and an
+        // unloaded shader draws black with no error. The cost is one GL program per edit of a shader file during
+        // hot reload, a development-time leak that ends with the process.
         _cache[path] = new CachedShader(file.LastWriteTimeUtc, file.Length, shader);
         return shader;
-    }
-
-    private void Unload(Shader shader)
-    {
-        RaylibShaderDefaults.Remove(shader);
-        Raylib.UnloadShader(shader);
-        LoadedShaderCount--;
     }
 
     private static Shader Convert(string path)
