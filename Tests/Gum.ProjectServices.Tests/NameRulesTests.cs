@@ -11,6 +11,41 @@ public class NameRulesTests
 {
     private readonly NameRules _rules = new NameRules();
 
+    #region C# identifiers from arbitrary text
+
+    [Theory]
+    [InlineData("MyGame", "MyGame")]
+    [InlineData("2DPlatformer", "_2DPlatformer")]
+    [InlineData("3D-Maze.Game", "_3D_Maze_Game")]
+    [InlineData("My Game", "My_Game")]
+    [InlineData("my-game", "my_game")]
+    [InlineData("Game.Client", "Game_Client")]
+    [InlineData("Caf\u00e9", "Caf\u00e9")]
+    [InlineData("\u6e38\u620f", "\u6e38\u620f")]
+    [InlineData("class", "@class")]
+    [InlineData("a+b", "a_b")]
+    [InlineData("-", "_")]
+    [InlineData("", "_")]
+    public void ToCSharpIdentifier_OnAnyText_ReturnsAnIdentifierThatCompiles(string name, string expected)
+    {
+        string identifier = NameRules.ToCSharpIdentifier(name);
+
+        identifier.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("2DPlatformer")]
+    [InlineData("a b-c.d")]
+    [InlineData("\u00e9\u00e8")]
+    public void ToCSharpIdentifier_RunTwice_ChangesNothing(string name)
+    {
+        string once = NameRules.ToCSharpIdentifier(name);
+
+        NameRules.ToCSharpIdentifier(once).ShouldBe(once);
+    }
+
+    #endregion
+
     #region C# names
 
     [Theory]
