@@ -25,7 +25,7 @@ public class ComboBoxEscapeTests : BaseTestClass
         return comboBox;
     }
 
-    private static void PushEscape()
+    internal static void PushEscape()
     {
         Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
         keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(Keys.Escape)).Returns(true);
@@ -33,7 +33,7 @@ public class ComboBoxEscapeTests : BaseTestClass
     }
 
     // The receiver chain InteractiveGue runs each frame: preview (stops when handled), then update.
-    private static bool RunFrame()
+    internal static bool RunFrame()
     {
         IInputReceiver receiver = InteractiveGue.CurrentInputReceiver!;
         RoutedEventArgs args = new();
