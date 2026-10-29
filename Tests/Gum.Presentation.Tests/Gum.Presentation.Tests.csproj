@@ -49,11 +49,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The shipped Outline shader, so a test can check what its source declares (#7004). -->
-    <None Include="..\..\Gum\Content\Shaders\Outline.slang" Link="Outline.slang" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Per-process temp folder for the tool's per-user files (#5337). -->
     <Compile Include="..\Shared\**\*.cs" Link="Shared\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- Seed-driven test class and method order for the weekly shuffled-order workflow (#5820, #5840). -->
