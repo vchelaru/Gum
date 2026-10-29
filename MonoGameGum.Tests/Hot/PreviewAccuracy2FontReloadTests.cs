@@ -167,6 +167,50 @@ public partial class PreviewAccuracy2Tests
         ShouldBeCorrect(verdict);
     }
 
+    [Theory]
+    [InlineData("Content/Custom.ttf")]
+    [InlineData("Fonts/Custom.OTF")]
+    public void Font_SourceFileChanged_IsReportedAsNotApplied(string relativePath)
+    {
+        PreviewAccuracy2World world = Boot();
+        string path = Path.Combine(world.Dir, relativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "glyphs");
+
+        PreviewVerdict2 verdict = world.Reload(path);
+
+        verdict.Reloaded.ShouldBeTrue();
+        verdict.MatchesRestart.ShouldBeFalse();
+        verdict.Kinds.ShouldBe("FontSourceChanged");
+        world.Results.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Font_SourceFileChanged_WithTheProjectSavedInTheSameBurst_IsOneResult()
+    {
+        PreviewAccuracy2World world = Boot();
+        string path = Path.Combine(world.Dir, "Content", "Custom.ttf");
+        File.WriteAllText(path, "glyphs");
+        world.Manager.NotifyFileChanged(path);
+
+        PreviewVerdict2 verdict = world.Save(project => Std(MainScreen(project), "Caption", "Text", "Hello Again"));
+
+        world.Results.Count.ShouldBe(1);
+        verdict.Kinds.ShouldBe("FontSourceChanged");
+        verdict.MatchesRestart.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Font_SourceFileChanged_ThenNothingElse_IsReportedOnce()
+    {
+        PreviewAccuracy2World world = Boot();
+        string path = Path.Combine(world.Dir, "Content", "Custom.ttf");
+        File.WriteAllText(path, "glyphs");
+        world.Reload(path);
+
+        world.Settle().Reloaded.ShouldBeFalse();
+    }
+
     private static Microsoft.Xna.Framework.Graphics.Texture2D? PageOf(PreviewAccuracy2World world) =>
         ((RenderingLibrary.Graphics.Text)world.Find("Caption")!.RenderableComponent).BitmapFont?.Textures[0];
 

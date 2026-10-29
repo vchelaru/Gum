@@ -99,6 +99,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     private static readonly bool _isFileSystemCaseInsensitive =
         System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
         || System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+    // Font source files that changed and are waiting to be reported with the next result; game thread only.
+    private readonly List<HotReloadIssue> _sourceFontIssues = new List<HotReloadIssue>();
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
@@ -213,10 +215,17 @@ public class GumHotReloadManager : IGumHotReloadManager
         if (otherFiles.Count > 0)
         {
             ReassignShaderFiles(rootList, otherFiles);
+            ReportChangedFontSources(otherFiles);
         }
         if (reload)
         {
             PerformReload(rootList);
+        }
+        else if (_sourceFontIssues.Count > 0)
+        {
+            List<HotReloadIssue> issues = new List<HotReloadIssue>();
+            AddSourceFontIssues(issues);
+            RaiseIsolated(ReloadFinished, new HotReloadResult(issues), nameof(ReloadFinished));
         }
     }
 
@@ -264,6 +273,31 @@ public class GumHotReloadManager : IGumHotReloadManager
                 _changedOtherFiles.Add(fullPath);
             }
         }
+    }
+
+    // A .ttf or .otf is turned into a bitmap font by the generator, and which generated fonts came from
+    // it is not known here, so a change cannot be applied; the result says so.
+    private void ReportChangedFontSources(List<string> changedFiles)
+    {
+        foreach (string file in changedFiles)
+        {
+            string extension = Path.GetExtension(file).ToLowerInvariant();
+            if (extension is ".ttf" or ".otf")
+            {
+                _sourceFontIssues.Add(new HotReloadIssue(
+                    HotReloadIssueKind.FontSourceChanged,
+                    $"Font source file {Path.GetFileName(file)} changed. Fonts already generated from it keep the old glyphs; restart to apply."));
+            }
+        }
+    }
+
+    private void AddSourceFontIssues(List<HotReloadIssue> issues)
+    {
+        foreach (HotReloadIssue issue in _sourceFontIssues)
+        {
+            Report(issues, issue);
+        }
+        _sourceFontIssues.Clear();
     }
 
     // Re-assigns SourceShaderFile on every container using a changed file, so each looks its effect up
@@ -563,6 +597,8 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             return;
         }
+
+        AddSourceFontIssues(issues);
 
         // A subscriber that throws must not break Update or keep the others from hearing.
         if (applied)

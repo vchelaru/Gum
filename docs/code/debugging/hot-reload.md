@@ -170,6 +170,7 @@ Every reload's result lists every issue that reload had, including one an earlie
 | --------------------- | --------------------------------------------------------------------------------------------------- | ---------------- |
 | `MissingFile`         | The project lists a file that is not on disk. The reload went on without it.                        | `false`          |
 | `FontFailure`         | A changed font file could not be copied. It is tried again on the next reload.                      | `false`          |
+| `FontSourceChanged`   | A font source file (`.ttf` or `.otf`) changed. Fonts already generated from it keep the old glyphs until a restart. | `false`          |
 | `ReloadFailed`        | The project could not be read, or applying it threw. The UI is unchanged or partly updated.         | `false`          |
 | `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
 | `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |

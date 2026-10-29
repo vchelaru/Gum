@@ -17,6 +17,12 @@ public enum HotReloadIssueKind
     /// <summary>A changed font file could not be copied. It is tried again on the next reload.</summary>
     FontFailure,
 
+    /// <summary>
+    /// A font source file (.ttf or .otf) changed. Fonts already generated from it, and the Text using
+    /// them, keep the old glyphs until a restart.
+    /// </summary>
+    FontSourceChanged,
+
     /// <summary>The project could not be read, or applying it threw. The UI is unchanged or partly updated.</summary>
     ReloadFailed,
 
