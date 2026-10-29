@@ -128,6 +128,19 @@ public class SourceShaderFileResolverTests : IDisposable
         _reported[0].ShouldContain("Check if the file exists");
     }
 
+    // A resolver that returns null for .fx declined it; the message names the package that handles it.
+    [Fact]
+    public void SourceShaderFile_ReportsFailureNamingThePackage_WhenResolverReturnsNullForFx()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => null;
+        ContainerRuntime container = new();
+
+        container.SetProperty("SourceShaderFile", "Shaders/Outline.fx");
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldContain("Gum.SkiaSharp.ShadowDusk");
+    }
+
     [Fact]
     public void SourceShaderFile_Throws_WhenResolverReturnsNullAndMissingFileBehaviorIsThrow()
     {

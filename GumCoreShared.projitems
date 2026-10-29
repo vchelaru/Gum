@@ -154,6 +154,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameterMarker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderVariableNaming.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderParameterVariables.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ShaderResolverRequirement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableCloneLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HorizontalAlignment.cs" />

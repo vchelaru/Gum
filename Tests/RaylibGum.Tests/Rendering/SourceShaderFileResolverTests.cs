@@ -86,6 +86,7 @@ public class SourceShaderFileResolverTests : BaseTestClass
 
         _reported.Count.ShouldBe(1);
         _reported[0].ShouldContain("Check if the file exists");
+        _reported[0].ShouldContain("Gum.raylib.ShadowDusk");
     }
 
     [Fact]
