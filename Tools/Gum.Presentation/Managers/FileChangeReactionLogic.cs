@@ -51,6 +51,14 @@ namespace Gum.Managers
         /// <summary>A referenced file changed while a scope was open, so closing it reloads the canvas once.</summary>
         private bool _contentReloadPending;
 
+        /// <summary>
+        /// Files that changed or were deleted while a scope was open, whose check against the project's references
+        /// waits until it closes. An element reloaded earlier in the same flush forgets what the project references, so
+        /// asking per file would walk the project again after each reload; asking once the whole batch is back in
+        /// memory walks it once. Null exactly when <see cref="_reloadedWhileDeferring"/> is.
+        /// </summary>
+        private List<FilePath>? _referencedFileChecksWhileDeferring;
+
         public FileChangeReactionLogic(
             ISelectedState selectedState,
             IWireframeCommands wireframeCommands,
@@ -92,6 +100,7 @@ namespace Gum.Managers
         public IDisposable DeferDependentUpdates()
         {
             _reloadedWhileDeferring ??= new Dictionary<string, ElementSave>();
+            _referencedFileChecksWhileDeferring ??= new List<FilePath>();
             _behaviorsReloadedWhileDeferring ??= new Dictionary<string, BehaviorSave>();
             return new DeferredDependentUpdates(this);
         }
@@ -106,12 +115,19 @@ namespace Gum.Managers
             {
                 Dictionary<string, ElementSave>? reloaded = _owner._reloadedWhileDeferring;
                 Dictionary<string, BehaviorSave>? reloadedBehaviors = _owner._behaviorsReloadedWhileDeferring;
+                List<FilePath>? filesToCheck = _owner._referencedFileChecksWhileDeferring;
                 bool shouldRefresh = _owner._contentReloadPending;
                 _owner._reloadedWhileDeferring = null;
                 _owner._behaviorsReloadedWhileDeferring = null;
+                _owner._referencedFileChecksWhileDeferring = null;
                 _owner._contentReloadPending = false;
                 try
                 {
+                    if (filesToCheck != null && _owner.AnyIsReferencedFileAndForgetWhatTheyList(filesToCheck))
+                    {
+                        shouldRefresh = true;
+                    }
+
                     if (reloaded != null && _owner.UpdateDependentsOf(reloaded, reloadedBehaviors ?? new Dictionary<string, BehaviorSave>()))
                     {
                         shouldRefresh = true;
@@ -514,6 +530,12 @@ namespace Gum.Managers
         /// </summary>
         private void ReactToReferencedFileChanged(FilePath file)
         {
+            if (_referencedFileChecksWhileDeferring != null)
+            {
+                _referencedFileChecksWhileDeferring.Add(file);
+                return;
+            }
+
             if (!IsReferencedFile(file))
             {
                 return;
@@ -533,6 +555,30 @@ namespace Gum.Managers
             {
                 RefreshCanvasAndVariables();
             }
+        }
+
+        /// <summary>
+        /// The deferred form of <see cref="ReactToReferencedFileChanged"/> for a whole flush: true when some of
+        /// <paramref name="files"/> is one the tool refreshes. Files that name other files (an animation chain, a
+        /// font) are judged first and then make the project forget what it references, so the pictures they now
+        /// name count in the check of the rest; that costs two walks at most however the flush was ordered.
+        /// </summary>
+        private bool AnyIsReferencedFileAndForgetWhatTheyList(List<FilePath> files)
+        {
+            bool anyListerChanged = false;
+            foreach (FilePath file in files.Where(ListsOtherFiles))
+            {
+                if (IsReferencedFile(file))
+                {
+                    anyListerChanged = true;
+                }
+            }
+            if (anyListerChanged)
+            {
+                _referencedFiles.Invalidate();
+            }
+
+            return anyListerChanged || files.Where(file => !ListsOtherFiles(file)).Any(IsReferencedFile);
         }
 
         /// <summary>

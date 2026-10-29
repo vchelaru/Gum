@@ -36,6 +36,7 @@ public class GumxImportServiceTests : IDisposable
     private readonly FakeImportLogic _importLogic;
     private readonly FakeFileCommands _fileCommands = new();
     private readonly Mock<IFileWatchIgnoreList> _fileWatch = new();
+    private readonly Mock<IFileWatchManager> _fileWatchManager = new();
     private readonly FakeProjectState _projectState;
     private readonly GumProjectSave _gumProject;
 
@@ -55,7 +56,7 @@ public class GumxImportServiceTests : IDisposable
         _projectState  = new FakeProjectState(_projectDir, _gumProject);
         _importLogic   = new FakeImportLogic(_projectDir);
 
-        _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService, new ImportVersionGate(), _fileWatch.Object);
+        _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService, new ImportVersionGate(), _fileWatch.Object, _fileWatchManager.Object);
     }
 
     public void Dispose()
@@ -265,6 +266,39 @@ public class GumxImportServiceTests : IDisposable
     }
 
     // ── file watcher ──────────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ImportAsync_ForgetsWhichFilesTheProjectReferences_WhetherOrNotTheProjectReloads(bool saveSucceeds)
+    {
+        // The import registers and writes elements; without a reload (Auto Save off) no project-load event
+        // follows, so the kept set of referenced files would still list the project from before the import.
+        _fileCommands.SaveSucceeds = saveSucceeds;
+        ComponentSave component = ComponentWithWidth("MyButton", 100);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        await _sut.ImportAsync(SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "");
+
+        _fileWatchManager.Verify(manager => manager.InvalidateReferencedFiles(), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task ImportAsync_ThatFailsPartway_StillForgetsWhichFilesTheProjectReferences()
+    {
+        // Elements registered and files written before the failure are already part of the project.
+        _fileCommands.SaveSucceeds = true;
+        _fileCommands.ThrowOnLoadProject = true;
+        ComponentSave component = ComponentWithWidth("MyButton", 100);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        await Should.ThrowAsync<ImportFailedException>(() =>
+            _sut.ImportAsync(SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: ""));
+
+        _fileWatchManager.Verify(manager => manager.InvalidateReferencedFiles(), Times.AtLeastOnce);
+    }
 
     [Fact]
     public async Task ImportAsync_MutesTheFileWatcherForEachFileItWritesDirectly()
@@ -1612,7 +1646,9 @@ public class GumxImportServiceTests : IDisposable
             SaveProjectCallCount++;
             return SaveSucceeds;
         }
-        public Task LoadProjectAsync(string fileName) => Task.CompletedTask;
+        public bool ThrowOnLoadProject { get; set; }
+        public Task LoadProjectAsync(string fileName) =>
+            ThrowOnLoadProject ? Task.FromException(new IOException("disk error")) : Task.CompletedTask;
         public void DeleteDirectory(FilePath filePath) { }
         public void ClearDirectoryContents(FilePath filePath) { }
         public void MoveToRecycleBin(FilePath filePath) { }

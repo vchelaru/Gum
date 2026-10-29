@@ -474,6 +474,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         targetElement.Categories.Add(newCategory);
         _elementCommands.AddCategoryStateVariable(targetElement, newCategory.Name);
+        _copyPastePluginNotifier.CategoryAdd(newCategory);
 
         var targetInstanceNames = new HashSet<string>(targetElement.Instances.Select(item => item.Name));
         var missingInstanceNames = newCategory.States
@@ -576,6 +577,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             newStateSave.Name = name;
 
             targetCategory.States.Add(newStateSave);
+            _copyPastePluginNotifier.StateAdd(newStateSave);
 
             _guiCommands.RefreshStateTreeView();
 

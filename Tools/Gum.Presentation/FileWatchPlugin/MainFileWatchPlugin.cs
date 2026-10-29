@@ -83,6 +83,7 @@ public class MainFileWatchPlugin : CorePriorityPlugin
         this.InstanceDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
         this.InstancesDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
         this.StateAdd += _ => _controller.HandleReferencesMayHaveChanged();
+        this.CategoryAdd += _ => _controller.HandleReferencesMayHaveChanged();
         this.StateDelete += _ => _controller.HandleReferencesMayHaveChanged();
         this.VariableAdd += (_, _) => _controller.HandleReferencesMayHaveChanged();
         this.VariableDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
