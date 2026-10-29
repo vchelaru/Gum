@@ -377,6 +377,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         var rootVar = ObjectFinder.Self.GetRootVariable(leftSide, element);
 
+        if (rootVar == null && instance != null)
+        {
+            // A shader parameter is declared by no type; the container's saved entry defines it.
+            rootVar = ObjectFinder.Self.GetShaderParameterDefinition(instance.Name + "." + leftSide, parentElement);
+        }
+
         if (rootVar == null)
         {
             // Synthetic category-state LHS: "<CategoryName>State" assigns a state from the

@@ -2191,6 +2191,100 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         errors.ShouldHaveSingleItem().Message.ShouldContain("from Components/Styles, which the project does not have");
     }
 
+    private ComponentSave AddLabelReadingShaderParameter(string line, string? marker, bool saved = true, string? exposedAs = null)
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, line);
+        component.Instances.Add(new InstanceSave { Name = "Icon", BaseType = "Container", ParentContainer = component });
+        if (saved)
+        {
+            component.DefaultState!.Variables.Add(new VariableSave
+            {
+                Name = "Icon.Outline_Thickness",
+                Type = "float",
+                SetsValue = false,
+                ShaderParameter = marker,
+                ExposedAsName = exposedAs
+            });
+        }
+        return component;
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceReadsSavedShaderParameter()
+    {
+        ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Outline_Thickness * 2", marker: "Thickness");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceReadsSavedShaderParameterOfElementBase()
+    {
+        // The derived element overrides a parameter of an instance its base owns.
+        ComponentSave baseLabel = AddLabelReadingShaderParameter("Width = 1", marker: "Thickness");
+        baseLabel.Name = "BaseLabel";
+        ComponentSave reader = AddComponentWithReferences("Reader", sourceObject: null, "Width = Components/DerivedLabel.Icon.Outline_Thickness");
+        ComponentSave derived = new ComponentSave { Name = "DerivedLabel", BaseType = "BaseLabel" };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        Project.Components.Add(derived);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(reader, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenReferenceReadsShaderParameterNothingNamed()
+    {
+        ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Outline_Thickness", marker: null, saved: false);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Message.ShouldContain("Icon.Outline_Thickness");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenSavedEntryHasNoMarker()
+    {
+        ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Outline_Thickness", marker: null);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldHaveSingleItem().Code.ShouldBe("GUM0009");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameSavedForm_WhenReferenceUsesPlainParameterName()
+    {
+        ComponentSave component = AddLabelReadingShaderParameter("Width = Icon.Thickness", marker: "Thickness");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Message.ShouldContain("Icon.Thickness");
+        error.Message.ShouldContain("Icon.Outline_Thickness");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNameEveryComponent_WhenReferenceUsesPlainVectorParameterName()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, "Width = Icon.Tint");
+        component.Instances.Add(new InstanceSave { Name = "Icon", BaseType = "Container", ParentContainer = component });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "Icon.Outline_Tint__X", Type = "float", SetsValue = false, ShaderParameter = "Tint#0/2" });
+        component.DefaultState.Variables.Add(new VariableSave { Name = "Icon.Outline_Tint__Y", Type = "float", SetsValue = false, ShaderParameter = "Tint#1/2" });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Message.ShouldContain("Icon.Outline_Tint__X");
+        error.Message.ShouldContain("Icon.Outline_Tint__Y");
+    }
+
     private ComponentSave AddStylesComponent(string name, string colorInstanceName)
     {
         ComponentSave styles = new ComponentSave { Name = name, BaseType = "Container" };

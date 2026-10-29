@@ -608,7 +608,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 }
                 else if (variablePath.Length > 0 && !VariableExists(referencedElement, variablePath))
                 {
-                    problem = $"\"{variablePath}\" from {qualifiedElementName}, which has no such variable";
+                    problem = $"\"{variablePath}\" from {qualifiedElementName}, which has no such variable{GetSavedShaderNameHint(referencedElement, variablePath)}";
                 }
             }
             return " ";
@@ -623,7 +623,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             string referencedName = ElementSaveExtensions.DecodeOwnerName(match.Value);
             if (!ReferenceKeywords.Contains(referencedName) && !VariableExists(owner, referencedName))
             {
-                return $"\"{referencedName}\", which {owner.Name} does not have";
+                return $"\"{referencedName}\", which {owner.Name} does not have{GetSavedShaderNameHint(owner, referencedName)}";
             }
         }
         return null;
@@ -657,7 +657,12 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
             ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
             // A missing instance type is already reported as a missing base type.
-            return instanceType == null || VariableExists(instanceType, variablePath.Substring(dot + 1));
+            if (instanceType == null || VariableExists(instanceType, variablePath.Substring(dot + 1)))
+            {
+                return true;
+            }
+            // A shader parameter is declared by no type; it exists only where something saved it.
+            return ObjectFinder.Self.GetShaderParameterDefinition(variablePath, element) != null;
         }
 
         if (RuntimeComputedVariableNames.Contains(variablePath)
@@ -694,6 +699,37 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             return VariableExists(element, variablePath.Substring(0, variablePath.Length - "Color".Length) + "Red");
         }
         return false;
+    }
+
+    /// <summary>
+    /// When <paramref name="variablePath"/> names a shader parameter by its plain name (<c>Icon.Thickness</c>) and
+    /// the element saved it under its full name, returns text naming the saved form; otherwise an empty string.
+    /// </summary>
+    private static string GetSavedShaderNameHint(ElementSave element, string variablePath)
+    {
+        int dot = variablePath.IndexOf('.');
+        if (dot <= 0)
+        {
+            return string.Empty;
+        }
+        string instancePrefix = variablePath.Substring(0, dot + 1);
+        string plainName = variablePath.Substring(dot + 1);
+
+        List<string> savedNames = new List<string>();
+        foreach (ElementSave inChain in SelfAndBaseElements(element))
+        {
+            foreach (VariableSave variable in inChain.DefaultState?.Variables ?? new List<VariableSave>())
+            {
+                if (variable.Name.StartsWith(instancePrefix, StringComparison.Ordinal)
+                    && ShaderParameterMarker.TryParse(variable.ShaderParameter, out ShaderParameterMarker marker)
+                    && marker.Parameter == plainName
+                    && !savedNames.Contains(variable.Name))
+                {
+                    savedNames.Add(variable.Name);
+                }
+            }
+        }
+        return savedNames.Count == 0 ? string.Empty : $" (it is saved as {string.Join(", ", savedNames)})";
     }
 
     private static InstanceSave? FindInstanceInInheritance(ElementSave element, string instanceName)

@@ -1277,8 +1277,77 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            return GetRootVariable(afterDot, instanceElement);
+            VariableSave? declaredByType = GetRootVariable(afterDot, instanceElement);
+
+            if (declaredByType == null && instance.ParentContainer != null)
+            {
+                // A shader parameter is not declared by the instance's type; the container that saved it
+                // under "Instance.Parameter" is the only place that knows it.
+                return GetShaderParameterDefinition(instance.Name + "." + afterDot, instance.ParentContainer);
+            }
+
+            return declaredByType;
         }
+    }
+
+    /// <summary>
+    /// Returns the definition of a shader parameter variable saved on <paramref name="container"/> or one of its
+    /// base elements, or null when none is saved.
+    /// </summary>
+    /// <param name="qualifiedVariableName">The saved name, such as <c>Icon.Outline_Thickness</c>.</param>
+    /// <param name="container">The element to start searching from.</param>
+    public VariableSave? GetShaderParameterDefinition(string qualifiedVariableName, ElementSave container)
+    {
+        int dot = qualifiedVariableName.IndexOf('.');
+        if (dot <= 0)
+        {
+            return null;
+        }
+
+        VariableSave? saved = FindMarkedVariable(container, qualifiedVariableName);
+        if (saved == null)
+        {
+            foreach (ElementSave baseElement in GetBaseElements(container))
+            {
+                saved = FindMarkedVariable(baseElement, qualifiedVariableName);
+                if (saved != null)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (saved == null)
+        {
+            return null;
+        }
+
+        // Shaped like a variable the instance's type declares: the root name, not the saved one.
+        return new VariableSave
+        {
+            Name = qualifiedVariableName.Substring(dot + 1),
+            Type = saved.Type,
+            ShaderParameter = saved.ShaderParameter
+        };
+    }
+
+    private static VariableSave? FindMarkedVariable(ElementSave element, string savedName)
+    {
+        List<VariableSave>? variables = element.DefaultState?.Variables;
+        if (variables == null)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < variables.Count; i++)
+        {
+            VariableSave variable = variables[i];
+            if (!string.IsNullOrEmpty(variable.ShaderParameter) && variable.Name == savedName)
+            {
+                return variable;
+            }
+        }
+        return null;
     }
 
     public VariableListSave? GetRootVariableList(string name, ElementSave element)

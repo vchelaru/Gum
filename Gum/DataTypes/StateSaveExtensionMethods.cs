@@ -628,6 +628,12 @@ public static class StateSaveExtensionMethods
                 variableSave.IsFont = rootVariable?.IsFont == true;
                 variableSave.IsFile = isFile;
 
+                // Only a definition saved by a shader parameter row carries the marker.
+                if (string.IsNullOrEmpty(variableSave.ShaderParameter) && !string.IsNullOrEmpty(rootVariable?.ShaderParameter))
+                {
+                    variableSave.ShaderParameter = rootVariable!.ShaderParameter;
+                }
+
                 if (!string.IsNullOrEmpty(exposedVariableSourceName))
                 {
                     variableSave.ExposedAsName = variableName;
