@@ -154,22 +154,13 @@ Remove the self-referential selector variable from the category's states. The se
 
 The check fires on every Screen and Component, for any state inside a category that sets that same category's selector. A state setting a *child instance's* selector (e.g. `Border.ColorCategoryState`, which carries a source object) is the intended cascade and is not flagged.
 
-## GUM0018: Category Name Collides With Generated Code
+## Category Names That Clash With Generated Code
 
-Each category generates a nested enum named like it and a `<CategoryName>State` property in the element's [generated code](../../code-tab/README.md). C# does not allow a member named like its own class, or two members with one name, so a category whose name clashes with one of these names produces code that does not compile (CS0542, CS0102). Gum reports **GUM0018** as an error in the [Errors tab](../../editor-tab.md) and `gumcli check` and `gumcli codegen` skip the element until it is fixed.
+Each category generates a nested enum named like it and a `<CategoryName>State` property in the element's [generated code](../../code-tab/README.md). C# does not allow a member named like its own class, or two members with one name, so two kinds of category names produce code that does not compile:
 
-### Example
+* A category named like its element when the class is named like the element. A component `Mode` with a category `Mode` fails with CS0542 under Gum Forms, where the class is `Mode`. It compiles under the legacy MonoGame, Raylib and Skia outputs, where the class is `ModeRuntime`.
+* A category whose enum or `<CategoryName>State` property repeats the name another category generates, such as categories `Mode` and `ModeState` (the property `ModeState` and the enum `ModeState`). This fails with every output library.
 
-A component named `Mode` has a category named `Mode`. The enum `Mode` would sit inside the class `Mode`. The same happens when a component named `ModeState` has a category named `Mode` (the property `ModeState`), or when a component has both a `Mode` category and a `ModeState` category.
+The Gum tool refuses a category named like its element, so these only appear in projects edited by hand, written by a script or AI agent, or where the element was renamed after the category was added. The Code tab and `gumcli codegen` report the element with an error naming the category and skip it. Rename the category or the element; the enum and the property are public, so Gum does not rename them for you. `gumcli check` does not report it, because whether the names clash depends on the output library. Elements set to **Never Generate** are not checked.
 
-### How it got there
-
-The Gum tool refuses a category named like its element, so this only appears in projects edited by hand, written by a script or AI agent, or where the element was renamed after the category was added.
-
-### Fixing it
-
-Rename the category or the element. The enum and the property are public, so Gum does not rename them for you. An instance or variable named like a category is different: its generated field or property gets a trailing `_` instead, so nothing public changes.
-
-### Detection scope
-
-The check fires on every Screen and Component. Standard elements are never generated and are skipped.
+An instance, exposed variable or custom variable named like a category is different: its generated field or property gets a trailing `_`, so nothing public changes.

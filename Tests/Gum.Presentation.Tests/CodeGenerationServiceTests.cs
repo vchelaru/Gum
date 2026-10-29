@@ -135,6 +135,22 @@ public class CodeGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void GenerateCodeForElement_CategoryNamedLikeItsGumFormsClass_PrintsErrorAndWritesNothing()
+    {
+        // Gum Forms names the class "MyComponent", so the nested enum "MyComponent" is CS0542 (#7141).
+        ComponentSave component = CreateComponent();
+        component.Categories.Add(new StateSaveCategory { Name = "MyComponent" });
+
+        _codeGenerationService.GenerateCodeForElement(
+            component, new CodeOutputElementSettings(), CreateFormsSettings(), showPopups: false);
+
+        _guiCommands.Verify(
+            x => x.PrintOutput(It.Is<string>(m => m.Contains("Category \"MyComponent\" generates"))),
+            Times.Once);
+        _retryService.Verify(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
     public void GenerateCodeForElement_UnsupportedFormsBaseType_AndShowPopups_ShowsErrorInDialog()
     {
         ComponentSave component = CreateBehaviorlessSpriteComponent();
