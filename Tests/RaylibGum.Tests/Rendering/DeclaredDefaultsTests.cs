@@ -49,10 +49,10 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         EndDrawing();
     }
 
-    private static Shader LoadConvertedShader(bool registerDefaults)
+    private static Shader LoadConvertedShader(bool registerDefaults, string slang = Slang)
     {
         Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            Slang, new RaylibConvertOptions(), TestContext.Current.CancellationToken);
+            slang, new RaylibConvertOptions(), TestContext.Current.CancellationToken);
         conversion.IsSuccess.ShouldBeTrue(
             conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
 
@@ -206,5 +206,91 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         {
             UnloadShader(shader);
         }
+    }
+
+    // Red is Count / 6 (int), green is Weights[1] + Weights[2] (array), blue is Mask / 10 when On
+    // (uint and bool, which raylib uploads as unsigned).
+    private const string TypesSlang = @"
+Texture2D SpriteTexture;
+SamplerState SpriteTextureSampler;
+int Count = 3;
+uint Mask = 5;
+bool On = true;
+float Weights[3] = { 0.1, 0.2, 0.4 };
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+[shader(""fragment"")]
+float4 MainPS(VertexShaderOutput input) : COLOR0
+{
+    float4 sprite = SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates);
+    return float4(float(Count) / 6.0, Weights[1] + Weights[2], On ? float(Mask) / 10.0 : 0.0, 1.0) * sprite.a;
+}
+";
+
+    [Fact]
+    public void Draw_UnsetIntUintBoolAndArrayParameters_ReadTheirDeclaredDefaults()
+    {
+        Shader shader = LoadConvertedShader(registerDefaults: true, TypesSlang);
+        try
+        {
+            Color pixel = Draw(shader, _ => { })[0];
+
+            Math.Abs(pixel.R - 128).ShouldBeLessThan(3);   // Count = 3
+            Math.Abs(pixel.G - 153).ShouldBeLessThan(3);   // 0.2 + 0.4
+            Math.Abs(pixel.B - 128).ShouldBeLessThan(3);   // On, Mask = 5
+        }
+        finally
+        {
+            RaylibShaderDefaults.Remove(shader);
+            UnloadShader(shader);
+        }
+    }
+
+    // ShadowDusk refuses matrix uniforms on the raylib route, and SetShaderValueV with a count of 1 does
+    // not upload a matrix, so a matrix default is skipped rather than written into the wrong uniform.
+    [Fact]
+    public void Draw_MatrixDefault_IsNotWritten()
+    {
+        Shader shader = LoadConvertedShader(registerDefaults: false);
+        try
+        {
+            ShaderUniformDefaults defaults = new ShaderUniformDefaults();
+            defaults.Add(ShaderUniformDefault.FromTypeName("Strength", "mat2", 0, new float[] { 0.5f, 0.5f, 0.5f, 0.5f })!);
+            RaylibShaderDefaults.Set(shader, defaults);
+
+            Draw(shader, _ => { })[0].R.ShouldBe((byte)0);
+        }
+        finally
+        {
+            RaylibShaderDefaults.Remove(shader);
+            UnloadShader(shader);
+        }
+    }
+
+    [Theory]
+    [InlineData("float", ShaderParameterKind.Float, 1, false)]
+    [InlineData("vec3", ShaderParameterKind.Float, 3, false)]
+    [InlineData("float4", ShaderParameterKind.Float, 4, false)]
+    [InlineData("half2", ShaderParameterKind.Float, 2, false)]
+    [InlineData("int", ShaderParameterKind.Int, 1, false)]
+    [InlineData("ivec2", ShaderParameterKind.Int, 2, false)]
+    [InlineData("uint", ShaderParameterKind.Bool, 1, false)]
+    [InlineData("uvec4", ShaderParameterKind.Bool, 4, false)]
+    [InlineData("bool", ShaderParameterKind.Bool, 1, false)]
+    [InlineData("mat4", ShaderParameterKind.Float, 1, true)]
+    [InlineData("float2x2", ShaderParameterKind.Float, 1, true)]
+    public void FromTypeName_MapsTheTypeName(string typeName, ShaderParameterKind kind, int components, bool isMatrix)
+    {
+        ShaderUniformDefault declared = ShaderUniformDefault.FromTypeName("U", typeName, 0, new float[] { 1f })!;
+
+        declared.Kind.ShouldBe(kind);
+        declared.ComponentCount.ShouldBe(components);
+        declared.IsMatrix.ShouldBe(isMatrix);
     }
 }

@@ -50,9 +50,22 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
     {
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
         File.Delete(_path);
+        foreach (string extra in _extraPaths) File.Delete(extra);
     }
 
-    private SKColor DrawCenter(Action<ContainerRuntime>? setParameters)
+    private SKColor DrawCenter(Action<ContainerRuntime>? setParameters) => DrawCenter(_path, setParameters);
+
+    private string WriteShader(string source)
+    {
+        string path = Path.Combine(Path.GetTempPath(), "GumDeclaredDefaults7042_" + Guid.NewGuid().ToString("N") + ".slang");
+        File.WriteAllText(path, source);
+        _extraPaths.Add(path);
+        return path;
+    }
+
+    private readonly System.Collections.Generic.List<string> _extraPaths = new();
+
+    private SKColor DrawCenter(string shaderPath, Action<ContainerRuntime>? setParameters)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(32, 32));
         GumService.Default.Initialize(surface.Canvas, 32, 32);
@@ -67,7 +80,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         });
         GumService.Default.Root.Children.Add(container);
         setParameters?.Invoke(container);
-        container.SourceShaderFile = _path;
+        container.SourceShaderFile = shaderPath;
         GumService.Default.Draw();
 
         using SKImage image = surface.Snapshot();
@@ -97,5 +110,79 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 
         pixel.Red.ShouldBeGreaterThan((byte)250);
         Math.Abs(pixel.Green - 128).ShouldBeLessThan(3); // the other declared default is still applied
+    }
+
+    // Red is Count / 6 (an int default), green is Weights[1] + Weights[2] (an array default).
+    // SkSL has no uint or bool uniforms, so those never reach this route.
+    private const string TypesShader = @"
+Texture2D SpriteTexture;
+SamplerState SpriteTextureSampler;
+int Count = 3;
+float Weights[3] = { 0.1, 0.2, 0.4 };
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+[shader(""fragment"")]
+float4 MainPS(VertexShaderOutput input) : COLOR0
+{
+    float4 sprite = SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates);
+    return float4(float(Count) / 6.0, Weights[1] + Weights[2], 0.0, 1.0) * sprite.a;
+}
+";
+
+    [Fact]
+    public void Draw_UnsetIntAndArrayParameters_ReadTheirDeclaredDefaults()
+    {
+        SKColor pixel = DrawCenter(WriteShader(TypesShader), null);
+
+        Math.Abs(pixel.Red - 128).ShouldBeLessThan(3);   // Count = 3
+        Math.Abs(pixel.Green - 153).ShouldBeLessThan(3); // 0.2 + 0.4
+    }
+
+    [Fact]
+    public void Draw_EffectWithNoRegisteredDefaults_UnsetParametersReadZero()
+    {
+        SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(@"
+uniform shader SpriteTexture;
+uniform float Strength;
+half4 main(float2 coord) {
+    return half4(Strength, 1, 0, 1) * SpriteTexture.eval(coord).a;
+}", out string errors)!;
+        string.IsNullOrEmpty(errors).ShouldBeTrue(errors);
+        SkiaRuntimeEffectDefaults.TryGet(effect).ShouldBeNull();
+
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(32, 32));
+        GumService.Default.Initialize(surface.Canvas, 32, 32);
+        ContainerRuntime container = new() { Width = 32, Height = 32, IsRenderTarget = true };
+        container.Children.Add(new RectangleRuntime { Width = 32, Height = 32, IsFilled = true, FillColor = SKColors.White });
+        GumService.Default.Root.Children.Add(container);
+        container.RenderTargetEffect = effect;
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        SKColor pixel = bitmap.GetPixel(16, 16);
+        pixel.Red.ShouldBe((byte)0);
+        pixel.Green.ShouldBeGreaterThan((byte)250);
+    }
+
+    // The only way a Bool-kind (uint or bool) default could reach Skia is a uint or bool uniform, and
+    // Skia's own compiler rejects those, so the Skia route never writes one.
+    [Fact]
+    public void Convert_UintUniform_IsRejectedBySkiasCompiler()
+    {
+        string source = TypesShader.Replace("int Count = 3;", "uint Count = 3;");
+        var result = global::ShadowDusk.Compiler.Sksl.SkslConverter.ConvertSlang(source, new global::ShadowDusk.Compiler.Sksl.SkslConvertOptions());
+
+        if (result.IsSuccess)
+        {
+            SKRuntimeEffect? effect = SKRuntimeEffect.CreateShader(result.Value.SkslText, out _);
+            effect.ShouldBeNull();
+        }
     }
 }

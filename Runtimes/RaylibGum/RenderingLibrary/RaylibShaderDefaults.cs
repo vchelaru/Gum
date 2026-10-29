@@ -36,6 +36,13 @@ public static class RaylibShaderDefaults
     /// <summary>Writes <paramref name="declared"/> to <paramref name="location"/> in <paramref name="shader"/>.</summary>
     internal static void Write(Shader shader, int location, ShaderUniformDefault declared)
     {
+        // ShadowDusk refuses matrix uniforms on the raylib route (SD0630-SD0636), and SetShaderValueV with
+        // a count of 1 does not upload a matrix, so a matrix default is skipped.
+        if (declared.IsMatrix)
+        {
+            return;
+        }
+
         int count = System.Math.Max(1, declared.ArrayLength);
         int components = System.Math.Clamp(declared.ComponentCount, 1, 4);
         float[] values = declared.Values;

@@ -274,12 +274,16 @@ public sealed class ShaderUniformDefault
     /// <summary>The array length, or 0 when the uniform is not an array.</summary>
     public int ArrayLength { get; }
 
+    /// <summary>True for a matrix uniform, whose values are the matrix cells in row-major order.</summary>
+    public bool IsMatrix { get; }
+
     /// <summary>The default, <see cref="ComponentCount"/> times the larger of 1 and <see cref="ArrayLength"/> values.</summary>
     public float[] Values { get; }
 
     /// <summary>Creates a declared default.</summary>
-    public ShaderUniformDefault(string name, ShaderParameterKind kind, int componentCount, int arrayLength, float[] values)
+    public ShaderUniformDefault(string name, ShaderParameterKind kind, int componentCount, int arrayLength, float[] values, bool isMatrix = false)
     {
+        IsMatrix = isMatrix;
         Name = name;
         Kind = kind;
         ComponentCount = componentCount;
@@ -310,16 +314,15 @@ public sealed class ShaderUniformDefault
         }
 
         char last = typeName[typeName.Length - 1];
-        int components = last >= '2' && last <= '4' && !typeName.Contains("x") && !typeName.StartsWith("mat", System.StringComparison.Ordinal)
-            ? last - '0'
-            : 1;
+        bool isMatrix = typeName.StartsWith("mat", System.StringComparison.Ordinal) || typeName.Contains("x");
+        int components = last >= '2' && last <= '4' && !isMatrix ? last - '0' : 1;
 
         float[] copy = new float[values.Count];
         for (int i = 0; i < copy.Length; i++)
         {
             copy[i] = values[i];
         }
-        return new ShaderUniformDefault(name, kind, components, arrayLength, copy);
+        return new ShaderUniformDefault(name, kind, components, arrayLength, copy, isMatrix);
     }
 }
 
