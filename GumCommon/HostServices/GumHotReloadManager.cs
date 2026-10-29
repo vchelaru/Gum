@@ -97,6 +97,9 @@ public class GumHotReloadManager : IGumHotReloadManager
     // whose definition has since changed. The diff re-points a visual at the new element, so without
     // this the next reload would see no change and stop listing a tree that is still stale.
     private readonly ReloadMemory _memory = new ReloadMemory();
+    // Consecutive tries at the files beside the project that could not be read (one the editor still had
+    // open); reset by any new file change; guarded by _pendingReloadLock.
+    private int _failedFileAttempts;
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
@@ -262,6 +265,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 _lastOtherChangeTime = now;
                 _changedOtherFiles.Add(fullPath);
+                _failedFileAttempts = 0;
             }
         }
     }
@@ -464,14 +468,44 @@ public class GumHotReloadManager : IGumHotReloadManager
     internal void PerformFileReload(IEnumerable<GraphicalUiElement> roots, IReadOnlyCollection<string> changedFiles)
     {
         List<HotReloadIssue> issues = new List<HotReloadIssue>();
-        List<GraphicalUiElement> rootList = roots.ToList();
-
         bool applied = false;
-        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
-        if (project != null && ReloadLocalization(project, null, changedFiles, issues))
+        try
         {
-            RefreshLocalization(rootList);
-            applied = true;
+            List<GraphicalUiElement> rootList = roots.ToList();
+            GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+            if (project != null)
+            {
+                // A file the editor still has open is tried once more after the debounce, as the project is.
+                bool lastTry;
+                lock (_pendingReloadLock)
+                {
+                    lastTry = _failedFileAttempts >= 1;
+                }
+
+                if (ReloadLocalization(project, null, changedFiles, issues, lastTry, out bool willRetry))
+                {
+                    RefreshLocalization(rootList);
+                    applied = true;
+                }
+
+                if (willRetry)
+                {
+                    lock (_pendingReloadLock)
+                    {
+                        _failedFileAttempts++;
+                        _lastOtherChangeTime = _utcNow();
+                        _changedOtherFiles.UnionWith(changedFiles);
+                    }
+                    return;
+                }
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Update runs on the game's thread: a failure here must not end the game.
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.ReloadFailed,
+                $"Hot reload failed while applying the changed files: {exception.Message}\nThe UI may be partially updated; the next save reloads."));
         }
 
         if (applied || issues.Count > 0)
@@ -569,7 +603,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             _loadAnimationsFromProvider(newProject, animationProvider);
 
             // The database is replaced before the diff so text the save changed translates against it.
-            bool localizationReloaded = ReloadLocalization(newProject, previousProject, changedFiles, localizationIssues);
+            bool localizationReloaded = ReloadLocalization(newProject, previousProject, changedFiles, localizationIssues, reportFailure: true, out _);
 
             ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems, diffIssues, _memory);
 
@@ -612,9 +646,12 @@ public class GumHotReloadManager : IGumHotReloadManager
     // files (or a .resx satellite) changed on disk. Returns whether it did, so the caller translates the
     // visuals again. The files load into a scratch service first: one that cannot be read leaves the
     // game's database, and so its text, as it was.
+    // A file that cannot be read sets willRetry unless reportFailure is true, in which case it is reported.
     private bool ReloadLocalization(
-        GumProjectSave project, GumProjectSave? previousProject, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues)
+        GumProjectSave project, GumProjectSave? previousProject, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues,
+        bool reportFailure, out bool willRetry)
     {
+        willRetry = false;
         ILocalizationService? service = LocalizationServiceProvider?.Invoke();
         string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
         if (service == null || string.IsNullOrEmpty(sourceDirectory))
@@ -642,6 +679,12 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
+            if (!reportFailure)
+            {
+                willRetry = true;
+                return false;
+            }
+
             Report(issues, new HotReloadIssue(
                 HotReloadIssueKind.ReloadFailed,
                 $"Hot reload could not read the localization files: {exception.Message}\nText keeps its previous translations until the next save."));

@@ -216,6 +216,21 @@ public class ProjectLocalizationLoaderTests
         ProjectLocalizationLoader.IsLocalizationFile(project, "/Game/Content", changedFile).ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData("/Game/Content/s.csv", true)]
+    [InlineData("/Game/Content/./s.csv", true)]
+    [InlineData("/Game/Content/Text/../s.csv", true)]
+    [InlineData("/Game/Content/S.CSV", true)]
+    [InlineData("/Game/Content/Text/b.es.resx", true)]
+    [InlineData("/Game/Shared/c.csv", true)]
+    [InlineData("/Game/Content/Shared/c.csv", false)]
+    public void IsLocalizationFile_sees_through_dot_segments_backslashes_and_case_in_the_listed_paths(string changedFile, bool expected)
+    {
+        GumProjectSave project = ProjectWithLocalizationFiles("./s.csv", "Text\\b.resx", "../Shared/c.csv");
+
+        ProjectLocalizationLoader.IsLocalizationFile(project, "/Game/Content", changedFile).ShouldBe(expected);
+    }
+
     private static GumProjectSave ProjectWithLocalizationFiles(params string[] files)
     {
         GumProjectSave project = new GumProjectSave { FullFileName = "C:/Game/Content/Project.gumx" };

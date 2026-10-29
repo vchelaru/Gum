@@ -127,14 +127,13 @@ public static class ProjectLocalizationLoader
             projectDirectory += "/";
         }
 
-        string changed = FileManager.Standardize(changedFile, preserveCase: false, makeAbsolute: true);
+        string changed = Normalize(changedFile);
         string? changedDirectory = Path.GetDirectoryName(changed);
         string changedName = Path.GetFileName(changed);
 
         foreach (string relativePath in ToRelativePaths(project.LocalizationFiles))
         {
-            string basePath = FileManager.Standardize(
-                ToLooseFilePath(projectDirectory, relativePath), preserveCase: false, makeAbsolute: true);
+            string basePath = Normalize(ToLooseFilePath(projectDirectory, relativePath));
             if (basePath == changed)
             {
                 return true;
@@ -151,6 +150,10 @@ public static class ProjectLocalizationLoader
 
         return false;
     }
+
+    // The form two paths to the same file share: absolute, "." and ".." collapsed, forward slashes, lower case.
+    private static string Normalize(string path) =>
+        FileManager.Standardize(Path.GetFullPath(path), preserveCase: false, makeAbsolute: true);
 
     /// <summary>
     /// The non-empty entries of <paramref name="localizationFiles"/> with forward slashes, the form
