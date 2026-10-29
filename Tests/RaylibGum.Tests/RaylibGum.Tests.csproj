@@ -25,7 +25,7 @@
     <PackageReference Include="xunit.v3" VersionOverride="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" VersionOverride="3.1.5" />
 	<PackageReference Include="Raylib-cs" VersionOverride="8.0.0" />
-    <PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.21.0" />
+    <PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.22.0" />
   </ItemGroup>
 
   <ItemGroup>

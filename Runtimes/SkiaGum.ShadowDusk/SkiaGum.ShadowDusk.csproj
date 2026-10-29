@@ -16,8 +16,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- 0.21.0 is the first release with the .slang converters (SkslConverter.ConvertSlang). -->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.21.0" />
+		<!-- 0.21.0 added the .slang converters (SkslConverter.ConvertSlang); 0.22.0 adds the compiled effect's parameter defaults. -->
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.0" />
 	</ItemGroup>
 
 	<ItemGroup>

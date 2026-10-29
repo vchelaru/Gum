@@ -162,6 +162,30 @@ public class PropertyGridManagerTests
     }
 
     [Fact]
+    public void RefreshEntireGrid_SelectedBehavior_MakeDefaultOnTheDefaultImplementationRowClearsTheValue()
+    {
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+        sut.InitializeEarly();
+        BehaviorSave behavior = new BehaviorSave { Name = "Clickable", DefaultImplementation = "Button" };
+        GumProjectSave project = new GumProjectSave();
+        project.Behaviors.Add(behavior);
+        _mocker.GetMock<IProjectState>().SetupGet(state => state.GumProjectSave).Returns(project);
+        _mocker.GetMock<IStateEditingIndicatorService>()
+            .Setup(service => service.GetInfo())
+            .Returns(new StateEditingIndicatorInfo(HasStateInformation: false, StateInformation: null, StateBackground: default));
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
+        selectedState.SetupGet(state => state.SelectedInstances).Returns(new List<InstanceSave>());
+        selectedState.SetupGet(state => state.SelectedBehavior).Returns(behavior);
+        sut.RefreshEntireGrid(force: true);
+        InstanceMember? row = _view.BehaviorGrid.GetInstanceMember(nameof(BehaviorSave.DefaultImplementation));
+        row.ShouldNotBeNull();
+
+        row.IsDefault = true;
+
+        behavior.DefaultImplementation.ShouldBeNull();
+    }
+
+    [Fact]
     public void SelectedBehaviorVariable_CanBeSetBeforeTheViewExists()
     {
         PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();

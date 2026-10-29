@@ -168,6 +168,61 @@ public class ShaderParameterRowsTests
         _text.ShouldBe("");
     }
 
+    [Fact]
+    public void IsDefault_IsTrueUntilAValueIsStored()
+    {
+        List<SyntheticVariableRow> rows = Build(FloatInfo("Thickness", defaultValue: 2.5f));
+
+        rows[0].IsDefault!().ShouldBeTrue();
+
+        _text = "Thickness=4.0";
+        rows[0].IsDefault!().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsDefault_IsFalseForAStoredValueEqualToTheDefault()
+    {
+        _text = "Thickness=0.0";
+        List<SyntheticVariableRow> rows = Build(FloatInfo("Thickness", defaultValue: 0f));
+
+        rows[0].IsDefault!().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsDefault_OnlyLooksAtItsOwnParameter()
+    {
+        _text = "Other=1.0";
+        List<SyntheticVariableRow> rows = Build(FloatInfo("Thickness"), FloatInfo("Other"));
+
+        rows[0].IsDefault!().ShouldBeTrue();
+        rows[1].IsDefault!().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ResetToDefault_RemovesOnlyThisParametersEntry()
+    {
+        _text = "Old=1.0; Thickness=4.0";
+        List<SyntheticVariableRow> rows = Build(FloatInfo("Thickness", defaultValue: 2.5f));
+
+        rows[0].ResetToDefault!();
+
+        _text.ShouldBe("Old=1.0");
+        rows[0].Get().ShouldBe(2.5f);
+        rows[0].IsDefault!().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ResetToDefault_OnAVectorComponent_ReturnsEveryComponentToTheDefault()
+    {
+        _text = "Tint=(1.0, 1.0, 1.0, 1.0)";
+        List<SyntheticVariableRow> rows = Build(VectorInfo("Tint", 4));
+
+        rows[2].ResetToDefault!();
+
+        _text.ShouldBe("");
+        rows.Select(row => row.IsDefault!()).ShouldAllBe(isDefault => isDefault);
+    }
+
     private List<SyntheticVariableRow> BuildWithSourceDefaults(
         Dictionary<string, ShaderParameterValue> sourceDefaults, params ShaderParameterInfo[] infos) =>
         ShaderParameterRows.Build(infos, () => _text, text => _text = text, sourceDefaults);

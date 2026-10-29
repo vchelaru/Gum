@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Raylib-cs" Version="8.0.0" />
     <!-- Converts Outline.slang to a raylib GLSL fragment shader at runtime (RaylibConverter). -->
-    <PackageReference Include="ShadowDusk.Compiler" Version="0.21.0" />
+    <PackageReference Include="ShadowDusk.Compiler" Version="0.22.0" />
   </ItemGroup>
 
   <ItemGroup>
