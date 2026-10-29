@@ -410,6 +410,32 @@ public class NameVerifierTests : BaseTestClass
         whyNotValid.ShouldBe("The name Category1 is already used by a(n) Category");
     }
 
+    [Theory]
+    [InlineData("Score", "Score")]
+    [InlineData("Hud/Score", "Score")]
+    [InlineData("Hud/Score Panel", "Score_Panel")]
+    public void IsInstanceNameValid_ShouldReturnFalse_IfSameAsTheNameOfTheClassGeneratedForItsContainer(string elementName, string instanceName)
+    {
+        var element = new ComponentSave { Name = elementName };
+
+        var isValid = _nameVerifier.IsInstanceNameValid(instanceName, null, element, out string whyNotValid);
+
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldContain("is named");
+    }
+
+    [Fact]
+    public void IsElementNameValid_ShouldReturnFalse_IfTheElementHasAnInstanceWithThatName()
+    {
+        var element = new ComponentSave { Name = "Hud/Panel" };
+        element.Instances.Add(new InstanceSave { Name = "Score", ParentContainer = element });
+
+        var isValid = _nameVerifier.IsElementNameValid("Score", "Hud", element, out string? whyNotValid);
+
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldBe("The element has an instance named 'Score'");
+    }
+
     [Fact]
     public void IsVariableNameValid_ShouldReturnFalse_IfCollidesWithAnimation()
     {

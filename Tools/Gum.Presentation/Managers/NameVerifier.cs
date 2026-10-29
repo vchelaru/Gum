@@ -51,6 +51,16 @@ public class NameVerifier : INameVerifier
         {
             IsNameAnExistingElement(componentNameWithoutFolder, folderName, elementSave, out whyNotValid);
         }
+        if (string.IsNullOrEmpty(whyNotValid) && componentNameWithoutFolder != null && elementSave != null)
+        {
+            // The generated class takes the element's name, and none of its members can share it.
+            InstanceSave? sameNamed = elementSave.Instances.FirstOrDefault(item =>
+                _rules.Standardize(item.Name) == _rules.Standardize(componentNameWithoutFolder));
+            if (sameNamed != null)
+            {
+                whyNotValid = $"The element has an instance named '{sameNamed.Name}'";
+            }
+        }
         return string.IsNullOrEmpty(whyNotValid);
     }
     public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, [NotNullWhen(false)] out string? whyNotValid, StateSaveCategory? categoryToIgnore = null)
@@ -283,9 +293,11 @@ public class NameVerifier : INameVerifier
     private void IsNameAlreadyUsed(string name, object? objectToIgnore, IInstanceContainer instanceContainer, out string? whyNotValid)
     {
         whyNotValid = null;
-        if (objectToIgnore != instanceContainer && _rules.Standardize(name) == _rules.Standardize(instanceContainer.Name))
+        // The generated class is named after the element without its folder, and a member cannot be named like its class.
+        string containerNameWithoutFolder = instanceContainer.Name.Substring(instanceContainer.Name.LastIndexOfAny(new[] { '/', '\\' }) + 1);
+        if (objectToIgnore != instanceContainer && _rules.Standardize(name) == _rules.Standardize(containerNameWithoutFolder))
         {
-            whyNotValid = $"The element is named '{instanceContainer.Name}'";
+            whyNotValid = $"The element is named '{containerNameWithoutFolder}'";
         }
         var instance = instanceContainer.Instances.FirstOrDefault(item => item != objectToIgnore && _rules.Standardize(item.Name) == _rules.Standardize(name));
         if (instance != null)
