@@ -122,13 +122,3 @@ To resolve it, add an `<Instance>` with that name and `<DefinedByBase>true</Defi
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
-
-### Variable Without an Instance Prefix (GUM0017)
-
-Variables on an instance are written with the instance name as a prefix, such as `TextInstance.Text`. When a component file sets `Text` with no prefix, but the component has no variable by that name while one of its instances does, the line sets nothing or fails at runtime. `gumcli check` reports **GUM0017** as an error and suggests the prefixed names.
-
-To resolve it, add the instance prefix to the variable name in the file.
-
-{% hint style="info" %}
-Available in December 2026, or now if building Gum from source.
-{% endhint %}

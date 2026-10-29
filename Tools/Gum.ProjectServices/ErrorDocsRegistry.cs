@@ -29,7 +29,6 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0014"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#circular-base-types-gum0014",
             ["GUM0015"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#component-with-no-base-type-gum0015",
             ["GUM0016"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#missing-base-instance-gum0016",
-            ["GUM0017"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#variable-without-an-instance-prefix-gum0017",
         };
     }
 
