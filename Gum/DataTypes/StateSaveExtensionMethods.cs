@@ -635,9 +635,10 @@ public static class StateSaveExtensionMethods
                 variableSave.IsFile = isFile;
 
                 // Only a definition saved by a shader parameter row carries the marker.
-                if (string.IsNullOrEmpty(variableSave.ShaderParameter) && !string.IsNullOrEmpty(rootVariable?.ShaderParameter))
+                if (string.IsNullOrEmpty(variableSave.ShaderParameter)
+                    && global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(rootVariable?.ShaderParameter, out global::RenderingLibrary.Graphics.ShaderParameterMarker marker))
                 {
-                    variableSave.ShaderParameter = rootVariable!.ShaderParameter;
+                    variableSave.ShaderParameter = marker.Format();
                 }
 
                 if (!string.IsNullOrEmpty(exposedVariableSourceName))

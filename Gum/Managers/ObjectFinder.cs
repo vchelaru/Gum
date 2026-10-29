@@ -1342,12 +1342,15 @@ public class ObjectFinder : IObjectFinder
             return null;
         }
 
+        // FindMarkedVariable only returns entries whose marker parses.
+        global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(saved.ShaderParameter, out global::RenderingLibrary.Graphics.ShaderParameterMarker marker);
+
         // Shaped like a variable the instance's type declares: the root name, not the saved one.
         return new VariableSave
         {
             Name = qualifiedVariableName.Substring(dot + 1),
             Type = saved.Type,
-            ShaderParameter = saved.ShaderParameter
+            ShaderParameter = marker.Format()
         };
     }
 
@@ -1362,7 +1365,7 @@ public class ObjectFinder : IObjectFinder
         for (int i = 0; i < variables.Count; i++)
         {
             VariableSave variable = variables[i];
-            if (!string.IsNullOrEmpty(variable.ShaderParameter) && variable.Name == savedName)
+            if (variable.Name == savedName && global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(variable.ShaderParameter, out _))
             {
                 return variable;
             }
