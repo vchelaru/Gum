@@ -501,6 +501,118 @@ public class TextBoxSurrogatePairTests : BaseTestClass
         textBox.CaretIndex.ShouldBe(2);
     }
 
+
+    // ----- A caret between the halves of a character (#7100) -----
+    // A caret set from code can sit between the halves of an emoji or of a "\r\n". Backspace and Delete
+    // already take the whole character; Ctrl+Backspace, typing and pasting there must not split it.
+
+    [Fact]
+    public void CtrlBackspace_CaretBetweenTheHalves_ShouldRemoveWholePair()
+    {
+        TextBox textBox = CreateTextBox("x a" + Emoji + "b");
+        textBox.CaretIndex = 4;
+
+        textBox.HandleBackspace(isCtrlDown: true);
+
+        textBox.Text.ShouldBe("x b");
+        textBox.CaretIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void CtrlBackspace_Ascii_ShouldRemoveTheWordBeforeTheCaret()
+    {
+        TextBox textBox = CreateTextBox("ab cd");
+        textBox.CaretIndex = 5;
+
+        textBox.HandleBackspace(isCtrlDown: true);
+
+        textBox.Text.ShouldBe("ab ");
+        textBox.CaretIndex.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Typing_CaretBetweenTheHalves_ShouldInsertBeforeThePair()
+    {
+        TextBox textBox = CreateTextBox("a" + Emoji + "b");
+        textBox.CaretIndex = 2;
+
+        textBox.HandleCharEntered('X');
+
+        textBox.Text.ShouldBe("aX" + Emoji + "b");
+        textBox.CaretIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Typing_Ascii_ShouldInsertAtTheCaret()
+    {
+        TextBox textBox = CreateTextBox("abc");
+        textBox.CaretIndex = 1;
+
+        textBox.HandleCharEntered('X');
+
+        textBox.Text.ShouldBe("aXbc");
+        textBox.CaretIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Typing_CaretBetweenCrAndLf_ShouldInsertBeforeTheBreak()
+    {
+        TextBox textBox = CreateTextBox("a\r\nb");
+        textBox.CaretIndex = 2;
+
+        textBox.HandleCharEntered('X');
+
+        textBox.Text.ShouldBe("aX\r\nb");
+    }
+
+    [Fact]
+    public void Paste_CaretBetweenTheHalves_ShouldInsertBeforeThePair()
+    {
+        Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("X");
+        TextBox textBox = CreateTextBox("a" + Emoji + "b");
+        textBox.CaretIndex = 2;
+
+        textBox.HandleKeyDown(Keys.V, false, false, true);
+
+        textBox.Text.ShouldBe("aX" + Emoji + "b");
+    }
+
+    [Fact]
+    public void Paste_Ascii_ShouldInsertAtTheCaret()
+    {
+        Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("X");
+        TextBox textBox = CreateTextBox("abc");
+        textBox.CaretIndex = 1;
+
+        textBox.HandleKeyDown(Keys.V, false, false, true);
+
+        textBox.Text.ShouldBe("aXbc");
+    }
+
+    [Fact]
+    public void Typing_AfterTextSetKeepsAnOldCaretBetweenTheHalves_ShouldInsertBeforeThePair()
+    {
+        TextBox textBox = CreateTextBox("abcd");
+        textBox.CaretIndex = 2;
+
+        textBox.Text = "a" + Emoji + "b";
+        textBox.HandleCharEntered('X');
+
+        textBox.Text.ShouldBe("aX" + Emoji + "b");
+    }
+
+    [Fact]
+    public void Typing_SelectionEdgesBetweenTheHalves_ShouldReplaceTheWholePair()
+    {
+        TextBox textBox = CreateTextBox("a" + Emoji + "b");
+        textBox.SelectionStart = 2;
+        textBox.SelectionLength = 1;
+
+        textBox.HandleCharEntered('X');
+
+        textBox.Text.ShouldBe("aXb");
+    }
+
     static TextBox CreateTextBox(string text)
     {
         TextBox textBox = new();
