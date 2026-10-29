@@ -35,6 +35,7 @@ public class Game1 : Game
     private readonly string? _focusName;
     private readonly string? _typedText;
 
+    private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
     private PreviewSelectionMessage _selection;
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
@@ -109,6 +110,7 @@ public class Game1 : Game
         GumService.Default.EnableHotReload(_gumxPath);
         // A reload re-applies the default state over the whole tree, undoing the selected state.
         GumService.Default.HotReloadCompleted += ApplySelectedState;
+        GumService.Default.HotReloadFinished += HandleHotReloadFinished;
 
         ApplyCanvasSizeFromProject();
 
@@ -153,6 +155,7 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         UpdateBackingScale();
+        RebuildAfterReloadIfNeeded();
         GumService.Default.Update(gameTime);
         PollSelectionFile(gameTime);
         base.Update(gameTime);
@@ -377,10 +380,7 @@ public class Game1 : Game
 
     private void ShowElement()
     {
-        GumService.Default.Root.Children.Clear();
-
-        ElementSave? element = ObjectFinder.Self.GetElementSave(_selection.ElementName);
-        if (element == null)
+        if (!PreviewElementPresenter.Show(_selection))
         {
             Console.Error.WriteLine($"GumPreview: no screen or component named '{_selection.ElementName}' in {_gumxPath}.");
             UpdateWindowTitle(missingElement: true);
@@ -389,32 +389,46 @@ public class Game1 : Game
         }
 
         _isElementMissing = false;
-        element.ToGraphicalUiElement().AddToRoot();
-        ApplySelectedState();
         UpdateWindowTitle();
     }
 
-    // Puts the shown element in the state selected in the tool, on top of its default state - the
-    // same thing the tool's own canvas shows for a selected categorized state (issue #4856).
-    private void ApplySelectedState()
+    // A reload that left the tree different from what a restart would show (a renamed or deleted
+    // shown screen, a missing file, a failed read) is followed by a rebuild of the shown element from
+    // the project the reload loaded, so Preview ends up as a fresh launch would. It runs at the start
+    // of a frame, outside the reload's own callbacks.
+    private void RebuildAfterReloadIfNeeded()
     {
-        if (_selection.StateName == null)
+        if (!_reloadPolicy.TryTakePendingReload())
         {
             return;
         }
 
-        foreach (GraphicalUiElement root in GumService.Default.Root.Children)
+        try
         {
-            if (root.ElementSave != null && root.ElementSave.Name == _selection.ElementName)
-            {
-                StateSave? state = _selection.FindState(root.ElementSave);
-                if (state != null)
-                {
-                    root.ApplyState(state);
-                }
-            }
+            ShowElement();
+        }
+        catch (Exception exception)
+        {
+            _reloadPolicy.NotifyReloadFailed();
+            Console.Error.WriteLine($"GumPreview: could not rebuild '{_selection.ElementName}' after a reload: {exception.Message}");
         }
     }
+
+    // Raised from inside GumService.Update; only records the result, so nothing here can throw into
+    // the reload.
+    private void HandleHotReloadFinished(HotReloadResult result)
+    {
+        try
+        {
+            _reloadPolicy.OnReloadFinished(result);
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine($"GumPreview: could not handle a reload result: {exception.Message}");
+        }
+    }
+
+    private void ApplySelectedState() => PreviewElementPresenter.ApplySelectedState(_selection);
 
     private void UpdateWindowTitle(bool missingElement = false) =>
         Window.Title = missingElement

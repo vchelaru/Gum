@@ -60,6 +60,8 @@ Preview needs a saved project and a selected screen or component. If either is m
 
 While Preview is open, selecting a different screen or component in the tool swaps what Preview shows. Selecting a state in the **States** tab puts the previewed element in that state, so you can check each state of a component with the real runtime. Saving changes in the tool updates the Preview window automatically, the same way [hot reload](../code/debugging/hot-reload.md) works for a game you run yourself.
 
+When a saved change cannot be applied to the running window, for example you rename or delete the screen Preview is showing, Preview reloads itself fully and ends up exactly as if you had opened it fresh. If the screen it was showing no longer exists, the window title says so until you select another screen or component.
+
 Preview renders with the same sibling order the tool's canvas uses. If **Sort by batch** is selected in the **Performance** tab, Preview sorts by batch too, so what you see matches the tool.
 
 If your project has a component with the `TooltipBehavior`, Preview shows that component when you hover over a control that has a `ToolTip`, the same as a game loading the project does. See [Tooltip](../code/controls/tooltip.md).
