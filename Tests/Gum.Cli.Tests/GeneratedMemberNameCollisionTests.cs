@@ -13,7 +13,7 @@ namespace Gum.Cli.Tests;
 /// <summary>
 /// A member of a generated class cannot be named like its enclosing type (CS0542), so an instance, custom
 /// variable or exposed variable named like its own component must still generate a class that builds.
-/// Each test runs <c>gumcli codegen</c> on a project and compiles the output against the MonoGame runtime.
+/// Each test runs <c>gumcli codegen</c> on a project and compiles the output against the MonoGame runtime (<see cref="GeneratedGameHarness"/>).
 /// </summary>
 public class GeneratedMemberNameCollisionTests : BaseTestClass
 {
@@ -80,102 +80,14 @@ public class GeneratedMemberNameCollisionTests : BaseTestClass
         Compile().ShouldBeEmpty();
     }
 
-    #region Harness
+    private string CreateGame(ObjectInstantiationType instantiationType) => GeneratedGameHarness.CreateGame(TempDirectory, instantiationType);
 
-    private string CreateGame(ObjectInstantiationType instantiationType)
-    {
-        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
-            "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><RootNamespace>MyGame</RootNamespace></PropertyGroup>" +
-            "<ItemGroup><PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.4\" /></ItemGroup></Project>");
-        string gumx = Path.Combine(TempDirectory, "Content", "GumProject", "GumProject.gumx");
-        CliTestHelper.Run("new", gumx, "--template", "empty").ExitCode.ShouldBe(0);
-        CliTestHelper.Run("codegen-init", gumx).ExitCode.ShouldBe(0);
+    private static CliTestHelper Codegen(string gumx) => GeneratedGameHarness.Codegen(gumx);
 
-        string gumFolder = Path.GetDirectoryName(gumx)! + Path.DirectorySeparatorChar;
-        CodeOutputProjectSettingsManager settingsManager = new CodeOutputProjectSettingsManager(
-            new SilentLogger(), new FixedProjectDirectoryProvider(gumFolder));
-        CodeOutputProjectSettings settings = settingsManager.CreateOrLoadSettingsForProject();
-        settings.OutputLibrary = OutputLibrary.GumForms;
-        settings.ObjectInstantiationType = instantiationType;
-        settingsManager.WriteSettingsForProject(settings);
-        return gumx;
-    }
+    private static void EditProject(string gumx, Action<GumProjectSave> edit) => GeneratedGameHarness.EditProject(gumx, edit);
 
-    private static CliTestHelper Codegen(string gumx) => CliTestHelper.Run("codegen", gumx);
+    private static ComponentSave AddComponent(GumProjectSave project, string name, string baseType, params (string Name, string BaseType)[] instances) =>
+        GeneratedGameHarness.AddComponent(project, name, baseType, instances);
 
-    private static void EditProject(string gumx, Action<GumProjectSave> edit)
-    {
-        GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
-        edit(project);
-        project.Save(gumx, saveElements: true);
-    }
-
-    private static ComponentSave AddComponent(GumProjectSave project, string name, string baseType, params (string Name, string BaseType)[] instances)
-    {
-        ComponentSave component = new ComponentSave { Name = name, BaseType = baseType };
-        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
-        foreach ((string instanceName, string instanceBaseType) in instances)
-        {
-            component.Instances.Add(new InstanceSave { Name = instanceName, BaseType = instanceBaseType, ParentContainer = component });
-        }
-        project.Components.Add(component);
-        project.ComponentReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Component });
-        return component;
-    }
-
-    /// <summary>Compiles every .cs under the game folder the way the game's build would; returns the errors.</summary>
-    private List<string> Compile()
-    {
-        CSharpParseOptions parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
-        List<SyntaxTree> trees = Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories)
-            .Select(path => CSharpSyntaxTree.ParseText(File.ReadAllText(path), parseOptions, path))
-            .ToList();
-
-        // Only the framework and the MonoGame runtime: RaylibGum and the Forms placeholders declare the same type names.
-        string frameworkDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
-        HashSet<string> referencePaths = new HashSet<string>(
-            Directory.GetFiles(frameworkDirectory, "*.dll").Where(IsManagedAssembly),
-            StringComparer.OrdinalIgnoreCase)
-        {
-            Assembly.Load("GumCommon").Location,
-            Assembly.Load("MonoGameGum").Location,
-            Assembly.Load("MonoGame.Framework").Location,
-        };
-
-        CSharpCompilation compilation = CSharpCompilation.Create(
-            "MemberNames_" + Guid.NewGuid().ToString("N"),
-            trees,
-            referencePaths.Where(File.Exists).Select(path => MetadataReference.CreateFromFile(path)),
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Annotations));
-
-        using MemoryStream stream = new MemoryStream();
-        EmitResult result = compilation.Emit(stream);
-        return result.Diagnostics
-            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
-            .Select(diagnostic => diagnostic.ToString())
-            .Take(10)
-            .ToList();
-    }
-
-    private static bool IsManagedAssembly(string path)
-    {
-        try
-        {
-            AssemblyName.GetAssemblyName(path);
-            return true;
-        }
-        catch (BadImageFormatException)
-        {
-            return false;
-        }
-    }
-
-    private class SilentLogger : ICodeGenLogger
-    {
-        public void PrintOutput(string message) { }
-
-        public void PrintError(string message) { }
-    }
-
-    #endregion
+    private List<string> Compile() => GeneratedGameHarness.Compile(TempDirectory);
 }
