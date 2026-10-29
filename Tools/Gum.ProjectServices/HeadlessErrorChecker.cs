@@ -1,4 +1,4 @@
-using Gum.Bundle;
+﻿using Gum.Bundle;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -1415,6 +1415,16 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         HashSet<string> availableOnElement = GetRootVariableNames(elementSave);
+        // Screens and components also carry the variables of the project's Component standard (IsOverrideInCodeGen,
+        // IsXamarinFormsControl); finding those on an instance says nothing about a missing prefix.
+        foreach (string standardName in new[] { "Component", "Screen" })
+        {
+            StateSave? standardDefaults = ObjectFinder.Self.GetStandardElement(standardName)?.DefaultState;
+            if (standardDefaults != null)
+            {
+                availableOnElement.UnionWith(standardDefaults.Variables.Select(variable => variable.Name));
+            }
+        }
         HashSet<string> reported = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (StateSave state in elementSave.AllStates)
