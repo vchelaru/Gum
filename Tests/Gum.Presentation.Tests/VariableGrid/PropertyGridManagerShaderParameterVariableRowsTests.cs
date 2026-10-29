@@ -1,4 +1,6 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
+using Gum.Logic;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -117,7 +119,7 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
 
         Row(category, "Thickness").Value = 3f;
 
-        VariableSave saved = _component.DefaultState.GetVariableSave(VariableName)!;
+        VariableSave saved = _component.DefaultState.GetVariableSave(VariableName).ShouldNotBeNull("the edit should have saved the variable");
         saved.Value.ShouldBe(3f);
         saved.Type.ShouldBe("float");
         saved.ShaderParameter.ShouldBe("Thickness");
@@ -172,7 +174,7 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
 
         Row(category, "Thickness").Value = 5f;
 
-        _component.DefaultState.GetVariableSave(VariableName)!.Value.ShouldBe(5f);
+        _component.DefaultState.GetVariableSave(VariableName).ShouldNotBeNull("the edit should have saved the variable").Value.ShouldBe(5f);
         string text = (string)_component.DefaultState.GetVariableSave("Holder.ShaderParameters")!.Value!;
         text.ShouldNotContain("Thickness");
         text.ShouldContain("Softness");
@@ -202,10 +204,10 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
         Row(category, "Count").Value = 3;
         Row(category, "Wrapped").Value = true;
 
-        VariableSave count = _component.DefaultState.GetVariableSave("Holder.Outline_Count")!;
+        VariableSave count = _component.DefaultState.GetVariableSave("Holder.Outline_Count").ShouldNotBeNull("the edit should have saved the variable");
         count.Type.ShouldBe("int");
         count.Value.ShouldBe(3);
-        VariableSave wrapped = _component.DefaultState.GetVariableSave("Holder.Outline_Wrapped")!;
+        VariableSave wrapped = _component.DefaultState.GetVariableSave("Holder.Outline_Wrapped").ShouldNotBeNull("the edit should have saved the variable");
         wrapped.Type.ShouldBe("bool");
         wrapped.Value.ShouldBe(true);
         wrapped.ShaderParameter.ShouldBe("Wrapped");
@@ -256,5 +258,73 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
         MemberCategory category = BuildRows();
 
         Row(category, "Thickness").ContextMenuEvents.Keys.ShouldNotContain("Expose Variable");
+    }
+
+    private UndoManager UseRealUndoManager()
+    {
+        Mock<IReferenceFinderProjectProvider> projectProvider = new();
+        projectProvider.Setup(x => x.GumProjectSave).Returns(ObjectFinder.Self.GumProjectSave!);
+        _mocker.GetMock<ISelectedState>().Setup(state => state.SelectedComponent).Returns(_component);
+        UndoManager undoManager = new UndoManager(_mocker.Get<ISelectedState>(), new Mock<IUndoRenameLogic>().Object,
+            new Mock<IGuiCommands>().Object, new Mock<IFileCommands>().Object, new Mock<IMessenger>().Object,
+            new Mock<IUndoPluginNotifier>().Object, new Mock<IAnimationUndoProvider>().Object, projectProvider.Object,
+            new Lazy<IVariableReferenceLogic>(() => new Mock<IVariableReferenceLogic>().Object));
+        _mocker.Use<IUndoManager>(undoManager);
+        return undoManager;
+    }
+
+    [Fact]
+    public void UndoAndRedo_OfARowEdit_RemoveAndRestoreTheMarkedVariable()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f));
+        UndoManager undoManager = UseRealUndoManager();
+        MemberCategory category = BuildRows();
+
+        undoManager.RecordState();
+        Row(category, "Thickness").Value = 3f;
+        undoManager.RecordUndo();
+        undoManager.PerformUndo();
+
+        _component.DefaultState.Variables.Any(variable => variable.Name == VariableName).ShouldBeFalse();
+
+        undoManager.PerformRedo();
+
+        VariableSave restored = _component.DefaultState.GetVariableSave(VariableName).ShouldNotBeNull("redo should bring the variable back");
+        restored.Value.ShouldBe(3f);
+        restored.ShaderParameter.ShouldBe("Thickness");
+        restored.Type.ShouldBe("float");
+    }
+
+    [Fact]
+    public void UndoOfASecondEdit_RestoresThePreviousValue()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f));
+        UndoManager undoManager = UseRealUndoManager();
+        MemberCategory category = BuildRows();
+        undoManager.RecordState();
+        Row(category, "Thickness").Value = 3f;
+        undoManager.RecordUndo();
+
+        undoManager.RecordState();
+        Row(category, "Thickness").Value = 6f;
+        undoManager.RecordUndo();
+        undoManager.PerformUndo();
+
+        _component.DefaultState.GetVariableSave(VariableName).ShouldNotBeNull().Value.ShouldBe(3f);
+    }
+
+    [Fact]
+    public void EditingOneInstance_LeavesAnotherInstanceOfTheSameShaderUnset()
+    {
+        InstanceSave other = new InstanceSave { Name = "Other", BaseType = "Container", ParentContainer = _component };
+        _component.Instances.Add(other);
+        _component.DefaultState.SetValue("Other.SourceShaderFile", "Shaders/Outline.slang");
+        GivenTheEffectDeclares(Float("Thickness", 2f));
+        MemberCategory category = BuildRows();
+
+        Row(category, "Thickness").Value = 3f;
+
+        _component.DefaultState.GetVariableSave(VariableName).ShouldNotBeNull();
+        _component.DefaultState.Variables.Any(variable => variable.Name == "Other.Outline_Thickness").ShouldBeFalse();
     }
 }
