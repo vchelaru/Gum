@@ -1244,11 +1244,7 @@ public class VariableGridEntry
     {
         var actions = new List<VariableContextMenuAction>();
 
-        // Exposing a shader parameter is not offered yet.
-        if (ShaderBinding == null)
-        {
-            TryAddExposeVariableMenuOptions(actions, InstanceSave);
-        }
+        TryAddExposeVariableMenuOptions(actions, InstanceSave);
         TryAddHideFromInstancesMenuOptions(actions, InstanceSave, _stateListCategoryContainer);
         TryAddCopyVariableReferenceMenuOptions(actions);
 
@@ -1297,6 +1293,41 @@ public class VariableGridEntry
 
     #region Expose/Unexpose
 
+    private void ExposeVariable()
+    {
+        InstanceSave selectedInstance = _selectedState.SelectedInstance!;
+        if (ShaderBinding == null || ElementSave == null)
+        {
+            _exposeVariableService.HandleExposeVariableClick(selectedInstance, RootVariableName);
+            return;
+        }
+
+        // A shader parameter nobody has set is not saved, so exposing it is the first thing to name it: give it a
+        // placeholder to expose, and take that back when the prompt is cancelled. One lock keeps the placeholder and
+        // the exposure a single undo step.
+        StateSave defaultState = ElementSave.GetDefaultStateOrThrow();
+        using var undoLock = _undoManager.RequestLock();
+        VariableSave? placeholder = ShaderBinding.AddNamedPlaceholder(defaultState, Name);
+        // The service reports success without an attempt when it refuses (for example no selected element).
+        OptionallyAttemptedGeneralResponse<VariableSave> response = _exposeVariableService.HandleExposeVariableClick(selectedInstance, RootVariableName);
+        bool exposed = response.Succeeded && response.DidAttempt;
+        if (!exposed)
+        {
+            if (placeholder != null)
+            {
+                defaultState.Variables.Remove(placeholder);
+            }
+            return;
+        }
+
+        // The value the legacy text held belongs to the variable now that something names the parameter.
+        if (ShaderBinding.HasLegacyValue(defaultState))
+        {
+            defaultState.SetValue(Name, ShaderBinding.GetFallbackValue(defaultState), selectedInstance, ShaderBinding.VariableType);
+            ShaderBinding.AfterWrite(defaultState, Name);
+        }
+    }
+
     private void TryAddExposeVariableMenuOptions(List<VariableContextMenuAction> actions, InstanceSave? instance)
     {
         bool canExpose = false;
@@ -1334,8 +1365,7 @@ public class VariableGridEntry
         if (canExpose)
         {
             // Variable doesn't exist, so they can only expose it, not unexpose it.
-            actions.Add(new VariableContextMenuAction("Expose Variable", () =>
-                _exposeVariableService.HandleExposeVariableClick(_selectedState.SelectedInstance!, RootVariableName)));
+            actions.Add(new VariableContextMenuAction("Expose Variable", ExposeVariable));
         }
         if (canUnExpose)
         {

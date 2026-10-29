@@ -296,9 +296,64 @@ public class ExposeVariableService : IExposeVariableService
             _instanceOverrideRemover.RemoveAndRecordForUndo(valuesToClear);
         }
 
+        RemoveUnnamedShaderPlaceholder(variableSave, elementSave);
+
         _pluginManager.VariableDelete(elementSave, oldExposedName);
         _fileCommands.TryAutoSaveCurrentElement();
         _guiCommands.RefreshVariables(force: true);
+    }
+
+    /// <summary>
+    /// Removes the marked, valueless shader parameter entry that exposing added once nothing names the parameter any
+    /// more: no value in any state, no variable reference assigning it, and no exposure. A parameter that is only
+    /// saved because something names it must not stay saved after that is gone.
+    /// </summary>
+    private static void RemoveUnnamedShaderPlaceholder(VariableSave variable, ElementSave element)
+    {
+        if (!global::RenderingLibrary.Graphics.ShaderParameterMarker.TryParse(variable.ShaderParameter, out _) ||
+            variable.SetsValue || variable.Value != null || !string.IsNullOrEmpty(variable.ExposedAsName))
+        {
+            return;
+        }
+
+        string referencesName = variable.SourceObject + ".VariableReferences";
+        string rootName = variable.GetRootName();
+        foreach (StateSave state in element.AllStates)
+        {
+            foreach (VariableSave other in state.Variables)
+            {
+                if (other != variable && other.Name == variable.Name && (other.SetsValue || !string.IsNullOrEmpty(other.ExposedAsName)))
+                {
+                    return;
+                }
+            }
+
+            foreach (VariableListSave list in state.VariableLists)
+            {
+                if (list.Name != referencesName || list.ValueAsIList == null)
+                {
+                    continue;
+                }
+                foreach (object? line in list.ValueAsIList)
+                {
+                    string? text = line as string;
+                    if (text == null || text.TrimStart().StartsWith("//"))
+                    {
+                        continue;
+                    }
+                    int equals = text.IndexOf('=');
+                    if (equals > 0 && text.Substring(0, equals).Trim() == rootName)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
+
+        foreach (StateSave state in element.AllStates)
+        {
+            state.Variables.Remove(variable);
+        }
     }
 
     /// <summary>
