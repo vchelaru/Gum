@@ -288,4 +288,20 @@ public class TextRuntimeBbCodeLinkTagTests : BaseTestClass
         pastEnd.ShouldBe("cd ef".Length);
         textRuntime.GetTagAtIndex("Link", pastEnd).ShouldBeNull();
     }
+
+    [Fact]
+    public void GetTagAtIndex_AfterRawTextAssignedDirectly_NoLongerFindsTheOldRange()
+    {
+        TextRuntime textRuntime = Make("[Link=x]abc[/Link]");
+        textRuntime.GetTagAtIndex("Link", 1).ShouldNotBeNull();
+
+        // Code such as ListBoxItem and ComboBox writes the renderable's RawText directly.
+        Text text = (Text)textRuntime.RenderableComponent!;
+        text.RawText = "xyz";
+
+        for (int i = 0; i < 3; i++)
+        {
+            textRuntime.GetTagAtIndex("Link", i).ShouldBeNull();
+        }
+    }
 }

@@ -270,4 +270,24 @@ public class TextRuntimeBbCodeLinkTagTests
         pastEnd.ShouldBe("cd ef".Length);
         textRuntime.GetTagAtIndex("Link", pastEnd).ShouldBeNull();
     }
+
+    [Fact]
+    public void GetTagAtIndex_AfterRawTextAssignedDirectly_ReflectsTheNewMarkup()
+    {
+        TextRuntime textRuntime = Make("[Link=x]abc[/Link]");
+        textRuntime.GetTagAtIndex("Link", 1).ShouldNotBeNull();
+
+        // Skia parses the markup whenever the renderable's RawText is assigned.
+        SkiaGum.Text text = (SkiaGum.Text)textRuntime.RenderableComponent!;
+        text.RawText = "q [Link=y]r[/Link]";
+
+        textRuntime.GetTagAtIndex("Link", 0).ShouldBeNull();
+        TextTagSpan span = textRuntime.GetTagAtIndex("Link", 2)!.Value;
+        span.Argument.ShouldBe("y");
+        span.StartIndex.ShouldBe(2);
+        span.EndIndex.ShouldBe(3);
+
+        text.RawText = "plain";
+        textRuntime.GetTagAtIndex("Link", 2).ShouldBeNull();
+    }
 }

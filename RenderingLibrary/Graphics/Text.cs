@@ -423,6 +423,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             if (mRawText != value)
             {
                 mRawText = value;
+                // The tags belong to the previous text. The markup path sets them again after assigning RawText.
+                ParsedBbCodeTags = null;
                 UpdateWrappedText();
 
                 UpdatePreRenderDimensions();
