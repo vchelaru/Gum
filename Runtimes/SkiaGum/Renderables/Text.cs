@@ -344,7 +344,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             else
             {
                 // Never stop between the halves of a surrogate pair.
-                if (char.IsHighSurrogate(line[remaining - 1]))
+                if (CodePointLength(line, remaining - 1) == 2)
                 {
                     remaining++;
                 }
@@ -432,8 +432,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         while (codePointPosition < targetCodePoint && utf16Position < source.Length)
         {
-            bool isPair = char.IsHighSurrogate(source[utf16Position]) && utf16Position + 1 < source.Length;
-            utf16Position += isPair ? 2 : 1;
+            utf16Position += CodePointLength(source, utf16Position);
             codePointPosition++;
         }
 
@@ -1583,8 +1582,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// (issue #3701) with the same hard line breaks <see cref="GetVisibleWrappedText"/> inserts, so the
     /// typewriter reveal keeps per-run BBCode styling instead of falling back to plain text. Both sources
     /// index into <see cref="_layoutText"/> code-point-for-code-point (a run's text is only ever replaced
-    /// character-for-character by a <c>[Custom]</c> callback, never lengthened/shortened), so slicing runs
-    /// by the visible lines' lengths lines up with the correct styled content. Exposed internally for unit
+    /// code-point-for-code-point by a <c>[Custom]</c> callback, so an emoji becomes one replacement character), so slicing runs
+    /// by the visible lines' code-point counts lines up with the correct styled content. Exposed internally for unit
     /// testing.
     /// </summary>
     /// <param name="fullBlock">The full layout, whose line breaks the runs are fit to (see <see cref="FitRunsToLines"/>);
@@ -1604,26 +1603,33 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         for (int lineIndex = 0; lineIndex < visibleLines.Count; lineIndex++)
         {
-            int remaining = visibleLines[lineIndex].Length;
+            int remaining = CountCodePoints(visibleLines[lineIndex]);
             Style? lineStyle = null;
             while (remaining > 0 && runIndex < fullRuns.Count)
             {
                 StyledTextRun run = fullRuns[runIndex];
-                int available = run.Text.Length - runOffset;
-                if (available <= 0)
+                if (runOffset >= run.Text.Length)
                 {
                     runIndex++;
                     runOffset = 0;
                     continue;
                 }
 
-                int take = System.Math.Min(available, remaining);
+                // Counted in code points, as the layout's lines are: a [Custom] replacement is one character per code point,
+                // so a replaced emoji is one char in the run but two in the line.
+                int take = 0;
+                int codePointsTaken = 0;
+                while (runOffset + take < run.Text.Length && codePointsTaken < remaining)
+                {
+                    take += CodePointLength(run.Text, runOffset + take);
+                    codePointsTaken++;
+                }
                 string text = run.Text.Substring(runOffset, take);
                 result.Add(new StyledTextRun(text, run.Style, run.Letter, run.IsHeightRun));
                 lineStyle = run.Style;
 
                 runOffset += take;
-                remaining -= take;
+                remaining -= codePointsTaken;
                 if (runOffset >= run.Text.Length)
                 {
                     runIndex++;
@@ -1791,6 +1797,22 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return metrics.LineHeightForHeight(lineHeightFactor * metrics.PlainHeight);
     }
 
+    /// <summary>The number of UTF-16 chars of the code point at <paramref name="index"/>, counted the way the layout counts
+    /// them: a high surrogate and the char after it are one code point (an emoji; a lone high surrogate takes its neighbor
+    /// with it), else 1. The line mapping must follow this rule or WrappedText loses the end of a malformed text.</summary>
+    private static int CodePointLength(string text, int index) =>
+        char.IsHighSurrogate(text[index]) && index + 1 < text.Length ? 2 : 1;
+
+    private static int CountCodePoints(string text)
+    {
+        int count = 0;
+        for (int i = 0; i < text.Length; i += CodePointLength(text, i))
+        {
+            count++;
+        }
+        return count;
+    }
+
     /// <summary>
     /// Sizes every line of a text with a size or font run on its own (#6475). A run's <see cref="Style.LineHeight"/>
     /// applies to every line the run reaches, and a line takes its top and its bottom from whichever of its runs
@@ -1836,7 +1858,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 int pieceStart = charIndex;
                 while (charIndex < run.Text.Length && codePointsLeft > 0)
                 {
-                    charIndex += char.IsHighSurrogate(run.Text[charIndex]) && charIndex + 1 < run.Text.Length ? 2 : 1;
+                    charIndex += CodePointLength(run.Text, charIndex);
                     codePointsLeft--;
                     position++;
                 }
@@ -2174,13 +2196,18 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         if (length > 0 && startStripped + length <= _layoutText.Length)
                         {
                             var taggedSubstring = _layoutText.Substring(startStripped, length);
-                            for (int i = 0; i < taggedSubstring.Length; i++)
+                            int letterLength;
+                            for (int i = 0; i < taggedSubstring.Length; i += letterLength)
                             {
+                                // A surrogate pair (an emoji) is one letter: splitting it in two draws two glyphs (issue #7108).
+                                letterLength = char.IsHighSurrogate(taggedSubstring[i])
+                                    && i + 1 < taggedSubstring.Length
+                                    && char.IsLowSurrogate(taggedSubstring[i + 1]) ? 2 : 1;
                                 _inlineVariables.Add(new InlineVariable
                                 {
                                     VariableName = "Custom",
                                     StartIndex = startStripped + i,
-                                    CharacterCount = 1,
+                                    CharacterCount = letterLength,
                                     Value = new ParameterizedLetterCustomizationCall
                                     {
                                         FunctionName = argument,
