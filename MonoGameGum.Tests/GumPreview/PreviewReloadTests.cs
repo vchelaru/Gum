@@ -30,6 +30,7 @@ public class PreviewReloadTests : BaseTestClass
     private readonly PreviewReloadPolicy _policy = new PreviewReloadPolicy();
     private PreviewSelectionMessage _selection = new PreviewSelectionMessage("MainScreen");
     private int _rebuilds;
+    private bool _isElementMissing;
 
     public override void Dispose()
     {
@@ -42,9 +43,12 @@ public class PreviewReloadTests : BaseTestClass
     private void StartPreview(SweepSpec spec)
     {
         _world.Boot(spec);
-        _world.Manager.ReloadFinished += _policy.OnReloadFinished;
-        PreviewElementPresenter.Show(_selection).ShouldBeTrue();
+        _world.Manager.ReloadFinished += result => _policy.OnReloadFinished(result, _isElementMissing);
+        ShowSelection();
+        _isElementMissing.ShouldBeFalse();
     }
+
+    private void ShowSelection() => _isElementMissing = !PreviewElementPresenter.Show(_selection);
 
     // One game frame: the rebuild a result asked for runs first, then the manager's Update.
     private void Frame()
@@ -52,7 +56,7 @@ public class PreviewReloadTests : BaseTestClass
         if (_policy.TryTakePendingReload())
         {
             _rebuilds++;
-            PreviewElementPresenter.Show(_selection);
+            ShowSelection();
         }
         _world.Manager.Update(GumService.Default.Root.Children.ToList());
     }
@@ -156,7 +160,8 @@ public class PreviewReloadTests : BaseTestClass
         Save(_world.Gumx);
 
         _selection = new PreviewSelectionMessage("HomeScreen");
-        PreviewElementPresenter.Show(_selection).ShouldBeTrue();
+        ShowSelection();
+        _isElementMissing.ShouldBeFalse();
 
         Describe().ShouldContain("<HomeScreen>");
         Describe().ShouldBe(DescribeAFreshLaunch());
@@ -210,5 +215,41 @@ public class PreviewReloadTests : BaseTestClass
         _rebuilds.ShouldBe(1);
         Describe().ShouldBe(DescribeAFreshLaunch());
         afterFirst.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void SelectingANameBeforeTheSaveAddsIt_ShowsItOnceTheSaveLands()
+    {
+        StartPreview(Spec);
+        _selection = new PreviewSelectionMessage("HomeScreen");
+        ShowSelection();
+        _isElementMissing.ShouldBeTrue();
+        Describe().ShouldBeEmpty();
+
+        RenameMainScreen("HomeScreen");
+        Save(_world.Gumx);
+
+        _rebuilds.ShouldBe(1);
+        _isElementMissing.ShouldBeFalse();
+        Describe().ShouldContain("<HomeScreen>");
+        Describe().ShouldBe(DescribeAFreshLaunch());
+    }
+
+    [Fact]
+    public void AnElementThatStaysMissing_RebuildsOncePerReload_NotWithoutOne()
+    {
+        StartPreview(Spec);
+        _selection = new PreviewSelectionMessage("HomeScreen");
+        ShowSelection();
+
+        _world.SaveAll(Spec with { BoxX = 9 });
+        Save(_world.Gumx, _world.ScreenFile);
+        _rebuilds.ShouldBe(1);
+        Frame();
+        Frame();
+
+        _rebuilds.ShouldBe(1);
+        _isElementMissing.ShouldBeTrue();
+        Describe().ShouldBeEmpty();
     }
 }

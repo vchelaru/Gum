@@ -392,6 +392,8 @@ public class Game1 : Game
         UpdateWindowTitle();
     }
 
+    // The manager's console text for a shown screen that is gone says it stays on screen until a
+    // restart; that is for games. Preview rebuilds itself instead, so it never stays stale.
     // A reload that left the tree different from what a restart would show (a renamed or deleted
     // shown screen, a missing file, a failed read) is followed by a rebuild of the shown element from
     // the project the reload loaded, so Preview ends up as a fresh launch would. It runs at the start
@@ -420,7 +422,7 @@ public class Game1 : Game
     {
         try
         {
-            _reloadPolicy.OnReloadFinished(result);
+            _reloadPolicy.OnReloadFinished(result, _isElementMissing);
         }
         catch (Exception exception)
         {

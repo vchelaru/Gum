@@ -17,7 +17,9 @@ namespace GumPreview;
 /// on every save). The issues of the last rebuild are remembered; a result whose non-matching issues
 /// are identical asks for nothing, since a rebuild just made the tree fresh and the live reload that
 /// followed hit the same problem. The memory clears when a result matches a restart, so the problem
-/// coming back rebuilds again, and when a rebuild fails, so the next result retries.
+/// coming back rebuilds again, and when a rebuild fails, so the next result retries. While the shown
+/// element is missing, every finished reload rebuilds once, whatever it reports: a rebuild is only
+/// started by a reload, so an element that stays missing cannot loop.
 /// </remarks>
 internal sealed class PreviewReloadPolicy
 {
@@ -29,19 +31,25 @@ internal sealed class PreviewReloadPolicy
     public bool IsReloadPending => _isReloadPending;
 
     /// <summary>Records what a finished hot reload means for Preview. Does not rebuild anything.</summary>
-    public void OnReloadFinished(HotReloadResult result)
+    /// <param name="result">What the reload reported.</param>
+    /// <param name="isShownElementMissing">
+    /// True while Preview shows nothing because the selected element did not exist when it was last
+    /// shown. The reload may have added it (the tool selects a new name before the save lands), and a
+    /// reload with an empty tree reports nothing wrong, so any finished reload asks for a rebuild.
+    /// </param>
+    public void OnReloadFinished(HotReloadResult result, bool isShownElementMissing = false)
     {
         if (result.MatchesRestart)
         {
             // The newest result describes the tree, so a rebuild asked for by an older one is moot.
-            _isReloadPending = false;
+            _isReloadPending = isShownElementMissing;
             _pendingSignature = null;
             _lastReloadedSignature = null;
             return;
         }
 
         string signature = SignatureOf(result);
-        if (signature == _lastReloadedSignature)
+        if (signature == _lastReloadedSignature && !isShownElementMissing)
         {
             _isReloadPending = false;
             _pendingSignature = null;

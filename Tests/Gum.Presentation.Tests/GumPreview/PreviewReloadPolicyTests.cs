@@ -155,4 +155,62 @@ public class PreviewReloadPolicyTests
 
         policy.TryTakePendingReload().ShouldBeTrue();
     }
+
+    [Fact]
+    public void ACleanReload_WhileTheShownElementIsMissing_AsksForARebuild()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+
+        policy.OnReloadFinished(Result(), isShownElementMissing: true);
+
+        policy.TryTakePendingReload().ShouldBeTrue();
+        policy.TryTakePendingReload().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AMatchingResult_WhileTheElementIsNotMissing_StillAsksForNothing()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.InstanceRebuilt)), isShownElementMissing: false);
+
+        policy.TryTakePendingReload().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AMissingElement_RebuildsAfterEachReload_ButNotBetweenReloads()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+        policy.OnReloadFinished(Result(), isShownElementMissing: true);
+        policy.TryTakePendingReload().ShouldBeTrue();
+
+        policy.TryTakePendingReload().ShouldBeFalse();
+        policy.OnReloadFinished(Result(), isShownElementMissing: true);
+
+        policy.TryTakePendingReload().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ARepeatedNonMatchingResult_WhileTheElementIsMissing_StillRebuilds()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")), isShownElementMissing: true);
+        policy.TryTakePendingReload().ShouldBeTrue();
+
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")), isShownElementMissing: true);
+
+        policy.TryTakePendingReload().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ARepeatedNonMatchingResult_OnceTheElementIsShown_DoesNotRebuild()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")), isShownElementMissing: true);
+        policy.TryTakePendingReload().ShouldBeTrue();
+
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile, "Wall.png")), isShownElementMissing: false);
+
+        policy.TryTakePendingReload().ShouldBeFalse();
+    }
 }
