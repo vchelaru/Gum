@@ -350,6 +350,9 @@ public class PasswordBox : TextBoxBase
             {
                 SecurePassword.RemoveAt(SecurePassword.Length - 1);
             }
+
+            // A caret that was past the cut text (a paste that overflowed) would index past the end.
+            caretIndex = System.Math.Min(caretIndex, SecurePassword.Length);
         }
     }
 }

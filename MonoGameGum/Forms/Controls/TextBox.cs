@@ -388,16 +388,13 @@ public class TextBox : TextBoxBase
             {
                 DeleteSelection();
             }
-            foreach (var character in whatToPaste)
-            {
-                // Use SetTextFromUi because this is user-pasted input.
-                // Text may legitimately be null (e.g. explicitly cleared), so guard it
-                // the same way HandleCharEntered does (#4099).
-                SetTextFromUi((this.Text ?? "").Insert(caretIndex, "" + character));
-                caretIndex++;
-            }
-
-            TruncateTextToMaxLength();
+            // Insert the whole paste, then cut to MaxLength from the end, the way typing does. Text may
+            // legitimately be null (e.g. explicitly cleared), so guard it the same way HandleCharEntered does (#4099).
+            string textAfterPaste = TruncateTextToMaxLength((Text ?? "").Insert(caretIndex, whatToPaste)) ?? "";
+            // Set caretIndex before assigning Text so that the events are raised with the new caretIndex value.
+            caretIndex = System.Math.Min(caretIndex + whatToPaste.Length, textAfterPaste.Length);
+            // Use SetTextFromUi because this is user-pasted input.
+            SetTextFromUi(textAfterPaste);
             RefreshCaretAfterEdit();
         }
     }
