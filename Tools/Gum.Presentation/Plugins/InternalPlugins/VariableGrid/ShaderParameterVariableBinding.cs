@@ -22,11 +22,11 @@ public sealed class ShaderParameterVariableBinding
     {
         _info = info;
         _legacyTextVariableName = legacyTextVariableName;
-        Marker = new ShaderParameterMarker(info.Name).Format();
+        Marker = new ShaderParameterMarker(info.Name);
     }
 
-    /// <summary>The text saved in <c>VariableSave.ShaderParameter</c>.</summary>
-    public string Marker { get; }
+    /// <summary>The marker whose <c>Format()</c> is saved in <c>VariableSave.ShaderParameter</c>.</summary>
+    public ShaderParameterMarker Marker { get; }
 
     /// <summary>The Gum variable type name (<c>float</c>, <c>int</c> or <c>bool</c>).</summary>
     public string VariableType => _info.Kind switch
@@ -77,7 +77,7 @@ public sealed class ShaderParameterVariableBinding
         {
             if (string.IsNullOrEmpty(written.ShaderParameter))
             {
-                written.ShaderParameter = Marker;
+                written.ShaderParameter = Marker.Format();
             }
             if (string.IsNullOrEmpty(written.Type))
             {

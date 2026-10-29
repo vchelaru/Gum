@@ -151,7 +151,7 @@ public class VariableGridEntry
     /// gives the variable its type and marker, and a value still in the legacy <c>ShaderParameters</c> text counts
     /// as this row's value until it is edited or made default. Null for every other row.
     /// </summary>
-    public ShaderParameterVariableBinding? ShaderParameter { get; set; }
+    public ShaderParameterVariableBinding? ShaderBinding { get; set; }
 
     /// <summary>
     /// The name the grid knows the row by when it is not <see cref="Name"/>: a shader parameter row keeps the
@@ -198,7 +198,7 @@ public class VariableGridEntry
                 return false;
             }
             return GetValueStrictlyOnSelectedState() == null
-                && !(_stateSave != null && ShaderParameter?.HasLegacyValue(_stateSave) == true);
+                && !(_stateSave != null && ShaderBinding?.HasLegacyValue(_stateSave) == true);
         }
     }
 
@@ -671,9 +671,9 @@ public class VariableGridEntry
         {
             return GeneralResponse.UnsuccessfulResponse;
         }
-        if (ShaderParameter != null)
+        if (ShaderBinding != null)
         {
-            if (!ShaderParameter.TryCoerce(newValue, out object? coerced))
+            if (!ShaderBinding.TryCoerce(newValue, out object? coerced))
             {
                 return GeneralResponse.UnsuccessfulResponse;
             }
@@ -746,10 +746,10 @@ public class VariableGridEntry
                     var rootVariable = ObjectFinder.Self.GetRootVariable(Name, elementSave);
                     variableType = rootVariable?.Type;
                 }
-                variableType ??= ShaderParameter?.VariableType;
+                variableType ??= ShaderBinding?.VariableType;
                 // ...set variable after getting it from base, or else we'd get the variable we just set...
                 stateSave.SetValue(Name, newValue, instanceSave, variableType);
-                ShaderParameter?.AfterWrite(stateSave, Name);
+                ShaderBinding?.AfterWrite(stateSave, Name);
                 if (existingVariable?.ExposedAsName is { Length: > 0 } exposedAsName && variableDefinedInThisOrBase != null &&
                     stateSave.GetVariableSave(Name) is { } variable)
                 {
@@ -952,7 +952,7 @@ public class VariableGridEntry
             }
         }
 
-        if (shouldReset && state != null && ShaderParameter?.RemoveLegacyValue(state) == true)
+        if (shouldReset && state != null && ShaderBinding?.RemoveLegacyValue(state) == true)
         {
             wasChangeMade = true;
         }
@@ -1245,7 +1245,7 @@ public class VariableGridEntry
         var actions = new List<VariableContextMenuAction>();
 
         // Exposing a shader parameter is not offered yet.
-        if (ShaderParameter == null)
+        if (ShaderBinding == null)
         {
             TryAddExposeVariableMenuOptions(actions, InstanceSave);
         }

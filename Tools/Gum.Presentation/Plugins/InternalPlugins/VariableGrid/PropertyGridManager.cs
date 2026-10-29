@@ -1207,7 +1207,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _typeManager,
             _clipboardService)
         {
-            ShaderParameter = binding,
+            ShaderBinding = binding,
             GridName = parameter.Name,
             DisplayName = parameter.Name,
         };
