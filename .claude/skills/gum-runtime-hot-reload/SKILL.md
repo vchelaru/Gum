@@ -48,7 +48,7 @@ The 200 ms debounce coalesces the Gum tool's multi-file save burst into one relo
 
 ## PerformReload — What Actually Happens
 
-1. `CopyAndUnloadChangedFonts()` — copies changed `.fnt` files plus matching `<basename>*.png` texture pages from source `FontCache/` to bin `FontCache/`, then `LoaderManager.Dispose`s both so they reload from disk.
+1. `CopyAndUnloadChangedFonts()` — copies changed `.fnt` files plus matching `<basename>*.png` texture pages from source `FontCache/` to bin `FontCache/`, then `LoaderManager.Dispose`s both so they reload from disk. When the bin folder is the source folder (Preview), the copy is skipped for a file that is already at its destination (`CopyUnlessSameFile`) and the eviction still runs.
 2. `GumProjectSave.Load` + `Initialize`; swap into `ObjectFinder.Self.GumProjectSave`.
 3. Reload animations: enumerate `*Animations.ganx` under the source directory via a `LooseFileGumFileProvider` and load each through `GumService.LoadAnimationsFromProvider` into the new project (no `RelativeDirectory` swap — the provider is rooted at the source dir).
 4. `ApplyDiff(roots, newProject, SystemManagers.Default)` — applies the in-place reconciliation walk described below.

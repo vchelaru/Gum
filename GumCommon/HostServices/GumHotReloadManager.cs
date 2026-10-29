@@ -96,6 +96,9 @@ public class GumHotReloadManager : IGumHotReloadManager
     // whose definition has since changed. The diff re-points a visual at the new element, so without
     // this the next reload would see no change and stop listing a tree that is still stale.
     private readonly ReloadMemory _memory = new ReloadMemory();
+    private static readonly bool _isFileSystemCaseInsensitive =
+        System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
+        || System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
@@ -379,6 +382,19 @@ public class GumHotReloadManager : IGumHotReloadManager
         return failures;
     }
 
+    // A game that loads its content from the folder the tool saves into (Preview) has the file where
+    // the runtime reads it; copying a file onto itself throws.
+    private static void CopyUnlessSameFile(string source, string destination)
+    {
+        StringComparison comparison = _isFileSystemCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        if (string.Equals(Path.GetFullPath(source), Path.GetFullPath(destination), comparison))
+        {
+            return;
+        }
+
+        File.Copy(source, destination, overwrite: true);
+    }
+
     private void CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
     {
         var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
@@ -388,7 +404,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         // Copy the .fnt file
         var destinationFile = Path.Combine(destinationFontCache, fileName);
-        File.Copy(sourceFntPath, destinationFile, overwrite: true);
+        CopyUnlessSameFile(sourceFntPath, destinationFile);
 
         // Copy associated .png texture pages (same name prefix)
         var baseName = Path.GetFileNameWithoutExtension(fileName);
@@ -396,7 +412,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
         {
             var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
-            File.Copy(pngFile, pngDestination, overwrite: true);
+            CopyUnlessSameFile(pngFile, pngDestination);
             copiedPngs.Add(pngDestination);
         }
 
