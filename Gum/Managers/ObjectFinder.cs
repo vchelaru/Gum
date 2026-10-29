@@ -1310,6 +1310,20 @@ public class ObjectFinder : IObjectFinder
         }
     }
 
+    // A helper rather than a lambda: a lambda capturing the instance name allocates its closure on every call of
+    // GetRootVariable, including the hot path for ordinary variables.
+    private bool BaseElementOwnsInstance(ElementSave element, string instanceName)
+    {
+        foreach (ElementSave baseElement in GetBaseElements(element))
+        {
+            if (baseElement.GetInstance(instanceName) != null)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// <summary>
     /// Returns the definition of a shader parameter variable saved on <paramref name="container"/> or one of its
     /// base elements, or null when none is saved.
@@ -1448,7 +1462,7 @@ public class ObjectFinder : IObjectFinder
 
             // GetInstance only sees this element's own instances. A derived element can still save a shader
             // parameter entry for an instance its base owns.
-            if (GetBaseElements(element).Any(baseElement => baseElement.GetInstance(beforeDot) != null))
+            if (BaseElementOwnsInstance(element, beforeDot))
             {
                 return GetShaderParameterDefinition(effectiveName, element);
             }
