@@ -2174,13 +2174,18 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         if (length > 0 && startStripped + length <= _layoutText.Length)
                         {
                             var taggedSubstring = _layoutText.Substring(startStripped, length);
-                            for (int i = 0; i < taggedSubstring.Length; i++)
+                            int letterLength;
+                            for (int i = 0; i < taggedSubstring.Length; i += letterLength)
                             {
+                                // A surrogate pair (an emoji) is one letter: splitting it in two draws two glyphs (issue #7108).
+                                letterLength = char.IsHighSurrogate(taggedSubstring[i])
+                                    && i + 1 < taggedSubstring.Length
+                                    && char.IsLowSurrogate(taggedSubstring[i + 1]) ? 2 : 1;
                                 _inlineVariables.Add(new InlineVariable
                                 {
                                     VariableName = "Custom",
                                     StartIndex = startStripped + i,
-                                    CharacterCount = 1,
+                                    CharacterCount = letterLength,
                                     Value = new ParameterizedLetterCustomizationCall
                                     {
                                         FunctionName = argument,

@@ -347,16 +347,98 @@ public class TextCustomizationTests : BaseTestClass
         }
     }
 
-    private static List<float> GlyphYsInOrder(TextBlock block)
+    // Issue #7108: a [Custom] span splits per character, and a surrogate pair (an emoji) must stay one run so it
+    // draws as one glyph. The callback gets the UTF-16 index of the pair's first unit and offsets Y by 10 + index,
+    // so each glyph's Y shift against the same text without the tag says which callback call moved it.
+    [Theory]
+    [InlineData("a[Custom=SpanOffset]\U0001F600b[/Custom]", "0,11,13")]
+    [InlineData("[Custom=SpanOffset]\U0001F600[/Custom]", "10")]
+    [InlineData("[Custom=SpanOffset]\U0001F600a\U0001F600[/Custom]", "10,12,13")]
+    [InlineData("a\U0001F600[Custom=SpanOffset]b\U0001F600[/Custom]c", "0,0,13,14,0")]
+    public void GetTextBlock_CustomSpanContainingEmoji_KeepsTheEmojiOneGlyph(string rawText, string expectedYShifts)
     {
-        List<float> ys = new();
-        foreach (FontRun fontRun in block.FontRuns.OrderBy(r => r.Start))
+        Text.Customizations["SpanOffset"] = (index, block) => new LetterCustomization { YOffset = 10 + index };
+
+        (List<SKPoint> plain, List<SKPoint> customized) = MeasureAgainstPlain(rawText, width: 1000);
+
+        customized.Count.ShouldBe(plain.Count);
+        for (int i = 0; i < plain.Count; i++)
         {
-            foreach (SKPoint glyph in fontRun.GlyphPositions)
-            {
-                ys.Add(glyph.Y);
-            }
+            (customized[i].X - plain[i].X).ShouldBe(0f, tolerance: 0.01, $"glyph {i} x");
         }
-        return ys;
+        string.Join(",", customized.Select((p, i) => (p.Y - plain[i].Y).ToString("0.#"))).ShouldBe(expectedYShifts);
     }
+
+    [Fact]
+    public void GetTextBlock_CustomSpanContainingEmojiAndWrapping_KeepsTheEmojiOneGlyph()
+    {
+        Text.Customizations["SpanOffset"] = (index, block) => new LetterCustomization { YOffset = 10 + index };
+
+        (List<SKPoint> plain, List<SKPoint> customized) =
+            MeasureAgainstPlain("aaaa [Custom=SpanOffset]bbbb\U0001F600cccc dddd[/Custom]", width: 90);
+
+        plain.Select(p => p.Y).Distinct().Count().ShouldBeGreaterThan(1, "the text must wrap for this test to mean anything");
+        customized.Count.ShouldBe(plain.Count);
+        for (int i = 0; i < plain.Count; i++)
+        {
+            (customized[i].X - plain[i].X).ShouldBe(0f, tolerance: 0.01, $"glyph {i} x");
+        }
+    }
+
+    // A lone surrogate has nothing to pair with, so it stays one run per UTF-16 unit as before.
+    [Fact]
+    public void GetStyledRuns_CustomSpanWithLoneSurrogate_StaysOneRunPerCharacter()
+    {
+        Text.Customizations["SpanOffset"] = (index, block) => new LetterCustomization();
+        Text text = MakeText();
+        text.RawText = "[Custom=SpanOffset]\uD83Db\uDE00c[/Custom]";
+
+        text.GetStyledRuns().Select(r => r.Text).ToList().ShouldBe(new List<string> { "\uD83D", "b", "\uDE00", "c" });
+    }
+
+    // Grapheme clusters beyond a surrogate pair (flags, ZWJ sequences) are not joined: each code point is its own run.
+    [Fact]
+    public void GetStyledRuns_CustomSpanWithFlagAndZwjSequence_SplitsPerCodePoint()
+    {
+        Text.Customizations["SpanOffset"] = (index, block) => new LetterCustomization();
+        Text text = MakeText();
+        text.RawText = "[Custom=SpanOffset]\U0001F1FA\U0001F1F8\U0001F468‍\U0001F469[/Custom]";
+
+        text.GetStyledRuns().Select(r => r.Text).ToList().ShouldBe(
+            new List<string> { "\U0001F1FA", "\U0001F1F8", "\U0001F468", "‍", "\U0001F469" });
+    }
+
+    [Fact]
+    public void GetStyledRuns_CustomSpanWithEmoji_CallsBackOncePerCodePointWithTheFirstUnitIndex()
+    {
+        List<int> indexes = new();
+        Text.Customizations["SpanOffset"] = (index, block) =>
+        {
+            indexes.Add(index);
+            return new LetterCustomization();
+        };
+        Text text = MakeText();
+        text.RawText = "a[Custom=SpanOffset]\U0001F600b[/Custom]";
+
+        text.GetStyledRuns();
+
+        indexes.ShouldBe(new List<int> { 1, 3 });
+    }
+
+    private static (List<SKPoint> Plain, List<SKPoint> Customized) MeasureAgainstPlain(string rawText, float width)
+    {
+        Text plain = MakeText();
+        plain.Width = width;
+        plain.RawText = rawText.Replace("[Custom=SpanOffset]", "").Replace("[/Custom]", "");
+        Text customized = MakeText();
+        customized.Width = width;
+        customized.RawText = rawText;
+        return (GlyphPointsInOrder(plain.GetTextBlock()), GlyphPointsInOrder(customized.GetTextBlock()));
+    }
+
+    private static List<SKPoint> GlyphPointsInOrder(TextBlock block) =>
+        block.FontRuns.OrderBy(r => r.Start).SelectMany(r => r.GlyphPositions).ToList();
+
+    private static List<float> GlyphYsInOrder(TextBlock block) =>
+        GlyphPointsInOrder(block).Select(p => p.Y).ToList();
 }
