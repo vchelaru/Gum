@@ -244,7 +244,9 @@ public class FileWatchManager : IFileWatchManager
             or "ganx" or "ganj" or "behx" or "behj" or "fnt"
             or "achx" or "achj"
             or "codsj"
-            || ShaderFileExtensions.Contains(extension))
+            || ShaderFileExtensions.Contains(extension)
+            // Any other file an element references (svg, lottie json, a decoder plugin's format, ...).
+            || _fileChangeReactionLogic.IsReferencedByProject(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -256,9 +258,10 @@ public class FileWatchManager : IFileWatchManager
         // Detect deletion of an element file so the tool can flag the element's source as missing
         // (red "!" / GUM0004) instead of silently diverging from disk (issue #3367). Enqueue it
         // like a change - the flush re-checks existence, so a delete-then-recreate (atomic save)
-        // within the debounce window collapses back into a normal reload. Non-element deletes are
-        // left unhandled, as before.
-        if (IsElementFileExtension(fileName) || IsShaderFileExtension(fileName))
+        // within the debounce window collapses back into a normal reload. A file an element references
+        // (picture, svg, font, ...) is queued the same way so the canvas stops showing the cached copy;
+        // other deletes are left unhandled.
+        if (IsElementFileExtension(fileName) || IsShaderFileExtension(fileName) || _fileChangeReactionLogic.IsReferencedByProject(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -507,7 +510,8 @@ public class FileWatchManager : IFileWatchManager
                     // Drop usually means an atomic-save temp that was renamed away. But an element
                     // file that's still gone at flush time is a real deletion the user should see
                     // (issue #3367) — route it to the delete reaction instead of dropping silently.
-                    if ((IsElementFileExtension(file) || IsShaderFileExtension(file)) && !IsTransientTempFile(file))
+                    if (!IsTransientTempFile(file)
+                        && (IsElementFileExtension(file) || IsShaderFileExtension(file) || _fileChangeReactionLogic.IsReferencedByProject(file)))
                     {
                         deletedFiles.Add(file);
                     }
@@ -547,21 +551,25 @@ public class FileWatchManager : IFileWatchManager
                 }
             }
 
-            foreach (var file in deletedFiles)
+            // Deleting a folder of pictures reloads the canvas once, not once per picture.
+            using (_fileChangeReactionLogic.DeferDependentUpdates())
             {
-                try
+                foreach (var file in deletedFiles)
                 {
-                    _fileChangeReactionLogic.ReactToFileDeleted(file);
-                    if (PrintFileChangesToOutput)
+                    try
                     {
-                        _guiCommands.PrintOutput($"Element file deletion processed: {file}");
+                        _fileChangeReactionLogic.ReactToFileDeleted(file);
+                        if (PrintFileChangesToOutput)
+                        {
+                            _guiCommands.PrintOutput($"File deletion processed: {file}");
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    if (PrintFileChangesToOutput)
+                    catch (Exception ex)
                     {
-                        _guiCommands.PrintOutput($"Error reacting to file deletion for {file}: {ex.Message}");
+                        if (PrintFileChangesToOutput)
+                        {
+                            _guiCommands.PrintOutput($"Error reacting to file deletion for {file}: {ex.Message}");
+                        }
                     }
                 }
             }
