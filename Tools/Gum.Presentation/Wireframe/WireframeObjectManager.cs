@@ -151,11 +151,13 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         {
             ClearAll();
             RootGue = null;
+            DisposeCachedContentIfReloading(forceReloadTextures);
         }
         else if(elementSave is ComponentSave && string.IsNullOrEmpty(elementSave.BaseType))
         {
             ClearAll();
             RootGue = null;
+            DisposeCachedContentIfReloading(forceReloadTextures);
             _guiCommands.PrintOutput($"Error - cannot create representation for Component {elementSave.Name} because its BaseType is not set.");
         }
         else if (forceLayout || forceReloadTextures)
@@ -252,6 +254,18 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         }
         ElementShowing = elementSave;
 
+    }
+
+    /// <summary>
+    /// With nothing built there is nothing holding the cached textures, fonts and effects, so a content
+    /// reload (a file changed on disk, #7027) still drops them; the next element shown loads from disk.
+    /// </summary>
+    private static void DisposeCachedContentIfReloading(bool forceReloadTextures)
+    {
+        if (forceReloadTextures)
+        {
+            LoaderManager.Self.DisposeAndClear();
+        }
     }
 
     /// <summary>

@@ -38,9 +38,18 @@ public class FileWatchPluginController
         }
     }
 
+    /// <summary>
+    /// An edit that can change which files the project's elements reference (an element, instance, state or
+    /// variable added, removed or set, an undo, a canvas refresh). The kept set of referenced files is
+    /// rebuilt on the next rename or delete of a file, instead of the walk running for each of them.
+    /// </summary>
+    public void HandleReferencesMayHaveChanged() => _fileWatchManager.InvalidateReferencedFiles();
+
     public void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue,
         bool isFullCommit)
     {
+        HandleReferencesMayHaveChanged();
+
         // A file path is never scrubbed, so an intermediate drag tick can't be one.
         if (element == null || !isFullCommit)
         {
@@ -69,6 +78,8 @@ public class FileWatchPluginController
 
     public void HandleProjectLoad(GumProjectSave save)
     {
+        HandleReferencesMayHaveChanged();
+
         if (save.FullFileName == null)
         {
             _fileWatchLogic.HandleProjectUnloaded();

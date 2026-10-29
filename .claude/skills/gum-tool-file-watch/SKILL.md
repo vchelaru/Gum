@@ -85,12 +85,12 @@ The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path th
 
 | Extension | Action |
 |-----------|--------|
-| `png`, `gif`, `tga`, `bmp` | Refresh wireframe if referenced by selected element |
-| `achx` | Reload animation chain if referenced by selected element |
-| `fnt` | Reload font (also looks up page PNGs) |
+| `slang`, `fx` | Drop the cached effect and rebuild the shown element if any element references the shader |
+| Any other file (images, svg, lottie json, `achx`, `fnt`, a decoder plugin's format), except the types below that keep their own reaction | If an element references it (see below) or the canvas cached it, drop the whole `LoaderManager` cache and reload the canvas and Variables tab |
 | `gusx`, `gutx`, `gucx` (and JSON siblings) | Reload element from disk, refresh tree + wireframe, then re-apply the references that read it (see below) |
 | `gumx` | Reload entire project |
-| `ganx` | Print warning — Gum does not support runtime reload of animation collections |
+| `ganx`, `ganj` | The StateAnimationPlugin reloads the Animations tab when it is the selected element's sidecar |
+| `gumfcs` (font character file) | `MainFontsPlugin` regenerates the ranges and missing fonts |
 | `behx`, `behj` | Reload behavior definition, then re-apply its tool-only references to implementing components and elements holding their instances (see below) |
 | `csv`, `resx` | Reload localization file (RESX also matches satellites via `IsLocalizationFileThatShouldTriggerReload`) |
 | `ProjectCodeSettings.codsj` | Handled by the code output plugin's `ReactToFileChanged` (`CodeOutputPluginBase.HandleFileChanged`): reload only, never regenerate or migrate; an unreadable file keeps the current settings and makes the Code tab read-only until a readable version arrives or the user resets it |
@@ -112,9 +112,11 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 
 **Dropped events can print a reason**: with "Print file changes to output" on (File Watch tab), a skipped Gum file prints at once as `File change skipped (<reason>): <path>` (own save, unknown Created, temp file). Skips of other files are counted per reason and printed once per flush (`x300, e.g. a, b, c`), and a rename or delete of a type Gum does not react to prints nothing, so a build touching hundreds of files stays readable. A save that prints nothing never reached the manager, so look at the OS events first.
 
-**Renames are routed for every reacted-to extension**: `ReactToRename` forwards renames for the extensions in its list (images, Gum files, `.csv`, `.resx`, `.codsj`, ...). Many editors (Vim, JetBrains, some VS Code modes) save by writing a temp file and renaming it over the target, so a type missing from that list silently misses external edits.
+**Referenced files follow the project, not an extension list**: every file a variable names (`IsFile`), an animation chain's frames and a font's pages is reached through `FileChangeReactionLogic.IsReferencedFile` (referenced or cached by the canvas, and not a type with its own reaction: `ganx`, `ganj`, `gumfcs`, `codsj`, which the project walk lists too). A new file-backed type needs no change here. The project walk parses every referenced `.achx` and `.fnt`, so `IProjectReferencedFiles` keeps its result and the rename, delete and flush checks read that set; the walk runs once until something calls `FileWatchManager.InvalidateReferencedFiles` (the File Watch plugin does for element, instance, state and variable edits, undo and canvas refreshes) or a reload here changes what is referenced. A walk per event freezes the UI when a build touches hundreds of files. Everything the canvas loads by path sits in `LoaderManager`, so a change drops the whole cache and reloads even when the shown element does not use the file itself: a per-element file walk misses nested instances, base types and frame textures, and an element selected later would draw the cached copy. A flush of several such files reloads once, when `DeferDependentUpdates` closes. Shaders are the exception and drop only their own cache entry.
 
-**Delete only reacts for element files**: `ReactToDelete` queues a deleted element file like a change, so the flush can flag the element's source as missing. Other deletes are ignored.
+**Renames are routed for every reacted-to extension**: `ReactToRename` forwards renames for the extensions in its list (images, Gum files, `.csv`, `.resx`, `.codsj`, ...) and for any file an element references. Many editors (Vim, JetBrains, some VS Code modes) save by writing a temp file and renaming it over the target, so a type missing from that list silently misses external edits.
+
+**Delete reacts for element files, shaders and referenced files**: `ReactToDelete` queues them like a change, so the flush can flag the element's source as missing or rebuild the canvas to report the missing file. Other deletes are ignored.
 
 **A reloaded element updates the elements that read it, after the whole flush is reloaded**: `ReactToElementSaveChanged` calls `IVariableReferenceLogic.ApplyReferencesToElement(element, trySave: true)`, the cascade an in-tool edit runs, so readers get new materialized values, are saved (Auto Save on) and the canvas and Variables tab refresh. `FileWatchManager.Flush` wraps its loop in `FileChangeReactionLogic.DeferDependentUpdates()`, so a reader that is itself in the batch is reloaded before any save of it; saving it first would overwrite the external edit still waiting in the queue. The reloaded element is never saved by this path. Readers keep their object and undo history, so `IUndoManager.RebaseStoredValues` writes the changed values into every snapshot of them; otherwise a later Ctrl+Z restores the replaced value and saves it.
 

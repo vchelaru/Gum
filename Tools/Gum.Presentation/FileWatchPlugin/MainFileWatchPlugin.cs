@@ -72,6 +72,23 @@ public class MainFileWatchPlugin : CorePriorityPlugin
         this.ProjectLoad += HandleProjectLoad;
         this.ProjectLocationSet += HandleProjectLocationSet;
         this.VariableSet += HandleVariableSet;
+
+        // Anything that can change which files the elements reference. A canvas refresh follows nearly every
+        // edit that matters, which keeps an edit no event names from leaving the kept set stale.
+        this.ElementAdd += _ => _controller.HandleReferencesMayHaveChanged();
+        this.ElementDelete += _ => _controller.HandleReferencesMayHaveChanged();
+        this.ElementImported += _ => _controller.HandleReferencesMayHaveChanged();
+        this.ElementDuplicate += (_, _) => _controller.HandleReferencesMayHaveChanged();
+        this.InstanceAdd += (_, _) => _controller.HandleReferencesMayHaveChanged();
+        this.InstanceDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
+        this.InstancesDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
+        this.StateAdd += _ => _controller.HandleReferencesMayHaveChanged();
+        this.StateDelete += _ => _controller.HandleReferencesMayHaveChanged();
+        this.VariableAdd += (_, _) => _controller.HandleReferencesMayHaveChanged();
+        this.VariableDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
+        this.VariableSetThroughReference += (_, _, _, _, _) => _controller.HandleReferencesMayHaveChanged();
+        this.AfterUndo += () => _controller.HandleReferencesMayHaveChanged();
+        this.WireframeRefreshed += () => _controller.HandleReferencesMayHaveChanged();
     }
 
     private void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue,
