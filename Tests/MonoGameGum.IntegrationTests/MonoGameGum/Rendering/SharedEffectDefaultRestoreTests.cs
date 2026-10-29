@@ -44,6 +44,29 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 }
 ";
 
+    // Same, with a <Name>IsSet companion (like Outline's Thickness): red is Level, green is LevelIsSet.
+    private const string CompanionSlang = @"
+Texture2D SpriteTexture;
+SamplerState SpriteTextureSampler;
+
+float Level = 0.5;
+float LevelIsSet = 0.0;
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+[shader(""fragment"")]
+float4 MainPS(VertexShaderOutput input) : COLOR0
+{
+    float4 sprite = SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates);
+    return float4(Level, LevelIsSet, 0.0, 1.0) * sprite.a;
+}
+";
+
     private const int CaptureSize = 128;
     private const int ContainerSpacing = 40;
 
@@ -182,6 +205,58 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         }
     }
 
+    // RenderToCapture draws twice by default, which lets the container that sets a value redraw between the
+    // game's change and the unset container. A real frame draws once: here the unset container is the first
+    // thing drawn after the game's change.
+    [Fact]
+    public void SharedEffect_WhenTheGameChangesAFloatBetweenSingleDrawFrames_TheFirstUnsetDrawReadsTheGamesValue()
+    {
+        Color[] data = Render(
+            Containers(b => { }, a => a.SetShaderParameter("Level", 1f)),
+            afterFirstFrame: (effect, _) => effect.Parameters["Level"]!.SetValue(0.9f),
+            drawsPerFrame: 1);
+
+        ShouldBeNear(Channel(data, 0, 'R'), 230);
+    }
+
+    [Fact]
+    public void SharedEffect_WithACompanion_WhenTheGameChangesTheValueBetweenSingleDrawFrames_TheUnsetContainerReadsTheGamesValueAndANotSetCompanion()
+    {
+        Color[] data = Render(
+            Containers(b => { }, a => a.SetShaderParameter("Level", 1f)),
+            afterFirstFrame: (effect, _) => effect.Parameters["Level"]!.SetValue(0.9f),
+            drawsPerFrame: 1,
+            slang: CompanionSlang);
+
+        ShouldBeNear(Channel(data, 0, 'R'), 230);
+        Channel(data, 0, 'G').ShouldBe(0);
+        Channel(data, 1, 'G').ShouldBe(255);
+    }
+
+    [Fact]
+    public void ApplyShaderParameters_WhenTheGameChangesAValueGumWrote_TheNextCallThatDoesNotSetItKeepsTheGamesValue()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Effect effect = CompileDefaultsEffect(game.GraphicsDevice);
+
+        ShaderParameterCollection setsLevel = new();
+        setsLevel.Set("Level", ShaderParameterValue.FromFloat(1f));
+        ShaderParameterCollection setsNothing = new();
+
+        Renderer.ApplyShaderParameters(setsLevel, effect);
+        effect.Parameters["Level"]!.SetValue(0.9f);
+        Renderer.ApplyShaderParameters(setsNothing, effect);
+
+        effect.Parameters["Level"]!.GetValueSingle().ShouldBe(0.9f);
+
+        // And it stays the baseline once another container has set the value and let go of it again.
+        Renderer.ApplyShaderParameters(setsLevel, effect);
+        Renderer.ApplyShaderParameters(setsNothing, effect);
+
+        effect.Parameters["Level"]!.GetValueSingle().ShouldBe(0.9f);
+    }
+
     // ApplyShaderParameters runs for every container with an effect on every draw: once the baselines are
     // captured, applying and restoring must not allocate.
     [Fact]
@@ -213,10 +288,12 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         allocated.ShouldBe(0);
     }
 
-    private static Effect CompileDefaultsEffect(GraphicsDevice gd)
+    private static Effect CompileDefaultsEffect(GraphicsDevice gd) => CompileEffect(gd, DefaultsSlang);
+
+    private static Effect CompileEffect(GraphicsDevice gd, string slang)
     {
         Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            DefaultsSlang, new SlangConvertOptions { SourceName = "Defaults.slang" });
+            slang, new SlangConvertOptions { SourceName = "Defaults.slang" });
         conversion.IsSuccess.ShouldBeTrue(conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
         EffectCompiler compiler = new();
         Result<CompiledShader, ShaderError[]> compileResult =
@@ -237,7 +314,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
     private static Action<ContainerRuntime>[] Containers(params Action<ContainerRuntime>[] setters) => setters;
 
     private Color[] Render(Action<ContainerRuntime>[] setters, Action<ContainerRuntime>? changeAfterFirstFrame = null, float? gameSetsLevel = null,
-        Action<Effect, ContainerRuntime[]>? afterFirstFrame = null, Action<Effect, ContainerRuntime[]>? afterSecondFrame = null)
+        Action<Effect, ContainerRuntime[]>? afterFirstFrame = null, Action<Effect, ContainerRuntime[]>? afterSecondFrame = null,
+        int drawsPerFrame = 2, string slang = DefaultsSlang)
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -245,7 +323,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         SystemManagers managers = SystemManagers.Default;
         Renderer renderer = managers.Renderer;
 
-        using Effect effect = CompileDefaultsEffect(gd);
+        using Effect effect = CompileEffect(gd, slang);
 
         // The compiled defaults are what the whole fix rests on.
         effect.Parameters["Level"]!.GetValueSingle().ShouldBe(0.5f);
@@ -274,31 +352,31 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
             containers[i] = container;
         }
 
-        Color[] data = RenderToCapture(gd, renderer, managers);
+        Color[] data = RenderToCapture(gd, renderer, managers, drawsPerFrame);
         if (changeAfterFirstFrame != null)
         {
             changeAfterFirstFrame(containers[0]);
-            data = RenderToCapture(gd, renderer, managers);
+            data = RenderToCapture(gd, renderer, managers, drawsPerFrame);
         }
         if (afterFirstFrame != null)
         {
             afterFirstFrame(effect, containers);
-            data = RenderToCapture(gd, renderer, managers);
+            data = RenderToCapture(gd, renderer, managers, drawsPerFrame);
         }
         if (afterSecondFrame != null)
         {
             afterSecondFrame(effect, containers);
-            data = RenderToCapture(gd, renderer, managers);
+            data = RenderToCapture(gd, renderer, managers, drawsPerFrame);
         }
         return data;
     }
 
-    private static Color[] RenderToCapture(GraphicsDevice gd, Renderer renderer, SystemManagers managers)
+    private static Color[] RenderToCapture(GraphicsDevice gd, Renderer renderer, SystemManagers managers, int draws)
     {
         using RenderTarget2D capture = new(gd, CaptureSize, CaptureSize, false, SurfaceFormat.Color, DepthFormat.None, 0,
             RenderTargetUsage.PreserveContents);
 
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < draws; i++)
         {
             gd.SetRenderTarget(capture);
             gd.Clear(Color.Black);

@@ -1603,7 +1603,11 @@ public class Renderer : IRenderer
             EffectParameter? staleParameter = effect.Parameters[stale.Key];
             if (staleParameter != null)
             {
-                WriteTracked(history, stale.Key, staleParameter, history.GetRestoreValue(stale.Key, stale.Value));
+                // Observe before asking for the restore value: a game change since Gum's last write must
+                // become the baseline first, or the old baseline would be written over it.
+                ObserveLive(history, stale.Key, staleParameter);
+                SetEffectParameter(staleParameter, history.GetRestoreValue(stale.Key, stale.Value));
+                RecordHeld(history, stale.Key, staleParameter);
             }
         }
 
@@ -1637,11 +1641,21 @@ public class Renderer : IRenderer
     // next write is compared against. A parameter that cannot be read is only written.
     private static void WriteTracked(ShaderParameterHistory history, string name, EffectParameter parameter, ShaderParameterValue value)
     {
+        ObserveLive(history, name, parameter);
+        SetEffectParameter(parameter, value);
+        RecordHeld(history, name, parameter);
+    }
+
+    private static void ObserveLive(ShaderParameterHistory history, string name, EffectParameter parameter)
+    {
         if (EffectShaderParameters.TryReadValue(parameter, out ShaderParameterValue live))
         {
             history.ObserveLive(name, live);
         }
-        SetEffectParameter(parameter, value);
+    }
+
+    private static void RecordHeld(ShaderParameterHistory history, string name, EffectParameter parameter)
+    {
         if (EffectShaderParameters.TryReadValue(parameter, out ShaderParameterValue held))
         {
             history.RecordHeld(name, held);
