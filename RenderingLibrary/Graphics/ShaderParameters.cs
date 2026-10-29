@@ -280,3 +280,94 @@ public sealed class ShaderParameterHistory
         return _stale;
     }
 }
+
+/// <summary>
+/// The value a shader declares for one uniform (<c>float Thickness = 1.0;</c>), for a backend that
+/// cannot read it back from the compiled shader (SkiaSharp and raylib). The values are in the layout
+/// ShadowDusk reports: array element after array element, each element's components in order.
+/// </summary>
+public sealed class ShaderUniformDefault
+{
+    /// <summary>The uniform's name in the shader.</summary>
+    public string Name { get; }
+
+    /// <summary>Float, Int or Bool (Bool stands for an unsigned or bool uniform).</summary>
+    public ShaderParameterKind Kind { get; }
+
+    /// <summary>Components per element, from 1 (a scalar) to 4.</summary>
+    public int ComponentCount { get; }
+
+    /// <summary>The array length, or 0 when the uniform is not an array.</summary>
+    public int ArrayLength { get; }
+
+    /// <summary>True for a matrix uniform, whose values are the matrix cells in row-major order.</summary>
+    public bool IsMatrix { get; }
+
+    /// <summary>The default, <see cref="ComponentCount"/> times the larger of 1 and <see cref="ArrayLength"/> values.</summary>
+    public float[] Values { get; }
+
+    /// <summary>Creates a declared default.</summary>
+    public ShaderUniformDefault(string name, ShaderParameterKind kind, int componentCount, int arrayLength, float[] values, bool isMatrix = false)
+    {
+        IsMatrix = isMatrix;
+        Name = name;
+        Kind = kind;
+        ComponentCount = componentCount;
+        ArrayLength = arrayLength;
+        Values = values;
+    }
+
+    /// <summary>
+    /// Creates a default from a converted shader's uniform type name (<c>float</c>, <c>vec3</c>, <c>ivec2</c>,
+    /// <c>uint</c>, <c>int2</c>, ...). Returns null when <paramref name="values"/> is null (no declared default).
+    /// </summary>
+    public static ShaderUniformDefault? FromTypeName(string name, string typeName, int arrayLength, System.Collections.Generic.IReadOnlyList<float>? values)
+    {
+        if (values == null)
+        {
+            return null;
+        }
+
+        ShaderParameterKind kind = ShaderParameterKind.Float;
+        if (typeName.StartsWith("uint", System.StringComparison.Ordinal) || typeName.StartsWith("uvec", System.StringComparison.Ordinal) ||
+            typeName.StartsWith("bool", System.StringComparison.Ordinal) || typeName.StartsWith("bvec", System.StringComparison.Ordinal))
+        {
+            kind = ShaderParameterKind.Bool;
+        }
+        else if (typeName.StartsWith("int", System.StringComparison.Ordinal) || typeName.StartsWith("ivec", System.StringComparison.Ordinal))
+        {
+            kind = ShaderParameterKind.Int;
+        }
+
+        char last = typeName[typeName.Length - 1];
+        bool isMatrix = typeName.StartsWith("mat", System.StringComparison.Ordinal) || typeName.Contains("x");
+        int components = last >= '2' && last <= '4' && !isMatrix ? last - '0' : 1;
+
+        float[] copy = new float[values.Count];
+        for (int i = 0; i < copy.Length; i++)
+        {
+            copy[i] = values[i];
+        }
+        return new ShaderUniformDefault(name, kind, components, arrayLength, copy, isMatrix);
+    }
+}
+
+/// <summary>The declared defaults of one shader, by uniform name.</summary>
+public sealed class ShaderUniformDefaults : IEnumerable<ShaderUniformDefault>
+{
+    private readonly Dictionary<string, ShaderUniformDefault> _defaults = new Dictionary<string, ShaderUniformDefault>();
+
+    /// <summary>The number of uniforms with a default.</summary>
+    public int Count => _defaults.Count;
+
+    /// <summary>Adds or replaces the default for its uniform.</summary>
+    public void Add(ShaderUniformDefault value) => _defaults[value.Name] = value;
+
+    /// <summary>Gets the default declared for <paramref name="name"/>.</summary>
+    public bool TryGetValue(string name, out ShaderUniformDefault? value) => _defaults.TryGetValue(name, out value);
+
+    /// <inheritdoc/>
+    public IEnumerator<ShaderUniformDefault> GetEnumerator() => _defaults.Values.GetEnumerator();
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+}

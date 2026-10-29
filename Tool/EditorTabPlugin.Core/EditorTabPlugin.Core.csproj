@@ -35,7 +35,7 @@
 			shader-compiler binaries transitively (e.g. win-x64 libvkd3d-shader-1.dll), which the
 			PostBuild step copies alongside the plugin so they load when invoked.
 		-->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.0" />
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

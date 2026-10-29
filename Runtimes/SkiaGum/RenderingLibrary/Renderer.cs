@@ -2,6 +2,7 @@
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Math;
+using SkiaGum.Content;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
@@ -914,17 +915,25 @@ namespace RenderingLibrary.Graphics
             canvas.Restore();
         }
 
-        // A new uniform block starts with whatever bytes the allocator returned, but a shader (and the
-        // tool, which shows an unset parameter as zero) expects an unset parameter to read as zero.
+        // A new uniform block starts with whatever bytes the allocator returned. An unset parameter reads
+        // as the default its shader declares (SkiaGum.SkiaRuntimeEffectDefaults, registered by the loader
+        // that compiled the effect), or as zero when it declares none, the same as the tool shows it.
         // The ShadowDusk_ uniforms Gum already filled are skipped.
         private static void ZeroUnsetUniforms(
             SKRuntimeEffect effect, SKRuntimeEffectUniforms uniforms, ShaderParameterCollection? parameters)
         {
+            ShaderUniformDefaults? defaults = SkiaRuntimeEffectDefaults.TryGet(effect);
             foreach (string name in effect.Uniforms)
             {
                 if (name.StartsWith("ShadowDusk_", System.StringComparison.Ordinal) ||
                     (parameters != null && parameters.TryGetValue(name, out _)))
                 {
+                    continue;
+                }
+
+                if (defaults != null && defaults.TryGetValue(name, out ShaderUniformDefault? declared) && declared != null)
+                {
+                    WriteDefault(uniforms, declared);
                     continue;
                 }
 
@@ -947,6 +956,29 @@ namespace RenderingLibrary.Graphics
                     {
                     }
                 }
+            }
+        }
+
+        private static void WriteDefault(SKRuntimeEffectUniforms uniforms, ShaderUniformDefault declared)
+        {
+            float[] values = declared.Values;
+            if (declared.Kind == ShaderParameterKind.Int)
+            {
+                int[] ints = new int[values.Length];
+                for (int i = 0; i < ints.Length; i++)
+                {
+                    ints[i] = (int)values[i];
+                }
+                if (ints.Length == 1) uniforms[declared.Name] = ints[0];
+                else uniforms[declared.Name] = ints;
+            }
+            else if (values.Length == 1)
+            {
+                uniforms[declared.Name] = values[0];
+            }
+            else
+            {
+                uniforms[declared.Name] = values;
             }
         }
 
