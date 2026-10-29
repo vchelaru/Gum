@@ -134,6 +134,99 @@ public class PasswordBoxSurrogatePairTests : BaseTestClass
         passwordBox.CaretIndex.ShouldBe(1);
     }
 
+
+    // ----- A caret between the halves of a character (#7100) -----
+
+    [Fact]
+    public void CtrlBackspace_CaretBetweenTheHalves_ShouldRemoveWholePair()
+    {
+        PasswordBox passwordBox = CreatePasswordBox("x a" + Emoji + "b");
+        passwordBox.CaretIndex = 4;
+
+        passwordBox.HandleBackspace(isCtrlDown: true);
+
+        passwordBox.Password.ShouldBe("b");
+        passwordBox.CaretIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void CtrlBackspace_Ascii_ShouldRemoveEverythingBeforeTheCaret()
+    {
+        PasswordBox passwordBox = CreatePasswordBox("abcd");
+        passwordBox.CaretIndex = 3;
+
+        passwordBox.HandleBackspace(isCtrlDown: true);
+
+        passwordBox.Password.ShouldBe("d");
+        passwordBox.CaretIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Typing_CaretBetweenTheHalves_ShouldInsertBeforeThePair()
+    {
+        PasswordBox passwordBox = CreatePasswordBox("a" + Emoji + "b");
+        passwordBox.CaretIndex = 2;
+
+        passwordBox.HandleCharEntered('X');
+
+        passwordBox.Password.ShouldBe("aX" + Emoji + "b");
+        passwordBox.CaretIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Paste_CaretBetweenTheHalves_ShouldInsertBeforeThePair()
+    {
+        Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("X");
+        PasswordBox passwordBox = CreatePasswordBox("a" + Emoji + "b");
+        passwordBox.CaretIndex = 2;
+
+        passwordBox.HandleKeyDown(Keys.V, false, false, true);
+
+        passwordBox.Password.ShouldBe("aX" + Emoji + "b");
+    }
+
+    // ----- MaxLength while typing (#7100) -----
+
+    [Fact]
+    public void MaxLength_TypedEmojiThatDoesNotFit_ShouldBeRejectedWhole()
+    {
+        PasswordBox passwordBox = CreatePasswordBox("ab");
+        passwordBox.MaxLength = 3;
+        passwordBox.CaretIndex = 2;
+
+        passwordBox.HandleCharEntered(Emoji[0]);
+        passwordBox.HandleCharEntered(Emoji[1]);
+
+        passwordBox.Password.ShouldBe("ab");
+        passwordBox.CaretIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void MaxLength_TypedEmojiThatFits_ShouldBeInserted()
+    {
+        PasswordBox passwordBox = CreatePasswordBox("a");
+        passwordBox.MaxLength = 3;
+        passwordBox.CaretIndex = 1;
+
+        passwordBox.HandleCharEntered(Emoji[0]);
+        passwordBox.HandleCharEntered(Emoji[1]);
+
+        passwordBox.Password.ShouldBe("a" + Emoji);
+        passwordBox.CaretIndex.ShouldBe(3);
+    }
+
+    [Fact]
+    public void MaxLength_TypedAsciiAtTheLimit_ShouldBeRejected()
+    {
+        PasswordBox passwordBox = CreatePasswordBox("abc");
+        passwordBox.MaxLength = 3;
+        passwordBox.CaretIndex = 3;
+
+        passwordBox.HandleCharEntered('X');
+
+        passwordBox.Password.ShouldBe("abc");
+    }
+
     static PasswordBox CreatePasswordBox(string password)
     {
         PasswordBox passwordBox = new();

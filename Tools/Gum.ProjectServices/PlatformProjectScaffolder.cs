@@ -68,7 +68,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         Directory.CreateDirectory(gumFolder);
 
-        string rootNamespace = projectName.Replace(".", "_").Replace("-", "_");
+        string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
         WriteHostFiles(fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference);
 
         if (themeDirectory != null)

@@ -24,7 +24,7 @@ public partial class GraphicalUiElement
     /// extension, so importing both namespaces is never ambiguous (CS0121). This supersedes the
     /// legacy <c>using MonoGameGum;</c> / <c>using RaylibGum;</c> shim for new code.
     /// </remarks>
-    public void AddChild(FrameworkElement child) => Children.Add(child.Visual);
+    public void AddChild(FrameworkElement child) => AddChild(child.Visual);
 
     /// <summary>
     /// Removes a Forms control previously parented via <see cref="AddChild(FrameworkElement)"/>.

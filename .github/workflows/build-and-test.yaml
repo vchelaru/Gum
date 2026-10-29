@@ -911,6 +911,7 @@ jobs:
             Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0
             Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0
             Tests/GumShadowDusk.Tests.KniDesktopGL/bin/Release/net8.0
+            Tests/SkiaGum.GpuTests/bin/Release/net8.0
 
       # Moved here (after Mesa is installed) because ScreenshotCommandTests and
       # DiffScreenshotsCommandTests exercise `gumcli screenshot --backend raylib` and

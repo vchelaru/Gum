@@ -177,6 +177,8 @@ public class PasswordBox : TextBoxBase
                 DeleteSelection();
             }
 
+            SnapCaretToCharacterStart();
+
             // We handle these actions in TextBoxBase.HandleKeyDown based on Keyboard.GetState()
             if (character == '\b'           // BACKSPACE key
                 || character == (char)127   // DEL key
@@ -191,8 +193,10 @@ public class PasswordBox : TextBoxBase
                 var passwordBinding = PropertyRegistry.GetBindingExpression(nameof(Password));
                 passwordBinding?.UpdateSource();
             }
-            else if (caretIndex >= MaxLength)
+            else if (caretIndex >= MaxLength && !CompletesSurrogatePair(character))
             {
+                // The second half of an emoji is let through so TruncateTextToMaxLength drops the pair whole,
+                // as TextBox does, instead of leaving the first half stored alone.
                 // If they enter more than the allowed characters, SecrueString.InsertAt will thow an error, so prevent that
                 // throw new ArgumentOutOfRangeException(nameof(index), SR.ArgumentOutOfRange_IndexString);
             }
@@ -206,9 +210,13 @@ public class PasswordBox : TextBoxBase
         }
     }
 
+    private bool CompletesSurrogatePair(char character) =>
+        char.IsLowSurrogate(character) && caretIndex > 0 && caretIndex <= SecurePassword.Length && char.IsHighSurrogate(Password[caretIndex - 1]);
+
     private void CallMethodsInResponseToPasswordChanged()
     {
         TruncateTextToMaxLength();
+        caretIndex = System.Math.Min(caretIndex, SecurePassword.Length);
         UpdateCaretPositionFromCaretIndex();
         OffsetTextToKeepCaretInView();
         UpdateDisplayedCharacters();
@@ -232,10 +240,8 @@ public class PasswordBox : TextBoxBase
             }
             else if (isCtrlDown)
             {
-                for (int i = caretIndex - 1; i > -1; i--)
-                {
-                    SecurePassword.RemoveAt(i);
-                }
+                // A caret inside a character (a programmatic CaretIndex) takes the whole character with it.
+                RemoveRange(0, GetBackspaceEnd(Password, caretIndex));
 
                 caretIndex = 0;
             }
@@ -262,8 +268,8 @@ public class PasswordBox : TextBoxBase
 
     public void DeleteSelection()
     {
-        int lengthToRemove = selectionLength;
-        ExpandToWholeCharacters(Password, ref selectionStart, ref lengthToRemove);
+        var (start, lengthToRemove) = GetWholeCharacterSelection(Password, selectionStart, selectionLength);
+        selectionStart = start;
         RemoveRange(selectionStart, lengthToRemove);
         CallMethodsInResponseToPasswordChanged();
 

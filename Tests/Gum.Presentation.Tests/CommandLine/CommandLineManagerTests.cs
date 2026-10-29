@@ -159,4 +159,36 @@ public class CommandLineManagerTests
             Directory.Delete(tempDirectory, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task ReadCommandLine_FindsTheProject_WhenRelativeElementArgIsRunFromTheProjectFolder()
+    {
+        // `cd MyProjectFolder; Gum Components/Foo.gucx` names the element by a path with a single
+        // folder in it, so the project is the current directory (#7134).
+        string tempDirectory = Path.Combine(Path.GetTempPath(), "CommandLineManagerTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(tempDirectory, "Components"));
+        string projectPath = Path.Combine(tempDirectory, "MyProject.gumx");
+        File.WriteAllText(projectPath, "<GumProjectSave />");
+        File.WriteAllText(Path.Combine(tempDirectory, "Components", "Foo.gucx"), "<ComponentSave />");
+        string originalDirectory = Directory.GetCurrentDirectory();
+
+        try
+        {
+            Directory.SetCurrentDirectory(tempDirectory);
+
+            await _commandLineManager.ReadCommandLine(new[] { "Gum", Path.Combine("Components", "Foo.gucx") });
+
+            _commandLineManager.ElementName.ShouldBe("Foo");
+            // The temp folder may be reached through a symlink (macOS), so compare by what the path names.
+            _commandLineManager.GlueProjectToLoad!.ShouldSatisfyAllConditions(
+                p => Path.IsPathRooted(p).ShouldBeTrue(),
+                p => Path.GetFileName(p).ShouldBe("MyProject.gumx"),
+                p => File.Exists(p).ShouldBeTrue());
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalDirectory);
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
 }

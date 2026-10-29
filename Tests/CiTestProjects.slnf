@@ -11,6 +11,7 @@
       "Tests\\Gum.RepoHygiene.Tests\\Gum.RepoHygiene.Tests.csproj",
       "Tests\\Gum.Analyzers.Tests\\Gum.Analyzers.Tests.csproj",
       "Tests\\SkiaGum.Tests\\SkiaGum.Tests.csproj",
+      "Tests\\SkiaGum.GpuTests\\SkiaGum.GpuTests.csproj",
       "Tests\\Gum.NetStandard.Tests\\Gum.NetStandard.Tests.csproj",
       "Tests\\SilkNetGum.Tests\\SilkNetGum.Tests.csproj",
       "Tests\\UnityGum.Tests\\UnityGum.Tests.csproj",

@@ -101,7 +101,9 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 **Culture-independent output** -- Generated code must be identical on every machine, so sorting, casing and number formatting in the generators use the invariant culture (`CultureInfo.InvariantCulture`, `StringComparison.Ordinal`/`InvariantCulture`, `ToUpperInvariant`).
 
-**C# name compliance** -- `CodeGenerationNameVerifier` prefixes C# keywords with `@`, leading digits with `_`, and replaces spaces with `_`.
+**C# name compliance** -- `CodeGenerationNameVerifier` prefixes C# keywords with `@`, leading digits with `_`, and replaces spaces with `_`. Text that is not a validated Gum name (the csproj file name behind `RootNamespace`, element folder segments in a namespace) goes through `NameRules.ToCSharpIdentifier` instead, which also replaces dots, hyphens and other invalid characters; never derive a namespace or identifier with ad-hoc `Replace` calls.
+
+**Member names that collide** -- A member can't be named like its class (CS0542) or like a method the generator declares (`CustomInitialize`, `ApplyDefaultVariables`, ...). Every site that writes an instance, custom/exposed variable or animation member name uses `CodeGenerationNameVerifier.ToCSharpMemberName`, which appends `_` to a reserved name; `CodeGenerator.ReserveMemberNames` sets the reserved names per element. The tool also refuses such instance names (`NameVerifier.IsNameAlreadyUsed`), so the rename only shows up in projects edited by hand. A new generated method name goes in `GeneratedMethodNames`.
 
 **RenameService** -- When elements are renamed in the tool, updates generated code file names and internal references.
 

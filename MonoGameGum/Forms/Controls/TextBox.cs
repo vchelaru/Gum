@@ -215,6 +215,8 @@ public class TextBox : TextBoxBase
                 DeleteSelection();
             }
 
+            SnapCaretToCharacterStart();
+
             // If text is null force it to be an empty string so we can add characters
             string textAfterAdd = Text ?? "";
             string? newlyAddedText = null;
@@ -294,12 +296,14 @@ public class TextBox : TextBoxBase
             }
             else if (isCtrlDown)
             {
-                var indexBeforeNullable = GetCtrlBeforeTarget(caretIndex);
+                // A caret inside a character (a programmatic CaretIndex) takes the whole character with the word.
+                int end = GetBackspaceEnd(Text, caretIndex);
+                var indexBeforeNullable = GetCtrlBeforeTarget(end);
 
                 var indexToDeleteTo = indexBeforeNullable ?? 0;
 
                 // Use SetTextFromUi because this is user-initiated editing
-                SetTextFromUi(Text.Remove(indexToDeleteTo, caretIndex - indexToDeleteTo));
+                SetTextFromUi(Text.Remove(indexToDeleteTo, end - indexToDeleteTo));
 
                 caretIndex = indexToDeleteTo;
                 RefreshCaretAfterEdit();
@@ -339,32 +343,34 @@ public class TextBox : TextBoxBase
 
     protected override void HandleCopy()
     {
-        if (selectionLength != 0 && DisplayedText is { } displayedText)
-        {
-            var whatToCopy = displayedText.Substring(
-                selectionStart, selectionLength);
-#if FRB
-            ClipboardImplementation.PushStringToClipboard(whatToCopy);
-#else
-            global::RenderingLibrary.IGumService.Default?.Clipboard?.SetText(whatToCopy);
-#endif
-        }
+        CopySelectionToClipboard();
     }
 
     protected override void HandleCut()
     {
-        if (selectionLength != 0 && DisplayedText is { } displayedText)
+        if (CopySelectionToClipboard())
         {
-            var whatToCopy = displayedText.Substring(
-                selectionStart, selectionLength);
-#if FRB
-            ClipboardImplementation.PushStringToClipboard(whatToCopy);
-#else
-            global::RenderingLibrary.IGumService.Default?.Clipboard?.SetText(whatToCopy);
-#endif
-
             DeleteSelection();
         }
+    }
+
+    // Copies the selected text, widened to whole characters like DeleteSelection, so Cut removes
+    // exactly what it copied. Returns false when nothing is selected.
+    private bool CopySelectionToClipboard()
+    {
+        if (selectionLength == 0 || DisplayedText is not { } displayedText)
+        {
+            return false;
+        }
+
+        var (start, length) = GetWholeCharacterSelection(displayedText, selectionStart, selectionLength);
+        var whatToCopy = displayedText.Substring(start, length);
+#if FRB
+        ClipboardImplementation.PushStringToClipboard(whatToCopy);
+#else
+        global::RenderingLibrary.IGumService.Default?.Clipboard?.SetText(whatToCopy);
+#endif
+        return true;
     }
 
     protected override void HandlePaste()
@@ -405,13 +411,9 @@ public class TextBox : TextBoxBase
     public void DeleteSelection()
     {
         var text = Text ?? "";
-        var lengthToRemove = selectionLength;
-        if (selectionStart + lengthToRemove > text.Length)
-        {
-            lengthToRemove = text.Length - selectionStart;
-        }
         // An edge of the selection inside a CRLF or an emoji takes the whole character, so no half is left behind.
-        ExpandToWholeCharacters(text, ref selectionStart, ref lengthToRemove);
+        var (start, lengthToRemove) = GetWholeCharacterSelection(text, selectionStart, selectionLength);
+        selectionStart = start;
         // Use SetTextFromUi because this is user-initiated editing
         SetTextFromUi(text.Remove(selectionStart, lengthToRemove));
         CaretIndex = selectionStart;

@@ -615,7 +615,7 @@ public class ScrollViewer :
     {
         if (InnerPanel != null)
         {
-            this.InnerPanel.Children.Add(child.Visual);
+            this.InnerPanel.AddChild(child.Visual);
         }
         else
         {
@@ -639,7 +639,7 @@ public class ScrollViewer :
     {
         if (InnerPanel != null)
         {
-            this.InnerPanel.Children.Add(child);
+            this.InnerPanel.AddChild(child);
         }
         else
         {

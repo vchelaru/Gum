@@ -109,7 +109,10 @@ namespace Gum.CommandLine
                         {
                             ElementName = FileManager.RemovePath(FileManager.RemoveExtension(arg));
 
-                            string gluxDirectory = FileManager.GetDirectory(FileManager.GetDirectory(arg));
+                            // A relative path is relative to the working directory; a one-folder one such as
+                            // Components/Foo.gucx has no directory above its folder to find without this (#7134).
+                            string elementPath = System.IO.Path.IsPathRooted(arg) ? arg : System.IO.Path.GetFullPath(arg);
+                            string gluxDirectory = FileManager.GetDirectory(FileManager.GetDirectory(elementPath));
 
                             // The containing project may itself be XML or JSON-formatted (issue #4182) -
                             // whichever project file sits next to the element wins.
