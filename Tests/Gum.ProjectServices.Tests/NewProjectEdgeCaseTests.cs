@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
 
@@ -62,6 +63,130 @@ public class NewProjectEdgeCaseTests : BaseTestClass
             .ToList();
 
     #region Names
+
+    public static IEnumerable<object[]> HostPlatformsAndRiskyNames()
+    {
+        // Names the generated code uses as a simple type name, names that clash with its namespaces or with
+        // the Program class the top-level statements create, a dotted name, and a safe control.
+        string[] names =
+        {
+            "Game", "Button", "Color", "Program", "Game1", "Gum", "Microsoft", "System", "Vector2", "Texture2D",
+            "GumService", "GameTime", "GraphicsDeviceManager", "DateTime", "SkiaRenderer", "SKColors",
+            "SkiaRenderTarget2D", "My.Game", "MyGame"
+        };
+        foreach (string platform in new[] { "monogame", "kni", "kniskia" })
+        {
+            foreach (string name in names)
+            {
+                yield return new object[] { platform, name };
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(HostPlatformsAndRiskyNames))]
+    public async Task Execute_XnaHostWithAProjectNamedLikeATypeItUses_GeneratesCodeThatCompiles(string platform, string name)
+    {
+        NewProjectService service = CreateService();
+        NewProjectResult result = await service.ExecuteAsync(Request(Path.Combine(_folder, name), platform), null, CancellationToken.None);
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+
+        CSharpCompilation compilation = CSharpCompilation.Create(
+            "Host",
+            new[]
+            {
+                CSharpSyntaxTree.ParseText(XnaStubs),
+                CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(_folder, name, "Game1.cs"))),
+                CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(_folder, name, "Program.cs")))
+            },
+            ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
+                .Select(path => MetadataReference.CreateFromFile(path)),
+            new CSharpCompilationOptions(OutputKind.ConsoleApplication, nullableContextOptions: NullableContextOptions.Disable));
+        List<string> errors = compilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Select(diagnostic => diagnostic.ToString())
+            .ToList();
+
+        errors.ShouldBeEmpty(string.Join(Environment.NewLine, errors));
+    }
+
+    // Small stand-ins for the Xna/KNI, Gum and Skia types the Game1/Program templates use.
+    private const string XnaStubs = @"
+namespace Microsoft.Xna.Framework
+{
+    public class GameTime { }
+    public struct Color { public static Color CornflowerBlue; }
+    public class GameWindow { public bool AllowUserResizing { get; set; } }
+    public class ContentManager { public string RootDirectory { get; set; } }
+    public class PresentationParameters { public int BackBufferWidth { get; set; } public int BackBufferHeight { get; set; } }
+    public class GraphicsDevice
+    {
+        public PresentationParameters PresentationParameters { get; } = new PresentationParameters();
+        public void Clear(Color color) { }
+        public void SetRenderTarget(object target) { }
+    }
+    public class GraphicsDeviceManager { public GraphicsDeviceManager(Game game) { } }
+    public class Game : System.IDisposable
+    {
+        public ContentManager Content { get; } = new ContentManager();
+        public GameWindow Window { get; } = new GameWindow();
+        public bool IsMouseVisible { get; set; }
+        public GraphicsDevice GraphicsDevice { get; } = new GraphicsDevice();
+        protected virtual void Initialize() { }
+        protected virtual void Update(GameTime gameTime) { }
+        protected virtual void Draw(GameTime gameTime) { }
+        protected virtual void UnloadContent() { }
+        public void Run() { }
+        public void Dispose() { }
+    }
+}
+namespace SkiaSharp
+{
+    public struct SKColor { }
+    public static class SKColors { public static SKColor Transparent; }
+    public class SKCanvas { public void Clear(SKColor color) { } }
+}
+namespace SkiaGameRendering
+{
+    public class SkiaTexture { public int Width { get; set; } public int Height { get; set; } }
+    public class SkiaRenderTarget2D : System.IDisposable
+    {
+        public SkiaRenderTarget2D(Microsoft.Xna.Framework.GraphicsDevice device, int width, int height) { }
+        public SkiaTexture Texture { get; } = new SkiaTexture();
+        public SkiaSharp.SKCanvas Canvas { get; } = new SkiaSharp.SKCanvas();
+        public void Begin() { }
+        public void End() { }
+        public void Dispose() { }
+    }
+    public static class SkiaRenderer
+    {
+        public static bool IsInitialized { get; }
+        public static bool IsReady { get; }
+        public static void Initialize(Microsoft.Xna.Framework.GraphicsDevice device) { }
+        public static void Dispose() { }
+    }
+}
+namespace Gum
+{
+    public class GumService
+    {
+        public static GumService Default { get; } = new GumService();
+        public void Initialize(Microsoft.Xna.Framework.Game game, string project) { }
+        public void Update(Microsoft.Xna.Framework.GameTime gameTime) { }
+        public void Draw() { }
+        public void Draw(SkiaSharp.SKCanvas canvas) { }
+        public void HandleResize(int width, int height) { }
+    }
+}
+namespace Gum.Forms.Controls
+{
+    public class Button
+    {
+        public string Text { get; set; }
+        public event System.EventHandler Click;
+        public void AddToRoot() { }
+    }
+}";
 
     [Theory]
     [InlineData("My Game")]
@@ -325,6 +450,48 @@ public class NewProjectEdgeCaseTests : BaseTestClass
         result.Files.Success.ShouldBeFalse();
         result.Files.ErrorMessage.ShouldContain("Gum source not found");
         Directory.Exists(Path.Combine(_folder, "Out")).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("Gum Checkout")]
+    [InlineData("R&D")]
+    [InlineData("it's <here>")]
+    [InlineData("say \"hi\"")]
+    [InlineData("100%")]
+    [InlineData("100%41")]
+    [InlineData("a;b")]
+    [InlineData("$(HOME)")]
+    [InlineData("me@work")]
+    [InlineData("wild*card?")]
+    public void Create_SourceLinkedToACheckoutWithSpecialCharacters_WritesAWellFormedProjectThatPointsAtTheRuntime(string checkoutName)
+    {
+        if (OperatingSystem.IsWindows() && checkoutName.IndexOfAny(new[] { '<', '>', '"', '*', '?' }) >= 0)
+        {
+            return;
+        }
+
+        string checkout = Path.Combine(_folder, checkoutName);
+        string runtime = Path.Combine(checkout, "MonoGameGum", "MonoGameGum.csproj");
+        Directory.CreateDirectory(Path.GetDirectoryName(runtime)!);
+        File.WriteAllText(runtime, "<Project />");
+        string game = Path.Combine(_folder, "Game");
+
+        // Code generation setup may stop on the stand-in runtime project; the host project is written first.
+        try
+        {
+            new PlatformProjectScaffolder().Create(game, HostPlatform.MonoGame, false, checkout);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException)
+        {
+        }
+
+        string include = XDocument.Load(Path.Combine(game, "Game.csproj"))
+            .Descendants("ProjectReference").Single().Attribute("Include")!.Value;
+        // MSBuild reads %XX in an item include as the character with that hex code.
+        string path = Regex.Replace(include, "%([0-9A-Fa-f]{2})", match => ((char)Convert.ToInt32(match.Groups[1].Value, 16)).ToString());
+        File.Exists(Path.GetFullPath(Path.Combine(game, path.Replace('\\', Path.DirectorySeparatorChar)))).ShouldBeTrue();
+        // ';' separates items and '*' and '?' are wildcards in an include, so none may be left bare.
+        include.IndexOfAny(new[] { ';', '*', '?', '$', '@' }).ShouldBe(-1);
     }
 
     private static string? ReferencedProject(string csproj)

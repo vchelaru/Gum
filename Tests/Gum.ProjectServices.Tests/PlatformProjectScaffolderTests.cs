@@ -230,6 +230,52 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
+    public void Create_WithGumSourceInAFolderNeedingEscapes_ShouldStillDetectSyntaxVersionFromTheProjectReference()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        string gumSource = Path.Combine(_tempDirectory, "R&D;100%41");
+        Directory.CreateDirectory(Path.Combine(gumSource, "MonoGameGum"));
+        File.WriteAllText(Path.Combine(gumSource, "MonoGameGum", "MonoGameGum.csproj"), "<Project />");
+        File.WriteAllText(
+            Path.Combine(gumSource, "MonoGameGum", "AssemblyAttributes.cs"),
+            "[assembly: GumSyntaxVersion(Version = 7)]");
+        string projectDirectory = Path.Combine(_tempDirectory, "work", "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false, gumSource);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        string gumFolder = Path.Combine(projectDirectory, "Content", "GumProject");
+        CodeOutputProjectSettings? settings = new CodeOutputProjectSettingsManager(
+            new NullCodeGenLogger(), new FixedProjectDirectoryProvider(gumFolder + Path.DirectorySeparatorChar))
+            .TryLoadSettingsForProject();
+        SyntaxVersionResult version = new SyntaxVersionDetectionService(new NullCodeGenLogger())
+            .Detect(settings!, gumFolder + Path.DirectorySeparatorChar);
+        version.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+        version.Version.ShouldBe(7);
+    }
+
+    [Fact]
+    public void Create_WhenProjectIsNamedProgram_ShouldNotUseProgramAsTheRootNamespace()
+    {
+        // A namespace Program clashes with the Program class that top-level statements create (CS0101).
+        string projectDirectory = Path.Combine(_tempDirectory, "Program");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Raylib, includeFormsTemplate: false);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        File.ReadAllText(result.CsprojPath).ShouldContain("<RootNamespace>Program_</RootNamespace>");
+        CodeOutputProjectSettings? settings = new CodeOutputProjectSettingsManager(
+            new NullCodeGenLogger(),
+            new FixedProjectDirectoryProvider(Path.Combine(projectDirectory, "Content", "GumProject") + Path.DirectorySeparatorChar))
+            .TryLoadSettingsForProject();
+        settings!.RootNamespace.ShouldBe("Program_");
+    }
+
+    [Fact]
     public void Create_WithGumSourceMissingTheRuntimeProject_ShouldFailWithoutWritingFiles()
     {
         string gumSource = Path.Combine(_tempDirectory, "NotGum");

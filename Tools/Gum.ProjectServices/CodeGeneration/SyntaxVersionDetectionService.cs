@@ -227,7 +227,8 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         // Look for a ProjectReference to a Gum runtime that stamps a GumSyntaxVersion.
         foreach (Match referenceMatch in ProjectReferenceIncludeRegex.Matches(csprojContents))
         {
-            string relativePath = referenceMatch.Groups[1].Value;
+            // The attribute text is XML-escaped, and MSBuild reads %XX as a character.
+            string relativePath = Uri.UnescapeDataString(System.Net.WebUtility.HtmlDecode(referenceMatch.Groups[1].Value));
             string projectName = Path.GetFileNameWithoutExtension(relativePath.Replace('\\', '/'));
             if (!IsRuntimeName(projectName))
             {
