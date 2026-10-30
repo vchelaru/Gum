@@ -239,6 +239,31 @@ public class TextRuntimeOversampledFontCacheTests : BaseTestClass
     }
 
     [Fact]
+    public void RegenerateOversampledFont_MoreMissingSizesThanTheMissLimit_StillRemembersALaterMiss()
+    {
+        TextRuntime.PrebuiltFontClock = () => new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        int lastSizeProbes = 0;
+        global::ToolsUtilities.FileManager.CustomGetStreamFromFile = name =>
+        {
+            if (name.EndsWith("Font" + (20 + 299) * 2 + "Pixel.fnt"))
+            {
+                lastSizeProbes++;
+            }
+            return null!;
+        };
+        TextRuntime textRuntime = CreateText();
+
+        for (int i = 0; i < 300; i++)
+        {
+            textRuntime.FontSize = 20 + i;
+            Should.NotThrow(() => textRuntime.RegenerateOversampledFont(2f));
+        }
+        textRuntime.RegenerateOversampledFont(2f);
+
+        lastSizeProbes.ShouldBe(1);
+    }
+
+    [Fact]
     public void RegenerateOversampledFont_SizeAppearsInFontCacheAfterTheRetryDelay_IsUsed()
     {
         DateTime now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);

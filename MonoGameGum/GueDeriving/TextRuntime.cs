@@ -912,9 +912,12 @@ public class TextRuntime : InteractiveGue
     {
         string fullFileName = ToolsUtilities.FileManager.Standardize(fontCacheFileName, preserveCase: true, makeAbsolute: true);
         DateTime now = PrebuiltFontClock();
-        if (_prebuiltFontMisses.TryGetValue(fullFileName, out DateTime missedAt) && now - missedAt < PrebuiltFontRetryDelay)
+        lock (_prebuiltFontMisses)
         {
-            return null;
+            if (_prebuiltFontMisses.TryGetValue(fullFileName, out DateTime missedAt) && now - missedAt < PrebuiltFontRetryDelay)
+            {
+                return null;
+            }
         }
 
         BitmapFont? font = null;
@@ -924,9 +927,14 @@ public class TextRuntime : InteractiveGue
         {
             font = new BitmapFont(fullFileName, checkForShadowSibling: HasDropshadow);
         }
-        catch
+        catch (Exception ex) when (ex is not (System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException))
         {
-            font = null;
+            CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                $"Error loading pre-built oversampled font '{fullFileName}', keeping the native font:\n{ex}");
+        }
+        catch (Exception)
+        {
+            // Not built.
         }
 #else
         if (ToolsUtilities.FileManager.FileExists(fullFileName))
@@ -943,17 +951,20 @@ public class TextRuntime : InteractiveGue
         }
 #endif
 
-        if (font == null)
+        lock (_prebuiltFontMisses)
         {
-            if (_prebuiltFontMisses.Count >= MaxPrebuiltFontMisses)
+            if (font == null)
             {
-                _prebuiltFontMisses.Clear();
+                if (_prebuiltFontMisses.Count >= MaxPrebuiltFontMisses)
+                {
+                    _prebuiltFontMisses.Clear();
+                }
+                _prebuiltFontMisses[fullFileName] = now;
             }
-            _prebuiltFontMisses[fullFileName] = now;
-        }
-        else
-        {
-            _prebuiltFontMisses.Remove(fullFileName);
+            else
+            {
+                _prebuiltFontMisses.Remove(fullFileName);
+            }
         }
         return font;
     }
