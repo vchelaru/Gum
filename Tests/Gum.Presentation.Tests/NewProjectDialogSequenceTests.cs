@@ -122,6 +122,117 @@ public class NewProjectDialogSequenceTests
         viewModel.IsEditable.ShouldBeTrue();
     }
 
+    // The files exist after the code project is created, so the service refuses the same request and the target
+    // folder is no longer empty.
+    private async Task<NewProjectDialogViewModel> CreateWithFailedRestoreAndFilesOnDisk()
+    {
+        bool created = false;
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                created = true;
+                return Task.FromResult(FilesOk());
+            });
+        _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(() => created ? Exists() : Valid());
+        _detector.Setup(x => x.TargetExistsAndIsNotEmpty(It.IsAny<string>(), It.IsAny<string>())).Returns(() => created);
+        SetUpRestore(RestoreFailed());
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        await viewModel.PlanRefresh;
+        viewModel.AffirmativeCommand.Execute(null);
+        await viewModel.CreationTask;
+        viewModel.IsRestoreFailed.ShouldBeTrue();
+        return viewModel;
+    }
+
+    [Fact]
+    public async Task Back_AfterAFailedRestore_ShowsTheRefusalAndTheNotEmptyWarning_AndDisablesOk()
+    {
+        NewProjectDialogViewModel viewModel = await CreateWithFailedRestoreAndFilesOnDisk();
+
+        viewModel.BackCommand.Execute(null);
+        await viewModel.PlanRefresh;
+
+        viewModel.RefusalText.ShouldNotBeEmpty();
+        viewModel.IsTargetNotEmptyWarningVisible.ShouldBeTrue();
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Back_AfterAFailedRestore_AllowsOkAgain_WhenTheNameChangesToAFreeOne()
+    {
+        NewProjectDialogViewModel viewModel = await CreateWithFailedRestoreAndFilesOnDisk();
+        viewModel.BackCommand.Execute(null);
+        await viewModel.PlanRefresh;
+        _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(Valid());
+        _detector.Setup(x => x.TargetExistsAndIsNotEmpty(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
+
+        viewModel.ProjectName = "Second";
+        await viewModel.PlanRefresh;
+
+        viewModel.RefusalText.ShouldBeEmpty();
+        viewModel.IsTargetNotEmptyWarningVisible.ShouldBeFalse();
+        viewModel.CanExecuteAffirmative().ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task FailedFileCreation_RefreshesThePlan_ForTheFilesAlreadyWritten()
+    {
+        bool written = false;
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                written = true;
+                return Task.FromResult(new NewProjectFilesResult { Success = false, ErrorMessage = "Disk is full." });
+            });
+        _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(() => written ? Exists() : Valid());
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        await viewModel.PlanRefresh;
+
+        viewModel.AffirmativeCommand.Execute(null);
+        await viewModel.CreationTask;
+        await viewModel.PlanRefresh;
+
+        viewModel.ErrorMessage.ShouldBe("Disk is full.");
+        viewModel.RefusalText.ShouldNotBeEmpty();
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(nameof(NewProjectDialogViewModel.ProjectName))]
+    [InlineData(nameof(NewProjectDialogViewModel.Location))]
+    [InlineData(nameof(NewProjectDialogViewModel.SelectedFileFormat))]
+    [InlineData(nameof(NewProjectDialogViewModel.IsIncludeFormsControls))]
+    [InlineData(nameof(NewProjectDialogViewModel.IsIncludeDemoScreenGum))]
+    [InlineData(nameof(NewProjectDialogViewModel.IncludeCodeProject))]
+    [InlineData(nameof(NewProjectDialogViewModel.PlatformName))]
+    [InlineData(nameof(NewProjectDialogViewModel.SourceLinkedChoice))]
+    [InlineData(nameof(NewProjectDialogViewModel.RunRestore))]
+    public async Task ErrorMessage_FromAFailedCreation_ClearsWhenAnInputChanges(string input)
+    {
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new IOException("Disk is full."));
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        viewModel.AffirmativeCommand.Execute(null);
+        await viewModel.CreationTask;
+        viewModel.HasError.ShouldBeTrue();
+
+        switch (input)
+        {
+            case nameof(NewProjectDialogViewModel.ProjectName): viewModel.ProjectName = "OtherGame"; break;
+            case nameof(NewProjectDialogViewModel.Location): viewModel.Location = Path.Combine(Folder, "Other"); break;
+            case nameof(NewProjectDialogViewModel.SelectedFileFormat): viewModel.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat; break;
+            case nameof(NewProjectDialogViewModel.IsIncludeFormsControls): viewModel.IsIncludeFormsControls = !viewModel.IsIncludeFormsControls; break;
+            case nameof(NewProjectDialogViewModel.IsIncludeDemoScreenGum): viewModel.IsIncludeDemoScreenGum = !viewModel.IsIncludeDemoScreenGum; break;
+            case nameof(NewProjectDialogViewModel.IncludeCodeProject): viewModel.IncludeCodeProject = false; break;
+            case nameof(NewProjectDialogViewModel.PlatformName): viewModel.PlatformName = "raylib"; break;
+            case nameof(NewProjectDialogViewModel.SourceLinkedChoice): viewModel.SourceLinkedChoice = !viewModel.SourceLinkedChoice; break;
+            case nameof(NewProjectDialogViewModel.RunRestore): viewModel.RunRestore = !viewModel.RunRestore; break;
+        }
+
+        viewModel.ErrorMessage.ShouldBeEmpty();
+        viewModel.HasError.ShouldBeFalse();
+    }
+
     [Fact]
     public async Task Back_ThenANewName_CreatesTheSecondProject_AndReportsIt()
     {
