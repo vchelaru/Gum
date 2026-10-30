@@ -31,8 +31,50 @@ public class DefaultTypeResolver : ITypeResolver
 
         // Try standard .NET type resolution
         type = Type.GetType(typeAsString);
-        return type;
+        if (type != null)
+        {
+            return type;
+        }
+
+        return FindInGumCommon(typeAsString);
     }
+
+    // The tool's TypeManager resolves any type of GumCommon by name (GradientType, ColorOperation, GeneralUnitType,
+    // Orientation, ...), so a project that names one must resolve here too.
+    private Type? FindInGumCommon(string typeAsString)
+    {
+        _gumCommonTypesByName ??= BuildGumCommonTypes();
+        Type? found = null;
+        if (_gumCommonTypesByName.TryGetValue(typeAsString, out found))
+        {
+            return found;
+        }
+
+        // "Orientation?" names the nullable enum.
+        if (typeAsString.Length > 1 && typeAsString[typeAsString.Length - 1] == '?'
+            && _gumCommonTypesByName.TryGetValue(typeAsString.Substring(0, typeAsString.Length - 1), out found)
+            && found.IsEnum)
+        {
+            return typeof(Nullable<>).MakeGenericType(found);
+        }
+        return null;
+    }
+
+    private static Dictionary<string, Type> BuildGumCommonTypes()
+    {
+        Dictionary<string, Type> types = new Dictionary<string, Type>();
+        foreach (Type exported in typeof(DimensionUnitType).Assembly.GetExportedTypes())
+        {
+            if (exported.FullName != null)
+            {
+                types.TryAdd(exported.FullName, exported);
+            }
+            types.TryAdd(exported.Name, exported);
+        }
+        return types;
+    }
+
+    private Dictionary<string, Type>? _gumCommonTypesByName;
 
     /// <summary>
     /// Registers an additional type for resolution by both its short name and its fully-qualified name.
