@@ -19,13 +19,24 @@ namespace Gum.Avalonia.Controls;
 public sealed class ThemeSelectionView : StackPanel
 {
     /// <summary>Builds the view; set its DataContext to a <see cref="ThemeSelectionViewModel"/>.</summary>
-    public ThemeSelectionView()
+    /// <param name="labelAbove">Puts the "Theme" label above a full-width drop-down instead of beside it (New Project).</param>
+    public ThemeSelectionView(bool labelAbove = false)
     {
         Orientation = Orientation.Vertical;
 
-        StackPanel themeRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8), Spacing = 8 };
-        themeRow.Children.Add(new TextBlock { Text = "Theme", MinWidth = 56, VerticalAlignment = VerticalAlignment.Center });
-        ComboBox themes = new ComboBox { MinWidth = 160, VerticalAlignment = VerticalAlignment.Center };
+        StackPanel themeRow = new StackPanel
+        {
+            Orientation = labelAbove ? Orientation.Vertical : Orientation.Horizontal,
+            Margin = new Thickness(0, 0, 0, 8),
+            Spacing = labelAbove ? 3 : 8,
+        };
+        themeRow.Children.Add(new TextBlock { Text = "Theme", MinWidth = labelAbove ? 0 : 56, VerticalAlignment = VerticalAlignment.Center });
+        ComboBox themes = new ComboBox
+        {
+            MinWidth = 160,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = labelAbove ? HorizontalAlignment.Stretch : HorizontalAlignment.Left,
+        };
         themes.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(ThemeSelectionViewModel.AvailableThemes)));
         themes.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(ThemeSelectionViewModel.SelectedTheme)) { Mode = BindingMode.TwoWay });
         themeRow.Children.Add(themes);

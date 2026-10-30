@@ -7,6 +7,8 @@ using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -21,6 +23,8 @@ public class NewProjectLogic : INewProjectLogic
     /// </summary>
     public const string StartingScreenName = "MainScreen";
 
+    private const string DemoScreenName = "DemoScreenGum";
+
     private readonly IProjectManager _projectManager;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
@@ -29,6 +33,7 @@ public class NewProjectLogic : INewProjectLogic
     private readonly ICopyPasteProjectCommands _projectCommands;
     private readonly ISelectedState _selectedState;
     private readonly IDefaultFontBundler _defaultFontBundler;
+    private readonly IDeleteLogic _deleteLogic;
 
     public NewProjectLogic(
         IProjectManager projectManager,
@@ -37,7 +42,8 @@ public class NewProjectLogic : INewProjectLogic
         IFormsThemeImporter themeImporter,
         ICopyPasteProjectCommands projectCommands,
         ISelectedState selectedState,
-        IDefaultFontBundler defaultFontBundler)
+        IDefaultFontBundler defaultFontBundler,
+        IDeleteLogic deleteLogic)
     {
         _projectManager = projectManager;
         _dialogService = dialogService;
@@ -46,14 +52,15 @@ public class NewProjectLogic : INewProjectLogic
         _projectCommands = projectCommands;
         _selectedState = selectedState;
         _defaultFontBundler = defaultFontBundler;
+        _deleteLogic = deleteLogic;
     }
 
     /// <inheritdoc/>
     public async Task CreateNewProjectAsync()
     {
-        // The open project is replaced only once the user has accepted both prompts, so backing out
-        // leaves it loaded (#5968). The theme picker describes what the new project would need, so
-        // it is pointed at a blank one rather than the open project.
+        // The open project is replaced only once the user has accepted the dialog (and, with a code project,
+        // the files were created), so backing out leaves it loaded (#5968). The theme picker describes what
+        // the new project would need, so it is pointed at a blank one rather than the open project.
         GumProjectSave blankProject = _projectManager.CreateBlankProject();
         if (!_dialogService.Show<NewProjectDialogViewModel>(
                 vm => vm.ThemeSelection.TargetProject = blankProject, out NewProjectDialogViewModel viewModel))
@@ -62,13 +69,16 @@ public class NewProjectLogic : INewProjectLogic
             return;
         }
 
-        // The theme import copies files next to the gumx, so the project needs a location on disk
-        // before it can run.
-        if (_projectManager.AskUserForNewProjectLocation() is not { } projectLocation)
+        if (viewModel.IsCodeProjectCreated && viewModel.CreatedGumProjectPath is { } createdProjectPath)
         {
-            EnsureProjectLoaded();
+            await LoadCreatedCodeProjectAsync(viewModel, createdProjectPath);
             return;
         }
+
+        // The theme import copies files next to the project file, so the project needs a location on disk
+        // before it can run.
+        string projectLocation = viewModel.GumProjectPath;
+        Directory.CreateDirectory(Path.GetDirectoryName(projectLocation)!);
 
         ClearSelection();
 
@@ -97,6 +107,28 @@ public class NewProjectLogic : INewProjectLogic
 
         ScreenSave startingScreen = new() { Name = StartingScreenName };
         _projectCommands.AddScreen(startingScreen);
+        _selectedState.SelectedScreen = startingScreen;
+    }
+
+    // The dialog already wrote the Gum project and the code project around it; the tool only opens the Gum
+    // project and applies the choices the creators cannot express (the demo screen) and the starting screen.
+    private async Task LoadCreatedCodeProjectAsync(NewProjectDialogViewModel viewModel, string gumProjectPath)
+    {
+        ClearSelection();
+        await _projectManager.LoadProjectAsync(new FilePath(gumProjectPath));
+
+        GumProjectSave project = _projectManager.GetLoadedProject();
+        if (viewModel.IsIncludeFormsControls && !viewModel.IsIncludeDemoScreenGum
+            && project.Screens.FirstOrDefault(screen => screen.Name == DemoScreenName) is { } demoScreen)
+        {
+            _deleteLogic.RemoveElement(demoScreen);
+        }
+
+        ScreenSave startingScreen = project.Screens.FirstOrDefault(screen => screen.Name == StartingScreenName) ?? new ScreenSave { Name = StartingScreenName };
+        if (!project.Screens.Contains(startingScreen))
+        {
+            _projectCommands.AddScreen(startingScreen);
+        }
         _selectedState.SelectedScreen = startingScreen;
     }
 
