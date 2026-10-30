@@ -132,7 +132,7 @@ public sealed class NewProjectDialogView : StackPanel
         Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
 
         StackPanel name = new StackPanel();
-        name.Children.Add(FieldLabel("Project name"));
+        name.Children.Add(FieldLabel(NewProjectDialogText.ProjectName, NewProjectDialogText.ProjectNameTip));
         TextBox nameBox = new TextBox();
         nameBox.Bind(TextBox.TextProperty, new Binding(nameof(NewProjectDialogViewModel.ProjectName)) { Mode = BindingMode.TwoWay });
         name.Children.Add(nameBox);
@@ -141,7 +141,7 @@ public sealed class NewProjectDialogView : StackPanel
 
         StackPanel format = new StackPanel();
         Grid.SetColumn(format, 1);
-        format.Children.Add(FieldLabel("File format"));
+        format.Children.Add(FieldLabel(NewProjectDialogText.FileFormat, NewProjectDialogText.FileFormatTip, alignRight: true));
         ComboBox formats = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, MinWidth = 190 };
         formats.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(NewProjectDialogViewModel.FileFormats)));
         formats.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(NewProjectDialogViewModel.SelectedFileFormat)) { Mode = BindingMode.TwoWay });
@@ -153,7 +153,7 @@ public sealed class NewProjectDialogView : StackPanel
     private Control CreateLocation()
     {
         StackPanel panel = new StackPanel();
-        panel.Children.Add(FieldLabel("Location"));
+        panel.Children.Add(FieldLabel(NewProjectDialogText.Location, NewProjectDialogText.LocationTip));
         Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 6 };
         TextBox location = new TextBox();
         location.Bind(TextBox.TextProperty, new Binding(nameof(NewProjectDialogViewModel.Location)) { Mode = BindingMode.TwoWay });
@@ -169,17 +169,10 @@ public sealed class NewProjectDialogView : StackPanel
     {
         StackPanel text = new StackPanel();
         StackPanel heading = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        heading.Children.Add(new TextBlock { Text = "Inside an existing code project", FontWeight = FontWeight.SemiBold });
+        heading.Children.Add(new TextBlock { Text = NewProjectDialogText.WarningHeading, FontWeight = FontWeight.SemiBold });
 
-        FluentIcon info = CreateIcon(Icon.Info, 1.1);
+        FluentIcon info = CreateInfoIcon(tipBinding: new Binding(nameof(NewProjectDialogViewModel.ExistingCodeProjectTip)));
         info.Name = WarningInfoName;
-        info.Cursor = new Cursor(StandardCursorType.Help);
-        info.Focusable = true;
-        info.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
-        TextBlock tip = new TextBlock { TextWrapping = TextWrapping.Wrap, MaxWidth = 300 };
-        tip.Bind(TextBlock.TextProperty, new Binding(nameof(NewProjectDialogViewModel.ExistingCodeProjectTip)));
-        ToolTip.SetTip(info, tip);
-        ToolTip.SetShowDelay(info, 0);
         heading.Children.Add(info);
         text.Children.Add(heading);
         text.Children.Add(Bound(new TextBlock { TextWrapping = TextWrapping.Wrap }, TextBlock.TextProperty, nameof(NewProjectDialogViewModel.ExistingCodeProjectText)));
@@ -192,7 +185,7 @@ public sealed class NewProjectDialogView : StackPanel
     private Control CreateTargetNotEmptyWarning()
     {
         StackPanel text = new StackPanel();
-        text.Children.Add(new TextBlock { Text = "Folder is not empty", FontWeight = FontWeight.SemiBold });
+        text.Children.Add(new TextBlock { Text = NewProjectDialogText.TargetNotEmptyHeading, FontWeight = FontWeight.SemiBold });
         text.Children.Add(Bound(new TextBlock { TextWrapping = TextWrapping.Wrap }, TextBlock.TextProperty, nameof(NewProjectDialogViewModel.TargetNotEmptyText)));
 
         Control banner = CreateBanner(text);
@@ -204,17 +197,17 @@ public sealed class NewProjectDialogView : StackPanel
     {
         StackPanel section = new StackPanel();
         section.Children.Add(Divider());
-        CheckBox includeForms = new CheckBox { Content = "Include Forms controls" };
+        CheckBox includeForms = new CheckBox { Content = LabelWithTip(NewProjectDialogText.IncludeForms, NewProjectDialogText.IncludeFormsTip) };
         includeForms.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.IsIncludeFormsControls)) { Mode = BindingMode.TwoWay });
         section.Children.Add(includeForms);
-        section.Children.Add(HelpText("Adds buttons, text boxes, list boxes and other standard controls to the project."));
+        section.Children.Add(HelpText(NewProjectDialogText.IncludeFormsHelp));
 
         StackPanel options = new StackPanel();
         options.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsIncludeFormsControls)));
-        ThemeSelectionView themeSelection = new ThemeSelectionView(labelAbove: true);
+        ThemeSelectionView themeSelection = new ThemeSelectionView(labelAbove: true, labelContent: LabelWithTip(NewProjectDialogText.Theme, NewProjectDialogText.ThemeTip));
         themeSelection.Bind(DataContextProperty, new Binding(nameof(NewProjectDialogViewModel.ThemeSelection)));
         options.Children.Add(themeSelection);
-        CheckBox includeDemo = new CheckBox { Content = "Include DemoScreenGum", Margin = new Thickness(0, 2, 0, 0) };
+        CheckBox includeDemo = new CheckBox { Content = LabelWithTip(NewProjectDialogText.IncludeDemo, NewProjectDialogText.IncludeDemoTip), Margin = new Thickness(0, 2, 0, 0) };
         includeDemo.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.IsIncludeDemoScreenGum)) { Mode = BindingMode.TwoWay });
         options.Children.Add(includeDemo);
         section.Children.Add(options);
@@ -225,14 +218,14 @@ public sealed class NewProjectDialogView : StackPanel
     {
         StackPanel section = new StackPanel();
         section.Children.Add(Divider());
-        CheckBox includeCode = new CheckBox { Content = "Include C# code project" };
+        CheckBox includeCode = new CheckBox { Content = LabelWithTip(NewProjectDialogText.CreateCodeProject, NewProjectDialogText.CreateCodeProjectTip) };
         includeCode.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.IncludeCodeProject)) { Mode = BindingMode.TwoWay });
         section.Children.Add(includeCode);
-        section.Children.Add(HelpText("Adds a .csproj and C# files that load this Gum project, ready for code generation."));
+        section.Children.Add(HelpText(NewProjectDialogText.CreateCodeProjectHelp));
 
         StackPanel options = new StackPanel();
         options.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IncludeCodeProject)));
-        options.Children.Add(FieldLabel("Platform"));
+        options.Children.Add(FieldLabel(NewProjectDialogText.Platform, NewProjectDialogText.PlatformTip));
         ComboBox platform = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
         platform.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(NewProjectDialogViewModel.Platforms)));
         platform.ItemTemplate = new FuncDataTemplate<NewProjectPlatformOption>((option, _) => new TextBlock { Text = option?.Label });
@@ -246,17 +239,16 @@ public sealed class NewProjectDialogView : StackPanel
         platformNote.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
         options.Children.Add(platformNote);
 
-        CheckBox sourceLinked = new CheckBox { Content = "Link Gum source", Margin = new Thickness(0, 8, 0, 0) };
+        CheckBox sourceLinked = new CheckBox { Content = NewProjectDialogText.UseLocalSource, Margin = new Thickness(0, 8, 0, 0) };
         sourceLinked.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.SourceLinked)) { Mode = BindingMode.TwoWay });
         sourceLinked.Bind(IsEnabledProperty, new Binding(nameof(NewProjectDialogViewModel.IsSourceLinkedEnabled)));
         options.Children.Add(sourceLinked);
-        options.Children.Add(Bound(
-            new TextBlock { Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) },
-            TextBlock.TextProperty, nameof(NewProjectDialogViewModel.SourceLinkedNote)));
+        options.Children.Add(new TextBlock { Text = NewProjectDialogText.UseLocalSourceNote, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) });
 
-        CheckBox restore = new CheckBox { Content = "Run dotnet restore" };
+        CheckBox restore = new CheckBox { Content = NewProjectDialogText.RestorePackages };
         restore.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.RunRestore)) { Mode = BindingMode.TwoWay });
         options.Children.Add(restore);
+        options.Children.Add(new TextBlock { Text = NewProjectDialogText.RestorePackagesNote, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) });
         section.Children.Add(options);
         return section;
     }
@@ -283,7 +275,7 @@ public sealed class NewProjectDialogView : StackPanel
         content.Children.Add(Bound(
             new TextBlock { Opacity = 0.7, Margin = new Thickness(0, 4, 0, 0) }, TextBlock.TextProperty, nameof(NewProjectDialogViewModel.PlanTotalText)));
 
-        return CreateSection(FilesExpanderName, "Files", nameof(NewProjectDialogViewModel.FilesCountText), content);
+        return CreateSection(FilesExpanderName, NewProjectDialogText.FilesHeading, nameof(NewProjectDialogViewModel.FilesCountText), content);
     }
 
     private Control CreateCommandLineSection()
@@ -291,7 +283,7 @@ public sealed class NewProjectDialogView : StackPanel
         StackPanel content = new StackPanel();
         content.Children.Add(new TextBlock
         {
-            Text = "Optional. Copy this to create the same project without the tool.",
+            Text = NewProjectDialogText.CommandLineDescription,
             Opacity = 0.7,
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(0, 2, 0, 6),
@@ -331,7 +323,7 @@ public sealed class NewProjectDialogView : StackPanel
         note.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.CommandLineNote)) { Converter = NotNullConverter.Instance });
         content.Children.Add(note);
 
-        return CreateSection(CommandLineExpanderName, "Command line", null, content);
+        return CreateSection(CommandLineExpanderName, NewProjectDialogText.CommandLineHeading, null, content);
     }
 
     #endregion
@@ -471,7 +463,44 @@ public sealed class NewProjectDialogView : StackPanel
         return line;
     }
 
-    private static TextBlock FieldLabel(string text) => new TextBlock { Text = text, Margin = new Thickness(0, 9, 0, 3) };
+    private static Control FieldLabel(string text, string tip, bool alignRight = false)
+    {
+        Control label = LabelWithTip(text, tip, alignRight);
+        label.Margin = new Thickness(0, 9, 0, 3);
+        return label;
+    }
+
+    // A label followed by an (i) icon whose hover tip explains the field; the icon takes keyboard focus too.
+    private static StackPanel LabelWithTip(string text, string tip, bool alignRight = false)
+    {
+        StackPanel label = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        label.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
+        label.Children.Add(CreateInfoIcon(tip, alignRight));
+        return label;
+    }
+
+    private static FluentIcon CreateInfoIcon(string? tip = null, bool alignRight = false, Binding? tipBinding = null)
+    {
+        FluentIcon info = CreateIcon(Icon.Info, 1.1);
+        info.Cursor = new Cursor(StandardCursorType.Help);
+        info.Focusable = true;
+        info.Opacity = 0.7;
+        TextBlock tipText = new TextBlock { TextWrapping = TextWrapping.Wrap, MaxWidth = 300 };
+        if (tipBinding != null)
+        {
+            tipText.Bind(TextBlock.TextProperty, tipBinding);
+            info.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
+            info.Opacity = 1;
+        }
+        else
+        {
+            tipText.Text = tip;
+        }
+        ToolTip.SetTip(info, tipText);
+        ToolTip.SetShowDelay(info, 0);
+        ToolTip.SetPlacement(info, alignRight ? PlacementMode.BottomEdgeAlignedRight : PlacementMode.BottomEdgeAlignedLeft);
+        return info;
+    }
 
     private static TextBlock HelpText(string text) =>
         new TextBlock { Text = text, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 8) };

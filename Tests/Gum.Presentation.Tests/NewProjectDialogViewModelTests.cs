@@ -175,7 +175,7 @@ public class NewProjectDialogViewModelTests
 
         viewModel.SourceLinked.ShouldBeTrue();
         viewModel.IsSourceLinkedEnabled.ShouldBeFalse();
-        viewModel.PlatformNote.ShouldBe("Gum.KniSkia is not on NuGet yet, so source-linked is required.");
+        viewModel.PlatformNote.ShouldBe("Gum.KniSkia is not on NuGet yet, so the local Gum source is required.");
     }
 
     [Fact]
@@ -191,7 +191,6 @@ public class NewProjectDialogViewModelTests
 
         viewModel.SourceLinked.ShouldBeFalse();
         viewModel.IsSourceLinkedEnabled.ShouldBeFalse();
-        viewModel.SourceLinkedNote.ShouldBe("Not available: this tool was not built from a Gum checkout.");
     }
 
     [Fact]
@@ -205,7 +204,7 @@ public class NewProjectDialogViewModelTests
             vm.PlatformName = "kniskia";
         });
 
-        viewModel.ValidationMessage.ShouldBe("Link Gum source needs a Gum checkout, and none was found.");
+        viewModel.ValidationMessage.ShouldBe("Use local Gum source needs the Gum source code on this computer, and none was found.");
         viewModel.CanExecuteAffirmative().ShouldBeFalse();
     }
 
@@ -288,7 +287,7 @@ public class NewProjectDialogViewModelTests
         viewModel.ExistingCodeProjectText.ShouldBe($"Found MyOtherGame.csproj in {Folder}.");
         viewModel.ExistingCodeProjectTip.ShouldContain("Program.cs, Game1.cs");
         viewModel.ExistingCodeProjectTip.ShouldContain(Path.Combine(Folder, "MyGame"));
-        viewModel.ExistingCodeProjectTip.ShouldContain("uncheck Include C# code project");
+        viewModel.ExistingCodeProjectTip.ShouldContain("uncheck Create C# project");
     }
 
     [Fact]
@@ -395,8 +394,8 @@ public class NewProjectDialogViewModelTests
     [Fact]
     public async Task Plan_IsAskedForTheCurrentChoices()
     {
-        NewProjectRequest? last = null;
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Callback<NewProjectRequest>(request => last = request)
+        System.Collections.Concurrent.ConcurrentQueue<NewProjectRequest> requests = new();
+        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Callback<NewProjectRequest>(request => requests.Enqueue(request))
             .Returns(new NewProjectPlan("root", new[] { "A" }, Array.Empty<string>()));
         NewProjectDialogViewModel viewModel = Create();
 
@@ -406,11 +405,9 @@ public class NewProjectDialogViewModelTests
         viewModel.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
         await viewModel.PlanRefresh;
 
-        last.ShouldNotBeNull();
-        last!.Platform.ShouldBe("raylib");
-        last.Template.ShouldBe("empty");
-        last.UseXmlFormat.ShouldBeTrue();
-        last.Path.ShouldBe(Path.Combine(Folder, "MyGame"));
+        // Earlier refreshes may finish in any order; one of them carries all of the final choices.
+        requests.ShouldContain(request => request.Platform == "raylib" && request.Template == "empty" && request.UseXmlFormat
+            && request.Path == Path.Combine(Folder, "MyGame"));
     }
 
     [Fact]

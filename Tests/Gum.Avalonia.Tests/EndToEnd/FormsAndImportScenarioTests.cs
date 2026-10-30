@@ -54,7 +54,7 @@ public class FormsAndImportScenarioTests
 
         GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
         new FilePath(project.FullFileName.ShouldNotBeNull()).ShouldBe(new FilePath(Path.Combine(tree.Project.ProjectFolder, "NewlyCreated", "NewlyCreated.gumx")));
-        tree.Project.FollowProjectFile(project.FullFileName);
+        tree.Project.FollowProjectFile(project.FullFileName!);
         theme.Components.Select(component => component.Name).ShouldBeSubsetOf(project.Components.Select(component => component.Name));
         project.Screens.Select(screen => screen.Name).ShouldContain("DemoScreenGum");
         project.Screens.Select(screen => screen.Name).ShouldContain(NewProjectLogic.StartingScreenName);

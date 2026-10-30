@@ -19,8 +19,9 @@ namespace Gum.Avalonia.Controls;
 public sealed class ThemeSelectionView : StackPanel
 {
     /// <summary>Builds the view; set its DataContext to a <see cref="ThemeSelectionViewModel"/>.</summary>
+    /// <param name="labelContent">Replaces the "Theme" text label, such as with a label that carries a tip.</param>
     /// <param name="labelAbove">Puts the "Theme" label above a full-width drop-down instead of beside it (New Project).</param>
-    public ThemeSelectionView(bool labelAbove = false)
+    public ThemeSelectionView(bool labelAbove = false, Control? labelContent = null)
     {
         Orientation = Orientation.Vertical;
 
@@ -30,7 +31,7 @@ public sealed class ThemeSelectionView : StackPanel
             Margin = new Thickness(0, 0, 0, 8),
             Spacing = labelAbove ? 3 : 8,
         };
-        themeRow.Children.Add(new TextBlock { Text = "Theme", MinWidth = labelAbove ? 0 : 56, VerticalAlignment = VerticalAlignment.Center });
+        themeRow.Children.Add(labelContent ?? new TextBlock { Text = "Theme", MinWidth = labelAbove ? 0 : 56, VerticalAlignment = VerticalAlignment.Center });
         ComboBox themes = new ComboBox
         {
             MinWidth = 160,

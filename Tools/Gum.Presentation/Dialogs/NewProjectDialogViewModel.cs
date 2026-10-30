@@ -44,9 +44,9 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     private static readonly Dictionary<string, string> _platformNotes = new Dictionary<string, string>
     {
-        ["stride"] = "Runs on Windows only; renders with Skia on the CPU.",
-        [KniSkiaPlatform] = "Gum.KniSkia is not on NuGet yet, so source-linked is required.",
-        ["silknet"] = "Needs a graphics driver with OpenGL 3.3.",
+        ["stride"] = NewProjectDialogText.StridePlatformNote,
+        [KniSkiaPlatform] = NewProjectDialogText.KniSkiaPlatformNote,
+        ["silknet"] = NewProjectDialogText.SilkNetPlatformNote,
     };
 
     private readonly INewProjectService _service;
@@ -224,13 +224,6 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     /// <summary>Whether the Link Gum source box can be changed.</summary>
     public bool IsSourceLinkedEnabled => IncludeCodeProject && !IsSourceLinkedForced && _service.IsSourceLinkedAvailable;
-
-    /// <summary>The line under Link Gum source.</summary>
-    public string SourceLinkedNote
-    {
-        get => Get<string>() ?? string.Empty;
-        private set => Set(value);
-    }
 
     /// <summary>The warning-colored note under the platform dropdown, or empty.</summary>
     public string PlatformNote
@@ -646,22 +639,19 @@ public class NewProjectDialogViewModel : DialogViewModel
         List<string> notes = new List<string>();
         if (IsIncludeFormsControls && !IsIncludeDemoScreenGum)
         {
-            notes.Add("gumcli new has no option to leave out DemoScreenGum yet.");
+            notes.Add(NewProjectDialogText.NoDemoCommandNote);
         }
         if (!game && UseXmlFormat)
         {
-            notes.Add("The extension in the path picks the file format.");
+            notes.Add(NewProjectDialogText.ExtensionPicksFormatNote);
         }
         if (game && UseXmlFormat)
         {
-            notes.Add("gumcli new has no option for the .gumx format with a code project yet.");
+            notes.Add(NewProjectDialogText.NoXmlWithCodeProjectNote);
         }
         CommandLineNote = string.Join(" ", notes);
 
         PlatformNote = game && _platformNotes.TryGetValue(PlatformName, out string? note) ? note : string.Empty;
-        SourceLinkedNote = _service.IsSourceLinkedAvailable
-            ? "References the Gum checkout this tool was built from instead of the NuGet package."
-            : "Not available: this tool was not built from a Gum checkout.";
 
         ValidationMessage = GetValidationMessage();
         RefreshWarnings();
@@ -673,27 +663,27 @@ public class NewProjectDialogViewModel : DialogViewModel
         string name = ProjectName.Trim();
         if (name.Length == 0)
         {
-            return "Enter a project name.";
+            return NewProjectDialogText.EnterName;
         }
         if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
         {
-            return "The name has characters a folder name can't have.";
+            return NewProjectDialogText.InvalidFolderName;
         }
         if (IncludeCodeProject && !_identifier.IsMatch(name))
         {
-            return "Not a valid C# name.";
+            return NewProjectDialogText.InvalidCSharpName;
         }
         if (Location.Trim().Length == 0)
         {
-            return "Choose a location.";
+            return NewProjectDialogText.ChooseLocation;
         }
         if (Location.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
         {
-            return "The location has characters a path can't have.";
+            return NewProjectDialogText.InvalidLocation;
         }
         if (IncludeCodeProject && SourceLinked && !_service.IsSourceLinkedAvailable)
         {
-            return "Link Gum source needs a Gum checkout, and none was found.";
+            return NewProjectDialogText.NeedsLocalSource;
         }
         return string.Empty;
     }
@@ -708,10 +698,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             string found = _existingCodeProject!;
             ExistingCodeProjectText = $"Found {Path.GetFileName(found)} in {Path.GetDirectoryName(found)}.";
             bool hasGame1 = PlatformName is not ("raylib" or "silknet" or "stride");
-            ExistingCodeProjectTip =
-                $"Include C# code project creates a new .csproj and C# files (Program.cs{(hasGame1 ? ", Game1.cs" : "")}) in " +
-                $"{Path.Combine(folder, EffectiveName)}. Select a folder outside the existing project, or uncheck " +
-                "Include C# code project to add only the Gum project.";
+            ExistingCodeProjectTip = NewProjectDialogText.WarningTip(hasGame1, Path.Combine(folder, EffectiveName));
         }
 
         IsTargetNotEmptyWarningVisible = _targetNotEmpty;
