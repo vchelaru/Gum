@@ -235,6 +235,8 @@ button.Visual.RollOff += (_, _) =>
 };
 ```
 
+When the cursor moves directly from one control to another, the first control's `RollOff` is raised before the second control's `RollOn`, so its `Unhighlight` starts before the other control's `Highlight`.
+
 The animations named above must exist on the control — either authored in the Gum tool and loaded with `LoadAnimations`, or created in code as shown in the next section. The control still applies its built-in **Highlighted** state on `RollOn`, so use animations for additional effects on top of that state rather than as a replacement for it.
 
 ## Code Example - Animations in Code-Only Projects

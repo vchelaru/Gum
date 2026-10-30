@@ -18,6 +18,7 @@ Modify csproj:
 <PackageReference Include="Gum.raylib" />
 <PackageReference Include="KernSmith.RaylibGum" /> <!-- Recommended, optional: dynamic fonts -->
 <PackageReference Include="KernSmith.Rasterizers.StbTrueType" /> <!-- Only needed if targeting web -->
+<PackageReference Include="Gum.raylib.ShadowDusk" /> <!-- Optional: .fx and .slang shader files -->
 ```
 
 Or add through command line:
@@ -26,6 +27,7 @@ Or add through command line:
 dotnet add package Gum.raylib
 dotnet add package KernSmith.RaylibGum               # Recommended, optional: dynamic fonts
 dotnet add package KernSmith.Rasterizers.StbTrueType # Only needed if targeting web
+dotnet add package Gum.raylib.ShadowDusk             # Optional: .fx and .slang shader files
 ```
 
 {% hint style="warning" %}
@@ -109,7 +111,7 @@ CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreat
 ```
 
 {% hint style="info" %}
-For shipping games, you should register custom .ttf fonts rather than relying on system fonts. For more information, see the [Fonts](../../../../standard-visuals/textruntime/fonts.md) page.
+For shipping games, you should register custom .ttf fonts rather than relying on system fonts. For more information, see the [Fonts](../../../standard-visuals/textruntime/fonts.md) page.
 {% endhint %}
 
 {% hint style="warning" %}
@@ -130,6 +132,26 @@ Then pass the backend explicitly:
 CustomSetPropertyOnRenderable.InMemoryFontCreator =
     new KernSmithRaylibFontCreator(KernSmith.RasterizerBackend.StbTrueType);
 ```
+{% endhint %}
+
+## Adding Shader Support (Optional)
+
+`Gum.raylib.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file. ShadowDusk converts it to a GLSL fragment shader at runtime. Without this package, a container whose `SourceShaderFile` is set fails to load unless you register your own shader resolver.
+
+Add the NuGet package as shown above, then call `UseShadowDusk` after `GumUI.Initialize`. The window must already exist:
+
+```csharp
+// Initialize
+GumUI.Initialize();
+GumUI.UseShadowDusk();
+```
+
+If linking to source instead of NuGet, add `<Gum Root>/Runtimes/RaylibGum.ShadowDusk/RaylibGum.ShadowDusk.csproj` to your solution.
+
+For loading, errors, and examples, see [ContainerRuntime](../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
+
+{% hint style="info" %}
+`Gum.raylib.ShadowDusk` is available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 ## Adding Expression Support (Optional)

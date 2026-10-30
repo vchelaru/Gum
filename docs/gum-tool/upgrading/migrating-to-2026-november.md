@@ -669,3 +669,57 @@ Available in November 2026, or now if building Gum from source.
 A [hot reload](../../code/debugging/hot-reload.md) now applies only the variables the project changed. Before, it applied the whole default state of a component instance, so a `Width` your code set on a tool-authored `Button` went back to the component's value on every reload, while the same `Width` on a plain `ColoredRectangle` stayed. Now both keep the value your code set until the project changes that variable.
 
 This affects you if your game relied on a reload resetting a value it set in code. Set the value again in `HotReloadCompleted`, or change the variable in the Gum project.
+
+### SourceShaderFile Needs a Shader Resolver
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+A container whose `SourceShaderFile` is set now fails to load unless a shader resolver handles the file. Before, MonoGame, KNI, FNA and raylib rendered the container without the shader and reported nothing. Now the assignment fails like a missing file, so with the default `MissingFileBehavior` of `ThrowException` it throws a `FileNotFoundException` while the project loads. This includes a container with `IsRenderTarget` set to `false`.
+
+This affects you if a container in your project has a `SourceShaderFile` and your game registered no resolver for it. Add the ShadowDusk package for your runtime (`Gum.MonoGame.ShadowDusk`, `Gum.KNI.ShadowDusk`, `Gum.FNA.ShadowDusk`, or `Gum.raylib.ShadowDusk`) and call `UseShadowDusk()` once at startup, after `Initialize` and before any element or screen that uses a `SourceShaderFile` is created. The file fails at assignment, and a later `UseShadowDusk()` does not retry it. See [Loading Shader Files With SourceShaderFile](../../code/standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
+
+❌ Old:
+
+```csharp
+// Initialize
+GumUI.Initialize(this);
+// The screen's SourceShaderFile silently rendered unshaded.
+```
+
+✅ New:
+
+```csharp
+// Initialize
+GumUI.Initialize(this);
+GumUI.UseShadowDusk();
+```
+
+To keep the old behavior of rendering without the shader, set `MissingFileBehavior` after Gum initializes. The error is then reported through `PropertyAssignmentError`:
+
+```csharp
+// Initialize
+Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
+    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+```
+
+### RollOff Is Raised Before RollOn
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+When the cursor moves straight from one `InteractiveGue` to another, `RollOff` is now raised on the old element before `RollOn` on the new one. Before, `RollOn` came first. Handlers that set state on `RollOn` and clear it on `RollOff` now work when the cursor crosses between elements.
+
+This affects you if a handler assigns `cursor.VisualOver`. Because `RollOff` runs first, a `RollOn` handler in the same frame now sees the value a `RollOff` handler assigned. It also affects any code that relied on `RollOn` running first.
+
+### Unity Startup Hook Is Skipped When GUM_NO_UNITY_ENGINE Is Defined
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+Generated code now omits the `UnityEngine.RuntimeInitializeOnLoadMethod` startup hook when `GUM_NO_UNITY_ENGINE` is defined, and uses `[ModuleInitializer]` instead. This lets generated code compile in a Unity assembly with **No Engine References**, which defines `UNITY_5_3_OR_NEWER` but cannot see `UnityEngine`.
+
+This affects you only if you define `GUM_NO_UNITY_ENGINE`. Regenerate your code from the Gum tool. Unity does not run `[ModuleInitializer]` methods, so call the generated `RegisterRuntimeType()` methods and `StandardElementsCodeGenRegistration.RegisterFallbackStandardElements()` yourself at startup. See [Unity](../../code/getting-started/setup/adding-initializing-gum/unity.md#generated-code-in-an-assembly-with-no-engine-references).

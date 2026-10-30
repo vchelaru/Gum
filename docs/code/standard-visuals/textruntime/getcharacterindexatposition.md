@@ -12,6 +12,8 @@ This method can also be used on text which includes BBCode, returning an index a
 
 The position is in the same units the text is drawn in, so the method accounts for `FontScale`.
 
+To find which BBCode tag is under that index, pass it to `GetTagAtIndex`. See [Combining With GetTagAtIndex](#combining-with-gettagatindex).
+
 ## Code Example: Printing Character at Position
 
 The following code shows how to use the Gum cursor to hover over a TextRuntime and display the character under the cursor.
@@ -82,3 +84,26 @@ protected override void Update(GameTime gameTime)
 ```
 
 <figure><img src="../../../.gitbook/assets/25_07 13 42.gif" alt=""><figcaption><p>Cursor hovering over characters, and the character is printed out to the debug window</p></figcaption></figure>
+
+## Combining With GetTagAtIndex
+
+`TextRuntime.GetTagAtIndex(tagName, index)` returns the BBCode tag with the given name that contains a character index, or `null` if there is none. It uses the same index `GetCharacterIndexAtPosition` returns, so the two combine to find the tag under the cursor. This is how a [Link tag](bbcode.md#links) becomes clickable:
+
+```csharp
+// Update
+var cursor = GumUI.Cursor;
+if (textRuntime.HasCursorOver(cursor))
+{
+    int index = textRuntime.GetCharacterIndexAtPosition(
+        cursor.XRespectingGumZoomAndBounds(),
+        cursor.YRespectingGumZoomAndBounds());
+
+    TextTagSpan? link = textRuntime.GetTagAtIndex("Link", index);
+    if (link != null)
+    {
+        // link.Value.Argument is the id, such as "shop" for [Link=shop]
+    }
+}
+```
+
+`GetCharacterIndexAtPosition` returns the nearest caret position, not the character under the point. A point past the end of the text returns the text length, and a point on the right half of a character returns the index after it. For a tag, that means the right half of its last letter gives an index equal to `EndIndex`, and `GetTagAtIndex` returns `null` there because `EndIndex` is exclusive. Check that the cursor is over the text first, as the sample does, and expect a click on the right half of a link's last letter to miss.

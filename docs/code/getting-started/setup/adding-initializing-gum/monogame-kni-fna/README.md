@@ -10,7 +10,7 @@ MonoGame Gum works on a variety of platforms including DesktopGL, DirectX, and m
 
 The easiest way to add Gum to your project is to use NuGet. Open your project in your preferred IDE, or add packages through the command line. Each Gum NuGet package works on any platform. For example, MonoGame Desktop and Android project types use the same Gum NuGet package.
 
-The block below includes the base package plus three commonly-used add-ons, each marked **recommended, optional** or **optional**: shape fill/gradient/shadow support, dynamic (KernSmith) fonts, and arithmetic expression support. If you don't need one, skip its line here and delete the matching line from the initialization code in [Adding Gum to Game](./#adding-gum-to-game) below.
+The block below includes the base package plus four commonly-used add-ons, each marked **recommended, optional** or **optional**: shape fill/gradient/shadow support, dynamic (KernSmith) fonts, shader file support, and arithmetic expression support. If you don't need one, skip its line here and delete the matching line from the initialization code in [Adding Gum to Game](./#adding-gum-to-game) below.
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -22,6 +22,7 @@ Modify csproj:
 <PackageReference Include="Gum.MonoGame" Version="*" />
 <PackageReference Include="Gum.Shapes.MonoGame" Version="*" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
 <PackageReference Include="KernSmith.MonoGameGum" Version="*" /> <!-- Recommended, optional: dynamic fonts -->
+<PackageReference Include="Gum.MonoGame.ShadowDusk" Version="*" /> <!-- Optional: .fx and .slang shader files -->
 <PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
@@ -31,6 +32,7 @@ Or add through command line:
 dotnet add package Gum.MonoGame
 dotnet add package Gum.Shapes.MonoGame     # Recommended, optional: shape fill/gradient/shadow
 dotnet add package KernSmith.MonoGameGum   # Recommended, optional: dynamic fonts
+dotnet add package Gum.MonoGame.ShadowDusk # Optional: .fx and .slang shader files
 dotnet add package Gum.Expressions         # Optional: arithmetic expressions in variable references
 ```
 {% endtab %}
@@ -45,6 +47,7 @@ Modify csproj:
 <PackageReference Include="Gum.Shapes.KNI" Version="*" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
 <PackageReference Include="KernSmith.KniGum" Version="*" /> <!-- Recommended, optional: dynamic fonts -->
 <PackageReference Include="KernSmith.Rasterizers.StbTrueType" Version="*" /> <!-- Only needed if targeting web (BlazorGL) -->
+<PackageReference Include="Gum.KNI.ShadowDusk" Version="*" /> <!-- Optional: .fx and .slang shader files -->
 <PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
@@ -55,6 +58,7 @@ dotnet add package Gum.KNI
 dotnet add package Gum.Shapes.KNI     # Recommended, optional: shape fill/gradient/shadow
 dotnet add package KernSmith.KniGum   # Recommended, optional: dynamic fonts
 dotnet add package KernSmith.Rasterizers.StbTrueType   # Only needed if targeting web (BlazorGL)
+dotnet add package Gum.KNI.ShadowDusk # Optional: .fx and .slang shader files
 dotnet add package Gum.Expressions    # Optional: arithmetic expressions in variable references
 ```
 {% endtab %}
@@ -66,6 +70,7 @@ Modify csproj:
 
 ```xml
 <PackageReference Include="Gum.FNA" Version="*" />
+<PackageReference Include="Gum.FNA.ShadowDusk" Version="*" /> <!-- Optional: .fx and .slang shader files -->
 <PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
@@ -73,6 +78,7 @@ Or add through command line:
 
 ```bash
 dotnet add package Gum.FNA
+dotnet add package Gum.FNA.ShadowDusk # Optional: .fx and .slang shader files
 dotnet add package Gum.Expressions   # Optional: arithmetic expressions in variable references
 ```
 
@@ -92,7 +98,7 @@ To add source, first clone the Gum repository: [https://github.com/vchelaru/Gum]
 
 If you have already added the Gum NuGet package to your project, remove it.
 
-As with the NuGet packages above, the shape support, KernSmith, and expression projects are marked **recommended, optional** or **optional**; skip a project if you don't need it, and delete its matching line from the initialization code in [Adding Gum to Game](./#adding-gum-to-game).
+As with the NuGet packages above, the shape support, KernSmith, shader, and expression projects are marked **recommended, optional** or **optional**; skip a project if you don't need it, and delete its matching line from the initialization code in [Adding Gum to Game](./#adding-gum-to-game).
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -103,6 +109,7 @@ Add the following projects to your solution:
 * \<Gum Root>/Runtimes/GumShapes/MonoGameGumShapes.csproj, **Recommended, optional:** shape fill/gradient/shadow
 * \<Gum Root>/Integrations/KernSmith/KernSmith.GumCommon/KernSmith.GumCommon.csproj, **Recommended, optional:** dynamic fonts
 * \<Gum Root>/Integrations/KernSmith/KernSmith.MonoGameGum/KernSmith.MonoGameGum.csproj, **Recommended, optional:** dynamic fonts
+* \<Gum Root>/Runtimes/GumShadowDusk/MonoGameGum.ShadowDusk.csproj, **Optional:** .fx and .slang shader files
 * \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj, **Optional:** arithmetic expressions in variable references
 
 Next, add project references in your game project for the pieces you use directly (`GumCommon.csproj` and `KernSmith.GumCommon.csproj` are pulled in transitively and don't need a direct reference). Your project might look like this depending on the location of the Gum repository relative to your game project:
@@ -113,6 +120,7 @@ Next, add project references in your game project for the pieces you use directl
 <ProjectReference Include="..\Gum\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
 <ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.GumCommon\KernSmith.GumCommon.csproj" />
 <ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumShadowDusk\MonoGameGum.ShadowDusk.csproj" />
 <ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
 {% endtab %}
@@ -125,6 +133,7 @@ Add the following projects to your solution:
 * \<Gum Root>/Runtimes/GumShapes/KniGumShapes.csproj, **Recommended, optional:** shape fill/gradient/shadow
 * \<Gum Root>/Integrations/KernSmith/KernSmith.GumCommon/KernSmith.GumCommon.csproj, **Recommended, optional:** dynamic fonts
 * \<Gum Root>/Integrations/KernSmith/KernSmith.KniGum/KernSmith.KniGum.csproj, **Recommended, optional:** dynamic fonts
+* \<Gum Root>/Runtimes/GumShadowDusk/KniGum.ShadowDusk.csproj, **Optional:** .fx and .slang shader files
 * \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj, **Optional:** arithmetic expressions in variable references
 
 Next, add project references in your game project for the pieces you use directly (`GumCommon.csproj` and `KernSmith.GumCommon.csproj` are pulled in transitively and don't need a direct reference). Your project might look like this depending on the location of the Gum repository relative to your game project:
@@ -135,6 +144,7 @@ Next, add project references in your game project for the pieces you use directl
 <ProjectReference Include="..\Gum\Runtimes\GumShapes\KniGumShapes.csproj" />
 <ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.GumCommon\KernSmith.GumCommon.csproj" />
 <ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.KniGum\KernSmith.KniGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumShadowDusk\KniGum.ShadowDusk.csproj" />
 <ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
 {% endtab %}
@@ -144,6 +154,7 @@ Add the following projects to your solution:
 
 * \<Gum Root>/MonoGameGum/FnaGum/FnaGum.csproj
 * \<Gum Root>/GumCommon/GumCommon.csproj
+* \<Gum Root>/Runtimes/GumShadowDusk/FnaGum.ShadowDusk.csproj, **Optional:** .fx and .slang shader files
 * \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj, **Optional:** arithmetic expressions in variable references
 
 Next, add project references in your game project for the pieces you use directly. Your project might look like this depending on the location of the Gum repository relative to your game project:
@@ -151,6 +162,7 @@ Next, add project references in your game project for the pieces you use directl
 ```xml
 <ProjectReference Include="..\Gum\MonoGameGum\FnaGum\FnaGum.csproj" />
 <ProjectReference Include="..\Gum\GumCommon\GumCommon.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumShadowDusk\FnaGum.ShadowDusk.csproj" />
 <ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
 
@@ -164,7 +176,7 @@ If using Visual Studio Code, see the [Visual Studio Code and Linking Source](vis
 
 Gum can be added to a Game/Core class with a few lines of code. Projects are encouraged to create a local GumService property called GumUI for convenience.
 
-The code below also wires up shape support, dynamic fonts (KernSmith), and expression support, matching the NuGet packages above. If you skipped a package above, delete its matching line(s) here too.
+The code below also wires up shape support, dynamic fonts (KernSmith), shader file support, and expression support, matching the NuGet packages above. If you skipped a package above, delete its matching line(s) here too.
 
 {% hint style="info" %}
 The code in this example assumes that you are using retained mode rendering. If you are interested in immediate mode rendering, see the [Setup for GumBatch](../../setup-for-gumbatch.md) page.
@@ -202,6 +214,7 @@ public class Game1 : Game
 </strong><strong>        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
 </strong><strong>        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
 </strong><strong>            new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice); // Recommended, optional: dynamic fonts
+</strong><strong>        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
 </strong><strong>        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 </strong>        base.Initialize();
     }
@@ -239,6 +252,7 @@ public class Game1 : Core
 </strong><strong>        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
 </strong><strong>        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
 </strong><strong>            new KernSmith.Gum.KernSmithFontCreator(Core.GraphicsDevice); // Recommended, optional: dynamic fonts
+</strong><strong>        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
 </strong><strong>        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 </strong>        
         Scene = new BasicScene();
@@ -298,6 +312,20 @@ Then pass the backend explicitly when creating the font creator:
 ```csharp
 new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice, KernSmith.RasterizerBackend.StbTrueType);
 ```
+{% endhint %}
+
+### About Shader File Support (Optional)
+
+The ShadowDusk package added above lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file, which Gum compiles at runtime. Install the package that matches your runtime (`Gum.MonoGame.ShadowDusk`, `Gum.KNI.ShadowDusk`, or `Gum.FNA.ShadowDusk`) and call `GumUI.UseShadowDusk()` once, as shown in the initialization code. The call takes no arguments.
+
+Without the package, a container whose `SourceShaderFile` is set fails to load. If your project does not use `SourceShaderFile`, skip the package and delete the `UseShadowDusk` line.
+
+If linking to source instead of NuGet, add the `ShadowDusk` project listed above for your runtime to your solution.
+
+For loading, errors, and examples, see [ContainerRuntime](../../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 ### About Expression Support (Optional)

@@ -45,3 +45,25 @@ passwordBox.AddToRoot();
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA6tW8ix2L81VsiopKk3VUSotzsxLL1ayilYCCuqFZxalphUl5qYqxeooZeZllmQm5mRWpSpZKZUlFikUJBYXl-cXpTjlVyjYKuSllisEIEQ0NK1j8pBU6MHknDOAWm0VYkoNDIzMlSEUmlLHlJSQ_KD8_BKgIUq1ADyYlTeiAAAA)
 
 <figure><img src="../../.gitbook/assets/13_22 15 31.gif" alt=""><figcaption><p>Password entered in a PasswordBox</p></figcaption></figure>
+
+## EditCommitted and EditCancelled
+
+`EditCommitted` is raised when the user presses Enter. A `PasswordBox` never contains a line break, so Enter always ends the edit. `EditCancelled` is raised when the user presses Escape.
+
+Both events are raised only for key presses on the focused `PasswordBox`. The `PasswordBox` keeps focus and its text, so the handler decides what happens next:
+
+```csharp
+// Initialize
+passwordBox.EditCommitted += (_, _) => Login(passwordBox.Password);
+passwordBox.EditCancelled += (_, _) => passwordBox.IsFocused = false;
+```
+
+For how these events interact with Escape handling in your own code, see [EditCommitted and EditCancelled](textbox.md#editcommitted-and-editcancelled) on the TextBox page.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Emoji and MaxLength
+
+An emoji counts as one character for the caret, Backspace, Delete, and clicking. `MaxLength` counts UTF-16 `char` values, so an emoji counts as two, and an emoji that would straddle the limit is dropped whole. Pasting text that exceeds `MaxLength` inserts the paste, then cuts the result to `MaxLength` from the end, so text after the caret is what gets cut.
