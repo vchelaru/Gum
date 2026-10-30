@@ -28,6 +28,20 @@ public interface IPreviewLauncher
     void PushSelection(ElementSave? element, bool activate = false);
 
     /// <summary>
+    /// Re-sends <paramref name="element"/> after the tool renamed it (a rename, a folder rename, a
+    /// move into a folder, or an undo of those), since the selection file still names the old
+    /// path and no selection event follows. Does nothing for an element the preview is not showing.
+    /// A pinned preview stays pinned to the renamed element.
+    /// </summary>
+    void ReactToElementRenamed(ElementSave element);
+
+    /// <summary>
+    /// Re-points the pin and the shown element at the same-named elements of a newly loaded
+    /// project, since the loaded objects are new. Unpins when the pinned element is not in it.
+    /// </summary>
+    void ReactToProjectLoaded(GumProjectSave project);
+
+    /// <summary>
     /// Refreshes the running preview's JSON projection after a save (issue #4748). Does nothing
     /// unless a preview is currently running AND it was launched against a temporary JSON copy of a
     /// .gumx project (the Native AOT build can't load .gumx directly) - re-converts the current

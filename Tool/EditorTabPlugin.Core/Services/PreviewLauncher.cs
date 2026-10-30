@@ -204,6 +204,29 @@ public class PreviewLauncher : IPreviewLauncher
     }
 
     /// <inheritdoc/>
+    public void ReactToElementRenamed(ElementSave element)
+    {
+        // A pinned preview shows its pinned element, so this covers the pin too: the renamed
+        // element is the same object, and pushing it keeps the pin and updates the name.
+        if (element == _shownElement)
+        {
+            PushSelection(element);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void ReactToProjectLoaded(GumProjectSave project)
+    {
+        _shownElement = FindSameNamed(project, _shownElement);
+        SetPinned(FindSameNamed(project, _pinnedElement));
+    }
+
+    private static ElementSave? FindSameNamed(GumProjectSave project, ElementSave? element) =>
+        element == null
+            ? null
+            : project.AllElements.FirstOrDefault(candidate => candidate.GetType() == element.GetType() && candidate.Name == element.Name);
+
+    /// <inheritdoc/>
     public void RefreshIfRunning()
     {
         if (!IsRunning || !_isConvertedGumxPreview)
