@@ -96,13 +96,10 @@ public class NewProjectService : INewProjectService
         }
         else
         {
-            string? preflightError = PlatformProjectScaffolder.GetPreflightError(targets.RootDirectory);
+            NewProjectError? preflightError = PlatformProjectScaffolder.GetPreflightError(targets.RootDirectory);
             if (preflightError != null)
             {
-                NewProjectErrorKind kind = preflightError.Contains("already exists")
-                    ? NewProjectErrorKind.ProjectAlreadyExists
-                    : NewProjectErrorKind.InvalidProjectName;
-                return Fail(kind, preflightError);
+                return new NewProjectValidation { Error = preflightError };
             }
         }
 

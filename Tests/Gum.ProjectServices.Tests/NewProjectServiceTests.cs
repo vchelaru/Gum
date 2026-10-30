@@ -360,6 +360,48 @@ public class NewProjectServiceTests : BaseTestClass
     }
 
     [Fact]
+    public async Task CreateFiles_WhenCreationFailsLate_KeepsPlannedFilesThatWereThereBefore()
+    {
+        NewProjectService service = CreateService();
+        string game = Path.Combine(_folder, "Game");
+        string gumFolder = Path.Combine(game, "Content", "GumProject");
+        Directory.CreateDirectory(gumFolder);
+        // Planned files that already exist, one in the game folder and one in the Gum project folder.
+        File.WriteAllText(Path.Combine(game, "Program.cs"), "mine");
+        File.WriteAllText(Path.Combine(gumFolder, "ExampleSpriteFrame.png"), "mine");
+        // A folder where the code generation settings file goes fails the creation after the other files are written.
+        Directory.CreateDirectory(Path.Combine(gumFolder, "ProjectCodeSettings.codsj"));
+        ResolvedNewProject project = service.Validate(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty"
+        }).Resolved!;
+
+        NewProjectFilesResult result = await service.CreateFilesAsync(project, CancellationToken.None);
+
+        result.Success.ShouldBeFalse();
+        File.Exists(Path.Combine(game, "Program.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(gumFolder, "ExampleSpriteFrame.png")).ShouldBeTrue();
+        File.Exists(Path.Combine(game, "Game.csproj")).ShouldBeFalse();
+        File.Exists(Path.Combine(gumFolder, "GumProject.gumj")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenRestoreCannotStart_KeepsTheFilesAndSaysWhichStepStopped()
+    {
+        NewProjectService service = CreateService();
+        _restoreRunner.NextResult = new RestoreResult { Status = RestoreStatus.ProcessNotFound, ErrorMessage = "no dotnet" };
+
+        NewProjectResult result = await service.ExecuteAsync(
+            new NewProjectRequest { Path = Path.Combine(_folder, "NoSdk"), Platform = "kni", Template = "empty" },
+            null, CancellationToken.None);
+
+        result.Files.Success.ShouldBeTrue();
+        result.Restore!.Status.ShouldBe(RestoreStatus.ProcessNotFound);
+        result.Restore.ErrorMessage.ShouldBe("no dotnet");
+        File.Exists(result.Files.CsprojPath).ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task CreateFiles_WhenAlreadyCanceled_WritesNothing()
     {
         NewProjectService service = CreateService();
