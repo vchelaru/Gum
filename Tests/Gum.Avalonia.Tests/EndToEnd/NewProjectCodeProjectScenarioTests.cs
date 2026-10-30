@@ -83,6 +83,7 @@ public class NewProjectCodeProjectScenarioTests
         string gumFolder = Path.Combine(location, "Game", "Content", "GumProject");
         project.FullFileName!.Replace((char)92, '/').ShouldEndWith("Game/Content/GumProject/GumProject.gumj");
         File.Exists(Path.Combine(location, "Game", "Game.csproj")).ShouldBeTrue();
+        File.Exists(Path.Combine(location, "Game", "Game.slnx")).ShouldBeTrue();
 
         // The folder tree shows where the project goes; each folder and the marked project file are really there.
         string gameFolder = Path.Combine(location, "Game");

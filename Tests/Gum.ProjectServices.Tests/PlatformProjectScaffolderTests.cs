@@ -1,5 +1,6 @@
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
+using System.Xml.Linq;
 using Shouldly;
 
 namespace Gum.ProjectServices.Tests;
@@ -154,6 +155,64 @@ public class PlatformProjectScaffolderTests : IDisposable
         result.Success.ShouldBeFalse();
         result.ErrorMessage.ShouldContain(name);
         Directory.Exists(projectDirectory).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(HostPlatform.MonoGame)]
+    [InlineData(HostPlatform.Kni)]
+    [InlineData(HostPlatform.KniSkia)]
+    [InlineData(HostPlatform.Raylib)]
+    [InlineData(HostPlatform.Stride)]
+    [InlineData(HostPlatform.SilkNet)]
+    public void Create_ShouldWriteASlnxListingOnlyTheGameProject(HostPlatform platform)
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "My.Game-1");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, platform, includeFormsTemplate: false);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        string slnxPath = Path.Combine(projectDirectory, "My.Game-1.slnx");
+        File.Exists(slnxPath).ShouldBeTrue();
+        Directory.GetFiles(projectDirectory, "*.sln*").ShouldBe(new[] { slnxPath });
+
+        XElement solution = XDocument.Parse(File.ReadAllText(slnxPath)).Root!;
+        solution.Name.LocalName.ShouldBe("Solution");
+        XElement project = solution.Elements().ShouldHaveSingleItem();
+        project.Name.LocalName.ShouldBe("Project");
+        project.Attribute("Path")!.Value.ShouldBe("My.Game-1.csproj");
+        File.Exists(Path.Combine(projectDirectory, project.Attribute("Path")!.Value)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Create_WhenSourceLinked_ShouldKeepTheRuntimeProjectOutOfTheSlnx()
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+        string gumSource = CreateFakeGumSource("MonoGameGum/MonoGameGum.csproj");
+
+        PlatformProjectResult result = _sut.Create(
+            projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false, gumSourceDirectory: gumSource);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        File.ReadAllText(result.CsprojPath).ShouldContain("<ProjectReference Include=");
+        XDocument.Parse(File.ReadAllText(Path.Combine(projectDirectory, "MyGame.slnx")))
+            .Root!.Elements().Select(element => element.Attribute("Path")!.Value)
+            .ShouldBe(new[] { "MyGame.csproj" });
+    }
+
+    [Fact]
+    public void Create_WhenSlnxAlreadyExists_ShouldFailLikeAnExistingCsprojAndWriteNothing()
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+        Directory.CreateDirectory(projectDirectory);
+        string slnxPath = Path.Combine(projectDirectory, "MyGame.slnx");
+        File.WriteAllText(slnxPath, "original");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldContain("MyGame.slnx");
+        File.ReadAllText(slnxPath).ShouldBe("original");
+        Directory.GetFileSystemEntries(projectDirectory).ShouldBe(new[] { slnxPath });
     }
 
     [Fact]

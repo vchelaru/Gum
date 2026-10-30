@@ -20,6 +20,9 @@ public class NewProjectLayout
     /// <summary>The startup file every code project has.</summary>
     public const string ProgramFileName = "Program.cs";
 
+    /// <summary>The extension of the solution file a code project has beside its .csproj.</summary>
+    public const string SolutionExtension = "slnx";
+
     /// <summary>The game class file of the platforms that run a <c>Game1</c>.</summary>
     public const string Game1FileName = "Game1.cs";
 
@@ -50,11 +53,14 @@ public class NewProjectLayout
     /// <summary>The Gum project file, relative to <see cref="RootDirectory"/> with <c>/</c> separators.</summary>
     public string GumProjectFile { get; }
 
-    /// <summary>The code project's files in <see cref="RootDirectory"/>: the .csproj, Program.cs and, where the platform writes one, Game1.cs. Empty without a code project.</summary>
+    /// <summary>The code project's files in <see cref="RootDirectory"/>: the .csproj, the .slnx, Program.cs and, where the platform writes one, Game1.cs. Empty without a code project.</summary>
     public IReadOnlyList<string> HostFiles { get; }
 
     /// <summary>The Gum project's folder relative to <see cref="RootDirectory"/>; empty when it is the root.</summary>
     public string GumFolder => GumProjectFile.Contains('/') ? GumProjectFile[..GumProjectFile.LastIndexOf('/')] : string.Empty;
+
+    /// <summary>The solution file's name in a code project named <paramref name="projectName"/>.</summary>
+    public static string GetSolutionFileName(string projectName) => projectName + "." + SolutionExtension;
 
     /// <summary>Whether a code project for <paramref name="platform"/> has a Game1.cs.</summary>
     public static bool WritesGame1(HostPlatform platform) =>
@@ -82,7 +88,7 @@ public class NewProjectLayout
         List<string> folders = new List<string> { ContentFolderName, gumFolder };
         folders.AddRange(GumFolders.OrderBy(folder => folder, StringComparer.Ordinal).Select(folder => gumFolder + "/" + folder));
 
-        List<string> hostFiles = new List<string> { name + ".csproj", ProgramFileName };
+        List<string> hostFiles = new List<string> { name + ".csproj", GetSolutionFileName(name), ProgramFileName };
         if (WritesGame1(platform))
         {
             hostFiles.Add(Game1FileName);

@@ -1,4 +1,5 @@
 using Gum.ProjectServices;
+using System.Xml.Linq;
 using Shouldly;
 
 namespace Gum.Cli.Tests;
@@ -285,6 +286,37 @@ public class NewCommandTests : BaseTestClass
         File.Exists(Path.Combine(gumFolder, "GumProject.gumj")).ShouldBeTrue();
         File.Exists(Path.Combine(gumFolder, "ProjectCodeSettings.codsj")).ShouldBeTrue();
         result.StandardOutput.ShouldContain("MyGame.csproj");
+    }
+
+    [Theory]
+    [InlineData("monogame")]
+    [InlineData("kni")]
+    [InlineData("kniskia")]
+    [InlineData("raylib")]
+    [InlineData("stride")]
+    [InlineData("silknet")]
+    public void New_WithPlatform_ShouldCreateASlnxNextToTheCsproj(string platform)
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", platform, "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.Exists(Path.Combine(projectDir, "MyGame.csproj")).ShouldBeTrue();
+        string slnx = Path.Combine(projectDir, "MyGame.slnx");
+        File.Exists(slnx).ShouldBeTrue();
+        XDocument.Parse(File.ReadAllText(slnx)).Root!.Elements()
+            .Select(element => element.Attribute("Path")!.Value)
+            .ShouldBe(new[] { "MyGame.csproj" });
+    }
+
+    [Fact]
+    public void New_WithoutPlatform_ShouldNotCreateASolutionFile()
+    {
+        CliTestHelper result = CliTestHelper.Run("new", TempDirectory, "--template", "empty");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Directory.GetFiles(TempDirectory, "*.sln*", SearchOption.AllDirectories).ShouldBeEmpty();
     }
 
     [Fact]

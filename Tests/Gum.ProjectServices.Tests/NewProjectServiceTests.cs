@@ -404,6 +404,79 @@ public class NewProjectServiceTests : BaseTestClass
     }
 
     [Fact]
+    public async Task CreateFiles_WhenCreationFailsAfterTheSlnxIsWritten_RemovesTheSlnx()
+    {
+        NewProjectService service = CreateService();
+        string game = Path.Combine(_folder, "Game");
+        string gumFolder = Path.Combine(game, "Content", "GumProject");
+        Directory.CreateDirectory(gumFolder);
+        File.WriteAllText(Path.Combine(game, "keep.txt"), "mine");
+        // A folder where the code generation settings file goes fails the creation after the host files are written.
+        Directory.CreateDirectory(Path.Combine(gumFolder, "ProjectCodeSettings.codsj"));
+        ResolvedNewProject project = service.Validate(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty"
+        }).Resolved!;
+
+        NewProjectFilesResult result = await service.CreateFilesAsync(project, CancellationToken.None);
+
+        result.Success.ShouldBeFalse();
+        File.Exists(Path.Combine(game, "Game.slnx")).ShouldBeFalse();
+        File.Exists(Path.Combine(game, "Game.csproj")).ShouldBeFalse();
+        File.ReadAllText(Path.Combine(game, "keep.txt")).ShouldBe("mine");
+    }
+
+    [Fact]
+    public async Task CreateFiles_WhenASlnxAppearedAfterValidation_RefusesAndKeepsIt()
+    {
+        NewProjectService service = CreateService();
+        string game = Path.Combine(_folder, "Game");
+        ResolvedNewProject project = service.Validate(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty"
+        }).Resolved!;
+        Directory.CreateDirectory(game);
+        string slnx = Path.Combine(game, "Game.slnx");
+        File.WriteAllText(slnx, "mine");
+
+        NewProjectFilesResult result = await service.CreateFilesAsync(project, CancellationToken.None);
+
+        result.Success.ShouldBeFalse();
+        File.ReadAllText(slnx).ShouldBe("mine");
+        File.Exists(Path.Combine(game, "Game.csproj")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithAPlatformAndASlnxAlreadyThere_IsRefusedAsAnExistingProject()
+    {
+        NewProjectService service = CreateService();
+        string game = Path.Combine(_folder, "Game");
+        Directory.CreateDirectory(game);
+        File.WriteAllText(Path.Combine(game, "Game.slnx"), "mine");
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty"
+        });
+
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.ProjectAlreadyExists);
+        validation.Error.Message.ShouldContain("Game.slnx");
+    }
+
+    [Fact]
+    public async Task Execute_WithoutAPlatform_WritesNoSolutionFile()
+    {
+        NewProjectService service = CreateService();
+        string root = Path.Combine(_folder, "GumOnly");
+
+        NewProjectResult result = await service.ExecuteAsync(
+            new NewProjectRequest { Path = root, Template = "empty" }, null, CancellationToken.None);
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        Directory.GetFiles(root, "*.sln*", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WhenRestoreCannotStart_KeepsTheFilesAndSaysWhichStepStopped()
     {
         NewProjectService service = CreateService();

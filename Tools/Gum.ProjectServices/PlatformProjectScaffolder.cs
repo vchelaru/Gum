@@ -109,6 +109,9 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
                 NewProjectLayout.GumProjectFolderName + "." + extension));
     }
 
+    internal static string GetSolutionPath(string fullDirectory) =>
+        Path.Combine(fullDirectory, NewProjectLayout.GetSolutionFileName(Path.GetFileName(fullDirectory)));
+
     /// <summary>
     /// The reason a project cannot be created in <paramref name="fullDirectory"/> (bad name, or a project already there),
     /// checked before anything is written; <see langword="null"/> when it can.
@@ -127,6 +130,13 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         if (File.Exists(csprojPath))
         {
             return new NewProjectError(NewProjectErrorKind.ProjectAlreadyExists, $"Project already exists: {csprojPath}");
+        }
+
+        // The solution is refused like the .csproj: writing over it would destroy a file the user made.
+        string slnxPath = GetSolutionPath(fullDirectory);
+        if (File.Exists(slnxPath))
+        {
+            return new NewProjectError(NewProjectErrorKind.ProjectAlreadyExists, $"Solution already exists: {slnxPath}");
         }
 
         // Either format counts: a .gumx beside a new .gumj would leave two Gum projects in one folder.
@@ -210,6 +220,13 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         File.WriteAllText(
             Path.Combine(directory, NewProjectLayout.ProgramFileName),
             ReadTemplate(programFolder, "Program.cs.template", projectName, rootNamespace, gumProjectFileName));
+
+        // Only the game project: a source-linked Gum runtime stays a ProjectReference and needs no entry.
+        File.WriteAllText(
+            Path.Combine(directory, NewProjectLayout.GetSolutionFileName(projectName)),
+            "<Solution>" + Environment.NewLine +
+            $"  <Project Path=\"{SecurityElement.Escape(projectName + ".csproj")}\" />" + Environment.NewLine +
+            "</Solution>" + Environment.NewLine);
 
         if (isXnaGame)
         {
