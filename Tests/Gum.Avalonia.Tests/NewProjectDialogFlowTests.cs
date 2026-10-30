@@ -23,6 +23,9 @@ namespace Gum.Avalonia.Tests;
 /// </summary>
 public class NewProjectDialogFlowTests
 {
+    // A full path on every OS; the dialog refuses a Location that is not one.
+    private static readonly string ProjectsFolder = OperatingSystem.IsWindows() ? @"C:\Users\You\Projects" : "/Users/You/Projects";
+
     private readonly Mock<INewProjectService> _service = new();
 
     private static NewProjectFilesResult FilesOk() => new NewProjectFilesResult
@@ -44,7 +47,7 @@ public class NewProjectDialogFlowTests
             TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),
             _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object)
         {
-            Location = @"C:\Users\You\Projects",
+            Location = ProjectsFolder,
             IncludeCodeProject = true,
         };
         return PrScreenshot.ShowDialog(viewModel);
@@ -178,7 +181,7 @@ public class NewProjectDialogFlowTests
             scale.BaseFontSize = size;
             _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan("MyGame",
                 Enumerable.Range(0, 60).Select(number => $"Folder/File{number}.txt").ToList(), Array.Empty<string>()));
-            viewModel.Location = @"C:\Users\You\" + new string('a', 120);
+            viewModel.Location = Path.Combine(Path.GetDirectoryName(ProjectsFolder)!, new string('a', 120));
             for (int i = 0; i < 300 && !viewModel.PlanRefresh.IsCompleted; i++)
             {
                 Thread.Sleep(10);

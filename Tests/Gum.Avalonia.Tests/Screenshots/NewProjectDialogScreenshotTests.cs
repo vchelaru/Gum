@@ -21,7 +21,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class NewProjectDialogScreenshotTests
 {
-    private const string Location = @"C:\Users\You\Projects";
+    private static readonly string Location = OperatingSystem.IsWindows() ? @"C:\Users\You\Projects" : "/Users/You/Projects";
 
     private static readonly string[] ControlNames =
     {
@@ -101,7 +101,7 @@ public class NewProjectDialogScreenshotTests
     public void FilesWithBothScrollBars(string theme) => Capture("files-scrollbars", theme, (viewModel, window) =>
     {
         viewModel.IncludeCodeProject = true;
-        viewModel.Location = @"C:\Users\You\Projects\SomeVeryLongFolderName\AnotherVeryLongFolderName\YetAnotherLongFolderName\Games";
+        viewModel.Location = Path.Combine(Location, "SomeVeryLongFolderName", "AnotherVeryLongFolderName", "YetAnotherLongFolderName", "Games");
         for (int i = 0; i < 300 && !viewModel.PlanRefresh.IsCompleted; i++)
         {
             Thread.Sleep(10);

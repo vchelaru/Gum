@@ -695,7 +695,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             return NewProjectDialogText.InvalidLocation;
         }
-        if (!Path.IsPathRooted(Location.Trim()))
+        if (!Path.IsPathFullyQualified(Location.Trim()))
         {
             return NewProjectDialogText.LocationNotAbsolute;
         }
