@@ -22,6 +22,27 @@ public class PreviewReloadPolicyTests
         policy.TryTakePendingReload().ShouldBeFalse();
     }
 
+    [Fact]
+    public void CleanResult_WithAStateSelected_AsksForOneRebuild()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+
+        policy.OnReloadFinished(Result(), isStateSelected: true);
+
+        policy.TryTakePendingReload().ShouldBeTrue();
+        policy.TryTakePendingReload().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CleanResult_WithNoStateSelected_AsksForNothing()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+
+        policy.OnReloadFinished(Result(), isStateSelected: false);
+
+        policy.TryTakePendingReload().ShouldBeFalse();
+    }
+
     [Theory]
     [InlineData(HotReloadIssueKind.InstanceRemoved)]
     [InlineData(HotReloadIssueKind.InstanceRebuilt)]
