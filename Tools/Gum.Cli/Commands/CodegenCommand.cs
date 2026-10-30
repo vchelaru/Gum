@@ -219,7 +219,7 @@ public static class CodegenCommand
                 new CategoryNameCollisionErrorSource(codeGenerator, projectSettings),
             });
 
-        // GUM0015 is a project-level row, so the per-element gate adds the ones that name its element.
+        // GUM0015 and GUM0023 are project-level rows, so the per-element gate adds the ones that name its element.
         IReadOnlyList<ErrorResult> projectErrors = errorChecker.GetProjectErrors(project);
 
         // --element narrows the run to those elements (which also leaves the project-wide
@@ -263,7 +263,7 @@ public static class CodegenCommand
     private static bool PassesErrorCheck(IHeadlessErrorChecker errorChecker, IReadOnlyList<ErrorResult> projectErrors, ElementSave element, GumProjectSave project)
     {
         List<ErrorResult> errors = errorChecker.GetErrorsFor(element, project).ToList();
-        errors.AddRange(projectErrors.Where(e => e.Code == "GUM0015" && e.ElementName == element.Name));
+        errors.AddRange(projectErrors.Where(e => e.Code != null && HeadlessErrorChecker.CodegenGatingProjectCodes.Contains(e.Code) && e.ElementName == element.Name));
 
         foreach (var warning in errors.Where(e => e.Severity == ErrorSeverity.Warning))
         {

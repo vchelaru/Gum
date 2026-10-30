@@ -210,6 +210,60 @@ A font only has the characters in its ranges. When a Text's value, in any state,
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## Value That Does Not Fit Its Type (GUM0019)
+
+A variable saved as `float` or `int` must hold a number, and a `bool` variable must hold `true` or `false`. A hand-written file can save `Width` as a `float` holding `wide`. Nothing loads that as a number, so the variable does not do what the file says. `gumcli check` reports **GUM0019** as an error, naming the variable, the state, and the value it found. To resolve it, set the variable to a number (or `true`/`false`).
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Duplicate Names (GUM0020, GUM0021, GUM0022)
+
+Names inside one element must be unique, because Gum finds an item by name and takes one of the matches. `gumcli check` reports an error when an element has:
+
+* two instances with the same name (**GUM0020**)
+* two states with the same name, in the element or within one category, or two categories with the same name (**GUM0021**)
+* the same variable twice in one state (**GUM0022**)
+
+To resolve it, rename or delete all but one of them.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Element Referenced Twice (GUM0023)
+
+The project file lists each Screen, Component, Standard Element, and Behavior once. When the same name is listed twice, the file loads as two items with one name. `gumcli check` reports **GUM0023** as an error, and `gumcli codegen` skips that element until the extra reference is deleted from the `.gumx` file.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Parents That Form a Loop (GUM0024)
+
+Following the `Parent` of one instance to the next must end at an instance with no parent. When instance A has B as its parent and B has A (or an instance is its own parent), none of them can be placed. `gumcli check` reports **GUM0024** as an error naming the loop, for example `A -> B -> A`. To resolve it, clear or change the `Parent` of one instance in the loop.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Screen Used as a Type (GUM0025)
+
+A Screen is a whole page and cannot be used inside another element. `gumcli check` reports **GUM0025** as an error when an instance's type is a Screen, or when a component's `Base Type` is a Screen. The Gum tool does not allow either; a hand-written file can. To resolve it, use a Component instead.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## State the Category Does Not Have (GUM0026)
+
+A variable that selects a state, such as `Switch.ModeState`, must name a state that exists in that category (or in the instance type's uncategorized states for `State`). When it names a state that is not there, such as `Nope` in a `Mode` category that has only `On` and `Off`, the selection does nothing and generated code does not compile. `gumcli check` reports **GUM0026** as an error listing the states that do exist. To resolve it, correct the name or add the state to the category.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

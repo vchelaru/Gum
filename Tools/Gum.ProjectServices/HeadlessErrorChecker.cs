@@ -18,7 +18,7 @@ using ToolsUtilities;
 namespace Gum.ProjectServices;
 
 /// <inheritdoc/>
-public class HeadlessErrorChecker : IHeadlessErrorChecker
+public partial class HeadlessErrorChecker : IHeadlessErrorChecker
 {
     private static readonly HashSet<string> KnownBaseTypes = new HashSet<string>
     {
@@ -95,6 +95,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
+            errors.AddRange(GetDuplicateReferenceErrors(project));
         }
         finally
         {
@@ -123,6 +124,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
+            errors.AddRange(GetDuplicateReferenceErrors(project));
             return errors;
         }
         finally
@@ -150,6 +152,11 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetInstanceCycleErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
+        errors.AddRange(GetValueTypeMismatchErrorsFor(element));
+        errors.AddRange(GetDuplicateNameErrorsFor(element));
+        errors.AddRange(GetParentCycleErrorsFor(element));
+        errors.AddRange(GetScreenAsTypeErrorsFor(element));
+        errors.AddRange(GetUnknownStateValueErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
         errors.AddRange(GetInvalidEnumValueErrorsFor(element));
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
