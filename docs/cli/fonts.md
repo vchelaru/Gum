@@ -1,7 +1,7 @@
 # fonts
 
 ```
-gumcli fonts <project.gumj>
+gumcli fonts <project.gumj> [--font <name> --size <n>... [--bold] [--italic] [--outline <n>]]
 ```
 
 Scans all elements and states for font references and generates any missing bitmap font files (`.fnt` + `.png`) in the project's `FontCache/` folder.
@@ -18,11 +18,24 @@ The two generators are different programs, so a BMFont project's `FontCache` bui
 ## Options
 
 - `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
+- `--font <name>` — Also generate this font, even though no element uses it: a system font family or a `.ttf`/`.otf` path relative to the project. Requires `--size`.
+- `--size <n>...` — One or more sizes to generate for `--font`, for example `--size 18 24 30`.
+- `--bold`, `--italic` — Generate the `--font` sizes bold and/or italic.
+- `--outline <n>` — Outline thickness in pixels for the `--font` sizes. Default is 0.
+
+Use the `--font` options for fonts the game only needs at runtime, such as the sizes [font oversampling](../code/files-and-fonts/font-oversampling.md) asks for or the bold and italic runs of BBCode text set from code. Each run of the command adds one font with one style across the listed sizes; run it again for another style or font.
 
 ## Examples
 
 ```
 gumcli fonts MyProject/MyProject.gumj
+```
+
+Fonts the game needs at runtime but no element uses:
+
+```
+gumcli fonts MyProject/MyProject.gumj --font "Liberation Sans" --size 18 24 30
+gumcli fonts MyProject/MyProject.gumj --font "Liberation Sans" --size 12 --bold
 ```
 
 ## Notes
@@ -37,4 +50,4 @@ gumcli fonts MyProject/MyProject.gumj
 |------|---------|
 | 0 | All missing fonts generated successfully |
 | 1 | An error occurred during font generation |
-| 2 | Project could not be loaded |
+| 2 | Project could not be loaded, or the `--font` options are invalid (`--size` without `--font`, `--font` without `--size`, or a size of zero or less) |

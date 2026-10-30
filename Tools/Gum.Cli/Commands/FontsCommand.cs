@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -26,21 +28,87 @@ public static class FontsCommand
             "project",
             "Path to the .gumx project file.");
 
+        Option<string?> fontOption = new Option<string?>(
+            "--font",
+            "Also generate this font, which no element needs to use: a system font family or a .ttf/.otf path relative to the project. Requires --size.");
+
+        Option<int[]> sizeOption = new Option<int[]>(
+            "--size",
+            "Font size(s) to generate for --font, for example --size 18 24 30. Repeat the option or list several sizes.")
+        {
+            AllowMultipleArgumentsPerToken = true
+        };
+
+        Option<bool> boldOption = new Option<bool>("--bold", "Generate the --font sizes bold.");
+        Option<bool> italicOption = new Option<bool>("--italic", "Generate the --font sizes italic.");
+        Option<int> outlineOption = new Option<int>("--outline", () => 0, "Outline thickness in pixels for the --font sizes.");
+
         Command command = new Command("fonts", "Generate missing bitmap font files for a Gum project.")
         {
-            projectArgument
+            projectArgument,
+            fontOption,
+            sizeOption,
+            boldOption,
+            italicOption,
+            outlineOption
         };
 
         command.SetHandler((InvocationContext context) =>
         {
             string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
-            context.ExitCode = Execute(projectPath).GetAwaiter().GetResult();
+            string? font = context.ParseResult.GetValueForOption(fontOption);
+            int[] sizes = context.ParseResult.GetValueForOption(sizeOption) ?? Array.Empty<int>();
+            bool isBold = context.ParseResult.GetValueForOption(boldOption);
+            bool isItalic = context.ParseResult.GetValueForOption(italicOption);
+            int outline = context.ParseResult.GetValueForOption(outlineOption);
+
+            bool anyStyle = isBold || isItalic || outline != 0;
+            string? error = ValidateExtraFontOptions(font, sizes, anyStyle);
+            if (error != null)
+            {
+                Console.Error.WriteLine($"error: {error}");
+                context.ExitCode = 2;
+                return;
+            }
+
+            List<ExtraFontRequest> extraFonts = new List<ExtraFontRequest>();
+            foreach (int size in sizes.Distinct())
+            {
+                extraFonts.Add(new ExtraFontRequest(font!, size, isBold, isItalic, outline));
+            }
+
+            context.ExitCode = Execute(projectPath, extraFonts).GetAwaiter().GetResult();
         });
 
         return command;
     }
 
-    private static async System.Threading.Tasks.Task<int> Execute(string projectPath)
+    private static string? ValidateExtraFontOptions(string? font, int[] sizes, bool anyStyle)
+    {
+        if (string.IsNullOrWhiteSpace(font))
+        {
+            if (sizes.Length > 0 || anyStyle)
+            {
+                return "--size, --bold, --italic and --outline need --font to say which font to generate.";
+            }
+
+            return null;
+        }
+
+        if (sizes.Length == 0)
+        {
+            return "--font needs at least one --size.";
+        }
+
+        if (sizes.Any(size => size <= 0))
+        {
+            return "--size must be greater than zero.";
+        }
+
+        return null;
+    }
+
+    private static async System.Threading.Tasks.Task<int> Execute(string projectPath, IReadOnlyCollection<ExtraFontRequest> extraFonts)
     {
         string fullPath = Path.GetFullPath(projectPath);
 
@@ -76,7 +144,7 @@ public static class FontsCommand
 
         try
         {
-            await fontService.CreateAllMissingFontFiles(project, projectDirectory);
+            await fontService.CreateAllMissingFontFiles(project, projectDirectory, extraFonts);
         }
         catch (Exception ex)
         {

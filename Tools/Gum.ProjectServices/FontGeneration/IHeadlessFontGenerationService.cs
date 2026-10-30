@@ -2,6 +2,7 @@
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics.Fonts;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -18,6 +19,13 @@ public interface IHeadlessFontGenerationService
     /// Creates all missing font files referenced by the project and returns how many were generated.
     /// </summary>
     Task<int> CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory, bool forceRecreate = false);
+
+    /// <summary>
+    /// Creates all missing font files referenced by the project plus the given
+    /// <paramref name="extraFonts"/>, which no element needs to use, and returns how many were generated.
+    /// </summary>
+    Task<int> CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory,
+        IReadOnlyCollection<ExtraFontRequest> extraFonts, bool forceRecreate = false);
 
     /// <summary>
     /// Generates missing font files for all elements that recursively reference the element
