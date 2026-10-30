@@ -157,6 +157,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetParentCycleErrorsFor(element));
         errors.AddRange(GetScreenAsTypeErrorsFor(element));
         errors.AddRange(GetUnknownStateValueErrorsFor(element));
+        errors.AddRange(GetMissingInstanceVariableErrorsFor(element));
+        errors.AddRange(GetUnknownVariableTypeErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
         errors.AddRange(GetInvalidEnumValueErrorsFor(element));
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
