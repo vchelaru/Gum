@@ -2184,6 +2184,10 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         context.Applied.TryGetValue(element, out HashSet<string>? appliedToElement);
 
+        // The live value of a variable an old row wrote came from that row, not from the file, so the
+        // file's value (what a restart shows) is applied again whatever the old file held.
+        HashSet<string> oldRowTargets = GetRowTargets(oldState);
+
         StateSave changed = new StateSave { Name = state.Name, ParentContainer = state.ParentContainer };
         foreach (VariableSave variable in state.Variables)
         {
@@ -2195,7 +2199,8 @@ public class GumHotReloadManager : IGumHotReloadManager
             // A reparent is cheap and keeps the tree right after instances were rebuilt or moved.
             bool applies = !oldByName.TryGetValue(variable.Name, out VariableSave? oldVariable)
                 || !ValuesMatch(oldVariable.Value, variable.Value)
-                || variable.GetRootName() == "Parent";
+                || variable.GetRootName() == "Parent"
+                || oldRowTargets.Contains(variable.Name);
 
             if (!applies)
             {
@@ -2299,21 +2304,63 @@ public class GumHotReloadManager : IGumHotReloadManager
                 continue;
             }
 
-            object? defaultValue = newState.GetValueRecursive(variable.Name);
-            if (defaultValue != null)
-            {
-                element.SetProperty(variable.Name, defaultValue);
+            ResetToDefault(element, newState, variable, context);
+        }
 
-                // Layers above this one may still set the variable; they apply it again.
-                GraphicalUiElement? owner = string.IsNullOrEmpty(variable.SourceObject)
-                    ? element
-                    : element.GetGraphicalUiElementByName(variable.SourceObject);
-                if (owner != null)
-                {
-                    context.RecordApplied(owner, variable);
-                }
+        // A variable an old row wrote and the old file never stored has no old value to compare, and
+        // the live value is the row's.
+        foreach (string target in GetRowTargets(oldState))
+        {
+            if (stillSet.Contains(target) || oldState.Variables.Any(v => AppliesAValue(v) && v.Name == target))
+            {
+                continue;
+            }
+
+            VariableSave variable = new VariableSave { Name = target };
+            if (variable.GetRootName() != "Parent" && !variable.IsState(oldEs))
+            {
+                ResetToDefault(element, newState, variable, context);
             }
         }
+    }
+
+    private static void ResetToDefault(
+        GraphicalUiElement element, StateSave newState, VariableSave variable, ReloadContext context)
+    {
+        object? defaultValue = newState.GetValueRecursive(variable.Name);
+        if (defaultValue != null)
+        {
+            element.SetProperty(variable.Name, defaultValue);
+
+            // Layers above this one may still set the variable; they apply it again.
+            GraphicalUiElement? owner = string.IsNullOrEmpty(variable.SourceObject)
+                ? element
+                : element.GetGraphicalUiElementByName(variable.SourceObject);
+            if (owner != null)
+            {
+                context.RecordApplied(owner, variable);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The variables the rows of <paramref name="state"/> wrote when it was applied: every row outside a
+    /// loop, since a row in a loop is never evaluated and leaves the stored value (#6871).
+    /// </summary>
+    private static HashSet<string> GetRowTargets(StateSave state)
+    {
+        HashSet<string> targets = new HashSet<string>(StringComparer.Ordinal);
+        ElementSave? owner = state.ParentContainer;
+        if (owner == null || !state.VariableLists.Any(list => list.GetRootName() == "VariableReferences"))
+        {
+            return targets;
+        }
+
+        foreach (ReferenceRow row in VariableReferenceGraph.GetForState(owner, state).LoadOrderRows)
+        {
+            targets.Add(row.WrittenName);
+        }
+        return targets;
     }
 
     // Whether applying a state would set this variable. An empty Parent sets nothing either, since
