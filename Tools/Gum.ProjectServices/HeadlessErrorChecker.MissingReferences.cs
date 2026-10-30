@@ -12,10 +12,16 @@ public partial class HeadlessErrorChecker
 {
     #region GUM0027 — Variable names an instance the element does not have
 
+    /// <summary>
+    /// Whether GUM0027 is reported. Off by default: the Gum tool leaves such variables behind and hides them, so its
+    /// Errors tab must not list them. <c>gumcli check</c> turns it on, as a warning.
+    /// </summary>
+    public bool ReportsLeftoverInstanceVariables { get; init; }
+
     // "Ghost.Text" in an element with no instance Ghost (in itself or any base element) sets nothing. A warning, not an
     // error: the tool leaves such variables behind (e.g. when an instance is deleted or its base type changes) and
     // hides them, so the user cannot always remove them.
-    private static List<ErrorResult> GetMissingInstanceVariableErrorsFor(ElementSave element)
+    private List<ErrorResult> GetMissingInstanceVariableErrorsFor(ElementSave element)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
         HashSet<string> reported = new HashSet<string>(StringComparer.Ordinal);
@@ -25,7 +31,8 @@ public partial class HeadlessErrorChecker
             foreach (VariableSave variable in state.Variables)
             {
                 string? instanceName = variable.SourceObject;
-                if (!string.IsNullOrEmpty(instanceName)
+                if (ReportsLeftoverInstanceVariables
+                    && !string.IsNullOrEmpty(instanceName)
                     && FindInstanceInInheritance(element, instanceName!) == null
                     && reported.Add(instanceName!))
                 {
@@ -42,6 +49,18 @@ public partial class HeadlessErrorChecker
     #endregion
 
     #region GUM0028 — Variable with a type name nothing can resolve
+
+    private static bool IsExposedOnInstanceType(ElementSave element, VariableSave variable)
+    {
+        string? instanceName = variable.SourceObject;
+        if (string.IsNullOrEmpty(instanceName))
+        {
+            return false;
+        }
+        InstanceSave? instance = FindInstanceInInheritance(element, instanceName!);
+        ElementSave? instanceType = instance == null ? null : ObjectFinder.Self.GetElementSave(instance.BaseType);
+        return instanceType != null && FindExposedVariable(instanceType, variable.GetRootName()) != null;
+    }
 
     // A state variable's type is the name of a category, which any element of the project can define (older projects
     // wrote it without the State suffix, and an exposed variable keeps the type of the variable it exposes).
@@ -131,6 +150,12 @@ public partial class HeadlessErrorChecker
             foreach (VariableSave variable in state.Variables)
             {
                 string? type = variable.Type;
+                if (IsExposedOnInstanceType(element, variable))
+                {
+                    // An exposed variable keeps the type it had when it was set; the tool does not rewrite it when the
+                    // category or enum behind it is renamed.
+                    continue;
+                }
                 // A category selector's type is a category name; whether the category exists is GUM0026's business.
                 // A category selector's type is a category name; whether the category exists is GUM0026's business.
                 if (string.IsNullOrEmpty(type) || variable.GetRootName().EndsWith("State", StringComparison.Ordinal)

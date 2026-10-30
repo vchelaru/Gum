@@ -266,7 +266,7 @@ Available in November 2026, or now if building Gum from source.
 
 ## Variable of an Instance That Does Not Exist (GUM0027)
 
-A variable such as `Ghost.Text` sets a property on the instance `Ghost`, so the element, or one of its base elements, must contain an instance with that name. When the file holds such a variable for an instance that does not exist, the value is ignored. `gumcli check` reports **GUM0027** as a warning and does not block code generation. The Gum tool can leave these variables behind, for example after an instance is deleted, and does not show them. If you edit the file by hand, delete the variable or add the instance.
+A variable such as `Ghost.Text` sets a property on the instance `Ghost`, so the element, or one of its base elements, must contain an instance with that name. When the file holds such a variable for an instance that does not exist, the value is ignored. `gumcli check` reports **GUM0027** as a warning and does not block code generation. The Gum tool can leave these variables behind, for example after an instance is deleted, and does not show them, so its Errors tab does not list GUM0027. If you edit the file by hand, delete the variable or add the instance.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
