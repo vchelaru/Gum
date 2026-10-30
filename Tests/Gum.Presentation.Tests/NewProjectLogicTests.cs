@@ -409,6 +409,18 @@ public class NewProjectLogicTests
     }
 
     [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_DoesNotEditTheOpenProject_WhenTheLoadOfTheCreatedOneWasIgnored()
+    {
+        // ProjectManager ignores a load request while another load is in flight, leaving the previous project open.
+        GumProjectSave openProject = new GumProjectSave { FullFileName = Path.Combine(ChosenFolder, "Old", "Old.gumj") };
+        await SetUpCreatedCodeProject(openProject);
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_AddsAndSelectsTheStartingScreen()
     {
         await SetUpCreatedCodeProject(new GumProjectSave());
