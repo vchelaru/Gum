@@ -191,6 +191,53 @@ namespace Gum.Forms.Controls
 }";
 
     [Theory]
+    [InlineData("monogame")]
+    [InlineData("kni")]
+    [InlineData("kniskia")]
+    [InlineData("raylib")]
+    [InlineData("stride")]
+    [InlineData("silknet")]
+    public async Task Validate_PlatformNameEqualToAPackageTheHostReferences_IsRefused(string platform)
+    {
+        NewProjectService service = CreateService();
+        NewProjectResult sample = await service.ExecuteAsync(Request(Path.Combine(_folder, "Sample"), platform), null, CancellationToken.None);
+        sample.Files.Success.ShouldBeTrue(sample.Files.ErrorMessage);
+        List<string> packages = XDocument.Load(sample.Files.CsprojPath!)
+            .Descendants("PackageReference").Select(element => element.Attribute("Include")!.Value).ToList();
+        packages.ShouldNotBeEmpty();
+
+        // A project named like a package it references fails to restore with NU1108 (a cycle).
+        foreach (string package in packages)
+        {
+            NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, package), platform));
+
+            validation.IsValid.ShouldBeFalse(package);
+            validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+            validation.Error.Message.ShouldContain(package);
+        }
+    }
+
+    [Fact]
+    public void Validate_PlatformNameEqualToAPackageInDifferentCase_IsRefused()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "gum.RAYLIB"), "raylib"));
+
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+    }
+
+    [Fact]
+    public void Validate_PlatformNameEqualToAPackageOnlyAnotherPlatformReferences_IsAccepted()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "Gum.MonoGame"), "raylib"));
+
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
+    }
+
+    [Theory]
     [InlineData("My Game")]
     [InlineData("My.Game.v2")]
     [InlineData("Jeu é")]

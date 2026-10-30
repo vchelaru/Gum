@@ -140,9 +140,11 @@ public class NewProjectLogic : INewProjectLogic
         ClearSelection();
         await _projectManager.LoadProjectAsync(new FilePath(gumProjectPath));
 
-        // A failed load leaves no project (the project manager already explained why when it could). The files
-        // stay on disk, so say where they are and leave the tool with a blank project like a cancelled dialog does.
-        if (_projectManager.GumProjectSave == null)
+        // A failed load leaves no project (the project manager already explained why when it could), and an
+        // ignored one (another load in flight) leaves the previous project open. In both the created project is
+        // not the loaded one, so say where the files are and edit nothing; with no project, leave the tool with a
+        // blank one like a cancelled dialog does.
+        if (!IsLoaded(gumProjectPath))
         {
             _dialogService.ShowMessage(
                 $"The C# project was created, but its Gum project could not be opened:\n\n{gumProjectPath}");
@@ -172,6 +174,10 @@ public class NewProjectLogic : INewProjectLogic
         }
         _selectedState.SelectedScreen = startingScreen;
     }
+
+    private bool IsLoaded(string gumProjectPath) =>
+        _projectManager.GumProjectSave is { FullFileName: { Length: > 0 } loadedPath }
+        && new FilePath(loadedPath) == new FilePath(gumProjectPath);
 
     /// <inheritdoc/>
     public async Task CloseProjectAsync()
