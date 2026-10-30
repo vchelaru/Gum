@@ -107,7 +107,7 @@ public class NewProjectUiLayoutTests
         File.WriteAllText(Path.Combine(fixture.MakeFolder("Out", "Game"), "notes.txt"), "mine");
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.ChoosePlatform("stride");
         fixture.Settle();
         fixture.Dialog.OpenFolders();
@@ -118,17 +118,17 @@ public class NewProjectUiLayoutTests
         // Invalid name: the message sits beside the buttons.
         fixture.Dialog.TypeName("bad/name");
         fixture.Settle();
-        fixture.IsShown(NewProjectDialogText.InvalidFolderName).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.InvalidFolderName).ShouldBeTrue();
         AssertLaidOut(fixture, $"invalid name, zoom {zoom}, {theme}");
 
         // The refusal: a Gum-only project over an existing project file.
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
         fixture.Dialog.TypeName("Existing");
         File.WriteAllText(Path.Combine(fixture.MakeFolder("Out", "Existing"), "Existing.gumj"), "x");
         fixture.Dialog.TypeName("Existing2");
         fixture.Dialog.TypeName("Existing");
         fixture.Settle();
-        fixture.IsShown(NewProjectDialogText.RefusedHeading).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.RefusedHeading).ShouldBeTrue();
         AssertLaidOut(fixture, $"refusal, zoom {zoom}, {theme}");
 
         Window window = fixture.Window.Window;
@@ -149,7 +149,7 @@ public class NewProjectUiLayoutTests
         fixture.SetZoom(zoom);
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.StandInRestore(NewProjectUiFixture.RestoreFailed(string.Join("\n", Enumerable.Range(0, 12).Select(i => $"error NU1101: Unable to find package number {i} in any source"))));
         fixture.Window.Click(fixture.Dialog.OkButton);
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the restore failure");
@@ -165,7 +165,7 @@ public class NewProjectUiLayoutTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Window.Window.FitHeightToScreen(null);
         fixture.SetZoom(zoom);
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.OpenFolders();
         fixture.Dialog.OpenCommandLine();
 

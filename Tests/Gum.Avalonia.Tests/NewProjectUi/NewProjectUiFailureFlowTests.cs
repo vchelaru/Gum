@@ -22,7 +22,7 @@ public class NewProjectUiFailureFlowTests
         NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeName(name);
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Settle();
         return fixture;
     }
@@ -151,14 +151,14 @@ public class NewProjectUiFailureFlowTests
         fixture.Dialog.Result.ShouldBeNull();
         fixture.IsShown(RestoreFailedHeading).ShouldBeFalse("the panel is gone");
         fixture.Dialog.NameBox.IsEffectivelyEnabled.ShouldBeTrue("the form is editable again");
-        fixture.IsShown(NewProjectDialogText.RefusedHeading).ShouldBeTrue("the files just written now exist, so creating again would be refused");
+        fixture.IsShown(NewProjectUiText.RefusedHeading).ShouldBeTrue("the files just written now exist, so creating again would be refused");
         fixture.IsShownStartingWith("Project already exists").ShouldBeTrue();
-        fixture.IsShown(NewProjectDialogText.TargetNotEmptyHeading).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.TargetNotEmptyHeading).ShouldBeTrue();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
 
         fixture.Dialog.TypeName("Game2");
         fixture.Settle();
-        fixture.IsShown(NewProjectDialogText.RefusedHeading).ShouldBeFalse("a new name is free");
+        fixture.IsShown(NewProjectUiText.RefusedHeading).ShouldBeFalse("a new name is free");
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
     }
 
@@ -329,7 +329,7 @@ public class NewProjectUiFailureFlowTests
                 fixture.Dialog.ChoosePlatform("raylib");
                 break;
             case "checkbox":
-                fixture.Dialog.SetChecked(NewProjectDialogText.RestorePackages, false);
+                fixture.Dialog.SetChecked(NewProjectUiText.RestorePackages, false);
                 break;
             default:
                 fixture.Dialog.TypeLocation(fixture.MakeFolder("Else"));
@@ -405,7 +405,7 @@ public class NewProjectUiFailureFlowTests
     {
         using NewProjectUiFixture fixture = StartCodeProject();
         List<string> restored = fixture.StandInRestore(NewProjectUiFixture.RestoreFailed());
-        fixture.Dialog.SetChecked(NewProjectDialogText.RestorePackages, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.RestorePackages, false);
 
         fixture.Dialog.ClickOk();
 

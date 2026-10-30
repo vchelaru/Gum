@@ -13,11 +13,11 @@ namespace Gum.Avalonia.Tests.NewProjectUi;
 [Trait("Category", "NewProjectUi")]
 public class NewProjectUiBannerTests
 {
-    private static bool IsExistingCodeProjectBannerShown(NewProjectUiFixture fixture) => fixture.IsShown(NewProjectDialogText.WarningHeading);
+    private static bool IsExistingCodeProjectBannerShown(NewProjectUiFixture fixture) => fixture.IsShown(NewProjectUiText.WarningHeading);
 
-    private static bool IsNotEmptyBannerShown(NewProjectUiFixture fixture) => fixture.IsShown(NewProjectDialogText.TargetNotEmptyHeading);
+    private static bool IsNotEmptyBannerShown(NewProjectUiFixture fixture) => fixture.IsShown(NewProjectUiText.TargetNotEmptyHeading);
 
-    private static bool IsRefusalBannerShown(NewProjectUiFixture fixture) => fixture.IsShown(NewProjectDialogText.RefusedHeading);
+    private static bool IsRefusalBannerShown(NewProjectUiFixture fixture) => fixture.IsShown(NewProjectUiText.RefusedHeading);
 
     [AvaloniaTheory]
     [InlineData("Other.csproj")]
@@ -29,11 +29,11 @@ public class NewProjectUiBannerTests
         File.WriteAllText(Path.Combine(fixture.Location, existingFile), "<Project />");
 
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Settle();
 
         IsExistingCodeProjectBannerShown(fixture).ShouldBeTrue();
-        fixture.IsShown($"Found {existingFile} in {NewProjectDisplayPath.Normalize(fixture.Location)}.").ShouldBeTrue();
+        fixture.IsShown($"Found {existingFile} in {fixture.Location}.").ShouldBeTrue();
         IsRefusalBannerShown(fixture).ShouldBeFalse();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue("an existing code project warns and does not block");
     }
@@ -47,11 +47,11 @@ public class NewProjectUiBannerTests
         string nested = fixture.MakeFolder("Out", "deeper", "still");
 
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.TypeLocation(nested);
         fixture.Settle();
 
-        fixture.IsShown($"Found Parent.csproj in {NewProjectDisplayPath.Normalize(parent)}.").ShouldBeTrue();
+        fixture.IsShown($"Found Parent.csproj in {parent}.").ShouldBeTrue();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
 
         fixture.Dialog.TypeLocation(fixture.Location);
@@ -68,11 +68,11 @@ public class NewProjectUiBannerTests
         IsExistingCodeProjectBannerShown(fixture).ShouldBeFalse("a Gum-only project does not care about code projects");
 
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         IsExistingCodeProjectBannerShown(fixture).ShouldBeTrue();
 
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
         IsExistingCodeProjectBannerShown(fixture).ShouldBeFalse();
     }
 
@@ -84,7 +84,7 @@ public class NewProjectUiBannerTests
         File.WriteAllText(Path.Combine(obj, "Generated.csproj"), "<Project />");
 
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.TypeLocation(obj);
         fixture.Settle();
 
@@ -103,11 +103,11 @@ public class NewProjectUiBannerTests
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, codeProject);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, codeProject);
         fixture.Settle();
 
         IsNotEmptyBannerShown(fixture).ShouldBeTrue();
-        fixture.IsShown(NewProjectDialogText.TargetNotEmptyBody(NewProjectDisplayPath.Normalize(target))).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.TargetNotEmptyBody(target)).ShouldBeTrue();
         IsRefusalBannerShown(fixture).ShouldBeFalse();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
 
@@ -140,7 +140,7 @@ public class NewProjectUiBannerTests
 
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Settle();
         IsNotEmptyBannerShown(fixture).ShouldBeTrue();
         IsExistingCodeProjectBannerShown(fixture).ShouldBeTrue();
@@ -164,7 +164,7 @@ public class NewProjectUiBannerTests
         fixture.Dialog.TypeName("Game");
         if (chooseXml)
         {
-            fixture.Dialog.ChooseFileFormat(NewProjectDialogViewModel.XmlFormat);
+            fixture.Dialog.ChooseFileFormat(NewProjectUiText.XmlFormat);
         }
         fixture.Settle();
 
@@ -201,7 +201,7 @@ public class NewProjectUiBannerTests
             default:
                 // A C# project creates a different set of files, and none of them exists yet.
                 fixture.Settle();
-                fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+                fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
                 break;
         }
         fixture.Settle();
@@ -226,7 +226,7 @@ public class NewProjectUiBannerTests
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Settle();
 
         IsRefusalBannerShown(fixture).ShouldBeTrue();
@@ -234,7 +234,7 @@ public class NewProjectUiBannerTests
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
 
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
         fixture.Settle();
         IsRefusalBannerShown(fixture).ShouldBeFalse("Gum-only looks for Game/Game.gumj, which is not there");
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
@@ -251,7 +251,7 @@ public class NewProjectUiBannerTests
 
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Settle();
 
         IsExistingCodeProjectBannerShown(fixture).ShouldBeTrue();

@@ -20,16 +20,16 @@ public class NewProjectUiPlatformTests
 
     private static string? ExpectedNote(string platform) => platform switch
     {
-        "stride" => NewProjectDialogText.StridePlatformNote,
-        "kniskia" => NewProjectDialogText.KniSkiaPlatformNote,
-        "silknet" => NewProjectDialogText.SilkNetPlatformNote,
+        "stride" => NewProjectUiText.StridePlatformNote,
+        "kniskia" => NewProjectUiText.KniSkiaPlatformNote,
+        "silknet" => NewProjectUiText.SilkNetPlatformNote,
         _ => null,
     };
 
     private static void StartCodeProject(NewProjectUiFixture fixture, string platform)
     {
         fixture.Dialog.TypeName("Game");
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.ChoosePlatform(platform);
         fixture.Settle();
     }
@@ -38,7 +38,7 @@ public class NewProjectUiPlatformTests
     public void PlatformDropDown_ListsTheSixPlatformsInOrder_AndStartsOnMonoGame()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
 
         fixture.Dialog.PlatformBox.ItemCount.ShouldBe(6);
         fixture.ViewModel.Platforms.Select(option => option.Name).ShouldBe(new[] { "monogame", "kni", "kniskia", "raylib", "stride", "silknet" });
@@ -68,7 +68,7 @@ public class NewProjectUiPlatformTests
             fixture.IsShown(note).ShouldBeTrue($"the {platform} note shows");
         }
 
-        CheckBox localSource = fixture.Dialog.CheckBoxLabeled(NewProjectDialogText.UseLocalSource);
+        CheckBox localSource = fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource);
         if (platform == "kniskia")
         {
             localSource.IsChecked.ShouldBe(true, "KNI with Skia always links the source");
@@ -133,37 +133,37 @@ public class NewProjectUiPlatformTests
         service.Setup(x => x.IsSourceLinkedAvailable).Returns(false);
         service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(new NewProjectValidation { Resolved = new ResolvedNewProject { Name = "Game" } });
         using NewProjectUiFixture fixture = new NewProjectUiFixture(service.Object);
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectDialogText.UseLocalSource).IsEffectivelyEnabled.ShouldBeFalse("no checkout, nothing to link");
+        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsEffectivelyEnabled.ShouldBeFalse("no checkout, nothing to link");
         fixture.Dialog.ChoosePlatform("kniskia");
         fixture.Settle();
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectDialogText.UseLocalSource).IsChecked.ShouldBe(true);
-        fixture.IsShown(NewProjectDialogText.NeedsLocalSource).ShouldBeTrue("the dialog says why OK is off");
-        fixture.IsShown(NewProjectDialogText.KniSkiaPlatformNote).ShouldBeTrue();
+        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true);
+        fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeTrue("the dialog says why OK is off");
+        fixture.IsShown(NewProjectUiText.KniSkiaPlatformNote).ShouldBeTrue();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
 
         fixture.Dialog.ChoosePlatform("kni");
         fixture.Settle();
 
-        fixture.IsShown(NewProjectDialogText.NeedsLocalSource).ShouldBeFalse();
+        fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeFalse();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
-        fixture.Dialog.CheckBoxLabeled(NewProjectDialogText.UseLocalSource).IsChecked.ShouldBe(false, "the forced tick does not stay behind");
+        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(false, "the forced tick does not stay behind");
     }
 
     [AvaloniaFact]
     public void TickingLocalSource_SurvivesAVisitToKniSkia()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
-        fixture.Dialog.SetChecked(NewProjectDialogText.UseLocalSource, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.UseLocalSource, true);
         fixture.Dialog.OpenCommandLine().ShouldContain("--source-linked");
 
         fixture.Dialog.ChoosePlatform("kniskia");
         fixture.Dialog.ChoosePlatform("raylib");
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectDialogText.UseLocalSource).IsChecked.ShouldBe(true, "the user's own tick is still there");
+        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true, "the user's own tick is still there");
         fixture.Dialog.CommandLine.ShouldContain("--platform raylib");
         fixture.Dialog.CommandLine.ShouldContain("--source-linked");
     }
@@ -173,18 +173,18 @@ public class NewProjectUiPlatformTests
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         StartCodeProject(fixture, "stride");
-        fixture.IsShown(NewProjectDialogText.StridePlatformNote).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.StridePlatformNote).ShouldBeTrue();
 
         fixture.Dialog.ChoosePlatform("silknet");
-        fixture.IsShown(NewProjectDialogText.StridePlatformNote).ShouldBeFalse();
-        fixture.IsShown(NewProjectDialogText.SilkNetPlatformNote).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.StridePlatformNote).ShouldBeFalse();
+        fixture.IsShown(NewProjectUiText.SilkNetPlatformNote).ShouldBeTrue();
 
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, false);
-        fixture.IsShown(NewProjectDialogText.SilkNetPlatformNote).ShouldBeFalse("the platform choices are hidden with the code project");
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
+        fixture.IsShown(NewProjectUiText.SilkNetPlatformNote).ShouldBeFalse("the platform choices are hidden with the code project");
         fixture.Dialog.PlatformBox.IsEffectivelyVisible.ShouldBeFalse();
 
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.PlatformBox.SelectedValue.ShouldBe("silknet", "the platform is remembered");
-        fixture.IsShown(NewProjectDialogText.SilkNetPlatformNote).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.SilkNetPlatformNote).ShouldBeTrue();
     }
 }

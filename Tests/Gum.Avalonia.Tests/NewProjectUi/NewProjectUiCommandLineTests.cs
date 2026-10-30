@@ -69,14 +69,14 @@ public class NewProjectUiCommandLineTests
         copied.Add(ClipboardAfterCopy(fixture)!);
         copied[0].ShouldBe(fixture.Dialog.CommandLine);
 
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.ChoosePlatform("raylib");
-        fixture.Dialog.SetChecked(NewProjectDialogText.RestorePackages, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.RestorePackages, false);
         copied.Add(ClipboardAfterCopy(fixture)!);
         copied[1].ShouldBe(fixture.Dialog.CommandLine);
         copied[1].ShouldContain("--platform raylib --no-restore");
 
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
         fixture.Dialog.ChooseTheme("Bubblegum");
         fixture.Dialog.TypeName("Another Name");
         copied.Add(ClipboardAfterCopy(fixture)!);
@@ -116,9 +116,9 @@ public class NewProjectUiCommandLineTests
         fixture.StandInRestore(NewProjectUiFixture.RestoreOk());
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.ChoosePlatform(platform);
-        fixture.Dialog.SetChecked(NewProjectDialogText.IncludeForms, forms);
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, forms);
         if (forms)
         {
             fixture.Dialog.ChooseTheme(theme);
@@ -158,7 +158,7 @@ public class NewProjectUiCommandLineTests
         fixture.Settle();
         if (xml)
         {
-            fixture.Dialog.ChooseFileFormat(NewProjectDialogViewModel.XmlFormat);
+            fixture.Dialog.ChooseFileFormat(NewProjectUiText.XmlFormat);
         }
         fixture.Dialog.ChooseTheme(theme);
         string command = fixture.Dialog.OpenCommandLine();
@@ -195,7 +195,92 @@ public class NewProjectUiCommandLineTests
 
         NewProjectRequest request = ParseCommand(command);
 
-        request.Path.ShouldBe(NewProjectDisplayPath.Normalize(Path.Combine(location, "Game", "Game.gumj")));
+        request.Path.ShouldBe(Path.Combine(location, "Game", "Game.gumj"));
         fixture.Service.Validate(request).Error.ShouldBeNull();
+    }
+
+    private static string Game(NewProjectUiFixture fixture) => Path.Combine(fixture.Location, "MyGame");
+
+    private static string GumOnlyPath(NewProjectUiFixture fixture) => Path.Combine(fixture.Location, "MyGame", "MyGame.gumj");
+
+    [AvaloniaFact]
+    public void NoRestore_AppearsOnlyWhenRestoreIsUntickedWithACodeProject()
+    {
+        using NewProjectUiFixture fixture = new NewProjectUiFixture();
+        fixture.Dialog.OpenCommandLine().ShouldBe($"gumcli new \"{GumOnlyPath(fixture)}\"");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.RestorePackages).IsChecked.ShouldBe(true);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform monogame");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.RestorePackages, false);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform monogame --no-restore");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.RestorePackages, true);
+        fixture.Dialog.CommandLine.ShouldNotContain("--no-restore");
+
+        // Unticked, then the C# project goes away: a Gum-only project has no restore to skip.
+        fixture.Dialog.SetChecked(NewProjectUiText.RestorePackages, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath(fixture)}\"");
+    }
+
+    [AvaloniaFact]
+    public void SourceLinked_AppearsForATickedLocalSource_AndForKniSkia_ButNeverForAGumOnlyProject()
+    {
+        using NewProjectUiFixture fixture = new NewProjectUiFixture();
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.Dialog.ChoosePlatform("kni");
+        fixture.Dialog.OpenCommandLine().ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kni");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.UseLocalSource, true);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kni --source-linked");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.UseLocalSource, false);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kni");
+
+        fixture.Dialog.ChoosePlatform("kniskia");
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kniskia --source-linked");
+
+        // A tick left behind does not leak into a Gum-only command.
+        fixture.Dialog.ChoosePlatform("kni");
+        fixture.Dialog.SetChecked(NewProjectUiText.UseLocalSource, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath(fixture)}\"");
+    }
+
+    [AvaloniaFact]
+    public void TemplateEmpty_AppearsExactlyWhenFormsIsUnticked()
+    {
+        using NewProjectUiFixture fixture = new NewProjectUiFixture();
+        fixture.Dialog.OpenCommandLine().ShouldNotContain("--template");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, false);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath(fixture)}\" --template empty");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform monogame --template empty");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, true);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform monogame");
+    }
+
+    [AvaloniaFact]
+    public void Theme_AppearsForANamedThemeWithForms_NotForStandard_AndNotWithFormsOff()
+    {
+        using NewProjectUiFixture fixture = new NewProjectUiFixture();
+        fixture.Dialog.OpenCommandLine().ShouldNotContain("--theme");
+
+        fixture.Dialog.ChooseTheme("Bubblegum");
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath(fixture)}\" --theme Bubblegum");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, false);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath(fixture)}\" --template empty");
+
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, true);
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath(fixture)}\" --theme Bubblegum");
+
+        fixture.Dialog.ChooseTheme("Standard");
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath(fixture)}\"");
     }
 }

@@ -26,7 +26,7 @@ public class NewProjectUiKeyboardTests
             TextBox box when box.Name == null && box.GetVisualAncestors().OfType<ComboBox>().Any() => null,
             TextBox { Text: var text } when text != null && !text.Contains(Path.DirectorySeparatorChar) => "Project name",
             TextBox => "Location",
-            ComboBox combo when combo.ItemsSource is IEnumerable<string> formats && formats.Contains(NewProjectDialogViewModel.JsonFormat) => "File format",
+            ComboBox combo when combo.ItemsSource is IEnumerable<string> formats && formats.Contains(NewProjectUiText.JsonFormat) => "File format",
             ComboBox combo when combo.ItemsSource is IEnumerable<NewProjectPlatformOption> => "Platform",
             ComboBox => "Theme",
             CheckBox { Content: StackPanel label } => label.GetVisualDescendants().OfType<TextBlock>().First().Text,
@@ -65,14 +65,14 @@ public class NewProjectUiKeyboardTests
     public void Tab_VisitsEveryControlOnce_InReadingOrder_AndWrapsAround_GumOnly()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        fixture.Dialog.CheckBoxLabeled(NewProjectDialogText.IncludeDemo);
+        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.IncludeDemo);
 
         List<string> visited = WalkFocus(fixture);
 
         visited.ShouldBe(new[]
         {
-            "Project name", "File format", "Location", "Browse for a folder", NewProjectDialogText.IncludeForms, "Theme",
-            NewProjectDialogText.IncludeDemo, NewProjectDialogText.CreateCodeProject, "Folders", "Command line", "OK", "Cancel",
+            "Project name", "File format", "Location", "Browse for a folder", NewProjectUiText.IncludeForms, "Theme",
+            NewProjectUiText.IncludeDemo, NewProjectUiText.CreateCodeProject, "Folders", "Command line", "OK", "Cancel",
         });
         visited.Distinct().Count().ShouldBe(visited.Count, "no control twice");
     }
@@ -81,15 +81,15 @@ public class NewProjectUiKeyboardTests
     public void Tab_WithACodeProjectAndFormsOff_SkipsTheHiddenThemeAndDemo_AndAddsThePlatformControls()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        fixture.Dialog.SetChecked(NewProjectDialogText.IncludeForms, false);
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
 
         List<string> visited = WalkFocus(fixture);
 
         visited.ShouldBe(new[]
         {
-            "Project name", "File format", "Location", "Browse for a folder", NewProjectDialogText.IncludeForms, NewProjectDialogText.CreateCodeProject,
-            "Platform", NewProjectDialogText.UseLocalSource, NewProjectDialogText.RestorePackages, "Folders", "Command line", "OK", "Cancel",
+            "Project name", "File format", "Location", "Browse for a folder", NewProjectUiText.IncludeForms, NewProjectUiText.CreateCodeProject,
+            "Platform", NewProjectUiText.UseLocalSource, NewProjectUiText.RestorePackages, "Folders", "Command line", "OK", "Cancel",
         });
     }
 
@@ -110,7 +110,7 @@ public class NewProjectUiKeyboardTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.StandInRestore(NewProjectUiFixture.RestoreFailed());
         fixture.Window.Click(fixture.Dialog.OkButton);
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the restore failure");
@@ -146,7 +146,7 @@ public class NewProjectUiKeyboardTests
 
         fixture.Dialog.Result.ShouldBe(true);
         fixture.ViewModel.IsCodeProjectCreated.ShouldBeFalse("a Gum-only project is created by the tool after the dialog closes");
-        fixture.ViewModel.GumProjectPath.ShouldBe(NewProjectDisplayPath.Normalize(Path.Combine(fixture.Location, "Game", "Game.gumj")));
+        fixture.ViewModel.GumProjectPath.ShouldBe(Path.Combine(fixture.Location, "Game", "Game.gumj"));
     }
 
     [AvaloniaFact]
@@ -156,7 +156,7 @@ public class NewProjectUiKeyboardTests
         List<string> restored = fixture.StandInRestore(NewProjectUiFixture.RestoreOk());
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.TypeLocation(fixture.Location);
         fixture.Settle();
 
@@ -221,8 +221,8 @@ public class NewProjectUiKeyboardTests
     }
 
     [AvaloniaTheory]
-    [InlineData(NewProjectDialogText.IncludeForms)]
-    [InlineData(NewProjectDialogText.CreateCodeProject)]
+    [InlineData(NewProjectUiText.IncludeForms)]
+    [InlineData(NewProjectUiText.CreateCodeProject)]
     public void Space_OnAFocusedCheckBox_TogglesIt_AndTheCommandLineFollows(string label)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
@@ -250,7 +250,7 @@ public class NewProjectUiKeyboardTests
 
         fixture.Window.Press(Key.Down, PhysicalKey.ArrowDown);
 
-        fixture.Dialog.FileFormatBox.SelectedItem.ShouldBe(NewProjectDialogViewModel.XmlFormat);
+        fixture.Dialog.FileFormatBox.SelectedItem.ShouldBe(NewProjectUiText.XmlFormat);
         fixture.ViewModel.GumProjectPath.ShouldEndWith(".gumx");
         fixture.Window.Press(Key.Up, PhysicalKey.ArrowUp);
         fixture.ViewModel.GumProjectPath.ShouldEndWith(".gumj");

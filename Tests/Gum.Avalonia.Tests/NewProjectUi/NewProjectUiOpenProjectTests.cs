@@ -84,7 +84,7 @@ public class NewProjectUiOpenProjectTests
                 NewProjectDialogViewModel viewModel = window.ViewModel;
                 window.TypeName("Replacement");
                 window.TypeLocation(location);
-                window.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+                window.SetChecked(NewProjectUiText.CreateCodeProject, true);
                 window.ClickOkWithoutWaiting();
                 WaitFor(() => viewModel.IsRestoreFailed, "the restore failure");
 
@@ -122,7 +122,7 @@ public class NewProjectUiOpenProjectTests
             {
                 window.TypeName("Replacement");
                 window.TypeLocation(location);
-                window.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+                window.SetChecked(NewProjectUiText.CreateCodeProject, true);
                 window.ClickOkWithoutWaiting();
                 WaitFor(() => window.ViewModel.IsRestoreFailed, "the restore failure");
                 window.Press(Key.Escape, PhysicalKey.Escape);
@@ -166,8 +166,8 @@ public class NewProjectUiOpenProjectTests
             {
                 window.TypeName("Broken");
                 window.TypeLocation(location);
-                window.SetChecked(NewProjectDialogText.CreateCodeProject, true);
-                window.SetChecked(NewProjectDialogText.RestorePackages, false);
+                window.SetChecked(NewProjectUiText.CreateCodeProject, true);
+                window.SetChecked(NewProjectUiText.RestorePackages, false);
                 window.ClickOk();
             });
             tree.WaitUntil(() => tree.Dialogs.Messages.Count > 0 || tree.SelectedState.SelectedScreen?.Name == NewProjectLogic.StartingScreenName, AsyncWork, "the load to finish");
@@ -192,15 +192,15 @@ public class NewProjectUiOpenProjectTests
         {
             window.TypeName("First");
             window.TypeLocation(location);
-            window.SetChecked(NewProjectDialogText.IncludeForms, false);
+            window.SetChecked(NewProjectUiText.IncludeForms, false);
             window.ClickCancel();
         });
 
         RunDialog(tree, window =>
         {
             window.NameBox.Text.ShouldBe("MyGame");
-            window.CheckBoxLabeled(NewProjectDialogText.IncludeForms).IsChecked.ShouldBe(true);
-            window.CheckBoxLabeled(NewProjectDialogText.CreateCodeProject).IsChecked.ShouldBe(false);
+            window.CheckBoxLabeled(NewProjectUiText.IncludeForms).IsChecked.ShouldBe(true);
+            window.CheckBoxLabeled(NewProjectUiText.CreateCodeProject).IsChecked.ShouldBe(false);
             window.ClickCancel();
         });
     }

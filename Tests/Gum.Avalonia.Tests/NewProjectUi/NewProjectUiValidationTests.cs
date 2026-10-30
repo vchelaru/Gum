@@ -48,7 +48,7 @@ public class NewProjectUiValidationTests
             fixture.Dialog.TypeName(name);
         }
 
-        AssertRefused(fixture, NewProjectDialogText.EnterName);
+        AssertRefused(fixture, NewProjectUiText.EnterName);
 
         fixture.Dialog.TypeName("Game");
         AssertAccepted(fixture);
@@ -78,7 +78,7 @@ public class NewProjectUiValidationTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeName(name);
 
-        AssertRefused(fixture, NewProjectDialogText.InvalidFolderName);
+        AssertRefused(fixture, NewProjectUiText.InvalidFolderName);
 
         fixture.Dialog.TypeName("Game");
         AssertAccepted(fixture);
@@ -104,7 +104,7 @@ public class NewProjectUiValidationTests
 
         if (reserved)
         {
-            AssertRefused(fixture, NewProjectDialogText.InvalidFolderName);
+            AssertRefused(fixture, NewProjectUiText.InvalidFolderName);
             return;
         }
         AssertAccepted(fixture);
@@ -119,7 +119,7 @@ public class NewProjectUiValidationTests
     public void ANameThatMakesTheLongestFileNameExceed255Bytes_IsRefused(int length, bool codeProject, bool accepted)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, codeProject);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, codeProject);
         fixture.Dialog.TypeName(new string('a', length));
 
         if (accepted)
@@ -128,7 +128,7 @@ public class NewProjectUiValidationTests
         }
         else
         {
-            AssertRefused(fixture, NewProjectDialogText.NameTooLong);
+            AssertRefused(fixture, NewProjectUiText.NameTooLong);
         }
     }
 
@@ -143,8 +143,8 @@ public class NewProjectUiValidationTests
         fixture.Dialog.TypeName(name);
         AssertAccepted(fixture);
 
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
-        AssertRefused(fixture, NewProjectDialogText.InvalidCSharpName);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        AssertRefused(fixture, NewProjectUiText.InvalidCSharpName);
 
         fixture.Dialog.TypeName("My_Game2");
         AssertAccepted(fixture);
@@ -167,7 +167,7 @@ public class NewProjectUiValidationTests
             fixture.Dialog.TypeLocation(location);
         }
 
-        AssertRefused(fixture, NewProjectDialogText.ChooseLocation);
+        AssertRefused(fixture, NewProjectUiText.ChooseLocation);
 
         fixture.Dialog.TypeLocation(fixture.Location);
         AssertAccepted(fixture);
@@ -184,7 +184,7 @@ public class NewProjectUiValidationTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeLocation(location);
 
-        AssertRefused(fixture, NewProjectDialogText.LocationNotAbsolute);
+        AssertRefused(fixture, NewProjectUiText.LocationNotAbsolute);
 
         fixture.Dialog.TypeLocation(fixture.Location);
         AssertAccepted(fixture);
@@ -197,7 +197,7 @@ public class NewProjectUiValidationTests
         fixture.Dialog.TypeLocation(fixture.Location + "\0x");
         fixture.Dialog.LocationBox.Text!.ShouldContain("\0", Case.Sensitive, "the box took the character");
 
-        AssertRefused(fixture, NewProjectDialogText.InvalidLocation);
+        AssertRefused(fixture, NewProjectUiText.InvalidLocation);
 
         fixture.Dialog.TypeLocation(fixture.Location);
         AssertAccepted(fixture);
@@ -212,7 +212,7 @@ public class NewProjectUiValidationTests
 
         fixture.Dialog.TypeName("Game");
         fixture.Dialog.TypeLocation(location);
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         AssertAccepted(fixture);
         fixture.Dialog.ClickOk();
 
@@ -225,7 +225,7 @@ public class NewProjectUiValidationTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeName("a/b");
         fixture.Settle();
-        global::Avalonia.Controls.TextBlock message = fixture.Window.Find<global::Avalonia.Controls.TextBlock>(block => block.Text == NewProjectDialogText.InvalidFolderName && block.IsEffectivelyVisible);
+        global::Avalonia.Controls.TextBlock message = fixture.Window.Find<global::Avalonia.Controls.TextBlock>(block => block.Text == NewProjectUiText.InvalidFolderName && block.IsEffectivelyVisible);
         global::Avalonia.Rect messageBounds = fixture.BoundsOf(message);
         global::Avalonia.Rect okBounds = fixture.BoundsOf(fixture.Dialog.OkButton);
 
@@ -235,7 +235,7 @@ public class NewProjectUiValidationTests
         fixture.Dialog.TypeLocation("rel");
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.IsShown(NewProjectDialogText.InvalidFolderName).ShouldBeFalse("the first message is gone");
-        fixture.IsShown(NewProjectDialogText.LocationNotAbsolute).ShouldBeTrue("and the next problem shows");
+        fixture.IsShown(NewProjectUiText.InvalidFolderName).ShouldBeFalse("the first message is gone");
+        fixture.IsShown(NewProjectUiText.LocationNotAbsolute).ShouldBeTrue("and the next problem shows");
     }
 }

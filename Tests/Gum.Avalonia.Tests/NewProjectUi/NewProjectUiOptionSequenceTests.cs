@@ -23,31 +23,31 @@ public class NewProjectUiOptionSequenceTests
         switch (step)
         {
             case "code":
-                dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+                dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
                 break;
             case "codeOff":
-                dialog.SetChecked(NewProjectDialogText.CreateCodeProject, false);
+                dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
                 break;
             case "formsOff":
-                dialog.SetChecked(NewProjectDialogText.IncludeForms, false);
+                dialog.SetChecked(NewProjectUiText.IncludeForms, false);
                 break;
             case "formsOn":
-                dialog.SetChecked(NewProjectDialogText.IncludeForms, true);
+                dialog.SetChecked(NewProjectUiText.IncludeForms, true);
                 break;
             case "theme":
                 dialog.ChooseTheme(Theme);
                 break;
             case "xml":
-                dialog.ChooseFileFormat(NewProjectDialogViewModel.XmlFormat);
+                dialog.ChooseFileFormat(NewProjectUiText.XmlFormat);
                 break;
             case "json":
-                dialog.ChooseFileFormat(NewProjectDialogViewModel.JsonFormat);
+                dialog.ChooseFileFormat(NewProjectUiText.JsonFormat);
                 break;
             case "noRestore":
-                dialog.SetChecked(NewProjectDialogText.RestorePackages, false);
+                dialog.SetChecked(NewProjectUiText.RestorePackages, false);
                 break;
             case "demo":
-                dialog.SetChecked(NewProjectDialogText.IncludeDemo, true);
+                dialog.SetChecked(NewProjectUiText.IncludeDemo, true);
                 break;
             default:
                 dialog.ChoosePlatform(step.Substring("platform:".Length));
@@ -84,7 +84,7 @@ public class NewProjectUiOptionSequenceTests
                     viewModel.PlatformName = parts[1];
                     break;
                 case "xml":
-                    viewModel.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
+                    viewModel.SelectedFileFormat = NewProjectUiText.XmlFormat;
                     break;
                 case "theme":
                     viewModel.ThemeSelection.SelectedTheme = Theme;
@@ -135,13 +135,13 @@ public class NewProjectUiOptionSequenceTests
         fixture.Dialog.ChooseTheme(Theme);
         fixture.Dialog.OpenCommandLine().ShouldContain($"--theme {Theme}");
 
-        fixture.Dialog.SetChecked(NewProjectDialogText.IncludeForms, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, false);
         fixture.Dialog.CommandLine.ShouldNotContain("--theme");
         fixture.Dialog.CommandLine.ShouldContain("--template empty");
         fixture.Dialog.ThemeBox.IsEffectivelyVisible.ShouldBeFalse();
-        fixture.Dialog.CheckBoxLabeled(NewProjectDialogText.IncludeDemo).IsEffectivelyVisible.ShouldBeFalse();
+        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.IncludeDemo).IsEffectivelyVisible.ShouldBeFalse();
 
-        fixture.Dialog.SetChecked(NewProjectDialogText.IncludeForms, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, true);
         fixture.Dialog.ThemeBox.SelectedItem.ShouldBe(Theme);
         fixture.Dialog.CommandLine.ShouldContain($"--theme {Theme}");
         fixture.Dialog.CommandLine.ShouldNotContain("--template");
@@ -151,19 +151,19 @@ public class NewProjectUiOptionSequenceTests
     public void SwitchingTheFileFormatWithACodeProject_ChangesTheProjectFile_AndTheNoteExplainsTheCommandCannot()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.OpenCommandLine();
-        fixture.Dialog.ChooseFileFormat(NewProjectDialogViewModel.XmlFormat);
+        fixture.Dialog.ChooseFileFormat(NewProjectUiText.XmlFormat);
 
         fixture.ViewModel.GumProjectPath.ShouldEndWith(Path.Combine("Content", "GumProject", "GumProject.gumx"));
-        fixture.IsShownContaining(NewProjectDialogText.NoXmlWithCodeProjectNote).ShouldBeTrue("the command line has no way to ask for .gumx with a code project");
+        fixture.IsShownContaining(NewProjectUiText.NoXmlWithCodeProjectNote).ShouldBeTrue("the command line has no way to ask for .gumx with a code project");
         fixture.OpenSection(Gum.Avalonia.Dialogs.Views.NewProjectDialogView.FoldersExpanderName);
         fixture.ViewModel.SetFolderTreeExpanded(true);
         fixture.TreeRowTexts().ShouldContain("GumProject.gumx");
         fixture.TreeRowTexts().ShouldNotContain("GumProject.gumj");
 
-        fixture.Dialog.ChooseFileFormat(NewProjectDialogViewModel.JsonFormat);
-        fixture.IsShownContaining(NewProjectDialogText.NoXmlWithCodeProjectNote).ShouldBeFalse();
+        fixture.Dialog.ChooseFileFormat(NewProjectUiText.JsonFormat);
+        fixture.IsShownContaining(NewProjectUiText.NoXmlWithCodeProjectNote).ShouldBeFalse();
         fixture.TreeRowTexts().ShouldContain("GumProject.gumj");
     }
 
@@ -174,8 +174,8 @@ public class NewProjectUiOptionSequenceTests
         fixture.StandInRestore(NewProjectUiFixture.RestoreOk());
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
-        fixture.Dialog.ChooseFileFormat(NewProjectDialogViewModel.XmlFormat);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.Dialog.ChooseFileFormat(NewProjectUiText.XmlFormat);
         List<string> folders = new List<string>();
         List<string> mainFiles = new List<string>();
         NewProjectUiFixture.CollectLayout(fixture.ViewModel.FolderTree.Single(), folders, mainFiles);
@@ -197,11 +197,11 @@ public class NewProjectUiOptionSequenceTests
         fixture.StandInRestore(NewProjectUiFixture.RestoreOk());
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
-        fixture.Dialog.SetChecked(NewProjectDialogText.IncludeDemo, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.IncludeDemo, true);
         if (formsOff)
         {
-            fixture.Dialog.SetChecked(NewProjectDialogText.IncludeForms, false);
+            fixture.Dialog.SetChecked(NewProjectUiText.IncludeForms, false);
         }
 
         fixture.Dialog.ClickOk();

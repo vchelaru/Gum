@@ -33,7 +33,7 @@ public class NewProjectUiFoldersTests
 
         rows.ShouldBe(new[]
         {
-            NewProjectDisplayPath.AsFolder(Path.Combine(fixture.Location, "Game")),
+            NewProjectUiText.Folder(Path.Combine(fixture.Location, "Game")),
             "Behaviors" + Separator, "Components" + Separator, "Fonts" + Separator, "Screens" + Separator, "Standards" + Separator,
             "Game.gumj",
         }, ignoreOrder: true);
@@ -47,12 +47,12 @@ public class NewProjectUiFoldersTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.ChoosePlatform(platform);
 
         List<string> rows = fixture.FolderRows();
 
-        rows.ShouldContain(NewProjectDisplayPath.AsFolder(Path.Combine(fixture.Location, "Game")));
+        rows.ShouldContain(NewProjectUiText.Folder(Path.Combine(fixture.Location, "Game")));
         foreach (string expected in new[] { "Content", "GumProject", "Behaviors", "Components", "Fonts", "Screens", "Standards" })
         {
             rows.ShouldContain(expected + Separator, $"{expected} for {platform}");
@@ -65,7 +65,7 @@ public class NewProjectUiFoldersTests
     public void Collapse_all_ClosesEveryFolder_AndExpand_all_OpensThemAgain()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        fixture.Dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.OpenSection(NewProjectDialogView.FoldersExpanderName);
         fixture.TreeRowTexts().Count.ShouldBeGreaterThan(1, "the section opens with the folders showing");
 
@@ -89,10 +89,10 @@ public class NewProjectUiFoldersTests
 
         fixture.Dialog.TypeName("Renamed");
         fixture.Dialog.TypeLocation(elsewhere);
-        fixture.Dialog.ChooseFileFormat(NewProjectDialogViewModel.XmlFormat);
+        fixture.Dialog.ChooseFileFormat(NewProjectUiText.XmlFormat);
 
         List<string> rows = fixture.TreeRowTexts();
-        rows.ShouldContain(NewProjectDisplayPath.AsFolder(Path.Combine(elsewhere, "Renamed")));
+        rows.ShouldContain(NewProjectUiText.Folder(Path.Combine(elsewhere, "Renamed")));
         rows.ShouldContain("Renamed.gumx");
         rows.ShouldNotContain("Renamed.gumj");
         fixture.ViewModel.FolderTree.Single().Children.Where(child => child.IsMainFile).Select(child => child.Name).ShouldBe(new[] { "Renamed.gumx" });
@@ -137,7 +137,7 @@ public class NewProjectUiFoldersTests
         TextBlock root = tree.GetVisualDescendants().OfType<TextBlock>().First();
         ScrollContentPresenter presenter = scroller.GetVisualDescendants().OfType<ScrollContentPresenter>().First();
         fixture.BoundsOf(root).Right.ShouldBeLessThanOrEqualTo(fixture.BoundsOf(presenter).Right + 1, "the end of the path can be scrolled into view");
-        root.Text.ShouldBe(NewProjectDisplayPath.AsFolder(Path.Combine(longLocation, "MyGame")), "the whole path is in the row, not cut off");
+        root.Text.ShouldBe(NewProjectUiText.Folder(Path.Combine(longLocation, "MyGame")), "the whole path is in the row, not cut off");
     }
 
     [AvaloniaFact]
