@@ -424,7 +424,7 @@ public class NewProjectDialogViewModelTests
     public async Task Plan_LeavesOutTheDemoScreen_WhenItIsUnchecked(bool includeDemo, int expectedFiles)
     {
         _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan(
-            "root", new[] { "Screens/DemoScreenGum.gusj", "Screens/Other.gusj", "A.gumj" }, Array.Empty<string>()));
+            "root", new[] { "Content/GumProject/Screens/Bubblegum/DemoScreenGum.gusj", "Screens/Other.gusj", "A.gumj" }, Array.Empty<string>()));
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
             vm.IncludeCodeProject = true;

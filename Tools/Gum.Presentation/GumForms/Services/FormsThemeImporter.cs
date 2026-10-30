@@ -26,7 +26,6 @@ namespace GumFormsPlugin.Services;
 /// </remarks>
 public class FormsThemeImporter : IFormsThemeImporter
 {
-    private const string DemoScreenName = "DemoScreenGum";
 
     private readonly IFormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
@@ -203,8 +202,7 @@ public class FormsThemeImporter : IFormsThemeImporter
 
     private static bool IsDemoScreen(ScreenSave screen) => IsDemoScreen(screen.Name);
 
-    private static bool IsDemoScreen(string name) =>
-        name == DemoScreenName || name.EndsWith("/" + DemoScreenName, StringComparison.Ordinal);
+    private static bool IsDemoScreen(string name) => Gum.ProjectServices.DemoScreenRule.IsDemoScreenName(name);
 
     /// <summary>
     /// Opens the Import from .gumx dialog on the theme's own project so the user picks items one by

@@ -815,7 +815,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         }
 
         string[] files = plan.Files
-            .Where(file => !NewProjectDisplayPath.Normalize(file).Split(Path.DirectorySeparatorChar)[^1].StartsWith("DemoScreenGum.", StringComparison.Ordinal))
+            .Where(file => !DemoScreenRule.IsDemoScreenFile(file))
             .ToArray();
         return new NewProjectPlan(plan.RootDirectory, files, plan.Directories);
     }

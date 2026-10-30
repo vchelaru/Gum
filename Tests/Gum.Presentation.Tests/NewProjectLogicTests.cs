@@ -419,6 +419,22 @@ public class NewProjectLogicTests
     }
 
     [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_RemovesAThemedDemoScreen_WhenItIsUnchecked()
+    {
+        GumProjectSave loaded = new GumProjectSave();
+        ScreenSave themedDemo = new ScreenSave { Name = "Bubblegum/DemoScreenGum" };
+        ScreenSave other = new ScreenSave { Name = "Bubblegum/StylesScreen" };
+        loaded.Screens.Add(themedDemo);
+        loaded.Screens.Add(other);
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _deleteLogic.Verify(x => x.RemoveElement(themedDemo), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveElement(other), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_KeepsTheDemoScreen_WhenItIsChecked_OrFormsAreOff()
     {
         GumProjectSave loaded = new GumProjectSave();

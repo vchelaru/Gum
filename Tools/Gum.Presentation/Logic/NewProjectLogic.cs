@@ -23,7 +23,6 @@ public class NewProjectLogic : INewProjectLogic
     /// </summary>
     public const string StartingScreenName = "MainScreen";
 
-    private const string DemoScreenName = "DemoScreenGum";
 
     private readonly IProjectManager _projectManager;
     private readonly IDialogService _dialogService;
@@ -118,10 +117,18 @@ public class NewProjectLogic : INewProjectLogic
         await _projectManager.LoadProjectAsync(new FilePath(gumProjectPath));
 
         GumProjectSave project = _projectManager.GetLoadedProject();
-        if (viewModel.IsIncludeFormsControls && !viewModel.IsIncludeDemoScreenGum
-            && project.Screens.FirstOrDefault(screen => screen.Name == DemoScreenName) is { } demoScreen)
+        if (viewModel.IsIncludeFormsControls && !viewModel.IsIncludeDemoScreenGum)
         {
-            _deleteLogic.RemoveElement(demoScreen);
+            foreach (ScreenSave demoScreen in project.Screens.Where(screen => DemoScreenRule.IsDemoScreenName(screen.Name)).ToList())
+            {
+                // Removing the element leaves its file behind, and the project would not list it, so delete it too.
+                FilePath? demoFile = _fileCommands.GetFullFileName(demoScreen);
+                _deleteLogic.RemoveElement(demoScreen);
+                if (demoFile != null && File.Exists(demoFile.FullPath))
+                {
+                    File.Delete(demoFile.FullPath);
+                }
+            }
         }
 
         ScreenSave startingScreen = project.Screens.FirstOrDefault(screen => screen.Name == StartingScreenName) ?? new ScreenSave { Name = StartingScreenName };
