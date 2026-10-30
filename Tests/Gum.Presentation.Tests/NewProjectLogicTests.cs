@@ -339,6 +339,32 @@ public class NewProjectLogicTests
         _defaultFontBundler.Verify(x => x.CopyTo(It.IsAny<string>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData(".gumj")]
+    [InlineData(".gumx")]
+    public async Task CreateNewProjectAsync_RefusesToOverwriteAProject_InEitherFormat_EvenWithoutTheDialogValidation(string existingExtension)
+    {
+        string existing = Path.ChangeExtension(ChosenLocation, existingExtension);
+        Directory.CreateDirectory(Path.GetDirectoryName(existing)!);
+        File.WriteAllText(existing, "keep me");
+        try
+        {
+            SetUpDialog(accepted: true);
+
+            await _logic.CreateNewProjectAsync();
+
+            _dialogService.Verify(x => x.ShowMessage(It.Is<string>(message => message.Contains("Project already exists")), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+            _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
+            _projectManager.Verify(x => x.SetProjectLocation(It.IsAny<string>()), Times.Never);
+            _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
+            File.ReadAllText(existing).ShouldBe("keep me");
+        }
+        finally
+        {
+            File.Delete(existing);
+        }
+    }
+
     #region Code project
 
     private static string Slashes(string path) => path.Replace((char)92, (char)47);

@@ -660,6 +660,21 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
+    public async Task GumOnly_ProjectInTheOtherFormatAlreadyThere_ShowsTheRefusal()
+    {
+        _service.Setup(x => x.Validate(It.Is<NewProjectRequest>(request => request.Path != null && request.Path.EndsWith(".gumx")))).Returns(new NewProjectValidation
+        {
+            Error = new NewProjectError(NewProjectErrorKind.ProjectAlreadyExists, "Project already exists: " + GumOnlyPath(extension: ".gumx")),
+        });
+        NewProjectDialogViewModel viewModel = Create();
+
+        await viewModel.PlanRefresh;
+
+        viewModel.RefusalText.ShouldBe("Project already exists: " + GumOnlyPath(extension: ".gumx"));
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task OtherValidationErrors_DoNotTurnOkOffUpFront()
     {
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(new NewProjectValidation

@@ -77,6 +77,15 @@ public class NewProjectLogic : INewProjectLogic
         // The theme import copies files next to the project file, so the project needs a location on disk
         // before it can run.
         string projectLocation = viewModel.GumProjectPath;
+
+        // The dialog already refuses this, but the flow must not overwrite a project even when it is reached some other way.
+        if (FindExistingProjectFile(projectLocation) is { } existingProject)
+        {
+            _dialogService.ShowMessage($"Project already exists: {existingProject}");
+            EnsureProjectLoaded();
+            return;
+        }
+
         Directory.CreateDirectory(Path.GetDirectoryName(projectLocation)!);
 
         ClearSelection();
@@ -107,6 +116,21 @@ public class NewProjectLogic : INewProjectLogic
         ScreenSave startingScreen = new() { Name = StartingScreenName };
         _projectCommands.AddScreen(startingScreen);
         _selectedState.SelectedScreen = startingScreen;
+    }
+
+    // The project file at this path, in either format, if there is one.
+    private static string? FindExistingProjectFile(string projectPath)
+    {
+        foreach (string extension in new[] { ".gumj", ".gumx" })
+        {
+            string candidate = Path.ChangeExtension(projectPath, extension);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 
     // The dialog already wrote the Gum project and the code project around it; the tool only opens the Gum
