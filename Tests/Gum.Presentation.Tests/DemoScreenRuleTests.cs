@@ -29,6 +29,10 @@ public class DemoScreenRuleTests
     [InlineData("Components/DemoScreenGum.gucj", false)]
     [InlineData("DemoScreenGum.gusj", false)]
     [InlineData("MyScreens/DemoScreenGum.gusj", false)]
+    [InlineData("Screens/DemoScreenGumExtra.gusj", false)]
+    [InlineData("Screens/Sub/DemoScreenGum.gusj", true)]
+    [InlineData("Screens/DemoScreenGum", false)]
+    [InlineData("Screens/DemoScreenGum.gusj.bak", false)]
     public void IsDemoScreenFile_MatchesTheScreenFileWhateverTheSeparatorAndTheme(string path, bool expected)
     {
         DemoScreenRule.IsDemoScreenFile(path).ShouldBe(expected);

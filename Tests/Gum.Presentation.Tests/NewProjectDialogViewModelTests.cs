@@ -338,6 +338,18 @@ public class NewProjectDialogViewModelTests
         viewModel.ValidationMessage.ShouldBe("The location has characters a path can't have.");
     }
 
+    [Theory]
+    [InlineData("", "")]
+    [InlineData("  ", "  ")]
+    public void Location_TrailingSeparatorAndSurroundingSpaces_DoNotChangeThePaths(string before, string after)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.Location = before + Folder + Path.DirectorySeparatorChar + after);
+
+        viewModel.GumProjectPath.ShouldBe(GumOnlyPath());
+        viewModel.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath()}\"");
+        viewModel.ValidationMessage.ShouldBeEmpty();
+    }
+
     #endregion
 
     [Theory]
@@ -1067,9 +1079,20 @@ public class NewProjectDialogViewModelTests
     [InlineData(false, null, "empty")]
     public async Task Ok_PassesTheChoicesToTheService(bool forms, string? expectedTheme, string expectedTemplate)
     {
-        System.Collections.Concurrent.ConcurrentQueue<NewProjectRequest> requests = new();
-        _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Callback<NewProjectRequest>(request => requests.Enqueue(request)).Returns(Valid());
-        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>())).ReturnsAsync(FilesOk());
+        // Each Validate call hands back a uniquely named result, so the request that OK validated is the one whose name
+        // reaches CreateFilesAsync; the background plan refreshes also call Validate and must not be mistaken for it.
+        System.Collections.Concurrent.ConcurrentDictionary<string, NewProjectRequest> requestsByName = new();
+        int validateCalls = 0;
+        _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns<NewProjectRequest>(request =>
+        {
+            string name = "Call" + Interlocked.Increment(ref validateCalls);
+            requestsByName[name] = request;
+            return new NewProjectValidation { Resolved = new ResolvedNewProject { Name = name, CsprojPath = Valid().Resolved!.CsprojPath } };
+        });
+        ResolvedNewProject? created = null;
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
+            .Callback<ResolvedNewProject, CancellationToken>((project, _) => created = project)
+            .ReturnsAsync(FilesOk());
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
             vm.IncludeCodeProject = true;
@@ -1080,13 +1103,12 @@ public class NewProjectDialogViewModelTests
             vm.IsIncludeFormsControls = forms;
             vm.ThemeSelection.SelectedTheme = "Bubblegum";
         });
-        await viewModel.PlanRefresh;
-        requests.Clear();
 
         viewModel.AffirmativeCommand.Execute(null);
         await viewModel.CreationTask;
 
-        NewProjectRequest request = requests.ShouldHaveSingleItem();
+        created.ShouldNotBeNull();
+        NewProjectRequest request = requestsByName[created.Name];
         request.Path.ShouldBe(Path.Combine(Folder, "MyGame"));
         request.Platform.ShouldBe("kni");
         request.Template.ShouldBe(expectedTemplate);

@@ -575,6 +575,121 @@ public class NewProjectServiceTests : BaseTestClass
         };
     }
 
+    #region Edge cases
+
+    [Theory]
+    [InlineData("FORMS", null, "MonoGame")]
+    [InlineData("Empty", null, "KNISKIA")]
+    [InlineData("forms", "STANDARD", "Silk.Net")]
+    public void Validate_TemplatePlatformAndStandardThemeNames_IgnoreCase(string template, string? theme, string platform)
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "Cased"),
+            Template = template,
+            Theme = theme,
+            Platform = platform
+        });
+
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
+    }
+
+    [Fact]
+    public void Validate_EveryAcceptedPlatformName_ResolvesToItsPlatform()
+    {
+        NewProjectService service = CreateService();
+
+        foreach ((string name, HostPlatform platform) in NewProjectPlatforms.All)
+        {
+            NewProjectValidation validation = service.Validate(new NewProjectRequest
+            {
+                Path = Path.Combine(_folder, "P" + name.Replace('.', '_')),
+                Platform = name,
+                Template = "empty"
+            });
+
+            validation.IsValid.ShouldBeTrue($"{name}: {validation.Error?.Message}");
+            validation.Resolved!.Platform.ShouldBe(platform);
+        }
+    }
+
+    [Fact]
+    public void GetPlan_LeavesNoTemporaryFolderBehind()
+    {
+        int CountTemporaryFolders() => Directory.GetDirectories(Path.GetTempPath(), "GumNewProjectPlan_*").Length;
+        NewProjectService service = CreateService();
+        int before = CountTemporaryFolders();
+
+        service.GetPlan(new NewProjectRequest { Path = Path.Combine(_folder, "Temp"), Platform = "raylib", Template = "forms" });
+
+        CountTemporaryFolders().ShouldBe(before);
+    }
+
+    [Fact]
+    public void GetPlan_CalledFromManyThreads_ReturnsTheSamePlanEachTime()
+    {
+        NewProjectService service = CreateService();
+        NewProjectRequest request = new NewProjectRequest { Path = Path.Combine(_folder, "Threaded"), Platform = "kni", Template = "forms" };
+        List<string> plans = new List<string>();
+
+        Parallel.For(0, 8, _ =>
+        {
+            NewProjectPlan? plan = service.GetPlan(request);
+            lock (plans)
+            {
+                plans.Add(plan == null ? "null" : string.Join("|", plan.Files));
+            }
+        });
+
+        plans.Distinct().Count().ShouldBe(1);
+        plans[0].ShouldNotBe("null");
+    }
+
+    [Fact]
+    public void GetPlan_ForDifferentFormatsAndTemplates_DoesNotReuseAnotherCombinationsPlan()
+    {
+        NewProjectService service = CreateService();
+        NewProjectPlan? Plan(string template, bool xml) => service.GetPlan(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "Cache"),
+            Template = template,
+            UseXmlFormat = xml
+        });
+
+        NewProjectPlan json = Plan("forms", xml: false)!;
+        NewProjectPlan xmlPlan = Plan("forms", xml: true)!;
+        NewProjectPlan empty = Plan("empty", xml: false)!;
+        NewProjectPlan jsonAgain = Plan("forms", xml: false)!;
+
+        json.Files.ShouldContain("Cache.gumj");
+        json.Files.ShouldNotContain("Cache.gumx");
+        xmlPlan.Files.ShouldContain("Cache.gumx");
+        xmlPlan.Files.ShouldNotContain("Cache.gumj");
+        empty.Files.Count.ShouldBeLessThan(json.Files.Count);
+        jsonAgain.Files.ShouldBe(json.Files);
+    }
+
+    [Fact]
+    public async Task Execute_IntoAFolderWithOtherFiles_KeepsThem()
+    {
+        NewProjectService service = CreateService();
+        string root = Path.Combine(_folder, "Existing");
+        Directory.CreateDirectory(root);
+        string other = Path.Combine(root, "notes.txt");
+        File.WriteAllText(other, "keep me");
+
+        NewProjectResult result = await service.ExecuteAsync(
+            new NewProjectRequest { Path = root, Template = "empty" }, null, CancellationToken.None);
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        File.ReadAllText(other).ShouldBe("keep me");
+        File.Exists(Path.Combine(root, "Existing.gumj")).ShouldBeTrue();
+    }
+
+    #endregion
+
     private class FakeRestoreRunner : IRestoreRunner
     {
         public List<string> Restored { get; } = new List<string>();
