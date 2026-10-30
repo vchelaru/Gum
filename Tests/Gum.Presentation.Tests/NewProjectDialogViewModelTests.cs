@@ -338,6 +338,18 @@ public class NewProjectDialogViewModelTests
         viewModel.ValidationMessage.ShouldBe("The location has characters a path can't have.");
     }
 
+    [Theory]
+    [InlineData("", "")]
+    [InlineData("  ", "  ")]
+    public void Location_TrailingSeparatorAndSurroundingSpaces_DoNotChangeThePaths(string before, string after)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.Location = before + Folder + Path.DirectorySeparatorChar + after);
+
+        viewModel.GumProjectPath.ShouldBe(GumOnlyPath());
+        viewModel.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath()}\"");
+        viewModel.ValidationMessage.ShouldBeEmpty();
+    }
+
     #endregion
 
     [Theory]
