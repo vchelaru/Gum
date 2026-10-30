@@ -375,4 +375,91 @@ public class NewCommandTests : BaseTestClass
         result.StandardError.ShouldContain("--platform");
         Directory.Exists(projectDir).ShouldBeFalse();
     }
+
+    #region Output text pinned for the move into Gum.ProjectServices (#7208)
+
+    [Fact]
+    public void New_GumOnly_ShouldPrintCreatedProjectLineWithFullPath()
+    {
+        string filePath = Path.Combine(TempDirectory, "Pinned.gumj");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath);
+
+        result.ExitCode.ShouldBe(0);
+        result.StandardOutput.Trim().ShouldBe($"Created project: {filePath}");
+    }
+
+    [Fact]
+    public void New_WithInvalidTemplate_ShouldPrintValidValues()
+    {
+        CliTestHelper result = CliTestHelper.Run("new", Path.Combine(TempDirectory, "X.gumx"), "--template", "bogus");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.Trim().ShouldEndWith("Unknown template 'bogus'. Valid values are: forms, empty.");
+    }
+
+    [Fact]
+    public void New_WithThemeAndEmptyTemplate_ShouldExplainThemesStyleForms()
+    {
+        CliTestHelper result = CliTestHelper.Run(
+            "new", Path.Combine(TempDirectory, "X.gumx"), "--template", "empty", "--theme", "Meadow");
+
+        result.StandardError.Trim().ShouldEndWith("--theme needs the 'forms' template: themes style the Forms controls.");
+    }
+
+    [Fact]
+    public void New_WithUnknownPlatform_ShouldPrintExactValidValues()
+    {
+        CliTestHelper result = CliTestHelper.Run("new", Path.Combine(TempDirectory, "G"), "--platform", "nope");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.Trim().ShouldEndWith(
+            "Unknown platform 'nope'. Valid values are: monogame, kni, kniskia, raylib, stride, silknet.");
+    }
+
+    [Fact]
+    public void New_WithFnaPlatform_ShouldPrintNuGetExplanation()
+    {
+        CliTestHelper result = CliTestHelper.Run("new", Path.Combine(TempDirectory, "G"), "--platform", "fna");
+
+        result.StandardError.Trim().ShouldEndWith(
+            "FNA projects can't be scaffolded: FNA is not published to NuGet, so it has to be linked from source.");
+    }
+
+    [Fact]
+    public void New_WithPlatformAndProjectFilePath_ShouldPrintFolderExplanation()
+    {
+        CliTestHelper result = CliTestHelper.Run(
+            "new", Path.Combine(TempDirectory, "G.gumj"), "--platform", "monogame");
+
+        result.StandardError.Trim().ShouldEndWith("With --platform, <path> names the project folder, not a Gum project file.");
+    }
+
+    [Fact]
+    public void New_WithPlatformAndInvalidName_ShouldPrintNameRules()
+    {
+        CliTestHelper result = CliTestHelper.Run("new", Path.Combine(TempDirectory, "9bad"), "--platform", "monogame", "--no-restore");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("'9bad' is not a valid project name.");
+        Directory.Exists(Path.Combine(TempDirectory, "9bad")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithPlatform_ShouldPrintBothCreatedLines()
+    {
+        string projectDir = Path.Combine(TempDirectory, "PinnedGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "raylib", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string[] lines = result.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        lines.ShouldBe(new[]
+        {
+            $"Created project: {Path.Combine(projectDir, "PinnedGame.csproj")}",
+            $"Created Gum project: {Path.Combine(projectDir, "Content", "GumProject", "GumProject.gumj")}"
+        });
+    }
+
+    #endregion
 }

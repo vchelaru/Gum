@@ -27,29 +27,17 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
         string? themeDirectory = null)
     {
-        string fullDirectory = Path.GetFullPath(projectDirectory)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        string fullDirectory = GetFullDirectory(projectDirectory);
         string projectName = Path.GetFileName(fullDirectory);
 
-        string? nameError = GetProjectNameError(projectName);
-        if (nameError != null)
+        string? preflightError = GetPreflightError(fullDirectory);
+        if (preflightError != null)
         {
-            return Fail(nameError);
+            return Fail(preflightError);
         }
 
-        string csprojPath = Path.Combine(fullDirectory, projectName + ".csproj");
-        string gumFolder = Path.Combine(fullDirectory, "Content", GumProjectFolderName);
-        string gumProjectPath = Path.Combine(gumFolder, GumProjectFolderName + ".gumj");
-
-        if (File.Exists(csprojPath))
-        {
-            return Fail($"Project already exists: {csprojPath}");
-        }
-
-        if (File.Exists(gumProjectPath))
-        {
-            return Fail($"Gum project already exists: {gumProjectPath}");
-        }
+        (string csprojPath, string gumProjectPath) = GetProjectPaths(fullDirectory);
+        string gumFolder = Path.GetDirectoryName(gumProjectPath)!;
 
         (string packageName, string runtimeProjectPath) = GetGumRuntime(platform);
         string gumReference = $"<PackageReference Include=\"{packageName}\" Version=\"*\" />";
@@ -71,18 +59,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
         WriteHostFiles(fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference);
 
-        if (themeDirectory != null)
-        {
-            new FormsTemplateCreator().CreateFromTheme(gumProjectPath, themeDirectory);
-        }
-        else if (includeFormsTemplate)
-        {
-            new FormsTemplateCreator().Create(gumProjectPath);
-        }
-        else
-        {
-            new ProjectCreator().Create(gumProjectPath);
-        }
+        GumProjectTemplateWriter.Write(gumProjectPath, includeFormsTemplate, themeDirectory);
 
         WriteCodeGenerationSettings(gumProjectPath, csprojPath);
 
@@ -92,6 +69,45 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             CsprojPath = csprojPath,
             GumProjectPath = gumProjectPath
         };
+    }
+
+    internal static string GetFullDirectory(string projectDirectory) =>
+        Path.GetFullPath(projectDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+    internal static (string CsprojPath, string GumProjectPath) GetProjectPaths(string fullDirectory)
+    {
+        string projectName = Path.GetFileName(fullDirectory);
+        return (
+            Path.Combine(fullDirectory, projectName + ".csproj"),
+            Path.Combine(fullDirectory, "Content", GumProjectFolderName, GumProjectFolderName + ".gumj"));
+    }
+
+    /// <summary>
+    /// The reason a project cannot be created in <paramref name="fullDirectory"/> (bad name, or a project already there),
+    /// checked before anything is written; <see langword="null"/> when it can.
+    /// </summary>
+    internal static string? GetPreflightError(string fullDirectory)
+    {
+        string projectName = Path.GetFileName(fullDirectory);
+
+        string? nameError = GetProjectNameError(projectName);
+        if (nameError != null)
+        {
+            return nameError;
+        }
+
+        (string csprojPath, string gumProjectPath) = GetProjectPaths(fullDirectory);
+        if (File.Exists(csprojPath))
+        {
+            return $"Project already exists: {csprojPath}";
+        }
+
+        if (File.Exists(gumProjectPath))
+        {
+            return $"Gum project already exists: {gumProjectPath}";
+        }
+
+        return null;
     }
 
     private static string? GetProjectNameError(string projectName)
