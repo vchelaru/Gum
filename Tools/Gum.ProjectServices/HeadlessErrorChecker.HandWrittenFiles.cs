@@ -60,9 +60,10 @@ public partial class HeadlessErrorChecker
     {
         if (value is string text)
         {
-            return isNumeric
+            // The runtime skips a value it cannot convert, so an empty one leaves the property unset.
+            return text.Length == 0 || (isNumeric
                 ? double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out _)
-                : bool.TryParse(text, out _);
+                : bool.TryParse(text, out _));
         }
         return isNumeric ? value is not bool : value is bool;
     }
@@ -199,10 +200,18 @@ public partial class HeadlessErrorChecker
     {
         foreach (VariableSave variable in state?.Variables ?? new List<VariableSave>())
         {
-            if (!string.IsNullOrEmpty(variable.SourceObject) && variable.GetRootName() == "Parent" && variable.Value is string value && value.Length > 0)
+            if (!string.IsNullOrEmpty(variable.SourceObject) && variable.GetRootName() == "Parent" && variable.Value is string value)
             {
+                // An empty value in a derived element clears the parent a base element set.
                 int dot = value.IndexOf('.');
-                parents[variable.SourceObject!] = dot >= 0 ? value.Substring(0, dot) : value;
+                if (value.Length == 0)
+                {
+                    parents.Remove(variable.SourceObject!);
+                }
+                else
+                {
+                    parents[variable.SourceObject!] = dot >= 0 ? value.Substring(0, dot) : value;
+                }
             }
         }
     }
@@ -211,21 +220,29 @@ public partial class HeadlessErrorChecker
 
     #region GUM0025 — Screen used as a type
 
-    // A Screen is a whole page: it can be neither an instance nor a component's base.
+    // A Screen is a whole page: it can be neither an instance nor a component's base. A name shared by a Screen and
+    // a Component or Standard Element is not reported: an instance can only be the latter, and the plain lookup
+    // would pick either depending on whether the cache is on.
+    private static bool IsOnlyAScreen(string? name) =>
+        !string.IsNullOrEmpty(name)
+        && ObjectFinder.Self.GetScreen(name) != null
+        && ObjectFinder.Self.GetComponent(name) == null
+        && ObjectFinder.Self.GetStandardElement(name) == null;
+
     private static List<ErrorResult> GetScreenAsTypeErrorsFor(ElementSave element)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
 
         foreach (InstanceSave instance in element.Instances)
         {
-            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is ScreenSave)
+            if (IsOnlyAScreen(instance.BaseType))
             {
                 errors.Add(Error(element, "GUM0025",
                     $"Instance {instance.Name} of {element.Name} has the Screen {instance.BaseType} as its type. A Screen cannot be an instance; use a Component."));
             }
         }
 
-        if (element is ComponentSave && !string.IsNullOrEmpty(element.BaseType) && ObjectFinder.Self.GetElementSave(element.BaseType) is ScreenSave)
+        if (element is ComponentSave && !string.IsNullOrEmpty(element.BaseType) && IsOnlyAScreen(element.BaseType))
         {
             errors.Add(Error(element, "GUM0025",
                 $"Component {element.Name} has the Screen {element.BaseType} as its base type. A component can only derive from a component or a standard element."));

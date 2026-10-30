@@ -1,4 +1,5 @@
 using Shouldly;
+using System.Text.RegularExpressions;
 
 namespace Gum.Cli.Tests;
 
@@ -128,5 +129,64 @@ public class CheckHandWrittenGapTests : CheckHandWrittenFileHarness
         File.WriteAllText(Path.Combine(directory, "Game.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
         CliTestHelper.Run("codegen-init", project);
         return CliTestHelper.Run("codegen", project);
+    }
+
+    [Fact]
+    public void Check_DerivedComponentClearsInheritedParentAndReversesIt_ShouldNotReportLoop()
+    {
+        string project = CreateProject("ClearedParent");
+        AddComponent(project, "BaseHolder", "Container",
+            Default(Variable("string", "A.Parent", "string", "B")) + Instance("A", "Container") + Instance("B", "Container"));
+        AddComponent(project, "DerivedHolder", "BaseHolder",
+            Default(Variable("string", "A.Parent", "string", ""), Variable("string", "B.Parent", "string", "A")));
+
+        CheckRun run = Check(project);
+
+        run.Entries.ShouldNotContain(e => e.Code == "GUM0024");
+        run.ExitCode.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Check_FloatVariableWithEmptyValue_ShouldNotReportGum0019()
+    {
+        // The runtime skips an assignment it cannot convert, so an empty value leaves the property unset.
+        string project = CreateProject("EmptyFloat");
+        AddComponent(project, "Holder", "Container", Default(Variable("float", "Width", "string", "")));
+
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0019");
+    }
+
+    [Fact]
+    public void Check_InstanceTypeNamedLikeAScreenAndAComponent_ShouldNotReportGum0025()
+    {
+        // An instance can only be a component, so the name binds to the component.
+        string project = CreateProject("ScreenAndComponentSameName");
+        AddScreen(project, "Menu", null, Default());
+        AddComponent(project, "Menu", "Container", Default());
+        AddComponent(project, "Holder", "Container", Default() + Instance("Embedded", "Menu"));
+
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0025");
+    }
+
+    [Fact]
+    public void Codegen_ElementReferencedTwice_ShouldPrintTheErrorOnceAndTheSkippedSummary()
+    {
+        string project = CreateProject("DuplicateReferenceOutput");
+        AddComponent(project, "Twin", "Container", Default());
+        AddReference(project, """  <ComponentReference Name="Twin" />""");
+
+        CliTestHelper result = CodegenResult(project);
+
+        Regex.Matches(result.StandardError, "referenced more than once").Count.ShouldBe(1);
+        result.StandardError.ShouldContain("skipped due to errors");
+    }
+
+    [Fact]
+    public void Codegen_FloatVariableHoldingText_ShouldPrintTheSkippedSummary()
+    {
+        string project = CreateProject("WrongValueTypeOutput");
+        AddComponent(project, "Holder", "Container", Default(Variable("float", "Width", "string", "wide")));
+
+        CodegenResult(project).StandardError.ShouldContain("skipped due to errors");
     }
 }

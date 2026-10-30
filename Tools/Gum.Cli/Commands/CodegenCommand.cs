@@ -225,11 +225,12 @@ public static class CodegenCommand
         // --element narrows the run to those elements (which also leaves the project-wide
         // Standard Elements fallback file alone, issue #6042); otherwise the whole project.
         bool hasElementSubset = elementNames != null && elementNames.Length > 0;
+        HashSet<string> printedProjectErrors = new HashSet<string>();
         CodeGenerationRunResult runResult = codeGenService.GenerateCodeForElements(
             project, projectSettings, new CodeGenerationRunOptions
             {
                 Elements = hasElementSubset ? ResolveElements(elementNames!) : null,
-                Gate = element => PassesErrorCheck(errorChecker, projectErrors, element, project)
+                Gate = element => PassesErrorCheck(errorChecker, projectErrors, printedProjectErrors, element, project)
             });
 
         Console.WriteLine($"Generated code for {runResult.GeneratedCount} element(s).");
@@ -260,7 +261,7 @@ public static class CodegenCommand
     }
 
     // Prints the element's warnings and errors; only errors stop it from being generated.
-    private static bool PassesErrorCheck(IHeadlessErrorChecker errorChecker, IReadOnlyList<ErrorResult> projectErrors, ElementSave element, GumProjectSave project)
+    private static bool PassesErrorCheck(IHeadlessErrorChecker errorChecker, IReadOnlyList<ErrorResult> projectErrors, HashSet<string> printedProjectErrors, ElementSave element, GumProjectSave project)
     {
         List<ErrorResult> errors = errorChecker.GetErrorsFor(element, project).ToList();
         errors.AddRange(projectErrors.Where(e => e.Code != null && HeadlessErrorChecker.CodegenGatingProjectCodes.Contains(e.Code) && e.ElementName == element.Name));
@@ -276,7 +277,11 @@ public static class CodegenCommand
 
         foreach (var error in blockingErrors)
         {
-            Console.Error.WriteLine($"error: {element.Name}: {error.Message}");
+            // Two elements loaded from a doubly-referenced name carry the same project-level row; print it once.
+            if (!projectErrors.Contains(error) || printedProjectErrors.Add(error.Message))
+            {
+                Console.Error.WriteLine($"error: {element.Name}: {error.Message}");
+            }
         }
 
         return blockingErrors.Count == 0;
