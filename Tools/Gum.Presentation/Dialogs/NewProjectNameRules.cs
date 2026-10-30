@@ -17,6 +17,12 @@ public static class NewProjectNameRules
             .Concat(Enumerable.Range(1, 9).Select(number => "LPT" + number))
             .ToArray();
 
+    /// <summary>The longest name that still fits a 255-character file name once ".gumj" or ".gumx" is added.</summary>
+    public const int MaxLength = 250;
+
+    /// <summary>Whether <paramref name="name"/> (already trimmed) is too long to name the project file on every OS.</summary>
+    public static bool IsTooLong(string name) => name.Length > MaxLength;
+
     /// <summary>Whether <paramref name="name"/> (already trimmed) can name the project folder and file on every OS.</summary>
     public static bool IsValidFolderName(string name)
     {

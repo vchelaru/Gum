@@ -338,6 +338,31 @@ public class NewProjectDialogViewModelTests
         viewModel.ValidationMessage.ShouldBe("The location has characters a path can't have.");
     }
 
+    [Theory]
+    [InlineData("Projects")]
+    [InlineData("~/Projects")]
+    [InlineData("../Projects")]
+    [InlineData("  Projects  ")]
+    [InlineData("C:foo")]
+    public void ValidationMessage_RejectsALocationThatIsNotAnAbsolutePath(string location)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.Location = location);
+
+        viewModel.ValidationMessage.ShouldBe("The location must be a full path.");
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(250, "")]
+    [InlineData(251, "The name is too long.")]
+    public void ValidationMessage_LimitsTheNameToWhatFitsAsAFileNameWithItsExtension(int length, string expected)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = new string('a', length));
+
+        viewModel.ValidationMessage.ShouldBe(expected);
+        viewModel.CanExecuteAffirmative().ShouldBe(expected.Length == 0);
+    }
+
     #endregion
 
     [Theory]
