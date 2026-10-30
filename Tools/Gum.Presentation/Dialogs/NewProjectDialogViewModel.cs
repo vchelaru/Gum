@@ -596,6 +596,8 @@ public class NewProjectDialogViewModel : DialogViewModel
 
         if (propertyName != null && (_inputProperties.Contains(propertyName) || propertyName == nameof(ThemeSelection)))
         {
+            // An error from the last attempt describes inputs that no longer stand.
+            ErrorMessage = string.Empty;
             if (propertyName == nameof(SelectedFileFormat))
             {
                 NotifyPropertyChanged(nameof(UseXmlFormat));
