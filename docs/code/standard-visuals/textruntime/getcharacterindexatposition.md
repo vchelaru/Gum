@@ -10,6 +10,8 @@ Every backend counts a CRLF line break as one character, so `WrappedText` never 
 
 This method can also be used on text which includes BBCode, returning an index after BBCode has been removed.
 
+The position is in the same units the text is drawn in, so the method accounts for `FontScale`.
+
 ## Code Example: Printing Character at Position
 
 The following code shows how to use the Gum cursor to hover over a TextRuntime and display the character under the cursor.

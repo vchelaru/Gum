@@ -31,12 +31,19 @@ namespace RenderingLibrary.Graphics;
 
 public static class TextExtensions
 {
-
+    /// <summary>
+    /// Returns the index into <see cref="IWrappedText.WrappedText"/> (its lines concatenated) of the
+    /// character nearest the screen point, measured in drawn units so it follows FontScale.
+    /// </summary>
+    /// <param name="textInstance">The text to hit test.</param>
+    /// <param name="screenX">The screen x position, usually obtained by Cursor.XRespectingGumZoomAndBounds().</param>
+    /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds().</param>
     public static int GetCharacterIndexAtPosition(this Text textInstance, float screenX, float screenY)
     {
         TextHitTesting.UnrotatePoint(textInstance, ref screenX, ref screenY);
 
-        var lineHeight = textInstance.LineHeightInPixels * textInstance.LineHeightMultiplier;
+        float fontScale = GetMeasurementFontScale(textInstance);
+        var lineHeight = textInstance.LineHeightInPixels * fontScale * textInstance.LineHeightMultiplier;
         var topOfText = textInstance.GetAbsoluteTop() + TextHitTesting.GetVerticalAlignmentOffset(
             textInstance.VerticalAlignment, textInstance.EffectiveHeight, textInstance.WrappedTextHeight);
 
@@ -45,16 +52,22 @@ public static class TextExtensions
             screenX - textInstance.GetAbsoluteLeft(),
             screenY - topOfText,
             lineHeight,
-            lineText => GetLineXOffsetForHorizontalAlignment(textInstance, lineText),
-            (cursorOffset, lineText) => GetIndex(textInstance, cursorOffset, lineText));
+            lineText => GetLineXOffsetForHorizontalAlignment(textInstance, lineText, fontScale),
+            (cursorOffset, lineText) => GetIndex(textInstance, cursorOffset, lineText, fontScale));
     }
 
-    static float GetLineXOffsetForHorizontalAlignment(Text textInstance, string stringToMeasure)
+    // The scale from MeasureString/GetCharacterAdvance units (the font's own pixels) to drawn units.
+    // IWrappedText.WordWrapFontScale is that scale: the effective FontScale, except while oversampling pins
+    // a separate measurement font, where layout (and so the drawn box) ignores the compensation scale.
+    private static float GetMeasurementFontScale(Text textInstance) =>
+        ((IWrappedText)textInstance).WordWrapFontScale;
+
+    static float GetLineXOffsetForHorizontalAlignment(Text textInstance, string stringToMeasure, float fontScale)
     {
         if (textInstance.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Left)
             return 0;
 
-        float measuredLineWidth = textInstance.MeasureString(stringToMeasure);
+        float measuredLineWidth = textInstance.MeasureString(stringToMeasure) * fontScale;
         float textComponentWidth = textInstance.EffectiveWidth;
         float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
         if (textInstance.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
@@ -62,77 +75,19 @@ public static class TextExtensions
         return gapBetweenTextAndEdge;
     }
 
-    private static int GetIndex(Text textInstance, float cursorOffset, string? textToUse)
+    private static int GetIndex(Text textInstance, float cursorOffset, string? textToUse, float fontScale)
     {
-        var index = textToUse?.Length ?? 0;
-        float distanceMeasuredSoFar = 0;
-
 #if RAYLIB
-        if (textToUse == null)
-        {
-            return index;
-        }
-
-        for (int i = 0; i < textToUse.Length; i++)
-        {
-            // Is there a faster way to do this?
-            distanceMeasuredSoFar = textInstance.MeasureString(textToUse.Substring(0, i + 1));
-
-            // This should find which side of the character you're closest to, but for now it's good enough...
-            if (distanceMeasuredSoFar > cursorOffset)
-            {
-                var distanceBefore = textInstance.MeasureString(textToUse.Substring(0, i));
-                var advance = distanceMeasuredSoFar - distanceBefore;
-                var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
-                if (halfwayPoint > cursorOffset)
-                {
-                    index = i;
-                }
-                else
-                {
-                    index = i + 1;
-                }
-                break;
-            }
-        }
+        // Raylib has no per-character advance, so a character's advance is the growth of the measured prefix.
+        return TextHitTesting.GetIndexInLine(
+            textToUse,
+            cursorOffset,
+            (line, start, length) =>
+                textInstance.MeasureString(line.Substring(0, start + length)) - textInstance.MeasureString(line.Substring(0, start)),
+            fontScale);
 #else
-
-        var bitmapFont = textInstance.BitmapFont;
-
-        for (int i = 0; i < (textToUse?.Length ?? 0); i++)
-        {
-            // The loop only runs when textToUse has characters.
-            char character = textToUse![i];
-            // No font yet measures as 0, like Text.MeasureString.
-            global::RenderingLibrary.Graphics.BitmapCharacterInfo? characterInfo = bitmapFont?.GetCharacterInfo(character);
-
-            int advance = 0;
-
-            if (characterInfo != null)
-            {
-                //advance = characterInfo.GetXAdvanceInPixels(coreTextObject.BitmapFont.LineHeightInPixels);
-                advance = characterInfo.XAdvance;
-            }
-
-            distanceMeasuredSoFar += advance;
-
-            // This should find which side of the character you're closest to, but for now it's good enough...
-            if (distanceMeasuredSoFar > cursorOffset)
-            {
-                var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
-                if (halfwayPoint > cursorOffset)
-                {
-                    index = i;
-                }
-                else
-                {
-                    index = i + 1;
-                }
-                break;
-            }
-        }
+        return TextHitTesting.GetIndexInLine(textToUse, cursorOffset, ((IFormsText)textInstance).GetCharacterAdvance, fontScale);
 #endif
-        return index;
     }
 
     public static void GetLineNumber(this Text textInstance, int absoluteCharacterIndex, out int lineNumber, out int absoluteStartOfLine, out int relativeIndexOnLine)
