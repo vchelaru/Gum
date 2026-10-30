@@ -49,6 +49,50 @@ public class SourceFileAchxAutoLoadTests : BaseTestClass
         });
     }
 
+    [Fact]
+    public void SpriteRuntime_SourceFileChangedFromAchxToEmpty_DropsTheChains()
+    {
+        WithTempAchx(achxPath =>
+        {
+            SpriteRuntime sut = new();
+            sut.SourceFileName = achxPath;
+
+            sut.SourceFileName = "";
+
+            sut.AnimationChains.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void NineSliceRuntime_SourceFileChangedFromAchxToEmpty_DropsTheChains()
+    {
+        WithTempAchx(achxPath =>
+        {
+            NineSliceRuntime sut = new();
+            sut.SourceFileName = achxPath;
+
+            sut.SourceFileName = "";
+
+            sut.AnimationChains.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void SpriteRuntime_SourceFileChangedFromAchxToEmpty_KeepsChainsAssignedByCode()
+    {
+        WithTempAchx(achxPath =>
+        {
+            SpriteRuntime sut = new();
+            sut.SourceFileName = achxPath;
+            AnimationChainList fromCode = new AnimationChainList();
+            sut.AnimationChains = fromCode;
+
+            sut.SourceFileName = "";
+
+            sut.AnimationChains.ShouldBeSameAs(fromCode);
+        });
+    }
+
     private static void WithTempAchx(Action<string> action)
     {
         string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibAchxAutoLoad_" + Guid.NewGuid().ToString("N"));
