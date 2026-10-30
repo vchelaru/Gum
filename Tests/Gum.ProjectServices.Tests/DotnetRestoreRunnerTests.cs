@@ -72,4 +72,70 @@ public class DotnetRestoreRunnerTests
         result.Status.ShouldBe(RestoreStatus.Canceled);
         stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(30);
     }
+
+    [Fact]
+    public async Task RestoreAsync_CanceledWhileRunning_KillsTheChildProcessTooNotJustTheParent()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumRestoreTree_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            string pidFile = Path.Combine(folder, "child.pid");
+            string childScript = Path.Combine(folder, "child.ps1");
+            string parentScript = Path.Combine(folder, "parent.ps1");
+            File.WriteAllText(childScript, $"$PID | Set-Content '{pidFile}'; Start-Sleep -Seconds 60");
+            File.WriteAllText(parentScript, $"& pwsh -NoProfile -File '{childScript}'");
+            DotnetRestoreRunner runner = new DotnetRestoreRunner(_ =>
+            {
+                ProcessStartInfo info = new ProcessStartInfo("pwsh");
+                info.ArgumentList.Add("-NoProfile");
+                info.ArgumentList.Add("-File");
+                info.ArgumentList.Add(parentScript);
+                return info;
+            });
+            using CancellationTokenSource cancellation = new CancellationTokenSource();
+
+            Task<RestoreResult> restore = runner.RestoreAsync("x.csproj", null, cancellation.Token);
+            for (int i = 0; i < 100 && !File.Exists(pidFile); i++)
+            {
+                await Task.Delay(200);
+            }
+            File.Exists(pidFile).ShouldBeTrue("the grandchild process never started");
+            string pidText = "";
+            for (int i = 0; i < 20 && pidText.Trim().Length == 0; i++)
+            {
+                await Task.Delay(100);
+                pidText = File.ReadAllText(pidFile);
+            }
+            int childPid = int.Parse(pidText.Trim());
+
+            cancellation.Cancel();
+            RestoreResult result = await restore;
+
+            result.Status.ShouldBe(RestoreStatus.Canceled);
+            bool gone = false;
+            for (int i = 0; i < 50 && !gone; i++)
+            {
+                try
+                {
+                    using Process child = Process.GetProcessById(childPid);
+                    gone = child.HasExited;
+                }
+                catch (ArgumentException)
+                {
+                    gone = true;
+                }
+
+                if (!gone)
+                {
+                    await Task.Delay(100);
+                }
+            }
+            gone.ShouldBeTrue("the child process survived the cancel");
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
 }

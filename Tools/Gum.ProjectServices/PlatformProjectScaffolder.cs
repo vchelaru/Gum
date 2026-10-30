@@ -30,10 +30,10 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string fullDirectory = GetFullDirectory(projectDirectory);
         string projectName = Path.GetFileName(fullDirectory);
 
-        string? preflightError = GetPreflightError(fullDirectory);
+        NewProjectError? preflightError = GetPreflightError(fullDirectory);
         if (preflightError != null)
         {
-            return Fail(preflightError);
+            return Fail(preflightError.Message);
         }
 
         (string csprojPath, string gumProjectPath) = GetProjectPaths(fullDirectory);
@@ -86,25 +86,25 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     /// The reason a project cannot be created in <paramref name="fullDirectory"/> (bad name, or a project already there),
     /// checked before anything is written; <see langword="null"/> when it can.
     /// </summary>
-    internal static string? GetPreflightError(string fullDirectory)
+    internal static NewProjectError? GetPreflightError(string fullDirectory)
     {
         string projectName = Path.GetFileName(fullDirectory);
 
         string? nameError = GetProjectNameError(projectName);
         if (nameError != null)
         {
-            return nameError;
+            return new NewProjectError(NewProjectErrorKind.InvalidProjectName, nameError);
         }
 
         (string csprojPath, string gumProjectPath) = GetProjectPaths(fullDirectory);
         if (File.Exists(csprojPath))
         {
-            return $"Project already exists: {csprojPath}";
+            return new NewProjectError(NewProjectErrorKind.ProjectAlreadyExists, $"Project already exists: {csprojPath}");
         }
 
         if (File.Exists(gumProjectPath))
         {
-            return $"Gum project already exists: {gumProjectPath}";
+            return new NewProjectError(NewProjectErrorKind.ProjectAlreadyExists, $"Gum project already exists: {gumProjectPath}");
         }
 
         return null;

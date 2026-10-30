@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Shouldly;
 
 namespace Gum.ProjectServices.Tests;
@@ -78,6 +79,76 @@ public class ExistingCodeProjectDetectorTests : IDisposable
         string? found = _detector.FindExistingCodeProject(_root);
 
         (found == null || !found.StartsWith(_root)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_TrailingSeparator_StillFindsTheProject()
+    {
+        string csproj = Path.Combine(_root, "Game.csproj");
+        File.WriteAllText(csproj, "");
+
+        _detector.FindExistingCodeProject(_root + Path.DirectorySeparatorChar).ShouldBe(csproj);
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_DriveRoot_DoesNotThrow()
+    {
+        string? found = _detector.FindExistingCodeProject(Path.GetPathRoot(_root)!);
+
+        (found == null || File.Exists(found)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_PathThatDoesNotExistAtAnyLevel_DoesNotThrow()
+    {
+        string? found = _detector.FindExistingCodeProject(Path.Combine(_root, "no", "such", "folder"));
+
+        (found == null || !found.StartsWith(_root)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_UncLookingPath_ReturnsWithinABoundedTime()
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
+        string? found = _detector.FindExistingCodeProject(@"\\gum-no-such-server-7208\share\x");
+
+        stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(10);
+        found.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_ProjectFileOnlyInBin_IsIgnored()
+    {
+        string bin = Path.Combine(_root, "bin");
+        Directory.CreateDirectory(bin);
+        string buildOutput = Path.Combine(bin, "Generated.csproj");
+        File.WriteAllText(buildOutput, "");
+
+        _detector.FindExistingCodeProject(bin).ShouldNotBe(buildOutput);
+    }
+
+    [Theory]
+    [InlineData("Only.sln")]
+    [InlineData("Only.slnx")]
+    [InlineData("Only.csproj")]
+    public void FindExistingCodeProject_EachProjectKind_IsFound(string fileName)
+    {
+        string path = Path.Combine(_root, fileName);
+        File.WriteAllText(path, "");
+
+        _detector.FindExistingCodeProject(_root).ShouldBe(path);
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_FiveLevelsDeep_FindsTheProjectAtTheTop()
+    {
+        string csproj = Path.Combine(_root, "Game.csproj");
+        File.WriteAllText(csproj, "");
+        string deep = Path.Combine(_root, "a", "b", "c", "d", "e");
+        Directory.CreateDirectory(deep);
+
+        _detector.FindExistingCodeProject(deep).ShouldBe(csproj);
     }
 
     [Fact]
