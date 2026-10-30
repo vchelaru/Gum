@@ -230,4 +230,40 @@ public class ExistingCodeProjectDetectorTests : IDisposable
         File.WriteAllText(Path.Combine(empty, "a.txt"), "");
         _detector.TargetExistsAndIsNotEmpty(_root, "Empty").ShouldBeTrue();
     }
+
+    [Theory]
+    [InlineData("Game.csproj")]
+    [InlineData("Game.sln")]
+    [InlineData("Game.slnx")]
+    public void FindExistingCodeProject_FindsEachKindOfCodeProjectFile(string fileName)
+    {
+        string path = Path.Combine(_root, fileName);
+        File.WriteAllText(path, "");
+
+        _detector.FindExistingCodeProject(_root).ShouldBe(path);
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_FolderNamedLikeAProjectFile_IsNotAProject()
+    {
+        Directory.CreateDirectory(Path.Combine(_root, "Fake.csproj"));
+
+        string? found = _detector.FindExistingCodeProject(_root);
+
+        (found ?? "").ShouldNotStartWith(_root);
+    }
+
+    [Fact]
+    public void TargetExistsAndIsNotEmpty_NameWithCharactersAPathCannotHave_IsFalse()
+    {
+        _detector.TargetExistsAndIsNotEmpty(_root, "a\0b").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TargetExistsAndIsNotEmpty_FolderHoldingOnlyAnEmptyFolder_IsNotEmpty()
+    {
+        Directory.CreateDirectory(Path.Combine(_root, "Game", "Sub"));
+
+        _detector.TargetExistsAndIsNotEmpty(_root, "Game").ShouldBeTrue();
+    }
 }

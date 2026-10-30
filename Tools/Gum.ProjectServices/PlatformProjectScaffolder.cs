@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Gum.DataTypes;
 using Gum.ProjectServices.CodeGeneration;
 
 namespace Gum.ProjectServices;
@@ -25,7 +26,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     /// <inheritdoc/>
     public PlatformProjectResult Create(
         string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
-        string? themeDirectory = null)
+        string? themeDirectory = null, bool useXmlFormat = false)
     {
         string fullDirectory = GetFullDirectory(projectDirectory);
         string projectName = Path.GetFileName(fullDirectory);
@@ -36,7 +37,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             return Fail(preflightError.Message);
         }
 
-        (string csprojPath, string gumProjectPath) = GetProjectPaths(fullDirectory);
+        (string csprojPath, string gumProjectPath) = GetProjectPaths(fullDirectory, useXmlFormat);
         string gumFolder = Path.GetDirectoryName(gumProjectPath)!;
 
         (string packageName, string runtimeProjectPath) = GetGumRuntime(platform);
@@ -57,7 +58,8 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         Directory.CreateDirectory(gumFolder);
 
         string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
-        WriteHostFiles(fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference);
+        WriteHostFiles(
+            fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference, Path.GetFileName(gumProjectPath));
 
         GumProjectTemplateWriter.Write(gumProjectPath, includeFormsTemplate, themeDirectory);
 
@@ -74,12 +76,13 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     internal static string GetFullDirectory(string projectDirectory) =>
         Path.GetFullPath(projectDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-    internal static (string CsprojPath, string GumProjectPath) GetProjectPaths(string fullDirectory)
+    internal static (string CsprojPath, string GumProjectPath) GetProjectPaths(string fullDirectory, bool useXmlFormat)
     {
         string projectName = Path.GetFileName(fullDirectory);
+        string extension = useXmlFormat ? GumProjectSave.ProjectExtension : GumProjectSave.ProjectJsonExtension;
         return (
             Path.Combine(fullDirectory, projectName + ".csproj"),
-            Path.Combine(fullDirectory, "Content", GumProjectFolderName, GumProjectFolderName + ".gumj"));
+            Path.Combine(fullDirectory, "Content", GumProjectFolderName, GumProjectFolderName + "." + extension));
     }
 
     /// <summary>
@@ -96,15 +99,20 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             return new NewProjectError(NewProjectErrorKind.InvalidProjectName, nameError);
         }
 
-        (string csprojPath, string gumProjectPath) = GetProjectPaths(fullDirectory);
+        (string csprojPath, string gumProjectPath) = GetProjectPaths(fullDirectory, useXmlFormat: false);
         if (File.Exists(csprojPath))
         {
             return new NewProjectError(NewProjectErrorKind.ProjectAlreadyExists, $"Project already exists: {csprojPath}");
         }
 
-        if (File.Exists(gumProjectPath))
+        // Either format counts: a .gumx beside a new .gumj would leave two Gum projects in one folder.
+        foreach (bool useXmlFormat in new[] { false, true })
         {
-            return new NewProjectError(NewProjectErrorKind.ProjectAlreadyExists, $"Gum project already exists: {gumProjectPath}");
+            string existing = GetProjectPaths(fullDirectory, useXmlFormat).GumProjectPath;
+            if (File.Exists(existing))
+            {
+                return new NewProjectError(NewProjectErrorKind.ProjectAlreadyExists, $"Gum project already exists: {existing}");
+            }
         }
 
         return null;
@@ -139,7 +147,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
     private static void WriteHostFiles(
         string directory, string csprojPath, string projectName, string rootNamespace, HostPlatform platform,
-        string gumReference)
+        string gumReference, string gumProjectFileName)
     {
         string platformFolder = platform.ToString();
         // The XNA-style hosts share Program.cs and run a Game1. KNI Skia draws through a Skia canvas,
@@ -149,22 +157,22 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         File.WriteAllText(
             csprojPath,
-            ReadTemplate(platformFolder, "Host.csproj.template", projectName, rootNamespace)
+            ReadTemplate(platformFolder, "Host.csproj.template", projectName, rootNamespace, gumProjectFileName)
                 .Replace("{{GumReference}}", gumReference));
         File.WriteAllText(
             Path.Combine(directory, "Program.cs"),
-            ReadTemplate(programFolder, "Program.cs.template", projectName, rootNamespace));
+            ReadTemplate(programFolder, "Program.cs.template", projectName, rootNamespace, gumProjectFileName));
 
         if (isXnaGame)
         {
             string gameFolder = platform == HostPlatform.KniSkia ? platformFolder : "Xna";
             File.WriteAllText(
                 Path.Combine(directory, "Game1.cs"),
-                ReadTemplate(gameFolder, "Game1.cs.template", projectName, rootNamespace));
+                ReadTemplate(gameFolder, "Game1.cs.template", projectName, rootNamespace, gumProjectFileName));
         }
     }
 
-    private static string ReadTemplate(string folder, string fileName, string projectName, string rootNamespace)
+    private static string ReadTemplate(string folder, string fileName, string projectName, string rootNamespace, string gumProjectFileName)
     {
         string resourceName = ResourcePrefix + folder + "." + fileName;
         using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)
@@ -173,7 +181,8 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         return reader.ReadToEnd()
             .Replace("{{ProjectName}}", projectName)
-            .Replace("{{RootNamespace}}", rootNamespace);
+            .Replace("{{RootNamespace}}", rootNamespace)
+            .Replace("{{GumProjectFile}}", gumProjectFileName);
     }
 
     // Every runtime uses the same Gum Forms output (GumForms), so the library does not depend on the platform.

@@ -87,6 +87,13 @@ public class NewProjectService : INewProjectService
 
         Targets targets = ComputeTargets(request.Path, options.Platform != null, GetGumExtension(request));
 
+        // Only a bare file system root resolves to a folder with no name.
+        if (string.IsNullOrEmpty(targets.Name))
+        {
+            return Fail(NewProjectErrorKind.InvalidProjectName,
+                $"'{request.Path}' has no folder name to name the project after. Give a folder or project name.");
+        }
+
         if (options.Platform == null)
         {
             if (File.Exists(targets.GumProjectPath))
@@ -225,7 +232,8 @@ public class NewProjectService : INewProjectService
         {
             string root = PlatformProjectScaffolder.GetFullDirectory(
                 string.IsNullOrEmpty(path) ? DefaultPlatformProjectName : path);
-            (string csproj, string gumProject) = PlatformProjectScaffolder.GetProjectPaths(root);
+            (string csproj, string gumProject) = PlatformProjectScaffolder.GetProjectPaths(
+                root, useXmlFormat: gumExtension != GumProjectSave.ProjectJsonExtension);
             return new Targets
             {
                 RootDirectory = root,
@@ -246,9 +254,10 @@ public class NewProjectService : INewProjectService
         }
         else
         {
-            // Treat as a project name: create <name>/<name>.<ext>
-            string directoryName = Path.GetFileName(path);
-            fullPath = Path.GetFullPath(Path.Combine(path, directoryName + "." + gumExtension));
+            // Treat as a project name: create <name>/<name>.<ext>. The name comes from the resolved
+            // folder, so a trailing separator or a "." / ".." segment cannot leave it empty or wrong.
+            string directory = PlatformProjectScaffolder.GetFullDirectory(path);
+            fullPath = Path.Combine(directory, Path.GetFileName(directory) + "." + gumExtension);
         }
 
         return new Targets
@@ -286,6 +295,11 @@ public class NewProjectService : INewProjectService
 
         string extension = GetGumExtension(request);
         Targets real = ComputeTargets(request.Path, options.Platform != null, extension);
+        if (string.IsNullOrEmpty(real.Name))
+        {
+            return null;
+        }
+
         PlanTemplate template = GetPlanTemplate(options, extension);
 
         string Name(string relative) => relative.Replace(PlanPlaceholderName, real.Name);
@@ -412,7 +426,8 @@ public class NewProjectService : INewProjectService
             if (options.Platform is HostPlatform platform)
             {
                 PlatformProjectResult result = new PlatformProjectScaffolder().Create(
-                    targets.RootDirectory, platform, options.IncludeFormsTemplate, gumSourceDirectory, options.ThemeDirectory);
+                    targets.RootDirectory, platform, options.IncludeFormsTemplate, gumSourceDirectory, options.ThemeDirectory,
+                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath));
                 if (!result.Success)
                 {
                     return new NewProjectFilesResult { ErrorMessage = result.ErrorMessage };

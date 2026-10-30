@@ -659,4 +659,30 @@ public class FormsThemeImporterTests
             Directory.Delete(root, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task ImportThemeAsync_TakesOnlyTheDemoScreen_NotScreensThatOnlyLookLikeIt()
+    {
+        _theme.Screens.Add(new ScreenSave { Name = "Neon/DemoScreenGum" });
+        _theme.Screens.Add(new ScreenSave { Name = "Neon/Sub/DemoScreenGum" });
+        _theme.Screens.Add(new ScreenSave { Name = "Neon/MyDemoScreenGum" });
+        _theme.Screens.Add(new ScreenSave { Name = "Neon/DemoScreenGum2" });
+
+        await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: true);
+
+        _importedSelections.ShouldNotBeNull();
+        _importedSelections.DirectScreens.Select(s => s.Name).ShouldBe(new[] { "Neon/DemoScreenGum", "Neon/Sub/DemoScreenGum" });
+    }
+
+    [Fact]
+    public async Task ImportThemeAsync_TakesNoScreens_WhenTheDemoIsNotWanted()
+    {
+        _theme.Screens.Add(new ScreenSave { Name = "Neon/DemoScreenGum" });
+        _theme.Screens.Add(new ScreenSave { Name = "Neon/OtherScreen" });
+
+        await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+        _importedSelections.ShouldNotBeNull();
+        _importedSelections.DirectScreens.ShouldBeEmpty();
+    }
 }

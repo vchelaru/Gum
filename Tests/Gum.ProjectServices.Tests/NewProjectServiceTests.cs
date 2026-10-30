@@ -155,6 +155,72 @@ public class NewProjectServiceTests : BaseTestClass
         cached.ElapsedMilliseconds.ShouldBeLessThan(300);
     }
 
+
+    [Fact]
+    public async Task Execute_WithAPlatformAndXmlFormat_WritesAGumxProject()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectResult result = await service.ExecuteAsync(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "XmlGame"),
+            Platform = "monogame",
+            Template = "empty",
+            UseXmlFormat = true,
+            Restore = false
+        }, null, CancellationToken.None);
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        Path.GetExtension(result.Files.GumProjectPath).ShouldBe(".gumx");
+        File.Exists(result.Files.GumProjectPath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetPlan_WithAPlatformAndXmlFormat_ListsTheGumxProject()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectPlan? plan = service.GetPlan(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "XmlPlan"),
+            Platform = "monogame",
+            Template = "empty",
+            UseXmlFormat = true
+        });
+
+        plan.ShouldNotBeNull();
+        plan.Files.ShouldContain("Content/GumProject/GumProject.gumx");
+        plan.Files.ShouldNotContain("Content/GumProject/GumProject.gumj");
+    }
+
+    [Fact]
+    public async Task Execute_ForEveryPlatformAndFormat_TheGeneratedCodeLoadsTheGumFileItWrote()
+    {
+        NewProjectService service = CreateService();
+
+        foreach ((string name, HostPlatform _) in NewProjectPlatforms.MainNames)
+        {
+            foreach (bool xml in new[] { false, true })
+            {
+                string chosen = xml ? "GumProject.gumx" : "GumProject.gumj";
+                string other = xml ? "GumProject.gumj" : "GumProject.gumx";
+                string game = Path.Combine(_folder, $"{name}_{(xml ? "Xml" : "Json")}");
+
+                NewProjectResult result = await service.ExecuteAsync(new NewProjectRequest
+                {
+                    Path = game, Platform = name, Template = "empty", UseXmlFormat = xml, Restore = false
+                }, null, CancellationToken.None);
+
+                result.Files.Success.ShouldBeTrue($"{name}: {result.Files.ErrorMessage}");
+                Path.GetFileName(result.Files.GumProjectPath).ShouldBe(chosen, name);
+                File.Exists(Path.Combine(game, "Content", "GumProject", other)).ShouldBeFalse(name);
+                string code = string.Concat(Directory.GetFiles(game, "*.cs").Select(File.ReadAllText));
+                code.ShouldContain(chosen, customMessage: name);
+                code.ShouldNotContain(other, customMessage: name);
+            }
+        }
+    }
+
     #endregion
 
     #region Validate
@@ -278,6 +344,28 @@ public class NewProjectServiceTests : BaseTestClass
         service.Validate(withPlatform).Error!.Kind.ShouldBe(NewProjectErrorKind.ProjectAlreadyExists);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Validate_WithAPlatformAndAGumProjectOfEitherFormatAlreadyThere_IsRefused(bool existingIsXml)
+    {
+        NewProjectService service = CreateService();
+        string game = Path.Combine(_folder, "Existing");
+        await service.ExecuteAsync(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty", UseXmlFormat = existingIsXml, Restore = false
+        }, null, CancellationToken.None);
+        File.Delete(Path.Combine(game, "Existing.csproj"));
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty", UseXmlFormat = !existingIsXml
+        });
+
+        validation.Error.ShouldNotBeNull();
+        validation.Error.Kind.ShouldBe(NewProjectErrorKind.ProjectAlreadyExists);
+    }
+
     [Fact]
     public void Validate_SourceLinkedWithoutACheckout_IsRefused()
     {
@@ -316,6 +404,75 @@ public class NewProjectServiceTests : BaseTestClass
         CreateService().IsSourceLinkedAvailable.ShouldBeTrue();
         CreateService(_folder).IsSourceLinkedAvailable.ShouldBeFalse();
         CreateService(_folder).FindGumSourceDirectory().ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData(null, true)]
+    [InlineData("monogame", false)]
+    [InlineData("monogame", true)]
+    public void Validate_PathWithATrailingSeparator_ResolvesLikeThePathWithout(string? platform, bool altSeparator)
+    {
+        NewProjectService service = CreateService();
+        string bare = Path.Combine(_folder, "Trailing");
+        char separator = altSeparator ? Path.AltDirectorySeparatorChar : Path.DirectorySeparatorChar;
+
+        NewProjectValidation expected = service.Validate(new NewProjectRequest { Path = bare, Platform = platform, Template = "empty" });
+        NewProjectValidation actual = service.Validate(new NewProjectRequest { Path = bare + separator, Platform = platform, Template = "empty" });
+
+        actual.IsValid.ShouldBeTrue(actual.Error?.Message);
+        actual.Resolved!.Name.ShouldBe("Trailing");
+        actual.Resolved.GumProjectPath.ShouldBe(expected.Resolved!.GumProjectPath);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("monogame")]
+    public void Validate_PathWithSeveralTrailingSeparators_ResolvesLikeThePathWithout(string? platform)
+    {
+        NewProjectService service = CreateService();
+        string bare = Path.Combine(_folder, "Trailing");
+        string separators = new string(Path.DirectorySeparatorChar, 2) + Path.AltDirectorySeparatorChar;
+
+        NewProjectValidation expected = service.Validate(new NewProjectRequest { Path = bare, Platform = platform, Template = "empty" });
+        NewProjectValidation actual = service.Validate(new NewProjectRequest { Path = bare + separators, Platform = platform, Template = "empty" });
+
+        actual.IsValid.ShouldBeTrue(actual.Error?.Message);
+        actual.Resolved!.Name.ShouldBe("Trailing");
+        actual.Resolved.RootDirectory.ShouldBe(expected.Resolved!.RootDirectory);
+        actual.Resolved.GumProjectPath.ShouldBe(expected.Resolved.GumProjectPath);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("monogame")]
+    public void Validate_PathEndingInDotDot_NamesTheProjectAfterTheFolderItResolvesTo(string? platform)
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "Dotted", "Child", ".."),
+            Platform = platform,
+            Template = "empty"
+        });
+
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
+        validation.Resolved!.Name.ShouldBe("Dotted");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("monogame")]
+    public void Validate_FileSystemRoot_IsRefusedAsInvalidName(string? platform)
+    {
+        NewProjectService service = CreateService();
+        string root = Path.GetPathRoot(_folder)!;
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest { Path = root, Platform = platform, Template = "empty" });
+
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+        validation.Error.Message.ShouldContain("no folder name");
     }
 
     #endregion
@@ -505,6 +662,121 @@ public class NewProjectServiceTests : BaseTestClass
             Name = "Game"
         };
     }
+
+    #region Edge cases
+
+    [Theory]
+    [InlineData("FORMS", null, "MonoGame")]
+    [InlineData("Empty", null, "KNISKIA")]
+    [InlineData("forms", "STANDARD", "Silk.Net")]
+    public void Validate_TemplatePlatformAndStandardThemeNames_IgnoreCase(string template, string? theme, string platform)
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "Cased"),
+            Template = template,
+            Theme = theme,
+            Platform = platform
+        });
+
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
+    }
+
+    [Fact]
+    public void Validate_EveryAcceptedPlatformName_ResolvesToItsPlatform()
+    {
+        NewProjectService service = CreateService();
+
+        foreach ((string name, HostPlatform platform) in NewProjectPlatforms.All)
+        {
+            NewProjectValidation validation = service.Validate(new NewProjectRequest
+            {
+                Path = Path.Combine(_folder, "P" + name.Replace('.', '_')),
+                Platform = name,
+                Template = "empty"
+            });
+
+            validation.IsValid.ShouldBeTrue($"{name}: {validation.Error?.Message}");
+            validation.Resolved!.Platform.ShouldBe(platform);
+        }
+    }
+
+    [Fact]
+    public void GetPlan_LeavesNoTemporaryFolderBehind()
+    {
+        int CountTemporaryFolders() => Directory.GetDirectories(Path.GetTempPath(), "GumNewProjectPlan_*").Length;
+        NewProjectService service = CreateService();
+        int before = CountTemporaryFolders();
+
+        service.GetPlan(new NewProjectRequest { Path = Path.Combine(_folder, "Temp"), Platform = "raylib", Template = "forms" });
+
+        CountTemporaryFolders().ShouldBe(before);
+    }
+
+    [Fact]
+    public void GetPlan_CalledFromManyThreads_ReturnsTheSamePlanEachTime()
+    {
+        NewProjectService service = CreateService();
+        NewProjectRequest request = new NewProjectRequest { Path = Path.Combine(_folder, "Threaded"), Platform = "kni", Template = "forms" };
+        List<string> plans = new List<string>();
+
+        Parallel.For(0, 8, _ =>
+        {
+            NewProjectPlan? plan = service.GetPlan(request);
+            lock (plans)
+            {
+                plans.Add(plan == null ? "null" : string.Join("|", plan.Files));
+            }
+        });
+
+        plans.Distinct().Count().ShouldBe(1);
+        plans[0].ShouldNotBe("null");
+    }
+
+    [Fact]
+    public void GetPlan_ForDifferentFormatsAndTemplates_DoesNotReuseAnotherCombinationsPlan()
+    {
+        NewProjectService service = CreateService();
+        NewProjectPlan? Plan(string template, bool xml) => service.GetPlan(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "Cache"),
+            Template = template,
+            UseXmlFormat = xml
+        });
+
+        NewProjectPlan json = Plan("forms", xml: false)!;
+        NewProjectPlan xmlPlan = Plan("forms", xml: true)!;
+        NewProjectPlan empty = Plan("empty", xml: false)!;
+        NewProjectPlan jsonAgain = Plan("forms", xml: false)!;
+
+        json.Files.ShouldContain("Cache.gumj");
+        json.Files.ShouldNotContain("Cache.gumx");
+        xmlPlan.Files.ShouldContain("Cache.gumx");
+        xmlPlan.Files.ShouldNotContain("Cache.gumj");
+        empty.Files.Count.ShouldBeLessThan(json.Files.Count);
+        jsonAgain.Files.ShouldBe(json.Files);
+    }
+
+    [Fact]
+    public async Task Execute_IntoAFolderWithOtherFiles_KeepsThem()
+    {
+        NewProjectService service = CreateService();
+        string root = Path.Combine(_folder, "Existing");
+        Directory.CreateDirectory(root);
+        string other = Path.Combine(root, "notes.txt");
+        File.WriteAllText(other, "keep me");
+
+        NewProjectResult result = await service.ExecuteAsync(
+            new NewProjectRequest { Path = root, Template = "empty" }, null, CancellationToken.None);
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        File.ReadAllText(other).ShouldBe("keep me");
+        File.Exists(Path.Combine(root, "Existing.gumj")).ShouldBeTrue();
+    }
+
+    #endregion
 
     private class FakeRestoreRunner : IRestoreRunner
     {

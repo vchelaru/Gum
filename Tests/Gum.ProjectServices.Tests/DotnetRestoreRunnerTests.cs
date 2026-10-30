@@ -142,6 +142,66 @@ public class DotnetRestoreRunnerTests
         }
     }
 
+    [Fact]
+    public async Task RestoreAsync_ZeroExit_ReportsSucceededWithTheOutput()
+    {
+        DotnetRestoreRunner runner = new DotnetRestoreRunner(_ =>
+        {
+            ProcessStartInfo info = new ProcessStartInfo("dotnet");
+            info.ArgumentList.Add("--version");
+            return info;
+        });
+
+        RestoreResult result = await runner.RestoreAsync("x.csproj", null, CancellationToken.None);
+
+        result.Status.ShouldBe(RestoreStatus.Succeeded);
+        result.ExitCode.ShouldBe(0);
+        result.OutputTail.ShouldNotBeEmpty();
+    }
+
+    [SkippableFact]
+    public async Task RestoreAsync_KeepsOnlyTheLastTwentyLines_ButReportsEveryLine()
+    {
+        Skip.IfNot(IsPwshOnPath(), "pwsh is not installed");
+        DotnetRestoreRunner runner = new DotnetRestoreRunner(_ =>
+        {
+            ProcessStartInfo info = new ProcessStartInfo("pwsh");
+            info.ArgumentList.Add("-NoProfile");
+            info.ArgumentList.Add("-Command");
+            info.ArgumentList.Add("1..30 | ForEach-Object { \"line $_\" }; exit 1");
+            return info;
+        });
+        List<string> lines = new List<string>();
+
+        RestoreResult result = await runner.RestoreAsync("x.csproj", line => { lock (lines) { lines.Add(line); } }, CancellationToken.None);
+
+        result.Status.ShouldBe(RestoreStatus.Failed);
+        string[] tail = result.OutputTail.Split(Environment.NewLine);
+        tail.Length.ShouldBe(20);
+        tail[0].ShouldBe("line 11");
+        tail[^1].ShouldBe("line 30");
+        lines.Count.ShouldBe(30);
+    }
+
+    [SkippableFact]
+    public async Task RestoreAsync_IncludesWhatTheProcessWritesToStandardError()
+    {
+        Skip.IfNot(IsPwshOnPath(), "pwsh is not installed");
+        DotnetRestoreRunner runner = new DotnetRestoreRunner(_ =>
+        {
+            ProcessStartInfo info = new ProcessStartInfo("pwsh");
+            info.ArgumentList.Add("-NoProfile");
+            info.ArgumentList.Add("-Command");
+            info.ArgumentList.Add("[Console]::Error.WriteLine('error: out of disk'); exit 1");
+            return info;
+        });
+
+        RestoreResult result = await runner.RestoreAsync("x.csproj", null, CancellationToken.None);
+
+        result.Status.ShouldBe(RestoreStatus.Failed);
+        result.OutputTail.ShouldContain("error: out of disk");
+    }
+
     private static bool IsPwshOnPath()
     {
         string executable = OperatingSystem.IsWindows() ? "pwsh.exe" : "pwsh";
