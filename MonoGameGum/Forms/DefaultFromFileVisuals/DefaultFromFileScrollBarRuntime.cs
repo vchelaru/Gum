@@ -19,6 +19,7 @@ public class DefaultFromFileScrollBarRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new ScrollBar(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

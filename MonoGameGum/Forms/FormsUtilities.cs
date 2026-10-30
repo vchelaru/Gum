@@ -628,7 +628,14 @@ public class FormsUtilities
         {
             if (gue is InteractiveGue igue && igue.FormsControlAsObject is FrameworkElement fe)
             {
-                BehaviorFormsPropertyApplier.Apply(fe, igue, authoredOverridesOnly: !isBuiltElement);
+                if (isBuiltElement)
+                {
+                    BehaviorFormsPropertyApplier.ApplyOnceAtBuild(fe, igue);
+                }
+                else
+                {
+                    BehaviorFormsPropertyApplier.Apply(fe, igue, authoredOverridesOnly: true);
+                }
             }
         };
 

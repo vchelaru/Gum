@@ -19,6 +19,7 @@ public class DefaultFromFileSliderRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new Slider(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

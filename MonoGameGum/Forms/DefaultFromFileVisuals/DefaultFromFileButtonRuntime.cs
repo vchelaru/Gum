@@ -19,6 +19,7 @@ public class DefaultFromFileButtonRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new Button(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

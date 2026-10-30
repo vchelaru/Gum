@@ -24,6 +24,7 @@ public class DefaultFromFileStackPanelRuntime : ContainerRuntime
         if (FormsControl == null)
         {
             FormsControlAsObject = new StackPanel(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
     public StackPanel? FormsControl => FormsControlAsObject as StackPanel;

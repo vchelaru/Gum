@@ -14,6 +14,7 @@ public class DefaultFromFileExpanderRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new Expander(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
     public Expander? FormsControl => FormsControlAsObject as Expander;

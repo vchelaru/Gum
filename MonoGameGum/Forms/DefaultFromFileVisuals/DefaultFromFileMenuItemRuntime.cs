@@ -21,6 +21,7 @@ internal class DefaultFromFileMenuItemRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new MenuItem(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
     public MenuItem? FormsControl => FormsControlAsObject as MenuItem;

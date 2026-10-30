@@ -19,6 +19,7 @@ public class DefaultFromFileLabelRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new Label(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 
