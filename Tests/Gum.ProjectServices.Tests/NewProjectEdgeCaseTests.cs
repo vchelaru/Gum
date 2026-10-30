@@ -71,7 +71,7 @@ public class NewProjectEdgeCaseTests : BaseTestClass
         // a dotted name, and a safe control.
         string[] names =
         {
-            "Game", "Button", "Color", "Program", "Game1", "Gum", "Microsoft", "System", "Vector2", "Texture2D",
+            "Game", "Button", "Color", "Game1", "Gum", "Microsoft", "System", "Vector2", "Texture2D",
             "GumService", "GameTime", "GraphicsDeviceManager", "DateTime", "SkiaRenderer", "SKColors",
             "SkiaRenderTarget2D", "My.Game", "MyGame", "game", "args", "button", "Content", "Window", "GraphicsDevice",
             "var", "global", "record", "file", "dynamic", "async"
@@ -189,6 +189,80 @@ namespace Gum.Forms.Controls
         public void AddToRoot() { }
     }
 }";
+
+    [Theory]
+    [InlineData("monogame")]
+    [InlineData("kni")]
+    [InlineData("kniskia")]
+    [InlineData("raylib")]
+    [InlineData("stride")]
+    [InlineData("silknet")]
+    public async Task Validate_PlatformNameEqualToAPackageTheHostReferences_IsRefused(string platform)
+    {
+        NewProjectService service = CreateService();
+        NewProjectResult sample = await service.ExecuteAsync(Request(Path.Combine(_folder, "Sample"), platform), null, CancellationToken.None);
+        sample.Files.Success.ShouldBeTrue(sample.Files.ErrorMessage);
+        List<string> packages = XDocument.Load(sample.Files.CsprojPath!)
+            .Descendants("PackageReference").Select(element => element.Attribute("Include")!.Value).ToList();
+        packages.ShouldNotBeEmpty();
+
+        // A project named like a package it references fails to restore with NU1108 (a cycle).
+        foreach (string package in packages)
+        {
+            NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, package), platform));
+
+            validation.IsValid.ShouldBeFalse(package);
+            validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+            validation.Error.Message.ShouldContain(package);
+        }
+    }
+
+    [Theory]
+    [InlineData("monogame")]
+    [InlineData("kni")]
+    [InlineData("kniskia")]
+    [InlineData("raylib")]
+    [InlineData("stride")]
+    [InlineData("silknet")]
+    public void Validate_PlatformNameProgram_IsRefusedWithTheReason(string platform)
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "Program"), platform));
+
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+        validation.Error.Message.ShouldContain("namespace");
+    }
+
+    [Fact]
+    public void Validate_PlatformNameProgramInAnotherCase_IsAccepted()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "program"), "raylib"));
+
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
+    }
+
+    [Fact]
+    public void Validate_PlatformNameEqualToAPackageInDifferentCase_IsRefused()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "gum.RAYLIB"), "raylib"));
+
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+    }
+
+    [Fact]
+    public void Validate_PlatformNameEqualToAPackageOnlyAnotherPlatformReferences_IsAccepted()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "Gum.MonoGame"), "raylib"));
+
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
+    }
 
     [Theory]
     [InlineData("My Game")]

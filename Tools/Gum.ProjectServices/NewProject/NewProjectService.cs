@@ -101,7 +101,7 @@ public class NewProjectService : INewProjectService
         }
         else
         {
-            NewProjectError? preflightError = PlatformProjectScaffolder.GetPreflightError(targets.RootDirectory);
+            NewProjectError? preflightError = PlatformProjectScaffolder.GetPreflightError(targets.RootDirectory, options.Platform.Value);
             if (preflightError != null)
             {
                 return new NewProjectValidation { Error = preflightError };

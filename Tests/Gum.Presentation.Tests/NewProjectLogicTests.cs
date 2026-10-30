@@ -398,7 +398,7 @@ public class NewProjectLogicTests
     [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_LoadsTheCreatedGumProject_WithoutCreatingABlankOne()
     {
-        await SetUpCreatedCodeProject(new GumProjectSave());
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = CreatedGumProject });
 
         await _logic.CreateNewProjectAsync();
 
@@ -423,9 +423,36 @@ public class NewProjectLogicTests
     }
 
     [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_TreatsAnIgnoredLoadLikeAFailedOne()
+    {
+        // ProjectManager ignores a load request while another load is in flight, leaving the previous project open.
+        GumProjectSave openProject = new GumProjectSave { FullFileName = Path.Combine(ChosenFolder, "Old", "Old.gumj") };
+        openProject.Screens.Add(new ScreenSave { Name = "DemoScreenGum" });
+        await SetUpCreatedCodeProject(openProject, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _dialogService.Verify(x => x.ShowMessage(It.Is<string>(message => message.Contains(CreatedGumProject)), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveElement(It.IsAny<ElementSave>()), Times.Never);
+        _selectedState.VerifySet(x => x.SelectedScreen = It.IsAny<ScreenSave>(), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_AcceptsTheLoadedProjectWhenThePathDiffersOnlyInSpelling()
+    {
+        string respelled = Path.Combine(ChosenFolder, "Game", "Content", "..", "Content", "GumProject", "GumProject.gumj");
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = respelled });
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectCommands.Verify(x => x.AddScreen(It.Is<ScreenSave>(screen => screen.Name == NewProjectLogic.StartingScreenName)), Times.Once);
+    }
+
+    [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_AddsAndSelectsTheStartingScreen()
     {
-        await SetUpCreatedCodeProject(new GumProjectSave());
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = CreatedGumProject });
 
         await _logic.CreateNewProjectAsync();
 
@@ -436,7 +463,7 @@ public class NewProjectLogicTests
     [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_KeepsAnExistingStartingScreen()
     {
-        GumProjectSave loaded = new GumProjectSave();
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
         loaded.Screens.Add(new ScreenSave { Name = NewProjectLogic.StartingScreenName });
         await SetUpCreatedCodeProject(loaded);
 
@@ -448,7 +475,7 @@ public class NewProjectLogicTests
     [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_RemovesTheDemoScreen_WhenItIsUnchecked()
     {
-        GumProjectSave loaded = new GumProjectSave();
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
         ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
         loaded.Screens.Add(demo);
         await SetUpCreatedCodeProject(loaded, includeDemo: false);
@@ -461,7 +488,7 @@ public class NewProjectLogicTests
     [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_RemovesAThemedDemoScreen_WhenItIsUnchecked()
     {
-        GumProjectSave loaded = new GumProjectSave();
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
         ScreenSave themedDemo = new ScreenSave { Name = "Bubblegum/DemoScreenGum" };
         ScreenSave other = new ScreenSave { Name = "Bubblegum/StylesScreen" };
         loaded.Screens.Add(themedDemo);
@@ -477,7 +504,7 @@ public class NewProjectLogicTests
     [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_KeepsTheDemoScreen_WhenItIsChecked_OrFormsAreOff()
     {
-        GumProjectSave loaded = new GumProjectSave();
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
         loaded.Screens.Add(new ScreenSave { Name = "DemoScreenGum" });
         await SetUpCreatedCodeProject(loaded, includeDemo: true);
         await _logic.CreateNewProjectAsync();
@@ -502,7 +529,7 @@ public class NewProjectLogicTests
     [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_KeepsScreensThatOnlyLookLikeTheDemo()
     {
-        GumProjectSave loaded = new GumProjectSave();
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
         ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
         ScreenSave nestedDemo = new ScreenSave { Name = "A/B/DemoScreenGum" };
         ScreenSave myDemo = new ScreenSave { Name = "MyDemoScreenGum" };
@@ -531,7 +558,7 @@ public class NewProjectLogicTests
             string otherFile = Path.Combine(folder, "OtherScreen.gusx");
             File.WriteAllText(demoFile, "demo");
             File.WriteAllText(otherFile, "other");
-            GumProjectSave loaded = new GumProjectSave();
+            GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
             ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
             ScreenSave other = new ScreenSave { Name = "OtherScreen" };
             loaded.Screens.AddRange(new[] { demo, other });
@@ -553,7 +580,7 @@ public class NewProjectLogicTests
     [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_StillRemovesTheDemoScreen_WhenItsFileIsAlreadyGone()
     {
-        GumProjectSave loaded = new GumProjectSave();
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
         ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
         loaded.Screens.Add(demo);
         _fileCommands.Setup(x => x.GetFullFileName(demo)).Returns(new FilePath(Path.Combine(Path.GetTempPath(), "GumNeverExisted", "DemoScreenGum.gusx")));
@@ -570,7 +597,7 @@ public class NewProjectLogicTests
         List<string> order = new List<string>();
         _selectedState.SetupSet(x => x.SelectedElement = null).Callback(() => order.Add("clear"));
         _projectManager.Setup(x => x.LoadProjectAsync(It.IsAny<FilePath>())).Callback(() => order.Add("load")).Returns(Task.CompletedTask);
-        await SetUpCreatedCodeProject(new GumProjectSave());
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = CreatedGumProject });
 
         await _logic.CreateNewProjectAsync();
 
@@ -580,7 +607,7 @@ public class NewProjectLogicTests
     [Fact]
     public async Task CreateNewProjectAsync_WithACodeProject_SelectsTheStartingScreenLast_EvenWhenDemoScreensWereRemoved()
     {
-        GumProjectSave loaded = new GumProjectSave();
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
         loaded.Screens.Add(new ScreenSave { Name = "DemoScreenGum" });
         await SetUpCreatedCodeProject(loaded, includeDemo: false);
 

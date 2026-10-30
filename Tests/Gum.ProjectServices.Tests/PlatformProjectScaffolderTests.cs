@@ -259,20 +259,15 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
-    public void Create_WhenProjectIsNamedProgram_ShouldNotUseProgramAsTheRootNamespace()
+    public void Create_WhenProjectIsNamedProgram_ShouldFailWithoutWritingFiles()
     {
-        // A namespace Program clashes with the Program class that top-level statements create (CS0101).
         string projectDirectory = Path.Combine(_tempDirectory, "Program");
 
         PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Raylib, includeFormsTemplate: false);
 
-        result.Success.ShouldBeTrue(result.ErrorMessage);
-        File.ReadAllText(result.CsprojPath).ShouldContain("<RootNamespace>Program_</RootNamespace>");
-        CodeOutputProjectSettings? settings = new CodeOutputProjectSettingsManager(
-            new NullCodeGenLogger(),
-            new FixedProjectDirectoryProvider(Path.Combine(projectDirectory, "Content", "GumProject") + Path.DirectorySeparatorChar))
-            .TryLoadSettingsForProject();
-        settings!.RootNamespace.ShouldBe("Program_");
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldContain("Program");
+        Directory.Exists(projectDirectory).ShouldBeFalse();
     }
 
     [Fact]

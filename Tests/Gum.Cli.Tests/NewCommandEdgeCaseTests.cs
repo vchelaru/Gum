@@ -71,4 +71,16 @@ public class NewCommandEdgeCaseTests : BaseTestClass
         result.ExitCode.ShouldBe(2);
         Directory.Exists(path).ShouldBeFalse();
     }
+
+    [Fact]
+    public void New_WithPlatformAndANameThatIsAPackageTheProjectReferences_ShouldCreateNothingAndNameTheConflict()
+    {
+        string path = Path.Combine(TempDirectory, "Gum.raylib");
+
+        CliTestHelper result = CliTestHelper.Run("new", path, "--platform", "raylib", "--no-restore");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("Gum.raylib");
+        Directory.Exists(path).ShouldBeFalse();
+    }
 }

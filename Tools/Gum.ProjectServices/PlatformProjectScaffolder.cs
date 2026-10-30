@@ -23,6 +23,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     };
 
     private static readonly Regex ValidProjectName = new Regex("^[A-Za-z_][A-Za-z0-9_.-]*$");
+    private static readonly Regex PackageReferenceInclude = new Regex("<PackageReference\\s+Include=\"([^\"]+)\"");
 
     /// <inheritdoc/>
     public PlatformProjectResult Create(
@@ -32,7 +33,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string fullDirectory = GetFullDirectory(projectDirectory);
         string projectName = Path.GetFileName(fullDirectory);
 
-        NewProjectError? preflightError = GetPreflightError(fullDirectory);
+        NewProjectError? preflightError = GetPreflightError(fullDirectory, platform);
         if (preflightError != null)
         {
             return Fail(preflightError.Message);
@@ -58,7 +59,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         Directory.CreateDirectory(gumFolder);
 
-        string rootNamespace = GetRootNamespace(projectName);
+        string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
         WriteHostFiles(
             fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference, Path.GetFileName(gumProjectPath));
 
@@ -72,14 +73,6 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             CsprojPath = csprojPath,
             GumProjectPath = gumProjectPath
         };
-    }
-
-    // A namespace named Program clashes with the Program class that top-level statements create in the
-    // global namespace (CS0101), so the root namespace gets a suffix.
-    internal static string GetRootNamespace(string projectName)
-    {
-        string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
-        return rootNamespace == "Program" ? rootNamespace + "_" : rootNamespace;
     }
 
     // MSBuild reads %XX in an item include as a character, splits it at ';', expands '*' and '?' and
@@ -120,11 +113,11 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     /// The reason a project cannot be created in <paramref name="fullDirectory"/> (bad name, or a project already there),
     /// checked before anything is written; <see langword="null"/> when it can.
     /// </summary>
-    internal static NewProjectError? GetPreflightError(string fullDirectory)
+    internal static NewProjectError? GetPreflightError(string fullDirectory, HostPlatform platform)
     {
         string projectName = Path.GetFileName(fullDirectory);
 
-        string? nameError = GetProjectNameError(projectName);
+        string? nameError = GetProjectNameError(projectName, platform);
         if (nameError != null)
         {
             return new NewProjectError(NewProjectErrorKind.InvalidProjectName, nameError);
@@ -149,7 +142,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         return null;
     }
 
-    private static string? GetProjectNameError(string projectName)
+    private static string? GetProjectNameError(string projectName, HostPlatform platform)
     {
         if (!ValidProjectName.IsMatch(projectName))
         {
@@ -161,7 +154,31 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             return $"'{projectName}' is the assembly name of a Gum runtime package. Pick another project name.";
         }
 
+        // The Program class that top-level statements create in the global namespace clashes (CS0101) with a
+        // root namespace of the same name.
+        if (NameRules.ToCSharpIdentifier(projectName) == "Program")
+        {
+            return $"'{projectName}' cannot be a project name: the generated code has a class named Program, which clashes with a namespace of that name. Pick another project name.";
+        }
+
+        // A project named like a package it references fails to restore with NU1108 (a cycle).
+        if (GetReferencedPackageIds(platform).Contains(projectName, StringComparer.OrdinalIgnoreCase))
+        {
+            return $"'{projectName}' is the name of a package the {platform} project references, which makes restore fail with a cycle. Pick another project name.";
+        }
+
         return null;
+    }
+
+    // Every package id the generated csproj references: the Gum package from the runtime table plus the
+    // PackageReference lines of the platform's own template, the two places that write them.
+    private static string[] GetReferencedPackageIds(HostPlatform platform)
+    {
+        string template = ReadTemplate(platform.ToString(), "Host.csproj.template", "", "", "");
+        return PackageReferenceInclude.Matches(template)
+            .Select(match => match.Groups[1].Value)
+            .Append(GetGumRuntime(platform).PackageName)
+            .ToArray();
     }
 
     // Each platform's Gum package, and the location of that package's project inside a Gum checkout.
