@@ -264,6 +264,22 @@ A variable that selects a state, such as `Switch.ModeState`, must name a state t
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## Variable of an Instance That Does Not Exist (GUM0027)
+
+A variable such as `Ghost.Text` sets a property on the instance `Ghost`, so the element, or one of its base elements, must contain an instance with that name. When the file holds such a variable for an instance that does not exist, the value is ignored. `gumcli check` reports **GUM0027** as a warning and does not block code generation. The Gum tool can leave these variables behind, for example after an instance is deleted, and does not show them, so its Errors tab does not list GUM0027. If you edit the file by hand, delete the variable or add the instance.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Variable With an Unknown Type (GUM0028)
+
+Each variable stores the name of its type, such as `float`, `HorizontalAlignment`, or the name of a state category. When that name is none of those, for example `Blorp`, the value cannot be converted and generated code that uses it does not compile. `gumcli check` reports **GUM0028** as a warning. To resolve it, correct the type name in the element file.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

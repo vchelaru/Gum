@@ -37,6 +37,8 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0024"] = "gum-tool/project-files#parents-that-form-a-loop-gum0024",
             ["GUM0025"] = "gum-tool/project-files#screen-used-as-a-type-gum0025",
             ["GUM0026"] = "gum-tool/project-files#state-the-category-does-not-have-gum0026",
+            ["GUM0027"] = "gum-tool/project-files#variable-of-an-instance-that-does-not-exist-gum0027",
+            ["GUM0028"] = "gum-tool/project-files#variable-with-an-unknown-type-gum0028",
         };
     }
 
