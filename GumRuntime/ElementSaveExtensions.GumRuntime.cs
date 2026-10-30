@@ -2170,8 +2170,9 @@ namespace GumRuntime
                 // re-assert their state. The root is included so a Forms-behavior component built
                 // directly (not as an instance in a parent) still gets its own FormsProperty
                 // defaults applied.
+                InitialFormsPropertiesNotifier?.Invoke(toReturn, true);
                 InitialStateAppliedNotifier?.Invoke(toReturn);
-                NotifyFormsControlsOfInitialStateApplied(toReturn);
+                NotifyFormsControlsOfInitialStateApplied(toReturn, toReturn);
             }
             finally
             {
@@ -2195,10 +2196,20 @@ namespace GumRuntime
         /// </summary>
         public static Action<GraphicalUiElement>? InitialStateAppliedNotifier;
 
-        private static void NotifyFormsControlsOfInitialStateApplied(GraphicalUiElement element)
+        /// <summary>
+        /// Invoked with an element that was just built (second argument true) and with each of
+        /// its own instances (false), so a hosting layer (like Gum.Forms) can apply the values the
+        /// project authored for a Forms control. A descendant owned by a nested element is not
+        /// passed: that element's own build already did, and doing it again would overwrite what
+        /// code set on the control since. Set by <c>FormsUtilities</c>.
+        /// </summary>
+        public static Action<GraphicalUiElement, bool>? InitialFormsPropertiesNotifier;
+
+        private static void NotifyFormsControlsOfInitialStateApplied(GraphicalUiElement builtElement, GraphicalUiElement element)
         {
             var notifier = InitialStateAppliedNotifier;
-            if (notifier == null) return;
+            var propertiesNotifier = InitialFormsPropertiesNotifier;
+            if (notifier == null && propertiesNotifier == null) return;
 
             if (element.Children != null)
             {
@@ -2206,8 +2217,12 @@ namespace GumRuntime
                 {
                     if (child is GraphicalUiElement gueChild)
                     {
-                        notifier(gueChild);
-                        NotifyFormsControlsOfInitialStateApplied(gueChild);
+                        if (gueChild.ElementGueContainingThis == builtElement)
+                        {
+                            propertiesNotifier?.Invoke(gueChild, false);
+                        }
+                        notifier?.Invoke(gueChild);
+                        NotifyFormsControlsOfInitialStateApplied(builtElement, gueChild);
                     }
                 }
             }

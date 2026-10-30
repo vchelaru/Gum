@@ -153,12 +153,10 @@ public class ToggleButton : ButtonBase
 
     public ToggleButton() : base()
     {
-        IsChecked = false;
     }
 
     public ToggleButton(InteractiveGue visual) : base(visual)
     {
-        IsChecked = false;
     }
 
     protected override void ReactToVisualChanged()

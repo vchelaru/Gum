@@ -105,12 +105,22 @@ public class ScrollBar : RangeBase
 
     public ScrollBar() : base() 
     {
-        base.Orientation = Orientation.Vertical;
+        ApplyDefaultOrientation();
     }
 
     public ScrollBar(InteractiveGue visual) : base(visual) 
     {
-        base.Orientation = Orientation.Vertical;
+        ApplyDefaultOrientation();
+    }
+
+    private void ApplyDefaultOrientation()
+    {
+        // With a Visual, ReactToVisualChanged has already defaulted the orientation (and a subclass
+        // may have changed it since), so only a control without one needs the default.
+        if (Visual == null)
+        {
+            base.Orientation = Orientation.Vertical;
+        }
     }
 
     bool hasAssignedOrientation = false;

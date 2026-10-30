@@ -18,7 +18,14 @@ namespace Gum.Forms;
 /// </summary>
 internal static class BehaviorFormsPropertyApplier
 {
-    public static void Apply(FrameworkElement formsControl, GraphicalUiElement visual)
+    /// <summary>
+    /// Writes the FormsProperty values the project defines onto the control. By default that is
+    /// every tier, which a control's own build uses once, before any code touches it. With
+    /// <paramref name="authoredOverridesOnly"/> only a value its containing element explicitly
+    /// authors for the instance applies, so a default never overwrites what code set since the
+    /// control was built.
+    /// </summary>
+    public static void Apply(FrameworkElement formsControl, GraphicalUiElement visual, bool authoredOverridesOnly = false)
     {
         ElementSave? elementSave = visual.ElementSave;
         if (elementSave == null)
@@ -45,7 +52,9 @@ internal static class BehaviorFormsPropertyApplier
             // default. The third tier lets a behavior's declared default carry through when
             // neither component nor parent state authors a value (mirrors WPF
             // DependencyProperty.PropertyMetadata.DefaultValue).
-            object? value = ReadEffectiveValue(visual, elementSave, declaration.Name) ?? declaration.Value;
+            object? value = authoredOverridesOnly
+                ? ReadAuthoredOverride(visual, declaration.Name)
+                : ReadEffectiveValue(visual, elementSave, declaration.Name) ?? declaration.Value;
             if (value == null)
             {
                 continue;
@@ -98,6 +107,32 @@ internal static class BehaviorFormsPropertyApplier
         }
 
         return new RecursiveVariableFinder(elementSave.DefaultState!).GetValue(propertyName);
+    }
+
+    private static object? ReadAuthoredOverride(GraphicalUiElement visual, string propertyName)
+    {
+        ElementSave? container = (visual.ElementGueContainingThis as GraphicalUiElement)?.ElementSave;
+        if (container == null || string.IsNullOrEmpty(visual.Name))
+        {
+            return null;
+        }
+
+        // Only a state the containing element (or a base of it) authors counts. Unlike
+        // RecursiveVariableFinder this does not fall through to the instance's own component,
+        // whose values were applied when the control was built.
+        string qualified = visual.Name + "." + propertyName;
+        ElementSave? current = container;
+        while (current != null)
+        {
+            object? value = current.DefaultState?.GetValue(qualified);
+            if (value != null)
+            {
+                return value;
+            }
+            current = string.IsNullOrEmpty(current.BaseType) ? null : ObjectFinder.Self.GetBaseElement(current);
+        }
+
+        return null;
     }
 
     private static IEnumerable<VariableSave> EnumerateFormsPropertyDeclarations(

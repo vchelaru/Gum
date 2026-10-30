@@ -57,14 +57,21 @@ public class RadioButton : ToggleButton
 
     public RadioButton(string groupName = "") : base()
     {
-        GroupName = groupName;
-        IsChecked = false;
+        ApplyGroupName(groupName);
     }
 
     public RadioButton(InteractiveGue visual, string groupName = "") : base(visual)
     {
-        GroupName = groupName;
-        IsChecked = false;
+        ApplyGroupName(groupName);
+    }
+
+    private void ApplyGroupName(string groupName)
+    {
+        // The Visual is assigned in the base constructor; keep a group code set meanwhile.
+        if (!string.IsNullOrEmpty(groupName))
+        {
+            GroupName = groupName;
+        }
     }
 
     protected override void ReactToVisualChanged()
