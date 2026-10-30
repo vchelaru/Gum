@@ -23,7 +23,7 @@ The two generators are different programs, so a BMFont project's `FontCache` bui
 - `--bold`, `--italic` — Generate the `--font` sizes bold and/or italic.
 - `--outline <n>` — Outline thickness in pixels for the `--font` sizes. Default is 0.
 
-Use the `--font` options for fonts the game only needs at runtime, such as the sizes [font oversampling](../code/files-and-fonts/font-oversampling.md) asks for or the bold and italic runs of BBCode text set from code. Each run of the command adds one font with one style across the listed sizes; run it again for another style or font.
+Use the `--font` options for fonts the game only needs at runtime, such as the sizes [font oversampling](../code/files-and-fonts/font-oversampling.md) asks for or the bold and italic runs of BBCode text set from code. Each run of the command adds one font with one style across the listed sizes; run it again for another style or font. These options cannot ask for no smoothing or a drop shadow, so Text styles that use those (`_noSmooth`, `_ds` files) cannot be pre-baked this way.
 
 ## Examples
 
@@ -50,4 +50,4 @@ gumcli fonts MyProject/MyProject.gumj --font "Liberation Sans" --size 12 --bold
 |------|---------|
 | 0 | All missing fonts generated successfully |
 | 1 | An error occurred during font generation |
-| 2 | Project could not be loaded, or the `--font` options are invalid (`--size` without `--font`, `--font` without `--size`, or a size of zero or less) |
+| 2 | Project could not be loaded, or the `--font` options are invalid (`--size` without `--font`, `--font` without `--size`, a size that is not a whole number above zero, or an outline that is not a whole number of zero or more) |
