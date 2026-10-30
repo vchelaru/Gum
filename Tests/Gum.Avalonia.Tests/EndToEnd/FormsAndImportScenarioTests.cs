@@ -503,7 +503,7 @@ public class FormsAndImportScenarioTests
         project.Components.Single(component => component.Name == name);
 
     /// <summary>The project of a Forms theme as the test output stages it.</summary>
-    private static GumProjectSave StagedTheme(string name)
+    internal static GumProjectSave StagedTheme(string name)
     {
         string gumx = Path.Combine(AppContext.BaseDirectory, "Content", "FormsThemes", name, "GumProject.gumx");
         return GumProjectSave.Load(gumx, out _) ?? throw new InvalidOperationException($"The staged {name} theme did not load from {gumx}.");
