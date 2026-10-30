@@ -19,10 +19,27 @@ public class CheckMissingReferenceTests : CheckHandWrittenFileHarness
 
         CheckEntry entry = run.Entries.ShouldHaveSingleItem();
         entry.Code.ShouldBe("GUM0027");
-        entry.Severity.ShouldBe("Error");
+        entry.Severity.ShouldBe("Warning");
         entry.Element.ShouldBe("Holder");
         entry.Message.ShouldContain("Ghost");
-        run.ExitCode.ShouldBe(1);
+        run.ExitCode.ShouldBe(0);
+    }
+
+    // The tool keeps a variable of an instance after the instance's type changes or the instance goes away, and hides
+    // it, so a user cannot remove it: it must not fail check or block codegen.
+    [Fact]
+    public void Codegen_VariableLeftBehindOfMissingInstance_ShouldNotBlockGeneration()
+    {
+        string project = CreateProject("LeftBehind");
+        AddComponent(project, "IconButton", "Container", DefaultState(Variable("string", "Label.Text", "string", "hi")));
+        string directory = Path.GetDirectoryName(project)!;
+        File.WriteAllText(Path.Combine(directory, "Game.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
+        CliTestHelper.Run("codegen-init", project);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", project);
+
+        result.ExitCode.ShouldBe(0);
+        Directory.GetFiles(directory, "IconButton.Generated.cs", SearchOption.AllDirectories).ShouldNotBeEmpty();
     }
 
     [Fact]

@@ -12,7 +12,9 @@ public partial class HeadlessErrorChecker
 {
     #region GUM0027 — Variable names an instance the element does not have
 
-    // "Ghost.Text" in an element with no instance Ghost (in itself or any base element) sets nothing.
+    // "Ghost.Text" in an element with no instance Ghost (in itself or any base element) sets nothing. A warning, not an
+    // error: the tool leaves such variables behind (e.g. when an instance is deleted or its base type changes) and
+    // hides them, so the user cannot always remove them.
     private static List<ErrorResult> GetMissingInstanceVariableErrorsFor(ElementSave element)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
@@ -29,7 +31,7 @@ public partial class HeadlessErrorChecker
                 {
                     errors.Add(Error(element, "GUM0027",
                         $"{element.Name} sets {variable.Name} in state {state.Name}, but {element.Name} has no instance named {instanceName}. " +
-                        "Add the instance or delete the variable."));
+                        "The value is ignored.", ErrorSeverity.Warning));
                 }
             }
         }
@@ -89,10 +91,14 @@ public partial class HeadlessErrorChecker
         return KnownBaseTypes.Contains(name)
             || WellKnownTypeNames.Contains(shortName)
             || _typeResolver.GetTypeFromString(name) != null
+            || _gumTypes.GetTypeFromString(name) != null
             || _typeResolver.GetTypeFromString(shortName) != null
             || ObjectFinder.Self.GetElementSave(name) != null
             || IsCategoryNameInProject(name);
     }
+
+    // The tool's own type names (HorizontalAlignment, GradientType, ...) resolve whatever resolver the caller injected.
+    private static readonly DefaultTypeResolver _gumTypes = new DefaultTypeResolver();
 
     private static readonly HashSet<string> WellKnownGenericNames = new HashSet<string>(StringComparer.Ordinal)
     {
