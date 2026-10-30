@@ -152,6 +152,59 @@ public class ExistingCodeProjectDetectorTests : IDisposable
     }
 
     [Fact]
+    public void FindExistingCodeProject_SearchThatNeverFinishes_ReturnsNullAtTheBound()
+    {
+        using ManualResetEventSlim release = new ManualResetEventSlim();
+        ExistingCodeProjectDetector detector = new ExistingCodeProjectDetector(
+            TimeSpan.FromMilliseconds(200),
+            _ =>
+            {
+                release.Wait();
+                return "never";
+            });
+
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        string? found = detector.FindExistingCodeProject(_root);
+        stopwatch.Stop();
+        release.Set();
+
+        found.ShouldBeNull();
+        stopwatch.ElapsedMilliseconds.ShouldBeGreaterThanOrEqualTo(150);
+        stopwatch.ElapsedMilliseconds.ShouldBeLessThan(1500);
+    }
+
+    [Fact]
+    public async Task FindExistingCodeProject_TwentyTimedOutSearches_LeaveTheThreadPoolAvailable()
+    {
+        using ManualResetEventSlim release = new ManualResetEventSlim();
+        ExistingCodeProjectDetector detector = new ExistingCodeProjectDetector(
+            TimeSpan.FromMilliseconds(20),
+            _ =>
+            {
+                release.Wait();
+                return null;
+            });
+
+        for (int i = 0; i < 20; i++)
+        {
+            detector.FindExistingCodeProject(_root).ShouldBeNull();
+        }
+
+        Task poolWork = Task.Run(() => 1 + 1);
+        (await Task.WhenAny(poolWork, Task.Delay(2000))).ShouldBe(poolWork);
+        release.Set();
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_SearchThatThrows_ReturnsNull()
+    {
+        ExistingCodeProjectDetector detector = new ExistingCodeProjectDetector(
+            TimeSpan.FromSeconds(5), _ => throw new InvalidOperationException("boom"));
+
+        detector.FindExistingCodeProject(_root).ShouldBeNull();
+    }
+
+    [Fact]
     public void TargetExistsAndIsNotEmpty_ReflectsTheTargetFolder()
     {
         _detector.TargetExistsAndIsNotEmpty(_root, "Missing").ShouldBeFalse();

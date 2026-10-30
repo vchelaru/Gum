@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Gum.ProjectServices;
@@ -8,16 +9,45 @@ namespace Gum.ProjectServices;
 /// <inheritdoc/>
 public class ExistingCodeProjectDetector : IExistingCodeProjectDetector
 {
-    private static readonly TimeSpan SearchTimeout = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan DefaultSearchTimeout = TimeSpan.FromSeconds(2);
 
     private static readonly string[] CodeProjectPatterns = { "*.csproj", "*.sln", "*.slnx" };
+
+    private readonly TimeSpan _searchTimeout;
+    private readonly Func<string, string?> _search;
+
+    /// <param name="searchTimeout">How long a search may take before it gives up with null. Defaults to 2 seconds.</param>
+    /// <param name="search">The folder walk, for tests. Defaults to the real one.</param>
+    public ExistingCodeProjectDetector(TimeSpan? searchTimeout = null, Func<string, string?>? search = null)
+    {
+        _searchTimeout = searchTimeout ?? DefaultSearchTimeout;
+        _search = search ?? Search;
+    }
 
     /// <inheritdoc/>
     public string? FindExistingCodeProject(string folder)
     {
         // An unreachable network share can block a file system call for a long time; give up after a bound.
-        Task<string?> search = Task.Run(() => Search(folder));
-        return search.Wait(SearchTimeout) ? search.Result : null;
+        // A dedicated thread, so repeated hangs cannot starve the thread pool. A search that never returns is
+        // abandoned (background thread), and its failure is swallowed so nothing is left unobserved.
+        TaskCompletionSource<string?> completion = new TaskCompletionSource<string?>();
+        Thread thread = new Thread(() =>
+        {
+            try
+            {
+                completion.TrySetResult(_search(folder));
+            }
+            catch (Exception)
+            {
+                completion.TrySetResult(null);
+            }
+        })
+        {
+            IsBackground = true
+        };
+        thread.Start();
+
+        return completion.Task.Wait(_searchTimeout) ? completion.Task.Result : null;
     }
 
     private static string? Search(string folder)
