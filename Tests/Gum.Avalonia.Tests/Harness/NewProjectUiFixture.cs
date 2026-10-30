@@ -124,6 +124,9 @@ internal sealed class NewProjectUiFixture : IDisposable
     /// <summary>Whether a visible text block shows exactly <paramref name="text"/>.</summary>
     public bool IsShown(string text) => VisibleTexts().Contains(text);
 
+    /// <summary>Whether a visible text block's text contains <paramref name="part"/>.</summary>
+    public bool IsShownContaining(string part) => VisibleTexts().Any(text => text.Contains(part, StringComparison.Ordinal));
+
     /// <summary>Whether a visible text block's text starts with <paramref name="prefix"/>.</summary>
     public bool IsShownStartingWith(string prefix) => VisibleTexts().Any(text => text.StartsWith(prefix, StringComparison.Ordinal));
 
@@ -187,6 +190,52 @@ internal sealed class NewProjectUiFixture : IDisposable
     /// <summary>Where <paramref name="control"/> sits in the window, in the window's coordinates.</summary>
     public Rect BoundsOf(Visual control) =>
         new Rect(control.TranslatePoint(new Point(0, 0), Window.Window) ?? throw new InvalidOperationException("The control is not in the window."), control.Bounds.Size);
+
+    /// <summary>Opens a section (<see cref="Gum.Avalonia.Dialogs.Views.NewProjectDialogView.FoldersExpanderName"/> or the command line one) with a click on its heading, leaving the tree as it opens.</summary>
+    public Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure OpenSection(string name)
+    {
+        Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure section = Window.Find<Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure>(disclosure => disclosure.Name == name);
+        if (!section.IsExpanded)
+        {
+            Window.Click((Control)section.Children[0]);
+        }
+        section.IsExpanded.ShouldBeTrue();
+        Window.Layout();
+        return section;
+    }
+
+    /// <summary>The texts of the rows the Folders tree shows now.</summary>
+    public List<string> TreeRowTexts() =>
+        Window.Find<TreeView>().GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text ?? string.Empty).ToList();
+
+    /// <summary>Everything the view model derives from the choices, for comparing two routes to the same choices.</summary>
+    public string Snapshot()
+    {
+        NewProjectDialogViewModel viewModel = ViewModel;
+        List<string> lines = new List<string>
+        {
+            "command: " + viewModel.CommandLine,
+            "note: " + viewModel.CommandLineNote,
+            "path: " + viewModel.GumProjectPath,
+            "platformNote: " + viewModel.PlatformNote,
+            "validation: " + viewModel.ValidationMessage,
+            "sourceLinked: " + viewModel.SourceLinked + "/" + viewModel.IsSourceLinkedForced + "/" + viewModel.IsSourceLinkedEnabled,
+        };
+        foreach (NewProjectLayoutNode root in viewModel.FolderTree)
+        {
+            Flatten(root, 0, lines);
+        }
+        return string.Join("\n", lines).Replace(NewProjectDisplayPath.Normalize(Root), "<root>").Replace(Root, "<root>");
+    }
+
+    private static void Flatten(NewProjectLayoutNode node, int depth, List<string> lines)
+    {
+        lines.Add(new string(' ', depth * 2) + node.DisplayName + (node.IsMainFile ? " *" : string.Empty));
+        foreach (NewProjectLayoutNode child in node.Children)
+        {
+            Flatten(child, depth + 1, lines);
+        }
+    }
 
     /// <summary>The rows the Folders tree shows in the window, in order.</summary>
     public List<string> FolderRows() => Dialog.OpenFolders();
