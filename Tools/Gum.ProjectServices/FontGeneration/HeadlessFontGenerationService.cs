@@ -82,6 +82,13 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         return await GenerateMissingFontsFor(project, project.AllElements, projectDirectory, forceRecreate);
     }
 
+    /// <inheritdoc/>
+    public async Task<int> CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory,
+        IReadOnlyCollection<ExtraFontRequest> extraFonts, bool forceRecreate = false)
+    {
+        return await GenerateMissingFontsFor(project, project.AllElements, projectDirectory, forceRecreate, extraFonts);
+    }
+
     /// <summary>
     /// When a font property changes on an element, all elements that reference it may need
     /// new font files generated for their overridden font combinations. This ensures those
@@ -263,7 +270,7 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
     /// <returns>How many fonts were actually generated (as opposed to already on disk).</returns>
     private async Task<int> GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,
-        string projectDirectory, bool forceRecreate)
+        string projectDirectory, bool forceRecreate, IReadOnlyCollection<ExtraFontRequest>? extraFonts = null)
     {
         using var totalScope = Gum.Diagnostics.StartupTiming.Time("HeadlessFontGenerationService.GenerateMissingFontsFor (total)");
 
@@ -272,6 +279,18 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             bitmapFonts = CollectRequiredFonts(project, elements);
         }
+
+        // Fonts the game needs at runtime that no element uses. Keyed like the collected ones, so one
+        // that an element also uses is generated once.
+        if (extraFonts != null)
+        {
+            foreach (ExtraFontRequest extraFont in extraFonts)
+            {
+                BmfcSave extraBmfc = extraFont.ToBmfcSave(project);
+                bitmapFonts[extraBmfc.FontCacheFileName] = extraBmfc;
+            }
+        }
+
         Gum.Diagnostics.StartupTiming.Log($"  CollectRequiredFonts found {bitmapFonts.Count} fonts");
 
         // Resolve relative FontFile paths to absolute so font generators can find them.

@@ -952,6 +952,57 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldGenerateExtraFont_WhenNoElementUsesIt()
+    {
+        ControllableFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+        ExtraFontRequest extra = new("Nunito-Regular", 24, IsBold: true, IsItalic: true, OutlineThickness: 2);
+
+        await service.CreateAllMissingFontFiles(Project, "/tmp/test", new[] { extra });
+
+        string expectedFileName = BmfcSave.GetFontCacheFileNameFor(
+            24, "Nunito-Regular", 2, useFontSmoothing: true, isItalic: true, isBold: true);
+        generator.GeneratedFntPaths
+            .Select(path => Path.GetFileName(path.Replace('\\', '/')))
+            .ShouldContain(Path.GetFileName(expectedFileName));
+    }
+
+    [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldGenerateFontOnce_WhenExtraFontIsAlsoUsedByAnElement()
+    {
+        ControllableFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+
+        ScreenSave screen = new() { Name = "Screen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Nunito-Regular");
+        SetVar(state, "FontSize", 14);
+        Project.Screens.Add(screen);
+
+        ExtraFontRequest sameAsUsed = new("Nunito-Regular", 14);
+        await service.CreateAllMissingFontFiles(Project, "/tmp/test", new[] { sameAsUsed });
+
+        generator.GeneratedFntPaths.Count(path => path.Contains("Font14Nunito-Regular.fnt")).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldNameExtraFontFileFromThePathAsTyped_AndGiveGeneratorAnAbsolutePath()
+    {
+        Project.Version = GumProjectSave.NativeVersion;
+        ControllableFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumExtraFontTests_" + Guid.NewGuid().ToString("N"));
+        ExtraFontRequest extra = new("Fonts/Custom.ttf", 20);
+
+        await service.CreateAllMissingFontFiles(Project, projectDirectory, new[] { extra });
+
+        string expectedFileName = Path.GetFileName(BmfcSave.GetFontCacheFileNameFor(
+            20, "Custom", 0, useFontSmoothing: true, fontFilePath: "Fonts/Custom.ttf", includePathHash: true));
+        generator.GeneratedFntPaths.Select(path => Path.GetFileName(path)!).ShouldContain(expectedFileName);
+        generator.FontFiles.ShouldContain(Path.Combine(projectDirectory, "Fonts", "Custom.ttf"));
+    }
+
+    [Fact]
     public async Task CreateAllMissingFontFiles_ShouldReturnNumberOfFontsGenerated()
     {
         ControllableFontFileGenerator generator = new();
