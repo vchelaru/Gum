@@ -127,6 +127,30 @@ public class FormsThemesTemplateTests
             $"FormsTemplate/{subfolder}: manifest.txt vs files on disk");
     }
 
+    // A new project never ships sample screens beyond the demo screen: Add Forms, gumcli new and the
+    // New Project dialog all copy these folders (#7244).
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void Screens_ShouldBeOnlyTheDemoScreen(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        string templateDir = GetTemplateDir(templateFolder);
+        GumProjectSave project = new ProjectLoader().Load(Path.Combine(templateDir, "GumProject.gumx")).Project!;
+        string screensDir = Path.Combine(templateDir, "Screens");
+
+        List<string> names = project.ScreenReferences.Select(reference => reference.Name)
+            .Concat(Directory.GetFiles(screensDir, "*", SearchOption.AllDirectories)
+                .Select(file => Path.ChangeExtension(Path.GetRelativePath(screensDir, file), null).Replace((char)92, '/')))
+            .Concat((templateFolder == "FormsTemplate" ? File.ReadAllLines(Path.Combine(templateDir, "manifest.txt")) : Array.Empty<string>())
+                .Select(line => line.Trim())
+                .Where(line => line.StartsWith("Screens/", StringComparison.Ordinal))
+                .Select(line => Path.ChangeExtension(line.Substring("Screens/".Length), null)))
+            .ToList();
+
+        names.ShouldNotBeEmpty();
+        names.Where(name => !DemoScreenRule.IsDemoScreenName(name)).ShouldBeEmpty($"{templateFolder} lists or ships a screen that is not the demo screen");
+    }
+
     // Slider and ScrollBar thumbs get their own components (copies of the button) so restyling a thumb
     // does not restyle every button (#6165), and restyling one control's thumb does not restyle the
     // other's (#6808). DarkPro and Neon, and every theme's SliderThumb except Editor's, are already

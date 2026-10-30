@@ -57,8 +57,6 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="Editor/DemoScreenGum" />
-  <ScreenReference Name="Editor/KeyboardScreenGum" />
-  <ScreenReference Name="Editor/StylesScreen" />
   <ComponentReference Name="Editor/Controls/Button" />
   <ComponentReference Name="Editor/Controls/ButtonClose" />
   <ComponentReference Name="Editor/Controls/ButtonConfirm" />

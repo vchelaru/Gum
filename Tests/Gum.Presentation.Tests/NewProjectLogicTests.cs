@@ -490,7 +490,7 @@ public class NewProjectLogicTests
     {
         GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
         ScreenSave themedDemo = new ScreenSave { Name = "Bubblegum/DemoScreenGum" };
-        ScreenSave other = new ScreenSave { Name = "Bubblegum/StylesScreen" };
+        ScreenSave other = new ScreenSave { Name = "Bubblegum/OtherScreen" };
         loaded.Screens.Add(themedDemo);
         loaded.Screens.Add(other);
         await SetUpCreatedCodeProject(loaded, includeDemo: false);

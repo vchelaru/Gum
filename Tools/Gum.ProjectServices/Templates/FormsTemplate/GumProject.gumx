@@ -56,8 +56,6 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="DemoScreenGum" />
-  <ScreenReference Name="KeyboardScreenGum" />
-  <ScreenReference Name="StylesScreen" />
   <ComponentReference Name="Controls/ButtonClose" />
   <ComponentReference Name="Controls/ButtonConfirm" />
   <ComponentReference Name="Controls/ButtonDeny" />

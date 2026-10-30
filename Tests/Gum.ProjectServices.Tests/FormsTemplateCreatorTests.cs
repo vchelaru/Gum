@@ -114,6 +114,23 @@ public class FormsTemplateCreatorTests : IDisposable
         systemFontReferences.ShouldBeEmpty();
     }
 
+    [Theory]
+    [InlineData("TestProject.gumx", "gusx")]
+    [InlineData("TestProject.gumj", "gusj")]
+    public void Create_ShouldWriteOnlyTheDemoScreen(string projectFileName, string screenExtension)
+    {
+        string filePath = Path.Combine(_tempDirectory, projectFileName);
+
+        _sut.Create(filePath);
+
+        string[] screenFiles = Directory.GetFiles(Path.Combine(_tempDirectory, "Screens"), "*", SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(_tempDirectory, file).Replace((char)92, '/'))
+            .ToArray();
+        screenFiles.ShouldBe(new[] { "Screens/DemoScreenGum." + screenExtension });
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Project!.Screens.Select(screen => screen.Name).ShouldBe(new[] { "DemoScreenGum" });
+    }
+
     [Fact]
     public void Create_ShouldCreateUISpriteSheet()
     {
@@ -381,8 +398,8 @@ public class FormsTemplateCreatorTests : IDisposable
     public void Create_NoInstanceShouldRelyOnInheritingFormerlyBakedStandardProperties()
     {
         // Issue #4092 follow-up: the first fix pass materialized these properties onto every
-        // Component instance but missed Screens (DemoScreenGum's "Background" and StylesScreen's
-        // swatch/text instances), so they silently picked up the reset Standards' blank defaults
+        // Component instance but missed Screens (DemoScreenGum's "Background"), so they silently
+        // picked up the reset Standards' blank defaults
         // (no texture, no fill-parent sizing) instead of their themed look. This checks both
         // Components AND Screens so that gap can't reopen.
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");

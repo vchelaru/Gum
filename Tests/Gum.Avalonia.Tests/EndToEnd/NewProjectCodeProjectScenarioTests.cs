@@ -41,6 +41,8 @@ public class NewProjectCodeProjectScenarioTests
     [InlineData("Standard", true)]
     [InlineData("Bubblegum", false)]
     [InlineData("Bubblegum", true)]
+    [InlineData("Editor", false)]
+    [InlineData("Editor", true)]
     public void DemoScreenChoice_IsAppliedToTheLoadedProjectAndTheFiles(string theme, bool includeDemo)
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -91,6 +93,15 @@ public class NewProjectCodeProjectScenarioTests
         }
         shownMainFiles.ShouldBe(new[] { "Content/GumProject/GumProject.gumj" });
         File.Exists(Path.Combine(gameFolder, shownMainFiles.Single())).ShouldBeTrue();
+
+        // The template ships no other sample screen (#7244): only the demo screen, and the starting screen the tool adds.
+        project.Screens.Select(screen => screen.Name)
+            .Where(name => !name.EndsWith("DemoScreenGum") && name != NewProjectLogic.StartingScreenName)
+            .ShouldBeEmpty();
+        Directory.GetFiles(Path.Combine(gumFolder, "Screens"), "*", SearchOption.AllDirectories)
+            .Select(file => Path.GetFileNameWithoutExtension(file))
+            .Where(name => name != "DemoScreenGum" && name != NewProjectLogic.StartingScreenName)
+            .ShouldBeEmpty();
 
         List<string> demoScreens = project.Screens.Select(screen => screen.Name).Where(name => name.EndsWith("DemoScreenGum")).ToList();
         string[] demoFiles = Directory.GetFiles(gumFolder, "DemoScreenGum.*", SearchOption.AllDirectories);
