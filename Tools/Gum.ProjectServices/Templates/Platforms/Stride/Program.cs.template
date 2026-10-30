@@ -17,7 +17,7 @@ void Start(Scene rootScene)
 
     // Create screens and components in the Gum tool, generate code, then add them
     // here with: new MyScreen().AddToRoot();
-    GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
+    GumService.Default.Initialize(game, "Content/GumProject/{{GumProjectFile}}");
 
     Button button = new Button();
     button.AddToRoot();

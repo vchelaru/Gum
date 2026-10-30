@@ -155,6 +155,72 @@ public class NewProjectServiceTests : BaseTestClass
         cached.ElapsedMilliseconds.ShouldBeLessThan(300);
     }
 
+
+    [Fact]
+    public async Task Execute_WithAPlatformAndXmlFormat_WritesAGumxProject()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectResult result = await service.ExecuteAsync(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "XmlGame"),
+            Platform = "monogame",
+            Template = "empty",
+            UseXmlFormat = true,
+            Restore = false
+        }, null, CancellationToken.None);
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        Path.GetExtension(result.Files.GumProjectPath).ShouldBe(".gumx");
+        File.Exists(result.Files.GumProjectPath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetPlan_WithAPlatformAndXmlFormat_ListsTheGumxProject()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectPlan? plan = service.GetPlan(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "XmlPlan"),
+            Platform = "monogame",
+            Template = "empty",
+            UseXmlFormat = true
+        });
+
+        plan.ShouldNotBeNull();
+        plan.Files.ShouldContain("Content/GumProject/GumProject.gumx");
+        plan.Files.ShouldNotContain("Content/GumProject/GumProject.gumj");
+    }
+
+    [Fact]
+    public async Task Execute_ForEveryPlatformAndFormat_TheGeneratedCodeLoadsTheGumFileItWrote()
+    {
+        NewProjectService service = CreateService();
+
+        foreach ((string name, HostPlatform _) in NewProjectPlatforms.MainNames)
+        {
+            foreach (bool xml in new[] { false, true })
+            {
+                string chosen = xml ? "GumProject.gumx" : "GumProject.gumj";
+                string other = xml ? "GumProject.gumj" : "GumProject.gumx";
+                string game = Path.Combine(_folder, $"{name}_{(xml ? "Xml" : "Json")}");
+
+                NewProjectResult result = await service.ExecuteAsync(new NewProjectRequest
+                {
+                    Path = game, Platform = name, Template = "empty", UseXmlFormat = xml, Restore = false
+                }, null, CancellationToken.None);
+
+                result.Files.Success.ShouldBeTrue($"{name}: {result.Files.ErrorMessage}");
+                Path.GetFileName(result.Files.GumProjectPath).ShouldBe(chosen, name);
+                File.Exists(Path.Combine(game, "Content", "GumProject", other)).ShouldBeFalse(name);
+                string code = string.Concat(Directory.GetFiles(game, "*.cs").Select(File.ReadAllText));
+                code.ShouldContain(chosen, customMessage: name);
+                code.ShouldNotContain(other, customMessage: name);
+            }
+        }
+    }
+
     #endregion
 
     #region Validate
@@ -276,6 +342,28 @@ public class NewProjectServiceTests : BaseTestClass
 
         service.Validate(gumOnly).Error!.Kind.ShouldBe(NewProjectErrorKind.ProjectAlreadyExists);
         service.Validate(withPlatform).Error!.Kind.ShouldBe(NewProjectErrorKind.ProjectAlreadyExists);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Validate_WithAPlatformAndAGumProjectOfEitherFormatAlreadyThere_IsRefused(bool existingIsXml)
+    {
+        NewProjectService service = CreateService();
+        string game = Path.Combine(_folder, "Existing");
+        await service.ExecuteAsync(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty", UseXmlFormat = existingIsXml, Restore = false
+        }, null, CancellationToken.None);
+        File.Delete(Path.Combine(game, "Existing.csproj"));
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty", UseXmlFormat = !existingIsXml
+        });
+
+        validation.Error.ShouldNotBeNull();
+        validation.Error.Kind.ShouldBe(NewProjectErrorKind.ProjectAlreadyExists);
     }
 
     [Fact]
