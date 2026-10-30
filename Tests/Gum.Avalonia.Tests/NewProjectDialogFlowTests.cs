@@ -155,15 +155,25 @@ public class NewProjectDialogFlowTests
     [AvaloniaFact]
     public void ThemeRow_AlignsWithTheRowsAbove_AtEveryZoom()
     {
-        using ScreenshotWindow window = Open(out _);
+        using ScreenshotWindow window = Open(out NewProjectDialogViewModel viewModel);
         global::Gum.Services.IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<global::Gum.Services.IAppScaleProvider>();
         double original = scale.BaseFontSize;
         using IDisposable follower = global::Gum.Avalonia.Shell.AppWideWindowInput.FollowBaseFontSize(window.Window, scale);
         try
         {
             foreach (double size in PrScreenshot.ZoomLevels)
+            foreach (string state in new[] { "code project", "gum only", "forms re-checked" })
             {
                 scale.BaseFontSize = size;
+                if (state == "gum only")
+                {
+                    viewModel.IncludeCodeProject = false;
+                }
+                else if (state == "forms re-checked")
+                {
+                    viewModel.IsIncludeFormsControls = false;
+                    viewModel.IsIncludeFormsControls = true;
+                }
                 ScreenshotWindow.Pump(window.Window);
                 TextBox name = window.Find<TextBox>(box => box.Text == "MyGame");
                 Button browse = window.Find<Button>(button => button.Content as string == "Browse…");
@@ -175,9 +185,10 @@ public class NewProjectDialogFlowTests
                 double browseRight = Left(browse, window.Window) + browse.Bounds.Width;
                 double previewRight = Left(preview, window.Window) + preview.Bounds.Width;
 
-                themeLeft.ShouldBe(nameLeft, 0.5, $"theme drop-down left edge at zoom {size}");
-                previewRight.ShouldBe(browseRight, 0.5, $"preview right edge at zoom {size}");
-                (Left(theme, window.Window) + theme.Bounds.Width).ShouldBeLessThan(Left(preview, window.Window), $"drop-down and preview overlap at zoom {size}");
+                themeLeft.ShouldBe(nameLeft, 0.5, $"theme drop-down left edge at zoom {size}, {state}");
+                previewRight.ShouldBe(browseRight, 0.5, $"preview right edge at zoom {size}, {state}");
+                // The drop-down fills the row up to the 12 px gap before the preview.
+                (Left(theme, window.Window) + theme.Bounds.Width + 12).ShouldBe(Left(preview, window.Window), 0.5, $"drop-down fills the row at zoom {size}, {state}");
             }
         }
         finally
