@@ -206,7 +206,7 @@ internal sealed class NewProjectUiFixture : IDisposable
 
     /// <summary>The texts of the rows the Folders tree shows now.</summary>
     public List<string> TreeRowTexts() =>
-        Window.Find<TreeView>().GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text ?? string.Empty).ToList();
+        Window.Find<TreeView>().GetVisualDescendants().OfType<TextBlock>().Where(text => text.IsEffectivelyVisible).Select(text => text.Text ?? string.Empty).ToList();
 
     /// <summary>Everything the view model derives from the choices, for comparing two routes to the same choices.</summary>
     public string Snapshot()
