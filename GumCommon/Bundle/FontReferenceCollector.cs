@@ -327,12 +327,13 @@ public class FontReferenceCollector
             || stateSave.VariableLists.Any(vl => vl.SourceObject == ownerName);
     }
 
-    private static BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave,
+    private static IEnumerable<BmfcSave> GetBmfcSavesFor(InstanceSave? instance, StateSave stateSave,
         GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
-        return BuildBmfcSave(name => stateSave.GetValueRecursive(prefix + name),
-            project, spacingHorizontal, spacingVertical);
+        Func<string, object?> getValue = name => stateSave.GetValueRecursive(prefix + name);
+        return WithBbCodeRunFonts(BuildBmfcSave(getValue, project, spacingHorizontal, spacingVertical),
+            getValue, project, spacingHorizontal, spacingVertical);
     }
 
     /// <summary>
@@ -387,8 +388,7 @@ public class FontReferenceCollector
 
         if (branchValuesByProperty.Count == 0)
         {
-            BmfcSave? baseline = TryGetBmfcSaveFor(instance, stateSave, project, spacingHorizontal, spacingVertical);
-            if (baseline != null)
+            foreach (BmfcSave baseline in GetBmfcSavesFor(instance, stateSave, project, spacingHorizontal, spacingVertical))
             {
                 yield return baseline;
             }
@@ -401,8 +401,9 @@ public class FontReferenceCollector
                 ? overridden
                 : stateSave.GetValueRecursive(prefix + name);
 
-            BmfcSave? bmfcSave = BuildBmfcSave(Lookup, project, spacingHorizontal, spacingVertical);
-            if (bmfcSave != null)
+            foreach (BmfcSave bmfcSave in WithBbCodeRunFonts(
+                BuildBmfcSave(Lookup, project, spacingHorizontal, spacingVertical),
+                Lookup, project, spacingHorizontal, spacingVertical))
             {
                 yield return bmfcSave;
             }
@@ -480,10 +481,23 @@ public class FontReferenceCollector
         // when the shadow is on, so a plain Text doesn't pay seven more recursive lookups (#4929).
         bool hasDropshadow = getValue("HasDropshadow") as bool? ?? false;
 
+        return CreateBmfcSave(getValue, fontValue, fontSize.Value, outlineValue, fontSmoothing, isItalic, isBold,
+            hasDropshadow, project, spacingHorizontal, spacingVertical);
+    }
+
+    /// <summary>
+    /// Builds a <see cref="BmfcSave"/> from already-resolved font values. The dropshadow offset, blur and
+    /// color come from <paramref name="getValue"/> (the Text's own variables) because no BBCode tag varies
+    /// them mid-text, only the on/off flag. Shared by the Text's own font and each of its BBCode runs.
+    /// </summary>
+    private static BmfcSave CreateBmfcSave(Func<string, object?> getValue, string fontValue, float fontSize,
+        int outlineThickness, bool useSmoothing, bool isItalic, bool isBold, bool hasDropshadow,
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    {
         BmfcSave bmfcSave = new BmfcSave();
-        bmfcSave.FontSize = fontSize.Value;
-        bmfcSave.OutlineThickness = outlineValue;
-        bmfcSave.UseSmoothing = fontSmoothing;
+        bmfcSave.FontSize = fontSize;
+        bmfcSave.OutlineThickness = outlineThickness;
+        bmfcSave.UseSmoothing = useSmoothing;
         bmfcSave.IsItalic = isItalic;
         bmfcSave.IsBold = isBold;
         bmfcSave.SpacingHorizontal = spacingHorizontal;
@@ -518,6 +532,63 @@ public class FontReferenceCollector
         return bmfcSave;
     }
 
+    /// <summary>
+    /// <paramref name="baseSave"/> followed by every font the BBCode tags in the Text's value resolve to
+    /// (#7201). The renderers create a run's font when they draw the text, so a project nobody has
+    /// displayed yet has none of them. Replays <see cref="BbCodeFontStacks"/>, the same stack model the
+    /// renderers use, seeded from the Text's own font. Nothing for a null <paramref name="baseSave"/>.
+    /// </summary>
+    private static IEnumerable<BmfcSave> WithBbCodeRunFonts(BmfcSave? baseSave, Func<string, object?> getValue,
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    {
+        if (baseSave == null)
+        {
+            yield break;
+        }
+
+        yield return baseSave;
+
+        if (getValue("Text") is not string text || !text.Contains('['))
+        {
+            yield break;
+        }
+
+        // Same normalization the renderer applies before parsing, so tag boundaries agree.
+        string normalized = BbCodeParser.ReplaceGlyphTags(text.Replace("\r\n", "\n"));
+        List<FoundTag> tags = BbCodeParser.Parse(normalized, BbCodeParser.KnownTags);
+        if (tags.Count == 0)
+        {
+            yield break;
+        }
+
+        BbCodeFontStacks stacks = new BbCodeFontStacks();
+        stacks.Seed(baseSave.FontFile ?? baseSave.FontName, baseSave.FontSize, baseSave.OutlineThickness,
+            baseSave.UseSmoothing, baseSave.IsItalic, baseSave.IsBold, useCustomFont: false, baseSave.HasDropshadow);
+
+        List<TagInfo> allTags = new List<TagInfo>();
+        allTags.AddRange(tags.Select(item => item.Open));
+        allTags.AddRange(tags.Select(item => item.Close));
+        allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
+
+        foreach (TagInfo tag in allTags)
+        {
+            if (!stacks.Apply(tag.Name, tag.Argument, out _))
+            {
+                continue;
+            }
+
+            string? fontName = stacks.FontName.Peek();
+            if (string.IsNullOrEmpty(fontName))
+            {
+                continue;
+            }
+
+            yield return CreateBmfcSave(getValue, fontName, stacks.FontSize.Peek(), stacks.OutlineThickness.Peek(),
+                stacks.UseFontSmoothing.Peek(), stacks.IsItalic.Peek(), stacks.IsBold.Peek(),
+                stacks.HasDropshadow.Peek(), project, spacingHorizontal, spacingVertical);
+        }
+    }
+
     private void CollectFontsFromNestedTextInstances(ElementSave outerElement, StateSave outerState,
         InstanceSave componentInstance, Dictionary<string, BmfcSave> bitmapFonts,
         GumProjectSave project, int spacingHorizontal, int spacingVertical)
@@ -545,8 +616,7 @@ public class FontReferenceCollector
                     new ElementWithState(innerElement)
                 };
 
-                BmfcSave? bmfcSave = TryGetBmfcSaveFromStack(elementStack, project, spacingHorizontal, spacingVertical);
-                if (bmfcSave != null)
+                foreach (BmfcSave bmfcSave in GetBmfcSavesFromStack(elementStack, project, spacingHorizontal, spacingVertical))
                 {
                     bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
                 }
@@ -581,8 +651,7 @@ public class FontReferenceCollector
                 new ElementWithState(innerElement)
             };
 
-            BmfcSave? bmfcSave = TryGetBmfcSaveFromStack(elementStack, project, spacingHorizontal, spacingVertical);
-            if (bmfcSave != null)
+            foreach (BmfcSave bmfcSave in GetBmfcSavesFromStack(elementStack, project, spacingHorizontal, spacingVertical))
             {
                 bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
             }
@@ -607,11 +676,13 @@ public class FontReferenceCollector
         }
     }
 
-    private static BmfcSave? TryGetBmfcSaveFromStack(List<ElementWithState> elementStack,
+    private static IEnumerable<BmfcSave> GetBmfcSavesFromStack(List<ElementWithState> elementStack,
         GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         RecursiveVariableFinder rfv = new RecursiveVariableFinder(elementStack);
+        Func<string, object?> getValue = name => rfv.GetValueByBottomName(name);
 
-        return BuildBmfcSave(name => rfv.GetValueByBottomName(name), project, spacingHorizontal, spacingVertical);
+        return WithBbCodeRunFonts(BuildBmfcSave(getValue, project, spacingHorizontal, spacingVertical),
+            getValue, project, spacingHorizontal, spacingVertical);
     }
 }

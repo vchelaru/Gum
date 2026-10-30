@@ -4,7 +4,7 @@
 gumcli fonts <project.gumj> [--font <name> --size <n>... [--bold] [--italic] [--outline <n>]]
 ```
 
-Scans all elements and states for font references and generates any missing bitmap font files (`.fnt` + `.png`) in the project's `FontCache/` folder.
+Scans all elements and states for font references and generates any missing bitmap font files (`.fnt` + `.png`) in the project's `FontCache/` folder. BBCode tags in Text values are scanned too: `[Font=...]`, `[FontSize=...]`, `[OutlineThickness=...]`, `[IsBold=...]`, `[IsItalic=...]` and `[HasDropshadow=...]` each produce the font their run uses, nested tags included, in every state.
 
 The backend used to bake fonts is chosen by the project's **Font Generator** setting (see [Fonts](../gum-tool/fonts.md#font-generator)):
 

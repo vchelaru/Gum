@@ -1650,23 +1650,16 @@ public partial class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    // The eight font-resolution stacks (mirroring the MonoGame path). Inline [FontSize]/[IsBold]/etc. tags
-    // push their value on open and pop on close, so a run resolves to the font implied by every tag currently
-    // open over it - the whole reason nested markup needs a stack rather than a flat lookup.
-    static Stack<float> fontSizeStack = new Stack<float>();
-    static Stack<string?> fontNameStack = new Stack<string?>();
-    static Stack<int> outlineThicknessStack = new Stack<int>();
-    static Stack<bool> useFontSmoothingStack = new Stack<bool>();
-    static Stack<bool> isItalicStack = new Stack<bool>();
-    static Stack<bool> isBoldStack = new Stack<bool>();
-    static Stack<bool> useCustomFontStack = new Stack<bool>();
-    // A [HasDropshadow] tag toggles just this on/off flag per run - offset/blur/color stay whole-text
-    // (set via TextRuntime.Dropshadow*), the same split [OutlineThickness] uses against the whole-text
-    // OutlineColor. See #3528.
-    static Stack<bool> hasDropshadowStack = new Stack<bool>();
+    // The eight font-resolution stacks (see BbCodeFontStacks, shared with FontReferenceCollector). Inline
+    // [FontSize]/[IsBold]/etc. tags push their value on open and pop on close, so a run resolves to the font
+    // implied by every tag currently open over it - the whole reason nested markup needs a stack rather
+    // than a flat lookup. A [HasDropshadow] tag toggles just the on/off flag per run - offset/blur/color
+    // stay whole-text (set via TextRuntime.Dropshadow*), the same split [OutlineThickness] uses against the
+    // whole-text OutlineColor. See #3528.
+    static BbCodeFontStacks fontStacks = new BbCodeFontStacks();
 
     // The base text's dropshadow offset/blur/color, snapshotted once per SetBbCodeText call (no BBCode
-    // tag varies these mid-text - only on/off, via hasDropshadowStack above) and applied to every per-run
+    // tag varies these mid-text - only on/off, via fontStacks.HasDropshadow above) and applied to every per-run
     // font resolved by GetAndCreateFontIfNecessary, matching the base-font path
     // (TextRuntime.CopyFontGenerationFieldsTo / GetFontCacheFileName). See #3625.
     static float currentDropshadowOffsetX;
@@ -1681,7 +1674,7 @@ public partial class CustomSetPropertyOnRenderable
     // offset/blur/color (see the fields above) onto a per-run BmfcSave.
     static void ApplyCurrentDropshadowTo(BmfcSave bmfcSave)
     {
-        bmfcSave.HasDropshadow = hasDropshadowStack.Peek();
+        bmfcSave.HasDropshadow = fontStacks.HasDropshadow.Peek();
         bmfcSave.DropshadowOffsetX = currentDropshadowOffsetX;
         bmfcSave.DropshadowOffsetY = currentDropshadowOffsetY;
         bmfcSave.DropshadowBlur = currentDropshadowBlur;
@@ -1763,29 +1756,7 @@ public partial class CustomSetPropertyOnRenderable
 
     static List<TagInfo> allTags = new List<TagInfo>();
 
-    // BbCodeParser recognizes tag names ignoring case and carries a name as written, but the apply code
-    // below switches on the PascalCase variable names (also the InlineVariable names the renderers read),
-    // so a lowercase [color=Red] was stripped and never applied (#7106).
-    private static readonly Dictionary<string, string> CanonicalTagNames =
-        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["Red"] = "Red",
-            ["Green"] = "Green",
-            ["Blue"] = "Blue",
-            ["Color"] = "Color",
-            ["FontScale"] = "FontScale",
-            ["Custom"] = "Custom",
-            ["State"] = "State",
-            ["Font"] = "Font",
-            ["FontSize"] = "FontSize",
-            ["OutlineThickness"] = "OutlineThickness",
-            ["IsItalic"] = "IsItalic",
-            ["IsBold"] = "IsBold",
-            ["HasDropshadow"] = "HasDropshadow",
-        };
-
-    private static string CanonicalTagName(string name) =>
-        CanonicalTagNames.TryGetValue(name, out string? canonicalName) ? canonicalName : name;
+    private static string CanonicalTagName(string name) => BbCodeFontStacks.CanonicalTagName(name);
 
     /// <summary>
     /// Variable names a <c>[state=Name]</c> BBCode tag is allowed to apply to the substring it wraps -
@@ -2030,44 +2001,24 @@ public partial class CustomSetPropertyOnRenderable
         // never null, so this guard is always-true and FRB behavior is unchanged - a pure structural move.)
         if (textRuntime != null)
         {
-            fontNameStack.Clear();
+            string? baseFontName;
             if (textRuntime.UseCustomFont)
             {
-                var customFont = textRuntime.CustomFontFile;
-                if (customFont?.EndsWith(".fnt") == true)
+                baseFontName = textRuntime.CustomFontFile;
+                if (baseFontName?.EndsWith(".fnt") == true)
                 {
-                    customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
+                    baseFontName = baseFontName.Substring(0, baseFontName.Length - ".fnt".Length);
                 }
-                fontNameStack.Push(customFont);
             }
             else
             {
-                fontNameStack.Push(textRuntime.Font);
+                baseFontName = textRuntime.Font;
             }
 
-            fontSizeStack.Clear();
-            fontSizeStack.Push(textRuntime.FontSize);
-
-            outlineThicknessStack.Clear();
-            outlineThicknessStack.Push(textRuntime.OutlineThickness);
-
-            useFontSmoothingStack.Clear();
-            useFontSmoothingStack.Push(textRuntime.UseFontSmoothing);
-
-            isItalicStack.Clear();
-            isItalicStack.Push(textRuntime.IsItalic);
-
-            isBoldStack.Clear();
-            isBoldStack.Push(textRuntime.IsBold);
-
-            useCustomFontStack.Clear();
-            useCustomFontStack.Push(textRuntime.UseCustomFont);
-
-            hasDropshadowStack.Clear();
 #if FRB
             // FRB's GraphicalUiElement has no dropshadow font properties (see the FRB extension
             // methods below), so per-run resolution never applies a dropshadow there either.
-            hasDropshadowStack.Push(false);
+            bool baseHasDropshadow = false;
             currentDropshadowOffsetX = 0f;
             currentDropshadowOffsetY = 0f;
             currentDropshadowBlur = 0f;
@@ -2076,7 +2027,7 @@ public partial class CustomSetPropertyOnRenderable
             currentDropshadowBlue = 0;
             currentDropshadowAlpha = 0;
 #else
-            hasDropshadowStack.Push(textRuntime.HasDropshadow);
+            bool baseHasDropshadow = textRuntime.HasDropshadow;
             currentDropshadowOffsetX = textRuntime.DropshadowOffsetX;
             currentDropshadowOffsetY = textRuntime.DropshadowOffsetY;
             currentDropshadowBlur = textRuntime.DropshadowBlur;
@@ -2085,6 +2036,10 @@ public partial class CustomSetPropertyOnRenderable
             currentDropshadowBlue = (byte)textRuntime.DropshadowBlue;
             currentDropshadowAlpha = (byte)textRuntime.DropshadowAlpha;
 #endif
+
+            fontStacks.Seed(baseFontName, textRuntime.FontSize, textRuntime.OutlineThickness,
+                textRuntime.UseFontSmoothing, textRuntime.IsItalic, textRuntime.IsBold,
+                textRuntime.UseCustomFont, baseHasDropshadow);
 
             ApplyFontVariables(asText, expandedResults);
         }
@@ -2129,108 +2084,23 @@ public partial class CustomSetPropertyOnRenderable
             // creator wired - the raw pixel size as a float (ResolveRunFont then scales the base atlas).
             object? castedValue = null;
             string convertedName = "BitmapFont"; // shared historical run-marker name (see ResolvedFont note).
-            switch (CanonicalTagName(tag.Name))
+            if (fontStacks.Apply(tag.Name, tag.Argument, out bool pushed))
             {
-                case "Font":
-                    if (!string.IsNullOrEmpty(tag.Argument))
-                    {
-                        // tolerate ".fnt" suffix
-                        var argument = tag.Argument;
-                        if (argument?.EndsWith(".fnt") == true)
-                        {
-                            argument = argument.Substring(0, argument.Length - ".fnt".Length);
-                        }
-                        fontNameStack.Push(argument);
-                    }
-                    else
-                    {
-                        fontNameStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "FontSize":
-                    if (float.TryParse(tag.Argument, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedSize))
-                    {
-                        fontSizeStack.Push(parsedSize);
-                        castedValue = GetAndCreateFontIfNecessary();
+                castedValue = GetAndCreateFontIfNecessary();
 #if RAYLIB
-                        // Platform-necessary Raylib fallback: with no font creator wired, no crisp font can be
-                        // rasterized at the requested size, so store the raw pixel size as a float and let the
-                        // renderer scale the base atlas to it (a blurry-but-correct approximation). The XNA
-                        // path never needs this - it can new BitmapFont(...) at any size.
-                        castedValue ??= parsedSize;
+                if (CanonicalTagName(tag.Name) == "FontSize")
+                {
+                    // Platform-necessary Raylib fallback: with no font creator wired, no crisp font can be
+                    // rasterized at the requested size, so store the raw pixel size as a float and let the
+                    // renderer scale the base atlas to it (a blurry-but-correct approximation). The XNA
+                    // path never needs this - it can new BitmapFont(...) at any size.
+                    // The close tag must end that run too (#6468): back to the enclosing [FontSize] when
+                    // one is still open, else 0, which means "back to the base font" and which Text does
+                    // not treat as a size run. Without it the open run would stretch to the end of the text.
+                    castedValue ??= pushed ? fontStacks.FontSize.Peek()
+                        : fontStacks.FontSize.Count > 1 ? fontStacks.FontSize.Peek() : 0f;
+                }
 #endif
-                    }
-                    else
-                    {
-                        fontSizeStack.Pop();
-                        castedValue = GetAndCreateFontIfNecessary();
-#if RAYLIB
-                        // With no font creator the open tag stored a raw size (above), so the close tag must end
-                        // that run too (#6468): back to the enclosing [FontSize] when one is still open, else 0,
-                        // which means "back to the base font" and which Text does not treat as a size run.
-                        // Without it the open run would stretch to the end of the text.
-                        castedValue ??= fontSizeStack.Count > 1 ? fontSizeStack.Peek() : 0f;
-#endif
-                    }
-                    break;
-                case "OutlineThickness":
-                    if (int.TryParse(tag.Argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedOutline))
-                    {
-                        outlineThicknessStack.Push(parsedOutline);
-                    }
-                    else
-                    {
-                        outlineThicknessStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "IsItalic":
-                    if (bool.TryParse(tag.Argument, out bool parsedItalic))
-                    {
-                        isItalicStack.Push(parsedItalic);
-                    }
-                    else
-                    {
-                        isItalicStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "IsBold":
-                    if (bool.TryParse(tag.Argument, out bool parsedBold))
-                    {
-                        isBoldStack.Push(parsedBold);
-                    }
-                    else
-                    {
-                        isBoldStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "UseCustomFont":
-                    // Never fires today (UseCustomFont is not a BbCodeParser.KnownTag), but the stack push/pop
-                    // is kept parallel to the MonoGame path for convergence.
-                    if (bool.TryParse(tag.Argument, out bool parsedCustom))
-                    {
-                        useCustomFontStack.Push(parsedCustom);
-                    }
-                    else
-                    {
-                        useCustomFontStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "HasDropshadow":
-                    if (bool.TryParse(tag.Argument, out bool parsedHasDropshadow))
-                    {
-                        hasDropshadowStack.Push(parsedHasDropshadow);
-                    }
-                    else
-                    {
-                        hasDropshadowStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
             }
 
             if (castedValue != null)
@@ -2268,7 +2138,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             // A TextRuntime with no Font or CustomFontFile (e.g. AssignFontInConstructor = false) has no
             // family to resolve a run font from, so the range stays at the base font.
-            string? currentFontName = fontNameStack.Peek();
+            string? currentFontName = fontStacks.FontName.Peek();
             if (string.IsNullOrEmpty(currentFontName))
             {
                 return null;
@@ -2295,8 +2165,8 @@ public partial class CustomSetPropertyOnRenderable
                         string? bbFontFile = BmfcSave.IsFontFilePath(currentFontName) ? currentFontName : null;
 
                         BmfcSave bmfcSave = BuildInlineRunBmfcSave(
-                            fontSizeStack.Peek(), outlineThicknessStack.Peek(), useFontSmoothingStack.Peek(),
-                            isItalicStack.Peek(), isBoldStack.Peek(), bbFontFile, currentFontName);
+                            fontStacks.FontSize.Peek(), fontStacks.OutlineThickness.Peek(), fontStacks.UseFontSmoothing.Peek(),
+                            fontStacks.IsItalic.Peek(), fontStacks.IsBold.Peek(), bbFontFile, currentFontName);
 
                         font = InMemoryFontCreator.TryCreateFont(bmfcSave);
                         if (font != null)
@@ -2341,11 +2211,11 @@ public partial class CustomSetPropertyOnRenderable
                             string? bbFontFileForDisk = BmfcSave.IsFontFilePath(currentFontName) ? currentFontName : null;
 
                             BmfcSave bmfcSave = new BmfcSave();
-                            bmfcSave.FontSize = fontSizeStack.Peek();
-                            bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
-                            bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
-                            bmfcSave.IsItalic = isItalicStack.Peek();
-                            bmfcSave.IsBold = isBoldStack.Peek();
+                            bmfcSave.FontSize = fontStacks.FontSize.Peek();
+                            bmfcSave.OutlineThickness = fontStacks.OutlineThickness.Peek();
+                            bmfcSave.UseSmoothing = fontStacks.UseFontSmoothing.Peek();
+                            bmfcSave.IsItalic = fontStacks.IsItalic.Peek();
+                            bmfcSave.IsBold = fontStacks.IsBold.Peek();
                             ApplyCurrentDropshadowTo(bmfcSave);
                             ApplyFontCacheNaming(bmfcSave, bbFontFileForDisk);
 
@@ -2413,9 +2283,9 @@ public partial class CustomSetPropertyOnRenderable
 #else
             // Raylib can only produce a crisp font for the current stack state via a wired IRaylibFontCreator
             // (it cannot `new BitmapFont(file)` the way the XNA path does). The Raylib path always uses the
-            // FontCache key/creator - it does not branch on useCustomFontStack (matching the pre-#3624
+            // FontCache key/creator - it does not branch on fontStacks.UseCustomFont (matching the pre-#3624
             // behavior, where custom fonts were not re-generated per inline run).
-            if (InMemoryFontCreator == null || fontSizeStack.Peek() <= 0)
+            if (InMemoryFontCreator == null || fontStacks.FontSize.Peek() <= 0)
             {
                 return null;
             }
@@ -2428,14 +2298,14 @@ public partial class CustomSetPropertyOnRenderable
                 string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontName) ? fontName : null;
 
                 string fontCacheName = BmfcSave.GetFontCacheFileNameFor(
-                    fontSizeStack.Peek(),
+                    fontStacks.FontSize.Peek(),
                     fontName,
-                    outlineThicknessStack.Peek(),
-                    useFontSmoothingStack.Peek(),
-                    isItalicStack.Peek(),
-                    isBoldStack.Peek(),
+                    fontStacks.OutlineThickness.Peek(),
+                    fontStacks.UseFontSmoothing.Peek(),
+                    fontStacks.IsItalic.Peek(),
+                    fontStacks.IsBold.Peek(),
                     bbCodeFontFilePath,
-                    hasDropshadowStack.Peek(),
+                    fontStacks.HasDropshadow.Peek(),
                     currentDropshadowOffsetX,
                     currentDropshadowOffsetY,
                     currentDropshadowBlur,
@@ -2455,8 +2325,8 @@ public partial class CustomSetPropertyOnRenderable
                 }
 
                 BmfcSave bmfcSave = BuildInlineRunBmfcSave(
-                    fontSizeStack.Peek(), outlineThicknessStack.Peek(), useFontSmoothingStack.Peek(),
-                    isItalicStack.Peek(), isBoldStack.Peek(), bbCodeFontFilePath, fontName);
+                    fontStacks.FontSize.Peek(), fontStacks.OutlineThickness.Peek(), fontStacks.UseFontSmoothing.Peek(),
+                    fontStacks.IsItalic.Peek(), fontStacks.IsBold.Peek(), bbCodeFontFilePath, fontName);
 
                 Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
                 if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
@@ -2485,7 +2355,7 @@ public partial class CustomSetPropertyOnRenderable
         string GetFontFileName(string fontName)
         {
             string fontFileNameName;
-            if (useCustomFontStack.Peek())
+            if (fontStacks.UseCustomFont.Peek())
             {
                 fontFileNameName = fontName + ".fnt";
             }
@@ -2494,14 +2364,14 @@ public partial class CustomSetPropertyOnRenderable
                 string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontName) ? fontName : null;
 
                 fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                    fontSizeStack.Peek(),
+                    fontStacks.FontSize.Peek(),
                     fontName,
-                    outlineThicknessStack.Peek(),
-                    useFontSmoothingStack.Peek(),
-                    isItalicStack.Peek(),
-                    isBoldStack.Peek(),
+                    fontStacks.OutlineThickness.Peek(),
+                    fontStacks.UseFontSmoothing.Peek(),
+                    fontStacks.IsItalic.Peek(),
+                    fontStacks.IsBold.Peek(),
                     bbCodeFontFilePath,
-                    hasDropshadowStack.Peek(),
+                    fontStacks.HasDropshadow.Peek(),
                     currentDropshadowOffsetX,
                     currentDropshadowOffsetY,
                     currentDropshadowBlur,

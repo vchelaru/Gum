@@ -105,6 +105,7 @@
 		<Compile Include="..\GumDataTypes\Variables\VariableListSave.cs" Link="DataTypes\VariableListSave.cs" />
 		<Compile Include="..\GumDataTypes\Variables\VariableSave.cs" Link="DataTypes\VariableSave.cs" />
 		<Compile Include="..\GumRuntime\BbCodeParser.cs" Link="Runtime\BbCodeParser.cs" />
+		<Compile Include="..\GumRuntime\BbCodeFontStacks.cs" Link="Runtime\BbCodeFontStacks.cs" />
 		<Compile Include="..\GumRuntime\BindableGue.cs" Link="BindableGue.cs" />
 		<Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs" Link="Wireframe\ElementSaveExtensions.GumRuntime.cs" />
 		<Compile Include="..\GumRuntime\ElementTypeRegistry.cs" Link="Wireframe\ElementTypeRegistry.cs" />
