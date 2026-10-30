@@ -50,9 +50,11 @@ public class DotnetRestoreRunnerTests
         lines.ShouldNotBeEmpty();
     }
 
-    [Fact]
+    // pwsh is installed on the GitHub ubuntu, macOS and Windows runners; skipped where it is not.
+    [SkippableFact]
     public async Task RestoreAsync_CanceledWhileRunning_KillsTheProcessAndReturnsCanceled()
     {
+        Skip.IfNot(IsPwshOnPath(), "pwsh is not installed");
         DotnetRestoreRunner runner = new DotnetRestoreRunner(_ =>
         {
             ProcessStartInfo info = new ProcessStartInfo("pwsh");
@@ -73,9 +75,10 @@ public class DotnetRestoreRunnerTests
         stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(30);
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task RestoreAsync_CanceledWhileRunning_KillsTheChildProcessTooNotJustTheParent()
     {
+        Skip.IfNot(IsPwshOnPath(), "pwsh is not installed");
         string folder = Path.Combine(Path.GetTempPath(), "GumRestoreTree_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         try
@@ -137,5 +140,13 @@ public class DotnetRestoreRunnerTests
         {
             Directory.Delete(folder, recursive: true);
         }
+    }
+
+    private static bool IsPwshOnPath()
+    {
+        string executable = OperatingSystem.IsWindows() ? "pwsh.exe" : "pwsh";
+        return (Environment.GetEnvironmentVariable("PATH") ?? "")
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+            .Any(directory => File.Exists(Path.Combine(directory, executable)));
     }
 }
