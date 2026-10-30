@@ -438,7 +438,10 @@ internal sealed class PreviewAccuracy2World : IDisposable
             GumService.ApplyProjectTextureFilter,
             GumAnimationLoader.LoadAnimationsFromProvider,
             path => LoaderManager.Self.Dispose(path),
-            () => Now);
+            () => Now)
+        {
+            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService
+        };
         Manager.ReloadFinished += Results.Add;
         Manager.Start(Gumx);
         Manager.Stop();

@@ -42,6 +42,8 @@ When any of these files change, Gum reloads the project in place: it diffs the n
 
 Children added at runtime by your game code are left untouched. Hot reload identifies "design-time" children by their `Tag` — when Gum creates a visual from an `InstanceSave`, it stores the `InstanceSave` in `Tag`. Anything without an `InstanceSave` `Tag` is treated as runtime-owned and skipped.
 
+Localization files are reloaded too. Hot reload reacts to the files in the project's `LocalizationFiles` (`.csv` or `.resx`, plus the `.resx` language files next to a listed one). When one changes, or the list itself changes in the project, Gum reads the files again, replaces the database of `GumService.Default.LocalizationService` and translates the text on screen again in the current language. Text set with `SetTextNoTranslate` is left alone. A file Gum cannot find is reported as `MissingFile`; one it cannot read (a malformed or empty file, or one the editor still has open) is tried once more after the debounce, then leaves the old translations in place and is reported as `ReloadFailed`. A game that has no `LocalizationService` is not affected.
+
 When a reload is triggered, Gum automatically copies each changed `.fnt` and the texture pages it names from the source project to the same place in the bin-side folder (`FontCache/` for generated fonts, any folder for a `CustomFontFile`), and evicts cached fonts so they are reloaded from disk. Every `Text` then resolves its font again, so a font regenerated under the same name, or one that is written after the project was saved, shows on `Text` that is already on screen.
 
 ### Renamed or Deleted Screens and Components
@@ -171,7 +173,7 @@ Every reload's result lists every issue that reload had, including one an earlie
 | `MissingFile`         | The project lists a file that is not on disk. The reload went on without it.                        | `false`          |
 | `FontFailure`         | A changed font file could not be copied. It is tried again on the next reload.                      | `false`          |
 | `FontSourceChanged`   | A font source file (`.ttf` or `.otf`) changed. Fonts already generated from it keep the old glyphs until a restart. | `false`          |
-| `ReloadFailed`        | The project could not be read, or applying it threw. The UI is unchanged or partly updated.         | `false`          |
+| `ReloadFailed`        | The project or a changed localization file could not be read, or applying it threw. The UI is unchanged or partly updated. | `false`          |
 | `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
 | `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |
 | `InstanceRebuilt`     | An instance's component changed or was renamed, so its visual was rebuilt. References and handlers on it are stale. | `true` |

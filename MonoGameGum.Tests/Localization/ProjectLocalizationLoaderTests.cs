@@ -198,6 +198,39 @@ public class ProjectLocalizationLoaderTests
         }
     }
 
+    [Theory]
+    [InlineData("/Game/Content/Strings.csv", true)]
+    [InlineData("/Game/Content/Text/Buttons.es.resx", true)]
+    [InlineData("/Game/Content/Text/Buttons.resx", true)]
+    [InlineData("/Game/Content/Text/Other.es.resx", false)]
+    [InlineData("/Game/Content/Text/Sub/Buttons.es.resx", false)]
+    [InlineData("/Game/Content/Other.csv", false)]
+    [InlineData("/Game/Content/Strings.csv.bak", false)]
+    public void IsLocalizationFile_matches_listed_files_and_resx_satellites_only(string changedFile, bool expected)
+    {
+        GumProjectSave project = ProjectWithLocalizationFiles("Strings.csv");
+        project.LocalizationFiles.Clear();
+        project.LocalizationFiles.Add("Strings.csv");
+        project.LocalizationFiles.Add("Text/Buttons.resx");
+
+        ProjectLocalizationLoader.IsLocalizationFile(project, "/Game/Content", changedFile).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("/Game/Content/s.csv", true)]
+    [InlineData("/Game/Content/./s.csv", true)]
+    [InlineData("/Game/Content/Text/../s.csv", true)]
+    [InlineData("/Game/Content/S.CSV", true)]
+    [InlineData("/Game/Content/Text/b.es.resx", true)]
+    [InlineData("/Game/Shared/c.csv", true)]
+    [InlineData("/Game/Content/Shared/c.csv", false)]
+    public void IsLocalizationFile_sees_through_dot_segments_backslashes_and_case_in_the_listed_paths(string changedFile, bool expected)
+    {
+        GumProjectSave project = ProjectWithLocalizationFiles("./s.csv", "Text\\b.resx", "../Shared/c.csv");
+
+        ProjectLocalizationLoader.IsLocalizationFile(project, "/Game/Content", changedFile).ShouldBe(expected);
+    }
+
     private static GumProjectSave ProjectWithLocalizationFiles(params string[] files)
     {
         GumProjectSave project = new GumProjectSave { FullFileName = "C:/Game/Content/Project.gumx" };

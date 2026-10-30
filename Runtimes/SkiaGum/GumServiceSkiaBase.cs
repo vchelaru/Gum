@@ -338,7 +338,10 @@ public abstract class GumServiceSkiaBase : IGumService
         _hotReloadManager = new GumHotReloadManager(
             applyProjectTextureFilter: ApplyProjectTextureFilter,
             loadAnimationsFromProvider: GumAnimationLoader.LoadAnimationsFromProvider,
-            disposeCachedAsset: path => LoaderManager.Self.Dispose(path));
+            disposeCachedAsset: path => LoaderManager.Self.Dispose(path))
+        {
+            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService
+        };
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.ReloadFinished += result => HotReloadFinished?.Invoke(result);
         _hotReloadManager.Start(absoluteGumxSourcePath);
