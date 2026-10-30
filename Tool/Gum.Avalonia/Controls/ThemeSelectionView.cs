@@ -35,19 +35,19 @@ public sealed class ThemeSelectionView : StackPanel
         themeRow.Children.Add(labelContent ?? new TextBlock { Text = "Theme", MinWidth = labelAbove ? 0 : 56, VerticalAlignment = VerticalAlignment.Center });
         ComboBox themes = new ComboBox
         {
-            MinWidth = 160,
+            MinWidth = previewBeside ? 0 : 160,
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = labelAbove ? HorizontalAlignment.Stretch : HorizontalAlignment.Left,
         };
         themes.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(ThemeSelectionViewModel.AvailableThemes)));
         themes.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(ThemeSelectionViewModel.SelectedTheme)) { Mode = BindingMode.TwoWay });
         themeRow.Children.Add(themes);
-        WrapPanel? besideRow = null;
+        Grid? besideRow = null;
         if (previewBeside)
         {
-            themeRow.Width = 150;
+            // The drop-down fills what the preview leaves; the preview is a fixed-size block at the right edge.
             themeRow.Margin = new Thickness(0);
-            besideRow = new WrapPanel { ItemSpacing = 12, LineSpacing = 8, Margin = new Thickness(0, 0, 0, 8) };
+            besideRow = new Grid { ColumnDefinitions = new ColumnDefinitions("*,200"), ColumnSpacing = 12, Margin = new Thickness(0, 0, 0, 8) };
             besideRow.Children.Add(themeRow);
             Children.Add(besideRow);
         }
@@ -69,7 +69,11 @@ public sealed class ThemeSelectionView : StackPanel
         if (besideRow != null)
         {
             preview.MaxHeight = 112;
+            preview.MaxWidth = 200;
             preview.Margin = new Thickness(0);
+            preview.HorizontalAlignment = HorizontalAlignment.Right;
+            preview.VerticalAlignment = VerticalAlignment.Top;
+            Grid.SetColumn(preview, 1);
             besideRow.Children.Add(preview);
         }
         else

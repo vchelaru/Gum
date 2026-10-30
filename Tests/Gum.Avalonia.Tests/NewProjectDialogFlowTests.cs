@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Shouldly;
@@ -152,13 +153,49 @@ public class NewProjectDialogFlowTests
     }
 
     [AvaloniaFact]
+    public void ThemeRow_AlignsWithTheRowsAbove_AtEveryZoom()
+    {
+        using ScreenshotWindow window = Open(out _);
+        global::Gum.Services.IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<global::Gum.Services.IAppScaleProvider>();
+        double original = scale.BaseFontSize;
+        using IDisposable follower = global::Gum.Avalonia.Shell.AppWideWindowInput.FollowBaseFontSize(window.Window, scale);
+        try
+        {
+            foreach (double size in PrScreenshot.ZoomLevels)
+            {
+                scale.BaseFontSize = size;
+                ScreenshotWindow.Pump(window.Window);
+                TextBox name = window.Find<TextBox>(box => box.Text == "MyGame");
+                Button browse = window.Find<Button>(button => button.Content as string == "Browse…");
+                ComboBox theme = window.FindAll<ComboBox>().Single(combo => combo.ItemsSource is IEnumerable<string> items && !items.Contains(NewProjectDialogViewModel.JsonFormat));
+                Image preview = window.Find<Image>(image => image.IsEffectivelyVisible);
+
+                double nameLeft = Left(name, window.Window);
+                double themeLeft = Left(theme, window.Window);
+                double browseRight = Left(browse, window.Window) + browse.Bounds.Width;
+                double previewRight = Left(preview, window.Window) + preview.Bounds.Width;
+
+                themeLeft.ShouldBe(nameLeft, 0.5, $"theme drop-down left edge at zoom {size}");
+                previewRight.ShouldBe(browseRight, 0.5, $"preview right edge at zoom {size}");
+                (Left(theme, window.Window) + theme.Bounds.Width).ShouldBeLessThan(Left(preview, window.Window), $"drop-down and preview overlap at zoom {size}");
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = original;
+        }
+    }
+
+    private static double Left(Control control, Window window) => control.TranslatePoint(new global::Avalonia.Point(0, 0), window)!.Value.X;
+
+    [AvaloniaFact]
     public void InfoIconsCopyButtonAndBrowseHaveAccessibleNames()
     {
         using ScreenshotWindow window = Open(out _);
 
         List<string> names = window.FindAll<FluentIcons.Avalonia.FluentIcon>()
             .Select(icon => global::Avalonia.Automation.AutomationProperties.GetName(icon))
-            .Where(name => name != null && name.StartsWith("About ")).ToList();
+            .Where(name => name != null && name.StartsWith("About ")).Select(name => name!).ToList();
 
         names.ShouldBe(new[]
         {
