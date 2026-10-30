@@ -80,7 +80,7 @@ internal sealed class PreviewAccuracy3World : IDisposable
             () => Now);
         Manager.ReloadFinished += Results.Add;
         // Preview's policy decides, from each finished reload, whether the shown element is rebuilt (Game1.HandleHotReloadFinished).
-        Manager.ReloadFinished += result => _policy.OnReloadFinished(result, isStateSelected: Selection?.StateName != null);
+        Manager.ReloadFinished += result => _policy.OnReloadFinished(result, isStateSelected: Selection != null && PreviewReloadPolicy.IsStateSelected(Selection));
         Manager.Start(Gumx);
         Manager.Stop();
     }

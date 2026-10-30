@@ -1,4 +1,5 @@
 using Gum;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using GumPreview;
 using Shouldly;
 
@@ -16,7 +17,7 @@ public class PreviewReloadPolicyTests
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
 
-        policy.OnReloadFinished(Result());
+        policy.OnReloadFinished(Result(), isStateSelected: false);
 
         policy.IsReloadPending.ShouldBeFalse();
         policy.TryTakePendingReload().ShouldBeFalse();
@@ -43,6 +44,34 @@ public class PreviewReloadPolicyTests
         policy.TryTakePendingReload().ShouldBeFalse();
     }
 
+    [Fact]
+    public void ReloadFailedWithAStateSelected_AsksForOneRebuildPerFinishedResult()
+    {
+        PreviewReloadPolicy policy = new PreviewReloadPolicy();
+
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed)), isStateSelected: true);
+        policy.TryTakePendingReload().ShouldBeTrue();
+        policy.TryTakePendingReload().ShouldBeFalse();
+
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed)), isStateSelected: true);
+        policy.TryTakePendingReload().ShouldBeTrue();
+        policy.TryTakePendingReload().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsStateSelected_SelectionWithAState_IsTrue()
+    {
+        PreviewSelectionMessage selection = new PreviewSelectionMessage("Widget") { CategoryName = "Look", StateName = "Highlighted" };
+
+        PreviewReloadPolicy.IsStateSelected(selection).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsStateSelected_SelectionWithNoState_IsFalse()
+    {
+        PreviewReloadPolicy.IsStateSelected(new PreviewSelectionMessage("Widget")).ShouldBeFalse();
+    }
+
     [Theory]
     [InlineData(HotReloadIssueKind.InstanceRemoved)]
     [InlineData(HotReloadIssueKind.InstanceRebuilt)]
@@ -50,7 +79,7 @@ public class PreviewReloadPolicyTests
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
 
-        policy.OnReloadFinished(Result(Issue(kind)));
+        policy.OnReloadFinished(Result(Issue(kind)), isStateSelected: false);
 
         policy.TryTakePendingReload().ShouldBeFalse();
     }
@@ -64,7 +93,7 @@ public class PreviewReloadPolicyTests
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
 
-        policy.OnReloadFinished(Result(Issue(kind)));
+        policy.OnReloadFinished(Result(Issue(kind)), isStateSelected: false);
 
         policy.TryTakePendingReload().ShouldBeTrue();
         policy.TryTakePendingReload().ShouldBeFalse();
@@ -75,7 +104,7 @@ public class PreviewReloadPolicyTests
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
 
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.InstanceRemoved), Issue(HotReloadIssueKind.MissingFile)));
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.InstanceRemoved), Issue(HotReloadIssueKind.MissingFile)), isStateSelected: false);
 
         policy.TryTakePendingReload().ShouldBeTrue();
     }
@@ -84,9 +113,9 @@ public class PreviewReloadPolicyTests
     public void ANewerMatchingResult_CancelsTheRebuildAnOlderOneAskedFor()
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed)));
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed)), isStateSelected: false);
 
-        policy.OnReloadFinished(Result());
+        policy.OnReloadFinished(Result(), isStateSelected: false);
 
         policy.TryTakePendingReload().ShouldBeFalse();
     }
@@ -96,7 +125,7 @@ public class PreviewReloadPolicyTests
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
 
-        policy.OnReloadFinished(Result(), isShownElementMissing: true);
+        policy.OnReloadFinished(Result(), isStateSelected: false, isShownElementMissing: true);
 
         policy.TryTakePendingReload().ShouldBeTrue();
         policy.TryTakePendingReload().ShouldBeFalse();
@@ -107,7 +136,7 @@ public class PreviewReloadPolicyTests
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
 
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.InstanceRebuilt)), isShownElementMissing: false);
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.InstanceRebuilt)), isStateSelected: false, isShownElementMissing: false);
 
         policy.TryTakePendingReload().ShouldBeFalse();
     }
@@ -116,11 +145,11 @@ public class PreviewReloadPolicyTests
     public void AMissingElement_RebuildsAfterEachReload_ButNotBetweenReloads()
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(), isShownElementMissing: true);
+        policy.OnReloadFinished(Result(), isStateSelected: false, isShownElementMissing: true);
         policy.TryTakePendingReload().ShouldBeTrue();
 
         policy.TryTakePendingReload().ShouldBeFalse();
-        policy.OnReloadFinished(Result(), isShownElementMissing: true);
+        policy.OnReloadFinished(Result(), isStateSelected: false, isShownElementMissing: true);
 
         policy.TryTakePendingReload().ShouldBeTrue();
     }
@@ -131,11 +160,11 @@ public class PreviewReloadPolicyTests
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
         HotReloadIssue sticky = Issue(HotReloadIssueKind.StandardElementChanged, "Text changed");
 
-        policy.OnReloadFinished(Result(sticky));
+        policy.OnReloadFinished(Result(sticky), isStateSelected: false);
         policy.TryTakePendingReload().ShouldBeTrue();
-        policy.OnReloadFinished(Result(sticky));
+        policy.OnReloadFinished(Result(sticky), isStateSelected: false);
         policy.TryTakePendingReload().ShouldBeTrue();
-        policy.OnReloadFinished(Result(sticky));
+        policy.OnReloadFinished(Result(sticky), isStateSelected: false);
 
         policy.TryTakePendingReload().ShouldBeTrue();
     }
@@ -145,8 +174,8 @@ public class PreviewReloadPolicyTests
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
 
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed, "first")));
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ShownElementGone)));
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ReloadFailed, "first")), isStateSelected: false);
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.ShownElementGone)), isStateSelected: false);
 
         policy.TryTakePendingReload().ShouldBeTrue();
         policy.TryTakePendingReload().ShouldBeFalse();
@@ -156,7 +185,7 @@ public class PreviewReloadPolicyTests
     public void NoRebuildWithoutAFinishedReload()
     {
         PreviewReloadPolicy policy = new PreviewReloadPolicy();
-        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile)), isShownElementMissing: true);
+        policy.OnReloadFinished(Result(Issue(HotReloadIssueKind.MissingFile)), isStateSelected: false, isShownElementMissing: true);
         policy.TryTakePendingReload().ShouldBeTrue();
 
         policy.TryTakePendingReload().ShouldBeFalse();

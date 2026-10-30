@@ -422,7 +422,7 @@ public class Game1 : Game
     {
         try
         {
-            _reloadPolicy.OnReloadFinished(result, _isElementMissing, _selection.StateName != null);
+            _reloadPolicy.OnReloadFinished(result, PreviewReloadPolicy.IsStateSelected(_selection), _isElementMissing);
         }
         catch (Exception exception)
         {
