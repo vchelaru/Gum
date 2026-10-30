@@ -50,7 +50,8 @@ public static class NewProjectCommandLine
     public static string GetPath(string location, string name, string extension, bool withCodeProject)
     {
         string trimmed = location.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        string folder = trimmed.Length == 0 ? location : trimmed;
+        // A root such as "C:\" must keep its separator: "C:" combined with a name is the drive-relative "C:MyGame".
+        string folder = trimmed.Length < (Path.GetPathRoot(location)?.Length ?? 0) ? location : trimmed;
         return NewProjectDisplayPath.Normalize(withCodeProject
             ? Path.Combine(folder, name)
             : Path.Combine(folder, name, name + extension));

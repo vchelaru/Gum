@@ -243,6 +243,59 @@ public class NewProjectDialogViewModelTests
         viewModel.Location.ShouldBe(Folder);
     }
 
+    [Theory]
+    [InlineData("stride", NewProjectDialogText.StridePlatformNote)]
+    [InlineData("silknet", NewProjectDialogText.SilkNetPlatformNote)]
+    [InlineData("monogame", "")]
+    public void PlatformNote_ShowsOnlyForAPlatformWithOne_AndOnlyWithACodeProject(string platform, string expected)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.PlatformName = platform);
+        viewModel.PlatformNote.ShouldBeEmpty();
+
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformNote.ShouldBe(expected);
+
+        viewModel.IncludeCodeProject = false;
+        viewModel.PlatformNote.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GumProjectPath_WithACodeProject_IsTheProjectInsideContentGumProject()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
+        });
+
+        viewModel.GumProjectPath.ShouldBe(Path.Combine(Folder, "MyGame", "Content", "GumProject", "GumProject.gumx"));
+        viewModel.CommandLineNote.ShouldContain(NewProjectDialogText.NoXmlWithCodeProjectNote);
+    }
+
+    [Fact]
+    public void ProjectName_IsTrimmed_InThePathsAndTheCommandLine()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = "  Spaced  ");
+
+        viewModel.GumProjectPath.ShouldBe(GumOnlyPath("Spaced"));
+        viewModel.CommandLine.ShouldBe($"gumcli new \"{GumOnlyPath("Spaced")}\"");
+        viewModel.ValidationMessage.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CopyCommandLine_AsksTheViewToCopyTheCurrentCommand()
+    {
+        NewProjectDialogViewModel viewModel = Create();
+        List<string> copied = new List<string>();
+        viewModel.CommandLineCopyRequested += copied.Add;
+        viewModel.ProjectName = "Other";
+
+        viewModel.CopyCommandLineCommand.Execute(null);
+
+        copied.ShouldBe(new[] { viewModel.CommandLine });
+        copied.Single().ShouldContain("Other");
+    }
+
     #endregion
 
     #region Validation
@@ -538,6 +591,22 @@ public class NewProjectDialogViewModelTests
 
         viewModel.PlanTree.ShouldBeEmpty();
         viewModel.FilesCountText.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Plan_RefreshSurvives_AServiceAndADetectorThatThrow()
+    {
+        _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Throws(new InvalidOperationException("validate"));
+        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Throws(new IOException("plan"));
+        _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Throws(new UnauthorizedAccessException());
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+
+        await viewModel.PlanRefresh;
+
+        viewModel.PlanTree.ShouldBeEmpty();
+        viewModel.IsExistingCodeProjectWarningVisible.ShouldBeFalse();
+        viewModel.IsRefused.ShouldBeFalse();
+        viewModel.CanExecuteAffirmative().ShouldBeTrue();
     }
 
     #endregion
@@ -957,6 +1026,145 @@ public class NewProjectDialogViewModelTests
 
         viewModel.IsRestoreFailed.ShouldBeTrue();
         viewModel.RestoreFailureText.ShouldBe("Restore was canceled.");
+    }
+
+    [Fact]
+    public async Task Ok_PressedAgainWhileBusy_DoesNotStartASecondCreation()
+    {
+        TaskCompletionSource<NewProjectFilesResult> files = new TaskCompletionSource<NewProjectFilesResult>();
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>())).Returns(files.Task);
+        SetUpRestore(RestoreOk());
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        viewModel.OnAffirmative();
+        Task first = viewModel.CreationTask;
+
+        viewModel.OnAffirmative();
+
+        viewModel.CreationTask.ShouldBeSameAs(first);
+        files.SetResult(FilesOk());
+        await first;
+        _service.Verify(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Ok_StaysOpenWithTheError_WhenTheServiceThrows()
+    {
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new IOException("Disk is full."));
+        (NewProjectDialogViewModel viewModel, List<bool> closed) = WithCloseLog(Create(vm => vm.IncludeCodeProject = true));
+
+        viewModel.AffirmativeCommand.Execute(null);
+        await viewModel.CreationTask;
+
+        closed.ShouldBeEmpty();
+        viewModel.ErrorMessage.ShouldBe("Disk is full.");
+        viewModel.IsBusy.ShouldBeFalse();
+        viewModel.IsEditable.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(true, "Bubblegum", "forms")]
+    [InlineData(false, null, "empty")]
+    public async Task Ok_PassesTheChoicesToTheService(bool forms, string? expectedTheme, string expectedTemplate)
+    {
+        System.Collections.Concurrent.ConcurrentQueue<NewProjectRequest> requests = new();
+        _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Callback<NewProjectRequest>(request => requests.Enqueue(request)).Returns(Valid());
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>())).ReturnsAsync(FilesOk());
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "kni";
+            vm.SourceLinked = true;
+            vm.RunRestore = false;
+            vm.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
+            vm.IsIncludeFormsControls = forms;
+            vm.ThemeSelection.SelectedTheme = "Bubblegum";
+        });
+        await viewModel.PlanRefresh;
+        requests.Clear();
+
+        viewModel.AffirmativeCommand.Execute(null);
+        await viewModel.CreationTask;
+
+        NewProjectRequest request = requests.ShouldHaveSingleItem();
+        request.Path.ShouldBe(Path.Combine(Folder, "MyGame"));
+        request.Platform.ShouldBe("kni");
+        request.Template.ShouldBe(expectedTemplate);
+        request.Theme.ShouldBe(expectedTheme);
+        request.SourceLinked.ShouldBeTrue();
+        request.Restore.ShouldBeFalse();
+        request.UseXmlFormat.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(RestoreStatus.ProcessNotFound, "", "dotnet was not found.", "dotnet was not found.")]
+    [InlineData(RestoreStatus.ProcessNotFound, "some output", "", "some output")]
+    [InlineData(RestoreStatus.Failed, "", "ignored", "dotnet restore failed.")]
+    [InlineData(RestoreStatus.Failed, "", "", "dotnet restore failed.")]
+    public async Task RestoreFailure_ShowsTheMostUsefulText(RestoreStatus status, string outputTail, string errorMessage, string expected)
+    {
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>())).ReturnsAsync(FilesOk());
+        SetUpRestore(new RestoreResult { Status = status, OutputTail = outputTail, ErrorMessage = errorMessage });
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+
+        viewModel.AffirmativeCommand.Execute(null);
+        await viewModel.CreationTask;
+
+        viewModel.IsRestoreFailed.ShouldBeTrue();
+        viewModel.RestoreFailureText.ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task RestoreThatThrows_ShowsTheRestoreFailurePanel_WithTheMessage()
+    {
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>())).ReturnsAsync(FilesOk());
+        _service.Setup(x => x.RestoreAsync(It.IsAny<string>(), It.IsAny<Action<string>?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+        (NewProjectDialogViewModel viewModel, List<bool> closed) = WithCloseLog(Create(vm => vm.IncludeCodeProject = true));
+
+        viewModel.AffirmativeCommand.Execute(null);
+        await viewModel.CreationTask;
+
+        closed.ShouldBeEmpty();
+        viewModel.IsRestoreFailed.ShouldBeTrue();
+        viewModel.RestoreFailureText.ShouldBe("boom");
+        viewModel.IsBusy.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Cancel_OnTheRestoreFailurePanel_ClosesWithoutReportingACreatedProject()
+    {
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>())).ReturnsAsync(FilesOk());
+        SetUpRestore(RestoreFailed());
+        (NewProjectDialogViewModel viewModel, List<bool> closed) = WithCloseLog(Create(vm => vm.IncludeCodeProject = true));
+        viewModel.AffirmativeCommand.Execute(null);
+        await viewModel.CreationTask;
+
+        viewModel.NegativeCommand.Execute(null);
+
+        closed.ShouldBe(new[] { false });
+        viewModel.IsCodeProjectCreated.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Restore_ShowsTheLatestOutputLine_WhileItRuns()
+    {
+        TaskCompletionSource<RestoreResult> restore = new TaskCompletionSource<RestoreResult>();
+        _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>())).ReturnsAsync(FilesOk());
+        _service.Setup(x => x.RestoreAsync(It.IsAny<string>(), It.IsAny<Action<string>?>(), It.IsAny<CancellationToken>()))
+            .Returns<string, Action<string>?, CancellationToken>((_, output, _) =>
+            {
+                output!("Determining projects to restore...");
+                return restore.Task;
+            });
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+
+        viewModel.AffirmativeCommand.Execute(null);
+        await WaitUntil(() => viewModel.ProgressDetail == "Determining projects to restore...");
+
+        viewModel.ProgressText.ShouldBe("Running dotnet restore...");
+        restore.SetResult(RestoreOk());
+        await viewModel.CreationTask;
     }
 
     private static async Task WaitUntil(Func<bool> condition)
