@@ -17,7 +17,9 @@ Works on MonoGame, KNI, FNA, and Raylib. SkiaGum and Silk.NET do not need it, si
 You need two things:
 
 1. Turn on the flag: `TextRuntime.UseFontOversampling = true`. This is one `static` switch for the whole game, not a property on each text. If you want blocky text in a pixel art game, leave it off.
-2. Give Gum a way to build fonts while the game runs (`IInMemoryFontCreator` on MonoGame/KNI/FNA, `IRaylibFontCreator` on Raylib). KernSmith does both, see [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation). Oversampling needs this, because a `FontCache` folder only holds the sizes you built ahead of time and cannot add a new one later.
+2. Give Gum a way to get the larger fonts: either build them while the game runs, or build them ahead of time.
+
+**Build them while the game runs.** Set `IInMemoryFontCreator` on MonoGame/KNI/FNA, or `IRaylibFontCreator` on Raylib. KernSmith does both, see [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation). This works for any zoom.
 
 ```csharp
 // Initialize
@@ -26,13 +28,22 @@ CustomSetPropertyOnRenderable.InMemoryFontCreator =
     new KernSmithFontCreator(GraphicsDevice);
 ```
 
+**Build them ahead of time (MonoGame/KNI/FNA).** With no creator set, or when the creator returns `null`, Gum looks for the larger size in your project's `FontCache` folder, using the same file name any font of that size has. A text with `FontSize` 12 that is drawn at 2x needs `Font24...fnt`, and at 3x it needs `Font36...fnt`. No code is needed beyond the flag.
+
+```csharp
+// Initialize
+TextRuntime.UseFontOversampling = true;
+```
+
+If a size is not in `FontCache`, that text keeps its normal font and is drawn larger, as if oversampling were off. Nothing is reported. Because only the sizes you built are used, oversample from a camera with a few known zoom levels. Gum asks for an exact size (`FontSize` times `FontScale` times zoom), so a zoom that lands between your sizes is not served; the font at the nearest size is not substituted. [gumcli fonts](../../cli/fonts.md) builds the sizes some element in the project uses, so the larger sizes need an element at that size, or a font file generated another way. Raylib does not read the `FontCache` for oversampling and needs `IRaylibFontCreator`.
+
 After that it runs on its own. Each frame, every text you can see checks the zoom of the `Layer` it sits on. If that zoom moved enough to change the font by a full pixel, the text builds its font again. You do not need to write any code that runs each frame.
 
 The layer matters here. A layer with `LayerCameraSettings.IsInScreenSpace = true`, which is how most HUDs are set up, keeps its own `Zoom` (1 by default) no matter where the camera goes. Text on that layer never builds a new font, which is right, because it never looks zoomed. Only text on a layer that follows the camera zoom is oversampled. See [Layer, LayerCameraSettings](../gum-code-reference/layer.md#layercamerasettings).
 
 ## Manual Control
 
-`RegenerateOversampledFont(oversampleRatio)` builds the font again at a size you pick, such as during a cut scene that zooms without touching `Camera.Zoom`. The ratio is relative to the drawn size of the text (`FontSize` times `FontScale`), so passing the zoom keeps each pixel of the font on one pixel of the screen. Inline `[FontScale]` runs still look enlarged, because a text has only one font size. It returns `false` and does nothing if `UseFontOversampling` is off, if no `IInMemoryFontCreator` is set, or if `oversampleRatio` is zero or less.
+`RegenerateOversampledFont(oversampleRatio)` builds the font again at a size you pick, such as during a cut scene that zooms without touching `Camera.Zoom`. The ratio is relative to the drawn size of the text (`FontSize` times `FontScale`), so passing the zoom keeps each pixel of the font on one pixel of the screen. Inline `[FontScale]` runs still look enlarged, because a text has only one font size. It returns `false` and does nothing if `UseFontOversampling` is off, if `oversampleRatio` is zero or less, or if nothing can supply that size: no creator is set (Raylib), or the creator returned nothing and `FontCache` has no font of that size (MonoGame/KNI/FNA).
 
 The automatic path debounces continuous zooming: it only rebuilds a font's atlas once the requested size has moved `TextRuntime.OversamplingRegenerateThresholdPixels` (1 pixel by default) from what was last rasterized. That 1px absolute threshold is a bigger fraction of a small `FontSize` than a large one, so small text can stay noticeably blurry for longer while zooming. Lower the threshold (down to `0` to regenerate on any change) if you want small text to re-crisp sooner, at the cost of rebuilding the atlas more often.
 
