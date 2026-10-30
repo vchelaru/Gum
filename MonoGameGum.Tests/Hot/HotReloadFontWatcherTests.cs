@@ -53,13 +53,7 @@ public class HotReloadFontWatcherTests : BaseTestClass
             File.SetLastWriteTimeUtc(file, DateTime.UtcNow.AddMinutes(1));
         }
         global::ToolsUtilities.FileManager.RelativeDirectory = bin + "/";
-        // macOS reports the first read of a file after it was written as a change (access time). Read every
-        // file once now, so a later read by this test is not taken for an edit of an image, and let the
-        // events the writes caused arrive before the watcher starts.
-        foreach (string file in Directory.EnumerateFiles(world.Dir, "*.*", SearchOption.AllDirectories))
-        {
-            File.ReadAllBytes(file);
-        }
+        // Let the events the writes above caused arrive before the watcher starts.
         Thread.Sleep(1500);
         world.Manager.Start(world.Gumx);
         return world;
@@ -75,8 +69,7 @@ public class HotReloadFontWatcherTests : BaseTestClass
         }
     }
 
-    // The project saved with one edit, the way the tool writes it. World.Save also reads every file in the
-    // folder, which macOS reports as a change of each of them.
+    // The project saved with one edit, the way the tool writes it, without World.Save's snapshot of the folder.
     private static void SaveProject(PreviewAccuracy2World world)
     {
         GumProjectSave edited = Baseline();

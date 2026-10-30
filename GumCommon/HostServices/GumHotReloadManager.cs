@@ -300,6 +300,13 @@ public class GumHotReloadManager : IGumHotReloadManager
                     return;
                 }
 
+                // An editor saves through a hidden temp file (".!123!Font.fnt") and renames it.
+                string name = Path.GetFileName(fullPath);
+                if (name.StartsWith(".", StringComparison.Ordinal) || name.StartsWith("~", StringComparison.Ordinal))
+                {
+                    return;
+                }
+
                 lock (_fontFileLock)
                 {
                     if (_fontEventsIgnored)
@@ -478,6 +485,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             return null;
         }
 
+        fontsEvicted |= DropVanishedFonts(changedFonts, sourceDirectory);
         AddFontsChangedWithoutNotice(changedFonts, sourceDirectory);
         if (changedFonts.Count == 0)
         {
@@ -580,6 +588,38 @@ public class GumHotReloadManager : IGumHotReloadManager
                 yield return font;
             }
         }
+    }
+
+    // A queued font whose file is gone and that the load folder never held (a temp file an editor saved
+    // through) is not a failure; it is dropped from the queue. One the load folder holds a copy of stays
+    // queued so the failed copy is reported, since the game still shows it. A font loaded from where it is
+    // (Preview) that is gone is dropped from the cache, as a restart would not find it. Returns whether
+    // a cached font was dropped.
+    private bool DropVanishedFonts(List<string> changedFonts, string sourceDirectory)
+    {
+        bool evicted = false;
+        for (int i = changedFonts.Count - 1; i >= 0; i--)
+        {
+            string font = changedFonts[i];
+            if (File.Exists(font))
+            {
+                continue;
+            }
+
+            string loaded = LoadFolderPathOf(font, sourceDirectory);
+            if (IsSameFile(font, loaded))
+            {
+                _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(loaded, preserveCase: true, makeAbsolute: true));
+                evicted = true;
+                changedFonts.RemoveAt(i);
+            }
+            else if (!File.Exists(loaded))
+            {
+                changedFonts.RemoveAt(i);
+            }
+        }
+
+        return evicted;
     }
 
     // Puts fonts back and asks for a reload after the debounce to process them.

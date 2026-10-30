@@ -28,10 +28,10 @@ public class HotReloadFontQueueTests : BaseTestClass
         base.Dispose();
     }
 
-    private void Boot(bool nestedBin = false)
+    private void Boot(bool nestedBin = false, bool loadFromProjectFolder = false)
     {
         _world = new PreviewAccuracy2World();
-        _world.Boot(separateBin: true);
+        _world.Boot(separateBin: !loadFromProjectFolder);
         string bin = _world.Bin;
         if (nestedBin)
         {
@@ -174,5 +174,56 @@ public class HotReloadFontQueueTests : BaseTestClass
 
         _evicted.Count(path => path.Contains("Bulk")).ShouldBe(520);
         fonts.All(path => File.Exists(Path.Combine(_binFolder, "FontCache", Path.GetFileName(path)))).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FontLoadedFromTheProjectFolder_IsEvictedNotCopiedOntoItself()
+    {
+        Boot(loadFromProjectFolder: true);
+        Regenerate("Font20Pixel", 30);
+        _manager.NotifyFileChanged(Source("Font20Pixel"));
+
+        Frames().ShouldBe(1);
+
+        _results.SelectMany(result => result.Issues).ShouldBeEmpty();
+        _evicted.Count(path => path.EndsWith("Font20Pixel.fnt")).ShouldBe(1);
+        File.ReadAllText(Source("Font20Pixel")).ShouldContain("lineHeight=30");
+    }
+
+    [Fact]
+    public void FontLoadedFromTheProjectFolder_ThenDeleted_IsEvictedAsARestartWouldNotFindIt()
+    {
+        Boot(loadFromProjectFolder: true);
+        File.Delete(Source("Font20Pixel"));
+        _manager.NotifyFileChanged(Source("Font20Pixel"));
+
+        Frames().ShouldBe(1);
+
+        _evicted.Count(path => path.EndsWith("Font20Pixel.fnt")).ShouldBe(1);
+        _results.SelectMany(result => result.Issues).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void QueuedFontThatDisappearsBeforeTheReload_IsNotAFailure()
+    {
+        Boot();
+        string path = Source("Font99Temp");
+        File.WriteAllText(path, "info");
+        _manager.NotifyFileChanged(path);
+        File.Delete(path);
+
+        Frames();
+
+        _results.SelectMany(result => result.Issues).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void HiddenTempFileAnEditorSavesThrough_IsNotQueued()
+    {
+        Boot();
+
+        _manager.NotifyFileChanged(Path.Combine(_world.Dir, "FontCache", ".!12345!Font20Pixel.fnt"));
+
+        Frames().ShouldBe(0);
     }
 }
