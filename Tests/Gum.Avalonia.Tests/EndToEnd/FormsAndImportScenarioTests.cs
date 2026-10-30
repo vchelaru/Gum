@@ -43,24 +43,25 @@ public class FormsAndImportScenarioTests
             dialog.ThemeSelection.AvailableThemes.ShouldContain("Standard");
             dialog.IsIncludeFormsControls = true;
             dialog.IsIncludeDemoScreenGum = true;
+            dialog.ProjectName = "NewlyCreated";
+            dialog.Location = tree.Project.ProjectFolder;
+            dialog.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
             return true;
         });
-        tree.Dialogs.AnswerNextSaveFile(tree.Project.ProjectFilePath);
-        // The folder holds the project the harness started with.
-        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
 
         tree.PickMainMenu("File", "New Project");
         tree.WaitUntil(() => tree.SelectedState.SelectedScreen?.Name == NewProjectLogic.StartingScreenName, AsyncWork, "the new project's starting screen");
 
         GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
-        new FilePath(project.FullFileName.ShouldNotBeNull()).ShouldBe(new FilePath(tree.Project.ProjectFilePath));
+        new FilePath(project.FullFileName.ShouldNotBeNull()).ShouldBe(new FilePath(Path.Combine(tree.Project.ProjectFolder, "NewlyCreated", "NewlyCreated.gumx")));
+        tree.Project.FollowProjectFile(project.FullFileName!);
         theme.Components.Select(component => component.Name).ShouldBeSubsetOf(project.Components.Select(component => component.Name));
         project.Screens.Select(screen => screen.Name).ShouldContain("DemoScreenGum");
         project.Screens.Select(screen => screen.Name).ShouldContain(NewProjectLogic.StartingScreenName);
         tree.SaveAll();
         foreach (ComponentSave component in project.Components)
         {
-            File.Exists(ElementFile(tree, "Components", component.Name, "gucx")).ShouldBeTrue($"{component.Name} was saved");
+            File.Exists(Path.Combine(tree.Project.ProjectFolder, "NewlyCreated", "Components", component.Name + ".gucx")).ShouldBeTrue($"{component.Name} was saved");
         }
         tree.RootNode("Components").Nodes.ShouldNotBeEmpty();
 
