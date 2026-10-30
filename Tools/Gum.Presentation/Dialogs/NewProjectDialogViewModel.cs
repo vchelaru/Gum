@@ -755,22 +755,6 @@ public class NewProjectDialogViewModel : DialogViewModel
                 {
                     refused = NewProjectDisplayPath.Normalize(validation.Error.Message);
                 }
-                else if (!game)
-                {
-                    // A project in the other file format at the same place would be overwritten too.
-                    string otherExtension = Path.GetExtension(request.Path) == ".gumx" ? ".gumj" : ".gumx";
-                    NewProjectValidation other = _service.Validate(new NewProjectRequest
-                    {
-                        Path = Path.ChangeExtension(request.Path, otherExtension),
-                        Template = request.Template,
-                        Theme = request.Theme,
-                        UseXmlFormat = request.UseXmlFormat,
-                    });
-                    if (other.Error?.Kind == NewProjectErrorKind.ProjectAlreadyExists)
-                    {
-                        refused = NewProjectDisplayPath.Normalize(other.Error.Message);
-                    }
-                }
             }
             catch (Exception)
             {

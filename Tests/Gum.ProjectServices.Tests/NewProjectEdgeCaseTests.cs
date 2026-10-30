@@ -235,6 +235,55 @@ public class NewProjectEdgeCaseTests : BaseTestClass
         }
     }
 
+    [Theory]
+    [InlineData("Proj.gumx", "Proj", false)]
+    [InlineData("Proj.gumj", "Proj", true)]
+    [InlineData("Proj.gumx", "Proj/Proj.gumj", false)]
+    [InlineData("Proj.gumj", "Proj/Proj.gumx", false)]
+    public async Task Validate_GumOnlyNextToAProjectOfTheOtherFormat_IsRefusedAsAlreadyExisting(
+        string existingFile, string requestPath, bool useXml)
+    {
+        NewProjectService service = CreateService();
+        string existing = Path.Combine(_folder, "Proj", existingFile);
+        NewProjectResult first = await service.ExecuteAsync(Request(existing), null, CancellationToken.None);
+        first.Files.Success.ShouldBeTrue(first.Files.ErrorMessage);
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, requestPath.Replace('/', Path.DirectorySeparatorChar)),
+            Template = "empty",
+            UseXmlFormat = useXml
+        });
+
+        validation.Error.ShouldNotBeNull();
+        validation.Error.Kind.ShouldBe(NewProjectErrorKind.ProjectAlreadyExists);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Validate_PlatformFolderHoldingAProjectOfEitherFormat_IsRefusedAsAlreadyExisting(bool existingIsXml)
+    {
+        NewProjectService service = CreateService();
+        string game = Path.Combine(_folder, "Game");
+        NewProjectResult first = await service.ExecuteAsync(
+            new NewProjectRequest
+            {
+                Path = game, Platform = "raylib", Template = "empty", Restore = false, UseXmlFormat = existingIsXml
+            },
+            null, CancellationToken.None);
+        first.Files.Success.ShouldBeTrue(first.Files.ErrorMessage);
+        File.Delete(Path.Combine(game, "Game.csproj"));
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = game, Platform = "raylib", Template = "empty", UseXmlFormat = !existingIsXml
+        });
+
+        validation.Error.ShouldNotBeNull();
+        validation.Error.Kind.ShouldBe(NewProjectErrorKind.ProjectAlreadyExists);
+    }
+
     #endregion
 
     #region Source-linked
