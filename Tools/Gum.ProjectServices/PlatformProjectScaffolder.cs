@@ -60,7 +60,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         Directory.CreateDirectory(gumFolder);
 
-        string rootNamespace = GetRootNamespace(projectName);
+        string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
         WriteHostFiles(
             fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference, Path.GetFileName(gumProjectPath));
 
@@ -74,14 +74,6 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             CsprojPath = csprojPath,
             GumProjectPath = gumProjectPath
         };
-    }
-
-    // A namespace named Program clashes with the Program class that top-level statements create in the
-    // global namespace (CS0101), so the root namespace gets a suffix.
-    internal static string GetRootNamespace(string projectName)
-    {
-        string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
-        return rootNamespace == "Program" ? rootNamespace + "_" : rootNamespace;
     }
 
     // MSBuild reads %XX in an item include as a character, splits it at ';', expands '*' and '?' and
@@ -159,6 +151,13 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         if (ReservedProjectNames.Contains(projectName, StringComparer.OrdinalIgnoreCase))
         {
             return $"'{projectName}' is the assembly name of a Gum runtime package. Pick another project name.";
+        }
+
+        // The Program class that top-level statements create in the global namespace clashes (CS0101) with a
+        // root namespace of the same name.
+        if (NameRules.ToCSharpIdentifier(projectName) == "Program")
+        {
+            return $"'{projectName}' cannot be a project name: the generated code has a class named Program, which clashes with a namespace of that name. Pick another project name.";
         }
 
         // A project named like a package it references fails to restore with NU1108 (a cycle).

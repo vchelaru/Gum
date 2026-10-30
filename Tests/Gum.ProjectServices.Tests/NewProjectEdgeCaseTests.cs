@@ -71,7 +71,7 @@ public class NewProjectEdgeCaseTests : BaseTestClass
         // a dotted name, and a safe control.
         string[] names =
         {
-            "Game", "Button", "Color", "Program", "Game1", "Gum", "Microsoft", "System", "Vector2", "Texture2D",
+            "Game", "Button", "Color", "Game1", "Gum", "Microsoft", "System", "Vector2", "Texture2D",
             "GumService", "GameTime", "GraphicsDeviceManager", "DateTime", "SkiaRenderer", "SKColors",
             "SkiaRenderTarget2D", "My.Game", "MyGame", "game", "args", "button", "Content", "Window", "GraphicsDevice",
             "var", "global", "record", "file", "dynamic", "async"
@@ -215,6 +215,33 @@ namespace Gum.Forms.Controls
             validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
             validation.Error.Message.ShouldContain(package);
         }
+    }
+
+    [Theory]
+    [InlineData("monogame")]
+    [InlineData("kni")]
+    [InlineData("kniskia")]
+    [InlineData("raylib")]
+    [InlineData("stride")]
+    [InlineData("silknet")]
+    public void Validate_PlatformNameProgram_IsRefusedWithTheReason(string platform)
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "Program"), platform));
+
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+        validation.Error.Message.ShouldContain("namespace");
+    }
+
+    [Fact]
+    public void Validate_PlatformNameProgramInAnotherCase_IsAccepted()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "program"), "raylib"));
+
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
     }
 
     [Fact]
