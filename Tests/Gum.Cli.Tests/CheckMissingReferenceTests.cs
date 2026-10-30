@@ -97,5 +97,71 @@ public class CheckMissingReferenceTests : CheckHandWrittenFileHarness
         Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0028");
     }
 
+        [Theory]
+    [InlineData("Color")]
+    [InlineData("Color?")]
+    [InlineData("List<int>")]
+    [InlineData("int[]")]
+    [InlineData("Sprite")]
+    [InlineData("Vector2")]
+    [InlineData("Rectangle")]
+    [InlineData("string")]
+    [InlineData("decimal")]
+    [InlineData("double")]
+    [InlineData("long")]
+    [InlineData("Microsoft.Xna.Framework.Color")]
+    [InlineData("Dictionary<string, Color>")]
+    [InlineData("Other")]
+    [InlineData("HorizontalAlignment?")]
+    public void Check_ValidVariableTypeName_ShouldNotReportGum0028(string typeName)
+    {
+        string project = CreateProject("ValidType");
+        AddComponent(project, "Other", "Container", DefaultState());
+        AddComponent(project, "Holder", "Container",
+            DefaultState(Variable(System.Security.SecurityElement.Escape(typeName), "Label.Whatever", "string", "x")) + Instance("Label", "Text"));
+
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0028");
+    }
+
+    [Theory]
+    [InlineData("Blorp")]
+    [InlineData("Blorp?")]
+    [InlineData("List<Blorp>")]
+    [InlineData("Blorp[]")]
+    [InlineData("Dictionary<string, Blorp>")]
+    [InlineData("MyCustomEnum")]
+    public void Check_UnresolvableVariableTypeName_ShouldReportGum0028(string typeName)
+    {
+        string project = CreateProject("InvalidType");
+        AddComponent(project, "Holder", "Container",
+            DefaultState(Variable(System.Security.SecurityElement.Escape(typeName), "Label.Whatever", "string", "x")) + Instance("Label", "Text"));
+
+        Check(project).Entries.ShouldContain(e => e.Code == "GUM0028");
+    }
+
+    #endregion
+
+    #region GUM0007 with GumCommon enum types
+
+    [Fact]
+    public void Check_GumCommonEnumVariableWithValidValue_ShouldStaySilent()
+    {
+        string project = CreateProject("ValidGradient");
+        AddComponent(project, "Holder", "Container",
+            DefaultState(Variable("GradientType", "Label.GradientType", "int", "1")) + Instance("Label", "Text"));
+
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0007");
+    }
+
+    [Fact]
+    public void Check_GumCommonEnumVariableWithUndefinedValue_ShouldReportGum0007()
+    {
+        string project = CreateProject("InvalidGradient");
+        AddComponent(project, "Holder", "Container",
+            DefaultState(Variable("GradientType", "Label.GradientType", "int", "99")) + Instance("Label", "Text"));
+
+        Check(project).Entries.ShouldContain(e => e.Code == "GUM0007");
+    }
+
     #endregion
 }
