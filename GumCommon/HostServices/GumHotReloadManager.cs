@@ -73,6 +73,13 @@ public interface IGumHotReloadManager
 /// </remarks>
 public class GumHotReloadManager : IGumHotReloadManager
 {
+    /// <summary>
+    /// Whether a reload that finds the shown screen gone from the project prints that. A host that
+    /// rebuilds what it shows after such a reload (GumPreview) sets this to false: the message says
+    /// the old UI stays, which is not true there. The issue is still in <see cref="HotReloadResult"/>.
+    /// </summary>
+    public static bool PrintsShownElementGone { get; set; } = true;
+
     private readonly Action<GumProjectSave> _applyProjectTextureFilter;
     private readonly Func<GumProjectSave, Gum.Bundle.IGumFileProvider, int> _loadAnimationsFromProvider;
     private readonly Action<string> _disposeCachedAsset;
@@ -968,6 +975,11 @@ public class GumHotReloadManager : IGumHotReloadManager
         HashSet<string> current = new HashSet<string>();
         foreach (HotReloadIssue issue in issues)
         {
+            if (issue.Kind == HotReloadIssueKind.ShownElementGone && !PrintsShownElementGone)
+            {
+                continue;
+            }
+
             string? key = issue.Persists ? issue.Kind + ":" + issue.ElementName : null;
             if (key != null)
             {
