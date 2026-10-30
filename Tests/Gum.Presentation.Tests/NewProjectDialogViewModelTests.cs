@@ -339,6 +339,60 @@ public class NewProjectDialogViewModelTests
     }
 
     [Theory]
+    [InlineData(125, "")]
+    [InlineData(126, "The name is too long.")]
+    public void ValidationMessage_CountsTheNameInBytes_NotCharacters(int length, string expected)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = new string('\u00e9', length));
+
+        viewModel.ValidationMessage.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ValidationMessage_UpdatesTheNameLimit_WhenTheCodeProjectIsToggled()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = new string('a', 250));
+        viewModel.ValidationMessage.ShouldBeEmpty();
+
+        viewModel.IncludeCodeProject = true;
+        viewModel.ValidationMessage.ShouldBe("The name is too long.");
+
+        viewModel.IncludeCodeProject = false;
+        viewModel.ValidationMessage.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("Projects")]
+    [InlineData("~/Projects")]
+    [InlineData("../Projects")]
+    [InlineData("  Projects  ")]
+    [InlineData("C:foo")]
+    public void ValidationMessage_RejectsALocationThatIsNotAnAbsolutePath(string location)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.Location = location);
+
+        viewModel.ValidationMessage.ShouldBe("The location must be a full path.");
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(250, false, "")]
+    [InlineData(251, false, "The name is too long.")]
+    [InlineData(248, true, "")]
+    [InlineData(249, true, "The name is too long.")]
+    public void ValidationMessage_LimitsTheNameToWhatFitsAsAFileNameWithItsExtension(int length, bool codeProject, string expected)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = codeProject;
+            vm.ProjectName = new string('a', length);
+        });
+
+        viewModel.ValidationMessage.ShouldBe(expected);
+        viewModel.CanExecuteAffirmative().ShouldBe(expected.Length == 0);
+    }
+
+    [Theory]
     [InlineData("", "")]
     [InlineData("  ", "  ")]
     public void Location_TrailingSeparatorAndSurroundingSpaces_DoNotChangeThePaths(string before, string after)

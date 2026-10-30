@@ -679,6 +679,10 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             return NewProjectDialogText.InvalidFolderName;
         }
+        if (NewProjectNameRules.IsTooLong(name, IncludeCodeProject))
+        {
+            return NewProjectDialogText.NameTooLong;
+        }
         if (IncludeCodeProject && !_identifier.IsMatch(name))
         {
             return NewProjectDialogText.InvalidCSharpName;
@@ -690,6 +694,10 @@ public class NewProjectDialogViewModel : DialogViewModel
         if (Location.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
         {
             return NewProjectDialogText.InvalidLocation;
+        }
+        if (!Path.IsPathFullyQualified(Location.Trim()))
+        {
+            return NewProjectDialogText.LocationNotAbsolute;
         }
         if (IncludeCodeProject && SourceLinked && !_service.IsSourceLinkedAvailable)
         {
