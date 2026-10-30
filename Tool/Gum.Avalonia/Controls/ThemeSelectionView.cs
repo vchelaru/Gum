@@ -19,9 +19,10 @@ namespace Gum.Avalonia.Controls;
 public sealed class ThemeSelectionView : StackPanel
 {
     /// <summary>Builds the view; set its DataContext to a <see cref="ThemeSelectionViewModel"/>.</summary>
+    /// <param name="previewBeside">Puts the preview image to the right of a narrow theme column, wrapping below it when there is no room (New Project).</param>
     /// <param name="labelContent">Replaces the "Theme" text label, such as with a label that carries a tip.</param>
     /// <param name="labelAbove">Puts the "Theme" label above a full-width drop-down instead of beside it (New Project).</param>
-    public ThemeSelectionView(bool labelAbove = false, Control? labelContent = null)
+    public ThemeSelectionView(bool labelAbove = false, Control? labelContent = null, bool previewBeside = false)
     {
         Orientation = Orientation.Vertical;
 
@@ -41,7 +42,19 @@ public sealed class ThemeSelectionView : StackPanel
         themes.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(ThemeSelectionViewModel.AvailableThemes)));
         themes.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(ThemeSelectionViewModel.SelectedTheme)) { Mode = BindingMode.TwoWay });
         themeRow.Children.Add(themes);
-        Children.Add(themeRow);
+        WrapPanel? besideRow = null;
+        if (previewBeside)
+        {
+            themeRow.Width = 150;
+            themeRow.Margin = new Thickness(0);
+            besideRow = new WrapPanel { ItemSpacing = 12, LineSpacing = 8, Margin = new Thickness(0, 0, 0, 8) };
+            besideRow.Children.Add(themeRow);
+            Children.Add(besideRow);
+        }
+        else
+        {
+            Children.Add(themeRow);
+        }
 
         Image preview = new Image
         {
@@ -53,7 +66,16 @@ public sealed class ThemeSelectionView : StackPanel
         };
         preview.Bind(Image.SourceProperty, new Binding(nameof(ThemeSelectionViewModel.PreviewImagePath)) { Converter = FilePathToBitmapConverter.Instance });
         preview.Bind(IsVisibleProperty, new Binding(nameof(ThemeSelectionViewModel.HasPreviewImage)));
-        Children.Add(preview);
+        if (besideRow != null)
+        {
+            preview.MaxHeight = 112;
+            preview.Margin = new Thickness(0);
+            besideRow.Children.Add(preview);
+        }
+        else
+        {
+            Children.Add(preview);
+        }
 
         StackPanel requirementsText = new StackPanel();
         requirementsText.Children.Add(new TextBlock

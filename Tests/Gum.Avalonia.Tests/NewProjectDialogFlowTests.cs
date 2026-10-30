@@ -1,6 +1,8 @@
 using Avalonia.Headless.XUnit;
 using Shouldly;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
+using Avalonia.VisualTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Dialogs;
@@ -74,6 +76,23 @@ public class NewProjectDialogFlowTests
     private static RestoreResult RestoreOk() => new RestoreResult { Status = RestoreStatus.Succeeded, ExitCode = 0 };
 
     private static RestoreResult RestoreFailed() => new RestoreResult { Status = RestoreStatus.Failed, ExitCode = 1, OutputTail = "NU1101: no such package" };
+
+    [AvaloniaFact]
+    public void CopyButton_PutsTheExactCommandOnTheClipboard_AndShowsACheck()
+    {
+        using ScreenshotWindow window = Open(out NewProjectDialogViewModel viewModel);
+        window.Find<Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure>(d => d.Name == Gum.Avalonia.Dialogs.Views.NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
+        FluentIcons.Avalonia.FluentIcon icon = window.Find<Button>(button => button.Name == Gum.Avalonia.Dialogs.Views.NewProjectDialogView.CopyButtonName)
+            .GetVisualDescendants().OfType<FluentIcons.Avalonia.FluentIcon>().First();
+        icon.Icon.ShouldBe(FluentIcons.Common.Icon.Copy);
+
+        window.Click(window.Find<Button>(button => button.Name == Gum.Avalonia.Dialogs.Views.NewProjectDialogView.CopyButtonName));
+        WaitFor(window, () => icon.Icon == FluentIcons.Common.Icon.Checkmark, "the check mark");
+
+        string? copied = window.Window.Clipboard!.TryGetTextAsync().GetAwaiter().GetResult();
+        copied.ShouldBe(viewModel.CommandLine);
+        copied.ShouldStartWith("gumcli new \"");
+    }
 
     [AvaloniaFact]
     public void Ok_CreatesFilesAndRestores_ThenClosesAccepted()

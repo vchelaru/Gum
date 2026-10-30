@@ -38,6 +38,10 @@ public sealed class NewProjectDialogView : StackPanel
     /// <summary>Name of the info icon in the existing-code-project banner.</summary>
     public const string WarningInfoName = "PART_WarningInfo";
 
+    /// <summary>How long the copy icon shows its check after a copy; tests lengthen it to capture the state.</summary>
+    public static TimeSpan CopiedCheckDuration { get; set; } = TimeSpan.FromMilliseconds(1200);
+
+    private const double CheckBoxTextWidth = 340;
     private const string FontSizeKey = "ControlContentThemeFontSize";
     private const string MonospaceFonts = "Cascadia Mono, Consolas, Menlo, monospace";
 
@@ -53,7 +57,7 @@ public sealed class NewProjectDialogView : StackPanel
 
         _copyIcon = CreateIcon(Icon.Copy, 1.15);
         _copyIcon.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
-        _copiedTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1200) };
+        _copiedTimer = new DispatcherTimer { Interval = CopiedCheckDuration };
         _copiedTimer.Tick += (_, _) =>
         {
             _copiedTimer.Stop();
@@ -69,6 +73,7 @@ public sealed class NewProjectDialogView : StackPanel
         form.Children.Add(CreateLocation());
         form.Children.Add(CreateExistingProjectWarning());
         form.Children.Add(CreateTargetNotEmptyWarning());
+        form.Children.Add(CreateRefusal());
         form.Children.Add(CreateFormsSection());
         form.Children.Add(CreateCodeProjectSection());
         form.Children.Add(CreateFilesSection());
@@ -129,7 +134,7 @@ public sealed class NewProjectDialogView : StackPanel
 
     private Control CreateNameAndFormat()
     {
-        Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
+        Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,190"), ColumnSpacing = 8 };
 
         StackPanel name = new StackPanel();
         name.Children.Add(FieldLabel(NewProjectDialogText.ProjectName, NewProjectDialogText.ProjectNameTip));
@@ -142,7 +147,7 @@ public sealed class NewProjectDialogView : StackPanel
         StackPanel format = new StackPanel();
         Grid.SetColumn(format, 1);
         format.Children.Add(FieldLabel(NewProjectDialogText.FileFormat, NewProjectDialogText.FileFormatTip, alignRight: true));
-        ComboBox formats = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, MinWidth = 190 };
+        ComboBox formats = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
         formats.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(NewProjectDialogViewModel.FileFormats)));
         formats.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(NewProjectDialogViewModel.SelectedFileFormat)) { Mode = BindingMode.TwoWay });
         format.Children.Add(formats);
@@ -193,21 +198,33 @@ public sealed class NewProjectDialogView : StackPanel
         return banner;
     }
 
+    // The project file or code project already exists: gumcli new refuses, so OK is off while this shows.
+    private Control CreateRefusal()
+    {
+        StackPanel text = new StackPanel();
+        text.Children.Add(new TextBlock { Text = NewProjectDialogText.RefusedHeading, FontWeight = FontWeight.SemiBold });
+        text.Children.Add(Bound(new TextBlock { TextWrapping = TextWrapping.Wrap }, TextBlock.TextProperty, nameof(NewProjectDialogViewModel.RefusalText)));
+
+        Control banner = CreateBanner(text, "Frb.Brushes.Error");
+        banner.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsRefused)));
+        return banner;
+    }
+
     private Control CreateFormsSection()
     {
         StackPanel section = new StackPanel();
         section.Children.Add(Divider());
-        CheckBox includeForms = new CheckBox { Content = LabelWithTip(NewProjectDialogText.IncludeForms, NewProjectDialogText.IncludeFormsTip) };
+        CheckBox includeForms = new CheckBox { Content = LabelWithTip(NewProjectDialogText.IncludeForms, NewProjectDialogText.IncludeFormsTip, maxTextWidth: CheckBoxTextWidth) };
         includeForms.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.IsIncludeFormsControls)) { Mode = BindingMode.TwoWay });
         section.Children.Add(includeForms);
         section.Children.Add(HelpText(NewProjectDialogText.IncludeFormsHelp));
 
         StackPanel options = new StackPanel();
         options.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsIncludeFormsControls)));
-        ThemeSelectionView themeSelection = new ThemeSelectionView(labelAbove: true, labelContent: LabelWithTip(NewProjectDialogText.Theme, NewProjectDialogText.ThemeTip));
+        ThemeSelectionView themeSelection = new ThemeSelectionView(labelAbove: true, previewBeside: true, labelContent: LabelWithTip(NewProjectDialogText.Theme, NewProjectDialogText.ThemeTip));
         themeSelection.Bind(DataContextProperty, new Binding(nameof(NewProjectDialogViewModel.ThemeSelection)));
         options.Children.Add(themeSelection);
-        CheckBox includeDemo = new CheckBox { Content = LabelWithTip(NewProjectDialogText.IncludeDemo, NewProjectDialogText.IncludeDemoTip), Margin = new Thickness(0, 2, 0, 0) };
+        CheckBox includeDemo = new CheckBox { Content = LabelWithTip(NewProjectDialogText.IncludeDemo, NewProjectDialogText.IncludeDemoTip, maxTextWidth: CheckBoxTextWidth), Margin = new Thickness(0, 2, 0, 0) };
         includeDemo.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.IsIncludeDemoScreenGum)) { Mode = BindingMode.TwoWay });
         options.Children.Add(includeDemo);
         section.Children.Add(options);
@@ -218,7 +235,7 @@ public sealed class NewProjectDialogView : StackPanel
     {
         StackPanel section = new StackPanel();
         section.Children.Add(Divider());
-        CheckBox includeCode = new CheckBox { Content = LabelWithTip(NewProjectDialogText.CreateCodeProject, NewProjectDialogText.CreateCodeProjectTip) };
+        CheckBox includeCode = new CheckBox { Content = LabelWithTip(NewProjectDialogText.CreateCodeProject, NewProjectDialogText.CreateCodeProjectTip, maxTextWidth: CheckBoxTextWidth) };
         includeCode.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.IncludeCodeProject)) { Mode = BindingMode.TwoWay });
         section.Children.Add(includeCode);
         section.Children.Add(HelpText(NewProjectDialogText.CreateCodeProjectHelp));
@@ -268,6 +285,7 @@ public sealed class NewProjectDialogView : StackPanel
             (node, _) => CreateTreeRow(node),
             node => node.Children);
         tree.Styles.Add(CreateTreeItemStyle());
+        ScrollViewer.SetHorizontalScrollBarVisibility(tree, ScrollBarVisibility.Auto);
         Border treeBox = new Border { CornerRadius = new CornerRadius(3), Padding = new Thickness(6, 4), Child = tree };
         treeBox.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Field.Background");
         content.Children.Add(treeBox);
@@ -422,11 +440,11 @@ public sealed class NewProjectDialogView : StackPanel
     }
 
     // The amber banner of the mock: a tinted fill, an amber outline with a thicker left edge, and an icon.
-    private static Control CreateBanner(Control text)
+    private static Control CreateBanner(Control text, string brushKey = "Frb.Brushes.Icon.Manilla")
     {
         FluentIcon icon = CreateIcon(Icon.Warning, 1.4);
         icon.VerticalAlignment = VerticalAlignment.Top;
-        icon.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
+        icon.WithThemeResource(TemplatedControl.ForegroundProperty, brushKey);
 
         Grid content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 8, Margin = new Thickness(10, 8) };
         content.Children.Add(icon);
@@ -434,9 +452,9 @@ public sealed class NewProjectDialogView : StackPanel
         content.Children.Add(text);
 
         Border tint = new Border { Opacity = 0.14, CornerRadius = new CornerRadius(3) };
-        tint.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Icon.Manilla");
+        tint.WithThemeResource(Border.BackgroundProperty, brushKey);
         Border outline = new Border { CornerRadius = new CornerRadius(3), BorderThickness = new Thickness(4, 1, 1, 1) };
-        outline.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Icon.Manilla");
+        outline.WithThemeResource(Border.BorderBrushProperty, brushKey);
 
         Grid banner = new Grid { Margin = new Thickness(0, 8, 0, 0) };
         banner.Children.Add(tint);
@@ -471,10 +489,10 @@ public sealed class NewProjectDialogView : StackPanel
     }
 
     // A label followed by an (i) icon whose hover tip explains the field; the icon takes keyboard focus too.
-    private static StackPanel LabelWithTip(string text, string tip, bool alignRight = false)
+    private static StackPanel LabelWithTip(string text, string tip, bool alignRight = false, double maxTextWidth = double.PositiveInfinity)
     {
         StackPanel label = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        label.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
+        label.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap, MaxWidth = maxTextWidth });
         label.Children.Add(CreateInfoIcon(tip, alignRight));
         return label;
     }
@@ -496,7 +514,10 @@ public sealed class NewProjectDialogView : StackPanel
         {
             tipText.Text = tip;
         }
-        ToolTip.SetTip(info, tipText);
+        Border tipBox = new Border { Padding = new Thickness(8, 6), CornerRadius = new CornerRadius(4), BorderThickness = new Thickness(1), Child = tipText };
+        tipBox.WithThemeResource(Border.BackgroundProperty, "Frb.Surface01");
+        tipBox.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Border");
+        ToolTip.SetTip(info, tipBox);
         ToolTip.SetShowDelay(info, 0);
         ToolTip.SetPlacement(info, alignRight ? PlacementMode.BottomEdgeAlignedRight : PlacementMode.BottomEdgeAlignedLeft);
         return info;
@@ -540,6 +561,7 @@ public sealed class NewProjectDialogView : StackPanel
         _copyIcon.Icon = Icon.Checkmark;
         _copyIcon.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Success");
         _copiedTimer.Stop();
+        _copiedTimer.Interval = CopiedCheckDuration;
         _copiedTimer.Start();
     }
 }

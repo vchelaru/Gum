@@ -58,6 +58,36 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void TooltipOpen(string theme) => Capture("tooltip", theme, (viewModel, window) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        window.HoverForToolTip(window.Find<FluentIcons.Avalonia.FluentIcon>(icon => icon.Name == NewProjectDialogView.WarningInfoName), 2000);
+    }, existingProject: true);
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CopiedCheck(string theme) => Capture("copied", theme, (viewModel, window) =>
+    {
+        NewProjectDialogView.CopiedCheckDuration = TimeSpan.FromMinutes(5);
+        window.Find<NewProjectDialogView.Disclosure>(d => d.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
+        window.Click(window.Find<Button>(button => button.Name == NewProjectDialogView.CopyButtonName));
+        for (int i = 0; i < 20; i++)
+        {
+            Thread.Sleep(10);
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        }
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void NonEmptyFolder(string theme) => Capture("not-empty", theme, (viewModel, _) => viewModel.IncludeCodeProject = true,
+        existingProject: true, targetNotEmpty: true);
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void FilesExpanded(string theme) => Capture("files-expanded", theme, (viewModel, window) =>
     {
         viewModel.IncludeCodeProject = true;
@@ -103,6 +133,7 @@ public class NewProjectDialogScreenshotTests
         string theme,
         Action<NewProjectDialogViewModel, ScreenshotWindow> arrange,
         bool existingProject = false,
+        bool targetNotEmpty = false,
         NewProjectFilesResult? filesResult = null)
     {
         PrScreenshot.Run(() =>
@@ -125,6 +156,8 @@ public class NewProjectDialogScreenshotTests
             {
                 detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(@"C:\Users\You\Projects\MyOtherGame.csproj");
             }
+
+            detector.Setup(x => x.TargetExistsAndIsNotEmpty(It.IsAny<string>(), It.IsAny<string>())).Returns(targetNotEmpty);
 
             NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
                 TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),

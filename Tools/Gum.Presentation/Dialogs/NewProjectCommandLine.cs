@@ -51,8 +51,8 @@ public static class NewProjectCommandLine
     {
         string trimmed = location.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         string folder = trimmed.Length == 0 ? location : trimmed;
-        return withCodeProject
+        return NewProjectDisplayPath.Normalize(withCodeProject
             ? Path.Combine(folder, name)
-            : Path.Combine(folder, name, name + extension);
+            : Path.Combine(folder, name, name + extension));
     }
 }

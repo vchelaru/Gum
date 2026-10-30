@@ -32,7 +32,11 @@ public static class NewProjectDialogText
     public const string CommandLineHeading = "Command line";
     public const string CommandLineDescription = "Optional. Copy this to create the same project without the tool.";
     public const string WarningHeading = "Inside an existing code project";
-    public const string TargetNotEmptyHeading = "Folder is not empty";
+    public const string TargetNotEmptyHeading = "This folder is not empty";
+    public const string RefusedHeading = "Project already exists";
+
+    /// <summary>The not-empty banner body.</summary>
+    public static string TargetNotEmptyBody(string fullPath) => $"{fullPath} already has files. Files with the same names may be overwritten.";
 
     public const string StridePlatformNote = "Runs on Windows only; renders with Skia on the CPU.";
     public const string KniSkiaPlatformNote = "Gum.KniSkia is not on NuGet yet, so the local Gum source is required.";

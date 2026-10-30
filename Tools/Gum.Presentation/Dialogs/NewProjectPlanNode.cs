@@ -33,11 +33,16 @@ public class NewProjectPlanNode : ViewModel
         set => Set(value);
     }
 
-    /// <summary>The name with a trailing slash for a folder.</summary>
-    public string DisplayName => IsFolder ? Name + "/" : Name;
+    /// <summary>Whether this is the top folder, whose name is the full path of the folder that will be created.</summary>
+    public bool IsRoot { get; private set; }
+
+    /// <summary>The name with a trailing separator for a folder; the root already ends with one.</summary>
+    public string DisplayName => IsFolder && !IsRoot ? Name + System.IO.Path.DirectorySeparatorChar : Name;
 
     /// <summary>The count shown after a folder's name, empty for a file.</summary>
     public string CountText => IsFolder ? FileCount.ToString() : string.Empty;
+
+    private static readonly char[] Separators = { '/', (char)92 };
 
     private NewProjectPlanNode(string name, bool isFolder, IReadOnlyList<NewProjectPlanNode> children)
     {
@@ -58,14 +63,14 @@ public class NewProjectPlanNode : ViewModel
         FolderBuilder root = new FolderBuilder(rootName);
         foreach (string directory in plan.Directories)
         {
-            root.GetFolder(directory.Split('/'));
+            root.GetFolder(directory.Split(Separators, StringSplitOptions.RemoveEmptyEntries));
         }
         foreach (string file in plan.Files)
         {
-            string[] parts = file.Split('/');
+            string[] parts = file.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
             root.GetFolder(parts.Take(parts.Length - 1)).Files.Add(parts[^1]);
         }
-        return root.ToNode(mainFile, string.Empty, openDepth, 0);
+        return root.ToNode(mainFile == null ? null : NewProjectDisplayPath.Normalize(mainFile), string.Empty, openDepth, 0);
     }
 
     /// <summary>Opens or closes this folder and every folder under it.</summary>
@@ -110,12 +115,12 @@ public class NewProjectPlanNode : ViewModel
             List<NewProjectPlanNode> children = new List<NewProjectPlanNode>();
             foreach (FolderBuilder folder in _folders.Values)
             {
-                string childPath = path.Length == 0 ? folder._name : path + "/" + folder._name;
+                string childPath = path.Length == 0 ? folder._name : path + System.IO.Path.DirectorySeparatorChar + folder._name;
                 children.Add(folder.ToNode(mainFile, childPath, openDepth, depth + 1));
             }
             foreach (string file in Files.OrderBy(name => name, StringComparer.Ordinal))
             {
-                string filePath = path.Length == 0 ? file : path + "/" + file;
+                string filePath = path.Length == 0 ? file : path + System.IO.Path.DirectorySeparatorChar + file;
                 children.Add(new NewProjectPlanNode(file, false, Array.Empty<NewProjectPlanNode>())
                 {
                     IsMainFile = filePath == mainFile
@@ -126,6 +131,7 @@ public class NewProjectPlanNode : ViewModel
             {
                 FileCount = children.Sum(child => child.IsFolder ? child.FileCount : 1)
             };
+            node.IsRoot = depth == 0;
             node.IsExpanded = depth < openDepth;
             return node;
         }

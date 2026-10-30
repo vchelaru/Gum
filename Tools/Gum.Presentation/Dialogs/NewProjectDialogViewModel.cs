@@ -108,7 +108,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         Location = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         SelectedFileFormat = JsonFormat;
         IsIncludeFormsControls = true;
-        IsIncludeDemoScreenGum = true;
+        IsIncludeDemoScreenGum = false;
         PlatformName = Platforms.FirstOrDefault()?.Name ?? "monogame";
         RunRestore = true;
 
@@ -281,6 +281,16 @@ public class NewProjectDialogViewModel : DialogViewModel
         private set => Set(value);
     }
 
+    /// <summary>The reason <c>gumcli new</c> would refuse these choices (the project file already exists), or empty. OK is off while it shows.</summary>
+    public string RefusalText
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    /// <summary>Whether <see cref="RefusalText"/> has text.</summary>
+    public bool IsRefused => RefusalText.Length > 0;
+
     /// <summary>Whether the banner for a target folder that already holds files shows.</summary>
     public bool IsTargetNotEmptyWarningVisible
     {
@@ -413,7 +423,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     #endregion
 
     /// <inheritdoc/>
-    public override bool CanExecuteAffirmative() => !IsBusy && !IsRestoreFailed && ValidationMessage.Length == 0;
+    public override bool CanExecuteAffirmative() => !IsBusy && !IsRestoreFailed && ValidationMessage.Length == 0 && RefusalText.Length == 0;
 
     /// <summary>
     /// OK. A Gum-only project closes the dialog and the caller creates it. With a code project the files and the
@@ -564,7 +574,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         });
         if (folder != null)
         {
-            Location = folder;
+            Location = NewProjectDisplayPath.Normalize(folder);
         }
     }
 
@@ -665,7 +675,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             return NewProjectDialogText.EnterName;
         }
-        if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        if (!NewProjectNameRules.IsValidFolderName(name))
         {
             return NewProjectDialogText.InvalidFolderName;
         }
@@ -695,15 +705,15 @@ public class NewProjectDialogViewModel : DialogViewModel
         IsExistingCodeProjectWarningVisible = showExisting;
         if (showExisting)
         {
-            string found = _existingCodeProject!;
-            ExistingCodeProjectText = $"Found {Path.GetFileName(found)} in {Path.GetDirectoryName(found)}.";
+            string found = NewProjectDisplayPath.Normalize(_existingCodeProject!);
+            ExistingCodeProjectText = $"Found {Path.GetFileName(found)} in {NewProjectDisplayPath.Normalize(Path.GetDirectoryName(found) ?? string.Empty)}.";
             bool hasGame1 = PlatformName is not ("raylib" or "silknet" or "stride");
-            ExistingCodeProjectTip = NewProjectDialogText.WarningTip(hasGame1, Path.Combine(folder, EffectiveName));
+            ExistingCodeProjectTip = NewProjectDialogText.WarningTip(hasGame1, NewProjectDisplayPath.Normalize(Path.Combine(folder, EffectiveName)));
         }
 
         IsTargetNotEmptyWarningVisible = _targetNotEmpty;
         TargetNotEmptyText = _targetNotEmpty
-            ? $"{Path.Combine(folder, EffectiveName)} already exists and is not empty."
+            ? NewProjectDialogText.TargetNotEmptyBody(NewProjectDisplayPath.Normalize(Path.Combine(folder, EffectiveName)))
             : string.Empty;
     }
 
@@ -724,11 +734,24 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     private async Task RefreshPlanAsync(int version, NewProjectRequest request, string folder, string name, bool game, string mainFile)
     {
-        (NewProjectPlan? plan, string? existing, bool notEmpty) = await Task.Run(() =>
+        (NewProjectPlan? plan, string? existing, bool notEmpty, string? refusal) = await Task.Run(() =>
         {
             NewProjectPlan? computedPlan = null;
             string? existingProject = null;
             bool targetNotEmpty = false;
+            string? refused = null;
+            try
+            {
+                NewProjectValidation validation = _service.Validate(request);
+                if (validation.Error?.Kind == NewProjectErrorKind.ProjectAlreadyExists)
+                {
+                    refused = NewProjectDisplayPath.Normalize(validation.Error.Message);
+                }
+            }
+            catch (Exception)
+            {
+                // Reported by OK when it runs.
+            }
             try
             {
                 computedPlan = _service.GetPlan(request);
@@ -746,7 +769,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             {
                 // A location that cannot be read has nothing to warn about.
             }
-            return (computedPlan, existingProject, targetNotEmpty);
+            return (computedPlan, existingProject, targetNotEmpty, refused);
         });
 
         if (version != Volatile.Read(ref _refreshVersion))
@@ -756,6 +779,9 @@ public class NewProjectDialogViewModel : DialogViewModel
 
         _existingCodeProject = existing;
         _targetNotEmpty = notEmpty;
+        RefusalText = refusal ?? string.Empty;
+        NotifyPropertyChanged(nameof(IsRefused));
+        AffirmativeCommand.NotifyCanExecuteChanged();
         RefreshWarnings();
 
         if (plan == null)
@@ -767,7 +793,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             return;
         }
 
-        PlanTree = new[] { NewProjectPlanNode.Build(plan, name, mainFile, openDepth: game ? 3 : 1) };
+        PlanTree = new[] { NewProjectPlanNode.Build(plan, NewProjectDisplayPath.AsFolder(Path.Combine(folder, name)), mainFile, openDepth: game ? 3 : 1) };
         PlanFileCount = plan.Files.Count;
         FilesCountText = $"({plan.Files.Count})";
         PlanTotalText = plan.Files.Count == 1 ? "1 file" : $"{plan.Files.Count} files";
