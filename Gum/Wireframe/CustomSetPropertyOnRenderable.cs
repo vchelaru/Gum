@@ -2623,7 +2623,14 @@ public partial class CustomSetPropertyOnRenderable
 
         if (_knownUnresolvableFontKeys.Contains(fullFileName))
         {
-            return null;
+            // The font may have been generated since (the tool saves the project before it writes the
+            // .fnt, and hot reload copies it in later); only a file that is still missing stays unresolvable.
+            if (!ToolsUtilities.FileManager.FileExists(fullFileName))
+            {
+                return null;
+            }
+
+            _knownUnresolvableFontKeys.Remove(fullFileName);
         }
 
         // Issue #4665: BitmapFont's "-shadow.fnt" sibling probe is opt-in (see
