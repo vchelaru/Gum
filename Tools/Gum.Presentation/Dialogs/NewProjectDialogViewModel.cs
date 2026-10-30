@@ -679,7 +679,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             return NewProjectDialogText.InvalidFolderName;
         }
-        if (NewProjectNameRules.IsTooLong(name))
+        if (NewProjectNameRules.IsTooLong(name, IncludeCodeProject))
         {
             return NewProjectDialogText.NameTooLong;
         }
