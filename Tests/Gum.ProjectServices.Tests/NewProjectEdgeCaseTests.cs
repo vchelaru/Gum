@@ -67,12 +67,14 @@ public class NewProjectEdgeCaseTests : BaseTestClass
     public static IEnumerable<object[]> HostPlatformsAndRiskyNames()
     {
         // Names the generated code uses as a simple type name, names that clash with its namespaces or with
-        // the Program class the top-level statements create, a dotted name, and a safe control.
+        // the Program class and the game and args variables the top-level statements create, contextual keywords,
+        // a dotted name, and a safe control.
         string[] names =
         {
             "Game", "Button", "Color", "Program", "Game1", "Gum", "Microsoft", "System", "Vector2", "Texture2D",
             "GumService", "GameTime", "GraphicsDeviceManager", "DateTime", "SkiaRenderer", "SKColors",
-            "SkiaRenderTarget2D", "My.Game", "MyGame"
+            "SkiaRenderTarget2D", "My.Game", "MyGame", "game", "args", "button", "Content", "Window", "GraphicsDevice",
+            "var", "global", "record", "file", "dynamic", "async"
         };
         foreach (string platform in new[] { "monogame", "kni", "kniskia" })
         {
