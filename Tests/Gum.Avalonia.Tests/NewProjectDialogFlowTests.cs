@@ -177,7 +177,9 @@ public class NewProjectDialogFlowTests
 
                 themeLeft.ShouldBe(nameLeft, 0.5, $"theme drop-down left edge at zoom {size}");
                 Top(preview, window.Window).ShouldBe(Top(theme, window.Window), 0.5, $"preview top is flush with the drop-down top at zoom {size}");
-                previewRight.ShouldBe(browseRight, 0.5, $"preview right edge at zoom {size}");
+                // The drop-down fills the row up to a 20 px gap (scaled with the zoom) before the preview.
+                (Left(theme, window.Window) + theme.Bounds.Width + 20 * size / 12).ShouldBe(Left(preview, window.Window), 1.5, $"drop-down to preview gap at zoom {size}");
+                previewRight.ShouldBe(browseRight, 1.5, $"preview right edge at zoom {size}: preview {Left(preview, window.Window)}+{preview.Bounds.Width}, browse {Left(browse, window.Window)}+{browse.Bounds.Width}, theme {Left(theme, window.Window)}+{theme.Bounds.Width}");
                 (Left(theme, window.Window) + theme.Bounds.Width).ShouldBeLessThan(Left(preview, window.Window), $"drop-down and preview overlap at zoom {size}");
             }
         }

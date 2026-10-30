@@ -18,6 +18,8 @@ namespace Gum.Avalonia.Controls;
 /// </summary>
 public sealed class ThemeSelectionView : StackPanel
 {
+    private const double PreviewGap = 20;
+
     /// <summary>Builds the view; set its DataContext to a <see cref="ThemeSelectionViewModel"/>.</summary>
     /// <param name="previewBeside">Puts the preview image to the right of a narrow theme column, wrapping below it when there is no room (New Project).</param>
     /// <param name="labelContent">Replaces the "Theme" text label, such as with a label that carries a tip.</param>
@@ -49,11 +51,12 @@ public sealed class ThemeSelectionView : StackPanel
             // The label sits alone in row 0; the drop-down and the preview share row 1, so their tops are flush.
             besideRow = new Grid
             {
-                ColumnDefinitions = new ColumnDefinitions("*,200"),
+                ColumnDefinitions = new ColumnDefinitions("*,Auto"),
                 RowDefinitions = new RowDefinitions("Auto,Auto"),
-                ColumnSpacing = 12,
                 Margin = new Thickness(0, 0, 0, 8),
             };
+            // 20 px at the default size, scaling with the tool zoom like the text around it; the preview column hugs the image.
+            besideRow.Bind(Grid.ColumnSpacingProperty, besideRow.GetResourceObservable("ControlContentThemeFontSize", size => (object)(PreviewGap * (size is double baseSize ? baseSize : 12d) / 12d)));
             Control label = themeRow.Children[0];
             themeRow.Children.Clear();
             label.Margin = new Thickness(0, 0, 0, 3);
