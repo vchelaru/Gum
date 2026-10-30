@@ -127,7 +127,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<Gum.ProjectServices.IFormsThemeLocator>(
             _ => Gum.ProjectServices.FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory()));
         services.AddSingleton<Gum.ProjectServices.IRestoreRunner, Gum.ProjectServices.DotnetRestoreRunner>();
-        services.AddSingleton<Gum.ProjectServices.IExistingCodeProjectDetector, Gum.ProjectServices.ExistingCodeProjectDetector>();
+        services.AddSingleton<Gum.ProjectServices.IExistingCodeProjectDetector>(_ => new Gum.ProjectServices.ExistingCodeProjectDetector());
         services.AddSingleton<Gum.ProjectServices.INewProjectService>(provider => new Gum.ProjectServices.NewProjectService(
             provider.GetRequiredService<Gum.ProjectServices.IFormsThemeLocator>(),
             provider.GetRequiredService<Gum.ProjectServices.IRestoreRunner>(),

@@ -46,7 +46,7 @@ public class DialogScenarioTests
         {
             dialog.IsIncludeFormsControls = false;
             dialog.ProjectName = NewProjectName;
-            dialog.Location = Path.GetDirectoryName(tree.Project.ProjectFolder)!;
+            dialog.Location = tree.Project.ProjectFolder;
             dialog.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
             return true;
         });
@@ -56,8 +56,9 @@ public class DialogScenarioTests
 
         GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
         tree.SaveAll();
-        string newProjectFolder = Path.Combine(Path.GetDirectoryName(tree.Project.ProjectFolder)!, NewProjectName);
+        string newProjectFolder = Path.Combine(tree.Project.ProjectFolder, NewProjectName);
         project.FullFileName.ShouldBe(Path.Combine(newProjectFolder, NewProjectName + ".gumx"));
+        tree.Project.FollowProjectFile(project.FullFileName);
         project.Screens.Select(screen => screen.Name).ShouldBe(new[] { NewProjectLogic.StartingScreenName });
         project.Components.ShouldBeEmpty();
         File.Exists(Path.Combine(newProjectFolder, "Screens", NewProjectLogic.StartingScreenName + ".gusx")).ShouldBeTrue();

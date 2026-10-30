@@ -84,13 +84,13 @@ public class DialogViewRegistryTests
         view.ShouldBeOfType<NewProjectDialogView>();
         window.Title.ShouldBe("New Project");
         CheckBox[] checkBoxes = view.GetLogicalDescendants().OfType<CheckBox>().ToArray();
-        checkBoxes.Select(box => box.Content).ShouldBe(new object[] { "Include Forms controls", "Include DemoScreenGum" });
+        checkBoxes.Select(box => box.Content).ShouldBe(new object[] { "Include Forms controls", "Include DemoScreenGum", "Include C# code project", "Link Gum source", "Run dotnet restore" });
         checkBoxes[0].IsChecked.ShouldBe(true);
 
         checkBoxes[0].IsChecked = false;
 
         viewModel.IsIncludeFormsControls.ShouldBeFalse();
-        checkBoxes[1].IsEffectivelyEnabled.ShouldBeFalse();
+        checkBoxes[1].IsEffectivelyVisible.ShouldBeFalse();
         window.Close();
     }
 

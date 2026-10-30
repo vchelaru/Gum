@@ -1,0 +1,177 @@
+using Avalonia.Controls;
+using Avalonia.Styling;
+using Gum.Avalonia.Dialogs.Views;
+using Gum.Avalonia.Tests.EndToEnd;
+using Gum.Avalonia.Tests.Harness;
+using Gum.Dialogs;
+using Gum.ProjectServices;
+using Gum.Services.Dialogs;
+using Gum.ToolStates;
+using GumFormsPlugin.Services;
+using GumFormsPlugin.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+
+namespace Gum.Avalonia.Tests.Screenshots;
+
+/// <summary>
+/// The New Project dialog in each state of the approved mock, dark and light, at every zoom level
+/// (<c>GUM_SCREENSHOT_DIR=&lt;folder&gt; dotnet test --filter NewProjectDialogScreenshotTests</c>).
+/// </summary>
+[Trait("Category", PrScreenshot.Category)]
+public class NewProjectDialogScreenshotTests
+{
+    private const string Location = @"C:\Users\You\Projects";
+
+    private static readonly string[] ControlNames =
+    {
+        "Button", "CheckBox", "ColorPicker", "ComboBox", "DialogBox", "Expander", "ItemsControl", "Label", "ListBox", "ListBoxItem",
+        "Menu", "MenuItem", "Panel", "PasswordBox", "RadioButton", "ScrollBar", "ScrollViewer", "Slider", "Splitter", "StackPanel",
+        "TextBox", "Toast", "Toggle", "TreeView", "TreeViewItem", "UserControl", "Window", "PlayerJoinView", "SettingsView",
+        "Keyboard", "Thumb", "Menu2", "Label2", "Panel2", "Window2", "Toast2", "Toggle2", "Slider2",
+    };
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void Default(string theme) => Capture("default", theme, (_, _) => { });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void FormsUnchecked(string theme) => Capture("forms-unchecked", theme, (viewModel, _) => viewModel.IsIncludeFormsControls = false);
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CodeProjectChecked(string theme) => Capture("code-project", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "kniskia";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void WarningShowing(string theme) => Capture("warning", theme, (viewModel, _) => viewModel.IncludeCodeProject = true, existingProject: true);
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void FilesExpanded(string theme) => Capture("files-expanded", theme, (viewModel, window) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.IsIncludeFormsControls = true;
+        window.Find<Expander>(expander => expander.Name == NewProjectDialogView.FilesExpanderName).IsExpanded = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CommandLineExpanded(string theme) => Capture("command-line", theme, (viewModel, window) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.IsIncludeDemoScreenGum = false;
+        window.Find<Expander>(expander => expander.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void Busy(string theme) => Capture("busy", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.AffirmativeCommand.Execute(null);
+    }, filesResult: null);
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void RestoreFailure(string theme) => Capture("restore-failure", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.AffirmativeCommand.Execute(null);
+        for (int i = 0; i < 300 && !viewModel.IsRestoreFailed; i++)
+        {
+            Thread.Sleep(10);
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        }
+    }, filesResult: new NewProjectFilesResult { Success = true, GumProjectPath = "g.gumj", CsprojPath = "g.csproj" });
+
+    private static void Capture(
+        string name,
+        string theme,
+        Action<NewProjectDialogViewModel, ScreenshotWindow> arrange,
+        bool existingProject = false,
+        NewProjectFilesResult? filesResult = null)
+    {
+        PrScreenshot.Run(() =>
+        {
+            ToolStartup.EnsureInitialized();
+            Mock<INewProjectService> service = new();
+            service.Setup(x => x.IsSourceLinkedAvailable).Returns(true);
+            service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns<NewProjectRequest>(CreatePlan);
+            service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(new NewProjectValidation
+            {
+                Resolved = new ResolvedNewProject { Name = "MyGame", CsprojPath = "g.csproj" },
+            });
+            service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
+                .Returns(filesResult == null ? new TaskCompletionSource<NewProjectFilesResult>().Task : Task.FromResult(filesResult));
+            service.Setup(x => x.RestoreAsync(It.IsAny<string>(), It.IsAny<Action<string>?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new RestoreResult { Status = RestoreStatus.Failed, ExitCode = 1, OutputTail = "error NU1101: Unable to find package Gum.MonoGame. No packages exist with this id in source(s): nuget.org" });
+
+            Mock<IExistingCodeProjectDetector> detector = new();
+            if (existingProject)
+            {
+                detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(@"C:\Users\You\Projects\MyOtherGame.csproj");
+            }
+
+            NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
+                TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),
+                service.Object, detector.Object, new Mock<IDialogService>().Object)
+            {
+                Location = Location,
+            };
+            using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, theme == "light" ? ThemeVariant.Light : ThemeVariant.Dark);
+            arrange(viewModel, window);
+            for (int i = 0; i < 300 && viewModel.PlanTree.Count == 0; i++)
+            {
+                Thread.Sleep(10);
+                global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            }
+            PrScreenshot.SaveWindowAtZoomLevels(window.Window, $"new-project-{name}-{theme}");
+        });
+    }
+
+    // Stands in for the real plan so the screenshots are stable: the Forms project of the mock, or a code project around it.
+    private static NewProjectPlan? CreatePlan(NewProjectRequest request)
+    {
+        bool forms = request.Template == "forms";
+        bool game = request.Platform != null;
+        string prefix = game ? "Content/GumProject/" : string.Empty;
+        string project = (game ? "GumProject" : "MyGame") + ".gumj";
+        List<string> files = new List<string> { prefix + project, prefix + "Fonts/LiberationSans-LICENSE.txt", prefix + "Fonts/LiberationSans-Regular.ttf" };
+        List<string> directories = new List<string>();
+        if (forms)
+        {
+            files.AddRange(ControlNames.Take(33).Select(name => $"{prefix}Behaviors/{name}Behavior.behj"));
+            files.AddRange(ControlNames.Take(38).Select(name => $"{prefix}Components/Controls/{name}.gucj"));
+            files.AddRange(new[] { "Divider", "Icon", "PercentBar", "VerticalLines" }.Select(name => $"{prefix}Components/Elements/{name}.gucj"));
+            files.AddRange(new[] { "DemoScreenGum", "KeyboardScreenGum", "StylesScreen" }.Select(name => $"{prefix}Screens/{name}.gusj"));
+            files.Add(prefix + "Components/Styles.gucj");
+            files.Add(prefix + "UISpriteSheet.png");
+        }
+        else
+        {
+            directories.AddRange(new[] { "Behaviors", "Components", "Screens" }.Select(name => prefix + name));
+        }
+        if (game)
+        {
+            files.Add("MyGame.csproj");
+            files.Add("Program.cs");
+            files.Add("Game1.cs");
+            files.Add(prefix + "ProjectCodeSettings.codsj");
+        }
+        return new NewProjectPlan("MyGame", files.OrderBy(file => file, StringComparer.Ordinal).ToList(), directories);
+    }
+}

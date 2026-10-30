@@ -44,7 +44,7 @@ public class FormsAndImportScenarioTests
             dialog.IsIncludeFormsControls = true;
             dialog.IsIncludeDemoScreenGum = true;
             dialog.ProjectName = "NewlyCreated";
-            dialog.Location = Path.GetDirectoryName(tree.Project.ProjectFolder)!;
+            dialog.Location = tree.Project.ProjectFolder;
             dialog.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
             return true;
         });
@@ -53,14 +53,15 @@ public class FormsAndImportScenarioTests
         tree.WaitUntil(() => tree.SelectedState.SelectedScreen?.Name == NewProjectLogic.StartingScreenName, AsyncWork, "the new project's starting screen");
 
         GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
-        new FilePath(project.FullFileName.ShouldNotBeNull()).ShouldBe(new FilePath(Path.Combine(Path.GetDirectoryName(tree.Project.ProjectFolder)!, "NewlyCreated", "NewlyCreated.gumx")));
+        new FilePath(project.FullFileName.ShouldNotBeNull()).ShouldBe(new FilePath(Path.Combine(tree.Project.ProjectFolder, "NewlyCreated", "NewlyCreated.gumx")));
+        tree.Project.FollowProjectFile(project.FullFileName);
         theme.Components.Select(component => component.Name).ShouldBeSubsetOf(project.Components.Select(component => component.Name));
         project.Screens.Select(screen => screen.Name).ShouldContain("DemoScreenGum");
         project.Screens.Select(screen => screen.Name).ShouldContain(NewProjectLogic.StartingScreenName);
         tree.SaveAll();
         foreach (ComponentSave component in project.Components)
         {
-            File.Exists(Path.Combine(Path.GetDirectoryName(tree.Project.ProjectFolder)!, "NewlyCreated", "Components", component.Name + ".gucx")).ShouldBeTrue($"{component.Name} was saved");
+            File.Exists(Path.Combine(tree.Project.ProjectFolder, "NewlyCreated", "Components", component.Name + ".gucx")).ShouldBeTrue($"{component.Name} was saved");
         }
         tree.RootNode("Components").Nodes.ShouldNotBeEmpty();
 
