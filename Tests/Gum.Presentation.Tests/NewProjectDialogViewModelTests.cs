@@ -339,6 +339,27 @@ public class NewProjectDialogViewModelTests
     }
 
     [Theory]
+    [InlineData("Projects")]
+    [InlineData("~/Projects")]
+    [InlineData("../Projects")]
+    public void ValidationMessage_RejectsALocationThatIsNotAnAbsolutePath(string location)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.Location = location);
+
+        viewModel.ValidationMessage.ShouldNotBeEmpty();
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ValidationMessage_RejectsANameTooLongForAFolder()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = new string('a', 300));
+
+        viewModel.ValidationMessage.ShouldBe("The name has characters a folder name can't have.");
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Theory]
     [InlineData("", "")]
     [InlineData("  ", "  ")]
     public void Location_TrailingSeparatorAndSurroundingSpaces_DoNotChangeThePaths(string before, string after)

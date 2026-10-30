@@ -509,6 +509,25 @@ public class NewProjectServiceTests : BaseTestClass
     #region Edge cases
 
     [Theory]
+    [InlineData(null, false)]
+    [InlineData(null, true)]
+    [InlineData("monogame", false)]
+    [InlineData("monogame", true)]
+    public void Validate_PathWithATrailingSeparator_ResolvesLikeThePathWithout(string? platform, bool altSeparator)
+    {
+        NewProjectService service = CreateService();
+        string bare = Path.Combine(_folder, "Trailing");
+        char separator = altSeparator ? Path.AltDirectorySeparatorChar : Path.DirectorySeparatorChar;
+
+        NewProjectValidation expected = service.Validate(new NewProjectRequest { Path = bare, Platform = platform, Template = "empty" });
+        NewProjectValidation actual = service.Validate(new NewProjectRequest { Path = bare + separator, Platform = platform, Template = "empty" });
+
+        actual.IsValid.ShouldBeTrue(actual.Error?.Message);
+        actual.Resolved!.Name.ShouldBe("Trailing");
+        actual.Resolved.GumProjectPath.ShouldBe(expected.Resolved!.GumProjectPath);
+    }
+
+    [Theory]
     [InlineData("FORMS", null, "MonoGame")]
     [InlineData("Empty", null, "KNISKIA")]
     [InlineData("forms", "STANDARD", "Silk.Net")]
@@ -544,6 +563,43 @@ public class NewProjectServiceTests : BaseTestClass
             validation.IsValid.ShouldBeTrue($"{name}: {validation.Error?.Message}");
             validation.Resolved!.Platform.ShouldBe(platform);
         }
+    }
+
+    [Fact]
+    public async Task Execute_WithAPlatformAndXmlFormat_WritesAGumxProject()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectResult result = await service.ExecuteAsync(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "XmlGame"),
+            Platform = "monogame",
+            Template = "empty",
+            UseXmlFormat = true,
+            Restore = false
+        }, null, CancellationToken.None);
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        Path.GetExtension(result.Files.GumProjectPath).ShouldBe(".gumx");
+        File.Exists(result.Files.GumProjectPath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetPlan_WithAPlatformAndXmlFormat_ListsTheGumxProject()
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectPlan? plan = service.GetPlan(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "XmlPlan"),
+            Platform = "monogame",
+            Template = "empty",
+            UseXmlFormat = true
+        });
+
+        plan.ShouldNotBeNull();
+        plan.Files.ShouldContain("Content/GumProject/GumProject.gumx");
+        plan.Files.ShouldNotContain("Content/GumProject/GumProject.gumj");
     }
 
     [Fact]
