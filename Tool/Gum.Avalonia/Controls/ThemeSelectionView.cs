@@ -47,7 +47,7 @@ public sealed class ThemeSelectionView : StackPanel
         {
             // The drop-down fills what the preview leaves; the preview is a fixed-size block at the right edge.
             themeRow.Margin = new Thickness(0);
-            besideRow = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12, Margin = new Thickness(0, 0, 0, 8) };
+            besideRow = new Grid { ColumnDefinitions = new ColumnDefinitions("*,200"), ColumnSpacing = 12, Margin = new Thickness(0, 0, 0, 8) };
             besideRow.Children.Add(themeRow);
             Children.Add(besideRow);
         }
