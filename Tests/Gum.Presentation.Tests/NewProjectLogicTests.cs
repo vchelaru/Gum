@@ -485,5 +485,96 @@ public class NewProjectLogicTests
         _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
     }
 
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_KeepsScreensThatOnlyLookLikeTheDemo()
+    {
+        GumProjectSave loaded = new GumProjectSave();
+        ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
+        ScreenSave nestedDemo = new ScreenSave { Name = "A/B/DemoScreenGum" };
+        ScreenSave myDemo = new ScreenSave { Name = "MyDemoScreenGum" };
+        ScreenSave numbered = new ScreenSave { Name = "DemoScreenGum2" };
+        ScreenSave inFolder = new ScreenSave { Name = "Folder/MyDemoScreenGum" };
+        loaded.Screens.AddRange(new[] { demo, nestedDemo, myDemo, numbered, inFolder });
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _deleteLogic.Verify(x => x.RemoveElement(demo), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveElement(nestedDemo), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveElement(myDemo), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveElement(numbered), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveElement(inFolder), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_DeletesOnlyTheDemoScreensFile()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumNewProjectLogicDemo_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            string demoFile = Path.Combine(folder, "DemoScreenGum.gusx");
+            string otherFile = Path.Combine(folder, "OtherScreen.gusx");
+            File.WriteAllText(demoFile, "demo");
+            File.WriteAllText(otherFile, "other");
+            GumProjectSave loaded = new GumProjectSave();
+            ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
+            ScreenSave other = new ScreenSave { Name = "OtherScreen" };
+            loaded.Screens.AddRange(new[] { demo, other });
+            _fileCommands.Setup(x => x.GetFullFileName(demo)).Returns(new FilePath(demoFile));
+            _fileCommands.Setup(x => x.GetFullFileName(other)).Returns(new FilePath(otherFile));
+            await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+            await _logic.CreateNewProjectAsync();
+
+            File.Exists(demoFile).ShouldBeFalse();
+            File.Exists(otherFile).ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_StillRemovesTheDemoScreen_WhenItsFileIsAlreadyGone()
+    {
+        GumProjectSave loaded = new GumProjectSave();
+        ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
+        loaded.Screens.Add(demo);
+        _fileCommands.Setup(x => x.GetFullFileName(demo)).Returns(new FilePath(Path.Combine(Path.GetTempPath(), "GumNeverExisted", "DemoScreenGum.gusx")));
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _deleteLogic.Verify(x => x.RemoveElement(demo), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_ClearsTheSelectionBeforeTheCreatedProjectLoads()
+    {
+        List<string> order = new List<string>();
+        _selectedState.SetupSet(x => x.SelectedElement = null).Callback(() => order.Add("clear"));
+        _projectManager.Setup(x => x.LoadProjectAsync(It.IsAny<FilePath>())).Callback(() => order.Add("load")).Returns(Task.CompletedTask);
+        await SetUpCreatedCodeProject(new GumProjectSave());
+
+        await _logic.CreateNewProjectAsync();
+
+        order.ShouldBe(new[] { "clear", "load" });
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_SelectsTheStartingScreenLast_EvenWhenDemoScreensWereRemoved()
+    {
+        GumProjectSave loaded = new GumProjectSave();
+        loaded.Screens.Add(new ScreenSave { Name = "DemoScreenGum" });
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _selectedState.VerifySet(x => x.SelectedScreen = It.Is<ScreenSave>(screen => screen.Name == NewProjectLogic.StartingScreenName), Times.Once);
+        _selectedState.VerifySet(x => x.SelectedScreen = It.Is<ScreenSave>(screen => screen.Name != NewProjectLogic.StartingScreenName), Times.Never);
+    }
+
     #endregion
 }
