@@ -84,30 +84,6 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>PlayerJoinControlInstance.Parent</Name>
-      <Value xsi:type="xsd:string">InnerPanelInstance</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PlayerJoinControlInstance1.Parent</Name>
-      <Value xsi:type="xsd:string">InnerPanelInstance</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PlayerJoinControlInstance2.Parent</Name>
-      <Value xsi:type="xsd:string">InnerPanelInstance</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PlayerJoinControlInstance3.Parent</Name>
-      <Value xsi:type="xsd:string">InnerPanelInstance</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
       <Name>PlayerJoinViewItem1.Parent</Name>
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
       <SetsValue>true</SetsValue>
