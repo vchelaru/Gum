@@ -457,9 +457,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // Picking a state in the tool re-shows the previewed element in that state (issue #4856).
         this.ReactToStateSaveSelected += _ => _previewLauncher.PushSelection(_selectedState.SelectedElement);
         this.ElementDelete += HandleElementDeleted;
-        // The preview loads its element by name, so a pinned element that is gone or renamed can no
-        // longer be shown; fall back to following the selection (issue #3078).
-        this.ElementRename += (element, _) => UnpinPreviewIf(element);
+        // The preview loads its element by name and a rename (also a folder rename, a move into a
+        // folder, or an undo of those) selects nothing new, so re-send the new name. A pinned
+        // preview stays pinned to the renamed element (#7184).
+        this.ElementRename += (element, _) => _previewLauncher.ReactToElementRenamed(element);
 
         // Keeps a live .gumx preview session's temp JSON copy in sync with the real, edited project
         // (issue #4748) - the Native AOT preview build can't parse .gumx itself, so its hot-reload
@@ -680,6 +681,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private void HandleProjectLoad(GumProjectSave save)
     {
         _elementCameraMemory.Clear();
+        _previewLauncher.ReactToProjectLoaded(save);
         _editorViewModel.HandleProjectLoad(save);
 
         _canvas.UpdateCanvasBoundsToProject();

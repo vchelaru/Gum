@@ -107,6 +107,8 @@ public class Game1 : Game
         // here is undone when MonoGame shows it.
         _isRetinaBackingEnabled = MacRetinaBacking.TryEnable(Window.Handle);
 
+        // Preview rebuilds after such a reload, so "the old UI stays on screen" would be wrong.
+        GumHotReloadManager.PrintsShownElementGone = false;
         GumService.Default.EnableHotReload(_gumxPath);
         // A reload re-applies the default state over the whole tree, undoing the selected state.
         GumService.Default.HotReloadCompleted += ApplySelectedState;
@@ -382,7 +384,6 @@ public class Game1 : Game
     {
         if (!PreviewElementPresenter.Show(_selection))
         {
-            Console.Error.WriteLine($"GumPreview: no screen or component named '{_selection.ElementName}' in {_gumxPath}.");
             UpdateWindowTitle(missingElement: true);
             _isElementMissing = true;
             return;
@@ -434,7 +435,5 @@ public class Game1 : Game
     private void ApplySelectedState() => PreviewElementPresenter.ApplySelectedState(_selection);
 
     private void UpdateWindowTitle(bool missingElement = false) =>
-        Window.Title = missingElement
-            ? $"Gum Preview - element not found: {_selection.ElementName}"
-            : $"Gum Preview - {_selection.ElementName}";
+        Window.Title = PreviewWindowTitle.For(_selection.ElementName, missingElement);
 }
