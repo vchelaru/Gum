@@ -153,6 +153,63 @@ public class NewProjectDialogFlowTests
     }
 
     [AvaloniaFact]
+    public void NewProject_DoesNotShowTheListOfProjectChanges()
+    {
+        using ScreenshotWindow window = Open(out NewProjectDialogViewModel viewModel);
+        viewModel.ThemeSelection.TargetProject = new global::Gum.DataTypes.GumProjectSave();
+        viewModel.ThemeSelection.SelectedTheme = "Bubblegum";
+        viewModel.ThemeSelection.HasRequirements.ShouldBeTrue("the theme does need project changes, which the import still applies");
+
+        window.FindAll<TextBlock>().ShouldNotContain(text => text.Text != null && text.Text.StartsWith("Clicking OK will also apply"));
+    }
+
+    [AvaloniaTheory]
+    [InlineData(9)]
+    [InlineData(12)]
+    [InlineData(24)]
+    public void FilesTree_ScrollBarsTakeTheirOwnSpace_AndNeverCoverARow(double size)
+    {
+        using ScreenshotWindow window = Open(out NewProjectDialogViewModel viewModel);
+        global::Gum.Services.IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<global::Gum.Services.IAppScaleProvider>();
+        double original = scale.BaseFontSize;
+        using IDisposable follower = global::Gum.Avalonia.Shell.AppWideWindowInput.FollowBaseFontSize(window.Window, scale);
+        try
+        {
+            scale.BaseFontSize = size;
+            _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan("MyGame",
+                Enumerable.Range(0, 60).Select(number => $"Folder/File{number}.txt").ToList(), Array.Empty<string>()));
+            viewModel.Location = @"C:\Users\You\" + new string('a', 120);
+            for (int i = 0; i < 300 && !viewModel.PlanRefresh.IsCompleted; i++)
+            {
+                Thread.Sleep(10);
+                global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            }
+            window.Find<global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure>(d => d.Name == global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.FilesExpanderName).IsExpanded = true;
+            ScreenshotWindow.Pump(window.Window);
+            viewModel.SetPlanExpanded(true);
+            ScreenshotWindow.Pump(window.Window);
+
+            TreeView tree = window.Find<TreeView>();
+            ScrollViewer scroller = tree.GetVisualDescendants().OfType<ScrollViewer>().First();
+            global::Avalonia.Controls.Presenters.ScrollContentPresenter content = scroller.GetVisualDescendants().OfType<global::Avalonia.Controls.Presenters.ScrollContentPresenter>().First();
+            List<global::Avalonia.Controls.Primitives.ScrollBar> bars = scroller.GetVisualDescendants().OfType<global::Avalonia.Controls.Primitives.ScrollBar>()
+                .Where(bar => bar.IsEffectivelyVisible && bar.Bounds.Width > 0 && bar.Bounds.Height > 0).ToList();
+            bars.Count.ShouldBe(2, "both bars show for a long path and many rows");
+
+            global::Avalonia.Rect contentRect = new global::Avalonia.Rect(content.TranslatePoint(new global::Avalonia.Point(0, 0), window.Window)!.Value, content.Bounds.Size);
+            foreach (global::Avalonia.Controls.Primitives.ScrollBar bar in bars)
+            {
+                global::Avalonia.Rect barRect = new global::Avalonia.Rect(bar.TranslatePoint(new global::Avalonia.Point(0, 0), window.Window)!.Value, bar.Bounds.Size);
+                contentRect.Intersects(barRect).ShouldBeFalse($"the {bar.Orientation} bar covers the rows at zoom {size}");
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = original;
+        }
+    }
+
+    [AvaloniaFact]
     public void ThemeRow_AlignsWithTheRowsAbove_AtEveryZoom()
     {
         using ScreenshotWindow window = Open(out _);

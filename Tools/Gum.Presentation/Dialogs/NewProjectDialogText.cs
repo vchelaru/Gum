@@ -29,7 +29,7 @@ public static class NewProjectDialogText
     public const string RestorePackages = "Restore NuGet packages";
     public const string RestorePackagesNote = "Runs dotnet restore after creating. The first code generation needs the packages.";
     public const string FilesHeading = "Files";
-    public const string GumOnlyFilesNote = "The template files. The tool also adds a MainScreen and applies the demo screen choice when it creates the project, so the real count differs.";
+    public const string TemplateFilesNote = "The template files. When it creates the project the tool also adds a starting screen (MainScreen), its generated code and an event log, so the folder holds a few more.";
     public const string CommandLineHeading = "Command line";
     public const string CommandLineDescription = "Optional. Copy this to create the same project without the tool.";
     public const string WarningHeading = "Inside an existing code project";

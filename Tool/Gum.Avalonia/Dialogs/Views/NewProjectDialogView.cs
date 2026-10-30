@@ -229,7 +229,7 @@ public sealed class NewProjectDialogView : StackPanel
 
         StackPanel options = new StackPanel();
         options.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsIncludeFormsControls)));
-        ThemeSelectionView themeSelection = new ThemeSelectionView(labelAbove: true, previewBeside: true, labelContent: LabelWithTip(NewProjectDialogText.Theme, NewProjectDialogText.ThemeTip));
+        ThemeSelectionView themeSelection = new ThemeSelectionView(labelAbove: true, previewBeside: true, showRequirements: false, labelContent: LabelWithTip(NewProjectDialogText.Theme, NewProjectDialogText.ThemeTip));
         themeSelection.Bind(DataContextProperty, new Binding(nameof(NewProjectDialogViewModel.ThemeSelection)));
         options.Children.Add(themeSelection);
         CheckBox includeDemo = new CheckBox { Content = LabelWithTip(NewProjectDialogText.IncludeDemo, NewProjectDialogText.IncludeDemoTip, maxTextWidth: CheckBoxTextWidth), Margin = new Thickness(0, 2, 0, 0) };
@@ -294,12 +294,14 @@ public sealed class NewProjectDialogView : StackPanel
             node => node.Children);
         tree.Styles.Add(CreateTreeItemStyle());
         ScrollViewer.SetHorizontalScrollBarVisibility(tree, ScrollBarVisibility.Auto);
+        // The bars take their own space beside the rows instead of floating over them.
+        ScrollViewer.SetAllowAutoHide(tree, false);
         Border treeBox = new Border { CornerRadius = new CornerRadius(3), Padding = new Thickness(6, 4), Child = tree };
         treeBox.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Field.Background");
         content.Children.Add(treeBox);
 
         content.Children.Add(Bound(
-            new TextBlock { Opacity = 0.7, Margin = new Thickness(0, 4, 0, 0) }, TextBlock.TextProperty, nameof(NewProjectDialogViewModel.PlanTotalText)));
+            new TextBlock { Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) }, TextBlock.TextProperty, nameof(NewProjectDialogViewModel.PlanTotalText)));
 
         return CreateSection(FilesExpanderName, NewProjectDialogText.FilesHeading, nameof(NewProjectDialogViewModel.FilesCountText), content);
     }

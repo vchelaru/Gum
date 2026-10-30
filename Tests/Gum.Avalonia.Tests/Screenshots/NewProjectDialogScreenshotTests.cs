@@ -98,6 +98,22 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void FilesWithBothScrollBars(string theme) => Capture("files-scrollbars", theme, (viewModel, window) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.Location = @"C:\Users\You\Projects\SomeVeryLongFolderName\AnotherVeryLongFolderName\YetAnotherLongFolderName\Games";
+        for (int i = 0; i < 300 && !viewModel.PlanRefresh.IsCompleted; i++)
+        {
+            Thread.Sleep(10);
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        }
+        window.Find<NewProjectDialogView.Disclosure>(d => d.Name == NewProjectDialogView.FilesExpanderName).IsExpanded = true;
+        viewModel.SetPlanExpanded(true);
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void CommandLineExpanded(string theme) => Capture("command-line", theme, (viewModel, window) =>
     {
         viewModel.IncludeCodeProject = true;

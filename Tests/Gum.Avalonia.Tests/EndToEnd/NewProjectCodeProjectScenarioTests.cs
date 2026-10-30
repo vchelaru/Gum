@@ -18,6 +18,22 @@ public class NewProjectCodeProjectScenarioTests
 {
     private static readonly TimeSpan AsyncWork = TimeSpan.FromSeconds(90);
 
+    private static void CollectFiles(NewProjectPlanNode node, string prefix, List<string> files)
+    {
+        foreach (NewProjectPlanNode child in node.Children)
+        {
+            string path = prefix.Length == 0 ? child.Name : prefix + "/" + child.Name;
+            if (child.IsFolder)
+            {
+                CollectFiles(child, path, files);
+            }
+            else
+            {
+                files.Add(path);
+            }
+        }
+    }
+
     [AvaloniaTheory]
     [InlineData("Standard", false)]
     [InlineData("Standard", true)]
@@ -28,6 +44,7 @@ public class NewProjectCodeProjectScenarioTests
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         string location = Path.Combine(tree.Project.ProjectFolder, "Out");
         Directory.CreateDirectory(location);
+        List<string> planned = new List<string>();
         tree.Dialogs.AnswerNextInWindow<NewProjectDialogViewModel>(window =>
         {
             NewProjectDialogViewModel viewModel = (NewProjectDialogViewModel)window.Window.DataContext!;
@@ -38,6 +55,13 @@ public class NewProjectCodeProjectScenarioTests
             viewModel.IsIncludeFormsControls = true;
             viewModel.IsIncludeDemoScreenGum = includeDemo;
             viewModel.ThemeSelection.SelectedTheme = theme;
+            for (int i = 0; i < 500 && !viewModel.PlanRefresh.IsCompleted; i++)
+            {
+                Thread.Sleep(20);
+                Dispatcher.UIThread.RunJobs();
+            }
+            Dispatcher.UIThread.RunJobs();
+            CollectFiles(viewModel.PlanTree.Single(), string.Empty, planned);
             viewModel.AffirmativeCommand.Execute(null);
             for (int i = 0; i < 1500 && window.Result == null; i++)
             {
@@ -60,6 +84,17 @@ public class NewProjectCodeProjectScenarioTests
         project.FullFileName!.Replace((char)92, '/').ShouldEndWith("Game/Content/GumProject/GumProject.gumj");
         File.Exists(Path.Combine(location, "Game", "Game.csproj")).ShouldBeTrue();
 
+        // The plan lists the template files; the tool adds the starting screen, its generated code and the event log.
+        string gameFolder = Path.Combine(location, "Game");
+        List<string> onDisk = Directory.GetFiles(gameFolder, "*", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(gameFolder, path).Replace((char)92, '/')).ToList();
+        List<string> plannedFiles = planned.Select(path => path.Replace((char)92, '/')).ToList();
+        plannedFiles.Count.ShouldBeGreaterThan(20);
+        plannedFiles.Except(onDisk).ShouldBeEmpty("every planned file is written");
+        onDisk.Except(plannedFiles).ShouldAllBe(
+            extra => extra.Contains("/MainScreen.") || extra.StartsWith("MainScreen.") || extra.StartsWith("EventExport/") || extra.Contains("/EventExport/"),
+            "files outside the plan are only the ones the tool adds after creating");
+
         List<string> demoScreens = project.Screens.Select(screen => screen.Name).Where(name => name.EndsWith("DemoScreenGum")).ToList();
         string[] demoFiles = Directory.GetFiles(gumFolder, "DemoScreenGum.*", SearchOption.AllDirectories);
         if (includeDemo)
@@ -72,5 +107,29 @@ public class NewProjectCodeProjectScenarioTests
             demoScreens.ShouldBeEmpty();
             demoFiles.ShouldBeEmpty();
         }
+    }
+
+    [AvaloniaFact]
+    public void GumOnly_WithAThemeThatNeedsFontRanges_StillWidensThem_EvenThoughTheDialogDoesNotListTheChange()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        string location = Path.Combine(tree.Project.ProjectFolder, "Out");
+        Directory.CreateDirectory(location);
+        string defaultRanges = new GumProjectSave().FontRanges;
+        tree.Dialogs.AnswerNext<NewProjectDialogViewModel>(dialog =>
+        {
+            dialog.ProjectName = "Themed";
+            dialog.Location = location;
+            dialog.IsIncludeFormsControls = true;
+            dialog.ThemeSelection.SelectedTheme = "Bubblegum";
+            dialog.ThemeSelection.HasRequirements.ShouldBeTrue("Bubblegum needs project changes");
+            return true;
+        });
+
+        tree.PickMainMenu("File", "New Project");
+        tree.WaitUntil(() => tree.SelectedState.SelectedScreen?.Name == NewProjectLogic.StartingScreenName, AsyncWork, "the starting screen");
+
+        GumProjectSave project = TestAppBuilder.Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
+        project.FontRanges.ShouldNotBe(defaultRanges, "the theme's characters were added to the font ranges");
     }
 }

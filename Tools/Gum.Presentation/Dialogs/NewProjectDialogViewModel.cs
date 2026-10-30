@@ -796,12 +796,10 @@ public class NewProjectDialogViewModel : DialogViewModel
         plan = WithoutUncheckedDemoScreen(plan);
         PlanTree = new[] { NewProjectPlanNode.Build(plan, NewProjectDisplayPath.AsFolder(Path.Combine(folder, name)), mainFile, openDepth: game ? 3 : 1) };
         PlanFileCount = plan.Files.Count;
-        // A code project is written entirely by the shared creators, so its count is exact. A Gum-only project is
-        // written by the tool (starting screen, theme import), so only the template is listed and no count is shown.
-        FilesCountText = game ? $"({plan.Files.Count})" : string.Empty;
-        PlanTotalText = !game
-            ? NewProjectDialogText.GumOnlyFilesNote
-            : plan.Files.Count == 1 ? "1 file" : $"{plan.Files.Count} files";
+        // The plan is the template the shared creators write. The tool adds more after creating (the starting screen,
+        // its generated code, the event log), so no total is shown: a count that is too low is worse than none.
+        FilesCountText = string.Empty;
+        PlanTotalText = NewProjectDialogText.TemplateFilesNote;
     }
 
     #endregion

@@ -21,10 +21,11 @@ public sealed class ThemeSelectionView : StackPanel
     private const double PreviewGap = 20;
 
     /// <summary>Builds the view; set its DataContext to a <see cref="ThemeSelectionViewModel"/>.</summary>
+    /// <param name="showRequirements">False leaves out the list of project changes the import will make: it describes an existing project, so New Project hides it (the import still applies them).</param>
     /// <param name="previewBeside">Puts the preview image to the right of a narrow theme column, wrapping below it when there is no room (New Project).</param>
     /// <param name="labelContent">Replaces the "Theme" text label, such as with a label that carries a tip.</param>
     /// <param name="labelAbove">Puts the "Theme" label above a full-width drop-down instead of beside it (New Project).</param>
-    public ThemeSelectionView(bool labelAbove = false, Control? labelContent = null, bool previewBeside = false)
+    public ThemeSelectionView(bool labelAbove = false, Control? labelContent = null, bool previewBeside = false, bool showRequirements = true)
     {
         Orientation = Orientation.Vertical;
 
@@ -117,6 +118,9 @@ public sealed class ThemeSelectionView : StackPanel
             Child = requirementsText,
         };
         requirementsPanel.Bind(IsVisibleProperty, new Binding(nameof(ThemeSelectionViewModel.HasRequirements)));
-        Children.Add(requirementsPanel);
+        if (showRequirements)
+        {
+            Children.Add(requirementsPanel);
+        }
     }
 }
