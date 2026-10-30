@@ -16,7 +16,7 @@ The following BBCode variables require font generation:
 * OutlineThickness
 * HasDropshadow
 
-The Gum tool generates fonts automatically into the FontCache folder. For code-only projects, the recommended approach is to use [dynamic font generation via KernSmith](fonts.md#dynamic-font-generation-recommended), which handles font creation at runtime with no extra setup. Without the Gum tool or KernSmith, you must provide pre-built `.fnt` files for each font combination your BBCode text uses.
+The Gum tool generates these fonts into the FontCache folder when it displays the text. `gumcli fonts` generates the ones used by BBCode tags in the Text values of your project's elements, so a fresh checkout or CI build has them without opening the tool. BBCode text set from code is not in the project, so bake those fonts with the `--font` options of [gumcli fonts](../../../cli/fonts.md). For code-only projects, the recommended approach is to use [dynamic font generation via KernSmith](fonts.md#dynamic-font-generation-recommended), which handles font creation at runtime with no extra setup. Without the Gum tool or KernSmith, you must provide pre-built `.fnt` files for each font combination your BBCode text uses.
 
 The following variables work without any font setup:
 
