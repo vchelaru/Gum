@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -31,6 +32,7 @@ public class NewProjectLogicTests
     private readonly Mock<ICopyPasteProjectCommands> _projectCommands = new();
     private readonly Mock<ISelectedState> _selectedState = new();
     private readonly Mock<IDefaultFontBundler> _defaultFontBundler = new();
+    private readonly Mock<IDeleteLogic> _deleteLogic = new();
     private readonly NewProjectLogic _logic;
 
     public NewProjectLogicTests()
@@ -50,7 +52,8 @@ public class NewProjectLogicTests
             _themeImporter.Object,
             _projectCommands.Object,
             _selectedState.Object,
-            _defaultFontBundler.Object);
+            _defaultFontBundler.Object,
+            _deleteLogic.Object);
     }
 
     private Action<NewProjectDialogViewModel>? _dialogInitializer;
@@ -79,21 +82,28 @@ public class NewProjectLogicTests
             themeSelection.SelectedTheme = selectedTheme;
         }
 
-        NewProjectDialogViewModel viewModel = new(themeSelection)
-        {
-            IsIncludeFormsControls = isIncludeFormsControls,
-            IsIncludeDemoScreenGum = isIncludeDemoScreenGum,
-        };
+        NewProjectDialogViewModel viewModel = CreateViewModel(themeSelection);
+        viewModel.IsIncludeFormsControls = isIncludeFormsControls;
+        viewModel.IsIncludeDemoScreenGum = isIncludeDemoScreenGum;
         _dialogService
             .Setup(x => x.Show(It.Is<Action<NewProjectDialogViewModel>?>(i => CaptureInitializer(i)), out viewModel))
             .Returns(accepted);
     }
 
-    private const string ChosenLocation = "C:/nonexistent-project/Chosen.gumx";
+    private static readonly string ChosenFolder = Path.Combine(Path.GetTempPath(), "GumNewProjectLogicTests");
 
-    private void SetUpSaveLocationPrompt(bool accepted)
+    // Where the dialog's name, location and format put the project.
+    private static readonly string ChosenLocation = Path.Combine(ChosenFolder, "Chosen", "Chosen.gumj");
+
+    private NewProjectDialogViewModel CreateViewModel(ThemeSelectionViewModel themeSelection)
     {
-        _projectManager.Setup(x => x.AskUserForNewProjectLocation()).Returns(accepted ? ChosenLocation : null);
+        Mock<INewProjectService> service = new();
+        Mock<IExistingCodeProjectDetector> detector = new();
+        return new NewProjectDialogViewModel(themeSelection, service.Object, detector.Object, _dialogService.Object)
+        {
+            ProjectName = "Chosen",
+            Location = ChosenFolder,
+        };
     }
 
     [Fact]
@@ -104,18 +114,6 @@ public class NewProjectLogicTests
         await _logic.CreateNewProjectAsync();
 
         // Cancelling New Project must not unload the project that was open (#5968).
-        _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
-        _selectedState.VerifySet(x => x.SelectedElement = null, Times.Never);
-    }
-
-    [Fact]
-    public async Task CreateNewProjectAsync_KeepsTheOpenProject_WhenTheSaveLocationPromptIsCancelled()
-    {
-        SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: false);
-
-        await _logic.CreateNewProjectAsync();
-
         _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
         _selectedState.VerifySet(x => x.SelectedElement = null, Times.Never);
     }
@@ -133,18 +131,6 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public async Task CreateNewProjectAsync_CreatesABlankProject_WhenSaveLocationCancelledAndNoProjectIsLoaded()
-    {
-        _projectManager.Setup(x => x.GumProjectSave).Returns((GumProjectSave?)null);
-        SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: false);
-
-        await _logic.CreateNewProjectAsync();
-
-        _projectManager.Verify(x => x.CreateNewProject(), Times.Once);
-    }
-
-    [Fact]
     public async Task CreateNewProjectAsync_ShowsTheDialogAgainstABlankProject_NotTheOpenOne()
     {
         GumProjectSave blankProject = new GumProjectSave();
@@ -153,31 +139,28 @@ public class NewProjectLogicTests
 
         await _logic.CreateNewProjectAsync();
 
-        NewProjectDialogViewModel viewModel = new(CreateThemeSelection());
+        NewProjectDialogViewModel viewModel = CreateViewModel(CreateThemeSelection());
         _dialogInitializer.ShouldNotBeNull();
         _dialogInitializer!(viewModel);
         viewModel.ThemeSelection.TargetProject.ShouldBeSameAs(blankProject);
     }
 
     [Fact]
-    public async Task CreateNewProjectAsync_ReplacesTheProjectOnlyAfterBothPromptsAreAccepted()
+    public async Task CreateNewProjectAsync_ReplacesTheProjectOnlyAfterTheDialogIsAccepted()
     {
         List<string> calls = new();
         ThemeSelectionViewModel themeSelection = CreateThemeSelection();
-        NewProjectDialogViewModel viewModel = new(themeSelection);
+        NewProjectDialogViewModel viewModel = CreateViewModel(themeSelection);
         _dialogService
             .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
             .Returns(true)
             .Callback(() => calls.Add("dialog"));
-        _projectManager.Setup(x => x.AskUserForNewProjectLocation())
-            .Returns(ChosenLocation)
-            .Callback(() => calls.Add("location"));
         _projectManager.Setup(x => x.CreateNewProject()).Callback(() => calls.Add("create"));
         _projectManager.Setup(x => x.SetProjectLocation(ChosenLocation)).Callback(() => calls.Add("setLocation"));
 
         await _logic.CreateNewProjectAsync();
 
-        calls.ShouldBe(new[] { "dialog", "location", "create", "setLocation" });
+        calls.ShouldBe(new[] { "dialog", "create", "setLocation" });
     }
 
     [Fact]
@@ -185,7 +168,7 @@ public class NewProjectLogicTests
     {
         List<string> calls = new();
         _projectManager.Setup(x => x.CreateNewProject()).Callback(() => calls.Add("create"));
-        NewProjectDialogViewModel viewModel = new(CreateThemeSelection());
+        NewProjectDialogViewModel viewModel = CreateViewModel(CreateThemeSelection());
         _dialogService
             .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
             .Returns(false)
@@ -211,10 +194,9 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public async Task CloseProjectAsync_CreatesTheStarterProject_WhenBothPromptsAreAccepted()
+    public async Task CloseProjectAsync_CreatesTheStarterProject_WhenTheDialogIsAccepted()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CloseProjectAsync();
 
@@ -223,22 +205,9 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public async Task CloseProjectAsync_ImportsNothing_WhenTheSaveLocationPromptIsCancelled()
-    {
-        SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: false);
-
-        await _logic.CloseProjectAsync();
-
-        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
-        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
-    }
-
-    [Fact]
     public async Task CreateNewProjectAsync_ClearsTheSelection_OnlyOnceTheNewProjectReplacesTheOpenOne()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -262,18 +231,6 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public async Task CreateNewProjectAsync_ImportsNothing_WhenTheSaveLocationPromptIsCancelled()
-    {
-        SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: false);
-
-        await _logic.CreateNewProjectAsync();
-
-        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
-        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
-    }
-
-    [Fact]
     public async Task CreateNewProjectAsync_ForcesContainedElementsOnTheFirstSave()
     {
         // SetProjectLocation, called just above this save, already set FullFileName --
@@ -281,7 +238,6 @@ public class NewProjectLogicTests
         // though it is genuinely the project's first save, silently skipping every Standard's .gutx
         // file. forceSaveContainedElements: true bypasses that and must not regress to the default.
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -292,7 +248,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_ImportsTheDefaultThemeAndAddsAStartingScreen()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -306,7 +261,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_ImportsTheThemePickedInTheDialog_WhenItDiffersFromTheDefault()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true, selectedTheme: "Bubblegum");
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -317,7 +271,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_ImportsTheDemoScreenGum_WhenCheckedInTheDialog()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true, isIncludeDemoScreenGum: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -328,7 +281,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_StillAddsAStartingScreen_WhenFormsAreDeclined()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: false);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -340,7 +292,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_SelectsTheStartingScreen()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -353,7 +304,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_ImportsNothing_WhenTheInitialSaveFails()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
 
         await _logic.CreateNewProjectAsync();
@@ -369,7 +319,6 @@ public class NewProjectLogicTests
         // instead of a system font name (#4674), so every new project needs it on disk -- even
         // when Forms controls (which bring their own theme fonts) are declined.
         SetUpDialog(accepted: true, isIncludeFormsControls: false);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -380,7 +329,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_DoesNotBundleTheDefaultFont_WhenTheInitialSaveFails()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
 
         await _logic.CreateNewProjectAsync();
