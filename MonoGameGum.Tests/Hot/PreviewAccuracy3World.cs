@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using GumPreview;
 using ToolsUtilities;
 
 namespace MonoGameGum.Tests.Hot;
@@ -78,11 +79,13 @@ internal sealed class PreviewAccuracy3World : IDisposable
             path => LoaderManager.Self.Dispose(path),
             () => Now);
         Manager.ReloadFinished += Results.Add;
-        // Preview re-applies the selected state when a reload completes (Game1: HotReloadCompleted += ApplySelectedState).
-        Manager.ReloadCompleted += () => ApplySelectedState(Screen);
+        // Preview's policy decides, from each finished reload, whether the shown element is rebuilt (Game1.HandleHotReloadFinished).
+        Manager.ReloadFinished += result => _policy.OnReloadFinished(result, isStateSelected: Selection != null && PreviewReloadPolicy.IsStateSelected(Selection));
         Manager.Start(Gumx);
         Manager.Stop();
     }
+
+    private readonly PreviewReloadPolicy _policy = new PreviewReloadPolicy();
 
     private void ApplySelectedState(GraphicalUiElement root)
     {
@@ -142,8 +145,22 @@ internal sealed class PreviewAccuracy3World : IDisposable
         int before = Results.Count;
         Now = Now.AddMilliseconds(300);
         Manager.Update(new[] { Screen });
+        RebuildIfAsked();
         HotReloadResult? result = Results.Count > before ? Results[Results.Count - 1] : null;
         return Verdict(result);
+    }
+
+    // Game1 rebuilds at the start of the next frame, before anything is drawn; running it here gives the same tree.
+    private void RebuildIfAsked()
+    {
+        if (!_policy.TryTakePendingReload())
+        {
+            return;
+        }
+        GumService.Default.Root.Children.Clear();
+        Screen = ObjectFinder.Self.GetElementSave(ShownElement)!.ToGraphicalUiElement();
+        Screen.AddToRoot();
+        ApplySelectedState(Screen);
     }
 
     /// <summary>Whether both trees are laid out before they are dumped: a game lays its screen out in its first frame.</summary>

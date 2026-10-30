@@ -110,8 +110,6 @@ public class Game1 : Game
         // Preview rebuilds after such a reload, so "the old UI stays on screen" would be wrong.
         GumHotReloadManager.PrintsShownElementGone = false;
         GumService.Default.EnableHotReload(_gumxPath);
-        // A reload re-applies the default state over the whole tree, undoing the selected state.
-        GumService.Default.HotReloadCompleted += ApplySelectedState;
         GumService.Default.HotReloadFinished += HandleHotReloadFinished;
 
         ApplyCanvasSizeIfChanged();
@@ -432,7 +430,7 @@ public class Game1 : Game
     {
         try
         {
-            _reloadPolicy.OnReloadFinished(result, _isElementMissing);
+            _reloadPolicy.OnReloadFinished(result, PreviewReloadPolicy.IsStateSelected(_selection), _isElementMissing);
             _isCanvasCheckPending = true;
         }
         catch (Exception exception)
@@ -440,8 +438,6 @@ public class Game1 : Game
             Console.Error.WriteLine($"GumPreview: could not handle a reload result: {exception.Message}");
         }
     }
-
-    private void ApplySelectedState() => PreviewElementPresenter.ApplySelectedState(_selection);
 
     private void UpdateWindowTitle(bool missingElement = false) =>
         Window.Title = PreviewWindowTitle.For(_selection.ElementName, missingElement);
