@@ -23,8 +23,6 @@ namespace GumPreview;
 public class Game1 : Game
 {
     private const double SelectionPollIntervalSeconds = 0.25;
-    private const int FallbackCanvasWidth = 800;
-    private const int FallbackCanvasHeight = 600;
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly string _gumxPath;
@@ -36,6 +34,7 @@ public class Game1 : Game
     private readonly string? _typedText;
 
     private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
+    private readonly PreviewCanvasSize _canvasSize = new PreviewCanvasSize();
     private PreviewSelectionMessage _selection;
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
@@ -112,7 +111,7 @@ public class Game1 : Game
         GumService.Default.EnableHotReload(_gumxPath);
         GumService.Default.HotReloadFinished += HandleHotReloadFinished;
 
-        ApplyCanvasSizeFromProject();
+        ApplyCanvasSizeIfChanged(isWindowShown: false);
 
         // The tool writes the full selection (state, orderer) before launching; --element alone is
         // the fallback for a launch with no selection file.
@@ -155,6 +154,7 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         UpdateBackingScale();
+        ApplyCanvasSizeIfChanged(isWindowShown: true);
         RebuildAfterReloadIfNeeded();
         GumService.Default.Update(gameTime);
         PollSelectionFile(gameTime);
@@ -319,18 +319,37 @@ public class Game1 : Game
 
     private void ActivateWindow() => SdlLibrary.TryRaiseWindow(Window.Handle);
 
-    private void ApplyCanvasSizeFromProject()
+    // The project's canvas size drives the window and the canvas at launch and again whenever the
+    // saved size changes. An unchanged size is left alone, so a window the user resized is kept until
+    // the saved size changes (#7167). Checked every frame: a reload swaps the project the finder holds,
+    // and the check is two integer compares.
+    private void ApplyCanvasSizeIfChanged(bool isWindowShown)
     {
-        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
-        int width = project != null && project.DefaultCanvasWidth > 0 ? project.DefaultCanvasWidth : FallbackCanvasWidth;
-        int height = project != null && project.DefaultCanvasHeight > 0 ? project.DefaultCanvasHeight : FallbackCanvasHeight;
+        if (!_canvasSize.TryTakeChange(ObjectFinder.Self.GumProjectSave, out int width, out int height))
+        {
+            return;
+        }
 
-        _graphics.PreferredBackBufferWidth = width;
-        _graphics.PreferredBackBufferHeight = height;
-        _graphics.ApplyChanges();
-
-        GraphicalUiElement.CanvasWidth = width;
-        GraphicalUiElement.CanvasHeight = height;
+        if (isWindowShown && _isRetinaBackingEnabled)
+        {
+            // A showing Retina window is sized in points, like a user resize or a change of display
+            // scale, and HandleClientSizeChanged then sets the back buffer. Asking MonoGame for the
+            // pixels as points would size it twice too large for a frame, and only the height of a
+            // showing window is held to the display, where a launching one is held on both axes.
+            if (SdlLibrary.TryGetUsableClientSize(Window.Handle, out int maxPointWidth, out int maxPointHeight))
+            {
+                (width, height) = PreviewCanvasSize.FitToDisplay(width, height, _backingScale.Factor, maxPointWidth, maxPointHeight);
+            }
+            (int pointWidth, int pointHeight) = _backingScale.ToPoints(width, height);
+            MacRetinaBacking.SetWindowSize(Window.Handle, pointWidth, pointHeight);
+        }
+        else
+        {
+            _graphics.PreferredBackBufferWidth = width;
+            _graphics.PreferredBackBufferHeight = height;
+            _graphics.ApplyChanges();
+        }
+        PreviewCanvasSize.ApplyToCanvas(GumService.Default.Root, width, height);
     }
 
     // Runs every frame: the window can move to a display with a different scale (a Retina laptop
@@ -374,8 +393,7 @@ public class Game1 : Game
             GraphicsDevice.PresentationParameters.BackBufferHeight = height;
             GraphicsDevice.Viewport = new Viewport(0, 0, width, height);
         }
-        GraphicalUiElement.CanvasWidth = GraphicsDevice.Viewport.Width;
-        GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
+        PreviewCanvasSize.ApplyToCanvas(GumService.Default.Root, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
     }
 
     private void ShowElement()

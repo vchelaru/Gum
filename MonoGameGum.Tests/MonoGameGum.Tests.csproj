@@ -50,6 +50,7 @@
 		<!-- GumPreview is an executable, so its Forms interaction logic is linked rather than referenced. -->
 		<Compile Include="..\Tool\GumPreview\PreviewInteraction.cs" Link="GumPreview\PreviewInteraction.cs" />
 		<Compile Include="..\Tool\GumPreview\PreviewReloadPolicy.cs" Link="GumPreview\PreviewReloadPolicy.cs" />
+		<Compile Include="..\Tool\GumPreview\PreviewCanvasSize.cs" Link="GumPreview\PreviewCanvasSize.cs" />
 		<Compile Include="..\Tool\GumPreview\PreviewElementPresenter.cs" Link="GumPreview\PreviewElementPresenter.cs" />
 		<Compile Include="..\Tool\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="GumPreview\PreviewSelectionMessage.cs" />
 	</ItemGroup>
