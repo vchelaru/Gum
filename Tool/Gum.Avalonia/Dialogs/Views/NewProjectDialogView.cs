@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Automation;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Input;
@@ -41,6 +42,8 @@ public sealed class NewProjectDialogView : StackPanel
     /// <summary>How long the copy icon shows its check after a copy; tests lengthen it to capture the state.</summary>
     public static TimeSpan CopiedCheckDuration { get; set; } = TimeSpan.FromMilliseconds(1200);
 
+    private const double BaseWidth = 440;
+    private const double MaxWidthFitsWindow = 850;
     private const double CheckBoxTextWidth = 340;
     private const string FontSizeKey = "ControlContentThemeFontSize";
     private const string MonospaceFonts = "Cascadia Mono, Consolas, Menlo, monospace";
@@ -51,7 +54,8 @@ public sealed class NewProjectDialogView : StackPanel
     /// <summary>Builds the view.</summary>
     public NewProjectDialogView()
     {
-        Width = 440;
+        // 440 at the default size, and wider as the tool zooms in, so the two-column rows keep the room their text needs.
+        this.Bind(WidthProperty, this.GetResourceObservable(FontSizeKey, value => (object)Math.Min(MaxWidthFitsWindow, Math.Max(BaseWidth, BaseWidth * ((value is double size ? size : 12d) / 12d)))));
         Spacing = 0;
         DialogWindow.SetDialogTitle(this, "New Project");
 
@@ -134,11 +138,11 @@ public sealed class NewProjectDialogView : StackPanel
 
     private Control CreateNameAndFormat()
     {
-        Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,190"), ColumnSpacing = 8 };
+        Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
 
         StackPanel name = new StackPanel();
         name.Children.Add(FieldLabel(NewProjectDialogText.ProjectName, NewProjectDialogText.ProjectNameTip));
-        TextBox nameBox = new TextBox();
+        TextBox nameBox = new TextBox { MinWidth = 90 };
         nameBox.Bind(TextBox.TextProperty, new Binding(nameof(NewProjectDialogViewModel.ProjectName)) { Mode = BindingMode.TwoWay });
         name.Children.Add(nameBox);
         grid.Children.Add(name);
@@ -147,7 +151,7 @@ public sealed class NewProjectDialogView : StackPanel
         StackPanel format = new StackPanel();
         Grid.SetColumn(format, 1);
         format.Children.Add(FieldLabel(NewProjectDialogText.FileFormat, NewProjectDialogText.FileFormatTip, alignRight: true));
-        ComboBox formats = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+        ComboBox formats = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, MinWidth = 190 };
         formats.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(NewProjectDialogViewModel.FileFormats)));
         formats.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(NewProjectDialogViewModel.SelectedFileFormat)) { Mode = BindingMode.TwoWay });
         format.Children.Add(formats);
@@ -164,6 +168,10 @@ public sealed class NewProjectDialogView : StackPanel
         location.Bind(TextBox.TextProperty, new Binding(nameof(NewProjectDialogViewModel.Location)) { Mode = BindingMode.TwoWay });
         row.Children.Add(location);
         Button browse = CommandButton("Browse…", nameof(NewProjectDialogViewModel.BrowseCommand));
+        browse.VerticalAlignment = VerticalAlignment.Stretch;
+        browse.VerticalContentAlignment = VerticalAlignment.Center;
+        browse.Padding = new Thickness(12, 0);
+        AutomationProperties.SetName(browse, "Browse for a folder");
         Grid.SetColumn(browse, 1);
         row.Children.Add(browse);
         panel.Children.Add(row);
@@ -176,7 +184,7 @@ public sealed class NewProjectDialogView : StackPanel
         StackPanel heading = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         heading.Children.Add(new TextBlock { Text = NewProjectDialogText.WarningHeading, FontWeight = FontWeight.SemiBold });
 
-        FluentIcon info = CreateInfoIcon(tipBinding: new Binding(nameof(NewProjectDialogViewModel.ExistingCodeProjectTip)));
+        FluentIcon info = CreateInfoIcon(tipBinding: new Binding(nameof(NewProjectDialogViewModel.ExistingCodeProjectTip)), subject: "the existing code project warning");
         info.Name = WarningInfoName;
         heading.Children.Add(info);
         text.Children.Add(heading);
@@ -333,6 +341,7 @@ public sealed class NewProjectDialogView : StackPanel
         };
         copy.Bind(Button.CommandProperty, new Binding(nameof(NewProjectDialogViewModel.CopyCommandLineCommand)));
         ToolTip.SetTip(copy, "Copy");
+        AutomationProperties.SetName(copy, "Copy command line");
         box.Children.Add(copy);
         content.Children.Add(box);
 
@@ -358,7 +367,7 @@ public sealed class NewProjectDialogView : StackPanel
             header.Children.Add(Bound(new TextBlock { Opacity = 0.7 }, TextBlock.TextProperty, countPath));
         }
 
-        Disclosure disclosure = new Disclosure(header, content) { Name = name };
+        Disclosure disclosure = new Disclosure(header, content, title) { Name = name };
         StackPanel section = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
         section.Children.Add(Divider(new Thickness(0, 0, 0, 6)));
         section.Children.Add(disclosure);
@@ -373,7 +382,7 @@ public sealed class NewProjectDialogView : StackPanel
         private bool _isExpanded;
 
         /// <summary>Builds the disclosure, collapsed.</summary>
-        public Disclosure(Control header, Control content)
+        public Disclosure(Control header, Control content, string automationName)
         {
             _content = content;
             _content.IsVisible = false;
@@ -397,6 +406,7 @@ public sealed class NewProjectDialogView : StackPanel
                 }
             };
             row.Cursor = new Cursor(StandardCursorType.Hand);
+            AutomationProperties.SetName(row, automationName);
             Children.Add(row);
             Children.Add(content);
         }
@@ -493,13 +503,14 @@ public sealed class NewProjectDialogView : StackPanel
     {
         StackPanel label = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         label.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap, MaxWidth = maxTextWidth });
-        label.Children.Add(CreateInfoIcon(tip, alignRight));
+        label.Children.Add(CreateInfoIcon(tip, alignRight, subject: text));
         return label;
     }
 
-    private static FluentIcon CreateInfoIcon(string? tip = null, bool alignRight = false, Binding? tipBinding = null)
+    private static FluentIcon CreateInfoIcon(string? tip = null, bool alignRight = false, Binding? tipBinding = null, string subject = "")
     {
         FluentIcon info = CreateIcon(Icon.Info, 1.1);
+        AutomationProperties.SetName(info, "About " + subject);
         info.Cursor = new Cursor(StandardCursorType.Help);
         info.Focusable = true;
         info.Opacity = 0.7;

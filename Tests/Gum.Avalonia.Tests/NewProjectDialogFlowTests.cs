@@ -1,3 +1,4 @@
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Shouldly;
 using Avalonia.Controls;
@@ -91,6 +92,82 @@ public class NewProjectDialogFlowTests
         string? copied = window.Window.Clipboard!.TryGetTextAsync().GetAwaiter().GetResult();
         copied.ShouldBe(viewModel.CommandLine);
         copied.ShouldStartWith("gumcli new \"");
+    }
+
+    [AvaloniaFact]
+    public void Tab_VisitsTheControlsInReadingOrder()
+    {
+        using ScreenshotWindow window = Open(out NewProjectDialogViewModel viewModel);
+        viewModel.IsIncludeDemoScreenGum = true;
+        TextBox name = window.Find<TextBox>(box => box.Text == "MyGame");
+        name.Focus();
+        ScreenshotWindow.Pump(window.Window);
+
+        List<string> visited = new List<string>();
+        for (int i = 0; i < 40; i++)
+        {
+            global::Avalonia.Input.IInputElement? focused = window.Window.FocusManager!.GetFocusedElement();
+            string? description = Describe(focused);
+            if (description != null)
+            {
+                visited.Add(description);
+            }
+            if (description == "Cancel")
+            {
+                break;
+            }
+            window.Window.KeyPress(global::Avalonia.Input.Key.Tab, global::Avalonia.Input.RawInputModifiers.None, global::Avalonia.Input.PhysicalKey.Tab, null);
+            window.Window.KeyRelease(global::Avalonia.Input.Key.Tab, global::Avalonia.Input.RawInputModifiers.None, global::Avalonia.Input.PhysicalKey.Tab, null);
+            ScreenshotWindow.Pump(window.Window);
+        }
+
+        visited.ShouldBe(new[]
+        {
+            "Project name", "File format", "Location", "Browse for a folder", "Include Forms controls (recommended)", "Theme",
+            "Include demo screen", "Create C# project", "Platform", "Use local Gum source", "Restore NuGet packages",
+            "Files", "Command line", "OK", "Cancel",
+        });
+    }
+
+    // What a focused control is called, or null for one the reading order leaves out (the info icons, scroll parts).
+    private static string? Describe(global::Avalonia.Input.IInputElement? focused)
+    {
+        string? automationName = focused is Control control ? global::Avalonia.Automation.AutomationProperties.GetName(control) : null;
+        return focused switch
+        {
+            FluentIcons.Avalonia.FluentIcon => null,
+            TextBox { Text: "MyGame" } => "Project name",
+            TextBox => "Location",
+            ComboBox combo when combo.ItemsSource is IEnumerable<string> formats && formats.Contains(NewProjectDialogViewModel.JsonFormat) => "File format",
+            ComboBox combo when combo.ItemsSource is IEnumerable<NewProjectPlatformOption> => "Platform",
+            ComboBox => "Theme",
+            CheckBox { Content: StackPanel label } => label.GetVisualDescendants().OfType<TextBlock>().First().Text,
+            CheckBox { Content: string text } => text,
+            Button { Name: DialogWindow.AffirmativeButtonName } => "OK",
+            Button { Name: DialogWindow.NegativeButtonName } => "Cancel",
+            Control when !string.IsNullOrEmpty(automationName) => automationName,
+            Button { Content: string text } => text,
+            _ => null,
+        };
+    }
+
+    [AvaloniaFact]
+    public void InfoIconsCopyButtonAndBrowseHaveAccessibleNames()
+    {
+        using ScreenshotWindow window = Open(out _);
+
+        List<string> names = window.FindAll<FluentIcons.Avalonia.FluentIcon>()
+            .Select(icon => global::Avalonia.Automation.AutomationProperties.GetName(icon))
+            .Where(name => name != null && name.StartsWith("About ")).ToList();
+
+        names.ShouldBe(new[]
+        {
+            "About Project name", "About File format", "About Location", "About the existing code project warning",
+            "About Include Forms controls (recommended)", "About Theme", "About Include demo screen", "About Create C# project",
+            "About Platform",
+        }, ignoreOrder: true);
+        global::Avalonia.Automation.AutomationProperties.GetName(ButtonNamed(window, "PART_CopyCommandLine")).ShouldBe("Copy command line");
+        global::Avalonia.Automation.AutomationProperties.GetName(window.Find<Button>(button => button.Content as string == "Browse…")).ShouldBe("Browse for a folder");
     }
 
     [AvaloniaFact]
