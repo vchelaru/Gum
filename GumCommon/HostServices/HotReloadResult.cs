@@ -58,7 +58,13 @@ public enum HotReloadIssueKind
     /// A screen or component derives from an element that is not in the project. Visuals already on
     /// screen keep what they inherited from it until a restart.
     /// </summary>
-    BaseElementMissing
+    BaseElementMissing,
+
+    /// <summary>
+    /// A font source file (.ttf or .otf) changed. Fonts already generated from it, and the Text using
+    /// them, keep the old glyphs until a restart.
+    /// </summary>
+    FontSourceChanged
 }
 
 /// <summary>One thing a reload reported, with the same text that is written to the console.</summary>

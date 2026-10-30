@@ -46,7 +46,7 @@ Localization files are reloaded too. Hot reload reacts to the files in the proje
 
 Animation chain files (`.achx`, `.achj`) are reloaded when a Sprite or NineSlice uses one as its `SourceFile`: Gum drops the cached chains, reads the file again and assigns it to every visual using it, except those whose chains your code replaced. A chain file no visual uses is ignored. The playing chain is found again by name, so reordering chains is fine. If the chain was renamed or deleted, the visual keeps its last frame and Gum reports a `ReloadFailed` issue (`MatchesRestart` is `false`), since a restart would show nothing. Chains your code assigned to the visual's `AnimationChains` after the file was assigned are left alone.
 
-When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files from the source project's `FontCache/` directory to the bin-side `FontCache/` directory, and evicts cached fonts so they are reloaded from disk.
+When a reload is triggered, Gum automatically copies each changed `.fnt` and the texture pages it names from the source project to the same place in the bin-side folder (`FontCache/` for generated fonts, any folder for a `CustomFontFile`), and evicts cached fonts so they are reloaded from disk. Every `Text` then resolves its font again, so a font regenerated under the same name, or one that is written after the project was saved, shows on `Text` that is already on screen.
 
 ### Renamed or Deleted Screens and Components
 
@@ -174,6 +174,7 @@ Every reload's result lists every issue that reload had, including one an earlie
 | --------------------- | --------------------------------------------------------------------------------------------------- | ---------------- |
 | `MissingFile`         | The project lists a file that is not on disk. The reload went on without it.                        | `false`          |
 | `FontFailure`         | A changed font file could not be copied. It is tried again on the next reload.                      | `false`          |
+| `FontSourceChanged`   | A font source file (`.ttf` or `.otf`) changed. Fonts already generated from it keep the old glyphs until a restart. | `false`          |
 | `ReloadFailed`        | The project or a changed localization file could not be read, applying it threw, or a changed file cannot be applied while the game runs (a replaced image). The UI is unchanged or partly updated. | `false`          |
 | `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
 | `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |

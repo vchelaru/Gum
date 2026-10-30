@@ -104,14 +104,33 @@ public class GumHotReloadManager : IGumHotReloadManager
     // whose definition has since changed. The diff re-points a visual at the new element, so without
     // this the next reload would see no change and stop listing a tree that is still stale.
     private readonly ReloadMemory _memory = new ReloadMemory();
+    private static readonly bool _isFileSystemCaseInsensitive =
+        System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
+        || System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+    // Most font files one reload copies; the rest wait for the next reload.
+    private const int MaxFontsPerReload = 500;
+    // Reloads in a row that only font files asked for, before the manager stops believing they are
+    // changes. A copy that raises events for the files it reads would otherwise reload forever.
+    private const int MaxFontOnlyReloads = 5;
+    private readonly HashSet<string> _changedFontFiles;
     // Changed images the running game still shows the old copy of, keyed by standardized path. Listed in
     // every later result until the manager is replaced; game thread only.
     private readonly Dictionary<string, HotReloadIssue> _staleImages = new Dictionary<string, HotReloadIssue>();
     // Consecutive tries at the files beside the project that could not be read (one the editor still had
     // open); reset by any new file change; guarded by _pendingReloadLock.
     private int _failedFileAttempts;
-    private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
+    // Failed copies of a font since it last changed: the first is reported and retried, the second is dropped.
+    private readonly Dictionary<string, int> _fontCopyFailures;
+    // Set by the watcher thread (under _fontFileLock) when a file other than a font changed, so a reload
+    // with no such change and a font queue is known to have been asked for by fonts alone.
+    private bool _projectFileChangedSinceReload;
+    private bool _fontQueueContinues;
+    private int _fontOnlyReloads;
+    private bool _fontEventsIgnored;
+    private HotReloadIssue? _loopIssue;
+    // Font source files that changed and are waiting to be reported with the next result; game thread only.
+    private readonly List<HotReloadIssue> _sourceFontIssues = new List<HotReloadIssue>();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
     // visuals reference once the debounce passes; guarded by _pendingReloadLock.
     private readonly HashSet<string> _changedOtherFiles = new HashSet<string>();
@@ -154,6 +173,9 @@ public class GumHotReloadManager : IGumHotReloadManager
         _loadAnimationsFromProvider = loadAnimationsFromProvider;
         _disposeCachedAsset = disposeCachedAsset;
         _utcNow = utcNow;
+        StringComparer comparer = _isFileSystemCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        _changedFontFiles = new HashSet<string>(comparer);
+        _fontCopyFailures = new Dictionary<string, int>(comparer);
     }
 
     /// <summary>
@@ -231,6 +253,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         if (otherFiles.Count > 0)
         {
             ReassignShaderFiles(rootList, otherFiles);
+            ReportChangedFontSources(otherFiles);
         }
         if (reload)
         {
@@ -240,22 +263,74 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             PerformFileReload(rootList, otherFiles);
         }
+        else if (_sourceFontIssues.Count > 0)
+        {
+            List<HotReloadIssue> issues = new List<HotReloadIssue>();
+            AddSourceFontIssues(issues);
+            RaiseIsolated(ReloadFinished, new HotReloadResult(issues), nameof(ReloadFinished));
+        }
     }
 
     private void HandleFileChange(object sender, FileSystemEventArgs e) => NotifyFileChanged(e.FullPath);
 
     // Called from the watcher's thread-pool thread; internal so tests can drive it without a
     // FileSystemWatcher.
-    internal void NotifyFileChanged(string fullPath)
+    internal void NotifyFileChanged(string fullPath) => NotifyFileChanged(fullPath, pageChanged: false);
+
+    // pageChanged: the font was queued because a page it names changed, so its own copy being current says nothing.
+    private void NotifyFileChanged(string fullPath, bool pageChanged)
     {
+        // The game's own build folder under the project folder holds copies; a change there is not an edit.
+        if (IsInsideNestedLoadFolder(fullPath))
+        {
+            return;
+        }
+
         string extension = Path.GetExtension(fullPath).ToLowerInvariant();
+        if (extension == ".png" && !IsCopyCurrent(fullPath))
+        {
+            // A font's page can be written after its .fnt; the font is loaded again to pick it up.
+            foreach (string fontFile in FontsThatNamePage(fullPath))
+            {
+                NotifyFileChanged(fontFile, pageChanged: true);
+            }
+        }
+
         if (IsWatchedExtension(extension))
         {
             if (extension == ".fnt")
             {
+                // macOS reports a copy as a change of the file it read, so a font the load folder
+                // already holds in this version is the manager's own copy, not an edit.
+                if (!pageChanged && IsCopyCurrent(fullPath))
+                {
+                    return;
+                }
+
+                // An editor saves through a hidden temp file (".!123!Font.fnt") and renames it.
+                string name = Path.GetFileName(fullPath);
+                if (name.StartsWith(".", StringComparison.Ordinal) || name.StartsWith("~", StringComparison.Ordinal))
+                {
+                    return;
+                }
+
                 lock (_fontFileLock)
                 {
+                    if (_fontEventsIgnored)
+                    {
+                        return;
+                    }
+
                     _changedFontFiles.Add(fullPath);
+                    _fontCopyFailures.Remove(fullPath);
+                }
+            }
+            else
+            {
+                lock (_fontFileLock)
+                {
+                    _projectFileChangedSinceReload = true;
+                    _fontEventsIgnored = false;
                 }
             }
 
@@ -278,6 +353,31 @@ public class GumHotReloadManager : IGumHotReloadManager
                 _failedFileAttempts = 0;
             }
         }
+    }
+
+    // A .ttf or .otf is turned into a bitmap font by the generator, and which generated fonts came from
+    // it is not known here, so a change cannot be applied; the result says so.
+    private void ReportChangedFontSources(List<string> changedFiles)
+    {
+        foreach (string file in changedFiles)
+        {
+            string extension = Path.GetExtension(file).ToLowerInvariant();
+            if (extension is ".ttf" or ".otf")
+            {
+                _sourceFontIssues.Add(new HotReloadIssue(
+                    HotReloadIssueKind.FontSourceChanged,
+                    $"Font source file {Path.GetFileName(file)} changed. Fonts already generated from it keep the old glyphs; restart to apply."));
+            }
+        }
+    }
+
+    private void AddSourceFontIssues(List<HotReloadIssue> issues)
+    {
+        foreach (HotReloadIssue issue in _sourceFontIssues)
+        {
+            Report(issues, issue);
+        }
+        _sourceFontIssues.Clear();
     }
 
     // Re-assigns SourceShaderFile on every container using a changed file, so each looks its effect up
@@ -365,20 +465,25 @@ public class GumHotReloadManager : IGumHotReloadManager
             or ".behx" or ".behj"
             or ".fnt";
 
-    // Returns a description of the fonts that could not be copied (a file the editor still has open),
-    // which stay queued for the next reload; null when every font copied.
-    private string? CopyAndUnloadChangedFonts()
+    // Returns a description of the fonts that could not be copied (a file the editor still has open); null
+    // when every font copied. A failed copy is tried once more by the next reload and then dropped, so a
+    // file that stays locked is reported once, not on every reload.
+    // fontsEvicted is true when a font was dropped from the cache, so Text that already holds it (or
+    // fell back to the default font while it was missing) has to resolve its font again.
+    private string? CopyAndUnloadChangedFonts(out bool fontsEvicted)
     {
+        fontsEvicted = false;
         List<string> changedFonts;
+        bool projectFileChanged;
+        bool continuation;
         lock (_fontFileLock)
         {
             changedFonts = new List<string>(_changedFontFiles);
             _changedFontFiles.Clear();
-        }
-
-        if (changedFonts.Count == 0)
-        {
-            return null;
+            projectFileChanged = _projectFileChangedSinceReload;
+            _projectFileChangedSinceReload = false;
+            continuation = _fontQueueContinues;
+            _fontQueueContinues = false;
         }
 
         var sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
@@ -387,10 +492,32 @@ public class GumHotReloadManager : IGumHotReloadManager
             return null;
         }
 
-        var sourceFontCache = Path.Combine(sourceDirectory, "FontCache");
-        if (!Directory.Exists(sourceFontCache))
+        fontsEvicted |= DropVanishedFonts(changedFonts, sourceDirectory);
+        AddFontsChangedWithoutNotice(changedFonts, sourceDirectory);
+        if (changedFonts.Count == 0)
         {
+            _fontOnlyReloads = 0;
             return null;
+        }
+
+        if (!projectFileChanged && !continuation)
+        {
+            _fontOnlyReloads++;
+            if (_fontOnlyReloads > MaxFontOnlyReloads)
+            {
+                StopBelievingFontEvents();
+                return null;
+            }
+        }
+        else if (projectFileChanged)
+        {
+            _fontOnlyReloads = 0;
+        }
+
+        if (changedFonts.Count > MaxFontsPerReload)
+        {
+            RequeueFonts(changedFonts.Skip(MaxFontsPerReload));
+            changedFonts = changedFonts.Take(MaxFontsPerReload).ToList();
         }
 
         string? failures = null;
@@ -398,53 +525,328 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             try
             {
-                CopyAndUnloadFont(sourceFntPath, sourceFontCache);
+                fontsEvicted |= CopyAndUnloadFont(sourceFntPath, sourceDirectory);
+                lock (_fontFileLock)
+                {
+                    _fontCopyFailures.Remove(sourceFntPath);
+                }
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
+                bool firstFailure;
                 lock (_fontFileLock)
                 {
-                    _changedFontFiles.Add(sourceFntPath);
+                    firstFailure = !_fontCopyFailures.ContainsKey(sourceFntPath);
+                    _fontCopyFailures[sourceFntPath] = 1;
                 }
-                failures += $"\nCould not copy font file {sourceFntPath}: {exception.Message}";
+
+                if (firstFailure)
+                {
+                    RequeueFonts(new[] { sourceFntPath });
+                    failures += $"\nCould not copy font file {sourceFntPath}: {exception.Message}";
+                }
             }
         }
 
         return failures;
     }
 
-    private void CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
+    // A watcher drops events when its buffer overflows, so a font the load folder holds in another
+    // version than the project folder is also changed, whether or not a notification arrived.
+    private void AddFontsChangedWithoutNotice(List<string> changedFonts, string sourceDirectory)
     {
-        var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
-        Directory.CreateDirectory(destinationFontCache);
-
-        var fileName = Path.GetFileName(sourceFntPath);
-
-        // Copy the .fnt file
-        var destinationFile = Path.Combine(destinationFontCache, fileName);
-        File.Copy(sourceFntPath, destinationFile, overwrite: true);
-
-        // Copy associated .png texture pages (same name prefix)
-        var baseName = Path.GetFileNameWithoutExtension(fileName);
-        var copiedPngs = new List<string>();
-        foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
+        if (IsSameFile(sourceDirectory, LoadFolder))
         {
-            var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
-            File.Copy(pngFile, pngDestination, overwrite: true);
-            copiedPngs.Add(pngDestination);
+            return;
+        }
+
+        StringComparer comparer = _isFileSystemCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        HashSet<string> queued = new HashSet<string>(changedFonts.Select(Path.GetFullPath), comparer);
+        foreach (string sourceFnt in EnumerateProjectFonts(sourceDirectory))
+        {
+            string destination = LoadFolderPathOf(sourceFnt, sourceDirectory);
+            if (!queued.Contains(Path.GetFullPath(sourceFnt)) && File.Exists(destination) && !IsCurrent(sourceFnt, destination))
+            {
+                changedFonts.Add(sourceFnt);
+            }
+        }
+    }
+
+    // Every .fnt under the project folder, except the ones in a build folder nested under it.
+    private IEnumerable<string> EnumerateProjectFonts(string sourceDirectory)
+    {
+        Stack<string> folders = new Stack<string>();
+        folders.Push(sourceDirectory);
+        while (folders.Count > 0)
+        {
+            string folder = folders.Pop();
+            if (IsInsideNestedLoadFolder(folder))
+            {
+                continue;
+            }
+
+            foreach (string subfolder in Directory.GetDirectories(folder))
+            {
+                folders.Push(subfolder);
+            }
+
+            foreach (string font in Directory.GetFiles(folder, "*.fnt"))
+            {
+                yield return font;
+            }
+        }
+    }
+
+    // A queued font whose file is gone and that the load folder never held (a temp file an editor saved
+    // through) is not a failure; it is dropped from the queue. One the load folder holds a copy of stays
+    // queued so the failed copy is reported, since the game still shows it. A font loaded from where it is
+    // (Preview) that is gone is dropped from the cache, as a restart would not find it. Returns whether
+    // a cached font was dropped.
+    private bool DropVanishedFonts(List<string> changedFonts, string sourceDirectory)
+    {
+        bool evicted = false;
+        for (int i = changedFonts.Count - 1; i >= 0; i--)
+        {
+            string font = changedFonts[i];
+            if (File.Exists(font))
+            {
+                continue;
+            }
+
+            string loaded = LoadFolderPathOf(font, sourceDirectory);
+            if (IsSameFile(font, loaded))
+            {
+                _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(loaded, preserveCase: true, makeAbsolute: true));
+                evicted = true;
+                changedFonts.RemoveAt(i);
+            }
+            else if (!File.Exists(loaded))
+            {
+                changedFonts.RemoveAt(i);
+            }
+        }
+
+        return evicted;
+    }
+
+    // Puts fonts back and asks for a reload after the debounce to process them.
+    private void RequeueFonts(IEnumerable<string> fonts)
+    {
+        lock (_fontFileLock)
+        {
+            foreach (string font in fonts)
+            {
+                _changedFontFiles.Add(font);
+            }
+            _fontQueueContinues = true;
+        }
+
+        lock (_pendingReloadLock)
+        {
+            _lastChangeTime = _utcNow();
+            _pendingReload = true;
+        }
+    }
+
+    private void StopBelievingFontEvents()
+    {
+        _fontOnlyReloads = 0;
+        lock (_fontFileLock)
+        {
+            _fontEventsIgnored = true;
+            _fontCopyFailures.Clear();
+        }
+
+        _loopIssue = new HotReloadIssue(
+            HotReloadIssueKind.ReloadFailed,
+            "Hot reload stopped queueing font files: they kept changing with no change to the project, "
+            + "which usually means the game's own copy of them is being reported as an edit. A change to the project restarts it.");
+    }
+
+    private static bool IsSameFile(string first, string second)
+    {
+        StringComparison comparison = _isFileSystemCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return string.Equals(
+            Path.GetFullPath(first).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            Path.GetFullPath(second).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            comparison);
+    }
+
+    // The destination holds this file as it is now: the same length and write time (copies keep the
+    // source's write time). A file that is its own destination (Preview) is never "current".
+    private static bool IsCurrent(string source, string destination)
+    {
+        try
+        {
+            if (IsSameFile(source, destination) || !File.Exists(destination))
+            {
+                return false;
+            }
+
+            return new FileInfo(source).Length == new FileInfo(destination).Length
+                && File.GetLastWriteTimeUtc(source) == File.GetLastWriteTimeUtc(destination);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    // Where the game loads a file of the project from: the same place relative to the load folder. A file
+    // outside the project folder, or already inside the load folder (a build folder under the project),
+    // has no such place, so it is loaded from where it is.
+    private string LoadFolderPathOf(string sourceFile, string sourceDirectory)
+    {
+        string relative = Path.GetRelativePath(sourceDirectory, sourceFile);
+        if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) || IsInside(LoadFolder, sourceFile))
+        {
+            return sourceFile;
+        }
+
+        return Path.Combine(LoadFolder, relative);
+    }
+
+    private bool IsCopyCurrent(string sourceFile)
+    {
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        return !string.IsNullOrEmpty(sourceDirectory) && IsCurrent(sourceFile, LoadFolderPathOf(sourceFile, sourceDirectory));
+    }
+
+    private string LoadFolder => string.IsNullOrEmpty(_binGumDirectory) ? "." : _binGumDirectory;
+
+    // The game's load folder sits inside the project folder (a build folder under the project).
+    private bool IsInsideNestedLoadFolder(string path)
+    {
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        if (string.IsNullOrEmpty(sourceDirectory) || IsSameFile(sourceDirectory, LoadFolder))
+        {
+            return false;
+        }
+
+        return IsInside(sourceDirectory, LoadFolder) && IsInside(LoadFolder, path);
+    }
+
+    private static bool IsInside(string folder, string file)
+    {
+        string relative = Path.GetRelativePath(folder, file);
+        return !relative.StartsWith("..", StringComparison.Ordinal) && !Path.IsPathRooted(relative);
+    }
+
+    // A game that loads its content from the folder the tool saves into (Preview) has the file where
+    // the runtime reads it, so there is nothing to copy. The copy keeps the source's write time, which
+    // is how IsCurrent tells a copy that is up to date. Returns whether the file was copied.
+    private static bool CopyUnlessCurrent(string source, string destination)
+    {
+        if (IsSameFile(source, destination) || IsCurrent(source, destination))
+        {
+            return false;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        File.Copy(source, destination, overwrite: true);
+        File.SetLastWriteTimeUtc(destination, File.GetLastWriteTimeUtc(source));
+        return true;
+    }
+
+    // The .fnt and its texture pages go to the load folder (a no-op where the game loads from the project
+    // folder) and are dropped from the cache under the path the game loads them by, wherever in the
+    // project the font lives (FontCache/ for generated fonts, anywhere for a CustomFontFile). Nothing is
+    // dropped when the load folder already holds every file as it is now, and a font loaded from where it
+    // is (Preview) is dropped, since the event itself is the change. Returns whether the font was dropped.
+    private bool CopyAndUnloadFont(string sourceFntPath, string sourceDirectory)
+    {
+        string destinationFile = LoadFolderPathOf(sourceFntPath, sourceDirectory);
+        bool loadedFromSource = IsSameFile(sourceFntPath, destinationFile);
+        bool changed = CopyUnlessCurrent(sourceFntPath, destinationFile) || loadedFromSource;
+
+        List<string> changedPages = new List<string>();
+        foreach (string pageFile in PagesOf(sourceFntPath))
+        {
+            string pageSource = Path.Combine(Path.GetDirectoryName(sourceFntPath)!, pageFile);
+            if (File.Exists(pageSource))
+            {
+                string pageDestination = LoadFolderPathOf(pageSource, sourceDirectory);
+                if (CopyUnlessCurrent(pageSource, pageDestination) || loadedFromSource)
+                {
+                    changedPages.Add(pageDestination);
+                }
+            }
+        }
+
+        if (!changed && changedPages.Count == 0)
+        {
+            return false;
         }
 
         // Unload the cached font so it gets reloaded from the new file
-        var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
-        var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
-        _disposeCachedAsset(standardizedFont);
+        _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(destinationFile, preserveCase: true, makeAbsolute: true));
 
         // Unload the cached texture pages so they get reloaded too
-        foreach (var pngPath in copiedPngs)
+        foreach (string pagePath in changedPages)
         {
-            var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
-            _disposeCachedAsset(standardizedPng);
+            _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(pagePath, preserveCase: true, makeAbsolute: true));
         }
+
+        return true;
+    }
+
+    // The .fnt files next to a texture that name it as a page. Only a .fnt whose name starts the
+    // texture's name is read, which is how the generator names pages.
+    private static IEnumerable<string> FontsThatNamePage(string pagePath)
+    {
+        string? directory = Path.GetDirectoryName(pagePath);
+        if (directory == null || !Directory.Exists(directory))
+        {
+            return Array.Empty<string>();
+        }
+
+        string pageName = Path.GetFileName(pagePath);
+        string pageBaseName = Path.GetFileNameWithoutExtension(pagePath);
+        List<string> fonts = new List<string>();
+        try
+        {
+            foreach (string fontFile in Directory.GetFiles(directory, "*.fnt"))
+            {
+                if (pageBaseName.StartsWith(Path.GetFileNameWithoutExtension(fontFile), StringComparison.OrdinalIgnoreCase)
+                    && PagesOf(fontFile).Any(page => string.Equals(Path.GetFileName(page), pageName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    fonts.Add(fontFile);
+                }
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // A folder that cannot be listed has no font to reload.
+        }
+
+        return fonts;
+    }
+
+    // The page files a .fnt names, plus the files next to it that share its name, which are the pages
+    // the font generator writes and cover a .fnt that cannot be read yet.
+    private static IEnumerable<string> PagesOf(string fntPath)
+    {
+        HashSet<string> pages = new HashSet<string>();
+        try
+        {
+            ParsedFontFile parsed = new ParsedFontFile(File.ReadAllText(fntPath));
+            foreach (string page in parsed.GetPagesAsArrayOfStrings.Where(page => !Path.IsPathRooted(page)))
+            {
+                pages.Add(page);
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException && exception is not IOException)
+        {
+            // Not a text/XML .fnt: the generator's naming below is all there is to go by.
+        }
+
+        string baseName = Path.GetFileNameWithoutExtension(fntPath);
+        foreach (string sibling in Directory.GetFiles(Path.GetDirectoryName(fntPath)!, baseName + "*.png"))
+        {
+            pages.Add(Path.GetFileName(sibling));
+        }
+
+        return pages;
     }
 
     // internal (not private) so tests can drive a reload deterministically without the
@@ -478,6 +880,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             ApplyChangedFiles(rootList, changedFiles, issues, shownBefore);
         }
+        AddSourceFontIssues(issues);
 
         RaiseResult(applied, issues);
     }
@@ -528,6 +931,7 @@ public class GumHotReloadManager : IGumHotReloadManager
                 $"Hot reload failed while applying the changed files: {exception.Message}\nThe UI may be partially updated; the next save reloads."));
         }
 
+        AddSourceFontIssues(issues);
         if (applied || issues.Count > 0)
         {
             RaiseResult(applied, issues);
@@ -591,7 +995,12 @@ public class GumHotReloadManager : IGumHotReloadManager
     private bool TryReload(List<GraphicalUiElement> rootList, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues, out bool willRetry)
     {
         willRetry = false;
-        string? fontFailure = CopyAndUnloadChangedFonts();
+        string? fontFailure = CopyAndUnloadChangedFonts(out bool fontsEvicted);
+        if (_loopIssue != null)
+        {
+            Report(issues, _loopIssue);
+            _loopIssue = null;
+        }
 
         // The whole project is read into a temporary first. A file caught half written, locked by the
         // editor or unparsable leaves the running tree and ObjectFinder exactly as they were (#6978).
@@ -633,6 +1042,11 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 RefreshLocalization(rootList);
             }
+
+            if (fontsEvicted)
+            {
+                ReapplyFonts(rootList);
+            }
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -662,6 +1076,27 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
 
         return true;
+    }
+
+    // The diff only touches Text whose font variables changed. A font file that changed under the same
+    // name, or arrived after the project that asks for it, is a different font for Text whose variables
+    // did not, so every Text resolves its font from its properties again (a cache hit when its font was
+    // not evicted).
+    private static void ReapplyFonts(List<GraphicalUiElement> roots)
+    {
+        List<GraphicalUiElement> visited = new List<GraphicalUiElement>();
+        foreach (GraphicalUiElement root in roots)
+        {
+            CollectDescendants(root, visited);
+        }
+
+        foreach (GraphicalUiElement element in visited)
+        {
+            if (element.RenderableComponent is IText)
+            {
+                element.UpdateToFontValues();
+            }
+        }
     }
 
     private sealed class ChangedReference
