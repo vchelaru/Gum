@@ -35,7 +35,7 @@ internal static class PreviewElementPresenter
 
     // Puts the shown element in the state selected in the tool, on top of its default state - the
     // same thing the tool's own canvas shows for a selected categorized state (issue #4856).
-    public static void ApplySelectedState(PreviewSelectionMessage selection)
+    private static void ApplySelectedState(PreviewSelectionMessage selection)
     {
         if (selection.StateName == null)
         {
