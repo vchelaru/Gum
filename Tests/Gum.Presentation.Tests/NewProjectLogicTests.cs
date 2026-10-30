@@ -371,7 +371,7 @@ public class NewProjectLogicTests
 
     private static readonly string CreatedGumProject = Path.Combine(ChosenFolder, "Game", "Content", "GumProject", "GumProject.gumj");
 
-    private async Task<NewProjectDialogViewModel> SetUpCreatedCodeProject(GumProjectSave loaded, bool includeForms = true, bool includeDemo = true)
+    private async Task<NewProjectDialogViewModel> SetUpCreatedCodeProject(GumProjectSave? loaded, bool includeForms = true, bool includeDemo = true)
     {
         Mock<INewProjectService> service = new();
         service.Setup(x => x.IsSourceLinkedAvailable).Returns(false);
@@ -406,6 +406,20 @@ public class NewProjectLogicTests
         _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
         _projectManager.Verify(x => x.SetProjectLocation(It.IsAny<string>()), Times.Never);
         _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_TellsTheUserAndKeepsAProject_WhenTheCreatedProjectCannotBeLoaded()
+    {
+        await SetUpCreatedCodeProject(loaded: null);
+
+        Func<Task> create = () => _logic.CreateNewProjectAsync();
+
+        await Should.NotThrowAsync(create);
+        _dialogService.Verify(x => x.ShowMessage(It.Is<string>(message => message.Contains(CreatedGumProject)), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _projectManager.Verify(x => x.CreateNewProject(), Times.Once);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveElement(It.IsAny<ElementSave>()), Times.Never);
     }
 
     [Fact]

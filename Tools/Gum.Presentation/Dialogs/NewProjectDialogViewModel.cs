@@ -115,7 +115,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         BrowseCommand = new RelayCommand(Browse);
         RetryRestoreCommand = new RelayCommand(() => _ = RunRestoreStepAsync());
         ContinueWithoutRestoreCommand = new RelayCommand(FinishCodeProject);
-        BackCommand = new RelayCommand(() => IsRestoreFailed = false);
+        BackCommand = new RelayCommand(Back);
         CopyCommandLineCommand = new RelayCommand(() => CommandLineCopyRequested?.Invoke(CommandLine));
 
         PropertyChanged += (_, e) => HandlePropertyChanged(e.PropertyName);
@@ -473,13 +473,14 @@ public class NewProjectDialogViewModel : DialogViewModel
             SetBusy(true, "Creating files...");
             _cancellation = new CancellationTokenSource();
             NewProjectFilesResult files = await _service.CreateFilesAsync(validation.Resolved!, _cancellation.Token);
-            if (files.Canceled)
+            if (files.Canceled || !files.Success)
             {
-                return;
-            }
-            if (!files.Success)
-            {
-                ErrorMessage = files.ErrorMessage;
+                // Some files may already be written; the plan reads the disk.
+                RefreshPlan();
+                if (!files.Canceled)
+                {
+                    ErrorMessage = files.ErrorMessage;
+                }
                 return;
             }
 
@@ -501,6 +502,14 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             SetBusy(false, string.Empty);
         }
+    }
+
+    // The files were written while the dialog was open, so what the plan, the refusal and the not-empty warning
+    // read from disk has changed without an input changing.
+    private void Back()
+    {
+        IsRestoreFailed = false;
+        RefreshPlan();
     }
 
     private async Task RunRestoreStepAsync()
