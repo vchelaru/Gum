@@ -284,10 +284,32 @@ public partial class GraphicalUiElement
     {
         SetPropertyCore(propertyName, value);
 
+        if (propertyName == "SourceFile")
+        {
+            RecordAssignedSourceFile(value as string);
+        }
+
         // These names are reported by their own property setter.
         if (!ReportsFromTypedSetter(propertyName))
         {
             ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
+    // The file last assigned through the SourceFile variable. A Sprite or NineSlice shows the texture or
+    // animation chains the file produced, not the path, so hot reload needs this to find who shows a
+    // file that changed on disk.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<GraphicalUiElement, string> _assignedSourceFiles =
+        new System.Runtime.CompilerServices.ConditionalWeakTable<GraphicalUiElement, string>();
+
+    internal string? AssignedSourceFile => _assignedSourceFiles.TryGetValue(this, out string? file) ? file : null;
+
+    private void RecordAssignedSourceFile(string? file)
+    {
+        _assignedSourceFiles.Remove(this);
+        if (!string.IsNullOrEmpty(file))
+        {
+            _assignedSourceFiles.Add(this, file!);
         }
     }
 
