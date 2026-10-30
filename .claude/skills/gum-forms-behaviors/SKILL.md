@@ -93,6 +93,8 @@ Tier 3 is **virtual** — never written to state, never appears in `.gusx`. Stat
 - `EvaluatedSyntax.FromSyntaxNode` takes an optional `fallback` parameter threaded through every recursive evaluation.
 - `BehaviorToolOnlyReferencesApplier` builds a per-element fallback that walks every linked behavior's `FormsProperties` and resolves bare or instance-qualified identifiers to declared `Value`.
 - `BehaviorFormsPropertyApplier.Apply` adds the third tier inline: `ReadEffectiveValue(...) ?? declaration.Value`.
+
+**Each tier-2/3 default is applied once, at the control's own build, never re-applied by an ancestor.** `SetGraphicalUiElement` calls `InitialFormsPropertiesNotifier(built, true)` for the element it just built (all three tiers) and `(instance, false)` for that element's own instances only (`Apply(..., authoredOverridesOnly: true)`: just a value the container's default state, or a base of it, explicitly authors for the instance; no fall-through to the instance's component and no declared default). An instance owned by a nested element is skipped, so code that ran in that element's `CustomInitialize` (which runs in `AfterFullCreation`, after the control exists) keeps what it set, at any nesting depth. A value the container authors still wins over `CustomInitialize`, since the container's pass runs after it. `InitialStateAppliedNotifier` (the `UpdateState` re-sync) still walks every descendant.
 - `StateReferencingInstanceMember.DefaultValueFallback` lets the variable grid show the declared default in the checkbox/text without writing into state. `IsDefault` still returns true (state empty), preserving the grid's italic/grey styling.
 
 Codegen (FullyInCode GumForms) mirrors tiers 1 and 2 only (and a Forms property authored in a category state, which `ApplyState` also writes onto the control): it assigns authored values on the control and relies on tier 3 equalling the control's code default (see `CodeGenerator.FillWithFormsPropertyAssignments`, gum-tool-codegen).
@@ -142,7 +144,7 @@ Reflection apply is generic, so any new logical-only `FormsProperty` declaration
 | `GumDataTypes/Behaviors/ElementBehaviorReference.cs` | Per-element reference holding only `BehaviorName` |
 | `GumDataTypes/Behaviors/StandardFormsBehaviorNames.cs` | String constants for all standard behavior names |
 | `GumDataTypes/ElementSave.cs` | `Behaviors` list on components/screens |
-| `MonoGameGum/Forms/FormsUtilities.cs` | `RegisterFromFileFormRuntimeDefaults()` — drives the mapping; sets `InitialStateAppliedNotifier` to invoke `BehaviorFormsPropertyApplier` |
+| `MonoGameGum/Forms/FormsUtilities.cs` | `RegisterFromFileFormRuntimeDefaults()` — drives the mapping; sets `InitialFormsPropertiesNotifier` (invokes `BehaviorFormsPropertyApplier`) and `InitialStateAppliedNotifier` (`UpdateState`) |
 | `MonoGameGum/Forms/DefaultFromFileVisuals/` | `DefaultFromFileXxxRuntime` classes — `AfterFullCreation()` creates Forms objects |
 | `MonoGameGum/Forms/BehaviorFormsPropertyApplier.cs` | Reflects `BehaviorSave.FormsProperties` values onto the wrapped `FrameworkElement` (with three-tier default resolution) |
 | `Gum/Plugins/InternalPlugins/VariableGrid/BehaviorToolOnlyReferencesApplier.cs` | Tool-only design-time apply pass for `ToolOnlyVariableReferences`. Strictly tool-only — never invoked from runtime / generated code. |

@@ -602,6 +602,7 @@ public class FormsUtilities
         string? fromFileNamespace = typeof(DefaultFromFileButtonRuntime).Namespace;
         ElementSaveExtensions.UnregisterGueInstantiationTypes(type => type.Namespace == fromFileNamespace);
         ElementSaveExtensions.InitialStateAppliedNotifier = null;
+        ElementSaveExtensions.InitialFormsPropertiesNotifier = null;
         MenuItem.FromFileSubmenuPopupTemplate = null;
         ComboBox.FromFileDropDownTemplate = null;
     }
@@ -623,11 +624,18 @@ public class FormsUtilities
 
     public static void RegisterFromFileFormRuntimeDefaults()
     {
+        ElementSaveExtensions.InitialFormsPropertiesNotifier = (gue, isBuiltElement) =>
+        {
+            if (gue is InteractiveGue igue && igue.FormsControlAsObject is FrameworkElement fe)
+            {
+                BehaviorFormsPropertyApplier.Apply(fe, igue, authoredOverridesOnly: !isBuiltElement);
+            }
+        };
+
         ElementSaveExtensions.InitialStateAppliedNotifier = gue =>
         {
             if (gue is InteractiveGue igue && igue.FormsControlAsObject is FrameworkElement fe)
             {
-                BehaviorFormsPropertyApplier.Apply(fe, igue);
                 fe.UpdateState();
             }
         };

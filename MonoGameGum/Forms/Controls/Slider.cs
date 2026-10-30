@@ -92,10 +92,22 @@ public class Slider : RangeBase, IInputReceiver
 
     private void Initialize()
     {
-        Minimum = 0;
-        Maximum = 100;
-        LargeChange = 25;
-        SmallChange = 5;
+        // The Visual is assigned in the base constructor, so a derived control's ReactToVisualChanged
+        // (where generated code runs CustomInitialize) has already run. Keep what it set.
+        if (!IsMaximumSet)
+        {
+            Maximum = 100;
+        }
+
+        if (!IsLargeChangeSet)
+        {
+            LargeChange = 25;
+        }
+
+        if (!IsSmallChangeSet)
+        {
+            SmallChange = 5;
+        }
 
         // by default sliders use left/right to change the slider value
         this.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;

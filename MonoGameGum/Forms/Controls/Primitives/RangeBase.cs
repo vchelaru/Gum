@@ -140,6 +140,12 @@ public abstract class RangeBase :
         }
     }
 
+    /// <summary>
+    /// True once <see cref="Maximum"/> has been assigned, so a derived control's defaults do not
+    /// overwrite a value that code set while the Visual was being assigned.
+    /// </summary>
+    protected bool IsMaximumSet { get; private set; }
+
     double maximum = 1;
     /// <summary>
     /// The maximum inclusive value which can be set through the UI.
@@ -149,6 +155,7 @@ public abstract class RangeBase :
         get => maximum;
         set
         {
+            IsMaximumSet = true;
             var oldValue = maximum;
             if(value != oldValue)
             {

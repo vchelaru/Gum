@@ -105,12 +105,21 @@ public class ScrollBar : RangeBase
 
     public ScrollBar() : base() 
     {
-        base.Orientation = Orientation.Vertical;
+        ApplyDefaultOrientation();
     }
 
     public ScrollBar(InteractiveGue visual) : base(visual) 
     {
-        base.Orientation = Orientation.Vertical;
+        ApplyDefaultOrientation();
+    }
+
+    private void ApplyDefaultOrientation()
+    {
+        // The Visual is assigned in the base constructor; keep an orientation code set meanwhile.
+        if (!hasAssignedOrientation)
+        {
+            base.Orientation = Orientation.Vertical;
+        }
     }
 
     bool hasAssignedOrientation = false;
