@@ -226,7 +226,7 @@ public class NewProjectService : INewProjectService
             string root = PlatformProjectScaffolder.GetFullDirectory(
                 string.IsNullOrEmpty(path) ? DefaultPlatformProjectName : path);
             (string csproj, string gumProject) = PlatformProjectScaffolder.GetProjectPaths(
-                root, useXmlFormat: gumExtension == GumProjectSave.ProjectExtension);
+                root, useXmlFormat: gumExtension != GumProjectSave.ProjectJsonExtension);
             return new Targets
             {
                 RootDirectory = root,
@@ -414,7 +414,7 @@ public class NewProjectService : INewProjectService
             {
                 PlatformProjectResult result = new PlatformProjectScaffolder().Create(
                     targets.RootDirectory, platform, options.IncludeFormsTemplate, gumSourceDirectory, options.ThemeDirectory,
-                    useXmlFormat: Path.GetExtension(targets.GumProjectPath).TrimStart('.') == GumProjectSave.ProjectExtension);
+                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath));
                 if (!result.Success)
                 {
                     return new NewProjectFilesResult { ErrorMessage = result.ErrorMessage };
