@@ -52,12 +52,13 @@ public sealed class NewProjectDialogView : StackPanel
         DialogWindow.SetDialogTitle(this, "New Project");
 
         _copyIcon = CreateIcon(Icon.Copy, 1.15);
+        _copyIcon.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
         _copiedTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1200) };
         _copiedTimer.Tick += (_, _) =>
         {
             _copiedTimer.Stop();
             _copyIcon.Icon = Icon.Copy;
-            _copyIcon.ClearValue(TemplatedControl.ForegroundProperty);
+            _copyIcon.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
         };
 
         Children.Add(CreateStatus());
@@ -128,7 +129,7 @@ public sealed class NewProjectDialogView : StackPanel
 
     private Control CreateNameAndFormat()
     {
-        Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,190"), ColumnSpacing = 8 };
+        Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
 
         StackPanel name = new StackPanel();
         name.Children.Add(FieldLabel("Project name"));
@@ -141,7 +142,7 @@ public sealed class NewProjectDialogView : StackPanel
         StackPanel format = new StackPanel();
         Grid.SetColumn(format, 1);
         format.Children.Add(FieldLabel("File format"));
-        ComboBox formats = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+        ComboBox formats = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, MinWidth = 190 };
         formats.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(NewProjectDialogViewModel.FileFormats)));
         formats.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(NewProjectDialogViewModel.SelectedFileFormat)) { Mode = BindingMode.TwoWay });
         format.Children.Add(formats);
@@ -269,7 +270,7 @@ public sealed class NewProjectDialogView : StackPanel
         links.Children.Add(Link("Collapse all", () => (DataContext as NewProjectDialogViewModel)?.SetPlanExpanded(false)));
         content.Children.Add(links);
 
-        TreeView tree = new TreeView { MaxHeight = 230, Padding = new Thickness(0), FontFamily = new FontFamily(MonospaceFonts) };
+        TreeView tree = new TreeView { MaxHeight = 230, Padding = new Thickness(0), FontFamily = new FontFamily(MonospaceFonts), FontWeight = FontWeight.Normal };
         tree.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(NewProjectDialogViewModel.PlanTree)));
         tree.ItemTemplate = new FuncTreeDataTemplate<NewProjectPlanNode>(
             (node, _) => CreateTreeRow(node),
@@ -301,6 +302,7 @@ public sealed class NewProjectDialogView : StackPanel
         {
             TextWrapping = TextWrapping.Wrap,
             FontFamily = new FontFamily(MonospaceFonts),
+            FontWeight = FontWeight.Normal,
             Margin = new Thickness(10, 8, 38, 8),
         };
         command.Bind(TextBlock.TextProperty, new Binding(nameof(NewProjectDialogViewModel.CommandLine)));
@@ -336,8 +338,7 @@ public sealed class NewProjectDialogView : StackPanel
 
     #region Pieces
 
-    // A disclosure with the section's heading, an optional muted count after it, and a rule above. Built from an
-    // Expander so keyboard and automation work, restyled flat to match the mock's plain bold heading.
+    // A disclosure with the section's heading, an optional muted count after it, and a rule above.
     private static Control CreateSection(string name, string title, string? countPath, Control content)
     {
         StackPanel header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
@@ -347,30 +348,60 @@ public sealed class NewProjectDialogView : StackPanel
             header.Children.Add(Bound(new TextBlock { Opacity = 0.7 }, TextBlock.TextProperty, countPath));
         }
 
-        Expander expander = new Expander
-        {
-            Name = name,
-            Header = header,
-            Content = content,
-            IsExpanded = false,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-        };
-        expander.Styles.Add(CreateFlatExpanderStyle());
-
+        Disclosure disclosure = new Disclosure(header, content) { Name = name };
         StackPanel section = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
         section.Children.Add(Divider(new Thickness(0, 0, 0, 6)));
-        section.Children.Add(expander);
+        section.Children.Add(disclosure);
         return section;
     }
 
-    private static Style CreateFlatExpanderStyle()
+    /// <summary>A heading with a chevron that shows or hides its content; flat, as the mock draws it.</summary>
+    public sealed class Disclosure : StackPanel
     {
-        Style style = new Style(selector => selector.OfType<Expander>());
-        style.Setters.Add(new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent));
-        style.Setters.Add(new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(0)));
-        style.Setters.Add(new Setter(TemplatedControl.PaddingProperty, new Thickness(0, 4, 0, 0)));
-        return style;
+        private readonly FluentIcon _chevron;
+        private readonly Control _content;
+        private bool _isExpanded;
+
+        /// <summary>Builds the disclosure, collapsed.</summary>
+        public Disclosure(Control header, Control content)
+        {
+            _content = content;
+            _content.IsVisible = false;
+            _chevron = CreateIcon(Icon.ChevronRight, 1.0);
+            _chevron.Opacity = 0.7;
+
+            StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Background = Brushes.Transparent, Focusable = true };
+            row.Children.Add(_chevron);
+            row.Children.Add(header);
+            row.PointerPressed += (_, e) =>
+            {
+                IsExpanded = !IsExpanded;
+                e.Handled = true;
+            };
+            row.KeyDown += (_, e) =>
+            {
+                if (e.Key is Key.Enter or Key.Space)
+                {
+                    IsExpanded = !IsExpanded;
+                    e.Handled = true;
+                }
+            };
+            row.Cursor = new Cursor(StandardCursorType.Hand);
+            Children.Add(row);
+            Children.Add(content);
+        }
+
+        /// <summary>Whether the content shows.</summary>
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                _isExpanded = value;
+                _content.IsVisible = value;
+                _chevron.Icon = value ? Icon.ChevronDown : Icon.ChevronRight;
+            }
+        }
     }
 
     private static Style CreateTreeItemStyle()

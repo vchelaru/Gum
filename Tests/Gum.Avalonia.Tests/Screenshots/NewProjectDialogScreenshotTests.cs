@@ -62,7 +62,7 @@ public class NewProjectDialogScreenshotTests
     {
         viewModel.IncludeCodeProject = true;
         viewModel.IsIncludeFormsControls = true;
-        window.Find<Expander>(expander => expander.Name == NewProjectDialogView.FilesExpanderName).IsExpanded = true;
+        window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.FilesExpanderName).IsExpanded = true;
     });
 
     [SkippableTheory]
@@ -72,7 +72,7 @@ public class NewProjectDialogScreenshotTests
     {
         viewModel.IncludeCodeProject = true;
         viewModel.IsIncludeDemoScreenGum = false;
-        window.Find<Expander>(expander => expander.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
+        window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
     });
 
     [SkippableTheory]
