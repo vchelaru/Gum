@@ -115,8 +115,9 @@ public class ScrollBar : RangeBase
 
     private void ApplyDefaultOrientation()
     {
-        // The Visual is assigned in the base constructor; keep an orientation code set meanwhile.
-        if (!hasAssignedOrientation)
+        // With a Visual, ReactToVisualChanged has already defaulted the orientation (and a subclass
+        // may have changed it since), so only a control without one needs the default.
+        if (Visual == null)
         {
             base.Orientation = Orientation.Vertical;
         }

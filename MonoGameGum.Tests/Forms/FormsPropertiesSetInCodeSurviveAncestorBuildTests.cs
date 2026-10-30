@@ -174,6 +174,31 @@ public class FormsPropertiesSetInCodeSurviveAncestorBuildTests : BaseTestClass
         slider.Maximum.ShouldBe(7);
     }
 
+    private class RangedSliderRuntime : Gum.Forms.DefaultFromFileVisuals.DefaultFromFileSliderRuntime
+    {
+        public override void AfterFullCreation()
+        {
+            base.AfterFullCreation();
+            FormsControl!.Maximum = 1;
+        }
+    }
+
+    // Pins current behavior: the root pass runs after the built element's AfterFullCreation, so
+    // code there cannot keep a value the behavior declares a default for. Not reached by the
+    // generated `new MySlider()` path (see the issue linked from the PR).
+    [Fact]
+    public void RootSliderBuiltDirectly_MaximumSetInAfterFullCreation_IsResetByTheRootPass()
+    {
+        LoadProject(wrapperCount: 0, SliderBehavior(), controlComponent: "Controls/Slider");
+        ElementSaveExtensions.RegisterGueInstantiationType("Controls/Slider", typeof(RangedSliderRuntime));
+        ComponentSave component = ObjectFinder.Self.GumProjectSave!.Components.Single(item => item.Name == "Controls/Slider");
+
+        GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+
+        Slider slider = (Slider)((InteractiveGue)visual).FormsControlAsObject!;
+        slider.Maximum.ShouldBe(100);
+    }
+
     // Other controls -----------------------------------------------------------------------
 
     [Theory]
@@ -276,6 +301,41 @@ public class FormsPropertiesSetInCodeSurviveAncestorBuildTests : BaseTestClass
         slider.Maximum.ShouldBe(100);
         slider.SmallChange.ShouldBe(5);
         slider.LargeChange.ShouldBe(25);
+    }
+
+    [Fact]
+    public void Slider_WithoutADefaultVisual_HasSliderDefaults()
+    {
+        Slider slider = CreateWithoutDefaultVisual(() => new Slider());
+
+        slider.Maximum.ShouldBe(100);
+        slider.SmallChange.ShouldBe(5);
+        slider.LargeChange.ShouldBe(25);
+    }
+
+    [Fact]
+    public void ScrollBar_WithoutADefaultVisual_IsVertical()
+    {
+        ScrollBar bar = CreateWithoutDefaultVisual(() => new ScrollBar());
+
+        bar.Orientation.ShouldBe(Orientation.Vertical);
+    }
+
+    private static T CreateWithoutDefaultVisual<T>(Func<T> create)
+    {
+        Dictionary<Type, VisualTemplate> saved = new Dictionary<Type, VisualTemplate>(FrameworkElement.DefaultFormsTemplates);
+        FrameworkElement.DefaultFormsTemplates.Clear();
+        try
+        {
+            return create();
+        }
+        finally
+        {
+            foreach (KeyValuePair<Type, VisualTemplate> pair in saved)
+            {
+                FrameworkElement.DefaultFormsTemplates[pair.Key] = pair.Value;
+            }
+        }
     }
 
     private class HorizontalScrollBar : ScrollBar

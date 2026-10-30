@@ -93,8 +93,9 @@ public class Slider : RangeBase, IInputReceiver
     private void Initialize()
     {
         // The Visual is assigned in the base constructor, so a derived control's ReactToVisualChanged
-        // (where generated code runs CustomInitialize) has already run. Keep what it set.
-        if (!IsMaximumSet)
+        // (where generated code runs CustomInitialize) has already run. Keep what it set. With a
+        // Visual, RangeBase.ReactToVisualChanged has already defaulted the Maximum.
+        if (Visual == null)
         {
             Maximum = 100;
         }
