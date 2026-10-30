@@ -91,6 +91,31 @@ public class PreviewCanvasSizeTests : BaseTestClass
         height.ShouldBe(PreviewCanvasSize.FallbackHeight);
     }
 
+    [Theory]
+    [InlineData(1024, 768, 1.0, 1512, 831, 1024, 768)]
+    [InlineData(1024, 768, 2.0, 1512, 831, 1024, 768)]
+    [InlineData(4000, 3000, 2.0, 1512, 831, 3024, 1662)]
+    [InlineData(4000, 768, 2.0, 1512, 831, 3024, 768)]
+    [InlineData(1024, 3000, 1.0, 1512, 831, 1024, 831)]
+    [InlineData(3024, 1662, 2.0, 1512, 831, 3024, 1662)]
+    [InlineData(4000, 3000, 2.0, 0, 0, 4000, 3000)]
+    [InlineData(4000, 3000, 2.0, 1512, 0, 3024, 3000)]
+    public void FitToDisplay_ClampsEachAxisToTheRoomTheDisplayHas(
+        int width, int height, double scale, int maxW, int maxH, int expectedWidth, int expectedHeight)
+    {
+        (int fitWidth, int fitHeight) = PreviewCanvasSize.FitToDisplay(width, height, scale, maxW, maxH);
+
+        fitWidth.ShouldBe(expectedWidth);
+        fitHeight.ShouldBe(expectedHeight);
+    }
+
+    [Fact]
+    public void FitToDisplay_KeepsASizeWhoseWindowPointsRoundUpToTheMaximum()
+    {
+        // 3023 pixels at scale 2 is 1512 points (rounded up), which fits 1512; it must not shrink.
+        PreviewCanvasSize.FitToDisplay(3023, 1661, 2.0, 1512, 831).ShouldBe((3023, 1661));
+    }
+
     // The same flow as a hot reload through Preview: the manager loads the saved files into the finder.
     private static void SaveCanvasSize(SweepWorld world, int width, int height)
     {

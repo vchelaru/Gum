@@ -1,3 +1,4 @@
+using System;
 using Gum.DataTypes;
 using Gum.Wireframe;
 
@@ -31,6 +32,27 @@ internal sealed class PreviewCanvasSize
         }
         _lastSaved = (width, height);
         return true;
+    }
+
+    /// <summary>
+    /// The canvas size, in pixels, whose window fits a display that has room for
+    /// <paramref name="maxPointWidth"/> by <paramref name="maxPointHeight"/> window points (one point
+    /// covers <paramref name="pointScale"/> pixels). A fresh launch gets this from the OS on both axes;
+    /// a window that is already showing is not clamped the same way, so the reload path asks for it.
+    /// A non-positive maximum means the room is unknown and leaves that axis alone.
+    /// </summary>
+    public static (int Width, int Height) FitToDisplay(int width, int height, double pointScale, int maxPointWidth, int maxPointHeight)
+    {
+        return (FitAxis(width, pointScale, maxPointWidth), FitAxis(height, pointScale, maxPointHeight));
+    }
+
+    private static int FitAxis(int pixels, double pointScale, int maxPoints)
+    {
+        if (maxPoints <= 0 || Math.Ceiling(pixels / pointScale) <= maxPoints)
+        {
+            return pixels;
+        }
+        return (int)Math.Round(maxPoints * pointScale);
     }
 
     /// <summary>Sets the canvas and re-lays out what hangs off the root, so percent-based and docked layouts follow.</summary>
