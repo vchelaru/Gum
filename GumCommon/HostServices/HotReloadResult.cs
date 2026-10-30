@@ -19,7 +19,8 @@ public enum HotReloadIssueKind
 
     /// <summary>
     /// The project could not be read, or applying it threw, or a changed localization file could not be
-    /// read. The UI is unchanged or partly updated.
+    /// read, or a changed file cannot be applied while the game runs (a replaced image). The UI is
+    /// unchanged or partly updated.
     /// </summary>
     ReloadFailed,
 

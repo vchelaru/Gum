@@ -2,10 +2,12 @@
 using Gum.DataTypes;
 using Gum;
 using Gum.Forms.Controls;
+using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Wireframe;
+using RenderingLibrary.Content;
 using Shouldly;
 using System.IO;
 using System.Linq;
@@ -18,6 +20,22 @@ namespace MonoGameGum.Tests.Hot;
 public partial class PreviewAccuracy2Tests
 {
     private static string Content(string dir, string name) => Path.Combine(dir, "Content", name);
+
+    // Several chains in one file, in the order given: (chain name, texture).
+    private static void WriteChains(string dir, string name, params (string chain, string texture)[] chains)
+    {
+        System.Text.StringBuilder xml = new System.Text.StringBuilder();
+        xml.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        xml.AppendLine("<AnimationChainArraySave><FileRelativeTextures>true</FileRelativeTextures><TimeMeasurementUnit>Undefined</TimeMeasurementUnit><CoordinateType>Pixel</CoordinateType>");
+        foreach ((string chain, string texture) in chains)
+        {
+            xml.AppendLine("<AnimationChain><Name>" + chain + "</Name><Frame><TextureName>" + texture
+                + "</TextureName><FrameLength>0.1</FrameLength><LeftCoordinate>0</LeftCoordinate><RightCoordinate>8</RightCoordinate><TopCoordinate>0</TopCoordinate><BottomCoordinate>8</BottomCoordinate></Frame></AnimationChain>");
+        }
+        xml.AppendLine("</AnimationChainArraySave>");
+        Directory.CreateDirectory(Path.GetDirectoryName(Content(dir, name))!);
+        File.WriteAllText(Content(dir, name), xml.ToString());
+    }
 
     private static void WriteChain(string dir, string name, string texture, float frameLength, int frames = 2, int right = 8)
     {
@@ -90,29 +108,33 @@ public partial class PreviewAccuracy2Tests
         verdict.Hot.ShouldContain("SourceRectangle={X:2_Y:3_Width:8_Height:6}");
     }
 
-    // Documented: a texture replaced on disk keeps its cached copy until the game restarts.
+    // Documented: a texture replaced on disk keeps its cached copy until the game restarts, and the result says so.
     [Fact]
-    public void Texture_ImageReplacedOnDiskUnderTheSameName_IsNotWatched()
+    public void Texture_ImageReplacedOnDiskUnderTheSameName_ReportsThatARestartIsNeeded()
     {
         PreviewAccuracy2World world = Boot();
         WritePng(Content(world.Dir, "red.png"), 32, 32);
         PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "red.png"));
 
-        verdict.Reloaded.ShouldBeFalse("a .png is not a file hot reload reacts to");
+        verdict.Reloaded.ShouldBeTrue("a .png a visual shows is reported");
+        verdict.MatchesRestart.ShouldBeFalse();
+        verdict.Kinds.ShouldBe("ReloadFailed");
+        verdict.Result!.Issues[0].Message.ShouldContain("restarts");
         verdict.Hot.ShouldContain("r.tex=16x16");
         verdict.Fresh.ShouldContain("r.tex=32x32");
     }
 
     // A file that did not exist when the sprite asked for it, and does now.
     [Fact]
-    public void Texture_SpriteSourceFile_PointsToAFileThatIsCreatedLater_IsNotWatched()
+    public void Texture_SpriteSourceFile_PointsToAFileThatIsCreatedLater_ReportsThatARestartIsNeeded()
     {
         PreviewAccuracy2World world = Boot();
         world.Save(project => Std(MainScreen(project), "Pic", "SourceFile", "Content/later.png"));
         WritePng(Content(world.Dir, "later.png"), 24, 24);
         PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "later.png"));
 
-        verdict.Reloaded.ShouldBeFalse();
+        verdict.Reloaded.ShouldBeTrue();
+        verdict.MatchesRestart.ShouldBeFalse();
         verdict.Hot.ShouldContain("r.tex=<null>");
         verdict.Fresh.ShouldContain("r.tex=24x24");
     }
@@ -131,8 +153,114 @@ public partial class PreviewAccuracy2Tests
         verdict.Hot.ShouldContain("r.chains=Run:");
     }
 
+    private PreviewAccuracy2World BootWithChain(string instance = "Pic")
+    {
+        PreviewAccuracy2World world = Boot();
+        world.Save(
+            project =>
+            {
+                Std(MainScreen(project), instance, "SourceFile", "Content/run.achx");
+                Std(MainScreen(project), instance, "CurrentChainName", "Run");
+            },
+            dir => WriteChain(dir, "run.achx", "red.png", 0.1f));
+        return world;
+    }
+
     [Fact]
-    public void Texture_AnimationChainFile_EditedOnDisk_IsNotWatched()
+    public void Texture_AnimationChainFile_EditedOnDisk_IsReloadedAndReapplied()
+    {
+        PreviewAccuracy2World world = BootWithChain();
+        WriteChain(world.Dir, "run.achx", "other.png", 0.5f, frames: 3);
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "run.achx"));
+
+        verdict.Reloaded.ShouldBeTrue("an .achx a Sprite plays is a file hot reload reacts to");
+        ShouldBeCorrect(verdict);
+    }
+
+    [Fact]
+    public void Texture_AnimationChainFile_EditedOnDisk_AndTheProjectSavedInTheSameBurst()
+    {
+        PreviewAccuracy2World world = BootWithChain();
+        PreviewVerdict2 verdict = world.Save(
+            project =>
+            {
+                Std(MainScreen(project), "Pic", "SourceFile", "Content/run.achx");
+                Std(MainScreen(project), "Pic", "CurrentChainName", "Run");
+                Std(MainScreen(project), "Box", "Red", 99);
+            },
+            dir => WriteChain(dir, "run.achx", "other.png", 0.5f, frames: 3));
+        ShouldBeCorrect(verdict);
+    }
+
+    [Fact]
+    public void Texture_AnimationChainFile_PlayedByANineSlice_EditedOnDisk_IsReloadedAndReapplied()
+    {
+        PreviewAccuracy2World world = BootWithChain("Frame");
+        WriteChain(world.Dir, "run.achx", "other.png", 0.5f, frames: 3);
+        ShouldBeCorrect(world.Reload(Content(world.Dir, "run.achx")));
+    }
+
+    [Fact]
+    public void Texture_AnimationChainFile_NoVisualPlaysIt_IsIgnored()
+    {
+        PreviewAccuracy2World world = Boot();
+        WriteChain(world.Dir, "unused.achx", "red.png", 0.5f);
+        world.Reload(Content(world.Dir, "unused.achx")).Reloaded.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Texture_AnimationChainFile_EditedWhileTheProjectIsCopiedToABinFolder_ReachesTheSprite()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World();
+        _worlds.Add(world);
+        world.Boot(
+            separateBin: true,
+            editBaseline: project =>
+            {
+                Std(MainScreen(project), "Pic", "SourceFile", "Content/run.achx");
+                Std(MainScreen(project), "Pic", "CurrentChainName", "Run");
+            },
+            beforeBoot: dir => WriteChain(dir, "run.achx", "red.png", 0.1f));
+        string cacheKey = global::ToolsUtilities.FileManager.RemoveDotDotSlash(global::ToolsUtilities.FileManager.RelativeDirectory + "Content/run.achx");
+        System.IDisposable? cachedBefore = LoaderManager.Self.GetDisposable(cacheKey);
+        cachedBefore.ShouldNotBeNull();
+        WriteChain(world.Dir, "run.achx", "other.png", 0.5f, frames: 3);
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "run.achx"));
+
+        verdict.Reloaded.ShouldBeTrue();
+        ShouldBeCorrect(verdict);
+        // The cached chains were dropped and read again from the copy in the bin folder.
+        System.IDisposable? cachedAfter = LoaderManager.Self.GetDisposable(cacheKey);
+        cachedAfter.ShouldNotBeNull();
+        cachedAfter.ShouldNotBeSameAs(cachedBefore);
+    }
+
+    [Fact]
+    public void Texture_AnimationChainFile_PlayingChainRenamed_ReportsThatARestartIsNeeded()
+    {
+        PreviewAccuracy2World world = BootWithChain();
+        WriteChains(world.Dir, "run.achx", ("Walk", "other.png"));
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "run.achx"));
+
+        verdict.MatchesRestart.ShouldBeFalse();
+        verdict.Kinds.ShouldBe("ReloadFailed");
+        // No chain of the new file plays, as nothing plays after a restart.
+        verdict.Hot.ShouldNotContain("CurrentChainName=Walk");
+    }
+
+    [Fact]
+    public void Texture_AnimationChainFile_PlayingChainDeleted_ReportsThatARestartIsNeeded()
+    {
+        PreviewAccuracy2World world = BootWithChain();
+        WriteChains(world.Dir, "run.achx", ("Other", "other.png"));
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "run.achx"));
+
+        verdict.MatchesRestart.ShouldBeFalse();
+        verdict.Kinds.ShouldBe("ReloadFailed");
+    }
+
+    [Fact]
+    public void Texture_AnimationChainFile_ChainsReordered_PlayingChainFoundByName()
     {
         PreviewAccuracy2World world = Boot();
         world.Save(
@@ -141,14 +269,73 @@ public partial class PreviewAccuracy2Tests
                 Std(MainScreen(project), "Pic", "SourceFile", "Content/run.achx");
                 Std(MainScreen(project), "Pic", "CurrentChainName", "Run");
             },
-            dir => WriteChain(dir, "run.achx", "red.png", 0.1f));
-        WriteChain(world.Dir, "run.achx", "other.png", 0.5f, frames: 3);
-        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "run.achx"));
-
-        verdict.Reloaded.ShouldBeFalse("an .achx is not a file hot reload reacts to");
-        verdict.Differs.ShouldBeTrue();
+            dir => WriteChains(dir, "run.achx", ("Run", "red.png"), ("Other", "other.png")));
+        WriteChains(world.Dir, "run.achx", ("Other", "other.png"), ("Run", "red.png"));
+        ShouldBeCorrect(world.Reload(Content(world.Dir, "run.achx")));
     }
 
+    [Fact]
+    public void Texture_AnimationChainFile_ChainsAssignedByCode_AreLeftAlone()
+    {
+        PreviewAccuracy2World world = BootWithChain();
+        SpriteRuntime pic = (SpriteRuntime)world.Screen.GetGraphicalUiElementByName("Pic")!;
+        AnimationChainList mine = new AnimationChainList { new AnimationChain { Name = "Mine" } };
+        pic.AnimationChains = mine;
+
+        WriteChain(world.Dir, "run.achx", "other.png", 0.5f, frames: 3);
+        world.Reload(Content(world.Dir, "run.achx"));
+
+        pic.AnimationChains.ShouldBeSameAs(mine);
+    }
+
+    [Fact]
+    public void Texture_AnimationChainFile_PlayedInsideAComponentInstance_EditedOnDisk_IsReloadedAndReapplied()
+    {
+        PreviewAccuracy2World world = Boot();
+        world.Save(
+            project =>
+            {
+                Std(Component(project, "Widgets/Badge"), "Pic", "SourceFile", "Content/run.achx");
+                Std(Component(project, "Widgets/Badge"), "Pic", "CurrentChainName", "Run");
+            },
+            dir => WriteChain(dir, "run.achx", "red.png", 0.1f));
+        WriteChain(world.Dir, "run.achx", "other.png", 0.5f, frames: 3);
+        ShouldBeCorrect(world.Reload(Content(world.Dir, "run.achx")));
+    }
+
+    [Fact]
+    public void Texture_ImageOnlyAnimationChainFramesUse_ReplacedOnDisk_ReportsThatARestartIsNeeded()
+    {
+        PreviewAccuracy2World world = Boot();
+        WritePng(Content(world.Dir, "frames.png"), 16, 16);
+        world.Save(
+            project =>
+            {
+                Std(MainScreen(project), "Pic", "SourceFile", "Content/run.achx");
+                Std(MainScreen(project), "Pic", "CurrentChainName", "Run");
+            },
+            dir => WriteChains(dir, "run.achx", ("Run", "frames.png")));
+        WritePng(Content(world.Dir, "frames.png"), 32, 32);
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "frames.png"));
+
+        verdict.Reloaded.ShouldBeTrue();
+        verdict.MatchesRestart.ShouldBeFalse();
+        verdict.Kinds.ShouldBe("ReloadFailed");
+    }
+
+    [Fact]
+    public void Texture_ImageReplacedOnDisk_StaysListedInLaterResults()
+    {
+        PreviewAccuracy2World world = Boot();
+        WritePng(Content(world.Dir, "red.png"), 32, 32);
+        world.Reload(Content(world.Dir, "red.png")).MatchesRestart.ShouldBeFalse();
+
+        PreviewVerdict2 later = world.Save(project => Std(MainScreen(project), "Box", "Red", 99));
+
+        later.Reloaded.ShouldBeTrue();
+        later.MatchesRestart.ShouldBeFalse();
+        later.Kinds.ShouldContain("ReloadFailed");
+    }
 
     [Fact]
     public void Texture_AnimationChain_CurrentChainNameChanged()

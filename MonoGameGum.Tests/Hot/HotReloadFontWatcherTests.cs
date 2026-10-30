@@ -1,4 +1,5 @@
 #pragma warning disable CS0618
+using Gum.DataTypes;
 using Shouldly;
 using System;
 using System.Diagnostics;
@@ -52,6 +53,14 @@ public class HotReloadFontWatcherTests : BaseTestClass
             File.SetLastWriteTimeUtc(file, DateTime.UtcNow.AddMinutes(1));
         }
         global::ToolsUtilities.FileManager.RelativeDirectory = bin + "/";
+        // macOS reports the first read of a file after it was written as a change (access time). Read every
+        // file once now, so a later read by this test is not taken for an edit of an image, and let the
+        // events the writes caused arrive before the watcher starts.
+        foreach (string file in Directory.EnumerateFiles(world.Dir, "*.*", SearchOption.AllDirectories))
+        {
+            File.ReadAllBytes(file);
+        }
+        Thread.Sleep(1500);
         world.Manager.Start(world.Gumx);
         return world;
     }
@@ -64,6 +73,16 @@ public class HotReloadFontWatcherTests : BaseTestClass
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             File.Copy(file, target, overwrite: true);
         }
+    }
+
+    // The project saved with one edit, the way the tool writes it. World.Save also reads every file in the
+    // folder, which macOS reports as a change of each of them.
+    private static void SaveProject(PreviewAccuracy2World world)
+    {
+        GumProjectSave edited = Baseline();
+        Std(MainScreen(edited), "Caption", "Text", "Edited");
+        edited.Initialize();
+        SaveAll(edited, world.Gumx);
     }
 
     // The game's frame loop on the real clock.
@@ -89,7 +108,7 @@ public class HotReloadFontWatcherTests : BaseTestClass
 
         RunFrames(world, TimeSpan.FromSeconds(3));
         world.Results.Count.ShouldBe(settled, "reloads in the quiet three seconds after");
-        world.Results.SelectMany(result => result.Issues).ShouldBeEmpty();
+        world.Results.SelectMany(result => result.Issues).ShouldBeEmpty(string.Join(" | ", world.Results.SelectMany(result => result.Issues).Select(issue => issue.Kind + ": " + issue.Message)));
     }
 
     [Fact]
@@ -97,7 +116,7 @@ public class HotReloadFontWatcherTests : BaseTestClass
     {
         PreviewAccuracy2World world = BootWithManyFonts(nestedBin: false);
 
-        world.Save(project => Std(MainScreen(project), "Caption", "Text", "Edited"), notifyEverything: false);
+        SaveProject(world);
 
         ShouldSettle(world);
     }
@@ -117,7 +136,7 @@ public class HotReloadFontWatcherTests : BaseTestClass
     {
         PreviewAccuracy2World world = BootWithManyFonts(nestedBin: true);
 
-        world.Save(project => Std(MainScreen(project), "Caption", "Text", "Edited"), notifyEverything: false);
+        SaveProject(world);
 
         ShouldSettle(world);
     }
