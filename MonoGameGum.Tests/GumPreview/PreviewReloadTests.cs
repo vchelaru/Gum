@@ -43,7 +43,7 @@ public class PreviewReloadTests : BaseTestClass
     private void StartPreview(SweepSpec spec)
     {
         _world.Boot(spec);
-        _world.Manager.ReloadFinished += result => _policy.OnReloadFinished(result, _isElementMissing);
+        _world.Manager.ReloadFinished += result => _policy.OnReloadFinished(result, PreviewReloadPolicy.IsStateSelected(_selection), _isElementMissing);
         ShowSelection();
         _isElementMissing.ShouldBeFalse();
     }
