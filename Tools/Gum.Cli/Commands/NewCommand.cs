@@ -1,10 +1,8 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using Gum.DataTypes;
+using System.Threading;
 using Gum.ProjectServices;
 
 namespace Gum.Cli.Commands;
@@ -46,7 +44,7 @@ public static class NewCommand
             description: "Create a full, runnable game project for a platform (not just a Gum project), referencing Gum " +
                          "through NuGet, with the Gum project inside it at Content/GumProject and code generation already " +
                          "configured. <path> then names the project folder. Omit this option to create only a Gum project. " +
-                         $"Accepted values: {ValidPlatformNames}. 'stride' runs on Windows only; 'kniskia' is KNI drawing Gum through Skia.");
+                         $"Accepted values: {NewProjectPlatforms.ValidNames}. 'stride' runs on Windows only; 'kniskia' is KNI drawing Gum through Skia.");
 
         var noRestoreOption = new Option<bool>(
             "--no-restore",
@@ -83,190 +81,50 @@ public static class NewCommand
         return command;
     }
 
-    // The --platform values. An alias follows its platform's main name and is not listed as a valid value.
-    private static readonly (string Name, HostPlatform Platform)[] Platforms =
-    {
-        ("monogame", HostPlatform.MonoGame),
-        ("kni", HostPlatform.Kni),
-        ("kniskia", HostPlatform.KniSkia),
-        ("raylib", HostPlatform.Raylib),
-        ("stride", HostPlatform.Stride),
-        ("silknet", HostPlatform.SilkNet),
-        ("silk.net", HostPlatform.SilkNet)
-    };
-
-    private static string ValidPlatformNames =>
-        string.Join(", ", Platforms.GroupBy(entry => entry.Platform).Select(group => group.First().Name));
-
-    private const string DefaultProjectName = "GumProject";
-    private const string DefaultPlatformProjectName = "MyGumGame";
-
     private static int Execute(
         string? path, string template, string? theme, string? platform, bool noRestore, bool sourceLinked)
     {
-        if (sourceLinked && platform == null)
+        INewProjectService service = new NewProjectService(
+            FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory()),
+            new DotnetRestoreRunner(),
+            new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() });
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
         {
-            Console.Error.WriteLine("--source-linked needs --platform: it links a platform's Gum runtime project.");
+            Path = path,
+            Template = template,
+            Theme = theme,
+            Platform = platform,
+            SourceLinked = sourceLinked,
+            Restore = !noRestore
+        });
+
+        if (validation.Resolved == null)
+        {
+            Console.Error.WriteLine(validation.Error!.Message);
             return 2;
         }
 
-        if (!string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(template, "empty", StringComparison.OrdinalIgnoreCase))
+        NewProjectFilesResult files = service.CreateFilesAsync(validation.Resolved, CancellationToken.None).GetAwaiter().GetResult();
+
+        if (!files.Success)
         {
-            Console.Error.WriteLine($"Unknown template '{template}'. Valid values are: forms, empty.");
+            Console.Error.WriteLine(files.ErrorMessage);
             return 2;
         }
 
-        string? themeDirectory = null;
-        if (theme != null)
+        if (files.CsprojPath == null)
         {
-            if (!string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.Error.WriteLine("--theme needs the 'forms' template: themes style the Forms controls.");
-                return 2;
-            }
-
-            if (!TryFindThemeDirectory(theme, out themeDirectory))
-            {
-                return 2;
-            }
+            Console.WriteLine($"Created project: {files.GumProjectPath}");
+            return 0;
         }
 
-        if (platform != null)
-        {
-            return ExecuteWithPlatform(path, template, themeDirectory, platform, noRestore, sourceLinked);
-        }
-
-        string fullPath;
-
-        if (string.IsNullOrEmpty(path))
-        {
-            fullPath = Path.GetFullPath(Path.Combine(DefaultProjectName, DefaultProjectName + "." + GumProjectSave.ProjectJsonExtension));
-        }
-        else if (GumProjectSave.IsProjectFile(path))
-        {
-            fullPath = Path.GetFullPath(path);
-        }
-        else
-        {
-            // Treat as a project name: create <name>/<name>.gumj
-            var directoryName = Path.GetFileName(path);
-            fullPath = Path.GetFullPath(Path.Combine(path, directoryName + "." + GumProjectSave.ProjectJsonExtension));
-        }
-
-        if (File.Exists(fullPath))
-        {
-            Console.Error.WriteLine($"Project already exists: {fullPath}");
-            return 2;
-        }
-
-        var directory = Path.GetDirectoryName(fullPath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        if (themeDirectory != null)
-        {
-            IFormsTemplateCreator themeCreator = new FormsTemplateCreator();
-            themeCreator.CreateFromTheme(fullPath, themeDirectory);
-        }
-        else if (string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase))
-        {
-            IFormsTemplateCreator formsCreator = new FormsTemplateCreator();
-            formsCreator.Create(fullPath);
-        }
-        else
-        {
-            IProjectCreator creator = new ProjectCreator();
-            creator.Create(fullPath);
-        }
-
-        Console.WriteLine($"Created project: {fullPath}");
-        return 0;
-    }
-
-    // The default theme is the plain Forms template, so it resolves to no folder and the caller falls through to it.
-    private static bool TryFindThemeDirectory(string theme, out string? themeDirectory)
-    {
-        themeDirectory = null;
-        if (string.Equals(theme, "Standard", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        IFormsThemeLocator locator = FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory());
-        themeDirectory = locator.FindThemeDirectory(theme);
-        if (themeDirectory != null)
-        {
-            return true;
-        }
-
-        string available = string.Join(", ", new[] { "Standard" }.Concat(locator.GetAvailableThemes()));
-        Console.Error.WriteLine($"Unknown theme '{theme}'. Available themes: {available}.");
-        return false;
-    }
-
-    private static int ExecuteWithPlatform(
-        string? path, string template, string? themeDirectory, string platform, bool noRestore, bool sourceLinked)
-    {
-        if (string.Equals(platform, "fna", StringComparison.OrdinalIgnoreCase))
-        {
-            Console.Error.WriteLine("FNA projects can't be scaffolded: FNA is not published to NuGet, so it has to be linked from source.");
-            return 2;
-        }
-
-        HostPlatform? match = Platforms
-            .Where(entry => string.Equals(entry.Name, platform, StringComparison.OrdinalIgnoreCase))
-            .Select(entry => (HostPlatform?)entry.Platform)
-            .FirstOrDefault();
-        if (match is not HostPlatform hostPlatform)
-        {
-            Console.Error.WriteLine($"Unknown platform '{platform}'. Valid values are: {ValidPlatformNames}.");
-            return 2;
-        }
-
-        if (!string.IsNullOrEmpty(path) && GumProjectSave.IsProjectFile(path))
-        {
-            Console.Error.WriteLine("With --platform, <path> names the project folder, not a Gum project file.");
-            return 2;
-        }
-
-        string? gumSourceDirectory = null;
-        if (sourceLinked)
-        {
-            gumSourceDirectory = GumSourceLocator.Find(AppContext.BaseDirectory)
-                ?? GumSourceLocator.Find(Directory.GetCurrentDirectory());
-            if (gumSourceDirectory == null)
-            {
-                Console.Error.WriteLine(
-                    "--source-linked needs a Gum checkout: run a gumcli built from one, or run this from inside one.");
-                return 2;
-            }
-        }
-
-        string projectDirectory = Path.GetFullPath(string.IsNullOrEmpty(path) ? DefaultPlatformProjectName : path);
-
-        IPlatformProjectScaffolder scaffolder = new PlatformProjectScaffolder();
-        PlatformProjectResult result = scaffolder.Create(
-            projectDirectory,
-            hostPlatform,
-            includeFormsTemplate: string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase),
-            gumSourceDirectory,
-            themeDirectory);
-
-        if (!result.Success)
-        {
-            Console.Error.WriteLine(result.ErrorMessage);
-            return 2;
-        }
-
-        Console.WriteLine($"Created project: {result.CsprojPath}");
-        Console.WriteLine($"Created Gum project: {result.GumProjectPath}");
+        Console.WriteLine($"Created project: {files.CsprojPath}");
+        Console.WriteLine($"Created Gum project: {files.GumProjectPath}");
 
         if (!noRestore)
         {
-            Restore(result.CsprojPath);
+            Restore(service, files.CsprojPath);
         }
 
         return 0;
@@ -274,31 +132,21 @@ public static class NewCommand
 
     // Code generation reads the Gum version from the restored package, so restoring now makes the
     // first generation target the right syntax. A failure (offline, no SDK on PATH) is not fatal.
-    private static void Restore(string csprojPath)
+    private static void Restore(INewProjectService service, string csprojPath)
     {
         Console.WriteLine("Restoring NuGet packages...");
 
-        try
+        RestoreResult result = service
+            .RestoreAsync(csprojPath, Console.WriteLine, CancellationToken.None)
+            .GetAwaiter().GetResult();
+
+        if (result.Status == RestoreStatus.ProcessNotFound)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo("dotnet")
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            startInfo.ArgumentList.Add("restore");
-            startInfo.ArgumentList.Add(csprojPath);
-
-            using Process? process = Process.Start(startInfo);
-            process?.WaitForExit();
-
-            if (process == null || process.ExitCode != 0)
-            {
-                Console.Error.WriteLine($"warning: 'dotnet restore' failed. Run it on {csprojPath} before generating code.");
-            }
+            Console.Error.WriteLine($"warning: could not run 'dotnet restore' ({result.ErrorMessage}). Run it on {csprojPath} before generating code.");
         }
-        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception or InvalidOperationException)
+        else if (result.Status != RestoreStatus.Succeeded)
         {
-            Console.Error.WriteLine($"warning: could not run 'dotnet restore' ({exception.Message}). Run it on {csprojPath} before generating code.");
+            Console.Error.WriteLine($"warning: 'dotnet restore' failed. Run it on {csprojPath} before generating code.");
         }
     }
 }
