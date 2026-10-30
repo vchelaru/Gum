@@ -390,7 +390,7 @@ public class NewProjectDialogViewModelTests
     [Fact]
     public async Task Plan_FillsTheTree_WithCountsPerFolderAndATotal()
     {
-        NewProjectDialogViewModel viewModel = Create();
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
 
         await viewModel.PlanRefresh;
 
@@ -404,6 +404,36 @@ public class NewProjectDialogViewModelTests
         root.Children.Single(child => child.Name == "Fonts").CountText.ShouldBe("2");
         root.Children.Single(child => child.Name == "Empty").CountText.ShouldBe("0");
         root.Children.Single(child => child.Name == "A.gumj").IsMainFile.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Plan_ForAGumOnlyProject_ShowsNoCount_AndSaysTheToolAddsMore()
+    {
+        NewProjectDialogViewModel viewModel = Create();
+
+        await viewModel.PlanRefresh;
+
+        viewModel.FilesCountText.ShouldBeEmpty();
+        viewModel.PlanTotalText.ShouldBe(NewProjectDialogText.GumOnlyFilesNote);
+        viewModel.PlanTree.Single().Children.ShouldNotBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false, 2)]
+    [InlineData(true, 3)]
+    public async Task Plan_LeavesOutTheDemoScreen_WhenItIsUnchecked(bool includeDemo, int expectedFiles)
+    {
+        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan(
+            "root", new[] { "Screens/DemoScreenGum.gusj", "Screens/Other.gusj", "A.gumj" }, Array.Empty<string>()));
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.IsIncludeDemoScreenGum = includeDemo;
+        });
+
+        await viewModel.PlanRefresh;
+
+        viewModel.PlanFileCount.ShouldBe(expectedFiles);
     }
 
     [Fact]

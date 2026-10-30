@@ -793,13 +793,32 @@ public class NewProjectDialogViewModel : DialogViewModel
             return;
         }
 
+        plan = WithoutUncheckedDemoScreen(plan);
         PlanTree = new[] { NewProjectPlanNode.Build(plan, NewProjectDisplayPath.AsFolder(Path.Combine(folder, name)), mainFile, openDepth: game ? 3 : 1) };
         PlanFileCount = plan.Files.Count;
-        FilesCountText = $"({plan.Files.Count})";
-        PlanTotalText = plan.Files.Count == 1 ? "1 file" : $"{plan.Files.Count} files";
+        // A code project is written entirely by the shared creators, so its count is exact. A Gum-only project is
+        // written by the tool (starting screen, theme import), so only the template is listed and no count is shown.
+        FilesCountText = game ? $"({plan.Files.Count})" : string.Empty;
+        PlanTotalText = !game
+            ? NewProjectDialogText.GumOnlyFilesNote
+            : plan.Files.Count == 1 ? "1 file" : $"{plan.Files.Count} files";
     }
 
     #endregion
+
+    // The tool leaves DemoScreenGum out unless it is checked, though the template always contains it.
+    private NewProjectPlan WithoutUncheckedDemoScreen(NewProjectPlan plan)
+    {
+        if (!IsIncludeFormsControls || IsIncludeDemoScreenGum)
+        {
+            return plan;
+        }
+
+        string[] files = plan.Files
+            .Where(file => !NewProjectDisplayPath.Normalize(file).Split(Path.DirectorySeparatorChar)[^1].StartsWith("DemoScreenGum.", StringComparison.Ordinal))
+            .ToArray();
+        return new NewProjectPlan(plan.RootDirectory, files, plan.Directories);
+    }
 
     private static string GetPlatformLabel(string name) => name switch
     {

@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Dialogs;
