@@ -66,4 +66,4 @@ Available in November 2026, or now if building Gum from source.
 
 ## Emoji and MaxLength
 
-An emoji counts as one character for the caret, Backspace, Delete, and clicking. `MaxLength` counts UTF-16 `char` values, so an emoji counts as two, and an emoji that would straddle the limit is dropped whole. Pasting text that exceeds `MaxLength` inserts what fits.
+An emoji counts as one character for the caret, Backspace, Delete, and clicking. `MaxLength` counts UTF-16 `char` values, so an emoji counts as two, and an emoji that would straddle the limit is dropped whole. Pasting text that exceeds `MaxLength` inserts the paste, then cuts the result to `MaxLength` from the end, so text after the caret is what gets cut.

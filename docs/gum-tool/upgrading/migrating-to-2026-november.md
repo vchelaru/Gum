@@ -722,4 +722,4 @@ Available in November 2026, or now if building Gum from source.
 
 Generated code now omits the `UnityEngine.RuntimeInitializeOnLoadMethod` startup hook when `GUM_NO_UNITY_ENGINE` is defined, and uses `[ModuleInitializer]` instead. This lets generated code compile in a Unity assembly with **No Engine References**, which defines `UNITY_5_3_OR_NEWER` but cannot see `UnityEngine`.
 
-This affects you only if you define `GUM_NO_UNITY_ENGINE`. Regenerate your code from the Gum tool. Unity does not run `[ModuleInitializer]` methods, so call the generated `RegisterRuntimeType()` methods yourself. See [Unity](../../code/getting-started/setup/adding-initializing-gum/unity.md#generated-code-in-an-assembly-with-no-engine-references).
+This affects you only if you define `GUM_NO_UNITY_ENGINE`. Regenerate your code from the Gum tool. Unity does not run `[ModuleInitializer]` methods, so call the generated `RegisterRuntimeType()` methods and `StandardElementsCodeGenRegistration.RegisterFallbackStandardElements()` yourself at startup. See [Unity](../../code/getting-started/setup/adding-initializing-gum/unity.md#generated-code-in-an-assembly-with-no-engine-references).

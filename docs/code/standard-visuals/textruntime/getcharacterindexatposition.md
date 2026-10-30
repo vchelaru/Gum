@@ -106,4 +106,4 @@ if (textRuntime.HasCursorOver(cursor))
 }
 ```
 
-`GetCharacterIndexAtPosition` returns `-1` when no character is under the position, and `GetTagAtIndex` returns `null` for that index.
+`GetCharacterIndexAtPosition` returns the nearest caret position, not the character under the point. A point past the end of the text returns the text length, and a point on the right half of a character returns the index after it. For a tag, that means the right half of its last letter gives an index equal to `EndIndex`, and `GetTagAtIndex` returns `null` there because `EndIndex` is exclusive. Check that the cursor is over the text first, as the sample does, and expect a click on the right half of a link's last letter to miss.

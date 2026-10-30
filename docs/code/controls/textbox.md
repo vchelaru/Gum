@@ -107,7 +107,7 @@ panel.AddChild(textBox);
 
 ## MaxLength
 
-The `MaxLength` property can be used to restrict the number of characters that can be entered into a `TextBox`. This limit applies to both user typing and pasting. If a user attempts to type more characters than allowed, the extra characters are ignored. If a user pastes a string that would exceed the limit, the `TextBox` inserts the pasted text and cuts the result to `MaxLength` from the end, the same as typing. A paste near the limit therefore inserts as much as fits.
+The `MaxLength` property can be used to restrict the number of characters that can be entered into a `TextBox`. This limit applies to both user typing and pasting. If a user attempts to type more characters than allowed, the extra characters are ignored. If a user pastes a string that would exceed the limit, the `TextBox` inserts the pasted text and cuts the result to `MaxLength` from the end, the same as typing. If the caret is in the middle of the text, the text after the caret is what gets cut.
 
 `MaxLength` counts UTF-16 `char` values, the same as `string.Length`, so an emoji counts as two. An emoji that would straddle the limit is dropped whole rather than split.
 

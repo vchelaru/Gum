@@ -88,13 +88,14 @@ Available in November 2026, or now if building Gum from source.
 
 The `Link` tag marks a range of text with an id. Gum does not style the range, and the tag is removed from the drawn text. Your code finds the range under a point with `GetTagAtIndex`, which takes a tag name and a character index and returns the tag that contains that character, or `null` if there is none. The index is in the displayed text (BBCode removed), the same index `GetCharacterIndexAtPosition` returns, so the two combine to find the link under the cursor.
 
-The returned `TextTagSpan` has `Name`, `Argument` (the id, such as `shop`), `StartIndex`, and `EndIndex`. `EndIndex` is one past the last character in the tag. The tag name is not case sensitive. When tags with the same name are nested, `GetTagAtIndex` returns the innermost one. A tag is only found if it has a closing tag.
+The returned `TextTagSpan` has `Name`, `Argument` (the id, such as `shop`), `StartIndex`, and `EndIndex`. `EndIndex` is one past the last character in the tag. `GetCharacterIndexAtPosition` returns the nearest caret position, so a click on the right half of a link's last letter gives `EndIndex` and finds no tag. The tag name is not case sensitive. When tags with the same name are nested, `GetTagAtIndex` returns the innermost one. A tag is only found if it has a closing tag.
 
-The following code opens a different page depending on which link the player clicks. The `Color` tags are optional. They make the links visible:
+The following code shows which link the player clicked in a `Label`. The `Color` tags are optional. They make the links visible:
 
 ```csharp
 // Class scope
 TextRuntime linkText;
+Label linkLabel;
 
 protected override void Initialize()
 {
@@ -105,6 +106,10 @@ protected override void Initialize()
         "Visit the [Link=shop][Color=Yellow]shop[/Color][/Link] " +
         "or read the [Link=help][Color=Yellow]help[/Color][/Link].";
     linkText.AddToRoot();
+
+    linkLabel = new Label();
+    linkLabel.AddToRoot();
+    linkLabel.Y = 40;
 
     base.Initialize();
 }
@@ -123,8 +128,8 @@ protected override void Update(GameTime gameTime)
         TextTagSpan? link = linkText.GetTagAtIndex("Link", index);
         if (link != null)
         {
-            // link.Value.Argument is "shop" or "help"
-            OpenPage(link.Value.Argument);
+            // Argument is "shop" or "help"
+            linkLabel.Text = "Clicked " + link.Value.Argument;
         }
     }
 
