@@ -16,6 +16,52 @@ public class ProjectLoaderTests
         _sut = new ProjectLoader();
     }
 
+    // The New Project dialog loads template projects on a background thread while the tool's UI thread reads the
+    // shared ObjectFinder; a load that swapped the tool's open project there made plugins see the template's.
+    [Fact]
+    public void Load_NeverShowsTheLoadedProject_ThroughTheSharedObjectFinder()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        GumProjectSave openProject = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = openProject;
+        try
+        {
+            new ProjectCreator().Create(gumxPath);
+
+            bool stop = false;
+            GumProjectSave? seenInstead = null;
+            Task reader = Task.Run(() =>
+            {
+                while (!Volatile.Read(ref stop))
+                {
+                    GumProjectSave? current = ObjectFinder.Self.GumProjectSave;
+                    if (!ReferenceEquals(current, openProject))
+                    {
+                        seenInstead = current;
+                        return;
+                    }
+                }
+            });
+
+            for (int i = 0; i < 100 && !reader.IsCompleted; i++)
+            {
+                _sut.Load(gumxPath).Success.ShouldBeTrue();
+            }
+            Volatile.Write(ref stop, true);
+            reader.Wait();
+
+            seenInstead.ShouldBeNull();
+            ObjectFinder.Self.GumProjectSave.ShouldBeSameAs(openProject);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
     [Fact]
     public void Load_ShouldDefaultFontGeneratorToBmFont_WhenFontGeneratorElementMissing()
     {

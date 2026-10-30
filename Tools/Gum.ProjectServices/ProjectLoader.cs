@@ -83,19 +83,15 @@ public class ProjectLoader : IProjectLoader
     /// <summary>
     /// Applies the same load-time cleanup as the tool's load, so headless codegen never emits a
     /// variable the runtime no longer has (#6612). The cleanup resolves instance base types through
-    /// <see cref="ObjectFinder"/>, so the project is set on it for the duration of the call.
+    /// <see cref="ObjectFinder"/>, so the project is given to a finder of its own on this thread. Setting it on
+    /// the shared one would swap the tool's open project for the duration, which the UI thread reads while the
+    /// New Project dialog loads template projects on a background thread.
     /// </summary>
     private static void StripRemovedVariables(GumProjectSave project)
     {
-        GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
-        ObjectFinder.Self.GumProjectSave = project;
-        try
+        using (ObjectFinder.UseOnThisThread(new ObjectFinder { GumProjectSave = project }))
         {
             project.StripCircleRectangleGradientColor1();
-        }
-        finally
-        {
-            ObjectFinder.Self.GumProjectSave = previousProject;
         }
     }
 
