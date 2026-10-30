@@ -890,29 +890,72 @@ public class TextRuntime : InteractiveGue
 #endif
 
 #if XNALIKE
+    // Test seam for the retry delay below.
+    internal static Func<DateTime> PrebuiltFontClock = () => DateTime.UtcNow;
+
+    // Paths with no usable pre-built font, and when each was found missing or broken. Automatic
+    // oversampling asks every frame for every zoomed text, so without this each one would probe the disk
+    // (or, on KNI, throw) per frame. Retried after a second because a font written later, such as by hot
+    // reload, has no hook into TextRuntime. Bounded by the distinct sizes a game asks for.
+    static readonly Dictionary<string, DateTime> _prebuiltFontMisses = new(StringComparer.OrdinalIgnoreCase);
+    static readonly TimeSpan PrebuiltFontRetryDelay = TimeSpan.FromSeconds(1);
+    const int MaxPrebuiltFontMisses = 256;
+
     /// <summary>
     /// Loads <paramref name="fontCacheFileName"/> (a project-relative FontCache path) as a new
-    /// instance, or null if the project did not build that size. Never the LoaderManager's shared
-    /// instance, because the oversampled-font map disposes its font once no text uses it.
+    /// instance, or null if the project did not build that size or the file is unusable (reported
+    /// through PropertyAssignmentError). Never the LoaderManager's shared instance, because the
+    /// oversampled-font map disposes its font once no text uses it. Never throws: this runs from
+    /// Text.OnPreRender, where an escaping exception leaves the SpriteBatch open.
     /// </summary>
     BitmapFont? TryLoadPrebuiltOversampledFont(string fontCacheFileName)
     {
         string fullFileName = ToolsUtilities.FileManager.Standardize(fontCacheFileName, preserveCase: true, makeAbsolute: true);
+        DateTime now = PrebuiltFontClock();
+        if (_prebuiltFontMisses.TryGetValue(fullFileName, out DateTime missedAt) && now - missedAt < PrebuiltFontRetryDelay)
+        {
+            return null;
+        }
+
+        BitmapFont? font = null;
 #if KNI
         // Browser builds have no File.Exists, so try the load and treat a failure as "not built".
         try
         {
-            return new BitmapFont(fullFileName, checkForShadowSibling: HasDropshadow);
+            font = new BitmapFont(fullFileName, checkForShadowSibling: HasDropshadow);
         }
         catch
         {
-            return null;
+            font = null;
         }
 #else
-        return ToolsUtilities.FileManager.FileExists(fullFileName)
-            ? new BitmapFont(fullFileName, checkForShadowSibling: HasDropshadow)
-            : null;
+        if (ToolsUtilities.FileManager.FileExists(fullFileName))
+        {
+            try
+            {
+                font = new BitmapFont(fullFileName, checkForShadowSibling: HasDropshadow);
+            }
+            catch (Exception ex)
+            {
+                CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                    $"Error loading pre-built oversampled font '{fullFileName}', keeping the native font:\n{ex}");
+            }
+        }
 #endif
+
+        if (font == null)
+        {
+            if (_prebuiltFontMisses.Count >= MaxPrebuiltFontMisses)
+            {
+                _prebuiltFontMisses.Clear();
+            }
+            _prebuiltFontMisses[fullFileName] = now;
+        }
+        else
+        {
+            _prebuiltFontMisses.Remove(fullFileName);
+        }
+        return font;
     }
 #endif
 

@@ -37,6 +37,7 @@ public class TextRuntimeOversampledFontCacheTests : BaseTestClass
     {
         // The shared oversampled fonts are static and keyed by name, so texts still using one would
         // hand it to the next test. Turning oversampling off puts each text back on its native font.
+        TextRuntime.PrebuiltFontClock = () => DateTime.UtcNow;
         TextRuntime.UseFontOversampling = false;
         foreach (TextRuntime textRuntime in _texts)
         {
@@ -175,6 +176,81 @@ public class TextRuntimeOversampledFontCacheTests : BaseTestClass
 
         text.BitmapFont.ShouldBeSameAs(nativeFont);
         text.OversampleCompensationScale.ShouldBe(1f);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("this is not a font file")]
+    public void RegenerateOversampledFont_CorruptFntInFontCache_KeepsTheNativeFontAndReportsTheError(string contents)
+    {
+        Directory.CreateDirectory(Path.Combine(_contentFolder, "FontCache"));
+        File.WriteAllText(Path.Combine(_contentFolder, "FontCache", "Font40Pixel.fnt"), contents);
+        TextRuntime textRuntime = CreateText();
+        Text text = GetText(textRuntime);
+        BitmapFont? nativeFont = text.BitmapFont;
+        List<string> errors = new();
+        Action<string> onError = errors.Add;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += onError;
+        try
+        {
+            bool result = false;
+            Should.NotThrow(() => result = textRuntime.RegenerateOversampledFont(2f));
+
+            result.ShouldBeFalse();
+            text.BitmapFont.ShouldBeSameAs(nativeFont);
+            errors.ShouldContain(error => error.Contains("Font40Pixel.fnt"));
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= onError;
+        }
+    }
+
+    [Fact]
+    public void RegenerateOversampledFont_SizeMissingFromFontCache_ProbesOncePerSecondNotOncePerCall()
+    {
+        DateTime now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        TextRuntime.PrebuiltFontClock = () => now;
+        int probes = 0;
+        global::ToolsUtilities.FileManager.CustomGetStreamFromFile = name =>
+        {
+            if (name.EndsWith("Font40Pixel.fnt"))
+            {
+                probes++;
+            }
+            return null!;
+        };
+        TextRuntime first = CreateText();
+        TextRuntime second = CreateText();
+
+        for (int frame = 0; frame < 5; frame++)
+        {
+            first.RegenerateOversampledFont(2f);
+            second.RegenerateOversampledFont(2f);
+        }
+
+        probes.ShouldBe(1);
+
+        now = now.AddSeconds(1.5);
+        first.RegenerateOversampledFont(2f);
+        second.RegenerateOversampledFont(2f);
+
+        probes.ShouldBe(2);
+    }
+
+    [Fact]
+    public void RegenerateOversampledFont_SizeAppearsInFontCacheAfterTheRetryDelay_IsUsed()
+    {
+        DateTime now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        TextRuntime.PrebuiltFontClock = () => now;
+        TextRuntime textRuntime = CreateText();
+        textRuntime.RegenerateOversampledFont(2f).ShouldBeFalse();
+
+        BuildPrebuiltSize40();
+        textRuntime.RegenerateOversampledFont(2f).ShouldBeFalse("because the miss is remembered for a second");
+        now = now.AddSeconds(1.5);
+
+        textRuntime.RegenerateOversampledFont(2f).ShouldBeTrue();
     }
 
     private const string StubFontData =
