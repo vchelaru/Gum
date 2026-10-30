@@ -761,10 +761,10 @@ public class TextRuntime : InteractiveGue
     /// KernSmith's rasterizer has fractional precision (see issue #4304), so this is not rounded. The
     /// raster never goes below <see cref="FontSize"/>.</param>
     /// <returns>
-    /// True if the font was regenerated. False if <see cref="UseFontOversampling"/> is off, no
-    /// in-memory font creator is registered, or <paramref name="oversampleRatio"/> is not positive --
-    /// oversampling only makes sense with dynamic font generation, since a disk-based font cache
-    /// holds a fixed set of pre-baked sizes.
+    /// True if the font was regenerated. False if <see cref="UseFontOversampling"/> is off,
+    /// <paramref name="oversampleRatio"/> is not positive, or nothing could supply the raster size:
+    /// no in-memory font creator is registered (Raylib), or the creator returned nothing and the
+    /// project's FontCache has no pre-built font at that size (MonoGame, KNI, FNA; issue #7157).
     /// </returns>
     public bool RegenerateOversampledFont(float oversampleRatio)
     {
@@ -778,7 +778,7 @@ public class TextRuntime : InteractiveGue
 
     bool RegenerateOversampledFontAtRasterSize(float rasterFontSize)
     {
-        if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
+        if (!CanOversample)
         {
             return false;
         }
@@ -792,7 +792,7 @@ public class TextRuntime : InteractiveGue
         BitmapFont? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
         try
         {
-            font ??= CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+            font ??= CustomSetPropertyOnRenderableType.InMemoryFontCreator?.TryCreateFont(bmfcSave);
         }
         catch (Exception ex)
         {
@@ -802,9 +802,12 @@ public class TextRuntime : InteractiveGue
             // throwing "Begin has already been called" (found via a BlazorGL/WASM repro where the default
             // FreeType rasterizer backend can't run and TryCreateFont throws instead of returning null).
             CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
-                $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator.GetType().Name}:\n{ex}");
+                $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator!.GetType().Name}:\n{ex}");
             return false;
         }
+
+        // Issue #7157: a size the project built ahead of time (gumcli fonts) needs no runtime creator.
+        font ??= TryLoadPrebuiltOversampledFont(bmfcSave.FontCacheFileName);
         if (font == null)
         {
             return false;
@@ -873,6 +876,46 @@ public class TextRuntime : InteractiveGue
         return true;
     }
 
+    /// <summary>
+    /// Whether oversampling can currently produce a font. On MonoGame, KNI and FNA a size the project
+    /// built ahead of time into its FontCache is enough, so no <see cref="IInMemoryFontCreator"/> is
+    /// required (issue #7157); Raylib still needs its creator.
+    /// </summary>
+    static bool CanOversample =>
+        UseFontOversampling
+#if XNALIKE
+        ;
+#else
+        && CustomSetPropertyOnRenderableType.InMemoryFontCreator != null;
+#endif
+
+#if XNALIKE
+    /// <summary>
+    /// Loads <paramref name="fontCacheFileName"/> (a project-relative FontCache path) as a new
+    /// instance, or null if the project did not build that size. Never the LoaderManager's shared
+    /// instance, because the oversampled-font map disposes its font once no text uses it.
+    /// </summary>
+    BitmapFont? TryLoadPrebuiltOversampledFont(string fontCacheFileName)
+    {
+        string fullFileName = ToolsUtilities.FileManager.Standardize(fontCacheFileName, preserveCase: true, makeAbsolute: true);
+#if KNI
+        // Browser builds have no File.Exists, so try the load and treat a failure as "not built".
+        try
+        {
+            return new BitmapFont(fullFileName, checkForShadowSibling: HasDropshadow);
+        }
+        catch
+        {
+            return null;
+        }
+#else
+        return ToolsUtilities.FileManager.FileExists(fullFileName)
+            ? new BitmapFont(fullFileName, checkForShadowSibling: HasDropshadow)
+            : null;
+#endif
+    }
+#endif
+
     // The raster size of the live oversampled display font, or null while this text draws with its
     // native font. Automatic oversampling compares against it, and glyph growth bakes at it.
     float? _oversampledRasterFontSize;
@@ -911,7 +954,7 @@ public class TextRuntime : InteractiveGue
     /// <returns>True if the font was regenerated.</returns>
     internal bool UpdateAutomaticFontOversampling(float effectiveZoom)
     {
-        if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
+        if (!CanOversample)
         {
             // Issue #4330 (manual-test finding): oversampling is meant to be a live toggle, not a
             // one-way ratchet -- if this Text was already oversampled, re-resolve the font through the
