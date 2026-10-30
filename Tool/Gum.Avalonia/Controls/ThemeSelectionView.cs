@@ -46,9 +46,21 @@ public sealed class ThemeSelectionView : StackPanel
         if (previewBeside)
         {
             // The drop-down fills what the preview leaves; the preview is a fixed-size block at the right edge.
-            themeRow.Margin = new Thickness(0);
-            besideRow = new Grid { ColumnDefinitions = new ColumnDefinitions("*,200"), ColumnSpacing = 12, Margin = new Thickness(0, 0, 0, 8) };
-            besideRow.Children.Add(themeRow);
+            // The label sits alone in row 0; the drop-down and the preview share row 1, so their tops are flush.
+            besideRow = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("*,200"),
+                RowDefinitions = new RowDefinitions("Auto,Auto"),
+                ColumnSpacing = 12,
+                Margin = new Thickness(0, 0, 0, 8),
+            };
+            Control label = themeRow.Children[0];
+            themeRow.Children.Clear();
+            label.Margin = new Thickness(0, 0, 0, 3);
+            besideRow.Children.Add(label);
+            Grid.SetRow(themes, 1);
+            themes.VerticalAlignment = VerticalAlignment.Top;
+            besideRow.Children.Add(themes);
             Children.Add(besideRow);
         }
         else
@@ -74,6 +86,7 @@ public sealed class ThemeSelectionView : StackPanel
             preview.HorizontalAlignment = HorizontalAlignment.Right;
             preview.VerticalAlignment = VerticalAlignment.Top;
             Grid.SetColumn(preview, 1);
+            Grid.SetRow(preview, 1);
             besideRow.Children.Add(preview);
         }
         else

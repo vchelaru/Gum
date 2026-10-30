@@ -176,6 +176,7 @@ public class NewProjectDialogFlowTests
                 double previewRight = Left(preview, window.Window) + preview.Bounds.Width;
 
                 themeLeft.ShouldBe(nameLeft, 0.5, $"theme drop-down left edge at zoom {size}");
+                Top(preview, window.Window).ShouldBe(Top(theme, window.Window), 0.5, $"preview top is flush with the drop-down top at zoom {size}");
                 previewRight.ShouldBe(browseRight, 0.5, $"preview right edge at zoom {size}");
                 (Left(theme, window.Window) + theme.Bounds.Width).ShouldBeLessThan(Left(preview, window.Window), $"drop-down and preview overlap at zoom {size}");
             }
@@ -185,6 +186,8 @@ public class NewProjectDialogFlowTests
             scale.BaseFontSize = original;
         }
     }
+
+    private static double Top(Control control, Window window) => control.TranslatePoint(new global::Avalonia.Point(0, 0), window)!.Value.Y;
 
     private static double Left(Control control, Window window) => control.TranslatePoint(new global::Avalonia.Point(0, 0), window)!.Value.X;
 
