@@ -1,5 +1,6 @@
 #pragma warning disable CS0618
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Gum.Graphics.Animation;
@@ -96,5 +97,48 @@ public partial class PreviewAccuracy2Tests
         world.Save(project => RemoveVariable(project, "Pic.SourceFile"));
 
         world.Find("Pic")!.RenderableComponent.ShouldBeOfType<Sprite>().AnimationChains.ShouldBeSameAs(fromCode);
+    }
+
+    [Fact]
+    public void ChangedSourceFile_FromAChainFileToEmpty_KeepsTheChainNameAskedFor()
+    {
+        PreviewAccuracy2World world = BootWithChain();
+        GraphicalUiElement pic = world.Find("Pic")!;
+        Sprite sprite = pic.RenderableComponent.ShouldBeOfType<Sprite>();
+
+        pic.SetProperty("SourceFile", "");
+        sprite.CurrentChainName.ShouldBeNull();
+        pic.SetProperty("SourceFile", "Content/run.achx");
+
+        sprite.CurrentChainName.ShouldBe("Run");
+    }
+
+    [Fact]
+    public void ChangedSourceFile_FromAChainFileToEmpty_KeepsTextureValuesASelectedStateSets()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World();
+        _worlds.Add(world);
+        world.Boot(
+            editBaseline: project =>
+            {
+                Std(MainScreen(project), "Pic", "SourceFile", "Content/run.achx");
+                Std(MainScreen(project), "Pic", "CurrentChainName", "Run");
+                StateSave big = new StateSave { Name = "Big", ParentContainer = MainScreen(project) };
+                Set(big, "Pic.TextureAddress", "TextureAddress", Gum.Managers.TextureAddress.Custom);
+                Set(big, "Pic.TextureWidth", "int", 5);
+                Set(big, "Pic.TextureHeight", "int", 6);
+                StateSaveCategory look = new StateSaveCategory { Name = "Look" };
+                look.States.Add(big);
+                MainScreen(project).Categories.Add(look);
+            },
+            beforeBoot: dir => WriteChain(dir, "run.achx", "red.png", 0.1f));
+        world.Screen.ApplyState("Look", "Big");
+        GraphicalUiElement pic = world.Find("Pic")!;
+
+        pic.SetProperty("SourceFile", "");
+
+        pic.TextureAddress.ShouldBe(Gum.Managers.TextureAddress.Custom);
+        pic.TextureWidth.ShouldBe(5);
+        pic.TextureHeight.ShouldBe(6);
     }
 }

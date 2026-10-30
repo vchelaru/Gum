@@ -355,23 +355,68 @@ public partial class GraphicalUiElement
         SuspendLayout();
         try
         {
-            ElementSave? owner = (Tag as InstanceSave)?.ParentContainer;
-            foreach (string name in new[] { "TextureAddress", "TextureLeft", "TextureTop", "TextureWidth", "TextureHeight", "FlipHorizontal" })
-            {
-                object? fromProject = owner?.DefaultState?.GetValueRecursive(((InstanceSave)Tag!).Name + "." + name);
-                SetProperty(name, fromProject ?? name switch
-                {
-                    "TextureAddress" => TextureAddress.EntireTexture,
-                    "FlipHorizontal" => false,
-                    _ => 0,
-                });
-            }
+            RestoreTextureVariables();
         }
         finally
         {
             if (!wasSuspended)
             {
                 ResumeLayout();
+            }
+        }
+    }
+
+    private static readonly string[] _chainDrivenVariables = { "TextureAddress", "TextureLeft", "TextureTop", "TextureWidth", "TextureHeight", "FlipHorizontal" };
+
+    // Sets the variables a chain frame writes to what the saved element gives them: the default
+    // state, then the category states applied (or being applied) on the element that contains this one.
+    // The chain name is not among them: the renderable keeps the name asked for.
+    private void RestoreTextureVariables()
+    {
+        InstanceSave? instance = Tag as InstanceSave;
+        string prefix = instance == null ? "" : instance.Name + ".";
+        foreach (string name in _chainDrivenVariables)
+        {
+            object? fromProject = instance?.ParentContainer?.DefaultState?.GetValueRecursive(prefix + name);
+            SetProperty(name, fromProject ?? name switch
+            {
+                "TextureAddress" => TextureAddress.EntireTexture,
+                "FlipHorizontal" => false,
+                _ => 0,
+            });
+        }
+
+        GraphicalUiElement? container = ElementGueContainingThis;
+        if (instance == null || container == null)
+        {
+            return;
+        }
+
+        List<StateSave> states = new List<StateSave>();
+        if (container._appliedCategoryStates != null)
+        {
+            foreach (KeyValuePair<string, string> applied in container._appliedCategoryStates)
+            {
+                StateSave? state = container.mCategories.TryGetValue(applied.Key, out StateSaveCategory? category)
+                    ? category.States.FirstOrDefault(item => item.Name == applied.Value)
+                    : null;
+                if (state != null)
+                {
+                    states.Add(state);
+                }
+            }
+        }
+        states.AddRange(container.statesInStack);
+
+        foreach (StateSave state in states)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (variable.SetsValue && variable.Value != null && variable.Name.StartsWith(prefix, StringComparison.Ordinal)
+                    && Array.IndexOf(_chainDrivenVariables, variable.Name.Substring(prefix.Length)) >= 0)
+                {
+                    SetProperty(variable.Name.Substring(prefix.Length), variable.Value);
+                }
             }
         }
     }
