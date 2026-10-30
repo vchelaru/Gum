@@ -16,7 +16,7 @@ using Shouldly;
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// The New Project dialog's rules: the live gumcli command, the warnings, validation, the Files plan and the
+/// The New Project dialog's rules: the live gumcli command, the warnings, validation, the folder tree and the
 /// create-then-restore run that happens while the dialog stays open.
 /// </summary>
 public class NewProjectDialogViewModelTests
@@ -35,8 +35,6 @@ public class NewProjectDialogViewModelTests
         _formsFileService.Setup(x => x.GetAvailableThemes()).Returns(new List<string> { "Standard", "Bubblegum" });
         _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns("C:/nonexistent-theme/");
         _service.Setup(x => x.IsSourceLinkedAvailable).Returns(true);
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(
-            new NewProjectPlan("root", new[] { "A.gumj", "Fonts/F.ttf", "Fonts/G.ttf" }, new[] { "Empty" }));
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(Valid());
     }
 
@@ -62,7 +60,7 @@ public class NewProjectDialogViewModelTests
 
     private static readonly char OtherSeparator = Path.DirectorySeparatorChar == (char)92 ? (char)47 : (char)92;
 
-    private static IEnumerable<string> AllDisplayNames(NewProjectPlanNode node) =>
+    private static IEnumerable<string> AllDisplayNames(NewProjectLayoutNode node) =>
         new[] { node.DisplayName }.Concat(node.Children.SelectMany(AllDisplayNames));
 
     private static string WithOtherSeparator(string path) => path.Replace(Path.DirectorySeparatorChar, OtherSeparator);
@@ -443,7 +441,7 @@ public class NewProjectDialogViewModelTests
         _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(found);
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.IsExistingCodeProjectWarningVisible.ShouldBeTrue();
         viewModel.ExistingCodeProjectText.ShouldBe($"Found MyOtherGame.csproj in {Folder}.");
@@ -458,7 +456,7 @@ public class NewProjectDialogViewModelTests
         _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(Path.Combine(Folder, "Other.csproj"));
         NewProjectDialogViewModel viewModel = Create();
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.IsExistingCodeProjectWarningVisible.ShouldBeFalse();
     }
@@ -473,7 +471,7 @@ public class NewProjectDialogViewModelTests
             vm.PlatformName = "raylib";
         });
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.ExistingCodeProjectTip.ShouldContain("(Program.cs)");
     }
@@ -484,7 +482,7 @@ public class NewProjectDialogViewModelTests
         _detector.Setup(x => x.TargetExistsAndIsNotEmpty(Folder, "MyGame")).Returns(true);
         NewProjectDialogViewModel viewModel = Create();
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.IsTargetNotEmptyWarningVisible.ShouldBeTrue();
         viewModel.TargetNotEmptyText.ShouldBe($"{Path.Combine(Folder, "MyGame")} already has files. Files with the same names may be overwritten.");
@@ -497,105 +495,118 @@ public class NewProjectDialogViewModelTests
         _detector.Setup(x => x.TargetExistsAndIsNotEmpty(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.CanExecuteAffirmative().ShouldBeTrue();
     }
 
     #endregion
 
-    #region Plan
+    #region Folder tree
 
     [Fact]
-    public async Task Plan_FillsTheTree_WithCountsPerFolderAndATotal()
+    public void FolderTree_ForAGumOnlyProject_IsTheRootWithTheStandardFoldersAndTheProjectFile()
+    {
+        NewProjectDialogViewModel viewModel = Create();
+
+        NewProjectLayoutNode root = viewModel.FolderTree.Single();
+
+        root.DisplayName.ShouldBe(NewProjectDisplayPath.AsFolder(Path.Combine(Folder, "MyGame")));
+        root.Children.Select(child => child.DisplayName).ShouldBe(
+            new[] { "Behaviors" + Sep, "Components" + Sep, "Fonts" + Sep, "Screens" + Sep, "Standards" + Sep, "MyGame.gumj" });
+        root.Children.Single(child => child.Name == "MyGame.gumj").IsMainFile.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FolderTree_ForACodeProject_NestsTheGumProjectUnderContent_AndMarksItsFile()
     {
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
 
-        await viewModel.PlanRefresh;
+        NewProjectLayoutNode root = viewModel.FolderTree.Single();
 
-        viewModel.PlanFileCount.ShouldBe(3);
-        viewModel.FilesCountText.ShouldBeEmpty();
-        viewModel.PlanTotalText.ShouldBeEmpty();
-        NewProjectPlanNode root = viewModel.PlanTree.Single();
-        root.DisplayName.ShouldBe(NewProjectDisplayPath.AsFolder(Path.Combine(Folder, "MyGame")));
-        root.CountText.ShouldBe("3");
-        root.Children.Select(child => child.DisplayName).ShouldBe(new[] { "Empty" + Sep, "Fonts" + Sep, "A.gumj" });
-        root.Children.Single(child => child.Name == "Fonts").CountText.ShouldBe("2");
-        root.Children.Single(child => child.Name == "Empty").CountText.ShouldBe("0");
-        root.Children.Single(child => child.Name == "A.gumj").IsMainFile.ShouldBeFalse();
+        root.Children.Select(child => child.Name).ShouldBe(new[] { "Content" });
+        NewProjectLayoutNode gumProject = root.Children.Single().Children.Single(child => child.Name == "GumProject");
+        gumProject.Children.Single(child => child.Name == "GumProject.gumj").IsMainFile.ShouldBeTrue();
+        gumProject.Children.Select(child => child.Name).ShouldContain("Screens");
     }
 
     [Fact]
-    public async Task Plan_ShowsNoTotal()
+    public void FolderTree_FollowsTheInputs()
     {
         NewProjectDialogViewModel viewModel = Create();
 
-        await viewModel.PlanRefresh;
+        viewModel.ProjectName = "Renamed";
+        viewModel.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
 
-        viewModel.FilesCountText.ShouldBeEmpty();
-        viewModel.PlanTotalText.ShouldBeEmpty();
-        viewModel.PlanTree.Single().Children.ShouldNotBeEmpty();
+        NewProjectLayoutNode root = viewModel.FolderTree.Single();
+        root.DisplayName.ShouldBe(NewProjectDisplayPath.AsFolder(Path.Combine(Folder, "Renamed")));
+        root.Children.Select(child => child.Name).ShouldContain("Renamed.gumx");
     }
 
     [Theory]
-    [InlineData(false, 2)]
-    [InlineData(true, 3)]
-    public async Task Plan_LeavesOutTheDemoScreen_WhenItIsUnchecked(bool includeDemo, int expectedFiles)
+    [InlineData("monogame", "Game1.cs")]
+    [InlineData("raylib", null)]
+    public void FolderTree_DoesNotListFiles_ExceptTheGumProjectFile(string platform, string? game1)
     {
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan(
-            "root", new[] { "Content/GumProject/Screens/Bubblegum/DemoScreenGum.gusj", "Screens/Other.gusj", "A.gumj" }, Array.Empty<string>()));
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
             vm.IncludeCodeProject = true;
-            vm.IsIncludeDemoScreenGum = includeDemo;
+            vm.PlatformName = platform;
         });
 
-        await viewModel.PlanRefresh;
+        List<string> files = Flatten(viewModel.FolderTree.Single()).Where(node => !node.IsFolder).Select(node => node.Name).ToList();
 
-        viewModel.PlanFileCount.ShouldBe(expectedFiles);
+        files.ShouldBe(new[] { "GumProject.gumj" });
+        files.ShouldNotContain(game1 ?? "Game1.cs");
     }
 
     [Fact]
-    public async Task Plan_HighlightsTheGumProjectFile()
-    {
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(
-            new NewProjectPlan("root", new[] { "MyGame.gumj", "Other.png" }, Array.Empty<string>()));
-        NewProjectDialogViewModel viewModel = Create();
-
-        await viewModel.PlanRefresh;
-
-        viewModel.PlanTree.Single().Children.Single(child => child.Name == "MyGame.gumj").IsMainFile.ShouldBeTrue();
-    }
-
-    [Fact]
-    public async Task Plan_StartsFoldersCollapsed_ExceptTheRoot_AndExpandAllOpensEverything()
+    public void FolderTree_StartsFoldersCollapsed_ExceptTheRoot_AndExpandAllOpensEverything()
     {
         NewProjectDialogViewModel viewModel = Create();
-        await viewModel.PlanRefresh;
-        NewProjectPlanNode root = viewModel.PlanTree.Single();
+        NewProjectLayoutNode root = viewModel.FolderTree.Single();
 
         root.IsExpanded.ShouldBeTrue();
         root.Children.Single(child => child.Name == "Fonts").IsExpanded.ShouldBeFalse();
 
-        viewModel.SetPlanExpanded(true);
+        viewModel.SetFolderTreeExpanded(true);
         root.Children.Single(child => child.Name == "Fonts").IsExpanded.ShouldBeTrue();
-        viewModel.SetPlanExpanded(false);
+        viewModel.SetFolderTreeExpanded(false);
         root.IsExpanded.ShouldBeFalse();
     }
 
     [Fact]
-    public async Task Plan_IsAskedForTheCurrentChoices()
+    public void FolderTree_IsEmpty_ForAPlatformTheDialogDoesNotKnow()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "fna";
+        });
+
+        viewModel.FolderTree.ShouldBeEmpty();
+    }
+
+    private static IEnumerable<NewProjectLayoutNode> Flatten(NewProjectLayoutNode node) =>
+        new[] { node }.Concat(node.Children.SelectMany(Flatten));
+
+    #endregion
+
+    #region Checks
+
+    [Fact]
+    public async Task Checks_AskTheServiceAboutTheCurrentChoices()
     {
         System.Collections.Concurrent.ConcurrentQueue<NewProjectRequest> requests = new();
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Callback<NewProjectRequest>(request => requests.Enqueue(request))
-            .Returns(new NewProjectPlan("root", new[] { "A" }, Array.Empty<string>()));
+        _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Callback<NewProjectRequest>(request => requests.Enqueue(request))
+            .Returns(Valid());
         NewProjectDialogViewModel viewModel = Create();
 
         viewModel.IncludeCodeProject = true;
         viewModel.PlatformName = "raylib";
         viewModel.IsIncludeFormsControls = false;
         viewModel.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         // Earlier refreshes may finish in any order; one of them carries all of the final choices.
         requests.ShouldContain(request => request.Platform == "raylib" && request.Template == "empty" && request.UseXmlFormat
@@ -603,73 +614,59 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
-    public async Task Plan_DoesNotBlockTyping()
+    public async Task Checks_DoNotBlockTyping()
     {
         using ManualResetEventSlim release = new ManualResetEventSlim();
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(() =>
+        _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(() =>
         {
             release.Wait(TimeSpan.FromSeconds(30));
-            return new NewProjectPlan("root", new[] { "A" }, Array.Empty<string>());
+            return Path.Combine(Folder, "Other.csproj");
         });
-        NewProjectDialogViewModel viewModel = Create();
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
 
         viewModel.ProjectName = "Typed";
 
-        viewModel.PlanRefresh.IsCompleted.ShouldBeFalse();
+        viewModel.ChecksRefresh.IsCompleted.ShouldBeFalse();
         viewModel.CommandLine.ShouldContain("Typed");
         release.Set();
-        await viewModel.PlanRefresh;
-        viewModel.PlanFileCount.ShouldBe(1);
+        await viewModel.ChecksRefresh;
+        viewModel.IsExistingCodeProjectWarningVisible.ShouldBeTrue();
     }
 
     [Fact]
-    public async Task Plan_KeepsOnlyTheLatestResult()
+    public async Task Checks_KeepOnlyTheLatestResult()
     {
         using ManualResetEventSlim release = new ManualResetEventSlim();
         int calls = 0;
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(() =>
+        _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(() =>
         {
             if (Interlocked.Increment(ref calls) == 1)
             {
                 release.Wait(TimeSpan.FromSeconds(30));
-                return new NewProjectPlan("root", new[] { "Stale" }, Array.Empty<string>());
+                return Path.Combine(Folder, "Stale.csproj");
             }
-            return new NewProjectPlan("root", new[] { "Fresh1", "Fresh2" }, Array.Empty<string>());
+            return Path.Combine(Folder, "Fresh.csproj");
         });
-        NewProjectDialogViewModel viewModel = Create();
-        Task first = viewModel.PlanRefresh;
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        Task first = viewModel.ChecksRefresh;
 
         viewModel.ProjectName = "Second";
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
         release.Set();
         await first;
 
-        viewModel.PlanFileCount.ShouldBe(2);
+        viewModel.ExistingCodeProjectText.ShouldContain("Fresh.csproj");
     }
 
     [Fact]
-    public async Task Plan_IsEmpty_WhenTheServiceHasNone()
-    {
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns((NewProjectPlan?)null);
-        NewProjectDialogViewModel viewModel = Create();
-
-        await viewModel.PlanRefresh;
-
-        viewModel.PlanTree.ShouldBeEmpty();
-        viewModel.FilesCountText.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task Plan_RefreshSurvives_AServiceAndADetectorThatThrow()
+    public async Task Checks_Survive_AServiceAndADetectorThatThrow()
     {
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Throws(new InvalidOperationException("validate"));
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Throws(new IOException("plan"));
         _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Throws(new UnauthorizedAccessException());
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
-        viewModel.PlanTree.ShouldBeEmpty();
         viewModel.IsExistingCodeProjectWarningVisible.ShouldBeFalse();
         viewModel.IsRefused.ShouldBeFalse();
         viewModel.CanExecuteAffirmative().ShouldBeTrue();
@@ -680,29 +677,21 @@ public class NewProjectDialogViewModelTests
     #region Separators
 
     [Fact]
-    public async Task Plan_ShowsOnlyTheOsSeparator_WhateverTheServiceReturns()
+    public void FolderTree_ShowsOnlyTheOsSeparator_WhateverTheLocationUses()
     {
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan(
-            "root",
-            new[] { "Content/GumProject/GumProject.gumj", "Content" + (char)92 + "GumProject" + (char)92 + "Fonts" + (char)92 + "F.ttf", "Game1.cs" },
-            new[] { "Content/GumProject/Behaviors" }));
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
             vm.Location = WithOtherSeparator(Folder);
             vm.IncludeCodeProject = true;
         });
 
-        await viewModel.PlanRefresh;
-
-        NewProjectPlanNode root = viewModel.PlanTree.Single();
+        NewProjectLayoutNode root = viewModel.FolderTree.Single();
         List<string> names = AllDisplayNames(root).ToList();
         names.ShouldNotContain(name => name.Contains(OtherSeparator));
         root.DisplayName.ShouldBe(NewProjectDisplayPath.AsFolder(Path.Combine(Folder, "MyGame")));
         root.Children.Select(child => child.DisplayName).ShouldContain("Content" + Sep);
         names.ShouldContain("Behaviors" + Sep);
         names.ShouldContain("GumProject.gumj");
-        viewModel.PlanTree.Single().Children.Single(child => child.Name == "Content").Children.Single(child => child.Name == "GumProject")
-            .Children.Single(child => child.Name == "GumProject.gumj").IsMainFile.ShouldBeTrue();
     }
 
     [Fact]
@@ -725,7 +714,7 @@ public class NewProjectDialogViewModelTests
             vm.IncludeCodeProject = true;
         });
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.ExistingCodeProjectText.ShouldNotContain(OtherSeparator.ToString());
         viewModel.ExistingCodeProjectTip.ShouldNotContain(OtherSeparator.ToString());
@@ -752,7 +741,7 @@ public class NewProjectDialogViewModelTests
     {
         NewProjectDialogViewModel viewModel = Create();
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.IsTargetNotEmptyWarningVisible.ShouldBeFalse();
         viewModel.IsRefused.ShouldBeFalse();
@@ -767,7 +756,7 @@ public class NewProjectDialogViewModelTests
         _detector.Setup(x => x.TargetExistsAndIsNotEmpty(Folder, "MyGame")).Returns(true);
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = codeProject);
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.IsTargetNotEmptyWarningVisible.ShouldBeTrue();
         viewModel.IsRefused.ShouldBeFalse();
@@ -786,7 +775,7 @@ public class NewProjectDialogViewModelTests
         });
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = codeProject);
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.IsRefused.ShouldBeTrue();
         viewModel.RefusalText.ShouldBe("Project already exists: " + GumOnlyPath());
@@ -803,7 +792,7 @@ public class NewProjectDialogViewModelTests
         });
         NewProjectDialogViewModel viewModel = Create();
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.IsRefused.ShouldBeFalse();
         viewModel.CanExecuteAffirmative().ShouldBeTrue();
@@ -1119,7 +1108,7 @@ public class NewProjectDialogViewModelTests
     public async Task Ok_PassesTheChoicesToTheService(bool forms, string? expectedTheme, string expectedTemplate)
     {
         // Each Validate call hands back a uniquely named result, so the request that OK validated is the one whose name
-        // reaches CreateFilesAsync; the background plan refreshes also call Validate and must not be mistaken for it.
+        // reaches CreateFilesAsync; the background checks also call Validate and must not be mistaken for it.
         System.Collections.Concurrent.ConcurrentDictionary<string, NewProjectRequest> requestsByName = new();
         int validateCalls = 0;
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns<NewProjectRequest>(request =>

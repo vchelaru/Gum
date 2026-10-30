@@ -27,8 +27,8 @@ namespace Gum.Avalonia.Dialogs.Views;
 /// </summary>
 public sealed class NewProjectDialogView : StackPanel
 {
-    /// <summary>Name of the Files section's expander.</summary>
-    public const string FilesExpanderName = "PART_FilesExpander";
+    /// <summary>Name of the Folders section's expander.</summary>
+    public const string FoldersExpanderName = "PART_FoldersExpander";
 
     /// <summary>Name of the Command line section's expander.</summary>
     public const string CommandLineExpanderName = "PART_CommandLineExpander";
@@ -80,7 +80,7 @@ public sealed class NewProjectDialogView : StackPanel
         form.Children.Add(CreateRefusal());
         form.Children.Add(CreateFormsSection());
         form.Children.Add(CreateCodeProjectSection());
-        form.Children.Add(CreateFilesSection());
+        form.Children.Add(CreateFoldersSection());
         form.Children.Add(CreateCommandLineSection());
         Children.Add(form);
 
@@ -278,18 +278,18 @@ public sealed class NewProjectDialogView : StackPanel
         return section;
     }
 
-    private Control CreateFilesSection()
+    private Control CreateFoldersSection()
     {
         StackPanel content = new StackPanel();
 
         StackPanel links = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 4 };
-        links.Children.Add(Link("Expand all", () => (DataContext as NewProjectDialogViewModel)?.SetPlanExpanded(true)));
-        links.Children.Add(Link("Collapse all", () => (DataContext as NewProjectDialogViewModel)?.SetPlanExpanded(false)));
+        links.Children.Add(Link("Expand all", () => (DataContext as NewProjectDialogViewModel)?.SetFolderTreeExpanded(true)));
+        links.Children.Add(Link("Collapse all", () => (DataContext as NewProjectDialogViewModel)?.SetFolderTreeExpanded(false)));
         content.Children.Add(links);
 
         TreeView tree = new TreeView { MaxHeight = 230, Padding = new Thickness(0), FontFamily = new FontFamily(MonospaceFonts), FontWeight = FontWeight.Normal };
-        tree.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(NewProjectDialogViewModel.PlanTree)));
-        tree.ItemTemplate = new FuncTreeDataTemplate<NewProjectPlanNode>(
+        tree.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(NewProjectDialogViewModel.FolderTree)));
+        tree.ItemTemplate = new FuncTreeDataTemplate<NewProjectLayoutNode>(
             (node, _) => CreateTreeRow(node),
             node => node.Children);
         tree.Styles.Add(CreateTreeItemStyle());
@@ -300,10 +300,7 @@ public sealed class NewProjectDialogView : StackPanel
         treeBox.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Field.Background");
         content.Children.Add(treeBox);
 
-        content.Children.Add(Bound(
-            new TextBlock { Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) }, TextBlock.TextProperty, nameof(NewProjectDialogViewModel.PlanTotalText)));
-
-        return CreateSection(FilesExpanderName, NewProjectDialogText.FilesHeading, nameof(NewProjectDialogViewModel.FilesCountText), content);
+        return CreateSection(FoldersExpanderName, NewProjectDialogText.FoldersHeading, content);
     }
 
     private Control CreateCommandLineSection()
@@ -352,22 +349,18 @@ public sealed class NewProjectDialogView : StackPanel
         note.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.CommandLineNote)) { Converter = NotNullConverter.Instance });
         content.Children.Add(note);
 
-        return CreateSection(CommandLineExpanderName, NewProjectDialogText.CommandLineHeading, null, content);
+        return CreateSection(CommandLineExpanderName, NewProjectDialogText.CommandLineHeading, content);
     }
 
     #endregion
 
     #region Pieces
 
-    // A disclosure with the section's heading, an optional muted count after it, and a rule above.
-    private static Control CreateSection(string name, string title, string? countPath, Control content)
+    // A disclosure with the section's heading and a rule above.
+    private static Control CreateSection(string name, string title, Control content)
     {
         StackPanel header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         header.Children.Add(new TextBlock { Text = title, FontWeight = FontWeight.SemiBold });
-        if (countPath != null)
-        {
-            header.Children.Add(Bound(new TextBlock { Opacity = 0.7 }, TextBlock.TextProperty, countPath));
-        }
 
         Disclosure disclosure = new Disclosure(header, content, title) { Name = name };
         StackPanel section = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
@@ -429,13 +422,13 @@ public sealed class NewProjectDialogView : StackPanel
     private static Style CreateTreeItemStyle()
     {
         Style style = new Style(selector => selector.OfType<TreeViewItem>());
-        style.Setters.Add(new Setter(TreeViewItem.IsExpandedProperty, new Binding(nameof(NewProjectPlanNode.IsExpanded)) { Mode = BindingMode.TwoWay }));
+        style.Setters.Add(new Setter(TreeViewItem.IsExpandedProperty, new Binding(nameof(NewProjectLayoutNode.IsExpanded)) { Mode = BindingMode.TwoWay }));
         style.Setters.Add(new Setter(Layoutable.MinHeightProperty, 0d));
         style.Setters.Add(new Setter(TemplatedControl.PaddingProperty, new Thickness(0)));
         return style;
     }
 
-    private static Control CreateTreeRow(NewProjectPlanNode node)
+    private static Control CreateTreeRow(NewProjectLayoutNode node)
     {
         StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, Margin = new Thickness(0, 1) };
         TextBlock name = new TextBlock { Text = node.DisplayName, VerticalAlignment = VerticalAlignment.Center };
@@ -444,10 +437,6 @@ public sealed class NewProjectDialogView : StackPanel
             name.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Success");
         }
         row.Children.Add(name);
-        if (node.IsFolder)
-        {
-            row.Children.Add(new TextBlock { Text = node.CountText, Opacity = 0.6, VerticalAlignment = VerticalAlignment.Center });
-        }
         return row;
     }
 

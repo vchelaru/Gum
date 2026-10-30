@@ -28,7 +28,7 @@ public static class NewProjectDialogText
     public const string UseLocalSourceNote = "For Gum developers: the C# project uses the Gum source code on this computer instead of the published NuGet package, to try unreleased changes. Only available when this tool was built from that source code.";
     public const string RestorePackages = "Restore NuGet packages";
     public const string RestorePackagesNote = "Runs dotnet restore after creating. The first code generation needs the packages.";
-    public const string FilesHeading = "Files";
+    public const string FoldersHeading = "Folders";
     public const string CommandLineHeading = "Command line";
     public const string CommandLineDescription = "Optional. Copy this to create the same project without the tool.";
     public const string WarningHeading = "Inside an existing code project";

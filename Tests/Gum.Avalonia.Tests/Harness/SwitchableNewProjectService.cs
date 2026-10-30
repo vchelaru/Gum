@@ -19,8 +19,6 @@ internal sealed class SwitchableNewProjectService : INewProjectService
 
     public NewProjectValidation Validate(NewProjectRequest request) => _inner.Validate(request);
 
-    public NewProjectPlan? GetPlan(NewProjectRequest request) => _inner.GetPlan(request);
-
     public Task<NewProjectFilesResult> CreateFilesAsync(ResolvedNewProject project, CancellationToken cancellationToken) =>
         CreateFiles != null ? CreateFiles(project, cancellationToken) : _inner.CreateFilesAsync(project, cancellationToken);
 

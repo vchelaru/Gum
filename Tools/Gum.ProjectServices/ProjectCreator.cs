@@ -11,17 +11,10 @@ namespace Gum.ProjectServices;
 /// <inheritdoc/>
 public class ProjectCreator : IProjectCreator
 {
+    // FontCache is created up front (rather than lazily on first font generation) so the file watcher
+    // never has to watch a directory that doesn't exist yet on a freshly-created project (#4259).
     private static readonly string[] StandardSubfolders =
-    {
-        "Screens",
-        "Components",
-        "Standards",
-        "Behaviors",
-        "Fonts",
-        // Created up front (rather than lazily on first font generation) so the file watcher
-        // never has to watch a directory that doesn't exist yet on a freshly-created project (#4259).
-        "FontCache"
-    };
+        NewProjectLayout.GumFolders.Append(NewProjectLayout.FontCacheFolderName).ToArray();
 
     // ColoredRectangle is intentionally omitted: the v3 Rectangle carries the full
     // fill/stroke/gradient/dropshadow surface, making it redundant for new projects

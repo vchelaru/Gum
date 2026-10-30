@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using Shouldly;
-using Xunit.Abstractions;
 
 namespace Gum.ProjectServices.Tests;
 
@@ -9,14 +7,12 @@ namespace Gum.ProjectServices.Tests;
 /// </summary>
 public class NewProjectServiceTests : BaseTestClass
 {
-    private readonly ITestOutputHelper _output;
     private readonly string _folder;
     private readonly string _checkout;
     private readonly FakeRestoreRunner _restoreRunner = new FakeRestoreRunner();
 
-    public NewProjectServiceTests(ITestOutputHelper output)
+    public NewProjectServiceTests()
     {
-        _output = output;
         _folder = Path.Combine(Path.GetTempPath(), "GumNewProjectService_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_folder);
         _checkout = GumSourceLocator.Find(AppContext.BaseDirectory)
@@ -40,122 +36,6 @@ public class NewProjectServiceTests : BaseTestClass
             : gumSourceSearchDirectories);
     }
 
-    public static IEnumerable<object?[]> AllCombinations()
-    {
-        foreach (string? platform in new string?[] { null, "monogame", "kni", "kniskia", "raylib", "stride", "silknet" })
-        {
-            yield return new object?[] { platform, "forms", null };
-            yield return new object?[] { platform, "empty", null };
-            yield return new object?[] { platform, "forms", "Meadow" };
-        }
-    }
-
-    #region Plan
-
-    [Theory]
-    [MemberData(nameof(AllCombinations))]
-    public async Task GetPlan_ForEveryPlatformTemplateAndTheme_EqualsTheFilesExecuteWrites(
-        string? platform, string template, string? theme)
-    {
-        NewProjectService service = CreateService();
-        NewProjectRequest request = new NewProjectRequest
-        {
-            Path = Path.Combine(_folder, "Planned"),
-            Platform = platform,
-            Template = template,
-            Theme = theme,
-            Restore = false
-        };
-
-        NewProjectPlan? plan = service.GetPlan(request);
-        NewProjectResult result = await service.ExecuteAsync(request, null, CancellationToken.None);
-
-        plan.ShouldNotBeNull();
-        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
-        string root = Path.Combine(_folder, "Planned");
-        plan.RootDirectory.ShouldBe(root);
-
-        List<string> actualFiles = Directory.GetFiles(root, "*", SearchOption.AllDirectories)
-            .Select(path => Path.GetRelativePath(root, path).Replace('\\', '/')).OrderBy(path => path, StringComparer.Ordinal).ToList();
-        List<string> actualDirectories = Directory.GetDirectories(root, "*", SearchOption.AllDirectories)
-            .Select(path => Path.GetRelativePath(root, path).Replace('\\', '/')).OrderBy(path => path, StringComparer.Ordinal).ToList();
-
-        plan.Files.ToList().ShouldBe(actualFiles);
-        plan.Directories.ToList().ShouldBe(actualDirectories);
-    }
-
-    [Fact]
-    public void GetPlan_WithXmlFormat_ListsTheGumxProject()
-    {
-        NewProjectService service = CreateService();
-
-        NewProjectPlan? plan = service.GetPlan(new NewProjectRequest
-        {
-            Path = Path.Combine(_folder, "Xml"),
-            UseXmlFormat = true,
-            Template = "empty"
-        });
-
-        plan.ShouldNotBeNull();
-        plan.Files.ShouldContain("Xml.gumx");
-    }
-
-    [Fact]
-    public void GetPlan_WithPlatform_NamesTheCodeProjectAfterTheFolder()
-    {
-        NewProjectService service = CreateService();
-
-        NewProjectPlan? plan = service.GetPlan(new NewProjectRequest
-        {
-            Path = Path.Combine(_folder, "Space Free"),
-            Platform = "monogame"
-        });
-
-        plan.ShouldNotBeNull();
-        plan.Files.ShouldContain("Space Free.csproj");
-        plan.Files.ShouldContain("Content/GumProject/GumProject.gumj");
-    }
-
-    [Fact]
-    public void GetPlan_DoesNotCreateTheTargetFolder()
-    {
-        NewProjectService service = CreateService();
-        string target = Path.Combine(_folder, "NotCreated");
-
-        service.GetPlan(new NewProjectRequest { Path = target, Platform = "monogame" });
-
-        Directory.Exists(target).ShouldBeFalse();
-        Directory.GetFileSystemEntries(_folder).ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void GetPlan_WithAnInvalidOption_ReturnsNull()
-    {
-        NewProjectService service = CreateService();
-
-        service.GetPlan(new NewProjectRequest { Platform = "fna" }).ShouldBeNull();
-        service.GetPlan(new NewProjectRequest { Theme = "NoSuchTheme" }).ShouldBeNull();
-    }
-
-    [Fact]
-    public void GetPlan_ForFormsWithPlatform_IsFastOnceCachedAndReportsTheFirstCost()
-    {
-        NewProjectService service = CreateService();
-        NewProjectRequest request = new NewProjectRequest { Path = Path.Combine(_folder, "Fast"), Platform = "monogame" };
-
-        Stopwatch first = Stopwatch.StartNew();
-        service.GetPlan(request);
-        first.Stop();
-
-        Stopwatch cached = Stopwatch.StartNew();
-        service.GetPlan(new NewProjectRequest { Path = Path.Combine(_folder, "OtherName"), Platform = "monogame" });
-        cached.Stop();
-
-        _output.WriteLine($"first plan: {first.ElapsedMilliseconds} ms, cached plan: {cached.ElapsedMilliseconds} ms");
-        cached.ElapsedMilliseconds.ShouldBeLessThan(300);
-    }
-
-
     [Fact]
     public async Task Execute_WithAPlatformAndXmlFormat_WritesAGumxProject()
     {
@@ -173,24 +53,6 @@ public class NewProjectServiceTests : BaseTestClass
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
         Path.GetExtension(result.Files.GumProjectPath).ShouldBe(".gumx");
         File.Exists(result.Files.GumProjectPath).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void GetPlan_WithAPlatformAndXmlFormat_ListsTheGumxProject()
-    {
-        NewProjectService service = CreateService();
-
-        NewProjectPlan? plan = service.GetPlan(new NewProjectRequest
-        {
-            Path = Path.Combine(_folder, "XmlPlan"),
-            Platform = "monogame",
-            Template = "empty",
-            UseXmlFormat = true
-        });
-
-        plan.ShouldNotBeNull();
-        plan.Files.ShouldContain("Content/GumProject/GumProject.gumx");
-        plan.Files.ShouldNotContain("Content/GumProject/GumProject.gumj");
     }
 
     [Fact]
@@ -221,7 +83,6 @@ public class NewProjectServiceTests : BaseTestClass
         }
     }
 
-    #endregion
 
     #region Validate
 
@@ -701,62 +562,6 @@ public class NewProjectServiceTests : BaseTestClass
             validation.IsValid.ShouldBeTrue($"{name}: {validation.Error?.Message}");
             validation.Resolved!.Platform.ShouldBe(platform);
         }
-    }
-
-    [Fact]
-    public void GetPlan_LeavesNoTemporaryFolderBehind()
-    {
-        int CountTemporaryFolders() => Directory.GetDirectories(Path.GetTempPath(), "GumNewProjectPlan_*").Length;
-        NewProjectService service = CreateService();
-        int before = CountTemporaryFolders();
-
-        service.GetPlan(new NewProjectRequest { Path = Path.Combine(_folder, "Temp"), Platform = "raylib", Template = "forms" });
-
-        CountTemporaryFolders().ShouldBe(before);
-    }
-
-    [Fact]
-    public void GetPlan_CalledFromManyThreads_ReturnsTheSamePlanEachTime()
-    {
-        NewProjectService service = CreateService();
-        NewProjectRequest request = new NewProjectRequest { Path = Path.Combine(_folder, "Threaded"), Platform = "kni", Template = "forms" };
-        List<string> plans = new List<string>();
-
-        Parallel.For(0, 8, _ =>
-        {
-            NewProjectPlan? plan = service.GetPlan(request);
-            lock (plans)
-            {
-                plans.Add(plan == null ? "null" : string.Join("|", plan.Files));
-            }
-        });
-
-        plans.Distinct().Count().ShouldBe(1);
-        plans[0].ShouldNotBe("null");
-    }
-
-    [Fact]
-    public void GetPlan_ForDifferentFormatsAndTemplates_DoesNotReuseAnotherCombinationsPlan()
-    {
-        NewProjectService service = CreateService();
-        NewProjectPlan? Plan(string template, bool xml) => service.GetPlan(new NewProjectRequest
-        {
-            Path = Path.Combine(_folder, "Cache"),
-            Template = template,
-            UseXmlFormat = xml
-        });
-
-        NewProjectPlan json = Plan("forms", xml: false)!;
-        NewProjectPlan xmlPlan = Plan("forms", xml: true)!;
-        NewProjectPlan empty = Plan("empty", xml: false)!;
-        NewProjectPlan jsonAgain = Plan("forms", xml: false)!;
-
-        json.Files.ShouldContain("Cache.gumj");
-        json.Files.ShouldNotContain("Cache.gumx");
-        xmlPlan.Files.ShouldContain("Cache.gumx");
-        xmlPlan.Files.ShouldNotContain("Cache.gumj");
-        empty.Files.Count.ShouldBeLessThan(json.Files.Count);
-        jsonAgain.Files.ShouldBe(json.Files);
     }
 
     [Fact]

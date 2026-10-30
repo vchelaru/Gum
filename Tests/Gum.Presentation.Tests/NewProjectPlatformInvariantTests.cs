@@ -14,8 +14,9 @@ using Shouldly;
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// Facts the New Project dialog states in its own text, checked against what the real shared service writes for each
-/// platform, so a new or changed platform template cannot silently contradict the dialog.
+/// Facts the New Project dialog states in its own text, checked against the layout rules for each platform (which
+/// <c>NewProjectLayoutTests</c> pins against what the real creation writes), so a new or changed platform template
+/// cannot silently contradict the dialog.
 /// </summary>
 public class NewProjectPlatformInvariantTests
 {
@@ -26,16 +27,11 @@ public class NewProjectPlatformInvariantTests
     [MemberData(nameof(MainPlatformNames))]
     public async Task ExistingCodeProjectTip_MentionsGame1_ExactlyWhenThePlatformWritesIt(string platform)
     {
-        NewProjectService service = new NewProjectService(
-            new FormsThemeLocator(new string[0]), new Mock<IRestoreRunner>().Object, new string[0]);
-        NewProjectPlan? plan = service.GetPlan(new NewProjectRequest
-        {
-            Path = Path.Combine(Path.GetTempPath(), "GumPlatformInvariant", "MyGame"),
-            Platform = platform,
-            Template = "empty"
-        });
-        plan.ShouldNotBeNull();
-        bool writesGame1 = plan.Files.Any(file => file == "Game1.cs" || file.EndsWith("/Game1.cs"));
+        NewProjectPlatforms.TryParse(platform, out HostPlatform hostPlatform).ShouldBeTrue();
+        bool writesGame1 = NewProjectLayout.ForCodeProject("root", "MyGame", hostPlatform, useXmlFormat: false)
+            .HostFiles.Contains(NewProjectLayout.Game1FileName);
+        Mock<INewProjectService> service = new Mock<INewProjectService>();
+        service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(new NewProjectValidation());
 
         Mock<IFormsFileService> formsFileService = new Mock<IFormsFileService>();
         formsFileService.Setup(x => x.DefaultThemeName).Returns("Standard");
@@ -44,7 +40,7 @@ public class NewProjectPlatformInvariantTests
         detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(Path.Combine(Path.GetTempPath(), "Other.csproj"));
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(formsFileService.Object, new Mock<IProjectState>().Object),
-            service, detector.Object, new Mock<IDialogService>().Object)
+            service.Object, detector.Object, new Mock<IDialogService>().Object)
         {
             ProjectName = "MyGame",
             Location = Path.Combine(Path.GetTempPath(), "GumPlatformInvariant"),
@@ -52,7 +48,7 @@ public class NewProjectPlatformInvariantTests
             PlatformName = platform,
         };
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.ExistingCodeProjectTip.Contains("Game1.cs").ShouldBe(writesGame1);
     }

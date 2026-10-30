@@ -14,7 +14,6 @@ namespace Gum.ProjectServices;
 public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 {
     private const string ResourcePrefix = "Gum.ProjectServices.Templates.Platforms.";
-    private const string GumProjectFolderName = "GumProject";
 
     // Each is the assembly name of a Gum runtime package. A host project with the same name writes a
     // same-named DLL over the runtime's copy in bin/ and fails at runtime with no build warning.
@@ -112,7 +111,9 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string extension = useXmlFormat ? GumProjectSave.ProjectExtension : GumProjectSave.ProjectJsonExtension;
         return (
             Path.Combine(fullDirectory, projectName + ".csproj"),
-            Path.Combine(fullDirectory, "Content", GumProjectFolderName, GumProjectFolderName + "." + extension));
+            Path.Combine(
+                fullDirectory, NewProjectLayout.ContentFolderName, NewProjectLayout.GumProjectFolderName,
+                NewProjectLayout.GumProjectFolderName + "." + extension));
     }
 
     /// <summary>
@@ -182,7 +183,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string platformFolder = platform.ToString();
         // The XNA-style hosts share Program.cs and run a Game1. KNI Skia draws through a Skia canvas,
         // so it has its own Game1.
-        bool isXnaGame = platform is HostPlatform.MonoGame or HostPlatform.Kni or HostPlatform.KniSkia;
+        bool isXnaGame = NewProjectLayout.WritesGame1(platform);
         string programFolder = isXnaGame ? "Xna" : platformFolder;
 
         File.WriteAllText(
@@ -190,14 +191,14 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             ReadTemplate(platformFolder, "Host.csproj.template", projectName, rootNamespace, gumProjectFileName)
                 .Replace("{{GumReference}}", gumReference));
         File.WriteAllText(
-            Path.Combine(directory, "Program.cs"),
+            Path.Combine(directory, NewProjectLayout.ProgramFileName),
             ReadTemplate(programFolder, "Program.cs.template", projectName, rootNamespace, gumProjectFileName));
 
         if (isXnaGame)
         {
             string gameFolder = platform == HostPlatform.KniSkia ? platformFolder : "Xna";
             File.WriteAllText(
-                Path.Combine(directory, "Game1.cs"),
+                Path.Combine(directory, NewProjectLayout.Game1FileName),
                 ReadTemplate(gameFolder, "Game1.cs.template", projectName, rootNamespace, gumProjectFileName));
         }
     }

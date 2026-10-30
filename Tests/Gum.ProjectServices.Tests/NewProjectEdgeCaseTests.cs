@@ -195,18 +195,15 @@ namespace Gum.Forms.Controls
     [InlineData("My.Game.v2")]
     [InlineData("Jeu é")]
     [InlineData("日本語")]
-    public async Task Execute_GumOnlyNameWithSpacesDotsOrUnicode_CreatesTheProjectAndThePlanMatches(string name)
+    public async Task Execute_GumOnlyNameWithSpacesDotsOrUnicode_CreatesTheProject(string name)
     {
         NewProjectService service = CreateService();
         NewProjectRequest request = Request(Path.Combine(_folder, name));
 
-        NewProjectPlan? plan = service.GetPlan(request);
         NewProjectResult result = await service.ExecuteAsync(request, null, CancellationToken.None);
 
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
         File.Exists(Path.Combine(_folder, name, name + ".gumj")).ShouldBeTrue();
-        plan.ShouldNotBeNull();
-        plan.Files.ToList().ShouldBe(RelativeFiles(Path.Combine(_folder, name)));
     }
 
     [Theory]
@@ -613,6 +610,29 @@ namespace Gum.Forms.Controls
         Directory.CreateDirectory(Path.Combine(checkout, "GumCommon"));
         File.WriteAllText(Path.Combine(checkout, "GumCommon", "GumCommon.csproj"), "<Project />");
         return checkout;
+    }
+
+    #endregion
+
+    #region Undo
+
+    [Fact]
+    public async Task CreateFiles_WhenCreationFailsInAnExistingGumOnlyFolder_RemovesTheFoldersAndFilesItAddedAndKeepsTheRest()
+    {
+        NewProjectService service = CreateService();
+        string folder = Path.Combine(_folder, "Gum");
+        Directory.CreateDirectory(Path.Combine(folder, "Fonts"));
+        File.WriteAllText(Path.Combine(folder, "notes.txt"), "mine");
+        File.WriteAllText(Path.Combine(folder, "Fonts", "Mine.ttf"), "my font");
+        // A file where the Screens folder must go fails the creation after Fonts and the standards exist.
+        File.WriteAllText(Path.Combine(folder, "Screens"), "in the way");
+        ResolvedNewProject project = service.Validate(Request(folder)).Resolved!;
+
+        NewProjectFilesResult result = await service.CreateFilesAsync(project, CancellationToken.None);
+
+        result.Success.ShouldBeFalse();
+        RelativeFiles(folder).ShouldBe(new List<string> { "Fonts/Mine.ttf", "Screens", "notes.txt" });
+        Directory.GetDirectories(folder).Select(Path.GetFileName).ShouldBe(new List<string?> { "Fonts" });
     }
 
     #endregion
