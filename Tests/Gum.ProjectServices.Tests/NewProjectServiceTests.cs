@@ -318,6 +318,75 @@ public class NewProjectServiceTests : BaseTestClass
         CreateService(_folder).FindGumSourceDirectory().ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData(null, true)]
+    [InlineData("monogame", false)]
+    [InlineData("monogame", true)]
+    public void Validate_PathWithATrailingSeparator_ResolvesLikeThePathWithout(string? platform, bool altSeparator)
+    {
+        NewProjectService service = CreateService();
+        string bare = Path.Combine(_folder, "Trailing");
+        char separator = altSeparator ? Path.AltDirectorySeparatorChar : Path.DirectorySeparatorChar;
+
+        NewProjectValidation expected = service.Validate(new NewProjectRequest { Path = bare, Platform = platform, Template = "empty" });
+        NewProjectValidation actual = service.Validate(new NewProjectRequest { Path = bare + separator, Platform = platform, Template = "empty" });
+
+        actual.IsValid.ShouldBeTrue(actual.Error?.Message);
+        actual.Resolved!.Name.ShouldBe("Trailing");
+        actual.Resolved.GumProjectPath.ShouldBe(expected.Resolved!.GumProjectPath);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("monogame")]
+    public void Validate_PathWithSeveralTrailingSeparators_ResolvesLikeThePathWithout(string? platform)
+    {
+        NewProjectService service = CreateService();
+        string bare = Path.Combine(_folder, "Trailing");
+        string separators = new string(Path.DirectorySeparatorChar, 2) + Path.AltDirectorySeparatorChar;
+
+        NewProjectValidation expected = service.Validate(new NewProjectRequest { Path = bare, Platform = platform, Template = "empty" });
+        NewProjectValidation actual = service.Validate(new NewProjectRequest { Path = bare + separators, Platform = platform, Template = "empty" });
+
+        actual.IsValid.ShouldBeTrue(actual.Error?.Message);
+        actual.Resolved!.Name.ShouldBe("Trailing");
+        actual.Resolved.RootDirectory.ShouldBe(expected.Resolved!.RootDirectory);
+        actual.Resolved.GumProjectPath.ShouldBe(expected.Resolved.GumProjectPath);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("monogame")]
+    public void Validate_PathEndingInDotDot_NamesTheProjectAfterTheFolderItResolvesTo(string? platform)
+    {
+        NewProjectService service = CreateService();
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest
+        {
+            Path = Path.Combine(_folder, "Dotted", "Child", ".."),
+            Platform = platform,
+            Template = "empty"
+        });
+
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
+        validation.Resolved!.Name.ShouldBe("Dotted");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("monogame")]
+    public void Validate_FileSystemRoot_IsRefusedAsInvalidName(string? platform)
+    {
+        NewProjectService service = CreateService();
+        string root = Path.GetPathRoot(_folder)!;
+
+        NewProjectValidation validation = service.Validate(new NewProjectRequest { Path = root, Platform = platform, Template = "empty" });
+
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+        validation.Error.Message.ShouldContain("no folder name");
+    }
+
     #endregion
 
     #region CreateFiles

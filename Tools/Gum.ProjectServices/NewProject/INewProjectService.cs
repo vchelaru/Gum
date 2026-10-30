@@ -21,7 +21,7 @@ public interface INewProjectService
     /// folder (cached per platform, template, theme and file format; the target folder is never touched). Ignores
     /// the path's existence and the source-linked setting, which do not change the file set.
     /// </summary>
-    /// <returns>The plan, or <see langword="null"/> when the template, theme or platform is not valid.</returns>
+    /// <returns>The plan, or <see langword="null"/> when the template, theme or platform is not valid, or the path is a file system root with no folder name.</returns>
     NewProjectPlan? GetPlan(NewProjectRequest request);
 
     /// <summary>

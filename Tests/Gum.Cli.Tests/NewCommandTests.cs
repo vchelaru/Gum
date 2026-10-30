@@ -32,6 +32,18 @@ public class NewCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void New_WithDirectoryNameAndTrailingSeparator_ShouldNameProjectAfterDirectory()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir + Path.DirectorySeparatorChar);
+
+        result.ExitCode.ShouldBe(0);
+        File.Exists(Path.Combine(projectDir, "MyGame.gumj")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, ".gumj")).ShouldBeFalse();
+    }
+
+    [Fact]
     public void New_WithGumjExtension_ShouldCreateProjectAtExactPath()
     {
         string filePath = Path.Combine(TempDirectory, "MyProject.gumj");
