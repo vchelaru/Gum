@@ -633,6 +633,25 @@ public class TextRuntimeTests : BaseTestClass
         sut.GetCharacterIndexAtPosition(1000, 0).ShouldBe(5);
     }
 
+    // The point is in drawn units, so the character under it follows FontScale (#7159).
+    [Theory]
+    [InlineData(0.5f)]
+    [InlineData(1f)]
+    [InlineData(2f)]
+    public void GetCharacterIndexAtPosition_FontScale_ShouldReturnCharacterNearestDrawnPoint(float fontScale)
+    {
+        TextRuntime sut = new();
+        sut.Text = "ABCDEFGHIJ";
+        sut.FontScale = fontScale;
+        Gum.Renderables.Text internalText = (Gum.Renderables.Text)sut.RenderableComponent;
+
+        float start = internalText.MeasureString("ABC") * fontScale;
+        float end = internalText.MeasureString("ABCD") * fontScale;
+
+        sut.GetCharacterIndexAtPosition(start + (end - start) * 0.25f, 1).ShouldBe(3);
+        sut.GetCharacterIndexAtPosition(start + (end - start) * 0.75f, 1).ShouldBe(4);
+    }
+
     #endregion
 
     #region HeightUnits
