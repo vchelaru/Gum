@@ -69,7 +69,7 @@ This uses two properties together:
 `RenderTargetEffect` is available on the XNA-like runtimes (MonoGame, KNI, and FNA), where the effect is a `Microsoft.Xna.Framework.Graphics.Effect`, and on SkiaSharp, where it is an `SKRuntimeEffect`. See [Render Target Shaders on SkiaSharp](#render-target-shaders-on-skiasharp).
 {% endhint %}
 
-Gum does not compile or load the shader for you — you supply an already-constructed `Effect`. You can load it however you like: the MonoGame content pipeline, `new Effect(graphicsDevice, bytes)` with precompiled shader bytes (no content pipeline required), or a runtime `.fx` compiler such as ShadowDusk.
+You can supply an already-constructed `Effect` yourself, loaded however you like: the MonoGame content pipeline, or `new Effect(graphicsDevice, bytes)` with precompiled shader bytes (no content pipeline required). To point at an `.fx` or `.slang` source file instead, see [Loading Shader Files With SourceShaderFile](#loading-shader-files-with-sourceshaderfile).
 
 #### Example - Applying a shader to a container
 
@@ -117,6 +117,46 @@ Overloads take a `float`, `int`, `bool`, two to four float components, or a `Sys
 
 {% hint style="info" %}
 To instead display a container's render target as a regular Sprite (so it can be scaled, rotated, or stacked) rather than post-processing it in place, see [RenderTargetTextureSource](spriteruntime/rendertargettexturesource.md).
+{% endhint %}
+
+#### Loading Shader Files With SourceShaderFile
+
+Setting `SourceShaderFile` to an `.fx` or `.slang` path makes Gum compile the shader at runtime and assign the result to the container. Gum loads no shader files by itself. A shader resolver must handle the file, and the optional ShadowDusk package for your runtime provides one:
+
+| Runtime | Package |
+|---|---|
+| MonoGame | `Gum.MonoGame.ShadowDusk` |
+| KNI | `Gum.KNI.ShadowDusk` |
+| FNA | `Gum.FNA.ShadowDusk` |
+| raylib | `Gum.raylib.ShadowDusk` |
+
+Add the package, then call `UseShadowDusk` once at startup. It takes no arguments. On MonoGame and KNI it compiles for the graphics backend the game runs on. Call it after `Initialize` and before creating any element that uses a `SourceShaderFile`:
+
+```csharp
+// Initialize
+GumUI.Initialize(this);
+GumUI.UseShadowDusk();
+
+var container = new ContainerRuntime();
+container.Width = 200;
+container.Height = 200;
+container.IsRenderTarget = true;
+container.SourceShaderFile = "Shaders/Grayscale.fx";
+container.AddToRoot();
+```
+
+On raylib, call `UseShadowDusk` after the window exists. ShadowDusk converts the shader to GLSL, and any default values the shader declares (such as `float Thickness = 1.0;`) apply to containers that do not set that parameter with `SetShaderParameter`.
+
+If no resolver handles the file, assigning `SourceShaderFile` fails like a missing file, and the message names the package to add. It follows `GraphicalUiElement.MissingFileBehavior`: by default the exception stops the screen or project from loading, and a call to `UseShadowDusk` made afterward does not retry the file. To render the container without the shader instead, set `MissingFileBehavior` to `ConsumeSilently` after Gum initializes. Gum then reports the error through `PropertyAssignmentError`:
+
+```csharp
+// Initialize
+Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
+    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+```
+
+{% hint style="info" %}
+The ShadowDusk packages for MonoGame, KNI, FNA and raylib are available in November 2026, or now if building Gum from source. Before this, a `SourceShaderFile` with no resolver rendered unshaded and reported nothing.
 {% endhint %}
 
 ### Render Target Shaders on SkiaSharp

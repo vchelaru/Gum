@@ -32,6 +32,32 @@ Pressing Escape closes an open drop-down and keeps the current selection. This w
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## DropDownOpened and DropDownClosed
+
+`DropDownOpened` is raised once each time the drop-down opens. `DropDownClosed` is raised once each time an open drop-down closes. Both are raised however the change happened, so a handler does not need to cover each route separately:
+
+* `DropDownOpened`: mouse, keyboard, gamepad, or setting `IsDropDownOpen` to `true`
+* `DropDownClosed`: picking an item, Escape, clicking away, losing focus, the `ComboBox` being disabled, hidden, or removed, or setting `IsDropDownOpen` to `false`
+
+```csharp
+// Initialize
+var comboBox = new ComboBox();
+comboBox.AddToRoot();
+comboBox.Items.Add("Item 1");
+comboBox.Items.Add("Item 2");
+
+var label = new Label();
+label.AddToRoot();
+label.Y = 40;
+
+comboBox.DropDownOpened += (_, _) => label.Text = "Open";
+comboBox.DropDownClosed += (_, _) => label.Text = "Closed";
+```
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Adjusting the Drop-Down ListBox
 
 `ComboBox` provides a `ListBox` property which can be used to customize the ListBox instance.

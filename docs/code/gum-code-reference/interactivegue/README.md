@@ -15,8 +15,8 @@ The following events are available on InteractiveGue
 * LosePush
 * DoubleClick
 * RightClick
-* RollOn
-* RollOff
+* RollOn (raised after the `RollOff` of the object the cursor left, if there is one)
+* RollOff (raised before the `RollOn` of the object the cursor entered, if there is one)
 * RollOver
 * HoverOver
 * Dragging

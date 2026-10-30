@@ -39,7 +39,19 @@ text.AddToRoot();
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACkWOTQvCMAyG7_sVoSeF4cCjsoMfODx4mbt1PXQ2zEDXQtdOUfzvdoMphECe5CHvOwFg574IHduAdwHTEZAhT1LTCyNlg3Tg8ekhB4MPuFhjC9lhdFZFwCM6Gsi0qyqelMF46nCx3NZmVCYYvZpVd-ohFj9YbV1eohIOFc-mUaQz3-uAoontv5FGAT9Z4683qTFfi4Zanv2AmLLVbP64U6qypbU-hmDJ5wu5H0Ud4QAAAA)
 
-BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, `Custom`, and `Glyph` (see [Inline Glyphs](#inline-glyphs)).
+BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, `Custom`, `Glyph` (see [Inline Glyphs](#inline-glyphs)), and `Link` (see [Links](#links)).
+
+Tag names are not case sensitive, and a closing tag matches its opening tag whatever the case, so `[color=Red]red[/COLOR]` works the same as `[Color=Red]red[/Color]`.
+
+An opening tag that has no closing tag is not a tag. It stays in the text and draws as literal characters:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+// Draws "This is [Color=Red]not closed" with the bracketed text visible.
+text.Text = "This is [Color=Red]not closed";
+text.AddToRoot();
+```
 
 `HasDropshadow` toggles the shadow for just the wrapped run, independently of the TextRuntime's own `HasDropshadow` value. The shadow's offset, blur, and color always come from the TextRuntime's `DropshadowOffsetX`/`DropshadowOffsetY`/`DropshadowBlur`/`DropshadowColor` properties; the tag only controls whether a given run draws it:
 
@@ -72,6 +84,60 @@ The tag only substitutes the character, so the glyph appears when the font has i
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## Links
+
+The `Link` tag marks a range of text with an id. Gum does not style the range, and the tag is removed from the drawn text. Your code finds the range under a point with `GetTagAtIndex`, which takes a tag name and a character index and returns the tag that contains that character, or `null` if there is none. The index is in the displayed text (BBCode removed), the same index `GetCharacterIndexAtPosition` returns, so the two combine to find the link under the cursor.
+
+The returned `TextTagSpan` has `Name`, `Argument` (the id, such as `shop`), `StartIndex`, and `EndIndex`. `EndIndex` is one past the last character in the tag. The tag name is not case sensitive. When tags with the same name are nested, `GetTagAtIndex` returns the innermost one. A tag is only found if it has a closing tag.
+
+The following code opens a different page depending on which link the player clicks. The `Color` tags are optional. They make the links visible:
+
+```csharp
+// Class scope
+TextRuntime linkText;
+
+protected override void Initialize()
+{
+    GumUI.Initialize(this);
+
+    linkText = new TextRuntime();
+    linkText.Text =
+        "Visit the [Link=shop][Color=Yellow]shop[/Color][/Link] " +
+        "or read the [Link=help][Color=Yellow]help[/Color][/Link].";
+    linkText.AddToRoot();
+
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    var cursor = GumUI.Cursor;
+    if (cursor.PrimaryClick && linkText.HasCursorOver(cursor))
+    {
+        int index = linkText.GetCharacterIndexAtPosition(
+            cursor.XRespectingGumZoomAndBounds(),
+            cursor.YRespectingGumZoomAndBounds());
+
+        TextTagSpan? link = linkText.GetTagAtIndex("Link", index);
+        if (link != null)
+        {
+            // link.Value.Argument is "shop" or "help"
+            OpenPage(link.Value.Argument);
+        }
+    }
+
+    base.Update(gameTime);
+}
+```
+
+For the index math behind `GetCharacterIndexAtPosition`, see [GetCharacterIndexAtPosition](getcharacterindexatposition.md).
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Custom Functions
 
 TextRuntime instances can use the `Custom` tag to define a custom function to be used when rendering a Text. This tag can be used to customize letters in a TextRuntime using custom code, allowing for effects such as wavy, rainbow, or shaking text.
@@ -89,10 +155,12 @@ The following variables can be modified on each letter. This list also includes 
 To use the Custom tag, the following must be performed:
 
 1. A function must be declared which is of one of the following types:
-   * `Func<int, string, LetterCustomization>` - the int value represents the index in the custom block, starting with 0. The string represents the entire string in the block. The returned LetterCustomization instance includes the desired modifications to the letter. Register with `Text.Customizations`.
+   * `Func<int, string, LetterCustomization>` - the int value is the index of the letter in the whole displayed text, with all BBCode tags removed. The string represents the text inside the custom block. The returned LetterCustomization instance includes the desired modifications to the letter. Register with `Text.Customizations`.
    * `Func<int, string, LetterCustomization, LetterCustomization>` - same as above, but the third parameter is a LetterCustomization containing the letter's current state (color, offset, scale) as set by prior BBCode tags. This allows relative modifications such as darkening the current color. Register with `Text.ContextCustomizations`.
 2. This function must be registered with the `RenderingLibrary.Graphics.Text` type using the appropriate dictionary.
 3. A Custom tag must be included in the text string.
+
+The int index counts displayed characters from the start of the whole text, not from the start of the block. In `"Gold: [Custom=Wave]50[/Custom]"` the function receives 6 for `5` and 7 for `0`, because `Gold: ` is six characters. The index is a UTF-16 index with the BBCode tags removed, so an emoji counts as two. The string parameter is only the text inside the block, so its `Length` is the block's length.
 
 ### Code Example: Shaking Letters With Custom Tag
 
