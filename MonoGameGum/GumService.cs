@@ -407,7 +407,10 @@ public partial class GumService : IGumService
     public void EnableHotReload(string absoluteGumxSourcePath)
     {
         _hotReloadManager = new GumHotReloadManager(
-            ApplyProjectTextureFilter, GumAnimationLoader.LoadAnimationsFromProvider, path => LoaderManager.Self.Dispose(path));
+            ApplyProjectTextureFilter, GumAnimationLoader.LoadAnimationsFromProvider, path => LoaderManager.Self.Dispose(path))
+        {
+            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService
+        };
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.ReloadFinished += result => HotReloadFinished?.Invoke(result);
         _hotReloadManager.Start(absoluteGumxSourcePath);

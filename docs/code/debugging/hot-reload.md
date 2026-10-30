@@ -42,6 +42,8 @@ When any of these files change, Gum reloads the project in place: it diffs the n
 
 Children added at runtime by your game code are left untouched. Hot reload identifies "design-time" children by their `Tag` — when Gum creates a visual from an `InstanceSave`, it stores the `InstanceSave` in `Tag`. Anything without an `InstanceSave` `Tag` is treated as runtime-owned and skipped.
 
+Localization files are reloaded too. Hot reload reacts to the files in the project's `LocalizationFiles` (`.csv` or `.resx`, plus the `.resx` language files next to a listed one). When one changes, or the list itself changes in the project, Gum reads the files again, replaces the database of `GumService.Default.LocalizationService` and translates the text on screen again in the current language. Text set with `SetTextNoTranslate` is left alone. A file Gum cannot find is reported as `MissingFile`; one it cannot read (a malformed or empty file, or one the editor still has open) is tried once more after the debounce, then leaves the old translations in place and is reported as `ReloadFailed`. A game that has no `LocalizationService` is not affected.
+
 Animation chain files (`.achx`, `.achj`) are reloaded when a Sprite or NineSlice uses one as its `SourceFile`: Gum drops the cached chains, reads the file again and assigns it to every visual using it, except those whose chains your code replaced. A chain file no visual uses is ignored. The playing chain is found again by name, so reordering chains is fine. If the chain was renamed or deleted, the visual keeps its last frame and Gum reports a `ReloadFailed` issue (`MatchesRestart` is `false`), since a restart would show nothing. Chains your code assigned to the visual's `AnimationChains` after the file was assigned are left alone.
 
 When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files from the source project's `FontCache/` directory to the bin-side `FontCache/` directory, and evicts cached fonts so they are reloaded from disk.
@@ -172,7 +174,7 @@ Every reload's result lists every issue that reload had, including one an earlie
 | --------------------- | --------------------------------------------------------------------------------------------------- | ---------------- |
 | `MissingFile`         | The project lists a file that is not on disk. The reload went on without it.                        | `false`          |
 | `FontFailure`         | A changed font file could not be copied. It is tried again on the next reload.                      | `false`          |
-| `ReloadFailed`        | The project could not be read, applying it threw, or a changed file cannot be applied while the game runs (a replaced image). The UI is unchanged or partly updated. | `false`          |
+| `ReloadFailed`        | The project or a changed localization file could not be read, applying it threw, or a changed file cannot be applied while the game runs (a replaced image). The UI is unchanged or partly updated. | `false`          |
 | `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
 | `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |
 | `InstanceRebuilt`     | An instance's component changed or was renamed, so its visual was rebuilt. References and handlers on it are stale. | `true` |

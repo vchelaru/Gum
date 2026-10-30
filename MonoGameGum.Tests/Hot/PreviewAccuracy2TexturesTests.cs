@@ -1,11 +1,16 @@
 #pragma warning disable CS0618
 using Gum.DataTypes;
-using Gum.GueDeriving;
+using Gum;
+using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
+using Gum.GueDeriving;
 using Gum.Managers;
+using Gum.Mvvm;
+using Gum.Wireframe;
 using RenderingLibrary.Content;
 using Shouldly;
 using System.IO;
+using System.Linq;
 using Xunit;
 using static MonoGameGum.Tests.Hot.PreviewAccuracy2World;
 
@@ -349,7 +354,7 @@ public partial class PreviewAccuracy2Tests
     // ---- Localization files ----
 
     [Fact]
-    public void Localization_CsvEditedOnDisk_IsNotWatched()
+    public void Localization_CsvEditedOnDisk_IsReloadedAndReapplied()
     {
         PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
         _worlds.Add(world);
@@ -357,11 +362,244 @@ public partial class PreviewAccuracy2Tests
         WriteLocalization(world.Dir, "Howdy");
         PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "loc.csv"));
 
-        verdict.Reloaded.ShouldBeFalse("a .csv is not a file hot reload reacts to");
-        verdict.Hot.ShouldContain("Text=Hello");
-        verdict.Fresh.ShouldContain("Text=Howdy");
+        verdict.Reloaded.ShouldBeTrue("a .csv the project lists is a file hot reload reacts to");
+        verdict.Hot.ShouldContain("Text=Howdy");
+        ShouldBeCorrect(verdict);
     }
 
+    [Fact]
+    public void Localization_CsvEditedOnDisk_AndTheProjectSavedInTheSameBurst()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        PreviewVerdict2 verdict = world.Save(project => Std(MainScreen(project), "Box", "Red", 99), dir => WriteLocalization(dir, "Howdy"));
+        verdict.Hot.ShouldContain("Text=Howdy");
+        ShouldBeCorrect(verdict);
+    }
+
+    [Fact]
+    public void Localization_NewCsvAddedToTheProject_IsLoaded()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        PreviewVerdict2 verdict = world.Save(
+            project =>
+            {
+                project.LocalizationFiles.Clear();
+                project.LocalizationFiles.Add("Content/more.csv");
+                Std(MainScreen(project), "Caption", "Text", "T_More");
+            },
+            dir => File.WriteAllText(Content(dir, "more.csv"), "StringId,English,Spanish\nT_More,More,Mas\n"));
+        verdict.Hot.ShouldContain("Text=More");
+        ShouldBeCorrect(verdict);
+    }
+
+    [Fact]
+    public void Localization_ListedFileEmptiedFromTheProject_ClearsTheDatabase()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        PreviewVerdict2 verdict = world.Save(project => project.LocalizationFiles.Clear());
+        ShouldBeCorrect(verdict);
+    }
+
+    [Fact]
+    public void Localization_CsvNotListedByTheProject_IsIgnored()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        File.WriteAllText(Content(world.Dir, "unlisted.csv"), "StringId,English\nT_Hello,Nope\n");
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "unlisted.csv"));
+
+        verdict.Reloaded.ShouldBeFalse();
+        verdict.Hot.ShouldContain("Text=Hello");
+    }
+
+    [Fact]
+    public void Localization_ListedCsvDeletedFromDisk_ReportsTheMissingFile()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        File.Delete(Content(world.Dir, "loc.csv"));
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "loc.csv"));
+
+        verdict.Reloaded.ShouldBeTrue();
+        verdict.Kinds.ShouldContain("MissingFile");
+        verdict.MatchesRestart.ShouldBeFalse();
+        // A restart with no usable file shows the string IDs.
+        verdict.Hot.ShouldContain("Text=T_Hello");
+    }
+
+    [Fact]
+    public void Localization_ResxSatelliteEditedOnDisk_IsReloadedAndReapplied()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        PreviewVerdict2 verdict = world.Save(
+            project =>
+            {
+                project.LocalizationFiles.Clear();
+                project.LocalizationFiles.Add("Content/Strings.resx");
+            },
+            dir =>
+            {
+                File.WriteAllText(Content(dir, "Strings.resx"), Resx("T_Hello", "Hello"));
+                File.WriteAllText(Content(dir, "Strings.es.resx"), Resx("T_Hello", "Hola"));
+            });
+        ShouldBeCorrect(verdict);
+
+        // Language 1 is the base file, 2 the Spanish satellite.
+        CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 2;
+        File.WriteAllText(Content(world.Dir, "Strings.es.resx"), Resx("T_Hello", "Holaa"));
+        verdict = world.Reload(Content(world.Dir, "Strings.es.resx"));
+
+        verdict.Hot.ShouldContain("Text=Holaa");
+        verdict.MatchesRestart.ShouldBeTrue();
+    }
+
+    private static string Resx(string name, string value) =>
+        $"<?xml version=\"1.0\" encoding=\"utf-8\"?><root><data name=\"{name}\"><value>{value}</value></data></root>";
+
+    private class KeyViewModel : ViewModel
+    {
+        public string? Key { get => Get<string>(); set => Set(value); }
+    }
+
+    [Fact]
+    public void Localization_BoundTextAndBoundFormsLabel_AreTranslatedAgainAfterTheCsvChanges()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        KeyViewModel viewModel = new KeyViewModel { Key = "T_Hello" };
+        TextRuntime boundText = new TextRuntime();
+        world.Screen.AddChild(boundText);
+        boundText.BindingContext = viewModel;
+        boundText.SetBinding(nameof(TextRuntime.Text), nameof(KeyViewModel.Key));
+        Label label = new Label();
+        world.Screen.AddChild(label.Visual);
+        label.BindingContext = viewModel;
+        label.SetBinding(nameof(Label.Text), nameof(KeyViewModel.Key));
+        boundText.Text.ShouldBe("Hello");
+        label.Text.ShouldBe("Hello");
+
+        WriteLocalization(world.Dir, "Howdy");
+        world.Reload(Content(world.Dir, "loc.csv")).MatchesRestart.ShouldBeTrue();
+
+        boundText.Text.ShouldBe("Howdy");
+        label.Text.ShouldBe("Howdy");
+    }
+
+    // The oracle loads the saved folder fresh, which a malformed or locked file would break, so these read the tree directly.
+    private static HotReloadResult? Tick(PreviewAccuracy2World world, params string[] changedFiles)
+    {
+        foreach (string file in changedFiles)
+        {
+            world.Manager.NotifyFileChanged(file);
+        }
+        int before = world.Results.Count;
+        world.Now = world.Now.AddMilliseconds(300);
+        world.Manager.Update(new[] { world.Screen });
+        return world.Results.Count > before ? world.Results[world.Results.Count - 1] : null;
+    }
+
+    private static string CaptionText(PreviewAccuracy2World world) => ((TextRuntime)world.Screen.GetGraphicalUiElementByName("Caption")!).Text;
+
+    private PreviewAccuracy2World BootLocalized()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        return world;
+    }
+
+    [Theory]
+    [InlineData("StringId,English\n\"T_Hello,\"Hello\nT_Other,\"unterminated")]
+    [InlineData("")]
+    public void Localization_UnreadableCsv_KeepsTheOldStringsAndReports(string content)
+    {
+        PreviewAccuracy2World world = BootLocalized();
+        File.WriteAllText(Content(world.Dir, "loc.csv"), content);
+
+        // A failed read is tried once more before it is reported.
+        Tick(world, Content(world.Dir, "loc.csv")).ShouldBeNull();
+        HotReloadResult? result = Tick(world);
+
+        result.ShouldNotBeNull();
+        result.Issues.Select(issue => issue.Kind).ShouldBe(new[] { HotReloadIssueKind.ReloadFailed });
+        result.MatchesRestart.ShouldBeFalse();
+        CaptionText(world).ShouldBe("Hello");
+        // The database itself, not only the text already on screen, is the old one.
+        CustomSetPropertyOnRenderable.LocalizationService!.Translate("T_Hello").ShouldBe("Hello");
+    }
+
+    [Fact]
+    public void Localization_ServiceProviderThrows_ReportsInsteadOfThrowing()
+    {
+        PreviewAccuracy2World world = BootLocalized();
+        world.Manager.LocalizationServiceProvider = () => throw new System.InvalidOperationException("boom");
+        WriteLocalization(world.Dir, "Howdy");
+
+        HotReloadResult? result = Tick(world, Content(world.Dir, "loc.csv"));
+
+        result.ShouldNotBeNull();
+        result.MatchesRestart.ShouldBeFalse();
+        result.Issues[0].Message.ShouldContain("boom");
+    }
+
+    [Fact]
+    public void Localization_CsvLockedByTheEditor_IsTriedAgainAfterTheDebounce()
+    {
+        PreviewAccuracy2World world = BootLocalized();
+        WriteLocalization(world.Dir, "Howdy");
+        using (new FileStream(Content(world.Dir, "loc.csv"), FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            Tick(world, Content(world.Dir, "loc.csv")).ShouldBeNull("a failed read is tried again before it is reported");
+        }
+
+        HotReloadResult? result = Tick(world);
+
+        result.ShouldNotBeNull();
+        result.MatchesRestart.ShouldBeTrue();
+        CaptionText(world).ShouldBe("Howdy");
+    }
+
+    [Fact]
+    public void Localization_CsvStillLockedOnTheSecondTry_ReportsOnce()
+    {
+        PreviewAccuracy2World world = BootLocalized();
+        WriteLocalization(world.Dir, "Howdy");
+        using FileStream locked = new FileStream(Content(world.Dir, "loc.csv"), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+        Tick(world, Content(world.Dir, "loc.csv")).ShouldBeNull();
+        HotReloadResult? result = Tick(world);
+
+        result.ShouldNotBeNull();
+        result.Issues.Select(issue => issue.Kind).ShouldBe(new[] { HotReloadIssueKind.ReloadFailed });
+        Tick(world).ShouldBeNull("nothing is tried again until the file changes");
+        CaptionText(world).ShouldBe("Hello");
+        CustomSetPropertyOnRenderable.LocalizationService!.Translate("T_Hello").ShouldBe("Hello");
+    }
+
+    [Fact]
+    public void Localization_SecondLanguageSelected_StaysSelectedAfterTheCsvChanges()
+    {
+        PreviewAccuracy2World world = new PreviewAccuracy2World { UseLocalization = true };
+        _worlds.Add(world);
+        world.Boot();
+        File.WriteAllText(Content(world.Dir, "loc.csv"), "StringId,English,Spanish\nT_Hello,Hello,Holaa\n");
+        CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 2;
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "loc.csv"));
+
+        verdict.Hot.ShouldContain("Text=Holaa");
+        CustomSetPropertyOnRenderable.LocalizationService.CurrentLanguage.ShouldBe(2);
+    }
 
     [Fact]
     public void Localization_TextKeyEditedToAnotherKey_UsesTheLoadedDatabase()

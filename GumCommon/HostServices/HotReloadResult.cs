@@ -18,8 +18,9 @@ public enum HotReloadIssueKind
     FontFailure,
 
     /// <summary>
-    /// The project could not be read, or applying it threw, or a changed file cannot be applied while the
-    /// game runs (a replaced image). The UI is unchanged or partly updated.
+    /// The project could not be read, or applying it threw, or a changed localization file could not be
+    /// read, or a changed file cannot be applied while the game runs (a replaced image). The UI is
+    /// unchanged or partly updated.
     /// </summary>
     ReloadFailed,
 
