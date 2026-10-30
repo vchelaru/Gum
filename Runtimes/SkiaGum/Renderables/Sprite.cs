@@ -223,6 +223,8 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     bool IAnimationChainRenderable.IsNamedChainMissing => AnimationLogic.IsNamedChainMissing;
 
+    void IAnimationChainRenderable.ClearAnimationChains() => AnimationLogic.AnimationChains = null;
+
     void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
 
     public bool AnimateSelf(double secondDifference)

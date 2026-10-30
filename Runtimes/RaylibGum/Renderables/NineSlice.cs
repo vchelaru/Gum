@@ -127,6 +127,8 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
 
     bool IAnimationChainRenderable.IsNamedChainMissing => AnimationLogic.IsNamedChainMissing;
 
+    void IAnimationChainRenderable.ClearAnimationChains() => AnimationLogic.AnimationChains = null;
+
     void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
 
     /// <inheritdoc/>

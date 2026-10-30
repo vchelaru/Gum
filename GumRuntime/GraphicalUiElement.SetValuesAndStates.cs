@@ -282,6 +282,11 @@ public partial class GraphicalUiElement
     /// <param name="value">The value, casted to the correct type.</param>
     public void SetProperty(string propertyName, object? value)
     {
+        if (propertyName == "SourceFile")
+        {
+            ReleaseChainsFromPreviousSourceFile(value as string);
+        }
+
         SetPropertyCore(propertyName, value);
 
         if (propertyName == "SourceFile")
@@ -307,9 +312,67 @@ public partial class GraphicalUiElement
     private void RecordAssignedSourceFile(string? file)
     {
         _assignedSourceFiles.Remove(this);
+        _chainsFromSourceFile.Remove(this);
         if (!string.IsNullOrEmpty(file))
         {
             _assignedSourceFiles.Add(this, file!);
+            if (IsChainFile(file!)
+                && (mContainedObjectAsIpso as IAnimationChainRenderable)?.AnimationChainList is { } chains)
+            {
+                _chainsFromSourceFile.Add(this, new WeakReference(chains));
+            }
+        }
+    }
+
+    private static bool IsChainFile(string file) => file.EndsWith(".achx") || file.EndsWith(".achj");
+
+    // The chain list the last chain file assigned through SourceFile produced. Chains a game assigns
+    // afterward are not this list and are never dropped when the SourceFile changes.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<GraphicalUiElement, WeakReference> _chainsFromSourceFile =
+        new System.Runtime.CompilerServices.ConditionalWeakTable<GraphicalUiElement, WeakReference>();
+
+    // A SourceFile that is empty or not a chain file shows no animation, as a restart does, so the
+    // chains the previous chain file produced go and the texture area the frames set goes back to the
+    // element's variables.
+    private void ReleaseChainsFromPreviousSourceFile(string? newFile)
+    {
+        if (!string.IsNullOrEmpty(newFile) && IsChainFile(newFile!))
+        {
+            return;
+        }
+
+        if (!_chainsFromSourceFile.TryGetValue(this, out WeakReference? owned)
+            || mContainedObjectAsIpso is not IAnimationChainRenderable renderable
+            || !ReferenceEquals(renderable.AnimationChainList, owned.Target))
+        {
+            return;
+        }
+
+        renderable.ClearAnimationChains();
+        _chainsFromSourceFile.Remove(this);
+
+        bool wasSuspended = IsLayoutSuspended;
+        SuspendLayout();
+        try
+        {
+            ElementSave? owner = (Tag as InstanceSave)?.ParentContainer;
+            foreach (string name in new[] { "TextureAddress", "TextureLeft", "TextureTop", "TextureWidth", "TextureHeight", "FlipHorizontal" })
+            {
+                object? fromProject = owner?.DefaultState?.GetValueRecursive(((InstanceSave)Tag!).Name + "." + name);
+                SetProperty(name, fromProject ?? name switch
+                {
+                    "TextureAddress" => TextureAddress.EntireTexture,
+                    "FlipHorizontal" => false,
+                    _ => 0,
+                });
+            }
+        }
+        finally
+        {
+            if (!wasSuspended)
+            {
+                ResumeLayout();
+            }
         }
     }
 

@@ -36,6 +36,11 @@ namespace RenderingLibrary.Graphics
         bool IsNamedChainMissing { get; }
 
         /// <summary>
+        /// Drops the assigned AnimationChainList. The frame already shown stays until the owner resets it.
+        /// </summary>
+        void ClearAnimationChains();
+
+        /// <summary>
         /// Sets the callback raised when the playback flag turns on, so the owning element can stop
         /// skipping this renderable.
         /// </summary>
