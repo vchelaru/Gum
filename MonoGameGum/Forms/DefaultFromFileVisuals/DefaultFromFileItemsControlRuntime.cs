@@ -23,6 +23,7 @@ public class DefaultFromFileItemsControlRuntime : InteractiveGue
         if(FormsControl == null)
         {
             FormsControlAsObject = new ItemsControl(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

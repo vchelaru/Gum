@@ -19,6 +19,7 @@ public class DefaultFromFileRadioButtonRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new RadioButton(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

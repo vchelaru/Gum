@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
 using Gum.Managers;
 using Gum.Wireframe;
+using GumRuntime;
 
 namespace Gum.Forms;
 
@@ -18,6 +20,39 @@ namespace Gum.Forms;
 /// </summary>
 internal static class BehaviorFormsPropertyApplier
 {
+    // Controls that already received the values their own build defines (see ApplyOnceAtBuild).
+    private static readonly ConditionalWeakTable<FrameworkElement, object> _appliedAtBuild = new();
+
+    /// <summary>
+    /// Applies every tier the project defines to a control that a <c>DefaultFromFile*Runtime</c> just
+    /// created, once, right where it is created. Code in a derived runtime's
+    /// <c>AfterFullCreation</c> (after <c>base.AfterFullCreation()</c>) then runs after the defaults
+    /// instead of being reset by them when the build ends. Does nothing before a project is registered
+    /// with <see cref="FormsUtilities.RegisterFromFileFormRuntimeDefaults"/>.
+    /// </summary>
+    public static void ApplyToCreatedControl(InteractiveGue visual)
+    {
+        ElementSaveExtensions.InitialFormsPropertiesNotifier?.Invoke(visual, true);
+    }
+
+    /// <summary>
+    /// Applies every tier to the control the first time it is called for that control, and does
+    /// nothing after. The build's own pass calls this for the element it built, so a control that
+    /// already got its values when it was created is not reset by it.
+    /// </summary>
+    public static void ApplyOnceAtBuild(FrameworkElement formsControl, GraphicalUiElement visual)
+    {
+        if (_appliedAtBuild.TryGetValue(formsControl, out _))
+        {
+            return;
+        }
+
+        if (Apply(formsControl, visual))
+        {
+            _appliedAtBuild.Add(formsControl, formsControl);
+        }
+    }
+
     /// <summary>
     /// Writes the FormsProperty values the project defines onto the control. By default that is
     /// every tier, which a control's own build uses once, before any code touches it. With
@@ -25,18 +60,19 @@ internal static class BehaviorFormsPropertyApplier
     /// authors for the instance applies, so a default never overwrites what code set since the
     /// control was built.
     /// </summary>
-    public static void Apply(FrameworkElement formsControl, GraphicalUiElement visual, bool authoredOverridesOnly = false)
+    /// <returns>False when the visual has no element or no project is loaded, so nothing could be applied.</returns>
+    public static bool Apply(FrameworkElement formsControl, GraphicalUiElement visual, bool authoredOverridesOnly = false)
     {
         ElementSave? elementSave = visual.ElementSave;
         if (elementSave == null)
         {
-            return;
+            return false;
         }
 
         GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
         if (project == null)
         {
-            return;
+            return false;
         }
 
         Type formsType = formsControl.GetType();
@@ -86,6 +122,8 @@ internal static class BehaviorFormsPropertyApplier
                 // FrameworkElement's property. Silently skip rather than crash construction.
             }
         }
+
+        return true;
     }
 
     private static object? ReadEffectiveValue(GraphicalUiElement visual, ElementSave elementSave, string propertyName)

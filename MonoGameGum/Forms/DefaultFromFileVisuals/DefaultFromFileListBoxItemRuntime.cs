@@ -19,6 +19,7 @@ public class DefaultFromFileListBoxItemRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new ListBoxItem(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

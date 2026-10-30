@@ -19,6 +19,7 @@ public class DefaultFromFileSplitterRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new Splitter(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
     public Splitter? FormsControl => FormsControlAsObject as Splitter;

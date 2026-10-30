@@ -18,6 +18,7 @@ public class DefaultFromFileWindowRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new Window(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

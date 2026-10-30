@@ -183,11 +183,10 @@ public class FormsPropertiesSetInCodeSurviveAncestorBuildTests : BaseTestClass
         }
     }
 
-    // Pins current behavior: the root pass runs after the built element's AfterFullCreation, so
-    // code there cannot keep a value the behavior declares a default for. Not reached by the
-    // generated `new MySlider()` path (see the issue linked from the PR).
+    // The control's defaults are applied when the control is created, before the rest of the
+    // built element's own AfterFullCreation, so code there keeps what it sets (#7197).
     [Fact]
-    public void RootSliderBuiltDirectly_MaximumSetInAfterFullCreation_IsResetByTheRootPass()
+    public void RootSliderBuiltDirectly_MaximumSetInAfterFullCreation_KeepsIt()
     {
         LoadProject(wrapperCount: 0, SliderBehavior(), controlComponent: "Controls/Slider");
         ElementSaveExtensions.RegisterGueInstantiationType("Controls/Slider", typeof(RangedSliderRuntime));
@@ -196,7 +195,51 @@ public class FormsPropertiesSetInCodeSurviveAncestorBuildTests : BaseTestClass
         GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
 
         Slider slider = (Slider)((InteractiveGue)visual).FormsControlAsObject!;
-        slider.Maximum.ShouldBe(100);
+        slider.Maximum.ShouldBe(1);
+    }
+
+    [Fact]
+    public void RootSliderBuiltDirectly_RangeAuthoredOnTheComponent_AfterFullCreationSetsMaximum_CodeWinsAndOtherAuthoredValueApplies()
+    {
+        LoadProject(wrapperCount: 0, SliderBehavior(), controlComponent: "Controls/Slider",
+            controlComponentVariables: new[]
+            {
+                Variable("double", "Minimum", -5.0),
+                Variable("double", "Maximum", 250.0)
+            });
+        ElementSaveExtensions.RegisterGueInstantiationType("Controls/Slider", typeof(RangedSliderRuntime));
+        ComponentSave component = ObjectFinder.Self.GumProjectSave!.Components.Single(item => item.Name == "Controls/Slider");
+
+        GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+
+        Slider slider = (Slider)((InteractiveGue)visual).FormsControlAsObject!;
+        slider.Maximum.ShouldBe(1);
+        slider.Minimum.ShouldBe(-5);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    public void NestedSliderWithCustomRuntime_MaximumSetInAfterFullCreation_AncestorsBuilt_KeepsIt(int wrapperCount)
+    {
+        LoadProject(wrapperCount, SliderBehavior(), controlComponent: "Controls/Slider");
+        ElementSaveExtensions.RegisterGueInstantiationType("Controls/Slider", typeof(RangedSliderRuntime));
+
+        Slider slider = BuildAndFindControl<Slider>(wrapperCount);
+
+        slider.Maximum.ShouldBe(1);
+    }
+
+    [Fact]
+    public void NestedSliderWithCustomRuntime_MaximumAuthoredOnTheHostInstance_AuthoredValueWins()
+    {
+        LoadProject(wrapperCount: 0, SliderBehavior(), controlComponent: "Controls/Slider",
+            hostVariables: new[] { Variable("double", "Control.Maximum", 7.0) });
+        ElementSaveExtensions.RegisterGueInstantiationType("Controls/Slider", typeof(RangedSliderRuntime));
+
+        Slider slider = BuildAndFindControl<Slider>(wrapperCount: 0);
+
+        slider.Maximum.ShouldBe(7);
     }
 
     // Other controls -----------------------------------------------------------------------

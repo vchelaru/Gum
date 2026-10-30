@@ -19,6 +19,7 @@ public class DefaultFromFileScrollViewerRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new ScrollViewer(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

@@ -20,6 +20,7 @@ internal class DefaultFromFilePanelRuntime : ContainerRuntime
         if (FormsControl == null)
         {
             FormsControlAsObject = new Panel(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
     public Panel? FormsControl => FormsControlAsObject as Panel;
