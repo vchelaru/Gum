@@ -29,6 +29,14 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0014"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#circular-base-types-gum0014",
             ["GUM0015"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#component-with-no-base-type-gum0015",
             ["GUM0018"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#component-containing-itself-gum0018",
+            ["GUM0019"] = "gum-tool/project-files#value-that-does-not-fit-its-type-gum0019",
+            ["GUM0020"] = "gum-tool/project-files#duplicate-names-gum0020-gum0021-gum0022",
+            ["GUM0021"] = "gum-tool/project-files#duplicate-names-gum0020-gum0021-gum0022",
+            ["GUM0022"] = "gum-tool/project-files#duplicate-names-gum0020-gum0021-gum0022",
+            ["GUM0023"] = "gum-tool/project-files#element-referenced-twice-gum0023",
+            ["GUM0024"] = "gum-tool/project-files#parents-that-form-a-loop-gum0024",
+            ["GUM0025"] = "gum-tool/project-files#screen-used-as-a-type-gum0025",
+            ["GUM0026"] = "gum-tool/project-files#state-the-category-does-not-have-gum0026",
         };
     }
 
