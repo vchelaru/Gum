@@ -1,9 +1,10 @@
+namespace {{RootNamespace}};
+
+// The usings are inside the namespace so a project named like one of these types (Game, Button) still finds them.
 using System;
 using Gum;
 using Gum.Forms.Controls;
 using Microsoft.Xna.Framework;
-
-namespace {{RootNamespace}};
 
 public class Game1 : Game
 {

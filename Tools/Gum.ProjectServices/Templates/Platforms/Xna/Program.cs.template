@@ -1,4 +1,2 @@
-using {{RootNamespace}};
-
-using Game1 game = new Game1();
+using var game = new {{RootNamespace}}.Game1();
 game.Run();

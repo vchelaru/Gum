@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security;
+using System.Text;
 using System.Text.RegularExpressions;
 using Gum.DataTypes;
 using Gum.ProjectServices.CodeGeneration;
@@ -52,12 +54,12 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
             // MSBuild paths use backslashes by convention; the syntax version detection also expects them.
             string include = Path.GetRelativePath(fullDirectory, runtimeCsproj).Replace('/', '\\');
-            gumReference = $"<ProjectReference Include=\"{include}\" />";
+            gumReference = $"<ProjectReference Include=\"{EscapeForIncludeAttribute(include)}\" />";
         }
 
         Directory.CreateDirectory(gumFolder);
 
-        string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
+        string rootNamespace = GetRootNamespace(projectName);
         WriteHostFiles(
             fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference, Path.GetFileName(gumProjectPath));
 
@@ -71,6 +73,34 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             CsprojPath = csprojPath,
             GumProjectPath = gumProjectPath
         };
+    }
+
+    // A namespace named Program clashes with the Program class that top-level statements create in the
+    // global namespace (CS0101), so the root namespace gets a suffix.
+    internal static string GetRootNamespace(string projectName)
+    {
+        string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
+        return rootNamespace == "Program" ? rootNamespace + "_" : rootNamespace;
+    }
+
+    // MSBuild reads %XX in an item include as a character, splits it at ';', expands '*' and '?' and
+    // evaluates $(...) and @(...); the XML escape comes last.
+    private static string EscapeForIncludeAttribute(string include)
+    {
+        StringBuilder builder = new StringBuilder(include.Length);
+        foreach (char c in include)
+        {
+            if (c is '%' or ';' or '*' or '?' or '$' or '@')
+            {
+                builder.Append('%').Append(((int)c).ToString("X2"));
+            }
+            else
+            {
+                builder.Append(c);
+            }
+        }
+
+        return SecurityElement.Escape(builder.ToString());
     }
 
     internal static string GetFullDirectory(string projectDirectory) =>

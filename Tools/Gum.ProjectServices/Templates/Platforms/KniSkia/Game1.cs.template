@@ -1,11 +1,12 @@
+namespace {{RootNamespace}};
+
+// The usings are inside the namespace so a project named like one of these types (Game, Button) still finds them.
 using System;
 using Gum;
 using Gum.Forms.Controls;
 using Microsoft.Xna.Framework;
 using SkiaGameRendering;
 using SkiaSharp;
-
-namespace {{RootNamespace}};
 
 // Gum draws into the SKCanvas of a SkiaRenderTarget2D (a KNI texture), which is then
 // composited onto the back buffer.
