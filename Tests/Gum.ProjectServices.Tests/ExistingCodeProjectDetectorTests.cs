@@ -106,15 +106,29 @@ public class ExistingCodeProjectDetectorTests : IDisposable
         (found == null || !found.StartsWith(_root)).ShouldBeTrue();
     }
 
-    [Fact]
-    public void FindExistingCodeProject_UncLookingPath_ReturnsWithinABoundedTime()
+    // Backslash UNC paths are only UNC on Windows; elsewhere they are a relative file name.
+    [SkippableFact]
+    public void FindExistingCodeProject_UncPathToAnUnreachableServer_ReturnsWithinABoundedTime()
     {
+        Skip.IfNot(OperatingSystem.IsWindows(), "UNC paths are Windows-only");
         Stopwatch stopwatch = Stopwatch.StartNew();
 
         string? found = _detector.FindExistingCodeProject(@"\\gum-no-such-server-7208\share\x");
 
         stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(10);
         found.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FindExistingCodeProject_AbsolutePathUnderTheRootThatDoesNotExist_ReturnsWithinABoundedTime()
+    {
+        string missing = Path.Combine(Path.GetPathRoot(_root)!, "gum-nonexistent-7208", "share", "x");
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
+        string? found = _detector.FindExistingCodeProject(missing);
+
+        stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(10);
+        (found == null || !found.StartsWith(missing)).ShouldBeTrue();
     }
 
     [Fact]
