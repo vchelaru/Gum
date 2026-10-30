@@ -18,7 +18,7 @@ GumService gumUI = GumService.Default;
 
 // Create screens and components in the Gum tool, generate code, then add them
 // here with: new MyScreen().AddToRoot();
-gumUI.Initialize("Content/GumProject/GumProject.gumj");
+gumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
 
 Button button = new Button();
 button.AddToRoot();

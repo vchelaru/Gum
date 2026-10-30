@@ -30,7 +30,7 @@ public class Game1 : Game
 
         // Create screens and components in the Gum tool, generate code, then add them here with:
         // new MyScreen().AddToRoot();
-        GumUI.Initialize(this, "Content/GumProject/GumProject.gumj");
+        GumUI.Initialize(this, "Content/GumProject/{{GumProjectFile}}");
 
         Button button = new Button();
         button.AddToRoot();
