@@ -812,10 +812,11 @@ public class NewProjectDialogViewModel : DialogViewModel
         plan = WithoutUncheckedDemoScreen(plan);
         PlanTree = new[] { NewProjectPlanNode.Build(plan, NewProjectDisplayPath.AsFolder(Path.Combine(folder, name)), mainFile, openDepth: game ? 3 : 1) };
         PlanFileCount = plan.Files.Count;
-        // The plan is the template the shared creators write. The tool adds more after creating (the starting screen,
-        // its generated code, the event log), so no total is shown: a count that is too low is worse than none.
+        // The plan is the template the shared creators write; the tool adds more after creating (the starting screen,
+        // its generated code, the event log; a Gum-only project is written by the importer), so no total is shown
+        // until it can be exact.
         FilesCountText = string.Empty;
-        PlanTotalText = NewProjectDialogText.TemplateFilesNote;
+        PlanTotalText = string.Empty;
     }
 
     #endregion

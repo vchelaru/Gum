@@ -396,7 +396,7 @@ public class NewProjectDialogViewModelTests
 
         viewModel.PlanFileCount.ShouldBe(3);
         viewModel.FilesCountText.ShouldBeEmpty();
-        viewModel.PlanTotalText.ShouldBe(NewProjectDialogText.TemplateFilesNote);
+        viewModel.PlanTotalText.ShouldBeEmpty();
         NewProjectPlanNode root = viewModel.PlanTree.Single();
         root.DisplayName.ShouldBe(NewProjectDisplayPath.AsFolder(Path.Combine(Folder, "MyGame")));
         root.CountText.ShouldBe("3");
@@ -407,14 +407,14 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
-    public async Task Plan_ShowsNoTotal_AndSaysTheToolAddsMore()
+    public async Task Plan_ShowsNoTotal()
     {
         NewProjectDialogViewModel viewModel = Create();
 
         await viewModel.PlanRefresh;
 
         viewModel.FilesCountText.ShouldBeEmpty();
-        viewModel.PlanTotalText.ShouldBe(NewProjectDialogText.TemplateFilesNote);
+        viewModel.PlanTotalText.ShouldBeEmpty();
         viewModel.PlanTree.Single().Children.ShouldNotBeEmpty();
     }
 
