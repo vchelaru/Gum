@@ -84,8 +84,6 @@ Fonts/LiberationSans-LICENSE.txt
 Fonts/LiberationSans-Regular.ttf
 GumProject.gumx
 Screens/DemoScreenGum.gusx
-Screens/KeyboardScreenGum.gusx
-Screens/StylesScreen.gusx
 Standards/Circle.gutx
 Standards/Component.gutx
 Standards/Container.gutx

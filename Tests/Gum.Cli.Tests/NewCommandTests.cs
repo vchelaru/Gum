@@ -92,6 +92,19 @@ public class NewCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void New_WithEditorTheme_ShouldWriteOnlyTheDemoScreen()
+    {
+        string filePath = Path.Combine(TempDirectory, "Themed.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "editor");
+
+        result.ExitCode.ShouldBe(0);
+        Directory.GetFiles(Path.Combine(TempDirectory, "Screens"), "*", SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(TempDirectory, file).Replace((char)92, '/'))
+            .ShouldBe(new[] { "Screens/Editor/DemoScreenGum.gusx" });
+    }
+
+    [Fact]
     public void New_WithUnknownTheme_ShouldReturnExitCode2AndListThemes()
     {
         string filePath = Path.Combine(TempDirectory, "Themed.gumx");
@@ -230,6 +243,32 @@ public class NewCommandTests : BaseTestClass
         ProjectLoadResult loadResult = new ProjectLoader().Load(gumjPath);
         loadResult.Success.ShouldBeTrue();
         loadResult.LoadErrors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void New_DefaultTemplate_ShouldWriteOnlyTheDemoScreen()
+    {
+        string filePath = Path.Combine(TempDirectory, "FormsDefault.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath);
+
+        result.ExitCode.ShouldBe(0);
+        Directory.GetFiles(Path.Combine(TempDirectory, "Screens"), "*", SearchOption.AllDirectories)
+            .Select(file => Path.GetFileName(file))
+            .ShouldBe(new[] { "DemoScreenGum.gusx" });
+    }
+
+    [Fact]
+    public void New_WithPlatform_ShouldWriteOnlyTheDemoScreen()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Directory.GetFiles(Path.Combine(projectDir, "Content", "GumProject", "Screens"), "*", SearchOption.AllDirectories)
+            .Select(file => Path.GetFileName(file))
+            .ShouldBe(new[] { "DemoScreenGum.gusj" });
     }
 
     [Fact]

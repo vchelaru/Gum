@@ -56,8 +56,7 @@ public class FormsAndImportScenarioTests
         new FilePath(project.FullFileName.ShouldNotBeNull()).ShouldBe(new FilePath(Path.Combine(tree.Project.ProjectFolder, "NewlyCreated", "NewlyCreated.gumx")));
         tree.Project.FollowProjectFile(project.FullFileName!);
         theme.Components.Select(component => component.Name).ShouldBeSubsetOf(project.Components.Select(component => component.Name));
-        project.Screens.Select(screen => screen.Name).ShouldContain("DemoScreenGum");
-        project.Screens.Select(screen => screen.Name).ShouldContain(NewProjectLogic.StartingScreenName);
+        project.Screens.Select(screen => screen.Name).ShouldBe(new[] { "DemoScreenGum", NewProjectLogic.StartingScreenName }, ignoreOrder: true);
         tree.SaveAll();
         foreach (ComponentSave component in project.Components)
         {

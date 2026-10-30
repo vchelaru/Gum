@@ -36,6 +36,21 @@ public class AddFormsToProjectServiceTests : IDisposable
     }
 
     [Fact]
+    public void AddFormsTo_OnEmptyProject_ShouldAddNoScreens()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        new ProjectCreator().Create(filePath);
+
+        AddFormsResult result = _sut.AddFormsTo(filePath);
+
+        result.Success.ShouldBeTrue();
+        ProjectLoadResult loadResult = new ProjectLoader().Load(filePath);
+        loadResult.Project!.Screens.ShouldBeEmpty();
+        loadResult.Project.ScreenReferences.ShouldBeEmpty();
+        Directory.GetFiles(Path.Combine(_tempDirectory, "Screens"), "*", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void AddFormsTo_WhenComponentAlreadyPresent_ShouldSkipItWithoutDuplicating()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
