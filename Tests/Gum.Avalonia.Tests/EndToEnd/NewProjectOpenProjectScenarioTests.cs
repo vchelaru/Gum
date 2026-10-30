@@ -111,7 +111,7 @@ public class NewProjectOpenProjectScenarioTests
             NewProjectDialogViewModel viewModel = (NewProjectDialogViewModel)window.Window.DataContext!;
             viewModel.ProjectName = "Existing";
             viewModel.Location = location;
-            WaitFor(window, () => viewModel.PlanRefresh.IsCompleted && viewModel.IsRefused, "the refusal");
+            WaitFor(window, () => viewModel.ChecksRefresh.IsCompleted && viewModel.IsRefused, "the refusal");
 
             viewModel.RefusalText.ShouldStartWith("Project already exists");
             window.Find<global::Avalonia.Controls.TextBlock>(text => text.Text == viewModel.RefusalText && text.IsEffectivelyVisible);

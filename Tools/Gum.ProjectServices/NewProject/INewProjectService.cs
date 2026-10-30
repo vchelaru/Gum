@@ -17,14 +17,6 @@ public interface INewProjectService
     NewProjectValidation Validate(NewProjectRequest request);
 
     /// <summary>
-    /// The files creating <paramref name="request"/> will write, from running the real creation into a temporary
-    /// folder (cached per platform, template, theme and file format; the target folder is never touched). Ignores
-    /// the path's existence and the source-linked setting, which do not change the file set.
-    /// </summary>
-    /// <returns>The plan, or <see langword="null"/> when the template, theme or platform is not valid, or the path is a file system root with no folder name.</returns>
-    NewProjectPlan? GetPlan(NewProjectRequest request);
-
-    /// <summary>
     /// Writes the files of an already validated request. On failure or cancellation removes only what this call
     /// created (a pre-existing file it overwrote stays as written).
     /// </summary>

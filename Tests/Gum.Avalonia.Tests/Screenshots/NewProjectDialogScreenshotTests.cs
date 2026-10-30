@@ -23,14 +23,6 @@ public class NewProjectDialogScreenshotTests
 {
     private static readonly string Location = OperatingSystem.IsWindows() ? @"C:\Users\You\Projects" : "/Users/You/Projects";
 
-    private static readonly string[] ControlNames =
-    {
-        "Button", "CheckBox", "ColorPicker", "ComboBox", "DialogBox", "Expander", "ItemsControl", "Label", "ListBox", "ListBoxItem",
-        "Menu", "MenuItem", "Panel", "PasswordBox", "RadioButton", "ScrollBar", "ScrollViewer", "Slider", "Splitter", "StackPanel",
-        "TextBox", "Toast", "Toggle", "TreeView", "TreeViewItem", "UserControl", "Window", "PlayerJoinView", "SettingsView",
-        "Keyboard", "Thumb", "Menu2", "Label2", "Panel2", "Window2", "Toast2", "Toggle2", "Slider2",
-    };
-
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
@@ -88,27 +80,28 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
-    public void FilesExpanded(string theme) => Capture("files-expanded", theme, (viewModel, window) =>
+    public void FoldersExpanded(string theme) => Capture("folders-expanded", theme, (viewModel, window) =>
     {
         viewModel.IncludeCodeProject = true;
         viewModel.IsIncludeFormsControls = true;
-        window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.FilesExpanderName).IsExpanded = true;
+        window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.FoldersExpanderName).IsExpanded = true;
     });
 
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
-    public void FilesWithBothScrollBars(string theme) => Capture("files-scrollbars", theme, (viewModel, window) =>
+    public void FoldersExpandedGumOnly(string theme) => Capture("folders-gum-only", theme, (_, window) =>
+        window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.FoldersExpanderName).IsExpanded = true);
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void FoldersWithScrollBars(string theme) => Capture("folders-scrollbars", theme, (viewModel, window) =>
     {
         viewModel.IncludeCodeProject = true;
         viewModel.Location = Path.Combine(Location, "SomeVeryLongFolderName", "AnotherVeryLongFolderName", "YetAnotherLongFolderName", "Games");
-        for (int i = 0; i < 300 && !viewModel.PlanRefresh.IsCompleted; i++)
-        {
-            Thread.Sleep(10);
-            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-        }
-        window.Find<NewProjectDialogView.Disclosure>(d => d.Name == NewProjectDialogView.FilesExpanderName).IsExpanded = true;
-        viewModel.SetPlanExpanded(true);
+        window.Find<NewProjectDialogView.Disclosure>(d => d.Name == NewProjectDialogView.FoldersExpanderName).IsExpanded = true;
+        viewModel.SetFolderTreeExpanded(true);
     });
 
     [SkippableTheory]
@@ -157,7 +150,6 @@ public class NewProjectDialogScreenshotTests
             ToolStartup.EnsureInitialized();
             Mock<INewProjectService> service = new();
             service.Setup(x => x.IsSourceLinkedAvailable).Returns(true);
-            service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns<NewProjectRequest>(CreatePlan);
             service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(new NewProjectValidation
             {
                 Resolved = new ResolvedNewProject { Name = "MyGame", CsprojPath = "g.csproj" },
@@ -183,44 +175,8 @@ public class NewProjectDialogScreenshotTests
             };
             using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, theme == "light" ? ThemeVariant.Light : ThemeVariant.Dark);
             arrange(viewModel, window);
-            for (int i = 0; i < 300 && viewModel.PlanTree.Count == 0; i++)
-            {
-                Thread.Sleep(10);
-                global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-            }
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             PrScreenshot.SaveWindowAtZoomLevels(window.Window, $"new-project-{name}-{theme}");
         });
-    }
-
-    // Stands in for the real plan so the screenshots are stable: the Forms project of the mock, or a code project around it.
-    private static NewProjectPlan? CreatePlan(NewProjectRequest request)
-    {
-        bool forms = request.Template == "forms";
-        bool game = request.Platform != null;
-        string prefix = game ? "Content/GumProject/" : string.Empty;
-        string project = (game ? "GumProject" : "MyGame") + ".gumj";
-        List<string> files = new List<string> { prefix + project, prefix + "Fonts/LiberationSans-LICENSE.txt", prefix + "Fonts/LiberationSans-Regular.ttf" };
-        List<string> directories = new List<string>();
-        if (forms)
-        {
-            files.AddRange(ControlNames.Take(33).Select(name => $"{prefix}Behaviors/{name}Behavior.behj"));
-            files.AddRange(ControlNames.Take(38).Select(name => $"{prefix}Components/Controls/{name}.gucj"));
-            files.AddRange(new[] { "Divider", "Icon", "PercentBar", "VerticalLines" }.Select(name => $"{prefix}Components/Elements/{name}.gucj"));
-            files.AddRange(new[] { "DemoScreenGum", "KeyboardScreenGum", "StylesScreen" }.Select(name => $"{prefix}Screens/{name}.gusj"));
-            files.Add(prefix + "Components/Styles.gucj");
-            files.Add(prefix + "UISpriteSheet.png");
-        }
-        else
-        {
-            directories.AddRange(new[] { "Behaviors", "Components", "Screens" }.Select(name => prefix + name));
-        }
-        if (game)
-        {
-            files.Add("MyGame.csproj");
-            files.Add("Program.cs");
-            files.Add("Game1.cs");
-            files.Add(prefix + "ProjectCodeSettings.codsj");
-        }
-        return new NewProjectPlan("MyGame", files.OrderBy(file => file, StringComparer.Ordinal).ToList(), directories);
     }
 }

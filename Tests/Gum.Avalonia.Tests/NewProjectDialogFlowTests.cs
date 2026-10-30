@@ -38,7 +38,6 @@ public class NewProjectDialogFlowTests
     private ScreenshotWindow Open(out NewProjectDialogViewModel viewModel)
     {
         _service.Setup(x => x.IsSourceLinkedAvailable).Returns(true);
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan("MyGame", new[] { "A.gumj" }, Array.Empty<string>()));
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(new NewProjectValidation
         {
             Resolved = new ResolvedNewProject { Name = "MyGame", CsprojPath = FilesOk().CsprojPath },
@@ -129,7 +128,7 @@ public class NewProjectDialogFlowTests
         {
             "Project name", "File format", "Location", "Browse for a folder", "Include Forms controls (recommended)", "Theme",
             "Include demo screen", "Create C# project", "Platform", "Use local Gum source", "Restore NuGet packages",
-            "Files", "Command line", "OK", "Cancel",
+            "Folders", "Command line", "OK", "Cancel",
         });
     }
 
@@ -166,11 +165,35 @@ public class NewProjectDialogFlowTests
         window.FindAll<TextBlock>().ShouldNotContain(text => text.Text != null && text.Text.StartsWith("Clicking OK will also apply"));
     }
 
+    [AvaloniaFact]
+    public void FoldersSection_ShowsTheRootPathAndTheFolders_WithNoFilesOrCountsExceptTheGumProject()
+    {
+        using ScreenshotWindow window = Open(out NewProjectDialogViewModel viewModel);
+        global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure section =
+            window.Find<global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure>(
+                d => d.Name == global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.FoldersExpanderName);
+        section.IsExpanded.ShouldBeFalse("the section starts collapsed");
+
+        section.IsExpanded = true;
+        viewModel.SetFolderTreeExpanded(true);
+        ScreenshotWindow.Pump(window.Window);
+
+        List<string> rows = window.Find<TreeView>().GetVisualDescendants().OfType<TextBlock>()
+            .Select(text => text.Text ?? string.Empty).ToList();
+        string separator = Path.DirectorySeparatorChar.ToString();
+        rows.ShouldContain(NewProjectDisplayPath.AsFolder(Path.Combine(ProjectsFolder, "MyGame")));
+        rows.ShouldContain("Content" + separator);
+        rows.ShouldContain("Screens" + separator);
+        rows.ShouldContain("GumProject.gumj");
+        rows.ShouldNotContain(text => text.EndsWith(".cs") || text.EndsWith(".csproj"));
+        rows.ShouldNotContain(text => text.Length > 0 && text.All(char.IsDigit), "no file counts");
+    }
+
     [AvaloniaTheory]
     [InlineData(9)]
     [InlineData(12)]
     [InlineData(24)]
-    public void FilesTree_ScrollBarsTakeTheirOwnSpace_AndNeverCoverARow(double size)
+    public void FolderTree_ScrollBarsTakeTheirOwnSpace_AndNeverCoverARow(double size)
     {
         using ScreenshotWindow window = Open(out NewProjectDialogViewModel viewModel);
         global::Gum.Services.IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<global::Gum.Services.IAppScaleProvider>();
@@ -179,17 +202,10 @@ public class NewProjectDialogFlowTests
         try
         {
             scale.BaseFontSize = size;
-            _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan("MyGame",
-                Enumerable.Range(0, 60).Select(number => $"Folder/File{number}.txt").ToList(), Array.Empty<string>()));
             viewModel.Location = Path.Combine(Path.GetDirectoryName(ProjectsFolder)!, new string('a', 120));
-            for (int i = 0; i < 300 && !viewModel.PlanRefresh.IsCompleted; i++)
-            {
-                Thread.Sleep(10);
-                global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-            }
-            window.Find<global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure>(d => d.Name == global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.FilesExpanderName).IsExpanded = true;
+            window.Find<global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure>(d => d.Name == global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.FoldersExpanderName).IsExpanded = true;
             ScreenshotWindow.Pump(window.Window);
-            viewModel.SetPlanExpanded(true);
+            viewModel.SetFolderTreeExpanded(true);
             ScreenshotWindow.Pump(window.Window);
 
             TreeView tree = window.Find<TreeView>();
@@ -197,7 +213,7 @@ public class NewProjectDialogFlowTests
             global::Avalonia.Controls.Presenters.ScrollContentPresenter content = scroller.GetVisualDescendants().OfType<global::Avalonia.Controls.Presenters.ScrollContentPresenter>().First();
             List<global::Avalonia.Controls.Primitives.ScrollBar> bars = scroller.GetVisualDescendants().OfType<global::Avalonia.Controls.Primitives.ScrollBar>()
                 .Where(bar => bar.IsEffectivelyVisible && bar.Bounds.Width > 0 && bar.Bounds.Height > 0).ToList();
-            bars.Count.ShouldBe(2, "both bars show for a long path and many rows");
+            bars.ShouldNotBeEmpty("the horizontal bar shows for a long path");
 
             global::Avalonia.Rect contentRect = new global::Avalonia.Rect(content.TranslatePoint(new global::Avalonia.Point(0, 0), window.Window)!.Value, content.Bounds.Size);
             foreach (global::Avalonia.Controls.Primitives.ScrollBar bar in bars)

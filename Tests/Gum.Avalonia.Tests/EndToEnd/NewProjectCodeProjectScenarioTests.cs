@@ -18,18 +18,20 @@ public class NewProjectCodeProjectScenarioTests
 {
     private static readonly TimeSpan AsyncWork = TimeSpan.FromSeconds(90);
 
-    private static void CollectFiles(NewProjectPlanNode node, string prefix, List<string> files)
+    // Every folder the tree shows, and the project file it marks, as paths relative to the root.
+    private static void Collect(NewProjectLayoutNode node, string prefix, List<string> folders, List<string> mainFiles)
     {
-        foreach (NewProjectPlanNode child in node.Children)
+        foreach (NewProjectLayoutNode child in node.Children)
         {
             string path = prefix.Length == 0 ? child.Name : prefix + "/" + child.Name;
             if (child.IsFolder)
             {
-                CollectFiles(child, path, files);
+                folders.Add(path);
+                Collect(child, path, folders, mainFiles);
             }
-            else
+            else if (child.IsMainFile)
             {
-                files.Add(path);
+                mainFiles.Add(path);
             }
         }
     }
@@ -44,7 +46,8 @@ public class NewProjectCodeProjectScenarioTests
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         string location = Path.Combine(tree.Project.ProjectFolder, "Out");
         Directory.CreateDirectory(location);
-        List<string> planned = new List<string>();
+        List<string> shownFolders = new List<string>();
+        List<string> shownMainFiles = new List<string>();
         tree.Dialogs.AnswerNextInWindow<NewProjectDialogViewModel>(window =>
         {
             NewProjectDialogViewModel viewModel = (NewProjectDialogViewModel)window.Window.DataContext!;
@@ -55,13 +58,8 @@ public class NewProjectCodeProjectScenarioTests
             viewModel.IsIncludeFormsControls = true;
             viewModel.IsIncludeDemoScreenGum = includeDemo;
             viewModel.ThemeSelection.SelectedTheme = theme;
-            for (int i = 0; i < 500 && !viewModel.PlanRefresh.IsCompleted; i++)
-            {
-                Thread.Sleep(20);
-                Dispatcher.UIThread.RunJobs();
-            }
             Dispatcher.UIThread.RunJobs();
-            CollectFiles(viewModel.PlanTree.Single(), string.Empty, planned);
+            Collect(viewModel.FolderTree.Single(), string.Empty, shownFolders, shownMainFiles);
             viewModel.AffirmativeCommand.Execute(null);
             for (int i = 0; i < 1500 && window.Result == null; i++)
             {
@@ -84,16 +82,15 @@ public class NewProjectCodeProjectScenarioTests
         project.FullFileName!.Replace((char)92, '/').ShouldEndWith("Game/Content/GumProject/GumProject.gumj");
         File.Exists(Path.Combine(location, "Game", "Game.csproj")).ShouldBeTrue();
 
-        // The plan lists the template files; the tool adds the starting screen, its generated code and the event log.
+        // The folder tree shows where the project goes; each folder and the marked project file are really there.
         string gameFolder = Path.Combine(location, "Game");
-        List<string> onDisk = Directory.GetFiles(gameFolder, "*", SearchOption.AllDirectories)
-            .Select(path => Path.GetRelativePath(gameFolder, path).Replace((char)92, '/')).ToList();
-        List<string> plannedFiles = planned.Select(path => path.Replace((char)92, '/')).ToList();
-        plannedFiles.Count.ShouldBeGreaterThan(20);
-        plannedFiles.Except(onDisk).ShouldBeEmpty("every planned file is written");
-        onDisk.Except(plannedFiles).ShouldAllBe(
-            extra => extra.Contains("/MainScreen.") || extra.StartsWith("MainScreen.") || extra.StartsWith("EventExport/") || extra.Contains("/EventExport/"),
-            "files outside the plan are only the ones the tool adds after creating");
+        shownFolders.ShouldContain("Content/GumProject/Screens");
+        foreach (string folder in shownFolders)
+        {
+            Directory.Exists(Path.Combine(gameFolder, folder)).ShouldBeTrue($"{folder} is shown in the dialog");
+        }
+        shownMainFiles.ShouldBe(new[] { "Content/GumProject/GumProject.gumj" });
+        File.Exists(Path.Combine(gameFolder, shownMainFiles.Single())).ShouldBeTrue();
 
         List<string> demoScreens = project.Screens.Select(screen => screen.Name).Where(name => name.EndsWith("DemoScreenGum")).ToList();
         string[] demoFiles = Directory.GetFiles(gumFolder, "DemoScreenGum.*", SearchOption.AllDirectories);

@@ -41,8 +41,6 @@ public class NewProjectDialogSequenceTests
         _formsFileService.Setup(x => x.GetAvailableThemes()).Returns(new List<string> { "Standard", "Bubblegum" });
         _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns("C:/nonexistent-theme/");
         _service.Setup(x => x.IsSourceLinkedAvailable).Returns(true);
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(
-            new NewProjectPlan("root", new[] { "A.gumj", "Fonts/F.ttf" }, new[] { "Empty" }));
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(Valid());
     }
 
@@ -109,7 +107,7 @@ public class NewProjectDialogSequenceTests
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(() => created ? Exists() : Valid());
         SetUpRestore(RestoreFailed());
         (NewProjectDialogViewModel viewModel, List<bool> closed) = WithCloseLog(Create(vm => vm.IncludeCodeProject = true));
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
         viewModel.AffirmativeCommand.Execute(null);
         await viewModel.CreationTask;
         viewModel.BackCommand.Execute(null);
@@ -137,7 +135,7 @@ public class NewProjectDialogSequenceTests
         _detector.Setup(x => x.TargetExistsAndIsNotEmpty(It.IsAny<string>(), It.IsAny<string>())).Returns(() => created);
         SetUpRestore(RestoreFailed());
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
         viewModel.AffirmativeCommand.Execute(null);
         await viewModel.CreationTask;
         viewModel.IsRestoreFailed.ShouldBeTrue();
@@ -150,7 +148,7 @@ public class NewProjectDialogSequenceTests
         NewProjectDialogViewModel viewModel = await CreateWithFailedRestoreAndFilesOnDisk();
 
         viewModel.BackCommand.Execute(null);
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.RefusalText.ShouldNotBeEmpty();
         viewModel.IsTargetNotEmptyWarningVisible.ShouldBeTrue();
@@ -162,12 +160,12 @@ public class NewProjectDialogSequenceTests
     {
         NewProjectDialogViewModel viewModel = await CreateWithFailedRestoreAndFilesOnDisk();
         viewModel.BackCommand.Execute(null);
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(Valid());
         _detector.Setup(x => x.TargetExistsAndIsNotEmpty(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
         viewModel.ProjectName = "Second";
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.RefusalText.ShouldBeEmpty();
         viewModel.IsTargetNotEmptyWarningVisible.ShouldBeFalse();
@@ -175,7 +173,7 @@ public class NewProjectDialogSequenceTests
     }
 
     [Fact]
-    public async Task FailedFileCreation_RefreshesThePlan_ForTheFilesAlreadyWritten()
+    public async Task FailedFileCreation_RefreshesTheChecks_ForTheFilesAlreadyWritten()
     {
         bool written = false;
         _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
@@ -186,11 +184,11 @@ public class NewProjectDialogSequenceTests
             });
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(() => written ? Exists() : Valid());
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.AffirmativeCommand.Execute(null);
         await viewModel.CreationTask;
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.ErrorMessage.ShouldBe("Disk is full.");
         viewModel.RefusalText.ShouldNotBeEmpty();
@@ -436,7 +434,7 @@ public class NewProjectDialogSequenceTests
         });
         viewModel.ThemeSelection.SelectedTheme = "Bubblegum";
         viewModel.IsIncludeFormsControls = true;
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Callback<NewProjectRequest>(requests.Add).Returns(Valid());
 
         await viewModel.RunCreationAsync();
@@ -457,43 +455,20 @@ public class NewProjectDialogSequenceTests
         viewModel.ThemeSelection.GetSelectedThemeOrDefault().ShouldBe("Standard");
     }
 
-    [Fact]
-    public async Task Plan_ForAThemeChangedWhileTheFirstPlanIsStillRunning_IsTheLatestThemesPlan()
-    {
-        ManualResetEventSlim release = new ManualResetEventSlim();
-        _service.Setup(x => x.GetPlan(It.Is<NewProjectRequest>(request => request.Theme == "Standard")))
-            .Returns(() =>
-            {
-                release.Wait(TimeSpan.FromSeconds(10));
-                return new NewProjectPlan("root", new[] { "Standard.gumj" }, Array.Empty<string>());
-            });
-        _service.Setup(x => x.GetPlan(It.Is<NewProjectRequest>(request => request.Theme == "Bubblegum")))
-            .Returns(new NewProjectPlan("root", new[] { "Bubblegum.gumj" }, Array.Empty<string>()));
-        NewProjectDialogViewModel viewModel = Create();
-
-        viewModel.ThemeSelection.SelectedTheme = "Bubblegum";
-        await viewModel.PlanRefresh;
-        release.Set();
-        await Task.Delay(100);
-
-        viewModel.PlanTree.Single().Children.Select(child => child.Name).ShouldBe(new[] { "Bubblegum.gumj" });
-    }
-
     #endregion
 
     #region Stale state after an input change
 
     [Fact]
-    public async Task Refusal_StillShows_WhenTheServiceCannotComputeAPlan()
+    public async Task Refusal_StillShows_WhenTheDetectorCannotReadTheFolder()
     {
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(Exists());
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Throws(new IOException("boom"));
+        _detector.Setup(x => x.TargetExistsAndIsNotEmpty(It.IsAny<string>(), It.IsAny<string>())).Throws(new IOException("boom"));
         NewProjectDialogViewModel viewModel = Create();
 
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.RefusalText.ShouldNotBeEmpty();
-        viewModel.PlanTree.ShouldBeEmpty();
         viewModel.CanExecuteAffirmative().ShouldBeFalse();
     }
 
@@ -502,11 +477,11 @@ public class NewProjectDialogSequenceTests
     {
         _service.Setup(x => x.Validate(It.Is<NewProjectRequest>(request => request.Path!.Contains("Taken")))).Returns(Exists());
         NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = "Taken");
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
         viewModel.IsRefused.ShouldBeTrue();
 
         viewModel.ProjectName = "Free";
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.RefusalText.ShouldBeEmpty();
         viewModel.IsRefused.ShouldBeFalse();
@@ -519,37 +494,14 @@ public class NewProjectDialogSequenceTests
         string other = Path.Combine(Path.GetTempPath(), "GumNewProjectSequenceOther");
         _detector.Setup(x => x.TargetExistsAndIsNotEmpty(Folder, It.IsAny<string>())).Returns(true);
         NewProjectDialogViewModel viewModel = Create();
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
         viewModel.IsTargetNotEmptyWarningVisible.ShouldBeTrue();
 
         viewModel.Location = other;
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
 
         viewModel.IsTargetNotEmptyWarningVisible.ShouldBeFalse();
         viewModel.TargetNotEmptyText.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task Plan_LeavesOutEveryDemoScreenFile_ButNoLookalike_WhenTheDemoIsUnchecked()
-    {
-        _service.Setup(x => x.GetPlan(It.IsAny<NewProjectRequest>())).Returns(new NewProjectPlan(
-            "root",
-            new[]
-            {
-                "Screens/DemoScreenGum.gusx",
-                "Screens/Bubblegum/DemoScreenGum.gusx",
-                "Content/GumProject/Screens/DemoScreenGum.gusx",
-                "Screens\\Hazard\\DemoScreenGum.gusx",
-                "Screens/MyDemoScreenGum.gusx",
-                "Screens/DemoScreenGum2.gusx",
-                "Screens/Bubblegum/StylesScreen.gusx",
-                "Components/Bubblegum/DemoScreenGum.gucx",
-            },
-            Array.Empty<string>()));
-        NewProjectDialogViewModel viewModel = Create(vm => vm.IsIncludeDemoScreenGum = false);
-        await viewModel.PlanRefresh;
-
-        viewModel.PlanFileCount.ShouldBe(4);
     }
 
     [Fact]
@@ -566,7 +518,7 @@ public class NewProjectDialogSequenceTests
         NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = "Slow");
 
         viewModel.ProjectName = "Fast";
-        await viewModel.PlanRefresh;
+        await viewModel.ChecksRefresh;
         release.Set();
         await Task.Delay(100);
 
@@ -675,62 +627,6 @@ public class NewProjectDialogSequenceTests
             await Task.Delay(10);
         }
         condition().ShouldBeTrue();
-    }
-}
-
-/// <summary>The Files tree for plans that are not the usual shape.</summary>
-public class NewProjectPlanNodeSequenceTests
-{
-    [Fact]
-    public void Build_ForAnEmptyPlan_IsOneRootWithNothingUnderIt()
-    {
-        NewProjectPlanNode root = NewProjectPlanNode.Build(
-            new NewProjectPlan("root", Array.Empty<string>(), Array.Empty<string>()), "/games/MyGame/", "MyGame.gumj", openDepth: 1);
-
-        root.Children.ShouldBeEmpty();
-        root.FileCount.ShouldBe(0);
-        root.IsExpanded.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Build_WhenTheMainFileIsNotInThePlan_HighlightsNothing()
-    {
-        NewProjectPlanNode root = NewProjectPlanNode.Build(
-            new NewProjectPlan("root", new[] { "A.gumj", "Sub/B.gumj" }, Array.Empty<string>()), "root", "Missing.gumj", openDepth: 1);
-
-        root.Children.SelectMany(child => child.Children.Append(child)).Count(node => node.IsMainFile).ShouldBe(0);
-    }
-
-    [Fact]
-    public void Build_AFolderListedWithATrailingSeparator_IsTheSameFolderAsItsFiles()
-    {
-        NewProjectPlanNode root = NewProjectPlanNode.Build(
-            new NewProjectPlan("root", new[] { "Content/A.txt" }, new[] { "Content/", "Content/Empty/" }), "root", null, openDepth: 1);
-
-        root.Children.Select(child => child.Name).ShouldBe(new[] { "Content" });
-        NewProjectPlanNode content = root.Children.Single();
-        content.Children.Select(child => child.Name).ShouldBe(new[] { "Empty", "A.txt" });
-        content.FileCount.ShouldBe(1);
-    }
-
-    [Fact]
-    public void Build_AFileAndAFolderWithTheSameNameAtOneLevel_AreBothKept()
-    {
-        NewProjectPlanNode root = NewProjectPlanNode.Build(
-            new NewProjectPlan("root", new[] { "Fonts", "Fonts/F.ttf" }, Array.Empty<string>()), "root", null, openDepth: 1);
-
-        root.Children.Select(child => (child.Name, child.IsFolder)).ShouldBe(new[] { ("Fonts", true), ("Fonts", false) });
-        root.FileCount.ShouldBe(2);
-    }
-
-    [Fact]
-    public void Build_WithNothingOpen_CollapsesTheRootToo()
-    {
-        NewProjectPlanNode root = NewProjectPlanNode.Build(
-            new NewProjectPlan("root", new[] { "A/B.txt" }, Array.Empty<string>()), "root", null, openDepth: 0);
-
-        root.IsExpanded.ShouldBeFalse();
-        root.Children.Single().IsExpanded.ShouldBeFalse();
     }
 }
 

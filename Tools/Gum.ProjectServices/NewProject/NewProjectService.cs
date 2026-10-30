@@ -14,16 +14,9 @@ public class NewProjectService : INewProjectService
     private const string DefaultProjectName = "GumProject";
     private const string DefaultPlatformProjectName = "MyGumGame";
 
-    // The name the plan's temporary run is created under; swapped for the real name in the plan's paths.
-    private const string PlanPlaceholderName = "GumPlanProjectName";
-
     private readonly IFormsThemeLocator _themeLocator;
     private readonly IRestoreRunner _restoreRunner;
     private readonly IReadOnlyList<string> _gumSourceSearchDirectories;
-
-    // The creators initialize shared static state (the standard elements), so one creation runs at a time.
-    private readonly object _creationLock = new object();
-    private readonly Dictionary<string, PlanTemplate> _planCache = new Dictionary<string, PlanTemplate>();
 
     /// <param name="themeLocator">Finds the bundled Forms themes.</param>
     /// <param name="restoreRunner">Runs <c>dotnet restore</c>.</param>
@@ -275,96 +268,6 @@ public class NewProjectService : INewProjectService
 
     #endregion
 
-    #region Plan
-
-    private class PlanTemplate
-    {
-        public PlanTemplate(IReadOnlyList<string> files, IReadOnlyList<string> directories)
-        {
-            Files = files;
-            Directories = directories;
-        }
-
-        public IReadOnlyList<string> Files { get; }
-
-        public IReadOnlyList<string> Directories { get; }
-    }
-
-    /// <inheritdoc/>
-    public NewProjectPlan? GetPlan(NewProjectRequest request)
-    {
-        if (ResolveOptions(request, out Options options) != null)
-        {
-            return null;
-        }
-
-        string extension = GetGumExtension(request);
-        Targets real = ComputeTargets(request.Path, options.Platform != null, extension);
-        if (string.IsNullOrEmpty(real.Name))
-        {
-            return null;
-        }
-
-        PlanTemplate template = GetPlanTemplate(options, extension);
-
-        string Name(string relative) => relative.Replace(PlanPlaceholderName, real.Name);
-        return new NewProjectPlan(
-            real.RootDirectory,
-            template.Files.Select(Name).OrderBy(file => file, StringComparer.Ordinal).ToList(),
-            template.Directories.Select(Name).OrderBy(directory => directory, StringComparer.Ordinal).ToList());
-    }
-
-    private PlanTemplate GetPlanTemplate(Options options, string extension)
-    {
-        string key = $"{options.Platform}|{options.IncludeFormsTemplate}|{options.ThemeDirectory}|{extension}";
-        lock (_creationLock)
-        {
-            if (_planCache.TryGetValue(key, out PlanTemplate? cached))
-            {
-                return cached;
-            }
-
-            string tempRoot = Path.Combine(Path.GetTempPath(), "GumNewProjectPlan_" + Guid.NewGuid().ToString("N"));
-            try
-            {
-                Directory.CreateDirectory(tempRoot);
-                Targets targets = ComputeTargets(
-                    Path.Combine(tempRoot, PlanPlaceholderName), options.Platform != null, extension);
-
-                // The same code the real creation runs, so the plan cannot drift from it.
-                NewProjectFilesResult result = WriteFiles(options, targets, gumSourceDirectory: null);
-                if (!result.Success)
-                {
-                    throw new InvalidOperationException($"Could not compute the new project plan: {result.ErrorMessage}");
-                }
-
-                PlanTemplate template = new PlanTemplate(
-                    Directory.GetFiles(targets.RootDirectory, "*", SearchOption.AllDirectories)
-                        .Select(path => ToRelative(targets.RootDirectory, path)).ToList(),
-                    Directory.GetDirectories(targets.RootDirectory, "*", SearchOption.AllDirectories)
-                        .Select(path => ToRelative(targets.RootDirectory, path)).ToList());
-                _planCache[key] = template;
-                return template;
-            }
-            finally
-            {
-                try
-                {
-                    Directory.Delete(tempRoot, recursive: true);
-                }
-                catch (IOException)
-                {
-                    // Left in the temp folder; not worth failing the plan.
-                }
-            }
-        }
-    }
-
-    private static string ToRelative(string root, string path) =>
-        Path.GetRelativePath(root, path).Replace('\\', '/');
-
-    #endregion
-
     #region Creation
 
     /// <inheritdoc/>
@@ -395,35 +298,34 @@ public class NewProjectService : INewProjectService
         };
 
         // What exists now is not ours to remove.
-        List<string> createdDirectories = FindDirectoriesThisRunWillCreate(project, options);
-        HashSet<string> preexistingFiles = new HashSet<string>(
-            Directory.Exists(project.RootDirectory)
-                ? GetPlanFilePaths(project, options).Where(File.Exists)
-                : Enumerable.Empty<string>());
-        List<string> plannedFiles = Directory.Exists(project.RootDirectory)
-            ? GetPlanFilePaths(project, options).ToList()
-            : new List<string>();
+        NewProjectJournal journal = NewProjectJournal.Begin(
+            project.RootDirectory, Path.GetDirectoryName(project.GumProjectPath) ?? project.RootDirectory);
 
         NewProjectFilesResult result;
-        lock (_creationLock)
+        try
         {
             result = WriteFiles(options, targets, project.GumSourceDirectory);
-        }
 
-        if (result.Success && cancellationToken.IsCancellationRequested)
+            if (result.Success && cancellationToken.IsCancellationRequested)
+            {
+                result = new NewProjectFilesResult { Canceled = true };
+            }
+        }
+        catch (Exception)
         {
-            result = new NewProjectFilesResult { Canceled = true };
+            journal.Undo();
+            throw;
         }
 
         if (!result.Success)
         {
-            RemoveWhatThisRunCreated(createdDirectories, plannedFiles, preexistingFiles);
+            journal.Undo();
         }
 
         return result;
     }
 
-    // Writes the Gum project (and the code project around it). Shared by the real creation and the plan.
+    // Writes the Gum project (and the code project around it).
     private static NewProjectFilesResult WriteFiles(Options options, Targets targets, string? gumSourceDirectory)
     {
         try
@@ -453,85 +355,6 @@ public class NewProjectService : INewProjectService
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             return new NewProjectFilesResult { ErrorMessage = exception.Message };
-        }
-    }
-
-    // The planned file paths, absolute, for the folder a request will write into.
-    private IEnumerable<string> GetPlanFilePaths(ResolvedNewProject project, Options options)
-    {
-        PlanTemplate template = GetPlanTemplate(options, Path.GetExtension(project.GumProjectPath).TrimStart('.'));
-        return template.Files.Select(file =>
-            Path.Combine(project.RootDirectory, file.Replace(PlanPlaceholderName, project.Name).Replace('/', Path.DirectorySeparatorChar)));
-    }
-
-    // The top-most folders that do not exist yet and will: everything inside them is this run's to remove.
-    private List<string> FindDirectoriesThisRunWillCreate(ResolvedNewProject project, Options options)
-    {
-        List<string> result = new List<string>();
-
-        if (!Directory.Exists(project.RootDirectory))
-        {
-            string? topMissing = null;
-            DirectoryInfo? directory = new DirectoryInfo(project.RootDirectory);
-            while (directory != null && !directory.Exists)
-            {
-                topMissing = directory.FullName;
-                directory = directory.Parent;
-            }
-
-            if (topMissing != null)
-            {
-                result.Add(topMissing);
-            }
-
-            return result;
-        }
-
-        PlanTemplate template = GetPlanTemplate(options, Path.GetExtension(project.GumProjectPath).TrimStart('.'));
-        foreach (string relative in template.Directories.OrderBy(path => path.Length))
-        {
-            string path = Path.Combine(
-                project.RootDirectory,
-                relative.Replace(PlanPlaceholderName, project.Name).Replace('/', Path.DirectorySeparatorChar));
-            bool isInsideCreated = result.Any(created => path.StartsWith(created + Path.DirectorySeparatorChar, StringComparison.Ordinal));
-            if (!Directory.Exists(path) && !isInsideCreated)
-            {
-                result.Add(path);
-            }
-        }
-
-        return result;
-    }
-
-    private static void RemoveWhatThisRunCreated(
-        List<string> createdDirectories, List<string> plannedFiles, HashSet<string> preexistingFiles)
-    {
-        foreach (string file in plannedFiles)
-        {
-            if (!preexistingFiles.Contains(file) && File.Exists(file))
-            {
-                TryDelete(() => File.Delete(file));
-            }
-        }
-
-        foreach (string directory in createdDirectories)
-        {
-            if (Directory.Exists(directory))
-            {
-                TryDelete(() => Directory.Delete(directory, recursive: true));
-            }
-        }
-    }
-
-    private static void TryDelete(Action delete)
-    {
-        try
-        {
-            delete();
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            // Cleanup is best effort; the creation error is what the caller needs to see.
         }
     }
 

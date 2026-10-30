@@ -68,26 +68,6 @@ public class NewProjectValidation
     public bool IsValid => Error == null;
 }
 
-/// <summary>The files a request will write, derived by running the real creation.</summary>
-public class NewProjectPlan
-{
-    public NewProjectPlan(string rootDirectory, IReadOnlyList<string> files, IReadOnlyList<string> directories)
-    {
-        RootDirectory = rootDirectory;
-        Files = files;
-        Directories = directories;
-    }
-
-    /// <summary>The game folder with a platform; the Gum project's folder without one.</summary>
-    public string RootDirectory { get; }
-
-    /// <summary>Paths relative to <see cref="RootDirectory"/>, with <c>/</c> separators, sorted.</summary>
-    public IReadOnlyList<string> Files { get; }
-
-    /// <summary>Folders relative to <see cref="RootDirectory"/>, with <c>/</c> separators, sorted, including empty ones.</summary>
-    public IReadOnlyList<string> Directories { get; }
-}
-
 /// <summary>Where <see cref="INewProjectService"/> is in its work.</summary>
 public enum NewProjectStep
 {

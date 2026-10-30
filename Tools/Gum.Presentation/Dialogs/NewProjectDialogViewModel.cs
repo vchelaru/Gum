@@ -88,7 +88,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     /// <summary>Raised when the user asks to copy the command line; the view puts it on the clipboard.</summary>
     public event Action<string>? CommandLineCopyRequested;
 
-    /// <summary>Creates the dialog; the plan for the default choices starts computing right away.</summary>
+    /// <summary>Creates the dialog; the folder tree and the checks for the default choices start right away.</summary>
     public NewProjectDialogViewModel(
         ThemeSelectionViewModel themeSelection,
         INewProjectService service,
@@ -128,7 +128,8 @@ public class NewProjectDialogViewModel : DialogViewModel
         };
 
         RefreshDerived();
-        RefreshPlan();
+        RefreshFolderTree();
+        RefreshChecks();
     }
 
     #region Inputs
@@ -307,46 +308,29 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     #endregion
 
-    #region Plan
+    #region Folder tree
 
-    /// <summary>The Files tree: one root folder, or empty while no plan exists.</summary>
-    public IReadOnlyList<NewProjectPlanNode> PlanTree
+    /// <summary>
+    /// The folder tree: one root folder (the full path of the folder that will be created) with the folders
+    /// beneath it and the Gum project file marked. Empty while the platform is not a known one.
+    /// </summary>
+    public IReadOnlyList<NewProjectLayoutNode> FolderTree
     {
-        get => Get<IReadOnlyList<NewProjectPlanNode>>() ?? Array.Empty<NewProjectPlanNode>();
-        private set => Set(value);
-    }
-
-    /// <summary>The number of files the creation writes, or 0 while there is no plan.</summary>
-    public int PlanFileCount
-    {
-        get => Get<int>();
-        private set => Set(value);
-    }
-
-    /// <summary>The Files heading's count, such as "(105)", or empty while there is no plan.</summary>
-    public string FilesCountText
-    {
-        get => Get<string>() ?? string.Empty;
-        private set => Set(value);
-    }
-
-    /// <summary>The line under the tree, such as "105 files".</summary>
-    public string PlanTotalText
-    {
-        get => Get<string>() ?? string.Empty;
+        get => Get<IReadOnlyList<NewProjectLayoutNode>>() ?? Array.Empty<NewProjectLayoutNode>();
         private set => Set(value);
     }
 
     /// <summary>
-    /// The plan computation for the latest inputs. Starts at construction and after every input change; typing
-    /// never waits for it. Completes when the Files tree reflects the inputs (or a newer computation took over).
+    /// The existing-code-project and project-already-exists checks for the latest inputs. They start at construction
+    /// and after every input change on a background thread, so typing never waits for a slow folder. Completes when
+    /// the warnings reflect the inputs (or a newer check took over).
     /// </summary>
-    public Task PlanRefresh { get; private set; } = Task.CompletedTask;
+    public Task ChecksRefresh { get; private set; } = Task.CompletedTask;
 
-    /// <summary>Opens or closes every folder in the Files tree.</summary>
-    public void SetPlanExpanded(bool expanded)
+    /// <summary>Opens or closes every folder in the folder tree.</summary>
+    public void SetFolderTreeExpanded(bool expanded)
     {
-        foreach (NewProjectPlanNode root in PlanTree)
+        foreach (NewProjectLayoutNode root in FolderTree)
         {
             root.SetExpandedRecursive(expanded);
         }
@@ -475,8 +459,8 @@ public class NewProjectDialogViewModel : DialogViewModel
             NewProjectFilesResult files = await _service.CreateFilesAsync(validation.Resolved!, _cancellation.Token);
             if (files.Canceled || !files.Success)
             {
-                // Some files may already be written; the plan reads the disk.
-                RefreshPlan();
+                // Files may have been written or removed; the checks read the disk.
+                RefreshChecks();
                 if (!files.Canceled)
                 {
                     ErrorMessage = files.ErrorMessage;
@@ -504,12 +488,12 @@ public class NewProjectDialogViewModel : DialogViewModel
         }
     }
 
-    // The files were written while the dialog was open, so what the plan, the refusal and the not-empty warning
+    // The files were written while the dialog was open, so what the refusal and the not-empty warning
     // read from disk has changed without an input changing.
     private void Back()
     {
         IsRestoreFailed = false;
-        RefreshPlan();
+        RefreshChecks();
     }
 
     private async Task RunRestoreStepAsync()
@@ -609,7 +593,8 @@ public class NewProjectDialogViewModel : DialogViewModel
                 NotifyPropertyChanged(nameof(IsSourceLinkedEnabled));
             }
             RefreshDerived();
-            RefreshPlan();
+            RefreshFolderTree();
+            RefreshChecks();
         }
     }
 
@@ -726,7 +711,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             string found = NewProjectDisplayPath.Normalize(_existingCodeProject!);
             ExistingCodeProjectText = $"Found {Path.GetFileName(found)} in {NewProjectDisplayPath.Normalize(Path.GetDirectoryName(found) ?? string.Empty)}.";
-            bool hasGame1 = PlatformName is not ("raylib" or "silknet" or "stride");
+            bool hasGame1 = NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform) && NewProjectLayout.WritesGame1(platform);
             ExistingCodeProjectTip = NewProjectDialogText.WarningTip(hasGame1, NewProjectDisplayPath.Normalize(Path.Combine(folder, EffectiveName)));
         }
 
@@ -738,24 +723,39 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     #endregion
 
-    #region Plan refresh
+    #region Folder tree and checks
 
-    private void RefreshPlan()
+    private void RefreshFolderTree()
     {
-        int version = Interlocked.Increment(ref _refreshVersion);
-        NewProjectRequest request = BuildRequest();
-        string folder = EffectiveLocation;
-        string name = EffectiveName;
         bool game = IncludeCodeProject;
-        string mainFile = game ? "Content/GumProject/GumProject" + Extension : name + Extension;
-        PlanRefresh = RefreshPlanAsync(version, request, folder, name, game, mainFile);
+        string name = EffectiveName;
+        string root = Path.Combine(EffectiveLocation, name);
+
+        NewProjectLayout? layout = null;
+        if (!game)
+        {
+            layout = NewProjectLayout.ForGumOnly(root, name, UseXmlFormat);
+        }
+        else if (NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform))
+        {
+            layout = NewProjectLayout.ForCodeProject(root, name, platform, UseXmlFormat);
+        }
+
+        FolderTree = layout == null
+            ? Array.Empty<NewProjectLayoutNode>()
+            : new[] { NewProjectLayoutNode.Build(layout, NewProjectDisplayPath.AsFolder(root), openDepth: game ? 3 : 1) };
     }
 
-    private async Task RefreshPlanAsync(int version, NewProjectRequest request, string folder, string name, bool game, string mainFile)
+    private void RefreshChecks()
     {
-        (NewProjectPlan? plan, string? existing, bool notEmpty, string? refusal) = await Task.Run(() =>
+        int version = Interlocked.Increment(ref _refreshVersion);
+        ChecksRefresh = RefreshChecksAsync(version, BuildRequest(), EffectiveLocation, EffectiveName);
+    }
+
+    private async Task RefreshChecksAsync(int version, NewProjectRequest request, string folder, string name)
+    {
+        (string? existing, bool notEmpty, string? refusal) = await Task.Run(() =>
         {
-            NewProjectPlan? computedPlan = null;
             string? existingProject = null;
             bool targetNotEmpty = false;
             string? refused = null;
@@ -773,14 +773,6 @@ public class NewProjectDialogViewModel : DialogViewModel
             }
             try
             {
-                computedPlan = _service.GetPlan(request);
-            }
-            catch (Exception)
-            {
-                // Bad characters in the path or a failed temporary run: no tree, and OK reports the real reason.
-            }
-            try
-            {
                 existingProject = _detector.FindExistingCodeProject(folder);
                 targetNotEmpty = _detector.TargetExistsAndIsNotEmpty(folder, name);
             }
@@ -788,7 +780,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             {
                 // A location that cannot be read has nothing to warn about.
             }
-            return (computedPlan, existingProject, targetNotEmpty, refused);
+            return (existingProject, targetNotEmpty, refused);
         });
 
         if (version != Volatile.Read(ref _refreshVersion))
@@ -802,41 +794,9 @@ public class NewProjectDialogViewModel : DialogViewModel
         NotifyPropertyChanged(nameof(IsRefused));
         AffirmativeCommand.NotifyCanExecuteChanged();
         RefreshWarnings();
-
-        if (plan == null)
-        {
-            PlanTree = Array.Empty<NewProjectPlanNode>();
-            PlanFileCount = 0;
-            FilesCountText = string.Empty;
-            PlanTotalText = string.Empty;
-            return;
-        }
-
-        plan = WithoutUncheckedDemoScreen(plan);
-        PlanTree = new[] { NewProjectPlanNode.Build(plan, NewProjectDisplayPath.AsFolder(Path.Combine(folder, name)), mainFile, openDepth: game ? 3 : 1) };
-        PlanFileCount = plan.Files.Count;
-        // The plan is the template the shared creators write; the tool adds more after creating (the starting screen,
-        // its generated code, the event log; a Gum-only project is written by the importer), so no total is shown
-        // until it can be exact.
-        FilesCountText = string.Empty;
-        PlanTotalText = string.Empty;
     }
 
     #endregion
-
-    // The tool leaves DemoScreenGum out unless it is checked, though the template always contains it.
-    private NewProjectPlan WithoutUncheckedDemoScreen(NewProjectPlan plan)
-    {
-        if (!IsIncludeFormsControls || IsIncludeDemoScreenGum)
-        {
-            return plan;
-        }
-
-        string[] files = plan.Files
-            .Where(file => !DemoScreenRule.IsDemoScreenFile(file))
-            .ToArray();
-        return new NewProjectPlan(plan.RootDirectory, files, plan.Directories);
-    }
 
     private static string GetPlatformLabel(string name) => name switch
     {
