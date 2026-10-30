@@ -87,6 +87,7 @@ public class HotReloadGoneElementTests : BaseTestClass
         _errors.ShouldBeEmpty();
         result.ShouldNotBeNull();
         result.Issues.Any(issue => issue.Kind == HotReloadIssueKind.ShownElementGone).ShouldBeTrue();
+        result.MatchesRestart.ShouldBeFalse();
     }
 
     [Fact]

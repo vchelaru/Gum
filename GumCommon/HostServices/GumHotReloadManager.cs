@@ -76,7 +76,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <summary>
     /// Whether a reload that finds the shown screen gone from the project prints that. A host that
     /// rebuilds what it shows after such a reload (GumPreview) sets this to false: the message says
-    /// the old UI stays, which is not true there. The issue is still in <see cref="HotReloadResult"/>.
+    /// the old UI stays, which is not true there. This only affects printing: the result still lists <see cref="HotReloadIssueKind.ShownElementGone"/> and <see cref="HotReloadResult.MatchesRestart"/> stays false.
     /// </summary>
     public static bool PrintsShownElementGone { get; set; } = true;
 

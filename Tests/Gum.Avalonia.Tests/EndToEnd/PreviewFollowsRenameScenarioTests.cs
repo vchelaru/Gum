@@ -48,6 +48,63 @@ public class PreviewFollowsRenameScenarioTests
     }
 
     [AvaloniaFact]
+    public void RenamingThePinnedScreen_StaysPinnedToItAndPushesTheNewName()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ScreenSave main = tree.Project.AddScreen("MainMenu");
+        tree.SaveAll();
+        AvaloniaEditorTabPlugin plugin = PluginManagerInstance.PluginContainers.Keys.OfType<AvaloniaEditorTabPlugin>().Single();
+        StandInPreview preview = new StandInPreview();
+        plugin.PreviewLauncher.ProcessStarter = preview;
+        try
+        {
+            tree.Click(tree.NodeFor(main));
+            plugin.PreviewLauncher.Launch();
+            plugin.PreviewLauncher.Pin().ShouldBeTrue();
+
+            main.Name = "MainMenu1234";
+            plugin.CallElementRename(main, "MainMenu");
+
+            plugin.PreviewLauncher.PinnedElement.ShouldBeSameAs(main);
+            preview.LastPushed().ElementName.ShouldBe("MainMenu1234");
+        }
+        finally
+        {
+            plugin.PreviewLauncher.Close();
+            preview.DeleteSelectionFile();
+        }
+    }
+
+    [AvaloniaFact]
+    public void DeletingThePinnedScreen_Unpins_SoTheNextSelectionReachesPreview()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ScreenSave main = tree.Project.AddScreen("MainMenu");
+        ScreenSave other = tree.Project.AddScreen("Other");
+        tree.SaveAll();
+        AvaloniaEditorTabPlugin plugin = PluginManagerInstance.PluginContainers.Keys.OfType<AvaloniaEditorTabPlugin>().Single();
+        StandInPreview preview = new StandInPreview();
+        plugin.PreviewLauncher.ProcessStarter = preview;
+        try
+        {
+            tree.Click(tree.NodeFor(main));
+            plugin.PreviewLauncher.Launch();
+            plugin.PreviewLauncher.Pin().ShouldBeTrue();
+
+            plugin.CallElementDelete(main);
+
+            plugin.PreviewLauncher.PinnedElement.ShouldBeNull();
+            plugin.PreviewLauncher.PushSelection(other);
+            preview.LastPushed().ElementName.ShouldBe("Other");
+        }
+        finally
+        {
+            plugin.PreviewLauncher.Close();
+            preview.DeleteSelectionFile();
+        }
+    }
+
+    [AvaloniaFact]
     public void DeletingTheShownScreen_ThenSelectingAnother_PushesTheOther()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
