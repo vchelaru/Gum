@@ -1485,7 +1485,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
     private void AddComponentWithSpriteSourceFile(string componentName, string sourceFile)
     {
-        ComponentSave component = new ComponentSave { Name = componentName };
+        ComponentSave component = new ComponentSave { Name = componentName, BaseType = "Container" };
         component.Instances.Add(new InstanceSave { Name = "MySprite", BaseType = "Sprite" });
         StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
         defaultState.Variables.Add(new VariableSave
@@ -1699,7 +1699,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
     private ComponentSave AddComponentWithTextFont(string componentName, string font)
     {
-        ComponentSave component = new ComponentSave { Name = componentName };
+        ComponentSave component = new ComponentSave { Name = componentName, BaseType = "Container" };
         component.Instances.Add(new InstanceSave { Name = "MyText", BaseType = "Text" });
         StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
         defaultState.Variables.Add(new VariableSave { Name = "MyText.Font", Value = font, Type = "string", SetsValue = true, IsFont = true });

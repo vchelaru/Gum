@@ -94,6 +94,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
             errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
             errors.AddRange(GetFontRangeEntryErrors(project));
+            errors.AddRange(GetMissingComponentBaseTypeErrors(project));
         }
         finally
         {
@@ -121,6 +122,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
             List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
             errors.AddRange(GetFontRangeEntryErrors(project));
+            errors.AddRange(GetMissingComponentBaseTypeErrors(project));
             return errors;
         }
         finally
@@ -145,6 +147,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
         errors.AddRange(GetCircularBaseTypeErrorFor(element));
+        errors.AddRange(GetInstanceCycleErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
@@ -1410,6 +1413,80 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         return errors;
+    }
+
+    // GUM0015: a component with no BaseType loads fine, but codegen then writes a class with no base class.
+    // Screens and standards legitimately have none.
+    // It is a project-level row, so the Errors tab lists it whichever element is selected.
+    private static List<ErrorResult> GetMissingComponentBaseTypeErrors(GumProjectSave project)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+
+        foreach (ComponentSave elementSave in project.Components.Where(component => string.IsNullOrWhiteSpace(component.BaseType)))
+        {
+            errors.Add(new ErrorResult
+            {
+                ElementName = elementSave.Name,
+                Code = "GUM0015",
+                Severity = ErrorSeverity.Error,
+                Message = $"Component {elementSave.Name} has no BaseType, so generated code gives its class no base class. " +
+                    "In the Gum tool, pick a Base Type (for example Container) in the BaseType dropdown, or set <BaseType> in its .gucx file to Container or to the component it derives from."
+            });
+        }
+
+        return errors;
+    }
+
+    // GUM0018: an element that contains an instance of itself, directly or through other elements' instances.
+    // Such an element can never finish building, so each element on the cycle gets the row and names the path.
+    private static List<ErrorResult> GetInstanceCycleErrorFor(ElementSave elementSave)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+        List<ElementSave>? path = FindInstanceCyclePath(elementSave, elementSave, new List<ElementSave> { elementSave }, new HashSet<ElementSave>());
+
+        if (path != null)
+        {
+            errors.Add(new ErrorResult
+            {
+                ElementName = elementSave.Name,
+                Code = "GUM0018",
+                Severity = ErrorSeverity.Error,
+                Message = $"{elementSave.Name} contains itself: {string.Join(" -> ", path.Select(item => item.Name))}. " +
+                    "Remove the instance that closes the loop; an element that instantiates itself can never finish building."
+            });
+        }
+
+        return errors;
+    }
+
+    private static List<ElementSave>? FindInstanceCyclePath(ElementSave target, ElementSave current, List<ElementSave> path, HashSet<ElementSave> visited)
+    {
+        foreach (InstanceSave instance in current.Instances)
+        {
+            ElementSave? instanceElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            if (instanceElement == null)
+            {
+                continue;
+            }
+
+            if (instanceElement == target)
+            {
+                return new List<ElementSave>(path) { target };
+            }
+
+            if (visited.Add(instanceElement))
+            {
+                path.Add(instanceElement);
+                List<ElementSave>? found = FindInstanceCyclePath(target, instanceElement, path, visited);
+                if (found != null)
+                {
+                    return found;
+                }
+                path.RemoveAt(path.Count - 1);
+            }
+        }
+
+        return null;
     }
 
     #endregion
