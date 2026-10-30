@@ -157,7 +157,6 @@ public partial class HeadlessErrorChecker
                     continue;
                 }
                 // A category selector's type is a category name; whether the category exists is GUM0026's business.
-                // A category selector's type is a category name; whether the category exists is GUM0026's business.
                 if (string.IsNullOrEmpty(type) || variable.GetRootName().EndsWith("State", StringComparison.Ordinal)
                     || IsResolvableTypeName(type!))
                 {

@@ -71,4 +71,61 @@ public class HeadlessMissingReferenceTests : BaseTestClass
         new HeadlessErrorChecker(new DefaultTypeResolver()).GetErrorsFor(title, Project)
             .ShouldNotContain(e => e.Code == "GUM0028");
     }
+
+    private ScreenSave BuildScreenWithUnknownTypedInstanceVariable(string? exposedOnButton, string? exposedOnOther)
+    {
+        ComponentSave button = new ComponentSave { Name = "Button", BaseType = "Container" };
+        StateSave buttonState = new StateSave { Name = "Default", ParentContainer = button };
+        if (exposedOnButton != null)
+        {
+            buttonState.Variables.Add(new VariableSave { Name = "Container.Text", Type = "string", Value = "", SetsValue = true, ExposedAsName = exposedOnButton });
+        }
+        button.States.Add(buttonState);
+
+        ComponentSave other = new ComponentSave { Name = "Other", BaseType = "Container" };
+        StateSave otherState = new StateSave { Name = "Default", ParentContainer = other };
+        if (exposedOnOther != null)
+        {
+            otherState.Variables.Add(new VariableSave { Name = "Container.Text", Type = "string", Value = "", SetsValue = true, ExposedAsName = exposedOnOther });
+        }
+        other.States.Add(otherState);
+
+        ScreenSave title = new ScreenSave { Name = "Title" };
+        title.Instances.Add(new InstanceSave { Name = "OkButton", BaseType = "Button" });
+        StateSave titleState = new StateSave { Name = "Default", ParentContainer = title };
+        titleState.Variables.Add(new VariableSave { Name = "OkButton.GlyphKind", Type = "Blorp", Value = "x", SetsValue = true });
+        title.States.Add(titleState);
+
+        Project.Components.Add(button);
+        Project.Components.Add(other);
+        Project.Screens.Add(title);
+        return title;
+    }
+
+    [Fact]
+    public void GetErrorsFor_NonExposedVariableWithUnknownType_ShouldReportGum0028()
+    {
+        ScreenSave title = BuildScreenWithUnknownTypedInstanceVariable(exposedOnButton: null, exposedOnOther: null);
+
+        new HeadlessErrorChecker(new DefaultTypeResolver()).GetErrorsFor(title, Project)
+            .ShouldContain(e => e.Code == "GUM0028");
+    }
+
+    [Fact]
+    public void GetErrorsFor_NameExposedOnADifferentComponent_ShouldReportGum0028()
+    {
+        ScreenSave title = BuildScreenWithUnknownTypedInstanceVariable(exposedOnButton: null, exposedOnOther: "GlyphKind");
+
+        new HeadlessErrorChecker(new DefaultTypeResolver()).GetErrorsFor(title, Project)
+            .ShouldContain(e => e.Code == "GUM0028");
+    }
+
+    [Fact]
+    public void GetErrorsFor_NameExposedOnTheInstancesType_ShouldNotReportGum0028()
+    {
+        ScreenSave title = BuildScreenWithUnknownTypedInstanceVariable(exposedOnButton: "GlyphKind", exposedOnOther: null);
+
+        new HeadlessErrorChecker(new DefaultTypeResolver()).GetErrorsFor(title, Project)
+            .ShouldNotContain(e => e.Code == "GUM0028");
+    }
 }
