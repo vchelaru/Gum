@@ -96,9 +96,14 @@ public class NewProjectService : INewProjectService
 
         if (options.Platform == null)
         {
-            if (File.Exists(targets.GumProjectPath))
+            // Either format counts: a .gumx beside a new .gumj would leave two Gum projects in one folder.
+            foreach (string extension in new[] { GumProjectSave.ProjectJsonExtension, GumProjectSave.ProjectExtension })
             {
-                return Fail(NewProjectErrorKind.ProjectAlreadyExists, $"Project already exists: {targets.GumProjectPath}");
+                string existing = Path.ChangeExtension(targets.GumProjectPath, extension);
+                if (File.Exists(existing))
+                {
+                    return Fail(NewProjectErrorKind.ProjectAlreadyExists, $"Project already exists: {existing}");
+                }
             }
         }
         else
