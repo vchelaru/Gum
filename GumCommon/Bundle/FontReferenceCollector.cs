@@ -554,7 +554,8 @@ public class FontReferenceCollector
             else
             {
                 CollectFontsFromNestedTextInstances(outerElement, outerState, componentInstance,
-                    componentElement, innerInstance, bitmapFonts, project, spacingHorizontal, spacingVertical);
+                    componentElement, innerInstance, bitmapFonts, project, spacingHorizontal, spacingVertical,
+                    new HashSet<ElementSave> { outerElement, componentElement });
             }
         }
     }
@@ -562,7 +563,8 @@ public class FontReferenceCollector
     private void CollectFontsFromNestedTextInstances(ElementSave outerElement, StateSave outerState,
         InstanceSave outerInstance, ElementSave parentComponent, InstanceSave innerInstance,
         Dictionary<string, BmfcSave> bitmapFonts,
-        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+        GumProjectSave project, int spacingHorizontal, int spacingVertical,
+        HashSet<ElementSave> elementsBeingWalked)
     {
         ElementSave? innerElement = _resolveInstanceElement(innerInstance);
         if (innerElement == null)
@@ -585,12 +587,22 @@ public class FontReferenceCollector
                 bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
             }
         }
-        else
+        else if (elementsBeingWalked.Add(innerElement))
         {
-            foreach (InstanceSave deeperInstance in innerElement.Instances)
+            // An element that instantiates itself, directly or through other components, is an error
+            // (GUM0018); skipping an element already on the walk's path ends the recursion (#7125).
+            try
             {
-                CollectFontsFromNestedTextInstances(outerElement, outerState, outerInstance,
-                    innerElement, deeperInstance, bitmapFonts, project, spacingHorizontal, spacingVertical);
+                foreach (InstanceSave deeperInstance in innerElement.Instances)
+                {
+                    CollectFontsFromNestedTextInstances(outerElement, outerState, outerInstance,
+                        innerElement, deeperInstance, bitmapFonts, project, spacingHorizontal, spacingVertical,
+                        elementsBeingWalked);
+                }
+            }
+            finally
+            {
+                elementsBeingWalked.Remove(innerElement);
             }
         }
     }

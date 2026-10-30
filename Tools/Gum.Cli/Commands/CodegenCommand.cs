@@ -219,6 +219,9 @@ public static class CodegenCommand
                 new CategoryNameCollisionErrorSource(codeGenerator, projectSettings),
             });
 
+        // GUM0015 is a project-level row, so the per-element gate adds the ones that name its element.
+        IReadOnlyList<ErrorResult> projectErrors = errorChecker.GetProjectErrors(project);
+
         // --element narrows the run to those elements (which also leaves the project-wide
         // Standard Elements fallback file alone, issue #6042); otherwise the whole project.
         bool hasElementSubset = elementNames != null && elementNames.Length > 0;
@@ -226,7 +229,7 @@ public static class CodegenCommand
             project, projectSettings, new CodeGenerationRunOptions
             {
                 Elements = hasElementSubset ? ResolveElements(elementNames!) : null,
-                Gate = element => PassesErrorCheck(errorChecker, element, project)
+                Gate = element => PassesErrorCheck(errorChecker, projectErrors, element, project)
             });
 
         Console.WriteLine($"Generated code for {runResult.GeneratedCount} element(s).");
@@ -257,9 +260,10 @@ public static class CodegenCommand
     }
 
     // Prints the element's warnings and errors; only errors stop it from being generated.
-    private static bool PassesErrorCheck(IHeadlessErrorChecker errorChecker, ElementSave element, GumProjectSave project)
+    private static bool PassesErrorCheck(IHeadlessErrorChecker errorChecker, IReadOnlyList<ErrorResult> projectErrors, ElementSave element, GumProjectSave project)
     {
-        IReadOnlyList<ErrorResult> errors = errorChecker.GetErrorsFor(element, project);
+        List<ErrorResult> errors = errorChecker.GetErrorsFor(element, project).ToList();
+        errors.AddRange(projectErrors.Where(e => e.Code == "GUM0015" && e.ElementName == element.Name));
 
         foreach (var warning in errors.Where(e => e.Severity == ErrorSeverity.Warning))
         {

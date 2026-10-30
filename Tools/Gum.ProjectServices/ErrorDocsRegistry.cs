@@ -27,6 +27,8 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0012"] = "gum-tool/project-files#text-outside-its-font-range-gum0012",
             ["GUM0013"] = "gum-tool/gum-elements/general-properties/variable-references#circular-references-gum0013",
             ["GUM0014"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#circular-base-types-gum0014",
+            ["GUM0015"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#component-with-no-base-type-gum0015",
+            ["GUM0018"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#component-containing-itself-gum0018",
         };
     }
 
