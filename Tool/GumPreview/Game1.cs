@@ -23,8 +23,6 @@ namespace GumPreview;
 public class Game1 : Game
 {
     private const double SelectionPollIntervalSeconds = 0.25;
-    private const int FallbackCanvasWidth = 800;
-    private const int FallbackCanvasHeight = 600;
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly string _gumxPath;
@@ -36,6 +34,8 @@ public class Game1 : Game
     private readonly string? _typedText;
 
     private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
+    private readonly PreviewCanvasSize _canvasSize = new PreviewCanvasSize();
+    private bool _isCanvasCheckPending;
     private PreviewSelectionMessage _selection;
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
@@ -114,7 +114,7 @@ public class Game1 : Game
         GumService.Default.HotReloadCompleted += ApplySelectedState;
         GumService.Default.HotReloadFinished += HandleHotReloadFinished;
 
-        ApplyCanvasSizeFromProject();
+        ApplyCanvasSizeIfChanged();
 
         // The tool writes the full selection (state, orderer) before launching; --element alone is
         // the fallback for a launch with no selection file.
@@ -157,6 +157,11 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         UpdateBackingScale();
+        if (_isCanvasCheckPending)
+        {
+            _isCanvasCheckPending = false;
+            ApplyCanvasSizeIfChanged();
+        }
         RebuildAfterReloadIfNeeded();
         GumService.Default.Update(gameTime);
         PollSelectionFile(gameTime);
@@ -321,18 +326,22 @@ public class Game1 : Game
 
     private void ActivateWindow() => SdlLibrary.TryRaiseWindow(Window.Handle);
 
-    private void ApplyCanvasSizeFromProject()
+    // The project's canvas size drives the window and the canvas at launch and again whenever a reload
+    // finds a different saved size. An unchanged size is left alone, so a window the user resized is
+    // kept until the saved size changes (#7167).
+    private void ApplyCanvasSizeIfChanged()
     {
-        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
-        int width = project != null && project.DefaultCanvasWidth > 0 ? project.DefaultCanvasWidth : FallbackCanvasWidth;
-        int height = project != null && project.DefaultCanvasHeight > 0 ? project.DefaultCanvasHeight : FallbackCanvasHeight;
+        if (!_canvasSize.TryTakeChange(ObjectFinder.Self.GumProjectSave, out int width, out int height))
+        {
+            return;
+        }
 
         _graphics.PreferredBackBufferWidth = width;
         _graphics.PreferredBackBufferHeight = height;
         _graphics.ApplyChanges();
-
-        GraphicalUiElement.CanvasWidth = width;
-        GraphicalUiElement.CanvasHeight = height;
+        PreviewCanvasSize.ApplyToCanvas(GumService.Default.Root, width, height);
+        // The window was sized for the backing scale; let the next frame size it again.
+        _backingScale = new BackingScale(1);
     }
 
     // Runs every frame: the window can move to a display with a different scale (a Retina laptop
@@ -376,8 +385,7 @@ public class Game1 : Game
             GraphicsDevice.PresentationParameters.BackBufferHeight = height;
             GraphicsDevice.Viewport = new Viewport(0, 0, width, height);
         }
-        GraphicalUiElement.CanvasWidth = GraphicsDevice.Viewport.Width;
-        GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
+        PreviewCanvasSize.ApplyToCanvas(GumService.Default.Root, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
     }
 
     private void ShowElement()
@@ -425,6 +433,7 @@ public class Game1 : Game
         try
         {
             _reloadPolicy.OnReloadFinished(result, _isElementMissing);
+            _isCanvasCheckPending = true;
         }
         catch (Exception exception)
         {
