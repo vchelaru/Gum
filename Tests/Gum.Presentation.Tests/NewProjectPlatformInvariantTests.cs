@@ -47,6 +47,7 @@ public class NewProjectPlatformInvariantTests
             Location = Path.Combine(Path.GetTempPath(), "GumPlatformInvariant"),
             IncludeCodeProject = true,
             PlatformName = platform,
+            IncludeRecommendedPackages = false,
         };
 
         await viewModel.ChecksRefresh;

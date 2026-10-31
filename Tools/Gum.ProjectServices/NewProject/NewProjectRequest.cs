@@ -29,6 +29,13 @@ public class NewProjectRequest
     public bool Restore { get; init; } = true;
 
     /// <summary>
+    /// Also add the NuGet add-ons the setup docs recommend for the platform (<see cref="RecommendedPackages"/>) to the code
+    /// project, before the restore. Needs a platform and the NuGet Gum runtime (not <see cref="SourceLinked"/>). The command line is
+    /// <c>gumcli new ... &amp;&amp; dotnet add "&lt;csproj&gt;" package ...</c>; <c>gumcli new</c> itself has no option for it.
+    /// </summary>
+    public bool IncludeRecommendedPackages { get; init; }
+
+    /// <summary>
     /// For a Gum-only project whose <see cref="Path"/> has no project extension: create a <c>.gumx</c> (XML)
     /// project instead of the default <c>.gumj</c> (JSON). A path ending in <c>.gumx</c>/<c>.gumj</c> decides by itself.
     /// </summary>

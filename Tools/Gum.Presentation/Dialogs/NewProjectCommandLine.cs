@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 
 namespace Gum.Dialogs;
@@ -42,6 +43,35 @@ public static class NewProjectCommandLine
         if (platform != null && !restore)
         {
             command += " --no-restore";
+        }
+        return command;
+    }
+
+    /// <summary>
+    /// The <see cref="Build"/> command followed by one <c>dotnet add</c> per package and, when <paramref name="restore"/>, a
+    /// final <c>dotnet restore</c>, chained with <c>&amp;&amp;</c> on one line. It mirrors the order the dialog runs
+    /// (create, add every package, restore once), so <c>gumcli new</c> gets <c>--no-restore</c> and each add is
+    /// <c>--no-restore</c>, which writes <c>Version="*"</c> without a feed lookup. The csproj path is spelled out so no
+    /// <c>cd</c> is needed.
+    /// </summary>
+    /// <param name="packages">The package ids to add; empty gives the same as <see cref="Build"/>.</param>
+    /// <param name="csprojPath">The code project file the new step writes.</param>
+    public static string BuildChained(
+        string path, string platform, bool includeForms, string? theme, bool restore, IReadOnlyList<string> packages, string csprojPath)
+    {
+        if (packages.Count == 0)
+        {
+            return Build(path, platform, includeForms, theme, sourceLinked: false, restore);
+        }
+
+        string command = Build(path, platform, includeForms, theme, sourceLinked: false, restore: false);
+        foreach (string package in packages)
+        {
+            command += $" && dotnet add \"{csprojPath}\" package {package} --no-restore";
+        }
+        if (restore)
+        {
+            command += $" && dotnet restore \"{csprojPath}\"";
         }
         return command;
     }

@@ -73,6 +73,7 @@ public class NewProjectDialogSequenceTests
         {
             ProjectName = "MyGame",
             Location = Folder,
+            IncludeRecommendedPackages = false,
         };
         configure?.Invoke(viewModel);
         return viewModel;

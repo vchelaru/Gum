@@ -28,6 +28,11 @@ public static class NewProjectDialogText
     public const string UseLocalSourceNote = "For Gum developers: the C# project uses the Gum source code on this computer instead of the published NuGet package, to try unreleased changes. Only available when this tool was built from that source code.";
     public const string RestorePackages = "Restore NuGet packages";
     public const string RestorePackagesNote = "Runs dotnet restore after creating. The first code generation needs the packages.";
+    public const string RestoreFailedHeading = "The code project was created, but dotnet restore failed.";
+    public const string PackagesFailedHeading = "The code project was created, but adding the recommended packages failed.";
+    public const string RecommendedPackages = "Include recommended packages";
+    public const string RecommendedPackagesDisabledNote = "Not available with local Gum source: the packages would add a second copy of Gum.";
+    public static string RecommendedPackagesNote(string packages) => $"Adds {packages} to the C# project, as the setup docs suggest.";
     public const string FoldersHeading = "Folders";
     public const string CommandLineHeading = "Command line";
     public const string CommandLineDescription = "Optional. Copy this to create the same project without the tool.";
@@ -45,6 +50,7 @@ public static class NewProjectDialogText
     public const string NoDemoCommandNote = "gumcli new has no option to leave out DemoScreenGum yet.";
     public const string ExtensionPicksFormatNote = "The extension in the path picks the file format.";
     public const string NoXmlWithCodeProjectNote = "gumcli new has no option for the .gumx format with a code project yet.";
+    public const string ChainedCommandNote = "This line chains commands with &&: it works in cmd, PowerShell 7 and bash, not Windows PowerShell 5.1.";
 
     public const string EnterName = "Enter a project name.";
     public const string InvalidFolderName = "The name has characters a folder name can't have.";

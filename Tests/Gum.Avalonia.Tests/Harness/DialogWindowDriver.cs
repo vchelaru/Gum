@@ -40,6 +40,8 @@ internal sealed class DialogWindowDriver : IDisposable
     {
         Control view = TestAppBuilder.Services.GetRequiredService<DialogViewRegistry>().CreateView(viewModel);
         DialogWindow window = new DialogWindow(viewModel, view);
+        // As AvaloniaDialogService: a tall view scrolls instead of pushing the footer buttons out of the window.
+        window.FitHeightToScreen(owner: null);
         window.Show();
         return window;
     }

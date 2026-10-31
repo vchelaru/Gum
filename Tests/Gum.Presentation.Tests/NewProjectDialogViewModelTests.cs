@@ -52,6 +52,7 @@ public class NewProjectDialogViewModelTests
         {
             ProjectName = "MyGame",
             Location = Folder,
+            IncludeRecommendedPackages = false,
         };
         configure?.Invoke(viewModel);
         return viewModel;

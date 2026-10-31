@@ -16,6 +16,7 @@ public class NewProjectService : INewProjectService
 
     private readonly IFormsThemeLocator _themeLocator;
     private readonly IRestoreRunner _restoreRunner;
+    private readonly IPackageAddRunner _packageAddRunner;
     private readonly IReadOnlyList<string> _gumSourceSearchDirectories;
 
     /// <param name="themeLocator">Finds the bundled Forms themes.</param>
@@ -23,9 +24,21 @@ public class NewProjectService : INewProjectService
     /// <param name="gumSourceSearchDirectories">Where to look for a Gum checkout, walking up from each, in order.</param>
     public NewProjectService(
         IFormsThemeLocator themeLocator, IRestoreRunner restoreRunner, IReadOnlyList<string> gumSourceSearchDirectories)
+        : this(themeLocator, restoreRunner, new DotnetPackageAddRunner(), gumSourceSearchDirectories)
+    {
+    }
+
+    /// <param name="themeLocator">Finds the bundled Forms themes.</param>
+    /// <param name="restoreRunner">Runs <c>dotnet restore</c>.</param>
+    /// <param name="packageAddRunner">Runs <c>dotnet add package</c>.</param>
+    /// <param name="gumSourceSearchDirectories">Where to look for a Gum checkout, walking up from each, in order.</param>
+    public NewProjectService(
+        IFormsThemeLocator themeLocator, IRestoreRunner restoreRunner, IPackageAddRunner packageAddRunner,
+        IReadOnlyList<string> gumSourceSearchDirectories)
     {
         _themeLocator = themeLocator;
         _restoreRunner = restoreRunner;
+        _packageAddRunner = packageAddRunner;
         _gumSourceSearchDirectories = gumSourceSearchDirectories;
     }
 
@@ -56,6 +69,21 @@ public class NewProjectService : INewProjectService
         if (optionsError != null)
         {
             return new NewProjectValidation { Error = optionsError };
+        }
+
+        if (request.IncludeRecommendedPackages)
+        {
+            if (options.Platform == null)
+            {
+                return Fail(NewProjectErrorKind.RecommendedPackagesNeedPlatform,
+                    "Recommended packages need a code project: they are added to its .csproj.");
+            }
+
+            if (request.SourceLinked)
+            {
+                return Fail(NewProjectErrorKind.RecommendedPackagesNeedNuGetRuntime,
+                    "Recommended packages need the NuGet Gum runtime: they would pull in a second copy of Gum next to the linked source.");
+            }
         }
 
         string? gumSourceDirectory = null;
@@ -119,7 +147,10 @@ public class NewProjectService : INewProjectService
                 RootDirectory = targets.RootDirectory,
                 GumProjectPath = targets.GumProjectPath,
                 CsprojPath = targets.CsprojPath,
-                Name = targets.Name
+                Name = targets.Name,
+                RecommendedPackages = request.IncludeRecommendedPackages
+                    ? RecommendedPackages.For(options.Platform!.Value)
+                    : Array.Empty<string>()
             }
         };
     }
@@ -368,6 +399,28 @@ public class NewProjectService : INewProjectService
         _restoreRunner.RestoreAsync(csprojPath, onOutputLine, cancellationToken);
 
     /// <inheritdoc/>
+    public async Task<AddPackagesResult> AddPackagesAsync(
+        string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken)
+    {
+        foreach (string package in packages)
+        {
+            RestoreResult result = await _packageAddRunner.AddAsync(csprojPath, package, onOutputLine, cancellationToken);
+            if (result.Status != RestoreStatus.Succeeded)
+            {
+                return new AddPackagesResult
+                {
+                    Status = result.Status,
+                    FailedPackage = package,
+                    OutputTail = result.OutputTail,
+                    ErrorMessage = result.ErrorMessage
+                };
+            }
+        }
+
+        return new AddPackagesResult { Status = RestoreStatus.Succeeded };
+    }
+
+    /// <inheritdoc/>
     public async Task<NewProjectResult> ExecuteAsync(
         NewProjectRequest request, IProgress<NewProjectProgress>? progress, CancellationToken cancellationToken)
     {
@@ -382,14 +435,30 @@ public class NewProjectService : INewProjectService
 
         progress?.Report(new NewProjectProgress(NewProjectStep.CreatingFiles, "Creating project files..."));
         NewProjectFilesResult files = await CreateFilesAsync(validation.Resolved, cancellationToken);
-        if (!files.Success || files.CsprojPath == null || !request.Restore)
+        if (!files.Success || files.CsprojPath == null)
         {
             return new NewProjectResult { Files = files };
         }
 
+        AddPackagesResult? packageAdd = null;
+        if (validation.Resolved.RecommendedPackages.Count > 0)
+        {
+            progress?.Report(new NewProjectProgress(NewProjectStep.AddingPackages, "Adding recommended packages..."));
+            packageAdd = await AddPackagesAsync(files.CsprojPath, validation.Resolved.RecommendedPackages, null, cancellationToken);
+            if (packageAdd.Status != RestoreStatus.Succeeded)
+            {
+                return new NewProjectResult { Files = files, PackageAdd = packageAdd };
+            }
+        }
+
+        if (!request.Restore)
+        {
+            return new NewProjectResult { Files = files, PackageAdd = packageAdd };
+        }
+
         progress?.Report(new NewProjectProgress(NewProjectStep.Restoring, "Restoring NuGet packages..."));
         RestoreResult restore = await RestoreAsync(files.CsprojPath, null, cancellationToken);
-        return new NewProjectResult { Files = files, Restore = restore };
+        return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore };
     }
 
     #endregion

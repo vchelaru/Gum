@@ -18,6 +18,9 @@ internal sealed class SwitchableNewProjectService : INewProjectService
     /// <summary>Replaces the restore step while set, so a test never runs <c>dotnet restore</c>; reset to null after the test.</summary>
     public Func<string, Action<string>?, CancellationToken, Task<RestoreResult>>? Restore { get; set; }
 
+    /// <summary>Replaces the add-packages step while set, so a test never runs <c>dotnet add</c>; reset to null after the test.</summary>
+    public Func<string, IReadOnlyList<string>, Action<string>?, CancellationToken, Task<AddPackagesResult>>? AddPackages { get; set; }
+
     public bool IsSourceLinkedAvailable => _inner.IsSourceLinkedAvailable;
 
     public NewProjectValidation Validate(NewProjectRequest request) => _inner.Validate(request);
@@ -27,6 +30,10 @@ internal sealed class SwitchableNewProjectService : INewProjectService
 
     public Task<RestoreResult> RestoreAsync(string csprojPath, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
         Restore != null ? Restore(csprojPath, onOutputLine, cancellationToken) : _inner.RestoreAsync(csprojPath, onOutputLine, cancellationToken);
+
+    public Task<AddPackagesResult> AddPackagesAsync(
+        string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+        AddPackages != null ? AddPackages(csprojPath, packages, onOutputLine, cancellationToken) : _inner.AddPackagesAsync(csprojPath, packages, onOutputLine, cancellationToken);
 
     public Task<NewProjectResult> ExecuteAsync(NewProjectRequest request, IProgress<NewProjectProgress>? progress, CancellationToken cancellationToken) =>
         _inner.ExecuteAsync(request, progress, cancellationToken);

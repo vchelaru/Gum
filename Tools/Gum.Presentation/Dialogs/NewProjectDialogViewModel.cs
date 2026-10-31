@@ -40,7 +40,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     {
         nameof(ProjectName), nameof(Location), nameof(SelectedFileFormat), nameof(IsIncludeFormsControls),
         nameof(IsIncludeDemoScreenGum), nameof(IncludeCodeProject), nameof(PlatformName), nameof(SourceLinkedChoice),
-        nameof(RunRestore),
+        nameof(RunRestore), nameof(IncludeRecommendedPackages),
     };
 
     private static readonly Dictionary<string, string> _platformNotes = new Dictionary<string, string>
@@ -56,6 +56,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     private readonly INewProjectLocationSettings _locationSettings;
     private CancellationTokenSource? _cancellation;
     private NewProjectFilesResult? _createdFiles;
+    private IReadOnlyList<string> _createdPackages = Array.Empty<string>();
     private int _refreshVersion;
     private string? _existingCodeProject;
     private bool _targetNotEmpty;
@@ -115,9 +116,10 @@ public class NewProjectDialogViewModel : DialogViewModel
         IsIncludeDemoScreenGum = false;
         PlatformName = Platforms.FirstOrDefault()?.Name ?? "monogame";
         RunRestore = true;
+        IncludeRecommendedPackages = true;
 
         BrowseCommand = new RelayCommand(Browse);
-        RetryRestoreCommand = new RelayCommand(() => _ = RunRestoreStepAsync());
+        RetryRestoreCommand = new RelayCommand(() => _ = RunPackagesAndRestoreAsync());
         ContinueWithoutRestoreCommand = new RelayCommand(FinishCodeProject);
         BackCommand = new RelayCommand(Back);
         CopyCommandLineCommand = new RelayCommand(() => CommandLineCopyRequested?.Invoke(CommandLine));
@@ -220,9 +222,45 @@ public class NewProjectDialogViewModel : DialogViewModel
         set => Set(value);
     }
 
+    /// <summary>
+    /// What the user ticked for Include recommended packages; on by default. See <see cref="AddsRecommendedPackages"/> for
+    /// what applies.
+    /// </summary>
+    public bool IncludeRecommendedPackages
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
     #endregion
 
     #region Derived display state
+
+    /// <summary>Whether the Include recommended packages checkbox shows: only with a C# project.</summary>
+    public bool IsRecommendedPackagesVisible => IncludeCodeProject;
+
+    /// <summary>Whether the checkbox can be changed: the platform has packages and the Gum runtime comes from NuGet.</summary>
+    public bool IsRecommendedPackagesEnabled => IncludeCodeProject && !SourceLinked && RecommendedPackageIds.Count > 0;
+
+    /// <summary>Whether creating adds the platform's recommended packages.</summary>
+    public bool AddsRecommendedPackages => IncludeRecommendedPackages && IsRecommendedPackagesEnabled;
+
+    /// <summary>The checkbox's state: ticked only when the packages will really be added; a disabled box shows unticked.</summary>
+    public bool RecommendedPackagesChecked
+    {
+        get => AddsRecommendedPackages;
+        set => IncludeRecommendedPackages = value;
+    }
+
+    /// <summary>The grey line under the checkbox: the packages it adds, or why it is unavailable.</summary>
+    public string RecommendedPackagesNote => IsRecommendedPackagesEnabled
+        ? NewProjectDialogText.RecommendedPackagesNote(string.Join(", ", RecommendedPackageIds))
+        : NewProjectDialogText.RecommendedPackagesDisabledNote;
+
+    private IReadOnlyList<string> RecommendedPackageIds =>
+        NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform)
+            ? RecommendedPackages.For(platform)
+            : Array.Empty<string>();
 
     /// <summary>Whether the platform forces source-linked on.</summary>
     public bool IsSourceLinkedForced => IncludeCodeProject && PlatformName == KniSkiaPlatform;
@@ -396,6 +434,13 @@ public class NewProjectDialogViewModel : DialogViewModel
         private set => Set(value);
     }
 
+    /// <summary>The failure panel's heading: says whether the restore or adding the recommended packages failed.</summary>
+    public string RestoreFailureHeading
+    {
+        get => Get<string>() ?? NewProjectDialogText.RestoreFailedHeading;
+        private set => Set(value);
+    }
+
     /// <summary>Whether the inputs can be changed (not busy and not showing a restore failure).</summary>
     public bool IsEditable => !IsBusy && !IsRestoreFailed;
 
@@ -473,9 +518,10 @@ public class NewProjectDialogViewModel : DialogViewModel
             }
 
             _createdFiles = files;
-            if (RunRestore && files.CsprojPath != null)
+            _createdPackages = validation.Resolved!.RecommendedPackages;
+            if (files.CsprojPath != null && (RunRestore || _createdPackages.Count > 0))
             {
-                await RunRestoreStepAsync();
+                await RunPackagesAndRestoreAsync();
             }
             else
             {
@@ -500,7 +546,9 @@ public class NewProjectDialogViewModel : DialogViewModel
         RefreshChecks();
     }
 
-    private async Task RunRestoreStepAsync()
+    // The recommended packages are added first (nothing is fetched yet), then one restore covers them all. A failure
+    // in either shows the same panel; Retry runs both again, and adding a package twice is harmless.
+    private async Task RunPackagesAndRestoreAsync()
     {
         if (_createdFiles?.CsprojPath is not { } csproj)
         {
@@ -511,10 +559,33 @@ public class NewProjectDialogViewModel : DialogViewModel
         try
         {
             IsRestoreFailed = false;
+            ProgressDetail = string.Empty;
+            IProgress<string> output = new Progress<string>(line => ProgressDetail = line);
+            if (_createdPackages.Count > 0)
+            {
+                SetBusy(true, "Adding recommended packages...");
+                _cancellation = new CancellationTokenSource();
+                AddPackagesResult added = await _service.AddPackagesAsync(csproj, _createdPackages, output.Report, _cancellation.Token);
+                if (added.Status != RestoreStatus.Succeeded)
+                {
+                    RestoreFailureHeading = NewProjectDialogText.PackagesFailedHeading;
+                    RestoreFailureText = added.Status == RestoreStatus.Canceled
+                        ? "Adding packages was canceled."
+                        : GetPackageFailureText(added);
+                    IsRestoreFailed = true;
+                    return;
+                }
+            }
+
+            if (!RunRestore)
+            {
+                FinishCodeProject();
+                return;
+            }
+
             SetBusy(true, "Running dotnet restore...");
             ProgressDetail = string.Empty;
             _cancellation = new CancellationTokenSource();
-            IProgress<string> output = new Progress<string>(line => ProgressDetail = line);
             RestoreResult result = await _service.RestoreAsync(csproj, output.Report, _cancellation.Token);
             switch (result.Status)
             {
@@ -522,10 +593,12 @@ public class NewProjectDialogViewModel : DialogViewModel
                     FinishCodeProject();
                     break;
                 case RestoreStatus.Canceled:
+                    RestoreFailureHeading = NewProjectDialogText.RestoreFailedHeading;
                     RestoreFailureText = "Restore was canceled.";
                     IsRestoreFailed = true;
                     break;
                 default:
+                    RestoreFailureHeading = NewProjectDialogText.RestoreFailedHeading;
                     RestoreFailureText = result.Status == RestoreStatus.ProcessNotFound && result.ErrorMessage.Length > 0
                         ? result.ErrorMessage
                         : (result.OutputTail.Length > 0 ? result.OutputTail : "dotnet restore failed.");
@@ -535,6 +608,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         }
         catch (Exception exception)
         {
+            RestoreFailureHeading = NewProjectDialogText.RestoreFailedHeading;
             RestoreFailureText = exception.Message;
             IsRestoreFailed = true;
         }
@@ -545,6 +619,14 @@ public class NewProjectDialogViewModel : DialogViewModel
                 SetBusy(false, string.Empty);
             }
         }
+    }
+
+    private static string GetPackageFailureText(AddPackagesResult added)
+    {
+        string detail = added.Status == RestoreStatus.ProcessNotFound && added.ErrorMessage.Length > 0
+            ? added.ErrorMessage
+            : (added.OutputTail.Length > 0 ? added.OutputTail : "dotnet add package failed.");
+        return $"Could not add {added.FailedPackage}. {detail}";
     }
 
     private void FinishCodeProject()
@@ -596,6 +678,14 @@ public class NewProjectDialogViewModel : DialogViewModel
                 NotifyPropertyChanged(nameof(IsSourceLinkedForced));
                 NotifyPropertyChanged(nameof(IsSourceLinkedEnabled));
             }
+            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(SourceLinkedChoice) or nameof(IncludeRecommendedPackages))
+            {
+                NotifyPropertyChanged(nameof(IsRecommendedPackagesVisible));
+                NotifyPropertyChanged(nameof(IsRecommendedPackagesEnabled));
+                NotifyPropertyChanged(nameof(AddsRecommendedPackages));
+                NotifyPropertyChanged(nameof(RecommendedPackagesChecked));
+                NotifyPropertyChanged(nameof(RecommendedPackagesNote));
+            }
             RefreshDerived();
             RefreshFolderTree();
             RefreshChecks();
@@ -638,6 +728,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             SourceLinked = game && SourceLinked,
             Restore = RunRestore,
             UseXmlFormat = UseXmlFormat,
+            IncludeRecommendedPackages = game && AddsRecommendedPackages,
         };
     }
 
@@ -650,15 +741,29 @@ public class NewProjectDialogViewModel : DialogViewModel
         GumProjectPath = game
             ? Path.Combine(path, "Content", "GumProject", "GumProject" + Extension)
             : path;
-        CommandLine = NewProjectCommandLine.Build(
-            path,
-            game ? PlatformName : null,
-            IsIncludeFormsControls,
-            IsIncludeFormsControls ? SelectedThemeName : null,
-            game && SourceLinked,
-            RunRestore);
+        bool chained = game && AddsRecommendedPackages;
+        CommandLine = chained
+            ? NewProjectCommandLine.BuildChained(
+                path,
+                PlatformName,
+                IsIncludeFormsControls,
+                IsIncludeFormsControls ? SelectedThemeName : null,
+                RunRestore,
+                RecommendedPackageIds,
+                NewProjectDisplayPath.Normalize(Path.Combine(path, name + ".csproj")))
+            : NewProjectCommandLine.Build(
+                path,
+                game ? PlatformName : null,
+                IsIncludeFormsControls,
+                IsIncludeFormsControls ? SelectedThemeName : null,
+                game && SourceLinked,
+                RunRestore);
 
         List<string> notes = new List<string>();
+        if (chained)
+        {
+            notes.Add(NewProjectDialogText.ChainedCommandNote);
+        }
         if (IsIncludeFormsControls && !IsIncludeDemoScreenGum)
         {
             notes.Add(NewProjectDialogText.NoDemoCommandNote);

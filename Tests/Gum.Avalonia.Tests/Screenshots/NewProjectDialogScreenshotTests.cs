@@ -46,6 +46,43 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void CodeProjectStride(string theme) => Capture("code-project-stride", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "stride";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CodeProjectSilkNet(string theme) => Capture("code-project-silknet", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "silknet";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CodeProjectMonoGame(string theme) => Capture("code-project-monogame", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CodeProjectMonoGameCommandLine(string theme) => Capture("code-project-monogame-command-line", theme, (viewModel, window) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+        window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void WarningShowing(string theme) => Capture("warning", theme, (viewModel, _) => viewModel.IncludeCodeProject = true, existingProject: true);
 
     [SkippableTheory]
@@ -157,6 +194,8 @@ public class NewProjectDialogScreenshotTests
             });
             service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
                 .Returns(filesResult == null ? new TaskCompletionSource<NewProjectFilesResult>().Task : Task.FromResult(filesResult));
+            service.Setup(x => x.AddPackagesAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<Action<string>?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new AddPackagesResult { Status = RestoreStatus.Succeeded });
             service.Setup(x => x.RestoreAsync(It.IsAny<string>(), It.IsAny<Action<string>?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new RestoreResult { Status = RestoreStatus.Failed, ExitCode = 1, OutputTail = "error NU1101: Unable to find package Gum.MonoGame. No packages exist with this id in source(s): nuget.org" });
 

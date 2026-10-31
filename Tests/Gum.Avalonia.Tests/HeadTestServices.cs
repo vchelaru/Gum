@@ -54,10 +54,12 @@ public static class HeadTestServices
         // View in explorer, Open Settings Folder and the Help links would start a real file manager or browser.
         services.Replace(ServiceDescriptor.Singleton<IFileSystemRevealService, RecordingFileSystemRevealService>());
         // New Project runs the real creation unless a test makes file creation block or fail.
+        services.AddSingleton<RecordingPackageAddRunner>();
         services.AddSingleton<SwitchableNewProjectService>(provider =>
             new SwitchableNewProjectService(new Gum.ProjectServices.NewProjectService(
                 provider.GetRequiredService<Gum.ProjectServices.IFormsThemeLocator>(),
                 provider.GetRequiredService<Gum.ProjectServices.IRestoreRunner>(),
+                provider.GetRequiredService<RecordingPackageAddRunner>(),
                 new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })));
         services.Replace(ServiceDescriptor.Singleton<Gum.ProjectServices.INewProjectService>(provider => provider.GetRequiredService<SwitchableNewProjectService>()));
         // The Font drop-down lists the same families on every machine.
