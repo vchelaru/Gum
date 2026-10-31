@@ -1214,7 +1214,10 @@ public class TextRuntime : InteractiveGue
             GrowFontIfNeeded(text);
         }
 
-        if (MissingCharacterBehavior != MissingCharacterBehavior.ConsumeSilently)
+        // #7293: while the font load is deferred (layout suspended, as during a project load) the Text is
+        // still on its previous or the default font, so a character it lacks says nothing about the font
+        // that will draw. The load re-wraps, which checks again against the real font.
+        if (MissingCharacterBehavior != MissingCharacterBehavior.ConsumeSilently && !IsFontDirty)
         {
 #if XNALIKE
             // A Text with no font of its own draws with the default font.
