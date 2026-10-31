@@ -1,3 +1,4 @@
+using Gum.Managers;
 using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
@@ -44,7 +45,7 @@ public class NewProjectDialogFlowTests
         });
         viewModel = new NewProjectDialogViewModel(
             TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),
-            _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object)
+            _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
         {
             Location = ProjectsFolder,
             IncludeCodeProject = true,

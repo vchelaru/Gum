@@ -1,3 +1,4 @@
+using Gum.Managers;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using Gum.Avalonia.Dialogs.Views;
@@ -169,7 +170,7 @@ public class NewProjectDialogScreenshotTests
 
             NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
                 TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),
-                service.Object, detector.Object, new Mock<IDialogService>().Object)
+                service.Object, detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
             {
                 Location = Location,
             };

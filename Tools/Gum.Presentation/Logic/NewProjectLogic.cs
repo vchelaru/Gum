@@ -33,6 +33,7 @@ public class NewProjectLogic : INewProjectLogic
     private readonly ISelectedState _selectedState;
     private readonly IDefaultFontBundler _defaultFontBundler;
     private readonly IDeleteLogic _deleteLogic;
+    private readonly INewProjectLocationSettings _locationSettings;
 
     public NewProjectLogic(
         IProjectManager projectManager,
@@ -42,7 +43,8 @@ public class NewProjectLogic : INewProjectLogic
         ICopyPasteProjectCommands projectCommands,
         ISelectedState selectedState,
         IDefaultFontBundler defaultFontBundler,
-        IDeleteLogic deleteLogic)
+        IDeleteLogic deleteLogic,
+        INewProjectLocationSettings locationSettings)
     {
         _projectManager = projectManager;
         _dialogService = dialogService;
@@ -52,6 +54,7 @@ public class NewProjectLogic : INewProjectLogic
         _selectedState = selectedState;
         _defaultFontBundler = defaultFontBundler;
         _deleteLogic = deleteLogic;
+        _locationSettings = locationSettings;
     }
 
     /// <inheritdoc/>
@@ -70,6 +73,8 @@ public class NewProjectLogic : INewProjectLogic
 
         if (viewModel.IsCodeProjectCreated && viewModel.CreatedGumProjectPath is { } createdProjectPath)
         {
+            // The dialog already wrote the files, so the creation succeeded whatever the load does.
+            _locationSettings.RememberNewProjectParent(viewModel.ProjectParentFolder);
             await LoadCreatedCodeProjectAsync(viewModel, createdProjectPath);
             return;
         }
@@ -101,6 +106,8 @@ public class NewProjectLogic : INewProjectLogic
         {
             return;
         }
+
+        _locationSettings.RememberNewProjectParent(viewModel.ProjectParentFolder);
 
         // The Text standard's Font default (StandardElementsManager) points at this bundled
         // file rather than a system font name, so every new project needs it on disk regardless
