@@ -180,7 +180,7 @@ public class NewProjectUiLayoutTests
             OutputTail = string.Join("\n", Enumerable.Range(0, 12).Select(i => $"error: could not write the project, line {i}"))
         });
         fixture.Settle();
-        fixture.Window.Click(fixture.Dialog.OkButton);
+        fixture.Dialog.ClickOkWithoutWaitingForClose();
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the packages failure");
         fixture.Service.AddPackages = null;
 
@@ -229,7 +229,7 @@ public class NewProjectUiLayoutTests
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.StandInRestore(NewProjectUiFixture.RestoreFailed(string.Join("\n", Enumerable.Range(0, 12).Select(i => $"error NU1101: Unable to find package number {i} in any source"))));
         fixture.Settle();
-        fixture.Window.Click(fixture.Dialog.OkButton);
+        fixture.Dialog.ClickOkWithoutWaitingForClose();
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the restore failure");
 
         AssertLaidOut(fixture, $"restore failure, zoom {zoom}");

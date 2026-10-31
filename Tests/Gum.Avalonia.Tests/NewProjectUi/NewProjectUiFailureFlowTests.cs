@@ -28,7 +28,7 @@ public class NewProjectUiFailureFlowTests
     }
 
     // Clicks OK and returns without waiting for the dialog to close.
-    private static void StartCreation(NewProjectUiFixture fixture) => fixture.Window.Click(fixture.Dialog.OkButton);
+    private static void StartCreation(NewProjectUiFixture fixture) => fixture.Dialog.ClickOkWithoutWaitingForClose();
 
     private static void FailRestoreOnce(NewProjectUiFixture fixture, out List<string> restored, string tail = "NU1101: no such package")
     {
@@ -282,7 +282,7 @@ public class NewProjectUiFailureFlowTests
         StartCreation(fixture);
         fixture.WaitUntil(() => fixture.ViewModel.IsBusy, "the busy state");
 
-        fixture.Window.Click(fixture.Dialog.OkButton);
+        fixture.Dialog.ClickOkWithoutWaitingForClose();
         fixture.Window.Press(Key.Enter, PhysicalKey.Enter);
         fixture.Window.Press(Key.Enter, PhysicalKey.Enter);
 
