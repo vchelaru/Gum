@@ -26,7 +26,7 @@ Creates a project pre-populated with the full Forms UI control set:
 - All Forms components and element variants
 - Standard elements and StandardGraphics assets
 - A demo screen (`DemoScreenGum`)
-- `UISpriteSheet.png` and `ProjectCodeSettings.codsj`
+- `UISpriteSheet.png`
 
 ### `empty`
 
@@ -58,7 +58,7 @@ MyGame/
     ProjectCodeSettings.codsj
 ```
 
-`MyGame.slnx` is a solution file next to the project, so you can open the folder in an IDE or run `dotnet build` there. `Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. To use the GPU path, change the target to `net10.0-windows7.0`; see [Skia Render Path](../code/getting-started/setup/adding-initializing-gum/stride.md#skia-render-path).
+`MyGame.slnx` is a solution file next to the project. `Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. To use the GPU path, change the target to `net10.0-windows7.0`; see [Skia Render Path](../code/getting-started/setup/adding-initializing-gum/stride.md#skia-render-path).
 
 The Silk.NET project runs on Windows, macOS, and Linux. It creates its window with SDL and draws through SkiaSharp on desktop OpenGL 3.3, so its NuGet packages bring every native library it needs and it does not use ANGLE. It requires a graphics driver that supports OpenGL 3.3. For the window and input setup in `Program.cs`, see [Silk.NET](../code/getting-started/setup/adding-initializing-gum/silk.net.md).
 
