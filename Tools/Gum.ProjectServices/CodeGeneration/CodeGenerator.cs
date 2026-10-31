@@ -2338,10 +2338,13 @@ public class CodeGenerator
 
     // Behaviors whose component derives from a Forms type without being that type's default visual. A
     // MenuItemSubmenuPopup is ScrollViewer-backed, but registering it for typeof(ScrollViewer) would replace
-    // the project's ScrollViewer component for every ScrollViewer (#6730).
+    // the project's ScrollViewer component for every ScrollViewer (#6730). A Tooltip component is the same: the
+    // from-file loader owns the Tooltip template (FromFileTooltipTemplate), and a plain new Tooltip() keeps its
+    // default visual unless that template is registered (#7252).
     static readonly HashSet<string> BehaviorsWithoutDefaultFormsTemplate = new HashSet<string>
     {
         StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName,
+        StandardFormsBehaviorNames.TooltipBehaviorName,
     };
 
     static Dictionary<string, string> BehaviorGumFormsTypes = new Dictionary<string, string>()
@@ -2350,6 +2353,7 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.CheckBoxBehaviorName, "global::Gum.Forms.Controls.CheckBox" },
         { StandardFormsBehaviorNames.ColorPickerBehaviorName, "global::Gum.Forms.Controls.ColorPicker" },
         { StandardFormsBehaviorNames.ComboBoxBehaviorName, "global::Gum.Forms.Controls.ComboBox" },
+        { StandardFormsBehaviorNames.DialogBoxBehaviorName, "global::Gum.Forms.Controls.Games.DialogBox" },
         { StandardFormsBehaviorNames.ExpanderBehaviorName, "global::Gum.Forms.Controls.Expander" },
         { StandardFormsBehaviorNames.ItemsControlBehaviorName, "global::Gum.Forms.Controls.ItemsControl" },
         { StandardFormsBehaviorNames.LabelBehaviorName, "global::Gum.Forms.Controls.Label" },
@@ -2368,6 +2372,8 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.StackPanelBehaviorName, "global::Gum.Forms.Controls.StackPanel" },
         { StandardFormsBehaviorNames.TextBoxBehaviorName, "global::Gum.Forms.Controls.TextBox" },
         { StandardFormsBehaviorNames.ToggleBehaviorName, "global::Gum.Forms.Controls.ToggleButton" },
+        { StandardFormsBehaviorNames.TooltipBehaviorName, "global::Gum.Forms.Controls.Tooltip" },
+        { StandardFormsBehaviorNames.UserControlBehaviorName, "global::Gum.Forms.Controls.UserControl" },
         { StandardFormsBehaviorNames.WindowBehaviorName, "global::Gum.Forms.Window" },
     };
 

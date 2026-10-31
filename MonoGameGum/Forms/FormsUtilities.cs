@@ -686,6 +686,12 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileComboBoxRuntime), overwriteIfAlreadyExists: false);
             }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.DialogBoxBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileDialogBoxRuntime), overwriteIfAlreadyExists: false);
+            }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.ItemsControlBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
@@ -814,6 +820,12 @@ public class FormsUtilities
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTooltipRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.UserControlBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileUserControlRuntime), overwriteIfAlreadyExists: false);
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.WindowBehaviorName))
             {

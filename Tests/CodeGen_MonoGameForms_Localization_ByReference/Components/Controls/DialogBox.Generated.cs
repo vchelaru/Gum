@@ -10,8 +10,8 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/DialogBox")]
-partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
+[global::Gum.DataTypes.GumElement("Controls/DialogBox", FormsType = typeof(global::Gum.Forms.Controls.Games.DialogBox))]
+partial class DialogBox : global::Gum.Forms.Controls.Games.DialogBox
 {
     #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -29,6 +29,7 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
             return visual;
         });
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(DialogBox)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Games.DialogBox)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/DialogBox", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
