@@ -11,8 +11,8 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/TreeViewToggle")]
-partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
+[global::Gum.DataTypes.GumElement("Controls/TreeViewToggle", FormsType = typeof(global::Gum.Forms.Controls.ToggleButton))]
+partial class TreeViewToggle : global::Gum.Forms.Controls.ToggleButton
 {
     #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -30,6 +30,7 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
             return visual;
         });
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(TreeViewToggle)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ToggleButton)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/TreeViewToggle", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;

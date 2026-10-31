@@ -36,6 +36,7 @@ The `DefaultFromFileXxxRuntime` classes exist solely to bridge the file-loading 
 |------------------------|-------------|
 | `ButtonBehaviorName` | `DefaultFromFileButtonRuntime` |
 | `CheckBoxBehaviorName` | `DefaultFromFileCheckBoxRuntime` |
+| `ToggleBehaviorName` | `DefaultFromFileToggleButtonRuntime` |
 | `ComboBoxBehaviorName` | `DefaultFromFileComboBoxRuntime` |
 | `ListBoxBehaviorName` | `DefaultFromFileListBoxRuntime` |
 | `TextBoxBehaviorName` | `DefaultFromFileTextBoxRuntime` |
