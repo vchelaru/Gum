@@ -25,10 +25,10 @@ public static class RecommendedPackages
         HostPlatform.Kni => new[] { "Gum.Shapes.KNI", "KernSmith.KniGum", Expressions },
         // raylib-raylib-cs.md.
         HostPlatform.Raylib => new[] { "KernSmith.RaylibGum", Expressions },
-        // silk.net.md: Skia-based, so no Gum.Shapes. The Silk.NET packages are already in the host template.
-        HostPlatform.SilkNet => new[] { "Gum.SkiaSharp.ShadowDusk", Expressions },
-        // stride.md: no Shapes (Skia-based). Stride draws through SkiaGum, so the SkiaGum ShadowDusk add-on applies (its UseShadowDusk extends GumServiceSkiaBase, which Stride's GumService derives from).
-        HostPlatform.Stride => new[] { "Gum.SkiaSharp.ShadowDusk", Expressions },
+        // silk.net.md: Skia-based, so no Gum.Shapes. Gum.SkiaSharp.ShadowDusk (also fits Stride) is left out until it has a stable version: nuget.org has only previews, and the floating Version="*" does not resolve to a prerelease (NU1103). Add a ShadowDusk row here after its stable publish. The Silk.NET packages are already in the host template.
+        HostPlatform.SilkNet => new[] { Expressions },
+        // stride.md: no Shapes (Skia-based). ShadowDusk is left out for now, as on silknet.
+        HostPlatform.Stride => new[] { Expressions },
         // No setup page; the platform is always source-linked, where NuGet add-ons would pull in a second Gum.
         HostPlatform.KniSkia => Array.Empty<string>(),
         _ => Array.Empty<string>()

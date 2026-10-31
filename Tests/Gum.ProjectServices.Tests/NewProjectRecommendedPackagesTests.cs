@@ -56,8 +56,8 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
     [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.Expressions")]
     [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
     [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.Expressions")]
-    [InlineData(HostPlatform.SilkNet, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
-    [InlineData(HostPlatform.Stride, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, "Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, "Gum.Expressions")]
     [InlineData(HostPlatform.KniSkia, "")]
     public void For_EachPlatform_ListsThePackagesTheSetupDocsRecommend(HostPlatform platform, string expected)
     {
@@ -75,6 +75,23 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
             {
                 packages.Any(package => package.StartsWith("Gum.Shapes.")).ShouldBeFalse(name);
             }
+        }
+    }
+
+    // nuget.org was checked on 2026-10-31: these ids exist only as previews. `dotnet add package X --no-restore` writes the
+    // floating Version="*", which does not resolve to a prerelease, so restore fails with NU1103. Remove an id from this
+    // list (and add it to the table) only after it has a stable version.
+    private static readonly string[] PrereleaseOnlyOnNuGet =
+    {
+        "Gum.SkiaSharp.ShadowDusk", "Gum.MonoGame.ShadowDusk", "Gum.KNI.ShadowDusk", "Gum.raylib.ShadowDusk", "Gum.FNA.ShadowDusk",
+    };
+
+    [Fact]
+    public void For_NoPlatform_ListsAPackageThatIsPrereleaseOnly()
+    {
+        foreach ((string name, HostPlatform platform) in NewProjectPlatforms.MainNames)
+        {
+            RecommendedPackages.For(platform).Intersect(PrereleaseOnlyOnNuGet).ShouldBeEmpty(name);
         }
     }
 
