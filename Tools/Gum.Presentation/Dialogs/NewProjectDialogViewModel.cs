@@ -444,6 +444,13 @@ public class NewProjectDialogViewModel : DialogViewModel
         private set => Set(value);
     }
 
+    /// <summary>Whether the project folder is made (a new folder icon) rather than reused.</summary>
+    public bool IsFolderNoticeCreating
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
     /// <summary>What happens to the project folder: made, reused, or Location used as it is.</summary>
     public string FolderNoticeHeading
     {
@@ -1069,6 +1076,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             : NewProjectDialogText.FoldersSummaryCreates(Path.GetFileName(projectFolder.TrimEnd(Path.DirectorySeparatorChar)), parentName.Length > 0 ? parentName : parent);
         FolderNoticePath = projectFolder;
         FolderNoticeSuffix = suffix;
+        IsFolderNoticeCreating = !_targetExists;
         IsFolderNoticeVisible = true;
     }
 

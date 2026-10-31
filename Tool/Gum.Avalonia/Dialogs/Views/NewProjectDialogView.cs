@@ -2,7 +2,9 @@ using System;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data.Converters;
 using Avalonia.Automation;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
@@ -29,6 +31,12 @@ public sealed class NewProjectDialogView : StackPanel
 {
     /// <summary>Name of the Folders section's expander.</summary>
     public const string FoldersExpanderName = "PART_FoldersExpander";
+
+    /// <summary>Name of the line under Location that names the project folder.</summary>
+    public const string FolderNoticeName = "PART_FolderNotice";
+
+    /// <summary>Name of the summary in the collapsed Folders header.</summary>
+    public const string FoldersSummaryName = "PART_FoldersSummary";
 
     /// <summary>Name of the Command line section's expander.</summary>
     public const string CommandLineExpanderName = "PART_CommandLineExpander";
@@ -180,7 +188,44 @@ public sealed class NewProjectDialogView : StackPanel
         Grid.SetColumn(browse, 1);
         row.Children.Add(browse);
         panel.Children.Add(row);
+        panel.Children.Add(CreateFolderNotice());
         return panel;
+    }
+
+    // Where the project folder goes, in full: the path wraps instead of being cut, so the destination is always visible.
+    private Control CreateFolderNotice()
+    {
+        FluentIcon icon = CreateIcon(Icon.FolderAdd, 1.1);
+        icon.VerticalAlignment = VerticalAlignment.Top;
+        icon.Margin = new Thickness(0, 1, 0, 0);
+        icon.Opacity = 0.7;
+        icon.Bind(FluentIcon.IconProperty, new Binding(nameof(NewProjectDialogViewModel.IsFolderNoticeCreating))
+        {
+            Converter = new FuncValueConverter<bool, Icon>(creating => creating ? Icon.FolderAdd : Icon.Folder),
+        });
+
+        Run heading = new Run();
+        heading.Bind(Run.TextProperty, new Binding(nameof(NewProjectDialogViewModel.FolderNoticeHeading)) { StringFormat = "{0} ", Mode = BindingMode.OneWay });
+        Run path = new Run { FontFamily = new FontFamily(MonospaceFonts), FontWeight = FontWeight.Normal };
+        path.Bind(Run.TextProperty, new Binding(nameof(NewProjectDialogViewModel.FolderNoticePath)) { Mode = BindingMode.OneWay });
+        Run suffix = new Run();
+        suffix.Bind(Run.TextProperty, new Binding(nameof(NewProjectDialogViewModel.FolderNoticeSuffix))
+        {
+            Mode = BindingMode.OneWay,
+            Converter = new FuncValueConverter<string?, string>(text => string.IsNullOrEmpty(text) ? string.Empty : " " + text),
+        });
+
+        TextBlock text = new TextBlock { Name = FolderNoticeName, TextWrapping = TextWrapping.Wrap, Opacity = 0.85, Focusable = false };
+        text.Inlines!.Add(heading);
+        text.Inlines.Add(path);
+        text.Inlines.Add(suffix);
+
+        Grid notice = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 6, Margin = new Thickness(0, 5, 0, 0) };
+        notice.Children.Add(icon);
+        Grid.SetColumn(text, 1);
+        notice.Children.Add(text);
+        notice.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsFolderNoticeVisible)));
+        return notice;
     }
 
     private Control CreateExistingProjectWarning()
@@ -326,7 +371,11 @@ public sealed class NewProjectDialogView : StackPanel
         treeBox.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Field.Background");
         content.Children.Add(treeBox);
 
-        return CreateSection(FoldersExpanderName, NewProjectDialogText.FoldersHeading, content);
+        // Shows beside the heading while the section is collapsed, so the answer is there without opening it.
+        TextBlock summary = Bound(new TextBlock { Name = FoldersSummaryName, Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center, Focusable = false },
+            TextBlock.TextProperty, nameof(NewProjectDialogViewModel.FoldersSummary));
+        summary.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.FoldersSummary)) { Converter = NotNullConverter.Instance });
+        return CreateSection(FoldersExpanderName, NewProjectDialogText.FoldersHeading, content, summary);
     }
 
     private Control CreateCommandLineSection()
@@ -383,12 +432,12 @@ public sealed class NewProjectDialogView : StackPanel
     #region Pieces
 
     // A disclosure with the section's heading and a rule above.
-    private static Control CreateSection(string name, string title, Control content)
+    private static Control CreateSection(string name, string title, Control content, Control? collapsedSummary = null)
     {
         StackPanel header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         header.Children.Add(new TextBlock { Text = title, FontWeight = FontWeight.SemiBold });
 
-        Disclosure disclosure = new Disclosure(header, content, title) { Name = name };
+        Disclosure disclosure = new Disclosure(header, content, title, collapsedSummary) { Name = name };
         StackPanel section = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
         section.Children.Add(Divider(new Thickness(0, 0, 0, 6)));
         section.Children.Add(disclosure);
@@ -400,10 +449,11 @@ public sealed class NewProjectDialogView : StackPanel
     {
         private readonly FluentIcon _chevron;
         private readonly Control _content;
+        private readonly Panel? _summaryHost;
         private bool _isExpanded;
 
         /// <summary>Builds the disclosure, collapsed.</summary>
-        public Disclosure(Control header, Control content, string automationName)
+        public Disclosure(Control header, Control content, string automationName, Control? collapsedSummary = null)
         {
             _content = content;
             _content.IsVisible = false;
@@ -413,6 +463,12 @@ public sealed class NewProjectDialogView : StackPanel
             StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Background = Brushes.Transparent, Focusable = true };
             row.Children.Add(_chevron);
             row.Children.Add(header);
+            if (collapsedSummary != null)
+            {
+                // The host is what hides the summary on expand; the summary keeps its own binding-driven visibility.
+                _summaryHost = new Panel { Children = { collapsedSummary }, VerticalAlignment = VerticalAlignment.Center };
+                row.Children.Add(_summaryHost);
+            }
             row.PointerPressed += (_, e) =>
             {
                 IsExpanded = !IsExpanded;
@@ -440,6 +496,10 @@ public sealed class NewProjectDialogView : StackPanel
             {
                 _isExpanded = value;
                 _content.IsVisible = value;
+                if (_summaryHost != null)
+                {
+                    _summaryHost.IsVisible = !value;
+                }
                 _chevron.Icon = value ? Icon.ChevronDown : Icon.ChevronRight;
             }
         }
