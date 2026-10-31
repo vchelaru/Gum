@@ -661,7 +661,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         float effectiveStrokeWidth = StrokeWidth - 2f * _dropshadowBlurX;
         if (!IsFilled && effectiveStrokeWidth <= 0 && _dropshadowBlurX > 0)
         {
-            float alphaScale = Microsoft.Xna.Framework.MathHelper.Clamp(StrokeWidth / (2f * _dropshadowBlurX), 0f, 1f);
+            float alphaScale = ComputeThinRingShadowAlphaScale(StrokeWidth, _dropshadowBlurX);
             baseColor = new Color(
                 baseColor.R,
                 baseColor.G,
@@ -673,6 +673,61 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
             effectiveStrokeWidth = 0.01f;
         }
         return (effectiveStrokeWidth, baseColor);
+    }
+
+    /// <summary>
+    /// Issue #7297 — starting alpha for the shadow of a ring thinner than <c>2 * blur</c>. SkiaGum
+    /// blurs the ring with a Gaussian of sigma <see cref="Gum.Wireframe.DropshadowBlur.GetSigma"/>, so
+    /// the pixel center 0.5 px outside a ring of visible width <c>W</c> has alpha
+    /// <c>Phi((W + 0.5) / sigma) - Phi(0.5 / sigma)</c>. Apos draws the shadow as a ~0-width ring
+    /// whose alpha falls along <c>1 - smoothstep(d / ramp)</c> with <c>d</c> the distance from the ring
+    /// centerline and <c>ramp</c> the half-width <c>blur + W / 2</c> (<see cref="GetShadowAntiAliasSize"/>).
+    /// At the edge pixel <c>d = W / 2 + 0.5</c>, so only that fraction of the starting alpha is left;
+    /// dividing by it makes the edge alpha equal Skia's (measured within about 15% from stroke 2 to
+    /// 24, blur 8 to 56). It replaces <c>S / (2 * blur)</c>, which left a thin ring 2.3 to 3.1 times
+    /// fainter than Skia. The tail beyond the edge still differs because Apos's ramp is not a Gaussian.
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="strokeWidth"/> is the renderable's StrokeWidth. Apos adds about one pixel of
+    /// anti-aliasing to it (the runtime pushes the user's width minus one, see
+    /// <c>ShapeStrokePreRenderMath</c>), so the visible ring is <c>strokeWidth + 1</c> wide.
+    /// </remarks>
+    private static float ComputeThinRingShadowAlphaScale(float strokeWidth, float blur)
+    {
+        if (strokeWidth <= 0f)
+        {
+            // A hidden stroke (width 0) casts no shadow.
+            return 0f;
+        }
+
+        // Apos's anti-aliasing fringe, in pixels.
+        const float AposAntiAliasFringe = 1f;
+        // The pixel center just outside the ring's outer edge, in pixels.
+        const float PixelCenter = 0.5f;
+        float visibleWidth = strokeWidth + AposAntiAliasFringe;
+
+        float sigma = Gum.Wireframe.DropshadowBlur.GetSigma(blur);
+        float skiaEdgeAlpha =
+            StandardNormalCdf((visibleWidth + PixelCenter) / sigma) - StandardNormalCdf(PixelCenter / sigma);
+
+        float edgeDistance = visibleWidth / 2f + PixelCenter;
+        float ramp = blur + visibleWidth / 2f;
+        float t = Microsoft.Xna.Framework.MathHelper.Clamp(edgeDistance / ramp, 0f, 1f);
+        float retained = 1f - (3f * t * t - 2f * t * t * t);
+        // Keeps the division finite right at stroke = 2 * blur, where the result clamps to 1 anyway.
+        retained = System.Math.Max(retained, 0.2f);
+
+        return Microsoft.Xna.Framework.MathHelper.Clamp(skiaEdgeAlpha / retained, 0f, 1f);
+    }
+
+    // Abramowitz and Stegun 7.1.26 erf approximation (error below 1.5e-7).
+    private static float StandardNormalCdf(float z)
+    {
+        float x = System.Math.Abs(z) / 1.4142135f;
+        float t = 1f / (1f + 0.3275911f * x);
+        float poly = ((((1.061405429f * t - 1.453152027f) * t) + 1.421413741f) * t - 0.284496736f) * t + 0.254829592f;
+        float erf = 1f - poly * t * (float)System.Math.Exp(-x * x);
+        return z >= 0f ? 0.5f * (1f + erf) : 0.5f * (1f - erf);
     }
 
     /// <summary>
