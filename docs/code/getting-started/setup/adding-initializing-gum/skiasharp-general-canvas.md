@@ -93,6 +93,32 @@ GumService.Default.HandleResize(newWidth, newHeight);
 Gum does not clear the canvas for you, so your own draw code is expected to clear or paint the background before calling `GumService.Default.Draw()`.
 {% endhint %}
 
+## Adding Shader Support (Optional)
+
+`Gum.SkiaSharp.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file.
+
+Add the NuGet package:
+
+```bash
+dotnet add package Gum.SkiaSharp.ShadowDusk
+```
+
+Then call `UseShadowDusk` after `GumService.Default.Initialize`:
+
+```csharp
+// Initialize
+GumService.Default.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
+GumService.Default.UseShadowDusk();
+```
+
+If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
+
+For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
+
+{% hint style="info" %}
+`Gum.SkiaSharp.ShadowDusk` is available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Adding Expression Support (Optional)
 
 If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
