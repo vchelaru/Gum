@@ -36,6 +36,10 @@
 		<Compile Include="..\..\..\Runtimes\SkiaGum\Renderables\RenderableShapeBase.cs">
 			<Link>Renderables\RenderableShapeBase.cs</Link>
 		</Compile>
+		<!-- RenderableShapeBase maps DropshadowBlur to a Gaussian sigma through this helper (#7295). -->
+		<Compile Include="..\..\..\GumCommon\Runtime\DropshadowBlur.cs">
+			<Link>Renderables\DropshadowBlur.cs</Link>
+		</Compile>
 		<Compile Include="..\..\..\Runtimes\SkiaGum\Renderables\BlendToSkBlendModeExtensions.cs">
 			<Link>Renderables\BlendToSkBlendModeExtensions.cs</Link>
 		</Compile>

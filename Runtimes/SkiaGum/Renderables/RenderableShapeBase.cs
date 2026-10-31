@@ -653,7 +653,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     /// <summary>
     /// Horizontal visible blur radius of the dropshadow, in pixels. Passed to
-    /// <c>SKImageFilter.CreateDropShadow</c> as a sigma of one third of this value.
+    /// <c>SKImageFilter.CreateDropShadow</c> as a sigma of 0.4 times this value (<c>DropshadowBlur.GetSigma</c>).
     /// </summary>
     public float DropshadowBlurX
     {
@@ -948,8 +948,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                         DropshadowOffsetX,
                         // See https://stackoverflow.com/questions/60456526/how-can-i-tell-the-amount-of-space-needed-for-a-skia-dropshadow
                         DropshadowOffsetY,
-                        DropshadowBlurX / 3.0f,
-                        DropshadowBlurY / 3.0f,
+                        global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX),
+                        global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY),
                         DropshadowColor);
         }
 
