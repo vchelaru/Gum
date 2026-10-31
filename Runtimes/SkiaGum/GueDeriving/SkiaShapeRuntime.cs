@@ -936,8 +936,8 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     /// Gaussian sigma. The sigma is chosen so the shadow reaches the user-set blur: measured outward
     /// from the shape edge, the alpha falls below 0.5% at about <see cref="DropshadowBlurX"/> pixels.</para>
     /// <para>Other backends approximate the same visible extent without a true Gaussian shader.
-    /// Treat the user-set value as "how far the shadow visibly bleeds," not as sigma — sigma
-    /// would require multiplying by 2.5 to get the visible radius.</para>
+    /// Treat the user-set value as "how far the shadow visibly bleeds," not as sigma: the sigma is
+    /// 0.4 x the blur, so the visible reach is about 1.0 x the blur (about 2.5 x the sigma).</para>
     /// </remarks>
     public float DropshadowBlurX
     {

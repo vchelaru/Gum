@@ -10,7 +10,7 @@ namespace SkiaGum.Tests.Renderables;
 /// <summary>
 /// Issue #7295: a dropshadow with blur N extends N pixels in every runtime. "Extends" is measured
 /// on a white shape and white shadow over black, outward from the shape edge along the middle row,
-/// as the farthest pixel whose alpha is at least 0.5% (a Gaussian tail never reaches zero).
+/// as the farthest pixel with value >= 1 (about 0.4% alpha; a Gaussian tail never reaches zero).
 /// </summary>
 public class ShadowReachTests
 {

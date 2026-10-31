@@ -9,7 +9,7 @@ namespace RaylibGum.Tests.Rendering;
 /// <summary>
 /// Issue #7295: a dropshadow with blur N extends N pixels in every runtime. "Extends" is measured
 /// on a white shape and white shadow over black, outward from the shape edge along the middle row,
-/// as the farthest pixel whose alpha is at least 0.5% (a Gaussian tail never reaches zero).
+/// as the farthest pixel with value >= 1 (about 0.4% alpha; a Gaussian tail never reaches zero).
 /// </summary>
 public class ShadowReachTests : BaseTestClass
 {
@@ -17,8 +17,8 @@ public class ShadowReachTests : BaseTestClass
     private const int ShapeSize = 100;
     private const int ShapeMin = (CanvasSize - ShapeSize) / 2;
 
-    // Brightness is alpha here: white on black. 0.5% of 255 is 1.275, so the first brightness
-    // value that rounds into 0.5% is 2 (0.78%) and 1 (0.39%) is below it.
+    // Brightness is alpha here: white on black. The threshold is pixel value >= 1 (about 0.4%),
+    // the smallest nonzero value, standing in for 0.5%; value >= 8 is about 3%.
     private static (int Reach, int ReachAt3Percent) MeasureReach(bool circle, float blur)
     {
         ShapeHolder shape = circle ? CreateCircle(blur) : CreateRectangle(blur);
