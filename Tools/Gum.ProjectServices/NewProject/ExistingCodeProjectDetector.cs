@@ -89,6 +89,9 @@ public class ExistingCodeProjectDetector : IExistingCodeProjectDetector
     }
 
     /// <inheritdoc/>
+    public bool TargetExists(string folder, string name) => Directory.Exists(Path.Combine(folder, name));
+
+    /// <inheritdoc/>
     public bool TargetExistsAndIsNotEmpty(string folder, string name)
     {
         string target = Path.Combine(folder, name);

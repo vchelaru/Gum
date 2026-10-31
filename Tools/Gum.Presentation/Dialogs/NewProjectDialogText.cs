@@ -41,6 +41,16 @@ public static class NewProjectDialogText
     public const string RecommendedPackagesDisabledNote = "Not available with local Gum source: the packages would add a second copy of Gum.";
     public static string RecommendedPackagesNote(string packages) => $"Adds {packages} to the C# project, as the setup docs suggest.";
     public const string FoldersHeading = "Folders";
+    public const string FolderCreates = "Creates a new folder";
+    public const string FolderUsesExisting = "Uses the existing folder";
+    public const string FolderUsesThis = "Uses this folder as the project folder";
+    public const string FolderAlreadyExists = "(it already exists)";
+    public const string FolderWillBeCreated = "(it will be created)";
+
+    /// <summary>The collapsed Folders header's summary: the project folder's name and the name of the folder holding it.</summary>
+    public static string FoldersSummaryCreates(string folderName, string parentName) =>
+        $"Creates {folderName}{System.IO.Path.DirectorySeparatorChar} in {parentName}";
+
     public const string CommandLineHeading = "Command line";
     public const string CommandLineDescription = "Optional. Copy this to create the same project without the tool.";
     public const string WarningHeading = "Inside an existing code project";
