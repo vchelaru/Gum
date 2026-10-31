@@ -36,6 +36,9 @@ public sealed class NewProjectDialogView : StackPanel
     /// <summary>Name of the button that copies the command line.</summary>
     public const string CopyButtonName = "PART_CopyCommandLine";
 
+    /// <summary>Name of the Include recommended packages check box.</summary>
+    public const string RecommendedPackagesCheckBoxName = "PART_RecommendedPackages";
+
     /// <summary>Name of the info icon in the existing-code-project banner.</summary>
     public const string WarningInfoName = "PART_WarningInfo";
 
@@ -122,7 +125,8 @@ public sealed class NewProjectDialogView : StackPanel
 
         StackPanel restoreFailed = new StackPanel { Spacing = 6, Margin = new Thickness(0, 4, 0, 8) };
         restoreFailed.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsRestoreFailed)));
-        restoreFailed.Children.Add(new TextBlock { Text = "The code project was created, but dotnet restore failed.", FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
+        restoreFailed.Children.Add(Bound(new TextBlock { FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap },
+            TextBlock.TextProperty, nameof(NewProjectDialogViewModel.RestoreFailureHeading)));
         SelectableTextBlock failure = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap };
         failure.Bind(TextBlock.TextProperty, new Binding(nameof(NewProjectDialogViewModel.RestoreFailureText)));
         failure.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Error");
@@ -274,6 +278,17 @@ public sealed class NewProjectDialogView : StackPanel
         restore.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.RunRestore)) { Mode = BindingMode.TwoWay });
         options.Children.Add(restore);
         options.Children.Add(new TextBlock { Text = NewProjectDialogText.RestorePackagesNote, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) });
+
+        StackPanel recommended = new StackPanel();
+        recommended.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsRecommendedPackagesVisible)));
+        CheckBox recommendedPackages = new CheckBox { Name = RecommendedPackagesCheckBoxName, Content = NewProjectDialogText.RecommendedPackages };
+        recommendedPackages.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.RecommendedPackagesChecked)) { Mode = BindingMode.TwoWay });
+        recommendedPackages.Bind(IsEnabledProperty, new Binding(nameof(NewProjectDialogViewModel.IsRecommendedPackagesEnabled)));
+        recommended.Children.Add(recommendedPackages);
+        TextBlock recommendedNote = Bound(new TextBlock { Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) },
+            TextBlock.TextProperty, nameof(NewProjectDialogViewModel.RecommendedPackagesNote));
+        recommended.Children.Add(recommendedNote);
+        options.Children.Add(recommended);
         section.Children.Add(options);
         return section;
     }

@@ -141,6 +141,53 @@ public class NewProjectUiLayoutTests
 
     [AvaloniaTheory]
     [MemberData(nameof(ZoomAndTheme))]
+    public void WithRecommendedPackagesChecked_TheNoteAndTheChainedCommandLineFit_AndOkAndCancelStayReachable(double zoom, string theme)
+    {
+        using NewProjectUiFixture fixture = new NewProjectUiFixture();
+        fixture.Window.Window.FitHeightToScreen(null);
+        fixture.SetTheme(theme == "light" ? ThemeVariant.Light : ThemeVariant.Dark);
+        fixture.SetZoom(zoom);
+        fixture.Dialog.TypeName("Game");
+        fixture.Settle();
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.Dialog.ChoosePlatform("monogame");
+        fixture.ViewModel.IncludeRecommendedPackages = true;
+        fixture.Settle();
+        fixture.Dialog.OpenFolders();
+        fixture.Dialog.OpenCommandLine();
+        fixture.Settle();
+
+        fixture.Dialog.CommandLine.ShouldContain("dotnet add");
+        AssertLaidOut(fixture, $"recommended packages, zoom {zoom}, {theme}");
+    }
+
+    [AvaloniaTheory]
+    [InlineData(9d)]
+    [InlineData(24d)]
+    public void ThePackagesFailurePanel_FitsAtTheExtremeZooms_WithItsThreeButtonsApart(double zoom)
+    {
+        using NewProjectUiFixture fixture = new NewProjectUiFixture();
+        fixture.Window.Window.FitHeightToScreen(null);
+        fixture.SetZoom(zoom);
+        fixture.Dialog.TypeName("Game");
+        fixture.Settle();
+        fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.ViewModel.IncludeRecommendedPackages = true;
+        fixture.Service.AddPackages = (_, _, _, _) => Task.FromResult(new Gum.ProjectServices.AddPackagesResult
+        {
+            Status = Gum.ProjectServices.RestoreStatus.Failed,
+            FailedPackage = "Gum.Shapes.MonoGame",
+            OutputTail = string.Join("\n", Enumerable.Range(0, 12).Select(i => $"error: could not write the project, line {i}"))
+        });
+        fixture.Window.Click(fixture.Dialog.OkButton);
+        fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the packages failure");
+        fixture.Service.AddPackages = null;
+
+        AssertLaidOut(fixture, $"packages failure, zoom {zoom}");
+    }
+
+    [AvaloniaTheory]
+    [MemberData(nameof(ZoomAndTheme))]
     public void ThemePreview_IsLargeBesideANarrowDropDown_InsideTheWindowAndApartFromIt(double zoom, string theme)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();

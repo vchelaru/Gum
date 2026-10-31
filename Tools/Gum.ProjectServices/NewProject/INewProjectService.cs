@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,7 +32,18 @@ public interface INewProjectService
     Task<RestoreResult> RestoreAsync(string csprojPath, Action<string>? onOutputLine, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Validates, writes the files, then restores when the request has a platform and <see cref="NewProjectRequest.Restore"/>.
+    /// Runs <c>dotnet add package</c> for each package in order, stopping at the first that does not succeed;
+    /// callable alone to retry a failed add. Adding an already referenced package is harmless.
+    /// </summary>
+    /// <param name="csprojPath">The code project file.</param>
+    /// <param name="packages">The package ids, usually <see cref="ResolvedNewProject.RecommendedPackages"/>.</param>
+    /// <param name="onOutputLine">Receives each line the process prints, or <see langword="null"/>.</param>
+    /// <param name="cancellationToken">Kills the running add.</param>
+    Task<AddPackagesResult> AddPackagesAsync(
+        string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Validates, writes the files, adds the <see cref="NewProjectRequest.IncludeRecommendedPackages"/> packages, then restores when the request has a platform and <see cref="NewProjectRequest.Restore"/>.
     /// A failed restore leaves the files in place; retry it with <see cref="RestoreAsync"/>.
     /// </summary>
     Task<NewProjectResult> ExecuteAsync(

@@ -53,6 +53,7 @@ internal sealed class NewProjectUiFixture : IDisposable
             new Mock<INewProjectLocationSettings>().Object)
         {
             Location = Location,
+            IncludeRecommendedPackages = false,
         };
         Window = new DialogWindowDriver(ViewModel);
         Dialog = new NewProjectDialogDriver(Window);

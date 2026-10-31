@@ -85,6 +85,7 @@ public class NewProjectUiOpenProjectTests
                 window.TypeName("Replacement");
                 window.TypeLocation(location);
                 window.SetChecked(NewProjectUiText.CreateCodeProject, true);
+                viewModel.IncludeRecommendedPackages = false;
                 window.ClickOkWithoutWaiting();
                 WaitFor(() => viewModel.IsRestoreFailed, "the restore failure");
 
@@ -123,6 +124,7 @@ public class NewProjectUiOpenProjectTests
                 window.TypeName("Replacement");
                 window.TypeLocation(location);
                 window.SetChecked(NewProjectUiText.CreateCodeProject, true);
+                window.ViewModel.IncludeRecommendedPackages = false;
                 window.ClickOkWithoutWaiting();
                 WaitFor(() => window.ViewModel.IsRestoreFailed, "the restore failure");
                 window.Press(Key.Escape, PhysicalKey.Escape);
