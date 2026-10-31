@@ -36,6 +36,7 @@ public class NewProjectLogicTests
     private readonly Mock<ISelectedState> _selectedState = new();
     private readonly Mock<IDefaultFontBundler> _defaultFontBundler = new();
     private readonly Mock<IDeleteLogic> _deleteLogic = new();
+    private readonly Mock<INewProjectLocationSettings> _locationSettings = new();
     private readonly NewProjectLogic _logic;
 
     public NewProjectLogicTests()
@@ -56,7 +57,8 @@ public class NewProjectLogicTests
             _projectCommands.Object,
             _selectedState.Object,
             _defaultFontBundler.Object,
-            _deleteLogic.Object);
+            _deleteLogic.Object,
+            _locationSettings.Object);
     }
 
     private Action<NewProjectDialogViewModel>? _dialogInitializer;
@@ -102,7 +104,7 @@ public class NewProjectLogicTests
     {
         Mock<INewProjectService> service = new();
         Mock<IExistingCodeProjectDetector> detector = new();
-        return new NewProjectDialogViewModel(themeSelection, service.Object, detector.Object, _dialogService.Object)
+        return new NewProjectDialogViewModel(themeSelection, service.Object, detector.Object, _dialogService.Object, _locationSettings.Object)
         {
             ProjectName = "Chosen",
             Location = ChosenFolder,
@@ -164,6 +166,37 @@ public class NewProjectLogicTests
         await _logic.CreateNewProjectAsync();
 
         calls.ShouldBe(new[] { "dialog", "create", "setLocation" });
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_RemembersTheParentFolder_WhenTheProjectIsCreated()
+    {
+        SetUpDialog(accepted: true);
+
+        await _logic.CreateNewProjectAsync();
+
+        _locationSettings.Verify(x => x.RememberNewProjectParent(ChosenFolder), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_DoesNotRememberTheParentFolder_WhenTheDialogIsCancelled()
+    {
+        SetUpDialog(accepted: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _locationSettings.Verify(x => x.RememberNewProjectParent(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_DoesNotRememberTheParentFolder_WhenTheSaveFails()
+    {
+        _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
+        SetUpDialog(accepted: true);
+
+        await _logic.CreateNewProjectAsync();
+
+        _locationSettings.Verify(x => x.RememberNewProjectParent(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -378,7 +411,7 @@ public class NewProjectLogicTests
         service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(new NewProjectValidation { Resolved = new ResolvedNewProject() });
         service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new NewProjectFilesResult { Success = true, GumProjectPath = CreatedGumProject, CsprojPath = "g.csproj" });
-        NewProjectDialogViewModel viewModel = new(CreateThemeSelection(), service.Object, new Mock<IExistingCodeProjectDetector>().Object, _dialogService.Object)
+        NewProjectDialogViewModel viewModel = new(CreateThemeSelection(), service.Object, new Mock<IExistingCodeProjectDetector>().Object, _dialogService.Object, _locationSettings.Object)
         {
             ProjectName = "Game",
             Location = ChosenFolder,
@@ -393,6 +426,16 @@ public class NewProjectLogicTests
         _dialogService.Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel)).Returns(true);
         _projectManager.Setup(x => x.GumProjectSave).Returns(loaded);
         return viewModel;
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_RemembersTheParentFolder()
+    {
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = CreatedGumProject });
+
+        await _logic.CreateNewProjectAsync();
+
+        _locationSettings.Verify(x => x.RememberNewProjectParent(ChosenFolder), Times.Once);
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using Moq;
+using Gum.Managers;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Styling;
@@ -47,7 +49,8 @@ internal sealed class NewProjectUiFixture : IDisposable
             ActivatorUtilities.CreateInstance<ThemeSelectionViewModel>(services),
             service ?? _switchable,
             detector ?? services.GetRequiredService<IExistingCodeProjectDetector>(),
-            services.GetRequiredService<IDialogService>())
+            services.GetRequiredService<IDialogService>(),
+            new Mock<INewProjectLocationSettings>().Object)
         {
             Location = Location,
         };

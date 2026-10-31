@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using Gum.Managers;
 using Gum.ProjectServices;
 using Gum.Services.Dialogs;
 using GumFormsPlugin.ViewModels;
@@ -52,6 +53,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     private readonly INewProjectService _service;
     private readonly IExistingCodeProjectDetector _detector;
     private readonly IDialogService _dialogService;
+    private readonly INewProjectLocationSettings _locationSettings;
     private CancellationTokenSource? _cancellation;
     private NewProjectFilesResult? _createdFiles;
     private int _refreshVersion;
@@ -93,19 +95,21 @@ public class NewProjectDialogViewModel : DialogViewModel
         ThemeSelectionViewModel themeSelection,
         INewProjectService service,
         IExistingCodeProjectDetector detector,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        INewProjectLocationSettings locationSettings)
     {
         ThemeSelection = themeSelection;
         _service = service;
         _detector = detector;
         _dialogService = dialogService;
+        _locationSettings = locationSettings;
 
         Platforms = NewProjectPlatforms.MainNames
             .Select(entry => new NewProjectPlatformOption(entry.Name, GetPlatformLabel(entry.Name)))
             .ToList();
 
         ProjectName = DefaultProjectName;
-        Location = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        Location = DefaultLocation;
         SelectedFileFormat = JsonFormat;
         IsIncludeFormsControls = true;
         IsIncludeDemoScreenGum = false;
@@ -563,7 +567,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         string? folder = _dialogService.OpenFolder(new OpenFolderDialogOptions
         {
             Title = "Where would you like to create the project?",
-            InitialDirectory = Directory.Exists(Location) ? Location : null,
+            InitialDirectory = Directory.Exists(Location) ? Location : DefaultLocation,
         });
         if (folder != null)
         {
@@ -606,7 +610,19 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     private string EffectiveLocation => Location.Trim().Length > 0
         ? Location.Trim()
-        : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        : DefaultLocation;
+
+    // The parent of the last created project's folder while it still exists, otherwise Documents.
+    private string DefaultLocation =>
+        _locationSettings.LastNewProjectParent is { Length: > 0 } remembered && Directory.Exists(remembered)
+            ? remembered
+            : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+    /// <summary>
+    /// The folder the project folder is created in, which the caller remembers once the project exists.
+    /// The project folder is always this folder plus the name, so it is never a drive root's parent.
+    /// </summary>
+    public string ProjectParentFolder => NewProjectDisplayPath.Normalize(EffectiveLocation);
 
     private string SelectedThemeName => ThemeSelection.GetSelectedThemeOrDefault();
 

@@ -1,3 +1,4 @@
+using Gum.Managers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -47,7 +48,7 @@ public class NewProjectDialogViewModelTests
     {
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
-            _service.Object, _detector.Object, _dialogService.Object)
+            _service.Object, _detector.Object, _dialogService.Object, new Mock<INewProjectLocationSettings>().Object)
         {
             ProjectName = "MyGame",
             Location = Folder,

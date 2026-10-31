@@ -97,6 +97,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<ICopyPasteProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<IReferenceFinderProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<IRenameProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
+        services.AddSingleton<INewProjectLocationSettings>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();
         services.AddSingleton<IProjectState, ProjectState>();
 
