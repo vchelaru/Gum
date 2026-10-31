@@ -69,10 +69,12 @@ public class NewProjectUiBannerTests
 
         fixture.Settle();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
+        fixture.Settle();
         IsExistingCodeProjectBannerShown(fixture).ShouldBeTrue();
 
         fixture.Settle();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
+        fixture.Settle();
         IsExistingCodeProjectBannerShown(fixture).ShouldBeFalse();
     }
 
