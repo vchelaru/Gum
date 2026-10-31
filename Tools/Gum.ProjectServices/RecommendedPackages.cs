@@ -20,9 +20,11 @@ public static class RecommendedPackages
     public static IReadOnlyList<string> For(HostPlatform platform) => platform switch
     {
         // monogame-kni-fna/README.md, MonoGame tab.
-        HostPlatform.MonoGame => new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", Expressions },
+        // Gum.Shapes.MonoGame is left out until a stable release carries Gum.Renderables.ShapeRenderer: stable 2026.10.1.1 lacks it, so the host init line would not build. Re-add as the first entry after the November stable (with the ShadowDusk rows).
+        HostPlatform.MonoGame => new[] { "KernSmith.MonoGameGum", Expressions },
         // monogame-kni-fna/README.md, KNI tab.
-        HostPlatform.Kni => new[] { "Gum.Shapes.KNI", "KernSmith.KniGum", Expressions },
+        // Gum.Shapes.KNI: left out for the same reason as Gum.Shapes.MonoGame.
+        HostPlatform.Kni => new[] { "KernSmith.KniGum", Expressions },
         // raylib-raylib-cs.md.
         HostPlatform.Raylib => new[] { "KernSmith.RaylibGum", Expressions },
         // silk.net.md: Skia-based, so no Gum.Shapes. Gum.SkiaSharp.ShadowDusk (also fits Stride) is left out until it has a stable version: nuget.org has only previews, and the floating Version="*" does not resolve to a prerelease (NU1103). Add a ShadowDusk row here after its stable publish. The Silk.NET packages are already in the host template.

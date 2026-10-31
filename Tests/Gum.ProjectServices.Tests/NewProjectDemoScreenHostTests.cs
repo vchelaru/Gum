@@ -157,13 +157,11 @@ public class NewProjectDemoScreenHostTests : IDisposable
     [Theory]
     [InlineData(HostPlatform.MonoGame, new[]
     {
-        "Gum.Renderables.ShapeRenderer.Self.Initialize();",
         "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
         "Gum.Expressions.GumExpressionService.Initialize();"
     })]
     [InlineData(HostPlatform.Kni, new[]
     {
-        "Gum.Renderables.ShapeRenderer.Self.Initialize();",
         "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
         "Gum.Expressions.GumExpressionService.Initialize();"
     })]
@@ -210,6 +208,29 @@ public class NewProjectDemoScreenHostTests : IDisposable
         host.ShouldNotContain("InMemoryFontCreator");
     }
 
+    // A table package whose init line names a type the stable runtime lacks breaks every default project (stable 2026.10.1.1 has
+    // no Gum.Renderables.ShapeRenderer). Until a stable release carries it, no row may add a Shapes package.
+    [Theory]
+    [InlineData(HostPlatform.MonoGame)]
+    [InlineData(HostPlatform.Kni)]
+    [InlineData(HostPlatform.Raylib)]
+    [InlineData(HostPlatform.SilkNet)]
+    [InlineData(HostPlatform.Stride)]
+    public void TablePackages_AllHaveAnInitLine_AndNoneIsShapes(HostPlatform platform)
+    {
+        (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: true);
+
+        service.UpdateHost(resolved, files, packagesAdded: true, screenCodeGenerated: false);
+
+        resolved.RecommendedPackages.ShouldNotContain(package => package.StartsWith("Gum.Shapes."));
+        string host = ReadHost(platform);
+        host.ShouldNotContain("ShapeRenderer");
+        foreach (string package in resolved.RecommendedPackages)
+        {
+            host.ShouldContain(PlatformHostContent.GetInitLines(new[] { package }).Single(), customMessage: package);
+        }
+    }
+
     [Fact]
     public void Host_BeforeThePackagesAreAdded_InitializesNone()
     {
@@ -233,7 +254,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
             progress: null, CancellationToken.None);
 
         _calls.Select(call => call.Split(' ')[0]).ToArray()
-            .ShouldBe(new[] { "add", "add", "add", "restore", "codegen" });
+            .ShouldBe(new[] { "add", "add", "restore", "codegen" });
         _calls[^1].ShouldContain("DemoScreenGum");
         result.Codegen.ShouldNotBeNull();
         result.Codegen!.Success.ShouldBeTrue();
@@ -255,7 +276,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
             },
             progress: null, CancellationToken.None);
 
-        _calls.Select(call => call.Split(' ')[0]).ToArray().ShouldBe(new[] { "add", "add", "add", "codegen" });
+        _calls.Select(call => call.Split(' ')[0]).ToArray().ShouldBe(new[] { "add", "add", "codegen" });
     }
 
     [Fact]

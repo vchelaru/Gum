@@ -383,7 +383,7 @@ public class NewProjectHappyPathScenarioTests
             string Add(string package) => $" && dotnet add \"{csproj}\" package {package} --no-restore";
             dialog.CommandLine.ShouldBe(
                 $"gumcli new \"{gameFolder}\" --platform monogame --no-restore"
-                + Add("Gum.Shapes.MonoGame") + Add("KernSmith.MonoGameGum") + Add("Gum.Expressions")
+                + Add("KernSmith.MonoGameGum") + Add("Gum.Expressions")
                 + $" && dotnet restore \"{csproj}\"");
             dialog.ChoosePlatform("raylib");
             dialog.CommandLine.ShouldBe(

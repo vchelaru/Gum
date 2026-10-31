@@ -55,7 +55,7 @@ public class NewProjectUiRecommendedPackagesTests
         fixture.Settle();
 
         PackagesBox(fixture).IsChecked.ShouldBe(true);
-        fixture.IsShown("Adds Gum.Shapes.MonoGame, KernSmith.MonoGameGum, Gum.Expressions to the C# project, as the setup docs suggest.").ShouldBeTrue();
+        fixture.IsShown("Adds KernSmith.MonoGameGum, Gum.Expressions to the C# project, as the setup docs suggest.").ShouldBeTrue();
     }
 
     [AvaloniaFact]

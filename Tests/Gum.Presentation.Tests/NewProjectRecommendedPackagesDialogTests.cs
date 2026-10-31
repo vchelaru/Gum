@@ -173,7 +173,7 @@ public class NewProjectRecommendedPackagesDialogTests
     }
 
     [Theory]
-    [InlineData("monogame", "Gum.Shapes.MonoGame, KernSmith.MonoGameGum, Gum.Expressions")]
+    [InlineData("monogame", "KernSmith.MonoGameGum, Gum.Expressions")]
     [InlineData("raylib", "KernSmith.RaylibGum, Gum.Expressions")]
     [InlineData("stride", "Gum.Expressions")]
     public void RecommendedPackagesNote_ListsThePackagesTheCheckboxAdds(string platform, string expected)
@@ -202,7 +202,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         viewModel.CommandLine.ShouldBe(
             $"gumcli new \"{GameFolder}\" --platform monogame --no-restore"
-            + $" && {Add("Gum.Shapes.MonoGame")} && {Add("KernSmith.MonoGameGum")} && {Add("Gum.Expressions")}"
+            + $" && {Add("KernSmith.MonoGameGum")} && {Add("Gum.Expressions")}"
             + $" && dotnet restore \"{Csproj}\"");
     }
 
@@ -326,7 +326,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         viewModel.RecommendedPackagesChecked.ShouldBeTrue();
         viewModel.IsRecommendedPackagesEnabled.ShouldBeTrue();
-        viewModel.CommandLine.ShouldContain(Add("Gum.Shapes.MonoGame"));
+        viewModel.CommandLine.ShouldContain(Add("KernSmith.MonoGameGum"));
         _requests.Clear();
         await viewModel.RunCreationAsync();
         _requests.Last().IncludeRecommendedPackages.ShouldBeTrue();
