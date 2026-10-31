@@ -328,6 +328,17 @@ public partial class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, dispatchValue);
         }
+#if RAYLIB
+        // #7296 — raylib's ArcRuntime keeps Thickness on the runtime (PreRender resolves
+        // StrokeWidthUnits and pushes it to the LineArc every frame). Without this dispatch the
+        // variable fell to SetPropertyThroughReflection, landed on the LineArc, and was
+        // overwritten by the runtime's default 10 on the next PreRender, so every loaded Arc drew
+        // at the default thickness.
+        else if (graphicalUiElement is Gum.GueDeriving.ArcRuntime arcRuntime)
+        {
+            handled = TrySetPropertyOnArcRuntime(arcRuntime, propertyName, dispatchValue);
+        }
+#endif
 #endif
 #if !RAYLIB
         else if (renderableIpso is LineCircle)
@@ -3636,6 +3647,18 @@ public partial class CustomSetPropertyOnRenderable
             ThrowExceptionsForMissingFiles(element);
         }
     }
+
+#if RAYLIB
+    private static bool TrySetPropertyOnArcRuntime(Gum.GueDeriving.ArcRuntime arcRuntime, string propertyName, object value)
+    {
+        if (propertyName == "Thickness")
+        {
+            arcRuntime.Thickness = (float)value;
+            return true;
+        }
+        return false;
+    }
+#endif
 
 #if !FRB
     // Issue #2925 — legacy variable routing for the two-slot CircleRuntime. The legacy
