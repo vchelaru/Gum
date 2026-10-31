@@ -46,6 +46,24 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void CodeProjectStride(string theme) => Capture("code-project-stride", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "stride";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CodeProjectSilkNet(string theme) => Capture("code-project-silknet", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "silknet";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void CodeProjectMonoGame(string theme) => Capture("code-project-monogame", theme, (viewModel, _) =>
     {
         viewModel.IncludeCodeProject = true;

@@ -262,6 +262,75 @@ public class NewProjectRecommendedPackagesDialogTests
     #endregion
 
     #region Request and run
+    [Fact]
+    public async Task Run_WithSourceLinked_RequestsNoPackages()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.SourceLinked = true;
+        });
+
+        await viewModel.RunCreationAsync();
+
+        _requests.Last().IncludeRecommendedPackages.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Run_ForKniSkia_RequestsNoPackages_AndCommandLineHasNoAdd()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "kniskia";
+        });
+
+        viewModel.CommandLine.ShouldNotContain("dotnet add");
+        await viewModel.RunCreationAsync();
+
+        _requests.Last().IncludeRecommendedPackages.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SourceLinkedThenBackToNuGet_ReChecksTheBox_WithTheChainBack()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+
+        viewModel.SourceLinked = true;
+        viewModel.SourceLinked = false;
+
+        viewModel.RecommendedPackagesChecked.ShouldBeTrue();
+        viewModel.CommandLine.ShouldContain("dotnet add");
+    }
+
+
+    [Fact]
+    public async Task SwitchingToKniSkiaAndBack_UnchecksThenReChecksTheBox_AndThePackagesReturn()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "monogame";
+        });
+        viewModel.RecommendedPackagesChecked.ShouldBeTrue();
+
+        viewModel.PlatformName = "kniskia";
+
+        viewModel.RecommendedPackagesChecked.ShouldBeFalse();
+        viewModel.IsRecommendedPackagesEnabled.ShouldBeFalse();
+        viewModel.CommandLine.ShouldNotContain("dotnet add");
+        await viewModel.RunCreationAsync();
+        _requests.Last().IncludeRecommendedPackages.ShouldBeFalse();
+
+        viewModel.PlatformName = "monogame";
+
+        viewModel.RecommendedPackagesChecked.ShouldBeTrue();
+        viewModel.IsRecommendedPackagesEnabled.ShouldBeTrue();
+        viewModel.CommandLine.ShouldContain(Add("Gum.Shapes.MonoGame"));
+        _requests.Clear();
+        await viewModel.RunCreationAsync();
+        _requests.Last().IncludeRecommendedPackages.ShouldBeTrue();
+    }
 
     [Fact]
     public async Task Run_AsksTheServiceForThePackages_AddsThemAfterTheFiles_AndRestoresLast()
