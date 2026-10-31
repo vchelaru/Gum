@@ -74,6 +74,11 @@ public class NewProjectFolderNoticeScreenshotTests
             };
             arrange(viewModel);
             using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, theme == "light" ? ThemeVariant.Light : ThemeVariant.Dark);
+            for (int i = 0; i < 300 && !viewModel.ChecksRefresh.IsCompleted; i++)
+            {
+                Thread.Sleep(10);
+                global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            }
             global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             PrScreenshot.SaveWindowAtZoomLevels(window.Window, $"new-project-folder-{name}-{theme}");
         });

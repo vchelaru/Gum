@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Gum.Dialogs;
 using Gum.Managers;
@@ -198,6 +199,43 @@ public class NewProjectFolderNoticeTests
 
         viewModel.FolderNoticeHeading.ShouldBe("Uses the existing folder");
         viewModel.FolderNoticePath.ShouldBe(Parent + Sep + "Taken" + Sep);
+    }
+
+    [Fact]
+    public async Task UntilTheCheckForTheCurrentInputsIsBack_NothingIsShown_ThenTheLastInputsAnswer()
+    {
+        NewProjectDialogViewModel viewModel = Create(Parent);
+        await viewModel.ChecksRefresh;
+        viewModel.FolderNoticeHeading.ShouldBe("Creates a new folder");
+
+        using ManualResetEventSlim gate = new ManualResetEventSlim(false);
+        _detector.Setup(x => x.TargetExists(It.IsAny<string>(), It.IsAny<string>())).Returns((string folder, string name) =>
+        {
+            gate.Wait(TimeSpan.FromSeconds(20));
+            return name == "Taken";
+        });
+
+        viewModel.ProjectName = "Taken";
+        viewModel.IsFolderNoticeVisible.ShouldBeFalse("the old answer is not the answer for Taken");
+        viewModel.FoldersSummary.ShouldBe("");
+        viewModel.ProjectName = "Other";
+        viewModel.IsFolderNoticeVisible.ShouldBeFalse();
+        viewModel.FolderNoticePath.ShouldBe("");
+        string elsewhere = Path.Combine(Path.GetTempPath(), "GumFolderNoticeElsewhere");
+        viewModel.Location = elsewhere;
+        viewModel.IsFolderNoticeVisible.ShouldBeFalse();
+
+        gate.Set();
+        await viewModel.ChecksRefresh;
+
+        viewModel.IsFolderNoticeVisible.ShouldBeTrue();
+        viewModel.FolderNoticeHeading.ShouldBe("Creates a new folder");
+        viewModel.FolderNoticePath.ShouldBe(elsewhere + Sep + "Other" + Sep);
+
+        viewModel.ProjectName = "Taken";
+        await viewModel.ChecksRefresh;
+        viewModel.FolderNoticeHeading.ShouldBe("Uses the existing folder");
+        viewModel.FolderNoticePath.ShouldBe(elsewhere + Sep + "Taken" + Sep);
     }
 
     [Fact]

@@ -34,8 +34,21 @@ public class NewProjectUiFolderNoticeTests
     {
         TextBlock? notice = Notice(fixture);
         notice.ShouldNotBeNull("the line under Location is showing");
-        return TextOf(notice);
+        return TextOf(notice) + " | " + PathBlock(fixture)!.Text;
     }
+
+    private static NewProjectDialogView.FolderPathPanel? PathBlock(NewProjectUiFixture fixture)
+    {
+        fixture.Window.Layout();
+        return fixture.Window.Window.GetVisualDescendants().OfType<NewProjectDialogView.FolderPathPanel>().FirstOrDefault(block => block.Name == "PART_FolderNoticePath" && block.IsEffectivelyVisible);
+    }
+
+    // How many folder pieces share the path's first row; one means the first line is just the drive designator.
+    private static int FirstRowPieces(NewProjectDialogView.FolderPathPanel path) =>
+        path.Children.Count(piece => Math.Abs(piece.Bounds.Top - path.Children[0].Bounds.Top) < 1);
+
+    private static int Rows(NewProjectDialogView.FolderPathPanel path) =>
+        path.Children.Select(piece => Math.Round(piece.Bounds.Top)).Distinct().Count();
 
     private static TextBlock? Summary(NewProjectUiFixture fixture)
     {
@@ -50,11 +63,15 @@ public class NewProjectUiFolderNoticeTests
         fixture.Dialog.TypeName("CodeProj3");
         fixture.Settle();
 
-        NoticeText(fixture).ShouldBe($"Creates a new folder {fixture.Location}{Separator}CodeProj3{Separator}");
+        NoticeText(fixture).ShouldBe($"Creates a new folder | {fixture.Location}{Separator}CodeProj3{Separator}");
         Rect location = fixture.BoundsOf(fixture.Dialog.LocationBox);
         Rect notice = fixture.BoundsOf(Notice(fixture)!);
         notice.Top.ShouldBeGreaterThanOrEqualTo(location.Bottom - 0.5, "below the Location field");
         (notice.Top - location.Bottom).ShouldBeLessThan(location.Height, "directly under it, not further down the dialog");
+        Rect path = fixture.BoundsOf(PathBlock(fixture)!);
+        path.Top.ShouldBeGreaterThanOrEqualTo(notice.Bottom - 0.5, "the path is on its own line under the heading");
+        path.Left.ShouldBe(notice.Left, 0.5, "and starts at the same left edge");
+        FirstRowPieces(PathBlock(fixture)!).ShouldBeGreaterThan(1, "never a lone drive designator on the first line");
     }
 
     [AvaloniaFact]
@@ -65,7 +82,7 @@ public class NewProjectUiFolderNoticeTests
         fixture.Dialog.TypeName("Taken");
         fixture.Settle();
 
-        NoticeText(fixture).ShouldBe($"Uses the existing folder {fixture.Location}{Separator}Taken{Separator}");
+        NoticeText(fixture).ShouldBe($"Uses the existing folder | {fixture.Location}{Separator}Taken{Separator}");
     }
 
     [AvaloniaFact]
@@ -76,13 +93,13 @@ public class NewProjectUiFolderNoticeTests
         fixture.Dialog.TypeName("Here");
         fixture.Dialog.TypeLocation(existing);
         fixture.Settle();
-        NoticeText(fixture).ShouldBe($"Uses this folder as the project folder {existing}{Separator} (it already exists)");
+        NoticeText(fixture).ShouldBe($"Uses this folder as the project folder (it already exists) | {existing}{Separator}");
 
         string missing = Path.Combine(fixture.Location, "Later");
         fixture.Dialog.TypeName("Later");
         fixture.Dialog.TypeLocation(missing);
         fixture.Settle();
-        NoticeText(fixture).ShouldBe($"Uses this folder as the project folder {missing}{Separator} (it will be created)");
+        NoticeText(fixture).ShouldBe($"Uses this folder as the project folder (it will be created) | {missing}{Separator}");
     }
 
     [AvaloniaFact]
@@ -121,7 +138,8 @@ public class NewProjectUiFolderNoticeTests
     public void ALongPath_IsNeverAbbreviated_Wraps_AndKeepsTheWindowUsable(double zoom)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        string location = fixture.Location;
+        // A path with no spaces in it, as most are; a space would give the text rules a break to use.
+        string location = OperatingSystem.IsWindows() ? @"C:\Users\You\Documents" : "/home/you/documents";
         for (int i = 0; i < 6; i++)
         {
             location = Path.Combine(location, "AVeryLongFolderNameNumber" + i);
@@ -131,26 +149,43 @@ public class NewProjectUiFolderNoticeTests
         fixture.SetZoom(zoom);
         fixture.Settle();
 
-        TextBlock notice = Notice(fixture)!;
+        NewProjectDialogView.FolderPathPanel notice = PathBlock(fixture)!;
         notice.ShouldNotBeNull();
-        string text = TextOf(notice);
-        text.ShouldContain($"{location}{Separator}TheProject{Separator}", customMessage: "the whole path is in the text");
-        text.ShouldNotContain("…");
-        text.ShouldNotContain("...");
-        notice.TextTrimming.ShouldBe(global::Avalonia.Media.TextTrimming.None);
-        notice.TextWrapping.ShouldBe(global::Avalonia.Media.TextWrapping.Wrap);
-        notice.TextLayout.TextLines.Count.ShouldBeGreaterThan(1, $"a path this long wraps to more lines at zoom {zoom}");
+        string text = notice.Text!;
+        text.ShouldBe($"{location}{Separator}TheProject{Separator}", "the whole path, with nothing added to it");
+        text.Any(c => char.IsControl(c) || c == (char)0x200B).ShouldBeFalse("no zero-width or control characters, so a copy is the plain path");
+        string.Concat(notice.Children.OfType<TextBlock>().Select(piece => piece.Text)).ShouldBe(text, "the pieces add up to the path, nothing cut or added");
+        FirstRowPieces(notice).ShouldBeGreaterThan(1, "the first line is more than a drive designator");
+        Rows(notice).ShouldBeGreaterThan(1, $"a path this long wraps to more lines at zoom {zoom}");
 
         Rect window = new Rect(fixture.Window.Window.Bounds.Size);
         Rect bounds = fixture.BoundsOf(notice);
         bounds.Right.ShouldBeLessThanOrEqualTo(window.Width + 0.5, "not clipped on the right");
-        bounds.Height.ShouldBeGreaterThan(notice.FontSize * 1.5, "the box grew to hold the wrapped lines");
         fixture.Window.Layout();
         Rect ok = fixture.BoundsOf(fixture.Dialog.OkButton);
         Rect cancel = fixture.BoundsOf(fixture.Dialog.CancelButton);
         window.Contains(ok.TopLeft).ShouldBeTrue("OK stays in the window");
         window.Contains(cancel.TopLeft).ShouldBeTrue("Cancel stays in the window");
         ok.Right.ShouldBeLessThanOrEqualTo(window.Width + 0.5);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(12)]
+    [InlineData(24)]
+    public void AFolderNameLongerThanTheLine_WrapsInsideItself_AndStaysInTheWindow(double zoom)
+    {
+        using NewProjectUiFixture fixture = new NewProjectUiFixture();
+        string location = Path.Combine(OperatingSystem.IsWindows() ? @"C:\Users\You" : "/home/you", new string('x', 200));
+        fixture.Dialog.TypeName("TheProject");
+        fixture.Dialog.TypeLocation(location);
+        fixture.SetZoom(zoom);
+        fixture.Settle();
+
+        NewProjectDialogView.FolderPathPanel path = PathBlock(fixture)!;
+        path.ShouldNotBeNull();
+        fixture.BoundsOf(path).Right.ShouldBeLessThanOrEqualTo(fixture.Window.Window.Bounds.Width + 0.5);
+        path.Children.Max(piece => piece.Bounds.Right).ShouldBeLessThanOrEqualTo(path.Bounds.Width + 0.5, "no piece runs out of the panel");
+        path.Text.ShouldBe($"{location}{Separator}TheProject{Separator}");
     }
 
     [AvaloniaFact]

@@ -35,6 +35,9 @@ public sealed class NewProjectDialogView : StackPanel
     /// <summary>Name of the line under Location that names the project folder.</summary>
     public const string FolderNoticeName = "PART_FolderNotice";
 
+    /// <summary>Name of the project folder path under the heading of that line.</summary>
+    public const string FolderNoticePathName = "PART_FolderNoticePath";
+
     /// <summary>Name of the summary in the collapsed Folders header.</summary>
     public const string FoldersSummaryName = "PART_FoldersSummary";
 
@@ -205,9 +208,7 @@ public sealed class NewProjectDialogView : StackPanel
         });
 
         Run heading = new Run();
-        heading.Bind(Run.TextProperty, new Binding(nameof(NewProjectDialogViewModel.FolderNoticeHeading)) { StringFormat = "{0} ", Mode = BindingMode.OneWay });
-        Run path = new Run { FontFamily = new FontFamily(MonospaceFonts), FontWeight = FontWeight.Normal };
-        path.Bind(Run.TextProperty, new Binding(nameof(NewProjectDialogViewModel.FolderNoticePath)) { Mode = BindingMode.OneWay });
+        heading.Bind(Run.TextProperty, new Binding(nameof(NewProjectDialogViewModel.FolderNoticeHeading)) { Mode = BindingMode.OneWay });
         Run suffix = new Run();
         suffix.Bind(Run.TextProperty, new Binding(nameof(NewProjectDialogViewModel.FolderNoticeSuffix))
         {
@@ -217,13 +218,19 @@ public sealed class NewProjectDialogView : StackPanel
 
         TextBlock text = new TextBlock { Name = FolderNoticeName, TextWrapping = TextWrapping.Wrap, Opacity = 0.85, Focusable = false };
         text.Inlines!.Add(heading);
-        text.Inlines.Add(path);
         text.Inlines.Add(suffix);
+
+        // On its own line, so the path always starts at the left edge of the text; the command line's mono style.
+        FolderPathPanel path = new FolderPathPanel { Name = FolderNoticePathName, Opacity = 0.85 };
+        path.Bind(FolderPathPanel.TextProperty, new Binding(nameof(NewProjectDialogViewModel.FolderNoticePath)));
+        StackPanel lines = new StackPanel { Spacing = 1 };
+        lines.Children.Add(text);
+        lines.Children.Add(path);
 
         Grid notice = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 6, Margin = new Thickness(0, 5, 0, 0) };
         notice.Children.Add(icon);
-        Grid.SetColumn(text, 1);
-        notice.Children.Add(text);
+        Grid.SetColumn(lines, 1);
+        notice.Children.Add(lines);
         notice.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsFolderNoticeVisible)));
         return notice;
     }
@@ -442,6 +449,67 @@ public sealed class NewProjectDialogView : StackPanel
         section.Children.Add(Divider(new Thickness(0, 0, 0, 6)));
         section.Children.Add(disclosure);
         return section;
+    }
+
+    /// <summary>
+    /// A folder path that wraps between its folders. A plain wrapping text block breaks a Windows path after the drive's colon
+    /// (the only break the text rules allow in it), leaving "C:" alone on the first line; here each folder is its own piece, so
+    /// a line always holds whole folders, and one folder name longer than the line wraps inside itself. The full path is never cut.
+    /// </summary>
+    public sealed class FolderPathPanel : WrapPanel
+    {
+        /// <summary>The path shown.</summary>
+        public static readonly StyledProperty<string?> TextProperty = AvaloniaProperty.Register<FolderPathPanel, string?>(nameof(Text));
+
+        static FolderPathPanel()
+        {
+            TextProperty.Changed.AddClassHandler<FolderPathPanel>((panel, _) => panel.Rebuild());
+        }
+
+        /// <summary>Builds the panel, empty.</summary>
+        public FolderPathPanel()
+        {
+            Focusable = false;
+        }
+
+        /// <summary>The path shown, whole.</summary>
+        public string? Text
+        {
+            get => GetValue(TextProperty);
+            set => SetValue(TextProperty, value);
+        }
+
+        private void Rebuild()
+        {
+            Children.Clear();
+            string text = Text ?? string.Empty;
+            AutomationProperties.SetName(this, text);
+            int start = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                bool lastChar = i == text.Length - 1;
+                if (text[i] == System.IO.Path.DirectorySeparatorChar || text[i] == System.IO.Path.AltDirectorySeparatorChar || lastChar)
+                {
+                    Children.Add(CreatePiece(text.Substring(start, i - start + 1)));
+                    start = i + 1;
+                }
+            }
+        }
+
+        private TextBlock CreatePiece(string piece)
+        {
+            TextBlock block = new TextBlock
+            {
+                Text = piece,
+                FontFamily = new FontFamily(MonospaceFonts),
+                FontWeight = FontWeight.Normal,
+                TextWrapping = TextWrapping.Wrap,
+                Focusable = false,
+            };
+            // A folder name wider than the line wraps inside its piece instead of running out of the window.
+            block.Bind(MaxWidthProperty, this.GetObservable(BoundsProperty, bounds => (object)(bounds.Width > 0 ? bounds.Width : double.PositiveInfinity)));
+            return block;
+        }
     }
 
     /// <summary>A heading with a chevron that shows or hides its content; flat, as the mock draws it.</summary>

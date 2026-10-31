@@ -62,6 +62,11 @@ public class NewProjectDialogViewModel : DialogViewModel
     private string? _existingCodeProject;
     private bool _targetNotEmpty;
     private bool _targetExists;
+    private string? _targetExistsFor;
+
+    private static string CheckKey(string folder, string name) => folder + "|" + name;
+
+    private string CurrentCheckKey() => CheckKey(ResolvedFolder.ParentFolder, EffectiveName);
 
     /// <summary>
     /// Theme picker, shared with the Add Forms dialog. Only relevant when
@@ -1046,7 +1051,8 @@ public class NewProjectDialogViewModel : DialogViewModel
     // contradicts them. Whether the folder exists comes from the same worker-thread check pass as the banners.
     private void RefreshFolderNotice()
     {
-        if (ValidationMessage.Length > 0 || RefusalText.Length > 0)
+        // The exists answer is only good for the inputs it was read for; until the check for the current ones is back, say nothing.
+        if (ValidationMessage.Length > 0 || RefusalText.Length > 0 || _targetExistsFor != CurrentCheckKey())
         {
             IsFolderNoticeVisible = false;
             FolderNoticeHeading = string.Empty;
@@ -1152,6 +1158,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         _existingCodeProject = existing;
         _targetNotEmpty = notEmpty;
         _targetExists = exists || notEmpty;
+        _targetExistsFor = CheckKey(folder, name);
         RefusalText = refusal ?? string.Empty;
         NotifyPropertyChanged(nameof(IsRefused));
         AffirmativeCommand.NotifyCanExecuteChanged();
