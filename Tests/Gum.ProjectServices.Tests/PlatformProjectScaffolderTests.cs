@@ -79,6 +79,43 @@ public class PlatformProjectScaffolderTests : IDisposable
         settings!.RootNamespace.ShouldBe(expectedNamespace);
     }
 
+    [Theory]
+    [InlineData(HostPlatform.MonoGame)]
+    [InlineData(HostPlatform.Kni)]
+    [InlineData(HostPlatform.KniSkia)]
+    [InlineData(HostPlatform.Raylib)]
+    [InlineData(HostPlatform.SilkNet)]
+    [InlineData(HostPlatform.Stride)]
+    public void Create_ShouldBuildAConsoleExeInDebugAndAWindowedExeInRelease(HostPlatform platform)
+    {
+        // A WinExe does not open a console window behind the game. Debug keeps Exe so console output shows.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, platform, includeFormsTemplate: true);
+
+        XDocument csproj = XDocument.Load(result.CsprojPath);
+        EvaluateOutputType(csproj, "Debug").ShouldBe("Exe");
+        EvaluateOutputType(csproj, "Release").ShouldBe("WinExe");
+    }
+
+    // Applies the OutputType elements in document order, honoring only the Release condition this template uses.
+    private static string? EvaluateOutputType(XDocument csproj, string configuration)
+    {
+        string? value = null;
+        foreach (XElement element in csproj.Descendants("OutputType"))
+        {
+            string? condition = element.Attribute("Condition")?.Value
+                ?? element.Parent?.Attribute("Condition")?.Value;
+            bool applies = condition == null
+                || condition.Replace(" ", "") == $"'$(Configuration)'=='{configuration}'";
+            if (applies)
+            {
+                value = element.Value;
+            }
+        }
+        return value;
+    }
+
     [Fact]
     public void Create_Stride_ShouldTargetPlainNet10SoTheCpuRenderPathRuns()
     {
