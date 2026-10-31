@@ -98,6 +98,9 @@ public class Game1 : Game
         // initialized GumService/GraphicsDevice.
         ShapeRenderer.Self.Initialize();
 
+        // Tab, keyboard and gamepad navigation, so a UI's focus order can be tried (issue #7260).
+        PreviewInputDefaults.Enable(GumService.Default);
+
         // Registered before the project's elements are built so a container's SourceShaderFile
         // resolves as it loads.
         PreviewShaderResolver.Register(GraphicsDevice);
