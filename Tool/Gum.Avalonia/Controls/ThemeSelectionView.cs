@@ -57,7 +57,7 @@ public sealed class ThemeSelectionView : StackPanel
                 Margin = new Thickness(0, 0, 0, 8),
             };
             // 20 px at the default size, scaling with the tool zoom like the text around it; the preview column hugs the image.
-            besideRow.Bind(Grid.ColumnSpacingProperty, besideRow.GetResourceObservable("ControlContentThemeFontSize", size => (object)(PreviewGap * (size is double baseSize ? baseSize : 12d) / 12d)));
+            besideRow.Bind(Grid.ColumnSpacingProperty, besideRow.GetResourceObservable("ControlContentThemeFontSize", size => (object)System.Math.Round(PreviewGap * (size is double baseSize ? baseSize : 12d) / 12d)));
             Control label = themeRow.Children[0];
             themeRow.Children.Clear();
             label.Margin = new Thickness(0, 0, 0, 3);
@@ -84,8 +84,8 @@ public sealed class ThemeSelectionView : StackPanel
         preview.Bind(IsVisibleProperty, new Binding(nameof(ThemeSelectionViewModel.HasPreviewImage)));
         if (besideRow != null)
         {
-            preview.MaxHeight = 112;
-            preview.MaxWidth = 200;
+            preview.MaxHeight = 175;
+            preview.MaxWidth = 245;
             preview.Margin = new Thickness(0);
             preview.HorizontalAlignment = HorizontalAlignment.Right;
             preview.VerticalAlignment = VerticalAlignment.Top;
