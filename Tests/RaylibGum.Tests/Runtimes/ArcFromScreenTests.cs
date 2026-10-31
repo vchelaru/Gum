@@ -66,4 +66,30 @@ public class ArcFromScreenTests : BaseTestClass
 
         arc.Thickness.ShouldBe(24f);
     }
+
+    [Fact]
+    public void SetProperty_CircleFloatVariablesBoxedAsInt_AreAccepted()
+    {
+        CircleRuntime circle = new();
+
+        circle.SetProperty("Radius", 20);
+        circle.SetProperty("StrokeWidth", 3);
+        circle.SetProperty("DropshadowBlur", 4);
+
+        circle.Radius.ShouldBe(20f);
+        circle.StrokeWidth.ShouldBe(3f);
+    }
+
+    [Fact]
+    public void SetProperty_RectangleFloatVariablesBoxedAsInt_AreAccepted()
+    {
+        RectangleRuntime rectangle = new();
+
+        rectangle.SetProperty("CornerRadius", 8);
+        rectangle.SetProperty("StrokeWidth", 3);
+        rectangle.SetProperty("DropshadowOffsetX", 2);
+
+        rectangle.CornerRadius.ShouldBe(8f);
+        rectangle.StrokeWidth.ShouldBe(3f);
+    }
 }
