@@ -498,7 +498,8 @@ public class RectangleRuntimeTests : RegistrationIsolatedTest
         fill.DropshadowColor.ShouldBe(new Color(10, 20, 30, 40));
         fill.DropshadowOffsetX.ShouldBe(5);
         fill.DropshadowOffsetY.ShouldBe(7);
-        fill.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(2);
+        // #7292: the halo is 2 * blur wide (was blur: 2).
+        fill.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(4);
 
         stroke.HasDropshadow.ShouldBeFalse();
     }
@@ -975,7 +976,8 @@ public class RectangleRuntimeTests : RegistrationIsolatedTest
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
         stroke.DropshadowOffsetX.ShouldBe(19f);
         stroke.DropshadowOffsetY.ShouldBe(11f);
-        stroke.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(3);
+        // #7292: blur + StrokeWidth / 2 = 4 for a thin stroke (was blur: 3).
+        stroke.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(4);
     }
 
     [Fact]

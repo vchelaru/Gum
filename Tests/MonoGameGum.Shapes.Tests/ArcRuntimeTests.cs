@@ -48,7 +48,8 @@ public class ArcRuntimeTests
         sut.DropshadowBlur = 5;
 
         RenderableShapeBase shape = (RenderableShapeBase)sut.RenderableComponent;
-        shape.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(5);
+        // #7292: the halo is 2 * blur wide (was blur: 5).
+        shape.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(10);
         shape.DropshadowBlurY.ShouldBe(5f);
         sut.DropshadowBlur.ShouldBe(5);
     }

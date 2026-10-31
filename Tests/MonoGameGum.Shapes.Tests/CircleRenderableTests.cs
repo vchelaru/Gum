@@ -125,7 +125,8 @@ public class CircleRenderableTests
         Color baseColor = new(50, 60, 70, 200);
         (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
 
-        strokeWidth.ShouldBe(-6f);
+        // #7292: the ramp is 2 * blur wide, so the raw value is StrokeWidth - 2 * blur (was - blur: -6).
+        strokeWidth.ShouldBe(-14f);
         color.ShouldBe(baseColor);
     }
 
@@ -159,19 +160,21 @@ public class CircleRenderableTests
         Color baseColor = new(50, 60, 70, 200);
         (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
 
-        strokeWidth.ShouldBe(6f);
+        // #7292: StrokeWidth - 2 * blur = 2 (was StrokeWidth - blur: 6).
+        strokeWidth.ShouldBe(2f);
         color.ShouldBe(baseColor);
     }
 
     [Fact]
     public void ComputeStrokeShadowDrawParameters_StrokeEqualsBlur_FullAlpha_PositiveStrokeWidth()
     {
-        // At stroke = blur, lineThickness = 0 — Apos would bail. Engage the fix with full alpha
+        // At stroke = 2 * blur, lineThickness = 0 — Apos would bail. Engage the fix with full alpha
         // (ratio = 1) and a small positive stroke width so Apos still draws the AA-only band.
+        // #7292: the boundary moved from stroke = blur (StrokeWidth 4) to stroke = 2 * blur (8).
         Circle sut = new()
         {
             IsFilled = false,
-            StrokeWidth = 4f,
+            StrokeWidth = 8f,
             DropshadowBlurX = 4f,
         };
 
@@ -188,7 +191,7 @@ public class CircleRenderableTests
         Circle sut = new()
         {
             IsFilled = false,
-            StrokeWidth = 2f,
+            StrokeWidth = 4f,   // #7292: was 2 (stroke / blur = 0.5); the ratio is now stroke / (2 * blur)
             DropshadowBlurX = 4f,
         };
 
@@ -257,7 +260,8 @@ public class CircleRenderableTests
     {
         Circle sut = new() { DropshadowBlurX = 5f };
 
-        sut.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(5);
+        // #7292: the ramp is centered on the edge and 2 * blur wide (was blur: 5).
+        sut.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(10);
     }
 
     [Fact]
@@ -267,16 +271,18 @@ public class CircleRenderableTests
         // remains 5 world units wide on screen.
         Circle sut = new() { DropshadowBlurX = 5f };
 
-        sut.GetShadowAntiAliasSize(cameraZoom: 2f).ShouldBe(10);
+        // #7292: 2 * blur * zoom (was blur * zoom: 10).
+        sut.GetShadowAntiAliasSize(cameraZoom: 2f).ShouldBe(20);
     }
 
     [Fact]
     public void GetShadowAntiAliasSize_ZoomedOut_ScalesBlurDown()
     {
-        // At zoom = 0.5, a 4-world-unit blur is 2 screen pixels.
+        // At zoom = 0.5, a 4-world-unit blur ramps over 2 * 4 = 8 world units = 4 screen pixels
+        // (#7292; was 2).
         Circle sut = new() { DropshadowBlurX = 4f };
 
-        sut.GetShadowAntiAliasSize(cameraZoom: 0.5f).ShouldBe(2);
+        sut.GetShadowAntiAliasSize(cameraZoom: 0.5f).ShouldBe(4);
     }
 
     [Fact]
@@ -321,22 +327,9 @@ public class CircleRenderableTests
     [Fact]
     public void ComputeShadowDrawGeometry_BlurEqualHalfRadius_RendersSymmetricRamp()
     {
-        // Standard case: B = R = 10, so B <= 2R. Ramp spans [R - B/2, R + B/2] = [5, 15],
-        // 50% line at R = 10.
+        // Standard case: B = R = 10, so B <= R. #7292: the ramp spans [R - B, R + B] = [0, 20]
+        // (was [R - B/2, R + B/2] = [5, 15]), 50% line at R = 10.
         Circle sut = new() { DropshadowBlurX = 10f };
-
-        (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 10f, cameraZoom: 1f);
-
-        effRadius.ShouldBe(5f);
-        effAaSize.ShouldBe(10);
-        alphaScale.ShouldBe(1f);
-    }
-
-    [Fact]
-    public void ComputeShadowDrawGeometry_BlurEqualTwiceRadius_BoundaryCase()
-    {
-        // Boundary: B = 2R, inner ramp edge sits exactly at r = 0. Still alphaScale = 1.
-        Circle sut = new() { DropshadowBlurX = 20f };
 
         (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 10f, cameraZoom: 1f);
 
@@ -346,24 +339,40 @@ public class CircleRenderableTests
     }
 
     [Fact]
+    public void ComputeShadowDrawGeometry_BlurEqualTwiceRadius_BoundaryCase()
+    {
+        // Boundary: B = 2R, where the energy factor (issue #2955) starts to apply and is exactly
+        // 1. #7292: the inner ramp is already truncated at r = 0 (B > R), so aaSize = R + B = 30
+        // (was 20) and the anchor lowers the base alpha to 0.5 / (1 - smoothstep(1/3)) = 0.675
+        // (was 1) so the 50% line still lands on the host edge.
+        Circle sut = new() { DropshadowBlurX = 20f };
+
+        (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 10f, cameraZoom: 1f);
+
+        effRadius.ShouldBe(0f);
+        effAaSize.ShouldBe(30);
+        alphaScale.ShouldBe(0.675f, tolerance: 0.001f);
+    }
+
+    [Fact]
     public void ComputeShadowDrawGeometry_BlurGreaterThanTwoRadius_TruncatesAndAppliesEnergyFalloff()
     {
         // User's repro: R = 36, B = 250. Expected from the math:
-        //   aaSize_world = R + B/2 = 161
-        //   t = R / aaSize = 36 / 161 = 0.2236
-        //   smoothstep = 3t^2 - 2t^3 = 0.1276
-        //   anchorAlpha = 0.5 / (1 - 0.1276) = 0.5731
+        //   aaSize_world = R + B = 286        (#7292; was R + B/2 = 161)
+        //   t = R / aaSize = 36 / 286 = 0.1259
+        //   smoothstep = 3t^2 - 2t^3 = 0.04356
+        //   anchorAlpha = 0.5 / (1 - 0.04356) = 0.5228
         //   energyScale = (2R/B)^2 = (72/250)^2 = 0.08294   (issue #2955)
-        //   alphaScale = anchorAlpha * energyScale = 0.04754
-        // 0.04754 lands right on the true-Gaussian center alpha (2R^2/B^2 ~= 0.041) instead of
-        // the old screen-filling ~0.5731. effRadius/effAaSize (the geometry) are unchanged.
+        //   alphaScale = anchorAlpha * energyScale = 0.04336   (was 0.04754)
+        // Still close to the true-Gaussian center alpha (2R^2/B^2 ~= 0.041) instead of
+        // the screen-filling ~0.52.
         Circle sut = new() { DropshadowBlurX = 250f };
 
         (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 36f, cameraZoom: 1f);
 
         effRadius.ShouldBe(0f);
-        effAaSize.ShouldBe(161);
-        alphaScale.ShouldBe(0.04754f, tolerance: 0.001f);
+        effAaSize.ShouldBe(286);
+        alphaScale.ShouldBe(0.04336f, tolerance: 0.001f);
     }
 
     [Fact]
@@ -394,8 +403,9 @@ public class CircleRenderableTests
 
         (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 10f, cameraZoom: 2f);
 
-        effRadius.ShouldBe(5f);
-        effAaSize.ShouldBe(20);
+        // #7292: B = R = 10 ramps over [R - B, R + B]: effRadius 0 (was 5), aaSize 2 * 10 * 2 = 40 (was 20).
+        effRadius.ShouldBe(0f);
+        effAaSize.ShouldBe(40);
         alphaScale.ShouldBe(1f);
     }
 
