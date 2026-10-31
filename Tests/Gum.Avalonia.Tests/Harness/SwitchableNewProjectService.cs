@@ -36,9 +36,9 @@ internal sealed class SwitchableNewProjectService : INewProjectService
         string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
         AddPackages != null ? AddPackages(csprojPath, packages, onOutputLine, cancellationToken) : _inner.AddPackagesAsync(csprojPath, packages, onOutputLine, cancellationToken);
 
-    public Task<GenerateCodeResult> GenerateDemoScreenCodeAsync(
+    public Task<GenerateCodeResult> GenerateCodeAsync(
         ResolvedNewProject project, NewProjectFilesResult files, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
-        GenerateCode != null ? GenerateCode(project, files, onOutputLine, cancellationToken) : _inner.GenerateDemoScreenCodeAsync(project, files, onOutputLine, cancellationToken);
+        GenerateCode != null ? GenerateCode(project, files, onOutputLine, cancellationToken) : _inner.GenerateCodeAsync(project, files, onOutputLine, cancellationToken);
 
     public void UpdateHost(ResolvedNewProject project, NewProjectFilesResult files, bool packagesAdded, bool screenCodeGenerated) =>
         _inner.UpdateHost(project, files, packagesAdded, screenCodeGenerated);

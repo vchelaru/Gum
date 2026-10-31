@@ -17,7 +17,7 @@ public enum NewProjectErrorKind
     InvalidProjectName,
     RecommendedPackagesNeedPlatform,
     RecommendedPackagesNeedNuGetRuntime,
-    DemoScreenCodeNeedsPlatform
+    GenerateCodeNeedsPlatform
 }
 
 /// <summary>A refused request. <see cref="Message"/> is the exact text <c>gumcli new</c> prints.</summary>
@@ -57,8 +57,8 @@ public class ResolvedNewProject
     /// <summary>The code project file that will be created, or <see langword="null"/> without a platform.</summary>
     public string? CsprojPath { get; init; }
 
-    /// <summary>Whether code is generated for the demo screen once the project is restored.</summary>
-    public bool GenerateDemoScreenCode { get; init; }
+    /// <summary>Whether code is generated for the whole project once it is restored.</summary>
+    public bool GenerateCode { get; init; }
 
     /// <summary>The recommended packages to add to the code project, in order; empty when not requested.</summary>
     public IReadOnlyList<string> RecommendedPackages { get; init; } = new string[0];
@@ -133,7 +133,7 @@ public class DemoScreenInfo
     public string Namespace { get; init; } = "";
 }
 
-/// <summary>Outcome of generating code for the demo screen.</summary>
+/// <summary>Outcome of generating code for the new project.</summary>
 public class GenerateCodeResult
 {
     public bool Success { get; init; }
@@ -156,7 +156,7 @@ public class NewProjectResult
     /// <summary>The restore outcome, or <see langword="null"/> when it did not run (no platform, not requested, or the files failed).</summary>
     public RestoreResult? Restore { get; init; }
 
-    /// <summary>The demo screen code generation outcome, or <see langword="null"/> when it did not run.</summary>
+    /// <summary>The code generation outcome, or <see langword="null"/> when it did not run.</summary>
     public GenerateCodeResult? Codegen { get; init; }
 }
 

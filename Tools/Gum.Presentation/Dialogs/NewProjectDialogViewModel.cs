@@ -40,7 +40,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     {
         nameof(ProjectName), nameof(Location), nameof(SelectedFileFormat), nameof(IsIncludeFormsControls),
         nameof(IsIncludeDemoScreenGum), nameof(IncludeCodeProject), nameof(PlatformName), nameof(SourceLinkedChoice),
-        nameof(RunRestore), nameof(IncludeRecommendedPackages), nameof(GenerateDemoScreenCodeChoice),
+        nameof(RunRestore), nameof(IncludeRecommendedPackages), nameof(GenerateCodeChoice),
     };
 
     private static readonly Dictionary<string, string> _platformNotes = new Dictionary<string, string>
@@ -118,7 +118,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         PlatformName = Platforms.FirstOrDefault()?.Name ?? "monogame";
         RunRestore = true;
         IncludeRecommendedPackages = true;
-        GenerateDemoScreenCodeChoice = true;
+        GenerateCodeChoice = true;
 
         BrowseCommand = new RelayCommand(Browse);
         RetryRestoreCommand = new RelayCommand(() => _ = RunPackagesAndRestoreAsync());
@@ -234,8 +234,8 @@ public class NewProjectDialogViewModel : DialogViewModel
         set => Set(value);
     }
 
-    /// <summary>What the user ticked for Generate code for the demo screen; on by default. See <see cref="GeneratesDemoScreenCode"/> for what applies.</summary>
-    public bool GenerateDemoScreenCodeChoice
+    /// <summary>What the user ticked for Generate code for the demo screen; on by default. See <see cref="GeneratesCode"/> for what applies.</summary>
+    public bool GenerateCodeChoice
     {
         get => Get<bool>();
         set => Set(value);
@@ -245,26 +245,32 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     #region Derived display state
 
-    /// <summary>Whether the demo screen exists in the new project: Forms controls with the demo screen ticked.</summary>
-    private bool HasDemoScreen => IsIncludeFormsControls && IsIncludeDemoScreenGum;
+    /// <summary>Whether the new project will have a screen or component to generate code for: the Forms template brings both.</summary>
+    private bool HasSomethingToGenerate => IsIncludeFormsControls;
 
-    /// <summary>Whether the Generate code for the demo screen checkbox shows: only with a C# project that has a demo screen.</summary>
-    public bool IsGenerateDemoCodeVisible => IncludeCodeProject && HasDemoScreen;
+    /// <summary>Whether the Generate code checkbox shows: only with a C# project.</summary>
+    public bool IsGenerateCodeVisible => IncludeCodeProject;
 
     /// <summary>
-    /// Whether the checkbox can be changed: code generation reads the restored runtime package to choose the syntax it emits,
-    /// so without the restore it does not run and the game loads the screen at runtime.
+    /// Whether the checkbox can be changed: there is something to generate, and the restore runs (code generation reads the restored
+    /// runtime package to choose the syntax it emits, so without the restore it does not run).
     /// </summary>
-    public bool IsGenerateDemoCodeEnabled => IsGenerateDemoCodeVisible && RunRestore;
+    public bool IsGenerateCodeEnabled => IsGenerateCodeVisible && RunRestore && HasSomethingToGenerate;
+
+    /// <summary>The grey line under the checkbox: what it does, or why it is unavailable.</summary>
+    public string GenerateCodeNote =>
+        !HasSomethingToGenerate ? NewProjectDialogText.GenerateCodeNothingNote
+        : !RunRestore ? NewProjectDialogText.GenerateCodeNeedsRestoreNote
+        : NewProjectDialogText.GenerateCodeNote;
 
     /// <summary>Whether creating generates code for the demo screen.</summary>
-    public bool GeneratesDemoScreenCode => IsGenerateDemoCodeEnabled && GenerateDemoScreenCodeChoice;
+    public bool GeneratesCode => IsGenerateCodeEnabled && GenerateCodeChoice;
 
     /// <summary>The checkbox's state: ticked only when code will really be generated; a disabled box shows unticked.</summary>
-    public bool GenerateDemoScreenCodeChecked
+    public bool GenerateCodeChecked
     {
-        get => GeneratesDemoScreenCode;
-        set => GenerateDemoScreenCodeChoice = value;
+        get => GeneratesCode;
+        set => GenerateCodeChoice = value;
     }
 
     /// <summary>
@@ -284,13 +290,35 @@ public class NewProjectDialogViewModel : DialogViewModel
             Success = true, GumProjectPath = _createdFiles.GumProjectPath, CsprojPath = _createdFiles.CsprojPath, DemoScreen = null
         };
         _service.UpdateHost(_createdResolved, withoutDemo, packagesAdded: _createdPackages.Count > 0, screenCodeGenerated: false);
+
+        // Code generation ran over the whole project, demo screen included: its class goes with the screen.
+        if (_createdFiles.DemoScreen is { } demo && _createdFiles.CsprojPath is { } csproj)
+        {
+            DeleteGeneratedDemoClass(Path.GetDirectoryName(csproj)!, demo);
+        }
     }
 
-    // The demo screen's element name as the chosen theme names it: a themed project holds it in a folder named after the theme.
-    private string DemoScreenElementName =>
-        SelectedThemeName is { Length: > 0 } theme && theme != NewProjectCommandLine.DefaultTheme
-            ? theme + "/" + DemoScreenRule.DemoScreenName
-            : DemoScreenRule.DemoScreenName;
+    private static void DeleteGeneratedDemoClass(string gameFolder, DemoScreenInfo demo)
+    {
+        try
+        {
+            foreach (string suffix in new[] { ".Generated.cs", ".cs" })
+            {
+                foreach (string file in Directory.EnumerateFiles(gameFolder, demo.ClassName + suffix, SearchOption.AllDirectories))
+                {
+                    string relative = Path.GetRelativePath(gameFolder, file).Replace((char)92, '/');
+                    if (relative.StartsWith("Screens/", StringComparison.Ordinal))
+                    {
+                        File.Delete(file);
+                    }
+                }
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // A class that could not be removed stays as ordinary project code.
+        }
+    }
 
     /// <summary>Whether the Include recommended packages checkbox shows: only with a C# project.</summary>
     public bool IsRecommendedPackagesVisible => IncludeCodeProject;
@@ -683,8 +711,8 @@ public class NewProjectDialogViewModel : DialogViewModel
         }
     }
 
-    private bool GeneratesDemoCode(ResolvedNewProject resolved, NewProjectFilesResult files) =>
-        resolved.GenerateDemoScreenCode && files.DemoScreen != null;
+    private static bool GeneratesDemoCode(ResolvedNewProject resolved, NewProjectFilesResult files) =>
+        resolved.GenerateCode && resolved.IncludeFormsTemplate;
 
     // The last step, after the restore: the generator reads the restored runtime package to choose the syntax it emits.
     private async Task RunCodegenOrFinishAsync(IProgress<string> output)
@@ -698,7 +726,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         SetBusy(true, "Generating code for the demo screen...");
         ProgressDetail = string.Empty;
         _cancellation = new CancellationTokenSource();
-        GenerateCodeResult generated = await _service.GenerateDemoScreenCodeAsync(
+        GenerateCodeResult generated = await _service.GenerateCodeAsync(
             _createdResolved, _createdFiles, output.Report, _cancellation.Token);
         if (generated.Success)
         {
@@ -770,12 +798,13 @@ public class NewProjectDialogViewModel : DialogViewModel
                 NotifyPropertyChanged(nameof(IsSourceLinkedForced));
                 NotifyPropertyChanged(nameof(IsSourceLinkedEnabled));
             }
-            if (propertyName is nameof(IncludeCodeProject) or nameof(IsIncludeFormsControls) or nameof(IsIncludeDemoScreenGum) or nameof(GenerateDemoScreenCodeChoice) or nameof(RunRestore))
+            if (propertyName is nameof(IncludeCodeProject) or nameof(IsIncludeFormsControls) or nameof(GenerateCodeChoice) or nameof(RunRestore))
             {
-                NotifyPropertyChanged(nameof(IsGenerateDemoCodeVisible));
-                NotifyPropertyChanged(nameof(IsGenerateDemoCodeEnabled));
-                NotifyPropertyChanged(nameof(GeneratesDemoScreenCode));
-                NotifyPropertyChanged(nameof(GenerateDemoScreenCodeChecked));
+                NotifyPropertyChanged(nameof(IsGenerateCodeVisible));
+                NotifyPropertyChanged(nameof(IsGenerateCodeEnabled));
+                NotifyPropertyChanged(nameof(GenerateCodeNote));
+                NotifyPropertyChanged(nameof(GeneratesCode));
+                NotifyPropertyChanged(nameof(GenerateCodeChecked));
             }
             if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(SourceLinkedChoice) or nameof(IncludeRecommendedPackages))
             {
@@ -828,7 +857,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             Restore = RunRestore,
             UseXmlFormat = UseXmlFormat,
             IncludeRecommendedPackages = game && AddsRecommendedPackages,
-            GenerateDemoScreenCode = game && GeneratesDemoScreenCode,
+            GenerateCode = game && GeneratesCode,
         };
     }
 
@@ -841,7 +870,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         GumProjectPath = game
             ? Path.Combine(path, "Content", "GumProject", "GumProject" + Extension)
             : path;
-        bool generatesCode = game && GeneratesDemoScreenCode;
+        bool generatesCode = game && GeneratesCode;
         bool chained = game && (AddsRecommendedPackages || generatesCode);
         CommandLine = chained
             ? NewProjectCommandLine.BuildChained(
@@ -853,7 +882,7 @@ public class NewProjectDialogViewModel : DialogViewModel
                 AddsRecommendedPackages ? RecommendedPackageIds : Array.Empty<string>(),
                 NewProjectDisplayPath.Normalize(Path.Combine(path, name + ".csproj")),
                 generatesCode ? GumProjectPath : null,
-                generatesCode ? DemoScreenElementName : null)
+                SourceLinked)
             : NewProjectCommandLine.Build(
                 path,
                 game ? PlatformName : null,
@@ -867,7 +896,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             notes.Add(NewProjectDialogText.ChainedCommandNote);
         }
-        if (game && IsGenerateDemoCodeVisible && !RunRestore)
+        if (game && IsIncludeFormsControls && !RunRestore)
         {
             notes.Add(NewProjectDialogText.NoCodegenWithoutRestoreNote);
         }

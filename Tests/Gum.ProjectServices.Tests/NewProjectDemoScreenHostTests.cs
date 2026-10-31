@@ -49,7 +49,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
             Template = template,
             Theme = theme,
             IncludeRecommendedPackages = packages,
-            GenerateDemoScreenCode = generate,
+            GenerateCode = generate,
             Restore = false,
         });
         validation.Error.ShouldBeNull(validation.Error?.Message);
@@ -257,13 +257,12 @@ public class NewProjectDemoScreenHostTests : IDisposable
             new NewProjectRequest
             {
                 Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", IncludeRecommendedPackages = true,
-                GenerateDemoScreenCode = true, Restore = true
+                GenerateCode = true, Restore = true
             },
             progress: null, CancellationToken.None);
 
         _calls.Select(call => call.Split(' ')[0]).ToArray()
             .ShouldBe(new[] { "add", "add", "restore", "codegen" });
-        _calls[^1].ShouldContain("DemoScreenGum");
         result.Codegen.ShouldNotBeNull();
         result.Codegen!.Success.ShouldBeTrue();
 
@@ -280,7 +279,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
             new NewProjectRequest
             {
                 Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", IncludeRecommendedPackages = true,
-                GenerateDemoScreenCode = true, Restore = false
+                GenerateCode = true, Restore = false
             },
             progress: null, CancellationToken.None);
 
@@ -294,7 +293,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
         NewProjectResult result = await service.ExecuteAsync(
             new NewProjectRequest
             {
-                Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", GenerateDemoScreenCode = true, Restore = false
+                Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", GenerateCode = true, Restore = false
             },
             progress: null, CancellationToken.None);
 
@@ -312,7 +311,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
         NewProjectResult result = await service.ExecuteAsync(
             new NewProjectRequest
             {
-                Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", GenerateDemoScreenCode = true, Restore = true
+                Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", GenerateCode = true, Restore = true
             },
             progress: null, CancellationToken.None);
 
@@ -328,7 +327,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
             new NewProjectRequest
             {
                 Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", Template = "empty",
-                GenerateDemoScreenCode = true, Restore = false
+                GenerateCode = true, Restore = false
             },
             progress: null, CancellationToken.None);
 
@@ -341,10 +340,10 @@ public class NewProjectDemoScreenHostTests : IDisposable
     {
         NewProjectValidation validation = CreateService().Validate(new NewProjectRequest
         {
-            Path = Path.Combine(_tempDirectory, "Proj"), GenerateDemoScreenCode = true
+            Path = Path.Combine(_tempDirectory, "Proj"), GenerateCode = true
         });
 
-        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.DemoScreenCodeNeedsPlatform);
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.GenerateCodeNeedsPlatform);
     }
 
     #endregion
@@ -381,11 +380,11 @@ public class NewProjectDemoScreenHostTests : IDisposable
             new HeadlessCodegenRunnerAdapter());
         NewProjectValidation validation = service.Validate(new NewProjectRequest
         {
-            Path = Path.Combine(_tempDirectory, "RealGame"), Platform = "monogame", GenerateDemoScreenCode = true, Restore = false
+            Path = Path.Combine(_tempDirectory, "RealGame"), Platform = "monogame", GenerateCode = true, Restore = false
         });
         NewProjectFilesResult files = service.CreateFilesAsync(validation.Resolved!, CancellationToken.None).GetAwaiter().GetResult();
 
-        GenerateCodeResult result = service.GenerateDemoScreenCodeAsync(validation.Resolved!, files, null, CancellationToken.None)
+        GenerateCodeResult result = service.GenerateCodeAsync(validation.Resolved!, files, null, CancellationToken.None)
             .GetAwaiter().GetResult();
 
         result.Success.ShouldBeTrue(result.OutputTail);

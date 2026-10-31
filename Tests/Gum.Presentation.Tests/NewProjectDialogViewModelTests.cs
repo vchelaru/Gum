@@ -54,6 +54,7 @@ public class NewProjectDialogViewModelTests
             Location = Folder,
             IncludeRecommendedPackages = false,
             IsIncludeDemoScreenGum = false,
+            GenerateCodeChoice = false,
         };
         configure?.Invoke(viewModel);
         return viewModel;

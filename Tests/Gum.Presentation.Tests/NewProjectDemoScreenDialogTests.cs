@@ -16,7 +16,7 @@ using Shouldly;
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// The "Generate code for the demo screen" checkbox of the New Project dialog (#7268): when it shows, what the command line
+/// The "Generate code" checkbox of the New Project dialog (#7268): when it shows, what the command line
 /// chains, what the request asks for, the order of the steps, and how a failed code generation behaves.
 /// </summary>
 public class NewProjectDemoScreenDialogTests
@@ -48,7 +48,7 @@ public class NewProjectDemoScreenDialogTests
             {
                 Resolved = new ResolvedNewProject
                 {
-                    Name = "MyGame", CsprojPath = Csproj, GenerateDemoScreenCode = request.GenerateDemoScreenCode,
+                    Name = "MyGame", CsprojPath = Csproj, GenerateCode = request.GenerateCode, IncludeFormsTemplate = request.Template == "forms",
                     RecommendedPackages = request.IncludeRecommendedPackages ? new[] { "Gum.Expressions" } : new string[0]
                 }
             };
@@ -76,7 +76,7 @@ public class NewProjectDemoScreenDialogTests
                 _calls.Add("restore");
                 return Task.FromResult(new RestoreResult { Status = RestoreStatus.Succeeded, ExitCode = 0 });
             });
-        _service.Setup(x => x.GenerateDemoScreenCodeAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<NewProjectFilesResult>(), It.IsAny<Action<string>?>(), It.IsAny<CancellationToken>()))
+        _service.Setup(x => x.GenerateCodeAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<NewProjectFilesResult>(), It.IsAny<Action<string>?>(), It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
                 _calls.Add("codegen");
@@ -101,51 +101,77 @@ public class NewProjectDemoScreenDialogTests
         return viewModel;
     }
 
-    private static string Codegen => $"gumcli codegen \"{GumProject}\" --element DemoScreenGum";
+    private static string Codegen => $"gumcli codegen \"{GumProject}\"";
 
     #region Visibility and default
 
     [Fact]
-    public void GenerateDemoScreenCode_DefaultsToChecked()
+    public void GenerateCode_DefaultsToChecked()
     {
-        Create().GenerateDemoScreenCodeChecked.ShouldBeTrue();
+        Create().GenerateCodeChecked.ShouldBeTrue();
     }
 
+    // Visible with any C# project; enabled when there is something to generate (Forms template) and the restore runs.
     [Theory]
-    [InlineData(true, true, true, true)]
-    [InlineData(false, true, true, false)]
-    [InlineData(true, false, true, false)]
-    [InlineData(true, true, false, false)]
-    public void IsGenerateDemoCodeVisible_NeedsACodeProjectFormsAndTheDemoScreen(
-        bool codeProject, bool forms, bool demo, bool expected)
+    [InlineData(true, true, true, true, true)]
+    [InlineData(false, true, true, false, false)]
+    [InlineData(true, false, true, true, false)]
+    [InlineData(true, true, false, true, false)]
+    [InlineData(true, true, true, false, true)]
+    public void TheCheckBox_IsVisibleWithACodeProject_AndEnabledWhenThereIsSomethingToGenerateAndTheRestoreRuns(
+        bool codeProject, bool forms, bool restore, bool expectedVisible, bool expectedEnabled)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
             vm.IncludeCodeProject = codeProject;
             vm.IsIncludeFormsControls = forms;
-            vm.IsIncludeDemoScreenGum = demo;
+            vm.RunRestore = restore;
         });
 
-        viewModel.IsGenerateDemoCodeVisible.ShouldBe(expected);
-        viewModel.GeneratesDemoScreenCode.ShouldBe(expected);
+        viewModel.IsGenerateCodeVisible.ShouldBe(codeProject);
+        viewModel.IsGenerateCodeEnabled.ShouldBe(expectedEnabled && codeProject);
+        viewModel.GeneratesCode.ShouldBe(expectedEnabled && codeProject);
+        viewModel.GenerateCodeChecked.ShouldBe(expectedEnabled && codeProject);
     }
 
     [Fact]
-    public void IsGenerateDemoCodeVisible_RaisesWhenTheDemoIsToggled()
+    public void WithNothingToGenerate_TheBoxIsDisabledUnticked_WithAShortNote_AndNoCodegenStep()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IsIncludeFormsControls = false);
+
+        viewModel.IsGenerateCodeVisible.ShouldBeTrue();
+        viewModel.IsGenerateCodeEnabled.ShouldBeFalse();
+        viewModel.GenerateCodeChecked.ShouldBeFalse();
+        viewModel.GenerateCodeNote.ShouldBe("Nothing to generate yet: the project has no screens or components. Include Forms controls to have some.");
+        viewModel.CommandLine.ShouldNotContain("codegen");
+    }
+
+    [Fact]
+    public void TheCheckBox_DoesNotDependOnTheDemoScreen()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IsIncludeDemoScreenGum = false);
+
+        viewModel.IsGenerateCodeVisible.ShouldBeTrue();
+        viewModel.GeneratesCode.ShouldBeTrue();
+        viewModel.CommandLine.ShouldEndWith($" && {Codegen}");
+    }
+
+    [Fact]
+    public void IsGenerateCodeEnabled_RaisesWhenFormsAreToggled()
     {
         NewProjectDialogViewModel viewModel = Create();
         List<string?> raised = new List<string?>();
         viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
 
-        viewModel.IsIncludeDemoScreenGum = false;
+        viewModel.IsIncludeFormsControls = false;
 
-        raised.ShouldContain(nameof(NewProjectDialogViewModel.IsGenerateDemoCodeVisible));
+        raised.ShouldContain(nameof(NewProjectDialogViewModel.IsGenerateCodeEnabled));
     }
 
     [Fact]
-    public void GeneratesDemoScreenCode_IsOff_WhenUnchecked()
+    public void GeneratesCode_IsOff_WhenUnchecked()
     {
-        Create(vm => vm.GenerateDemoScreenCodeChecked = false).GeneratesDemoScreenCode.ShouldBeFalse();
+        Create(vm => vm.GenerateCodeChecked = false).GeneratesCode.ShouldBeFalse();
     }
 
     #endregion
@@ -173,8 +199,8 @@ public class NewProjectDemoScreenDialogTests
         });
 
         viewModel.CommandLine.ShouldNotContain("codegen");
-        viewModel.IsGenerateDemoCodeEnabled.ShouldBeFalse();
-        viewModel.GenerateDemoScreenCodeChecked.ShouldBeFalse();
+        viewModel.IsGenerateCodeEnabled.ShouldBeFalse();
+        viewModel.GenerateCodeChecked.ShouldBeFalse();
         viewModel.CommandLineNote.ShouldContain("needs the restore");
     }
 
@@ -207,17 +233,9 @@ public class NewProjectDemoScreenDialogTests
     [Fact]
     public void CommandLine_Unchecked_HasNoCodegenStep()
     {
-        NewProjectDialogViewModel viewModel = Create(vm => vm.GenerateDemoScreenCodeChecked = false);
+        NewProjectDialogViewModel viewModel = Create(vm => vm.GenerateCodeChecked = false);
 
         viewModel.CommandLine.ShouldNotContain("codegen");
-    }
-
-    [Fact]
-    public void CommandLine_ForAThemedDemo_NamesTheScreenInItsThemeFolder()
-    {
-        NewProjectDialogViewModel viewModel = Create(vm => vm.ThemeSelection.SelectedTheme = "Bubblegum");
-
-        viewModel.CommandLine.ShouldEndWith($"--element Bubblegum/DemoScreenGum");
     }
 
     #endregion
@@ -231,19 +249,19 @@ public class NewProjectDemoScreenDialogTests
 
         await viewModel.RunCreationAsync();
 
-        _created[^1].GenerateDemoScreenCode.ShouldBeTrue();
+        _created[^1].GenerateCode.ShouldBeTrue();
     }
 
     [Fact]
-    public async Task Run_WithTheDemoUnchecked_GeneratesNothing()
+    public async Task Run_WithTheDemoUnchecked_StillGeneratesTheProjectsCode()
     {
         NewProjectDialogViewModel viewModel = Create(vm => vm.IsIncludeDemoScreenGum = false);
         _hasDemo = false;
 
         await viewModel.RunCreationAsync();
 
-        _created[^1].GenerateDemoScreenCode.ShouldBeFalse();
-        _calls.ShouldNotContain("codegen");
+        _created[^1].GenerateCode.ShouldBeTrue();
+        _calls.ShouldContain("codegen");
     }
 
     [Fact]
@@ -269,10 +287,9 @@ public class NewProjectDemoScreenDialogTests
     }
 
     [Fact]
-    public async Task Run_WhenThereIsNoDemoScreenOnDisk_RunsNoCodegen()
+    public async Task Run_WithNothingToGenerate_RunsNoCodegen()
     {
-        _hasDemo = false;
-        NewProjectDialogViewModel viewModel = Create();
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IsIncludeFormsControls = false);
 
         await viewModel.RunCreationAsync();
 
@@ -288,7 +305,7 @@ public class NewProjectDemoScreenDialogTests
         await viewModel.RunCreationAsync();
 
         viewModel.IsRestoreFailed.ShouldBeTrue();
-        viewModel.RestoreFailureHeading.ShouldBe("The code project was created, but generating code for the demo screen failed.");
+        viewModel.RestoreFailureHeading.ShouldBe("The code project was created, but generating code failed.");
         viewModel.RestoreFailureText.ShouldContain("DemoScreenGum: bad");
         viewModel.IsCodeProjectCreated.ShouldBeFalse();
     }

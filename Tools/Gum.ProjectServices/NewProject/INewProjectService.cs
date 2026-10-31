@@ -43,10 +43,10 @@ public interface INewProjectService
         string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Generates code for the demo screen (<c>gumcli codegen "&lt;gumj&gt;" --element &lt;screen&gt;</c>), including what it references,
-    /// then rewrites the host game to create the generated class. Run it after the restore. Does nothing when there is no demo screen.
+    /// Generates code for every screen and component of the new project (<c>gumcli codegen "&lt;gumj&gt;"</c>), then rewrites the host
+    /// game to create the demo screen's generated class (when there is one). Run it after the restore. Does nothing without the Forms template.
     /// </summary>
-    Task<GenerateCodeResult> GenerateDemoScreenCodeAsync(
+    Task<GenerateCodeResult> GenerateCodeAsync(
         ResolvedNewProject project, NewProjectFilesResult files, Action<string>? onOutputLine, CancellationToken cancellationToken);
 
     /// <summary>

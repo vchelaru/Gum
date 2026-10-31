@@ -101,10 +101,10 @@ public class NewProjectService : INewProjectService
             }
         }
 
-        if (request.GenerateDemoScreenCode && options.Platform == null)
+        if (request.GenerateCode && options.Platform == null)
         {
-            return Fail(NewProjectErrorKind.DemoScreenCodeNeedsPlatform,
-                "Generating code for the demo screen needs a code project: the code goes into its folder.");
+            return Fail(NewProjectErrorKind.GenerateCodeNeedsPlatform,
+                "Generating code needs a code project: the code goes into its folder.");
         }
 
         string? gumSourceDirectory = null;
@@ -169,7 +169,7 @@ public class NewProjectService : INewProjectService
                 GumProjectPath = targets.GumProjectPath,
                 CsprojPath = targets.CsprojPath,
                 Name = targets.Name,
-                GenerateDemoScreenCode = request.GenerateDemoScreenCode,
+                GenerateCode = request.GenerateCode,
                 RecommendedPackages = request.IncludeRecommendedPackages
                     ? RecommendedPackages.For(options.Platform!.Value)
                     : Array.Empty<string>()
@@ -444,10 +444,10 @@ public class NewProjectService : INewProjectService
     }
 
     /// <inheritdoc/>
-    public Task<GenerateCodeResult> GenerateDemoScreenCodeAsync(
+    public Task<GenerateCodeResult> GenerateCodeAsync(
         ResolvedNewProject project, NewProjectFilesResult files, Action<string>? onOutputLine, CancellationToken cancellationToken)
     {
-        if (files.DemoScreen == null)
+        if (!project.IncludeFormsTemplate)
         {
             return Task.FromResult(new GenerateCodeResult { Success = true });
         }
@@ -464,7 +464,7 @@ public class NewProjectService : INewProjectService
             int exitCode;
             try
             {
-                exitCode = _codegenRunner.Run(files.GumProjectPath, new[] { files.DemoScreen.Name }, prune: false, output, error);
+                exitCode = _codegenRunner.Run(files.GumProjectPath, elementNames: null, prune: false, output, error);
             }
             catch (Exception exception)
             {
@@ -546,10 +546,10 @@ public class NewProjectService : INewProjectService
 
         // After the restore: the code generator reads the restored runtime package to choose the syntax it emits.
         GenerateCodeResult? codegen = null;
-        if (validation.Resolved.GenerateDemoScreenCode && files.DemoScreen != null)
+        if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate)
         {
-            progress?.Report(new NewProjectProgress(NewProjectStep.GeneratingCode, "Generating code for the demo screen..."));
-            codegen = await GenerateDemoScreenCodeAsync(validation.Resolved, files, null, cancellationToken);
+            progress?.Report(new NewProjectProgress(NewProjectStep.GeneratingCode, "Generating code..."));
+            codegen = await GenerateCodeAsync(validation.Resolved, files, null, cancellationToken);
         }
 
         return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore, Codegen = codegen };

@@ -56,22 +56,19 @@ public static class NewProjectCommandLine
     /// </summary>
     /// <param name="packages">The package ids to add; empty gives the same as <see cref="Build"/>.</param>
     /// <param name="csprojPath">The code project file the new step writes.</param>
-    /// <param name="gumProjectPath">The Gum project file, for the final code generation step.</param>
-    /// <param name="demoScreen">The demo screen to generate code for; the last step is <c>gumcli codegen "&lt;gumj&gt;" --element &lt;screen&gt;</c>, after the restore (the generator reads the restored runtime package). Null adds none.</param>
+    /// <param name="gumProjectPath">The Gum project file; when set, the last step is <c>gumcli codegen "&lt;gumj&gt;"</c> (every screen and component), after the restore (the generator reads the restored runtime package). Null adds none.</param>
     public static string BuildChained(
         string path, string platform, bool includeForms, string? theme, bool restore, IReadOnlyList<string> packages, string csprojPath,
-        string? gumProjectPath = null, string? demoScreen = null)
+        string? gumProjectPath = null, bool sourceLinked = false)
     {
-        string codegen = demoScreen == null || gumProjectPath == null
-            ? string.Empty
-            : $" && gumcli codegen \"{gumProjectPath}\" --element {(demoScreen.Contains(' ') ? $"\"{demoScreen}\"" : demoScreen)}";
+        string codegen = gumProjectPath == null ? string.Empty : $" && gumcli codegen \"{gumProjectPath}\"";
 
         if (packages.Count == 0)
         {
-            return Build(path, platform, includeForms, theme, sourceLinked: false, restore) + codegen;
+            return Build(path, platform, includeForms, theme, sourceLinked, restore) + codegen;
         }
 
-        string command = Build(path, platform, includeForms, theme, sourceLinked: false, restore: false);
+        string command = Build(path, platform, includeForms, theme, sourceLinked, restore: false);
         foreach (string package in packages)
         {
             command += $" && dotnet add \"{csprojPath}\" package {package} --no-restore";
