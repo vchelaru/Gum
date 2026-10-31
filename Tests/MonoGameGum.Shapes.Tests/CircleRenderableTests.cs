@@ -199,7 +199,7 @@ public class CircleRenderableTests
         (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
 
         strokeWidth.ShouldBeGreaterThan(0f);
-        ((float)color.A).ShouldBe(160f, 3f);  // was 100 (stroke / (2 * blur) = 0.5); now 0.80 from the Gaussian ring edge alpha
+        ((float)color.A).ShouldBe(135f, 2f);  // was 100 (stroke / (2 * blur) = 0.5); now the Skia ring edge alpha over the Apos ramp left at the edge pixel
         // RGB preserved — only alpha is scaled.
         color.R.ShouldBe((byte)50);
         color.G.ShouldBe((byte)60);
