@@ -37,7 +37,7 @@ internal static class PlatformHostContent
         }
 
         return generated
-            ? new[] { $"using {screen.Namespace};" }
+            ? new[] { "using Gum.Forms.Controls;", $"using {screen.Namespace};" }
             : new[] { "using Gum.Managers;", "using GumRuntime;" };
     }
 

@@ -29,8 +29,8 @@ public class Game1 : Game
         base.Initialize();
 
         GumUI.Initialize(this, "Content/GumProject/{{GumProjectFile}}");
-{{InitLines}}
-{{ScreenLines}}
+        {{InitLines}}
+        {{ScreenLines}}
 
     }
 

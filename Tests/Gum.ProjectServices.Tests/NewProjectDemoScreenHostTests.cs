@@ -140,6 +140,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
         string host = ReadHost(platform);
         host.ShouldContain("new DemoScreenGum().AddToRoot();");
         host.ShouldContain("using MyGame.Screens;");
+        host.ShouldContain("using Gum.Forms.Controls;");
         host.ShouldNotContain("ToGraphicalUiElement");
     }
 

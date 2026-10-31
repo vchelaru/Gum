@@ -21,8 +21,8 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this, "GumProject/{{GumProjectFile}}");
-{{InitLines}}
-{{ScreenLines}}
+        {{InitLines}}
+        {{ScreenLines}}
 
         base.Initialize();
     }

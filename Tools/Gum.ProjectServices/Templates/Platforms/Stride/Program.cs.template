@@ -16,7 +16,7 @@ void Start(Scene rootScene)
     game.Add2DCamera();
 
     GumService.Default.Initialize(game, "Content/GumProject/{{GumProjectFile}}");
-{{InitLines}}
-{{ScreenLines}}
+    {{InitLines}}
+    {{ScreenLines}}
 
 }
