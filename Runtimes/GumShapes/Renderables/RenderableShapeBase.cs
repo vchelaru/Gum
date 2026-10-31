@@ -661,7 +661,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         float effectiveStrokeWidth = StrokeWidth - 2f * _dropshadowBlurX;
         if (!IsFilled && effectiveStrokeWidth <= 0 && _dropshadowBlurX > 0)
         {
-            float alphaScale = Microsoft.Xna.Framework.MathHelper.Clamp(StrokeWidth / (2f * _dropshadowBlurX), 0f, 1f);
+            float alphaScale = ComputeThinRingShadowAlphaScale(StrokeWidth, _dropshadowBlurX);
             baseColor = new Color(
                 baseColor.R,
                 baseColor.G,
@@ -673,6 +673,41 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
             effectiveStrokeWidth = 0.01f;
         }
         return (effectiveStrokeWidth, baseColor);
+    }
+
+    /// <summary>
+    /// Issue #7297 — starting alpha for the shadow of a ring thinner than <c>2 * blur</c>. SkiaGum
+    /// blurs the ring with a Gaussian of sigma <see cref="Gum.Wireframe.DropshadowBlur.GetSigma"/>, so
+    /// the pixel just outside the ring's outer edge has alpha
+    /// <c>Phi((S + 0.5) / sigma) - Phi(0.5 / sigma)</c> (a ring of width S, sampled at the pixel
+    /// center 0.5 past the edge). Apos's ramp keeps only a fraction of its starting alpha at that
+    /// pixel: about 0.7 for a thin ring, up to about 0.9 for a 12 px ring, less as the stroke nears
+    /// <c>2 * blur</c> (fractions measured from the render). Dividing by that fraction makes the
+    /// edge alpha match Skia's to within about 15%. It replaces <c>S / (2 * blur)</c>, which left a
+    /// thin ring 2.3 to 3.1 times fainter than Skia. The tail beyond the edge still differs because
+    /// Apos's ramp is not a Gaussian.
+    /// </summary>
+    private static float ComputeThinRingShadowAlphaScale(float strokeWidth, float blur)
+    {
+        float sigma = Gum.Wireframe.DropshadowBlur.GetSigma(blur);
+        float skiaEdgeAlpha = StandardNormalCdf((strokeWidth + 0.5f) / sigma) - StandardNormalCdf(0.5f / sigma);
+
+        float thicknessFactor = Microsoft.Xna.Framework.MathHelper.Clamp((strokeWidth - 4f) / 8f, 0f, 1f);
+        float edgeCenterRatio = (strokeWidth / 2f + 0.5f) / (blur + strokeWidth / 2f);
+        float retained = (0.7f + 0.19f * thicknessFactor) * (1f - 2f * System.Math.Max(0f, edgeCenterRatio - 0.25f));
+        retained = System.Math.Max(retained, 0.2f);
+
+        return Microsoft.Xna.Framework.MathHelper.Clamp(skiaEdgeAlpha / retained, 0f, 1f);
+    }
+
+    // Abramowitz and Stegun 7.1.26 erf approximation (error below 1.5e-7).
+    private static float StandardNormalCdf(float z)
+    {
+        float x = System.Math.Abs(z) / 1.4142135f;
+        float t = 1f / (1f + 0.3275911f * x);
+        float poly = ((((1.061405429f * t - 1.453152027f) * t) + 1.421413741f) * t - 0.284496736f) * t + 0.254829592f;
+        float erf = 1f - poly * t * (float)System.Math.Exp(-x * x);
+        return z >= 0f ? 0.5f * (1f + erf) : 0.5f * (1f - erf);
     }
 
     /// <summary>

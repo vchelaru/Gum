@@ -186,12 +186,12 @@ public class CircleRenderableTests
     }
 
     [Fact]
-    public void ComputeStrokeShadowDrawParameters_StrokeHalfOfBlur_HalvesStartingAlpha()
+    public void ComputeStrokeShadowDrawParameters_StrokeEqualToBlur_ScalesStartingAlphaByRingEnergy()
     {
         Circle sut = new()
         {
             IsFilled = false,
-            StrokeWidth = 4f,   // #7292: was 2 (stroke / blur = 0.5); the ratio is now stroke / (2 * blur)
+            StrokeWidth = 4f,   // #7297: the starting alpha follows Skia ring energy, no longer stroke / (2 * blur)
             DropshadowBlurX = 4f,
         };
 
@@ -199,7 +199,7 @@ public class CircleRenderableTests
         (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
 
         strokeWidth.ShouldBeGreaterThan(0f);
-        color.A.ShouldBe((byte)100);
+        ((float)color.A).ShouldBe(160f, 3f);  // was 100 (stroke / (2 * blur) = 0.5); now 0.80 from the Gaussian ring edge alpha
         // RGB preserved — only alpha is scaled.
         color.R.ShouldBe((byte)50);
         color.G.ShouldBe((byte)60);
