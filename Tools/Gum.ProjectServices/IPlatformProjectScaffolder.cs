@@ -23,8 +23,7 @@ public interface IPlatformProjectScaffolder
     /// plain Forms template. Takes precedence over <paramref name="includeFormsTemplate"/>.
     /// </param>
     /// <param name="useXmlFormat">Whether the Gum project is the XML <c>.gumx</c> format instead of <c>.gumj</c>; the generated code loads whichever is written.</param>
-    /// <param name="includeDemoScreen">Whether the host game shows the Forms template's demo screen. The screen's files are written either way; the New Project dialog removes them when unticked.</param>
     PlatformProjectResult Create(
         string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
-        string? themeDirectory = null, bool useXmlFormat = false, bool includeDemoScreen = true);
+        string? themeDirectory = null, bool useXmlFormat = false);
 }

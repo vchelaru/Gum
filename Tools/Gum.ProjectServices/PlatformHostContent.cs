@@ -67,7 +67,7 @@ internal static class PlatformHostContent
         {
             "// Shows the project's demo screen, loaded from the Gum project at runtime. To create screens as classes instead,",
             "// generate code for them in the Gum tool, then add them here with: new MyScreen().AddToRoot();",
-            $"ObjectFinder.Self.GetElementSave(\"{screen.Name}\")!.ToGraphicalUiElement().AddToRoot();"
+            $"ObjectFinder.Self.GetElementSave(\"{screen.Name}\")!.ToGraphicalUiElement(GumService.Default.SystemManagers, addToManagers: false).AddToRoot();"
         };
     }
 

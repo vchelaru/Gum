@@ -29,7 +29,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     /// <inheritdoc/>
     public PlatformProjectResult Create(
         string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
-        string? themeDirectory = null, bool useXmlFormat = false, bool includeDemoScreen = true)
+        string? themeDirectory = null, bool useXmlFormat = false)
     {
         string fullDirectory = GetFullDirectory(projectDirectory);
         string projectName = Path.GetFileName(fullDirectory);
@@ -68,7 +68,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         CodeOutputProjectSettings settings = WriteCodeGenerationSettings(gumProjectPath, csprojPath);
 
         // The screen is found from what was just written; the host is written last so it shows it.
-        DemoScreenInfo? demoScreen = includeDemoScreen ? FindDemoScreen(gumProjectPath, settings) : null;
+        DemoScreenInfo? demoScreen = FindDemoScreen(gumProjectPath, settings);
         WriteHostSources(
             fullDirectory, projectName, rootNamespace, platform, Path.GetFileName(gumProjectPath),
             demoScreen, screenCodeGenerated: false, addedPackages: Array.Empty<string>());

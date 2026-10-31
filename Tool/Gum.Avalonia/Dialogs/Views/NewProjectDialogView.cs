@@ -295,6 +295,7 @@ public sealed class NewProjectDialogView : StackPanel
         generateDemo.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsGenerateDemoCodeVisible)));
         CheckBox generateDemoCode = new CheckBox { Name = GenerateDemoCodeCheckBoxName, Content = NewProjectDialogText.GenerateDemoCode };
         generateDemoCode.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.GenerateDemoScreenCodeChecked)) { Mode = BindingMode.TwoWay });
+        generateDemoCode.Bind(IsEnabledProperty, new Binding(nameof(NewProjectDialogViewModel.IsGenerateDemoCodeEnabled)));
         generateDemo.Children.Add(generateDemoCode);
         generateDemo.Children.Add(new TextBlock { Text = NewProjectDialogText.GenerateDemoCodeNote, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) });
         options.Children.Add(generateDemo);

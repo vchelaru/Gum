@@ -30,6 +30,8 @@ public class NewProjectDemoScreenDialogTests
     private readonly Mock<IFormsFileService> _formsFileService = new();
     private readonly List<string> _calls = new List<string>();
     private readonly List<NewProjectRequest> _requests = new List<NewProjectRequest>();
+    // What creation was asked to write: validation also runs for the dialog's own checks, so the request list is not only the creation's.
+    private readonly List<ResolvedNewProject> _created = new List<ResolvedNewProject>();
     private readonly Queue<GenerateCodeResult> _codegenResults = new Queue<GenerateCodeResult>();
     private bool _hasDemo = true;
 
@@ -52,9 +54,10 @@ public class NewProjectDemoScreenDialogTests
             };
         });
         _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
-            .Returns(() =>
+            .Returns((ResolvedNewProject resolved, CancellationToken _) =>
             {
                 _calls.Add("files");
+                _created.Add(resolved);
                 return Task.FromResult(new NewProjectFilesResult
                 {
                     Success = true, GumProjectPath = GumProject, CsprojPath = Csproj,
@@ -158,8 +161,10 @@ public class NewProjectDemoScreenDialogTests
         viewModel.CommandLine.ShouldContain("--no-restore && dotnet add");
     }
 
+    // Code generation reads the restored runtime package to choose its syntax, so without the restore it is skipped and the
+    // game loads the screen at runtime. The checkbox is disabled and shows unticked.
     [Fact]
-    public void CommandLine_WithoutRestore_RunsCodegenAfterTheAdds()
+    public void WithoutRestore_NoCodegenStepIsShown_TheBoxIsDisabled_AndTheNoteSaysWhy()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -167,8 +172,26 @@ public class NewProjectDemoScreenDialogTests
             vm.RunRestore = false;
         });
 
-        viewModel.CommandLine.ShouldEndWith($"--no-restore && {Codegen}");
-        viewModel.CommandLine.ShouldNotContain("dotnet restore");
+        viewModel.CommandLine.ShouldNotContain("codegen");
+        viewModel.IsGenerateDemoCodeEnabled.ShouldBeFalse();
+        viewModel.GenerateDemoScreenCodeChecked.ShouldBeFalse();
+        viewModel.CommandLineNote.ShouldContain("needs the restore");
+    }
+
+    [Fact]
+    public async Task RemoveDemoScreenFromHost_RewritesTheHostWithoutTheScreen_KeepingThePackages()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeRecommendedPackages = true;
+            vm.IsIncludeDemoScreenGum = false;
+        });
+        await viewModel.RunCreationAsync();
+
+        viewModel.RemoveDemoScreenFromHost();
+
+        _service.Verify(x => x.UpdateHost(
+            It.IsAny<ResolvedNewProject>(), It.Is<NewProjectFilesResult>(files => files.DemoScreen == null), true, false), Times.Once);
     }
 
     [Fact]
@@ -208,20 +231,18 @@ public class NewProjectDemoScreenDialogTests
 
         await viewModel.RunCreationAsync();
 
-        _requests[^1].GenerateDemoScreenCode.ShouldBeTrue();
-        _requests[^1].IncludeDemoScreen.ShouldBeTrue();
+        _created[^1].GenerateDemoScreenCode.ShouldBeTrue();
     }
 
     [Fact]
-    public async Task Run_WithTheDemoUnchecked_LeavesTheDemoOutAndGeneratesNothing()
+    public async Task Run_WithTheDemoUnchecked_GeneratesNothing()
     {
         NewProjectDialogViewModel viewModel = Create(vm => vm.IsIncludeDemoScreenGum = false);
         _hasDemo = false;
 
         await viewModel.RunCreationAsync();
 
-        _requests[^1].IncludeDemoScreen.ShouldBeFalse();
-        _requests[^1].GenerateDemoScreenCode.ShouldBeFalse();
+        _created[^1].GenerateDemoScreenCode.ShouldBeFalse();
         _calls.ShouldNotContain("codegen");
     }
 
@@ -237,13 +258,13 @@ public class NewProjectDemoScreenDialogTests
     }
 
     [Fact]
-    public async Task Run_WithoutRestore_StillGeneratesTheCode()
+    public async Task Run_WithoutRestore_RunsNoCodegen()
     {
         NewProjectDialogViewModel viewModel = Create(vm => vm.RunRestore = false);
 
         await viewModel.RunCreationAsync();
 
-        _calls.ShouldBe(new[] { "files", "codegen" });
+        _calls.ShouldBe(new[] { "files" });
         viewModel.IsCodeProjectCreated.ShouldBeTrue();
     }
 

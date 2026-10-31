@@ -251,14 +251,39 @@ public class NewProjectDialogViewModel : DialogViewModel
     /// <summary>Whether the Generate code for the demo screen checkbox shows: only with a C# project that has a demo screen.</summary>
     public bool IsGenerateDemoCodeVisible => IncludeCodeProject && HasDemoScreen;
 
-    /// <summary>Whether creating generates code for the demo screen.</summary>
-    public bool GeneratesDemoScreenCode => IsGenerateDemoCodeVisible && GenerateDemoScreenCodeChoice;
+    /// <summary>
+    /// Whether the checkbox can be changed: code generation reads the restored runtime package to choose the syntax it emits,
+    /// so without the restore it does not run and the game loads the screen at runtime.
+    /// </summary>
+    public bool IsGenerateDemoCodeEnabled => IsGenerateDemoCodeVisible && RunRestore;
 
-    /// <summary>The checkbox's state.</summary>
+    /// <summary>Whether creating generates code for the demo screen.</summary>
+    public bool GeneratesDemoScreenCode => IsGenerateDemoCodeEnabled && GenerateDemoScreenCodeChoice;
+
+    /// <summary>The checkbox's state: ticked only when code will really be generated; a disabled box shows unticked.</summary>
     public bool GenerateDemoScreenCodeChecked
     {
-        get => GenerateDemoScreenCodeChoice;
+        get => GeneratesDemoScreenCode;
         set => GenerateDemoScreenCodeChoice = value;
+    }
+
+    /// <summary>
+    /// Called after the tool removed the demo screen the dialog's project was created with (the demo box was unticked): rewrites the
+    /// game so it no longer names the screen. The files were written while the demo still existed so the shown command and the dialog
+    /// create the same files.
+    /// </summary>
+    public void RemoveDemoScreenFromHost()
+    {
+        if (_createdResolved is null || _createdFiles is null || !_createdFiles.Success)
+        {
+            return;
+        }
+
+        NewProjectFilesResult withoutDemo = new NewProjectFilesResult
+        {
+            Success = true, GumProjectPath = _createdFiles.GumProjectPath, CsprojPath = _createdFiles.CsprojPath, DemoScreen = null
+        };
+        _service.UpdateHost(_createdResolved, withoutDemo, packagesAdded: _createdPackages.Count > 0, screenCodeGenerated: false);
     }
 
     // The demo screen's element name as the chosen theme names it: a themed project holds it in a folder named after the theme.
@@ -745,9 +770,10 @@ public class NewProjectDialogViewModel : DialogViewModel
                 NotifyPropertyChanged(nameof(IsSourceLinkedForced));
                 NotifyPropertyChanged(nameof(IsSourceLinkedEnabled));
             }
-            if (propertyName is nameof(IncludeCodeProject) or nameof(IsIncludeFormsControls) or nameof(IsIncludeDemoScreenGum) or nameof(GenerateDemoScreenCodeChoice))
+            if (propertyName is nameof(IncludeCodeProject) or nameof(IsIncludeFormsControls) or nameof(IsIncludeDemoScreenGum) or nameof(GenerateDemoScreenCodeChoice) or nameof(RunRestore))
             {
                 NotifyPropertyChanged(nameof(IsGenerateDemoCodeVisible));
+                NotifyPropertyChanged(nameof(IsGenerateDemoCodeEnabled));
                 NotifyPropertyChanged(nameof(GeneratesDemoScreenCode));
                 NotifyPropertyChanged(nameof(GenerateDemoScreenCodeChecked));
             }
@@ -802,7 +828,6 @@ public class NewProjectDialogViewModel : DialogViewModel
             Restore = RunRestore,
             UseXmlFormat = UseXmlFormat,
             IncludeRecommendedPackages = game && AddsRecommendedPackages,
-            IncludeDemoScreen = !IsIncludeFormsControls || IsIncludeDemoScreenGum,
             GenerateDemoScreenCode = game && GeneratesDemoScreenCode,
         };
     }
@@ -841,6 +866,10 @@ public class NewProjectDialogViewModel : DialogViewModel
         if (chained)
         {
             notes.Add(NewProjectDialogText.ChainedCommandNote);
+        }
+        if (game && IsGenerateDemoCodeVisible && !RunRestore)
+        {
+            notes.Add(NewProjectDialogText.NoCodegenWithoutRestoreNote);
         }
         if (game && (AddsRecommendedPackages || generatesCode))
         {

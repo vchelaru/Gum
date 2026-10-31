@@ -31,6 +31,7 @@ public static class NewProjectDialogText
     public const string RestoreFailedHeading = "The code project was created, but dotnet restore failed.";
     public const string PackagesFailedHeading = "The code project was created, but adding the recommended packages failed.";
     public const string CodegenFailedHeading = "The code project was created, but generating code for the demo screen failed.";
+    public const string NoCodegenWithoutRestoreNote = "Code generation for the demo screen needs the restore, so it is skipped; the game loads the screen at runtime.";
     public const string GenerateDemoCode = "Generate code for the demo screen";
     public const string GenerateDemoCodeNote = "Runs gumcli codegen for the demo screen, and the game shows it as a C# class. Unticked, the game loads the screen from the Gum project at runtime.";
     public const string DemoHostCommandNote = "gumcli new writes a game that loads the demo screen at runtime and does not initialize the packages; the dialog's game does both.";

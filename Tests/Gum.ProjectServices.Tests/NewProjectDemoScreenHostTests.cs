@@ -1,6 +1,7 @@
 #pragma warning disable xUnit1031 // The helpers create the project synchronously; nothing here can deadlock (no synchronization context).
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
+using System.Text.RegularExpressions;
 using Shouldly;
 
 namespace Gum.ProjectServices.Tests;
@@ -38,7 +39,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
 
     private (NewProjectService Service, ResolvedNewProject Resolved, NewProjectFilesResult Files) Create(
         HostPlatform platform, string template = "forms", bool packages = false, bool generate = false,
-        bool includeDemo = true, string? theme = null, FakeCodegen? codegen = null, string name = "MyGame")
+        string? theme = null, FakeCodegen? codegen = null, string name = "MyGame")
     {
         NewProjectService service = CreateService(codegen);
         NewProjectValidation validation = service.Validate(new NewProjectRequest
@@ -49,7 +50,6 @@ public class NewProjectDemoScreenHostTests : IDisposable
             Theme = theme,
             IncludeRecommendedPackages = packages,
             GenerateDemoScreenCode = generate,
-            IncludeDemoScreen = includeDemo,
             Restore = false,
         });
         validation.Error.ShouldBeNull(validation.Error?.Message);
@@ -76,9 +76,11 @@ public class NewProjectDemoScreenHostTests : IDisposable
         host.ShouldNotContain("new Button()");
         host.ShouldNotContain("Clicked at");
         host.ShouldContain("ObjectFinder.Self.GetElementSave(\"DemoScreenGum\")");
-        host.ShouldContain(".ToGraphicalUiElement()");
+        host.ShouldContain(".ToGraphicalUiElement(GumService.Default.SystemManagers, addToManagers: false)");
         host.ShouldContain(".AddToRoot()");
+        host.ShouldContain("using Gum.Managers;");
         host.ShouldContain("using GumRuntime;");
+        // The core overload (systemManagers, addToManagers) exists on every runtime, stable and source; the no-argument one is MonoGameGum only.
     }
 
     [Theory]
@@ -97,7 +99,13 @@ public class NewProjectDemoScreenHostTests : IDisposable
     [Fact]
     public void Host_WithTheDemoLeftOut_ShowsNothing()
     {
-        Create(HostPlatform.MonoGame, includeDemo: false);
+        (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(HostPlatform.MonoGame);
+        // The dialog removes the demo screen after the project loads, then asks for the host to be rewritten.
+        NewProjectFilesResult withoutDemo = new NewProjectFilesResult
+        {
+            Success = true, GumProjectPath = files.GumProjectPath, CsprojPath = files.CsprojPath
+        };
+        service.UpdateHost(resolved, withoutDemo, packagesAdded: false, screenCodeGenerated: false);
 
         string host = ReadHost(HostPlatform.MonoGame);
         host.ShouldNotContain("DemoScreenGum");
@@ -337,6 +345,28 @@ public class NewProjectDemoScreenHostTests : IDisposable
         });
 
         validation.Error!.Kind.ShouldBe(NewProjectErrorKind.DemoScreenCodeNeedsPlatform);
+    }
+
+    #endregion
+
+    #region Runtime sources the host lines rely on
+
+    // The host builds against whatever the NuGet runtime offers, which a unit test cannot restore. This pins that the members the runtime-load
+    // line uses are still declared in the runtime sources, so a signature change fails here and not in a user's build (the zero-argument
+    // ToGraphicalUiElement is MonoGameGum only and was the CS1501 on the Skia runtimes).
+    [Fact]
+    public void TheRuntimeLoadLine_UsesMembersEveryRuntimeDeclares()
+    {
+        string root = FindRepoRoot();
+        string extensions = File.ReadAllText(Path.Combine(root, "GumRuntime", "ElementSaveExtensions.GumRuntime.cs"));
+        Regex.IsMatch(extensions, @"public static GraphicalUiElement ToGraphicalUiElement\(this ElementSave elementSave,\s+ISystemManagers systemManagers,\s+bool addToManagers")
+            .ShouldBeTrue("the core overload the host calls");
+
+        // GumService.Default.SystemManagers: the MonoGame-family service and the Skia base (Silk.NET, Stride, KNI Skia) both declare it.
+        File.ReadAllText(Path.Combine(root, "MonoGameGum", "GumService.cs")).ShouldContain("public SystemManagers SystemManagers");
+        File.ReadAllText(Path.Combine(root, "Runtimes", "SkiaGum", "GumServiceSkiaBase.cs")).ShouldContain("public SystemManagers SystemManagers");
+        File.ReadAllText(Path.Combine(root, "GumRuntime", "GraphicalUiElement.Hierarchy.cs")).ShouldContain("public void AddToRoot()");
+        File.ReadAllText(Path.Combine(root, "Gum", "Managers", "ObjectFinder.cs")).ShouldContain("public ElementSave? GetElementSave(string? elementName)");
     }
 
     #endregion

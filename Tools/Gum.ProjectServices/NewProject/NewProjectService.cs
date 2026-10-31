@@ -169,7 +169,6 @@ public class NewProjectService : INewProjectService
                 GumProjectPath = targets.GumProjectPath,
                 CsprojPath = targets.CsprojPath,
                 Name = targets.Name,
-                IncludeDemoScreen = request.IncludeDemoScreen,
                 GenerateDemoScreenCode = request.GenerateDemoScreenCode,
                 RecommendedPackages = request.IncludeRecommendedPackages
                     ? RecommendedPackages.For(options.Platform!.Value)
@@ -358,7 +357,7 @@ public class NewProjectService : INewProjectService
         NewProjectFilesResult result;
         try
         {
-            result = WriteFiles(options, targets, project.GumSourceDirectory, project.IncludeDemoScreen);
+            result = WriteFiles(options, targets, project.GumSourceDirectory);
 
             if (result.Success && cancellationToken.IsCancellationRequested)
             {
@@ -380,7 +379,7 @@ public class NewProjectService : INewProjectService
     }
 
     // Writes the Gum project (and the code project around it).
-    private static NewProjectFilesResult WriteFiles(Options options, Targets targets, string? gumSourceDirectory, bool includeDemoScreen)
+    private static NewProjectFilesResult WriteFiles(Options options, Targets targets, string? gumSourceDirectory)
     {
         try
         {
@@ -388,7 +387,7 @@ public class NewProjectService : INewProjectService
             {
                 PlatformProjectResult result = new PlatformProjectScaffolder().Create(
                     targets.RootDirectory, platform, options.IncludeFormsTemplate, gumSourceDirectory, options.ThemeDirectory,
-                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath), includeDemoScreen: includeDemoScreen);
+                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath));
                 if (!result.Success)
                 {
                     return new NewProjectFilesResult { ErrorMessage = result.ErrorMessage };

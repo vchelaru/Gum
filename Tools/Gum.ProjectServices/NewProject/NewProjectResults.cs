@@ -57,9 +57,6 @@ public class ResolvedNewProject
     /// <summary>The code project file that will be created, or <see langword="null"/> without a platform.</summary>
     public string? CsprojPath { get; init; }
 
-    /// <summary>Whether the demo screen stays in the project; see <see cref="NewProjectRequest.IncludeDemoScreen"/>.</summary>
-    public bool IncludeDemoScreen { get; init; } = true;
-
     /// <summary>Whether code is generated for the demo screen once the project is restored.</summary>
     public bool GenerateDemoScreenCode { get; init; }
 
