@@ -136,6 +136,15 @@ internal sealed class NewProjectDialogDriver
         _window.Result.ShouldBe(true);
     }
 
+    /// <summary>Clicks OK and returns at once, for a flow that stays open (busy, a failure panel).</summary>
+    public void ClickOkWithoutWaiting() => _window.Click(OkButton);
+
+    /// <summary>Presses and releases a key in the window.</summary>
+    public void Press(Key key, PhysicalKey physicalKey) => _window.Press(key, physicalKey);
+
+    /// <summary>Clicks the button whose text is <paramref name="text"/>.</summary>
+    public void ClickButton(string text) => _window.ClickButton(text);
+
     /// <summary>Clicks Cancel; the window closes.</summary>
     public void ClickCancel()
     {
