@@ -2338,13 +2338,10 @@ public class CodeGenerator
 
     // Behaviors whose component derives from a Forms type without being that type's default visual. A
     // MenuItemSubmenuPopup is ScrollViewer-backed, but registering it for typeof(ScrollViewer) would replace
-    // the project's ScrollViewer component for every ScrollViewer (#6730). A Tooltip component is the same: the
-    // from-file loader owns the Tooltip template (FromFileTooltipTemplate), and a plain new Tooltip() keeps its
-    // default visual unless that template is registered (#7252).
+    // the project's ScrollViewer component for every ScrollViewer (#6730).
     static readonly HashSet<string> BehaviorsWithoutDefaultFormsTemplate = new HashSet<string>
     {
         StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName,
-        StandardFormsBehaviorNames.TooltipBehaviorName,
     };
 
     static Dictionary<string, string> BehaviorGumFormsTypes = new Dictionary<string, string>()
