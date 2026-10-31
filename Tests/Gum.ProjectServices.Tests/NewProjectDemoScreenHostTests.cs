@@ -1,3 +1,4 @@
+#pragma warning disable xUnit1031 // The helpers create the project synchronously; nothing here can deadlock (no synchronization context).
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
 using Shouldly;
