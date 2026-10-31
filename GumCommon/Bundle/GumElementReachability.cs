@@ -51,7 +51,7 @@ public class GumElementReachability
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> FormsCreatedBehaviors { get; } =
         new Dictionary<string, IReadOnlyList<string>>
         {
-            // FrameworkElement.ToolTip
+            // FrameworkElement.ToolTip and ToolTipService.SetToolTip (the Tooltip is built in ToolTipService). A project with no Forms component kept that only calls SetToolTip on plain visuals needs "Tooltip" in the extra roots.
             [AnyFormsBehavior] = new[] { StandardFormsBehaviorNames.TooltipBehaviorName },
             // ItemsControl.CreateNewItemFrameworkElement falls back to new Label(); CreateNewVisual uses the
             // ListBoxItem template

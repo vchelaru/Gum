@@ -613,32 +613,9 @@ public class FrameworkElement : INotifyPropertyChanged
         get => _toolTip;
         set
         {
-            if (value != null && value is not string && value is not Tooltip)
-            {
-                throw new NotSupportedException(
-                    $"FrameworkElement.ToolTip currently supports only string (or Tooltip) values. " +
-                    $"Got {value.GetType().FullName}. Non-string content is reserved for a future release.");
-            }
+            Tooltip? tooltip = ToolTipService.ToTooltip(value, memberName: "FrameworkElement.ToolTip");
 
             _toolTip = value;
-
-            if (value == null)
-            {
-                ToolTipService.RegisterTooltip(this, null);
-                return;
-            }
-
-            Tooltip tooltip;
-            if (value is Tooltip existing)
-            {
-                tooltip = existing;
-            }
-            else
-            {
-                tooltip = new Tooltip();
-                tooltip.Content = value;
-            }
-
             ToolTipService.RegisterTooltip(this, tooltip);
         }
     }
