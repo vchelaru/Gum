@@ -113,6 +113,7 @@ public class NewProjectUiKeyboardTests
         fixture.Settle();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.StandInRestore(NewProjectUiFixture.RestoreFailed());
+        fixture.Settle();
         fixture.Window.Click(fixture.Dialog.OkButton);
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the restore failure");
         fixture.ButtonLabeled("Retry")!.Focus();

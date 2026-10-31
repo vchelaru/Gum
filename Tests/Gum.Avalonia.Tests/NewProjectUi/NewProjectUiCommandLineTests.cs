@@ -95,6 +95,7 @@ public class NewProjectUiCommandLineTests
         string? copied = ClipboardAfterCopy(fixture);
 
         copied.ShouldBe(fixture.Dialog.CommandLine);
+        fixture.Settle();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
     }
 

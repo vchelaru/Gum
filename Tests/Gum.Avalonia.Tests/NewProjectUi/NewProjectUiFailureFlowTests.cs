@@ -252,6 +252,7 @@ public class NewProjectUiFailureFlowTests
         fixture.Dialog.Result.ShouldBeNull();
         fixture.ViewModel.HasError.ShouldBeFalse("a cancel is not an error");
         fixture.Dialog.NameBox.IsEffectivelyEnabled.ShouldBeTrue();
+        fixture.Settle();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
         Directory.Exists(fixture.GameFolder("Game")).ShouldBeFalse("nothing was written");
 
@@ -307,6 +308,7 @@ public class NewProjectUiFailureFlowTests
 
         fixture.Dialog.TypeName("Game2");
 
+        fixture.Settle();
         fixture.IsShown("the disk blew up").ShouldBeFalse("the error described the old inputs");
         fixture.ViewModel.HasError.ShouldBeFalse();
     }
@@ -321,6 +323,7 @@ public class NewProjectUiFailureFlowTests
         fixture.Service.CreateFiles = (_, _) => Task.FromResult(new NewProjectFilesResult { Success = false, ErrorMessage = "The folder is read-only." });
         StartCreation(fixture);
         fixture.WaitUntil(() => fixture.ViewModel.HasError, "the error");
+        fixture.Settle();
         fixture.IsShown("The folder is read-only.").ShouldBeTrue();
 
         switch (input)
@@ -336,6 +339,7 @@ public class NewProjectUiFailureFlowTests
                 break;
         }
 
+        fixture.Settle();
         fixture.IsShown("The folder is read-only.").ShouldBeFalse();
     }
 

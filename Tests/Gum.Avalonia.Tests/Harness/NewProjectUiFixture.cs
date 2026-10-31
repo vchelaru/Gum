@@ -45,10 +45,17 @@ internal sealed class NewProjectUiFixture : IDisposable
         _scale = services.GetRequiredService<IAppScaleProvider>();
         _originalFontSize = _scale.BaseFontSize;
 
+        IExistingCodeProjectDetector checksDetector = detector ?? services.GetRequiredService<IExistingCodeProjectDetector>();
+        TimeSpan? slow = SlowExistingCodeProjectDetector.DelayFromEnvironment();
+        if (slow != null && checksDetector is not SlowExistingCodeProjectDetector)
+        {
+            checksDetector = new SlowExistingCodeProjectDetector(checksDetector, slow.Value);
+        }
+
         ViewModel = new NewProjectDialogViewModel(
             ActivatorUtilities.CreateInstance<ThemeSelectionViewModel>(services),
             service ?? _switchable,
-            detector ?? services.GetRequiredService<IExistingCodeProjectDetector>(),
+            checksDetector,
             services.GetRequiredService<IDialogService>(),
             new Mock<INewProjectLocationSettings>().Object)
         {
@@ -57,10 +64,14 @@ internal sealed class NewProjectUiFixture : IDisposable
             IsIncludeDemoScreenGum = false,
             GenerateCodeChoice = false,
         };
+        Guard = new AsyncStateGuard(ViewModel);
         Window = new DialogWindowDriver(ViewModel);
-        Dialog = new NewProjectDialogDriver(Window);
+        Dialog = new NewProjectDialogDriver(Window, Guard);
         Settle();
     }
+
+    /// <summary>Fails a read of check-derived state before <see cref="Settle"/>; see <see cref="AsyncStateGuard"/>.</summary>
+    public AsyncStateGuard Guard { get; }
 
     /// <summary>The temp folder everything the test makes lives in.</summary>
     public string Root { get; }
@@ -92,7 +103,7 @@ internal sealed class NewProjectUiFixture : IDisposable
     public void WaitUntil(Func<bool> condition, string what)
     {
         System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        while (!condition())
+        while (!HoldsUnguarded(condition))
         {
             if (stopwatch.Elapsed > WaitLimit)
             {
@@ -100,6 +111,15 @@ internal sealed class NewProjectUiFixture : IDisposable
             }
             Thread.Sleep(5);
             Window.Layout();
+        }
+    }
+
+    // A wait reads state on purpose, so the guard stays quiet while it polls.
+    private bool HoldsUnguarded(Func<bool> condition)
+    {
+        using (Guard.Suppress())
+        {
+            return condition();
         }
     }
 
@@ -113,14 +133,16 @@ internal sealed class NewProjectUiFixture : IDisposable
             Window.Layout();
             if (ReferenceEquals(latest, ViewModel.ChecksRefresh))
             {
-                return;
+                break;
             }
         }
+        Guard.MarkSettled();
     }
 
-    /// <summary>Every text a visible TextBlock shows.</summary>
+    /// <summary>Every text a visible TextBlock shows. Throws when the folder checks were not waited for (<see cref="AsyncStateGuard"/>).</summary>
     public List<string> VisibleTexts()
     {
+        Guard.Check("the dialog's visible texts (banners, refusal, folder notice)");
         Window.Layout();
         return Window.Window.GetVisualDescendants().OfType<TextBlock>()
             .Where(block => block.IsEffectivelyVisible && !string.IsNullOrEmpty(block.Text))

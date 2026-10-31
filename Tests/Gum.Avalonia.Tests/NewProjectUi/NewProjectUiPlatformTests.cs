@@ -176,15 +176,18 @@ public class NewProjectUiPlatformTests
         fixture.IsShown(NewProjectUiText.StridePlatformNote).ShouldBeTrue();
 
         fixture.Dialog.ChoosePlatform("silknet");
+        fixture.Settle();
         fixture.IsShown(NewProjectUiText.StridePlatformNote).ShouldBeFalse();
         fixture.IsShown(NewProjectUiText.SilkNetPlatformNote).ShouldBeTrue();
 
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, false);
+        fixture.Settle();
         fixture.IsShown(NewProjectUiText.SilkNetPlatformNote).ShouldBeFalse("the platform choices are hidden with the code project");
         fixture.Dialog.PlatformBox.IsEffectivelyVisible.ShouldBeFalse();
 
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.Dialog.PlatformBox.SelectedValue.ShouldBe("silknet", "the platform is remembered");
+        fixture.Settle();
         fixture.IsShown(NewProjectUiText.SilkNetPlatformNote).ShouldBeTrue();
     }
 }
