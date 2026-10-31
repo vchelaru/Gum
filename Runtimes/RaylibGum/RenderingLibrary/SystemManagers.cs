@@ -292,6 +292,16 @@ public partial class SystemManagers : ISystemManagers
 
     private void RegisterComponentRuntimeInstantiations()
     {
+        // A standard element with a runtime class but no registration loads as a plain
+        // GraphicalUiElement, which drops the runtime-only variables (IsFilled/FillRed/...) (#7287).
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Arc",
+            () => new ArcRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Circle",
+            () => new CircleRuntime());
+
         // ColoredRectangle is obsolete, but existing projects still load it by type name.
 #pragma warning disable CS0618 // Type or member is obsolete
         ElementSaveExtensions.RegisterGueInstantiation(
