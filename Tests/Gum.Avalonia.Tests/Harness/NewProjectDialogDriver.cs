@@ -21,10 +21,12 @@ internal sealed class NewProjectDialogDriver
     private static readonly TimeSpan CreationTimeout = TimeSpan.FromSeconds(90);
 
     private readonly DialogWindowDriver _window;
+    private readonly AsyncStateGuard? _guard;
 
-    public NewProjectDialogDriver(DialogWindowDriver window)
+    public NewProjectDialogDriver(DialogWindowDriver window, AsyncStateGuard? guard = null)
     {
         _window = window;
+        _guard = guard;
     }
 
     /// <summary>The dialog's view model, for what the view does not show.</summary>
@@ -47,7 +49,15 @@ internal sealed class NewProjectDialogDriver
 
     public ComboBox PlatformBox => _window.Find<ComboBox>(combo => combo.ItemsSource is IEnumerable<NewProjectPlatformOption>);
 
-    public Button OkButton => _window.AffirmativeButton;
+    /// <summary>The OK button. Reading it before the folder checks were waited for throws (<see cref="AsyncStateGuard"/>): whether it is on depends on them.</summary>
+    public Button OkButton
+    {
+        get
+        {
+            _guard?.Check("the OK button");
+            return _window.AffirmativeButton;
+        }
+    }
 
     public Button CancelButton => _window.Find<Button>(button => button.Name == DialogWindow.NegativeButtonName);
 
@@ -63,6 +73,8 @@ internal sealed class NewProjectDialogDriver
     /// <summary>Clicks the check box labeled <paramref name="label"/> when it is not already in the wanted state.</summary>
     public void SetChecked(string label, bool isChecked)
     {
+        // A banner from the checks of an earlier edit can grow the window and move the box under a click.
+        Settle();
         CheckBox box = CheckBoxLabeled(label);
         if (box.IsChecked != isChecked)
         {
@@ -129,15 +141,15 @@ internal sealed class NewProjectDialogDriver
     /// <summary>Clicks OK and waits for the window to close (a code project creates its files first).</summary>
     public void ClickOk()
     {
-        ClickSettled(OkButton);
+        ClickSettled(() => _window.AffirmativeButton);
         Wait.Until(() => _window.Result != null, CreationTimeout, () =>
-            $"the dialog to close. OK enabled: {OkButton.IsEffectivelyEnabled}. Busy: {ViewModel.IsBusy}. Error: {ViewModel.ErrorMessage}. Restore failure: {ViewModel.RestoreFailureText}. Validation: {ViewModel.ValidationMessage}. Refusal: {ViewModel.RefusalText}.",
+            $"the dialog to close. OK enabled: {_window.AffirmativeButton.IsEffectivelyEnabled}. Busy: {ViewModel.IsBusy}. Error: {ViewModel.ErrorMessage}. Restore failure: {ViewModel.RestoreFailureText}. Validation: {ViewModel.ValidationMessage}. Refusal: {ViewModel.RefusalText}.",
             _window);
         _window.Result.ShouldBe(true);
     }
 
     /// <summary>Clicks OK and returns without waiting for the dialog to close (it first waits for the folder checks), for a flow that stays open (busy, a failure panel).</summary>
-    public void ClickOkWithoutWaitingForClose() => ClickSettled(OkButton);
+    public void ClickOkWithoutWaitingForClose() => ClickSettled(() => _window.AffirmativeButton);
 
     /// <summary>Presses and releases a key in the window.</summary>
     public void Press(Key key, PhysicalKey physicalKey) => _window.Press(key, physicalKey);
@@ -148,14 +160,21 @@ internal sealed class NewProjectDialogDriver
     /// <summary>Clicks Cancel; the window closes.</summary>
     public void ClickCancel()
     {
-        ClickSettled(CancelButton);
+        ClickSettled(() => CancelButton);
         _window.Result.ShouldBe(false);
     }
 
     // A person clicks a footer button long after the folder checks of the last edit finished. The checks run on a
     // worker and their banner can grow the window (moving the footer) at any moment, so a click made right after an
     // edit would land on the old position and be lost: wait for them first.
-    private void ClickSettled(Control button)
+    private void ClickSettled(Func<Control> button)
+    {
+        Settle();
+        _window.Click(button());
+    }
+
+    /// <summary>Waits for the folder checks of the latest edit and for the layout they cause.</summary>
+    public void Settle()
     {
         for (int i = 0; i < 3; i++)
         {
@@ -167,7 +186,7 @@ internal sealed class NewProjectDialogDriver
                 break;
             }
         }
-        _window.Click(button);
+        _guard?.MarkSettled();
     }
 
     private void OpenSection(string name)

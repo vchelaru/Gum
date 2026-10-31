@@ -120,7 +120,7 @@ public class NewProjectUiRecommendedPackagesTests
             ? new RestoreResult { Status = RestoreStatus.Failed, ExitCode = 1, OutputTail = "error: cannot write the csproj" }
             : new RestoreResult { Status = RestoreStatus.Succeeded, ExitCode = 0 };
 
-        fixture.Window.Click(fixture.Dialog.OkButton);
+        fixture.Dialog.ClickOkWithoutWaitingForClose();
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the failure panel");
 
         fixture.IsShown(NewProjectDialogText.PackagesFailedHeading).ShouldBeTrue();

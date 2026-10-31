@@ -28,7 +28,7 @@ public class NewProjectUiFailureFlowTests
     }
 
     // Clicks OK and returns without waiting for the dialog to close.
-    private static void StartCreation(NewProjectUiFixture fixture) => fixture.Window.Click(fixture.Dialog.OkButton);
+    private static void StartCreation(NewProjectUiFixture fixture) => fixture.Dialog.ClickOkWithoutWaitingForClose();
 
     private static void FailRestoreOnce(NewProjectUiFixture fixture, out List<string> restored, string tail = "NU1101: no such package")
     {
@@ -252,6 +252,7 @@ public class NewProjectUiFailureFlowTests
         fixture.Dialog.Result.ShouldBeNull();
         fixture.ViewModel.HasError.ShouldBeFalse("a cancel is not an error");
         fixture.Dialog.NameBox.IsEffectivelyEnabled.ShouldBeTrue();
+        fixture.Settle();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
         Directory.Exists(fixture.GameFolder("Game")).ShouldBeFalse("nothing was written");
 
@@ -281,7 +282,7 @@ public class NewProjectUiFailureFlowTests
         StartCreation(fixture);
         fixture.WaitUntil(() => fixture.ViewModel.IsBusy, "the busy state");
 
-        fixture.Window.Click(fixture.Dialog.OkButton);
+        fixture.Dialog.ClickOkWithoutWaitingForClose();
         fixture.Window.Press(Key.Enter, PhysicalKey.Enter);
         fixture.Window.Press(Key.Enter, PhysicalKey.Enter);
 
@@ -307,6 +308,7 @@ public class NewProjectUiFailureFlowTests
 
         fixture.Dialog.TypeName("Game2");
 
+        fixture.Settle();
         fixture.IsShown("the disk blew up").ShouldBeFalse("the error described the old inputs");
         fixture.ViewModel.HasError.ShouldBeFalse();
     }
@@ -321,6 +323,7 @@ public class NewProjectUiFailureFlowTests
         fixture.Service.CreateFiles = (_, _) => Task.FromResult(new NewProjectFilesResult { Success = false, ErrorMessage = "The folder is read-only." });
         StartCreation(fixture);
         fixture.WaitUntil(() => fixture.ViewModel.HasError, "the error");
+        fixture.Settle();
         fixture.IsShown("The folder is read-only.").ShouldBeTrue();
 
         switch (input)
@@ -336,6 +339,7 @@ public class NewProjectUiFailureFlowTests
                 break;
         }
 
+        fixture.Settle();
         fixture.IsShown("The folder is read-only.").ShouldBeFalse();
     }
 

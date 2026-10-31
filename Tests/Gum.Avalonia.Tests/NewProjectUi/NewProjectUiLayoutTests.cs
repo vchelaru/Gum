@@ -179,7 +179,8 @@ public class NewProjectUiLayoutTests
             FailedPackage = "Gum.Shapes.MonoGame",
             OutputTail = string.Join("\n", Enumerable.Range(0, 12).Select(i => $"error: could not write the project, line {i}"))
         });
-        fixture.Window.Click(fixture.Dialog.OkButton);
+        fixture.Settle();
+        fixture.Dialog.ClickOkWithoutWaitingForClose();
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the packages failure");
         fixture.Service.AddPackages = null;
 
@@ -227,7 +228,8 @@ public class NewProjectUiLayoutTests
         fixture.Settle();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
         fixture.StandInRestore(NewProjectUiFixture.RestoreFailed(string.Join("\n", Enumerable.Range(0, 12).Select(i => $"error NU1101: Unable to find package number {i} in any source"))));
-        fixture.Window.Click(fixture.Dialog.OkButton);
+        fixture.Settle();
+        fixture.Dialog.ClickOkWithoutWaitingForClose();
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the restore failure");
 
         AssertLaidOut(fixture, $"restore failure, zoom {zoom}");
@@ -254,6 +256,7 @@ public class NewProjectUiLayoutTests
         Rect shown = fixture.BoundsOf(command);
         shown.Top.ShouldBeGreaterThanOrEqualTo(view.Top - 1, "the command line is not above the visible part");
         shown.Bottom.ShouldBeLessThanOrEqualTo(view.Bottom + 1, "or below it");
+        fixture.Settle();
         fixture.BoundsOf(fixture.Dialog.OkButton).Top.ShouldBeGreaterThanOrEqualTo(view.Bottom - 1, "the buttons stay below the scrolling part");
     }
 }
