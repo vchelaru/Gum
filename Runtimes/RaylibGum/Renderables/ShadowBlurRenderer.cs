@@ -267,11 +267,26 @@ void main() {{
 /// </summary>
 internal sealed class RenderTextureService : RenderTargetServiceBase<RenderTexture2D>
 {
-    protected override RenderTexture2D Create(int width, int height) =>
-        LoadRenderTexture(width, height);
+    // raylib's LoadRenderTexture / UnloadRenderTexture leave the default framebuffer bound. When the
+    // host drew Gum inside its own BeginTextureMode, that silently redirects the rest of the frame
+    // to the screen, and the batch still pending from earlier draws flushes there instead of into
+    // the host's texture. Flush into the current target first, then bind it again (#7290).
+    protected override RenderTexture2D Create(int width, int height)
+    {
+        uint activeFramebuffer = Rlgl.GetActiveFramebuffer();
+        Rlgl.DrawRenderBatchActive();
+        RenderTexture2D created = LoadRenderTexture(width, height);
+        Rlgl.EnableFramebuffer(activeFramebuffer);
+        return created;
+    }
 
-    protected override void Destroy(RenderTexture2D renderTarget) =>
+    protected override void Destroy(RenderTexture2D renderTarget)
+    {
+        uint activeFramebuffer = Rlgl.GetActiveFramebuffer();
+        Rlgl.DrawRenderBatchActive();
         UnloadRenderTexture(renderTarget);
+        Rlgl.EnableFramebuffer(activeFramebuffer == renderTarget.Id ? 0 : activeFramebuffer);
+    }
 
     protected override int GetWidth(RenderTexture2D renderTarget) =>
         renderTarget.Texture.Width;
