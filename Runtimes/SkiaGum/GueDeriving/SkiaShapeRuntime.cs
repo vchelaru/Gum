@@ -934,7 +934,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     /// <c>RenderableShapeBase.CreatePaint</c> (Runtimes/SkiaGum/Renderables/RenderableShapeBase.cs)
     /// passes <c>DropshadowBlur.GetSigma(DropshadowBlurX)</c> (0.4 times the blur) to <c>SKImageFilter.CreateDropShadow</c> as the
     /// Gaussian sigma. The sigma is chosen so the shadow reaches the user-set blur: measured outward
-    /// from the shape edge, the alpha falls below 0.5% at about <see cref="DropshadowBlurX"/> pixels.</para>
+    /// from the shape edge, the alpha falls to about 0.4% at about <see cref="DropshadowBlurX"/> pixels.</para>
     /// <para>Other backends approximate the same visible extent without a true Gaussian shader.
     /// Treat the user-set value as "how far the shadow visibly bleeds," not as sigma: the sigma is
     /// 0.4 x the blur, so the visible reach is about 1.0 x the blur (about 2.5 x the sigma).</para>
