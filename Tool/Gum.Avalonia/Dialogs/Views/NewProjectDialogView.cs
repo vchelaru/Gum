@@ -38,6 +38,7 @@ public sealed class NewProjectDialogView : StackPanel
 
     /// <summary>Name of the Include recommended packages check box.</summary>
     public const string RecommendedPackagesCheckBoxName = "PART_RecommendedPackages";
+    public const string GenerateDemoCodeCheckBoxName = "PART_GenerateDemoCode";
 
     /// <summary>Name of the info icon in the existing-code-project banner.</summary>
     public const string WarningInfoName = "PART_WarningInfo";
@@ -289,6 +290,14 @@ public sealed class NewProjectDialogView : StackPanel
             TextBlock.TextProperty, nameof(NewProjectDialogViewModel.RecommendedPackagesNote));
         recommended.Children.Add(recommendedNote);
         options.Children.Add(recommended);
+
+        StackPanel generateDemo = new StackPanel();
+        generateDemo.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsGenerateDemoCodeVisible)));
+        CheckBox generateDemoCode = new CheckBox { Name = GenerateDemoCodeCheckBoxName, Content = NewProjectDialogText.GenerateDemoCode };
+        generateDemoCode.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.GenerateDemoScreenCodeChecked)) { Mode = BindingMode.TwoWay });
+        generateDemo.Children.Add(generateDemoCode);
+        generateDemo.Children.Add(new TextBlock { Text = NewProjectDialogText.GenerateDemoCodeNote, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) });
+        options.Children.Add(generateDemo);
         section.Children.Add(options);
         return section;
     }
