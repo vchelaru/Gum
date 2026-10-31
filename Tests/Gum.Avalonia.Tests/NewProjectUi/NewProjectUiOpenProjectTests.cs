@@ -86,7 +86,7 @@ public class NewProjectUiOpenProjectTests
                 window.TypeLocation(location);
                 window.SetChecked(NewProjectUiText.CreateCodeProject, true);
                 viewModel.IncludeRecommendedPackages = false;
-                window.ClickOkWithoutWaiting();
+                window.ClickOkWithoutWaitingForClose();
                 WaitFor(() => viewModel.IsRestoreFailed, "the restore failure");
 
                 ProjectManager.GumProjectSave.ShouldBeSameAs(openProject, "the panel is not the end: the open project stays");
@@ -125,7 +125,7 @@ public class NewProjectUiOpenProjectTests
                 window.TypeLocation(location);
                 window.SetChecked(NewProjectUiText.CreateCodeProject, true);
                 window.ViewModel.IncludeRecommendedPackages = false;
-                window.ClickOkWithoutWaiting();
+                window.ClickOkWithoutWaitingForClose();
                 WaitFor(() => window.ViewModel.IsRestoreFailed, "the restore failure");
                 window.Press(Key.Escape, PhysicalKey.Escape);
                 result = window.Result;
