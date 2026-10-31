@@ -61,6 +61,12 @@ public class NewProjectDialogViewModel : DialogViewModel
     private int _refreshVersion;
     private string? _existingCodeProject;
     private bool _targetNotEmpty;
+    private bool _targetExists;
+    private string? _targetExistsFor;
+
+    private static string CheckKey(string folder, string name) => folder + "|" + name;
+
+    private string CurrentCheckKey() => CheckKey(ResolvedFolder.ParentFolder, EffectiveName);
 
     /// <summary>
     /// Theme picker, shared with the Add Forms dialog. Only relevant when
@@ -427,6 +433,52 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     /// <summary>The not-empty banner's body.</summary>
     public string TargetNotEmptyText
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    #endregion
+
+    #region Folder notice
+
+    /// <summary>Whether the line under Location that names the project folder shows.</summary>
+    public bool IsFolderNoticeVisible
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    /// <summary>Whether the project folder is made (a new folder icon) rather than reused.</summary>
+    public bool IsFolderNoticeCreating
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    /// <summary>What happens to the project folder: made, reused, or Location used as it is.</summary>
+    public string FolderNoticeHeading
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    /// <summary>The full project folder, with a trailing separator as the Folders section shows it.</summary>
+    public string FolderNoticePath
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    /// <summary>Whether a Location that is already the project folder exists yet; empty when Location is the parent.</summary>
+    public string FolderNoticeSuffix
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    /// <summary>The same answer, short, for the collapsed Folders header; empty when there is no notice.</summary>
+    public string FoldersSummary
     {
         get => Get<string>() ?? string.Empty;
         private set => Set(value);
@@ -991,6 +1043,118 @@ public class NewProjectDialogViewModel : DialogViewModel
         TargetNotEmptyText = _targetNotEmpty
             ? NewProjectDialogText.TargetNotEmptyBody(projectFolder)
             : string.Empty;
+
+        RefreshFolderNotice();
+    }
+
+    /// <summary>How long a check for new Name or Location may take before the notice for the old ones is hidden.</summary>
+    public TimeSpan FolderNoticeHideDelay { get; set; } = TimeSpan.FromMilliseconds(150);
+
+    /// <summary>Whether the notice keeps its room in the layout: while it shows, and while it is hidden only until the check returns.</summary>
+    public bool IsFolderNoticeSpaceReserved
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    private CancellationTokenSource? _staleHide;
+
+    // Where the hide timer's work runs: the UI thread when the dialog is built on one, as the checks' continuations do.
+    private readonly TaskScheduler _uiScheduler = SynchronizationContext.Current != null ? TaskScheduler.FromCurrentSynchronizationContext() : TaskScheduler.Default;
+
+    private void CancelStaleHide()
+    {
+        _staleHide?.Cancel();
+        _staleHide = null;
+    }
+
+    private void StartStaleHide()
+    {
+        CancellationTokenSource source = new CancellationTokenSource();
+        _staleHide = source;
+        Task.Delay(FolderNoticeHideDelay, source.Token).ContinueWith(task =>
+        {
+            if (task.IsCanceled || !ReferenceEquals(_staleHide, source))
+            {
+                return;
+            }
+
+            _staleHide = null;
+            if (_targetExistsFor != CurrentCheckKey())
+            {
+                HideFolderNotice(reserveSpace: true);
+            }
+        }, _uiScheduler);
+    }
+
+    private void HideFolderNotice(bool reserveSpace)
+    {
+        IsFolderNoticeVisible = false;
+        IsFolderNoticeSpaceReserved = reserveSpace;
+        FoldersSummary = string.Empty;
+        if (!reserveSpace)
+        {
+            FolderNoticeHeading = string.Empty;
+            FolderNoticePath = string.Empty;
+            FolderNoticeSuffix = string.Empty;
+        }
+    }
+
+    // Says where the project folder goes. Silent while a validation message or an existing-project refusal is up, so it never
+    // contradicts them. Whether the folder exists comes from the same worker-thread check pass as the banners.
+    private void RefreshFolderNotice()
+    {
+        if (ValidationMessage.Length > 0 || RefusalText.Length > 0)
+        {
+            CancelStaleHide();
+            HideFolderNotice(reserveSpace: false);
+            return;
+        }
+
+        // The exists answer is only good for the inputs it was read for. A quick check leaves the previous notice up, so typing
+        // does not flicker; one still pending after FolderNoticeHideDelay hides it (keeping its room), and only the check for
+        // the current inputs shows a new answer.
+        if (_targetExistsFor != CurrentCheckKey())
+        {
+            if (IsFolderNoticeVisible)
+            {
+                if (FolderNoticeHideDelay <= TimeSpan.Zero)
+                {
+                    HideFolderNotice(reserveSpace: true);
+                }
+                else if (_staleHide == null)
+                {
+                    StartStaleHide();
+                }
+            }
+            return;
+        }
+
+        CancelStaleHide();
+        IsFolderNoticeSpaceReserved = true;
+
+        NewProjectFolder resolved = ResolvedFolder;
+        string projectFolder = NewProjectDisplayPath.AsFolder(resolved.ProjectFolder);
+        string suffix = string.Empty;
+        if (resolved.LocationIsProjectFolder)
+        {
+            FolderNoticeHeading = NewProjectDialogText.FolderUsesThis;
+            suffix = _targetExists ? NewProjectDialogText.FolderAlreadyExists : NewProjectDialogText.FolderWillBeCreated;
+        }
+        else
+        {
+            FolderNoticeHeading = _targetExists ? NewProjectDialogText.FolderUsesExisting : NewProjectDialogText.FolderCreates;
+        }
+
+        string parent = NewProjectDisplayPath.Normalize(resolved.ParentFolder);
+        string parentName = Path.GetFileName(parent.TrimEnd(Path.DirectorySeparatorChar));
+        FoldersSummary = _targetExists
+            ? NewProjectDialogText.FolderUsesExisting
+            : NewProjectDialogText.FoldersSummaryCreates(Path.GetFileName(projectFolder.TrimEnd(Path.DirectorySeparatorChar)), parentName.Length > 0 ? parentName : parent);
+        FolderNoticePath = projectFolder;
+        FolderNoticeSuffix = suffix;
+        IsFolderNoticeCreating = !_targetExists;
+        IsFolderNoticeVisible = true;
     }
 
     #endregion
@@ -1026,10 +1190,11 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     private async Task RefreshChecksAsync(int version, NewProjectRequest request, string folder, string name)
     {
-        (string? existing, bool notEmpty, string? refusal) = await Task.Run(() =>
+        (string? existing, bool notEmpty, bool exists, string? refusal) = await Task.Run(() =>
         {
             string? existingProject = null;
             bool targetNotEmpty = false;
+            bool targetExists = false;
             string? refused = null;
             try
             {
@@ -1047,12 +1212,13 @@ public class NewProjectDialogViewModel : DialogViewModel
             {
                 existingProject = _detector.FindExistingCodeProject(folder);
                 targetNotEmpty = _detector.TargetExistsAndIsNotEmpty(folder, name);
+                targetExists = _detector.TargetExists(folder, name);
             }
             catch (Exception)
             {
                 // A location that cannot be read has nothing to warn about.
             }
-            return (existingProject, targetNotEmpty, refused);
+            return (existingProject, targetNotEmpty, targetExists, refused);
         });
 
         if (version != Volatile.Read(ref _refreshVersion))
@@ -1062,6 +1228,8 @@ public class NewProjectDialogViewModel : DialogViewModel
 
         _existingCodeProject = existing;
         _targetNotEmpty = notEmpty;
+        _targetExists = exists || notEmpty;
+        _targetExistsFor = CheckKey(folder, name);
         RefusalText = refusal ?? string.Empty;
         NotifyPropertyChanged(nameof(IsRefused));
         AffirmativeCommand.NotifyCanExecuteChanged();

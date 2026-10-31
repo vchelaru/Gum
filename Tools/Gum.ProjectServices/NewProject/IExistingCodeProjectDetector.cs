@@ -12,6 +12,9 @@ public interface IExistingCodeProjectDetector
     /// <returns>The full path of the file found, or <see langword="null"/>.</returns>
     string? FindExistingCodeProject(string folder);
 
+    /// <summary>Whether <c>&lt;folder&gt;/&lt;name&gt;</c> exists, empty or not.</summary>
+    bool TargetExists(string folder, string name);
+
     /// <summary>Whether <c>&lt;folder&gt;/&lt;name&gt;</c> exists and has anything in it.</summary>
     bool TargetExistsAndIsNotEmpty(string folder, string name);
 }
