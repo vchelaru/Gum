@@ -118,6 +118,80 @@ public class BundleOnlyContentLoadTests : BaseTestClass
         loaded.Width.ShouldBe(3);
     }
 
+    // #6514: gumcli pack stores PNGs as raw pixels under the PNG's path. Matching alpha modes upload
+    // them untouched; a mismatch converts them and warns once, naming the package.
+    [Theory]
+    [InlineData(false, false, new byte[] { 255, 128, 0, 128, 255, 128, 0, 0 }, false)]
+    [InlineData(true, true, new byte[] { 128, 64, 0, 128, 0, 0, 0, 0 }, false)]
+    [InlineData(false, true, new byte[] { 128, 64, 0, 128, 0, 0, 0, 0 }, true)]
+    [InlineData(true, false, new byte[] { 255, 128, 0, 128, 255, 128, 0, 0 }, true)]
+    public void RawTextureEntry_ShouldLoadInTheRuntimesAlphaMode_AndWarnOnceOnMismatch(
+        bool packageIsPremultiplied, bool runtimeUsesPremultipliedAlpha, byte[] expectedPixels, bool expectWarning)
+    {
+        using MinimalGame game = new(initializeWithGame: false);
+        game.RunOneFrame();
+        byte[] storedPixels = packageIsPremultiplied
+            ? new byte[] { 128, 64, 0, 128, 0, 0, 0, 0 }
+            : new byte[] { 255, 128, 0, 128, 255, 128, 0, 0 };
+        InstallBundle(new List<(string, byte[])>
+        {
+            ("Bundled.gumx", Encoding.UTF8.GetBytes("<GumProjectSave />")),
+            ("Sprites/a.png", GumRawTexture.Encode(width: 2, height: 1, storedPixels, packageIsPremultiplied)),
+            ("Sprites/b.png", GumRawTexture.Encode(width: 2, height: 1, storedPixels, packageIsPremultiplied)),
+        });
+        List<string> warnings = new();
+        Action<string> previousReportWarning = GumRawTexture.ReportWarning;
+        GumRawTexture.ReportWarning = warnings.Add;
+        GumRawTexture.ResetWarnings();
+        Renderer.UsePremultipliedAlpha = runtimeUsesPremultipliedAlpha;
+        try
+        {
+            Texture2D? first = LoaderManager.Self.LoadContent<Texture2D>("Sprites/a.png");
+            LoaderManager.Self.LoadContent<Texture2D>("Sprites/b.png");
+
+            first.ShouldNotBeNull();
+            first.Width.ShouldBe(2);
+            first.Height.ShouldBe(1);
+            byte[] uploaded = new byte[8];
+            first.GetData(uploaded);
+            uploaded.ShouldBe(expectedPixels);
+            warnings.Count.ShouldBe(expectWarning ? 1 : 0);
+            if (expectWarning)
+            {
+                warnings[0].ShouldContain("Bundled.gumpkg");
+                warnings[0].ShouldContain(runtimeUsesPremultipliedAlpha
+                    ? "Renderer.UsePremultipliedAlpha is true"
+                    : "Renderer.UsePremultipliedAlpha is false");
+                warnings[0].ShouldContain(runtimeUsesPremultipliedAlpha
+                    ? "Repack it with 'gumcli pack --premultiplied-alpha'"
+                    : "Repack it with 'gumcli pack' without --premultiplied-alpha");
+            }
+        }
+        finally
+        {
+            Renderer.UsePremultipliedAlpha = false;
+            GumRawTexture.ReportWarning = previousReportWarning;
+            GumRawTexture.ResetWarnings();
+        }
+    }
+
+    [Fact]
+    public void RawTextureEntry_WithTruncatedPixels_ShouldFailWithAClearError()
+    {
+        using MinimalGame game = new(initializeWithGame: false);
+        game.RunOneFrame();
+        byte[] entry = GumRawTexture.Encode(width: 2, height: 2, new byte[16], isPremultiplied: false);
+        InstallBundle(new List<(string, byte[])>
+        {
+            ("Bundled.gumx", Encoding.UTF8.GetBytes("<GumProjectSave />")),
+            ("Sprites/a.png", entry.AsSpan(0, entry.Length - 4).ToArray()),
+        });
+
+        Exception exception = Should.Throw<Exception>(() => LoaderManager.Self.LoadContent<Texture2D>("Sprites/a.png"));
+
+        exception.ToString().ShouldContain("Raw texture pixel data is truncated");
+    }
+
     private void InstallBundle(List<(string path, byte[] content)> entries)
     {
         Directory.CreateDirectory(_projectDirectory);

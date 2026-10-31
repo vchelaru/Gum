@@ -312,13 +312,32 @@ public sealed class ContentLoader : IContentLoader
     // raylib's path-based LoadImage bypassed the hook entirely, so .gumpkg bundles, the GumFromZipFile
     // sample, mobile TitleContainer redirection, and any in-memory/encrypted asset store silently
     // failed on Raylib (#3033).
-    private static byte[] ReadFileBytes(string fileName)
+    //
+    // A gumcli-packed texture (#6514) is already decoded: it comes back as pixels in rawTexture (with
+    // an empty fileData) and skips the decoders. It is sniffed on the hook's own stream so the alpha-mode
+    // warning can name the package. Raylib draws straight alpha and never bleeds the edges of loose
+    // PNGs, so a premultiplied package is unpremultiplied unbled.
+    private static byte[] ReadFileBytes(string fileName, out byte[]? rawTexture, out int width, out int height)
     {
         using (var stream = FileManager.GetStreamForFile(fileName))
-        using (var memoryStream = new MemoryStream())
         {
-            stream.CopyTo(memoryStream);
-            return memoryStream.ToArray();
+            Stream seekable = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+            rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(seekable, fileName,
+                runtimeUsesPremultipliedAlpha: false, runtimeAlphaReason: "raylib draws straight alpha",
+                bleedTransparentEdges: false,
+                out Gum.Bundle.GumRawTextureHeader header);
+            width = header.Width;
+            height = header.Height;
+            if (rawTexture != null)
+            {
+                return Array.Empty<byte>();
+            }
+
+            using (var memoryStream = new MemoryStream())
+            {
+                seekable.CopyTo(memoryStream);
+                return memoryStream.ToArray();
+            }
         }
     }
 
@@ -352,7 +371,13 @@ public sealed class ContentLoader : IContentLoader
 
     private static Texture2D LoadTextureFromFile(string fileName)
     {
-        byte[] fileData = ReadFileBytes(fileName);
+        byte[] fileData = ReadFileBytes(fileName, out byte[]? rawTexture, out int rawWidth, out int rawHeight);
+        if (rawTexture != null)
+        {
+            Texture2D rawTexture2D = UploadRgbaTexture(rawTexture, rawWidth, rawHeight);
+            TextureFilterApplier(rawTexture2D, DefaultTextureFilter);
+            return rawTexture2D;
+        }
 
         DecodedImage? decoded = TryDecodeWithRegisteredDecoders(fileName, fileData);
         if (decoded != null)
@@ -506,7 +531,12 @@ public sealed class ContentLoader : IContentLoader
     // pixels as RGBA, whatever the file's own format was.
     private static unsafe byte[] LoadPageRgba(string pagePath, out int width, out int height)
     {
-        byte[] fileData = ReadFileBytes(pagePath);
+        // A gumcli-packed font page (#6514), converted the same way as LoadTextureFromFile.
+        byte[] fileData = ReadFileBytes(pagePath, out byte[]? rawTexture, out width, out height);
+        if (rawTexture != null)
+        {
+            return rawTexture;
+        }
 
         DecodedImage? decoded = TryDecodeWithRegisteredDecoders(pagePath, fileData);
         if (decoded != null)
@@ -532,6 +562,7 @@ public sealed class ContentLoader : IContentLoader
         }
     }
 
+    // Uploads width * height RGBA texels.
     private static unsafe Texture2D UploadRgbaTexture(byte[] pixels, int width, int height)
     {
         fixed (byte* pixelPointer = pixels)

@@ -210,9 +210,24 @@ public static class SkiaResourceManager
     /// <summary>
     /// Decodes <paramref name="stream"/> with the registered <see cref="LoaderManager.ImageDecoders"/>
     /// first, then <see cref="SKBitmap.Decode(Stream)"/>. Returns null when Skia cannot decode it.
+    /// A gumcli-packed raw texture (#6514) is wrapped without decoding: Skia draws premultiplied
+    /// alpha, so a straight package is premultiplied, with the same one-time warning as the other
+    /// runtimes (repacking with --premultiplied-alpha avoids it).
     /// </summary>
     private static SKBitmap? DecodeBitmap(string resourceName, Stream stream)
     {
+        stream = global::Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+        byte[]? rawTexture = global::Gum.Bundle.GumRawTexture.ReadForRuntime(stream, resourceName,
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "SkiaGum draws premultiplied alpha",
+            bleedTransparentEdges: false,
+            out global::Gum.Bundle.GumRawTextureHeader header);
+        if (rawTexture != null)
+        {
+            SKBitmap rawBitmap = new SKBitmap(new SKImageInfo(header.Width, header.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+            System.Runtime.InteropServices.Marshal.Copy(rawTexture, 0, rawBitmap.GetPixels(), rawTexture.Length);
+            return rawBitmap;
+        }
+
         Stream original = stream;
         try
         {

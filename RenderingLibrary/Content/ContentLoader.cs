@@ -198,6 +198,24 @@ public sealed class ContentLoader : IContentLoader
     {
         bool usePremultipliedAlpha = Graphics.Renderer.UsePremultipliedAlpha;
         bool bleedTransparentEdges = Graphics.Renderer.BleedTransparentTextureEdgesOnLoad;
+
+        stream = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+
+        // A gumcli-packed texture (#6514): already decoded, so convert the alpha mode if the
+        // package's differs and upload, with no image decode and no GetData readback.
+        byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(stream, fileName,
+            usePremultipliedAlpha,
+            usePremultipliedAlpha
+                ? "Renderer.UsePremultipliedAlpha is true"
+                : "Renderer.UsePremultipliedAlpha is false",
+            bleedTransparentEdges,
+            out Gum.Bundle.GumRawTextureHeader header);
+        if (rawTexture != null)
+        {
+            isProcessedOnLoad = true;
+            return CreateTextureFromRgba(device, rawTexture, header.Width, header.Height);
+        }
+
 #if !FRB
         System.IO.Stream original = stream;
         try
