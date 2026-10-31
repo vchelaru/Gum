@@ -1,15 +1,13 @@
 using System;
 using System.Diagnostics;
 using Gum;
-using Gum.Forms.Controls;
+{{HostUsings}}
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl;
 using SkiaSharp;
 
-// Silk.NET.Input also defines a Button, so this alias selects the Gum control.
-using Button = Gum.Forms.Controls.Button;
 
 // Silk.NET.Input only receives events from a window that Silk.NET.Windowing.Sdl created and initialized itself.
 SdlWindowing.Use();
@@ -49,13 +47,9 @@ CreateSurface(window.FramebufferSize);
 
 GumService gumUI = GumService.Default;
 
-// Create screens and components in the Gum tool, generate code, then add them
-// here with: new MyScreen().AddToRoot();
 gumUI.Initialize(surface!.Canvas, window.CreateInput(), "Content/GumProject/{{GumProjectFile}}");
-
-Button button = new Button();
-button.AddToRoot();
-button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
+{{InitLines}}
+{{ScreenLines}}
 
 // The resize is applied once per frame instead of inside the event, where the GL context may not be current.
 bool wasResized = false;

@@ -1,7 +1,6 @@
-using System;
 using Gum;
-using Gum.Forms.Controls;
 using Gum.Wireframe;
+{{HostUsings}}
 using Raylib_cs;
 
 const int screenWidth = 800;
@@ -16,13 +15,9 @@ GraphicalUiElement.CanvasHeight = screenHeight;
 
 GumService gumUI = GumService.Default;
 
-// Create screens and components in the Gum tool, generate code, then add them
-// here with: new MyScreen().AddToRoot();
 gumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
-
-Button button = new Button();
-button.AddToRoot();
-button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
+{{InitLines}}
+{{ScreenLines}}
 
 while (!Raylib.WindowShouldClose())
 {

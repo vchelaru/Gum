@@ -36,6 +36,20 @@ public class NewProjectRequest
     public bool IncludeRecommendedPackages { get; init; }
 
     /// <summary>
+    /// Whether the forms template's demo screen stays in the project (it is always written with the forms template; the
+    /// New Project dialog removes it afterwards when unticked). With a platform, the host game shows the demo screen
+    /// only when it stays. <c>gumcli new</c> always keeps it.
+    /// </summary>
+    public bool IncludeDemoScreen { get; init; } = true;
+
+    /// <summary>
+    /// Also generate code for the demo screen (<c>gumcli codegen "&lt;gumj&gt;" --element &lt;screen&gt;</c>) after the restore, and
+    /// then have the host game create the generated class instead of loading the screen at runtime. Needs a platform; does
+    /// nothing when there is no demo screen. <c>gumcli new</c> has no option for it: it is its own command in the chain.
+    /// </summary>
+    public bool GenerateDemoScreenCode { get; init; }
+
+    /// <summary>
     /// For a Gum-only project whose <see cref="Path"/> has no project extension: create a <c>.gumx</c> (XML)
     /// project instead of the default <c>.gumj</c> (JSON). A path ending in <c>.gumx</c>/<c>.gumj</c> decides by itself.
     /// </summary>

@@ -17,6 +17,37 @@ public static class DemoScreenRule
         name == DemoScreenName || name.EndsWith("/" + DemoScreenName, StringComparison.Ordinal);
 
     /// <summary>
+    /// The element name of the demo screen a project file's folder holds (<c>DemoScreenGum</c>, or <c>Bubblegum/DemoScreenGum</c>),
+    /// found from the screen files on disk, or <see langword="null"/> when there is none.
+    /// </summary>
+    public static string? FindDemoScreenName(string gumProjectPath)
+    {
+        string screensDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(gumProjectPath) ?? "", "Screens");
+        if (!System.IO.Directory.Exists(screensDirectory))
+        {
+            return null;
+        }
+
+        foreach (string file in System.Linq.Enumerable.OrderBy(
+                     System.IO.Directory.EnumerateFiles(screensDirectory, "*", System.IO.SearchOption.AllDirectories), item => item, StringComparer.Ordinal))
+        {
+            string extension = System.IO.Path.GetExtension(file).ToLowerInvariant();
+            if (extension != ".gusx" && extension != ".gusj")
+            {
+                continue;
+            }
+
+            string relative = "Screens/" + System.IO.Path.GetRelativePath(screensDirectory, file).Replace((char)92, '/');
+            if (IsDemoScreenFile(relative))
+            {
+                return relative.Substring("Screens/".Length, relative.Length - "Screens/".Length - extension.Length);
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Whether a project-relative file path is a demo screen's file: under a <c>Screens</c> folder, named like
     /// <see cref="IsDemoScreenName"/> once the folder and the extension are taken apart. Either separator works.
     /// </summary>
