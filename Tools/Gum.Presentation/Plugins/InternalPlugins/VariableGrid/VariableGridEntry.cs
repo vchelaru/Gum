@@ -759,7 +759,18 @@ public class VariableGridEntry
                 variableType ??= ShaderBinding?.VariableType;
                 // ...set variable after getting it from base, or else we'd get the variable we just set...
                 stateSave.SetValue(Name, newValue, instanceSave, variableType);
-                ShaderBinding?.AfterWrite(stateSave, Name);
+                if (ShaderBinding != null)
+                {
+                    // The runtime needs the whole vector, so the other components are saved too, and shown now.
+                    foreach ((VariableSave pinned, object pinnedValue) in ShaderBinding.PinComponents(stateSave, instanceSave, includeThisComponent: false))
+                    {
+                        if (instanceSave != null)
+                        {
+                            _wireframeObjectManager.GetRepresentation(instanceSave)?.SetProperty(pinned.GetRootName(), pinnedValue);
+                        }
+                    }
+                    ShaderBinding.AfterWrite(stateSave, Name);
+                }
                 if (existingVariable?.ExposedAsName is { Length: > 0 } exposedAsName && variableDefinedInThisOrBase != null &&
                     stateSave.GetVariableSave(Name) is { } variable)
                 {
@@ -975,9 +986,12 @@ public class VariableGridEntry
             }
         }
 
-        if (shouldReset && state != null && ShaderBinding?.RemoveLegacyValue(state) == true)
+        if (shouldReset && state != null && ShaderBinding != null)
         {
-            wasChangeMade = true;
+            // Make Default on one component of a vector resets the whole parameter.
+            bool resetOthers = ShaderBinding.ResetOtherComponents(state);
+            bool removedLegacy = ShaderBinding.RemoveLegacyValue(state);
+            wasChangeMade |= resetOthers || removedLegacy;
         }
 
         if (wasChangeMade)
@@ -1330,7 +1344,14 @@ public class VariableGridEntry
         // the exposure a single undo step.
         StateSave defaultState = ElementSave.GetDefaultStateOrThrow();
         using var undoLock = _undoManager.RequestLock();
-        VariableSave? placeholder = ShaderBinding.AddNamedPlaceholder(defaultState, Name);
+        // Exposing one component of a vector pins the whole parameter, as editing one does, so an outer element that sets
+        // only that component layers on top of a complete vector. Those components carry their values, so none is a placeholder.
+        HashSet<VariableSave> existingBefore = defaultState.Variables.ToHashSet();
+        List<VariableSave> added = ShaderBinding.IsComponent
+            ? ShaderBinding.PinComponents(defaultState, selectedInstance, includeThisComponent: true)
+                .Select(item => item.Variable).Where(variable => !existingBefore.Contains(variable)).ToList()
+            : new List<VariableSave>();
+        VariableSave? placeholder = ShaderBinding.IsComponent ? null : ShaderBinding.AddNamedPlaceholder(defaultState, Name);
         // The service reports success without an attempt when it refuses (for example no selected element).
         OptionallyAttemptedGeneralResponse<VariableSave> response = _exposeVariableService.HandleExposeVariableClick(selectedInstance, RootVariableName);
         bool exposed = response.Succeeded && response.DidAttempt;
@@ -1340,11 +1361,19 @@ public class VariableGridEntry
             {
                 defaultState.Variables.Remove(placeholder);
             }
+            foreach (VariableSave variable in added)
+            {
+                defaultState.Variables.Remove(variable);
+            }
             return;
         }
 
         // The value the legacy text held belongs to the variable now that something names the parameter.
-        if (ShaderBinding.HasLegacyValue(defaultState))
+        if (ShaderBinding.IsComponent)
+        {
+            ShaderBinding.RemoveLegacyValue(defaultState);
+        }
+        else if (ShaderBinding.HasLegacyValue(defaultState))
         {
             defaultState.SetValue(Name, ShaderBinding.GetFallbackValue(defaultState), selectedInstance, ShaderBinding.VariableType);
             ShaderBinding.AfterWrite(defaultState, Name);

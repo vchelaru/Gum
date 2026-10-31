@@ -1141,18 +1141,21 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         foreach (ShaderParameterInfo parameter in parameters)
         {
-            InstanceMember? variableMember = instance != null && stateSave != null && element != null
-                ? CreateShaderParameterVariableMember(parameter, shaderFile, instance, element, stateSave, textMember.IsReadOnly)
-                : null;
+            List<InstanceMember> variableMembers = instance != null && stateSave != null && element != null
+                ? CreateShaderParameterVariableMembers(parameter, shaderFile, instance, element, stateSave, textMember.IsReadOnly)
+                : new List<InstanceMember>();
 
-            if (variableMember != null)
+            if (variableMembers.Count > 0)
             {
-                category.Members.Insert(index, variableMember);
-                index++;
+                foreach (InstanceMember variableMember in variableMembers)
+                {
+                    category.Members.Insert(index, variableMember);
+                    index++;
+                }
                 continue;
             }
 
-            // A vector, or a parameter no variable name can stand for, stays on the saved text.
+            // A parameter no variable name can stand for stays on the saved text.
             foreach (SyntheticVariableRow row in ShaderParameterRows.Build(
                 new[] { parameter }, () => textMember.Value as string, text => textMember.Value = text))
             {
@@ -1165,22 +1168,48 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     }
 
     /// <summary>
-    /// The row for a single valued shader parameter, backed by the real saved variable
-    /// <c>Instance.&lt;shader file&gt;_&lt;Parameter&gt;</c>; null when the parameter is a vector, Gum fills it in
-    /// itself, or no variable name can stand for it (no shader file, or an unsupported parameter name).
+    /// The rows for a shader parameter, each backed by a real saved variable: one row for a single valued parameter
+    /// (<c>Instance.&lt;shader file&gt;_&lt;Parameter&gt;</c>), one per component for a float vector
+    /// (<c>Instance.&lt;shader file&gt;_&lt;Parameter&gt;__X</c>). Empty when Gum fills the parameter in itself, no
+    /// variable name can stand for it (no shader file, or an unsupported parameter name), or it is a vector that is not
+    /// a float.
     /// </summary>
-    private InstanceMember? CreateShaderParameterVariableMember(ShaderParameterInfo parameter, string? shaderFile,
+    private List<InstanceMember> CreateShaderParameterVariableMembers(ShaderParameterInfo parameter, string? shaderFile,
         InstanceSave instance, ElementSave element, StateSave stateSave, bool isReadOnly)
     {
-        if (parameter.Count != 1 || ShaderParameterRows.IsHiddenParameter(parameter) || string.IsNullOrEmpty(shaderFile) ||
-            !ShaderVariableNaming.IsSupportedParameterName(parameter.Name))
+        List<InstanceMember> members = new List<InstanceMember>();
+        bool isVector = parameter.Count > 1;
+        if (parameter.Count < 1 || ShaderParameterRows.IsHiddenParameter(parameter) || string.IsNullOrEmpty(shaderFile) ||
+            !ShaderVariableNaming.IsSupportedParameterName(parameter.Name) ||
+            (isVector && (parameter.Kind != ShaderParameterKind.Float || parameter.Count > ShaderParameterMarker.MaximumComponentCount)))
         {
-            return null;
+            return members;
         }
 
-        ShaderParameterVariableBinding binding = new ShaderParameterVariableBinding(parameter, instance.Name + ".ShaderParameters");
-        string variableName = instance.Name + "." + ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name);
+        string legacyTextName = instance.Name + ".ShaderParameters";
+        if (!isVector)
+        {
+            members.Add(CreateShaderParameterVariableMember(
+                new ShaderParameterVariableBinding(parameter, legacyTextName),
+                instance.Name + "." + ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name),
+                parameter.Name, instance, element, stateSave, isReadOnly));
+            return members;
+        }
 
+        Func<int, string> getComponentName = componentIndex => instance.Name + "." +
+            ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name, componentIndex, parameter.Count);
+        for (int i = 0; i < parameter.Count; i++)
+        {
+            members.Add(CreateShaderParameterVariableMember(
+                new ShaderParameterVariableBinding(parameter, legacyTextName, i, getComponentName),
+                getComponentName(i), ShaderParameterRows.GetComponentRowName(parameter, i), instance, element, stateSave, isReadOnly));
+        }
+        return members;
+    }
+
+    private InstanceMember CreateShaderParameterVariableMember(ShaderParameterVariableBinding binding, string variableName,
+        string rowName, InstanceSave instance, ElementSave element, StateSave stateSave, bool isReadOnly)
+    {
         VariableGridEntry entry = new VariableGridEntry(
             attributes: null,
             converter: null,
@@ -1208,8 +1237,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _clipboardService)
         {
             ShaderBinding = binding,
-            GridName = parameter.Name,
-            DisplayName = parameter.Name,
+            GridName = rowName,
+            DisplayName = rowName,
         };
         entry.DefaultValueFallback = () => binding.GetFallbackValue(stateSave);
 

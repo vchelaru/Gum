@@ -252,6 +252,26 @@ public class ContainerShaderVariablesTests : BaseTestClass
     }
 
     [Fact]
+    public void SetProperty_OverridingOneComponentOfACompleteVector_KeepsTheOtherComponents()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+        sut.SetProperty("Outline_Tint__X", 0.1f);
+        sut.SetProperty("Outline_Tint__Y", 0.2f);
+        sut.SetProperty("Outline_Tint__Z", 0.3f);
+        sut.SetProperty("Outline_Tint__W", 0.4f);
+
+        sut.SetProperty("Outline_Tint__X", 0.9f);
+
+        ShaderParameterValue tint = Get(sut, "Tint");
+        tint.Count.ShouldBe(4);
+        tint.X.ShouldBe(0.9f);
+        tint.Y.ShouldBe(0.2f);
+        tint.Z.ShouldBe(0.3f);
+        tint.W.ShouldBe(0.4f);
+    }
+
+    [Fact]
     public void SetProperty_ComponentVariablesBeforeTheFile_AssembleOneVector()
     {
         ContainerRuntime sut = new();

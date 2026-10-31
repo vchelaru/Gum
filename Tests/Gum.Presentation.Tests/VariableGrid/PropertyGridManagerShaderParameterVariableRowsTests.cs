@@ -215,21 +215,6 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
     }
 
     [Fact]
-    public void VectorParameters_KeepTheLegacyTextRows()
-    {
-        GivenTheEffectDeclares(
-            Float("Thickness", 2f),
-            new ShaderParameterInfo("Tint", ShaderParameterKind.Float, 2, ShaderParameterValue.FromVector2(0.5f, 0.25f)));
-        MemberCategory category = BuildRows();
-
-        category.Members.Select(member => member.Name).ToArray().ShouldBe(new[] { "Thickness", "Tint X", "Tint Y" });
-        Row(category, "Tint X").Value = 0.75f;
-
-        _component.DefaultState.GetValueRecursive("Holder.ShaderParameters").ShouldBe("Tint=(0.75, 0.25)");
-        _component.DefaultState.Variables.Any(variable => variable.Name.Contains("Tint")).ShouldBeFalse();
-    }
-
-    [Fact]
     public void WithoutAShaderFile_ScalarRowsStayOnTheLegacyText()
     {
         _component.DefaultState.Variables.RemoveAll(variable => variable.Name == "Holder.SourceShaderFile");
@@ -583,6 +568,286 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
                 File.Delete(path);
             }
         }
+    }
+
+    #endregion
+
+    #region Vectors (slice 5)
+
+    private const string TintX = "Holder.Outline_Tint__X";
+    private const string TintY = "Holder.Outline_Tint__Y";
+    private const string TintZ = "Holder.Outline_Tint__Z";
+    private const string TintW = "Holder.Outline_Tint__W";
+
+    private static ShaderParameterInfo Tint2() =>
+        new ShaderParameterInfo("Tint", ShaderParameterKind.Float, 2, ShaderParameterValue.FromVector2(0.5f, 0.25f));
+
+    private static ShaderParameterInfo Tint4() =>
+        new ShaderParameterInfo("Tint", ShaderParameterKind.Float, 4, ShaderParameterValue.FromVector4(0.1f, 0.2f, 0.3f, 0.4f));
+
+    private bool IsSaved(string name) => _component.DefaultState.Variables.Any(variable => variable.Name == name);
+
+    [Fact]
+    public void VectorRows_KeepTheirLabels_AndBuildingThemSavesNothing()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f), Tint2());
+
+        MemberCategory category = BuildRows();
+
+        category.Members.Select(member => member.Name).ToArray().ShouldBe(new[] { "Thickness", "Tint X", "Tint Y" });
+        Row(category, "Tint X").Value.ShouldBe(0.5f);
+        Row(category, "Tint Y").Value.ShouldBe(0.25f);
+        Row(category, "Tint X").IsDefault.ShouldBeTrue();
+        _component.DefaultState.Variables.Any(variable => variable.Name.Contains("Tint")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void EditingOneComponent_SavesEveryComponentAsAMarkedVariable()
+    {
+        GivenTheEffectDeclares(Tint2());
+        MemberCategory category = BuildRows();
+
+        Row(category, "Tint X").Value = 0.75f;
+
+        VariableSave x = _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull("the edited component should be saved");
+        x.Value.ShouldBe(0.75f);
+        x.Type.ShouldBe("float");
+        x.ShaderParameter.ShouldBe("Tint#0/2");
+        VariableSave y = _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull("the sibling should be saved with its current value");
+        y.Value.ShouldBe(0.25f);
+        y.Type.ShouldBe("float");
+        y.ShaderParameter.ShouldBe("Tint#1/2");
+        _component.DefaultState.GetVariableSave("Holder.ShaderParameters")?.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void EditingOneComponentOfAFloat4_SavesAllFour()
+    {
+        GivenTheEffectDeclares(Tint4());
+        MemberCategory category = BuildRows();
+
+        Row(category, "Tint Z").Value = 0.9f;
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.1f);
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.2f);
+        _component.DefaultState.GetVariableSave(TintZ).ShouldNotBeNull().Value.ShouldBe(0.9f);
+        VariableSave w = _component.DefaultState.GetVariableSave(TintW).ShouldNotBeNull();
+        w.Value.ShouldBe(0.4f);
+        w.ShaderParameter.ShouldBe("Tint#3/4");
+    }
+
+    [Fact]
+    public void SavedComponents_AreFoundByTheFinder_AndEveryRowShowsAsSet()
+    {
+        GivenTheEffectDeclares(Tint2());
+        MemberCategory category = BuildRows();
+
+        Row(category, "Tint X").Value = 0.75f;
+
+        ObjectFinder.Self.GetRootVariable(TintX, _component).ShouldNotBeNull();
+        ObjectFinder.Self.GetRootVariable(TintY, _component).ShouldNotBeNull();
+        Row(category, "Tint X").IsDefault.ShouldBeFalse();
+        Row(category, "Tint Y").IsDefault.ShouldBeFalse();
+        Row(category, "Tint Y").Value.ShouldBe(0.25f);
+    }
+
+    [Fact]
+    public void EditingASiblingLater_DoesNotChangeTheOtherComponents()
+    {
+        GivenTheEffectDeclares(Tint2());
+        MemberCategory category = BuildRows();
+        Row(category, "Tint X").Value = 0.75f;
+
+        Row(category, "Tint Y").Value = 0.1f;
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.75f);
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.1f);
+    }
+
+    [Fact]
+    public void EditingAComponent_TakesSiblingValuesFromTheLegacyText_AndMovesTheParameterOut()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f), Tint2());
+        _component.DefaultState.SetValue("Holder.ShaderParameters", "Tint=(0.5, 0.9);Thickness=4.0");
+        MemberCategory category = BuildRows();
+        Row(category, "Tint Y").Value.ShouldBe(0.9f);
+
+        Row(category, "Tint X").Value = 0.1f;
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.1f);
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.9f);
+        string text = (string)_component.DefaultState.GetVariableSave("Holder.ShaderParameters")!.Value!;
+        text.ShouldNotContain("Tint");
+        text.ShouldContain("Thickness");
+    }
+
+    [Fact]
+    public void ALegacyVectorValue_IsShownAndCountsAsSet()
+    {
+        GivenTheEffectDeclares(Tint2());
+        _component.DefaultState.SetValue("Holder.ShaderParameters", "Tint=(0.5, 0.9)");
+
+        MemberCategory category = BuildRows();
+
+        Row(category, "Tint Y").Value.ShouldBe(0.9f);
+        Row(category, "Tint X").IsDefault.ShouldBeFalse();
+        Row(category, "Tint Y").IsDefault.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MakeDefaultOnOneComponent_ResetsTheWholeParameter()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f), Tint2());
+        MemberCategory category = BuildRows();
+        Row(category, "Thickness").Value = 3f;
+        Row(category, "Tint X").Value = 0.75f;
+
+        Row(category, "Tint Y").IsDefault = true;
+
+        IsSaved(TintX).ShouldBeFalse();
+        IsSaved(TintY).ShouldBeFalse();
+        IsSaved(VariableName).ShouldBeTrue("other parameters are untouched");
+        Row(category, "Tint X").Value.ShouldBe(0.5f);
+    }
+
+    [Fact]
+    public void MakeDefaultOnAComponentWithALegacyValue_RemovesTheParameterFromTheText()
+    {
+        GivenTheEffectDeclares(Tint2());
+        _component.DefaultState.SetValue("Holder.ShaderParameters", "Tint=(0.5, 0.9)");
+        MemberCategory category = BuildRows();
+
+        Row(category, "Tint X").IsDefault = true;
+
+        ((string?)_component.DefaultState.GetVariableSave("Holder.ShaderParameters")!.Value).ShouldNotContain("Tint");
+        Row(category, "Tint Y").Value.ShouldBe(0.25f);
+    }
+
+    [Fact]
+    public void UndoAndRedo_OfAComponentEdit_RemoveAndRestoreAllComponents()
+    {
+        GivenTheEffectDeclares(Tint2());
+        UndoManager undoManager = UseRealUndoManager();
+        MemberCategory category = BuildRows();
+
+        undoManager.RecordState();
+        Row(category, "Tint X").Value = 0.75f;
+        undoManager.RecordUndo();
+        undoManager.PerformUndo();
+
+        IsSaved(TintX).ShouldBeFalse();
+        IsSaved(TintY).ShouldBeFalse();
+
+        undoManager.PerformRedo();
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.75f);
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.25f);
+    }
+
+    [Fact]
+    public void ExposeOnOneComponent_ExposesIt_AndSavesTheWholeParameterWithValues()
+    {
+        GivenTheEffectDeclares(Tint2());
+        UseRealExposeService(UseRealUndoManager(), answer: "TintX");
+        MemberCategory category = BuildRows();
+
+        Expose(Row(category, "Tint X"));
+
+        VariableSave x = _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull("exposing names the component");
+        x.ExposedAsName.ShouldBe("TintX");
+        x.ShaderParameter.ShouldBe("Tint#0/2");
+        x.Type.ShouldBe("float");
+        x.Value.ShouldBe(0.5f, "the exposed component carries its value so the vector is complete");
+        VariableSave y = _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull("exposing pins the whole parameter");
+        y.Value.ShouldBe(0.25f);
+        y.ExposedAsName.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ExposeOnOneComponent_ThenAnOuterElementSetsIt_TheVectorStaysComplete()
+    {
+        GivenTheEffectDeclares(Tint2());
+        UseRealExposeService(UseRealUndoManager(), answer: "TintX");
+        Expose(Row(BuildRows(), "Tint X"));
+        ComponentSave reloaded = RoundTrip(_component);
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        screen.States.Add(new StateSave { ParentContainer = screen });
+        InstanceSave user = new InstanceSave { Name = "Comp1", BaseType = "ShaderComponent", ParentContainer = screen };
+        screen.Instances.Add(user);
+        ObjectFinder.Self.GumProjectSave!.Components.Clear();
+        ObjectFinder.Self.GumProjectSave.Components.Add(reloaded);
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        screen.DefaultState.SetValue("Comp1.TintX", 0.9f, user);
+
+        screen.DefaultState.GetValueRecursive("Comp1.TintX").ShouldBe(0.9f);
+        reloaded.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.5f);
+        reloaded.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.25f);
+    }
+
+    [Fact]
+    public void ExposeOnOneComponent_WhenThePromptIsCancelled_SavesNothing()
+    {
+        GivenTheEffectDeclares(Tint2());
+        UseRealExposeService(UseRealUndoManager(), answer: null);
+        MemberCategory category = BuildRows();
+
+        Expose(Row(category, "Tint Y"));
+
+        IsSaved(TintX).ShouldBeFalse();
+        IsSaved(TintY).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ExposeOnOneComponent_WithALegacyValue_KeepsItAsTheComponentsValues()
+    {
+        GivenTheEffectDeclares(Tint2());
+        _component.DefaultState.SetValue("Holder.ShaderParameters", "Tint=(0.6, 0.9)");
+        UseRealExposeService(UseRealUndoManager(), answer: "TintX");
+        MemberCategory category = BuildRows();
+
+        Expose(Row(category, "Tint X"));
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.6f);
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.9f);
+        ((string?)_component.DefaultState.GetVariableSave("Holder.ShaderParameters")!.Value).ShouldNotContain("Tint");
+    }
+
+    [Fact]
+    public void ExposeOnOneComponent_UndoAndRedo_RemoveAndRestoreTheWholeParameter()
+    {
+        GivenTheEffectDeclares(Tint2());
+        UndoManager undoManager = UseRealUndoManager();
+        UseRealExposeService(undoManager, answer: "TintX");
+        MemberCategory category = BuildRows();
+
+        undoManager.RecordState();
+        Expose(Row(category, "Tint X"));
+        undoManager.PerformUndo();
+
+        IsSaved(TintX).ShouldBeFalse();
+        IsSaved(TintY).ShouldBeFalse();
+
+        undoManager.PerformRedo();
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().ExposedAsName.ShouldBe("TintX");
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void MakeDefaultOnAnExposedComponent_KeepsTheExposureAndClearsTheValues()
+    {
+        GivenTheEffectDeclares(Tint2());
+        UseRealExposeService(UseRealUndoManager(), answer: "TintX");
+        Expose(Row(BuildRows(), "Tint X"));
+        MemberCategory category = BuildRows();
+
+        Row(category, "Tint Y").IsDefault = true;
+
+        VariableSave x = _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull("an exposure is never removed by Make Default");
+        x.ExposedAsName.ShouldBe("TintX");
+        x.SetsValue.ShouldBeFalse();
+        IsSaved(TintY).ShouldBeFalse();
     }
 
     #endregion
