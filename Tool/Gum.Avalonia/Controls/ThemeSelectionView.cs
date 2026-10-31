@@ -84,8 +84,8 @@ public sealed class ThemeSelectionView : StackPanel
         preview.Bind(IsVisibleProperty, new Binding(nameof(ThemeSelectionViewModel.HasPreviewImage)));
         if (besideRow != null)
         {
-            preview.MaxHeight = 112;
-            preview.MaxWidth = 200;
+            preview.MaxHeight = 175;
+            preview.MaxWidth = 245;
             preview.Margin = new Thickness(0);
             preview.HorizontalAlignment = HorizontalAlignment.Right;
             preview.VerticalAlignment = VerticalAlignment.Top;

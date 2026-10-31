@@ -140,6 +140,35 @@ public class NewProjectUiLayoutTests
     }
 
     [AvaloniaTheory]
+    [MemberData(nameof(ZoomAndTheme))]
+    public void ThemePreview_IsLargeBesideANarrowDropDown_InsideTheWindowAndApartFromIt(double zoom, string theme)
+    {
+        using NewProjectUiFixture fixture = new NewProjectUiFixture();
+        fixture.Window.Window.FitHeightToScreen(null);
+        fixture.SetTheme(theme == "light" ? ThemeVariant.Light : ThemeVariant.Dark);
+        fixture.SetZoom(zoom);
+        fixture.Settle();
+
+        Image preview = fixture.Window.Window.GetVisualDescendants().OfType<Image>().First(image => image.IsEffectivelyVisible && image.Source != null);
+        Rect window = new Rect(fixture.Window.Window.Bounds.Size);
+        Rect previewBounds = fixture.BoundsOf(preview);
+        Rect dropDown = fixture.BoundsOf(fixture.Dialog.ThemeBox);
+
+        window.Contains(previewBounds.TopLeft).ShouldBeTrue($"the preview starts in the window ({zoom}, {theme})");
+        previewBounds.Right.ShouldBeLessThanOrEqualTo(window.Width + 0.5, $"the preview is not clipped on the right ({zoom}, {theme})");
+        previewBounds.Left.ShouldBeGreaterThanOrEqualTo(dropDown.Right, $"the drop-down ends before the preview starts ({zoom}, {theme})");
+        previewBounds.Top.ShouldBe(dropDown.Top, 1, $"the preview top is flush with the drop-down ({zoom}, {theme})");
+
+        if (zoom == 12)
+        {
+            previewBounds.Width.ShouldBeGreaterThanOrEqualTo(240, $"the preview is about 245 wide at 100%: {previewBounds}");
+            previewBounds.Height.ShouldBeGreaterThanOrEqualTo(165, $"and about 170 tall: {previewBounds}");
+            dropDown.Width.ShouldBeLessThanOrEqualTo(200, $"the drop-down is about 190 wide at 100%: {dropDown}");
+            (previewBounds.Left - dropDown.Right).ShouldBe(20, 1, "with a 20 px gap at 100%");
+        }
+    }
+
+    [AvaloniaTheory]
     [InlineData(9d)]
     [InlineData(24d)]
     public void TheRestoreFailurePanel_FitsAtTheExtremeZooms_WithItsThreeButtonsApart(double zoom)
