@@ -56,15 +56,19 @@ public static class NewProjectCommandLine
     /// </summary>
     /// <param name="packages">The package ids to add; empty gives the same as <see cref="Build"/>.</param>
     /// <param name="csprojPath">The code project file the new step writes.</param>
+    /// <param name="gumProjectPath">The Gum project file; when set, the last step is <c>gumcli codegen "&lt;gumj&gt;"</c> (every screen and component), after the restore (the generator reads the restored runtime package). Null adds none.</param>
     public static string BuildChained(
-        string path, string platform, bool includeForms, string? theme, bool restore, IReadOnlyList<string> packages, string csprojPath)
+        string path, string platform, bool includeForms, string? theme, bool restore, IReadOnlyList<string> packages, string csprojPath,
+        string? gumProjectPath = null, bool sourceLinked = false)
     {
+        string codegen = gumProjectPath == null ? string.Empty : $" && gumcli codegen \"{gumProjectPath}\"";
+
         if (packages.Count == 0)
         {
-            return Build(path, platform, includeForms, theme, sourceLinked: false, restore);
+            return Build(path, platform, includeForms, theme, sourceLinked, restore) + codegen;
         }
 
-        string command = Build(path, platform, includeForms, theme, sourceLinked: false, restore: false);
+        string command = Build(path, platform, includeForms, theme, sourceLinked, restore: false);
         foreach (string package in packages)
         {
             command += $" && dotnet add \"{csprojPath}\" package {package} --no-restore";
@@ -73,7 +77,7 @@ public static class NewProjectCommandLine
         {
             command += $" && dotnet restore \"{csprojPath}\"";
         }
-        return command;
+        return command + codegen;
     }
 
     /// <summary>The path argument for a Gum-only project, or for a game folder when <paramref name="withCodeProject"/>.</summary>

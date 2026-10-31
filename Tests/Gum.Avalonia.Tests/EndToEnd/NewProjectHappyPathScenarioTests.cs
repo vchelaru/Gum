@@ -106,7 +106,7 @@ public class NewProjectHappyPathScenarioTests
             dialog.NameBox.Text.ShouldBe("MyGame", "the name starts as MyGame");
             dialog.FileFormatBox.SelectedItem.ShouldBe(NewProjectDialogViewModel.JsonFormat, "JSON is the default format");
             dialog.CheckBoxLabeled(NewProjectDialogText.IncludeForms).IsChecked.ShouldBe(true, "Forms controls are on by default");
-            dialog.CheckBoxLabeled(NewProjectDialogText.IncludeDemo).IsChecked.ShouldBe(false, "the demo screen is off by default");
+            dialog.CheckBoxLabeled(NewProjectDialogText.IncludeDemo).IsChecked.ShouldBe(true, "the demo screen is on by default");
             dialog.CheckBoxLabeled(NewProjectDialogText.CreateCodeProject).IsChecked.ShouldBe(false, "no C# project by default");
 
             dialog.TypeName("Fresh");
@@ -124,8 +124,8 @@ public class NewProjectHappyPathScenarioTests
         AssertSameFile(project.FullFileName, expectedFile);
         tree.SaveAll();
         string gumFolder = Path.GetDirectoryName(expectedFile)!;
-        project.Screens.Select(screen => screen.Name).ShouldBe(new[] { NewProjectLogic.StartingScreenName }, "no demo screen by default");
-        tree.ChildTexts(tree.RootNode("Screens")).ShouldBe(new[] { NewProjectLogic.StartingScreenName });
+        project.Screens.Select(screen => screen.Name).ShouldBe(new[] { "DemoScreenGum", NewProjectLogic.StartingScreenName }, "the demo screen is on by default");
+        tree.ChildTexts(tree.RootNode("Screens")).ShouldBe(new[] { "DemoScreenGum", NewProjectLogic.StartingScreenName });
         File.Exists(Path.Combine(gumFolder, "Screens", NewProjectLogic.StartingScreenName + (useXml ? ".gusx" : ".gusj"))).ShouldBeTrue();
         AssertThemeComponentsArePresent(tree, project, "Standard", gumFolder);
 
@@ -272,7 +272,7 @@ public class NewProjectHappyPathScenarioTests
         GumProjectSave project = ProjectManager.GumProjectSave.ShouldNotBeNull();
         AssertSameFile(project.FullFileName, gumProjectFile);
         project.Screens.Select(screen => screen.Name).ShouldContain(NewProjectLogic.StartingScreenName);
-        project.Screens.Select(screen => screen.Name).ShouldNotContain(name => DemoScreenRule.IsDemoScreenName(name), "the demo screen is off by default");
+        project.Screens.Select(screen => screen.Name).ShouldContain(name => DemoScreenRule.IsDemoScreenName(name), "the demo screen is on by default");
         tree.ChildTexts(tree.RootNode("Screens")).ShouldContain(NewProjectLogic.StartingScreenName);
         tree.ChildTexts(tree.RootNode("Components")).ShouldNotBeEmpty("the Forms controls came along");
         tree.Dialogs.Messages.ShouldBeEmpty("nothing went wrong");
@@ -381,14 +381,17 @@ public class NewProjectHappyPathScenarioTests
             // Include recommended packages is on by default, so the line chains the adds and a final restore.
             string csproj = Path.Combine(gameFolder, "Cmd.csproj");
             string Add(string package) => $" && dotnet add \"{csproj}\" package {package} --no-restore";
+            // Generate code is on by default too: the last step generates every screen and component after the restore.
+            string gumj = Path.Combine(gameFolder, "Content", "GumProject", "GumProject.gumj");
+            string Generate = $" && gumcli codegen \"{gumj}\"";
             dialog.CommandLine.ShouldBe(
                 $"gumcli new \"{gameFolder}\" --platform monogame --no-restore"
-                + Add("Gum.Shapes.MonoGame") + Add("KernSmith.MonoGameGum") + Add("Gum.Expressions")
-                + $" && dotnet restore \"{csproj}\"");
+                + Add("KernSmith.MonoGameGum") + Add("Gum.Expressions")
+                + $" && dotnet restore \"{csproj}\"" + Generate);
             dialog.ChoosePlatform("raylib");
             dialog.CommandLine.ShouldBe(
                 $"gumcli new \"{gameFolder}\" --platform raylib --no-restore"
-                + Add("KernSmith.RaylibGum") + Add("Gum.Expressions") + $" && dotnet restore \"{csproj}\"");
+                + Add("KernSmith.RaylibGum") + Add("Gum.Expressions") + $" && dotnet restore \"{csproj}\"" + Generate);
 
             // Restore.
             dialog.SetChecked(NewProjectDialogText.RestorePackages, false);
@@ -398,12 +401,12 @@ public class NewProjectHappyPathScenarioTests
 
             // Recommended packages off: the plain command again.
             dialog.SetChecked(NewProjectDialogText.RecommendedPackages, false);
-            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform raylib");
+            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform raylib" + Generate);
             dialog.SetChecked(NewProjectDialogText.RecommendedPackages, true);
 
             // Local Gum source: KNI with Skia always links it.
             dialog.ChoosePlatform("kniskia");
-            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform kniskia --source-linked");
+            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform kniskia --source-linked" + Generate);
 
             dialog.ClickCancel();
         });

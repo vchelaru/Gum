@@ -20,6 +20,7 @@ internal sealed class SwitchableNewProjectService : INewProjectService
 
     /// <summary>Replaces the add-packages step while set, so a test never runs <c>dotnet add</c>; reset to null after the test.</summary>
     public Func<string, IReadOnlyList<string>, Action<string>?, CancellationToken, Task<AddPackagesResult>>? AddPackages { get; set; }
+    public Func<ResolvedNewProject, NewProjectFilesResult, Action<string>?, CancellationToken, Task<GenerateCodeResult>>? GenerateCode { get; set; }
 
     public bool IsSourceLinkedAvailable => _inner.IsSourceLinkedAvailable;
 
@@ -34,6 +35,13 @@ internal sealed class SwitchableNewProjectService : INewProjectService
     public Task<AddPackagesResult> AddPackagesAsync(
         string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
         AddPackages != null ? AddPackages(csprojPath, packages, onOutputLine, cancellationToken) : _inner.AddPackagesAsync(csprojPath, packages, onOutputLine, cancellationToken);
+
+    public Task<GenerateCodeResult> GenerateCodeAsync(
+        ResolvedNewProject project, NewProjectFilesResult files, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+        GenerateCode != null ? GenerateCode(project, files, onOutputLine, cancellationToken) : _inner.GenerateCodeAsync(project, files, onOutputLine, cancellationToken);
+
+    public void UpdateHost(ResolvedNewProject project, NewProjectFilesResult files, bool packagesAdded, bool screenCodeGenerated) =>
+        _inner.UpdateHost(project, files, packagesAdded, screenCodeGenerated);
 
     public Task<NewProjectResult> ExecuteAsync(NewProjectRequest request, IProgress<NewProjectProgress>? progress, CancellationToken cancellationToken) =>
         _inner.ExecuteAsync(request, progress, cancellationToken);

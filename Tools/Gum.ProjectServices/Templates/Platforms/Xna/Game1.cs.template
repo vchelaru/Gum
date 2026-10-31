@@ -1,9 +1,8 @@
 namespace {{RootNamespace}};
 
 // The usings are inside the namespace so a project named like one of these types (Game, Button) still finds them.
-using System;
 using Gum;
-using Gum.Forms.Controls;
+{{HostUsings}}
 using Microsoft.Xna.Framework;
 
 public class Game1 : Game
@@ -21,13 +20,9 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // Relative to the Content folder. Create screens and components in the Gum tool,
-        // generate code, then add them here with: new MyScreen().AddToRoot();
         GumUI.Initialize(this, "GumProject/{{GumProjectFile}}");
-
-        Button button = new Button();
-        button.AddToRoot();
-        button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
+        {{InitLines}}
+        {{ScreenLines}}
 
         base.Initialize();
     }

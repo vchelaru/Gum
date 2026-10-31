@@ -155,6 +155,16 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void CodeProjectWithDemoScreen(string theme) => Capture("code-project-demo", theme, (viewModel, window) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.IsIncludeDemoScreenGum = true;
+        window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void Busy(string theme) => Capture("busy", theme, (viewModel, _) =>
     {
         viewModel.IncludeCodeProject = true;

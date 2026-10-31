@@ -134,7 +134,8 @@ public static class GumCoreServiceCollectionExtensions
             provider.GetRequiredService<Gum.ProjectServices.IFormsThemeLocator>(),
             provider.GetRequiredService<Gum.ProjectServices.IRestoreRunner>(),
             provider.GetRequiredService<Gum.ProjectServices.IPackageAddRunner>(),
-            new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() }));
+            new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() },
+            new Gum.ProjectServices.CodeGeneration.HeadlessCodegenRunner(Gum.Expressions.GumExpressionService.Initialize)));
         services.AddSingleton<INewProjectLogic, NewProjectLogic>();
         services.AddSingleton<Gum.Startup.IProjectOpenRequestRouter, Gum.Startup.ProjectOpenRequestRouter>();
         services.AddSingleton<FileLocations>();

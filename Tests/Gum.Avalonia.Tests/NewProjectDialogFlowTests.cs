@@ -128,7 +128,7 @@ public class NewProjectDialogFlowTests
         visited.ShouldBe(new[]
         {
             "Project name", "File format", "Location", "Browse for a folder", "Include Forms controls (recommended)", "Theme",
-            "Include demo screen", "Create C# project", "Platform", "Use local Gum source", "Restore NuGet packages", "Include recommended packages",
+            "Include demo screen", "Create C# project", "Platform", "Use local Gum source", "Restore NuGet packages", "Include recommended packages", "Generate code",
             "Folders", "Command line", "OK", "Cancel",
         });
     }

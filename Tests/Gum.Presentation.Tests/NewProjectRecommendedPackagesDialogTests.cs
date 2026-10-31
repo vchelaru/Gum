@@ -31,7 +31,10 @@ public class NewProjectRecommendedPackagesDialogTests
     private readonly Mock<IFormsFileService> _formsFileService = new();
     private readonly Mock<IProjectState> _projectState = new();
     private readonly List<string> _calls = new List<string>();
-    private readonly List<NewProjectRequest> _requests = new List<NewProjectRequest>();
+    // What creation was handed. The dialog also validates on a pool thread to refresh its checks, so the last recorded request is not
+    // always the creation's; the resolved project given to CreateFilesAsync is.
+    private readonly List<ResolvedNewProject> _created = new List<ResolvedNewProject>();
+    private bool LastCreationAddsPackages => _created.Last().RecommendedPackages.Count > 0;
     private readonly Queue<AddPackagesResult> _addResults = new Queue<AddPackagesResult>();
     private readonly Queue<RestoreResult> _restoreResults = new Queue<RestoreResult>();
     private IReadOnlyList<string> _resolvedPackages = new[] { "Gum.Shapes.MonoGame", "Gum.Expressions" };
@@ -44,16 +47,20 @@ public class NewProjectRecommendedPackagesDialogTests
         _service.Setup(x => x.IsSourceLinkedAvailable).Returns(true);
         _service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns((NewProjectRequest request) =>
         {
-            _requests.Add(request);
             return new NewProjectValidation
             {
-                Resolved = new ResolvedNewProject { Name = "MyGame", CsprojPath = Csproj, RecommendedPackages = _resolvedPackages }
+                Resolved = new ResolvedNewProject
+                {
+                    Name = "MyGame", CsprojPath = Csproj,
+                    RecommendedPackages = request.IncludeRecommendedPackages ? _resolvedPackages : new string[0]
+                }
             };
         });
         _service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
-            .Returns(() =>
+            .Returns((ResolvedNewProject resolved, CancellationToken _) =>
             {
                 _calls.Add("files");
+                lock (_created) { _created.Add(resolved); }
                 return Task.FromResult(new NewProjectFilesResult
                 {
                     Success = true,
@@ -88,6 +95,8 @@ public class NewProjectRecommendedPackagesDialogTests
         {
             ProjectName = "MyGame",
             Location = Folder,
+            IsIncludeDemoScreenGum = false,
+            GenerateCodeChoice = false,
         };
         configure?.Invoke(viewModel);
         return viewModel;
@@ -173,7 +182,7 @@ public class NewProjectRecommendedPackagesDialogTests
     }
 
     [Theory]
-    [InlineData("monogame", "Gum.Shapes.MonoGame, KernSmith.MonoGameGum, Gum.Expressions")]
+    [InlineData("monogame", "KernSmith.MonoGameGum, Gum.Expressions")]
     [InlineData("raylib", "KernSmith.RaylibGum, Gum.Expressions")]
     [InlineData("stride", "Gum.Expressions")]
     public void RecommendedPackagesNote_ListsThePackagesTheCheckboxAdds(string platform, string expected)
@@ -202,7 +211,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         viewModel.CommandLine.ShouldBe(
             $"gumcli new \"{GameFolder}\" --platform monogame --no-restore"
-            + $" && {Add("Gum.Shapes.MonoGame")} && {Add("KernSmith.MonoGameGum")} && {Add("Gum.Expressions")}"
+            + $" && {Add("KernSmith.MonoGameGum")} && {Add("Gum.Expressions")}"
             + $" && dotnet restore \"{Csproj}\"");
     }
 
@@ -273,7 +282,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         await viewModel.RunCreationAsync();
 
-        _requests.Last().IncludeRecommendedPackages.ShouldBeFalse();
+        LastCreationAddsPackages.ShouldBeFalse();
     }
 
     [Fact]
@@ -288,7 +297,7 @@ public class NewProjectRecommendedPackagesDialogTests
         viewModel.CommandLine.ShouldNotContain("dotnet add");
         await viewModel.RunCreationAsync();
 
-        _requests.Last().IncludeRecommendedPackages.ShouldBeFalse();
+        LastCreationAddsPackages.ShouldBeFalse();
     }
 
     [Fact]
@@ -320,16 +329,16 @@ public class NewProjectRecommendedPackagesDialogTests
         viewModel.IsRecommendedPackagesEnabled.ShouldBeFalse();
         viewModel.CommandLine.ShouldNotContain("dotnet add");
         await viewModel.RunCreationAsync();
-        _requests.Last().IncludeRecommendedPackages.ShouldBeFalse();
+        LastCreationAddsPackages.ShouldBeFalse();
 
         viewModel.PlatformName = "monogame";
 
         viewModel.RecommendedPackagesChecked.ShouldBeTrue();
         viewModel.IsRecommendedPackagesEnabled.ShouldBeTrue();
-        viewModel.CommandLine.ShouldContain(Add("Gum.Shapes.MonoGame"));
-        _requests.Clear();
+        viewModel.CommandLine.ShouldContain(Add("KernSmith.MonoGameGum"));
+        _created.Clear();
         await viewModel.RunCreationAsync();
-        _requests.Last().IncludeRecommendedPackages.ShouldBeTrue();
+        LastCreationAddsPackages.ShouldBeTrue();
     }
 
     [Fact]
@@ -339,7 +348,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         await viewModel.RunCreationAsync();
 
-        _requests.Last().IncludeRecommendedPackages.ShouldBeTrue();
+        LastCreationAddsPackages.ShouldBeTrue();
         _calls.ShouldBe(new[] { "files", "add Gum.Shapes.MonoGame,Gum.Expressions", "restore" });
         viewModel.IsCodeProjectCreated.ShouldBeTrue();
     }
@@ -356,7 +365,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         await viewModel.RunCreationAsync();
 
-        _requests.Last().IncludeRecommendedPackages.ShouldBeFalse();
+        LastCreationAddsPackages.ShouldBeFalse();
         _calls.ShouldBe(new[] { "files", "restore" });
     }
 

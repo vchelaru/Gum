@@ -36,6 +36,13 @@ public class NewProjectRequest
     public bool IncludeRecommendedPackages { get; init; }
 
     /// <summary>
+    /// Also generate code for the whole new project (<c>gumcli codegen "&lt;gumj&gt;"</c>) after the restore, and
+    /// then have the host game create the demo screen's generated class instead of loading the screen at runtime. Needs a platform;
+    /// does nothing without the Forms template (nothing to generate). <c>gumcli new</c> has no option for it: it is its own command in the chain.
+    /// </summary>
+    public bool GenerateCode { get; init; }
+
+    /// <summary>
     /// For a Gum-only project whose <see cref="Path"/> has no project extension: create a <c>.gumx</c> (XML)
     /// project instead of the default <c>.gumj</c> (JSON). A path ending in <c>.gumx</c>/<c>.gumj</c> decides by itself.
     /// </summary>

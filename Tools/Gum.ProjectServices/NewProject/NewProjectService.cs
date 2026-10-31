@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Gum.DataTypes;
+using Gum.ProjectServices.CodeGeneration;
 
 namespace Gum.ProjectServices;
 
@@ -18,6 +19,7 @@ public class NewProjectService : INewProjectService
     private readonly IRestoreRunner _restoreRunner;
     private readonly IPackageAddRunner _packageAddRunner;
     private readonly IReadOnlyList<string> _gumSourceSearchDirectories;
+    private readonly IHeadlessCodegenRunner _codegenRunner;
 
     /// <param name="themeLocator">Finds the bundled Forms themes.</param>
     /// <param name="restoreRunner">Runs <c>dotnet restore</c>.</param>
@@ -35,7 +37,20 @@ public class NewProjectService : INewProjectService
     public NewProjectService(
         IFormsThemeLocator themeLocator, IRestoreRunner restoreRunner, IPackageAddRunner packageAddRunner,
         IReadOnlyList<string> gumSourceSearchDirectories)
+        : this(themeLocator, restoreRunner, packageAddRunner, gumSourceSearchDirectories, new HeadlessCodegenRunner())
     {
+    }
+
+    /// <param name="themeLocator">Finds the bundled Forms themes.</param>
+    /// <param name="restoreRunner">Runs <c>dotnet restore</c>.</param>
+    /// <param name="packageAddRunner">Runs <c>dotnet add package</c>.</param>
+    /// <param name="gumSourceSearchDirectories">Where to look for a Gum checkout, walking up from each, in order.</param>
+    /// <param name="codegenRunner">Generates the demo screen's code, as <c>gumcli codegen</c> does.</param>
+    public NewProjectService(
+        IFormsThemeLocator themeLocator, IRestoreRunner restoreRunner, IPackageAddRunner packageAddRunner,
+        IReadOnlyList<string> gumSourceSearchDirectories, IHeadlessCodegenRunner codegenRunner)
+    {
+        _codegenRunner = codegenRunner;
         _themeLocator = themeLocator;
         _restoreRunner = restoreRunner;
         _packageAddRunner = packageAddRunner;
@@ -84,6 +99,12 @@ public class NewProjectService : INewProjectService
                 return Fail(NewProjectErrorKind.RecommendedPackagesNeedNuGetRuntime,
                     "Recommended packages need the NuGet Gum runtime: they would pull in a second copy of Gum next to the linked source.");
             }
+        }
+
+        if (request.GenerateCode && options.Platform == null)
+        {
+            return Fail(NewProjectErrorKind.GenerateCodeNeedsPlatform,
+                "Generating code needs a code project: the code goes into its folder.");
         }
 
         string? gumSourceDirectory = null;
@@ -148,6 +169,7 @@ public class NewProjectService : INewProjectService
                 GumProjectPath = targets.GumProjectPath,
                 CsprojPath = targets.CsprojPath,
                 Name = targets.Name,
+                GenerateCode = request.GenerateCode,
                 RecommendedPackages = request.IncludeRecommendedPackages
                     ? RecommendedPackages.For(options.Platform!.Value)
                     : Array.Empty<string>()
@@ -375,7 +397,8 @@ public class NewProjectService : INewProjectService
                 {
                     Success = true,
                     GumProjectPath = result.GumProjectPath,
-                    CsprojPath = result.CsprojPath
+                    CsprojPath = result.CsprojPath,
+                    DemoScreen = result.DemoScreen
                 };
             }
 
@@ -421,6 +444,60 @@ public class NewProjectService : INewProjectService
     }
 
     /// <inheritdoc/>
+    public Task<GenerateCodeResult> GenerateCodeAsync(
+        ResolvedNewProject project, NewProjectFilesResult files, Action<string>? onOutputLine, CancellationToken cancellationToken)
+    {
+        if (!project.IncludeFormsTemplate)
+        {
+            return Task.FromResult(new GenerateCodeResult { Success = true });
+        }
+
+        return Task.Run(() =>
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new GenerateCodeResult { Canceled = true };
+            }
+
+            System.IO.StringWriter output = new System.IO.StringWriter();
+            System.IO.StringWriter error = new System.IO.StringWriter();
+            int exitCode;
+            try
+            {
+                exitCode = _codegenRunner.Run(files.GumProjectPath, elementNames: null, prune: false, output, error);
+            }
+            catch (Exception exception)
+            {
+                return new GenerateCodeResult { OutputTail = exception.Message };
+            }
+
+            string errors = error.ToString().Trim();
+            string tail = errors.Length > 0 ? errors : output.ToString().Trim();
+            if (exitCode != 0)
+            {
+                return new GenerateCodeResult { OutputTail = tail.Length > 0 ? tail : "Code generation failed." };
+            }
+
+            UpdateHost(project, files, packagesAdded: project.RecommendedPackages.Count > 0, screenCodeGenerated: true);
+            return new GenerateCodeResult { Success = true, OutputTail = tail };
+        }, CancellationToken.None);
+    }
+
+    /// <inheritdoc/>
+    public void UpdateHost(ResolvedNewProject project, NewProjectFilesResult files, bool packagesAdded, bool screenCodeGenerated)
+    {
+        if (project.Platform is not HostPlatform platform || !files.Success)
+        {
+            return;
+        }
+
+        PlatformProjectScaffolder.RewriteHostSources(
+            project.RootDirectory, platform, System.IO.Path.GetFileName(files.GumProjectPath), files.DemoScreen,
+            screenCodeGenerated && files.DemoScreen != null,
+            packagesAdded ? project.RecommendedPackages : Array.Empty<string>());
+    }
+
+    /// <inheritdoc/>
     public async Task<NewProjectResult> ExecuteAsync(
         NewProjectRequest request, IProgress<NewProjectProgress>? progress, CancellationToken cancellationToken)
     {
@@ -451,14 +528,31 @@ public class NewProjectService : INewProjectService
             }
         }
 
-        if (!request.Restore)
+        if (packageAdd != null)
         {
-            return new NewProjectResult { Files = files, PackageAdd = packageAdd };
+            UpdateHost(validation.Resolved, files, packagesAdded: true, screenCodeGenerated: false);
         }
 
-        progress?.Report(new NewProjectProgress(NewProjectStep.Restoring, "Restoring NuGet packages..."));
-        RestoreResult restore = await RestoreAsync(files.CsprojPath, null, cancellationToken);
-        return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore };
+        RestoreResult? restore = null;
+        if (request.Restore)
+        {
+            progress?.Report(new NewProjectProgress(NewProjectStep.Restoring, "Restoring NuGet packages..."));
+            restore = await RestoreAsync(files.CsprojPath, null, cancellationToken);
+            if (restore.Status != RestoreStatus.Succeeded)
+            {
+                return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore };
+            }
+        }
+
+        // After the restore: the code generator reads the restored runtime package to choose the syntax it emits.
+        GenerateCodeResult? codegen = null;
+        if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate)
+        {
+            progress?.Report(new NewProjectProgress(NewProjectStep.GeneratingCode, "Generating code..."));
+            codegen = await GenerateCodeAsync(validation.Resolved, files, null, cancellationToken);
+        }
+
+        return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore, Codegen = codegen };
     }
 
     #endregion

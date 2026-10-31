@@ -1,9 +1,8 @@
 namespace {{RootNamespace}};
 
 // The usings are inside the namespace so a project named like one of these types (Game, Button) still finds them.
-using System;
 using Gum;
-using Gum.Forms.Controls;
+{{HostUsings}}
 using Microsoft.Xna.Framework;
 using SkiaGameRendering;
 using SkiaSharp;
@@ -29,13 +28,10 @@ public class Game1 : Game
         // The graphics device exists once the base Initialize has run.
         base.Initialize();
 
-        // Create screens and components in the Gum tool, generate code, then add them here with:
-        // new MyScreen().AddToRoot();
         GumUI.Initialize(this, "Content/GumProject/{{GumProjectFile}}");
+        {{InitLines}}
+        {{ScreenLines}}
 
-        Button button = new Button();
-        button.AddToRoot();
-        button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
     }
 
     protected override void Update(GameTime gameTime)

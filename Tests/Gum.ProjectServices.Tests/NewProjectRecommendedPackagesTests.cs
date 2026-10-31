@@ -53,8 +53,8 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
     #region Table
 
     [Theory]
-    [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
+    [InlineData(HostPlatform.MonoGame, "KernSmith.MonoGameGum,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, "KernSmith.KniGum,Gum.Expressions")]
     [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.Expressions")]
     [InlineData(HostPlatform.SilkNet, "Gum.Expressions")]
     [InlineData(HostPlatform.Stride, "Gum.Expressions")]
@@ -104,7 +104,7 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
     {
         NewProjectValidation validation = CreateService().Validate(Request("monogame"));
 
-        validation.Resolved!.RecommendedPackages.ShouldBe(new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", "Gum.Expressions" });
+        validation.Resolved!.RecommendedPackages.ShouldBe(new[] { "KernSmith.MonoGameGum", "Gum.Expressions" });
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
         string csproj = result.Files.CsprojPath!;
         _calls.ShouldBe(new[]
         {
-            $"add {csproj} Gum.Shapes.KNI", $"add {csproj} KernSmith.KniGum", $"add {csproj} Gum.Expressions", $"restore {csproj}"
+            $"add {csproj} KernSmith.KniGum", $"add {csproj} Gum.Expressions", $"restore {csproj}"
         });
         result.PackageAdd!.Status.ShouldBe(RestoreStatus.Succeeded);
         result.Restore!.Status.ShouldBe(RestoreStatus.Succeeded);
@@ -178,7 +178,7 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
         result.PackageAdd!.Status.ShouldBe(RestoreStatus.Failed);
         result.PackageAdd.FailedPackage.ShouldBe("KernSmith.KniGum");
         result.Restore.ShouldBeNull();
-        _calls.Count.ShouldBe(2);
+        _calls.Count.ShouldBe(1);
         File.Exists(result.Files.CsprojPath).ShouldBeTrue();
     }
 

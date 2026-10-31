@@ -8,6 +8,27 @@ namespace Gum.Presentation.Tests;
 public class NewProjectCommandLineTests
 {
     [Fact]
+    public void BuildChained_KeepsSourceLinked_WhenOnlyTheCodegenStepIsChained()
+    {
+        string command = NewProjectCommandLine.BuildChained(
+            "/p/Game", "kniskia", includeForms: true, theme: null, restore: true, packages: new string[0], csprojPath: "/p/Game/Game.csproj",
+            gumProjectPath: "/p/Game/Content/GumProject/GumProject.gumj", sourceLinked: true);
+
+        command.ShouldBe("gumcli new \"/p/Game\" --platform kniskia --source-linked && gumcli codegen \"/p/Game/Content/GumProject/GumProject.gumj\"");
+    }
+
+    [Fact]
+    public void BuildChained_KeepsSourceLinked_BeforeTheChainedSteps()
+    {
+        string command = NewProjectCommandLine.BuildChained(
+            "/p/Game", "monogame", includeForms: true, theme: null, restore: false, packages: new[] { "Gum.Expressions" },
+            csprojPath: "/p/Game/Game.csproj", gumProjectPath: "/p/Game/Content/GumProject/GumProject.gumj", sourceLinked: true);
+
+        command.ShouldStartWith("gumcli new \"/p/Game\" --platform monogame --source-linked --no-restore && dotnet add");
+        command.ShouldEndWith(" && gumcli codegen \"/p/Game/Content/GumProject/GumProject.gumj\"");
+    }
+
+    [Fact]
     public void Build_WithoutAPlatform_IgnoresSourceLinkedAndRestore()
     {
         string command = NewProjectCommandLine.Build("/p/MyGame.gumj", platform: null, includeForms: true, theme: null, sourceLinked: true, restore: false);

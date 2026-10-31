@@ -15,6 +15,7 @@ internal static class NewProjectUiText
     public const string UseLocalSource = "Use local Gum source";
     public const string RestorePackages = "Restore NuGet packages";
     public const string RecommendedPackages = "Include recommended packages";
+    public const string GenerateCode = "Generate code";
 
     public const string WarningHeading = "Inside an existing code project";
     public const string TargetNotEmptyHeading = "This folder is not empty";

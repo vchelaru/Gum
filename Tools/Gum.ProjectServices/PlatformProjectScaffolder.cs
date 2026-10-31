@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -60,19 +61,63 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         Directory.CreateDirectory(gumFolder);
 
         string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
-        WriteHostFiles(
-            fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference, Path.GetFileName(gumProjectPath));
+        WriteHostFiles(fullDirectory, csprojPath, projectName, platform, gumReference, Path.GetFileName(gumProjectPath));
 
         GumProjectTemplateWriter.Write(gumProjectPath, includeFormsTemplate, themeDirectory);
 
-        WriteCodeGenerationSettings(gumProjectPath, csprojPath);
+        CodeOutputProjectSettings settings = WriteCodeGenerationSettings(gumProjectPath, csprojPath);
+
+        // The screen is found from what was just written; the host is written last so it shows it.
+        DemoScreenInfo? demoScreen = FindDemoScreen(gumProjectPath, settings);
+        WriteHostSources(
+            fullDirectory, projectName, rootNamespace, platform, Path.GetFileName(gumProjectPath),
+            demoScreen, screenCodeGenerated: false, addedPackages: Array.Empty<string>());
 
         return new PlatformProjectResult
         {
             Success = true,
             CsprojPath = csprojPath,
-            GumProjectPath = gumProjectPath
+            GumProjectPath = gumProjectPath,
+            DemoScreen = demoScreen
         };
+    }
+
+    // The class code generation makes for the demo screen: its name and the namespace the settings give it.
+    private static DemoScreenInfo? FindDemoScreen(string gumProjectPath, CodeOutputProjectSettings settings)
+    {
+        string? name = DemoScreenRule.FindDemoScreenName(gumProjectPath);
+        if (name == null)
+        {
+            return null;
+        }
+
+        string[] segments = name.Split('/');
+        string ns = settings.RootNamespace + ".Screens";
+        if (settings.AppendFolderToNamespace)
+        {
+            foreach (string folder in segments.Take(segments.Length - 1))
+            {
+                ns += "." + NameRules.ToCSharpIdentifier(folder);
+            }
+        }
+
+        return new DemoScreenInfo { Name = name, ClassName = NameRules.ToCSharpIdentifier(segments[^1]), Namespace = ns };
+    }
+
+    /// <summary>
+    /// Writes the host game's startup code again for what exists now: the packages that were added and whether the demo
+    /// screen's code was generated. The host only ever names what is in the project, so a step that did not finish leaves a
+    /// host that still builds.
+    /// </summary>
+    internal static void RewriteHostSources(
+        string directory, HostPlatform platform, string gumProjectFileName, DemoScreenInfo? demoScreen, bool screenCodeGenerated,
+        IReadOnlyList<string> addedPackages)
+    {
+        string fullDirectory = GetFullDirectory(directory);
+        string projectName = Path.GetFileName(fullDirectory);
+        WriteHostSources(
+            fullDirectory, projectName, NameRules.ToCSharpIdentifier(projectName), platform, gumProjectFileName, demoScreen,
+            screenCodeGenerated, addedPackages);
     }
 
     // MSBuild reads %XX in an item include as a character, splits it at ';', expands '*' and '?' and
@@ -204,22 +249,13 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     };
 
     private static void WriteHostFiles(
-        string directory, string csprojPath, string projectName, string rootNamespace, HostPlatform platform,
-        string gumReference, string gumProjectFileName)
+        string directory, string csprojPath, string projectName, HostPlatform platform, string gumReference, string gumProjectFileName)
     {
-        string platformFolder = platform.ToString();
-        // The XNA-style hosts share Program.cs and run a Game1. KNI Skia draws through a Skia canvas,
-        // so it has its own Game1.
-        bool isXnaGame = NewProjectLayout.WritesGame1(platform);
-        string programFolder = isXnaGame ? "Xna" : platformFolder;
-
+        string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
         File.WriteAllText(
             csprojPath,
-            ReadTemplate(platformFolder, "Host.csproj.template", projectName, rootNamespace, gumProjectFileName)
+            ReadTemplate(platform.ToString(), "Host.csproj.template", projectName, rootNamespace, gumProjectFileName)
                 .Replace("{{GumReference}}", gumReference));
-        File.WriteAllText(
-            Path.Combine(directory, NewProjectLayout.ProgramFileName),
-            ReadTemplate(programFolder, "Program.cs.template", projectName, rootNamespace, gumProjectFileName));
 
         // Only the game project: a source-linked Gum runtime stays a ProjectReference and needs no entry.
         File.WriteAllText(
@@ -227,13 +263,33 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             "<Solution>" + Environment.NewLine +
             $"  <Project Path=\"{SecurityElement.Escape(projectName + ".csproj")}\" />" + Environment.NewLine +
             "</Solution>" + Environment.NewLine);
+    }
+
+    // Program.cs, and Game1.cs where the platform has one: the part of the host that initializes Gum and shows a screen.
+    private static void WriteHostSources(
+        string directory, string projectName, string rootNamespace, HostPlatform platform, string gumProjectFileName,
+        DemoScreenInfo? demoScreen, bool screenCodeGenerated, IReadOnlyList<string> addedPackages)
+    {
+        string platformFolder = platform.ToString();
+        // The XNA-style hosts share Program.cs and run a Game1. KNI Skia draws through a Skia canvas,
+        // so it has its own Game1.
+        bool isXnaGame = NewProjectLayout.WritesGame1(platform);
+        string programFolder = isXnaGame ? "Xna" : platformFolder;
+
+        string Fill(string folder, string fileName)
+        {
+            string text = ReadTemplate(folder, fileName, projectName, rootNamespace, gumProjectFileName);
+            text = PlatformHostContent.Expand(text, "{{HostUsings}}", PlatformHostContent.GetUsings(demoScreen, screenCodeGenerated));
+            text = PlatformHostContent.Expand(text, "{{InitLines}}", PlatformHostContent.GetInitLines(addedPackages));
+            return PlatformHostContent.Expand(text, "{{ScreenLines}}", PlatformHostContent.GetScreenLines(demoScreen, screenCodeGenerated));
+        }
+
+        File.WriteAllText(Path.Combine(directory, NewProjectLayout.ProgramFileName), Fill(programFolder, "Program.cs.template"));
 
         if (isXnaGame)
         {
             string gameFolder = platform == HostPlatform.KniSkia ? platformFolder : "Xna";
-            File.WriteAllText(
-                Path.Combine(directory, NewProjectLayout.Game1FileName),
-                ReadTemplate(gameFolder, "Game1.cs.template", projectName, rootNamespace, gumProjectFileName));
+            File.WriteAllText(Path.Combine(directory, NewProjectLayout.Game1FileName), Fill(gameFolder, "Game1.cs.template"));
         }
     }
 
@@ -251,7 +307,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     }
 
     // Every runtime uses the same Gum Forms output (GumForms), so the library does not depend on the platform.
-    private static void WriteCodeGenerationSettings(string gumProjectPath, string csprojPath)
+    private static CodeOutputProjectSettings WriteCodeGenerationSettings(string gumProjectPath, string csprojPath)
     {
         AutoSetupResult setup = new CodeGenerationAutoSetupService().Run(gumProjectPath, csprojPath);
         CodeOutputProjectSettings settings = setup.Settings
@@ -262,6 +318,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string gumFolder = Path.GetDirectoryName(gumProjectPath)! + Path.DirectorySeparatorChar;
         new CodeOutputProjectSettingsManager(new NullCodeGenLogger(), new FixedProjectDirectoryProvider(gumFolder))
             .WriteSettingsForProject(settings);
+        return settings;
     }
 
     private static PlatformProjectResult Fail(string message) =>

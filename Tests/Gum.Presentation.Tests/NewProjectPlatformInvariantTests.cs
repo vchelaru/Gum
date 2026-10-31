@@ -48,6 +48,8 @@ public class NewProjectPlatformInvariantTests
             IncludeCodeProject = true,
             PlatformName = platform,
             IncludeRecommendedPackages = false,
+            IsIncludeDemoScreenGum = false,
+            GenerateCodeChoice = false,
         };
 
         await viewModel.ChecksRefresh;

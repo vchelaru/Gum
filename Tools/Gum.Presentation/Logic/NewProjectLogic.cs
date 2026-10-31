@@ -172,6 +172,9 @@ public class NewProjectLogic : INewProjectLogic
                     File.Delete(demoFile.FullPath);
                 }
             }
+
+            // The game was written while the demo screen existed (so the shown command and the dialog create the same files).
+            viewModel.RemoveDemoScreenFromHost();
         }
 
         ScreenSave startingScreen = project.Screens.FirstOrDefault(screen => screen.Name == StartingScreenName) ?? new ScreenSave { Name = StartingScreenName };
