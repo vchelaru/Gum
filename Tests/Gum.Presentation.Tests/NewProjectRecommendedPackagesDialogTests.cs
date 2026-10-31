@@ -88,6 +88,7 @@ public class NewProjectRecommendedPackagesDialogTests
         {
             ProjectName = "MyGame",
             Location = Folder,
+            IsIncludeDemoScreenGum = false,
         };
         configure?.Invoke(viewModel);
         return viewModel;

@@ -54,6 +54,7 @@ internal sealed class NewProjectUiFixture : IDisposable
         {
             Location = Location,
             IncludeRecommendedPackages = false,
+            IsIncludeDemoScreenGum = false,
         };
         Window = new DialogWindowDriver(ViewModel);
         Dialog = new NewProjectDialogDriver(Window);

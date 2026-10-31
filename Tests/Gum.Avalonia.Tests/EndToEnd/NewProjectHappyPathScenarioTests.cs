@@ -106,7 +106,7 @@ public class NewProjectHappyPathScenarioTests
             dialog.NameBox.Text.ShouldBe("MyGame", "the name starts as MyGame");
             dialog.FileFormatBox.SelectedItem.ShouldBe(NewProjectDialogViewModel.JsonFormat, "JSON is the default format");
             dialog.CheckBoxLabeled(NewProjectDialogText.IncludeForms).IsChecked.ShouldBe(true, "Forms controls are on by default");
-            dialog.CheckBoxLabeled(NewProjectDialogText.IncludeDemo).IsChecked.ShouldBe(false, "the demo screen is off by default");
+            dialog.CheckBoxLabeled(NewProjectDialogText.IncludeDemo).IsChecked.ShouldBe(true, "the demo screen is on by default");
             dialog.CheckBoxLabeled(NewProjectDialogText.CreateCodeProject).IsChecked.ShouldBe(false, "no C# project by default");
 
             dialog.TypeName("Fresh");

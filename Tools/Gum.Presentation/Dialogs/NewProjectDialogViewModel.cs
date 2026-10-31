@@ -114,7 +114,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         Location = DefaultLocation;
         SelectedFileFormat = JsonFormat;
         IsIncludeFormsControls = true;
-        IsIncludeDemoScreenGum = false;
+        IsIncludeDemoScreenGum = true;
         PlatformName = Platforms.FirstOrDefault()?.Name ?? "monogame";
         RunRestore = true;
         IncludeRecommendedPackages = true;
