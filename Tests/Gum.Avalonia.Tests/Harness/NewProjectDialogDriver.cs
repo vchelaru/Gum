@@ -129,7 +129,7 @@ internal sealed class NewProjectDialogDriver
     /// <summary>Clicks OK and waits for the window to close (a code project creates its files first).</summary>
     public void ClickOk()
     {
-        _window.Click(OkButton);
+        ClickSettled(OkButton);
         Wait.Until(() => _window.Result != null, CreationTimeout, () =>
             $"the dialog to close. OK enabled: {OkButton.IsEffectivelyEnabled}. Busy: {ViewModel.IsBusy}. Error: {ViewModel.ErrorMessage}. Restore failure: {ViewModel.RestoreFailureText}. Validation: {ViewModel.ValidationMessage}. Refusal: {ViewModel.RefusalText}.",
             _window);
@@ -137,7 +137,7 @@ internal sealed class NewProjectDialogDriver
     }
 
     /// <summary>Clicks OK and returns at once, for a flow that stays open (busy, a failure panel).</summary>
-    public void ClickOkWithoutWaiting() => _window.Click(OkButton);
+    public void ClickOkWithoutWaiting() => ClickSettled(OkButton);
 
     /// <summary>Presses and releases a key in the window.</summary>
     public void Press(Key key, PhysicalKey physicalKey) => _window.Press(key, physicalKey);
@@ -148,8 +148,26 @@ internal sealed class NewProjectDialogDriver
     /// <summary>Clicks Cancel; the window closes.</summary>
     public void ClickCancel()
     {
-        _window.Click(CancelButton);
+        ClickSettled(CancelButton);
         _window.Result.ShouldBe(false);
+    }
+
+    // A person clicks a footer button long after the folder checks of the last edit finished. The checks run on a
+    // worker and their banner can grow the window (moving the footer) at any moment, so a click made right after an
+    // edit would land on the old position and be lost: wait for them first.
+    private void ClickSettled(Control button)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            System.Threading.Tasks.Task latest = ViewModel.ChecksRefresh;
+            Wait.Until(() => latest.IsCompleted, CreationTimeout, () => "the folder checks", _window);
+            _window.Layout();
+            if (ReferenceEquals(latest, ViewModel.ChecksRefresh))
+            {
+                break;
+            }
+        }
+        _window.Click(button);
     }
 
     private void OpenSection(string name)
