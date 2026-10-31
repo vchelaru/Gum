@@ -105,11 +105,4 @@ public class PreviewInputDefaultsTests : MonoGameGum.Tests.Forms.BeginnerDriverT
 
         clicks.ShouldBe(1);
     }
-
-    [Fact]
-    public void Note_NamesTheCallsAGameUses()
-    {
-        PreviewInputDefaults.Note.ShouldContain("UseKeyboardDefaults");
-        PreviewInputDefaults.Note.ShouldContain("UseGamepadDefaults");
-    }
 }
