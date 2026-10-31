@@ -113,13 +113,13 @@ public class NewProjectDemoScreenDialogTests
 
     // Visible with any C# project; enabled when there is something to generate (Forms template) and the restore runs.
     [Theory]
-    [InlineData(true, true, true, true, true)]
-    [InlineData(false, true, true, false, false)]
-    [InlineData(true, false, true, true, false)]
-    [InlineData(true, true, false, true, false)]
-    [InlineData(true, true, true, false, true)]
+    [InlineData(true, true, true, true)]
+    [InlineData(false, true, true, false)]
+    [InlineData(true, false, true, false)]
+    [InlineData(true, true, false, false)]
+    [InlineData(true, true, true, true)]
     public void TheCheckBox_IsVisibleWithACodeProject_AndEnabledWhenThereIsSomethingToGenerateAndTheRestoreRuns(
-        bool codeProject, bool forms, bool restore, bool expectedVisible, bool expectedEnabled)
+        bool codeProject, bool forms, bool restore, bool expectedEnabled)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
