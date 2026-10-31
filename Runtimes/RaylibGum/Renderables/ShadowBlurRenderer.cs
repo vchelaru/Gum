@@ -274,6 +274,7 @@ internal sealed class RenderTextureService : RenderTargetServiceBase<RenderTextu
     protected override RenderTexture2D Create(int width, int height)
     {
         uint activeFramebuffer = Rlgl.GetActiveFramebuffer();
+        global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.Bank();
         Rlgl.DrawRenderBatchActive();
         RenderTexture2D created = LoadRenderTexture(width, height);
         Rlgl.EnableFramebuffer(activeFramebuffer);
@@ -283,6 +284,7 @@ internal sealed class RenderTextureService : RenderTargetServiceBase<RenderTextu
     protected override void Destroy(RenderTexture2D renderTarget)
     {
         uint activeFramebuffer = Rlgl.GetActiveFramebuffer();
+        global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.Bank();
         Rlgl.DrawRenderBatchActive();
         UnloadRenderTexture(renderTarget);
         Rlgl.EnableFramebuffer(activeFramebuffer == renderTarget.Id ? 0 : activeFramebuffer);

@@ -271,7 +271,9 @@ public class Renderer : IRenderer
         // The host may have called Draw inside its own BeginTextureMode (rendering Gum into a render
         // texture). raylib's EndTextureMode, which every render-target bake and blurred shadow runs,
         // unbinds whatever texture is active and restores nothing, so the rest of the frame would
-        // land on the screen instead. Record the host's texture so it can be rebound (#7290).
+        // land on the screen instead. Record the host's texture so it can be rebound (#7290). Its size
+        // comes from GetRenderWidth/Height, which raylib reports as the bound texture's size while
+        // one is active, the same size the camera above already uses.
         RenderTexture2D? hostRenderTexture = GetHostRenderTexture();
         ActiveRenderTexture = hostRenderTexture;
 

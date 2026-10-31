@@ -38,6 +38,68 @@ public class HostRenderTextureShadowTests : BaseTestClass
         }
     }
 
+    private static int CountDrawCallsFirstTwoFrames(bool insideHostTexture)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            RectangleRuntime shadowed = Box(10 + i * 40, 10, 0, 0, 255);
+            shadowed.HasDropshadow = true;
+            shadowed.DropshadowBlur = 5;
+            shadowed.DropshadowAlpha = 255;
+            GumService.Default.Root.Children.Add(shadowed);
+        }
+        GumService.Default.Root.UpdateLayout();
+
+        RenderTexture2D host = LoadRenderTexture(256, 128);
+        try
+        {
+            int drawCalls = 0;
+            for (int frame = 0; frame < 2; frame++)
+            {
+                BeginDrawing();
+                if (insideHostTexture)
+                {
+                    BeginTextureMode(host);
+                }
+                GumService.Default.Draw();
+                if (insideHostTexture)
+                {
+                    EndTextureMode();
+                }
+                EndDrawing();
+
+                int count = global::RenderingLibrary.Graphics.Renderer.Self.RenderStateChangeStatistics.DrawCallCount;
+                if (frame == 0)
+                {
+                    drawCalls = count;
+                }
+                else
+                {
+                    // The cached shadow textures of frame 2 are the reference for frame 1's creation flush.
+                    drawCalls.ShouldBe(count);
+                }
+            }
+
+            return drawCalls;
+        }
+        finally
+        {
+            UnloadRenderTexture(host);
+            GumService.Default.Root.Children.Clear();
+        }
+    }
+
+    [Fact]
+    public void Draw_FirstFrameWithShadowedBoxes_DrawCallCountMatchesWithAndWithoutHostTexture()
+    {
+        // Fresh shadow render textures are created (and their pending batch flushed) on each first
+        // frame; that flush must be counted the same wherever the frame is drawn.
+        int onScreen = CountDrawCallsFirstTwoFrames(insideHostTexture: false);
+        int inHostTexture = CountDrawCallsFirstTwoFrames(insideHostTexture: true);
+
+        inHostTexture.ShouldBe(onScreen);
+    }
+
     [Fact]
     public void Draw_BlurredShadowInsideHostRenderTexture_KeepsShapesBeforeAndAfterInHostTexture()
     {
