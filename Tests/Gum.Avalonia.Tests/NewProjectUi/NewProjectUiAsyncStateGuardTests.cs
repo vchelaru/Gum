@@ -85,4 +85,25 @@ public class NewProjectUiAsyncStateGuardTests
             Environment.SetEnvironmentVariable(SlowExistingCodeProjectDetector.EnvironmentVariable, original);
         }
     }
+
+    [AvaloniaFact]
+    public void OpeningASection_WaitsForThePendingChecks_BeforeItClicksTheHeading()
+    {
+        SlowExistingCodeProjectDetector detector = SlowDetector();
+        using NewProjectUiFixture fixture = new NewProjectUiFixture(detector: detector);
+        detector.Gate.Reset();
+        using System.Threading.Timer release = new System.Threading.Timer(_ => detector.Gate.Set(), null, 400, Timeout.Infinite);
+        try
+        {
+            fixture.ViewModel.ProjectName = "Other";
+
+            fixture.Dialog.OpenCommandLine();
+
+            fixture.ViewModel.ChecksRefresh.IsCompleted.ShouldBeTrue("a heading moves when the checks land, so the click waits for them");
+        }
+        finally
+        {
+            detector.Gate.Set();
+        }
+    }
 }
