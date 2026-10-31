@@ -156,6 +156,46 @@ public class NewProjectDemoScreenDialogTests
         viewModel.CommandLine.ShouldEndWith($" && {Codegen}");
     }
 
+    // The tick is the user's choice: Forms, Restore, the platform and the code project switch the box off and on, never the tick.
+    [Fact]
+    public void ATickSurvivesTheBoxBeingDisabledAndReEnabled()
+    {
+        NewProjectDialogViewModel viewModel = Create();
+        viewModel.GenerateCodeChecked.ShouldBeTrue();
+
+        viewModel.IsIncludeFormsControls = false;
+        viewModel.GenerateCodeChecked.ShouldBeFalse();
+        viewModel.IsIncludeFormsControls = true;
+        viewModel.GenerateCodeChecked.ShouldBeTrue();
+
+        viewModel.RunRestore = false;
+        viewModel.GenerateCodeChecked.ShouldBeFalse();
+        viewModel.RunRestore = true;
+        viewModel.GenerateCodeChecked.ShouldBeTrue();
+
+        viewModel.PlatformName = "kniskia";
+        viewModel.PlatformName = "monogame";
+        viewModel.GenerateCodeChecked.ShouldBeTrue();
+
+        viewModel.IncludeCodeProject = false;
+        viewModel.IncludeCodeProject = true;
+        viewModel.GenerateCodeChecked.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AnUntickSurvivesTheBoxBeingDisabledAndReEnabled()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.GenerateCodeChecked = false);
+
+        viewModel.IsIncludeFormsControls = false;
+        viewModel.IsIncludeFormsControls = true;
+        viewModel.RunRestore = false;
+        viewModel.RunRestore = true;
+
+        viewModel.GenerateCodeChecked.ShouldBeFalse();
+        viewModel.CommandLine.ShouldNotContain("codegen");
+    }
+
     [Fact]
     public void IsGenerateCodeEnabled_RaisesWhenFormsAreToggled()
     {
