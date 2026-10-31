@@ -932,12 +932,12 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     /// <remarks>
     /// <para>Skia is the authoritative renderer for this property. The Skia paint code at
     /// <c>RenderableShapeBase.CreatePaint</c> (Runtimes/SkiaGum/Renderables/RenderableShapeBase.cs)
-    /// passes <c>DropshadowBlurX / 3.0f</c> to <c>SKImageFilter.CreateDropShadow</c> as the
-    /// Gaussian sigma. A Gaussian's visible falloff extends to roughly 3σ, so the visible blur
-    /// radius works back out to the user-set <see cref="DropshadowBlurX"/>.</para>
+    /// passes <c>DropshadowBlur.GetSigma(DropshadowBlurX)</c> (0.4 times the blur) to <c>SKImageFilter.CreateDropShadow</c> as the
+    /// Gaussian sigma. The sigma is chosen so the shadow reaches the user-set blur: measured outward
+    /// from the shape edge, the alpha falls below 0.5% at about <see cref="DropshadowBlurX"/> pixels.</para>
     /// <para>Other backends approximate the same visible extent without a true Gaussian shader.
     /// Treat the user-set value as "how far the shadow visibly bleeds," not as sigma — sigma
-    /// would require multiplying by 3 to get the visible radius.</para>
+    /// would require multiplying by 2.5 to get the visible radius.</para>
     /// </remarks>
     public float DropshadowBlurX
     {

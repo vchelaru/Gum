@@ -36,9 +36,18 @@ namespace Gum.Renderables;
 public sealed class ShadowBlurRenderer
 {
     // Fixed unrolled loop bound — required for GLSL ES / older desktop drivers, harmless on
-    // modern ones. Cost is O(2*MaxRadius) taps per pass, 4*MaxRadius total. With MaxRadius=32
-    // that's 128 taps per pixel.
-    public const int MaxRadius = 32;
+    // modern ones. Taps past the radius are skipped, so the cost is O(2*radius+1) taps per pass and
+    // at most 2*(2*MaxRadius+1) = 258 per pixel over both passes (it was 130 with MaxRadius = 32).
+    // The shadow reaches about 1.06 * blur, so 64 covers a blur up to about 60 px; a larger blur
+    // is clipped at 64 px (and its kernel truncated short of 3 sigma).
+    public const int MaxRadius = 64;
+
+    /// <summary>
+    /// Kernel radius in pixels, which is also the render texture's padding around the shape: 3 sigma
+    /// (the truncated tail is under 0.2%), capped at <see cref="MaxRadius"/>.
+    /// </summary>
+    public static int GetKernelRadius(float blur) =>
+        Math.Min(MaxRadius, Math.Max(1, (int)MathF.Ceiling(global::Gum.Wireframe.DropshadowBlur.GetSigma(blur) * 3f)));
 
     private static readonly string FragmentShader = $@"#version 330
 in vec2 fragTexCoord;
@@ -89,7 +98,8 @@ void main() {{
     /// <param name="shadowMinY">Screen-space top-left Y of the shape bounds (already offset by DropshadowOffsetY).</param>
     /// <param name="shapeW">Shape width in pixels.</param>
     /// <param name="shapeH">Shape height in pixels.</param>
-    /// <param name="sigma">Gaussian sigma in pixels. Mirrors Skia's <c>SKImageFilter.CreateDropShadow</c> sigma.</param>
+    /// <param name="blur">The dropshadow blur in pixels: how far the shadow extends past the shape. The
+    /// Gaussian sigma is <see cref="DropshadowBlur.GetSigma"/>, the same one SkiaGum uses.</param>
     /// <param name="tint">Shadow color including alpha. Multiplied into the blurred mask at composite time.</param>
     /// <param name="activeCamera">The <see cref="Camera2D"/> currently established via <c>BeginMode2D</c>
     /// for the pass this shadow draws in (see <see cref="Renderer.ActiveCamera2D"/>). raylib's
@@ -115,20 +125,19 @@ void main() {{
         float shadowMinY,
         float shapeW,
         float shapeH,
-        float sigma,
+        float blur,
         Color tint,
         Camera2D activeCamera,
         RenderTexture2D? activeRenderTexture,
         Action<float, float> drawSilhouetteAt)
     {
-        if (sigma <= 0f || shapeW <= 0f || shapeH <= 0f || tint.A == 0)
+        if (blur <= 0f || shapeW <= 0f || shapeH <= 0f || tint.A == 0)
         {
             return;
         }
 
-        // Anything past 3σ contributes <0.5% of a Gaussian; ceil(3σ) captures the visible
-        // falloff without wasting RT area.
-        int radius = Math.Min(MaxRadius, Math.Max(1, (int)MathF.Ceiling(sigma * 3f)));
+        float sigma = global::Gum.Wireframe.DropshadowBlur.GetSigma(blur);
+        int radius = GetKernelRadius(blur);
         int rtW = (int)MathF.Ceiling(shapeW) + 2 * radius;
         int rtH = (int)MathF.Ceiling(shapeH) + 2 * radius;
 
