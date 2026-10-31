@@ -85,11 +85,17 @@ public class CodeGeneratorFormsBehaviorMappingTests : BaseTestClass
     }
 
     [Fact]
-    public void GetGeneratedCodeForElement_DefaultImplementationTooltip_DoesNotReplaceTooltipTemplate()
+    public void GetGeneratedCodeForElement_DefaultImplementationTooltip_RegistersDefaultTemplate()
     {
-        // A plain new Tooltip() keeps drawing what it does today; the from-file loader owns the
-        // project Tooltip template (FromFileTooltipTemplate).
         string code = Generate(new[] { "TooltipBehavior" }, isDefaultImplementation: true);
+
+        code.ShouldContain("DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Tooltip)]");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_NonDefaultImplementationTooltip_DoesNotRegisterDefaultTemplate()
+    {
+        string code = Generate(new[] { "TooltipBehavior" });
 
         code.ShouldContain("partial class Thing : global::Gum.Forms.Controls.Tooltip");
         code.ShouldNotContain("DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Tooltip)]");
