@@ -372,7 +372,7 @@ public sealed class NewProjectDialogView : StackPanel
         content.Children.Add(treeBox);
 
         // Shows beside the heading while the section is collapsed, so the answer is there without opening it.
-        TextBlock summary = Bound(new TextBlock { Name = FoldersSummaryName, Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center, Focusable = false },
+        TextBlock summary = Bound(new TextBlock { Name = FoldersSummaryName, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, Focusable = false },
             TextBlock.TextProperty, nameof(NewProjectDialogViewModel.FoldersSummary));
         summary.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.FoldersSummary)) { Converter = NotNullConverter.Instance });
         return CreateSection(FoldersExpanderName, NewProjectDialogText.FoldersHeading, content, summary);
@@ -460,13 +460,16 @@ public sealed class NewProjectDialogView : StackPanel
             _chevron = CreateIcon(Icon.ChevronRight, 1.0);
             _chevron.Opacity = 0.7;
 
-            StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Background = Brushes.Transparent, Focusable = true };
+            // The last column takes what is left, so a long summary wraps instead of running out of the window.
+            Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*"), ColumnSpacing = 4, Background = Brushes.Transparent, Focusable = true };
             row.Children.Add(_chevron);
+            Grid.SetColumn(header, 1);
             row.Children.Add(header);
             if (collapsedSummary != null)
             {
                 // The host is what hides the summary on expand; the summary keeps its own binding-driven visibility.
                 _summaryHost = new Panel { Children = { collapsedSummary }, VerticalAlignment = VerticalAlignment.Center };
+                Grid.SetColumn(_summaryHost, 2);
                 row.Children.Add(_summaryHost);
             }
             row.PointerPressed += (_, e) =>

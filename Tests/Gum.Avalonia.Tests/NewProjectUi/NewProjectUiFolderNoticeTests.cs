@@ -198,7 +198,8 @@ public class NewProjectUiFolderNoticeTests
     public void TheFoldersHeader_StaysInsideTheWindow_AtEveryZoom(double zoom)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
-        fixture.Dialog.TypeName("CodeProj3");
+        fixture.Dialog.TypeName("CodeProj3AndAVeryLongProjectNameToFillTheHeaderRow");
+        fixture.Dialog.TypeLocation(fixture.MakeFolder("AParentFolderWithAnExtremelyLongNameThatDoesNotFitBesideTheHeading"));
         fixture.SetZoom(zoom);
         fixture.Settle();
 

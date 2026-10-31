@@ -81,5 +81,6 @@ public class NewProjectFolderNoticeScreenshotTests
 
     private static void ArrangeFolderExists(Mock<IExistingCodeProjectDetector> detector, bool folderExists)
     {
+        detector.Setup(x => x.TargetExists(It.IsAny<string>(), It.IsAny<string>())).Returns(folderExists);
     }
 }
