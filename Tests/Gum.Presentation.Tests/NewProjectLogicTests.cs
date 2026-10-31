@@ -179,6 +179,22 @@ public class NewProjectLogicTests
     }
 
     [Fact]
+    public async Task CreateNewProjectAsync_LocationNamedLikeTheProject_SavesInItAndRemembersItsParent()
+    {
+        NewProjectDialogViewModel viewModel = CreateViewModel(CreateThemeSelection());
+        viewModel.Location = Path.Combine(ChosenFolder, "Chosen");
+        _dialogService
+            .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
+            .Returns(true);
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectManager.Verify(x => x.SetProjectLocation(ChosenLocation), Times.Once);
+        _locationSettings.Verify(x => x.RememberNewProjectParent(ChosenFolder), Times.Once);
+        _locationSettings.Verify(x => x.RememberNewProjectParent(Path.Combine(ChosenFolder, "Chosen")), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateNewProjectAsync_DoesNotRememberTheParentFolder_WhenTheDialogIsCancelled()
     {
         SetUpDialog(accepted: false);

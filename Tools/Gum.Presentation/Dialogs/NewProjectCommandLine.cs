@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Gum.ProjectServices;
 
 namespace Gum.Dialogs;
 
@@ -83,11 +84,8 @@ public static class NewProjectCommandLine
     /// <summary>The path argument for a Gum-only project, or for a game folder when <paramref name="withCodeProject"/>.</summary>
     public static string GetPath(string location, string name, string extension, bool withCodeProject)
     {
-        string trimmed = location.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        // A root such as "C:\" must keep its separator: "C:" combined with a name is the drive-relative "C:MyGame".
-        string folder = trimmed.Length < (Path.GetPathRoot(location)?.Length ?? 0) ? location : trimmed;
-        return NewProjectDisplayPath.Normalize(withCodeProject
-            ? Path.Combine(folder, name)
-            : Path.Combine(folder, name, name + extension));
+        // The project folder is Location itself when it ends in the project's name (see NewProjectFolder).
+        string projectFolder = NewProjectFolder.Resolve(location, name).ProjectFolder;
+        return NewProjectDisplayPath.Normalize(withCodeProject ? projectFolder : Path.Combine(projectFolder, name + extension));
     }
 }

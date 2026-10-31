@@ -766,10 +766,18 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     private void Browse()
     {
+        // Starting inside the project's own folder would show its contents; its parent shows it among its siblings.
+        string startFolder = Directory.Exists(Location) ? Location : DefaultLocation;
+        NewProjectFolder resolved = ResolvedFolder;
+        if (resolved.LocationIsProjectFolder && Directory.Exists(resolved.ParentFolder) && Directory.Exists(Location))
+        {
+            startFolder = NewProjectDisplayPath.Normalize(resolved.ParentFolder);
+        }
+
         string? folder = _dialogService.OpenFolder(new OpenFolderDialogOptions
         {
             Title = "Where would you like to create the project?",
-            InitialDirectory = Directory.Exists(Location) ? Location : DefaultLocation,
+            InitialDirectory = startFolder,
         });
         if (folder != null)
         {
@@ -836,11 +844,14 @@ public class NewProjectDialogViewModel : DialogViewModel
             ? remembered
             : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
+    // Where the project goes and what is remembered: Location itself when it ends in the project's name, else Location\Name.
+    private NewProjectFolder ResolvedFolder => NewProjectFolder.Resolve(EffectiveLocation, EffectiveName);
+
     /// <summary>
-    /// The folder the project folder is created in, which the caller remembers once the project exists.
-    /// The project folder is always this folder plus the name, so it is never a drive root's parent.
+    /// The folder that holds the project folder, which the caller remembers once the project exists: Location, or its parent when
+    /// Location is the project folder. A file system or UNC root is never the project folder, so it is remembered as it is.
     /// </summary>
-    public string ProjectParentFolder => NewProjectDisplayPath.Normalize(EffectiveLocation);
+    public string ProjectParentFolder => NewProjectDisplayPath.Normalize(ResolvedFolder.ParentFolder);
 
     private string SelectedThemeName => ThemeSelection.GetSelectedThemeOrDefault();
 
@@ -965,7 +976,7 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     private void RefreshWarnings()
     {
-        string folder = EffectiveLocation;
+        string projectFolder = NewProjectDisplayPath.Normalize(ResolvedFolder.ProjectFolder);
         bool showExisting = IncludeCodeProject && _existingCodeProject != null;
         IsExistingCodeProjectWarningVisible = showExisting;
         if (showExisting)
@@ -973,12 +984,12 @@ public class NewProjectDialogViewModel : DialogViewModel
             string found = NewProjectDisplayPath.Normalize(_existingCodeProject!);
             ExistingCodeProjectText = $"Found {Path.GetFileName(found)} in {NewProjectDisplayPath.Normalize(Path.GetDirectoryName(found) ?? string.Empty)}.";
             bool hasGame1 = NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform) && NewProjectLayout.WritesGame1(platform);
-            ExistingCodeProjectTip = NewProjectDialogText.WarningTip(hasGame1, NewProjectDisplayPath.Normalize(Path.Combine(folder, EffectiveName)));
+            ExistingCodeProjectTip = NewProjectDialogText.WarningTip(hasGame1, projectFolder);
         }
 
         IsTargetNotEmptyWarningVisible = _targetNotEmpty;
         TargetNotEmptyText = _targetNotEmpty
-            ? NewProjectDialogText.TargetNotEmptyBody(NewProjectDisplayPath.Normalize(Path.Combine(folder, EffectiveName)))
+            ? NewProjectDialogText.TargetNotEmptyBody(projectFolder)
             : string.Empty;
     }
 
@@ -990,7 +1001,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     {
         bool game = IncludeCodeProject;
         string name = EffectiveName;
-        string root = Path.Combine(EffectiveLocation, name);
+        string root = ResolvedFolder.ProjectFolder;
 
         NewProjectLayout? layout = null;
         if (!game)
@@ -1010,7 +1021,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     private void RefreshChecks()
     {
         int version = Interlocked.Increment(ref _refreshVersion);
-        ChecksRefresh = RefreshChecksAsync(version, BuildRequest(), EffectiveLocation, EffectiveName);
+        ChecksRefresh = RefreshChecksAsync(version, BuildRequest(), ResolvedFolder.ParentFolder, EffectiveName);
     }
 
     private async Task RefreshChecksAsync(int version, NewProjectRequest request, string folder, string name)
