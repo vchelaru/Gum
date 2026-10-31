@@ -56,4 +56,14 @@ public class ArcFromScreenTests : BaseTestClass
             ObjectFinder.Self.GumProjectSave = previousProject;
         }
     }
+
+    [Fact]
+    public void SetProperty_ThicknessBoxedAsInt_IsAccepted()
+    {
+        ArcRuntime arc = new();
+
+        arc.SetProperty("Thickness", 24);
+
+        arc.Thickness.ShouldBe(24f);
+    }
 }

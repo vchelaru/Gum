@@ -3653,7 +3653,7 @@ public partial class CustomSetPropertyOnRenderable
     {
         if (propertyName == "Thickness")
         {
-            arcRuntime.Thickness = (float)value;
+            arcRuntime.Thickness = System.Convert.ToSingle(value);
             return true;
         }
         return false;
