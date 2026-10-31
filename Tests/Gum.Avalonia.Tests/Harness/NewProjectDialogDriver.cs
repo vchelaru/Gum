@@ -62,10 +62,18 @@ internal sealed class NewProjectDialogDriver
     public Button CancelButton => _window.Find<Button>(button => button.Name == DialogWindow.NegativeButtonName);
 
     /// <summary>Types <paramref name="name"/> over the project name.</summary>
-    public void TypeName(string name) => _window.TypeInto(NameBox, name);
+    public void TypeName(string name)
+    {
+        Settle();
+        _window.TypeInto(NameBox, name);
+    }
 
     /// <summary>Types <paramref name="location"/> over the Location box.</summary>
-    public void TypeLocation(string location) => _window.TypeInto(LocationBox, location);
+    public void TypeLocation(string location)
+    {
+        Settle();
+        _window.TypeInto(LocationBox, location);
+    }
 
     /// <summary>The check box whose label reads <paramref name="label"/>.</summary>
     public CheckBox CheckBoxLabeled(string label) => _window.Find<CheckBox>(box => LabelOf(box) == label);
@@ -109,7 +117,11 @@ internal sealed class NewProjectDialogDriver
     public void ChoosePlatform(string platformName) => Choose(PlatformBox, item => (item as NewProjectPlatformOption)?.Name == platformName);
 
     /// <summary>Clicks Browse.</summary>
-    public void ClickBrowse() => _window.ClickButton("Browse…");
+    public void ClickBrowse()
+    {
+        Settle();
+        _window.ClickButton("Browse…");
+    }
 
     /// <summary>Opens the Folders section and all its folders; returns the rows the tree shows, in order.</summary>
     public List<string> OpenFolders()
@@ -191,6 +203,8 @@ internal sealed class NewProjectDialogDriver
 
     private void OpenSection(string name)
     {
+        // The notice and banners of the last edit move the heading when their check lands; click only once they have.
+        Settle();
         NewProjectDialogView.Disclosure section = _window.Find<NewProjectDialogView.Disclosure>(disclosure => disclosure.Name == name);
         if (!section.IsExpanded)
         {

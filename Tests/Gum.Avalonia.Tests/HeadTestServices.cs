@@ -62,6 +62,12 @@ public static class HeadTestServices
                 provider.GetRequiredService<RecordingPackageAddRunner>(),
                 new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })));
         services.Replace(ServiceDescriptor.Singleton<Gum.ProjectServices.INewProjectService>(provider => provider.GetRequiredService<SwitchableNewProjectService>()));
+        // GUM_SLOW_CHECKS_MS makes the folder checks of every New Project dialog take that long, the head's own included.
+        if (SlowExistingCodeProjectDetector.DelayFromEnvironment() is TimeSpan slowChecks)
+        {
+            services.Replace(ServiceDescriptor.Singleton<Gum.ProjectServices.IExistingCodeProjectDetector>(
+                _ => new SlowExistingCodeProjectDetector(new Gum.ProjectServices.ExistingCodeProjectDetector(), slowChecks)));
+        }
         // The Font drop-down lists the same families on every machine.
         services.Replace(ServiceDescriptor.Singleton<IInstalledFontProvider, FixedInstalledFontProvider>());
         ServiceProvider provider = services.BuildServiceProvider();
