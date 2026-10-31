@@ -328,6 +328,17 @@ public partial class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, dispatchValue);
         }
+#if RAYLIB
+        // #7296 — raylib's ArcRuntime keeps Thickness on the runtime (PreRender resolves
+        // StrokeWidthUnits and pushes it to the LineArc every frame). Without this dispatch the
+        // variable fell to SetPropertyThroughReflection, landed on the LineArc, and was
+        // overwritten by the runtime's default 10 on the next PreRender, so every loaded Arc drew
+        // at the default thickness.
+        else if (graphicalUiElement is Gum.GueDeriving.ArcRuntime arcRuntime)
+        {
+            handled = TrySetPropertyOnArcRuntime(arcRuntime, propertyName, dispatchValue);
+        }
+#endif
 #endif
 #if !RAYLIB
         else if (renderableIpso is LineCircle)
@@ -3637,6 +3648,18 @@ public partial class CustomSetPropertyOnRenderable
         }
     }
 
+#if RAYLIB
+    private static bool TrySetPropertyOnArcRuntime(Gum.GueDeriving.ArcRuntime arcRuntime, string propertyName, object value)
+    {
+        if (propertyName == "Thickness")
+        {
+            arcRuntime.Thickness = System.Convert.ToSingle(value);
+            return true;
+        }
+        return false;
+    }
+#endif
+
 #if !FRB
     // Issue #2925 — legacy variable routing for the two-slot CircleRuntime. The legacy
     // properties (Color/Alpha/Red/Green/Blue) on the runtime are intentionally obsolete and
@@ -3690,7 +3713,7 @@ public partial class CustomSetPropertyOnRenderable
                 circleRuntime.Blue = (int)value;
                 return true;
             case "Radius":
-                circleRuntime.Radius = (float)value;
+                circleRuntime.Radius = System.Convert.ToSingle(value);
                 return true;
             // Issue #2768 v3 shape surface (fill/stroke as independent channels) — these
             // properties only exist on the runtime, not on either renderable slot, so without
@@ -3725,7 +3748,7 @@ public partial class CustomSetPropertyOnRenderable
                 circleRuntime.StrokeAlpha = (int)value;
                 return true;
             case "StrokeWidth":
-                circleRuntime.StrokeWidth = (float)value;
+                circleRuntime.StrokeWidth = System.Convert.ToSingle(value);
                 return true;
             case "Blend":
                 circleRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
@@ -3775,13 +3798,13 @@ public partial class CustomSetPropertyOnRenderable
                 circleRuntime.DropshadowBlue = (int)value;
                 return true;
             case "DropshadowOffsetX":
-                circleRuntime.DropshadowOffsetX = (float)value;
+                circleRuntime.DropshadowOffsetX = System.Convert.ToSingle(value);
                 return true;
             case "DropshadowOffsetY":
-                circleRuntime.DropshadowOffsetY = (float)value;
+                circleRuntime.DropshadowOffsetY = System.Convert.ToSingle(value);
                 return true;
             case "DropshadowBlur":
-                circleRuntime.DropshadowBlur = (float)value;
+                circleRuntime.DropshadowBlur = System.Convert.ToSingle(value);
                 return true;
         }
         return false;
@@ -3836,7 +3859,7 @@ public partial class CustomSetPropertyOnRenderable
                 rectangleRuntime.Blue = (int)value;
                 return true;
             case "CornerRadius":
-                rectangleRuntime.CornerRadius = (float)value;
+                rectangleRuntime.CornerRadius = System.Convert.ToSingle(value);
                 return true;
             case "CustomRadiusTopLeft":
                 rectangleRuntime.CustomRadiusTopLeft = (float?)value;
@@ -3883,7 +3906,7 @@ public partial class CustomSetPropertyOnRenderable
                 rectangleRuntime.StrokeAlpha = (int)value;
                 return true;
             case "StrokeWidth":
-                rectangleRuntime.StrokeWidth = (float)value;
+                rectangleRuntime.StrokeWidth = System.Convert.ToSingle(value);
                 return true;
             case "Blend":
                 rectangleRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
@@ -3933,13 +3956,13 @@ public partial class CustomSetPropertyOnRenderable
                 rectangleRuntime.DropshadowBlue = (int)value;
                 return true;
             case "DropshadowOffsetX":
-                rectangleRuntime.DropshadowOffsetX = (float)value;
+                rectangleRuntime.DropshadowOffsetX = System.Convert.ToSingle(value);
                 return true;
             case "DropshadowOffsetY":
-                rectangleRuntime.DropshadowOffsetY = (float)value;
+                rectangleRuntime.DropshadowOffsetY = System.Convert.ToSingle(value);
                 return true;
             case "DropshadowBlur":
-                rectangleRuntime.DropshadowBlur = (float)value;
+                rectangleRuntime.DropshadowBlur = System.Convert.ToSingle(value);
                 return true;
         }
         return false;
