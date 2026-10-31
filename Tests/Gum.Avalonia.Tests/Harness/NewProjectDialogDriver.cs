@@ -136,8 +136,8 @@ internal sealed class NewProjectDialogDriver
         _window.Result.ShouldBe(true);
     }
 
-    /// <summary>Clicks OK and returns at once, for a flow that stays open (busy, a failure panel).</summary>
-    public void ClickOkWithoutWaiting() => ClickSettled(OkButton);
+    /// <summary>Clicks OK and returns without waiting for the dialog to close (it first waits for the folder checks), for a flow that stays open (busy, a failure panel).</summary>
+    public void ClickOkWithoutWaitingForClose() => ClickSettled(OkButton);
 
     /// <summary>Presses and releases a key in the window.</summary>
     public void Press(Key key, PhysicalKey physicalKey) => _window.Press(key, physicalKey);
