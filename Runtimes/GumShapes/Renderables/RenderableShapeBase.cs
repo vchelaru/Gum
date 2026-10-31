@@ -543,22 +543,22 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// Returns the (effectiveRadius_world, effectiveAaSize_screenPx, alphaScale) trio to hand
     /// to Apos.Shapes' <c>DrawCircle</c> for a shadow centered on a circular shape of nominal
     /// radius <paramref name="hostRadius"/>. Anchors the smoothstep falloff so α = 0.5 sits
-    /// exactly at <paramref name="hostRadius"/> and α = 0 sits at <c>hostRadius + DropshadowBlurX/2</c>
+    /// exactly at <paramref name="hostRadius"/> and α = 0 sits at <c>hostRadius + DropshadowBlurX</c> (issue #7292: blur is how far the shadow visibly extends)
     /// — matching CSS <c>box-shadow</c> / Figma / Photoshop convention where the original
     /// disk edge is the 50% line.
     /// </summary>
     /// <remarks>
     /// <para>
     /// Apos's AA falloff is <c>3t² − 2t³</c> (smoothstep), confirmed empirically. Because
-    /// smoothstep is symmetric (smoothstep(0.5) = 0.5), in the standard case (B ≤ 2R) we can
-    /// just pass <c>rDisk = R − B/2, aaSize = B</c> and the 50% line lands at R for free.
+    /// smoothstep is symmetric (smoothstep(0.5) = 0.5), in the standard case (B ≤ R) we can
+    /// just pass <c>rDisk = R − B, aaSize = 2B</c> and the 50% line lands at R for free.
     /// </para>
     /// <para>
-    /// When <c>DropshadowBlurX</c> exceeds 2·hostRadius, the inner ramp edge would be at a
+    /// When <c>DropshadowBlurX</c> exceeds hostRadius, the inner ramp edge would be at a
     /// negative radius — which Apos clamps to 0, sliding the entire ramp outward and making
     /// the 50% line drift far past R (giving the "way too big" shadow that #2950 reports).
     /// In that case the helper truncates the inner ramp at <c>rDisk = 0</c>, widens aaSize
-    /// to <c>R + B/2</c> so the outer edge still sits where the desired curve says, and
+    /// to <c>R + B</c> so the outer edge still sits where the desired curve says, and
     /// returns an <c>alphaScale</c> &lt; 1. The cost is that the center
     /// of the shadow is no longer 100% opaque — which is *correct*: a circle whose blur
     /// extends beyond its diameter genuinely should not have a solid black center.
@@ -584,30 +584,33 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         {
             return (hostRadius, 0, 1f);
         }
-        if (blur <= 2f * hostRadius)
+        // Issue #7292 — the ramp is centered on the host edge and reaches `blur` px each side,
+        // so its total width is 2 * blur and the shadow visibly extends `blur` px outward (what
+        // raylib and Skia draw, and what DropshadowBlurX documents). It used to be `blur` wide,
+        // which reached only blur / 2.
+        if (blur <= hostRadius)
         {
             // Standard case: ramp fits inside the host disk. Hand Apos the symmetric
             // geometry directly; smoothstep's symmetry around t=0.5 places α=0.5 at R for us.
             return (
-                hostRadius - blur * 0.5f,
-                MathFunctions.RoundToInt(blur * cameraZoom),
+                hostRadius - blur,
+                MathFunctions.RoundToInt(2f * blur * cameraZoom),
                 1f);
         }
-        // blur > 2R: truncate inner edge to rDisk = 0, widen aaSize to R + B/2, and scale
-        // base alpha so smoothstep(0,1, R/(R + B/2)) lands the curve at α = 0.5 at r = R.
+        // blur > R: truncate inner edge to rDisk = 0, widen aaSize to R + B, and scale
+        // base alpha so smoothstep(0,1, R/(R + B)) lands the curve at α = 0.5 at r = R.
         // anchorAlpha = 0.5 / (1 - smoothstep(R / aaSizeWorld)).
-        float aaSizeWorld = hostRadius + blur * 0.5f;
+        float aaSizeWorld = hostRadius + blur;
         float t = hostRadius / aaSizeWorld;
         float smoothstep = 3f * t * t - 2f * t * t * t;
         float anchorAlpha = 0.5f / (1f - smoothstep);
-        // Issue #2955 — energy preservation. anchorAlpha alone saturates the center at 0.5 as
-        // B → ∞ (a screen-filling 50% gray); a true Gaussian instead spreads the disk's fixed
-        // area-mass over an ever-larger region, so peak alpha falls as ~(2R/B)². Fold that factor
-        // in so the shadow fades toward a faint glow as blur outgrows the diameter, matching
-        // CSS box-shadow / Skia. The factor is exactly 1 at B = 2R (this branch's lower bound),
-        // so it leaves the moderate-blur curve untouched and is continuous across the boundary;
-        // for blur > 2R it is strictly < 1, so no min() clamp is needed.
-        float energyScale = 2f * hostRadius / blur;
+        // Issue #2955 — energy preservation, only once the blur outgrows the shape's DIAMETER
+        // (a Gaussian of visible radius B only thins a disk's peak alpha when 2R < B; this is
+        // also what keeps a blur-32 glow on a 40-px-tall button at full edge alpha). anchorAlpha
+        // alone saturates the center at 0.5 as B → ∞ (a screen-filling 50% gray); a true
+        // Gaussian instead spreads the disk's fixed area-mass over an ever-larger region, so
+        // peak alpha falls as ~(2R/B)². The factor is exactly 1 at B = 2R and continuous there.
+        float energyScale = blur > 2f * hostRadius ? 2f * hostRadius / blur : 1f;
         energyScale *= energyScale;
         float alphaScale = anchorAlpha * energyScale;
         return (
@@ -625,9 +628,20 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// in. Multiplying by zoom keeps the halo a constant <em>world</em> extent, matching the
     /// rest of Gum's wireframe.
     /// </summary>
+    /// <remarks>
+    /// Issue #7292 — a filled shape's ramp is centered on its edge and spans <c>2 * blur</c>. A
+    /// stroke-only shape whose stroke is thinner than that spans <c>blur + StrokeWidth / 2</c>
+    /// (the ring collapses to its centerline, see <see cref="ComputeStrokeShadowDrawRadius"/>),
+    /// so either way the shadow ends <c>blur</c> px past the body's outer edge.
+    /// </remarks>
     public int GetShadowAntiAliasSize(float cameraZoom)
     {
-        return MathFunctions.RoundToInt(_dropshadowBlurX * cameraZoom);
+        float ramp = 2f * _dropshadowBlurX;
+        if (!IsFilled && StrokeWidth < ramp)
+        {
+            ramp = _dropshadowBlurX + StrokeWidth / 2f;
+        }
+        return MathFunctions.RoundToInt(ramp * cameraZoom);
     }
 
     /// <summary>
@@ -644,10 +658,10 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// call before the stroke/blur fade is applied.</param>
     public (float effectiveStrokeWidth, Color effectiveColor) ComputeStrokeShadowDrawParameters(Color baseColor)
     {
-        float effectiveStrokeWidth = StrokeWidth - _dropshadowBlurX;
+        float effectiveStrokeWidth = StrokeWidth - 2f * _dropshadowBlurX;
         if (!IsFilled && effectiveStrokeWidth <= 0 && _dropshadowBlurX > 0)
         {
-            float alphaScale = Microsoft.Xna.Framework.MathHelper.Clamp(StrokeWidth / _dropshadowBlurX, 0f, 1f);
+            float alphaScale = Microsoft.Xna.Framework.MathHelper.Clamp(StrokeWidth / (2f * _dropshadowBlurX), 0f, 1f);
             baseColor = new Color(
                 baseColor.R,
                 baseColor.G,
@@ -663,16 +677,16 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
 
     /// <summary>
     /// Issue #2977 — shadow ring radius for a stroke-only shape. The filled-disk anchor model in
-    /// <see cref="ComputeShadowDrawGeometry"/> pulls the radius inward by <c>blur/2</c>, which is
+    /// <see cref="ComputeShadowDrawGeometry"/> pulls the radius inward by <c>blur</c>, which is
     /// correct for a solid disk but wrong for a ring: once blur exceeds the stroke width,
     /// <see cref="ComputeStrokeShadowDrawParameters"/> clamps the effective shadow stroke width to
-    /// a ~0 epsilon, so the ring centerline collapses to <c>hostRadius - blur/2</c> and marches
+    /// a ~0 epsilon, so the ring centerline collapses to <c>hostRadius - blur</c> and marches
     /// inward as blur grows — the shape visibly contracts. Instead anchor the shadow ring's
     /// centerline at the body stroke's centerline (<c>hostRadius - StrokeWidth/2</c>) regardless of
     /// blur; only the AA halo (aaSize) grows. Solve
     /// <c>shadowRadius - effectiveShadowStrokeWidth/2 = hostRadius - StrokeWidth/2</c> for the outer
-    /// radius Apos.Shapes' <c>DrawCircle</c> expects. For <c>blur &lt; StrokeWidth</c> this reduces
-    /// to the legacy <c>hostRadius - blur/2</c>, leaving the common small-blur case unchanged.
+    /// radius Apos.Shapes' <c>DrawCircle</c> expects. For <c>2 * blur &lt; StrokeWidth</c> this reduces
+    /// to <c>hostRadius - blur</c>, leaving the common small-blur case unchanged.
     /// </summary>
     public float ComputeStrokeShadowDrawRadius(float hostRadius, float effectiveShadowStrokeWidth)
     {
