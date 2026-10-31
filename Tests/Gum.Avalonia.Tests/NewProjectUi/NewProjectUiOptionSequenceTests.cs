@@ -156,6 +156,7 @@ public class NewProjectUiOptionSequenceTests
         fixture.Dialog.ChooseFileFormat(NewProjectUiText.XmlFormat);
 
         fixture.ViewModel.GumProjectPath.ShouldEndWith(Path.Combine("Content", "GumProject", "GumProject.gumx"));
+        fixture.Settle();
         fixture.IsShownContaining(NewProjectUiText.NoXmlWithCodeProjectNote).ShouldBeTrue("the command line has no way to ask for .gumx with a code project");
         fixture.OpenSection(Gum.Avalonia.Dialogs.Views.NewProjectDialogView.FoldersExpanderName);
         fixture.ViewModel.SetFolderTreeExpanded(true);
@@ -163,6 +164,7 @@ public class NewProjectUiOptionSequenceTests
         fixture.TreeRowTexts().ShouldNotContain("GumProject.gumj");
 
         fixture.Dialog.ChooseFileFormat(NewProjectUiText.JsonFormat);
+        fixture.Settle();
         fixture.IsShownContaining(NewProjectUiText.NoXmlWithCodeProjectNote).ShouldBeFalse();
         fixture.TreeRowTexts().ShouldContain("GumProject.gumj");
     }

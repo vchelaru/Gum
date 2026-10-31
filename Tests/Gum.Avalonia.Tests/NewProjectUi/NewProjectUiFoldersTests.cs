@@ -108,6 +108,7 @@ public class NewProjectUiFoldersTests
         fixture.Window.Press(global::Avalonia.Input.Key.Back, global::Avalonia.Input.PhysicalKey.Backspace);
 
         fixture.TreeRowTexts().ShouldContain("MyGame.gumj", "the tree falls back to the default name while OK is off");
+        fixture.Settle();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
     }
 
@@ -130,6 +131,7 @@ public class NewProjectUiFoldersTests
         scroller.GetVisualDescendants().OfType<global::Avalonia.Controls.Primitives.ScrollBar>()
             .Any(bar => bar.Orientation == global::Avalonia.Layout.Orientation.Horizontal && bar.IsEffectivelyVisible && bar.Bounds.Width > 0).ShouldBeTrue("a horizontal bar offers the rest");
         fixture.Window.Window.Bounds.Width.ShouldBe(widthBefore, 0.5, "a long path does not widen the dialog");
+        fixture.Settle();
         fixture.BoundsOf(fixture.Dialog.OkButton).Right.ShouldBeLessThanOrEqualTo(fixture.Window.Window.Bounds.Width);
 
         scroller.Offset = new Vector(scroller.Extent.Width - scroller.Viewport.Width, 0);
