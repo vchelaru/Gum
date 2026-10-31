@@ -157,14 +157,19 @@ public class NewProjectDialogViewModelTests
     #region Options
 
     [Fact]
-    public void Defaults_AreJsonFormsDemoAndNoCodeProject()
+    public void Defaults_AreJsonFormsDemoPackagesAndGenerateCodeTicked_AndNoCodeProject()
     {
-        NewProjectDialogViewModel viewModel = Create();
+        // No fixture overrides: the view model's own defaults.
+        NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
+            new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
+            _service.Object, _detector.Object, _dialogService.Object, new Mock<INewProjectLocationSettings>().Object);
 
         viewModel.SelectedFileFormat.ShouldBe(NewProjectDialogViewModel.JsonFormat);
         viewModel.UseXmlFormat.ShouldBeFalse();
         viewModel.IsIncludeFormsControls.ShouldBeTrue();
-        viewModel.IsIncludeDemoScreenGum.ShouldBeFalse();
+        viewModel.IsIncludeDemoScreenGum.ShouldBeTrue();
+        viewModel.IncludeRecommendedPackages.ShouldBeTrue();
+        viewModel.GenerateCodeChoice.ShouldBeTrue();
         viewModel.IncludeCodeProject.ShouldBeFalse();
         viewModel.RunRestore.ShouldBeTrue();
     }
