@@ -16,7 +16,7 @@ namespace Gum.ProjectServices.Tests;
 /// </summary>
 public class CodeGeneratorDefaultFormsRegistrationTests : BaseTestClass
 {
-    private static CodeGenerator CreateCodeGenerator(int syntaxVersion)
+    internal static CodeGenerator CreateCodeGenerator(int syntaxVersion)
     {
         Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
         string? whyNotValid;

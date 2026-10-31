@@ -803,6 +803,12 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
             }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ToggleBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileToggleButtonRuntime), overwriteIfAlreadyExists: false);
+            }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.TooltipBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(

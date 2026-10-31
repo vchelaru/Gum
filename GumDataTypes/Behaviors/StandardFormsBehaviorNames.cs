@@ -29,6 +29,7 @@ public static class StandardFormsBehaviorNames
     public const string SplitterBehaviorName = "SplitterBehavior";
     public const string StackPanelBehaviorName = "StackPanelBehavior";
     public const string TextBoxBehaviorName = "TextBoxBehavior";
+    public const string ToggleBehaviorName = "ToggleBehavior";
     public const string TooltipBehaviorName = "TooltipBehavior";
     public const string WindowBehaviorName = "WindowBehavior";
 
@@ -55,6 +56,7 @@ public static class StandardFormsBehaviorNames
         SplitterBehaviorName,
         StackPanelBehaviorName,
         TextBoxBehaviorName,
+        ToggleBehaviorName,
         TooltipBehaviorName,
         WindowBehaviorName,
     };

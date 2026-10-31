@@ -2367,6 +2367,7 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.SplitterBehaviorName, "global::Gum.Forms.Controls.Splitter" },
         { StandardFormsBehaviorNames.StackPanelBehaviorName, "global::Gum.Forms.Controls.StackPanel" },
         { StandardFormsBehaviorNames.TextBoxBehaviorName, "global::Gum.Forms.Controls.TextBox" },
+        { StandardFormsBehaviorNames.ToggleBehaviorName, "global::Gum.Forms.Controls.ToggleButton" },
         { StandardFormsBehaviorNames.WindowBehaviorName, "global::Gum.Forms.Window" },
     };
 

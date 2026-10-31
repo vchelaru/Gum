@@ -11,7 +11,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/TreeViewToggle")]
+[global::Gum.DataTypes.GumElement("Controls/TreeViewToggle", FormsType = typeof(global::Gum.Forms.Controls.ToggleButton))]
 partial class TreeViewToggleRuntime : ContainerRuntime
 {
     #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
@@ -22,7 +22,10 @@ partial class TreeViewToggleRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/TreeViewToggle", typeof(TreeViewToggleRuntime));
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ToggleButton)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new TreeViewToggleRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
+    public global::Gum.Forms.Controls.ToggleButton FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ToggleButton;
+    private bool _tryCreateFormsObject = true;
     public enum ToggleCategory
     {
         EnabledOn,
@@ -64,6 +67,7 @@ partial class TreeViewToggleRuntime : ContainerRuntime
 
     public TreeViewToggleRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
+        _tryCreateFormsObject = tryCreateFormsObject;
         if(fullInstantiation)
         {
             var element = ObjectFinder.Self.GetRequiredElementSave("Controls/TreeViewToggle");
@@ -75,6 +79,10 @@ partial class TreeViewToggleRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
+        if (FormsControl == null && _tryCreateFormsObject)
+        {
+            FormsControlAsObject = new global::Gum.Forms.Controls.ToggleButton(this);
+        }
         NineSliceInstance = this.GetGraphicalUiElementByName("NineSliceInstance") as global::Gum.GueDeriving.NineSliceRuntime;
         IconInstance = this.GetGraphicalUiElementByName("IconInstance") as CodeGen_MonoGame_ByReference.Components.Elements.IconRuntime;
         CustomInitialize();
