@@ -30,11 +30,11 @@ Every `*Visual` constructor does four things in order:
 
 `GumService.Initialize()` always calls `FormsUtilities.InitializeDefaults()` first, which populates `FrameworkElement.DefaultFormsTemplates` with code-only default visuals.
 
-If a `.gumx` project file is also passed to `Initialize()`, it then calls `FormsUtilities.RegisterFromFileFormRuntimeDefaults()`, which overrides the code-only defaults with project-defined Forms visuals (components with Forms behaviors). This is the path used when the Gum tool has authored the UI.
+If a `.gumx` project file is also passed to `Initialize()`, it then calls `FormsUtilities.RegisterFromFileFormRuntimeDefaults()`. That method does not replace `DefaultFormsTemplates` with project visuals: it only maps component names to `DefaultFromFile*Runtime` types through `RegisterGueInstantiationType`, so a component placed in a screen builds a Forms control. The only `DefaultFormsTemplates` it sets are the Tooltip and the MenuItem submenu popup (`FormsUtilities.cs`, `RegisterFromFileTooltipTemplate` and `RegisterFromFilePopupTemplates`). `new Button()` in a runtime-loaded project still gets the V3 visual. Generated code is what replaces a default (see `gum-tool-codegen`, "Default Forms template registration").
 
 **Code-only projects** — call `Initialize(DefaultVisualsVersion)` with no project file. Controls get their visuals from the `*Visual` classes.
 
-**Project-based** — call `Initialize(gumProjectFile)`. The code-only defaults are registered first, then project components replace them via `RegisterFromFileFormRuntimeDefaults()`.
+**Project-based** — call `Initialize(gumProjectFile)`. The code-only defaults are registered first, then `RegisterFromFileFormRuntimeDefaults()` wires the project's components by name.
 
 ## Styling.cs
 
