@@ -51,7 +51,16 @@ public class NewProjectFolderNoticeScreenshotTests
         viewModel => viewModel.Location = Path.Combine(Parent, "SomeVeryLongFolderName", "AnotherVeryLongFolderName", "YetAnotherLongFolderName", "TheLastFolderBeforeTheProject"),
         folderExists: false);
 
-    private static void Capture(string name, string theme, Action<NewProjectDialogViewModel> arrange, bool folderExists)
+    /// <summary>The path beside the command line, the style reference, with the Folders summary above it.</summary>
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void BesideTheCommandLine(string theme) => Capture("beside-command-line", theme,
+        viewModel => viewModel.Location = Parent, folderExists: false,
+        afterShow: window => window.Find<global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.Disclosure>(
+            d => d.Name == global::Gum.Avalonia.Dialogs.Views.NewProjectDialogView.CommandLineExpanderName).IsExpanded = true);
+
+    private static void Capture(string name, string theme, Action<NewProjectDialogViewModel> arrange, bool folderExists, Action<ScreenshotWindow>? afterShow = null)
     {
         PrScreenshot.Run(() =>
         {
@@ -79,6 +88,8 @@ public class NewProjectFolderNoticeScreenshotTests
                 Thread.Sleep(10);
                 global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             }
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            afterShow?.Invoke(window);
             global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             PrScreenshot.SaveWindowAtZoomLevels(window.Window, $"new-project-folder-{name}-{theme}");
         });

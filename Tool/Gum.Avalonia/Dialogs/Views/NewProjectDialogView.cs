@@ -231,7 +231,12 @@ public sealed class NewProjectDialogView : StackPanel
         notice.Children.Add(icon);
         Grid.SetColumn(lines, 1);
         notice.Children.Add(lines);
-        notice.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsFolderNoticeVisible)));
+        // While a slow check is out, the old answer is hidden but keeps its room, so the dialog does not jump.
+        notice.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsFolderNoticeSpaceReserved)));
+        notice.Bind(OpacityProperty, new Binding(nameof(NewProjectDialogViewModel.IsFolderNoticeVisible))
+        {
+            Converter = new FuncValueConverter<bool, double>(visible => visible ? 1d : 0d),
+        });
         return notice;
     }
 
@@ -502,7 +507,7 @@ public sealed class NewProjectDialogView : StackPanel
             {
                 Text = piece,
                 FontFamily = new FontFamily(MonospaceFonts),
-                FontWeight = FontWeight.Normal,
+                FontWeight = FontWeight.Light,
                 TextWrapping = TextWrapping.Wrap,
                 Focusable = false,
             };

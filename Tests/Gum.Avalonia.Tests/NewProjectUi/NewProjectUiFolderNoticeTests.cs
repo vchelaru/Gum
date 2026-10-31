@@ -169,6 +169,18 @@ public class NewProjectUiFolderNoticeTests
         ok.Right.ShouldBeLessThanOrEqualTo(window.Width + 0.5);
     }
 
+    [AvaloniaFact]
+    public void ASpaceInAFolderName_KeepsThatFolderInOnePiece()
+    {
+        // A fixed path, not a temp one, so the folder name with the space is certain to be in it.
+        string path = string.Join(Separator, "C:", "Users", "Vic Personal", "Documents", "GumProjects", "");
+        NewProjectDialogView.FolderPathPanel panel = new NewProjectDialogView.FolderPathPanel { Text = path };
+
+        string.Concat(panel.Children.OfType<TextBlock>().Select(piece => piece.Text)).ShouldBe(path);
+        panel.Children.OfType<TextBlock>().Count(piece => piece.Text!.Contains("Vic Personal")).ShouldBe(1);
+        panel.Children.OfType<TextBlock>().Single(piece => piece.Text!.Contains("Vic")).Text.ShouldBe("Vic Personal" + Separator, "'Vic' and 'Personal' are never split across pieces");
+    }
+
     [AvaloniaTheory]
     [InlineData(12)]
     [InlineData(24)]

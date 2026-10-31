@@ -207,6 +207,7 @@ public class NewProjectFolderNoticeTests
         NewProjectDialogViewModel viewModel = Create(Parent);
         await viewModel.ChecksRefresh;
         viewModel.FolderNoticeHeading.ShouldBe("Creates a new folder");
+        viewModel.FolderNoticeHideDelay = TimeSpan.Zero;
 
         using ManualResetEventSlim gate = new ManualResetEventSlim(false);
         _detector.Setup(x => x.TargetExists(It.IsAny<string>(), It.IsAny<string>())).Returns((string folder, string name) =>
@@ -220,7 +221,6 @@ public class NewProjectFolderNoticeTests
         viewModel.FoldersSummary.ShouldBe("");
         viewModel.ProjectName = "Other";
         viewModel.IsFolderNoticeVisible.ShouldBeFalse();
-        viewModel.FolderNoticePath.ShouldBe("");
         string elsewhere = Path.Combine(Path.GetTempPath(), "GumFolderNoticeElsewhere");
         viewModel.Location = elsewhere;
         viewModel.IsFolderNoticeVisible.ShouldBeFalse();
@@ -236,6 +236,65 @@ public class NewProjectFolderNoticeTests
         await viewModel.ChecksRefresh;
         viewModel.FolderNoticeHeading.ShouldBe("Uses the existing folder");
         viewModel.FolderNoticePath.ShouldBe(elsewhere + Sep + "Taken" + Sep);
+    }
+
+    [Fact]
+    public async Task FastChecks_NeverHideTheNotice_WhileTyping()
+    {
+        NewProjectDialogViewModel viewModel = Create(Parent);
+        await viewModel.ChecksRefresh;
+        viewModel.FolderNoticeHideDelay = TimeSpan.FromSeconds(30);
+        int hides = 0;
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(NewProjectDialogViewModel.IsFolderNoticeVisible) or nameof(NewProjectDialogViewModel.IsFolderNoticeSpaceReserved)
+                && (!viewModel.IsFolderNoticeVisible || !viewModel.IsFolderNoticeSpaceReserved))
+            {
+                hides++;
+            }
+        };
+
+        for (int i = 0; i < 10; i++)
+        {
+            viewModel.ProjectName = "Name" + i;
+            viewModel.IsFolderNoticeVisible.ShouldBeTrue("the previous notice stays up while the check runs");
+            await viewModel.ChecksRefresh;
+        }
+
+        hides.ShouldBe(0);
+        viewModel.FolderNoticePath.ShouldBe(Parent + Sep + "Name9" + Sep);
+    }
+
+    [Fact]
+    public async Task ASlowCheck_HidesTheNoticeAfterTheDelay_KeepingItsRoom_ThenShowsTheLastInputs()
+    {
+        NewProjectDialogViewModel viewModel = Create(Parent);
+        await viewModel.ChecksRefresh;
+        viewModel.FolderNoticeHideDelay = TimeSpan.FromMilliseconds(50);
+        using ManualResetEventSlim gate = new ManualResetEventSlim(false);
+        _detector.Setup(x => x.TargetExists(It.IsAny<string>(), It.IsAny<string>())).Returns((string folder, string name) =>
+        {
+            gate.Wait(TimeSpan.FromSeconds(20));
+            return false;
+        });
+
+        viewModel.ProjectName = "Slow1";
+        viewModel.ProjectName = "Slow2";
+        viewModel.IsFolderNoticeVisible.ShouldBeTrue("not hidden before the delay");
+        for (int i = 0; i < 400 && viewModel.IsFolderNoticeVisible; i++)
+        {
+            await Task.Delay(10);
+        }
+
+        viewModel.IsFolderNoticeVisible.ShouldBeFalse("hidden once the check outlasts the delay");
+        viewModel.IsFolderNoticeSpaceReserved.ShouldBeTrue("but its room stays");
+        viewModel.FoldersSummary.ShouldBe("");
+
+        gate.Set();
+        await viewModel.ChecksRefresh;
+
+        viewModel.IsFolderNoticeVisible.ShouldBeTrue();
+        viewModel.FolderNoticePath.ShouldBe(Parent + Sep + "Slow2" + Sep);
     }
 
     [Fact]

@@ -1047,20 +1047,91 @@ public class NewProjectDialogViewModel : DialogViewModel
         RefreshFolderNotice();
     }
 
+    /// <summary>How long a check for new Name or Location may take before the notice for the old ones is hidden.</summary>
+    public TimeSpan FolderNoticeHideDelay { get; set; } = TimeSpan.FromMilliseconds(150);
+
+    /// <summary>Whether the notice keeps its room in the layout: while it shows, and while it is hidden only until the check returns.</summary>
+    public bool IsFolderNoticeSpaceReserved
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    private CancellationTokenSource? _staleHide;
+
+    // Where the hide timer's work runs: the UI thread when the dialog is built on one, as the checks' continuations do.
+    private readonly TaskScheduler _uiScheduler = SynchronizationContext.Current != null ? TaskScheduler.FromCurrentSynchronizationContext() : TaskScheduler.Default;
+
+    private void CancelStaleHide()
+    {
+        _staleHide?.Cancel();
+        _staleHide = null;
+    }
+
+    private void StartStaleHide()
+    {
+        CancellationTokenSource source = new CancellationTokenSource();
+        _staleHide = source;
+        Task.Delay(FolderNoticeHideDelay, source.Token).ContinueWith(task =>
+        {
+            if (task.IsCanceled || !ReferenceEquals(_staleHide, source))
+            {
+                return;
+            }
+
+            _staleHide = null;
+            if (_targetExistsFor != CurrentCheckKey())
+            {
+                HideFolderNotice(reserveSpace: true);
+            }
+        }, _uiScheduler);
+    }
+
+    private void HideFolderNotice(bool reserveSpace)
+    {
+        IsFolderNoticeVisible = false;
+        IsFolderNoticeSpaceReserved = reserveSpace;
+        FoldersSummary = string.Empty;
+        if (!reserveSpace)
+        {
+            FolderNoticeHeading = string.Empty;
+            FolderNoticePath = string.Empty;
+            FolderNoticeSuffix = string.Empty;
+        }
+    }
+
     // Says where the project folder goes. Silent while a validation message or an existing-project refusal is up, so it never
     // contradicts them. Whether the folder exists comes from the same worker-thread check pass as the banners.
     private void RefreshFolderNotice()
     {
-        // The exists answer is only good for the inputs it was read for; until the check for the current ones is back, say nothing.
-        if (ValidationMessage.Length > 0 || RefusalText.Length > 0 || _targetExistsFor != CurrentCheckKey())
+        if (ValidationMessage.Length > 0 || RefusalText.Length > 0)
         {
-            IsFolderNoticeVisible = false;
-            FolderNoticeHeading = string.Empty;
-            FolderNoticePath = string.Empty;
-            FolderNoticeSuffix = string.Empty;
-            FoldersSummary = string.Empty;
+            CancelStaleHide();
+            HideFolderNotice(reserveSpace: false);
             return;
         }
+
+        // The exists answer is only good for the inputs it was read for. A quick check leaves the previous notice up, so typing
+        // does not flicker; one still pending after FolderNoticeHideDelay hides it (keeping its room), and only the check for
+        // the current inputs shows a new answer.
+        if (_targetExistsFor != CurrentCheckKey())
+        {
+            if (IsFolderNoticeVisible)
+            {
+                if (FolderNoticeHideDelay <= TimeSpan.Zero)
+                {
+                    HideFolderNotice(reserveSpace: true);
+                }
+                else if (_staleHide == null)
+                {
+                    StartStaleHide();
+                }
+            }
+            return;
+        }
+
+        CancelStaleHide();
+        IsFolderNoticeSpaceReserved = true;
 
         NewProjectFolder resolved = ResolvedFolder;
         string projectFolder = NewProjectDisplayPath.AsFolder(resolved.ProjectFolder);
