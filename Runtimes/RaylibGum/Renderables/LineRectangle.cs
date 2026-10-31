@@ -356,6 +356,7 @@ public class LineRectangle : InvisibleRenderable
                 // the full rationale; the helper paints the silhouette into an offscreen RT,
                 // blurs it H+V with a Gaussian shader, and composites with the tint.
                 Color silhouetteColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+                bool hollow = !(FillColor.HasValue || IsFilled);
                 global::RenderingLibrary.Graphics.Renderer.Self.ShadowBlur.Draw(
                     this,
                     shadowX,
@@ -368,7 +369,21 @@ public class LineRectangle : InvisibleRenderable
                     global::RenderingLibrary.Graphics.Renderer.Self.ActiveRenderTexture,
                     (px, py) =>
                     {
-                        if (useRounded)
+                        if (hollow)
+                        {
+                            // Issue #7297: a hollow shape's shadow is the blurred stroke ring only,
+                            // as MonoGame and Skia draw it, not the whole silhouette.
+                            if (useRounded)
+                            {
+                                DrawRectangleRoundedLinesEx(new Rectangle(px, py, w, h), roundness,
+                                    roundedSegments, LinePixelWidth, silhouetteColor);
+                            }
+                            else
+                            {
+                                DrawRectangleLinesEx(new Rectangle(px, py, w, h), LinePixelWidth, silhouetteColor);
+                            }
+                        }
+                        else if (useRounded)
                         {
                             DrawRectangleRounded(
                                 new Rectangle(px, py, w, h),

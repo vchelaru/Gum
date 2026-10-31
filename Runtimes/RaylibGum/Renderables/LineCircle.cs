@@ -421,6 +421,7 @@ public class LineCircle : InvisibleRenderable
                 float r = Radius;
                 float diameter = r * 2f;
                 Color silhouetteColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+                bool hollow = !(FillColor.HasValue || IsFilled);
                 global::RenderingLibrary.Graphics.Renderer.Self.ShadowBlur.Draw(
                     this,
                     shadowCx - r,
@@ -433,7 +434,17 @@ public class LineCircle : InvisibleRenderable
                     global::RenderingLibrary.Graphics.Renderer.Self.ActiveRenderTexture,
                     (px, py) =>
                     {
-                        DrawCircleV(new Vector2(px + r, py + r), r, silhouetteColor);
+                        if (hollow)
+                        {
+                            // Issue #7297: a hollow shape's shadow is the blurred stroke ring only,
+                            // as MonoGame and Skia draw it, not the whole silhouette.
+                            DrawRing(new Vector2(px + r, py + r), System.Math.Max(0f, r - StrokeWidth), r,
+                                0f, 360f, System.Math.Max(36, (int)(r * 2)), silhouetteColor);
+                        }
+                        else
+                        {
+                            DrawCircleV(new Vector2(px + r, py + r), r, silhouetteColor);
+                        }
                     });
             }
             else
