@@ -175,7 +175,7 @@ public class NewProjectRecommendedPackagesDialogTests
     [Theory]
     [InlineData("monogame", "Gum.Shapes.MonoGame, KernSmith.MonoGameGum, Gum.Expressions")]
     [InlineData("raylib", "KernSmith.RaylibGum, Gum.Expressions")]
-    [InlineData("stride", "Gum.Expressions")]
+    [InlineData("stride", "Gum.SkiaSharp.ShadowDusk, Gum.Expressions")]
     public void RecommendedPackagesNote_ListsThePackagesTheCheckboxAdds(string platform, string expected)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
@@ -216,7 +216,7 @@ public class NewProjectRecommendedPackagesDialogTests
             vm.RunRestore = false;
         });
 
-        viewModel.CommandLine.ShouldBe($"gumcli new \"{GameFolder}\" --platform stride --no-restore && {Add("Gum.Expressions")}");
+        viewModel.CommandLine.ShouldBe($"gumcli new \"{GameFolder}\" --platform stride --no-restore && {Add("Gum.SkiaSharp.ShadowDusk")} && {Add("Gum.Expressions")}");
     }
 
     [Fact]

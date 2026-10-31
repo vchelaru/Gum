@@ -57,7 +57,7 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
     [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
     [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.Expressions")]
     [InlineData(HostPlatform.SilkNet, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
-    [InlineData(HostPlatform.Stride, "Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
     [InlineData(HostPlatform.KniSkia, "")]
     public void For_EachPlatform_ListsThePackagesTheSetupDocsRecommend(HostPlatform platform, string expected)
     {

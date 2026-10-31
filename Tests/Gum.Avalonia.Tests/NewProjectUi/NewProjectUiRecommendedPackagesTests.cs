@@ -124,7 +124,7 @@ public class NewProjectUiRecommendedPackagesTests
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the failure panel");
 
         fixture.IsShown(NewProjectDialogText.PackagesFailedHeading).ShouldBeTrue();
-        fixture.IsShown("Could not add Gum.Expressions. error: cannot write the csproj").ShouldBeTrue();
+        fixture.IsShown("Could not add Gum.SkiaSharp.ShadowDusk. error: cannot write the csproj").ShouldBeTrue();
         fixture.ButtonLabeled("Retry").ShouldNotBeNull();
         fixture.ButtonLabeled("Back").ShouldNotBeNull();
 
