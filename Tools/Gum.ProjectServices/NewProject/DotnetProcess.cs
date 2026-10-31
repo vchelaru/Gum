@@ -16,13 +16,14 @@ internal static class DotnetProcess
     private const int TailLineCount = 20;
 
     public static async Task<RestoreResult> RunAsync(
-        ProcessStartInfo startInfo, Action<string>? onOutputLine, CancellationToken cancellationToken)
+        Func<ProcessStartInfo> createStartInfo, Action<string>? onOutputLine, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {
             return new RestoreResult { Status = RestoreStatus.Canceled };
         }
 
+        ProcessStartInfo startInfo = createStartInfo();
         startInfo.UseShellExecute = false;
         startInfo.CreateNoWindow = true;
         startInfo.RedirectStandardOutput = true;

@@ -23,7 +23,7 @@ public class DotnetRestoreRunner : IRestoreRunner
     /// <inheritdoc/>
     public Task<RestoreResult> RestoreAsync(
         string csprojPath, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
-        DotnetProcess.RunAsync(_createStartInfo(csprojPath), onOutputLine, cancellationToken);
+        DotnetProcess.RunAsync(() => _createStartInfo(csprojPath), onOutputLine, cancellationToken);
 
     private static ProcessStartInfo CreateDotnetRestoreStartInfo(string csprojPath)
     {

@@ -378,14 +378,28 @@ public class NewProjectHappyPathScenarioTests
 
             // C# project and platform: the game folder and --platform.
             dialog.SetChecked(NewProjectDialogText.CreateCodeProject, true);
-            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform monogame");
+            // Include recommended packages is on by default, so the line chains the adds and a final restore.
+            string csproj = Path.Combine(gameFolder, "Cmd.csproj");
+            string Add(string package) => $" && dotnet add \"{csproj}\" package {package} --no-restore";
+            dialog.CommandLine.ShouldBe(
+                $"gumcli new \"{gameFolder}\" --platform monogame --no-restore"
+                + Add("Gum.Shapes.MonoGame") + Add("KernSmith.MonoGameGum") + Add("Gum.Expressions")
+                + $" && dotnet restore \"{csproj}\"");
             dialog.ChoosePlatform("raylib");
-            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform raylib");
+            dialog.CommandLine.ShouldBe(
+                $"gumcli new \"{gameFolder}\" --platform raylib --no-restore"
+                + Add("KernSmith.RaylibGum") + Add("Gum.Expressions") + $" && dotnet restore \"{csproj}\"");
 
             // Restore.
             dialog.SetChecked(NewProjectDialogText.RestorePackages, false);
-            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform raylib --no-restore");
+            dialog.CommandLine.ShouldBe(
+                $"gumcli new \"{gameFolder}\" --platform raylib --no-restore" + Add("KernSmith.RaylibGum") + Add("Gum.Expressions"));
             dialog.SetChecked(NewProjectDialogText.RestorePackages, true);
+
+            // Recommended packages off: the plain command again.
+            dialog.SetChecked(NewProjectDialogText.RecommendedPackages, false);
+            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform raylib");
+            dialog.SetChecked(NewProjectDialogText.RecommendedPackages, true);
 
             // Local Gum source: KNI with Skia always links it.
             dialog.ChoosePlatform("kniskia");
