@@ -43,6 +43,20 @@ public interface INewProjectService
         string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Generates code for the demo screen (<c>gumcli codegen "&lt;gumj&gt;" --element &lt;screen&gt;</c>), including what it references,
+    /// then rewrites the host game to create the generated class. Run it after the restore. Does nothing when there is no demo screen.
+    /// </summary>
+    Task<GenerateCodeResult> GenerateDemoScreenCodeAsync(
+        ResolvedNewProject project, NewProjectFilesResult files, Action<string>? onOutputLine, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Rewrites the host game's startup code for what exists now: with <paramref name="packagesAdded"/> it initializes the
+    /// project's recommended packages, with <paramref name="screenCodeGenerated"/> it creates the demo screen's generated class
+    /// instead of loading the screen at runtime. A host never names what is not in the project, so Continue after a failed step builds.
+    /// </summary>
+    void UpdateHost(ResolvedNewProject project, NewProjectFilesResult files, bool packagesAdded, bool screenCodeGenerated);
+
+    /// <summary>
     /// Validates, writes the files, adds the <see cref="NewProjectRequest.IncludeRecommendedPackages"/> packages, then restores when the request has a platform and <see cref="NewProjectRequest.Restore"/>.
     /// A failed restore leaves the files in place; retry it with <see cref="RestoreAsync"/>.
     /// </summary>
