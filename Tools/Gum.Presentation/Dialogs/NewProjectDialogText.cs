@@ -11,7 +11,7 @@ public static class NewProjectDialogText
     public const string FileFormat = "File format";
     public const string FileFormatTip = "The file format of the Gum project. JSON (.gumj) is recommended. XML (.gumx) also works.";
     public const string Location = "Location";
-    public const string LocationTip = "The folder to create the project in. A new folder named after the project is created inside it.";
+    public const string LocationTip = "The folder to create the project in. A new folder named after the project is created inside it, unless this folder already has the project's name; then the project goes right in it.";
     public const string IncludeForms = "Include Forms controls (recommended)";
     public const string IncludeFormsTip = "Forms is the set of ready-made, interactive controls: buttons, text boxes, check boxes, list boxes, sliders, menus and more. Leave it on unless you plan to build all of your own controls.";
     public const string IncludeFormsHelp = "Adds buttons, text boxes, list boxes and other standard controls to the project.";
