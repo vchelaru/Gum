@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using Gum.DataTypes.Variables;
 
 namespace Gum.Wireframe;
 
@@ -138,6 +140,105 @@ public class BbCodeFontStacks
             default:
                 return false;
         }
+    }
+
+    /// <summary>
+    /// Variable names a <c>[state=Name]</c> BBCode tag is allowed to apply to the substring it wraps.
+    /// A state can hold arbitrary variables (X, Y, Width, etc.), but only these have per-run meaning, so
+    /// anything else on the state is silently skipped rather than applied to the whole element.
+    /// </summary>
+    public static readonly HashSet<string> StateTagVariableAllowlist = new HashSet<string>
+    {
+        "Color", "Red", "Green", "Blue", "FontScale",
+        "Font", "FontSize", "OutlineThickness", "IsItalic", "IsBold", "UseCustomFont", "HasDropshadow",
+    };
+
+    /// <summary>
+    /// Formats an already-typed <see cref="VariableSave.Value"/> back into the string
+    /// <see cref="TagInfo.Argument"/> form the per-tag parsing expects, so a decomposed state variable can
+    /// be re-dispatched through that unchanged parsing. Lossless for every allowlisted type: bool/int/float
+    /// format invariantly, and Color round-trips through 8-digit ARGB hex (not
+    /// <see cref="System.Drawing.Color.Name"/>, which is lossy for non-named colors).
+    /// </summary>
+    public static string? FormatStateVariableArgument(object? value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        if (value is System.Drawing.Color color)
+        {
+            return "0x" + color.ToArgb().ToString("X8", CultureInfo.InvariantCulture);
+        }
+
+        return Convert.ToString(value, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Expands every <c>[state=Name]</c> <see cref="FoundTag"/> in <paramref name="results"/> into one
+    /// synthetic <see cref="FoundTag"/> per allowlisted variable on the named state, each spanning the
+    /// state tag's own open/close range. Shared by the renderers (which resolve the state on the Text's
+    /// <c>GraphicalUiElement</c>) and by <c>FontReferenceCollector</c> (which resolves it on the Text's
+    /// element), so both see the same font tags. An unknown state name, or a state with no allowlisted
+    /// variables, contributes nothing - a no-op, not an error. State variables are never themselves
+    /// expanded, so a state cannot apply another state. Must run AFTER <see cref="BbCodeParser.RemoveTags"/>
+    /// has stripped the source text using the original (unexpanded) <paramref name="results"/>: the
+    /// synthetic entries share character ranges.
+    /// </summary>
+    /// <param name="results">The parsed tags of the Text value.</param>
+    /// <param name="findState">Resolves a state by its bare name, or null when there is none.</param>
+    public static List<FoundTag> ExpandStateTags(List<FoundTag> results, Func<string, StateSave?> findState)
+    {
+        List<FoundTag>? expanded = null;
+
+        foreach (FoundTag tag in results)
+        {
+            if (CanonicalTagName(tag.Name) != "State")
+            {
+                continue;
+            }
+
+            expanded ??= new List<FoundTag>(results.Where(item => CanonicalTagName(item.Name) != "State"));
+
+            StateSave? state = findState(tag.Open.Argument ?? string.Empty);
+            if (state == null)
+            {
+                continue;
+            }
+
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (variable.SetsValue && StateTagVariableAllowlist.Contains(variable.Name))
+                {
+                    string? argument = FormatStateVariableArgument(variable.Value);
+                    if (argument != null)
+                    {
+                        expanded.Add(new FoundTag
+                        {
+                            Name = variable.Name,
+                            Open = new TagInfo
+                            {
+                                StartIndex = tag.Open.StartIndex,
+                                Count = tag.Open.Count,
+                                StartStrippedIndex = tag.Open.StartStrippedIndex,
+                                Argument = argument,
+                                Name = variable.Name,
+                            },
+                            Close = new TagInfo
+                            {
+                                StartIndex = tag.Close.StartIndex,
+                                Count = tag.Close.Count,
+                                StartStrippedIndex = tag.Close.StartStrippedIndex,
+                                Name = variable.Name,
+                            },
+                        });
+                    }
+                }
+            }
+        }
+
+        return expanded ?? results;
     }
 
     private static bool PushOrPop(Stack<bool> stack, string? argument)

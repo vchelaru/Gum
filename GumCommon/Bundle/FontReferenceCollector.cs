@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using RenderingLibrary.Graphics.Fonts;
@@ -123,7 +124,7 @@ public class FontReferenceCollector
 
         if (isDefaultState || StateSetsAnythingFor(state, ownerName: null))
         {
-            foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, project, spacingHorizontal, spacingVertical))
+            foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, element, state, project, spacingHorizontal, spacingVertical))
             {
                 bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
             }
@@ -136,7 +137,7 @@ public class FontReferenceCollector
                 continue;
             }
 
-            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, state, project, spacingHorizontal, spacingVertical))
+            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, _resolveInstanceElement(instance), state, project, spacingHorizontal, spacingVertical))
             {
                 bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
             }
@@ -327,13 +328,13 @@ public class FontReferenceCollector
             || stateSave.VariableLists.Any(vl => vl.SourceObject == ownerName);
     }
 
-    private static IEnumerable<BmfcSave> GetBmfcSavesFor(InstanceSave? instance, StateSave stateSave,
-        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    private static IEnumerable<BmfcSave> GetBmfcSavesFor(InstanceSave? instance, ElementSave? textElement,
+        StateSave stateSave, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
         Func<string, object?> getValue = name => stateSave.GetValueRecursive(prefix + name);
         return WithBbCodeRunFonts(BuildBmfcSave(getValue, project, spacingHorizontal, spacingVertical),
-            getValue, project, spacingHorizontal, spacingVertical);
+            getValue, textElement, project, spacingHorizontal, spacingVertical);
     }
 
     /// <summary>
@@ -345,8 +346,8 @@ public class FontReferenceCollector
     /// applied) when none of the owner's font-affecting properties are set via a conditional
     /// reference. See #4042.
     /// </summary>
-    private static IEnumerable<BmfcSave> CollectAllBmfcSavesFor(InstanceSave? instance, StateSave stateSave,
-        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    private static IEnumerable<BmfcSave> CollectAllBmfcSavesFor(InstanceSave? instance, ElementSave? textElement,
+        StateSave stateSave, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
         string? ownerName = instance?.Name;
@@ -388,7 +389,7 @@ public class FontReferenceCollector
 
         if (branchValuesByProperty.Count == 0)
         {
-            foreach (BmfcSave baseline in GetBmfcSavesFor(instance, stateSave, project, spacingHorizontal, spacingVertical))
+            foreach (BmfcSave baseline in GetBmfcSavesFor(instance, textElement, stateSave, project, spacingHorizontal, spacingVertical))
             {
                 yield return baseline;
             }
@@ -403,7 +404,7 @@ public class FontReferenceCollector
 
             foreach (BmfcSave bmfcSave in WithBbCodeRunFonts(
                 BuildBmfcSave(Lookup, project, spacingHorizontal, spacingVertical),
-                Lookup, project, spacingHorizontal, spacingVertical))
+                Lookup, textElement, project, spacingHorizontal, spacingVertical))
             {
                 yield return bmfcSave;
             }
@@ -539,7 +540,7 @@ public class FontReferenceCollector
     /// renderers use, seeded from the Text's own font. Nothing for a null <paramref name="baseSave"/>.
     /// </summary>
     private static IEnumerable<BmfcSave> WithBbCodeRunFonts(BmfcSave? baseSave, Func<string, object?> getValue,
-        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+        ElementSave? textElement, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         if (baseSave == null)
         {
@@ -560,6 +561,10 @@ public class FontReferenceCollector
         {
             yield break;
         }
+
+        // A [state=Name] tag is expanded into the state's font variables, resolved on the Text's own
+        // element like the runtime does (#7204).
+        tags = BbCodeFontStacks.ExpandStateTags(tags, stateName => FindStateByName(textElement, stateName));
 
         BbCodeFontStacks stacks = new BbCodeFontStacks();
         stacks.Seed(baseSave.FontFile ?? baseSave.FontName, baseSave.FontSize, baseSave.OutlineThickness,
@@ -583,10 +588,68 @@ public class FontReferenceCollector
                 continue;
             }
 
+            // While a state has UseCustomFont on, the renderer loads a pre-baked "<name>.fnt" for the run
+            // instead of generating one.
+            if (stacks.UseCustomFont.Peek())
+            {
+                continue;
+            }
+
             yield return CreateBmfcSave(getValue, fontName, stacks.FontSize.Peek(), stacks.OutlineThickness.Peek(),
                 stacks.UseFontSmoothing.Peek(), stacks.IsItalic.Peek(), stacks.IsBold.Peek(),
                 stacks.HasDropshadow.Peek(), project, spacingHorizontal, spacingVertical);
         }
+    }
+
+    /// <summary>
+    /// Finds a state by its bare name the way the runtime does for a <c>[state=Name]</c> tag
+    /// (<c>TryGetStateByName</c> on the Text's <c>GraphicalUiElement</c>): the uncategorized states first,
+    /// then each category's states, across <paramref name="textElement"/> and its base types, where a
+    /// derived element's state or category replaces the base's of the same name.
+    /// </summary>
+    private static StateSave? FindStateByName(ElementSave? textElement, string stateName)
+    {
+        Dictionary<string, StateSave> states = new Dictionary<string, StateSave>();
+        Dictionary<string, StateSaveCategory> categories = new Dictionary<string, StateSaveCategory>();
+
+        // Base first so the derived element overrides it. A base-type cycle is invalid, but a malformed
+        // project shouldn't hang collection.
+        List<ElementSave> chain = new List<ElementSave>();
+        HashSet<ElementSave> visited = new HashSet<ElementSave>();
+        for (ElementSave? current = textElement; current != null && visited.Add(current);
+            current = ObjectFinder.Self.GetBaseElement(current))
+        {
+            chain.Insert(0, current);
+        }
+
+        foreach (ElementSave element in chain)
+        {
+            foreach (StateSaveCategory category in element.Categories)
+            {
+                categories[category.Name] = category;
+            }
+
+            foreach (StateSave state in element.States)
+            {
+                states[state.Name] = state;
+            }
+        }
+
+        if (states.TryGetValue(stateName, out StateSave? found))
+        {
+            return found;
+        }
+
+        foreach (StateSaveCategory category in categories.Values)
+        {
+            found = category.States.FirstOrDefault(item => item.Name == stateName);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     private void CollectFontsFromNestedTextInstances(ElementSave outerElement, StateSave outerState,
@@ -683,6 +746,6 @@ public class FontReferenceCollector
         Func<string, object?> getValue = name => rfv.GetValueByBottomName(name);
 
         return WithBbCodeRunFonts(BuildBmfcSave(getValue, project, spacingHorizontal, spacingVertical),
-            getValue, project, spacingHorizontal, spacingVertical);
+            getValue, elementStack[elementStack.Count - 1].Element, project, spacingHorizontal, spacingVertical);
     }
 }

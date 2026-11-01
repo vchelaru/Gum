@@ -1770,103 +1770,15 @@ public partial class CustomSetPropertyOnRenderable
     private static string CanonicalTagName(string name) => BbCodeFontStacks.CanonicalTagName(name);
 
     /// <summary>
-    /// Variable names a <c>[state=Name]</c> BBCode tag is allowed to apply to the substring it wraps -
-    /// exactly the set already wired for per-run application elsewhere in this file (the direct-value
-    /// cases in <see cref="SetBbCodeText"/> plus the font-stack cases in <see cref="ApplyFontVariables"/>).
-    /// A state can hold arbitrary variables (X, Y, Width, etc.), but only these have per-run meaning, so
-    /// anything else on the state is silently skipped rather than applied to the whole element.
-    /// </summary>
-    private static readonly HashSet<string> StateBbCodeAllowlist = new HashSet<string>
-    {
-        "Color", "Red", "Green", "Blue", "FontScale",
-        "Font", "FontSize", "OutlineThickness", "IsItalic", "IsBold", "UseCustomFont", "HasDropshadow",
-    };
-
-    /// <summary>
-    /// Formats an already-typed <see cref="Gum.DataTypes.Variables.VariableSave.Value"/> back into the
-    /// string <see cref="TagInfo.Argument"/> form the existing per-tag parsing (in
-    /// <see cref="SetBbCodeText"/> and <see cref="ApplyFontVariables"/>) expects, so a decomposed state
-    /// variable can be re-dispatched through that unchanged parsing without a bespoke typed-value path.
-    /// Lossless for every allowlisted type: bool/int/float format invariantly, and Color round-trips
-    /// through 8-digit ARGB hex (not <see cref="System.Drawing.Color.Name"/>, which is lossy for
-    /// non-named colors).
-    /// </summary>
-    private static string? FormatStateVariableArgument(object? value)
-    {
-        if (value == null)
-        {
-            return null;
-        }
-
-        if (value is System.Drawing.Color color)
-        {
-            return "0x" + color.ToArgb().ToString("X8", CultureInfo.InvariantCulture);
-        }
-
-        return Convert.ToString(value, CultureInfo.InvariantCulture);
-    }
-
-    /// <summary>
-    /// Expands every <c>[state=Name]</c> <see cref="FoundTag"/> in <paramref name="results"/> into one
-    /// synthetic <see cref="FoundTag"/> per allowlisted variable on the named state (looked up via
+    /// Expands every <c>[state=Name]</c> tag into the allowlisted variables of the named state (see
+    /// <see cref="BbCodeFontStacks.ExpandStateTags"/>), looked up via
     /// <see cref="GraphicalUiElementExtensions.TryGetStateByName"/> - the same States-then-Categories
     /// resolution <see cref="GraphicalUiElement.ApplyState(string)"/> uses, so a state defined in the
-    /// Gum tool's States tab, inside a categorized state, or added in code all resolve identically),
-    /// each spanning the state tag's own open/close range. An unknown state name, or a state with no
-    /// allowlisted variables, contributes nothing - a no-op, not an error. Must run AFTER
-    /// <see cref="BbCodeParser.RemoveTags"/> has already stripped the source text using the original
-    /// (unexpanded) <paramref name="results"/>: the synthetic entries share character ranges with each
-    /// other (and with the original state tag), so stripping with them in play would remove the same
-    /// range more than once.
+    /// Gum tool's States tab, inside a categorized state, or added in code all resolve identically.
     /// </summary>
-    private static List<FoundTag> ExpandStateTags(List<FoundTag> results, GraphicalUiElement graphicalUiElement)
-    {
-        List<FoundTag>? expanded = null;
-
-        foreach (FoundTag tag in results)
-        {
-            if (CanonicalTagName(tag.Name) == "State")
-            {
-                expanded ??= new List<FoundTag>(results.Where(item => CanonicalTagName(item.Name) != "State"));
-
-                if (graphicalUiElement.TryGetStateByName(tag.Open.Argument ?? string.Empty,
-                        out Gum.DataTypes.Variables.StateSave? state))
-                {
-                    foreach (Gum.DataTypes.Variables.VariableSave variable in state.Variables)
-                    {
-                        if (variable.SetsValue && StateBbCodeAllowlist.Contains(variable.Name))
-                        {
-                            string? argument = FormatStateVariableArgument(variable.Value);
-                            if (argument != null)
-                            {
-                                expanded.Add(new FoundTag
-                                {
-                                    Name = variable.Name,
-                                    Open = new TagInfo
-                                    {
-                                        StartIndex = tag.Open.StartIndex,
-                                        Count = tag.Open.Count,
-                                        StartStrippedIndex = tag.Open.StartStrippedIndex,
-                                        Argument = argument,
-                                        Name = variable.Name,
-                                    },
-                                    Close = new TagInfo
-                                    {
-                                        StartIndex = tag.Close.StartIndex,
-                                        Count = tag.Close.Count,
-                                        StartStrippedIndex = tag.Close.StartStrippedIndex,
-                                        Name = variable.Name,
-                                    },
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return expanded ?? results;
-    }
+    private static List<FoundTag> ExpandStateTags(List<FoundTag> results, GraphicalUiElement graphicalUiElement) =>
+        BbCodeFontStacks.ExpandStateTags(results, name =>
+            graphicalUiElement.TryGetStateByName(name, out Gum.DataTypes.Variables.StateSave? state) ? state : null);
 
     /// <summary>
     /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
