@@ -162,8 +162,9 @@ void main() {{
     /// </param>
     /// <param name="shapeKey">Everything besides size and blur that decides the silhouette's pixels (shape kind,
     /// corner radius, stroke width, arc angles, fill vs stroke). The blurred result is cached per owner and
-    /// reused while this key, the size and the blur are unchanged. Offset, tint, camera zoom and rotation
+    /// reused while this key, the size and the blur are unchanged. Offset, tint and camera zoom
     /// do not need to be in the key: they only affect the composite, and the mask is drawn in world pixels.
+    /// A shape whose silhouette is itself drawn turned (the non-square arc) puts its rotation in the key.
     /// <c>null</c> disables caching for the call.</param>
     public void Draw(
         IRenderableIpso owner,
@@ -373,7 +374,8 @@ void main() {{
 /// size and blur) mean the blurred mask is identical and can be reused. Fields are compared exactly.
 /// </summary>
 public readonly record struct ShadowMaskKey(
-    int Kind, bool Hollow, float P0 = 0f, float P1 = 0f, float P2 = 0f, float P3 = 0f, float P4 = 0f);
+    int Kind, bool Hollow, float P0 = 0f, float P1 = 0f, float P2 = 0f, float P3 = 0f, float P4 = 0f,
+    float P5 = 0f, float P6 = 0f, float P7 = 0f, float P8 = 0f, float P9 = 0f);
 
 /// <summary>
 /// raylib subclass of <see cref="RenderTargetServiceBase{TRenderTarget}"/> that supplies the
