@@ -3651,31 +3651,43 @@ public partial class CustomSetPropertyOnRenderable
 #if RAYLIB
     private static bool TrySetPropertyOnArcRuntime(Gum.GueDeriving.ArcRuntime arcRuntime, string propertyName, object value)
     {
-        // The gradient *Units variables arrive as PositionUnitType (endpoints) or DimensionUnitType
-        // (radii). With no dispatch they fell to SetPropertyThroughReflection and were lost, so a
-        // percent-authored gradient was read as raw pixels (#7306).
+        if (propertyName == "Thickness")
+        {
+            arcRuntime.Thickness = System.Convert.ToSingle(value);
+            return true;
+        }
+        return TrySetGradientUnit(arcRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+    }
+
+    // The gradient *Units variables arrive as PositionUnitType (endpoints) or DimensionUnitType
+    // (radii). With no dispatch they fell to SetPropertyThroughReflection and were lost, so a
+    // percent-authored gradient was read as raw pixels (#7306, #7312). Shared by Arc, Circle and
+    // Rectangle: all three renderables resolve the units the same way.
+    private static bool TrySetGradientUnit(Gum.Renderables.GradientShapeRenderable? renderable, string propertyName, object value)
+    {
+        if (renderable == null)
+        {
+            return false;
+        }
         switch (propertyName)
         {
-            case "Thickness":
-                arcRuntime.Thickness = System.Convert.ToSingle(value);
-                return true;
             case "GradientX1Units":
-                arcRuntime.GradientX1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                renderable.GradientX1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
                 return true;
             case "GradientY1Units":
-                arcRuntime.GradientY1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                renderable.GradientY1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
                 return true;
             case "GradientX2Units":
-                arcRuntime.GradientX2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                renderable.GradientX2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
                 return true;
             case "GradientY2Units":
-                arcRuntime.GradientY2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                renderable.GradientY2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
                 return true;
             case "GradientInnerRadiusUnits":
-                arcRuntime.GradientInnerRadiusUnits = (DimensionUnitType)value;
+                renderable.GradientInnerRadiusUnits = (DimensionUnitType)value;
                 return true;
             case "GradientOuterRadiusUnits":
-                arcRuntime.GradientOuterRadiusUnits = (DimensionUnitType)value;
+                renderable.GradientOuterRadiusUnits = (DimensionUnitType)value;
                 return true;
         }
         return false;
@@ -3829,7 +3841,11 @@ public partial class CustomSetPropertyOnRenderable
                 circleRuntime.DropshadowBlur = System.Convert.ToSingle(value);
                 return true;
         }
+#if RAYLIB
+        return TrySetGradientUnit(circleRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+#else
         return false;
+#endif
 #pragma warning restore CS0618
     }
 
@@ -3987,7 +4003,11 @@ public partial class CustomSetPropertyOnRenderable
                 rectangleRuntime.DropshadowBlur = System.Convert.ToSingle(value);
                 return true;
         }
+#if RAYLIB
+        return TrySetGradientUnit(rectangleRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+#else
         return false;
+#endif
 #pragma warning restore CS0618
     }
 #endif

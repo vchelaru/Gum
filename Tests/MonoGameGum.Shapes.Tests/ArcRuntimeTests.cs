@@ -191,7 +191,8 @@ public class ArcRuntimeTests
         // on the renderable, not the GUE.
         renderable.PreRender();
 
-        shape.StrokeWidth.ShouldBe(8);
+        // #7309: Circle's Apos draw adds a 1 px anti-alias fringe, so the runtime pushes 8 - 1.
+        shape.StrokeWidth.ShouldBe(7);
     }
 
     // Same propagation guard as StrokeWidth: dashed-stroke values live on the runtime so the
