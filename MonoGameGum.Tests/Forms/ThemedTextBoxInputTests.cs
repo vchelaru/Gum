@@ -55,6 +55,7 @@ public class ThemedTextBoxInputTests : BeginnerDriverTestBase
         project.Initialize();
         ObjectFinder.Self.GumProjectSave = project;
         ElementSaveExtensions.RegisterGueInstantiationType("Container", typeof(Gum.GueDeriving.ContainerRuntime));
+        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new Gum.GueDeriving.TextRuntime());
         FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         return project;
     }
