@@ -286,7 +286,7 @@ public class NewProjectDialogSequenceTests
 
         viewModel.IsRestoreFailed.ShouldBeFalse();
         viewModel.IsBusy.ShouldBeTrue();
-        viewModel.ProgressText.ShouldBe("Running dotnet restore...");
+        viewModel.ProgressText.ShouldBe("Step 2 of 2: Running dotnet restore...");
         second.SetResult(RestoreOk());
         await WaitUntil(() => !viewModel.IsBusy);
     }

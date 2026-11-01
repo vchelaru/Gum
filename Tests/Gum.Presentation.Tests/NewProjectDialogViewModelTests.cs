@@ -988,7 +988,7 @@ public class NewProjectDialogViewModelTests
 
         viewModel.IsBusy.ShouldBeTrue();
         viewModel.IsEditable.ShouldBeFalse();
-        viewModel.ProgressText.ShouldBe("Creating files...");
+        viewModel.ProgressText.ShouldBe("Step 1 of 2: Creating files...");
         viewModel.CanExecuteAffirmative().ShouldBeFalse();
         files.SetResult(FilesOk());
         await viewModel.CreationTask;
@@ -1109,7 +1109,7 @@ public class NewProjectDialogViewModelTests
             });
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
         viewModel.AffirmativeCommand.Execute(null);
-        await WaitUntil(() => viewModel.ProgressText == "Running dotnet restore...");
+        await WaitUntil(() => viewModel.ProgressText == "Step 2 of 2: Running dotnet restore...");
 
         viewModel.NegativeCommand.Execute(null);
         await viewModel.CreationTask;
@@ -1262,7 +1262,7 @@ public class NewProjectDialogViewModelTests
         viewModel.AffirmativeCommand.Execute(null);
         await WaitUntil(() => viewModel.ProgressDetail == "Determining projects to restore...");
 
-        viewModel.ProgressText.ShouldBe("Running dotnet restore...");
+        viewModel.ProgressText.ShouldBe("Step 2 of 2: Running dotnet restore...");
         restore.SetResult(RestoreOk());
         await viewModel.CreationTask;
     }
