@@ -142,4 +142,80 @@ public class HotReloadFormsPropertyEditTests : BaseTestClass
         ((TextBox)box).Visual.GetGraphicalUiElementByName("PlaceholderTextInstance")!
             .ToString(); // the visual child exists
     }
+
+    private static GumProjectSave WithBool(string variable, bool? value) =>
+        HotReloadTextBoxProjects.Build(s => HotReloadTextBoxProjects.Set(s, "Text1." + variable, "bool", value));
+
+    [Fact]
+    public void ApplyDiff_AuthoredBoolPropertyRemoved_RevertsLikeARestart()
+    {
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(WithBool("IsReadOnly", true));
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+        box.IsReadOnly.ShouldBeTrue();
+
+        HotReloadTextBoxProjects.Reload(screen, WithBool("IsReadOnly", null));
+
+        box.IsReadOnly.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ApplyDiff_AuthoredPlaceholderRemoved_RevertsToTheComponentPlaceholder()
+    {
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(HotReloadTextBoxProjects.Build(
+            s => HotReloadTextBoxProjects.Set(s, "Text1.Placeholder", "string", "Hint")));
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+
+        HotReloadTextBoxProjects.Reload(screen, HotReloadTextBoxProjects.Build());
+
+        box.Placeholder.ShouldBe("Component placeholder");
+    }
+
+    [Fact]
+    public void ApplyDiff_PropertySetInCodeAndFileUnchanged_KeepsTheCodeValue()
+    {
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(WithBool("IsReadOnly", true));
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+        box.IsReadOnly = false;
+
+        HotReloadTextBoxProjects.Reload(screen, WithBool("IsReadOnly", true));
+
+        box.IsReadOnly.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ApplyDiff_PropertySetInCodeAndFileChangesIt_TheFileWins()
+    {
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(WithBool("IsReadOnly", false));
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+        box.IsReadOnly = true;
+
+        HotReloadTextBoxProjects.Reload(screen, WithBool("IsReadOnly", true));
+        box.IsReadOnly = false;
+        HotReloadTextBoxProjects.Reload(screen, WithBool("IsReadOnly", false));
+
+        box.IsReadOnly.ShouldBeFalse();
+        box.IsReadOnly = true;
+        HotReloadTextBoxProjects.Reload(screen, WithBool("IsReadOnly", null));
+        box.IsReadOnly.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ApplyDiff_PlaceholderEditedWhileFocused_TextCaretAndSelectionUnchanged()
+    {
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(HotReloadTextBoxProjects.Build(
+            s => HotReloadTextBoxProjects.Set(s, "Text1.Placeholder", "string", "First")));
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+        box.Text = "hello world";
+        box.IsFocused = true;
+        box.CaretIndex = 6;
+        box.SelectionLength = 3;
+
+        HotReloadTextBoxProjects.Reload(screen, HotReloadTextBoxProjects.Build(
+            s => HotReloadTextBoxProjects.Set(s, "Text1.Placeholder", "string", "Second")));
+
+        box.Placeholder.ShouldBe("Second");
+        box.Text.ShouldBe("hello world");
+        box.CaretIndex.ShouldBe(6);
+        box.SelectionLength.ShouldBe(3);
+    }
 }

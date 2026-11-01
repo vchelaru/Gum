@@ -32,6 +32,11 @@ internal static class BehaviorFormsPropertyApplier
     /// </summary>
     public static void ApplyToCreatedControl(InteractiveGue visual)
     {
+        if (visual.FormsControlAsObject is FrameworkElement created && ElementSaveExtensions.InitialFormsPropertiesNotifier != null)
+        {
+            SnapshotInitialValues(created);
+        }
+
         ElementSaveExtensions.InitialFormsPropertiesNotifier?.Invoke(visual, true);
     }
 
@@ -102,6 +107,48 @@ internal static class BehaviorFormsPropertyApplier
         return true;
     }
 
+    // What each property held the first time the project wrote it, so a variable the project later removes
+    // (and the behavior declares no default for) returns to the control's own default.
+    private static readonly ConditionalWeakTable<FrameworkElement, Dictionary<string, object?>> _initialValues = new();
+
+    private static readonly Dictionary<Type, PropertyInfo[]> _simpleProperties = new();
+
+    // The control's own defaults, taken before any project value is written, for a variable removed later.
+    private static void SnapshotInitialValues(FrameworkElement control)
+    {
+        Type type = control.GetType();
+        PropertyInfo[]? properties;
+        lock (_simpleProperties)
+        {
+            if (!_simpleProperties.TryGetValue(type, out properties))
+            {
+                properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(p => p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0 && IsSimple(p.PropertyType))
+                    .ToArray();
+                _simpleProperties[type] = properties;
+            }
+        }
+
+        Dictionary<string, object?> initial = _initialValues.GetOrCreateValue(control);
+        foreach (PropertyInfo property in properties)
+        {
+            try
+            {
+                initial.TryAdd(property.Name, property.GetValue(control));
+            }
+            catch (Exception)
+            {
+                // A getter that needs state the control does not have yet has no default to remember.
+            }
+        }
+    }
+
+    private static bool IsSimple(Type type)
+    {
+        Type target = Nullable.GetUnderlyingType(type) ?? type;
+        return target.IsPrimitive || target.IsEnum || target == typeof(string) || target == typeof(object);
+    }
+
     private static void TrySet(FrameworkElement formsControl, Type formsType, string name, object? value)
     {
         PropertyInfo? prop = formsType.GetProperty(name);
@@ -110,12 +157,29 @@ internal static class BehaviorFormsPropertyApplier
             return;
         }
 
+        Dictionary<string, object?> initial = _initialValues.GetOrCreateValue(formsControl);
+        if (value != null && !initial.ContainsKey(name))
+        {
+            initial[name] = prop.GetValue(formsControl);
+        }
+
         if (value == null)
         {
-            // A removed variable with no behavior default: back to null where the property can hold it.
-            if (!prop.PropertyType.IsValueType || Nullable.GetUnderlyingType(prop.PropertyType) != null)
+            // A removed variable with no behavior default: back to what the control held before the project wrote it.
+            try
             {
-                prop.SetValue(formsControl, null);
+                if (initial.TryGetValue(name, out object? original))
+                {
+                    prop.SetValue(formsControl, original);
+                }
+                else if (!prop.PropertyType.IsValueType || Nullable.GetUnderlyingType(prop.PropertyType) != null)
+                {
+                    prop.SetValue(formsControl, null);
+                }
+            }
+            catch (Exception)
+            {
+                // Same as below: a property that cannot take the value is left as it is.
             }
             return;
         }
