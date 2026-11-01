@@ -39,6 +39,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0026"] = "gum-tool/project-files#state-the-category-does-not-have-gum0026",
             ["GUM0027"] = "gum-tool/project-files#variable-of-an-instance-that-does-not-exist-gum0027",
             ["GUM0028"] = "gum-tool/project-files#variable-with-an-unknown-type-gum0028",
+            ["GUM0029"] = "gum-tool/project-files#variable-the-instances-type-does-not-have-gum0029",
         };
     }
 

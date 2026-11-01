@@ -159,6 +159,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetUnknownStateValueErrorsFor(element));
         errors.AddRange(GetMissingInstanceVariableErrorsFor(element));
         errors.AddRange(GetUnknownVariableTypeErrorsFor(element));
+        errors.AddRange(GetUnknownInstanceVariableErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
         errors.AddRange(GetInvalidEnumValueErrorsFor(element));
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
