@@ -760,7 +760,7 @@
       <Value xsi:type="xsd:float">15</Value>
     </Variable>
     <Variable Type="float" Name="WindowStandardInstance.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">545</Value>
+      <Value xsi:type="xsd:float">580</Value>
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
