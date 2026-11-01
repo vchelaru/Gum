@@ -7,7 +7,7 @@ using static Raylib_cs.Raylib;
 namespace RaylibGum.Tests.Runtimes;
 
 /// <summary>
-/// #7383 - a solid Arc (its rounded caps and its dropshadow too) is the same shape as on Skia: a stroke of
+/// #7383 - a solid (or dashed) Arc (its rounded caps and its dropshadow too) is the same shape as on Skia: a stroke of
 /// constant thickness along the ellipse inscribed in its box, turned about the box's top-left corner. The
 /// samples were read from the same scene rendered on Skia (opaque blue 0,0,255 over white, a 6,6 offset
 /// shadow of blur 8 in black, alpha 200), at points away from antialiased edges.
@@ -20,7 +20,7 @@ public class ArcSolidPlacementTests : BaseTestClass
 
     // Renders an arc whose box center is (100, 100) after turning.
     private static Color[,] Render(float width, float height, float rotation, float sweep, float thickness,
-        bool isEndRounded, bool hasDropshadow)
+        bool isEndRounded, bool hasDropshadow, float dashLength = 0, float gapLength = 0)
     {
         ContainerRuntime container = new();
         container.Width = Size;
@@ -42,6 +42,8 @@ public class ArcSolidPlacementTests : BaseTestClass
         arc.Height = height;
         arc.Rotation = rotation;
         arc.IsEndRounded = isEndRounded;
+        arc.StrokeDashLength = dashLength;
+        arc.StrokeGapLength = gapLength;
         arc.Red = 0; arc.Green = 0; arc.Blue = 255; arc.Alpha = 255;
         if (hasDropshadow)
         {
@@ -124,6 +126,20 @@ public class ArcSolidPlacementTests : BaseTestClass
         ShouldMatchSkia(Render(140, 80, 0, 270, 30, isEndRounded: true, hasDropshadow: true), WideRoundShadowSamples);
     }
 
+    [Fact]
+    public void DashedArcInNonSquareBox_RotatedAndRounded_MatchesSkia()
+    {
+        ShouldMatchSkia(Render(140, 80, 30, 270, 10, isEndRounded: true, hasDropshadow: false, dashLength: 12, gapLength: 8),
+            DashedRoundWideRotated30Samples);
+    }
+
+    [Fact]
+    public void DashedArcInTallBox_WithDropshadow_MatchesSkia()
+    {
+        ShouldMatchSkia(Render(80, 140, 0, 270, 10, isEndRounded: false, hasDropshadow: true, dashLength: 12, gapLength: 8),
+            DashedButtTallShadowSamples);
+    }
+
     private static readonly (int X, int Y, int R, int G, int B)[] WideRingSamples =
     {
         (46,98,0,0,255), (121,78,0,0,255), (104,113,0,0,255), (58,70,0,0,255), (82,72,0,0,255), (88,128,0,0,255), (71,74,0,0,255), (44,110,0,0,255), (108,134,0,0,255), (138,70,0,0,255), (68,125,0,0,255), (110,83,0,0,255), (67,9,255,255,255), (103,17,255,255,255), (76,97,255,255,255), (178,92,255,255,255), (158,14,255,255,255), (129,43,255,255,255), (65,18,255,255,255), (186,131,255,255,255), (174,94,255,255,255), (193,12,255,255,255)
@@ -152,5 +168,15 @@ public class ArcSolidPlacementTests : BaseTestClass
     private static readonly (int X, int Y, int R, int G, int B)[] WideRoundShadowSamples =
     {
         (113,77,0,0,255), (59,113,0,0,255), (81,123,0,0,255), (103,87,0,0,255), (128,111,0,0,255), (43,98,0,0,255), (54,104,0,0,255), (79,84,0,0,255), (119,78,0,0,255), (75,73,0,0,255), (102,80,0,0,255), (122,78,0,0,255), (37,42,255,255,255), (50,177,255,255,255), (82,42,255,255,255), (10,5,255,255,255), (15,142,255,255,255), (104,165,255,255,255), (158,33,255,255,255), (76,47,255,255,255), (123,50,255,255,255), (137,3,255,255,255), (107,101,246,246,246), (158,113,249,249,249), (45,134,248,248,248), (160,112,247,247,247), (67,145,246,246,246), (149,140,248,248,248), (164,110,247,247,247), (112,151,247,247,247), (102,101,246,246,246), (82,149,248,248,248)
+    };
+
+    private static readonly (int X, int Y, int R, int G, int B)[] DashedRoundWideRotated30Samples =
+    {
+        (121,124,0,0,255), (101,136,0,0,255), (40,126,0,0,255), (44,124,0,0,255), (114,131,0,0,255), (102,138,0,0,255), (74,71,0,0,255), (76,70,0,0,255), (40,132,0,0,255), (118,127,0,0,255), (58,141,0,0,255), (82,140,0,0,255), (79,70,0,0,255), (128,58,0,0,255), (151,171,255,255,255), (193,114,255,255,255), (25,51,255,255,255), (125,33,255,255,255), (31,17,255,255,255), (144,154,255,255,255), (183,173,255,255,255), (12,58,255,255,255), (16,8,255,255,255), (68,24,255,255,255)
+    };
+
+    private static readonly (int X, int Y, int R, int G, int B)[] DashedButtTallShadowSamples =
+    {
+        (85,39,0,0,255), (97,36,0,0,255), (72,60,0,0,255), (126,65,0,0,255), (99,35,0,0,255), (74,140,0,0,255), (64,97,0,0,255), (70,137,0,0,255), (99,167,0,0,255), (126,60,0,0,255), (80,158,0,0,255), (131,63,0,0,255), (67,81,0,0,255), (84,155,0,0,255), (153,3,255,255,255), (93,139,255,255,255), (71,17,255,255,255), (169,98,255,255,255), (173,137,255,255,255), (31,59,255,255,255), (180,88,255,255,255), (87,117,255,255,255), (114,195,255,255,255), (79,179,255,255,255), (94,51,177,177,177), (132,76,221,221,221), (77,93,231,231,231), (81,73,219,219,219), (109,165,202,202,202), (83,86,249,249,249), (106,43,109,109,109), (134,49,241,241,241), (118,171,217,217,217), (83,54,206,206,206)
     };
 }

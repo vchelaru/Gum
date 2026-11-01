@@ -375,7 +375,7 @@ void main() {{
 /// </summary>
 public readonly record struct ShadowMaskKey(
     int Kind, bool Hollow, float P0 = 0f, float P1 = 0f, float P2 = 0f, float P3 = 0f, float P4 = 0f,
-    float P5 = 0f, float P6 = 0f, float P7 = 0f);
+    float P5 = 0f, float P6 = 0f, float P7 = 0f, float P8 = 0f, float P9 = 0f);
 
 /// <summary>
 /// raylib subclass of <see cref="RenderTargetServiceBase{TRenderTarget}"/> that supplies the

@@ -275,8 +275,9 @@ public class LineArc : GradientShapeRenderable
         bool dashed = StrokeDashLength > 0f && StrokeGapLength > 0f && SweepAngle != 0f;
         if (dashed)
         {
-            // Dashes stay on the circle inscribed in the box (min(W, H)); only the center follows rotation.
-            DrawDashed(new Vector2(cx, cy), rotationDegrees, innerRadius, outerRadius, strokeColor);
+            // Dashes are solid (a gradient is ignored); DrawSolid dashes along the band.
+            DrawSolid(band, isCircle, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
+                segments, hasCaps, strokeColor);
         }
         else if (ShouldPaintGradient)
         {
@@ -296,6 +297,60 @@ public class LineArc : GradientShapeRenderable
             DrawSolid(band, isCircle, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
                 segments, hasCaps, strokeColor);
         }
+    }
+
+    /// <summary>
+    /// Dashes along the centerline of a non-square band, measured in pixels of arc length like Skia's
+    /// <c>SKPathEffect.CreateDash</c> (starting at the arc's start, phase 0). The centerline length is
+    /// tabulated against the angle, and each dash is the band between the angles at its two ends.
+    /// </summary>
+    private void DrawDashedBand(in BandGeometry band, float startAngleRl, float endAngleRl, int segments, Color color)
+    {
+        const float deg2rad = System.MathF.PI / 180f;
+        float pattern = StrokeDashLength + StrokeGapLength;
+        int steps = System.Math.Max(16, segments * 4);
+        System.Span<float> lengths = steps <= 2048 ? stackalloc float[steps + 1] : new float[steps + 1];
+        float previousX = band.A * System.MathF.Cos(startAngleRl * deg2rad);
+        float previousY = band.B * System.MathF.Sin(startAngleRl * deg2rad);
+        lengths[0] = 0f;
+        for (int i = 1; i <= steps; i++)
+        {
+            float angle = (startAngleRl + (endAngleRl - startAngleRl) * (i / (float)steps)) * deg2rad;
+            float x = band.A * System.MathF.Cos(angle);
+            float y = band.B * System.MathF.Sin(angle);
+            float dx = x - previousX;
+            float dy = y - previousY;
+            lengths[i] = lengths[i - 1] + System.MathF.Sqrt(dx * dx + dy * dy);
+            previousX = x;
+            previousY = y;
+        }
+        float total = lengths[steps];
+        if (total <= 0f || pattern <= 0f)
+        {
+            return;
+        }
+
+        for (float at = 0f; at < total; at += pattern)
+        {
+            float dashStartRl = AngleAt(lengths, startAngleRl, endAngleRl, at);
+            float dashEndRl = AngleAt(lengths, startAngleRl, endAngleRl, System.MathF.Min(at + StrokeDashLength, total));
+            int segmentsPerDash = System.Math.Max(1, (int)(System.MathF.Abs(dashEndRl - dashStartRl) / 4f));
+            DrawContinuous(band, false, 0f, 0f, dashStartRl, dashEndRl, segmentsPerDash, IsEndRounded, color);
+        }
+    }
+
+    // The angle at which the tabulated centerline reaches the given length.
+    private static float AngleAt(System.ReadOnlySpan<float> lengths, float startAngleRl, float endAngleRl, float length)
+    {
+        int steps = lengths.Length - 1;
+        int j = 0;
+        while (j < steps - 1 && lengths[j + 1] < length)
+        {
+            j++;
+        }
+        float span = lengths[j + 1] - lengths[j];
+        float t = span > 0f ? (length - lengths[j]) / span : 0f;
+        return startAngleRl + (endAngleRl - startAngleRl) * ((j + t) / steps);
     }
 
     /// <summary>
@@ -358,10 +413,29 @@ public class LineArc : GradientShapeRenderable
     }
 
     /// <summary>
-    /// Paints the band (and its rounded caps) in one solid color: a <c>DrawRing</c> for a circle, a
-    /// <see cref="DrawBand"/> strip for any other box. Shared by the body and by the shadow silhouette.
+    /// Paints the stroke (dashed when the dash and gap lengths are set) in one solid color: a
+    /// <c>DrawRing</c> for a circle, a <see cref="DrawBand"/> strip for any other box, with rounded caps.
+    /// Shared by the body and by the shadow silhouette.
     /// </summary>
     private void DrawSolid(in BandGeometry band, bool isCircle, float innerRadius, float outerRadius,
+        float startAngleRl, float endAngleRl, int segments, bool hasCaps, Color color)
+    {
+        if (StrokeDashLength > 0f && StrokeGapLength > 0f && SweepAngle != 0f)
+        {
+            if (isCircle)
+            {
+                DrawDashed(new Vector2(band.Cx, band.Cy), band.RotationDegrees, innerRadius, outerRadius, color);
+            }
+            else
+            {
+                DrawDashedBand(band, startAngleRl, endAngleRl, segments, color);
+            }
+            return;
+        }
+        DrawContinuous(band, isCircle, innerRadius, outerRadius, startAngleRl, endAngleRl, segments, hasCaps, color);
+    }
+
+    private void DrawContinuous(in BandGeometry band, bool isCircle, float innerRadius, float outerRadius,
         float startAngleRl, float endAngleRl, int segments, bool hasCaps, Color color)
     {
         if (isCircle)
@@ -721,9 +795,9 @@ public class LineArc : GradientShapeRenderable
                     startAngleDeg, endAngleDeg, segments, hasCaps, silhouetteColor);
             },
             isCircle
-                ? new ShadowMaskKey(4, false, innerRadius, outerRadius, startAngleDeg, endAngleDeg, segments, hasCaps ? 1f : 0f, rotation)
+                ? new ShadowMaskKey(4, false, innerRadius, outerRadius, startAngleDeg, endAngleDeg, segments, hasCaps ? 1f : 0f, rotation, StrokeDashLength, StrokeGapLength)
                 : new ShadowMaskKey(5, false, band.HalfW, band.HalfH, band.Thickness, startAngleDeg, endAngleDeg,
-                    segments, rotation, hasCaps ? 1f : 0f));
+                    segments, rotation, hasCaps ? 1f : 0f, StrokeDashLength, StrokeGapLength));
     }
 
     /// <summary>
