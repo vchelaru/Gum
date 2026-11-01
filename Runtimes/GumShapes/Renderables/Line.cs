@@ -103,12 +103,12 @@ internal class Line : RenderableShapeBase
 
         if (UseGradient && forcedColor == null)
         {
-            var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+            var gradient = ScaleStrokeAlpha(base.GetGradient(absoluteLeft, absoluteTop));
             sb.DrawLine(a, b, lineRadius, gradient, gradient, aaSize: antiAliasSize, dash: dash);
         }
         else
         {
-            var color = forcedColor ?? this.Color;
+            var color = forcedColor ?? ScaleStrokeAlpha(this.Color);
             sb.DrawLine(a, b, lineRadius, color, color, aaSize: antiAliasSize, dash: dash);
         }
     }
@@ -140,12 +140,12 @@ internal class Line : RenderableShapeBase
 
         if (UseGradient && forcedColor == null)
         {
-            var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+            var gradient = ScaleStrokeAlpha(base.GetGradient(absoluteLeft, absoluteTop));
             sb.DrawRectangle(position, size, gradient, gradient, thickness: 0, cornerRadii: 0, rotation: rotation, aaSize: antiAliasSize);
         }
         else
         {
-            var color = forcedColor ?? this.Color;
+            var color = forcedColor ?? ScaleStrokeAlpha(this.Color);
             sb.DrawRectangle(position, size, color, color, thickness: 0, cornerRadii: 0, rotation: rotation, aaSize: antiAliasSize);
         }
     }
