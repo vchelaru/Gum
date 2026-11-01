@@ -34,7 +34,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
 
     private NewProjectService CreateService(FakeCodegen? codegen = null, FakePackageAdd? add = null) =>
         new NewProjectService(
-            new FakeThemes(), new FakeRestore(_calls), add ?? new FakePackageAdd(_calls), new[] { _tempDirectory },
+            new FakeThemes(), new FakeRestore(_calls), add ?? new FakePackageAdd(_calls), new[] { _tempDirectory, FindRepoRoot() },
             codegen ?? new FakeCodegen(_calls));
 
     private (NewProjectService Service, ResolvedNewProject Resolved, NewProjectFilesResult Files) Create(
@@ -51,6 +51,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
             IncludeRecommendedPackages = packages,
             GenerateCode = generate,
             Restore = false,
+            SourceLinked = platform == HostPlatform.KniSkia,
         });
         validation.Error.ShouldBeNull(validation.Error?.Message);
         NewProjectFilesResult files = service.CreateFilesAsync(validation.Resolved!, CancellationToken.None).GetAwaiter().GetResult();

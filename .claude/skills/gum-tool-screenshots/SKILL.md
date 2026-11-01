@@ -7,6 +7,8 @@ description: Screenshots of the Gum tool (Avalonia head) to check or show a UI c
 
 Pick the route by what has to be on screen. Load this before the first attempt.
 
+A `PrScreenshot` shows the real window, or the real panel inside the real theme and background, never a bare control in an isolated window: the colors then differ from the tool and read as a regression. `Screenshots/StandardsPaletteScreenshotTests.cs` is the pattern (the real `MainWindow`, canvas hidden, both themes).
+
 | To see | Use |
 |---|---|
 | A tab, row, dialog or control | The headless harness and `PrScreenshot` (`Tests/Gum.Avalonia.Tests/Harness/README.md`, "PR screenshots"). `Screenshots/ShaderDropdownScreenshotTests.cs` types into the filter box. Run with `GUM_SCREENSHOT_DIR=<folder>`. |

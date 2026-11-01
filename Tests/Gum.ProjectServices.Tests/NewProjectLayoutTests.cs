@@ -53,7 +53,8 @@ public class NewProjectLayoutTests : BaseTestClass
         NewProjectResult result = await CreateService().ExecuteAsync(
             new NewProjectRequest
             {
-                Path = root, Platform = platform, Template = template, Theme = theme, Restore = false, UseXmlFormat = xml
+                Path = root, Platform = platform, Template = template, Theme = theme, Restore = false, UseXmlFormat = xml,
+                SourceLinked = platform == "kniskia"
             },
             null, CancellationToken.None);
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);

@@ -30,8 +30,9 @@ public class NewProjectRequest
 
     /// <summary>
     /// Also add the NuGet add-ons the setup docs recommend for the platform (<see cref="RecommendedPackages"/>) to the code
-    /// project, before the restore. Needs a platform and the NuGet Gum runtime (not <see cref="SourceLinked"/>). The command line is
-    /// <c>gumcli new ... &amp;&amp; dotnet add "&lt;csproj&gt;" package ...</c>; <c>gumcli new</c> itself has no option for it.
+    /// project, before the restore. Needs a platform. With <see cref="SourceLinked"/> the add-ons are linked as projects of the checkout
+    /// (<see cref="RecommendedPackages.ForSourceLinked"/>) while the files are written. The command line is
+    /// <c>gumcli new ... &amp;&amp; dotnet add "&lt;csproj&gt;" package ...</c> (<c>reference</c> when source-linked); <c>gumcli new</c> itself has no option for it.
     /// </summary>
     public bool IncludeRecommendedPackages { get; init; }
 

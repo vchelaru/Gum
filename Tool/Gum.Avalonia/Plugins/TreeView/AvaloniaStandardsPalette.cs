@@ -24,7 +24,7 @@ public sealed class AvaloniaStandardsPalette : Border
 {
     private const double TwoColumnMinWidth = 160;
 
-    /// <summary>Below this chip width the name is hidden and only the icon shows.</summary>
+    /// <summary>Below this chip width at the default zoom the name is hidden and only the icon shows; it grows with the base font size.</summary>
     public const double IconOnlyBelowWidth = 64;
     private const double ChipIconSize = 14;
     private const double DragThreshold = 4;
@@ -62,25 +62,27 @@ public sealed class AvaloniaStandardsPalette : Border
         Margin = new Thickness(0, 4, 0, 0);
 
         WrapPanel header = new WrapPanel { Margin = new Thickness(2, 0, 2, 6) };
-        header.Children.Add(new TextBlock
+        TextBlock title = new TextBlock
         {
             Text = "STANDARDS",
-            FontSize = 10.5,
             FontWeight = FontWeight.SemiBold,
             Margin = new Thickness(0, 0, 8, 0),
             VerticalAlignment = VerticalAlignment.Center,
-        });
-        header.Children.Add(new TextBlock
+        };
+        AvaloniaTreeIcons.FollowBaseFontSize(title, TextBlock.FontSizeProperty, 10.5);
+        TextBlock hint = new TextBlock
         {
             Text = "click or drag to add",
-            FontSize = 10,
             FontStyle = FontStyle.Italic,
             Opacity = 0.6,
             VerticalAlignment = VerticalAlignment.Center,
-        });
+        };
+        AvaloniaTreeIcons.FollowBaseFontSize(hint, TextBlock.FontSizeProperty, 10);
+        header.Children.Add(title);
+        header.Children.Add(hint);
 
         _chipsPanel = new UniformGrid { Columns = 2 };
-        _chipsPanel.SizeChanged += (_, e) => _chipsPanel.Columns = e.NewSize.Width >= TwoColumnMinWidth ? 2 : 1;
+        _chipsPanel.SizeChanged += (_, e) => _chipsPanel.Columns = e.NewSize.Width >= TwoColumnMinWidth * AvaloniaTreeIcons.GetZoomScale(this) ? 2 : 1;
 
         StackPanel root = new StackPanel();
         root.Children.Add(header);
@@ -127,11 +129,11 @@ public sealed class AvaloniaStandardsPalette : Border
 
     private Border CreateChip(string typeName)
     {
-        // The chip text is a fixed size, so its icon stays fixed with it.
+        // The icon and the text both follow the base font size.
         // The name takes what is left beside the icon, trimmed rather than drawn past the chip's edge
         // (#4694), and goes altogether once the chip is too narrow to show more than the icon.
         Grid content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
-        if (AvaloniaTreeIcons.CreateIcon(typeName + ".png", ChipIconSize, followZoom: false) is { } icon)
+        if (AvaloniaTreeIcons.CreateIcon(typeName + ".png", ChipIconSize) is { } icon)
         {
             icon.Margin = new Thickness(0, 0, 6, 0);
             content.Children.Add(icon);
@@ -139,10 +141,10 @@ public sealed class AvaloniaStandardsPalette : Border
         TextBlock name = new TextBlock
         {
             Text = typeName,
-            FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(name, TextBlock.FontSizeProperty, 12);
         Grid.SetColumn(name, 1);
         content.Children.Add(name);
 
@@ -157,7 +159,7 @@ public sealed class AvaloniaStandardsPalette : Border
             ClipToBounds = true,
             Child = content,
         };
-        chip.SizeChanged += (_, e) => name.IsVisible = e.NewSize.Width >= IconOnlyBelowWidth;
+        chip.SizeChanged += (_, e) => name.IsVisible = e.NewSize.Width >= IconOnlyBelowWidth * AvaloniaTreeIcons.GetZoomScale(this);
         ToolTip.SetTip(chip, $"Click to add a {typeName} to the current Screen/Component (inside the selected container, if any).\nDrag onto a Screen/Component or the canvas to add it there.\nRight-click for more options.");
         chip.PointerEntered += (_, _) => chip.BorderBrush = PrimaryBrush;
         chip.PointerExited += (_, _) => ApplySelectionVisual(chip, _selectedTypeName == typeName);
