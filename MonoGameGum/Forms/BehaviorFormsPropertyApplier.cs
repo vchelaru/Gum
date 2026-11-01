@@ -168,13 +168,15 @@ internal static class BehaviorFormsPropertyApplier
             // A removed variable with no behavior default: back to what the control held before the project wrote it.
             try
             {
-                if (initial.TryGetValue(name, out object? original))
-                {
-                    prop.SetValue(formsControl, original);
-                }
-                else if (!prop.PropertyType.IsValueType || Nullable.GetUnderlyingType(prop.PropertyType) != null)
+                // A reference or nullable property holds null until a project writes it; the snapshot may already
+                // hold the component's value when the control was created after the variable was applied.
+                if (!prop.PropertyType.IsValueType || Nullable.GetUnderlyingType(prop.PropertyType) != null)
                 {
                     prop.SetValue(formsControl, null);
+                }
+                else if (initial.TryGetValue(name, out object? original))
+                {
+                    prop.SetValue(formsControl, original);
                 }
             }
             catch (Exception)
@@ -255,7 +257,18 @@ internal static class BehaviorFormsPropertyApplier
                 return overrideValue;
             }
         }
-        return own.DefaultState == null ? null : new RecursiveVariableFinder(own.DefaultState).GetValue(propertyName);
+        // A plain lookup, as a Forms property is not a variable of the standard element the finder knows.
+        ElementSave? current = own;
+        while (current != null)
+        {
+            object? value = current.DefaultState?.GetValue(propertyName);
+            if (value != null)
+            {
+                return value;
+            }
+            current = string.IsNullOrEmpty(current.BaseType) ? null : ObjectFinder.Self.GetBaseElement(current);
+        }
+        return null;
     }
 
     private static object? ReadEffectiveValue(GraphicalUiElement visual, ElementSave elementSave, string propertyName)
@@ -276,7 +289,8 @@ internal static class BehaviorFormsPropertyApplier
             }
         }
 
-        return new RecursiveVariableFinder(elementSave.DefaultState!).GetValue(propertyName);
+        return new RecursiveVariableFinder(elementSave.DefaultState!).GetValue(propertyName)
+            ?? Effective(visual, null, elementSave, propertyName);
     }
 
     private static object? ReadAuthoredOverride(GraphicalUiElement visual, string propertyName)

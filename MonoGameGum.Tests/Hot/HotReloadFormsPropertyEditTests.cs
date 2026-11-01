@@ -218,4 +218,20 @@ public class HotReloadFormsPropertyEditTests : BaseTestClass
         box.CaretIndex.ShouldBe(6);
         box.SelectionLength.ShouldBe(3);
     }
+
+    [Fact]
+    public void Load_ComponentDefaultSetsMaxLengthAndMaxLettersToShow_DoesNotThrowAndAppliesThem()
+    {
+        GumProjectSave project = HotReloadTextBoxProjects.Build(
+            componentEdits: s =>
+            {
+                HotReloadTextBoxProjects.Set(s, "MaxLength", "int?", 7);
+                HotReloadTextBoxProjects.Set(s, "MaxLettersToShow", "int?", 5);
+            });
+
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(project);
+
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+        box.MaxLength.ShouldBe(7);
+    }
 }
