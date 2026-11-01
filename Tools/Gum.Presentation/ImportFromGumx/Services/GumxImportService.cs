@@ -6,6 +6,7 @@ using Gum.DataTypes.Serialization.Json;
 using Gum.StateAnimation.SaveClasses;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
+using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.ProjectServices;
@@ -93,11 +94,24 @@ public class GumxImportService : IGumxImportService
         }
     }
 
-    private static readonly HashSet<string> _assetExtensions =
-        new(
-            new[] { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".achx", ".achj", ".fnt" }
-                .Concat(global::RenderingLibrary.Graphics.Fonts.BmfcSave.FontFileExtensions),
-            StringComparer.OrdinalIgnoreCase);
+    /// <summary>
+    /// Whether a variable value names a file the import copies: the tool's own Source File formats
+    /// (<see cref="ImageFileExtensions.AllSourceFileFormats"/>), font files, bitmap font (.fnt) and tga.
+    /// </summary>
+    private static bool IsAssetPath(string value)
+    {
+        string extension = Path.GetExtension(value);
+        if (extension.Length == 0)
+        {
+            return false;
+        }
+
+        string bare = extension.TrimStart('.');
+        return ImageFileExtensions.AllSourceFileFormats.Contains(bare, StringComparer.OrdinalIgnoreCase)
+            || bare.Equals("tga", StringComparison.OrdinalIgnoreCase)
+            || bare.Equals("fnt", StringComparison.OrdinalIgnoreCase)
+            || global::RenderingLibrary.Graphics.Fonts.BmfcSave.FontFileExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <inheritdoc/>
     public async Task<ImportResult> ImportAsync(
@@ -325,7 +339,7 @@ public class GumxImportService : IGumxImportService
                 {
                     if (variable.Value is string stringValue && !string.IsNullOrEmpty(stringValue))
                     {
-                        if (_assetExtensions.Contains(Path.GetExtension(stringValue))
+                        if (IsAssetPath(stringValue)
                             && !IsFontCachePath(stringValue)
                             && seen.Add(stringValue))
                         {
