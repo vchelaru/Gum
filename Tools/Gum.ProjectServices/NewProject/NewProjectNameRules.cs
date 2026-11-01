@@ -2,14 +2,22 @@ using System;
 using System.Linq;
 using System.Text;
 
-namespace Gum.Dialogs;
+namespace Gum.ProjectServices;
 
 /// <summary>
 /// What a project name may be. The same on every operating system, because a project made on one is opened on
 /// another: the characters Windows forbids, control characters, a trailing dot or space, and the Windows device names.
+/// The one validator behind the New Project dialog, <see cref="NewProjectService"/> and <c>gumcli new</c>.
 /// </summary>
 public static class NewProjectNameRules
 {
+    /// <summary>Shown when <see cref="IsValidFolderName"/> is false. Says what to change.</summary>
+    public const string InvalidFolderNameMessage =
+        "The name can't be a folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and Windows device names such as CON, NUL or COM1.";
+
+    /// <summary>Shown when <see cref="IsTooLong"/> is true.</summary>
+    public const string NameTooLongMessage = "The name is too long.";
+
     private const string ForbiddenCharacters = "<>:\"/\\|?*";
 
     private static readonly string[] ReservedNames =
@@ -31,6 +39,19 @@ public static class NewProjectNameRules
     {
         int extensionLength = includeCodeProject ? CsprojExtensionLength : GumExtensionLength;
         return Encoding.UTF8.GetByteCount(name) + extensionLength > MaxFileNameBytes;
+    }
+
+    /// <summary>
+    /// The message for the first rule <paramref name="name"/> (already trimmed, not empty) breaks, or <see langword="null"/>
+    /// when it can name the project.
+    /// </summary>
+    public static string? GetProblem(string name, bool includeCodeProject)
+    {
+        if (!IsValidFolderName(name))
+        {
+            return InvalidFolderNameMessage;
+        }
+        return IsTooLong(name, includeCodeProject) ? NameTooLongMessage : null;
     }
 
     /// <summary>Whether <paramref name="name"/> (already trimmed) can name the project folder and file on every OS.</summary>

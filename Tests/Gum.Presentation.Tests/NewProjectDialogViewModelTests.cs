@@ -314,9 +314,9 @@ public class NewProjectDialogViewModelTests
     [InlineData("My Game", true, "Not a valid C# name.")]
     [InlineData("1Game", true, "Not a valid C# name.")]
     [InlineData("My_Game2", true, "")]
-    [InlineData("a|b", false, "The name has characters a folder name can't have.")]
-    [InlineData("CON", false, "The name has characters a folder name can't have.")]
-    [InlineData("a.", false, "The name has characters a folder name can't have.")]
+    [InlineData("a|b", false, "The name can't be a folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and Windows device names such as CON, NUL or COM1.")]
+    [InlineData("CON", false, "The name can't be a folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and Windows device names such as CON, NUL or COM1.")]
+    [InlineData("a.", false, "The name can't be a folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and Windows device names such as CON, NUL or COM1.")]
     public void ValidationMessage_FollowsTheNameRules(string name, bool codeProject, string expected)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>

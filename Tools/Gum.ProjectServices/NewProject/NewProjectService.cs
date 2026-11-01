@@ -130,6 +130,15 @@ public class NewProjectService : INewProjectService
                 $"'{request.Path}' has no folder name to name the project after. Give a folder or project name.");
         }
 
+        // The folder name as typed: the full path drops a trailing dot or space on Windows, which hides it from the rules.
+        string typedName = GetTypedName(request.Path) ?? targets.Name;
+        string? nameProblem = NewProjectNameRules.GetProblem(typedName, includeCodeProject: options.Platform != null)
+            ?? NewProjectNameRules.GetProblem(targets.Name, includeCodeProject: options.Platform != null);
+        if (nameProblem != null)
+        {
+            return Fail(NewProjectErrorKind.InvalidProjectName, nameProblem);
+        }
+
         if (options.Platform == null)
         {
             // Either format counts: a .gumx beside a new .gumj would leave two Gum projects in one folder.
@@ -278,6 +287,18 @@ public class NewProjectService : INewProjectService
         }
 
         return request.UseXmlFormat ? GumProjectSave.ProjectExtension : GumProjectSave.ProjectJsonExtension;
+    }
+
+    // The last segment of a path that names a project folder, or null when it names a project file or has no usable segment.
+    private static string? GetTypedName(string? path)
+    {
+        if (string.IsNullOrEmpty(path) || GumProjectSave.IsProjectFile(path))
+        {
+            return null;
+        }
+        string segment = path.TrimEnd('/', '\\');
+        segment = segment.Substring(segment.LastIndexOfAny(new[] { '/', '\\' }) + 1);
+        return segment.Length == 0 || segment == "." || segment == ".." ? null : segment;
     }
 
     // The one place the path rules live, for both the Gum-only and the platform layout.
@@ -550,14 +571,20 @@ public class NewProjectService : INewProjectService
         }
 
         // After the restore: the code generator reads the restored runtime package to choose the syntax it emits.
+        // Without the restore there is no package to read, so it is skipped, as the dialog says (CodegenSkipped).
         GenerateCodeResult? codegen = null;
-        if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate)
+        bool codegenSkipped = false;
+        if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate && !request.Restore)
+        {
+            codegenSkipped = true;
+        }
+        else if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate)
         {
             progress?.Report(new NewProjectProgress(NewProjectStep.GeneratingCode, "Generating code..."));
             codegen = await GenerateCodeAsync(validation.Resolved, files, null, cancellationToken);
         }
 
-        return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore, Codegen = codegen };
+        return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore, Codegen = codegen, CodegenSkipped = codegenSkipped };
     }
 
     #endregion

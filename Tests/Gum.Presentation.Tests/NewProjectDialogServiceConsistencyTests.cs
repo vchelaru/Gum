@@ -103,7 +103,7 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
             ResolvedNewProject resolved = _service.LastResolved.ShouldNotBeNull(label);
             (resolved.Platform != null).ShouldBe(code, label);
             (resolved.GumSourceDirectory != null).ShouldBe(code && viewModel.SourceLinked, label);
-            (resolved.RecommendedPackages.Count > 0).ShouldBe(viewModel.AddsRecommendedPackages, label);
+            (resolved.RecommendedPackages.Count + resolved.LinkedAddOns.Count > 0).ShouldBe(viewModel.AddsRecommendedPackages, label);
             resolved.GenerateCode.ShouldBe(code && viewModel.GeneratesCode, label);
             resolved.IncludeFormsTemplate.ShouldBe(forms, label);
             if (viewModel.AddsRecommendedPackages)
@@ -122,7 +122,7 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
     }
 
     [Fact]
-    public void SourceLinked_WithPackagesTicked_ShowsTheBoxUntickedAndDisabled_WithTheReason()
+    public void SourceLinked_WithPackagesTicked_ShowsTheBoxTickedAndEnabled_LinkingTheAddOns()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -133,11 +133,10 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
         });
 
         viewModel.SourceLinked.ShouldBeTrue();
-        viewModel.IsRecommendedPackagesEnabled.ShouldBeFalse();
-        viewModel.RecommendedPackagesChecked.ShouldBeFalse();
-        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesDisabledNote);
+        viewModel.IsRecommendedPackagesEnabled.ShouldBeTrue();
+        viewModel.RecommendedPackagesChecked.ShouldBeTrue();
+        viewModel.RecommendedPackagesNote.ShouldNotBe(NewProjectDialogText.RecommendedPackagesDisabledNote);
         viewModel.CommandLine.ShouldContain("--source-linked");
-        viewModel.CommandLine.ShouldNotContain("dotnet add");
     }
 
     [Fact]
@@ -205,6 +204,23 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
         viewModel.ErrorMessage.ShouldBe(string.Empty);
         _service.LastResolved.ShouldNotBeNull();
         _service.LastResolved!.GumProjectPath.ShouldEndWith(name + ".gumj");
+    }
+
+    [Theory]
+    [InlineData("CON")]
+    [InlineData("com1")]
+    [InlineData("Aux.txt")]
+    [InlineData("a.")]
+    [InlineData("a|b")]
+    public void AFolderNameTheDialogRefuses_IsRefusedByTheServiceWithTheSameMessage(string name)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = name);
+
+        NewProjectValidation validation = _service.Validate(new NewProjectRequest { Path = Path.Combine(_folder, name) });
+
+        viewModel.ValidationMessage.ShouldNotBeEmpty();
+        validation.Resolved.ShouldBeNull();
+        validation.Error!.Message.ShouldBe(viewModel.ValidationMessage);
     }
 
     [Fact]

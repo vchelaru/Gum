@@ -1008,13 +1008,10 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             return NewProjectDialogText.EnterName;
         }
-        if (!NewProjectNameRules.IsValidFolderName(name))
+        string? nameProblem = NewProjectNameRules.GetProblem(name, IncludeCodeProject);
+        if (nameProblem != null)
         {
-            return NewProjectDialogText.InvalidFolderName;
-        }
-        if (NewProjectNameRules.IsTooLong(name, IncludeCodeProject))
-        {
-            return NewProjectDialogText.NameTooLong;
+            return nameProblem;
         }
         if (IncludeCodeProject && !_identifier.IsMatch(name))
         {
