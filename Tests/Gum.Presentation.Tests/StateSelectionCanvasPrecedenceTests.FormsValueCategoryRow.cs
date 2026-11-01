@@ -14,7 +14,7 @@ namespace Gum.Presentation.Tests;
 /// Forms value is authored or unset (#6908). A Default reference row on the name sets the final value. A Forms
 /// value left unset shows what Default stores: its own value until the tool materializes the Forms default.
 /// </summary>
-public partial class StateSelectionCanvasSplashTests
+public partial class StateSelectionCanvasPrecedenceTests
 {
     private const float FormsWidth = 77f;
     private const float FormsDefaultWidth = 10f;

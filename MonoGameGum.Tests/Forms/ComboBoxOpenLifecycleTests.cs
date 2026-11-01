@@ -9,11 +9,11 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// Splash-damage sweep (#6644): what happens to an open ComboBox drop-down when the ComboBox is
+/// What happens to an open ComboBox drop-down when the ComboBox is
 /// hidden, rooted elsewhere, or opened before it is in the tree. The popup hiding
 /// when an ancestor is hidden is a separate known bug (#6681) and replacing the ListBox or Visual while open is #6684; neither is covered here.
 /// </summary>
-public class ComboBoxOpenLifecycleSplashTests : BaseTestClass
+public class ComboBoxOpenLifecycleTests : BaseTestClass
 {
     private static ComboBox CreateComboBox(params string[] items)
     {

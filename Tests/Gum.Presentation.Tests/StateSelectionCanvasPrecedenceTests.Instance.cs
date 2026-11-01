@@ -15,7 +15,7 @@ namespace Gum.Presentation.Tests;
 /// materializes a Forms variable into the instance's category state with
 /// <see cref="BehaviorToolOnlyReferencesApplier"/> after every edit, so these tests run it the same way.
 /// </summary>
-public partial class StateSelectionCanvasSplashTests
+public partial class StateSelectionCanvasPrecedenceTests
 {
     #region Instance of a Button inside a screen
 

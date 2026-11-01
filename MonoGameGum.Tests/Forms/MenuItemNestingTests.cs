@@ -9,10 +9,10 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// Splash-damage sweep over the MenuItem/Menu popup (#6685, #6691): submenus nested one to three
+/// The MenuItem/Menu popup: submenus nested one to three
 /// levels deep, how they stack, close together and stay on the canvas.
 /// </summary>
-public class MenuItemNestingSplashTests : BaseTestClass
+public class MenuItemNestingTests : BaseTestClass
 {
     #region Helpers
 

@@ -17,11 +17,11 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// Splash-damage sweep (#6644) around the open ComboBox drop-down following its ComboBox: the cases
+/// Covers the open ComboBox drop-down following its ComboBox: the cases
 /// the pinned tests in ComboBoxTests do not cover (resize, open/close cycles, edges, input and focus
 /// after a re-placement, tree changes while open, idle gating).
 /// </summary>
-public class ComboBoxFollowSplashTests : BaseTestClass
+public class ComboBoxPopupFollowTests : BaseTestClass
 {
     #region Helpers
 

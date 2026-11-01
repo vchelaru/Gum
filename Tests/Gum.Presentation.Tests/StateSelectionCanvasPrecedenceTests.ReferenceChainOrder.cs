@@ -7,7 +7,7 @@ using static Gum.Presentation.Tests.StateSelectionCanvasHarness;
 
 namespace Gum.Presentation.Tests;
 
-public partial class StateSelectionCanvasSplashTests
+public partial class StateSelectionCanvasPrecedenceTests
 {
     /// <summary>Discriminator for the chain case: the default state's chain, written in reverse order, on the default selection.</summary>
     [Fact]

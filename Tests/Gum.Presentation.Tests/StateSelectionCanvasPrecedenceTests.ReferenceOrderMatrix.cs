@@ -12,7 +12,7 @@ namespace Gum.Presentation.Tests;
 /// #6856: the canvas evaluates a reference row only after every row it reads has been evaluated, whatever
 /// order the rows are written in, in which state they sit and which list or instance owns them.
 /// </summary>
-public partial class StateSelectionCanvasSplashTests
+public partial class StateSelectionCanvasPrecedenceTests
 {
     #region Hand-computed chains
 
