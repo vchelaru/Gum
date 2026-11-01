@@ -553,6 +553,72 @@ public class ArcRuntime : GraphicalUiElement
         }
     }
 
+    /// <inheritdoc cref="LineArc.GradientX1Units"/>
+    public Gum.Converters.GeneralUnitType GradientX1Units
+    {
+        get => ContainedLineArc.GradientX1Units;
+        set
+        {
+            ContainedLineArc.GradientX1Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientY1Units"/>
+    public Gum.Converters.GeneralUnitType GradientY1Units
+    {
+        get => ContainedLineArc.GradientY1Units;
+        set
+        {
+            ContainedLineArc.GradientY1Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientX2Units"/>
+    public Gum.Converters.GeneralUnitType GradientX2Units
+    {
+        get => ContainedLineArc.GradientX2Units;
+        set
+        {
+            ContainedLineArc.GradientX2Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientY2Units"/>
+    public Gum.Converters.GeneralUnitType GradientY2Units
+    {
+        get => ContainedLineArc.GradientY2Units;
+        set
+        {
+            ContainedLineArc.GradientY2Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientInnerRadiusUnits"/>
+    public DimensionUnitType GradientInnerRadiusUnits
+    {
+        get => ContainedLineArc.GradientInnerRadiusUnits;
+        set
+        {
+            ContainedLineArc.GradientInnerRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientOuterRadiusUnits"/>
+    public DimensionUnitType GradientOuterRadiusUnits
+    {
+        get => ContainedLineArc.GradientOuterRadiusUnits;
+        set
+        {
+            ContainedLineArc.GradientOuterRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     /// <summary>
     /// Initializes a new raylib <c>ArcRuntime</c>. Constructor defaults mirror the Skia/Apos
     /// branch so cross-backend sample code starts from the same baseline (Width = Height = 100,

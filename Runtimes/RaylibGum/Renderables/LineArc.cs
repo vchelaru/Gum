@@ -1,3 +1,5 @@
+using Gum.Converters;
+using Gum.DataTypes;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System.Numerics;
@@ -139,6 +141,42 @@ public class LineArc : InvisibleRenderable
     /// <inheritdoc cref="LineCircle.GradientOuterRadius"/>
     public float GradientOuterRadius { get; set; }
 
+    /// <summary>Unit of <see cref="GradientX1"/>, resolved against the arc's width. Matches Skia.</summary>
+    public GeneralUnitType GradientX1Units { get; set; }
+
+    /// <summary>Unit of <see cref="GradientY1"/>, resolved against the arc's height.</summary>
+    public GeneralUnitType GradientY1Units { get; set; }
+
+    /// <summary>Unit of <see cref="GradientX2"/>, resolved against the arc's width.</summary>
+    public GeneralUnitType GradientX2Units { get; set; }
+
+    /// <summary>Unit of <see cref="GradientY2"/>, resolved against the arc's height.</summary>
+    public GeneralUnitType GradientY2Units { get; set; }
+
+    /// <summary>Unit of <see cref="GradientInnerRadius"/>, resolved against the arc's width.</summary>
+    public DimensionUnitType GradientInnerRadiusUnits { get; set; }
+
+    /// <summary>Unit of <see cref="GradientOuterRadius"/>, resolved against the arc's width.</summary>
+    public DimensionUnitType GradientOuterRadiusUnits { get; set; }
+
+    /// <summary><see cref="GradientX1"/> in bbox-local pixels after applying <see cref="GradientX1Units"/>.</summary>
+    public float EffectiveGradientX1 => GradientUnitResolver.ResolveEndpoint(GradientX1, GradientX1Units, Width);
+
+    /// <summary><see cref="GradientY1"/> in bbox-local pixels after applying <see cref="GradientY1Units"/>.</summary>
+    public float EffectiveGradientY1 => GradientUnitResolver.ResolveEndpoint(GradientY1, GradientY1Units, Height);
+
+    /// <summary><see cref="GradientX2"/> in bbox-local pixels after applying <see cref="GradientX2Units"/>.</summary>
+    public float EffectiveGradientX2 => GradientUnitResolver.ResolveEndpoint(GradientX2, GradientX2Units, Width);
+
+    /// <summary><see cref="GradientY2"/> in bbox-local pixels after applying <see cref="GradientY2Units"/>.</summary>
+    public float EffectiveGradientY2 => GradientUnitResolver.ResolveEndpoint(GradientY2, GradientY2Units, Height);
+
+    /// <summary><see cref="GradientInnerRadius"/> in pixels after applying <see cref="GradientInnerRadiusUnits"/>.</summary>
+    public float EffectiveGradientInnerRadius => GradientUnitResolver.ResolveRadius(GradientInnerRadius, GradientInnerRadiusUnits, Width);
+
+    /// <summary><see cref="GradientOuterRadius"/> in pixels after applying <see cref="GradientOuterRadiusUnits"/>.</summary>
+    public float EffectiveGradientOuterRadius => GradientUnitResolver.ResolveRadius(GradientOuterRadius, GradientOuterRadiusUnits, Width);
+
     /// <summary>
     /// Issue #3454 — true when the gradient pass should paint. The arc is stroke-only (no fill
     /// slot), so unlike <see cref="LineCircle.ShouldPaintFillGradient"/> this gates only on
@@ -153,19 +191,23 @@ public class LineArc : InvisibleRenderable
     /// (Radius, Radius) so non-square bounds rotate correctly.</remarks>
     public (float x1, float y1, float x2, float y2) GetRotatedGradientEndpoints(float rotationDegrees)
     {
+        float x1 = EffectiveGradientX1;
+        float y1 = EffectiveGradientY1;
+        float x2 = EffectiveGradientX2;
+        float y2 = EffectiveGradientY2;
         if (rotationDegrees == 0f)
         {
-            return (GradientX1, GradientY1, GradientX2, GradientY2);
+            return (x1, y1, x2, y2);
         }
         float rotRad = rotationDegrees * System.MathF.PI / 180f;
         float cos = System.MathF.Cos(rotRad);
         float sin = System.MathF.Sin(rotRad);
         float pivotX = Width * 0.5f;
         float pivotY = Height * 0.5f;
-        float dx1 = GradientX1 - pivotX;
-        float dy1 = GradientY1 - pivotY;
-        float dx2 = GradientX2 - pivotX;
-        float dy2 = GradientY2 - pivotY;
+        float dx1 = x1 - pivotX;
+        float dy1 = y1 - pivotY;
+        float dx2 = x2 - pivotX;
+        float dy2 = y2 - pivotY;
         return (
             pivotX + dx1 * cos + dy1 * sin,
             pivotY - dx1 * sin + dy1 * cos,
@@ -560,13 +602,15 @@ public class LineArc : InvisibleRenderable
             float dx = localX - gx1;
             float dy = localY - gy1;
             float dist = System.MathF.Sqrt(dx * dx + dy * dy);
-            float outer = GradientOuterRadius > 0f ? GradientOuterRadius : outerRadius;
-            float span = outer - GradientInnerRadius;
+            float effectiveOuter = EffectiveGradientOuterRadius;
+            float effectiveInner = EffectiveGradientInnerRadius;
+            float outer = effectiveOuter > 0f ? effectiveOuter : outerRadius;
+            float span = outer - effectiveInner;
             if (span <= 0f)
             {
                 return Color2;
             }
-            t = (dist - GradientInnerRadius) / span;
+            t = (dist - effectiveInner) / span;
         }
         if (t < 0f) t = 0f;
         else if (t > 1f) t = 1f;
