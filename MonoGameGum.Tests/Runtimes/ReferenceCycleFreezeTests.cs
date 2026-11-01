@@ -404,7 +404,7 @@ public class ReferenceCycleFreezeTests : BaseTestClass
             GumExpressionService.Initialize();
         }
         GumProjectSave project = CreateProject();
-        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new Gum.GueDeriving.TextRuntime());
+        StandardRuntimeRegistrations.Register();
         ComponentSave label = new ComponentSave { Name = "Label", BaseType = "Text" };
         label.States.Add(new StateSave { Name = "Default", ParentContainer = label });
         label.Instances.Add(new InstanceSave { Name = "Shadow", BaseType = "Text", ParentContainer = label });

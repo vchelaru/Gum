@@ -60,7 +60,7 @@ public partial class VariableReferenceCreationTests : BaseTestClass
             project.StandardElements.Add(standardElement);
         }
         ObjectFinder.Self.GumProjectSave = project;
-        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new TextRuntime());
+        StandardRuntimeRegistrations.Register();
         return project;
     }
 
