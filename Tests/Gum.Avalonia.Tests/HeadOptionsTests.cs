@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Gum.CommandLine;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -36,7 +37,7 @@ public class HeadOptionsTests
         {
             string path = Path.Combine(folder, name);
             HeadOptions.Parse(new[] { "--exit-after", "60", path, "--select", "A/B" }).StartupFileError
-                .ShouldBe("The project file does not exist: " + path);
+                .ShouldBe("The file does not exist: " + path);
         }
     }
 
@@ -68,5 +69,35 @@ public class HeadOptionsTests
     {
         HeadOptions.Parse(new[] { Path.GetTempPath() }).StartupFileError.ShouldBe(Path.GetTempPath() + " is not a Gum project file");
         HeadOptions.Parse(new[] { "run.ps1", "--exit-after", "5" }).StartupFileError.ShouldBe("run.ps1 is not a Gum project file");
+    }
+
+    [Fact]
+    public void StartupFileError_ReadsTheValuesOfKnownFlagsAsValues()
+    {
+        string[] commandLine =
+        {
+            "--exit-after", "60", "--screenshot", "out.png", "--select", "Screens/Main#Label", "--theme", "light",
+            "--user-data", "run data", "--zoom-to-fit",
+        };
+
+        HeadOptions.Parse(commandLine).StartupFileError.ShouldBeNull();
+    }
+
+    [Fact]
+    public void StartupFileError_IgnoresUnknownFlagsAndTheirValues()
+    {
+        HeadOptions.Parse(new[] { "--exit-after", "5", "-v", "--parent-pid", "5", "--content-root", "folder", "--focus", "Foo" })
+            .StartupFileError.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryResolveStartupFile_WithAnElementFileInAMissingFolder_FindsNoProject()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "no-such-folder-7374", "Components", "Foo.gucx");
+
+        CommandLineManager.TryResolveStartupFile(path, out string? project, out string? elementName).ShouldBeTrue();
+
+        project.ShouldBeNull();
+        elementName.ShouldBe("Foo");
     }
 }

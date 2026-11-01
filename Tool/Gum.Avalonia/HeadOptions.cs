@@ -86,8 +86,11 @@ public sealed class HeadOptions
         string? userData = null;
         bool zoomToFit = false;
         List<string> positionals = new List<string>();
+        bool followsUnknownFlag = false;
         for (int i = 0; i < args.Count; i++)
         {
+            bool isValueOfUnknownFlag = followsUnknownFlag;
+            followsUnknownFlag = false;
             if (args[i] == "--exit-after" && i + 1 < args.Count)
             {
                 exitAfter = double.Parse(args[++i], CultureInfo.InvariantCulture);
@@ -112,7 +115,12 @@ public sealed class HeadOptions
             {
                 userData = Path.GetFullPath(args[++i]);
             }
-            else if (!args[i].StartsWith("--"))
+            else if (args[i].StartsWith("-"))
+            {
+                // Not ours; the next argument may be its value (--project x, --parent-pid 5), which is not a startup file.
+                followsUnknownFlag = true;
+            }
+            else if (!isValueOfUnknownFlag || CommandLineManager.TryResolveStartupFile(args[i], out _, out _))
             {
                 positionals.Add(args[i]);
             }
@@ -138,7 +146,7 @@ public sealed class HeadOptions
 
         if (lastStartupFile != null && !File.Exists(lastStartupFile))
         {
-            return "The project file does not exist: " + lastStartupFile;
+            return "The file does not exist: " + lastStartupFile;
         }
 
         return null;
