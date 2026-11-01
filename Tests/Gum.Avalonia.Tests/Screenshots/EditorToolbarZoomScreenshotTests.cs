@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Gum.Services;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -37,5 +38,34 @@ public class EditorToolbarZoomScreenshotTests
         Dispatcher.UIThread.RunJobs();
 
         PrScreenshot.SaveWindowAtZoomLevels(window, name);
+        WriteDensity(window, name);
     });
+
+    // The strip's width and the share of it that is empty space (everything but its text), per zoom.
+    private static void WriteDensity(Window window, string name)
+    {
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        double originalSize = scale.BaseFontSize;
+        using IDisposable follower = AppWideWindowInput.FollowBaseFontSize(window, scale);
+        List<string> lines = new List<string>();
+        try
+        {
+            foreach (double size in PrScreenshot.ZoomLevels)
+            {
+                scale.BaseFontSize = size;
+                Dispatcher.UIThread.RunJobs();
+                StackPanel strip = window.GetVisualDescendants().OfType<StackPanel>()
+                    .First(panel => panel.Children.OfType<CheckBox>().Any());
+                double text = strip.GetVisualDescendants().OfType<TextBlock>().Where(block => block.IsEffectivelyVisible && !string.IsNullOrEmpty(block.Text))
+                    .Sum(block => block.Bounds.Width <= 0 ? 0 : block.DesiredSize.Width);
+                double width = strip.Children.Sum(child => child.Bounds.Width + child.Margin.Left + child.Margin.Right);
+                lines.Add($"zoom {size}: strip {width:F0}px, text {text:F0}px, gap/text {(width - text) / text:F2}");
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = originalSize;
+        }
+        File.WriteAllLines(Path.Combine(Environment.GetEnvironmentVariable("GUM_SCREENSHOT_DIR")!, name + "-density.txt"), lines);
+    }
 }

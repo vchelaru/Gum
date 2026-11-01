@@ -18,7 +18,7 @@ namespace Gum.Avalonia.Tests;
 public class EditorToolbarZoomTests
 {
     [AvaloniaFact]
-    public void Toolbar_WidthsFollowTheBaseFontSize()
+    public void Toolbar_SizesFollowTheBaseFontSize()
     {
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
         IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
@@ -31,18 +31,16 @@ public class EditorToolbarZoomTests
             window.Show();
             scale.BaseFontSize = 12;
             Dispatcher.UIThread.RunJobs();
-            List<double> atDefault = ScaledWidths(toolbar);
-            atDefault.ShouldContain(100);
-            atDefault.ShouldContain(180);
-            atDefault.ShouldContain(80);
+            List<double> atDefault = ScaledSizes(toolbar);
+            atDefault.Count.ShouldBeGreaterThan(8);
 
             scale.BaseFontSize = 24;
             Dispatcher.UIThread.RunJobs();
-            ScaledWidths(toolbar).ShouldBe(atDefault.Select(width => width * 2).ToList());
+            ScaledSizes(toolbar).ShouldBe(atDefault.Select(size => size * 2).ToList());
 
             scale.BaseFontSize = 9;
             Dispatcher.UIThread.RunJobs();
-            ScaledWidths(toolbar).ShouldBe(atDefault.Select(width => width * 0.75).ToList());
+            ScaledSizes(toolbar).ShouldBe(atDefault.Select(size => size * 0.75).ToList());
         }
         finally
         {
@@ -50,9 +48,13 @@ public class EditorToolbarZoomTests
         }
     }
 
-    private static List<double> ScaledWidths(EditorToolbar toolbar) => toolbar.GetVisualDescendants()
+    // Each strip item's width or minimum width (whichever the toolbar sets) plus its horizontal margin.
+    private static List<double> ScaledSizes(EditorToolbar toolbar) => toolbar.GetVisualDescendants()
         .OfType<StackPanel>().First().Children
-        .Select(control => control.Width)
-        .Where(width => !double.IsNaN(width))
+        .SelectMany(control => new[]
+        {
+            double.IsNaN(control.Width) ? control.MinWidth : control.Width,
+            control.Margin.Left + control.Margin.Right,
+        })
         .ToList();
 }
