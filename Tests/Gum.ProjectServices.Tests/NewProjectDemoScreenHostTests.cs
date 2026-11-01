@@ -273,7 +273,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutRestore_RunsCodegenAfterTheAdds()
+    public async Task ExecuteAsync_WithoutRestore_SkipsCodegen()
     {
         NewProjectService service = CreateService();
         await service.ExecuteAsync(
@@ -284,7 +284,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
             },
             progress: null, CancellationToken.None);
 
-        _calls.Select(call => call.Split(' ')[0]).ToArray().ShouldBe(new[] { "add", "add", "codegen" });
+        _calls.Select(call => call.Split(' ')[0]).ToArray().ShouldBe(new[] { "add", "add" });
     }
 
     [Fact]
@@ -294,7 +294,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
         NewProjectResult result = await service.ExecuteAsync(
             new NewProjectRequest
             {
-                Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", GenerateCode = true, Restore = false
+                Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", GenerateCode = true, Restore = true
             },
             progress: null, CancellationToken.None);
 

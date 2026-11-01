@@ -68,4 +68,22 @@ public class NewProjectFollowUpStepTests : NewProjectServiceTestBase
         result.Files.Success.ShouldBeFalse();
         Directory.Exists(Game()).ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task Execute_GenerateCodeWithoutRestore_RunsNoCodegen()
+    {
+        NewProjectResult result = await Run(Request("monogame", restore: false, generate: true));
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        result.Codegen.ShouldBeNull();
+        _calls.ShouldNotContain(call => call.StartsWith("codegen"), "The dialog says code generation needs the restore, so it is skipped.");
+    }
+
+    [Fact]
+    public async Task Execute_GenerateCodeWithRestore_RunsCodegen()
+    {
+        NewProjectResult result = await Run(Request("monogame", restore: true, generate: true));
+
+        result.Codegen.ShouldNotBeNull();
+    }
 }

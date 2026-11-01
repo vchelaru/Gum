@@ -37,6 +37,26 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void DeviceNameRefused(string theme) => Capture("device-name-refused", theme, (viewModel, _) => viewModel.ProjectName = "CON");
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void TrailingDotRefused(string theme) => Capture("trailing-dot-refused", theme, (viewModel, _) => viewModel.ProjectName = "Game.");
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void TooLongNameRefused(string theme) => Capture("too-long-name-refused", theme, (viewModel, _) => viewModel.ProjectName = new string('a', 260));
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void ForbiddenCharacterRefused(string theme) => Capture("forbidden-character-refused", theme, (viewModel, _) => viewModel.ProjectName = "Game<");
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void CodeProjectChecked(string theme) => Capture("code-project", theme, (viewModel, _) =>
     {
         viewModel.IncludeCodeProject = true;

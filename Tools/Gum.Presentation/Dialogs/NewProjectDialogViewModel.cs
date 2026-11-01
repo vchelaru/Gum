@@ -463,6 +463,20 @@ public class NewProjectDialogViewModel : DialogViewModel
         private set => Set(value);
     }
 
+    /// <summary>The name problem shown under the Project name box, or empty.</summary>
+    public string NameMessage
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    /// <summary>The validation message that is not about the name (shown beside OK), or empty.</summary>
+    public string BottomMessage
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
     /// <summary>The Gum project file the choices create.</summary>
     public string GumProjectPath
     {
@@ -1074,30 +1088,38 @@ public class NewProjectDialogViewModel : DialogViewModel
 
         PlatformNote = game && _platformNotes.TryGetValue(PlatformName, out string? note) ? note : string.Empty;
 
-        ValidationMessage = GetValidationMessage();
+        string nameMessage = GetNameMessage();
+        string otherMessage = nameMessage.Length > 0 ? string.Empty : GetOtherValidationMessage();
+        NameMessage = nameMessage;
+        BottomMessage = otherMessage;
+        ValidationMessage = nameMessage.Length > 0 ? nameMessage : otherMessage;
         RefreshWarnings();
         AffirmativeCommand.NotifyCanExecuteChanged();
     }
 
-    private string GetValidationMessage()
+    // The name's own problems, shown under the Project name box.
+    private string GetNameMessage()
     {
         string name = ProjectName.Trim();
         if (name.Length == 0)
         {
             return NewProjectDialogText.EnterName;
         }
-        if (!NewProjectNameRules.IsValidFolderName(name))
+        string? nameProblem = NewProjectNameRules.GetProblem(name, IncludeCodeProject);
+        if (nameProblem != null)
         {
-            return NewProjectDialogText.InvalidFolderName;
-        }
-        if (NewProjectNameRules.IsTooLong(name, IncludeCodeProject))
-        {
-            return NewProjectDialogText.NameTooLong;
+            return nameProblem;
         }
         if (IncludeCodeProject && !_identifier.IsMatch(name))
         {
             return NewProjectDialogText.InvalidCSharpName;
         }
+        return string.Empty;
+    }
+
+    // Everything else that disables OK, shown beside it.
+    private string GetOtherValidationMessage()
+    {
         if (Location.Trim().Length == 0)
         {
             return NewProjectDialogText.ChooseLocation;

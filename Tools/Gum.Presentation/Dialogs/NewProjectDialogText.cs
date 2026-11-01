@@ -1,3 +1,5 @@
+using Gum.ProjectServices;
+
 namespace Gum.Dialogs;
 
 /// <summary>
@@ -75,10 +77,8 @@ public static class NewProjectDialogText
     public const string ChainedCommandNote = "This line chains commands with &&: it works in cmd, PowerShell 7 and bash, not Windows PowerShell 5.1.";
 
     public const string EnterName = "Enter a project name.";
-    public const string InvalidFolderName = "The name has characters a folder name can't have.";
     public const string InvalidCSharpName = "Not a valid C# name.";
     public const string ChooseLocation = "Choose a location.";
-    public const string NameTooLong = "The name is too long.";
     public const string InvalidLocation = "The location has characters a path can't have.";
     public const string LocationNotAbsolute = "The location must be a full path.";
     public const string NeedsLocalSource = "Local Gum source needs the Gum source code on this computer, and none was found.";
