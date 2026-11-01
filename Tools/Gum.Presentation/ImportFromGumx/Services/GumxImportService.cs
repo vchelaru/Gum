@@ -201,6 +201,13 @@ public class GumxImportService : IGumxImportService
                 result.AddSkipped(element.Name, "file(s) it uses not found: " + string.Join(", ", missingAssets));
             }
 
+            // A Source File whose extension the importer does not recognise is never fetched or copied, so say so.
+            foreach (ElementSave element in allCandidateElements.Where(e => !skippedElements.Contains(e)))
+            {
+                foreach (string path in CollectUnrecognizedSourceFiles(element))
+                    result.AddSkipped(path, $"Source File used by {element.Name} has an unrecognized extension, so it was not copied");
+            }
+
             bool IsWritten(ElementSave element) =>
                 !skippedElements.Contains(element)
                 && !(conflictResolution == ConflictResolution.Skip
@@ -351,6 +358,21 @@ public class GumxImportService : IGumxImportService
         }
         return result;
     }
+
+    /// <summary>
+    /// Source File values of the element that name a file with an extension the import does not copy
+    /// (<see cref="IsAssetPath"/>). Web addresses and extensionless values are not files to copy.
+    /// </summary>
+    private static IEnumerable<string> CollectUnrecognizedSourceFiles(ElementSave element) =>
+        element.AllStates
+            .SelectMany(state => state.Variables)
+            .Where(variable => (variable.Name == "SourceFile" || variable.Name.EndsWith(".SourceFile", StringComparison.Ordinal))
+                && variable.Value is string { Length: > 0 } value
+                && Path.GetExtension(value).Length > 0
+                && !value.Contains("://")
+                && !IsAssetPath(value))
+            .Select(variable => (string)variable.Value!)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
 
     private static bool IsFontCachePath(string relativePath) =>
         relativePath.IndexOf("FontCache/", StringComparison.OrdinalIgnoreCase) >= 0
