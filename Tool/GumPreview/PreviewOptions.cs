@@ -15,12 +15,12 @@ public sealed class PreviewOptions
 {
     /// <summary>Usage text printed with <see cref="Error"/>.</summary>
     public const string Usage =
-        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>] [--select-all]]";
+        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>] [--select-all]] [--log <path>]";
 
     private static readonly HashSet<string> ValueFlags = new HashSet<string>
     {
         "--project", "--element", "--selection-file", "--content-root", "--parent-pid",
-        "--exit-after", "--screenshot", "--focus", "--type",
+        "--exit-after", "--screenshot", "--focus", "--type", "--log",
     };
 
     private PreviewOptions()
@@ -59,6 +59,9 @@ public sealed class PreviewOptions
 
     /// <summary>With <see cref="FocusName"/>, selects all the text in that text box after any <see cref="TypedText"/>.</summary>
     public bool SelectAll { get; private set; }
+
+    /// <summary>The file Preview writes its diagnostic log to (<see cref="PreviewDebugLog"/>), or null when logging is off, the default.</summary>
+    public string? LogPath { get; private set; }
 
     /// <summary>Why the command line is unusable, or null when it is usable.</summary>
     public string? Error { get; private set; }
@@ -112,6 +115,10 @@ public sealed class PreviewOptions
             else if (args[i] == "--focus" && hasValue)
             {
                 options.FocusName = args[++i];
+            }
+            else if (args[i] == "--log" && hasValue)
+            {
+                options.LogPath = Path.GetFullPath(args[++i]);
             }
             else if (args[i] == "--select-all")
             {
