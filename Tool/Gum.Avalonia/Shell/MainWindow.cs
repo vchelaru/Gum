@@ -39,8 +39,12 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     private readonly TextBlock _statusText;
     private global::Avalonia.Controls.Image _logo = null!;
 
-    // The WPF head's caption height (its caption buttons are 48 by 32).
+    // The WPF head's caption height (its caption buttons are 48 by 32) and the logo's height, both
+    // at the default base font size; they grow with it so the menu text is never clipped.
     private const double TitleBarHeight = 32;
+    private const double LogoHeight = 16;
+    private const string FontSizeKey = "ControlContentThemeFontSize";
+    private const double DefaultFontSize = 12;
 
     // A window drawn into its title bar gets its resize border inside the client area, where it
     // covers a scroll bar at the right edge; the panel stops short of it (#4694). A maximized window
@@ -177,16 +181,16 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         {
             ExtendClientAreaToDecorationsHint = true;
             ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
-            ExtendClientAreaTitleBarHeightHint = TitleBarHeight;
+            this.Bind(ExtendClientAreaTitleBarHeightHintProperty, ScaledWithFont(TitleBarHeight));
         }
 
         _logo = new global::Avalonia.Controls.Image
         {
-            Height = 16,
             Margin = new Thickness(8, 0, 4, 0),
             VerticalAlignment = VerticalAlignment.Center,
             Stretch = global::Avalonia.Media.Stretch.Uniform,
         };
+        _logo.Bind(HeightProperty, ScaledWithFont(LogoHeight));
         RefreshLogo();
         ActualThemeVariantChanged += (_, _) => RefreshLogo();
 
@@ -220,7 +224,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         };
         if (drawsInTitleBar)
         {
-            row.Height = TitleBarHeight;
+            row.Bind(HeightProperty, ScaledWithFont(TitleBarHeight));
         }
         row.Children.Add(_logo);
         if (menu != null)
@@ -230,6 +234,11 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         row.Children.Add(fileName);
         return row;
     }
+
+    // A size in pixels at the default base font size, grown or shrunk with the base font size (the zoom).
+    private IObservable<object?> ScaledWithFont(double sizeAtDefault) =>
+        this.GetResourceObservable(FontSizeKey, size =>
+            (object)Math.Round(sizeAtDefault * (size is double baseSize ? baseSize : DefaultFontSize) / DefaultFontSize));
 
     // The shared light/dark logo choice (MainWindowIconLogic), loaded from this head's resources.
     private void RefreshLogo()
