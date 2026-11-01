@@ -25,6 +25,13 @@ internal class Line : RenderableShapeBase
         // Issue #2937 — re-open the shared ShapeBatch with this shape's blend if it differs.
         ShapeRenderer.EnsureBlend(this);
 
+        // A Line has no fill, so a stroke of 0 (or less) leaves nothing to draw. Without this the zero
+        // height rectangle still draws Apos's 1 px anti-alias fringe, a faint line Skia does not draw.
+        if (StrokeWidth <= 0)
+        {
+            return;
+        }
+
         var sb = ShapeRenderer.ShapeBatch;
 
         var absoluteLeft = this.GetAbsoluteLeft();
