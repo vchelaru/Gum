@@ -276,6 +276,58 @@ namespace RenderingLibrary.Math.Geometry
         internal static float GetThicknessScale(float linePixelWidth, float cameraZoom, int sourceHeight) =>
             linePixelWidth / cameraZoom / sourceHeight;
 
+        /// <summary>One sprite of a repeated-texture line: where it starts along the line, how long it is, and which texels it samples.</summary>
+        internal readonly struct TextureRun
+        {
+            public TextureRun(float offset, float length, int sourceX, int sourceWidth)
+            {
+                Offset = offset;
+                Length = length;
+                SourceX = sourceX;
+                SourceWidth = sourceWidth;
+            }
+
+            public float Offset { get; }
+            public float Length { get; }
+            public int SourceX { get; }
+            public int SourceWidth { get; }
+        }
+
+        /// <summary>
+        /// Splits a line of <paramref name="distance"/> world units into sprites that repeat a texture so every
+        /// texel is exactly 1 / (repetitionsPerLength * textureWidth) world units wide. A texel width that
+        /// varies with the line length rasterizes some dashes and gaps a pixel wider than the rest. The
+        /// remainder shorter than one texel is drawn as a final, shortened texel.
+        /// </summary>
+        internal static int LayoutRepeatedTexture(float distance, int textureWidth, float repetitionsPerLength,
+            out TextureRun first, out TextureRun second)
+        {
+            float texelWidth = 1f / (repetitionsPerLength * textureWidth);
+            int wholeTexels = (int)(distance / texelWidth + 0.0001f);
+
+            if (wholeTexels < 1)
+            {
+                // Shorter than one texel: only the first texel (the dash) fits.
+                first = new TextureRun(0, distance, 0, 1);
+                second = default;
+                return 1;
+            }
+
+            float wholeLength = wholeTexels * texelWidth;
+            float remainder = distance - wholeLength;
+
+            if (remainder < texelWidth * 0.001f)
+            {
+                first = new TextureRun(0, wholeLength, 0, wholeTexels);
+                second = default;
+                return 1;
+            }
+
+            first = new TextureRun(0, wholeLength, 0, wholeTexels);
+            second = new TextureRun(wholeLength, remainder, wholeTexels % textureWidth, 1);
+            return 2;
+        }
+
         public void Render(SpriteRenderer spriteRenderer, SystemManagers? managers,
             Texture2D textureToUse, float repetitionsPerLength, System.Drawing.Rectangle? sourceRectangle = null, float rotation = 0)
         {
@@ -360,26 +412,31 @@ namespace RenderingLibrary.Math.Geometry
                 }
                 else
                 {
-                    int repetitions = (int)(distance * repetitionsPerLength);
+                    float runAngle = (float)System.Math.Atan2((double)(vector2.Y - vector1.Y),
+                        (double)(vector2.X - vector1.X));
+                    var direction = new Vector2((float)System.Math.Cos(runAngle), (float)System.Math.Sin(runAngle));
+                    var thickness = LinePixelWidth / renderer.CurrentZoom;
 
-                    if (repetitions < 1)
+                    int runCount = LayoutRepeatedTexture(distance, textureToUse.Width, repetitionsPerLength, out var firstRun, out var secondRun);
+                    for (int runIndex = 0; runIndex < runCount; runIndex++)
                     {
-                        repetitions = 1;
+                        var run = runIndex == 0 ? firstRun : secondRun;
+                        spriteRenderer.Draw(textureToUse,
+                            Position + vector1 + direction * run.Offset,
+                            new Rectangle(run.SourceX, 0, run.SourceWidth, textureToUse.Height),
+                            Color,
+                            runAngle,
+                            Vector2.Zero,
+                            new Vector2(run.Length / run.SourceWidth, thickness),
+                            SpriteEffects.None,
+                            Depth,
+                            this,
+                            renderer:null,
+                            offsetPixel:false);
                     }
-                    var sourceRectWidth =
-                        textureToUse.Width * repetitions;
 
-                    //repetitions = 128;
-
-                    // calculate the angle between the two vectors
-
-                    sourceRectangleToUse = new Rectangle(
-                        0, 
-                        0, 
-                        sourceRectWidth, 
-                        textureToUse.Height);
-                    scale =
-                        new Vector2(distance / ((float)repetitions * textureToUse.Width), LinePixelWidth / renderer.CurrentZoom);
+                    i += extraStep;
+                    continue;
                 }
 
                 // stretch the pixel between the two vectors
