@@ -1730,10 +1730,10 @@ public class FrameworkElement : INotifyPropertyChanged
         }
         /////////////////End Early Out/////////////////
 
-        var parentGue = requestingElement.Visual.Parent as InteractiveGue;
+        var parentGue = requestingElement.Visual.Parent;
         var requestingElementVisual = requestingElement.Visual;
 
-        HandleTab(tabDirection, requestingElementVisual, parentGue, shouldAskParent: true, loop:loop);
+        HandleTabCore(tabDirection, requestingElementVisual, parentGue, shouldAskParent: true, loop:loop);
     }
 
     /// <summary>
@@ -1750,9 +1750,17 @@ public class FrameworkElement : INotifyPropertyChanged
     public static bool HandleTab(TabDirection tabDirection, InteractiveGue? requestingVisual,
         InteractiveGue? parentVisual, bool shouldAskParent, bool loop)
     {
+        return HandleTabCore(tabDirection, requestingVisual, parentVisual, shouldAskParent, loop);
+    }
+
+    // Works on GraphicalUiElement because a screen loaded from a file is a plain GraphicalUiElement (not an
+    // InteractiveGue), and its instances have that screen as their Parent.
+    private static bool HandleTabCore(TabDirection tabDirection, GraphicalUiElement? requestingVisual,
+        GraphicalUiElement? parentVisual, bool shouldAskParent, bool loop)
+    {
         void UnFocusRequestingVisual()
         {
-            if (requestingVisual?.FormsControlAsObject is FrameworkElement requestingFrameworkElement && 
+            if ((requestingVisual as InteractiveGue)?.FormsControlAsObject is FrameworkElement requestingFrameworkElement && 
                 // this can happen if the only input receiver requests next tab and it loops back on itself.
                 InteractiveGue.CurrentInputReceiver != requestingFrameworkElement)
             {
@@ -1824,8 +1832,8 @@ public class FrameworkElement : INotifyPropertyChanged
             }
             else
             {
-                var childAtI = requestingVisualSiblings[newIndex] as InteractiveGue;
-                var elementAtI = childAtI?.FormsControlAsObject as FrameworkElement;
+                var childAtI = requestingVisualSiblings[newIndex];
+                var elementAtI = (childAtI as InteractiveGue)?.FormsControlAsObject as FrameworkElement;
 
                 if (CanElementBeFocused(elementAtI))
                 {
@@ -1838,10 +1846,10 @@ public class FrameworkElement : INotifyPropertyChanged
                 }
                 else
                 {
-                    if (childAtI?.Visible == true && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
+                    if (childAtI.Visible && (childAtI is not InteractiveGue childInteractive || childInteractive.IsEnabled) && (elementAtI == null || elementAtI.IsEnabled))
                     {
                         // let this try to handle it:
-                        didChildHandle = HandleTab(tabDirection, null, childAtI, shouldAskParent: false, loop:loop);
+                        didChildHandle = HandleTabCore(tabDirection, null, childAtI, shouldAskParent: false, loop:loop);
 
                         if (didChildHandle)
                         {
@@ -1891,19 +1899,19 @@ public class FrameworkElement : INotifyPropertyChanged
                             // input, which is routed only to the top-most modal.
                             if (loop)
                             {
-                                didFocusNewItem = HandleTab(tabDirection, null, parentVisual, shouldAskParent: false, loop: false);
+                                didFocusNewItem = HandleTabCore(tabDirection, null, parentVisual, shouldAskParent: false, loop: false);
                             }
                         }
                         else
 #endif
                         if (parentVisual?.Parent != null)
                         {
-                            var grandparentVisual = parentVisual.Parent as InteractiveGue;
-                            didFocusNewItem = HandleTab(tabDirection, parentVisual, grandparentVisual, shouldAskParent: true, loop:loop);
+                            var grandparentVisual = parentVisual.Parent;
+                            didFocusNewItem = HandleTabCore(tabDirection, parentVisual, grandparentVisual, shouldAskParent: true, loop:loop);
                         }
                         else
                         {
-                            didFocusNewItem = HandleTab(tabDirection, parentVisual, null, shouldAskParent: true, loop: loop);
+                            didFocusNewItem = HandleTabCore(tabDirection, parentVisual, null, shouldAskParent: true, loop: loop);
 
                             if(didFocusNewItem == false && didReachEndOfChildren && loop)
                             {
@@ -1914,11 +1922,11 @@ public class FrameworkElement : INotifyPropertyChanged
                                 // Going Down we enter at the first visible child and going Up at the last, so the search
                                 // continues in the direction of travel when that child holds nothing focusable (for example
                                 // a background).
-                                InteractiveGue? entryChild = null;
+                                GraphicalUiElement? entryChild = null;
                                 for (int i = 0; i < requestingVisualSiblings.Count; i++)
                                 {
                                     int siblingIndex = tabDirection == TabDirection.Down ? i : requestingVisualSiblings.Count - 1 - i;
-                                    if (requestingVisualSiblings[siblingIndex] is InteractiveGue ig && ig.Visible && ig.IsEnabled)
+                                    if (requestingVisualSiblings[siblingIndex] is { Visible: true } ig && (ig is not InteractiveGue igi || igi.IsEnabled))
                                     {
                                         entryChild = ig;
                                         break;
@@ -1926,7 +1934,7 @@ public class FrameworkElement : INotifyPropertyChanged
                                 }
                                 entryChild = entryChild ?? requestingVisual;
 
-                                didFocusNewItem = HandleTab(tabDirection, null, entryChild, shouldAskParent: true, loop: false);
+                                didFocusNewItem = HandleTabCore(tabDirection, null, entryChild, shouldAskParent: true, loop: false);
                             }
                         }
                     }
@@ -2370,7 +2378,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// navigation cannot fall through to background modals, mirroring the way mouse input is routed
     /// only to the top-most modal.
     /// </summary>
-    static bool IsTopMostModal(InteractiveGue? visual)
+    static bool IsTopMostModal(GraphicalUiElement? visual)
     {
         var modalRoot = ModalRoot;
         if (visual == null || modalRoot == null || visual.Parent != modalRoot)
