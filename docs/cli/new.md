@@ -1,17 +1,20 @@
 # new
 
 ```
-gumcli new [<path>] [--template <name>] [--platform <name>] [--source-linked] [--preview] [--no-restore]
+gumcli new [<path>] [--template <name>] [--theme <name>] [--platform <name>] [--source-linked] [--preview] [--no-restore]
 ```
 
 Creates a new Gum project. The path is optional — when omitted, a `GumProject` subdirectory is created in the current directory.
 
 Add `--platform` to also create a runnable game project for MonoGame, KNI, KNI with Skia, raylib, Stride, or Silk.NET. Without it, only a Gum project is created.
 
+The New Project dialog in the Gum tool shows the matching command under **Command line**. See [Creating a Project](../gum-tool/setup/creating-a-project.md).
+
 ## Options
 
 - `<path>` *(optional)* — Path for the new project. Pass a `.gumj` (JSON) or `.gumx` (XML) extension to choose the format. If no extension is given, creates `<path>/<name>.gumj` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumj`. With `--platform`, the path names the game project folder instead, and defaults to `MyGumGame`.
 - `--template` / `-t` — Template to use. Default: `forms`.
+- `--theme`: With the `forms` template, starts from a bundled Forms theme (for example Meadow or Bubblegum) instead of the plain Forms controls. `Standard` is the plain Forms controls. An unknown name lists the themes found.
 - `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `kniskia`, `raylib`, `stride`, `silknet`.
 - `--source-linked`: With `--platform`, references the platform's runtime project in a Gum source checkout instead of the NuGet package. See [Linking to Gum Source](#linking-to-gum-source).
 - `--preview`: With `--platform`, references the newest preview (prerelease) Gum NuGet packages instead of the stable ones. Preview packages may be unstable. Cannot be combined with `--source-linked`.
