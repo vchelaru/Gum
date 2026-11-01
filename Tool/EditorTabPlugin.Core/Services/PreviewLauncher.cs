@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -20,6 +21,7 @@ public class PreviewLauncher : IPreviewLauncher
     private readonly Func<bool> _isSortByBatchKey;
 
     private IPreviewProcess? _process;
+    private ExitWatch? _exitWatch;
     private string? _selectionFilePath;
     private bool _isConvertedGumxPreview;
     private ElementSave? _shownElement;
@@ -48,6 +50,12 @@ public class PreviewLauncher : IPreviewLauncher
 
     /// <summary>Finds and starts the preview executable; a test swaps it for a stand-in.</summary>
     internal IPreviewProcessStarter ProcessStarter { get; set; }
+
+    /// <summary>
+    /// Runs an action on the UI thread; null uses the <see cref="SynchronizationContext"/> current
+    /// at launch. A test sets it to run inline instead of depending on the ambient context.
+    /// </summary>
+    internal Action<Action>? PostToUiThread { get; set; }
 
     /// <inheritdoc/>
     public bool IsRunning => _process is { HasExited: false };
@@ -113,16 +121,16 @@ public class PreviewLauncher : IPreviewLauncher
         }
 
         _selectionFilePath = Path.Combine(Path.GetTempPath(), $"GumPreviewSelection_{Guid.NewGuid():N}.txt");
-        PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate: false).Serialize());
 
         ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
             resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory, Environment.ProcessId);
 
         try
         {
+            PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate: false).Serialize());
             _process = ProcessStarter.Start(startInfo);
         }
-        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception or IOException)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             _outputManager.AddError($"Could not launch the preview: {exception.Message}");
             _process = null;
@@ -139,6 +147,74 @@ public class PreviewLauncher : IPreviewLauncher
 
         _shownElement = element;
         _outputManager.AddOutput($"Launched preview for {element.Name}.");
+        WatchForExit(_process);
+    }
+
+    /// <summary>
+    /// Reports the process's exit when it ends by itself with a nonzero code. The exit is raised on
+    /// a thread-pool thread, so it is posted to the launching (UI) thread's context before touching
+    /// the output panel; with no context it runs inline.
+    /// </summary>
+    private void WatchForExit(IPreviewProcess process)
+    {
+        Action<Action>? post = PostToUiThread;
+        SynchronizationContext? context = SynchronizationContext.Current;
+        ExitWatch watch = new ExitWatch(process);
+        watch.Handler = exit =>
+        {
+            if (post != null)
+            {
+                post(() => ReportExit(watch, exit));
+            }
+            else if (context == null)
+            {
+                ReportExit(watch, exit);
+            }
+            else
+            {
+                context.Post(_ => ReportExit(watch, exit), null);
+            }
+        };
+        _exitWatch = watch;
+        process.Exited += watch.Handler;
+    }
+
+    private void ReportExit(ExitWatch watch, PreviewProcessExit exit)
+    {
+        if (watch.IsDone)
+        {
+            return;
+        }
+        watch.Stop();
+        if (exit.ExitCode == 0)
+        {
+            return;
+        }
+        string detail = string.IsNullOrWhiteSpace(exit.ErrorText) ? "no error output" : exit.ErrorText.Trim();
+        _outputManager.AddError($"The preview exited with code {exit.ExitCode}: {detail}");
+    }
+
+    private sealed class ExitWatch
+    {
+        private readonly IPreviewProcess _process;
+
+        public ExitWatch(IPreviewProcess process)
+        {
+            _process = process;
+        }
+
+        public Action<PreviewProcessExit>? Handler { get; set; }
+
+        public bool IsDone { get; private set; }
+
+        public void Stop()
+        {
+            IsDone = true;
+            if (Handler != null)
+            {
+                _process.Exited -= Handler;
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -149,6 +225,9 @@ public class PreviewLauncher : IPreviewLauncher
             return;
         }
 
+        // A preview the tool closes itself is not an error.
+        _exitWatch?.Stop();
+        _exitWatch = null;
         if (!_process.HasExited)
         {
             _process.Close();
