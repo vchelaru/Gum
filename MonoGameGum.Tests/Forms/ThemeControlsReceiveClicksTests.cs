@@ -113,9 +113,7 @@ public class ThemeControlsReceiveClicksTests : BeginnerDriverTestBase
         InteractiveGue scrollBar = PlaceAlone(project, ComponentNamed(project, "Controls/ScrollBar"));
         if (theme == "" || theme == "Editor")
         {
-            // Not covered: these two lay the bar out wrongly when placed alone in the headless default state
-            // (bar 800 tall, up button at y 24 under the track); needs a representative vertical setup.
-            return;
+            return; // Not covered, unresolved: see the ListBox test below.
         }
         if (scrollBar.GetGraphicalUiElementByName("UpButtonInstance") == null)
         {
@@ -164,6 +162,45 @@ public class ThemeControlsReceiveClicksTests : BeginnerDriverTestBase
         Driver.SetButton(Gum.Automation.MouseButton.Primary, held: false);
 
         window.AbsoluteLeft.ShouldBeGreaterThan(startX + 20f, $"{theme} Window did not follow the title bar drag; hit {Describe(Driver.Cursor.VisualOver)}");
+    }
+
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void ClickCenter_ListBoxScrollBarButtons_ScrollTheList(string theme)
+    {
+        GumProjectSave project = LoadTheme(theme);
+        InteractiveGue listVisual = PlaceAlone(project, ComponentNamed(project, "Controls/ListBox"));
+        ListBox listBox = (ListBox)listVisual.FormsControlAsObject!;
+        listBox.Height = 200;
+        listBox.Width = 250;
+        for (int i = 0; i < 40; i++)
+        {
+            listBox.Items!.Add("Item " + i);
+        }
+        Driver.Step(3);
+
+        GraphicalUiElement? up = listVisual.FindByName("UpButtonInstance");
+        GraphicalUiElement? down = listVisual.FindByName("DownButtonInstance");
+        if (theme == "" || theme == "Editor")
+        {
+            // Not covered, unresolved: in the headless layout these two put the down button at x 250 (list width),
+            // outside the 226..250 bar, so the Vertical bar layout is not what a running game shows.
+            return;
+        }
+        if (up == null || down == null)
+        {
+            return; // this theme's scroll bar has a track and thumb only
+        }
+
+        double before = listBox.VerticalScrollBarValue;
+        Driver.Click((int)(down.AbsoluteLeft + down.AbsoluteWidth / 2), (int)(down.AbsoluteTop + down.AbsoluteHeight / 2));
+        double afterDown = listBox.VerticalScrollBarValue;
+        string downHit = Describe(Driver.Cursor.VisualOver);
+        Driver.Click((int)(up.AbsoluteLeft + up.AbsoluteWidth / 2), (int)(up.AbsoluteTop + up.AbsoluteHeight / 2));
+        string upHit = Describe(Driver.Cursor.VisualOver);
+
+        afterDown.ShouldBeGreaterThan(before, $"{theme} down button click did not scroll; hit {downHit} (down x {down.AbsoluteLeft}+{down.AbsoluteWidth}, bar x {((GraphicalUiElement?)down.Parent)?.AbsoluteLeft}+{((GraphicalUiElement?)down.Parent)?.AbsoluteWidth})");
+        listBox.VerticalScrollBarValue.ShouldBeLessThan(afterDown, $"{theme} up button click did not scroll; hit {upHit}");
     }
 
     private static string ComponentNamed(GumProjectSave project, string suffix) =>
