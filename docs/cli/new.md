@@ -1,7 +1,7 @@
 # new
 
 ```
-gumcli new [<path>] [--template <name>] [--platform <name>] [--source-linked] [--no-restore]
+gumcli new [<path>] [--template <name>] [--platform <name>] [--source-linked] [--preview] [--no-restore]
 ```
 
 Creates a new Gum project. The path is optional — when omitted, a `GumProject` subdirectory is created in the current directory.
@@ -14,6 +14,7 @@ Add `--platform` to also create a runnable game project for MonoGame, KNI, KNI w
 - `--template` / `-t` — Template to use. Default: `forms`.
 - `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `kniskia`, `raylib`, `stride`, `silknet`.
 - `--source-linked`: With `--platform`, references the platform's runtime project in a Gum source checkout instead of the NuGet package. See [Linking to Gum Source](#linking-to-gum-source).
+- `--preview`: With `--platform`, references the newest preview (prerelease) Gum NuGet packages instead of the stable ones. Preview packages may be unstable. Cannot be combined with `--source-linked`.
 - `--no-restore`: With `--platform`, skips the `dotnet restore` that otherwise runs after the project is created.
 
 ## Templates

@@ -110,7 +110,7 @@ public class NewProjectService : INewProjectService
                     "With --platform, <path> names the project folder, not a Gum project file.");
             }
 
-            if (request.SourceLinked)
+            if (request.PackageChannel == NewProjectPackageChannel.LocalSource)
             {
                 gumSourceDirectory = FindGumSourceDirectory();
                 if (gumSourceDirectory == null)
@@ -164,11 +164,12 @@ public class NewProjectService : INewProjectService
                 CsprojPath = targets.CsprojPath,
                 Name = targets.Name,
                 GenerateCode = request.GenerateCode,
-                // Source-linked: the add-ons are linked as projects while the files are written, so no package is added.
-                RecommendedPackages = request.IncludeRecommendedPackages && !request.SourceLinked
-                    ? RecommendedPackages.For(options.Platform!.Value)
+                PackageChannel = request.PackageChannel,
+                // Local source: the add-ons are linked as projects while the files are written, so no package is added.
+                RecommendedPackages = request.IncludeRecommendedPackages && request.PackageChannel != NewProjectPackageChannel.LocalSource
+                    ? RecommendedPackages.For(options.Platform!.Value, request.PackageChannel)
                     : Array.Empty<string>(),
-                LinkedAddOns = request.IncludeRecommendedPackages && request.SourceLinked
+                LinkedAddOns = request.IncludeRecommendedPackages && request.PackageChannel == NewProjectPackageChannel.LocalSource
                     ? RecommendedPackages.ForSourceLinked(options.Platform!.Value)
                     : Array.Empty<string>()
             }
@@ -192,10 +193,16 @@ public class NewProjectService : INewProjectService
     {
         options = new Options();
 
-        if (request.SourceLinked && request.Platform == null)
+        if (request.PackageChannel == NewProjectPackageChannel.LocalSource && request.Platform == null)
         {
             return new NewProjectError(NewProjectErrorKind.SourceLinkedNeedsPlatform,
                 "--source-linked needs --platform: it links a platform's Gum runtime project.");
+        }
+
+        if (request.PackageChannel == NewProjectPackageChannel.Preview && request.Platform == null)
+        {
+            return new NewProjectError(NewProjectErrorKind.PreviewNeedsPlatform,
+                "--preview needs --platform: it picks the preview Gum packages of a code project.");
         }
 
         bool isForms = string.Equals(request.Template, "forms", StringComparison.OrdinalIgnoreCase);
@@ -242,10 +249,10 @@ public class NewProjectService : INewProjectService
                     $"Unknown platform '{request.Platform}'. Valid values are: {NewProjectPlatforms.ValidNames}.");
             }
 
-            if (parsed == HostPlatform.KniSkia && !request.SourceLinked)
+            if (parsed == HostPlatform.KniSkia && request.PackageChannel != NewProjectPackageChannel.LocalSource)
             {
                 return new NewProjectError(NewProjectErrorKind.KniSkiaNeedsSourceLinked,
-                    "KNI with Skia (kniskia) is not published to NuGet, so it has to be linked from source: pass --source-linked (needs a Gum checkout).");
+                    "KNI with Skia (kniskia) is not published to NuGet, so it has to be linked from source: pass --source-linked (needs a Gum checkout), not --preview.");
             }
 
             platform = parsed;
@@ -361,7 +368,7 @@ public class NewProjectService : INewProjectService
         NewProjectFilesResult result;
         try
         {
-            result = WriteFiles(options, targets, project.GumSourceDirectory, project.LinkedAddOns);
+            result = WriteFiles(options, targets, project.GumSourceDirectory, project.LinkedAddOns, project.UsesPrerelease);
 
             if (result.Success && cancellationToken.IsCancellationRequested)
             {
@@ -384,7 +391,7 @@ public class NewProjectService : INewProjectService
 
     // Writes the Gum project (and the code project around it).
     private static NewProjectFilesResult WriteFiles(
-        Options options, Targets targets, string? gumSourceDirectory, IReadOnlyList<string> linkedAddOns)
+        Options options, Targets targets, string? gumSourceDirectory, IReadOnlyList<string> linkedAddOns, bool preview)
     {
         try
         {
@@ -392,7 +399,7 @@ public class NewProjectService : INewProjectService
             {
                 PlatformProjectResult result = new PlatformProjectScaffolder().Create(
                     targets.RootDirectory, platform, options.IncludeFormsTemplate, gumSourceDirectory, options.ThemeDirectory,
-                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath), linkedAddOns: linkedAddOns);
+                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath), linkedAddOns: linkedAddOns, preview: preview);
                 if (!result.Success)
                 {
                     return new NewProjectFilesResult { ErrorMessage = result.ErrorMessage };
@@ -427,12 +434,17 @@ public class NewProjectService : INewProjectService
         _restoreRunner.RestoreAsync(csprojPath, onOutputLine, cancellationToken);
 
     /// <inheritdoc/>
+    public Task<AddPackagesResult> AddPackagesAsync(
+        string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+        AddPackagesAsync(csprojPath, packages, prerelease: false, onOutputLine, cancellationToken);
+
+    /// <inheritdoc/>
     public async Task<AddPackagesResult> AddPackagesAsync(
-        string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken)
+        string csprojPath, IReadOnlyList<string> packages, bool prerelease, Action<string>? onOutputLine, CancellationToken cancellationToken)
     {
         foreach (string package in packages)
         {
-            RestoreResult result = await _packageAddRunner.AddAsync(csprojPath, package, onOutputLine, cancellationToken);
+            RestoreResult result = await _packageAddRunner.AddAsync(csprojPath, package, prerelease, onOutputLine, cancellationToken);
             if (result.Status != RestoreStatus.Succeeded)
             {
                 return new AddPackagesResult
@@ -526,7 +538,8 @@ public class NewProjectService : INewProjectService
         if (validation.Resolved.RecommendedPackages.Count > 0)
         {
             progress?.Report(new NewProjectProgress(NewProjectStep.AddingPackages, "Adding recommended packages..."));
-            packageAdd = await AddPackagesAsync(files.CsprojPath, validation.Resolved.RecommendedPackages, null, cancellationToken);
+            packageAdd = await AddPackagesAsync(
+                files.CsprojPath, validation.Resolved.RecommendedPackages, validation.Resolved.UsesPrerelease, null, cancellationToken);
             if (packageAdd.Status != RestoreStatus.Succeeded)
             {
                 return new NewProjectResult { Files = files, PackageAdd = packageAdd };

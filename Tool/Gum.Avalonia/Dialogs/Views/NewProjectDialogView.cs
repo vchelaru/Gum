@@ -326,11 +326,7 @@ public sealed class NewProjectDialogView : StackPanel
         platformNote.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
         options.Children.Add(platformNote);
 
-        CheckBox sourceLinked = new CheckBox { Content = NewProjectDialogText.UseLocalSource, Margin = new Thickness(0, 8, 0, 0) };
-        sourceLinked.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.SourceLinked)) { Mode = BindingMode.TwoWay });
-        sourceLinked.Bind(IsEnabledProperty, new Binding(nameof(NewProjectDialogViewModel.IsSourceLinkedEnabled)));
-        options.Children.Add(sourceLinked);
-        options.Children.Add(Secondary(new TextBlock { Text = NewProjectDialogText.UseLocalSourceNote, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) }));
+        options.Children.Add(CreatePackageChannelGroup());
 
         CheckBox restore = new CheckBox { Content = NewProjectDialogText.RestorePackages };
         restore.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.RunRestore)) { Mode = BindingMode.TwoWay });
@@ -359,6 +355,45 @@ public sealed class NewProjectDialogView : StackPanel
         options.Children.Add(generateDemo);
         section.Children.Add(options);
         return section;
+    }
+
+    // The Gum packages choice: Stable (default), Preview, Local Gum source, one at a time.
+    private Control CreatePackageChannelGroup()
+    {
+        StackPanel group = new StackPanel { Margin = new Thickness(0, 8, 0, 0) };
+        group.Children.Add(FieldLabel(NewProjectDialogText.PackageChannel, NewProjectDialogText.PackageChannelTip));
+        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelStable, null, null, nameof(NewProjectDialogViewModel.IsStableChannelChecked), nameof(NewProjectDialogViewModel.IsStableChannelEnabled)));
+
+        TextBlock warning = new TextBlock { Text = NewProjectDialogText.PreviewWarning, TextWrapping = TextWrapping.Wrap };
+        warning.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
+        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelPreview, warning, nameof(NewProjectDialogViewModel.IsPreviewWarningVisible), nameof(NewProjectDialogViewModel.IsPreviewChannelChecked), nameof(NewProjectDialogViewModel.IsPreviewChannelEnabled)));
+
+        TextBlock localNote = Secondary(new TextBlock { Text = NewProjectDialogText.UseLocalSourceNote, TextWrapping = TextWrapping.Wrap });
+        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelLocalSource, localNote, null, nameof(NewProjectDialogViewModel.IsLocalSourceChannelChecked), nameof(NewProjectDialogViewModel.IsSourceLinkedEnabled)));
+        return group;
+    }
+
+    // The note is part of the radio's content, so it lines up under the label at any glyph size and clearly belongs to this radio.
+    private static RadioButton ChannelRadio(string label, TextBlock? note, string? noteVisibleProperty, string checkedProperty, string enabledProperty)
+    {
+        object content = label;
+        if (note != null)
+        {
+            note.Margin = new Thickness(0, 2, 0, 2);
+            if (noteVisibleProperty != null)
+            {
+                note.Bind(IsVisibleProperty, new Binding(noteVisibleProperty));
+            }
+            StackPanel stack = new StackPanel();
+            stack.Children.Add(new TextBlock { Text = label });
+            stack.Children.Add(note);
+            content = stack;
+        }
+
+        RadioButton radio = new RadioButton { Content = content, GroupName = "PackageChannel" };
+        radio.Bind(ToggleButton.IsCheckedProperty, new Binding(checkedProperty) { Mode = BindingMode.TwoWay });
+        radio.Bind(IsEnabledProperty, new Binding(enabledProperty));
+        return radio;
     }
 
     private Control CreateFoldersSection()

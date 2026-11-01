@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Dialogs;
@@ -68,7 +69,7 @@ public class NewProjectUiPlatformTests
             fixture.IsShown(note).ShouldBeTrue($"the {platform} note shows");
         }
 
-        CheckBox localSource = fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource);
+        ToggleButton localSource = fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource);
         if (platform == "kniskia")
         {
             localSource.IsChecked.ShouldBe(true, "KNI with Skia always links the source");
@@ -135,11 +136,11 @@ public class NewProjectUiPlatformTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture(service.Object);
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsEffectivelyEnabled.ShouldBeFalse("no checkout, nothing to link");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsEffectivelyEnabled.ShouldBeFalse("no checkout, nothing to link");
         fixture.Dialog.ChoosePlatform("kniskia");
         fixture.Settle();
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true);
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true);
         fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeTrue("the dialog says why OK is off");
         fixture.IsShown(NewProjectUiText.KniSkiaPlatformNote).ShouldBeTrue();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
@@ -149,7 +150,7 @@ public class NewProjectUiPlatformTests
 
         fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeFalse();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
-        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(false, "the forced tick does not stay behind");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(false, "the forced tick does not stay behind");
     }
 
     [AvaloniaFact]
@@ -163,7 +164,7 @@ public class NewProjectUiPlatformTests
         fixture.Dialog.ChoosePlatform("kniskia");
         fixture.Dialog.ChoosePlatform("raylib");
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true, "the user's own tick is still there");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true, "the user's own tick is still there");
         fixture.Dialog.CommandLine.ShouldContain("--platform raylib");
         fixture.Dialog.CommandLine.ShouldContain("--source-linked");
     }

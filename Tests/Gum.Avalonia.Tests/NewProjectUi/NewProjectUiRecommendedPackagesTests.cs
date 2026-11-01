@@ -48,14 +48,14 @@ public class NewProjectUiRecommendedPackagesTests
     }
 
     [AvaloniaFact]
-    public void TheCheckBox_ShowsCheckedByDefault_AndTheNoteListsThePackages()
+    public void TheCheckBox_ShowsCheckedByDefault_AndTheNoteIsTheGeneralOne()
     {
         using NewProjectUiFixture fixture = StartCodeProject();
         fixture.ViewModel.IncludeRecommendedPackages = true;
         fixture.Settle();
 
         PackagesBox(fixture).IsChecked.ShouldBe(true);
-        fixture.IsShown("Adds KernSmith.MonoGameGum, Gum.Expressions to the C# project, as the setup docs suggest.").ShouldBeTrue();
+        fixture.IsShown("Adds packages for shapes, shader compilation and dynamic fonts, where available. With local Gum source, their projects are linked instead.").ShouldBeTrue();
     }
 
     [AvaloniaFact]

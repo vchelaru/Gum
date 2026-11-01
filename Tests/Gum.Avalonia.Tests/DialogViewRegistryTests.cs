@@ -85,7 +85,7 @@ public class DialogViewRegistryTests
         window.Title.ShouldBe("New Project");
         CheckBox[] checkBoxes = view.GetLogicalDescendants().OfType<CheckBox>().ToArray();
         checkBoxes.Select(box => box.Content is StackPanel label ? label.GetLogicalDescendants().OfType<TextBlock>().First().Text : box.Content).ShouldBe(
-            new object?[] { "Include Forms controls (recommended)", "Include demo screen", "Create C# project", "Use local Gum source", "Restore NuGet packages", "Include recommended packages", "Generate code" });
+            new object?[] { "Include Forms controls (recommended)", "Include demo screen", "Create C# project", "Restore NuGet packages", "Include recommended packages", "Generate code" });
         checkBoxes[0].IsChecked.ShouldBe(true);
 
         checkBoxes[0].IsChecked = false;

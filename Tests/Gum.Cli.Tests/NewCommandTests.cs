@@ -466,6 +466,43 @@ public class NewCommandTests : BaseTestClass
         Directory.Exists(projectDir).ShouldBeFalse();
     }
 
+    [Fact]
+    public void New_WithPreview_ShouldWritePrereleaseAwareGumReference()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--preview", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
+        csproj.ShouldContain("<PackageReference Include=\"Gum.MonoGame\" Version=\"*-*\" />");
+    }
+
+    [Fact]
+    public void New_WithPreviewAndSourceLinked_ShouldReturnExitCode2NamingBothOptions()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--preview", "--source-linked", "--no-restore");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--preview");
+        result.StandardError.ShouldContain("--source-linked");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithPreviewButNoPlatform_ShouldReturnExitCode2()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--preview");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--platform");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
     #region Output text pinned for the move into Gum.ProjectServices (#7208)
 
     [Fact]
@@ -561,6 +598,7 @@ public class NewCommandTests : BaseTestClass
     [InlineData("-p")]
     [InlineData("--no-restore")]
     [InlineData("--source-linked")]
+    [InlineData("--preview")]
     public void New_HasEveryOptionTheDialogsCommandLineUses(string alias)
     {
         Command command = NewCommand.Create();

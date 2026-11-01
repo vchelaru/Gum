@@ -24,8 +24,13 @@ public static class NewProjectDialogText
     public const string CreateCodeProjectHelp = "Also creates a runnable C# project (.csproj) with this Gum project inside it, so you can run it and generate code.";
     public const string Platform = "Platform";
     public const string PlatformTip = "The game framework the C# project runs on. It decides how the game draws and reads input. MonoGame is the most widely used.";
-    public const string UseLocalSource = "Use local Gum source";
-    public const string UseLocalSourceNote = "For Gum developers: the C# project uses the Gum source code on this computer instead of the published NuGet package, to try unreleased changes. Only available when this tool was built from that source code.";
+    public const string PackageChannel = "Gum packages";
+    public const string PackageChannelTip = "Which Gum packages the C# project uses. Stable is the published release.";
+    public const string ChannelStable = "Stable";
+    public const string ChannelPreview = "Preview";
+    public const string ChannelLocalSource = "Local Gum source";
+    public const string PreviewWarning = "Preview packages are the newest builds and may be unstable.";
+    public const string UseLocalSourceNote = "For Gum developers: the C# project uses the Gum source code on this computer instead of the NuGet packages, to try unreleased changes. Only available when this tool was built from that source code.";
     public const string RestorePackages = "Restore NuGet packages";
     public const string RestorePackagesNote = "Runs dotnet restore after creating. The first code generation needs the packages.";
     public const string RestoreFailedHeading = "The code project was created, but dotnet restore failed.";
@@ -39,8 +44,7 @@ public static class NewProjectDialogText
     public const string DemoHostCommandNote = "gumcli new writes a game that loads the demo screen at runtime and does not initialize the packages; the dialog's game does both.";
     public const string RecommendedPackages = "Include recommended packages";
     public const string RecommendedPackagesDisabledNote = "This platform has no recommended packages.";
-    public static string RecommendedPackagesNote(string packages) => $"Adds {packages} to the C# project, as the setup docs suggest.";
-    public static string RecommendedPackagesLinkedNote(string packages) => $"With local Gum source: links the projects for {packages} from the Gum source instead of adding packages.";
+    public const string RecommendedPackagesNote = "Adds packages for shapes, shader compilation and dynamic fonts, where available. With local Gum source, their projects are linked instead.";
     public const string FoldersHeading = "Folders";
     public const string FolderCreates = "Creates a new folder";
     public const string FolderUsesExisting = "Uses the existing folder";
@@ -77,7 +81,7 @@ public static class NewProjectDialogText
     public const string NameTooLong = "The name is too long.";
     public const string InvalidLocation = "The location has characters a path can't have.";
     public const string LocationNotAbsolute = "The location must be a full path.";
-    public const string NeedsLocalSource = "Use local Gum source needs the Gum source code on this computer, and none was found.";
+    public const string NeedsLocalSource = "Local Gum source needs the Gum source code on this computer, and none was found.";
 
     /// <summary>The warning's hover tip.</summary>
     public static string WarningTip(bool hasGame1, string targetFolder) =>
