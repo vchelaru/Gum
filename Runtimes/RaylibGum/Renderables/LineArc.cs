@@ -308,8 +308,13 @@ public class LineArc : GradientShapeRenderable
     {
         const float deg2rad = System.MathF.PI / 180f;
         float pattern = StrokeDashLength + StrokeGapLength;
-        int steps = System.Math.Max(16, segments * 4);
-        System.Span<float> lengths = steps <= 2048 ? stackalloc float[steps + 1] : new float[steps + 1];
+        // The table only has to be fine enough that the polyline length is accurate.
+        int steps = System.Math.Clamp(segments * 4, 16, MaxDashTableSteps);
+        if (s_dashLengths.Length < steps + 1)
+        {
+            s_dashLengths = new float[steps + 1];
+        }
+        float[] lengths = s_dashLengths;
         float previousX = band.A * System.MathF.Cos(startAngleRl * deg2rad);
         float previousY = band.B * System.MathF.Sin(startAngleRl * deg2rad);
         lengths[0] = 0f;
@@ -330,28 +335,53 @@ public class LineArc : GradientShapeRenderable
             return;
         }
 
+        float dashCount = total / pattern;
+        if (dashCount > MaxDashes)
+        {
+            // Like Skia, which draws the stroke undashed once a path has more than a million dashes, give up on
+            // dashes when there are more than a screen can show. Below Skia's own limit its dashes are narrower
+            // than a pixel and read as the average coverage, so the stroke is drawn at that alpha instead.
+            Color solid = color;
+            if (dashCount <= SkiaMaxDashCount)
+            {
+                solid = new Color(color.R, color.G, color.B, (byte)(color.A * StrokeDashLength / pattern));
+            }
+            DrawContinuous(band, false, 0f, 0f, startAngleRl, endAngleRl, segments,
+                IsEndRounded && System.MathF.Abs(endAngleRl - startAngleRl) < 360f, solid);
+            return;
+        }
+
+        // Dashes come in order, so the table is walked once rather than searched for each one.
+        int index = 0;
+        float AngleAt(float length)
+        {
+            while (index < steps - 1 && lengths[index + 1] < length)
+            {
+                index++;
+            }
+            float span = lengths[index + 1] - lengths[index];
+            float t = span > 0f ? (length - lengths[index]) / span : 0f;
+            return startAngleRl + (endAngleRl - startAngleRl) * ((index + t) / steps);
+        }
+
         for (float at = 0f; at < total; at += pattern)
         {
-            float dashStartRl = AngleAt(lengths, startAngleRl, endAngleRl, at);
-            float dashEndRl = AngleAt(lengths, startAngleRl, endAngleRl, System.MathF.Min(at + StrokeDashLength, total));
+            float dashStartRl = AngleAt(at);
+            float dashEndRl = AngleAt(System.MathF.Min(at + StrokeDashLength, total));
             int segmentsPerDash = System.Math.Max(1, (int)(System.MathF.Abs(dashEndRl - dashStartRl) / 4f));
             DrawContinuous(band, false, 0f, 0f, dashStartRl, dashEndRl, segmentsPerDash, IsEndRounded, color);
         }
     }
 
-    // The angle at which the tabulated centerline reaches the given length.
-    private static float AngleAt(System.ReadOnlySpan<float> lengths, float startAngleRl, float endAngleRl, float length)
-    {
-        int steps = lengths.Length - 1;
-        int j = 0;
-        while (j < steps - 1 && lengths[j + 1] < length)
-        {
-            j++;
-        }
-        float span = lengths[j + 1] - lengths[j];
-        float t = span > 0f ? (length - lengths[j]) / span : 0f;
-        return startAngleRl + (endAngleRl - startAngleRl) * ((j + t) / steps);
-    }
+    // Shared by every arc: the renderer draws on one thread, and dashes are drawn one arc at a time.
+    private static float[] s_dashLengths = new float[1025];
+    private const int MaxDashTableSteps = 4096;
+
+    /// <summary>The most dashes drawn along one non-square arc; beyond it the stroke is drawn solid.</summary>
+    private const int MaxDashes = 4000;
+
+    /// <summary>Skia's SkDashPath refuses (and the stroke is drawn undashed) above this many dashes.</summary>
+    private const int SkiaMaxDashCount = 1000000;
 
     /// <summary>
     /// Translate the user's dash/gap pixel lengths into arc-angle sweeps along the curve and
@@ -379,6 +409,20 @@ public class LineArc : GradientShapeRenderable
         float patternAngleDeg = dashAngleDeg + gapAngleDeg;
         if (patternAngleDeg <= 0f)
         {
+            return;
+        }
+
+        float dashCount = System.MathF.Abs(SweepAngle) / patternAngleDeg;
+        if (dashCount > MaxDashes)
+        {
+            // See DrawDashedBand: past the cap the stroke is drawn solid.
+            Color solid = dashCount <= SkiaMaxDashCount
+                ? new Color(strokeColor.R, strokeColor.G, strokeColor.B,
+                    (byte)(strokeColor.A * StrokeDashLength / (StrokeDashLength + StrokeGapLength)))
+                : strokeColor;
+            DrawContinuous(circleBand, true, innerRadius, outerRadius, -StartAngle, -StartAngle - SweepAngle,
+                ComputeSegments(outerRadius, System.MathF.Abs(SweepAngle)),
+                IsEndRounded && System.MathF.Abs(SweepAngle) < 360f, solid);
             return;
         }
 
