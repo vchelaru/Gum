@@ -123,7 +123,7 @@ public class NewCommandEdgeCaseTests : BaseTestClass
             CliTestHelper result = CliTestHelper.Run(new[] { "new", projectDir }.Concat(extra).ToArray());
 
             result.ExitCode.ShouldBe(2, result.StandardError);
-            result.StandardError.ShouldContain(Gum.ProjectServices.NewProjectNameRules.InvalidFolderNameMessage);
+            result.StandardError.ShouldContain(Gum.ProjectServices.NewProjectNameRules.GetProblem(name, true)!);
             Directory.Exists(projectDir).ShouldBeFalse();
         }
     }

@@ -78,7 +78,7 @@ public class NewProjectUiValidationTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeName(name);
 
-        AssertRefused(fixture, NewProjectUiText.InvalidFolderName);
+        AssertRefused(fixture, NewProjectUiText.NameProblem(name.Trim()));
 
         fixture.Dialog.TypeName("Game");
         AssertAccepted(fixture);
@@ -104,7 +104,7 @@ public class NewProjectUiValidationTests
 
         if (reserved)
         {
-            AssertRefused(fixture, NewProjectUiText.InvalidFolderName);
+            AssertRefused(fixture, NewProjectUiText.NameProblem(name.Trim()));
             return;
         }
         AssertAccepted(fixture);
@@ -128,7 +128,7 @@ public class NewProjectUiValidationTests
         }
         else
         {
-            AssertRefused(fixture, NewProjectUiText.NameTooLong);
+            AssertRefused(fixture, NewProjectUiText.NameProblem(new string('a', length), codeProject));
         }
     }
 
@@ -225,7 +225,7 @@ public class NewProjectUiValidationTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeName("a/b");
         fixture.Settle();
-        global::Avalonia.Controls.TextBlock message = fixture.Window.Find<global::Avalonia.Controls.TextBlock>(block => block.Text == NewProjectUiText.InvalidFolderName && block.IsEffectivelyVisible);
+        global::Avalonia.Controls.TextBlock message = fixture.Window.Find<global::Avalonia.Controls.TextBlock>(block => block.Text == NewProjectUiText.NameProblem("a/b") && block.IsEffectivelyVisible);
         global::Avalonia.Rect messageBounds = fixture.BoundsOf(message);
         global::Avalonia.Rect okBounds = fixture.BoundsOf(fixture.Dialog.OkButton);
 
@@ -235,7 +235,7 @@ public class NewProjectUiValidationTests
         fixture.Dialog.TypeLocation("rel");
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
-        fixture.IsShown(NewProjectUiText.InvalidFolderName).ShouldBeFalse("the first message is gone");
+        fixture.IsShown(NewProjectUiText.NameProblem("a/b")).ShouldBeFalse("the first message is gone");
         fixture.IsShown(NewProjectUiText.LocationNotAbsolute).ShouldBeTrue("and the next problem shows");
     }
 }

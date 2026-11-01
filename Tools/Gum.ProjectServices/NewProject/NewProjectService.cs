@@ -302,6 +302,11 @@ public class NewProjectService : INewProjectService
         {
             return null;
         }
+        string? root = Path.GetPathRoot(path);
+        if (root != null && root.Length >= path.Length)
+        {
+            return null;
+        }
         string segment = path.TrimEnd('/', '\\');
         segment = segment.Substring(segment.LastIndexOfAny(new[] { '/', '\\' }) + 1);
         return segment.Length == 0 || segment == "." || segment == ".." ? null : segment;

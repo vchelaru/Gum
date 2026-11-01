@@ -92,7 +92,7 @@ public class NewProjectNameValidationTests : NewProjectServiceTestBase
 
             validation.Resolved.ShouldBeNull($"platform={platform}");
             validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName, $"platform={platform}");
-            validation.Error.Message.ShouldBe(NewProjectNameRules.InvalidFolderNameMessage, $"platform={platform}");
+            validation.Error.Message.ShouldBe(NewProjectNameRules.GetProblem(name, platform != null), $"platform={platform}");
             result.Files.Success.ShouldBeFalse($"platform={platform}");
             result.Files.ErrorMessage.ShouldBe(validation.Error.Message, $"platform={platform}");
             Directory.Exists(Game(name)).ShouldBeFalse($"platform={platform}");

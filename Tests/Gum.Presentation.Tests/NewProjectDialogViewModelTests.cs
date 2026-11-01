@@ -314,9 +314,9 @@ public class NewProjectDialogViewModelTests
     [InlineData("My Game", true, "Not a valid C# name.")]
     [InlineData("1Game", true, "Not a valid C# name.")]
     [InlineData("My_Game2", true, "")]
-    [InlineData("a|b", false, "Not a valid folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and names like CON or COM1.")]
-    [InlineData("CON", false, "Not a valid folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and names like CON or COM1.")]
-    [InlineData("a.", false, "Not a valid folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and names like CON or COM1.")]
+    [InlineData("a|b", false, "The name contains characters a folder name cannot have: < > : \" / \u005C | ? *")]
+    [InlineData("CON", false, "CON is a reserved Windows name. Choose another name.")]
+    [InlineData("a.", false, "A folder name cannot end with a dot or a space.")]
     public void ValidationMessage_FollowsTheNameRules(string name, bool codeProject, string expected)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
@@ -347,7 +347,7 @@ public class NewProjectDialogViewModelTests
 
     [Theory]
     [InlineData(125, "")]
-    [InlineData(126, "The name is too long.")]
+    [InlineData(126, "The name is too long: 250 bytes at most.")]
     public void ValidationMessage_CountsTheNameInBytes_NotCharacters(int length, string expected)
     {
         NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = new string('\u00e9', length));
@@ -362,7 +362,7 @@ public class NewProjectDialogViewModelTests
         viewModel.ValidationMessage.ShouldBeEmpty();
 
         viewModel.IncludeCodeProject = true;
-        viewModel.ValidationMessage.ShouldBe("The name is too long.");
+        viewModel.ValidationMessage.ShouldBe("The name is too long: 248 bytes at most.");
 
         viewModel.IncludeCodeProject = false;
         viewModel.ValidationMessage.ShouldBeEmpty();
@@ -384,9 +384,9 @@ public class NewProjectDialogViewModelTests
 
     [Theory]
     [InlineData(250, false, "")]
-    [InlineData(251, false, "The name is too long.")]
+    [InlineData(251, false, "The name is too long: 250 bytes at most.")]
     [InlineData(248, true, "")]
-    [InlineData(249, true, "The name is too long.")]
+    [InlineData(249, true, "The name is too long: 248 bytes at most.")]
     public void ValidationMessage_LimitsTheNameToWhatFitsAsAFileNameWithItsExtension(int length, bool codeProject, string expected)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>

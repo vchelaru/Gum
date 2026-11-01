@@ -11,13 +11,6 @@ namespace Gum.ProjectServices;
 /// </summary>
 public static class NewProjectNameRules
 {
-    /// <summary>Shown when <see cref="IsValidFolderName"/> is false. Says what to change.</summary>
-    public const string InvalidFolderNameMessage =
-        "Not a valid folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and names like CON or COM1.";
-
-    /// <summary>Shown when <see cref="IsTooLong"/> is true.</summary>
-    public const string NameTooLongMessage = "The name is too long.";
-
     private const string ForbiddenCharacters = "<>:\"/\\|?*";
 
     private static readonly string[] ReservedNames =
@@ -42,16 +35,35 @@ public static class NewProjectNameRules
     }
 
     /// <summary>
-    /// The message for the first rule <paramref name="name"/> (already trimmed, not empty) breaks, or <see langword="null"/>
-    /// when it can name the project.
+    /// A short sentence naming the first rule <paramref name="name"/> (already trimmed, not empty) breaks, or
+    /// <see langword="null"/> when it can name the project.
     /// </summary>
     public static string? GetProblem(string name, bool includeCodeProject)
     {
-        if (!IsValidFolderName(name))
+        if (name.Any(character => character < ' ' || ForbiddenCharacters.Contains(character)))
         {
-            return InvalidFolderNameMessage;
+            return "The name contains characters a folder name cannot have: " + string.Join(' ', ForbiddenCharacters.Select(character => character.ToString()));
         }
-        return IsTooLong(name, includeCodeProject) ? NameTooLongMessage : null;
+        if (name.EndsWith('.') || name.EndsWith(' '))
+        {
+            return "A folder name cannot end with a dot or a space.";
+        }
+        string? reserved = GetReservedBaseName(name);
+        if (reserved != null)
+        {
+            return $"{reserved} is a reserved Windows name. Choose another name.";
+        }
+        return IsTooLong(name, includeCodeProject)
+            ? $"The name is too long: {MaxFileNameBytes - (includeCodeProject ? CsprojExtensionLength : GumExtensionLength)} bytes at most."
+            : null;
+    }
+
+    // A device name is reserved with any extension too ("CON.txt"); returns it as typed, or null.
+    private static string? GetReservedBaseName(string name)
+    {
+        int dot = name.IndexOf('.');
+        string baseName = (dot < 0 ? name : name.Substring(0, dot)).TrimEnd(' ');
+        return ReservedNames.Contains(baseName, StringComparer.OrdinalIgnoreCase) ? baseName : null;
     }
 
     /// <summary>Whether <paramref name="name"/> (already trimmed) can name the project folder and file on every OS.</summary>
@@ -66,9 +78,6 @@ public static class NewProjectNameRules
             return false;
         }
 
-        // A device name is reserved with any extension too ("CON.txt").
-        int dot = name.IndexOf('.');
-        string baseName = dot < 0 ? name : name.Substring(0, dot);
-        return !ReservedNames.Contains(baseName.TrimEnd(' '), StringComparer.OrdinalIgnoreCase);
+        return GetReservedBaseName(name) == null;
     }
 }
