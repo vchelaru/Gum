@@ -206,8 +206,8 @@ public class LineRectangle : GradientShapeRenderable
 
     /// <summary>
     /// Issue #2998 — see <see cref="LineCircle.ShouldPaintFillGradient"/> for the full
-    /// contract. Same gate, same predicate, applied to <see cref="DrawLinearGradientQuad"/>
-    /// and <see cref="DrawRadialGradientGrid"/> on the fill pass.
+    /// contract. Same gate, same predicate, applied to <see cref="DrawGradientGrid"/>
+    /// on the fill pass.
     /// </summary>
     public bool ShouldPaintFillGradient =>
         UseGradient && (FillColor.HasValue || IsFilled) && (Color1.A > 0 || Color2.A > 0);
@@ -411,8 +411,8 @@ public class LineRectangle : GradientShapeRenderable
                 // applied via the same R() helper used by the outline path.
                 //
                 // Issue #2998 — gradient visibility comes from the gradient STOP alphas, not the
-                // solid fill alpha; neither DrawLinearGradientQuad nor DrawRadialGradientGrid
-                // modulates by fillColor.A. Route through ShouldPaintFillGradient (the single source
+                // solid fill alpha; DrawGradientGrid
+                // does not modulate by fillColor.A. Route through ShouldPaintFillGradient (the single source
                 // of truth) so a transparent solid fill with visible stops still paints, and two
                 // transparent stops paint nothing.
                 if (!ShouldPaintFillGradient)
@@ -421,13 +421,13 @@ public class LineRectangle : GradientShapeRenderable
                 }
                 else if (GradientType == GradientType.Linear)
                 {
-                    DrawLinearGradientQuad(tl, tr, br, bl, w, h);
+                    DrawGradientGrid(R, w, h, SampleLinearAt);
                 }
                 else
                 {
                     // Per-vertex-colored grid clipped to the rectangle (a fan from the centroid gives
                     // "X"-shaped spokes; stacked translucent circles accumulate alpha and ignore the bounds).
-                    DrawRadialGradientGrid(R, w, h);
+                    DrawGradientGrid(R, w, h, RadialColorAt(w, h));
                 }
             }
             else if (useRounded && !rotated)
@@ -579,41 +579,51 @@ public class LineRectangle : GradientShapeRenderable
     }
 
     /// <summary>
-    /// Emits two triangles covering the rotated quad with per-vertex colors computed from the
-    /// linear gradient axis. Exact for a planar gradient — barycentric interpolation across each
-    /// triangle reproduces the gradient correctly across the diagonal seam.
-    /// </summary>
-    private void DrawLinearGradientQuad(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl,
-        float w, float h)
-    {
-        // Coords are rectangle-local (0,0 = top-left). Cache the four corner t values then
-        // emit two triangles. Same vertex order rule as raylib's DrawTriangle / the circle's
-        // gradient fan: CCW front-facing.
-        Color cTl = SampleLinearAt(0f, 0f);
-        Color cTr = SampleLinearAt(w, 0f);
-        Color cBr = SampleLinearAt(w, h);
-        Color cBl = SampleLinearAt(0f, h);
-
-        Rlgl.Begin((int)DrawMode.Triangles);
-        EmitVertexColored(tl, cTl);
-        EmitVertexColored(br, cBr);
-        EmitVertexColored(tr, cTr);
-
-        EmitVertexColored(tl, cTl);
-        EmitVertexColored(bl, cBl);
-        EmitVertexColored(br, cBr);
-        Rlgl.End();
-    }
-
-    /// <summary>
-    /// Renders the radial gradient as a grid of triangles whose per-vertex color is the gradient
-    /// sampled at that vertex's distance from the gradient center. The mesh covers exactly the
+    /// Renders a gradient as a grid of triangles whose per-vertex color is <paramref name="colorAt"/>
+    /// sampled at that vertex, linear and radial alike. A grid (not two triangles over the corners)
+    /// keeps the clamp beyond the gradient endpoints, which a planar blend across the whole quad
+    /// would smear into the middle of the shape (#7307). The mesh covers exactly the
     /// rectangle (so it never bleeds outside it) and each pixel is painted once, so translucent
     /// stops do not accumulate alpha the way stacked concentric circles did. Colors interpolate
     /// straight (unpremultiplied) like Skia's default gradient shader. Vertices go through
     /// <paramref name="toWorld"/>, so the gradient rotates with the rectangle.
     /// </summary>
-    private void DrawRadialGradientGrid(Func<float, float, Vector2> toWorld, float w, float h)
+    private void DrawGradientGrid(Func<float, float, Vector2> toWorld, float w, float h,
+        Func<float, float, Color> colorAt)
+    {
+        int columns = Math.Clamp((int)MathF.Ceiling(w / 4f), 1, 96);
+        int rows = Math.Clamp((int)MathF.Ceiling(h / 4f), 1, 96);
+
+        Rlgl.Begin((int)DrawMode.Triangles);
+        for (int row = 0; row < rows; row++)
+        {
+            float y0 = h * row / rows;
+            float y1 = h * (row + 1) / rows;
+            for (int column = 0; column < columns; column++)
+            {
+                float x0 = w * column / columns;
+                float x1 = w * (column + 1) / columns;
+                Color c00 = colorAt(x0, y0);
+                Color c10 = colorAt(x1, y0);
+                Color c11 = colorAt(x1, y1);
+                Color c01 = colorAt(x0, y1);
+                Vector2 p00 = toWorld(x0, y0);
+                Vector2 p10 = toWorld(x1, y0);
+                Vector2 p11 = toWorld(x1, y1);
+                Vector2 p01 = toWorld(x0, y1);
+                // CCW front-facing under default culling.
+                EmitVertexColored(p00, c00);
+                EmitVertexColored(p11, c11);
+                EmitVertexColored(p10, c10);
+                EmitVertexColored(p00, c00);
+                EmitVertexColored(p01, c01);
+                EmitVertexColored(p11, c11);
+            }
+        }
+        Rlgl.End();
+    }
+
+    private Func<float, float, Color> RadialColorAt(float w, float h)
     {
         float cx = EffectiveGradientX1;
         float cy = EffectiveGradientY1;
@@ -625,49 +635,17 @@ public class LineRectangle : GradientShapeRenderable
         float span = outer - inner;
 
         // Degenerate band (inner >= outer): whole shape reads as Color2.
-        bool degenerate = span <= 0f;
-
-        int columns = Math.Clamp((int)MathF.Ceiling(w / 4f), 1, 96);
-        int rows = Math.Clamp((int)MathF.Ceiling(h / 4f), 1, 96);
-
-        Color ColorAt(float x, float y)
+        if (span <= 0f)
         {
-            if (degenerate)
-            {
-                return Color2;
-            }
+            return (x, y) => Color2;
+        }
+
+        return (x, y) =>
+        {
             float dx = x - cx;
             float dy = y - cy;
             return LerpClamped((MathF.Sqrt(dx * dx + dy * dy) - inner) / span);
-        }
-
-        Rlgl.Begin((int)DrawMode.Triangles);
-        for (int row = 0; row < rows; row++)
-        {
-            float y0 = h * row / rows;
-            float y1 = h * (row + 1) / rows;
-            for (int column = 0; column < columns; column++)
-            {
-                float x0 = w * column / columns;
-                float x1 = w * (column + 1) / columns;
-                Color c00 = ColorAt(x0, y0);
-                Color c10 = ColorAt(x1, y0);
-                Color c11 = ColorAt(x1, y1);
-                Color c01 = ColorAt(x0, y1);
-                Vector2 p00 = toWorld(x0, y0);
-                Vector2 p10 = toWorld(x1, y0);
-                Vector2 p11 = toWorld(x1, y1);
-                Vector2 p01 = toWorld(x0, y1);
-                // Same winding as DrawLinearGradientQuad (front-facing under default culling).
-                EmitVertexColored(p00, c00);
-                EmitVertexColored(p11, c11);
-                EmitVertexColored(p10, c10);
-                EmitVertexColored(p00, c00);
-                EmitVertexColored(p01, c01);
-                EmitVertexColored(p11, c11);
-            }
-        }
-        Rlgl.End();
+        };
     }
 
     private Color SampleLinearAt(float localX, float localY)
