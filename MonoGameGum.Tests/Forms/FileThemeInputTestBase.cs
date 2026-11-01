@@ -93,7 +93,7 @@ public abstract class FileThemeInputTestBase : BeginnerDriverTestBase
         }
         ObjectFinder.Self.GumProjectSave = entry.Project;
         // A running game gets this registration from GumService.Initialize; BaseTestClass.Dispose clears it.
-        ElementSaveExtensions.RegisterGueInstantiationType("Container", typeof(Gum.GueDeriving.ContainerRuntime));
+        StandardRuntimeRegistrations.Register();
         Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         return entry.Project;
     }

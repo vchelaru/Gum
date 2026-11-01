@@ -36,16 +36,9 @@ public class ThemedTextBoxTextChangedTests : FileThemeInputTestBase
 
     #region Helpers
 
-    private static GumProjectSave LoadThemeWithText(string theme)
-    {
-        GumProjectSave project = LoadTheme(theme);
-        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new Gum.GueDeriving.TextRuntime());
-        return project;
-    }
-
     private (InteractiveGue Visual, TextBox Box) Place(string theme, Action<TextBox>? configure = null)
     {
-        GumProjectSave project = LoadThemeWithText(theme);
+        GumProjectSave project = LoadTheme(theme);
         string component = project.Components.Single(item => item.Name.EndsWith("Controls/TextBox")).Name;
         ScreenSave screen = new ScreenSave { Name = "Screen" + project.Screens.Count };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });

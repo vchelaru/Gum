@@ -150,11 +150,7 @@ public class ThemedScrollBarThumbTravelTests : BaseTestClass
             : Path.Combine(templates, "FormsThemes", theme, "GumProject.gumx");
         // SystemManagers registers these in a running game; without them "Container" loads as a plain
         // GraphicalUiElement and ScrollBar.Track (an InteractiveGue) would be null.
-        ElementSaveExtensions.RegisterGueInstantiation("Container", () => new Gum.GueDeriving.ContainerRuntime());
-        ElementSaveExtensions.RegisterGueInstantiation("NineSlice", () => new Gum.GueDeriving.NineSliceRuntime());
-        ElementSaveExtensions.RegisterGueInstantiation("ColoredRectangle", () => new Gum.GueDeriving.ColoredRectangleRuntime());
-        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new Gum.GueDeriving.TextRuntime());
-        ElementSaveExtensions.RegisterGueInstantiation("Sprite", () => new Gum.GueDeriving.SpriteRuntime());
+        StandardRuntimeRegistrations.Register();
         GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
         project.Initialize();
         ObjectFinder.Self.GumProjectSave = project;

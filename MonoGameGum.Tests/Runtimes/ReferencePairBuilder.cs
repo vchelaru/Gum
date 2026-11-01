@@ -35,8 +35,7 @@ internal static class ReferencePairBuilder
             element.DefaultState!.ParentContainer = element;
             project.StandardElements.Add(element);
         }
-        ElementSaveExtensions.RegisterGueInstantiation("Container", () => new ContainerRuntime());
-        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new TextRuntime());
+        StandardRuntimeRegistrations.Register();
         ObjectFinder.Self.GumProjectSave = project;
 
         ComponentSave pair = new ComponentSave { Name = "Pair", BaseType = "Container" };
