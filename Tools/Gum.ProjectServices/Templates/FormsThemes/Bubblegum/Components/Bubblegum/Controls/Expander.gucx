@@ -266,6 +266,24 @@
       <Variable Type="bool" Name="ContentContainer.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>Expanded</Name>
@@ -274,6 +292,24 @@
       </Variable>
       <Variable Type="bool" Name="ContentContainer.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
