@@ -27,7 +27,7 @@ namespace Gum.Renderables;
 /// arc-restricted version of the concentric-band approach <c>LineCircle</c> uses for a full disk.
 /// </para>
 /// </remarks>
-public class LineArc : InvisibleRenderable
+public class LineArc : GradientShapeRenderable
 {
     /// <summary>
     /// Color slot used as the stroke color when <see cref="StrokeColor"/> is <c>null</c>.
@@ -123,60 +123,6 @@ public class LineArc : InvisibleRenderable
     /// <summary>Gradient end color (linear: at the axis end; radial: at the outer radius).</summary>
     public Color Color2 { get; set; } = Color.White;
 
-    /// <inheritdoc cref="LineCircle.GradientX1"/>
-    public float GradientX1 { get; set; }
-
-    /// <inheritdoc cref="LineCircle.GradientY1"/>
-    public float GradientY1 { get; set; }
-
-    /// <inheritdoc cref="LineCircle.GradientX2"/>
-    public float GradientX2 { get; set; }
-
-    /// <inheritdoc cref="LineCircle.GradientY2"/>
-    public float GradientY2 { get; set; }
-
-    /// <inheritdoc cref="LineCircle.GradientInnerRadius"/>
-    public float GradientInnerRadius { get; set; }
-
-    /// <inheritdoc cref="LineCircle.GradientOuterRadius"/>
-    public float GradientOuterRadius { get; set; }
-
-    /// <summary>Unit of <see cref="GradientX1"/>, resolved against the arc's width. Matches Skia.</summary>
-    public GeneralUnitType GradientX1Units { get; set; }
-
-    /// <summary>Unit of <see cref="GradientY1"/>, resolved against the arc's height.</summary>
-    public GeneralUnitType GradientY1Units { get; set; }
-
-    /// <summary>Unit of <see cref="GradientX2"/>, resolved against the arc's width.</summary>
-    public GeneralUnitType GradientX2Units { get; set; }
-
-    /// <summary>Unit of <see cref="GradientY2"/>, resolved against the arc's height.</summary>
-    public GeneralUnitType GradientY2Units { get; set; }
-
-    /// <summary>Unit of <see cref="GradientInnerRadius"/>, resolved against the arc's width.</summary>
-    public DimensionUnitType GradientInnerRadiusUnits { get; set; }
-
-    /// <summary>Unit of <see cref="GradientOuterRadius"/>, resolved against the arc's width.</summary>
-    public DimensionUnitType GradientOuterRadiusUnits { get; set; }
-
-    /// <summary><see cref="GradientX1"/> in bbox-local pixels after applying <see cref="GradientX1Units"/>.</summary>
-    public float EffectiveGradientX1 => GradientUnitResolver.ResolveEndpoint(GradientX1, GradientX1Units, Width);
-
-    /// <summary><see cref="GradientY1"/> in bbox-local pixels after applying <see cref="GradientY1Units"/>.</summary>
-    public float EffectiveGradientY1 => GradientUnitResolver.ResolveEndpoint(GradientY1, GradientY1Units, Height);
-
-    /// <summary><see cref="GradientX2"/> in bbox-local pixels after applying <see cref="GradientX2Units"/>.</summary>
-    public float EffectiveGradientX2 => GradientUnitResolver.ResolveEndpoint(GradientX2, GradientX2Units, Width);
-
-    /// <summary><see cref="GradientY2"/> in bbox-local pixels after applying <see cref="GradientY2Units"/>.</summary>
-    public float EffectiveGradientY2 => GradientUnitResolver.ResolveEndpoint(GradientY2, GradientY2Units, Height);
-
-    /// <summary><see cref="GradientInnerRadius"/> in pixels after applying <see cref="GradientInnerRadiusUnits"/>.</summary>
-    public float EffectiveGradientInnerRadius => GradientUnitResolver.ResolveRadius(GradientInnerRadius, GradientInnerRadiusUnits, Width);
-
-    /// <summary><see cref="GradientOuterRadius"/> in pixels after applying <see cref="GradientOuterRadiusUnits"/>.</summary>
-    public float EffectiveGradientOuterRadius => GradientUnitResolver.ResolveRadius(GradientOuterRadius, GradientOuterRadiusUnits, Width);
-
     /// <summary>
     /// Issue #3454 — true when the gradient pass should paint. The arc is stroke-only (no fill
     /// slot), so unlike <see cref="LineCircle.ShouldPaintFillGradient"/> this gates only on
@@ -185,35 +131,6 @@ public class LineArc : InvisibleRenderable
     /// </summary>
     public bool ShouldPaintGradient =>
         UseGradient && (Color1.A > 0 || Color2.A > 0);
-
-    /// <inheritdoc cref="LineCircle.GetRotatedGradientEndpoints(float)"/>
-    /// <remarks>Pivots around the arc's bbox center (Width/2, Height/2) rather than
-    /// (Radius, Radius) so non-square bounds rotate correctly.</remarks>
-    public (float x1, float y1, float x2, float y2) GetRotatedGradientEndpoints(float rotationDegrees)
-    {
-        float x1 = EffectiveGradientX1;
-        float y1 = EffectiveGradientY1;
-        float x2 = EffectiveGradientX2;
-        float y2 = EffectiveGradientY2;
-        if (rotationDegrees == 0f)
-        {
-            return (x1, y1, x2, y2);
-        }
-        float rotRad = rotationDegrees * System.MathF.PI / 180f;
-        float cos = System.MathF.Cos(rotRad);
-        float sin = System.MathF.Sin(rotRad);
-        float pivotX = Width * 0.5f;
-        float pivotY = Height * 0.5f;
-        float dx1 = x1 - pivotX;
-        float dy1 = y1 - pivotY;
-        float dx2 = x2 - pivotX;
-        float dy2 = y2 - pivotY;
-        return (
-            pivotX + dx1 * cos + dy1 * sin,
-            pivotY - dx1 * sin + dy1 * cos,
-            pivotX + dx2 * cos + dy2 * sin,
-            pivotY - dx2 * sin + dy2 * cos);
-    }
 
     /// <summary>
     /// When <c>true</c>, a dropshadow pass renders behind the stroke using

@@ -990,28 +990,22 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     /// </summary>
     public override void PreRender()
     {
-        var strokeWidth = StrokeWidth;
-        var strokeDashLength = StrokeDashLength;
-        var strokeGapLength = StrokeGapLength;
+        // Issue #7309 - the same stroke / dash / gap math Rectangle and Circle use: ScreenPixel
+        // scaling, and for the shapes whose Apos draw adds a 1 px anti-alias fringe outside the
+        // nominal thickness (Circle, RoundedRectangle, Line), subtracting that fringe so the visible ring
+        // is the authored width, as in Skia. Arc already accounts for the fringe in its draw.
+        // With no camera (unit tests, before the runtime is added to the system) the zoom is 1.
+        float cameraZoom = this.EffectiveManagers?.Renderer?.Camera?.Zoom ?? 1f;
+        bool fringeOutsideThickness = ContainedRenderable is Circle or RoundedRectangle or Line;
 
-        if (StrokeWidthUnits == DimensionUnitType.ScreenPixel)
-        {
-            // Only ScreenPixel needs the camera zoom; if managers are not yet available
-            // (e.g. unit tests, or before the runtime is added to the system) fall back to
-            // the unscaled value rather than skipping the push entirely.
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
-            if (camera != null)
-            {
-                var zoom = camera.Zoom;
-                strokeWidth /= zoom;
-                strokeDashLength /= zoom;
-                strokeGapLength /= zoom;
-            }
-        }
+        ShapeStrokePreRenderMath.Result strokeMath = ShapeStrokePreRenderMath.Compute(
+            StrokeWidth, StrokeDashLength, StrokeGapLength,
+            StrokeWidthUnits, IsAntialiased, fringeOutsideThickness,
+            cameraZoom, strokeColorAlpha: byte.MaxValue);
 
-        ContainedRenderable.StrokeWidth = strokeWidth;
-        ContainedRenderable.StrokeDashLength = strokeDashLength;
-        ContainedRenderable.StrokeGapLength = strokeGapLength;
+        ContainedRenderable.StrokeWidth = strokeMath.StrokeWidth;
+        ContainedRenderable.StrokeDashLength = strokeMath.DashLength;
+        ContainedRenderable.StrokeGapLength = strokeMath.GapLength;
         ContainedRenderable.IsAntialiased = IsAntialiased;
 
         // NOTE: do NOT call base.PreRender() here. base.PreRender() forwards to
