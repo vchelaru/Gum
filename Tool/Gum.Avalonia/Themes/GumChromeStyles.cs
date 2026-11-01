@@ -13,6 +13,7 @@ using Avalonia.Styling;
 using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using Avalonia.Controls.Shapes;
+using Gum.Avalonia.Plugins.TreeView;
 
 namespace Gum.Avalonia.Themes;
 
@@ -79,7 +80,50 @@ public static class GumChromeStyles
     public static Styles Create()
     {
         RegisterComboBoxColumnFollowsZoom();
+        RegisterRadioButtonFollowsZoom();
         return CreateStyles();
+    }
+
+    private static bool _radioButtonRegistered;
+
+    // Fluent writes the radio ring (20), dot (8), row height (24), glyph column (20) and the content's left margin (8)
+    // into the template itself, so each radio button binds them to the scaled resources once its template is applied.
+    private static void RegisterRadioButtonFollowsZoom()
+    {
+        if (_radioButtonRegistered)
+        {
+            return;
+        }
+        _radioButtonRegistered = true;
+        TemplatedControl.TemplateAppliedEvent.AddClassHandler<RadioButton>((radio, e) =>
+        {
+            foreach (string name in new[] { "OuterEllipse", "CheckOuterEllipse" })
+            {
+                BindSize(e.NameScope.Find<Control>(name), FrbThemeResources.RadioGlyphSizeKey);
+            }
+            BindSize(e.NameScope.Find<Control>("CheckGlyph"), FrbThemeResources.RadioDotSizeKey);
+            if (e.NameScope.Find<Control>("OuterEllipse") is { Parent: Grid row })
+            {
+                row.Bind(Layoutable.HeightProperty, row.GetResourceObservable(FrbThemeResources.RadioRowHeightKey));
+                if (row.Parent is Grid root && root.ColumnDefinitions.Count == 2)
+                {
+                    root.ColumnDefinitions[0].Bind(ColumnDefinition.WidthProperty, root.GetResourceObservable(FrbThemeResources.RadioGlyphColumnKey));
+                }
+            }
+            if (e.NameScope.Find<Control>("PART_ContentPresenter") is { } content)
+            {
+                content.Bind(Layoutable.MarginProperty, content.GetResourceObservable(FrbThemeResources.RadioContentMarginKey));
+            }
+        });
+    }
+
+    private static void BindSize(Control? part, string resourceKey)
+    {
+        if (part != null)
+        {
+            part.Bind(Layoutable.WidthProperty, part.GetResourceObservable(resourceKey));
+            part.Bind(Layoutable.HeightProperty, part.GetResourceObservable(resourceKey));
+        }
     }
 
     private static bool _comboBoxColumnRegistered;
@@ -473,6 +517,7 @@ public static class GumChromeStyles
             VerticalAlignment = VerticalAlignment.Center,
             [!Border.BorderBrushProperty] = foreground,
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(box, 13);
         if (checkedMark)
         {
             box.Child = new global::Avalonia.Controls.Shapes.Path
@@ -481,10 +526,12 @@ public static class GumChromeStyles
                 Height = 7,
                 Data = Geometry.Parse("M 0 0 L 7 7 M 0 7 L 7 0"),
                 StrokeThickness = 2,
+                Stretch = Stretch.Fill,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 [!global::Avalonia.Controls.Shapes.Shape.StrokeProperty] = foreground,
             };
+            AvaloniaTreeIcons.FollowBaseFontSize((Control)box.Child, 7);
         }
         return box;
     }
@@ -624,29 +671,32 @@ public static class GumChromeStyles
 
         Path check = new Path
         {
+            Name = "PART_Check",
             Data = CheckMark,
             StrokeThickness = 2,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
+            RenderTransform = FollowsFontSize(checkBox),
             [!Shape.StrokeProperty] = checkBox[!TemplatedControl.ForegroundProperty],
         };
         check.Bind(Visual.IsVisibleProperty, new Binding(nameof(CheckBox.IsChecked)) { Source = checkBox, Converter = IsTrue });
 
         Border mixed = new Border
         {
-            Width = 6,
-            Height = 6,
+            Name = "PART_Mixed",
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             [!Border.BackgroundProperty] = checkBox[!TemplatedControl.ForegroundProperty],
         };
+        mixed.Bind(Layoutable.WidthProperty, FontSizeTimes(checkBox, 0.5));
+        mixed.Bind(Layoutable.HeightProperty, FontSizeTimes(checkBox, 0.5));
         mixed.Bind(Visual.IsVisibleProperty, new Binding(nameof(CheckBox.IsChecked)) { Source = checkBox, Converter = IsNull });
 
         ContentPresenter content = new ContentPresenter
         {
             Name = "PART_ContentPresenter",
-            Margin = new Thickness(4, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
+            [!Layoutable.MarginProperty] = new Binding(nameof(TemplatedControl.FontSize)) { Source = checkBox, Converter = new FuncValueConverter<double, Thickness>(size => new Thickness(size / 3, 0, 0, 0)) },
             [!ContentPresenter.ContentProperty] = checkBox[!ContentControl.ContentProperty],
             [!ContentPresenter.ContentTemplateProperty] = checkBox[!ContentControl.ContentTemplateProperty],
         };
@@ -665,5 +715,19 @@ public static class GumChromeStyles
         return root;
     }
 
+    // The check box is drawn for the default 12 and scales with its font size (the box itself is one font size square).
+    private static readonly IValueConverter FontSizeToScale = new FuncValueConverter<double, double>(size => size / FrbThemeResources.DefaultBaseFontSize);
+
+    private static ScaleTransform FollowsFontSize(Control source)
+    {
+        ScaleTransform transform = new ScaleTransform();
+        IBinding scale = new Binding(nameof(TemplatedControl.FontSize)) { Source = source, Converter = FontSizeToScale };
+        transform.Bind(ScaleTransform.ScaleXProperty, scale);
+        transform.Bind(ScaleTransform.ScaleYProperty, scale);
+        return transform;
+    }
+
+    private static IBinding FontSizeTimes(Control source, double factor) =>
+        new Binding(nameof(TemplatedControl.FontSize)) { Source = source, Converter = new FuncValueConverter<double, double>(size => size * factor) };
     private static IBinding Resource(string key) => new DynamicResourceExtension(key);
 }
