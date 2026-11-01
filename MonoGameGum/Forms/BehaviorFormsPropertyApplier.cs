@@ -32,6 +32,11 @@ internal static class BehaviorFormsPropertyApplier
     /// </summary>
     public static void ApplyToCreatedControl(InteractiveGue visual)
     {
+        if (visual.FormsControlAsObject is FrameworkElement created && ElementSaveExtensions.InitialFormsPropertiesNotifier != null)
+        {
+            SnapshotInitialValues(created);
+        }
+
         ElementSaveExtensions.InitialFormsPropertiesNotifier?.Invoke(visual, true);
     }
 
@@ -96,34 +101,161 @@ internal static class BehaviorFormsPropertyApplier
                 continue;
             }
 
-            PropertyInfo? prop = formsType.GetProperty(declaration.Name);
-            if (prop == null || !prop.CanWrite)
+            TrySet(formsControl, formsType, declaration.Name, value);
+        }
+
+        return true;
+    }
+
+    // What each property held the first time the project wrote it, so a variable the project later removes
+    // (and the behavior declares no default for) returns to the control's own default.
+    private static readonly ConditionalWeakTable<FrameworkElement, Dictionary<string, object?>> _initialValues = new();
+
+    private static readonly Dictionary<Type, PropertyInfo[]> _simpleProperties = new();
+
+    // The control's own defaults, taken before any project value is written, for a variable removed later.
+    private static void SnapshotInitialValues(FrameworkElement control)
+    {
+        Type type = control.GetType();
+        PropertyInfo[]? properties;
+        lock (_simpleProperties)
+        {
+            if (!_simpleProperties.TryGetValue(type, out properties))
+            {
+                properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(p => p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0 && IsSimple(p.PropertyType))
+                    .ToArray();
+                _simpleProperties[type] = properties;
+            }
+        }
+
+        Dictionary<string, object?> initial = _initialValues.GetOrCreateValue(control);
+        foreach (PropertyInfo property in properties)
+        {
+            try
+            {
+                initial.TryAdd(property.Name, property.GetValue(control));
+            }
+            catch (Exception)
+            {
+                // A getter that needs state the control does not have yet has no default to remember.
+            }
+        }
+    }
+
+    private static bool IsSimple(Type type)
+    {
+        Type target = Nullable.GetUnderlyingType(type) ?? type;
+        return target.IsPrimitive || target.IsEnum || target == typeof(string) || target == typeof(object);
+    }
+
+    private static void TrySet(FrameworkElement formsControl, Type formsType, string name, object? value)
+    {
+        PropertyInfo? prop = formsType.GetProperty(name);
+        if (prop == null || !prop.CanWrite)
+        {
+            return;
+        }
+
+        Dictionary<string, object?> initial = _initialValues.GetOrCreateValue(formsControl);
+        if (value != null && !initial.ContainsKey(name))
+        {
+            initial[name] = prop.GetValue(formsControl);
+        }
+
+        if (value == null)
+        {
+            // A removed variable with no behavior default: back to what the control held before the project wrote it.
+            try
+            {
+                if (initial.TryGetValue(name, out object? original))
+                {
+                    prop.SetValue(formsControl, original);
+                }
+                else if (!prop.PropertyType.IsValueType || Nullable.GetUnderlyingType(prop.PropertyType) != null)
+                {
+                    prop.SetValue(formsControl, null);
+                }
+            }
+            catch (Exception)
+            {
+                // Same as below: a property that cannot take the value is left as it is.
+            }
+            return;
+        }
+
+        try
+        {
+            Type target = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+            // IsAssignableFrom preserves the boxed-enum path for state-authored values
+            // from the variable grid. The IsEnum branch handles raw strings — e.g. a
+            // behavior default <Value xsi:type="xsd:string">Auto</Value> from a .behx,
+            // which Convert.ChangeType cannot coerce onto an enum target.
+            object coerced = prop.PropertyType.IsAssignableFrom(value.GetType())
+                ? value
+                : target.IsEnum
+                    ? Enum.Parse(target, value.ToString()!, ignoreCase: true)
+                    : Convert.ChangeType(value, target);
+            prop.SetValue(formsControl, coerced);
+        }
+        catch (Exception)
+        {
+            // Coercion or set failed; the FormsProperty type doesn't line up with the
+            // FrameworkElement's property. Silently skip rather than crash construction.
+        }
+    }
+
+    /// <summary>
+    /// After a hot reload: writes onto the control each Forms property whose effective project value changed
+    /// (or was removed, which returns it to the behavior default) between the version the visual was built
+    /// from and the reloaded one. A property the reload left alone keeps what code set. Writing through the
+    /// property also refreshes the control's own record of values it must keep across a state re-apply.
+    /// </summary>
+    internal static void ReapplyChanged(
+        FrameworkElement formsControl, GraphicalUiElement visual, Func<string, ElementSave?> oldElement)
+    {
+        ElementSave? newOwn = visual.ElementSave;
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        if (newOwn == null || project == null)
+        {
+            return;
+        }
+
+        ElementSave oldOwn = oldElement(newOwn.Name) ?? newOwn;
+        GraphicalUiElement? container = visual.ElementGueContainingThis as GraphicalUiElement ?? visual.Parent as GraphicalUiElement;
+        ElementSave? newContainer = container?.ElementSave;
+        ElementSave? oldContainer = newContainer == null ? null : oldElement(newContainer.Name) ?? newContainer;
+
+        Type formsType = formsControl.GetType();
+        foreach (VariableSave declaration in EnumerateFormsPropertyDeclarations(newOwn, project))
+        {
+            if (string.IsNullOrEmpty(declaration.Name))
             {
                 continue;
             }
 
-            try
+            object? oldValue = Effective(visual, oldContainer, oldOwn, declaration.Name);
+            object? newValue = Effective(visual, newContainer, newOwn, declaration.Name);
+            if (Equals(oldValue, newValue) || oldValue?.ToString() == newValue?.ToString())
             {
-                Type target = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
-                // IsAssignableFrom preserves the boxed-enum path for state-authored values
-                // from the variable grid. The IsEnum branch handles raw strings — e.g. a
-                // behavior default <Value xsi:type="xsd:string">Auto</Value> from a .behx,
-                // which Convert.ChangeType cannot coerce onto an enum target.
-                object coerced = prop.PropertyType.IsAssignableFrom(value.GetType())
-                    ? value
-                    : target.IsEnum
-                        ? Enum.Parse(target, value.ToString()!, ignoreCase: true)
-                        : Convert.ChangeType(value, target);
-                prop.SetValue(formsControl, coerced);
+                continue;
             }
-            catch (Exception)
+
+            TrySet(formsControl, formsType, declaration.Name, newValue ?? declaration.Value);
+        }
+    }
+
+    private static object? Effective(GraphicalUiElement visual, ElementSave? container, ElementSave own, string propertyName)
+    {
+        if (container?.DefaultState != null && !string.IsNullOrEmpty(visual.Name))
+        {
+            object? overrideValue = new RecursiveVariableFinder(container.DefaultState).GetValue(visual.Name + "." + propertyName);
+            if (overrideValue != null)
             {
-                // Coercion or set failed; the FormsProperty type doesn't line up with the
-                // FrameworkElement's property. Silently skip rather than crash construction.
+                return overrideValue;
             }
         }
-
-        return true;
+        return own.DefaultState == null ? null : new RecursiveVariableFinder(own.DefaultState).GetValue(propertyName);
     }
 
     private static object? ReadEffectiveValue(GraphicalUiElement visual, ElementSave elementSave, string propertyName)
