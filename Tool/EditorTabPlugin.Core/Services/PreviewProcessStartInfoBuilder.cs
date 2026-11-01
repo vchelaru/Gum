@@ -27,6 +27,8 @@ public static class PreviewProcessStartInfoBuilder
         ProcessStartInfo startInfo = new ProcessStartInfo(executablePath)
         {
             UseShellExecute = false,
+            // GumPreview has no console; its one-line startup error is only reachable through this pipe.
+            RedirectStandardError = true,
         };
         startInfo.ArgumentList.Add("--project");
         startInfo.ArgumentList.Add(projectPath);
