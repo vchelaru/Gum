@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Avalonia;
 using Avalonia.Threading;
@@ -30,6 +30,12 @@ public static class Program
     {
         StartupTiming.Mark("Main entry");
         HeadOptions options = HeadOptions.Parse(args);
+        if (options.ExitAfterSeconds != null && options.MissingProjectFile is { } missingProject)
+        {
+            Console.Error.WriteLine("The project file does not exist: " + missingProject + ". No screenshot was taken.");
+            return 1;
+        }
+
         // Before anything reads or writes a per-user file.
         ApplyUserDataFolder(options);
         if (options.ExitAfterSeconds is double exitAfterSeconds)

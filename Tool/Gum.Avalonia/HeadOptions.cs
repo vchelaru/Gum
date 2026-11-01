@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -15,8 +15,9 @@ public sealed class HeadOptions
 {
     /// <summary>Creates the options.</summary>
     public HeadOptions(double? exitAfterSeconds, string? screenshotPath, string? selectPath = null, string? theme = null, string? userDataFolder = null,
-        bool zoomToFit = false)
+        bool zoomToFit = false, string? projectFile = null)
     {
+        ProjectFile = projectFile;
         ExitAfterSeconds = exitAfterSeconds;
         ScreenshotPath = screenshotPath;
         SelectPath = selectPath;
@@ -66,6 +67,15 @@ public sealed class HeadOptions
     /// </summary>
     public string? UserDataFolder { get; }
 
+    /// <summary>The project file (.gumx or .gumj) named on the command line, as a full path; null when none is.</summary>
+    public string? ProjectFile { get; }
+
+    /// <summary>
+    /// The named project file when it does not exist. Loading one shows a modal error that nobody
+    /// answers in an unattended run, so the run would sit until <c>--exit-after</c> (#7374).
+    /// </summary>
+    public string? MissingProjectFile => ProjectFile != null && !File.Exists(ProjectFile) ? ProjectFile : null;
+
     /// <summary>Parses the head-owned flags and ignores everything else.</summary>
     public static HeadOptions Parse(IReadOnlyList<string> args)
     {
@@ -75,6 +85,7 @@ public sealed class HeadOptions
         string? theme = null;
         string? userData = null;
         bool zoomToFit = false;
+        string? projectFile = null;
         for (int i = 0; i < args.Count; i++)
         {
             if (args[i] == "--exit-after" && i + 1 < args.Count)
@@ -101,7 +112,12 @@ public sealed class HeadOptions
             {
                 userData = Path.GetFullPath(args[++i]);
             }
+            else if (projectFile == null && !args[i].StartsWith("--") &&
+                (args[i].EndsWith(".gumx", StringComparison.OrdinalIgnoreCase) || args[i].EndsWith(".gumj", StringComparison.OrdinalIgnoreCase)))
+            {
+                projectFile = Path.GetFullPath(args[i]);
+            }
         }
-        return new HeadOptions(exitAfter, screenshot, select, theme, userData, zoomToFit);
+        return new HeadOptions(exitAfter, screenshot, select, theme, userData, zoomToFit, projectFile);
     }
 }
