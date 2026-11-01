@@ -588,7 +588,8 @@ public class LineArc : GradientShapeRenderable
                     innerRadius, outerRadius,
                     startAngleDeg, endAngleDeg,
                     segments, silhouetteColor);
-            });
+            },
+            new ShadowMaskKey(4, false, innerRadius, outerRadius, startAngleDeg, endAngleDeg, segments));
     }
 
     /// <summary>
