@@ -299,7 +299,8 @@ namespace RenderingLibrary.Math.Geometry
         /// varies with the line length rasterizes some dashes and gaps a pixel wider than the rest. The
         /// remainder shorter than one texel is drawn as a final, shortened texel.
         /// </summary>
-        internal static TextureRun[] LayoutRepeatedTexture(float distance, int textureWidth, float repetitionsPerLength)
+        internal static int LayoutRepeatedTexture(float distance, int textureWidth, float repetitionsPerLength,
+            out TextureRun first, out TextureRun second)
         {
             float texelWidth = 1f / (repetitionsPerLength * textureWidth);
             int wholeTexels = (int)(distance / texelWidth + 0.0001f);
@@ -307,7 +308,9 @@ namespace RenderingLibrary.Math.Geometry
             if (wholeTexels < 1)
             {
                 // Shorter than one texel: only the first texel (the dash) fits.
-                return new[] { new TextureRun(0, distance, 0, 1) };
+                first = new TextureRun(0, distance, 0, 1);
+                second = default;
+                return 1;
             }
 
             float wholeLength = wholeTexels * texelWidth;
@@ -315,14 +318,14 @@ namespace RenderingLibrary.Math.Geometry
 
             if (remainder < texelWidth * 0.001f)
             {
-                return new[] { new TextureRun(0, wholeLength, 0, wholeTexels) };
+                first = new TextureRun(0, wholeLength, 0, wholeTexels);
+                second = default;
+                return 1;
             }
 
-            return new[]
-            {
-                new TextureRun(0, wholeLength, 0, wholeTexels),
-                new TextureRun(wholeLength, remainder, wholeTexels % textureWidth, 1),
-            };
+            first = new TextureRun(0, wholeLength, 0, wholeTexels);
+            second = new TextureRun(wholeLength, remainder, wholeTexels % textureWidth, 1);
+            return 2;
         }
 
         public void Render(SpriteRenderer spriteRenderer, SystemManagers? managers,
@@ -414,8 +417,10 @@ namespace RenderingLibrary.Math.Geometry
                     var direction = new Vector2((float)System.Math.Cos(runAngle), (float)System.Math.Sin(runAngle));
                     var thickness = LinePixelWidth / renderer.CurrentZoom;
 
-                    foreach (var run in LayoutRepeatedTexture(distance, textureToUse.Width, repetitionsPerLength))
+                    int runCount = LayoutRepeatedTexture(distance, textureToUse.Width, repetitionsPerLength, out var firstRun, out var secondRun);
+                    for (int runIndex = 0; runIndex < runCount; runIndex++)
                     {
+                        var run = runIndex == 0 ? firstRun : secondRun;
                         spriteRenderer.Draw(textureToUse,
                             Position + vector1 + direction * run.Offset,
                             new Rectangle(run.SourceX, 0, run.SourceWidth, textureToUse.Height),

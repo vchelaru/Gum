@@ -17,7 +17,8 @@ public class LinePrimitiveDottedPixelTests
     // The dotted line is drawn with .25 * zoom repetitions per world unit: a 4 pixel period at any zoom.
     private static List<int> MeasureRuns(float lengthWorld, float startScreen, float zoom)
     {
-        var runs = LinePrimitive.LayoutRepeatedTexture(lengthWorld, DottedTextureWidth, .25f * zoom);
+        int runCount = LinePrimitive.LayoutRepeatedTexture(lengthWorld, DottedTextureWidth, .25f * zoom, out var first, out var second);
+        var runs = runCount == 1 ? new[] { first } : new[] { first, second };
 
         float startWorld = startScreen / zoom;
         int firstPixel = (int)System.Math.Floor(startScreen);
