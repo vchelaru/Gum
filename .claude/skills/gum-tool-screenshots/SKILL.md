@@ -33,3 +33,4 @@ The editor canvas does not show how a Forms control looks at runtime (templates,
 - Before/after: build GumPreview in each worktree and run each exe on its own project copy. The theme files are data, so the same exe works for both if only a template changed.
 - A thumb with no visible track makes a one-pixel change invisible by eye; size the list so the thumb nearly fills it, or diff the two PNGs.
 - Exit 1 with "was not ready within --exit-after ... No screenshot was taken" means the project did not load or no frame drew; read the stderr text. Open the PNG and confirm the controls are drawn before reporting.
+- A component alone (`--element Meadow/Controls/TextBox`) draws at the top-left of the 1024x768 canvas; `--focus` names an instance inside a screen, so use a screen for the focused/typed/selected look.
