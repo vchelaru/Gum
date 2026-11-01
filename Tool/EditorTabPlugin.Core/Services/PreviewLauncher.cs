@@ -126,6 +126,14 @@ public class PreviewLauncher : IPreviewLauncher
         {
             _outputManager.AddError($"Could not launch the preview: {exception.Message}");
             _process = null;
+            DeleteSelectionFileQuietly();
+            return;
+        }
+
+        if (_process == null)
+        {
+            _outputManager.AddError($"Could not launch the preview: the process did not start ({resolved.Value.ExecutablePath}).");
+            DeleteSelectionFileQuietly();
             return;
         }
 
