@@ -13,10 +13,10 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// Splash-damage sweep over the MenuItem/Menu popup (#6685, #6691): how the menu opens, switches and
+/// The MenuItem/Menu popup: how the menu opens, switches and
 /// closes under cursor pushes, hovering and programmatic selection, and the events it raises.
 /// </summary>
-public class MenuItemInteractionSplashTests : BaseTestClass
+public class MenuItemInteractionTests : BaseTestClass
 {
     #region Helpers
 

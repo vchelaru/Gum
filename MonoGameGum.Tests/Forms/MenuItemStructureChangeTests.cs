@@ -11,11 +11,11 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// Splash-damage sweep over the MenuItem/Menu popup (#6685, #6691): the menu's structure changing
+/// The MenuItem/Menu popup: the menu's structure changing
 /// while it is open or closed (items added, removed, hidden, replaced, rebuilt from a collection) and
 /// the Visual being replaced or the whole menu leaving and re-entering the tree.
 /// </summary>
-public class MenuItemStructureSplashTests : BaseTestClass
+public class MenuItemStructureChangeTests : BaseTestClass
 {
     #region Helpers
 

@@ -6,7 +6,7 @@ using static Gum.Presentation.Tests.StateSelectionCanvasHarness;
 
 namespace Gum.Presentation.Tests;
 
-public partial class StateSelectionCanvasSplashTests
+public partial class StateSelectionCanvasPrecedenceTests
 {
     /// <summary>A screen state that sets the instance's category state while IsEnabled is false: the Forms variable wins.</summary>
     [Fact]

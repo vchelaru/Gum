@@ -12,13 +12,13 @@ using static MonoGameGum.Tests.RenderingLibraries.BatchOrdererScenes;
 namespace MonoGameGum.Tests.RenderingLibraries;
 
 /// <summary>
-/// Splash-damage tests around #7032: draw-order correctness and texture-run merging of
+/// Draw-order correctness and texture-run merging of
 /// <see cref="BatchKeyGroupedOrderer"/> for component-shaped scenes (free-container roots holding
 /// sprites, nine-slices, text pieces and shapes), with clips, render targets and invisible nodes.
 /// The invariant everywhere: reordering must never change the visual result, so overlapping
 /// renderables keep their depth-first order.
 /// </summary>
-public class BatchKeyGroupedOrdererSplashTests : BaseTestClass
+public class BatchKeyGroupedOrdererComponentSceneTests : BaseTestClass
 {
     private static readonly object TexBg = new object();
     private static readonly object TexFont = new object();
