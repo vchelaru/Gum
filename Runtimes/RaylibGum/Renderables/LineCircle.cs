@@ -383,7 +383,8 @@ public class LineCircle : GradientShapeRenderable
                         {
                             DrawCircleV(new Vector2(px + r, py + r), r, silhouetteColor);
                         }
-                    });
+                    },
+                    new ShadowMaskKey(3, hollow, r, StrokeWidth));
             }
             else
             {

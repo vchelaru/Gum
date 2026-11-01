@@ -365,7 +365,8 @@ public class LineRectangle : GradientShapeRenderable
                         {
                             DrawRectangleV(new Vector2(px, py), new Vector2(w, h), silhouetteColor);
                         }
-                    });
+                    },
+                    new ShadowMaskKey(useRounded ? 2 : 1, hollow, roundness, roundedSegments, LinePixelWidth));
             }
             else
             {
