@@ -14,10 +14,10 @@ using Xunit;
 namespace MonoGameGum.Tests.Runtimes;
 
 /// <summary>
-/// Splash-damage sweep (#6644) of the per-frame update contract: <see cref="IUpdateEveryFrame"/> and its
+/// The per-frame update contract: <see cref="IUpdateEveryFrame"/> and its
 /// IsActivityNeeded member, together with the idle-subtree skip in GraphicalUiElement.AnimateSelf.
 /// </summary>
-public class UpdateEveryFrameSplashTests : BaseTestClass
+public class UpdateEveryFrameTests : BaseTestClass
 {
     #region Helpers
 

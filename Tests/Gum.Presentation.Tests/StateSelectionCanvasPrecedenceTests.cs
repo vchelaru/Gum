@@ -14,15 +14,15 @@ using static Gum.Presentation.Tests.StateSelectionCanvasHarness;
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// Splash damage for #6851: what the canvas shows after the user selects a state, across state kinds,
+/// What the canvas shows after the user selects a state, across state kinds,
 /// reference rows on the default and the selected state, element kinds, authored behavior values and
 /// refreshes. Every test drives the real <c>WireframeObjectManager.RefreshAll</c>.
 /// </summary>
-public partial class StateSelectionCanvasSplashTests : BaseTestClass
+public partial class StateSelectionCanvasPrecedenceTests : BaseTestClass
 {
     private readonly Func<string, ISystemManagers, IRenderable?>? _previousRenderableFunc;
 
-    public StateSelectionCanvasSplashTests()
+    public StateSelectionCanvasPrecedenceTests()
     {
         GumExpressionService.Initialize();
         _previousRenderableFunc = ElementSaveExtensions.CustomCreateGraphicalComponentFunc;

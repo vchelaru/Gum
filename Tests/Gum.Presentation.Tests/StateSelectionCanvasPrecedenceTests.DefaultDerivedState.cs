@@ -13,7 +13,7 @@ namespace Gum.Presentation.Tests;
 /// A component viewed itself with Default selected shows what a running game shows: the Default values
 /// with the Enabled or Disabled category state (chosen by IsEnabled, true when unset) on top (#6857).
 /// </summary>
-public partial class StateSelectionCanvasSplashTests
+public partial class StateSelectionCanvasPrecedenceTests
 {
     [Theory]
     [InlineData(true)]

@@ -15,13 +15,13 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// Splash-damage sweep for #6643: where a ComboBox drop-down is scrolled when it opens, across the
+/// Where a ComboBox drop-down is scrolled when it opens, across the
 /// ways the selection and the items can change while it is closed or open.
 /// Boundary: ComboBox open/close + ListBox SelectedIndex/ScrollIndexIntoView/visibility/layout.
 /// "In view" is judged from the rows' absolute rectangles against the clip container, which is
 /// what the user sees, never from the scroll value formula under test.
 /// </summary>
-public class ComboBoxScrollSplashTests : BaseTestClass
+public class ComboBoxScrollTests : BaseTestClass
 {
     private const int ManyItems = 30;
 

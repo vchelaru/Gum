@@ -16,7 +16,7 @@ namespace Gum.Presentation.Tests;
 /// over a category state a state of the container sets. Controls: Button (IsEnabled), CheckBox (IsEnabled,
 /// IsChecked), the Forms properties that feed a *CategoryState through a behavior's tool-only reference.
 /// </summary>
-public partial class StateSelectionCanvasSplashTests
+public partial class StateSelectionCanvasPrecedenceTests
 {
     #region Case model and oracle
 
