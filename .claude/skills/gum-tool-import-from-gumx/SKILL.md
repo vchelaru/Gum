@@ -39,6 +39,10 @@ Anything `GumxImportService.ImportAsync` cannot bring over (a listed file that i
 
 Files reached through another file: each copied `.achx`/`.achj` is loaded with `AnimationChainListSave.FromFile` and its textures are copied with their path relative to the chain kept (once if shared). A texture that is missing, absolute, or leaves the source project, and a chain that will not load, go through `AddSkipped`; the element still imports. Shader files (`ShaderFileExtensions`) are copied like any Source File.
 
+## Files must be inside the source project
+
+`SourceProjectContainment.GetRefusal(sourceBase, relativePath)` is the one check for "is this file inside the source project": a `..` that leaves it, or a real path (every symlink or junction followed, on the file and each parent folder) outside the real source folder. Every asset read goes through it (Source Files, fonts, shaders, chain textures, element animation files) and a refused file is reported through `AddSkipped`. Links that stay inside the project are allowed. Behavior and Standard file paths are deliberately not checked: a project may reference them anywhere.
+
 ## Tree rows
 
 Each row is a check box plus a "Details..." `HyperlinkButton`, visible only on flagged-Standard rows (`ImportTreeNodeViewModel.IsDetailsButtonVisible`). The link opens `StandardDiffDetailsView` as a separate modal showing the row's `StandardDiffRows`; the diff is not expanded inline in the tree. A force-included Standard's check box is disabled, with `RequiredReason` as its tooltip.

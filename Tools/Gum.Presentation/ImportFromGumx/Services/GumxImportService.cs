@@ -180,7 +180,17 @@ public class GumxImportService : IGumxImportService
                 .ToList();
 
             var fetchTasks = allAssetPaths
-                .Select(async p => (path: p, bytes: await _sourceService.FetchBinaryAsync(p.Replace('\\', '/'), sourceBase)))
+                .Select(async p =>
+                {
+                    // A file whose real path is outside the source project (a link planted in it) is reported and treated as missing.
+                    string? refusal = SourceProjectContainment.GetRefusal(sourceBase, p);
+                    if (refusal != null)
+                    {
+                        result.AddSkipped(p, refusal);
+                        return (path: p, bytes: (byte[]?)null);
+                    }
+                    return (path: p, bytes: await _sourceService.FetchBinaryAsync(p.Replace('\\', '/'), sourceBase));
+                })
                 .ToList();
             var assetCache = (await Task.WhenAll(fetchTasks))
                 .ToDictionary(t => t.path, t => t.bytes, StringComparer.OrdinalIgnoreCase);
@@ -453,6 +463,12 @@ public class GumxImportService : IGumxImportService
                     chain.Refused.Add((name, refusal!));
                     continue;
                 }
+                string? linkRefusal = SourceProjectContainment.GetRefusal(sourceBase, resolved);
+                if (linkRefusal != null)
+                {
+                    chain.Refused.Add((resolved, linkRefusal));
+                    continue;
+                }
                 if (!fetches.ContainsKey(resolved))
                 {
                     fetches[resolved] = _sourceService.FetchBinaryAsync(resolved, sourceBase);
@@ -492,7 +508,7 @@ public class GumxImportService : IGumxImportService
             {
                 if (stack.Count == 0)
                 {
-                    refusal = "texture path leaves the source project, so it was not copied";
+                    refusal = "texture path " + SourceProjectContainment.LeavesProjectReason;
                     return null;
                 }
                 stack.RemoveAt(stack.Count - 1);
@@ -649,6 +665,9 @@ public class GumxImportService : IGumxImportService
         {
             string relativeSourcePath = $"{elementSubfolder}/{sourceName}" +
                 ElementAnimationsSave.GetFileNameSuffix(isSourceJson);
+
+            string? refusal = SourceProjectContainment.GetRefusal(sourceBase, relativeSourcePath);
+            if (refusal != null) throw new IOException($"{relativeSourcePath} {refusal}");
 
             byte[]? bytes = await _sourceService.FetchBinaryAsync(relativeSourcePath, sourceBase);
             if (bytes == null)

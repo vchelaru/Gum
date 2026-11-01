@@ -213,7 +213,7 @@ public class GumxImportAnimationChainTextureTests : IDisposable
         + string.Join(",", textures.Select(t => $"{{\"textureName\":\"{t}\",\"frameLength\":0.1}}"))
         + "]}]}";
 
-    private class FakeImportLogic : IImportLogic
+    internal class FakeImportLogic : IImportLogic
     {
         private readonly string _projectDir;
         public FakeImportLogic(string projectDir) { _projectDir = projectDir; }
@@ -230,7 +230,7 @@ public class GumxImportAnimationChainTextureTests : IDisposable
         public BehaviorSave ImportBehavior(FilePath filePath, string? desiredDirectory = null, bool saveProject = false) => new BehaviorSave();
     }
 
-    private class FakeProjectState : IProjectState
+    internal class FakeProjectState : IProjectState
     {
         public FakeProjectState(string projectDirectory, GumProjectSave gumProjectSave)
         {
@@ -249,7 +249,7 @@ public class GumxImportAnimationChainTextureTests : IDisposable
         public bool NeedsToSaveProject => false;
     }
 
-    private class FakeFileCommands : IFileCommands
+    internal class FakeFileCommands : IFileCommands
     {
 #pragma warning disable CS0067
         public event Action? LocalizationLoaded;
