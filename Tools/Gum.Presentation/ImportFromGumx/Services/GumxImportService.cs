@@ -176,7 +176,7 @@ public class GumxImportService : IGumxImportService
                 .Concat(selections.DirectComponents)
                 .Concat(selections.DirectScreens)
                 .ToList();
-            List<string> behaviorAssetPaths = CollectBehaviorAssetPaths(selections.Behaviors);
+            List<string> behaviorAssetPaths = CollectOutsideBehaviorAssetPaths(selections.Behaviors, sourceBase);
 
             var assetsByElement = allCandidateElements.ToDictionary(
                 e => e,
@@ -280,7 +280,7 @@ public class GumxImportService : IGumxImportService
             List<BehaviorSave> importedBehaviors = new();
             foreach (var behavior in selections.Behaviors.Where(b => !b.IsSourceFileMissing))
             {
-                List<string> missingBehaviorAssets = CollectBehaviorAssetPaths(new[] { behavior })
+                List<string> missingBehaviorAssets = CollectOutsideBehaviorAssetPaths(new[] { behavior }, sourceBase)
                     .Where(p => assetCache.TryGetValue(p, out var b) && b == null).ToList();
                 if (missingBehaviorAssets.Count > 0)
                 {
@@ -309,7 +309,7 @@ public class GumxImportService : IGumxImportService
             // 6. Write pre-fetched asset files to disk for imported elements
             var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
             List<string> importedAssetPaths = CollectReferencedAssetPaths(importedElements)
-                .Concat(CollectBehaviorAssetPaths(importedBehaviors))
+                .Concat(CollectOutsideBehaviorAssetPaths(importedBehaviors, sourceBase))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
             await CopyCachedAssetsAsync(importedAssetPaths, assetCache, projectDir, result, externalPlan);
@@ -385,6 +385,13 @@ public class GumxImportService : IGumxImportService
     /// <summary>The same scan over a behavior's states, required variables and forms properties.</summary>
     private static List<string> CollectBehaviorAssetPaths(IEnumerable<BehaviorSave> behaviors) =>
         CollectAssetPaths(behaviors.SelectMany(ExternalAssetPlan.GetVariables));
+
+    /// <summary>
+    /// Only the files a behavior names from outside the source project: those are copied to external and
+    /// a missing one skips the behavior. Inside-project files are left alone, as before external files existed.
+    /// </summary>
+    private static List<string> CollectOutsideBehaviorAssetPaths(IEnumerable<BehaviorSave> behaviors, string sourceBase) =>
+        CollectBehaviorAssetPaths(behaviors).Where(path => ExternalAssetPlan.IsOutside(sourceBase, path)).ToList();
 
     private static List<string> CollectAssetPaths(IEnumerable<VariableSave> variables)
     {

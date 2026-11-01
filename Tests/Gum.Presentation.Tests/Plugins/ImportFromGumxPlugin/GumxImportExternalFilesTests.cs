@@ -289,6 +289,37 @@ public class GumxImportExternalFilesTests : IDisposable
         File.Exists(Path.Combine(_projectDir, "Behaviors", "B.behx")).ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task ImportAsync_BehaviorWithStaleInsideProjectFile_IsStillImportedAndNothingIsCopied()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "B" };
+        behavior.RequiredVariables.Variables.Add(new VariableSave { Name = "Sprite.SourceFile", Value = "textures/gone.png", SetsValue = true });
+        string behaviorFile = Path.Combine(_sourceDir, "Behaviors", "B.behx");
+        Directory.CreateDirectory(Path.GetDirectoryName(behaviorFile)!);
+        behavior.Save(behaviorFile, true);
+
+        ImportResult result = await ImportMany(new(), new List<BehaviorSave> { behavior }, ConflictResolution.Cancel);
+
+        result.SkippedElements.ShouldNotContain("Behaviors/B");
+        File.ReadAllText(Path.Combine(_projectDir, "Behaviors", "B.behx")).ShouldContain("textures/gone.png");
+    }
+
+    [Fact]
+    public async Task ImportAsync_BehaviorWithExistingInsideProjectFile_DoesNotCopyIt()
+    {
+        File.WriteAllText(Path.Combine(_sourceDir, "in.png"), "in");
+        BehaviorSave behavior = new BehaviorSave { Name = "B" };
+        behavior.RequiredVariables.Variables.Add(new VariableSave { Name = "Sprite.SourceFile", Value = "in.png", SetsValue = true });
+        string behaviorFile = Path.Combine(_sourceDir, "Behaviors", "B.behx");
+        Directory.CreateDirectory(Path.GetDirectoryName(behaviorFile)!);
+        behavior.Save(behaviorFile, true);
+
+        await ImportMany(new(), new List<BehaviorSave> { behavior }, ConflictResolution.Cancel);
+
+        File.Exists(Path.Combine(_projectDir, "in.png")).ShouldBeFalse();
+        File.Exists(Path.Combine(_projectDir, "Behaviors", "B.behx")).ShouldBeTrue();
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────
 
     private string WriteOutside(string relativeToGameFolder, string contents)

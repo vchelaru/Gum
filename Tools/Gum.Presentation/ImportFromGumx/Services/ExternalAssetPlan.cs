@@ -75,6 +75,14 @@ internal sealed class ExternalAssetPlan
         return variable;
     }
 
+    /// <summary>Whether a local path names a file outside the source folder: absolute, or a <c>..</c> that climbs out of it.</summary>
+    public static bool IsOutside(string sourceBase, string written) =>
+        !written.Contains("://")
+        && !sourceBase.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+        && !sourceBase.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+        && (Path.IsPathRooted(written)
+            || SourceProjectContainment.GetRefusal(sourceBase, written) == SourceProjectContainment.LeavesProjectReason);
+
     /// <param name="assetPaths">Every asset path the imported elements name, as written.</param>
     /// <param name="readChainTextures">Reads the texture names and FileRelativeTextures of the chain file at a full path, or null if unreadable.</param>
     public static ExternalAssetPlan Build(
@@ -94,9 +102,7 @@ internal sealed class ExternalAssetPlan
         foreach (string written in assetPaths)
         {
             if (written.Contains("://")) continue;
-            bool isOutside = Path.IsPathRooted(written)
-                || SourceProjectContainment.GetRefusal(sourceBase, written) == SourceProjectContainment.LeavesProjectReason;
-            if (!isOutside) continue;
+            if (!IsOutside(sourceBase, written)) continue;
 
             string full = Path.GetFullPath(Path.IsPathRooted(written)
                 ? written
