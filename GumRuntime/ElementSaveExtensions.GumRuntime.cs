@@ -261,12 +261,44 @@ namespace GumRuntime
                         toReturn = TryCreateStrongTypeForElement(baseElement, fullInstantiation, genericType);
                     }
                     // If it has a base type, but we can't resolve it, it's an error.
-                    // We can still create something useful to avoid falling apart here:
-                    toReturn = toReturn ?? new GraphicalUiElement(new InvisibleRenderable());
+                    // We can still create something useful to avoid falling apart here, unless the editor wants
+                    // this component outlined (#7417): then leave the renderable empty so the factory is asked
+                    // for the base type (Container) and supplies the dotted outline.
+                    if (toReturn == null && !ShouldLeaveRenderableForOutline(elementSave))
+                    {
+                        toReturn = new GraphicalUiElement(new InvisibleRenderable());
+                    }
                 }
             }
 
             return toReturn;
+        }
+
+        // True when the editor draws outlines, a factory exists to supply one, and the component and every
+        // component it derives from has no instances of its own, ending at the standard Container (a
+        // StackPanel). A component with children of its own (directly or inherited) is not outlined.
+        private static bool ShouldLeaveRenderableForOutline(ElementSave elementSave)
+        {
+            if (!GraphicalUiElement.ShowLineRectangles || CustomCreateGraphicalComponentFunc == null)
+            {
+                return false;
+            }
+
+            ElementSave? current = elementSave;
+            // The depth cap guards against a base type cycle in a hand-edited project.
+            for (int depth = 0; depth < 100 && current != null; depth++)
+            {
+                if (current is StandardElementSave)
+                {
+                    return current.Name == "Container";
+                }
+                if (current.Instances.Count > 0)
+                {
+                    return false;
+                }
+                current = ObjectFinder.Self.GetBaseElement(current);
+            }
+            return false;
         }
 
         /// <summary>
