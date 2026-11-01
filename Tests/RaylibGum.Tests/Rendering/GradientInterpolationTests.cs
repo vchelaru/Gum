@@ -1,4 +1,5 @@
 using Gum.GueDeriving;
+using Gum.Renderables;
 using Gum.Wireframe;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
@@ -73,7 +74,92 @@ public class GradientInterpolationTests : BaseTestClass
         ((double)actual.B).ShouldBe((255 * (1 - t) * alpha) + (Backdrop.B * (1 - alpha)), Tolerance);
     }
 
-    private static Color[] Render(string shape, bool linear, int alpha1, int alpha2)
+    [Fact]
+    public void LinearGradient_OnA2000SquareRectangle_EmitsAtMost36Vertices()
+    {
+        RectangleRuntime rectangle = new();
+        rectangle.Width = 2000;
+        rectangle.Height = 2000;
+        rectangle.SetProperty("IsFilled", true);
+        rectangle.SetProperty("StrokeWidth", 0f);
+        rectangle.SetProperty("UseGradient", true);
+        rectangle.SetProperty("GradientType", GradientType.Linear);
+        rectangle.SetProperty("Green2", 255);
+        rectangle.SetProperty("GradientX1", 500f);
+        rectangle.SetProperty("GradientY1", 300f);
+        rectangle.SetProperty("GradientX2", 1500f);
+        rectangle.SetProperty("GradientY2", 900f);
+        Gum.GumService.Default.Root.Children.Add(rectangle);
+        Gum.GumService.Default.Root.UpdateLayout();
+
+        BeginDrawing();
+        Gum.GumService.Default.Draw();
+        EndDrawing();
+
+        LineRectangle renderable = (LineRectangle)rectangle.RenderableComponent!;
+        renderable.LastLinearGradientVertexCount.ShouldBeInRange(3, 36);
+        Gum.GumService.Default.Root.Children.Clear();
+    }
+
+    [Theory]
+    [InlineData(2f, 0f)]
+    [InlineData(10f, 0f)]
+    [InlineData(30f, 0.5f)]
+    [InlineData(50f, 1f)]
+    [InlineData(57f, 1f)]
+    public void LinearGradient_OnARectangleTurned90Degrees_FollowsTheShape(float localX, float t)
+    {
+        // A 60x40 box turned 90 degrees counterclockwise about its top-left at (20,80): local (lx, ly) is world (20 + ly, 80 - lx).
+        Color[] pixels = Render("Rect", linear: true, alpha1: 255, alpha2: 255, left: 20, top: 80, width: 60, height: 40,
+            rotation: 90, gradientX1: 10, gradientX2: 50);
+
+        Color actual = pixels[((80 - (int)localX - 1) * Size) + 20 + 20];
+
+        ((double)actual.G).ShouldBe(255 * t, Tolerance);
+        ((double)actual.B).ShouldBe(255 * (1 - t), Tolerance);
+    }
+
+    [Fact]
+    public void LinearGradient_OnARectangleTurned30Degrees_MatchesTheGradientFormula()
+    {
+        Color[] pixels = Render("Rect", linear: true, alpha1: 255, alpha2: 255, left: 20, top: 70, width: 70, height: 30,
+            rotation: 30, gradientX1: 15, gradientX2: 55);
+
+        float cos = MathF.Cos(30 * MathF.PI / 180);
+        float sin = MathF.Sin(30 * MathF.PI / 180);
+        foreach (float localX in new[] { 5f, 20f, 35f, 50f, 65f })
+        {
+            float localY = 15;
+            int worldX = (int)(20 + (localX * cos) + (localY * sin));
+            int worldY = (int)(70 - (localX * sin) + (localY * cos));
+            float t = Math.Clamp((localX - 15) / 40f, 0f, 1f);
+
+            Color actual = pixels[(worldY * Size) + worldX];
+
+            ((double)actual.G).ShouldBe(255 * t, Tolerance + 4);
+            ((double)actual.B).ShouldBe(255 * (1 - t), Tolerance + 4);
+        }
+    }
+
+    [Fact]
+    public void LinearGradient_OnANonSquareRectangleWithAlpha_MatchesTheGradientFormula()
+    {
+        Color[] pixels = Render("Rect", linear: true, alpha1: 255, alpha2: 64, left: 5, top: 30, width: 90, height: 20,
+            rotation: 0, gradientX1: 10, gradientX2: 80);
+
+        foreach (float localX in new[] { 5f, 25f, 45f, 65f, 85f })
+        {
+            float t = Math.Clamp((localX - 10) / 70f, 0f, 1f);
+            float alpha = (255 + ((64 - 255) * t)) / 255f;
+            Color actual = pixels[(40 * Size) + 5 + (int)localX];
+
+            ((double)actual.G).ShouldBe((255 * t * alpha) + (Backdrop.G * (1 - alpha)), Tolerance);
+            ((double)actual.B).ShouldBe((255 * (1 - t) * alpha) + (Backdrop.B * (1 - alpha)), Tolerance);
+        }
+    }
+
+    private static Color[] Render(string shape, bool linear, int alpha1, int alpha2, float left = 0, float top = 0,
+        float width = Size, float height = Size, float rotation = 0, float gradientX1 = 10, float gradientX2 = 90)
     {
         ContainerRuntime container = new();
         container.Width = Size;
@@ -105,8 +191,11 @@ public class GradientInterpolationTests : BaseTestClass
             arc.SetProperty("Thickness", 50f);
             gradient = arc;
         }
-        gradient.Width = Size;
-        gradient.Height = Size;
+        gradient.X = left;
+        gradient.Y = top;
+        gradient.Width = width;
+        gradient.Height = height;
+        gradient.Rotation = rotation;
         if (shape != "Arc")
         {
             gradient.SetProperty("IsFilled", true);
@@ -124,9 +213,9 @@ public class GradientInterpolationTests : BaseTestClass
         gradient.SetProperty("Alpha2", alpha2);
         if (linear)
         {
-            gradient.SetProperty("GradientX1", 10f);
+            gradient.SetProperty("GradientX1", gradientX1);
             gradient.SetProperty("GradientY1", 0f);
-            gradient.SetProperty("GradientX2", 90f);
+            gradient.SetProperty("GradientX2", gradientX2);
             gradient.SetProperty("GradientY2", 0f);
         }
         else

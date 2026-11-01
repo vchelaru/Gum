@@ -421,7 +421,7 @@ public class LineRectangle : GradientShapeRenderable
                 }
                 else if (GradientType == GradientType.Linear)
                 {
-                    DrawGradientGrid(R, w, h, SampleLinearAt);
+                    DrawLinearGradient(tl, tr, bl, w, h);
                 }
                 else
                 {
@@ -580,9 +580,8 @@ public class LineRectangle : GradientShapeRenderable
 
     /// <summary>
     /// Renders a gradient as a grid of triangles whose per-vertex color is <paramref name="colorAt"/>
-    /// sampled at that vertex, linear and radial alike. A grid (not two triangles over the corners)
-    /// keeps the clamp beyond the gradient endpoints, which a planar blend across the whole quad
-    /// would smear into the middle of the shape (#7307). The mesh covers exactly the
+    /// sampled at that vertex (used by the radial gradient; the linear one is <see cref="DrawLinearGradient"/>).
+    /// The mesh covers exactly the
     /// rectangle (so it never bleeds outside it) and each pixel is painted once, so translucent
     /// stops do not accumulate alpha the way stacked concentric circles did. Colors interpolate
     /// straight (unpremultiplied) like Skia's default gradient shader. Vertices go through
@@ -648,19 +647,112 @@ public class LineRectangle : GradientShapeRenderable
         };
     }
 
-    private Color SampleLinearAt(float localX, float localY)
+    /// <summary>Vertices emitted by the last <see cref="DrawLinearGradient"/>; a test seam for the bound.</summary>
+    internal int LastLinearGradientVertexCount { get; private set; }
+
+    /// <summary>
+    /// Draws the linear gradient as at most three convex pieces, split where the gradient reaches
+    /// its start and end (t = 0 and t = 1). The blend is planar inside each piece, so per-vertex colors
+    /// are exact and the clamp lands on the endpoints (#7307). The vertex count is at most
+    /// 3 pieces x 4 triangles x 3 = 36 whatever the rectangle size, and nothing is allocated.
+    /// <paramref name="tl"/>, <paramref name="tr"/> and <paramref name="bl"/> are the rotated
+    /// world positions of the rectangle's corners.
+    /// </summary>
+    private void DrawLinearGradient(Vector2 tl, Vector2 tr, Vector2 bl, float w, float h)
     {
         float x1 = EffectiveGradientX1;
         float y1 = EffectiveGradientY1;
         float dx = EffectiveGradientX2 - x1;
         float dy = EffectiveGradientY2 - y1;
         float lenSq = dx * dx + dy * dy;
+
+        // t = a x + b y + c in rectangle-local coordinates.
+        float a = lenSq > 0f ? dx / lenSq : 0f;
+        float b = lenSq > 0f ? dy / lenSq : 0f;
+        float c = lenSq > 0f ? -(x1 * dx + y1 * dy) / lenSq : 0f;
+
+        Vector2 axisX = (tr - tl) / (w > 0f ? w : 1f);
+        Vector2 axisY = (bl - tl) / (h > 0f ? h : 1f);
+
+        Span<Vector2> source = stackalloc Vector2[8];
+        Span<Vector2> first = stackalloc Vector2[8];
+        Span<Vector2> second = stackalloc Vector2[8];
+        source[0] = new Vector2(0f, 0f);
+        source[1] = new Vector2(w, 0f);
+        source[2] = new Vector2(w, h);
+        source[3] = new Vector2(0f, h);
+
+        int vertices = 0;
+        Rlgl.Begin((int)DrawMode.Triangles);
         if (lenSq <= 0f)
         {
-            return Color1;
+            vertices += EmitGradientFan(source, 4, tl, axisX, axisY, a, b, c);
         }
-        float t = ((localX - x1) * dx + (localY - y1) * dy) / lenSq;
-        return LerpClamped(t);
+        else
+        {
+            // t <= 0
+            int count = ClipHalfPlane(source, 4, first, -a, -b, -c);
+            vertices += EmitGradientFan(first, count, tl, axisX, axisY, a, b, c);
+            // 0 <= t <= 1
+            count = ClipHalfPlane(source, 4, first, a, b, c);
+            count = ClipHalfPlane(first, count, second, -a, -b, 1f - c);
+            vertices += EmitGradientFan(second, count, tl, axisX, axisY, a, b, c);
+            // t >= 1
+            count = ClipHalfPlane(source, 4, first, a, b, c - 1f);
+            vertices += EmitGradientFan(first, count, tl, axisX, axisY, a, b, c);
+        }
+        Rlgl.End();
+        LastLinearGradientVertexCount = vertices;
+    }
+
+    // Sutherland-Hodgman against the half plane p.x * px + p.y * py + pc >= 0. Keeps the winding.
+    private static int ClipHalfPlane(ReadOnlySpan<Vector2> input, int count, Span<Vector2> output,
+        float px, float py, float pc)
+    {
+        int written = 0;
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 current = input[i];
+            Vector2 next = input[(i + 1) % count];
+            float dCurrent = (current.X * px) + (current.Y * py) + pc;
+            float dNext = (next.X * px) + (next.Y * py) + pc;
+            if (dCurrent >= 0f)
+            {
+                output[written++] = current;
+            }
+            if ((dCurrent >= 0f) != (dNext >= 0f))
+            {
+                float f = dCurrent / (dCurrent - dNext);
+                output[written++] = current + ((next - current) * f);
+            }
+        }
+        return written;
+    }
+
+    private int EmitGradientFan(ReadOnlySpan<Vector2> polygon, int count, Vector2 origin,
+        Vector2 axisX, Vector2 axisY, float a, float b, float c)
+    {
+        if (count < 3)
+        {
+            return 0;
+        }
+        int emitted = 0;
+        for (int i = 1; i < count - 1; i++)
+        {
+            // Local order (0, i + 1, i) is front-facing under default culling.
+            EmitGradientVertex(polygon[0], origin, axisX, axisY, a, b, c);
+            EmitGradientVertex(polygon[i + 1], origin, axisX, axisY, a, b, c);
+            EmitGradientVertex(polygon[i], origin, axisX, axisY, a, b, c);
+            emitted += 3;
+        }
+        return emitted;
+    }
+
+    private void EmitGradientVertex(Vector2 local, Vector2 origin, Vector2 axisX, Vector2 axisY,
+        float a, float b, float c)
+    {
+        Color color = LerpClamped((a * local.X) + (b * local.Y) + c);
+        EmitVertexColored(origin + (axisX * local.X) + (axisY * local.Y), color);
     }
 
     private Color LerpClamped(float t)
