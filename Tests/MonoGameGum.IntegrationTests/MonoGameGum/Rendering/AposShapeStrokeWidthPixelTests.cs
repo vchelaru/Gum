@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework.Graphics;
+using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -94,6 +95,8 @@ public class AposShapeStrokeWidthPixelTests : BaseTestClass
 
     // The stroke must stay invisible for a zero or negligible width, never become a faint hairline.
     [Theory]
+    [InlineData(StrokeShapeKind.Line, 0f)]
+    [InlineData(StrokeShapeKind.Line, 0.0001f)]
     [InlineData(StrokeShapeKind.Rectangle, 0f)]
     [InlineData(StrokeShapeKind.Rectangle, 0.0001f)]
     [InlineData(StrokeShapeKind.Circle, 0f)]
@@ -122,7 +125,37 @@ public class AposShapeStrokeWidthPixelTests : BaseTestClass
         measured.ShouldBe(stroke, tolerance: 0.08f, $"{kind} gradient stroke {stroke}");
     }
 
-    private static float MeasureRing(StrokeShapeKind kind, float stroke, float cornerRadius, float size, float offset, bool roundedLine = false, float zoom = 1f, bool gradient = false)
+    // #7380: a Line defaults to ScreenPixel units (constant on-screen thickness, as on Skia); with Absolute
+    // units the thickness is world units and scales with Camera.Zoom, as the other shapes' strokes do.
+    [Theory]
+    [InlineData(DimensionUnitType.ScreenPixel, 0.5f, 12f)]
+    [InlineData(DimensionUnitType.ScreenPixel, 1f, 12f)]
+    [InlineData(DimensionUnitType.ScreenPixel, 2f, 12f)]
+    [InlineData(DimensionUnitType.Absolute, 0.5f, 6f)]
+    [InlineData(DimensionUnitType.Absolute, 1f, 12f)]
+    [InlineData(DimensionUnitType.Absolute, 2f, 24f)]
+    public void LineThickness_UnderCameraZoom_FollowsStrokeWidthUnits(DimensionUnitType units, float zoom, float expected)
+    {
+        float measured = MeasureRing(StrokeShapeKind.Line, 12f, 0f, 60f, 0f, zoom: zoom, units: units);
+
+        measured.ShouldBe(expected, tolerance: 0.7f, $"units {units} zoom {zoom}");
+    }
+
+    // #7379: a Line with no stroke draws nothing, at any zoom and with a dropshadow.
+    [Theory]
+    [InlineData(0f, 1f)]
+    [InlineData(0f, 2f)]
+    [InlineData(0f, 0.5f)]
+    [InlineData(0.0001f, 1f)]
+    public void LineWithZeroOrNegligibleStroke_DrawsNothing_AtAnyZoom(float stroke, float zoom)
+    {
+        MeasureRing(StrokeShapeKind.Line, stroke, 0f, 60f, 0f, zoom: zoom, units: DimensionUnitType.Absolute)
+            .ShouldBe(0f, tolerance: 0.02f, $"stroke {stroke} zoom {zoom}");
+        MeasureRing(StrokeShapeKind.Line, stroke, 0f, 60f, 0f, roundedLine: true, zoom: zoom)
+            .ShouldBe(0f, tolerance: 0.02f, $"rounded stroke {stroke} zoom {zoom}");
+    }
+
+    private static float MeasureRing(StrokeShapeKind kind, float stroke, float cornerRadius, float size, float offset, bool roundedLine = false, float zoom = 1f, bool gradient = false, DimensionUnitType? units = null)
     {
         using ShapeGameLease game = new ShapeGameLease();
         GraphicsDevice gd = game.GraphicsDevice;
@@ -140,6 +173,7 @@ public class AposShapeStrokeWidthPixelTests : BaseTestClass
         {
             case StrokeShapeKind.Line:
                 shape = new LineRuntime { StrokeWidth = stroke, IsRounded = roundedLine, Color = white };
+                if (units.HasValue) { ((LineRuntime)shape).StrokeWidthUnits = units.Value; }
                 break;
             case StrokeShapeKind.Rectangle:
                 shape = new RectangleRuntime { IsFilled = false, StrokeWidth = stroke, CornerRadius = cornerRadius, StrokeColor = white };
