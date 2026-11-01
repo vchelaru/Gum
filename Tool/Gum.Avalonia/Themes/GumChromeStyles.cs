@@ -76,7 +76,36 @@ public static class GumChromeStyles
     };
 
     /// <summary>Creates the styles. Add them after the Fluent theme so they take precedence.</summary>
-    public static Styles Create() => new Styles
+    public static Styles Create()
+    {
+        RegisterComboBoxColumnFollowsZoom();
+        return CreateStyles();
+    }
+
+    private static bool _comboBoxColumnRegistered;
+
+    // Fluent writes the chevron's 12px size, its 10px margin and its 32px column into the template itself,
+    // beyond the reach of a style, so each combo box binds them to the scaled resources once its template is applied.
+    private static void RegisterComboBoxColumnFollowsZoom()
+    {
+        if (_comboBoxColumnRegistered)
+        {
+            return;
+        }
+        _comboBoxColumnRegistered = true;
+        TemplatedControl.TemplateAppliedEvent.AddClassHandler<ComboBox>((combo, e) =>
+        {
+            if (e.NameScope.Find<Control>("DropDownGlyph") is { Parent: Grid grid } glyph && grid.ColumnDefinitions.Count == 2)
+            {
+                glyph.Bind(Layoutable.WidthProperty, glyph.GetResourceObservable(FrbThemeResources.ComboBoxGlyphSizeKey));
+                glyph.Bind(Layoutable.HeightProperty, glyph.GetResourceObservable(FrbThemeResources.ComboBoxGlyphSizeKey));
+                glyph.Bind(Layoutable.MarginProperty, glyph.GetResourceObservable(FrbThemeResources.ComboBoxGlyphMarginKey));
+                grid.ColumnDefinitions[1].Bind(ColumnDefinition.WidthProperty, grid.GetResourceObservable(FrbThemeResources.ComboBoxGlyphColumnKey));
+            }
+        });
+    }
+
+    private static Styles CreateStyles() => new Styles
     {
         new Style(selector => selector.Is<DataUiGrid>())
         {
@@ -406,6 +435,11 @@ public static class GumChromeStyles
                 new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(1)),
                 new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
             },
+        },
+        // An editable combo box's text sits vertically centered, not at the top of a field that is taller than it.
+        new Style(selector => selector.OfType<ComboBox>().Template().OfType<TextBox>().Name("PART_EditableTextBox"))
+        {
+            Setters = { new Setter(TextBox.VerticalContentAlignmentProperty, VerticalAlignment.Center) },
         },
         ButtonPart<ComboBoxItem>(null, new[] { ":pointerover" }, Resource("Frb.Brushes.Primary"), Resource("Frb.Brushes.Primary")),
         ButtonPart<ComboBoxItem>(null, new[] { ":selected" }, Brushes.Transparent, Resource("Frb.Brushes.Primary")),

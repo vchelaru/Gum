@@ -10,6 +10,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using EditorTabPlugin_XNA.ViewModels;
+using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Themes;
 using Gum.DataTypes;
 
@@ -22,8 +23,7 @@ namespace Gum.Avalonia.Plugins.EditorTab;
 /// </summary>
 internal sealed class EditorToolbar : DockPanel
 {
-    private const double DefaultBaseFontSize = 12;
-    private const double DefaultButtonWidth = 20;
+    private const double DefaultButtonWidth = 16;
     private const string PreviewIdleGlyph = "▶";
 
     /// <summary>The grid sizes offered in the toolbar's Grid Size drop-down; any other size can still be typed.</summary>
@@ -39,51 +39,45 @@ internal sealed class EditorToolbar : DockPanel
         StackPanel panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0, Margin = new Thickness(4, 2) };
 
         panel.Children.Add(SizedButton("-", nameof(EditorViewModel.ZoomOutCommand)));
-        panel.Children.Add(new ComboBox
+        panel.Children.Add(Scaled(new ComboBox
         {
-            Width = 100,
             DisplayMemberBinding = new Binding(nameof(ZoomLevel.ZoomDisplay)),
             [!ItemsControl.ItemsSourceProperty] = new Binding(nameof(EditorViewModel.ZoomLevels)),
             [!SelectingItemsControl.SelectedItemProperty] = new Binding(nameof(EditorViewModel.PercentZoomLevel)) { Mode = BindingMode.TwoWay },
-        });
+        }, minWidth: 56));
         panel.Children.Add(SizedButton("+", nameof(EditorViewModel.ZoomInCommand)));
 
-        panel.Children.Add(new ComboBox
+        panel.Children.Add(Scaled(new ComboBox
         {
-            Width = 180,
-            Margin = new Thickness(10, 0, 0, 0),
             DisplayMemberBinding = new Binding(nameof(CustomCanvasSize.FriendlyName)),
             [!ItemsControl.ItemsSourceProperty] = new Binding(nameof(EditorViewModel.CustomCanvasSizes)),
             [!SelectingItemsControl.SelectedItemProperty] = new Binding(nameof(EditorViewModel.SelectedCustomCanvasSize)) { Mode = BindingMode.TwoWay },
-        });
+        }, minWidth: 110, marginLeft: 8));
 
-        panel.Children.Add(GlyphLabel("Aa", "Font Scale", 20));
+        panel.Children.Add(GlyphLabel("Aa", "Font Scale", 10));
         panel.Children.Add(SizedButton("-", nameof(EditorViewModel.FontScaleDecreaseCommand)));
-        panel.Children.Add(new TextBlock
+        panel.Children.Add(Scaled(new TextBlock
         {
-            Width = 40,
             VerticalAlignment = VerticalAlignment.Center,
             TextAlignment = TextAlignment.Center,
             [!TextBlock.TextProperty] = new Binding(nameof(EditorViewModel.GlobalFontScaleDisplay)),
-        });
+        }, minWidth: 28, marginLeft: 2, marginRight: 2));
         panel.Children.Add(SizedButton("+", nameof(EditorViewModel.FontScaleIncreaseCommand)));
 
-        panel.Children.Add(new CheckBox
+        panel.Children.Add(Scaled(new CheckBox
         {
             Content = "Snap to Grid",
-            Margin = new Thickness(20, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
             [!ToggleButton.IsCheckedProperty] = new Binding(nameof(EditorViewModel.SnapToGrid)) { Mode = BindingMode.TwoWay },
-        });
-        panel.Children.Add(GlyphLabel("▦", "Grid Size", 10));
-        panel.Children.Add(new ComboBox
+        }, marginLeft: 10));
+        panel.Children.Add(GlyphLabel("▦", "Grid Size", 6));
+        panel.Children.Add(Scaled(new ComboBox
         {
-            Width = 80,
             IsEditable = true,
             VerticalAlignment = VerticalAlignment.Center,
             ItemsSource = GridSizePresets,
             [!ComboBox.TextProperty] = new Binding(nameof(EditorViewModel.GridSize)) { Mode = BindingMode.TwoWay },
-        });
+        }, minWidth: 52));
 
         RotateTransform previewSpinnerRotation = new RotateTransform();
         TextBlock previewIcon = new TextBlock
@@ -100,8 +94,6 @@ internal sealed class EditorToolbar : DockPanel
         // shift position.
         Ellipse previewSpinner = new Ellipse
         {
-            Width = 12,
-            Height = 12,
             StrokeThickness = 2,
             Stroke = Brushes.White,
             StrokeDashArray = new AvaloniaList<double> { 2, 1.5 },
@@ -111,6 +103,7 @@ internal sealed class EditorToolbar : DockPanel
             RenderTransformOrigin = RelativePoint.Center,
             IsVisible = false,
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(previewSpinner, 12);
         Panel previewIconHost = new Panel();
         previewIconHost.Children.Add(previewIcon);
         previewIconHost.Children.Add(previewSpinner);
@@ -131,7 +124,7 @@ internal sealed class EditorToolbar : DockPanel
 
         PinPreviewButton = new ToggleButton
         {
-            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Pin, 14),
+            Content = CreatePinIcon(),
             Margin = new Thickness(0, 0, 4, 0),
             Padding = new Thickness(6, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -173,16 +166,6 @@ internal sealed class EditorToolbar : DockPanel
     /// <summary>The zoom and font scale +/- buttons, whose width follows the UI base font size.</summary>
     internal IReadOnlyList<Button> SizedButtons => _sizedButtons;
 
-    /// <summary>Widens the +/- buttons in step with the UI base font size, as the WPF toolbar does.</summary>
-    public void UpdateButtonSizes(double baseFontSize)
-    {
-        double width = DefaultButtonWidth * baseFontSize / DefaultBaseFontSize;
-        foreach (Button button in _sizedButtons)
-        {
-            button.Width = width;
-        }
-    }
-
     /// <summary>
     /// Hides the Preview button's ▶ icon behind a spinning ring while the GumPreview process
     /// spawns, then restores the icon. Only the ring rotates - the button itself (its
@@ -219,20 +202,55 @@ internal sealed class EditorToolbar : DockPanel
         {
             Classes = { GumChromeStyles.FlatButtonClass },
             Content = content,
-            Width = DefaultButtonWidth,
             Padding = new Thickness(0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             [!Button.CommandProperty] = new Binding(commandPath),
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(button, DefaultButtonWidth, widthOnly: true);
         _sizedButtons.Add(button);
         return button;
     }
 
-    private static TextBlock GlyphLabel(string glyph, string tooltip, double leftMargin) => new TextBlock
+    private static TextBlock GlyphLabel(string glyph, string tooltip, double leftMargin) => Scaled(new TextBlock
     {
         Text = glyph,
-        Margin = new Thickness(leftMargin, 0, 4, 0),
         VerticalAlignment = VerticalAlignment.Center,
         [ToolTip.TipProperty] = tooltip,
-    };
+    }, marginLeft: leftMargin, marginRight: 4);
+
+    private static Control CreatePinIcon()
+    {
+        Control icon = GumFluentIcons.Create(FluentIcons.Common.Icon.Pin, 14);
+        AvaloniaTreeIcons.FollowBaseFontSize(icon, 14);
+        return icon;
+    }
+
+    /// <summary>
+    /// Gives <paramref name="control"/> its width and left/right margin in pixels at the default zoom and in
+    /// proportion to the UI base font size after, so the strip shrinks and grows with its text.
+    /// </summary>
+    private static T Scaled<T>(T control, double? width = null, double? minWidth = null, double marginLeft = 0, double marginRight = 0) where T : Control
+    {
+        if (width is double w)
+        {
+            AvaloniaTreeIcons.FollowBaseFontSize(control, w, widthOnly: true);
+        }
+        if (minWidth is double min)
+        {
+            control.Bind(Layoutable.MinWidthProperty, control.GetResourceObservable(
+                FrbThemeResources.BaseFontSizeKey,
+                value => (object)((value is double size ? size : FrbThemeResources.DefaultBaseFontSize) / FrbThemeResources.DefaultBaseFontSize * min)));
+        }
+        if (marginLeft != 0 || marginRight != 0)
+        {
+            control.Bind(Layoutable.MarginProperty, control.GetResourceObservable(
+                FrbThemeResources.BaseFontSizeKey,
+                value =>
+                {
+                    double factor = (value is double size ? size : FrbThemeResources.DefaultBaseFontSize) / FrbThemeResources.DefaultBaseFontSize;
+                    return (object)new Thickness(marginLeft * factor, 0, marginRight * factor, 0);
+                }));
+        }
+        return control;
+    }
 }
