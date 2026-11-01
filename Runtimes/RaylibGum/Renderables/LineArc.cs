@@ -336,16 +336,8 @@ public class LineArc : GradientShapeRenderable
         }
 
         float dashCount = total / pattern;
-        if (dashCount > MaxDashes)
+        if (TryGetUndashedColor(color, dashCount, Thickness, out Color solid))
         {
-            // Like Skia, which draws the stroke undashed once a path has more than a million dashes, give up on
-            // dashes when there are more than a screen can show. Below Skia's own limit its dashes are narrower
-            // than a pixel and read as the average coverage, so the stroke is drawn at that alpha instead.
-            Color solid = color;
-            if (dashCount <= SkiaMaxDashCount)
-            {
-                solid = new Color(color.R, color.G, color.B, (byte)(color.A * StrokeDashLength / pattern));
-            }
             DrawContinuous(band, false, 0f, 0f, startAngleRl, endAngleRl, segments,
                 IsEndRounded && System.MathF.Abs(endAngleRl - startAngleRl) < 360f, solid);
             return;
@@ -376,6 +368,34 @@ public class LineArc : GradientShapeRenderable
     // Shared by every arc: the renderer draws on one thread, and dashes are drawn one arc at a time.
     private static float[] s_dashLengths = new float[1025];
     private const int MaxDashTableSteps = 4096;
+
+    /// <summary>Dash plus gap, in pixels, at or below which Skia's antialiased dashes read as an average coverage.</summary>
+    private const float SubPixelPatternLength = 3f;
+
+    /// <summary>
+    /// True when the stroke is better drawn undashed, in <paramref name="solid"/>. Past <see cref="MaxDashes"/> that is
+    /// the cost cap; at or below <see cref="SubPixelPatternLength"/> raylib's aliased quads, narrower than a pixel,
+    /// come out lighter or darker than Skia's antialiased ones. Below Skia's own dash limit the stroke takes the alpha
+    /// of the average coverage (a round cap also covers half the thickness at each end of every dash); above it Skia
+    /// draws the stroke undashed at full alpha.
+    /// </summary>
+    private bool TryGetUndashedColor(Color color, float dashCount, float thickness, out Color solid)
+    {
+        solid = color;
+        float pattern = StrokeDashLength + StrokeGapLength;
+        if (dashCount <= MaxDashes && pattern > SubPixelPatternLength)
+        {
+            return false;
+        }
+        if (dashCount <= SkiaMaxDashCount)
+        {
+            float coverage = IsEndRounded
+                ? System.MathF.Min(1f, (StrokeDashLength + thickness) / pattern)
+                : StrokeDashLength / pattern;
+            solid = new Color(color.R, color.G, color.B, (byte)(color.A * coverage));
+        }
+        return true;
+    }
 
     /// <summary>The most dashes drawn along one non-square arc; beyond it the stroke is drawn solid.</summary>
     private const int MaxDashes = 4000;
@@ -413,13 +433,8 @@ public class LineArc : GradientShapeRenderable
         }
 
         float dashCount = System.MathF.Abs(SweepAngle) / patternAngleDeg;
-        if (dashCount > MaxDashes)
+        if (TryGetUndashedColor(strokeColor, dashCount, outerRadius - innerRadius, out Color solid))
         {
-            // See DrawDashedBand: past the cap the stroke is drawn solid.
-            Color solid = dashCount <= SkiaMaxDashCount
-                ? new Color(strokeColor.R, strokeColor.G, strokeColor.B,
-                    (byte)(strokeColor.A * StrokeDashLength / (StrokeDashLength + StrokeGapLength)))
-                : strokeColor;
             DrawContinuous(circleBand, true, innerRadius, outerRadius, -StartAngle, -StartAngle - SweepAngle,
                 ComputeSegments(outerRadius, System.MathF.Abs(SweepAngle)),
                 IsEndRounded && System.MathF.Abs(SweepAngle) < 360f, solid);
