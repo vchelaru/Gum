@@ -98,6 +98,10 @@ A direct `InnerPanel.Children.Move` (hot reload does this) reaches `HandleInnerP
 
 `ListBoxItem.AssignListBoxEvents` is guarded by `hasHadListBoxEventsAssigned`. A `ListBoxItem` that bypasses normal item creation (e.g., added to InnerPanel directly without going through `Items`) may or may not have its events assigned. If events are missing, the item renders but clicking it produces no selection change.
 
+## Authoring Items In The Gum Tool
+
+Items placed in a ListBox, ComboBox or any container instance in the tool are parented to the instance's **Default Slot**, never to the instance itself: the demo screens set `ListBoxItemInstance.Parent` to `ResolutionBox.InnerPanelInstance`, not `ResolutionBox`. When writing a screen's `.gusj` or `.gusx` by hand (or generating one), read the component's Default Slot and parent to that child; a direct child of the control bypasses `InnerPanel` and the items never appear in the list. See `docs/gum-tool/gum-elements/component/default-child-container.md`.
+
 ## Selection
 
 `SelectedItems` is an `ObservableCollection<object>` (not replaceable, only modified). `SelectedObject` and `SelectedIndex` are convenience properties that read/write the first entry in `SelectedItems`.
