@@ -236,7 +236,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     }
 
     // A size in pixels at the default base font size, grown or shrunk with the base font size (the zoom).
-    private IObservable<object> ScaledWithFont(double sizeAtDefault) =>
+    private IObservable<object?> ScaledWithFont(double sizeAtDefault) =>
         this.GetResourceObservable(FontSizeKey, size =>
             (object)Math.Round(sizeAtDefault * (size is double baseSize ? baseSize : DefaultFontSize) / DefaultFontSize));
 
