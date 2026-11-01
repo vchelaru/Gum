@@ -9,4 +9,10 @@ internal static class PreviewWindowTitle
 {
     public static string For(string elementName, bool isElementMissing) =>
         isElementMissing ? "Gum Preview" : $"Gum Preview - {elementName}";
+
+    /// <summary>
+    /// The title of a window whose project could not be loaded. The window has nothing to draw, so the
+    /// reason goes where it can be read without a dialog.
+    /// </summary>
+    public static string ForLoadFailure(string message) => $"Gum Preview - {message}";
 }
