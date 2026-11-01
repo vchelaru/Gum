@@ -14,9 +14,9 @@ public class NewProjectNameRulesTests
     [InlineData("com\u00B2", "com\u00B2 is a reserved Windows name. Choose another name.")]
     [InlineData("COM\u00B3", "COM\u00B3 is a reserved Windows name. Choose another name.")]
     [InlineData("LPT\u00B3.txt", "LPT\u00B3 is a reserved Windows name. Choose another name.")]
-    [InlineData("a<b", "The name contains characters a folder name cannot have: < > : \" / \u005C | ? *")]
-    [InlineData("a|b", "The name contains characters a folder name cannot have: < > : \" / \u005C | ? *")]
-    [InlineData("a\tb", "The name contains characters a folder name cannot have: < > : \" / \u005C | ? *")]
+    [InlineData("a<b", "Invalid character '<' in the name.")]
+    [InlineData("a|b", "Invalid character '|' in the name.")]
+    [InlineData("a\tb", "Invalid control character in the name.")]
     [InlineData("Game.", "A folder name cannot end with a dot or a space.")]
     [InlineData("Game ", "A folder name cannot end with a dot or a space.")]
     public void GetProblem_NamesTheRuleThatWasHit(string name, string expected)

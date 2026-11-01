@@ -314,7 +314,7 @@ public class NewProjectDialogViewModelTests
     [InlineData("My Game", true, "Not a valid C# name.")]
     [InlineData("1Game", true, "Not a valid C# name.")]
     [InlineData("My_Game2", true, "")]
-    [InlineData("a|b", false, "The name contains characters a folder name cannot have: < > : \" / \u005C | ? *")]
+    [InlineData("a|b", false, "Invalid character '|' in the name.")]
     [InlineData("CON", false, "CON is a reserved Windows name. Choose another name.")]
     [InlineData("a.", false, "A folder name cannot end with a dot or a space.")]
     public void ValidationMessage_FollowsTheNameRules(string name, bool codeProject, string expected)

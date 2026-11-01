@@ -42,9 +42,10 @@ public static class NewProjectNameRules
     /// </summary>
     public static string? GetProblem(string name, bool includeCodeProject)
     {
-        if (name.Any(character => character < ' ' || ForbiddenCharacters.Contains(character)))
+        char invalid = name.FirstOrDefault(character => character < ' ' || ForbiddenCharacters.Contains(character));
+        if (invalid != default)
         {
-            return "The name contains characters a folder name cannot have: " + string.Join(' ', ForbiddenCharacters.Select(character => character.ToString()));
+            return invalid < ' ' ? "Invalid control character in the name." : $"Invalid character '{invalid}' in the name.";
         }
         if (name.EndsWith('.') || name.EndsWith(' '))
         {
