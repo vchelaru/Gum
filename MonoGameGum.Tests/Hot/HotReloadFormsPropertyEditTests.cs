@@ -220,21 +220,22 @@ public class HotReloadFormsPropertyEditTests : BaseTestClass
     }
 
     [Fact]
-    public void Load_ComponentDefaultSetsMaxLengthAndMaxLettersToShow_DoesNotThrowAndAppliesThem()
+    public void Load_ComponentDefaultSetsMaxLengthLettersAndLines_DoesNotThrowAndAppliesThem()
     {
         GumProjectSave project = HotReloadTextBoxProjects.Build(
             componentEdits: s =>
             {
                 HotReloadTextBoxProjects.Set(s, "MaxLength", "int?", 7);
                 HotReloadTextBoxProjects.Set(s, "MaxLettersToShow", "int?", 5);
+                HotReloadTextBoxProjects.Set(s, "MaxNumberOfLines", "int?", 3);
             });
 
         GraphicalUiElement screen = HotReloadTextBoxProjects.Load(project);
 
         TextBox box = HotReloadTextBoxProjects.Box(screen);
         box.MaxLength.ShouldBe(7);
-        box.MaxLettersToShow = 5;
         box.MaxLettersToShow.ShouldBe(5);
+        box.MaxNumberOfLines.ShouldBe(3);
     }
 
     private static GumProjectSave WithComponentPlaceholder(string text) =>
