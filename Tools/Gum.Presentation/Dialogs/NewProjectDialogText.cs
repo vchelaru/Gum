@@ -38,8 +38,9 @@ public static class NewProjectDialogText
     public const string GenerateCodeNeedsRestoreNote = "Code generation needs the restore, so it is skipped.";
     public const string DemoHostCommandNote = "gumcli new writes a game that loads the demo screen at runtime and does not initialize the packages; the dialog's game does both.";
     public const string RecommendedPackages = "Include recommended packages";
-    public const string RecommendedPackagesDisabledNote = "Not available with local Gum source: the packages would add a second copy of Gum.";
+    public const string RecommendedPackagesDisabledNote = "This platform has no recommended packages.";
     public static string RecommendedPackagesNote(string packages) => $"Adds {packages} to the C# project, as the setup docs suggest.";
+    public static string RecommendedPackagesLinkedNote(string packages) => $"With local Gum source: links the projects for {packages} from the Gum source instead of adding packages.";
     public const string FoldersHeading = "Folders";
     public const string FolderCreates = "Creates a new folder";
     public const string FolderUsesExisting = "Uses the existing folder";

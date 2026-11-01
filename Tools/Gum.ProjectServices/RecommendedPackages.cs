@@ -5,7 +5,7 @@ namespace Gum.ProjectServices;
 
 /// <summary>
 /// The NuGet add-ons the setup docs (<c>docs/code/getting-started/setup/adding-initializing-gum</c>) recommend per platform,
-/// which New Project adds to the code project when asked. Only packages that exist on nuget.org are listed.
+/// which New Project adds to the code project when asked. Only packages that exist on nuget.org are listed; a source-linked project uses <see cref="ForSourceLinked"/> instead.
 /// </summary>
 public static class RecommendedPackages
 {
@@ -35,4 +35,38 @@ public static class RecommendedPackages
         HostPlatform.KniSkia => Array.Empty<string>(),
         _ => Array.Empty<string>()
     };
+
+    /// <summary>
+    /// The add-ons a source-linked project links for <paramref name="platform"/> instead of adding packages, as package ids so the
+    /// host's init lines stay one table. Unlike <see cref="For"/> it includes Gum.Shapes.MonoGame / Gum.Shapes.KNI: the checkout
+    /// always carries the shapes project, so the stable-release gap that keeps shapes out of the NuGet list does not apply.
+    /// Over-linking is deliberate: source-linking is an advanced path, and an unwanted reference is easy to remove.
+    /// </summary>
+    public static IReadOnlyList<string> ForSourceLinked(HostPlatform platform) => platform switch
+    {
+        HostPlatform.MonoGame => new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", Expressions },
+        HostPlatform.Kni => new[] { "Gum.Shapes.KNI", "KernSmith.KniGum", Expressions },
+        HostPlatform.Raylib => new[] { "KernSmith.RaylibGum", Expressions },
+        HostPlatform.SilkNet => new[] { Expressions },
+        HostPlatform.Stride => new[] { Expressions },
+        // Always source-linked and has no add-ons to match (see For).
+        _ => Array.Empty<string>()
+    };
+
+    /// <summary>
+    /// The project of <paramref name="packageId"/> inside a Gum checkout, relative to the checkout's root (the
+    /// <see cref="System.IO.Path.DirectorySeparatorChar"/> separates segments).
+    /// </summary>
+    public static string GetSourceProject(string packageId) => packageId switch
+    {
+        "Gum.Shapes.MonoGame" => Combine("Runtimes", "GumShapes", "MonoGameGumShapes.csproj"),
+        "Gum.Shapes.KNI" => Combine("Runtimes", "GumShapes", "KniGumShapes.csproj"),
+        "KernSmith.MonoGameGum" => Combine("Integrations", "KernSmith", "KernSmith.MonoGameGum", "KernSmith.MonoGameGum.csproj"),
+        "KernSmith.KniGum" => Combine("Integrations", "KernSmith", "KernSmith.KniGum", "KernSmith.KniGum.csproj"),
+        "KernSmith.RaylibGum" => Combine("Integrations", "KernSmith", "KernSmith.RaylibGum", "KernSmith.RaylibGum.csproj"),
+        Expressions => Combine("Runtimes", "GumExpressions", "GumExpressions.csproj"),
+        _ => throw new ArgumentOutOfRangeException(nameof(packageId), packageId, "No source project is known for this package.")
+    };
+
+    private static string Combine(params string[] segments) => System.IO.Path.Combine(segments);
 }
