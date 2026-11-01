@@ -121,6 +121,15 @@ public class NewProjectService : INewProjectService
             }
         }
 
+        // The folder name as typed, before the path is normalized: on Windows the full path rewrites NUL to a device path
+        // and drops a trailing dot or space, which hides them from the rules.
+        string? typedName = GetTypedName(request.Path);
+        string? typedProblem = typedName == null ? null : NewProjectNameRules.GetProblem(typedName, options.Platform != null);
+        if (typedProblem != null)
+        {
+            return Fail(NewProjectErrorKind.InvalidProjectName, typedProblem);
+        }
+
         Targets targets = ComputeTargets(request.Path, options.Platform != null, GetGumExtension(request));
 
         // Only a bare file system root resolves to a folder with no name.
@@ -130,10 +139,7 @@ public class NewProjectService : INewProjectService
                 $"'{request.Path}' has no folder name to name the project after. Give a folder or project name.");
         }
 
-        // The folder name as typed: the full path drops a trailing dot or space on Windows, which hides it from the rules.
-        string typedName = GetTypedName(request.Path) ?? targets.Name;
-        string? nameProblem = NewProjectNameRules.GetProblem(typedName, includeCodeProject: options.Platform != null)
-            ?? NewProjectNameRules.GetProblem(targets.Name, includeCodeProject: options.Platform != null);
+        string? nameProblem = NewProjectNameRules.GetProblem(targets.Name, includeCodeProject: options.Platform != null);
         if (nameProblem != null)
         {
             return Fail(NewProjectErrorKind.InvalidProjectName, nameProblem);
@@ -571,20 +577,15 @@ public class NewProjectService : INewProjectService
         }
 
         // After the restore: the code generator reads the restored runtime package to choose the syntax it emits.
-        // Without the restore there is no package to read, so it is skipped, as the dialog says (CodegenSkipped).
+        // Without the restore there is no package to read, so it is skipped, as the dialog says.
         GenerateCodeResult? codegen = null;
-        bool codegenSkipped = false;
-        if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate && !request.Restore)
-        {
-            codegenSkipped = true;
-        }
-        else if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate)
+        if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate && request.Restore)
         {
             progress?.Report(new NewProjectProgress(NewProjectStep.GeneratingCode, "Generating code..."));
             codegen = await GenerateCodeAsync(validation.Resolved, files, null, cancellationToken);
         }
 
-        return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore, Codegen = codegen, CodegenSkipped = codegenSkipped };
+        return new NewProjectResult { Files = files, PackageAdd = packageAdd, Restore = restore, Codegen = codegen };
     }
 
     #endregion

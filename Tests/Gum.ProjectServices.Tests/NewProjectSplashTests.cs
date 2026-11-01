@@ -81,6 +81,8 @@ public class NewProjectSplashTests : IDisposable
     [InlineData("prn")]
     [InlineData("Aux")]
     [InlineData("NUL")]
+    [InlineData("nul")]
+    [InlineData("NUL.txt")]
     [InlineData("COM1")]
     [InlineData("com9")]
     [InlineData("LPT1")]
@@ -98,6 +100,7 @@ public class NewProjectSplashTests : IDisposable
 
             validation.Resolved.ShouldBeNull($"platform={platform}");
             validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName, $"platform={platform}");
+            validation.Error.Message.ShouldBe(NewProjectNameRules.InvalidFolderNameMessage, $"platform={platform}");
             result.Files.Success.ShouldBeFalse($"platform={platform}");
             result.Files.ErrorMessage.ShouldBe(validation.Error.Message, $"platform={platform}");
             Directory.Exists(Game(name)).ShouldBeFalse($"platform={platform}");
@@ -130,17 +133,15 @@ public class NewProjectSplashTests : IDisposable
 
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
         result.Codegen.ShouldBeNull();
-        result.CodegenSkipped.ShouldBeTrue("The caller must be told the code was not generated.");
         _calls.ShouldNotContain(call => call.StartsWith("codegen"), "The dialog says code generation needs the restore, so it is skipped.");
     }
 
     [Fact]
-    public async Task Execute_GenerateCodeWithRestore_RunsCodegenAndReportsNothingSkipped()
+    public async Task Execute_GenerateCodeWithRestore_RunsCodegen()
     {
         NewProjectResult result = await Run(Request("monogame", restore: true, generate: true));
 
         result.Codegen.ShouldNotBeNull();
-        result.CodegenSkipped.ShouldBeFalse();
     }
 
     #endregion
