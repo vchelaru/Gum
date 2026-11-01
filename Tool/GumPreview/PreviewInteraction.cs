@@ -11,10 +11,10 @@ public static class PreviewInteraction
 {
     /// <summary>
     /// Focuses the Forms control named <paramref name="focusName"/> under <paramref name="root"/>, then
-    /// enters <paramref name="text"/> one character at a time as typing would. Returns why it could not,
+    /// enters <paramref name="text"/> one character at a time as typing would, then selects all when asked. Returns why it could not,
     /// or null on success.
     /// </summary>
-    public static string? Apply(GraphicalUiElement root, string focusName, string? text)
+    public static string? Apply(GraphicalUiElement root, string focusName, string? text, bool selectAll = false)
     {
         GraphicalUiElement? visual = root.GetGraphicalUiElementByName(focusName);
         if (visual is not InteractiveGue interactive || interactive.FormsControlAsObject is not FrameworkElement control)
@@ -22,9 +22,9 @@ public static class PreviewInteraction
             return $"no Forms control named '{focusName}' was found.";
         }
 
-        if (!string.IsNullOrEmpty(text) && control is not TextBoxBase)
+        if ((!string.IsNullOrEmpty(text) || selectAll) && control is not TextBoxBase)
         {
-            return $"'{focusName}' is not a text box, so --type cannot enter text into it.";
+            return $"'{focusName}' is not a text box, so --type and --select-all cannot be used on it.";
         }
 
         control.IsFocused = true;
@@ -34,6 +34,10 @@ public static class PreviewInteraction
             {
                 textBox.HandleCharEntered(character);
             }
+        }
+        if (selectAll)
+        {
+            ((TextBoxBase)control).SelectAll();
         }
         return null;
     }

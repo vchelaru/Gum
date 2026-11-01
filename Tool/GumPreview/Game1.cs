@@ -32,6 +32,7 @@ public class Game1 : Game
     private readonly string? _screenshotPath;
     private readonly string? _focusName;
     private readonly string? _typedText;
+    private readonly bool _selectAll;
 
     private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
     private readonly PreviewCanvasSize _canvasSize = new PreviewCanvasSize();
@@ -57,10 +58,11 @@ public class Game1 : Game
     /// <param name="focusName">A Forms control in the shown element to focus once it loads.</param>
     /// <param name="typedText">With <paramref name="focusName"/>, text typed into that text box.</param>
     public Game1(string gumxPath, string elementName, string? selectionFilePath, string? contentRootDirectory = null,
-        UnattendedPreviewRun? unattended = null, string? screenshotPath = null, string? focusName = null, string? typedText = null)
+        UnattendedPreviewRun? unattended = null, string? screenshotPath = null, string? focusName = null, string? typedText = null, bool selectAll = false)
     {
         _focusName = focusName;
         _typedText = typedText;
+        _selectAll = selectAll;
         _gumxPath = gumxPath;
         _selection = new PreviewSelectionMessage(elementName);
         _selectionFilePath = selectionFilePath;
@@ -187,7 +189,7 @@ public class Game1 : Game
         {
             if (root.ElementSave != null && root.ElementSave.Name == _selection.ElementName)
             {
-                return PreviewInteraction.Apply(root, _focusName, _typedText);
+                return PreviewInteraction.Apply(root, _focusName, _typedText, _selectAll);
             }
         }
         return null;

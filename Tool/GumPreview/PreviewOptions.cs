@@ -15,7 +15,7 @@ public sealed class PreviewOptions
 {
     /// <summary>Usage text printed with <see cref="Error"/>.</summary>
     public const string Usage =
-        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>]]";
+        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>] [--select-all]]";
 
     private PreviewOptions()
     {
@@ -50,6 +50,9 @@ public sealed class PreviewOptions
 
     /// <summary>With <see cref="FocusName"/>, text entered into that text box as if typed.</summary>
     public string? TypedText { get; private set; }
+
+    /// <summary>With <see cref="FocusName"/>, selects all the text in that text box after any <see cref="TypedText"/>.</summary>
+    public bool SelectAll { get; private set; }
 
     /// <summary>Why the command line is unusable, or null when it is usable.</summary>
     public string? Error { get; private set; }
@@ -95,6 +98,10 @@ public sealed class PreviewOptions
             {
                 options.FocusName = args[++i];
             }
+            else if (args[i] == "--select-all")
+            {
+                options.SelectAll = true;
+            }
             else if (args[i] == "--type" && hasValue)
             {
                 options.TypedText = args[++i];
@@ -108,6 +115,10 @@ public sealed class PreviewOptions
         else if (options.TypedText != null && options.FocusName == null)
         {
             options.Error = "--type needs --focus to name the text box to type into.";
+        }
+        else if (options.SelectAll && options.FocusName == null)
+        {
+            options.Error = "--select-all needs --focus to name the text box to select in.";
         }
         else if (parentPidText != null)
         {
