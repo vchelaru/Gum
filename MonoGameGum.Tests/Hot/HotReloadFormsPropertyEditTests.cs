@@ -1,3 +1,4 @@
+using Gum.GueDeriving;
 using Gum;
 using RenderingLibrary;
 using Gum.DataTypes;
@@ -139,8 +140,7 @@ public class HotReloadFormsPropertyEditTests : BaseTestClass
             s => HotReloadTextBoxProjects.Set(s, "Text1.Placeholder", "string", "Second hint")));
 
         box.Placeholder.ShouldBe("Second hint");
-        ((TextBox)box).Visual.GetGraphicalUiElementByName("PlaceholderTextInstance")!
-            .ToString(); // the visual child exists
+        ((TextRuntime)box.Visual.GetGraphicalUiElementByName("PlaceholderTextInstance")!).Text.ShouldBe("Second hint");
     }
 
     private static GumProjectSave WithBool(string variable, bool? value) =>
@@ -233,5 +233,7 @@ public class HotReloadFormsPropertyEditTests : BaseTestClass
 
         TextBox box = HotReloadTextBoxProjects.Box(screen);
         box.MaxLength.ShouldBe(7);
+        box.MaxLettersToShow = 5;
+        box.MaxLettersToShow.ShouldBe(5);
     }
 }
