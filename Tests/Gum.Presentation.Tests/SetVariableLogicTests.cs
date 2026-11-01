@@ -1,4 +1,4 @@
-using Gum.Commands;
+﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -1017,7 +1017,130 @@ public class SetVariableLogicTests : BaseTestClass
             TextureAddress.EntireTexture,
             container,
             instance,
-            container.DefaultState,
+            container.DefaultState!,
             refresh: true);
+    }
+
+    private (ComponentSave container, InstanceSave instance) CreateCustomSpriteWithSource(string absolutePath)
+    {
+        ComponentSave container = new ComponentSave();
+        container.States.Add(new Gum.DataTypes.Variables.StateSave());
+        container.DefaultState!.ParentContainer = container;
+        container.DefaultState!.SetValue("SpriteInstance.TextureAddress", TextureAddress.Custom);
+        container.DefaultState!.SetValue("SpriteInstance.SourceFile", absolutePath);
+        container.DefaultState!.SetValue("SpriteInstance.TextureWidth", 99, "int");
+        container.DefaultState!.SetValue("SpriteInstance.TextureHeight", 98, "int");
+        InstanceSave instance = new InstanceSave { Name = "SpriteInstance" };
+        mocker.GetMock<ISelectedState>().Setup(x => x.SelectedInstance).Returns(instance);
+        mocker.GetMock<IProjectManager>()
+            .Setup(x => x.MakeAbsoluteIfNecessary(It.IsAny<string>()))
+            .Returns<string>(x => x);
+        return (container, instance);
+    }
+
+    private sealed class FakeFormatDecoder : global::RenderingLibrary.Content.IImageDecoder
+    {
+        public bool Throws;
+        public System.Collections.Generic.IEnumerable<string>? SupportedExtensions => new[] { "fake" };
+
+        public bool TryDecode(string fileName, System.IO.Stream stream, out global::RenderingLibrary.Content.DecodedImage? image)
+        {
+            if (Throws) throw new System.IO.InvalidDataException("bad fake");
+            image = new global::RenderingLibrary.Content.DecodedImage(new byte[7 * 3 * 4], 7, 3);
+            return true;
+        }
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldSetTextureSize_WhenSourceFileIsDecoderProvidedFormat()
+    {
+        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".fake");
+        System.IO.File.WriteAllBytes(path, new byte[] { 1 });
+        var decoder = new FakeFormatDecoder();
+        global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Add(decoder);
+        try
+        {
+            var (container, instance) = CreateCustomSpriteWithSource(path);
+
+            _setVariableLogic.ReactToPropertyValueChanged(
+                "TextureAddress", TextureAddress.EntireTexture, container, instance, container.DefaultState!, refresh: true);
+
+            container.DefaultState!.GetValue("SpriteInstance.TextureWidth").ShouldBe(7);
+            container.DefaultState!.GetValue("SpriteInstance.TextureHeight").ShouldBe(3);
+        }
+        finally
+        {
+            global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Remove(decoder);
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldReportErrorAndKeepCoordinates_WhenNoDecoderCanReadSourceFile()
+    {
+        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".fake");
+        System.IO.File.WriteAllBytes(path, new byte[] { 9, 9, 9, 9, 9, 9, 9, 9, 9, 9 });
+        try
+        {
+            var (container, instance) = CreateCustomSpriteWithSource(path);
+
+            Should.NotThrow(() => _setVariableLogic.ReactToPropertyValueChanged(
+                "TextureAddress", TextureAddress.EntireTexture, container, instance, container.DefaultState!, refresh: true));
+
+            container.DefaultState!.GetValue("SpriteInstance.TextureWidth").ShouldBe(99);
+            mocker.GetMock<IOutputManager>().Verify(x => x.AddError(It.IsAny<string>()), Times.Once);
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldReportErrorInsteadOfThrowing_WhenDecoderThrows()
+    {
+        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".fake");
+        System.IO.File.WriteAllBytes(path, new byte[] { 1 });
+        var decoder = new FakeFormatDecoder { Throws = true };
+        global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Add(decoder);
+        try
+        {
+            var (container, instance) = CreateCustomSpriteWithSource(path);
+
+            Should.NotThrow(() => _setVariableLogic.ReactToPropertyValueChanged(
+                "TextureAddress", TextureAddress.EntireTexture, container, instance, container.DefaultState!, refresh: true));
+
+            mocker.GetMock<IOutputManager>().Verify(x => x.AddError(It.IsAny<string>()), Times.Once);
+        }
+        finally
+        {
+            global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Remove(decoder);
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [InlineData("pic.fake")]
+    [InlineData("pic.FAKE")]
+    [InlineData("dir.with.dots/pic.fake")]
+    public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenExtensionIsDeclaredByRegisteredDecoder(string file)
+    {
+        var decoder = new FakeFormatDecoder();
+        global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Add(decoder);
+        try
+        {
+            _setVariableLogic.GetWhySourcefileIsInvalid(file, new ComponentSave(), new InstanceSave(), "SourceFile").ShouldBeNull();
+        }
+        finally
+        {
+            global::RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Remove(decoder);
+        }
+    }
+
+    [Fact]
+    public void GetWhySourcefileIsInvalid_ShouldReturnNotSupported_WhenDecoderFormatHasNoDecoderRegistered()
+    {
+        _setVariableLogic.GetWhySourcefileIsInvalid("pic.fake", new ComponentSave(), new InstanceSave(), "SourceFile")
+            .ShouldBe("The extension fake is not supported");
     }
 }
