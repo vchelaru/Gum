@@ -488,13 +488,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
         StateSave stateSave, string qualifiedName, bool trySave, bool isFullCommit = true)
     {
-        // A tick of a drag changes only the dragged variable. The cascade runs once, on the full commit that
-        // ends the drag, so a tick costs nothing that grows with the project and the result is the one a
-        // typed edit gives. Every drag, scrub and slider ends with a full commit (#6888).
-        if (!isFullCommit && unqualifiedMember != "VariableReferences")
-        {
-            return;
-        }
+        // A tick of a drag applies only the references inside the current element (its own rows, the
+        // behavior's tool-only lines, its other states), so a followed value is live and the cost does not grow
+        // with the project. The part that reaches other elements, files or the whole canvas runs once, on the
+        // full commit that ends the drag, so the result is the one a typed edit gives. Every drag, scrub and
+        // slider ends with a full commit (#6888, #7438).
+        bool isWide = isFullCommit || unqualifiedMember == "VariableReferences";
 
         // The currently-rendered wireframe representation of parentElement, if any. Lets a right
         // side like "Root.AbsoluteWidth" resolve against the live, already-laid-out object - null
@@ -561,6 +560,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         if (unqualifiedMember == "VariableReferences")
         {
             _guiCommands.RefreshVariableValues();
+        }
+
+        if (!isWide)
+        {
+            return;
         }
 
         ApplyReferencesToElement(parentElement, trySave, isFullCommit);
