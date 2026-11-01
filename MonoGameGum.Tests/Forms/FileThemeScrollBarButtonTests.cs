@@ -40,7 +40,7 @@ public class FileThemeScrollBarButtonTests : FileThemeInputTestBase
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(AllThemes))]
     public void DragThumb_VerticalScrollBar_ReachesMaximumAndMinimum(string theme)
     {
         ScrollBar bar = PlaceVerticalScrollBar(theme);
@@ -54,7 +54,7 @@ public class FileThemeScrollBarButtonTests : FileThemeInputTestBase
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(AllThemes))]
     public void ClickUpButton_VerticalScrollBar_ScrollsUp(string theme)
     {
         ScrollBar bar = PlaceVerticalScrollBar(theme);
@@ -72,7 +72,7 @@ public class FileThemeScrollBarButtonTests : FileThemeInputTestBase
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(AllThemes))]
     public void ClickDownButton_VerticalScrollBar_ScrollsDown(string theme)
     {
         ScrollBar bar = PlaceVerticalScrollBar(theme);
@@ -90,7 +90,7 @@ public class FileThemeScrollBarButtonTests : FileThemeInputTestBase
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(AllThemes))]
     public void ClickDownButton_ListBox_ScrollsTheList(string theme)
     {
         ListBox listBox = Place<ListBox>(LoadTheme(theme), "ListBox");

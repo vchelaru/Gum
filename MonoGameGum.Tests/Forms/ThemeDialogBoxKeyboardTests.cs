@@ -13,10 +13,10 @@ namespace MonoGameGum.Tests.Forms;
 /// A DialogBox on a screen loaded from a packaged theme takes keyboard focus by Tab like any other stop, so
 /// Tab and Shift+Tab must also lead out of it.
 /// </summary>
-public class ThemeDialogBoxKeyboardTests : ThemeKeyboardTestBase
+public class ThemeDialogBoxKeyboardTests : FileThemeInputTestBase
 {
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(RepresentativeThemes))]
     public void Tab_FromFocusedDialogBox_MovesFocusToAnotherControl(string theme)
     {
         GraphicalUiElement screen = LoadDemoScreen(theme);
@@ -33,7 +33,7 @@ public class ThemeDialogBoxKeyboardTests : ThemeKeyboardTestBase
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(RepresentativeThemes))]
     public void ShiftTab_FromFocusedDialogBox_MovesFocusToAnotherControl(string theme)
     {
         GraphicalUiElement screen = LoadDemoScreen(theme);
