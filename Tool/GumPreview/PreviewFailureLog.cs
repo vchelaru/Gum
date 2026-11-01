@@ -20,7 +20,7 @@ public sealed class PreviewFailureLog
     /// <c>GumPreview: {context}: {reason}</c> unless it repeats the previous failure, and is not rethrown.
     /// A success makes the next failure report again. Returns whether the action succeeded.
     /// </summary>
-    public bool TryRun(Action action, string context, TextWriter errors)
+    public bool TryRun(Action action, string context, TextWriter errors, PreviewDebugLog? debugLog = null)
     {
         try
         {
@@ -30,6 +30,7 @@ public sealed class PreviewFailureLog
         }
         catch (Exception exception)
         {
+            debugLog?.LogException(context, exception);
             string message = $"{context}: {FirstLine(exception)}";
             if (message != _lastMessage)
             {

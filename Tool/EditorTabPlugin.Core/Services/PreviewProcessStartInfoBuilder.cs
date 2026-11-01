@@ -9,6 +9,9 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 /// </summary>
 public static class PreviewProcessStartInfoBuilder
 {
+    /// <summary>When set to a file path in the tool's environment, Preview is launched with <c>--log</c> pointing at it.</summary>
+    public const string LogPathEnvironmentVariable = "GUM_PREVIEW_LOG";
+
     /// <summary>
     /// Builds the launch command. Arguments go through <see cref="ProcessStartInfo.ArgumentList"/>,
     /// so paths containing spaces need no manual quoting.
@@ -22,7 +25,11 @@ public static class PreviewProcessStartInfoBuilder
     /// The launching tool's process id. GumPreview exits when that process does, so a killed or
     /// crashed tool doesn't leave the preview open (issue #6011).
     /// </param>
-    public static ProcessStartInfo Build(string executablePath, string projectPath, string elementName, string selectionFilePath, string contentRootDirectory, int parentProcessId)
+    /// <param name="logPath">
+    /// Where GumPreview writes its diagnostic log (<c>--log</c>), or null/empty for no log.
+    /// <see cref="PreviewLauncher"/> fills it from <see cref="LogPathEnvironmentVariable"/>.
+    /// </param>
+    public static ProcessStartInfo Build(string executablePath, string projectPath, string elementName, string selectionFilePath, string contentRootDirectory, int parentProcessId, string? logPath = null)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo(executablePath)
         {
@@ -40,6 +47,11 @@ public static class PreviewProcessStartInfoBuilder
         startInfo.ArgumentList.Add(contentRootDirectory);
         startInfo.ArgumentList.Add("--parent-pid");
         startInfo.ArgumentList.Add(parentProcessId.ToString(CultureInfo.InvariantCulture));
+        if (!string.IsNullOrEmpty(logPath))
+        {
+            startInfo.ArgumentList.Add("--log");
+            startInfo.ArgumentList.Add(logPath);
+        }
         return startInfo;
     }
 }

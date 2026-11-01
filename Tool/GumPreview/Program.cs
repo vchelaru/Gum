@@ -43,8 +43,9 @@ if (options.ExitAfterSeconds is double exitAfterSeconds)
     }, null, TimeSpan.FromSeconds(exitAfterSeconds), Timeout.InfiniteTimeSpan);
 }
 
+using PreviewDebugLog? debugLog = PreviewDebugLog.Open(options.LogPath);
 using Game1 game = new Game1(options.ProjectPath!, options.ElementName!, options.SelectionFilePath, options.ContentRootDirectory,
-    unattended, options.ScreenshotPath, options.FocusName, options.TypedText, options.SelectAll);
+    unattended, options.ScreenshotPath, options.FocusName, options.TypedText, options.SelectAll, debugLog);
 game.Run();
 deadline?.Dispose();
 return game.UnattendedExitCode;
