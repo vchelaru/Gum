@@ -56,6 +56,14 @@ public class FontReferenceCollector
     private readonly Func<InstanceSave, ElementSave?> _resolveInstanceElement;
 
     /// <summary>
+    /// Maps a Text value to every translation of it, one per language the project's localization data
+    /// holds (#7398). The runtime translates a localization key before it reads BBCode, so tags that live
+    /// only in a translation are scanned too. Null (the default) scans the raw value only. Returns
+    /// nothing for a value that is not a key.
+    /// </summary>
+    public Func<string, IEnumerable<string>>? TranslationsOf { get; set; }
+
+    /// <summary>
     /// Creates a collector that resolves an instance's referenced element via
     /// <paramref name="resolveInstanceElement"/> (typically
     /// <c>i =&gt; ObjectFinder.Self.GetElementSave(i)</c>).
@@ -328,7 +336,7 @@ public class FontReferenceCollector
             || stateSave.VariableLists.Any(vl => vl.SourceObject == ownerName);
     }
 
-    private static IEnumerable<BmfcSave> GetBmfcSavesFor(InstanceSave? instance, ElementSave? textElement,
+    private IEnumerable<BmfcSave> GetBmfcSavesFor(InstanceSave? instance, ElementSave? textElement,
         StateSave stateSave, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
@@ -346,7 +354,7 @@ public class FontReferenceCollector
     /// applied) when none of the owner's font-affecting properties are set via a conditional
     /// reference. See #4042.
     /// </summary>
-    private static IEnumerable<BmfcSave> CollectAllBmfcSavesFor(InstanceSave? instance, ElementSave? textElement,
+    private IEnumerable<BmfcSave> CollectAllBmfcSavesFor(InstanceSave? instance, ElementSave? textElement,
         StateSave stateSave, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
@@ -539,7 +547,7 @@ public class FontReferenceCollector
     /// displayed yet has none of them. Replays <see cref="BbCodeFontStacks"/>, the same stack model the
     /// renderers use, seeded from the Text's own font. Nothing for a null <paramref name="baseSave"/>.
     /// </summary>
-    private static IEnumerable<BmfcSave> WithBbCodeRunFonts(BmfcSave? baseSave, Func<string, object?> getValue,
+    private IEnumerable<BmfcSave> WithBbCodeRunFonts(BmfcSave? baseSave, Func<string, object?> getValue,
         ElementSave? textElement, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         if (baseSave == null)
@@ -549,7 +557,33 @@ public class FontReferenceCollector
 
         yield return baseSave;
 
-        if (getValue("Text") is not string text || !text.Contains('['))
+        if (getValue("Text") is not string rawText)
+        {
+            yield break;
+        }
+
+        // The runtime reads BBCode from the raw value first and only translates a value without a '['
+        // (CustomSetPropertyOnRenderable.TrySetPropertyOnText), so a value with tags is never a key.
+        List<string> texts = new List<string> { rawText };
+        if (!rawText.Contains('[') && TranslationsOf != null)
+        {
+            texts.AddRange(TranslationsOf(rawText));
+        }
+
+        foreach (string text in texts)
+        {
+            foreach (BmfcSave bmfcSave in BbCodeRunFontsOf(text, baseSave, getValue, textElement, project,
+                spacingHorizontal, spacingVertical))
+            {
+                yield return bmfcSave;
+            }
+        }
+    }
+
+    private static IEnumerable<BmfcSave> BbCodeRunFontsOf(string text, BmfcSave baseSave,
+        Func<string, object?> getValue, ElementSave? textElement, GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    {
+        if (!text.Contains('['))
         {
             yield break;
         }
@@ -739,7 +773,7 @@ public class FontReferenceCollector
         }
     }
 
-    private static IEnumerable<BmfcSave> GetBmfcSavesFromStack(List<ElementWithState> elementStack,
+    private IEnumerable<BmfcSave> GetBmfcSavesFromStack(List<ElementWithState> elementStack,
         GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         RecursiveVariableFinder rfv = new RecursiveVariableFinder(elementStack);

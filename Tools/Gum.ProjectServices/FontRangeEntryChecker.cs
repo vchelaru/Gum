@@ -1,3 +1,4 @@
+using Gum.Localization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,7 +53,10 @@ public static class FontRangeEntryChecker
     /// <summary>Every font the project's Texts need, as <see cref="FontReferenceCollector"/> collects them.</summary>
     public static IReadOnlyList<BmfcSave> CollectFonts(GumProjectSave project)
     {
-        FontReferenceCollector collector = new FontReferenceCollector(instance => ObjectFinder.Self.GetElementSave(instance));
+        FontReferenceCollector collector = new FontReferenceCollector(instance => ObjectFinder.Self.GetElementSave(instance))
+        {
+            TranslationsOf = ProjectTranslations.CreateLookup(project)
+        };
         return collector.Collect(project, project.AllElements).Values.ToList();
     }
 
