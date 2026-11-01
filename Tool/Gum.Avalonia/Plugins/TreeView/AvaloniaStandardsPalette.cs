@@ -127,10 +127,11 @@ public sealed class AvaloniaStandardsPalette : Border
 
     private Border CreateChip(string typeName)
     {
+        // The chip text is a fixed size, so its icon stays fixed with it.
         // The name takes what is left beside the icon, trimmed rather than drawn past the chip's edge
         // (#4694), and goes altogether once the chip is too narrow to show more than the icon.
         Grid content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
-        if (AvaloniaTreeIcons.CreateIcon(typeName + ".png", ChipIconSize) is { } icon)
+        if (AvaloniaTreeIcons.CreateIcon(typeName + ".png", ChipIconSize, followZoom: false) is { } icon)
         {
             icon.Margin = new Thickness(0, 0, 6, 0);
             content.Children.Add(icon);

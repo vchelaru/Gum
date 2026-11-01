@@ -6,6 +6,11 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Data;
+using Avalonia.Layout;
+using Avalonia.Styling;
+using FluentIcons.Avalonia;
+using Gum.Avalonia.Themes;
 using Gum.Managers;
 
 namespace Gum.Avalonia.Plugins.TreeView;
@@ -65,25 +70,52 @@ public static class AvaloniaTreeIcons
         return brush;
     }
 
-    /// <summary>A tinted icon for a file-name key (e.g. "Sprite_Instance.png"), or null if there is none.</summary>
-    public static Control? CreateIcon(string key, double size) =>
-        TreeIconCatalog.TryGetIndex(key, out int index) ? CreateIcon(index, size) : null;
+    /// <summary>
+    /// Sizes <paramref name="icon"/> as <paramref name="sizeAtDefaultZoom"/> pixels at the default base font
+    /// size and in proportion to it after, so the icon follows the tool's zoom like the text beside it.
+    /// </summary>
+    public static void FollowBaseFontSize(Control icon, double sizeAtDefaultZoom, bool widthOnly = false)
+    {
+        IObservable<object?> size = icon.GetResourceObservable(
+            FrbThemeResources.BaseFontSizeKey,
+            value => (object)((value is double baseSize ? baseSize : FrbThemeResources.DefaultBaseFontSize)
+                / FrbThemeResources.DefaultBaseFontSize * sizeAtDefaultZoom));
+        icon.Bind(Layoutable.WidthProperty, size);
+        if (widthOnly)
+        {
+            return;
+        }
+        icon.Bind(Layoutable.HeightProperty, size);
+        if (icon is FluentIcon)
+        {
+            icon.Bind(FluentIcon.FontSizeProperty, size);
+        }
+    }
 
-    /// <summary>A tinted icon for an icon index, or null if there is none.</summary>
-    public static Control? CreateIcon(int imageIndex, double size)
+    /// <summary>A tinted icon for a file-name key (e.g. "Sprite_Instance.png"), or null if there is none.</summary>
+    public static Control? CreateIcon(string key, double size, bool followZoom = true) =>
+        TreeIconCatalog.TryGetIndex(key, out int index) ? CreateIcon(index, size, followZoom) : null;
+
+    /// <summary>A tinted icon for an icon index, or null if there is none. <paramref name="size"/> is its size at the default zoom; <paramref name="followZoom"/> false keeps it that size.</summary>
+    public static Control? CreateIcon(int imageIndex, double size, bool followZoom = true)
     {
         if (GetBitmap(imageIndex) is not { } bitmap)
         {
             return null;
         }
 
-        return new Rectangle
+        Rectangle icon = new Rectangle
         {
             Width = size,
             Height = size,
             Fill = GetBrush(imageIndex),
             OpacityMask = new ImageBrush(bitmap),
         };
+        if (followZoom)
+        {
+            FollowBaseFontSize(icon, size);
+        }
+        return icon;
     }
 
     private static Bitmap? LoadBitmap(TreeIconDefinition definition)

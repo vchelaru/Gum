@@ -865,6 +865,7 @@ internal sealed class TreeRowView : Border
         _expanderIcon = GumFluentIcons.Create(FluentIcons.Common.Icon.ChevronRight, 12);
         _expanderIcon.HorizontalAlignment = HorizontalAlignment.Center;
         _expanderIcon.VerticalAlignment = VerticalAlignment.Center;
+        AvaloniaTreeIcons.FollowBaseFontSize(_expanderIcon, 12);
         _expander = new Border
         {
             Width = 14,
@@ -872,6 +873,7 @@ internal sealed class TreeRowView : Border
             Background = Brushes.Transparent,
             Child = _expanderIcon,
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(_expander, 14, widthOnly: true);
         _expander.PointerPressed += (_, e) =>
         {
             // Only the left button toggles; a right click on the chevron is a click on the row.

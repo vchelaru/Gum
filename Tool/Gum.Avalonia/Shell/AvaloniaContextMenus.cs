@@ -93,10 +93,17 @@ public static class AvaloniaContextMenus
 
     // The States tree's category and state glyphs are Fluent System Icons, as in the WPF head; every
     // other key is a tree icon file name.
+    // Each icon's size is for the default zoom and follows the base font size, like the menu text.
     private static object? CreateIcon(string key, double size) => key switch
     {
-        ContextMenuIconKeys.Category => GumFluentIcons.Create(FluentIcons.Common.Icon.DatabaseMultiple, size),
-        ContextMenuIconKeys.State => GumFluentIcons.Create(FluentIcons.Common.Icon.Database, size),
+        ContextMenuIconKeys.Category => FollowZoom(GumFluentIcons.Create(FluentIcons.Common.Icon.DatabaseMultiple, size), size),
+        ContextMenuIconKeys.State => FollowZoom(GumFluentIcons.Create(FluentIcons.Common.Icon.Database, size), size),
         _ => AvaloniaTreeIcons.CreateIcon(key, size),
     };
+
+    private static Control FollowZoom(Control icon, double size)
+    {
+        AvaloniaTreeIcons.FollowBaseFontSize(icon, size);
+        return icon;
+    }
 }
