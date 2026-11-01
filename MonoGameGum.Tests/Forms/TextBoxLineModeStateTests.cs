@@ -81,7 +81,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
     }
 
     private static VerticalAlignment TextAlignment(GraphicalUiElement boxVisual) =>
-        ((RenderingLibrary.Graphics.Text)boxVisual.GetGraphicalUiElementByName("TextInstance")!.RenderableComponent).VerticalAlignment;
+        ((RenderingLibrary.Graphics.Text)boxVisual.GetGraphicalUiElementByName("TextInstance")!.RenderableComponent!).VerticalAlignment;
 
     // The Single state sizes the text to its children; Multi sizes it to the container.
     private static DimensionUnitType TextWidthUnits(GraphicalUiElement boxVisual) =>
