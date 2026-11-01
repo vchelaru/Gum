@@ -266,13 +266,13 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -354,13 +354,13 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -398,13 +398,13 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -442,13 +442,13 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -486,13 +486,13 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <Variable Type="int" Name="TabText.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">190</Value>
+        <Value xsi:type="xsd:int">180</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>

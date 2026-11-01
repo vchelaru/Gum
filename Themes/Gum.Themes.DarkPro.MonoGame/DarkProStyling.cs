@@ -76,9 +76,6 @@ public class DarkProColors
     /// <summary>Primary text (<c>--txt</c>, <c>#D4D4D4</c>).</summary>
     public Color Text { get; set; } = new Color(212, 212, 212);
 
-    /// <summary>Text drawn on a full <see cref="Accent"/> fill (a focused list row); <see cref="Text"/> is only 3:1 there (#7366).</summary>
-    public Color TextOnAccent { get; set; } = new Color(255, 255, 255);
-
     /// <summary>Muted / secondary text (<c>--mu</c>, <c>#888888</c>).</summary>
     public Color Muted { get; set; } = new Color(136, 136, 136);
 

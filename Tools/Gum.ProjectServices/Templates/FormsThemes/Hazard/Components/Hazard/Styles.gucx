@@ -455,10 +455,10 @@
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="int" Name="TextSelection.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">86</Value>
+      <Value xsi:type="xsd:int">88</Value>
     </Variable>
     <Variable Type="int" Name="TextSelection.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">108</Value>
+      <Value xsi:type="xsd:int">110</Value>
     </Variable>
     <Variable Type="bool" Name="TextSelection.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>

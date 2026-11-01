@@ -8,6 +8,9 @@ using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
+using Gum.DataTypes;
+using Gum.Input;
+using Moq;
 using Shouldly;
 using Xunit;
 using V3Styling = Gum.Forms.DefaultVisuals.V3.Styling;
@@ -28,14 +31,11 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
     private const int Width = 640;
     private const int Height = 300;
     private const double MinimumTextContrast = 4.5;
-    private const double MinimumSelectionAreaContrast = 1.5;
 
-    // Standard keeps its teal Primary (6,159,177) by the maintainer's decision on #7366: the selected ListBox row gets
-    // dark text instead, while the TextBox selection and the open MenuItem (white on teal, 3.18:1) stay as they are.
-    private static readonly Dictionary<string, string[]> PendingSurfaces = new()
-    {
-        ["standard"] = new[] { "TextBox selection (focused)", "PasswordBox selection (focused)", "MenuItem top-level open" },
-    };
+    // Only the Standard ListBox rows (and the drop-down rows that share the ListBoxItem visual) are asserted. Every other
+    // theme and surface is measured and recorded but left pending: the rest of #7366 was closed as not planned (#7408).
+    private static bool IsAsserted(string themeName, string surface) =>
+        themeName == "standard" && (surface.StartsWith("ListBoxItem") || surface.StartsWith("ComboBox drop-down item"));
 
     private sealed record Measurement(string Surface, double Contrast, XnaColor Background, XnaColor Text, double Minimum = MinimumTextContrast);
 
@@ -83,6 +83,27 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         AssertReadable(themeName, themeName + " tool", measurements);
     }
 
+    private static T FromComponent<T>(string componentName) where T : FrameworkElement
+    {
+        ComponentSave component = global::Gum.Managers.ObjectFinder.Self.GetComponent(componentName).ShouldNotBeNull(componentName);
+        GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        return (visual as InteractiveGue)?.FormsControlAsObject.ShouldBeOfType<T>(componentName)!;
+    }
+
+    // A mouse cursor parked far outside the capture, so no control reacts to it.
+    private static void InstallOffscreenCursor()
+    {
+        Mock<ICursor> cursor = new();
+        cursor.SetupProperty(c => c.VisualOver);
+        cursor.SetupProperty(c => c.WindowPushed);
+        cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(c => c.X).Returns(-1000);
+        cursor.Setup(c => c.Y).Returns(-1000);
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(-1000);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(-1000);
+        FormsUtilities.SetCursor(cursor.Object);
+    }
+
     private static void AssertReadable(string themeName, string label, List<Measurement> measurements)
     {
         string? tablePath = Environment.GetEnvironmentVariable("GUM_THEME_TABLE");
@@ -96,7 +117,7 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         }
         measurements.ShouldNotBeEmpty(label);
         List<string> failures = measurements
-            .Where(m => m.Contrast < m.Minimum && !(PendingSurfaces.TryGetValue(themeName, out string[]? pending) && pending.Contains(m.Surface)))
+            .Where(m => m.Contrast < m.Minimum && IsAsserted(themeName, m.Surface))
             .Select(m => $"{m.Surface}: {m.Contrast:0.00}:1 (text {m.Text.R},{m.Text.G},{m.Text.B} on {m.Background.R},{m.Background.G},{m.Background.B})")
             .ToList();
         failures.ShouldBeEmpty($"{label}: below its minimum contrast");
@@ -104,7 +125,7 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
 
     private static List<Measurement> RunScene(string pngPrefix, string themeName, string? componentPrefix, XnaColor background)
     {
-        MenuFocusRenderTests.InstallOffscreenCursor();
+        InstallOffscreenCursor();
         GraphicsDevice gd = SystemManagers.Default.Renderer.GraphicsDevice;
         List<Measurement> results = new();
 
@@ -125,7 +146,7 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         }
 
         T Make<T>(string name, Func<T> codeOnly) where T : FrameworkElement =>
-            componentPrefix == null ? codeOnly() : MenuFocusRenderTests.FromComponent<T>(componentPrefix + name);
+            componentPrefix == null ? codeOnly() : FromComponent<T>(componentPrefix + name);
 
         void Place(FrameworkElement element, float x, float y, float? width = null, float? height = null)
         {
@@ -228,33 +249,6 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         combo.IsDropDownOpen = false;
         combo.RemoveFromRoot();
 
-        // Scene 3: a menu bar with its first item highlighted, then its submenu open with the first row highlighted.
-        Menu menu = Make("Menu", () => new Menu());
-        MenuItem Item(string header)
-        {
-            MenuItem item = Make("MenuItem", () => new MenuItem());
-            item.Header = header;
-            return item;
-        }
-        Place(menu, 0, 0, Width);
-        MenuItem file = Item("File");
-        MenuItem newItem = Item("New");
-        MenuItem openItem = Item("Open");
-        file.Items!.Add(newItem);
-        file.Items!.Add(openItem);
-        menu.Items!.Add(file);
-        menu.Items!.Add(Item("Edit"));
-        menu.AddToRoot();
-        menu.Visual.UpdateLayout();
-        menu.IsFocused = true;
-        pixels = MenuFocusRenderTests.Capture(gd, background, pngPrefix + "-menu-focused.png", Width, Height);
-        results.Add(MeasureText("MenuItem top-level highlighted", pixels, file.Visual.GetGraphicalUiElementByName("TextInstance")));
-        MenuFocusRenderTests.Press(global::Gum.Forms.Input.Keys.Down);
-        pixels = MenuFocusRenderTests.Capture(gd, background, pngPrefix + "-menu-open.png", Width, Height);
-        results.Add(MeasureText("MenuItem top-level open", pixels, file.Visual.GetGraphicalUiElementByName("TextInstance")));
-        results.Add(MeasureText("MenuItem submenu row highlighted", pixels, newItem.Visual.GetGraphicalUiElementByName("TextInstance")));
-        results.Add(MeasureText("MenuItem submenu row resting", pixels, openItem.Visual.GetGraphicalUiElementByName("TextInstance")));
-        menu.RemoveFromRoot();
         return results;
     }
 
@@ -280,7 +274,7 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         int y = (int)(textBoxVisual.AbsoluteTop + textBoxVisual.GetAbsoluteHeight() / 2);
         XnaColor field = pixels[y * Width + x];
         return new Measurement(surface, ContrastRatio(selected.Background, field), selected.Background, field,
-            themeName == "hazard" ? MinimumSelectionAreaContrast : 1.0);
+            1.0);
     }
 
     private static Measurement MeasureText(string surface, XnaColor[] pixels, GraphicalUiElement? text)

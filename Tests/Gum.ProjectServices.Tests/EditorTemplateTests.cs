@@ -110,7 +110,7 @@ public class EditorTemplateTests
         // TextPrimaryDisabled/Highlighted/Pushed are the V3 ComboBox arrow shading of TextPrimary (#6754).
         Dictionary<string, (int R, int G, int B)> expected = new()
         {
-            ["TextPrimary"] = (190, 190, 190),
+            ["TextPrimary"] = (180, 180, 180),
             ["TextMuted"] = (88, 88, 88),
             ["Primary"] = (60, 60, 60),
             ["PrimaryDark"] = (51, 51, 51),
@@ -118,7 +118,7 @@ public class EditorTemplateTests
             ["Accent"] = (192, 222, 255),
             ["BorderHover"] = (150, 150, 150),
             ["BorderPushed"] = (255, 255, 255),
-            ["Selection"] = (0, 62, 86),
+            ["Selection"] = (0, 92, 128),
             ["PanelBackground"] = (27, 27, 27),
             ["RecessedBackground"] = (10, 10, 10),
             ["PanelBackgroundDark"] = (17, 17, 17),

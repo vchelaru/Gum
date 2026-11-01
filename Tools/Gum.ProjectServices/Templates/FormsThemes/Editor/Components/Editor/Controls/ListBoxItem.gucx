@@ -386,10 +386,10 @@
     <State>
       <Name>Selected</Name>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">86</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="Background.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">62</Value>
+        <Value xsi:type="xsd:int">92</Value>
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>

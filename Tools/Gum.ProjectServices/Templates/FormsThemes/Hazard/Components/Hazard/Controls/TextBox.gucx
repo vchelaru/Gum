@@ -304,10 +304,10 @@
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="int" Name="SelectionInstance.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">86</Value>
+      <Value xsi:type="xsd:int">88</Value>
     </Variable>
     <Variable Type="int" Name="SelectionInstance.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">108</Value>
+      <Value xsi:type="xsd:int">110</Value>
     </Variable>
     <Variable Type="float" Name="SelectionInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-4</Value>
@@ -730,13 +730,13 @@
         <Value xsi:type="xsd:int">120</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">59</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">212</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">248</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -765,7 +765,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Hazard/Styles.TextBright.FillColor</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">

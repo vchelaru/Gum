@@ -470,10 +470,10 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Selection.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">86</Value>
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
     <Variable Type="int" Name="Selection.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">62</Value>
+      <Value xsi:type="xsd:int">92</Value>
     </Variable>
     <Variable Type="int" Name="Selection.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -572,13 +572,13 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimary.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">190</Value>
+      <Value xsi:type="xsd:int">180</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimary.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">190</Value>
+      <Value xsi:type="xsd:int">180</Value>
     </Variable>
     <Variable Type="int" Name="TextPrimary.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">190</Value>
+      <Value xsi:type="xsd:int">180</Value>
     </Variable>
     <Variable Type="bool" Name="TextPrimary.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>

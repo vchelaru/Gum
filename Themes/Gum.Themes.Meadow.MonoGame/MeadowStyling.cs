@@ -72,8 +72,8 @@ public class MeadowColors
     // ---- Sage (selection + check state) ------------------------------------
 
     /// <summary>Sage — selected-row fill, check/radio focus ring
-    /// (<c>--sage</c>, <c>#C4E4D0</c>, lightened from <c>#BCDDC9</c> so <c>TealDark</c> text on it is 4.5:1, #7366).</summary>
-    public Color Sage { get; set; } = new Color(196, 228, 208);
+    /// (<c>--sage</c>, <c>#BCDDC9</c>).</summary>
+    public Color Sage { get; set; } = new Color(188, 221, 201);
 
     /// <summary>Sage light (<c>--sagel</c>, <c>#D3E9DA</c>).</summary>
     public Color SageLight { get; set; } = new Color(211, 233, 218);

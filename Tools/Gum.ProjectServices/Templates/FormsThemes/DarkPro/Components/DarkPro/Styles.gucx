@@ -397,24 +397,6 @@
     <Variable Type="float" Name="Text.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
-    <Variable Type="int" Name="TextOnAccent.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
-    <Variable Type="int" Name="TextOnAccent.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
-    <Variable Type="int" Name="TextOnAccent.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
-    <Variable Type="bool" Name="TextOnAccent.IsFilled" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
-    </Variable>
-    <Variable Type="string" Name="TextOnAccent.Parent" SetsValue="true">
-      <Value xsi:type="xsd:string">Colors</Value>
-    </Variable>
-    <Variable Type="float" Name="TextOnAccent.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
     <Variable Type="ChildrenLayout" Name="TextStyles.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -472,7 +454,6 @@
   <Instance Name="Placeholder" BaseType="Rectangle" />
   <Instance Name="PressedFill" BaseType="Rectangle" />
   <Instance Name="PressedText" BaseType="Rectangle" />
-  <Instance Name="TextOnAccent" BaseType="Rectangle" />
   <Instance Name="Surface1" BaseType="Rectangle" />
   <Instance Name="Surface2" BaseType="Rectangle" />
   <Instance Name="Text" BaseType="Rectangle" />
