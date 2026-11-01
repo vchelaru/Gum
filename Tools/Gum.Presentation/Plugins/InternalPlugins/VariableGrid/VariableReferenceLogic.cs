@@ -544,7 +544,15 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
         // ButtonCategoryState = "Disabled"). Tool-only by design — never invoked at
         // runtime, since the Forms control's own setter owns the visual at runtime.
-        BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+        if (isWide)
+        {
+            BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+        }
+        else
+        {
+            // A tick touches only the lines that read the dragged member, on the instance dragged.
+            BehaviorToolOnlyReferencesApplier.ApplyDrivenBy(parentElement, leftSideInstance, unqualifiedMember, stateSave);
+        }
 
         // A categorized state's rows read the same instances, so they follow too (#6886).
         HashSet<string> changedNames = new HashSet<string> { qualifiedName };

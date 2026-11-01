@@ -58,6 +58,28 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
+    /// Applies only the lines the edit of <paramref name="changedMember"/> on <paramref name="instance"/> (null for
+    /// the element itself) can change, so a drag tick costs what the one edited instance costs, not every
+    /// behavior instance of the element. Same writes as <see cref="Apply"/> for that instance.
+    /// </summary>
+    public static void ApplyDrivenBy(ElementSave element, InstanceSave? instance, string changedMember, StateSave stateSave)
+    {
+        if (element.DefaultState == null || stateSave != element.DefaultState ||
+            GetUnderlyingMembersDrivenBy(element, instance, changedMember).Count == 0)
+        {
+            return;
+        }
+
+        ComponentSave? component = instance != null
+            ? ObjectFinder.Self.GetElementSave(instance.BaseType) as ComponentSave
+            : element as ComponentSave;
+        if (component != null)
+        {
+            ApplyBehaviorsOf(component, instance, stateSave);
+        }
+    }
+
+    /// <summary>
     /// Values a Forms control instance's behavior derives that a non-default <paramref name="selectedState"/> of
     /// <paramref name="element"/> would otherwise override: the selected state sets the derived variable itself
     /// (<c>Play.ButtonCategoryState</c>) or a Forms property it reads (<c>Play.IsEnabled</c>). An instance's

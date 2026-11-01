@@ -57,6 +57,40 @@ public class DragCommitCascadeTests : BaseTestClass
     }
 
     [Fact]
+    public void Tick_OfUnrelatedVariable_ShouldNotTouchButtonStates_Nor_CostPerButton()
+    {
+        using DragWorld world = new DragWorld();
+        world.BuildButtons(200);
+        world.ButtonStateWrites.ShouldBe(0);
+        world.Tick("S0", "Default", 59);
+
+        List<double> milliseconds = new List<double>();
+        for (int i = 0; i < 7; i++)
+        {
+            Stopwatch watch = Stopwatch.StartNew();
+            world.Tick("S0", "Default", 60 + i);
+            watch.Stop();
+            milliseconds.Add(watch.Elapsed.TotalMilliseconds);
+        }
+        milliseconds.Sort();
+
+        world.ButtonStateWrites.ShouldBe(0);
+        milliseconds[3].ShouldBeLessThan(3.0);
+    }
+
+    [Fact]
+    public void Tick_OfIsEnabled_ShouldUpdateOnlyThatButtonsState()
+    {
+        using DragWorld world = new DragWorld();
+        world.BuildButtons(20);
+
+        world.TickIsEnabled(3, false);
+
+        world.ButtonCategoryStateOf(3).ShouldBe("Disabled");
+        world.ButtonStateWrites.ShouldBe(1);
+    }
+
+    [Fact]
     public void Tick_ShouldWriteToolOnlyBehaviorReferences_WithoutSavingOrRecordingUndo()
     {
         using DragWorld world = new DragWorld();
