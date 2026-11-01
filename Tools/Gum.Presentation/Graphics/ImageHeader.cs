@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RenderingLibrary.Content;
 using SkiaSharp;
 
 namespace Gum.Graphics;
@@ -26,48 +27,58 @@ public static class ImageHeader
             { new byte[] { 0xff, 0xd8 }, DecodeJfif },
         };
 
-    /// <summary>        
-    /// Gets the dimensions of an image.        
-    /// </summary>        
-    /// <param name="path">The path of the image to get the dimensions of.</param>        
-    /// <returns>The dimensions of the specified image.</returns>        
-    /// <exception cref="ArgumentException">The image was of an unrecognised format.</exception>        
+    /// <summary>
+    /// Gets the dimensions of an image file, asking the same sources the loader does: the decoders
+    /// registered in <see cref="LoaderManager.ImageDecoders"/> first, then the built-in header
+    /// table, then SkiaSharp. The file is opened once.
+    /// </summary>
+    /// <param name="path">The path of the image.</param>
+    /// <returns>The dimensions, or null when the file does not exist or no source can read it.</returns>
     public static Size? GetDimensions(string path)
     {
-        if (File.Exists(path))
+        if (!File.Exists(path))
         {
+            return null;
+        }
+
+        Stream stream = File.OpenRead(path);
+        try
+        {
+            DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(path, ref stream);
+            if (decoded != null)
+            {
+                return new Size(decoded.Width, decoded.Height);
+            }
+
+            // TryDecode leaves the stream where it found it; it may be a seekable copy.
+            if (!stream.CanSeek)
+            {
+                return null;
+            }
+
+            long start = stream.Position;
             try
             {
-                using (BinaryReader binaryReader = new BinaryReader(File.OpenRead(path)))
+                using (var binaryReader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true))
                 {
-                    try
-                    {
-                        return GetDimensions(binaryReader);
-                    }
-                    catch (ArgumentException e)
-                    {
-                        string newMessage = string.Format("{0} file: '{1}' ", errorMessage, path);
-
-                        throw new ArgumentException(newMessage, "path", e);
-                    }
+                    return GetDimensions(binaryReader);
                 }
             }
-            catch (ArgumentException)
+            catch (Exception e) when (e is ArgumentException || e is EndOfStreamException)
             {
                 // Header parsing failed: let a real decoder read the dimensions. SkiaSharp runs on
                 // every OS the tool targets; System.Drawing.Bitmap does not.
-                using (SKCodec? codec = SKCodec.Create(path))
+                stream.Position = start;
+                using (SKCodec? codec = SKCodec.Create(stream))
                 {
-                    if (codec == null)
-                    {
-                        throw;
-                    }
-
-                    return new Size(codec.Info.Width, codec.Info.Height);
+                    return codec == null ? null : new Size(codec.Info.Width, codec.Info.Height);
                 }
             }
         }
-        return null;
+        finally
+        {
+            stream.Dispose();
+        }
     }
 
     /// <summary>        

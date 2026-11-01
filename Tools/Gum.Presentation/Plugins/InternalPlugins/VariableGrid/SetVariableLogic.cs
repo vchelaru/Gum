@@ -90,6 +90,7 @@ public class SetVariableLogic : ISetVariableLogic
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectState _projectState;
     private readonly IProjectManager _projectManager;
+    private readonly IOutputManager _outputManager;
 
     // When non-null, AskIfShouldCopy returns this value without showing a dialog.
     // Used by OnWireframeDrop to consolidate the per-file copy prompt into one dialog.
@@ -111,7 +112,8 @@ public class SetVariableLogic : ISetVariableLogic
         IPluginManager pluginManager,
         IWireframeObjectManager wireframeObjectManager,
         IProjectState projectState,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        IOutputManager outputManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -130,6 +132,7 @@ public class SetVariableLogic : ISetVariableLogic
         _wireframeObjectManager = wireframeObjectManager;
         _projectState = projectState;
         _projectManager = projectManager;
+        _outputManager = outputManager;
     }
 
     public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -1116,7 +1119,23 @@ public class SetVariableLogic : ISetVariableLogic
                         }
                         else
                         {
-                            var size = ImageHeader.GetDimensions(absolute);
+                            System.Drawing.Size? size = null;
+                            string? failure = null;
+                            try
+                            {
+                                size = ImageHeader.GetDimensions(absolute);
+                                failure = size == null ? "no decoder recognized the file" : null;
+                            }
+                            catch (Exception e)
+                            {
+                                // A decoder or the disk failing must not fail the property change.
+                                failure = e.Message;
+                            }
+
+                            if (failure != null)
+                            {
+                                _outputManager.AddError($"Could not read the size of {sourceFile} ({failure}), so the texture coordinates were left unchanged. Set them manually or add an IImageDecoder for this format.");
+                            }
 
                             if (size != null && instance != null)
                             {

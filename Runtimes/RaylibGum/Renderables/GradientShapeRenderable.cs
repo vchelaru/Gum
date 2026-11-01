@@ -36,7 +36,7 @@ public abstract class GradientShapeRenderable : InvisibleRenderable
 
     /// <summary>
     /// Outer radius for a radial gradient: at this radius the color is the gradient's end color.
-    /// When 0 (the default) the shape's own extent is used so a default radial covers the whole shape.
+    /// When 0 or less (the default is 0) the outer radius is 100 pixels, like Skia and MonoGame.
     /// </summary>
     public float GradientOuterRadius { get; set; }
 
@@ -73,8 +73,11 @@ public abstract class GradientShapeRenderable : InvisibleRenderable
     /// <summary><see cref="GradientInnerRadius"/> in pixels after applying <see cref="GradientInnerRadiusUnits"/>.</summary>
     public float EffectiveGradientInnerRadius => GradientUnitResolver.ResolveRadius(GradientInnerRadius, GradientInnerRadiusUnits, Width);
 
-    /// <summary><see cref="GradientOuterRadius"/> in pixels after applying <see cref="GradientOuterRadiusUnits"/>.</summary>
-    public float EffectiveGradientOuterRadius => GradientUnitResolver.ResolveRadius(GradientOuterRadius, GradientOuterRadiusUnits, Width);
+    /// <summary>
+    /// <see cref="GradientOuterRadius"/> in pixels after applying <see cref="GradientOuterRadiusUnits"/>;
+    /// 100 when that resolves to 0 or less.
+    /// </summary>
+    public float EffectiveGradientOuterRadius => GradientUnitResolver.ResolveOuterRadius(GradientOuterRadius, GradientOuterRadiusUnits, Width);
 
     /// <summary>
     /// Returns the unit-resolved gradient axis endpoints rotated around the bbox center by

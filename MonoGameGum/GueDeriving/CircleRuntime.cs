@@ -1320,7 +1320,11 @@ public class CircleRuntime : GraphicalUiElement
         // Mirrors AposShapeRuntime.PreRender. Skipped for slots that don't implement the
         // interface (core DefaultStrokedCircleRenderable has no AA concept).
         if (_fill is IAntialiasedRenderable fillAa) fillAa.IsAntialiased = _isAntialiased;
-        if (_stroke is IAntialiasedRenderable strokeAa) strokeAa.IsAntialiased = _isAntialiased;
+        if (_stroke is IAntialiasedRenderable strokeAa)
+        {
+            strokeAa.IsAntialiased = _isAntialiased;
+            strokeAa.StrokeAlphaScale = strokeMath.StrokeAlphaScale;
+        }
 
         // When fill is the contained object and stroke is its child, the layout system pushes
         // size onto fill but not stroke (stroke is a plain renderable, not a layout-aware

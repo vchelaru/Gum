@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
@@ -19,6 +20,8 @@ namespace Gum.Avalonia.Shell;
 public sealed class MainPanelView : Grid
 {
     private readonly AvaloniaTabManager _tabs;
+    private readonly Grid _rightGrid;
+    private readonly List<Control> _toolPanels = new List<Control>();
 
     /// <summary>Builds the layout over the tab manager.</summary>
     public MainPanelView(AvaloniaTabManager tabs)
@@ -44,10 +47,11 @@ public sealed class MainPanelView : Grid
             },
         };
         centerGrid.Children.Add(CreateRegion(tabs.CenterTop, 0, 0));
+        _toolPanels.Add(centerGrid);
         centerGrid.Children.Add(CreateSplitter(GridResizeDirection.Rows, 1, 0));
         centerGrid.Children.Add(CreateRegion(tabs.CenterBottom, 2, 0));
 
-        Grid rightGrid = new Grid
+        Grid rightGrid = _rightGrid = new Grid
         {
             RowDefinitions = new RowDefinitions
             {
@@ -58,23 +62,60 @@ public sealed class MainPanelView : Grid
         };
         rightGrid.Children.Add(CreateRegion(tabs.RightTop, 0, 0));
         rightGrid.Children.Add(CreateSplitter(GridResizeDirection.Rows, 1, 0));
-        rightGrid.Children.Add(CreateRegion(tabs.RightBottom, 2, 0));
+        Grid bottomRight = CreateRegion(tabs.RightBottom, 2, 0);
+        rightGrid.Children.Add(bottomRight);
+        GridSplitter rightSplitter = (GridSplitter)rightGrid.Children[1];
 
-        Children.Add(CreateRegion(tabs.Left, 0, 0));
-        Children.Add(CreateSplitter(GridResizeDirection.Columns, 0, 1));
+        Grid left = CreateRegion(tabs.Left, 0, 0);
+        GridSplitter leftSplitter = CreateSplitter(GridResizeDirection.Columns, 0, 1);
+        GridSplitter middleSplitter = CreateSplitter(GridResizeDirection.Columns, 0, 3);
+        _toolPanels.AddRange(new Control[] { left, leftSplitter, middleSplitter, bottomRight, rightSplitter });
+
+        Children.Add(left);
+        Children.Add(leftSplitter);
         SetColumn(centerGrid, 2);
         Children.Add(centerGrid);
-        Children.Add(CreateSplitter(GridResizeDirection.Columns, 0, 3));
+        Children.Add(middleSplitter);
         SetColumn(rightGrid, 4);
         Children.Add(rightGrid);
 
         // Persist the user's splitter positions through the tab manager.
         LayoutUpdated += (_, _) =>
         {
+            // Hidden panels measure 0; the sizes to bring back stay as the user left them.
+            if (!_tabs.IsToolsVisible)
+            {
+                return;
+            }
             _tabs.LeftColumnWidth = ColumnDefinitions[0].ActualWidth;
             _tabs.CenterColumnWidth = ColumnDefinitions[2].ActualWidth;
             _tabs.BottomRightHeight = rightGrid.RowDefinitions[2].ActualHeight;
         };
+
+        // View > Hide Tools: collapse everything but the canvas region; Show Tools brings back the
+        // sizes the manager kept.
+        _tabs.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(AvaloniaTabManager.IsToolsVisible))
+            {
+                ApplyToolsVisibility();
+            }
+        };
+        ApplyToolsVisibility();
+    }
+
+    private void ApplyToolsVisibility()
+    {
+        bool visible = _tabs.IsToolsVisible;
+        // Collapsing the panels (not only zeroing their lengths) also takes their controls out of
+        // the tab order, so focus cannot land in a hidden panel.
+        foreach (Control panel in _toolPanels)
+        {
+            panel.IsVisible = visible;
+        }
+        ColumnDefinitions[0].Width = new GridLength(visible ? _tabs.LeftColumnWidth : 0, GridUnitType.Pixel);
+        ColumnDefinitions[2].Width = new GridLength(visible ? _tabs.CenterColumnWidth : 0, GridUnitType.Pixel);
+        _rightGrid.RowDefinitions[2].Height = new GridLength(visible ? _tabs.BottomRightHeight : 0, GridUnitType.Pixel);
     }
 
     private Grid CreateRegion(ObservableCollection<AvaloniaPluginTab> source, int row, int column)

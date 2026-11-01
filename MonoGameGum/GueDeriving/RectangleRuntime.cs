@@ -1633,7 +1633,11 @@ public class RectangleRuntime : GraphicalUiElement
 
         // Issue #2818: push AA to both slots so a single setter flips fill + stroke together.
         if (_fill is IAntialiasedRenderable fillAa) fillAa.IsAntialiased = _isAntialiased;
-        if (_stroke is IAntialiasedRenderable strokeAa) strokeAa.IsAntialiased = _isAntialiased;
+        if (_stroke is IAntialiasedRenderable strokeAa)
+        {
+            strokeAa.IsAntialiased = _isAntialiased;
+            strokeAa.StrokeAlphaScale = strokeMath.StrokeAlphaScale;
+        }
 
         // Mirror size to stroke when fill is the contained object — see CircleRuntime.PreRender.
         if (_fill is IPositionedSizedObject fillSized && _stroke is IPositionedSizedObject strokeSized)

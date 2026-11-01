@@ -206,8 +206,8 @@ public class LineRectangle : GradientShapeRenderable
 
     /// <summary>
     /// Issue #2998 — see <see cref="LineCircle.ShouldPaintFillGradient"/> for the full
-    /// contract. Same gate, same predicate, applied to <see cref="DrawLinearGradientQuad"/>
-    /// and <see cref="DrawRadialGradientGrid"/> on the fill pass.
+    /// contract. Same gate, same predicate, applied to <see cref="DrawGradientGrid"/>
+    /// on the fill pass.
     /// </summary>
     public bool ShouldPaintFillGradient =>
         UseGradient && (FillColor.HasValue || IsFilled) && (Color1.A > 0 || Color2.A > 0);
@@ -365,7 +365,8 @@ public class LineRectangle : GradientShapeRenderable
                         {
                             DrawRectangleV(new Vector2(px, py), new Vector2(w, h), silhouetteColor);
                         }
-                    });
+                    },
+                    new ShadowMaskKey(useRounded ? 2 : 1, hollow, roundness, roundedSegments, LinePixelWidth));
             }
             else
             {
@@ -411,8 +412,8 @@ public class LineRectangle : GradientShapeRenderable
                 // applied via the same R() helper used by the outline path.
                 //
                 // Issue #2998 — gradient visibility comes from the gradient STOP alphas, not the
-                // solid fill alpha; neither DrawLinearGradientQuad nor DrawRadialGradientGrid
-                // modulates by fillColor.A. Route through ShouldPaintFillGradient (the single source
+                // solid fill alpha; DrawGradientGrid
+                // does not modulate by fillColor.A. Route through ShouldPaintFillGradient (the single source
                 // of truth) so a transparent solid fill with visible stops still paints, and two
                 // transparent stops paint nothing.
                 if (!ShouldPaintFillGradient)
@@ -421,13 +422,13 @@ public class LineRectangle : GradientShapeRenderable
                 }
                 else if (GradientType == GradientType.Linear)
                 {
-                    DrawLinearGradientQuad(tl, tr, br, bl, w, h);
+                    DrawLinearGradient(tl, tr, bl, w, h);
                 }
                 else
                 {
                     // Per-vertex-colored grid clipped to the rectangle (a fan from the centroid gives
                     // "X"-shaped spokes; stacked translucent circles accumulate alpha and ignore the bounds).
-                    DrawRadialGradientGrid(R, w, h);
+                    DrawGradientGrid(R, w, h, RadialColorAt(w, h));
                 }
             }
             else if (useRounded && !rotated)
@@ -579,67 +580,19 @@ public class LineRectangle : GradientShapeRenderable
     }
 
     /// <summary>
-    /// Emits two triangles covering the rotated quad with per-vertex colors computed from the
-    /// linear gradient axis. Exact for a planar gradient — barycentric interpolation across each
-    /// triangle reproduces the gradient correctly across the diagonal seam.
-    /// </summary>
-    private void DrawLinearGradientQuad(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl,
-        float w, float h)
-    {
-        // Coords are rectangle-local (0,0 = top-left). Cache the four corner t values then
-        // emit two triangles. Same vertex order rule as raylib's DrawTriangle / the circle's
-        // gradient fan: CCW front-facing.
-        Color cTl = SampleLinearAt(0f, 0f);
-        Color cTr = SampleLinearAt(w, 0f);
-        Color cBr = SampleLinearAt(w, h);
-        Color cBl = SampleLinearAt(0f, h);
-
-        Rlgl.Begin((int)DrawMode.Triangles);
-        EmitVertexColored(tl, cTl);
-        EmitVertexColored(br, cBr);
-        EmitVertexColored(tr, cTr);
-
-        EmitVertexColored(tl, cTl);
-        EmitVertexColored(bl, cBl);
-        EmitVertexColored(br, cBr);
-        Rlgl.End();
-    }
-
-    /// <summary>
-    /// Renders the radial gradient as a grid of triangles whose per-vertex color is the gradient
-    /// sampled at that vertex's distance from the gradient center. The mesh covers exactly the
+    /// Renders a gradient as a grid of triangles whose per-vertex color is <paramref name="colorAt"/>
+    /// sampled at that vertex (used by the radial gradient; the linear one is <see cref="DrawLinearGradient"/>).
+    /// The mesh covers exactly the
     /// rectangle (so it never bleeds outside it) and each pixel is painted once, so translucent
     /// stops do not accumulate alpha the way stacked concentric circles did. Colors interpolate
     /// straight (unpremultiplied) like Skia's default gradient shader. Vertices go through
     /// <paramref name="toWorld"/>, so the gradient rotates with the rectangle.
     /// </summary>
-    private void DrawRadialGradientGrid(Func<float, float, Vector2> toWorld, float w, float h)
+    private void DrawGradientGrid(Func<float, float, Vector2> toWorld, float w, float h,
+        Func<float, float, Color> colorAt)
     {
-        float cx = EffectiveGradientX1;
-        float cy = EffectiveGradientY1;
-        float effectiveOuter = EffectiveGradientOuterRadius;
-        float outer = effectiveOuter > 0f
-            ? effectiveOuter
-            : 0.5f * MathF.Sqrt(w * w + h * h);
-        float inner = EffectiveGradientInnerRadius;
-        float span = outer - inner;
-
-        // Degenerate band (inner >= outer): whole shape reads as Color2.
-        bool degenerate = span <= 0f;
-
         int columns = Math.Clamp((int)MathF.Ceiling(w / 4f), 1, 96);
         int rows = Math.Clamp((int)MathF.Ceiling(h / 4f), 1, 96);
-
-        Color ColorAt(float x, float y)
-        {
-            if (degenerate)
-            {
-                return Color2;
-            }
-            float dx = x - cx;
-            float dy = y - cy;
-            return LerpClamped((MathF.Sqrt(dx * dx + dy * dy) - inner) / span);
-        }
 
         Rlgl.Begin((int)DrawMode.Triangles);
         for (int row = 0; row < rows; row++)
@@ -650,15 +603,15 @@ public class LineRectangle : GradientShapeRenderable
             {
                 float x0 = w * column / columns;
                 float x1 = w * (column + 1) / columns;
-                Color c00 = ColorAt(x0, y0);
-                Color c10 = ColorAt(x1, y0);
-                Color c11 = ColorAt(x1, y1);
-                Color c01 = ColorAt(x0, y1);
+                Color c00 = colorAt(x0, y0);
+                Color c10 = colorAt(x1, y0);
+                Color c11 = colorAt(x1, y1);
+                Color c01 = colorAt(x0, y1);
                 Vector2 p00 = toWorld(x0, y0);
                 Vector2 p10 = toWorld(x1, y0);
                 Vector2 p11 = toWorld(x1, y1);
                 Vector2 p01 = toWorld(x0, y1);
-                // Same winding as DrawLinearGradientQuad (front-facing under default culling).
+                // CCW front-facing under default culling.
                 EmitVertexColored(p00, c00);
                 EmitVertexColored(p11, c11);
                 EmitVertexColored(p10, c10);
@@ -670,19 +623,136 @@ public class LineRectangle : GradientShapeRenderable
         Rlgl.End();
     }
 
-    private Color SampleLinearAt(float localX, float localY)
+    private Func<float, float, Color> RadialColorAt(float w, float h)
+    {
+        float cx = EffectiveGradientX1;
+        float cy = EffectiveGradientY1;
+        float effectiveOuter = EffectiveGradientOuterRadius;
+        float outer = effectiveOuter;
+        float inner = EffectiveGradientInnerRadius;
+        float span = outer - inner;
+
+        // Degenerate band (inner >= outer): whole shape reads as Color2.
+        if (span <= 0f)
+        {
+            return (x, y) => Color2;
+        }
+
+        return (x, y) =>
+        {
+            float dx = x - cx;
+            float dy = y - cy;
+            return LerpClamped((MathF.Sqrt(dx * dx + dy * dy) - inner) / span);
+        };
+    }
+
+    /// <summary>Vertices emitted by the last <see cref="DrawLinearGradient"/>; a test seam for the bound.</summary>
+    internal int LastLinearGradientVertexCount { get; private set; }
+
+    /// <summary>
+    /// Draws the linear gradient as at most three convex pieces, split where the gradient reaches
+    /// its start and end (t = 0 and t = 1). The blend is planar inside each piece, so per-vertex colors
+    /// are exact and the clamp lands on the endpoints (#7307). The vertex count is at most
+    /// 3 pieces x 4 triangles x 3 = 36 whatever the rectangle size, and nothing is allocated.
+    /// <paramref name="tl"/>, <paramref name="tr"/> and <paramref name="bl"/> are the rotated
+    /// world positions of the rectangle's corners.
+    /// </summary>
+    private void DrawLinearGradient(Vector2 tl, Vector2 tr, Vector2 bl, float w, float h)
     {
         float x1 = EffectiveGradientX1;
         float y1 = EffectiveGradientY1;
         float dx = EffectiveGradientX2 - x1;
         float dy = EffectiveGradientY2 - y1;
         float lenSq = dx * dx + dy * dy;
+
+        // t = a x + b y + c in rectangle-local coordinates.
+        float a = lenSq > 0f ? dx / lenSq : 0f;
+        float b = lenSq > 0f ? dy / lenSq : 0f;
+        // A zero length gradient is all Color2, like Skia's clamp.
+        float c = lenSq > 0f ? -(x1 * dx + y1 * dy) / lenSq : 1f;
+
+        Vector2 axisX = (tr - tl) / (w > 0f ? w : 1f);
+        Vector2 axisY = (bl - tl) / (h > 0f ? h : 1f);
+
+        Span<Vector2> source = stackalloc Vector2[8];
+        Span<Vector2> first = stackalloc Vector2[8];
+        Span<Vector2> second = stackalloc Vector2[8];
+        source[0] = new Vector2(0f, 0f);
+        source[1] = new Vector2(w, 0f);
+        source[2] = new Vector2(w, h);
+        source[3] = new Vector2(0f, h);
+
+        int vertices = 0;
+        Rlgl.Begin((int)DrawMode.Triangles);
         if (lenSq <= 0f)
         {
-            return Color1;
+            vertices += EmitGradientFan(source, 4, tl, axisX, axisY, a, b, c);
         }
-        float t = ((localX - x1) * dx + (localY - y1) * dy) / lenSq;
-        return LerpClamped(t);
+        else
+        {
+            // t <= 0
+            int count = ClipHalfPlane(source, 4, first, -a, -b, -c);
+            vertices += EmitGradientFan(first, count, tl, axisX, axisY, a, b, c);
+            // 0 <= t <= 1
+            count = ClipHalfPlane(source, 4, first, a, b, c);
+            count = ClipHalfPlane(first, count, second, -a, -b, 1f - c);
+            vertices += EmitGradientFan(second, count, tl, axisX, axisY, a, b, c);
+            // t >= 1
+            count = ClipHalfPlane(source, 4, first, a, b, c - 1f);
+            vertices += EmitGradientFan(first, count, tl, axisX, axisY, a, b, c);
+        }
+        Rlgl.End();
+        LastLinearGradientVertexCount = vertices;
+    }
+
+    // Sutherland-Hodgman against the half plane p.x * px + p.y * py + pc >= 0. Keeps the winding.
+    private static int ClipHalfPlane(ReadOnlySpan<Vector2> input, int count, Span<Vector2> output,
+        float px, float py, float pc)
+    {
+        int written = 0;
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 current = input[i];
+            Vector2 next = input[(i + 1) % count];
+            float dCurrent = (current.X * px) + (current.Y * py) + pc;
+            float dNext = (next.X * px) + (next.Y * py) + pc;
+            if (dCurrent >= 0f)
+            {
+                output[written++] = current;
+            }
+            if ((dCurrent >= 0f) != (dNext >= 0f))
+            {
+                float f = dCurrent / (dCurrent - dNext);
+                output[written++] = current + ((next - current) * f);
+            }
+        }
+        return written;
+    }
+
+    private int EmitGradientFan(ReadOnlySpan<Vector2> polygon, int count, Vector2 origin,
+        Vector2 axisX, Vector2 axisY, float a, float b, float c)
+    {
+        if (count < 3)
+        {
+            return 0;
+        }
+        int emitted = 0;
+        for (int i = 1; i < count - 1; i++)
+        {
+            // Local order (0, i + 1, i) is front-facing under default culling.
+            EmitGradientVertex(polygon[0], origin, axisX, axisY, a, b, c);
+            EmitGradientVertex(polygon[i + 1], origin, axisX, axisY, a, b, c);
+            EmitGradientVertex(polygon[i], origin, axisX, axisY, a, b, c);
+            emitted += 3;
+        }
+        return emitted;
+    }
+
+    private void EmitGradientVertex(Vector2 local, Vector2 origin, Vector2 axisX, Vector2 axisY,
+        float a, float b, float c)
+    {
+        Color color = LerpClamped((a * local.X) + (b * local.Y) + c);
+        EmitVertexColored(origin + (axisX * local.X) + (axisY * local.Y), color);
     }
 
     private Color LerpClamped(float t)

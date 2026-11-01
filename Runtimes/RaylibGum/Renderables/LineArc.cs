@@ -273,16 +273,17 @@ public class LineArc : GradientShapeRenderable
         }
         else if (ShouldPaintGradient)
         {
-            // Gradient axis lives in bbox-local coords (origin = bbox top-left); rotate it around
-            // the bbox center so it tracks the arc under self-rotation, then paint the annular
-            // sector as a per-vertex-colored triangle strip. bboxLeft/Top = (cx - halfW, cy - halfH)
-            // = the arc's absolute top-left.
-            float bboxLeft = cx - halfW;
-            float bboxTop = cy - halfH;
-            (float gx1, float gy1, float gx2, float gy2) =
-                GetRotatedGradientEndpoints(this.GetAbsoluteRotation());
-            DrawGradientBand(new Vector2(cx, cy), innerRadius, outerRadius,
-                startAngleDeg, endAngleDeg, segments, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+            // The band is an ellipse inscribed in the box (like Skia's), rotated about the box's
+            // top-left corner (Gum's rotation origin). Each vertex samples the gradient at its
+            // box-local position against the unrotated endpoints, so the gradient follows the shape.
+            float bboxLeft = this.GetAbsoluteLeft();
+            float bboxTop = this.GetAbsoluteTop();
+            float gx1 = EffectiveGradientX1;
+            float gy1 = EffectiveGradientY1;
+            float gx2 = EffectiveGradientX2;
+            float gy2 = EffectiveGradientY2;
+            DrawGradientBand(bboxLeft, bboxTop, this.GetAbsoluteRotation(), halfW, halfH,
+                outerRadius - innerRadius, startAngleDeg, endAngleDeg, segments, gx1, gy1, gx2, gy2);
             if (IsEndRounded && System.MathF.Abs(SweepAngle) < 360f && thickness > 0f)
             {
                 // Sample the gradient at each cap's center so a rounded end blends with the band
@@ -293,8 +294,8 @@ public class LineArc : GradientShapeRenderable
                 float scy = cy + midRadius * System.MathF.Sin(startAngleDeg * deg2rad);
                 float ecx = cx + midRadius * System.MathF.Cos(endAngleDeg * deg2rad);
                 float ecy = cy + midRadius * System.MathF.Sin(endAngleDeg * deg2rad);
-                Color startCap = ComputeGradientColor(scx, scy, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
-                Color endCap = ComputeGradientColor(ecx, ecy, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                Color startCap = ComputeGradientColor(scx - bboxLeft, scy - bboxTop, gx1, gy1, gx2, gy2);
+                Color endCap = ComputeGradientColor(ecx - bboxLeft, ecy - bboxTop, gx1, gy1, gx2, gy2);
                 DrawCaps(new Vector2(cx, cy), innerRadius, outerRadius,
                     startAngleDeg, endAngleDeg, startCap, endCap);
             }
@@ -435,73 +436,70 @@ public class LineArc : GradientShapeRenderable
     /// <summary>
     /// Issue #3454 — paints the arc's annular sector (<c>[innerRadius, outerRadius]</c> ×
     /// <c>[startAngleRl, endAngleRl]</c>) as an <c>rlgl</c> triangle strip whose vertices sample
-    /// the gradient at their world position. The angular loop always steps from the smaller to the
+    /// the gradient at their box-local position. The angular loop always steps from the smaller to the
     /// larger raylib-space angle so the triangle winding stays front-facing under raylib's default
     /// backface culling regardless of the sweep's sign — the sector covers the same region either
     /// way and the gradient color is position-based, so iteration direction is free. This is the
     /// arc-restricted analog of <see cref="LineCircle.DrawGradientFan"/> (a full disk); the arc
     /// tessellates only the swept angular range and only the stroked band, not the whole disc.
     /// </summary>
-    private void DrawGradientBand(Vector2 center, float innerRadius, float outerRadius,
+    private void DrawGradientBand(float bboxLeft, float bboxTop, float rotationDegrees,
+        float halfW, float halfH, float thickness,
         float startAngleRl, float endAngleRl, int segments,
-        float bboxLeft, float bboxTop, float gx1, float gy1, float gx2, float gy2)
+        float gx1, float gy1, float gx2, float gy2)
     {
         const float deg2rad = System.MathF.PI / 180f;
         float aMin = System.MathF.Min(startAngleRl, endAngleRl);
         float aMax = System.MathF.Max(startAngleRl, endAngleRl);
         int safeSegments = System.Math.Max(1, segments);
 
+        // Gum rotation is counterclockwise on screen (y down), about the box's top-left corner.
+        float rotRad = rotationDegrees * deg2rad;
+        float cosRot = System.MathF.Cos(rotRad);
+        float sinRot = System.MathF.Sin(rotRad);
+
+        // Box-local point on the ellipse whose semi-axes are inset by `inset` from the box edge.
+        void Emit(float angleRad, float inset)
+        {
+            float localX = halfW + System.MathF.Cos(angleRad) * (halfW - inset);
+            float localY = halfH + System.MathF.Sin(angleRad) * (halfH - inset);
+            Color color = ComputeGradientColor(localX, localY, gx1, gy1, gx2, gy2);
+            Rlgl.Color4ub(color.R, color.G, color.B, color.A);
+            Rlgl.Vertex2f(bboxLeft + localX * cosRot + localY * sinRot,
+                bboxTop - localX * sinRot + localY * cosRot);
+        }
+
         Rlgl.Begin((int)DrawMode.Triangles);
         for (int layer = 0; layer < GradientRadialLayers; layer++)
         {
-            float rOuter = innerRadius + (outerRadius - innerRadius) * (GradientRadialLayers - layer) / GradientRadialLayers;
-            float rInner = innerRadius + (outerRadius - innerRadius) * (GradientRadialLayers - layer - 1) / GradientRadialLayers;
+            float insetOuter = thickness * layer / GradientRadialLayers;
+            float insetInner = thickness * (layer + 1) / GradientRadialLayers;
             for (int i = 0; i < safeSegments; i++)
             {
                 float a0 = (aMin + (aMax - aMin) * (i / (float)safeSegments)) * deg2rad;
                 float a1 = (aMin + (aMax - aMin) * ((i + 1) / (float)safeSegments)) * deg2rad;
-                float c0 = System.MathF.Cos(a0), s0 = System.MathF.Sin(a0);
-                float c1 = System.MathF.Cos(a1), s1 = System.MathF.Sin(a1);
-
-                float ox0 = center.X + c0 * rOuter, oy0 = center.Y + s0 * rOuter;
-                float ox1 = center.X + c1 * rOuter, oy1 = center.Y + s1 * rOuter;
-                float ix0 = center.X + c0 * rInner, iy0 = center.Y + s0 * rInner;
-                float ix1 = center.X + c1 * rInner, iy1 = center.Y + s1 * rInner;
 
                 // Winding matches LineCircle.DrawGradientFan (front-facing under default culling).
-                EmitGradientVertex(ix0, iy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
-                EmitGradientVertex(ox1, oy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
-                EmitGradientVertex(ox0, oy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                Emit(a0, insetInner);
+                Emit(a1, insetOuter);
+                Emit(a0, insetOuter);
 
-                EmitGradientVertex(ix0, iy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
-                EmitGradientVertex(ix1, iy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
-                EmitGradientVertex(ox1, oy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                Emit(a0, insetInner);
+                Emit(a1, insetInner);
+                Emit(a1, insetOuter);
             }
         }
         Rlgl.End();
     }
 
-    private void EmitGradientVertex(float worldX, float worldY, float bboxLeft, float bboxTop,
-        float gx1, float gy1, float gx2, float gy2, float outerRadius)
-    {
-        Color color = ComputeGradientColor(worldX, worldY, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
-        Rlgl.Color4ub(color.R, color.G, color.B, color.A);
-        Rlgl.Vertex2f(worldX, worldY);
-    }
-
     /// <summary>
-    /// Interpolates <see cref="Color1"/> → <see cref="Color2"/> for a world-space point. Linear
-    /// projects the point onto the (rotation-adjusted) axis; radial normalizes the distance from
-    /// the center against the <c>[InnerRadius, OuterRadius]</c> band. Matches
-    /// <see cref="LineCircle.EmitGradientVertex"/>'s math, but a default (0) radial outer radius
-    /// falls back to the arc's <paramref name="outerRadius"/> rather than a disc <c>Radius</c>.
+    /// Interpolates <see cref="Color1"/> → <see cref="Color2"/> for a box-local point. Linear
+    /// projects the point onto the axis; radial normalizes the distance from the center against
+    /// the <c>[InnerRadius, OuterRadius]</c> band (outer falls back to 100 pixels, like Skia).
     /// </summary>
-    private Color ComputeGradientColor(float worldX, float worldY, float bboxLeft, float bboxTop,
-        float gx1, float gy1, float gx2, float gy2, float outerRadius)
+    private Color ComputeGradientColor(float localX, float localY,
+        float gx1, float gy1, float gx2, float gy2)
     {
-        float localX = worldX - bboxLeft;
-        float localY = worldY - bboxTop;
-
         float t;
         if (GradientType == GradientType.Linear)
         {
@@ -510,7 +508,7 @@ public class LineArc : GradientShapeRenderable
             float lenSq = dx * dx + dy * dy;
             if (lenSq <= 0f)
             {
-                return Color1;
+                return Color2;
             }
             t = ((localX - gx1) * dx + (localY - gy1) * dy) / lenSq;
         }
@@ -521,7 +519,7 @@ public class LineArc : GradientShapeRenderable
             float dist = System.MathF.Sqrt(dx * dx + dy * dy);
             float effectiveOuter = EffectiveGradientOuterRadius;
             float effectiveInner = EffectiveGradientInnerRadius;
-            float outer = effectiveOuter > 0f ? effectiveOuter : outerRadius;
+            float outer = effectiveOuter;
             float span = outer - effectiveInner;
             if (span <= 0f)
             {
@@ -590,7 +588,8 @@ public class LineArc : GradientShapeRenderable
                     innerRadius, outerRadius,
                     startAngleDeg, endAngleDeg,
                     segments, silhouetteColor);
-            });
+            },
+            new ShadowMaskKey(4, false, innerRadius, outerRadius, startAngleDeg, endAngleDeg, segments));
     }
 
     /// <summary>
