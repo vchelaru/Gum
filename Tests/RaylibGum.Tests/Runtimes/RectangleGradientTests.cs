@@ -120,18 +120,18 @@ public class RectangleGradientTests : BaseTestClass
         shape.SetProperty("GradientX2Units", PositionUnitType.PercentageWidth);
         container.Children.Add(shape);
 
-        GumService.Default.Root.Children.Add(container);
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.Children.Add(container);
+        Gum.GumService.Default.Root.UpdateLayout();
 
         BeginDrawing();
-        GumService.Default.Draw();
+        Gum.GumService.Default.Draw();
         EndDrawing();
 
         Image image = LoadImageFromTexture(Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value.Texture);
         Color left = GetImageColor(image, 4, size / 2);
         Color right = GetImageColor(image, size - 5, size / 2);
         UnloadImage(image);
-        GumService.Default.Root.Children.Clear();
+        Gum.GumService.Default.Root.Children.Clear();
 
         left.R.ShouldBeGreaterThan((byte)180);
         left.B.ShouldBeLessThan((byte)80);
