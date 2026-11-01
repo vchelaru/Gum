@@ -13,6 +13,8 @@ internal sealed class SKPathBuilder : IDisposable
 
     public void AddArc(SKRect oval, float startAngle, float sweepAngle) => _path.AddArc(oval, startAngle, sweepAngle);
 
+    public void AddOval(SKRect oval, SKPathDirection direction) => _path.AddOval(oval, direction);
+
     public void AddRoundRect(SKRect rect, float rx, float ry) => _path.AddRoundRect(rect, rx, ry);
 
     public void ArcTo(SKRect oval, float startAngle, float sweepAngle, bool forceMoveTo) =>
