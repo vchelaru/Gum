@@ -39,7 +39,7 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.X" SetsValue="true">
-      <Value xsi:type="xsd:float">-2</Value>
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="HorizontalAlignment" Name="FocusedIndicator.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -153,7 +153,7 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="RadioBackground.X" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="HorizontalAlignment" Name="RadioBackground.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>

@@ -198,7 +198,7 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="FocusRectInstance.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">-15</Value>
+      <Value xsi:type="xsd:float">-17</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusRectInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
