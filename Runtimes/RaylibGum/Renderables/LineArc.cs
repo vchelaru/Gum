@@ -229,9 +229,9 @@ public class LineArc : GradientShapeRenderable
             return;
         }
 
-        // Curve is inscribed in the bounding box, anchored at the box's center. Mirrors the
-        // way Skia's path.AddArc(boundingRect, ...) treats the rect — the arc fits the smaller
-        // of W/H so non-square bounds still render a circular (not elliptical) arc.
+        // The arc is an ellipse inscribed in the box (like Skia's path.AddArc(boundingRect, ...)), turned
+        // about the box's top-left corner (Gum's rotation origin). A square box is a circle, which keeps
+        // the DrawRing path; any other box is a constant-thickness band along the ellipse (BandGeometry).
         float halfW = Width * 0.5f;
         float halfH = Height * 0.5f;
         float outerRadius = System.MathF.Min(halfW, halfH);
@@ -245,8 +245,11 @@ public class LineArc : GradientShapeRenderable
         float thickness = System.MathF.Min(Thickness, outerRadius * 2f);
         float innerRadius = System.MathF.Max(0f, outerRadius - thickness);
 
-        float cx = this.GetAbsoluteLeft() + halfW;
-        float cy = this.GetAbsoluteTop() + halfH;
+        float rotationDegrees = this.GetAbsoluteRotation();
+        float rotRad = rotationDegrees * (System.MathF.PI / 180f);
+        // The box center after turning about the top-left corner (counterclockwise on screen, y down).
+        float cx = this.GetAbsoluteLeft() + halfW * System.MathF.Cos(rotRad) + halfH * System.MathF.Sin(rotRad);
+        float cy = this.GetAbsoluteTop() - halfW * System.MathF.Sin(rotRad) + halfH * System.MathF.Cos(rotRad);
 
         // raylib's DrawRing uses degrees with 0 at 3 o'clock and increasing angles sweeping
         // clockwise on screen (y-down). Gum's convention is 0 at 3 o'clock with increasing
@@ -256,59 +259,42 @@ public class LineArc : GradientShapeRenderable
         // direction stays correct visually.
         float startAngleDeg = -StartAngle;
         float endAngleDeg = -StartAngle - SweepAngle;
-        int segments = ComputeSegments(outerRadius, System.MathF.Abs(SweepAngle));
+        bool isCircle = halfW == halfH;
+        int segments = ComputeSegments(System.MathF.Max(halfW, halfH), System.MathF.Abs(SweepAngle));
+        bool hasCaps = IsEndRounded && System.MathF.Abs(SweepAngle) < 360f && thickness > 0f;
 
         Color strokeColor = StrokeColor ?? Color;
+        BandGeometry band = new BandGeometry(cx, cy, rotationDegrees, halfW, halfH, thickness);
 
         if (HasDropshadow)
         {
-            DrawDropshadow(cx, cy, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
-                segments, strokeColor.A);
+            DrawDropshadow(band, isCircle, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
+                segments, hasCaps, strokeColor.A);
         }
 
         bool dashed = StrokeDashLength > 0f && StrokeGapLength > 0f && SweepAngle != 0f;
         if (dashed)
         {
-            DrawDashed(new Vector2(cx, cy), innerRadius, outerRadius, strokeColor);
+            // Dashes stay on the circle inscribed in the box (min(W, H)); only the center follows rotation.
+            DrawDashed(new Vector2(cx, cy), rotationDegrees, innerRadius, outerRadius, strokeColor);
         }
         else if (ShouldPaintGradient)
         {
-            // The band is an ellipse inscribed in the box (like Skia's), rotated about the box's
-            // top-left corner (Gum's rotation origin). Each vertex samples the gradient at its
-            // box-local position against the unrotated endpoints, so the gradient follows the shape.
-            float bboxLeft = this.GetAbsoluteLeft();
-            float bboxTop = this.GetAbsoluteTop();
-            float gx1 = EffectiveGradientX1;
-            float gy1 = EffectiveGradientY1;
-            float gx2 = EffectiveGradientX2;
-            float gy2 = EffectiveGradientY2;
-            DrawGradientBand(bboxLeft, bboxTop, this.GetAbsoluteRotation(), halfW, halfH,
-                outerRadius - innerRadius, startAngleDeg, endAngleDeg, segments, gx1, gy1, gx2, gy2);
-            if (IsEndRounded && System.MathF.Abs(SweepAngle) < 360f && thickness > 0f)
+            // Each vertex samples the gradient at its box-local position against the unrotated
+            // endpoints, so the gradient follows the shape.
+            GradientSampler sampler = new GradientSampler(this);
+            DrawBand(band, startAngleDeg, endAngleDeg, segments, GradientRadialLayers, sampler, strokeColor);
+            if (hasCaps)
             {
                 // Sample the gradient at each cap's center so a rounded end blends with the band
                 // it caps instead of jumping to a single solid stroke color.
-                const float deg2rad = System.MathF.PI / 180f;
-                float midRadius = (innerRadius + outerRadius) * 0.5f;
-                float scx = cx + midRadius * System.MathF.Cos(startAngleDeg * deg2rad);
-                float scy = cy + midRadius * System.MathF.Sin(startAngleDeg * deg2rad);
-                float ecx = cx + midRadius * System.MathF.Cos(endAngleDeg * deg2rad);
-                float ecy = cy + midRadius * System.MathF.Sin(endAngleDeg * deg2rad);
-                Color startCap = ComputeGradientColor(scx - bboxLeft, scy - bboxTop, gx1, gy1, gx2, gy2);
-                Color endCap = ComputeGradientColor(ecx - bboxLeft, ecy - bboxTop, gx1, gy1, gx2, gy2);
-                DrawCaps(new Vector2(cx, cy), innerRadius, outerRadius,
-                    startAngleDeg, endAngleDeg, startCap, endCap);
+                DrawCaps(band, startAngleDeg, endAngleDeg, sampler, strokeColor);
             }
         }
         else
         {
-            DrawRing(new Vector2(cx, cy), innerRadius, outerRadius,
-                startAngleDeg, endAngleDeg, segments, strokeColor);
-            if (IsEndRounded && System.MathF.Abs(SweepAngle) < 360f && thickness > 0f)
-            {
-                DrawCaps(new Vector2(cx, cy), innerRadius, outerRadius,
-                    startAngleDeg, endAngleDeg, strokeColor, strokeColor);
-            }
+            DrawSolid(band, isCircle, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
+                segments, hasCaps, strokeColor);
         }
     }
 
@@ -318,11 +304,12 @@ public class LineArc : GradientShapeRenderable
     /// <c>SKPathEffect.CreateDash</c>); the loop walks the SweepAngle in dash + gap angular
     /// steps. Same pattern <see cref="LineCircle"/> uses for its dashed ring.
     /// </summary>
-    private void DrawDashed(Vector2 center, float innerRadius, float outerRadius, Color strokeColor)
+    private void DrawDashed(Vector2 center, float rotationDegrees, float innerRadius, float outerRadius, Color strokeColor)
     {
         // Use the band's centerline circumference so dash pixel-lengths feel consistent at
         // different thicknesses (matches the visual the Skia dashed-stroke path produces, which
         // centers dashes on the stroked path).
+        BandGeometry circleBand = new BandGeometry(center.X, center.Y, rotationDegrees, outerRadius, outerRadius, outerRadius - innerRadius);
         float curveRadius = (innerRadius + outerRadius) * 0.5f;
         if (curveRadius <= 0f)
         {
@@ -357,139 +344,279 @@ public class LineArc : GradientShapeRenderable
             float dashEndGum = StartAngle + sweepSign * dashEnd;
             float dashStartRl = -dashStartGum;
             float dashEndRl = -dashEndGum;
-            DrawRing(center, innerRadius, outerRadius, dashStartRl, dashEndRl,
+            DrawRing(center, innerRadius, outerRadius, dashStartRl - rotationDegrees, dashEndRl - rotationDegrees,
                 segmentsPerDash, strokeColor);
             // Per-dash rounded caps — Skia parity: SKStrokeCap.Round + SKPathEffect.CreateDash
             // rounds both ends of every dash, not just the overall stroke endpoints. Same guard
             // as the solid path: skip when thickness collapses or the dash isn't actually a dash.
             if (IsEndRounded && outerRadius > innerRadius && dashEnd > currentAngle)
             {
-                DrawCaps(center, innerRadius, outerRadius, dashStartRl, dashEndRl, strokeColor, strokeColor);
+                DrawCaps(circleBand, dashStartRl, dashEndRl, null, strokeColor);
             }
             currentAngle += patternAngleDeg;
         }
     }
 
     /// <summary>
-    /// Issue #2895 — synthesizes rounded end caps for the stroked band by drawing one
-    /// <c>DrawCircleSector</c> half-disk per endpoint. The half-disk's flat diameter lies along
-    /// the band's radial endpoint and its bulge points opposite the band's tangent, so it lands
-    /// flush against the band's flat end without overlapping it. This is what keeps the cap
-    /// alpha-correct at non-opaque stroke colors — a full <c>DrawCircle</c> would composite
-    /// twice over the band's last few pixels and produce a darker crescent under the cap.
+    /// Paints the band (and its rounded caps) in one solid color: a <c>DrawRing</c> for a circle, a
+    /// <see cref="DrawBand"/> strip for any other box. Shared by the body and by the shadow silhouette.
     /// </summary>
-    /// <remarks>
-    /// Angles are in raylib's negated-CW space (the same space <see cref="Render(ISystemManagers)"/>
-    /// already converts to). Cap bulge direction derives from <c>sign(SweepAngle)</c>: at the
-    /// start endpoint the band's interior is at <c>startAngleRl + sweepSign*-90°</c> (raylib
-    /// y-down, so "up" is -90 etc.), so the cap bulges at <c>startAngleRl + sweepSign*90°</c>;
-    /// symmetric flip at the end endpoint. The 180° sector spans <c>[B-90°, B+90°]</c> in raylib
-    /// CW terms, which is identical to the radial axis at the endpoint.
-    /// </remarks>
-    private void DrawCaps(Vector2 center, float innerRadius, float outerRadius,
-        float startAngleRl, float endAngleRl, Color startColor, Color endColor)
+    private void DrawSolid(in BandGeometry band, bool isCircle, float innerRadius, float outerRadius,
+        float startAngleRl, float endAngleRl, int segments, bool hasCaps, Color color)
     {
-        float thickness = outerRadius - innerRadius;
-        if (thickness <= 0f)
+        if (isCircle)
         {
-            return;
+            // DrawRing takes screen angles, so the turn is added to the box-local ones.
+            DrawRing(new Vector2(band.Cx, band.Cy), innerRadius, outerRadius,
+                startAngleRl - band.RotationDegrees, endAngleRl - band.RotationDegrees, segments, color);
         }
-        float capRadius = thickness * 0.5f;
-        float midRadius = (innerRadius + outerRadius) * 0.5f;
-        // sweepSign computed in Gum space (positive = CCW); the negated-angle conversion in
-        // Render flips it to raylib-space, but the bulge offset is symmetric so we can stay in
-        // Gum-sign terms and trust the +/- 90° to come out right against raylib-space angles.
-        float sweepSign = SweepAngle >= 0f ? 1f : -1f;
-
-        // ~4° per cap segment matches the smoothness floor ComputeSegments uses; bumped on fat
-        // caps so the half-disk silhouette doesn't read as a polygon at large thickness.
-        int capSegments = System.Math.Max(8, (int)(capRadius * 0.8f));
-
-        const float deg2rad = System.MathF.PI / 180f;
-
-        // Start endpoint cap. Under a gradient, startColor/endColor are the gradient samples at
-        // each endpoint; on the solid path they are the same stroke color.
-        float startCx = center.X + midRadius * System.MathF.Cos(startAngleRl * deg2rad);
-        float startCy = center.Y + midRadius * System.MathF.Sin(startAngleRl * deg2rad);
-        float startBulge = startAngleRl + sweepSign * 90f;
-        DrawCircleSector(new Vector2(startCx, startCy), capRadius,
-            startBulge - 90f, startBulge + 90f, capSegments, startColor);
-
-        // End endpoint cap — bulge flips because the band tangent at the end points the other
-        // way down the band relative to the start.
-        float endCx = center.X + midRadius * System.MathF.Cos(endAngleRl * deg2rad);
-        float endCy = center.Y + midRadius * System.MathF.Sin(endAngleRl * deg2rad);
-        float endBulge = endAngleRl - sweepSign * 90f;
-        DrawCircleSector(new Vector2(endCx, endCy), capRadius,
-            endBulge - 90f, endBulge + 90f, capSegments, endColor);
+        else
+        {
+            DrawBand(band, startAngleRl, endAngleRl, segments, 1, null, color);
+        }
+        if (hasCaps)
+        {
+            DrawCaps(band, startAngleRl, endAngleRl, null, color);
+        }
     }
 
     /// <summary>
-    /// Number of concentric annular sub-bands the gradient band is split into between
-    /// <c>innerRadius</c> and <c>outerRadius</c>. Radial subdivision keeps a radial gradient
-    /// smooth across a thick band (or a wedge, where innerRadius collapses to 0); a linear
-    /// gradient is unaffected by the count since every vertex samples by world position. Mirrors
-    /// <c>LineCircle.RadialLayers</c>.
+    /// Issue #2895 — synthesizes rounded end caps for the stroked band by drawing one
+    /// <c>DrawCircleSector</c> half-disk per endpoint, centered on the band's centerline end and
+    /// bulging along the centerline's tangent (what Skia's <c>SKStrokeCap.Round</c> does). The
+    /// half-disk's flat diameter lies along the band's endpoint so it lands flush against the flat end
+    /// without overlapping it, which keeps the cap alpha-correct at non-opaque stroke colors — a full
+    /// <c>DrawCircle</c> would composite twice over the band's last few pixels.
+    /// </summary>
+    /// <remarks>
+    /// Angles are in raylib's negated-CW space. With a sampler, each cap takes the gradient color at its
+    /// center; otherwise <paramref name="solid"/>.
+    /// </remarks>
+    private void DrawCaps(in BandGeometry band, float startAngleRl, float endAngleRl,
+        GradientSampler? sampler, Color solid)
+    {
+        if (band.Thickness <= 0f)
+        {
+            return;
+        }
+        // The band runs from the start angle to the end angle, so the start cap bulges against that
+        // direction and the end cap along it.
+        float travel = endAngleRl >= startAngleRl ? 1f : -1f;
+        DrawCap(band, startAngleRl, -travel, sampler, solid);
+        DrawCap(band, endAngleRl, travel, sampler, solid);
+    }
+
+    private static void DrawCap(in BandGeometry band, float angleRl, float bulgeSign,
+        GradientSampler? sampler, Color solid)
+    {
+        const float deg2rad = System.MathF.PI / 180f;
+        float angleRad = angleRl * deg2rad;
+        band.Point(angleRad, 0.5f, out float sx, out float sy, out float lx, out float ly);
+        band.Tangent(angleRad, out float tx, out float ty);
+        float bulgeDeg = System.MathF.Atan2(ty * bulgeSign, tx * bulgeSign) / deg2rad;
+        float capRadius = band.Thickness * 0.5f;
+        // ~4° per cap segment matches the smoothness floor ComputeSegments uses; bumped on fat
+        // caps so the half-disk silhouette doesn't read as a polygon at large thickness.
+        int capSegments = System.Math.Max(8, (int)(capRadius * 0.8f));
+        Color color = sampler.HasValue
+            ? sampler.Value.Sample(lx + band.HalfW, ly + band.HalfH)
+            : solid;
+        DrawCircleSector(new Vector2(sx, sy), capRadius, bulgeDeg - 90f, bulgeDeg + 90f, capSegments, color);
+    }
+
+    /// <summary>
+    /// Number of concentric sub-bands the gradient band is split into between its outer and inner
+    /// edge. Radial subdivision keeps a radial gradient smooth across a thick band (or a wedge, where
+    /// the inner edge collapses to the center); a linear gradient is unaffected by the count since
+    /// every vertex samples by position. Mirrors <c>LineCircle.RadialLayers</c>.
     /// </summary>
     private const int GradientRadialLayers = 8;
 
     /// <summary>
-    /// Issue #3454 — paints the arc's annular sector (<c>[innerRadius, outerRadius]</c> ×
-    /// <c>[startAngleRl, endAngleRl]</c>) as an <c>rlgl</c> triangle strip whose vertices sample
-    /// the gradient at their box-local position. The angular loop always steps from the smaller to the
-    /// larger raylib-space angle so the triangle winding stays front-facing under raylib's default
-    /// backface culling regardless of the sweep's sign — the sector covers the same region either
-    /// way and the gradient color is position-based, so iteration direction is free. This is the
-    /// arc-restricted analog of <see cref="LineCircle.DrawGradientFan"/> (a full disk); the arc
-    /// tessellates only the swept angular range and only the stroked band, not the whole disc.
+    /// Paints the band as an <c>rlgl</c> triangle strip of <paramref name="layers"/> sub-bands. With a
+    /// sampler, each vertex takes the gradient at its box-local position; without one the band is
+    /// <paramref name="solid"/>. Each triangle is wound front-facing under raylib's default backface
+    /// culling whatever the sweep's sign, so a band whose inner edge folds over itself (a thick stroke
+    /// on a narrow ellipse) still fills. This is the arc-restricted analog of
+    /// <see cref="LineCircle.DrawGradientFan"/>.
     /// </summary>
-    private void DrawGradientBand(float bboxLeft, float bboxTop, float rotationDegrees,
-        float halfW, float halfH, float thickness,
-        float startAngleRl, float endAngleRl, int segments,
-        float gx1, float gy1, float gx2, float gy2)
+    private void DrawBand(in BandGeometry band, float startAngleRl, float endAngleRl, int segments,
+        int layers, GradientSampler? sampler, Color solid)
     {
         const float deg2rad = System.MathF.PI / 180f;
         float aMin = System.MathF.Min(startAngleRl, endAngleRl);
         float aMax = System.MathF.Max(startAngleRl, endAngleRl);
         int safeSegments = System.Math.Max(1, segments);
 
-        // Gum rotation is counterclockwise on screen (y down), about the box's top-left corner.
-        float rotRad = rotationDegrees * deg2rad;
-        float cosRot = System.MathF.Cos(rotRad);
-        float sinRot = System.MathF.Sin(rotRad);
-
-        // Box-local point on the ellipse whose semi-axes are inset by `inset` from the box edge.
-        void Emit(float angleRad, float inset)
-        {
-            float localX = halfW + System.MathF.Cos(angleRad) * (halfW - inset);
-            float localY = halfH + System.MathF.Sin(angleRad) * (halfH - inset);
-            Color color = ComputeGradientColor(localX, localY, gx1, gy1, gx2, gy2);
-            Rlgl.Color4ub(color.R, color.G, color.B, color.A);
-            Rlgl.Vertex2f(bboxLeft + localX * cosRot + localY * sinRot,
-                bboxTop - localX * sinRot + localY * cosRot);
-        }
-
         Rlgl.Begin((int)DrawMode.Triangles);
-        for (int layer = 0; layer < GradientRadialLayers; layer++)
+        for (int layer = 0; layer < layers; layer++)
         {
-            float insetOuter = thickness * layer / GradientRadialLayers;
-            float insetInner = thickness * (layer + 1) / GradientRadialLayers;
+            float fOuter = layer / (float)layers;
+            float fInner = (layer + 1) / (float)layers;
             for (int i = 0; i < safeSegments; i++)
             {
                 float a0 = (aMin + (aMax - aMin) * (i / (float)safeSegments)) * deg2rad;
                 float a1 = (aMin + (aMax - aMin) * ((i + 1) / (float)safeSegments)) * deg2rad;
 
-                // Winding matches LineCircle.DrawGradientFan (front-facing under default culling).
-                Emit(a0, insetInner);
-                Emit(a1, insetOuter);
-                Emit(a0, insetOuter);
+                BandVertex inner0 = band.Vertex(a0, fInner, sampler, solid);
+                BandVertex outer1 = band.Vertex(a1, fOuter, sampler, solid);
+                BandVertex outer0 = band.Vertex(a0, fOuter, sampler, solid);
+                BandVertex inner1 = band.Vertex(a1, fInner, sampler, solid);
 
-                Emit(a0, insetInner);
-                Emit(a1, insetInner);
-                Emit(a1, insetOuter);
+                EmitTriangle(inner0, outer1, outer0);
+                EmitTriangle(inner0, inner1, outer1);
             }
         }
         Rlgl.End();
+    }
+
+    // Front-facing under raylib's default culling is a negative cross product in y-down screen space.
+    private static void EmitTriangle(BandVertex v0, BandVertex v1, BandVertex v2)
+    {
+        float cross = (v1.X - v0.X) * (v2.Y - v0.Y) - (v1.Y - v0.Y) * (v2.X - v0.X);
+        if (cross > 0f)
+        {
+            (v1, v2) = (v2, v1);
+        }
+        Rlgl.Color4ub(v0.Color.R, v0.Color.G, v0.Color.B, v0.Color.A);
+        Rlgl.Vertex2f(v0.X, v0.Y);
+        Rlgl.Color4ub(v1.Color.R, v1.Color.G, v1.Color.B, v1.Color.A);
+        Rlgl.Vertex2f(v1.X, v1.Y);
+        Rlgl.Color4ub(v2.Color.R, v2.Color.G, v2.Color.B, v2.Color.A);
+        Rlgl.Vertex2f(v2.X, v2.Y);
+    }
+
+    private readonly struct BandVertex
+    {
+        public BandVertex(float x, float y, Color color)
+        {
+            X = x; Y = y; Color = color;
+        }
+        public readonly float X;
+        public readonly float Y;
+        public readonly Color Color;
+    }
+
+    /// <summary>The gradient axis captured for one frame so each vertex samples the same endpoints.</summary>
+    private readonly struct GradientSampler
+    {
+        private readonly LineArc _owner;
+        private readonly float _gx1, _gy1, _gx2, _gy2;
+
+        public GradientSampler(LineArc owner)
+        {
+            _owner = owner;
+            _gx1 = owner.EffectiveGradientX1;
+            _gy1 = owner.EffectiveGradientY1;
+            _gx2 = owner.EffectiveGradientX2;
+            _gy2 = owner.EffectiveGradientY2;
+        }
+
+        /// <summary>The gradient color at a box-local point (origin at the box's top-left, unrotated).</summary>
+        public Color Sample(float localX, float localY) =>
+            _owner.ComputeGradientColor(localX, localY, _gx1, _gy1, _gx2, _gy2);
+    }
+
+    /// <summary>
+    /// Where the arc's band lies on screen: a stroke of constant thickness along the ellipse inscribed
+    /// in the box, inset by half the thickness so the stroke's outer edge meets the box (what Skia draws
+    /// for <c>AddArc(boundingRect)</c> stroked at that width), with the box turned about its top-left
+    /// corner by the rotation. Angles are parametric (the ellipse point at angle t is
+    /// <c>(A cos t, B sin t)</c>), like Skia's, and <c>f</c> runs from 0 on the outer edge to 1 on the
+    /// inner edge. For a square box this is the plain circular ring.
+    /// </summary>
+    private readonly struct BandGeometry
+    {
+        public readonly float Cx, Cy, RotationDegrees, Cos, Sin, HalfW, HalfH, Thickness, A, B;
+
+        public BandGeometry(float cx, float cy, float rotationDegrees, float halfW, float halfH, float thickness)
+        {
+            float rotRad = rotationDegrees * (System.MathF.PI / 180f);
+            Cx = cx; Cy = cy;
+            RotationDegrees = rotationDegrees;
+            Cos = System.MathF.Cos(rotRad);
+            Sin = System.MathF.Sin(rotRad);
+            HalfW = halfW; HalfH = halfH; Thickness = thickness;
+            A = System.MathF.Max(0f, halfW - thickness * 0.5f);
+            B = System.MathF.Max(0f, halfH - thickness * 0.5f);
+        }
+
+        private BandGeometry(BandGeometry other, float cx, float cy)
+        {
+            Cx = cx; Cy = cy;
+            RotationDegrees = other.RotationDegrees;
+            Cos = other.Cos; Sin = other.Sin;
+            HalfW = other.HalfW; HalfH = other.HalfH; Thickness = other.Thickness;
+            A = other.A; B = other.B;
+        }
+
+        /// <summary>The same band with its center moved to a new screen position.</summary>
+        public BandGeometry At(float cx, float cy) => new BandGeometry(this, cx, cy);
+
+        /// <summary>Half the size of the screen-aligned box that holds the turned box.</summary>
+        public (float X, float Y) ExtentsOfTurnedBox() => (
+            System.MathF.Abs(HalfW * Cos) + System.MathF.Abs(HalfH * Sin),
+            System.MathF.Abs(HalfW * Sin) + System.MathF.Abs(HalfH * Cos));
+
+        /// <summary>The screen point, and its center-relative unrotated local point, at a band position.</summary>
+        public void Point(float angleRad, float f, out float sx, out float sy, out float lx, out float ly)
+        {
+            float c = System.MathF.Cos(angleRad);
+            float s = System.MathF.Sin(angleRad);
+            if (HalfW == HalfH)
+            {
+                // A circle: the point is simply at the radius that is `f` of the way in from the box edge.
+                float radius = HalfW - Thickness * f;
+                lx = c * radius;
+                ly = s * radius;
+                sx = Cx + lx * Cos + ly * Sin;
+                sy = Cy - lx * Sin + ly * Cos;
+                return;
+            }
+            float nx = B * c;
+            float ny = A * s;
+            float length = System.MathF.Sqrt(nx * nx + ny * ny);
+            if (length <= 1e-6f)
+            {
+                nx = c;
+                ny = s;
+            }
+            else
+            {
+                nx /= length;
+                ny /= length;
+            }
+            float offset = Thickness * (0.5f - f);
+            lx = A * c + nx * offset;
+            ly = B * s + ny * offset;
+            sx = Cx + lx * Cos + ly * Sin;
+            sy = Cy - lx * Sin + ly * Cos;
+        }
+
+        /// <summary>The unit screen direction of the centerline as the angle increases.</summary>
+        public void Tangent(float angleRad, out float tx, out float ty)
+        {
+            float localX = -A * System.MathF.Sin(angleRad);
+            float localY = B * System.MathF.Cos(angleRad);
+            float length = System.MathF.Sqrt(localX * localX + localY * localY);
+            if (length <= 1e-6f)
+            {
+                localX = -System.MathF.Sin(angleRad);
+                localY = System.MathF.Cos(angleRad);
+                length = 1f;
+            }
+            localX /= length;
+            localY /= length;
+            tx = localX * Cos + localY * Sin;
+            ty = -localX * Sin + localY * Cos;
+        }
+
+        public BandVertex Vertex(float angleRad, float f, GradientSampler? sampler, Color solid)
+        {
+            Point(angleRad, f, out float sx, out float sy, out float lx, out float ly);
+            Color color = sampler.HasValue ? sampler.Value.Sample(lx + HalfW, ly + HalfH) : solid;
+            return new BandVertex(sx, sy, color);
+        }
     }
 
     /// <summary>
@@ -540,17 +667,17 @@ public class LineArc : GradientShapeRenderable
     /// <summary>
     /// Issue #2865: render-to-texture + separable Gaussian replaces the band-stack approximation
     /// (which inherited the same source-over inversion overshoot LineRectangle and LineCircle
-    /// did). Bounds are the conservative full-circle bbox — a tightly-fit arc bbox would save
-    /// some RT pixels on a thin sweep but needs more math; the conservative version is always
-    /// correct. The silhouette callback paints a white DrawRing matching the nominal stroke band.
-    /// Cap-in-shadow is not painted — matches the prior band approach (which didn't include
-    /// rounded caps in the shadow either), tracked as a follow-up for full Skia parity.
+    /// did). The silhouette is the same band (and rounded caps) the body draws, offset by the
+    /// dropshadow offset, so it follows the box's rotation and non-square shape. A circle blurs inside
+    /// its own diameter; any other box inside the screen-aligned box that holds the turned box.
     /// </summary>
-    private void DrawDropshadow(float cx, float cy, float innerRadius, float outerRadius,
-        float startAngleDeg, float endAngleDeg, int segments, byte bodyAlpha)
+    private void DrawDropshadow(in BandGeometry band, bool isCircle, float innerRadius, float outerRadius,
+        float startAngleDeg, float endAngleDeg, int segments, bool hasCaps, byte bodyAlpha)
     {
-        float shadowCx = cx + DropshadowOffsetX;
-        float shadowCy = cy + DropshadowOffsetY;
+        // Like Skia's drop-shadow filter, the offset is in the arc's own (turned) space.
+        float shadowCx = band.Cx + DropshadowOffsetX * band.Cos + DropshadowOffsetY * band.Sin;
+        float shadowCy = band.Cy - DropshadowOffsetX * band.Sin + DropshadowOffsetY * band.Cos;
+        BandGeometry shadowBand = band.At(shadowCx, shadowCy);
         float blur = System.MathF.Max(DropshadowBlurX, DropshadowBlurY);
 
         // Issue #2851: scale shadow alpha by the body alpha so fading the arc also fades the
@@ -563,33 +690,40 @@ public class LineArc : GradientShapeRenderable
 
         if (blur <= 0f)
         {
-            // Hard offset silhouette — single DrawRing matching the nominal band.
-            DrawRing(new Vector2(shadowCx, shadowCy), innerRadius, outerRadius,
-                startAngleDeg, endAngleDeg, segments, effectiveDropshadowColor);
+            // Hard offset silhouette — the nominal band.
+            DrawSolid(shadowBand, isCircle, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
+                segments, hasCaps, effectiveDropshadowColor);
             return;
         }
 
-        float diameter = outerRadius * 2f;
+        float extentX = outerRadius;
+        float extentY = outerRadius;
+        if (!isCircle)
+        {
+            (extentX, extentY) = band.ExtentsOfTurnedBox();
+        }
         Color silhouetteColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+        // The mask is drawn in world pixels, so it depends on the rotation (it turns the arc, and a non-square box).
+        float rotation = band.RotationDegrees;
         global::RenderingLibrary.Graphics.Renderer.Self.ShadowBlur.Draw(
             this,
-            shadowCx - outerRadius,
-            shadowCy - outerRadius,
-            diameter,
-            diameter,
+            shadowBand.Cx - extentX,
+            shadowBand.Cy - extentY,
+            extentX * 2f,
+            extentY * 2f,
             blur,
             effectiveDropshadowColor,
             global::RenderingLibrary.Graphics.Renderer.Self.ActiveCamera2D,
             global::RenderingLibrary.Graphics.Renderer.Self.ActiveRenderTexture,
             (px, py) =>
             {
-                DrawRing(
-                    new Vector2(px + outerRadius, py + outerRadius),
-                    innerRadius, outerRadius,
-                    startAngleDeg, endAngleDeg,
-                    segments, silhouetteColor);
+                DrawSolid(shadowBand.At(px + extentX, py + extentY), isCircle, innerRadius, outerRadius,
+                    startAngleDeg, endAngleDeg, segments, hasCaps, silhouetteColor);
             },
-            new ShadowMaskKey(4, false, innerRadius, outerRadius, startAngleDeg, endAngleDeg, segments));
+            isCircle
+                ? new ShadowMaskKey(4, false, innerRadius, outerRadius, startAngleDeg, endAngleDeg, segments, hasCaps ? 1f : 0f, rotation)
+                : new ShadowMaskKey(5, false, band.HalfW, band.HalfH, band.Thickness, startAngleDeg, endAngleDeg,
+                    segments, rotation, hasCaps ? 1f : 0f));
     }
 
     /// <summary>
