@@ -13,7 +13,7 @@ A bug usually exists because a test was missing. Nearby behavior in the same are
 
 1. **Pin the reported bug first.** Write the failing test, see it fail for the right reason, fix it. This is the normal `tdd` flow.
 2. **Map the area.** Name the class or feature boundary, list its behaviors (inputs, units, visibility, ordering, events, states, open versus closed, before versus after layout), and mark which already have tests by grepping the matching test project. The unmarked rows are the gap list. Put it in the PR body.
-3. **Write tests for the gaps in bulk.** Often 20 to 50. Cover the matrix, not one-offs: the same behavior across the inputs that could differ. Assert the correct behavior, not the current behavior. Keep the whole batch fast (a few seconds; large sweeps take their case count from `SweepScale.Cases`).
+3. **Write tests for the gaps in bulk.** Often 20 to 50. Cover the matrix, not one-offs: the same behavior across the inputs that could differ. Assert the correct behavior, not the current behavior. Put each test in the class named for the behavior it exercises (an existing class when one fits, else a new class named for that behavior), never in a `*Splash*` file or class, and name the test for the behavior; "splash" only says how the test was found, and these are permanent tests people search by behavior. Keep the whole batch fast (a few seconds; large sweeps take their case count from `SweepScale.Cases`).
 4. **Run them.** Green tests stay as coverage. Each red test is a new bug.
 
 ## What happens to a red test
