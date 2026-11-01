@@ -24,7 +24,7 @@ On MonoGame, KNI, and FNA this match is available in November 2026, or now if bu
 
 ### Arcs in Non-Square Bounds
 
-In non-square bounds, an Arc on MonoGame, KNI, and FNA is stretched to fill the bounds, so it is thicker along the longer side. An Arc 60 wide and 40 tall with a `Thickness` of `8` is about `12` thick at the left and right. This comes from Apos.Shapes, which draws circles but not ellipses. Skia and raylib keep the thickness constant. The same stretch makes a radial gradient elliptical.
+In non-square bounds, an Arc on MonoGame, KNI, and FNA is stretched to fill the bounds, so it is thicker along the longer side. An Arc 60 wide and 40 tall with a `Thickness` of `8` is about `12` thick at the left and right. The same stretch makes a radial gradient elliptical.
 
 <figure><img src="../../../../.gitbook/assets/21_05 19 29.png" alt=""><figcaption><p>Arc that is 60 wide and 40 tall with a Thickness of 8, a Start Angle of 90 and a Sweep Angle of 270</p></figcaption></figure>
 
