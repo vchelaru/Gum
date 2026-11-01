@@ -244,7 +244,7 @@
       <Value xsi:type="xsd:int">60</Value>
     </Variable>
     <Variable Type="bool" Name="DemoHud.ExposeChildrenEvents" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="int" Name="DemoHud.Green" SetsValue="true">
       <Value xsi:type="xsd:int">60</Value>

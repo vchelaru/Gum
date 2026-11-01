@@ -81,11 +81,24 @@ public class Game1 : Game
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
         Window.ClientSizeChanged += HandleClientSizeChanged;
+        KeepWindowOffScreen();
         UpdateWindowTitle();
+    }
+
+    // MonoGame re-centers the window when the graphics settings apply, after the constructor, so
+    // the placement is repeated here and on every update.
+    private void KeepWindowOffScreen()
+    {
+        if (UnattendedWindow.StartPosition(isUnattended: _unattended != null) is (int x, int y)
+            && (Window.Position.X != x || Window.Position.Y != y))
+        {
+            Window.Position = new Point(x, y);
+        }
     }
 
     protected override void Initialize()
     {
+        KeepWindowOffScreen();
         GumService.Default.Initialize(this, _gumxPath);
 
         // GumService.Initialize just set this to _gumxPath's own directory - override it back to the
@@ -158,6 +171,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
+        KeepWindowOffScreen();
         UpdateBackingScale();
         ApplyCanvasSizeIfChanged(isWindowShown: true);
         RebuildAfterReloadIfNeeded();

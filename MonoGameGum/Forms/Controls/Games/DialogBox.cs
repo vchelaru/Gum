@@ -874,6 +874,27 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #endif
         }
 
+        // Navigation out of the dialog (Tab/Shift+Tab, arrows, d-pad) works like any other focusable control,
+        // independent of how the advance input is configured. Confirm may have dismissed the dialog, and one
+        // navigation call may have moved focus, so each step checks that this dialog still holds focus.
+        var navigationGamepads = FrameworkElement.GamePadsForUiControl;
+        for (int i = 0; i < navigationGamepads.Count && IsFocused; i++)
+        {
+            HandleGamepadNavigation(navigationGamepads[i]);
+        }
+#if FRB
+        var navigationGenericGamepads = GuiManager.GenericGamePadsForUiControl;
+        for (int i = 0; i < navigationGenericGamepads.Count && IsFocused; i++)
+        {
+            HandleGamepadNavigation(navigationGenericGamepads[i]);
+        }
+#else
+        if (IsFocused)
+        {
+            HandleKeyboardFocusUpdate();
+        }
+#endif
+
         FocusUpdate?.Invoke(this);
     }
 

@@ -70,7 +70,7 @@ public class ThumbFromProjectTests : BaseTestClass
     private static GumProjectSave LoadTemplate()
     {
         string gumx = Path.Combine(LocateRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", "FormsTemplate", "GumProject.gumx");
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiation("Container", () => new Gum.GueDeriving.ContainerRuntime());
+        StandardRuntimeRegistrations.Register();
         GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
         project.Initialize();
         ObjectFinder.Self.GumProjectSave = project;
