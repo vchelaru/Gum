@@ -7,6 +7,7 @@ using System.Linq;
 using Gum.DataTypes;
 using Gum.Bundle;
 using Gum.Expressions;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.ProjectServices;
 
@@ -147,7 +148,10 @@ public static class PackCommand
             }
         }
 
-        GumProjectDependencyWalker walker = new GumProjectDependencyWalker();
+        GumProjectDependencyWalker walker = new GumProjectDependencyWalker
+        {
+            FontTranslationsOf = ProjectTranslations.CreateLookup(project)
+        };
         WalkResult walkResult = walker.Walk(project, projectDirectory, inclusion,
             reachability == null ? null : new HashSet<string>(reachability.KeptElementNames, StringComparer.OrdinalIgnoreCase));
 
