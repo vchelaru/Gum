@@ -40,13 +40,13 @@
       <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">20</Value>
+      <Value xsi:type="xsd:int">117</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">28</Value>
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">70</Value>
+      <Value xsi:type="xsd:int">232</Value>
     </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
