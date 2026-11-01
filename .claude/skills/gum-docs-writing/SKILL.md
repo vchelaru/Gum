@@ -194,6 +194,7 @@ Three habits that cost words without buying understanding:
 - Backticks for property names, variable names, property values, file names, and code: `Width Units`, `Relative To Children`, `Is Tiling Middle Sections`.
 - Avoid passive voice, prefer "Gum displays a label" over "a label is displayed."
 - Screenshots (`.png`) for single states; animated GIFs (`.gif`) for multi-step interactions. Use them liberally.
+- **Do not document error and warning states or every dialog option.** The tool's own tooltips and messages own that. Use one screenshot per distinct task step, two at most per page, and match the length of the sibling pages.
 - **Never use an em dash (—).** Use a comma, period, or parenthetical instead. Check new/edited text for the character before finishing a doc pass.
 - Prefer plain language over jargon when a plainer phrasing says the same thing; keep Gum's own terms (control names, property names) since those are what readers need to look up.
 - Avoid hyphenated compound phrases where a plainer wording works.

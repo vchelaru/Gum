@@ -44,8 +44,7 @@ Set the dialog up like this:
 2. Set the **Location** to the folder decided earlier, such as your game's `Content` folder. Gum creates `Content/GumProject` for you.
 3. Leave **Include Forms controls** checked. This adds the Forms controls - the common controls that most projects need like Buttons and TextBoxes.
 4. Leave **Include demo screen** checked. Later tutorials reference the demo screen. Don't worry, you can delete this screen later as you develop your game.
-5. Leave **Create C# project** unchecked. This tutorial adds Gum to your existing game project.
-6. Click **OK**.
+5. Click **OK**.
 
 See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md) for the other options in the dialog.
 
