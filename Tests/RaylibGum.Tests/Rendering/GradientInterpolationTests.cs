@@ -74,6 +74,20 @@ public class GradientInterpolationTests : BaseTestClass
         ((double)actual.B).ShouldBe((255 * (1 - t) * alpha) + (Backdrop.B * (1 - alpha)), Tolerance);
     }
 
+    [Theory]
+    [InlineData("Rect")]
+    [InlineData("Circle")]
+    public void LinearGradient_WithTheSameStartAndEnd_FillsWithTheEndColor(string shape)
+    {
+        // Skia clamps a zero length gradient to its last stop.
+        Color[] pixels = Render(shape, linear: true, alpha1: 255, alpha2: 255, gradientX1: 10, gradientX2: 10);
+
+        Color actual = pixels[(50 * Size) + 40];
+
+        ((double)actual.G).ShouldBe(255, Tolerance);
+        ((double)actual.B).ShouldBe(0, Tolerance);
+    }
+
     [Fact]
     public void LinearGradient_OnA2000SquareRectangle_EmitsAtMost36Vertices()
     {

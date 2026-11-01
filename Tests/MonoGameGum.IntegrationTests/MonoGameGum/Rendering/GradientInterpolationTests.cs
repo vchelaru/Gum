@@ -81,7 +81,21 @@ public class GradientInterpolationTests : BaseTestClass
         ((double)actual.B).ShouldBe((double)((int)expectedB), Tolerance);
     }
 
-    private static XnaColor[] Render(string shape, bool linear, int alpha)
+    [Theory]
+    [InlineData("Rect")]
+    [InlineData("Circle")]
+    public void LinearGradient_WithTheSameStartAndEnd_FillsWithTheEndColor(string shape)
+    {
+        // Skia clamps a zero length gradient to its last stop.
+        XnaColor[] pixels = Render(shape, linear: true, alpha: 255, zeroLength: true);
+
+        XnaColor actual = pixels[(50 * Size) + 40];
+
+        ((double)actual.G).ShouldBe(255, Tolerance);
+        ((double)actual.B).ShouldBe(0, Tolerance);
+    }
+
+    private static XnaColor[] Render(string shape, bool linear, int alpha, bool zeroLength = false)
     {
         using ShapeGameLease game = new ShapeGameLease();
         GraphicsDevice gd = game.GraphicsDevice;
@@ -133,7 +147,7 @@ public class GradientInterpolationTests : BaseTestClass
         {
             gradient.SetProperty("GradientX1", 10f);
             gradient.SetProperty("GradientY1", 0f);
-            gradient.SetProperty("GradientX2", 90f);
+            gradient.SetProperty("GradientX2", zeroLength ? 10f : 90f);
             gradient.SetProperty("GradientY2", 0f);
         }
         else

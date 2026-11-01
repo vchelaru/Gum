@@ -669,7 +669,8 @@ public class LineRectangle : GradientShapeRenderable
         // t = a x + b y + c in rectangle-local coordinates.
         float a = lenSq > 0f ? dx / lenSq : 0f;
         float b = lenSq > 0f ? dy / lenSq : 0f;
-        float c = lenSq > 0f ? -(x1 * dx + y1 * dy) / lenSq : 0f;
+        // A zero length gradient is all Color2, like Skia's clamp.
+        float c = lenSq > 0f ? -(x1 * dx + y1 * dy) / lenSq : 1f;
 
         Vector2 axisX = (tr - tl) / (w > 0f ? w : 1f);
         Vector2 axisY = (bl - tl) / (h > 0f ? h : 1f);
