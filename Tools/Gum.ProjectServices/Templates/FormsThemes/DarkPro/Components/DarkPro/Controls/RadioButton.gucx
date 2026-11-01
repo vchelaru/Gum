@@ -5,7 +5,7 @@
   <State>
     <Name>Default</Name>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">22</Value>
+      <Value xsi:type="xsd:float">24</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -33,7 +33,7 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">22</Value>
+      <Value xsi:type="xsd:float">24</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -153,7 +153,7 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="RadioBackground.X" SetsValue="true">
-      <Value xsi:type="xsd:float">1</Value>
+      <Value xsi:type="xsd:float">2</Value>
     </Variable>
     <Variable Type="HorizontalAlignment" Name="RadioBackground.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -194,13 +194,13 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">-28</Value>
+      <Value xsi:type="xsd:float">-30</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.X" SetsValue="true">
-      <Value xsi:type="xsd:float">28</Value>
+      <Value xsi:type="xsd:float">30</Value>
     </Variable>
     <Variable Type="HorizontalAlignment" Name="TextInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
