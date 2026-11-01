@@ -49,7 +49,7 @@ public class TextBox : TextBoxBase
     /// </summary>
     public virtual string? Text
     {
-        get => coreTextObject.RawText;
+        get => coreTextObject?.RawText;
         set
         {
             bool isChange = value != Text;
@@ -128,12 +128,12 @@ public class TextBox : TextBoxBase
     /// </summary>
     public virtual int? MaxLettersToShow
     {
-        get => coreTextObject.MaxLettersToShow;
+        get => coreTextObject?.MaxLettersToShow;
         set
         {
             if (value != MaxLettersToShow)
             {
-                coreTextObject.MaxLettersToShow = value;
+                if (coreTextObject != null) { coreTextObject.MaxLettersToShow = value; }
             }
         }
     }
@@ -144,12 +144,12 @@ public class TextBox : TextBoxBase
     /// </summary>
     public virtual int? MaxNumberOfLines
     {
-        get => coreTextObject.MaxNumberOfLines;
+        get => coreTextObject?.MaxNumberOfLines;
         set
         {
             if (value != MaxNumberOfLines)
             {
-                coreTextObject.MaxNumberOfLines = value;
+                if (coreTextObject != null) { coreTextObject.MaxNumberOfLines = value; }
             }
         }
     }

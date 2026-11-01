@@ -23,9 +23,10 @@ if printf '%s' "$input" | grep -Eq '(^|[^[:alnum:]_./-])python([0-9.]*)(\.exe)?(
 fi
 
 # `cat > file` or `cat >> file` where cat starts a command (start of the command, after ; & ( or a newline,
-# not after a pipe) and nothing in the command feeds it: no heredoc (<<) and no input redirect (< file).
-if printf '%s' "$input" | grep -Eq '(^|[;&(]|\\n|")[ ]*cat +>{1,2} *[^ <]' \
-  && ! printf '%s' "$input" | grep -Eq '<<|[^2>&]< *[^ <]'; then
+# not after a pipe) and that same command ends right after the target (optionally a `2>...` redirect), so
+# nothing feeds it: no heredoc (<<) and no input redirect (< file) in that command. Judged per command, not
+# over the whole input, so a `<` elsewhere (an XML tag in a sed argument) cannot excuse it.
+if printf '%s' "$input" | grep -Eq '(^|[;&(]|\\n|")[ ]*cat +>{1,2} *[^ <;&|"\\]+( +2>(&1|[^ ;&|"\\]*))?[ ]*(;|&|\\n|"|\)|$)'; then
   echo "Refused: a bare 'cat > file' reads stdin and hangs forever when nothing feeds it. Write the file with the Write tool (or use a heredoc, then 'cat > file <<EOF')." >&2
   exit 2
 fi

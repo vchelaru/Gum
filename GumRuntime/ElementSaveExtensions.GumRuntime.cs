@@ -415,11 +415,54 @@ namespace GumRuntime
             }
         }
 
-        // Nesting depth of ToGraphicalUiElement; only the outermost build stamps its owner. A plain static:
-        // all UI work runs on one thread.
+        // Nesting depth of ToGraphicalUiElement on this thread; only the outermost build stamps its owner. Per thread:
+        // builds on several threads must not corrupt each other's count, which would leave it non-zero for good.
+        [ThreadStatic]
         private static int _buildDepth;
 
+        // Elements whose build is in progress. An instance of one of these, met while building its own contents,
+        // would recurse until the stack overflows, which cannot be caught (#7468).
+        // Per thread, so another thread's build never makes a legitimate instance look circular.
+        [ThreadStatic]
+        private static HashSet<ElementSave>? _elementsBeingBuiltOfThread;
+
+        private static HashSet<ElementSave> _elementsBeingBuilt =>
+            _elementsBeingBuiltOfThread ??= new HashSet<ElementSave>();
+
+        /// <summary>
+        /// True, after reporting it, when <paramref name="instanceElement"/> is already being built higher up the
+        /// stack, so building another one for an instance would never end. The instance is skipped.
+        /// </summary>
+        internal static bool IsCircularInstance(ElementSave instanceElement, InstanceSave instance)
+        {
+            if (!_elementsBeingBuilt.Contains(instanceElement))
+            {
+                return false;
+            }
+
+            RaiseReferenceError($"Circular instance: {instance.ParentContainer?.Name}.{instance.Name} is an instance of " +
+                $"{instanceElement.Name}, which contains it. The instance was not created.");
+            return true;
+        }
+
         private static GraphicalUiElement ToGraphicalUiElementCore(ElementSave elementSave,
+            ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
+        {
+            bool addedToBeingBuilt = _elementsBeingBuilt.Add(elementSave);
+            try
+            {
+                return BuildElement(elementSave, systemManagers, addToManagers, genericType, isOutermostBuild);
+            }
+            finally
+            {
+                if (addedToBeingBuilt)
+                {
+                    _elementsBeingBuilt.Remove(elementSave);
+                }
+            }
+        }
+
+        private static GraphicalUiElement BuildElement(ElementSave elementSave,
             ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
