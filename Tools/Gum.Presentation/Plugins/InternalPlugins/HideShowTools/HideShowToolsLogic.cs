@@ -19,12 +19,15 @@ public class HideShowToolsLogic
     /// </summary>
     public bool ToggleToolsVisibility()
     {
-        _toolsVisibility.IsToolsVisible = !_toolsVisibility.IsToolsVisible;
+        bool show = !_toolsVisibility.IsToolsVisible;
 
-        if (_toolsVisibility.IsToolsVisible)
+        // Before the panels show, so they reappear at a usable size.
+        if (show)
         {
             _toolsVisibility.EnsureMinimumWidth();
         }
+
+        _toolsVisibility.IsToolsVisible = show;
 
         return _toolsVisibility.IsToolsVisible;
     }
