@@ -1,3 +1,4 @@
+using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -96,7 +97,7 @@ public class GumxImportService : IGumxImportService
 
     /// <summary>
     /// Whether a variable value names a file the import copies: the tool's own Source File formats
-    /// (<see cref="ImageFileExtensions.AllSourceFileFormats"/>), font files, bitmap font (.fnt) and tga.
+    /// (<see cref="ImageFileExtensions.AllSourceFileFormats"/>), font files, bitmap font (.fnt), tga and shader files.
     /// </summary>
     private static bool IsAssetPath(string value)
     {
@@ -110,6 +111,7 @@ public class GumxImportService : IGumxImportService
         return ImageFileExtensions.AllSourceFileFormats.Contains(bare, StringComparer.OrdinalIgnoreCase)
             || bare.Equals("tga", StringComparison.OrdinalIgnoreCase)
             || bare.Equals("fnt", StringComparison.OrdinalIgnoreCase)
+            || ShaderFileExtensions.Contains(bare)
             || global::RenderingLibrary.Graphics.Fonts.BmfcSave.FontFileExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
     }
 
@@ -189,6 +191,9 @@ public class GumxImportService : IGumxImportService
                 .Where(problem => selections.ReportSourceProblem?.Invoke(problem) ?? true))
                 result.AddSkipped(problem.Name, problem.Reason);
 
+            // The textures inside each fetched .achx/.achj are found now and fetched with the rest.
+            Dictionary<string, ChainTextures> chainTextures = await ResolveChainTexturesAsync(assetCache, sourceBase);
+
             var skippedElements = allCandidateElements
                 .Where(e => e.IsSourceFileMissing
                     || assetsByElement[e].Any(p => assetCache.TryGetValue(p, out var b) ? b == null : false))
@@ -206,6 +211,12 @@ public class GumxImportService : IGumxImportService
             {
                 foreach (string path in CollectUnrecognizedSourceFiles(element))
                     result.AddSkipped(path, $"Source File used by {element.Name} has an unrecognized extension, so it was not copied");
+            }
+
+            foreach (string chainPath in CollectReferencedAssetPaths(allCandidateElements.Where(e => !skippedElements.Contains(e))))
+            {
+                if (chainTextures.TryGetValue(chainPath, out ChainTextures? chain))
+                    ReportChainProblems(chainPath, chain, result);
             }
 
             bool IsWritten(ElementSave element) =>
@@ -269,6 +280,7 @@ public class GumxImportService : IGumxImportService
             // 6. Write pre-fetched asset files to disk for imported elements
             var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
             await CopyCachedAssetsAsync(importedElements, assetCache, projectDir, result);
+            await CopyChainTexturesAsync(importedElements, chainTextures, projectDir, result);
 
             // 7. Copy sibling .ganx (state animation) files for each imported element. A conflicting
             // element left alone by Skip keeps its own animations too.
@@ -373,6 +385,163 @@ public class GumxImportService : IGumxImportService
                 && !IsAssetPath(value))
             .Select(variable => (string)variable.Value!)
             .Distinct(StringComparer.OrdinalIgnoreCase);
+
+    private static bool IsChainFile(string path)
+    {
+        string extension = Path.GetExtension(path);
+        return extension.Equals(".achx", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".achj", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// The textures one .achx/.achj lists: each as its source-relative path with the fetched bytes (null when
+    /// missing), plus the entries that were refused and why.
+    /// </summary>
+    private sealed class ChainTextures
+    {
+        public string? LoadFailure;
+        public Dictionary<string, byte[]?> Textures { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public List<(string Name, string Reason)> Refused { get; } = new();
+    }
+
+    /// <summary>
+    /// Loads each fetched animation chain with the tool's own loader and fetches the textures it lists. A texture
+    /// name is relative to the chain (or to the project when the chain says FileRelativeTextures is false).
+    /// </summary>
+    private async Task<Dictionary<string, ChainTextures>> ResolveChainTexturesAsync(
+        Dictionary<string, byte[]?> assetCache, string sourceBase)
+    {
+        Dictionary<string, ChainTextures> chains = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, Task<byte[]?>> fetches = new(StringComparer.OrdinalIgnoreCase);
+        foreach ((string chainPath, byte[]? bytes) in assetCache.Where(pair => pair.Value != null && IsChainFile(pair.Key)))
+        {
+            ChainTextures chain = new ChainTextures();
+            chains[chainPath] = chain;
+
+            AnimationChainListSave? list = null;
+            string temp = Path.Combine(Path.GetTempPath(), "GumChain_" + Guid.NewGuid().ToString("N") + Path.GetExtension(chainPath));
+            try
+            {
+                File.WriteAllBytes(temp, bytes!);
+                list = AnimationChainListSave.FromFile(temp);
+            }
+            catch (Exception exception)
+            {
+                chain.LoadFailure = exception.Message;
+            }
+            finally
+            {
+                try { File.Delete(temp); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+            }
+
+            if (list == null) continue;
+
+            string[] baseSegments = list.FileRelativeTextures
+                ? chainPath.Split('/', '\\').SkipLast(1).ToArray()
+                : Array.Empty<string>();
+            IEnumerable<string> names = list.AnimationChains
+                .SelectMany(c => c.Frames)
+                .Select(f => f.TextureName)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name!)
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+            foreach (string name in names)
+            {
+                string? resolved = ResolveTexturePath(baseSegments, name, out string? refusal);
+                if (resolved == null)
+                {
+                    chain.Refused.Add((name, refusal!));
+                    continue;
+                }
+                if (!fetches.ContainsKey(resolved))
+                {
+                    fetches[resolved] = _sourceService.FetchBinaryAsync(resolved, sourceBase);
+                }
+                chain.Textures[resolved] = null;
+            }
+        }
+
+        await Task.WhenAll(fetches.Values);
+        foreach (ChainTextures chain in chains.Values)
+        {
+            foreach (string resolved in chain.Textures.Keys.ToList())
+                chain.Textures[resolved] = fetches[resolved].Result;
+        }
+        return chains;
+    }
+
+    /// <summary>
+    /// Joins <paramref name="name"/> onto <paramref name="baseSegments"/> as a forward-slash path inside the
+    /// source project; null (with the reason) for an absolute path, a web address, or a path that leaves the project.
+    /// </summary>
+    private static string? ResolveTexturePath(string[] baseSegments, string name, out string? refusal)
+    {
+        refusal = null;
+        if (name.Contains("://") || Path.IsPathRooted(name) || name.StartsWith('/') || name.StartsWith('\\')
+            || (name.Length >= 2 && name[1] == ':'))
+        {
+            refusal = "absolute texture path, so it was not copied";
+            return null;
+        }
+
+        List<string> stack = baseSegments.Where(segment => segment.Length > 0 && segment != ".").ToList();
+        foreach (string segment in name.Split('/', '\\'))
+        {
+            if (segment.Length == 0 || segment == ".") continue;
+            if (segment == "..")
+            {
+                if (stack.Count == 0)
+                {
+                    refusal = "texture path leaves the source project, so it was not copied";
+                    return null;
+                }
+                stack.RemoveAt(stack.Count - 1);
+            }
+            else
+            {
+                stack.Add(segment);
+            }
+        }
+        return stack.Count == 0 ? null : string.Join("/", stack);
+    }
+
+    private static void ReportChainProblems(string chainPath, ChainTextures chain, ImportResult result)
+    {
+        string chainName = Path.GetFileName(chainPath);
+        if (chain.LoadFailure != null)
+            result.AddSkipped(chainPath, $"animation chain could not be read, so its textures were not copied ({chain.LoadFailure})");
+        foreach ((string name, string reason) in chain.Refused)
+            result.AddSkipped(name, $"used by {chainName}: {reason}");
+        foreach (string texture in chain.Textures.Where(pair => pair.Value == null).Select(pair => pair.Key))
+            result.AddSkipped(texture, $"texture used by {chainName} not found");
+    }
+
+    /// <summary>Writes the textures of every animation chain the imported elements reference, each once.</summary>
+    private async Task CopyChainTexturesAsync(
+        IEnumerable<ElementSave> importedElements,
+        Dictionary<string, ChainTextures> chainTextures,
+        string projectDir,
+        ImportResult result)
+    {
+        HashSet<string> done = new(StringComparer.OrdinalIgnoreCase);
+        foreach (string chainPath in CollectReferencedAssetPaths(importedElements))
+        {
+            if (!chainTextures.TryGetValue(chainPath, out ChainTextures? chain)) continue;
+            foreach ((string texture, byte[]? bytes) in chain.Textures)
+            {
+                if (bytes == null || !done.Add(texture)) continue;
+                string destPath = Path.Combine(projectDir, texture.Replace('/', Path.DirectorySeparatorChar));
+                if (!File.Exists(destPath))
+                {
+                    MuteFileWatcher(destPath);
+                    Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+                    await File.WriteAllBytesAsync(destPath, bytes);
+                    result.WrittenFiles.Add(destPath);
+                }
+                result.CopiedAssets.Add(texture);
+            }
+        }
+    }
 
     private static bool IsFontCachePath(string relativePath) =>
         relativePath.IndexOf("FontCache/", StringComparison.OrdinalIgnoreCase) >= 0
