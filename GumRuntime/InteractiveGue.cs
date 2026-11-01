@@ -182,6 +182,8 @@ public partial class InteractiveGue : GraphicalUiElement
             if (_raiseChildrenEventsOutsideOfBounds != value)
             {
                 _raiseChildrenEventsOutsideOfBounds = value;
+                // The cursor walk caches facts about subtrees; this flag changes what the walk can reach.
+                InvalidateSubtreeCaches();
                 ReportTypedPropertyChanged("RaiseChildrenEventsOutsideOfBounds");
             }
         }
