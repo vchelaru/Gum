@@ -122,10 +122,9 @@ public class HeadlessCodeGenerationServiceOrchestrationTests : BaseTestClass
 
         foreach (ComponentSave component in new[] { panel, other })
         {
-            System.Threading.Tasks.Task generated = System.Threading.Tasks.Task.Run(() =>
-                service.GenerateCodeForElement(component, new CodeOutputElementSettings(), settings, checkForMissing: false));
-            generated.Wait(5000).ShouldBeTrue("code generation froze on a circular reference (#6871)");
-            generated.GetAwaiter().GetResult();
+            Gum.Tests.Shared.FreezeGuard.Run(() =>
+                service.GenerateCodeForElement(component, new CodeOutputElementSettings(), settings, checkForMissing: false),
+                "code generation froze on a circular reference (#6871)");
         }
     }
 
