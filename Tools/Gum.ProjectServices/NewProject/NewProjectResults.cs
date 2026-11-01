@@ -16,7 +16,6 @@ public enum NewProjectErrorKind
     ProjectAlreadyExists,
     InvalidProjectName,
     RecommendedPackagesNeedPlatform,
-    RecommendedPackagesNeedNuGetRuntime,
     GenerateCodeNeedsPlatform
 }
 
@@ -62,6 +61,12 @@ public class ResolvedNewProject
 
     /// <summary>The recommended packages to add to the code project, in order; empty when not requested.</summary>
     public IReadOnlyList<string> RecommendedPackages { get; init; } = new string[0];
+
+    /// <summary>
+    /// The add-ons (package ids, see <see cref="RecommendedPackages.ForSourceLinked"/>) a source-linked project links as project
+    /// references while the files are created; empty otherwise. Nothing is added from NuGet for them.
+    /// </summary>
+    public IReadOnlyList<string> LinkedAddOns { get; init; } = new string[0];
 
     /// <summary>The project name: the game folder's name with a platform, otherwise the Gum project file's name.</summary>
     public string Name { get; init; } = "";

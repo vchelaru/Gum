@@ -93,12 +93,6 @@ public class NewProjectService : INewProjectService
                 return Fail(NewProjectErrorKind.RecommendedPackagesNeedPlatform,
                     "Recommended packages need a code project: they are added to its .csproj.");
             }
-
-            if (request.SourceLinked)
-            {
-                return Fail(NewProjectErrorKind.RecommendedPackagesNeedNuGetRuntime,
-                    "Recommended packages need the NuGet Gum runtime: they would pull in a second copy of Gum next to the linked source.");
-            }
         }
 
         if (request.GenerateCode && options.Platform == null)
@@ -170,8 +164,12 @@ public class NewProjectService : INewProjectService
                 CsprojPath = targets.CsprojPath,
                 Name = targets.Name,
                 GenerateCode = request.GenerateCode,
-                RecommendedPackages = request.IncludeRecommendedPackages
+                // Source-linked: the add-ons are linked as projects while the files are written, so no package is added.
+                RecommendedPackages = request.IncludeRecommendedPackages && !request.SourceLinked
                     ? RecommendedPackages.For(options.Platform!.Value)
+                    : Array.Empty<string>(),
+                LinkedAddOns = request.IncludeRecommendedPackages && request.SourceLinked
+                    ? RecommendedPackages.ForSourceLinked(options.Platform!.Value)
                     : Array.Empty<string>()
             }
         };
@@ -357,7 +355,7 @@ public class NewProjectService : INewProjectService
         NewProjectFilesResult result;
         try
         {
-            result = WriteFiles(options, targets, project.GumSourceDirectory);
+            result = WriteFiles(options, targets, project.GumSourceDirectory, project.LinkedAddOns);
 
             if (result.Success && cancellationToken.IsCancellationRequested)
             {
@@ -379,7 +377,8 @@ public class NewProjectService : INewProjectService
     }
 
     // Writes the Gum project (and the code project around it).
-    private static NewProjectFilesResult WriteFiles(Options options, Targets targets, string? gumSourceDirectory)
+    private static NewProjectFilesResult WriteFiles(
+        Options options, Targets targets, string? gumSourceDirectory, IReadOnlyList<string> linkedAddOns)
     {
         try
         {
@@ -387,7 +386,7 @@ public class NewProjectService : INewProjectService
             {
                 PlatformProjectResult result = new PlatformProjectScaffolder().Create(
                     targets.RootDirectory, platform, options.IncludeFormsTemplate, gumSourceDirectory, options.ThemeDirectory,
-                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath));
+                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath), linkedAddOns: linkedAddOns);
                 if (!result.Success)
                 {
                     return new NewProjectFilesResult { ErrorMessage = result.ErrorMessage };
@@ -494,7 +493,7 @@ public class NewProjectService : INewProjectService
         PlatformProjectScaffolder.RewriteHostSources(
             project.RootDirectory, platform, System.IO.Path.GetFileName(files.GumProjectPath), files.DemoScreen,
             screenCodeGenerated && files.DemoScreen != null,
-            packagesAdded ? project.RecommendedPackages : Array.Empty<string>());
+            (packagesAdded ? project.RecommendedPackages : Array.Empty<string>()).Concat(project.LinkedAddOns).ToList());
     }
 
     /// <inheritdoc/>

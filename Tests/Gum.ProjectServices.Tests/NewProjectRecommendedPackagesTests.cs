@@ -128,11 +128,13 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
     }
 
     [Fact]
-    public void Validate_PackagesWithSourceLinked_IsRefused()
+    public void Validate_PackagesWithSourceLinked_LinksTheAddOnsInsteadOfAddingPackages()
     {
         NewProjectValidation validation = CreateService().Validate(Request("monogame", sourceLinked: true));
 
-        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.RecommendedPackagesNeedNuGetRuntime);
+        validation.IsValid.ShouldBeTrue(validation.Error?.Message);
+        validation.Resolved!.RecommendedPackages.ShouldBeEmpty();
+        validation.Resolved.LinkedAddOns.ShouldBe(new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", "Gum.Expressions" });
     }
 
     #endregion
