@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
@@ -211,6 +212,83 @@ public class GumxImportExternalFilesTests : IDisposable
         AssertNothingPointsOutside(ReadSavedComponent());
     }
 
+    [Fact]
+    public async Task ImportAsync_InstanceAddedToSkippedComponent_PointsAtTheExternalCopy()
+    {
+        WriteOutside("Content/x.png", "x");
+        ComponentSave holder = new ComponentSave { Name = "Holder" };
+        holder.Instances.Add(new InstanceSave { Name = "Inner", BaseType = "Sprite", ParentContainer = holder });
+        StateSave holderDefault = new StateSave { Name = "Default" };
+        holderDefault.Variables.Add(new VariableSave { Name = "Inner.SourceFile", Value = "../../Content/x.png", SetsValue = true });
+        holder.States.Add(holderDefault);
+
+        // The destination already has a different Holder, so Skip keeps it and only adds what the reader reads.
+        ComponentSave existing = new ComponentSave { Name = "Holder" };
+        StateSave existingDefault = new StateSave { Name = "Default" };
+        existingDefault.Variables.Add(new VariableSave { Name = "Width", Value = 5f, SetsValue = true });
+        existing.States.Add(existingDefault);
+        Directory.CreateDirectory(Path.Combine(_projectDir, "Components"));
+        existing.Save(Path.Combine(_projectDir, "Components", "Holder." + GumProjectSave.ComponentExtension), true);
+
+        ComponentSave reader = new ComponentSave { Name = "Reader" };
+        StateSave readerDefault = new StateSave { Name = "Default" };
+        readerDefault.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = "VariableReferences",
+            Type = "string",
+            Value = new List<string> { "Width = Components/Holder.Inner.SourceFile" },
+        });
+        reader.States.Add(readerDefault);
+
+        await ImportMany(new List<ComponentSave> { holder, reader }, new(), ConflictResolution.Skip);
+
+        string savedHolder = File.ReadAllText(Path.Combine(_projectDir, "Components", "Holder." + GumProjectSave.ComponentExtension));
+        savedHolder.ShouldContain("Inner");
+        savedHolder.ShouldContain("external/x.png");
+        savedHolder.ShouldNotContain("..");
+        File.ReadAllText(Path.Combine(_projectDir, "external", "x.png")).ShouldBe("x");
+    }
+
+    [Fact]
+    public async Task ImportAsync_BehaviorWithOutsideFile_PointsAtTheExternalCopyAndSecondImportAddsNothing()
+    {
+        WriteOutside("Content/x.png", "x");
+        BehaviorSave behavior = new BehaviorSave { Name = "B" };
+        StateSaveCategory category = new StateSaveCategory { Name = "Look" };
+        StateSave state = new StateSave { Name = "On" };
+        state.Variables.Add(new VariableSave { Name = "Sprite.SourceFile", Value = "../../Content/x.png", SetsValue = true });
+        category.States.Add(state);
+        behavior.Categories.Add(category);
+        behavior.RequiredVariables.Variables.Add(new VariableSave { Name = "Sprite.SourceFile", Value = "../../Content/x.png", SetsValue = true });
+        string behaviorFile = Path.Combine(_sourceDir, "Behaviors", "B.behx");
+        Directory.CreateDirectory(Path.GetDirectoryName(behaviorFile)!);
+        behavior.Save(behaviorFile, true);
+
+        await ImportMany(new(), new List<BehaviorSave> { behavior }, ConflictResolution.Cancel);
+        ImportResult second = await ImportMany(new(), new List<BehaviorSave> { behavior }, ConflictResolution.Cancel);
+
+        string saved = File.ReadAllText(Path.Combine(_projectDir, "Behaviors", "B.behx"));
+        saved.ShouldContain("external/x.png");
+        saved.ShouldNotContain("..");
+        Directory.GetFiles(Path.Combine(_projectDir, "external")).Select(Path.GetFileName).ShouldBe(new[] { "x.png" });
+        second.ConflictingElements.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ImportAsync_BehaviorWithMissingOutsideFile_IsReportedAndNotImported()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "B" };
+        behavior.RequiredVariables.Variables.Add(new VariableSave { Name = "Sprite.SourceFile", Value = "../../Content/gone.png", SetsValue = true });
+        string behaviorFile = Path.Combine(_sourceDir, "Behaviors", "B.behx");
+        Directory.CreateDirectory(Path.GetDirectoryName(behaviorFile)!);
+        behavior.Save(behaviorFile, true);
+
+        ImportResult result = await ImportMany(new(), new List<BehaviorSave> { behavior }, ConflictResolution.Cancel);
+
+        result.SkippedElements.ShouldContain("Behaviors/B");
+        File.Exists(Path.Combine(_projectDir, "Behaviors", "B.behx")).ShouldBeFalse();
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────
 
     private string WriteOutside(string relativeToGameFolder, string contents)
@@ -254,6 +332,22 @@ public class GumxImportExternalFilesTests : IDisposable
             Standards = new(),
         };
         return await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+    }
+
+    private async Task<ImportResult> ImportMany(List<ComponentSave> components, List<BehaviorSave> behaviors, ConflictResolution resolution)
+    {
+        GumProjectSave source = new GumProjectSave();
+        foreach (ComponentSave component in components) source.Components.Add(component);
+        foreach (BehaviorSave behavior in behaviors) source.Behaviors.Add(behavior);
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = components,
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = behaviors,
+            Standards = new(),
+        };
+        return await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "", conflictResolution: resolution);
     }
 
     private string ReadSavedComponent() =>

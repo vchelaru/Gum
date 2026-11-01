@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,8 @@ internal sealed class ExternalAssetPlan
 
     private ExternalAssetPlan() { }
 
+    public bool HasEntries => _destinationBySource.Count > 0;
+
     public bool Contains(string sourcePath) => _destinationBySource.ContainsKey(sourcePath);
 
     /// <summary>The destination path (relative to the destination project, forward slashes) for a source path.</summary>
@@ -48,12 +51,28 @@ internal sealed class ExternalAssetPlan
         if (_destinationBySource.Count == 0) return;
         foreach (StateSave state in element.AllStates)
         {
-            foreach (VariableSave variable in state.Variables)
-            {
-                if (variable.Value is string text && _destinationBySource.TryGetValue(text, out string? destination))
-                    variable.Value = destination;
-            }
+            foreach (VariableSave variable in state.Variables) Rewrite(variable);
         }
+    }
+
+    /// <summary>Every variable a behavior carries: its category states, required variables and forms properties.</summary>
+    public static IEnumerable<VariableSave> GetVariables(BehaviorSave behavior) =>
+        behavior.AllStates.SelectMany(state => state.Variables)
+            .Concat(behavior.RequiredVariables.Variables)
+            .Concat(behavior.FormsProperties);
+
+    /// <summary>Points the behavior's variables that name a planned file at its copy.</summary>
+    public void Rewrite(BehaviorSave behavior)
+    {
+        foreach (VariableSave variable in GetVariables(behavior)) Rewrite(variable);
+    }
+
+    /// <summary>Points one variable at the copy of the file it names, if that file was planned. Returns the variable.</summary>
+    public VariableSave Rewrite(VariableSave variable)
+    {
+        if (variable.Value is string text && _destinationBySource.TryGetValue(text, out string? destination))
+            variable.Value = destination;
+        return variable;
     }
 
     /// <param name="assetPaths">Every asset path the imported elements name, as written.</param>

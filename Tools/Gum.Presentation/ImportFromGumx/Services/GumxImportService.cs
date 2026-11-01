@@ -152,7 +152,8 @@ public class GumxImportService : IGumxImportService
             CollectReferencedAssetPaths(selections.Standards.Cast<ElementSave>()
                 .Concat(selections.TransitiveComponents)
                 .Concat(selections.DirectComponents)
-                .Concat(selections.DirectScreens)),
+                .Concat(selections.DirectScreens))
+                .Concat(CollectBehaviorAssetPaths(selections.Behaviors)),
             sourceBase, projectDir, ReadChainTextureNames);
         var (conflicts, unchanged, _) = ClassifyExistingDestinations(
             selections, nameMap, qualifiedNameMap, projectDir, IsDestinationJsonFormat, externalPlan);
@@ -175,6 +176,7 @@ public class GumxImportService : IGumxImportService
                 .Concat(selections.DirectComponents)
                 .Concat(selections.DirectScreens)
                 .ToList();
+            List<string> behaviorAssetPaths = CollectBehaviorAssetPaths(selections.Behaviors);
 
             var assetsByElement = allCandidateElements.ToDictionary(
                 e => e,
@@ -182,6 +184,7 @@ public class GumxImportService : IGumxImportService
 
             var allAssetPaths = assetsByElement.Values
                 .SelectMany(p => p)
+                .Concat(behaviorAssetPaths)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
@@ -255,7 +258,7 @@ public class GumxImportService : IGumxImportService
                     .ToDictionary(g => g.Key, g => g.First());
                 if (keptComponents.Count > 0)
                 {
-                    AddMissingReferencedInstances(keptComponents, allCandidateElements.Where(IsWritten), projectDir, nameMap, result);
+                    AddMissingReferencedInstances(keptComponents, allCandidateElements.Where(IsWritten), projectDir, nameMap, result, externalPlan);
                 }
             }
 
@@ -273,10 +276,19 @@ public class GumxImportService : IGumxImportService
                     result.AddSkipped(component.Name, ProjectRefusedReason);
             }
 
-            // 3. Behaviors (no asset dependencies)
+            // 3. Behaviors
+            List<BehaviorSave> importedBehaviors = new();
             foreach (var behavior in selections.Behaviors.Where(b => !b.IsSourceFileMissing))
             {
-                string? failure = await WriteAndImportBehaviorAsync(behavior, source, sourceBase, projectDir, conflictNameSet, conflictResolution, result);
+                List<string> missingBehaviorAssets = CollectBehaviorAssetPaths(new[] { behavior })
+                    .Where(p => assetCache.TryGetValue(p, out var b) && b == null).ToList();
+                if (missingBehaviorAssets.Count > 0)
+                {
+                    result.AddSkipped("Behaviors/" + behavior.Name, "file(s) it uses not found: " + string.Join(", ", missingBehaviorAssets));
+                    continue;
+                }
+                importedBehaviors.Add(behavior);
+                string? failure = await WriteAndImportBehaviorAsync(behavior, source, sourceBase, projectDir, conflictNameSet, conflictResolution, result, externalPlan);
                 if (failure != null) result.AddSkipped("Behaviors/" + behavior.Name, failure);
             }
 
@@ -296,8 +308,12 @@ public class GumxImportService : IGumxImportService
 
             // 6. Write pre-fetched asset files to disk for imported elements
             var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
-            await CopyCachedAssetsAsync(importedElements, assetCache, projectDir, result, externalPlan);
-            await CopyChainTexturesAsync(importedElements, chainTextures, projectDir, result, externalPlan);
+            List<string> importedAssetPaths = CollectReferencedAssetPaths(importedElements)
+                .Concat(CollectBehaviorAssetPaths(importedBehaviors))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            await CopyCachedAssetsAsync(importedAssetPaths, assetCache, projectDir, result, externalPlan);
+            await CopyChainTexturesAsync(importedAssetPaths, chainTextures, projectDir, result, externalPlan);
 
             // 7. Copy sibling .ganx (state animation) files for each imported element. A conflicting
             // element left alone by Skip keeps its own animations too.
@@ -363,26 +379,25 @@ public class GumxImportService : IGumxImportService
     /// an asset file path (known extension). Excludes paths inside a FontCache folder.
     /// Returns each unique path once.
     /// </summary>
-    private static List<string> CollectReferencedAssetPaths(IEnumerable<ElementSave> elements)
+    private static List<string> CollectReferencedAssetPaths(IEnumerable<ElementSave> elements) =>
+        CollectAssetPaths(elements.SelectMany(element => element.AllStates.SelectMany(state => state.Variables)));
+
+    /// <summary>The same scan over a behavior's states, required variables and forms properties.</summary>
+    private static List<string> CollectBehaviorAssetPaths(IEnumerable<BehaviorSave> behaviors) =>
+        CollectAssetPaths(behaviors.SelectMany(ExternalAssetPlan.GetVariables));
+
+    private static List<string> CollectAssetPaths(IEnumerable<VariableSave> variables)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var result = new List<string>();
-        foreach (var element in elements)
+        foreach (var variable in variables)
         {
-            foreach (var state in element.AllStates)
+            if (variable.Value is string stringValue && !string.IsNullOrEmpty(stringValue)
+                && IsAssetPath(stringValue)
+                && !IsFontCachePath(stringValue)
+                && seen.Add(stringValue))
             {
-                foreach (var variable in state.Variables)
-                {
-                    if (variable.Value is string stringValue && !string.IsNullOrEmpty(stringValue))
-                    {
-                        if (IsAssetPath(stringValue)
-                            && !IsFontCachePath(stringValue)
-                            && seen.Add(stringValue))
-                        {
-                            result.Add(stringValue);
-                        }
-                    }
-                }
+                result.Add(stringValue);
             }
         }
         return result;
@@ -551,14 +566,14 @@ public class GumxImportService : IGumxImportService
 
     /// <summary>Writes the textures of every animation chain the imported elements reference, each once.</summary>
     private async Task CopyChainTexturesAsync(
-        IEnumerable<ElementSave> importedElements,
+        IEnumerable<string> importedAssetPaths,
         Dictionary<string, ChainTextures> chainTextures,
         string projectDir,
         ImportResult result,
         ExternalAssetPlan externalPlan)
     {
         HashSet<string> done = new(StringComparer.OrdinalIgnoreCase);
-        foreach (string chainPath in CollectReferencedAssetPaths(importedElements))
+        foreach (string chainPath in importedAssetPaths)
         {
             if (!chainTextures.TryGetValue(chainPath, out ChainTextures? chain)) continue;
             foreach ((string texture, byte[]? bytes) in chain.Textures)
@@ -617,13 +632,12 @@ public class GumxImportService : IGumxImportService
     /// were excluded from importedElements, so every path here should have cached bytes.
     /// </summary>
     private async Task CopyCachedAssetsAsync(
-        IEnumerable<ElementSave> importedElements,
+        IEnumerable<string> assetPaths,
         Dictionary<string, byte[]?> assetCache,
         string projectDir,
         ImportResult result,
         ExternalAssetPlan externalPlan)
     {
-        var assetPaths = CollectReferencedAssetPaths(importedElements);
         foreach (var relativePath in assetPaths)
         {
             string destPath = DestinationPathFor(relativePath, projectDir, externalPlan);
@@ -767,7 +781,7 @@ public class GumxImportService : IGumxImportService
             string destPath = Path.Combine(projectDir, "Behaviors", behavior.Name + "." + BehaviorExtension(isJsonFormat));
             if (!File.Exists(destPath)) { continue; }
 
-            if (IsSameContent(TryReadBehavior(destPath), behavior))
+            if (IsSameContent(TryReadBehavior(destPath), RewrittenBehaviorCopy(behavior, externalPlan)))
             {
                 unchanged.Add(behavior);
             }
@@ -805,6 +819,16 @@ public class GumxImportService : IGumxImportService
             conflicts.Add(destName);
             differing.Add(source);
         }
+    }
+
+    /// <summary>The behavior as the import writes it: a copy whose outside file paths point at their external copies.</summary>
+    private static BehaviorSave RewrittenBehaviorCopy(BehaviorSave behavior, ExternalAssetPlan? externalPlan)
+    {
+        if (externalPlan == null || !externalPlan.HasEntries) return behavior;
+        BehaviorSave? copy = GumFileSerializer.DeserializeBehaviorSave(SerializeCompact(behavior), GumProjectSave.NativeVersion);
+        if (copy == null) return behavior;
+        externalPlan.Rewrite(copy);
+        return copy;
     }
 
     private static bool IsSameContent<T>(T? existing, T incoming) where T : class
@@ -1003,7 +1027,8 @@ public class GumxImportService : IGumxImportService
         IEnumerable<ElementSave> readers,
         string projectDir,
         Dictionary<string, string> nameMap,
-        ImportResult result)
+        ImportResult result,
+        ExternalAssetPlan externalPlan)
     {
         var destinations = new Dictionary<ComponentSave, ComponentSave?>();
         var added = new Dictionary<ComponentSave, List<InstanceSave>>();
@@ -1166,11 +1191,11 @@ public class GumxImportService : IGumxImportService
                 // States first, so an instance added below also gets its values in them.
                 if (addedStates.TryGetValue(owner, out var states))
                 {
-                    AddCategoryStates(states, target);
+                    AddCategoryStates(states, target, externalPlan);
                 }
                 if (added.TryGetValue(owner, out var instances))
                 {
-                    AddInstances(owner, instances, target, nameMap);
+                    AddInstances(owner, instances, target, nameMap, externalPlan);
                 }
             }
             WriteElementToDisk(destination, DestinationComponentPath(owner, projectDir, nameMap), result);
@@ -1179,7 +1204,7 @@ public class GumxImportService : IGumxImportService
 
     // Copies each state into the target's category of the same name, creating the category when the
     // target lacks it. A category the target lacks gets only these states, not the source's others.
-    private static void AddCategoryStates(List<(StateSaveCategory Category, StateSave State)> states, ComponentSave target)
+    private static void AddCategoryStates(List<(StateSaveCategory Category, StateSave State)> states, ComponentSave target, ExternalAssetPlan externalPlan)
     {
         foreach (var (category, state) in states)
         {
@@ -1192,6 +1217,7 @@ public class GumxImportService : IGumxImportService
             if (targetCategory.States.Any(s => s.Name == state.Name)) { continue; }
 
             StateSave copy = state.Clone();
+            foreach (VariableSave variable in copy.Variables) externalPlan.Rewrite(variable);
             copy.ParentContainer = target;
             targetCategory.States.Add(copy);
         }
@@ -1206,7 +1232,7 @@ public class GumxImportService : IGumxImportService
     // Copies each instance and its values into the target's matching states. A category or state the
     // target lacks is not created.
     private static void AddInstances(ComponentSave source, List<InstanceSave> instances, ComponentSave target,
-        Dictionary<string, string> nameMap)
+        Dictionary<string, string> nameMap, ExternalAssetPlan externalPlan)
     {
         var statePairs = new List<(StateSave From, StateSave? To)>();
         statePairs.AddRange(source.States.Select(state => (state, target.States.FirstOrDefault(s => s.Name == state.Name))));
@@ -1233,7 +1259,7 @@ public class GumxImportService : IGumxImportService
                 if (to == null) { continue; }
                 to.Variables.AddRange(from.Variables
                     .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal) && to.Variables.All(t => t.Name != v.Name))
-                    .Select(v => v.Clone()));
+                    .Select(v => externalPlan.Rewrite(v.Clone())));
                 to.VariableLists.AddRange(from.VariableLists
                     .Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal) && to.VariableLists.All(t => t.Name != v.Name))
                     .Select(v => v.Clone()));
@@ -1406,7 +1432,8 @@ public class GumxImportService : IGumxImportService
         string projectDir,
         HashSet<string> conflictNameSet,
         ConflictResolution conflictResolution,
-        ImportResult result)
+        ImportResult result,
+        ExternalAssetPlan externalPlan)
     {
         bool isConflict = conflictNameSet.Contains(behavior.Name);
         if (isConflict && conflictResolution == ConflictResolution.Skip) { return null; }
@@ -1426,7 +1453,11 @@ public class GumxImportService : IGumxImportService
                 StringComparison.OrdinalIgnoreCase)
                 ? GumJsonFileSerializer.DeserializeBehavior(text)
                 : GumFileSerializer.DeserializeBehaviorSave(text, GumProjectSave.NativeVersion),
-            behaviorFile => behaviorFile.Save(destPath, UseCompact));
+            behaviorFile =>
+            {
+                externalPlan.Rewrite(behaviorFile);
+                behaviorFile.Save(destPath, UseCompact);
+            });
         if (failure == null && !isConflict
             && _importLogic.ImportBehavior(new FilePath(destPath), saveProject: false) == null)
         {
