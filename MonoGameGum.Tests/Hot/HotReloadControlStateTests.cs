@@ -17,9 +17,9 @@ using Xunit;
 namespace MonoGameGum.Tests.Hot;
 
 /// <summary>
-/// A MenuItem instance after a reload looks like a MenuItem a restart builds (#7488).
+/// MenuItem, Expander and ListBoxItem after a reload (ToolTip, IsEnabled edited and removed) look like ones a restart builds, and an Expander enabled again in code looks like a fresh one (#7473).
 /// </summary>
-public class HotReloadMenuItemTests : FileThemeInputTestBase
+public class HotReloadControlStateTests : FileThemeInputTestBase
 {
     private static string RepoRoot()
     {
