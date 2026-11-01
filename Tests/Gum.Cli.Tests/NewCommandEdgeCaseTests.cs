@@ -83,4 +83,30 @@ public class NewCommandEdgeCaseTests : BaseTestClass
         result.StandardError.ShouldContain("Gum.raylib");
         Directory.Exists(path).ShouldBeFalse();
     }
+
+    [Fact]
+    public void New_WithAPathContainingSpaces_CreatesTheCodeProjectThere()
+    {
+        string projectDir = Path.Combine(TempDirectory, "Vic Personal", "Gum Projects", "My_Game");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "raylib", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.Exists(Path.Combine(projectDir, "My_Game.csproj")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Content", "GumProject", "GumProject.gumj")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void New_SourceLinkedFromAPathContainingSpaces_ReferencesARuntimeProjectThatExists()
+    {
+        string projectDir = Path.Combine(TempDirectory, "Vic Personal", "Gum Projects", "Linked_Game");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--source-linked", "--no-restore", "--template", "empty");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "Linked_Game.csproj"));
+        System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(csproj, "<ProjectReference Include=\"([^\"]+)\"");
+        match.Success.ShouldBeTrue(csproj);
+        File.Exists(Path.GetFullPath(Path.Combine(projectDir, match.Groups[1].Value.Replace((char)92, Path.DirectorySeparatorChar)))).ShouldBeTrue();
+    }
 }
