@@ -214,7 +214,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         return null;
     }
 
-    private static string? GetProjectNameError(string projectName, HostPlatform platform)
+    internal static string? GetProjectNameError(string projectName, HostPlatform platform)
     {
         if (!ValidProjectName.IsMatch(projectName))
         {
