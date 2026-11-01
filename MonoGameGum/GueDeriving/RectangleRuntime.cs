@@ -719,52 +719,114 @@ public class RectangleRuntime : GraphicalUiElement
         set { _customRadiusBottomRight = value; NotifyPropertyChanged(); }
     }
 
-    GeneralUnitType _gradientX1Units;
-    /// <summary>Unit for <see cref="GradientX1"/>. Parity surface, not yet rendered on raylib.</summary>
+    // Gradient endpoint / radius units (#3175, #7312): forwarded to the contained renderable, which
+    // resolves them to pixels the same way Skia does.
+
+    /// <summary>Unit for <see cref="GradientX1"/>, resolved against the width.</summary>
     public GeneralUnitType GradientX1Units
     {
-        get => _gradientX1Units;
-        set { _gradientX1Units = value; NotifyPropertyChanged(); }
+        get => ContainedLineRectangle.GradientX1Units;
+        set { ContainedLineRectangle.GradientX1Units = value; NotifyPropertyChanged(); }
     }
 
-    GeneralUnitType _gradientY1Units;
-    /// <inheritdoc cref="GradientX1Units"/>
+    /// <summary>Unit for <see cref="GradientY1"/>, resolved against the height.</summary>
     public GeneralUnitType GradientY1Units
     {
-        get => _gradientY1Units;
-        set { _gradientY1Units = value; NotifyPropertyChanged(); }
+        get => ContainedLineRectangle.GradientY1Units;
+        set { ContainedLineRectangle.GradientY1Units = value; NotifyPropertyChanged(); }
     }
 
-    GeneralUnitType _gradientX2Units;
-    /// <inheritdoc cref="GradientX1Units"/>
+    /// <summary>Unit for <see cref="GradientX2"/>, resolved against the width.</summary>
     public GeneralUnitType GradientX2Units
     {
-        get => _gradientX2Units;
-        set { _gradientX2Units = value; NotifyPropertyChanged(); }
+        get => ContainedLineRectangle.GradientX2Units;
+        set { ContainedLineRectangle.GradientX2Units = value; NotifyPropertyChanged(); }
     }
 
-    GeneralUnitType _gradientY2Units;
-    /// <inheritdoc cref="GradientX1Units"/>
+    /// <summary>Unit for <see cref="GradientY2"/>, resolved against the height.</summary>
     public GeneralUnitType GradientY2Units
     {
-        get => _gradientY2Units;
-        set { _gradientY2Units = value; NotifyPropertyChanged(); }
+        get => ContainedLineRectangle.GradientY2Units;
+        set { ContainedLineRectangle.GradientY2Units = value; NotifyPropertyChanged(); }
     }
 
-    DimensionUnitType _gradientInnerRadiusUnits;
-    /// <summary>Unit for <see cref="GradientInnerRadius"/>. Parity surface, not yet rendered on raylib.</summary>
+    /// <summary>Unit for <see cref="GradientInnerRadius"/>, resolved against the width.</summary>
     public DimensionUnitType GradientInnerRadiusUnits
     {
-        get => _gradientInnerRadiusUnits;
-        set { _gradientInnerRadiusUnits = value; NotifyPropertyChanged(); }
+        get => ContainedLineRectangle.GradientInnerRadiusUnits;
+        set { ContainedLineRectangle.GradientInnerRadiusUnits = value; NotifyPropertyChanged(); }
     }
 
-    DimensionUnitType _gradientOuterRadiusUnits;
-    /// <inheritdoc cref="GradientInnerRadiusUnits"/>
+    /// <summary>Unit for <see cref="GradientOuterRadius"/>, resolved against the width.</summary>
     public DimensionUnitType GradientOuterRadiusUnits
     {
-        get => _gradientOuterRadiusUnits;
-        set { _gradientOuterRadiusUnits = value; NotifyPropertyChanged(); }
+        get => ContainedLineRectangle.GradientOuterRadiusUnits;
+        set { ContainedLineRectangle.GradientOuterRadiusUnits = value; NotifyPropertyChanged(); }
+    }
+
+    // Per-channel gradient stops (#7311). A loaded .gumx sets Red1..Alpha1 / Red2..Alpha2 by name;
+    // without these properties the values fell to reflection on the renderable and were dropped, so
+    // both stops stayed white and the gradient rendered as a plain white fill. Red1.. set the start
+    // stop directly like Skia/MonoGame (FillColor/StrokeColor re-sync it when they change).
+
+    /// <summary>Red channel of the gradient start stop (<see cref="Color2"/> is the end stop).</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public int Red1
+    {
+        get => ContainedLineRectangle.Color1.R;
+        set { ContainedLineRectangle.Color1 = WithRed(ContainedLineRectangle.Color1, (byte)value); NotifyPropertyChanged(); }
+    }
+
+    /// <summary>Green channel of the gradient start stop. See <see cref="Red1"/>.</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public int Green1
+    {
+        get => ContainedLineRectangle.Color1.G;
+        set { ContainedLineRectangle.Color1 = WithGreen(ContainedLineRectangle.Color1, (byte)value); NotifyPropertyChanged(); }
+    }
+
+    /// <summary>Blue channel of the gradient start stop. See <see cref="Red1"/>.</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public int Blue1
+    {
+        get => ContainedLineRectangle.Color1.B;
+        set { ContainedLineRectangle.Color1 = WithBlue(ContainedLineRectangle.Color1, (byte)value); NotifyPropertyChanged(); }
+    }
+
+    /// <summary>Alpha channel of the gradient start stop. See <see cref="Red1"/>.</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public int Alpha1
+    {
+        get => ContainedLineRectangle.Color1.A;
+        set { ContainedLineRectangle.Color1 = WithAlpha(ContainedLineRectangle.Color1, (byte)value); NotifyPropertyChanged(); }
+    }
+
+    /// <summary>Red channel of the gradient end stop, <see cref="Color2"/>.</summary>
+    public int Red2
+    {
+        get => ContainedLineRectangle.Color2.R;
+        set { ContainedLineRectangle.Color2 = WithRed(ContainedLineRectangle.Color2, (byte)value); NotifyPropertyChanged(); }
+    }
+
+    /// <summary>Green channel of <see cref="Color2"/>.</summary>
+    public int Green2
+    {
+        get => ContainedLineRectangle.Color2.G;
+        set { ContainedLineRectangle.Color2 = WithGreen(ContainedLineRectangle.Color2, (byte)value); NotifyPropertyChanged(); }
+    }
+
+    /// <summary>Blue channel of <see cref="Color2"/>.</summary>
+    public int Blue2
+    {
+        get => ContainedLineRectangle.Color2.B;
+        set { ContainedLineRectangle.Color2 = WithBlue(ContainedLineRectangle.Color2, (byte)value); NotifyPropertyChanged(); }
+    }
+
+    /// <summary>Alpha channel of <see cref="Color2"/>.</summary>
+    public int Alpha2
+    {
+        get => ContainedLineRectangle.Color2.A;
+        set { ContainedLineRectangle.Color2 = WithAlpha(ContainedLineRectangle.Color2, (byte)value); NotifyPropertyChanged(); }
     }
 
     Gum.RenderingLibrary.Blend _blend = Gum.RenderingLibrary.Blend.Normal;

@@ -23,7 +23,7 @@ public enum CircleOrigin
 /// keeps working unchanged — when <see cref="FillColor"/> and <see cref="StrokeColor"/> are
 /// both <c>null</c> the render path collapses to the original behavior.
 /// </summary>
-public class LineCircle : InvisibleRenderable
+public class LineCircle : GradientShapeRenderable
 {
     /// <inheritdoc cref="CircleOrigin"/>
     public CircleOrigin CircleOrigin { get; set; }
@@ -99,36 +99,6 @@ public class LineCircle : InvisibleRenderable
 
     /// <summary>End color (linear: at the axis end; radial: at the outer radius).</summary>
     public Color Color2 { get; set; } = Color.White;
-
-    /// <summary>
-    /// X coordinate of the gradient axis start (linear) or radial gradient center, in pixels
-    /// relative to the circle's bounding-box top-left. Default 0.
-    /// </summary>
-    public float GradientX1 { get; set; }
-
-    /// <summary>Y coordinate of <see cref="GradientX1"/>, same coord space.</summary>
-    public float GradientY1 { get; set; }
-
-    /// <summary>
-    /// X coordinate of the gradient axis end (linear only — ignored for radial).
-    /// </summary>
-    public float GradientX2 { get; set; }
-
-    /// <summary>Y coordinate of <see cref="GradientX2"/>.</summary>
-    public float GradientY2 { get; set; }
-
-    /// <summary>
-    /// Inner radius for a radial gradient — at this radius the color is <see cref="Color1"/>.
-    /// Default 0 (solid inner color at the gradient center).
-    /// </summary>
-    public float GradientInnerRadius { get; set; }
-
-    /// <summary>
-    /// Outer radius for a radial gradient — at this radius the color is <see cref="Color2"/>.
-    /// When 0 (the default), the circle's <see cref="Radius"/> is used so a default-configured
-    /// radial gradient covers the whole disk.
-    /// </summary>
-    public float GradientOuterRadius { get; set; }
 
     /// <summary>
     /// Length in world-space pixels of each dash segment around the ring's circumference.
@@ -301,38 +271,6 @@ public class LineCircle : InvisibleRenderable
     public float EffectiveFillRadius => WillRenderStroke
         ? System.Math.Clamp(Radius - StrokeWidth + SeamOverlap, 0f, Radius)
         : Radius;
-
-    /// <summary>
-    /// Issue #2934 / #2956 — returns the linear gradient axis endpoints rotated around the
-    /// bbox center by <paramref name="rotationDegrees"/>. The disc itself is rotation-
-    /// symmetric so its position is unchanged by rotation, but the gradient axis is defined
-    /// in object-local bbox coords and must rotate with the shape — otherwise the gradient
-    /// pattern stays world-axis-aligned while the user rotates the circle. Mirrors the
-    /// approach Apos's <c>RenderableShapeBase.GetGradient</c> took in PR #2945. Rotation
-    /// convention matches <see cref="LineRectangle"/>'s R helper (visual CCW on screen, since
-    /// screen Y points down): <c>[cos sin; -sin cos]</c>.
-    /// </summary>
-    public (float x1, float y1, float x2, float y2) GetRotatedGradientEndpoints(float rotationDegrees)
-    {
-        if (rotationDegrees == 0f)
-        {
-            return (GradientX1, GradientY1, GradientX2, GradientY2);
-        }
-        float rotRad = rotationDegrees * System.MathF.PI / 180f;
-        float cos = System.MathF.Cos(rotRad);
-        float sin = System.MathF.Sin(rotRad);
-        float pivotX = Radius;
-        float pivotY = Radius;
-        float dx1 = GradientX1 - pivotX;
-        float dy1 = GradientY1 - pivotY;
-        float dx2 = GradientX2 - pivotX;
-        float dy2 = GradientY2 - pivotY;
-        return (
-            pivotX + dx1 * cos + dy1 * sin,
-            pivotY - dx1 * sin + dy1 * cos,
-            pivotX + dx2 * cos + dy2 * sin,
-            pivotY - dx2 * sin + dy2 * cos);
-    }
 
     /// <inheritdoc cref="LineCircle"/>
     public LineCircle() : this(null) { }
@@ -674,15 +612,17 @@ public class LineCircle : InvisibleRenderable
             float dx = localX - gx1;
             float dy = localY - gy1;
             float dist = System.MathF.Sqrt(dx * dx + dy * dy);
-            float outer = GradientOuterRadius > 0f ? GradientOuterRadius : Radius;
-            float span = outer - GradientInnerRadius;
+            float effectiveOuter = EffectiveGradientOuterRadius;
+            float effectiveInner = EffectiveGradientInnerRadius;
+            float outer = effectiveOuter > 0f ? effectiveOuter : Radius;
+            float span = outer - effectiveInner;
             if (span <= 0f)
             {
                 Rlgl.Color4ub(Color2.R, Color2.G, Color2.B, Color2.A);
                 Rlgl.Vertex2f(worldX, worldY);
                 return;
             }
-            t = (dist - GradientInnerRadius) / span;
+            t = (dist - effectiveInner) / span;
         }
         if (t < 0f) t = 0f;
         else if (t > 1f) t = 1f;
