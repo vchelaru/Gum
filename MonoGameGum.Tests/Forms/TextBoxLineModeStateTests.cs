@@ -155,10 +155,21 @@ public class TextBoxLineModeStateTests : BaseTestClass
     [Theory]
     [InlineData("Hazard")]
     [InlineData("FormsTemplate")]
-    public void ThemedTextBox_AcceptsReturn_TextSizedToContainer(string project)
+    public void ThemedTextBox_AcceptsReturnOnly_TextSizedToChildrenSoItDoesNotWrap(string project)
     {
         Loaded loaded = LoadThemed(project, "TextBox", Authored.Default);
         loaded.Box.AcceptsReturn = true;
+        TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToChildren);
+    }
+
+    [Theory]
+    [InlineData("Hazard")]
+    [InlineData("FormsTemplate")]
+    public void ThemedTextBox_AcceptsReturnAndWrap_TextSizedToContainer(string project)
+    {
+        Loaded loaded = LoadThemed(project, "TextBox", Authored.Default);
+        loaded.Box.AcceptsReturn = true;
+        loaded.Box.TextWrapping = Gum.Forms.TextWrapping.Wrap;
         TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToParent);
     }
 

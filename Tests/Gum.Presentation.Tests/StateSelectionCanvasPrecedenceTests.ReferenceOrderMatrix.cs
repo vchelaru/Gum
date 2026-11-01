@@ -306,9 +306,7 @@ public partial class StateSelectionCanvasPrecedenceTests
         }
 
         GraphicalUiElement? root = null;
-        System.Threading.Tasks.Task shown = System.Threading.Tasks.Task.Run(() => root = Show(chain, chain.DefaultState!));
-        shown.Wait(5000).ShouldBeTrue("RefreshAll froze (#6871)");
-        shown.GetAwaiter().GetResult();
+        Gum.Tests.Shared.FreezeGuard.Run(() => root = Show(chain, chain.DefaultState!), "RefreshAll froze (#6871)");
 
         (WidthOfChild(root!, "A"), WidthOfChild(root!, "B"), WidthOfChild(root!, "C")).ShouldBe((10f, 120f, 30f));
     }

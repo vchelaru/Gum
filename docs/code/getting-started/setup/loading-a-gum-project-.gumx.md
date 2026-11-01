@@ -17,37 +17,40 @@ You are not required to use the Gum tool or .gumj projects - you are free to do 
 
 ## Creating a Gum Project
 
-Before creating a Gum project, it is recommended that you already have a functional Game project. Next, you'll need to save your Gum project:
+Before creating a Gum project, it is recommended that you already have a functional Game project. Next, create the Gum project in the Gum tool:
 
 1. Open the Gum tool
-2. Select File->New Project
-3. Navigate to the desired location for your project. See below for recommended locations:
+2. Select File > New Project
+3. Enter a **Project name**, such as `GumProject`. Leave **Create C# project** unchecked, since you already have a game project.
+4. Set the **Location** to the folder that holds your game's content. Gum creates a new folder named after the project inside it. See below for recommended locations:
 
 {% tabs %}
 {% tab title="MonoGame/KNI/FNA" %}
-Create a folder inside of your game's Content folder, such as `Content/GumProject`, then save the file in the newly-created folder.
+Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
 {% endtab %}
 
 {% tab title="raylib" %}
-Create a folder inside of your game's resources folder, such as `resources/GumProject`, then save the file in the newly-created folder.
+Set the **Location** to your game's `resources` folder. The project is created in `resources/GumProject`.
 {% endtab %}
 
 {% tab title="Silk.NET" %}
-Create a folder inside of your game's Content folder, such as `Content/GumProject`, then save the file in the newly-created folder.
+Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
 {% endtab %}
 
 {% tab title="MonoGame/KNI Web" %}
-Web targets (KNI BlazorGL and other WebAssembly hosts) must serve the Gum project from `wwwroot`. Create a folder inside your web project's `wwwroot/Content` folder, such as `wwwroot/Content/GumProject`, then save the file in the newly-created folder.
+Web targets (KNI BlazorGL and other WebAssembly hosts) must serve the Gum project from `wwwroot`. Set the **Location** to your web project's `wwwroot/Content` folder. The project is created in `wwwroot/Content/GumProject`.
 
 Files placed anywhere else are not published as static web assets and will fail to load at runtime with a 404.
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
-Create a folder inside of your project's folder, such as `GumProject`, then save the file in the newly-created folder.
+Set the **Location** to your project's folder. The project is created in `GumProject`.
 {% endtab %}
 {% endtabs %}
 
 It's best to put your Gum project in a folder that is not shared with any other content that it stays organized from the rest of your content files. Remember, Gum creates lots of files.
+
+For every option in the dialog, see [Creating a Project](../../../gum-tool/setup/creating-a-project.md). To start without an existing game project, check **Create C# project** and Gum creates a runnable game with the Gum project inside it.
 
 ## Adding the Gum Project to your .csproj
 
