@@ -40,7 +40,7 @@ public static class NewProjectDialogText
     public const string RecommendedPackages = "Include recommended packages";
     public const string RecommendedPackagesDisabledNote = "This platform has no recommended packages.";
     public static string RecommendedPackagesNote(string packages) => $"Adds {packages} to the C# project, as the setup docs suggest.";
-    public static string RecommendedPackagesLinkedNote(string packages) => $"With local Gum source: links the projects for {packages} from the Gum source instead of adding packages. Remove any you do not need.";
+    public static string RecommendedPackagesLinkedNote(string packages) => $"With local Gum source: links the projects for {packages} from the Gum source instead of adding packages.";
     public const string FoldersHeading = "Folders";
     public const string FolderCreates = "Creates a new folder";
     public const string FolderUsesExisting = "Uses the existing folder";
