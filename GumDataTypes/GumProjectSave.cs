@@ -172,7 +172,8 @@ public class GumProjectSave
         /// (<see cref="Gum.DataTypes.Variables.VariableSave.MinimumGumxVersion"/>) can tell an older
         /// project apart from a newer one and skip injecting the variable into the older one, whose
         /// pinned runtime lacks the property. The NineSlice <c>CustomBorderScaleLeft/Top/Right/Bottom</c>
-        /// variables (#6983) share this slot because both landed before version 7 shipped.
+        /// variables (#6983) and the <c>RaiseChildrenEventsOutsideOfBounds</c> variable (#7412) share this
+        /// slot because version 7 has only shipped in prereleases so far.
         /// </summary>
         ShaderParametersExpansion = 7,
     }
