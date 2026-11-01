@@ -421,7 +421,12 @@ namespace GumRuntime
 
         // Elements whose build is in progress. An instance of one of these, met while building its own contents,
         // would recurse until the stack overflows, which cannot be caught (#7468).
-        private static readonly HashSet<ElementSave> _elementsBeingBuilt = new HashSet<ElementSave>();
+        // Per thread, so another thread's build never makes a legitimate instance look circular.
+        [ThreadStatic]
+        private static HashSet<ElementSave>? _elementsBeingBuiltOfThread;
+
+        private static HashSet<ElementSave> _elementsBeingBuilt =>
+            _elementsBeingBuiltOfThread ??= new HashSet<ElementSave>();
 
         /// <summary>
         /// True, after reporting it, when <paramref name="instanceElement"/> is already being built higher up the

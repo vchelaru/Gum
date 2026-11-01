@@ -111,4 +111,35 @@ public class CircularInstanceRuntimeTests : BaseTestClass
         depth.ShouldBe(100);
         _reports.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void ToGraphicalUiElement_BuiltFromSeveralThreads_NeverSkipsALegitimateInstance()
+    {
+        ComponentSave leaf = AddComponent("Leaf");
+        ComponentSave middle = AddComponent("Middle");
+        ComponentSave top = AddComponent("Top");
+        AddInstance(middle, "A", "Leaf");
+        AddInstance(middle, "B", "Leaf");
+        AddInstance(top, "M1", "Middle");
+        AddInstance(top, "M2", "Middle");
+
+        int expected = Count(top.ToGraphicalUiElement());
+        _reports.Clear();
+        int[] counts = new int[4 * 30];
+
+        System.Threading.Tasks.Parallel.For(0, counts.Length, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = 4 },
+            i => counts[i] = Count(top.ToGraphicalUiElement()));
+
+        counts.ShouldAllBe(count => count == expected);
+
+        static int Count(GraphicalUiElement element)
+        {
+            int total = 1;
+            foreach (GraphicalUiElement child in element.Children.Cast<GraphicalUiElement>())
+            {
+                total += Count(child);
+            }
+            return total;
+        }
+    }
 }
