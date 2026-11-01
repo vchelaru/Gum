@@ -266,6 +266,13 @@ internal static class BehaviorFormsPropertyApplier
             {
                 return value;
             }
+
+            // The tool saves an exposed variable under the inner name (PlaceholderTextInstance.Text), not the exposed one.
+            VariableSave? exposed = current.DefaultState?.Variables.FirstOrDefault(v => v.ExposedAsName == propertyName && v.Value != null);
+            if (exposed != null)
+            {
+                return exposed.Value;
+            }
             current = string.IsNullOrEmpty(current.BaseType) ? null : ObjectFinder.Self.GetBaseElement(current);
         }
         return null;

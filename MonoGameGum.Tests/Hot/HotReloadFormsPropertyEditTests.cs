@@ -236,4 +236,20 @@ public class HotReloadFormsPropertyEditTests : BaseTestClass
         box.MaxLettersToShow = 5;
         box.MaxLettersToShow.ShouldBe(5);
     }
+
+    private static GumProjectSave WithComponentPlaceholder(string text) =>
+        HotReloadTextBoxProjects.Build(componentEdits: state =>
+            state.Variables.Single(v => v.Name == "PlaceholderTextInstance.Text").Value = text);
+
+    [Fact]
+    public void ApplyDiff_ComponentPlaceholderTextEdited_ControlShowsNewPlaceholder()
+    {
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(WithComponentPlaceholder("First"));
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+        box.Placeholder.ShouldBe("First");
+
+        HotReloadTextBoxProjects.Reload(screen, WithComponentPlaceholder("Second"));
+
+        box.Placeholder.ShouldBe("Second");
+    }
 }
