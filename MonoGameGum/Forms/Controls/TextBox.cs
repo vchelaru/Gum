@@ -414,10 +414,11 @@ public class TextBox : TextBoxBase
         // An edge of the selection inside a CRLF or an emoji takes the whole character, so no half is left behind.
         var (start, lengthToRemove) = GetWholeCharacterSelection(text, selectionStart, selectionLength);
         selectionStart = start;
+        // Cleared before the text changes so the shortened text does not clamp (and report) it a second time.
+        SelectionLength = 0;
         // Use SetTextFromUi because this is user-initiated editing
         SetTextFromUi(text.Remove(selectionStart, lengthToRemove));
         CaretIndex = selectionStart;
-        SelectionLength = 0;
     }
 
     #endregion
@@ -462,6 +463,7 @@ public class TextBox : TextBoxBase
     {
 
         CaretIndex = System.Math.Min(CaretIndex, value?.Length ?? 0);
+        ClearSelectionAfterTextChange(value?.Length ?? 0);
 
         TextChanged?.Invoke(this, EventArgs.Empty);
 
