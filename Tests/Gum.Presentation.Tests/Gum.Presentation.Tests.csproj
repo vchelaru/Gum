@@ -62,6 +62,7 @@
     <Compile Include="..\..\Tool\GumPreview\ParentProcessWatcher.cs" Link="GumPreview\ParentProcessWatcher.cs" />
     <Compile Include="..\..\Tool\GumPreview\UnattendedPreviewRun.cs" Link="GumPreview\UnattendedPreviewRun.cs" />
     <Compile Include="..\..\Tool\GumPreview\SdlLibrary.cs" Link="GumPreview\SdlLibrary.cs" />
+    <Compile Include="..\..\Tool\GumPreview\UnattendedWindow.cs" Link="GumPreview\UnattendedWindow.cs" />
     <Compile Include="..\..\Tool\GumPreview\PreviewWindowTitle.cs" Link="GumPreview\PreviewWindowTitle.cs" />
     <Compile Include="..\..\Tool\GumPreview\BackingScale.cs" Link="GumPreview\BackingScale.cs" />
     <Compile Include="..\..\Tool\GumPreview\PreviewReloadPolicy.cs" Link="GumPreview\PreviewReloadPolicy.cs" />
