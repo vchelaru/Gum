@@ -371,10 +371,10 @@ public class NewProjectDialogViewModelTests
     }
 
     [Theory]
-    [InlineData("Program", "namespace")]
-    [InlineData("MonoGameGum", "MonoGameGum")]
-    [InlineData("GumCommon", "GumCommon")]
-    [InlineData("gumcommon", "gumcommon")]
+    [InlineData("Program", "is reserved")]
+    [InlineData("MonoGameGum", "is a Gum package name")]
+    [InlineData("GumCommon", "is a Gum package name")]
+    [InlineData("gumcommon", "is a Gum package name")]
     public void ACodeProjectNameTheServiceWouldRefuse_TurnsOkOffUnderTheNameBox(string name, string expectedText)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>

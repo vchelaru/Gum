@@ -236,7 +236,7 @@ namespace Gum.Forms.Controls
         NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "Program"), platform));
 
         validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
-        validation.Error.Message.ShouldContain("namespace");
+        validation.Error.Message.ShouldContain("is reserved");
     }
 
     [Fact]
