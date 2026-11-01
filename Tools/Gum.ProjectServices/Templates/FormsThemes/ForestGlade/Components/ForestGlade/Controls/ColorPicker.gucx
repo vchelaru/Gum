@@ -43,6 +43,9 @@
     <Variable Type="DimensionUnitType" Name="HueDisplay.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="HueIndicator.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="float" Name="HueIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
     </Variable>
@@ -153,6 +156,9 @@
     </Variable>
     <Variable Type="DimensionUnitType" Name="SaturationValueDisplay.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="SaturationValueIndicator.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="SaturationValueIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">11</Value>
