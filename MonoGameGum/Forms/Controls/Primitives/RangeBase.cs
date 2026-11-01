@@ -330,6 +330,8 @@ public abstract class RangeBase :
             if (thumb != null)
             {
                 thumb.IsDragHandle = true;
+                // An internal part of this control, never a tab stop of its own (#7422).
+                thumb.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
                 thumb.Push += HandleThumbPush;
 
                 // A visual assigned (or reassigned) while this control is disabled
