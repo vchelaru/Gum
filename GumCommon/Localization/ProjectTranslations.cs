@@ -43,12 +43,14 @@ public static class ProjectTranslations
 
         return key =>
         {
-            List<string> translations = new List<string>();
+            // Only a translation with a '[' can carry tags, and the same text in several languages (or the
+            // "(loc)" fallback of a non-key) is scanned once.
+            HashSet<string> translations = new HashSet<string>();
             // Index 0 is the string ID itself in a loaded database; it is filtered out below.
             for (int language = 0; language <= languageCount; language++)
             {
                 string translated = service.TranslateForLanguage(key, language);
-                if (translated != key)
+                if (translated != key && translated.Contains('['))
                 {
                     translations.Add(translated);
                 }

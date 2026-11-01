@@ -77,6 +77,21 @@ public class FontReferenceCollectorLocalizationTests : IDisposable
     }
 
     [Fact]
+    public void Lookup_returns_each_distinct_tagged_translation_once_and_nothing_for_a_non_key()
+    {
+        File.WriteAllText(Path.Combine(_directory, "strings.csv"),
+            "id,English,Spanish,French\nMENU_PLAY,[b]x[/b],[b]x[/b],plain\n");
+        GumProjectSave project = TestProjectBuilder.BuildProject();
+        project.FullFileName = Path.Combine(_directory, "Project.gumx");
+        project.LocalizationFiles.Add("strings.csv");
+
+        Func<string, IEnumerable<string>> lookup = ProjectTranslations.CreateLookup(project)!;
+
+        lookup("MENU_PLAY").ShouldBe(new[] { "[b]x[/b]" });
+        lookup("Not a key").ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Collect_ignores_a_text_that_is_not_a_key()
     {
         Dictionary<string, BmfcSave> fonts = Collect("Not a key", "strings.csv",

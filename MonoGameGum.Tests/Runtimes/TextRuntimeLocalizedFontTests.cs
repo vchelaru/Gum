@@ -13,9 +13,10 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-// #7398: FontReferenceCollector bakes the fonts of every translation of a localization key, so the union
-// over the languages must be what the renderer asks for as each language is selected. Gum.Bundle.Tests
-// pins the same list for the collector (FontReferenceCollectorLocalizationTests, state-tag test).
+// #7398: pins the runtime side only: the fonts the renderer asks for as each language of a localization key
+// is selected. This test does not run the collector; FontReferenceCollectorLocalizationTests
+// (Collect_bakes_the_fonts_of_a_state_tag_inside_a_translation) in Gum.Bundle.Tests asserts the identical
+// list for the same CSV, so a change on either side breaks one of the two.
 public class TextRuntimeLocalizedFontTests : BaseTestClass
 {
     private const string FontData =
@@ -41,7 +42,7 @@ char id=97 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
     }
 
     [Fact]
-    public void Text_WithLocalizationKey_RequestsTheFontsTheCollectorBakesForEveryLanguage()
+    public void Text_WithLocalizationKey_RequestsTheFontsPinnedForEveryLanguage()
     {
         IInMemoryFontCreator? previousCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
         ILocalizationService? previousLocalization = CustomSetPropertyOnRenderable.LocalizationService;
