@@ -291,7 +291,6 @@ public class NewCommandTests : BaseTestClass
     [Theory]
     [InlineData("monogame")]
     [InlineData("kni")]
-    [InlineData("kniskia")]
     [InlineData("raylib")]
     [InlineData("stride")]
     [InlineData("silknet")]
@@ -362,24 +361,30 @@ public class NewCommandTests : BaseTestClass
     }
 
     [Fact]
-    public void New_WithKniSkiaPlatform_ShouldCreateKniGameDrawingGumThroughSkia()
+    public void New_WithKniSkiaPlatformAndSourceLinked_ShouldCreateASlnxAndLinkTheKniSkiaRuntime()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "kniskia", "--source-linked", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
+        csproj.ShouldContain("KniSkiaGum.csproj");
+        csproj.ShouldNotContain("PackageReference Include=\"Gum.KniSkia\"");
+        File.Exists(Path.Combine(projectDir, "MyGame.slnx")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void New_WithKniSkiaPlatformWithoutSourceLinked_ShouldReturnExitCode2NamingTheFix()
     {
         string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "kniskia", "--no-restore");
 
-        result.ExitCode.ShouldBe(0, result.StandardError);
-        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
-        csproj.ShouldContain("<PackageReference Include=\"Gum.KniSkia\"");
-        csproj.ShouldContain("<PackageReference Include=\"SkiaGameRendering.Kni.DesktopGL\"");
-        csproj.ShouldContain("<PackageReference Include=\"nkast.Kni.Platform.SDL2.GL\"");
-        csproj.ShouldNotContain("Gum.KNI\"");
-        File.Exists(Path.Combine(projectDir, "Program.cs")).ShouldBeTrue();
-        string game = File.ReadAllText(Path.Combine(projectDir, "Game1.cs"));
-        game.ShouldContain("namespace MyGame;");
-        game.ShouldContain("GumUI.Initialize(this, \"Content/GumProject/GumProject.gumj\")");
-        game.ShouldContain("SkiaRenderTarget2D");
-        game.ShouldContain("GumUI.Draw(_canvas.Canvas)");
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--source-linked");
+        Directory.Exists(projectDir).ShouldBeFalse();
     }
 
     [Fact]

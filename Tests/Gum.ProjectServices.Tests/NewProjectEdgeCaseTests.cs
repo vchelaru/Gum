@@ -54,7 +54,12 @@ public class NewProjectEdgeCaseTests : BaseTestClass
     }
 
     private static NewProjectRequest Request(string path, string? platform = null) =>
-        new NewProjectRequest { Path = path, Platform = platform, Template = "empty", Restore = false };
+        new NewProjectRequest
+        {
+            Path = path, Platform = platform, Template = "empty", Restore = false,
+            // KNI with Skia is not on NuGet, so it is always source-linked.
+            SourceLinked = platform == "kniskia"
+        };
 
     private static List<string> RelativeFiles(string root) =>
         Directory.GetFiles(root, "*", SearchOption.AllDirectories)

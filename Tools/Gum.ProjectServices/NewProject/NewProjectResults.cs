@@ -13,6 +13,7 @@ public enum NewProjectErrorKind
     UnknownPlatform,
     PlatformPathIsProjectFile,
     GumSourceNotFound,
+    KniSkiaNeedsSourceLinked,
     ProjectAlreadyExists,
     InvalidProjectName,
     RecommendedPackagesNeedPlatform,

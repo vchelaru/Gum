@@ -244,6 +244,12 @@ public class NewProjectService : INewProjectService
                     $"Unknown platform '{request.Platform}'. Valid values are: {NewProjectPlatforms.ValidNames}.");
             }
 
+            if (parsed == HostPlatform.KniSkia && !request.SourceLinked)
+            {
+                return new NewProjectError(NewProjectErrorKind.KniSkiaNeedsSourceLinked,
+                    "KNI with Skia (kniskia) is not published to NuGet, so it has to be linked from source: pass --source-linked (needs a Gum checkout).");
+            }
+
             platform = parsed;
         }
 
