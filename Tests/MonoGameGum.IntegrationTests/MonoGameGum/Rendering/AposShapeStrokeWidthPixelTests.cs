@@ -53,7 +53,31 @@ public class AposShapeStrokeWidthPixelTests : BaseTestClass
         measured.ShouldBe(stroke, tolerance: 0.7f, $"{kind} stroke {stroke} radius {cornerRadius} size {size} offset {offset}");
     }
 
-    private static float MeasureRing(StrokeShapeKind kind, float stroke, float cornerRadius, float size, float offset)
+    // #7350: Skia draws a stroke under 1 px as fractional coverage (a 0.5 px stroke is half intensity over
+    // 1 px). Apos cannot draw thinner than its 1 px hairline, so the stroke alpha is scaled by the width.
+    [Theory]
+    [InlineData(StrokeShapeKind.Line, false, 0.25f)]
+    [InlineData(StrokeShapeKind.Line, false, 0.5f)]
+    [InlineData(StrokeShapeKind.Line, true, 0.5f)]
+    [InlineData(StrokeShapeKind.Line, false, 0.75f)]
+    [InlineData(StrokeShapeKind.Rectangle, false, 0.25f)]
+    [InlineData(StrokeShapeKind.Rectangle, false, 0.5f)]
+    [InlineData(StrokeShapeKind.Rectangle, false, 0.75f)]
+    [InlineData(StrokeShapeKind.RoundedRectangle, false, 0.25f)]
+    [InlineData(StrokeShapeKind.RoundedRectangle, false, 0.5f)]
+    [InlineData(StrokeShapeKind.RoundedRectangle, false, 0.75f)]
+    [InlineData(StrokeShapeKind.Circle, false, 0.25f)]
+    [InlineData(StrokeShapeKind.Circle, false, 0.5f)]
+    [InlineData(StrokeShapeKind.Circle, false, 0.75f)]
+    [InlineData(StrokeShapeKind.ColoredCircle, false, 0.5f)]
+    public void SubPixelStroke_CoverageIsAuthoredWidth(StrokeShapeKind kind, bool roundedLine, float stroke)
+    {
+        float measured = MeasureRing(kind, stroke, 0f, 60f, 0f, roundedLine);
+
+        measured.ShouldBe(stroke, tolerance: 0.08f, $"{kind} rounded {roundedLine} stroke {stroke}");
+    }
+
+    private static float MeasureRing(StrokeShapeKind kind, float stroke, float cornerRadius, float size, float offset, bool roundedLine = false)
     {
         using ShapeGameLease game = new ShapeGameLease();
         GraphicsDevice gd = game.GraphicsDevice;
@@ -70,7 +94,7 @@ public class AposShapeStrokeWidthPixelTests : BaseTestClass
         switch (kind)
         {
             case StrokeShapeKind.Line:
-                shape = new LineRuntime { StrokeWidth = stroke, IsRounded = false, Color = white };
+                shape = new LineRuntime { StrokeWidth = stroke, IsRounded = roundedLine, Color = white };
                 break;
             case StrokeShapeKind.Rectangle:
                 shape = new RectangleRuntime { IsFilled = false, StrokeWidth = stroke, CornerRadius = cornerRadius, StrokeColor = white };

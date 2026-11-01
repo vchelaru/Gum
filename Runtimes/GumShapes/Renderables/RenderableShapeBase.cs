@@ -41,6 +41,30 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// PreRender each frame.
     /// </summary>
     public bool IsAntialiased { get; set; } = true;
+
+    /// <summary>
+    /// Fraction (0 to 1) of the stroke color's alpha that is drawn. The runtime pushes a value below 1
+    /// in PreRender for a stroke thinner than the 1 px anti-aliasing hairline, so the hairline has the
+    /// authored width as coverage, as Skia's fractional stroke does (issue #7350). Applied to the stroke
+    /// color only (<see cref="GetStrokePaint"/>, <c>Line</c>), never to the fill or a shadow pass.
+    /// </summary>
+    public float StrokeAlphaScale { get; set; } = 1f;
+
+    /// <summary>The color with its alpha multiplied by <see cref="StrokeAlphaScale"/>.</summary>
+    protected Color ScaleStrokeAlpha(Color color)
+    {
+        return StrokeAlphaScale >= 1f
+            ? color
+            : new Color(color.R, color.G, color.B, (byte)Math.Round(color.A * Math.Max(0f, StrokeAlphaScale)));
+    }
+
+    /// <summary>The gradient with both stop colors' alpha multiplied by <see cref="StrokeAlphaScale"/>.</summary>
+    protected Gradient ScaleStrokeAlpha(Gradient gradient)
+    {
+        gradient.AC = ScaleStrokeAlpha(gradient.AC);
+        gradient.BC = ScaleStrokeAlpha(gradient.BC);
+        return gradient;
+    }
     public int Alpha
     {
         get => Color.A;
@@ -1041,7 +1065,8 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     protected StrokePaint GetStrokePaint(float absoluteLeft, float absoluteTop, float rotationRadians, Color? forcedColor, RenderableShapeBase? mergedFill)
     {
         RenderableShapeBase? fill = forcedColor == null ? mergedFill : null;
-        Color border = forcedColor ?? Color;
+        // A shadow pass (forcedColor) keeps its own color; the authored stroke's thin-width alpha is not its.
+        Color border = forcedColor ?? ScaleStrokeAlpha(Color);
         Color interior = fill != null ? fill.Color : new Color(border.R, border.G, border.B, (byte)0);
         bool borderIsGradient = ShouldPaintGradient(forcedColor);
         bool interiorIsGradient = fill != null && fill.ShouldPaintGradient(null);
@@ -1052,7 +1077,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         }
 
         Gradient borderGradient = borderIsGradient
-            ? GetGradient(absoluteLeft, absoluteTop, rotationRadians)
+            ? ScaleStrokeAlpha(GetGradient(absoluteLeft, absoluteTop, rotationRadians))
             : SolidGradient(border);
         Gradient interiorGradient;
         if (fill != null)
