@@ -4,7 +4,7 @@
   <State>
     <Name>Default</Name>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">6</Value>
+      <Value xsi:type="xsd:float">4</Value>
     </Variable>
     <Variable Type="float" Name="Background.CustomRadiusBottomLeft" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
@@ -836,7 +836,7 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
         <string>FillColor = Components/ForestGlade/Styles.WindowBody.FillColor</string>
-        <string>StrokeColor = Components/ForestGlade/Styles.Bark.FillColor</string>
+        <string>StrokeColor = Components/ForestGlade/Styles.SunPale.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">

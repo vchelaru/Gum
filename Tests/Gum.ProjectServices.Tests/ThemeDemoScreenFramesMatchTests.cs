@@ -11,7 +11,7 @@ namespace Gum.ProjectServices.Tests;
 /// The two framing rectangles on every theme's DemoScreenGum (Background and Background1) must
 /// use the same stroke so the screen reads as one design (#7423).
 /// </summary>
-public class ThemeDemoScreenFrameStrokeTests
+public class ThemeDemoScreenFramesMatchTests
 {
     private static readonly string[] StrokeProperties =
         { "StrokeRed", "StrokeGreen", "StrokeBlue", "StrokeWidth" };
@@ -39,6 +39,50 @@ public class ThemeDemoScreenFrameStrokeTests
             values.TryGetValue("Background1." + property, out string? second);
             second.ShouldBe(first, $"{relativePath}: {property} differs between Background and Background1");
         }
+    }
+
+    [Theory]
+    [MemberData(nameof(DemoScreens))]
+    public void DemoScreen_BothFrames_ShouldUseSameCornerRadiusAndFill(string relativePath)
+    {
+        Dictionary<string, string> values = LoadValues(relativePath);
+
+        foreach (string property in new[] { "CornerRadius", "FillRed", "FillGreen", "FillBlue", "IsFilled" })
+        {
+            values.TryGetValue("Background." + property, out string? first);
+            values.TryGetValue("Background1." + property, out string? second);
+            second.ShouldBe(first, $"{relativePath}: {property} differs between Background and Background1");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(DemoScreens))]
+    public void DemoScreen_BothFrames_ShouldReferenceSameStrokeAndFillStyles(string relativePath)
+    {
+        // The VariableReferences override the literal color values, so they decide what is drawn.
+        string path = Path.Combine(FindRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", relativePath);
+        XDocument doc = XDocument.Load(path);
+
+        string? Reference(string instance, string prefix) => doc.Descendants("VariableList")
+            .Where(l => l.Element("Name")?.Value == instance + ".VariableReferences")
+            .SelectMany(l => l.Descendants("string"))
+            .Select(s => s.Value)
+            .FirstOrDefault(s => s.StartsWith(prefix));
+
+        foreach (string prefix in new[] { "StrokeColor", "FillColor" })
+        {
+            Reference("Background1", prefix).ShouldBe(Reference("Background", prefix),
+                $"{relativePath}: {prefix} reference differs between Background and Background1");
+        }
+    }
+
+    private static Dictionary<string, string> LoadValues(string relativePath)
+    {
+        string path = Path.Combine(FindRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", relativePath);
+        return XDocument.Load(path)
+            .Descendants("Variable")
+            .Select(v => (Name: v.Element("Name")?.Value ?? (string?)v.Attribute("Name") ?? "", Value: v.Element("Value")?.Value ?? ""))
+            .ToDictionary(x => x.Name, x => x.Value);
     }
 
     private static string FindRepoRoot()
