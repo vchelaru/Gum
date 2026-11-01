@@ -375,6 +375,42 @@
     <Variable Type="PositionUnitType" Name="LabelInstance1.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">1280 x 720</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance1.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">1920 x 1080</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance2.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">2560 x 1440</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance3.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Easy</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance4.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Normal</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance4.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance5.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Hard</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance5.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
     <Variable Type="ChildrenLayout" Name="MarginContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -812,5 +848,11 @@
   <Instance Name="DialogBoxInstance" BaseType="DarkPro/Controls/DialogBox" />
   <Instance Name="WindowStandardInstance" BaseType="DarkPro/Controls/Window" />
   <Instance Name="LabelInstance1" BaseType="DarkPro/Controls/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="DarkPro/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="DarkPro/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="DarkPro/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="DarkPro/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="DarkPro/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="DarkPro/Controls/ListBoxItem" />
   <Behaviors />
 </ScreenSave>
