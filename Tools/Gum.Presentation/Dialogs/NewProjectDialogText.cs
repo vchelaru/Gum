@@ -81,7 +81,7 @@ public static class NewProjectDialogText
     public const string NameTooLong = "The name is too long.";
     public const string InvalidLocation = "The location has characters a path can't have.";
     public const string LocationNotAbsolute = "The location must be a full path.";
-    public const string NeedsLocalSource = "Use local Gum source needs the Gum source code on this computer, and none was found.";
+    public const string NeedsLocalSource = "Local Gum source needs the Gum source code on this computer, and none was found.";
 
     /// <summary>The warning's hover tip.</summary>
     public static string WarningTip(bool hasGame1, string targetFolder) =>

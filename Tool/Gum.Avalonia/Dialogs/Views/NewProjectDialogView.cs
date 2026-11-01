@@ -362,22 +362,35 @@ public sealed class NewProjectDialogView : StackPanel
     {
         StackPanel group = new StackPanel { Margin = new Thickness(0, 8, 0, 0) };
         group.Children.Add(FieldLabel(NewProjectDialogText.PackageChannel, NewProjectDialogText.PackageChannelTip));
-        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelStable, nameof(NewProjectDialogViewModel.IsStableChannelChecked), nameof(NewProjectDialogViewModel.IsStableChannelEnabled)));
-        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelPreview, nameof(NewProjectDialogViewModel.IsPreviewChannelChecked), nameof(NewProjectDialogViewModel.IsPreviewChannelEnabled)));
+        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelStable, null, null, nameof(NewProjectDialogViewModel.IsStableChannelChecked), nameof(NewProjectDialogViewModel.IsStableChannelEnabled)));
 
-        TextBlock warning = new TextBlock { Text = NewProjectDialogText.PreviewWarning, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) };
-        warning.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsPreviewWarningVisible)));
+        TextBlock warning = new TextBlock { Text = NewProjectDialogText.PreviewWarning, TextWrapping = TextWrapping.Wrap };
         warning.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
-        group.Children.Add(warning);
+        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelPreview, warning, nameof(NewProjectDialogViewModel.IsPreviewWarningVisible), nameof(NewProjectDialogViewModel.IsPreviewChannelChecked), nameof(NewProjectDialogViewModel.IsPreviewChannelEnabled)));
 
-        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelLocalSource, nameof(NewProjectDialogViewModel.IsLocalSourceChannelChecked), nameof(NewProjectDialogViewModel.IsSourceLinkedEnabled)));
-        group.Children.Add(Secondary(new TextBlock { Text = NewProjectDialogText.UseLocalSourceNote, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) }));
+        TextBlock localNote = Secondary(new TextBlock { Text = NewProjectDialogText.UseLocalSourceNote, TextWrapping = TextWrapping.Wrap });
+        group.Children.Add(ChannelRadio(NewProjectDialogText.ChannelLocalSource, localNote, null, nameof(NewProjectDialogViewModel.IsLocalSourceChannelChecked), nameof(NewProjectDialogViewModel.IsSourceLinkedEnabled)));
         return group;
     }
 
-    private static RadioButton ChannelRadio(string label, string checkedProperty, string enabledProperty)
+    // The note is part of the radio's content, so it lines up under the label at any glyph size and clearly belongs to this radio.
+    private static RadioButton ChannelRadio(string label, TextBlock? note, string? noteVisibleProperty, string checkedProperty, string enabledProperty)
     {
-        RadioButton radio = new RadioButton { Content = label, GroupName = "PackageChannel" };
+        object content = label;
+        if (note != null)
+        {
+            note.Margin = new Thickness(0, 2, 0, 2);
+            if (noteVisibleProperty != null)
+            {
+                note.Bind(IsVisibleProperty, new Binding(noteVisibleProperty));
+            }
+            StackPanel stack = new StackPanel();
+            stack.Children.Add(new TextBlock { Text = label });
+            stack.Children.Add(note);
+            content = stack;
+        }
+
+        RadioButton radio = new RadioButton { Content = content, GroupName = "PackageChannel" };
         radio.Bind(ToggleButton.IsCheckedProperty, new Binding(checkedProperty) { Mode = BindingMode.TwoWay });
         radio.Bind(IsEnabledProperty, new Binding(enabledProperty));
         return radio;

@@ -224,7 +224,7 @@ public class NewProjectDialogViewModelTests
             vm.PlatformName = "kniskia";
         });
 
-        viewModel.ValidationMessage.ShouldBe("Use local Gum source needs the Gum source code on this computer, and none was found.");
+        viewModel.ValidationMessage.ShouldBe("Local Gum source needs the Gum source code on this computer, and none was found.");
         viewModel.CanExecuteAffirmative().ShouldBeFalse();
     }
 
