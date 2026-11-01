@@ -116,10 +116,30 @@ public class ElementSaveDisplayerCompositeReferenceTests : BaseTestClass
         }
 
         List<VariableGridEntry>? members = null;
-        System.Threading.Tasks.Task built = System.Threading.Tasks.Task.Run(() =>
-            members = _displayer.GetCategories(_screen, first, _screenDefaultState, null).SelectMany(category => category.Members).ToList());
-        built.Wait(5000).ShouldBeTrue("the Variables grid froze on a circular reference (#6871)");
-        built.GetAwaiter().GetResult();
+        // A dedicated thread, not Task.Run: a starved thread pool (earlier tests blocking pool threads)
+        // would delay the start and look like a freeze. Whether the work started tells the two apart.
+        bool started = false;
+        Exception? failure = null;
+        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        System.Threading.Thread worker = new System.Threading.Thread(() =>
+        {
+            started = true;
+            try
+            {
+                members = _displayer.GetCategories(_screen, first, _screenDefaultState, null).SelectMany(category => category.Members).ToList();
+            }
+            catch (Exception e)
+            {
+                failure = e;
+            }
+        });
+        worker.IsBackground = true;
+        worker.Start();
+        bool finished = worker.Join(30000);
+        finished.ShouldBeTrue(
+            $"the Variables grid froze on a circular reference (#6871): work started={started}, elapsed={stopwatch.ElapsedMilliseconds} ms, " +
+            $"thread pool threads={System.Threading.ThreadPool.ThreadCount}, pending work items={System.Threading.ThreadPool.PendingWorkItemCount}");
+        failure.ShouldBeNull();
 
         members!.First(member => member.RootVariableName == "Width").DetailText.ShouldBe("Set by B.Width + 1");
     }

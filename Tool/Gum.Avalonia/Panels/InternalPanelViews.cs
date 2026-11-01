@@ -222,22 +222,31 @@ public sealed class AlignmentView : Grid
         margin.Bind(TextBox.TextProperty, new Binding(nameof(AlignmentViewModel.DockMarginText)) { Mode = BindingMode.TwoWay });
         Place(margin, 1);
 
-        AddLabel("Anchor", 2);
+        AddLabel("Anchor", 2, "position only");
         Place(CreateAnchorButtons(), 2);
         Place(CreateMarginNote(), 3);
 
-        AddLabel("Dock", 4);
+        AddLabel("Dock", 4, "position and size");
         Place(CreateDockButtons(), 4);
         Place(CreateMarginNote(), 5);
     }
 
     private AlignmentViewModel? ViewModel => DataContext as AlignmentViewModel;
 
-    private void AddLabel(string text, int row)
+    private void AddLabel(string text, int row, string? subtext = null)
     {
-        TextBlock label = new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 8, 0) };
-        SetRow(label, row);
-        Children.Add(label);
+        StackPanel cell = new StackPanel { VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(4, 4, 8, 0) };
+        cell.Children.Add(new TextBlock { Text = text });
+        if (subtext != null)
+        {
+            // Secondary text, one step smaller than the label; follows the zoom through the base font size.
+            TextBlock note = new TextBlock { Text = subtext };
+            note.Bind(TextBlock.FontSizeProperty, note.GetResourceObservable("ControlContentThemeFontSize", size => (object)((size is double baseSize ? baseSize : 12d) * 0.85)));
+            note.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground.Muted");
+            cell.Children.Add(note);
+        }
+        SetRow(cell, row);
+        Children.Add(cell);
     }
 
     private void Place(Control control, int row)
