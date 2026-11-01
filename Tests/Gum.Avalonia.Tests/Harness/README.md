@@ -39,6 +39,8 @@ public class ManagePluginsScreenshotTests
 }
 ```
 
+Render the real window, or the real panel inside the real theme resources and background, never a bare control in an isolated window: the colors then differ from the tool (a harness window has no panel surface) and look like a regression. `Screenshots/StandardsPaletteScreenshotTests.cs` shows the pattern: empty the harness window, show the real `MainWindow` with its canvas hidden, and loop over both themes in one test.
+
 Take every screenshot at 100%, zoomed in and zoomed out. The tool zooms by changing the base font size (default 12), so anything sized in fixed pixels (an icon, a margin) does not follow the text and an alignment that is right at 100% can break at 9 or 24. Call `PrScreenshot.SaveWindowAtZoomLevels(window, name)` instead of `SaveWindow`: it saves `name-zoom-9.png`, `-12`, `-16` and `-24` (`PrScreenshot.ZoomLevels`) and restores the zoom; `ReferenceSubtextScreenshotTests` is the example. Look at the smallest and largest. The `--exit-after --screenshot` launch shows only the user's current zoom.
 
 `PrScreenshot.Run` skips the test unless `GUM_SCREENSHOT_DIR` names an output folder, so CI and

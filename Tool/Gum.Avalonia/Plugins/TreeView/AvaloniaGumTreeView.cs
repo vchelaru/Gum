@@ -13,6 +13,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Reactive;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
@@ -144,6 +145,9 @@ public sealed class AvaloniaGumTreeView : UserControl
 
     /// <summary>Edge length of each row's icon.</summary>
     public double IconSize { get; set; }
+
+    /// <summary>The horizontal space per tree level at the current base font size.</summary>
+    internal double IndentPerLevel => TreeRowView.Indent * AvaloniaTreeIcons.GetZoomScale(this);
 
     /// <summary>The node whose row is under the pointer, or null.</summary>
     public GumTreeNode? NodeUnderPointer { get; private set; }
@@ -750,7 +754,7 @@ public sealed class AvaloniaGumTreeView : UserControl
         double width = Math.Max(_scrollViewer.Viewport.Width, _scrollViewer.Extent.Width);
         double height = Math.Max(1, row.Height);
         const double lineThickness = 2;
-        double indent = TreeDropLogic.GetIndicatorIndent(row.Node, kind, TreeRowView.Indent);
+        double indent = TreeDropLogic.GetIndicatorIndent(row.Node, kind, IndentPerLevel);
 
         switch (kind)
         {
@@ -796,7 +800,7 @@ public sealed class AvaloniaGumTreeView : UserControl
             return;
         }
 
-        double indent = parentNode.Level * TreeRowView.Indent;
+        double indent = parentNode.Level * IndentPerLevel;
         global::Avalonia.Controls.Canvas.SetLeft(_dropParentHighlight, -_scrollViewer.Offset.X + indent);
         global::Avalonia.Controls.Canvas.SetTop(_dropParentHighlight, parentRow.Top);
         _dropParentHighlight.Width = Math.Max(0, width - indent);
@@ -837,7 +841,7 @@ internal sealed record TreeRow(GumTreeNode Node, int Level);
 /// </summary>
 internal sealed class TreeRowView : Border
 {
-    /// <summary>Horizontal space per tree level.</summary>
+    /// <summary>Horizontal space per tree level at the default base font size.</summary>
     internal const double Indent = 16;
 
     private static readonly IBrush FallbackFill = new SolidColorBrush(Color.FromArgb(0x26, 0x3e, 0x9e, 0xce));
@@ -852,6 +856,7 @@ internal sealed class TreeRowView : Border
     private readonly TextBlock _text;
     private GumTreeNode? _node;
     private int _iconIndex;
+    private IDisposable? _zoomSubscription;
 
     public TreeRowView(AvaloniaGumTreeView owner)
     {
@@ -949,6 +954,8 @@ internal sealed class TreeRowView : Border
     {
         base.OnAttachedToVisualTree(e);
         AvaloniaTreeIcons.ThemeChanged += HandleThemeChanged;
+        // The indent follows the base font size, so it is redrawn when that changes.
+        _zoomSubscription = this.GetResourceObservable(FrbThemeResources.BaseFontSizeKey).Subscribe(new AnonymousObserver<object?>(_ => Refresh()));
         Attach(Row?.Node);
     }
 
@@ -957,6 +964,8 @@ internal sealed class TreeRowView : Border
     {
         base.OnDetachedFromVisualTree(e);
         AvaloniaTreeIcons.ThemeChanged -= HandleThemeChanged;
+        _zoomSubscription?.Dispose();
+        _zoomSubscription = null;
         Attach(null);
     }
 
@@ -995,7 +1004,7 @@ internal sealed class TreeRowView : Border
             return;
         }
 
-        _indent.Width = Row.Level * Indent;
+        _indent.Width = Row.Level * _owner.IndentPerLevel;
         _expanderIcon.IsVisible = _node.HasChildren;
         _expanderIcon.Icon = _node.IsExpanded ? FluentIcons.Common.Icon.ChevronDown : FluentIcons.Common.Icon.ChevronRight;
         _text.Text = _node.Text;
