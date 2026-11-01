@@ -10,6 +10,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Themes;
 using Gum.Services.Dialogs;
 
@@ -202,6 +203,7 @@ public sealed class DialogWindow : Window
         };
         caption.Bind(TextBlock.TextProperty, this.GetObservable(TitleProperty));
         Border captionBar = new Border { Height = 24, Background = Brushes.Transparent, Child = caption };
+        AvaloniaTreeIcons.FollowBaseFontSize(captionBar, Layoutable.HeightProperty, 24);
         captionBar.PointerPressed += (_, e) =>
         {
             if (e.GetCurrentPoint(captionBar).Properties.IsLeftButtonPressed)
@@ -318,6 +320,7 @@ public sealed class DialogWindow : Window
     private static Button CreateFooterButton(string name, string textPath, string commandPath)
     {
         Button button = new Button { Name = name, MinWidth = 64, Padding = new Thickness(16, 4), Margin = new Thickness(5, 0, 0, 0) };
+        AvaloniaTreeIcons.FollowBaseFontSize(button, Layoutable.MinWidthProperty, 64);
         button.Bind(ContentProperty, new Binding(textPath));
         button.Bind(Button.CommandProperty, new Binding(commandPath));
         return button;

@@ -23,6 +23,8 @@ public sealed class DataUiCategoryView : StackPanel
     /// <summary>The class on the rows' items control, which the grid's alternating-row styles target.</summary>
     public const string RowsClass = "dataUiRows";
 
+    private const double ChevronSizeAtDefaultText = 9;
+    private const double DefaultTextSize = 12;
     private static readonly Geometry ChevronGeometry = Geometry.Parse("M 0,0 L 4,4 L 0,8");
 
     // A null grid brush leaves the header text on its inherited brush rather than hiding it.
@@ -58,14 +60,16 @@ public sealed class DataUiCategoryView : StackPanel
         {
             Data = ChevronGeometry,
             StrokeThickness = 1.5,
-            Width = 9,
-            Height = 9,
             Stretch = Stretch.Uniform,
             Margin = new Thickness(6, 0, 8, 0),
             VerticalAlignment = VerticalAlignment.Center,
             RenderTransform = rotation,
         };
         chevron.Bind(Shape.StrokeProperty, name.GetObservable(TextBlock.ForegroundProperty));
+        // Sized off the header text, so it follows the tool's zoom (9 px beside the default 12 px text).
+        Binding chevronSize = new Binding(nameof(TextBlock.FontSize)) { Source = name, Converter = new FuncValueConverter<double, double>(size => size * ChevronSizeAtDefaultText / DefaultTextSize) };
+        chevron.Bind(Layoutable.WidthProperty, chevronSize);
+        chevron.Bind(Layoutable.HeightProperty, chevronSize);
 
         Grid headerRow = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
         headerRow.Children.Add(chevron);
