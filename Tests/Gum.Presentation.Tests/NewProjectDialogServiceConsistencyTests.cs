@@ -103,7 +103,9 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
             ResolvedNewProject resolved = _service.LastResolved.ShouldNotBeNull(label);
             (resolved.Platform != null).ShouldBe(code, label);
             (resolved.GumSourceDirectory != null).ShouldBe(code && viewModel.SourceLinked, label);
-            (resolved.RecommendedPackages.Count > 0).ShouldBe(viewModel.AddsRecommendedPackages, label);
+            // Source-linked links the add-ons as projects instead of adding packages.
+            (resolved.RecommendedPackages.Count > 0).ShouldBe(viewModel.AddsRecommendedPackages && !viewModel.SourceLinked, label);
+            (resolved.LinkedAddOns.Count > 0).ShouldBe(viewModel.AddsRecommendedPackages && viewModel.SourceLinked, label);
             resolved.GenerateCode.ShouldBe(code && viewModel.GeneratesCode, label);
             resolved.IncludeFormsTemplate.ShouldBe(forms, label);
             if (viewModel.AddsRecommendedPackages)
@@ -122,7 +124,7 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
     }
 
     [Fact]
-    public void SourceLinked_WithPackagesTicked_ShowsTheBoxUntickedAndDisabled_WithTheReason()
+    public async Task SourceLinked_WithPackagesTicked_KeepsTheBoxTickedAndEnabled_AndLinksTheAddOns()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -133,11 +135,16 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
         });
 
         viewModel.SourceLinked.ShouldBeTrue();
-        viewModel.IsRecommendedPackagesEnabled.ShouldBeFalse();
-        viewModel.RecommendedPackagesChecked.ShouldBeFalse();
-        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesDisabledNote);
+        viewModel.IsRecommendedPackagesEnabled.ShouldBeTrue();
+        viewModel.RecommendedPackagesChecked.ShouldBeTrue();
         viewModel.CommandLine.ShouldContain("--source-linked");
-        viewModel.CommandLine.ShouldNotContain("dotnet add");
+        viewModel.CommandLine.ShouldNotContain(" package ");
+
+        await viewModel.RunCreationAsync();
+
+        ResolvedNewProject resolved = _service.LastResolved.ShouldNotBeNull();
+        resolved.LinkedAddOns.Count.ShouldBeGreaterThan(0);
+        resolved.RecommendedPackages.Count.ShouldBe(0);
     }
 
     [Fact]
