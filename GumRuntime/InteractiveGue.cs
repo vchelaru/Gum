@@ -182,8 +182,6 @@ public partial class InteractiveGue : GraphicalUiElement
             if (_raiseChildrenEventsOutsideOfBounds != value)
             {
                 _raiseChildrenEventsOutsideOfBounds = value;
-                // The cursor walk may skip subtrees it judged to be out of reach, so it has to look again.
-                InvalidateSubtreeCaches();
                 ReportTypedPropertyChanged("RaiseChildrenEventsOutsideOfBounds");
             }
         }
