@@ -109,4 +109,22 @@ public class NewCommandEdgeCaseTests : BaseTestClass
         match.Success.ShouldBeTrue(csproj);
         File.Exists(Path.GetFullPath(Path.Combine(projectDir, match.Groups[1].Value.Replace((char)92, Path.DirectorySeparatorChar)))).ShouldBeTrue();
     }
+
+    [Theory]
+    [InlineData("CON")]
+    [InlineData("com1")]
+    [InlineData("Nul.txt")]
+    public void New_WithAWindowsDeviceName_IsRefusedWithTheSameMessageTheDialogShows(string name)
+    {
+        foreach (string[] extra in new[] { new string[0], new[] { "--platform", "raylib", "--no-restore" } })
+        {
+            string projectDir = Path.Combine(TempDirectory, name);
+
+            CliTestHelper result = CliTestHelper.Run(new[] { "new", projectDir }.Concat(extra).ToArray());
+
+            result.ExitCode.ShouldBe(2, result.StandardError);
+            result.StandardError.ShouldContain(Gum.ProjectServices.NewProjectNameRules.InvalidFolderNameMessage);
+            Directory.Exists(projectDir).ShouldBeFalse();
+        }
+    }
 }

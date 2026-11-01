@@ -67,4 +67,54 @@ public class NewProjectNameValidationTests : NewProjectServiceTestBase
         validation.Error.ShouldNotBeNull();
         validation.Error!.Message.ShouldContain(name);
     }
+
+    [Theory]
+    [InlineData("CON")]
+    [InlineData("prn")]
+    [InlineData("Aux")]
+    [InlineData("NUL")]
+    [InlineData("nul")]
+    [InlineData("NUL.txt")]
+    [InlineData("COM1")]
+    [InlineData("com9")]
+    [InlineData("LPT1")]
+    [InlineData("lpt9")]
+    [InlineData("CON.txt")]
+    [InlineData("Nul.Game")]
+    [InlineData("Game.")]
+    [InlineData("Game ")]
+    public async Task Execute_ANameNoOperatingSystemShouldBeGiven_IsRefusedOnEveryOsAndWritesNothing(string name)
+    {
+        foreach (string? platform in new string?[] { null, "monogame" })
+        {
+            NewProjectValidation validation = CreateService().Validate(Request(platform, name));
+            NewProjectResult result = await Run(Request(platform, name));
+
+            validation.Resolved.ShouldBeNull($"platform={platform}");
+            validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName, $"platform={platform}");
+            validation.Error.Message.ShouldBe(NewProjectNameRules.InvalidFolderNameMessage, $"platform={platform}");
+            result.Files.Success.ShouldBeFalse($"platform={platform}");
+            result.Files.ErrorMessage.ShouldBe(validation.Error.Message, $"platform={platform}");
+            Directory.Exists(Game(name)).ShouldBeFalse($"platform={platform}");
+        }
+    }
+
+    [Theory]
+    [InlineData("COM10")]
+    [InlineData("Console")]
+    [InlineData("Game")]
+    public void Validate_ANameThatOnlyLooksReserved_IsAccepted(string name)
+    {
+        CreateService().Validate(Request("monogame", name)).Resolved.ShouldNotBeNull();
+        CreateService().Validate(Request(null, name)).Resolved.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Validate_ANameTooLongForTheFiles_IsRefusedWithTheMessageTheDialogShows()
+    {
+        NewProjectValidation validation = CreateService().Validate(Request(null, new string('a', 251)));
+
+        validation.Resolved.ShouldBeNull();
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
+    }
 }
