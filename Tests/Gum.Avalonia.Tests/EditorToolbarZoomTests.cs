@@ -21,10 +21,11 @@ public class EditorToolbarZoomTests
     [AvaloniaFact]
     public void Toolbar_SizesFollowTheBaseFontSize()
     {
-        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+        // The toolbar gets its own window: showing the container's one MainWindow leaves the tab content
+        // parented to it, which breaks the tests that host that content themselves.
+        EditorToolbar toolbar = new EditorToolbar();
+        Window window = new Window { Content = toolbar };
         IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
-        EditorToolbar toolbar = TestAppBuilder.Services.GetRequiredService<PluginManager>().InitializedPlugins
-            .OfType<AvaloniaEditorTabPlugin>().Single().Toolbar.ShouldNotBeNull();
         double originalSize = scale.BaseFontSize;
         using IDisposable follower = AppWideWindowInput.FollowBaseFontSize(window, scale);
         try
@@ -46,16 +47,18 @@ public class EditorToolbarZoomTests
         finally
         {
             scale.BaseFontSize = originalSize;
+            window.Close();
         }
     }
 
     [AvaloniaFact]
     public void ComboBoxes_HeightChevronAndEditableTextFollowTheBaseFontSize()
     {
-        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+        // The toolbar gets its own window: showing the container's one MainWindow leaves the tab content
+        // parented to it, which breaks the tests that host that content themselves.
+        EditorToolbar toolbar = new EditorToolbar();
+        Window window = new Window { Content = toolbar };
         IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
-        EditorToolbar toolbar = TestAppBuilder.Services.GetRequiredService<PluginManager>().InitializedPlugins
-            .OfType<AvaloniaEditorTabPlugin>().Single().Toolbar.ShouldNotBeNull();
         double originalSize = scale.BaseFontSize;
         using IDisposable follower = AppWideWindowInput.FollowBaseFontSize(window, scale);
         try
@@ -87,6 +90,7 @@ public class EditorToolbarZoomTests
         finally
         {
             scale.BaseFontSize = originalSize;
+            window.Close();
         }
     }
 
