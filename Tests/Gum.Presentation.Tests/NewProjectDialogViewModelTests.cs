@@ -370,6 +370,34 @@ public class NewProjectDialogViewModelTests
         viewModel.NameMessage.ShouldContain("reserved Windows name");
     }
 
+    [Theory]
+    [InlineData("Program", "is reserved")]
+    [InlineData("MonoGameGum", "is a Gum package name")]
+    [InlineData("GumCommon", "is a Gum package name")]
+    [InlineData("gumcommon", "is a Gum package name")]
+    public void ACodeProjectNameTheServiceWouldRefuse_TurnsOkOffUnderTheNameBox(string name, string expectedText)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "monogame";
+            vm.ProjectName = name;
+        });
+
+        viewModel.NameMessage.ShouldContain(expectedText);
+        viewModel.NameMessage.ShouldBe(viewModel.ValidationMessage);
+        viewModel.BottomMessage.ShouldBeEmpty();
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AClashingNameWithoutACodeProject_IsAccepted()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = "MonoGameGum");
+
+        viewModel.NameMessage.ShouldBeEmpty();
+    }
+
     [Fact]
     public void ALocationProblem_StaysBesideOk_AndLeavesTheNameBoxClean()
     {

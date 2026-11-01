@@ -1148,6 +1148,10 @@ public class NewProjectDialogViewModel : DialogViewModel
         {
             return NewProjectDialogText.InvalidCSharpName;
         }
+        if (IncludeCodeProject && NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform))
+        {
+            return NewProjectNameRules.GetCodeProjectProblem(name, platform) ?? string.Empty;
+        }
         return string.Empty;
     }
 

@@ -61,6 +61,14 @@ public static class NewProjectNameRules
             : null;
     }
 
+    /// <summary>
+    /// A short sentence when <paramref name="name"/> (already trimmed) clashes with the generated C# project on
+    /// <paramref name="platform"/>: a Gum runtime assembly name, <c>Program</c>, or a package the project references.
+    /// These depend only on the name and the platform, so the dialog checks them while typing; the service uses the same rule.
+    /// </summary>
+    public static string? GetCodeProjectProblem(string name, HostPlatform platform) =>
+        PlatformProjectScaffolder.GetProjectNameError(name, platform);
+
     // A device name is reserved with any extension too ("CON.txt"); returns it as typed, or null.
     private static string? GetReservedBaseName(string name)
     {

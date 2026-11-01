@@ -214,7 +214,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         return null;
     }
 
-    private static string? GetProjectNameError(string projectName, HostPlatform platform)
+    internal static string? GetProjectNameError(string projectName, HostPlatform platform)
     {
         if (!ValidProjectName.IsMatch(projectName))
         {
@@ -223,20 +223,20 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         if (ReservedProjectNames.Contains(projectName, StringComparer.OrdinalIgnoreCase))
         {
-            return $"'{projectName}' is the assembly name of a Gum runtime package. Pick another project name.";
+            return $"'{projectName}' is a Gum package name. Pick another project name.";
         }
 
         // The Program class that top-level statements create in the global namespace clashes (CS0101) with a
         // root namespace of the same name.
         if (NameRules.ToCSharpIdentifier(projectName) == "Program")
         {
-            return $"'{projectName}' cannot be a project name: the generated code has a class named Program, which clashes with a namespace of that name. Pick another project name.";
+            return $"'{projectName}' is reserved. Pick another project name.";
         }
 
         // A project named like a package it references fails to restore with NU1108 (a cycle).
         if (GetReferencedPackageIds(platform).Contains(projectName, StringComparer.OrdinalIgnoreCase))
         {
-            return $"'{projectName}' is the name of a package the {platform} project references, which makes restore fail with a cycle. Pick another project name.";
+            return $"'{projectName}' is a package the project uses. Pick another project name.";
         }
 
         return null;
