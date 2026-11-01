@@ -109,6 +109,26 @@ public class ListBoxItemVisual : InteractiveGue
         }
     }
 
+    Color _selectedForegroundColor = new Color(16, 16, 16);
+
+    /// <summary>
+    /// The text color used when the item is selected. Defaults to near-black: white text on the teal
+    /// Primary selection fill is only 3.18:1, dark text on it is 5.98:1 (#7366). Themes that pick their own
+    /// selection fill set this to a color that reads on it.
+    /// </summary>
+    public Color SelectedForegroundColor
+    {
+        get => _selectedForegroundColor;
+        set
+        {
+            if (!value.Equals(_selectedForegroundColor))
+            {
+                _selectedForegroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
     Color _foregroundColor;
 
     /// <summary>
@@ -242,7 +262,7 @@ public class ListBoxItemVisual : InteractiveGue
         ListBoxItemCategory.States.Add(States.Selected);
         States.Selected.Apply = () =>
         {
-            SetValuesForState(true, false, ForegroundColor, SelectedBackgroundColor); // TODO: Discuss how to approach this.
+            SetValuesForState(true, false, SelectedForegroundColor, SelectedBackgroundColor);
         };
 
         ListBoxItemCategory.States.Add(States.Focused);

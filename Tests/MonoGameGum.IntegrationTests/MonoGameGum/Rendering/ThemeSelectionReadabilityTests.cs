@@ -30,12 +30,11 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
     private const double MinimumTextContrast = 4.5;
     private const double MinimumSelectionAreaContrast = 1.5;
 
-    // Surfaces still under 4.5:1 in Standard (white on the teal Primary), left to the maintainer's decision (#7366);
-    // every other surface is pinned.
+    // Standard keeps its teal Primary (6,159,177) by the maintainer's decision on #7366: the selected ListBox row gets
+    // dark text instead, while the TextBox selection and the open MenuItem (white on teal, 3.18:1) stay as they are.
     private static readonly Dictionary<string, string[]> PendingSurfaces = new()
     {
-        ["standard"] = new[] { "ListBoxItem Selected", "TextBox selection (focused)", "PasswordBox selection (focused)", "MenuItem top-level open" },
-        
+        ["standard"] = new[] { "TextBox selection (focused)", "PasswordBox selection (focused)", "MenuItem top-level open" },
     };
 
     private sealed record Measurement(string Surface, double Contrast, XnaColor Background, XnaColor Text, double Minimum = MinimumTextContrast);
