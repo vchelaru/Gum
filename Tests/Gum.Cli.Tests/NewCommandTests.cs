@@ -361,6 +361,21 @@ public class NewCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void New_WithKniSkiaPlatformAndSourceLinked_ShouldCreateASlnxAndLinkTheKniSkiaRuntime()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "kniskia", "--source-linked", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
+        csproj.ShouldContain("KniSkiaGum.csproj");
+        csproj.ShouldNotContain("PackageReference Include=\"Gum.KniSkia\"");
+        File.Exists(Path.Combine(projectDir, "MyGame.slnx")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
     public void New_WithKniSkiaPlatformWithoutSourceLinked_ShouldReturnExitCode2NamingTheFix()
     {
         string projectDir = Path.Combine(TempDirectory, "MyGame");

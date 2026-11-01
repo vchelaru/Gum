@@ -198,6 +198,7 @@ namespace Gum.Forms.Controls
     [Theory]
     [InlineData("monogame")]
     [InlineData("kni")]
+    [InlineData("kniskia")]
     [InlineData("raylib")]
     [InlineData("stride")]
     [InlineData("silknet")]
