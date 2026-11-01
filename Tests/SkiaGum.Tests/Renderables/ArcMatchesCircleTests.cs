@@ -1,4 +1,4 @@
-using Gum.GueDeriving;
+﻿using Gum.GueDeriving;
 using Gum.Wireframe;
 using Shouldly;
 using SkiaSharp;
@@ -25,6 +25,28 @@ public class ArcMatchesCircleTests
         using SKBitmap arc = Render(position, ShapeKind.FullSweepArc);
 
         MaxChannelDifference(circle, arc).ShouldBeLessThanOrEqualTo(2);
+    }
+
+    // #7394: a full sweep is a ring at every start angle (and for any |sweep| >= 360). Skia's stroker rounds a
+    // circle differently depending on where its path starts, so edge pixels differ by up to about a quarter
+    // pixel of coverage; a missing ring differs by 255.
+    [Theory]
+    [InlineData(0f, 360f)]
+    [InlineData(30f, 360f)]
+    [InlineData(45f, 360f)]
+    [InlineData(90f, 360f)]
+    [InlineData(135f, 360f)]
+    [InlineData(359f, 360f)]
+    [InlineData(30f, -360f)]
+    [InlineData(30f, 720f)]
+    [InlineData(30f, 400f)]
+    public void FullSweepArc_AtAnyStartAngle_DrawsSamePixelsAsStrokedCircle(float startAngle, float sweepAngle)
+    {
+        using SKBitmap circle = Render(20f, ShapeKind.Circle);
+        using SKBitmap arc = Render(20f, ShapeKind.FullSweepArc, startAngle: startAngle, sweepAngle: sweepAngle);
+
+        MaxChannelDifference(circle, arc).ShouldBeLessThanOrEqualTo(70);
+        arc.GetPixel(50, 22).ShouldBe(ShapeColor);
     }
 
     [Fact]
@@ -74,7 +96,8 @@ public class ArcMatchesCircleTests
     internal static SKColor Backdrop => new SKColor(70, 70, 90);
     internal static SKColor ShapeColor => new SKColor(255, 0, 0);
 
-    internal static SKBitmap Render(float position, ShapeKind kind, float width = BoxSize, float height = BoxSize)
+    internal static SKBitmap Render(float position, ShapeKind kind, float width = BoxSize, float height = BoxSize,
+        float startAngle = 0, float sweepAngle = 360)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(CanvasSize, CanvasSize));
         Gum.GumService.Default.Initialize(surface.Canvas, CanvasSize, CanvasSize);
@@ -96,7 +119,7 @@ public class ArcMatchesCircleTests
             default:
                 shape = new ArcRuntime
                 {
-                    StartAngle = 0, SweepAngle = 360, Thickness = StrokeWidth, StrokeColor = ShapeColor,
+                    StartAngle = startAngle, SweepAngle = sweepAngle, Thickness = StrokeWidth, StrokeColor = ShapeColor,
                 };
                 break;
         }

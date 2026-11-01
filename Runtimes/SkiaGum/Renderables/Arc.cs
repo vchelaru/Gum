@@ -73,9 +73,33 @@ public class Arc : RenderableShapeBase
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
-        using var builder = new SKPathBuilder();
-        builder.AddArc(boundingRect, -StartAngle, -SweepAngle);
-        using SKPath path = builder.Detach();
+        using SKPath path = CreatePath(boundingRect);
         canvas.DrawPath(path, paint);
+    }
+
+    private SKPath CreatePath(SKRect boundingRect)
+    {
+        using var builder = new SKPathBuilder();
+        if (System.Math.Abs(SweepAngle) >= 360)
+        {
+            // A full sweep is a ring. AddArc with a full sweep is empty or seamed at most start
+            // angles (#7394), and arcs split at an arbitrary angle stroke with visible edge error,
+            // so draw the same oval a circle uses, turned so it begins at the start angle (the
+            // dash phase follows it).
+            builder.AddOval(
+                new SKRect(-1, -1, 1, 1),
+                SweepAngle > 0 ? SKPathDirection.CounterClockwise : SKPathDirection.Clockwise);
+            SKMatrix matrix = SKMatrix.Concat(
+                SKMatrix.CreateTranslation(boundingRect.MidX, boundingRect.MidY),
+                SKMatrix.Concat(
+                    SKMatrix.CreateScale(boundingRect.Width / 2, boundingRect.Height / 2),
+                    SKMatrix.CreateRotationDegrees(-StartAngle)));
+            SKPath ring = builder.Detach();
+            ring.Transform(matrix);
+            return ring;
+        }
+
+        builder.AddArc(boundingRect, -StartAngle, -SweepAngle);
+        return builder.Detach();
     }
 }
