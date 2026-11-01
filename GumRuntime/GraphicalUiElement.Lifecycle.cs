@@ -87,6 +87,13 @@ public partial class GraphicalUiElement
     public static Action<object>? UpdateFormsStateAction;
 
     /// <summary>
+    /// Called by a hot reload after the diff and before <see cref="UpdateFormsStateAction"/>: lets a Forms
+    /// control re-apply the Forms-property values (Placeholder, AcceptsReturn, ...) the reload changed or
+    /// removed. The function maps an element name to the version the visuals were built from.
+    /// </summary>
+    public static Action<object, GraphicalUiElement, Func<string, ElementSave?>>? ReapplyChangedFormsPropertiesAction;
+
+    /// <summary>
     /// Re-applies all default state values and current Forms visual states
     /// recursively on this element and all children. Call this after modifying
     /// variable values on ElementSave states (e.g., after
@@ -135,6 +142,18 @@ public partial class GraphicalUiElement
         for (int i = 0; i < Children.Count; i++)
         {
             Children[i].SaveFormsRuntimePropertiesRecursive();
+        }
+    }
+
+    internal void ReapplyChangedFormsPropertiesRecursive(Func<string, ElementSave?> oldElement)
+    {
+        if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
+        {
+            ReapplyChangedFormsPropertiesAction?.Invoke(interactive.FormsControlAsObject, this, oldElement);
+        }
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].ReapplyChangedFormsPropertiesRecursive(oldElement);
         }
     }
 
