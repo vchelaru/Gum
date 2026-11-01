@@ -46,6 +46,22 @@ public class PreviewDebugLogTests : IDisposable
     }
 
     [Fact]
+    public void Parse_LogWithInvalidCharacter_IsAnErrorNotAnException()
+    {
+        PreviewOptions options = PreviewOptions.Parse(new[] { "--project", "a.gumx", "--element", "Main", "--log", "bad\0path.log" });
+
+        options.Error.ShouldNotBeNull();
+        options.Error.ShouldContain("--log");
+        options.LogPath.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Open_InvalidCharacterPath_ReturnsNull()
+    {
+        PreviewDebugLog.Open("bad\0path.log").ShouldBeNull();
+    }
+
+    [Fact]
     public void Open_NullPath_ReturnsNullAndCreatesNothing()
     {
         PreviewDebugLog.Open(null).ShouldBeNull();

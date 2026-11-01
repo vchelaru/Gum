@@ -45,7 +45,7 @@ public sealed class PreviewDebugLog : IDisposable
             log.Write("log", "started");
             return log;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception)
         {
             Console.Error.WriteLine($"GumPreview: could not open the log {path}: {exception.Message}");
             return null;

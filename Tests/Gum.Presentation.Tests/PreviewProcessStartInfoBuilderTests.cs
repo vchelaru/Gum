@@ -70,6 +70,16 @@ public class PreviewProcessStartInfoBuilderTests
         startInfo.ArgumentList[startInfo.ArgumentList.IndexOf("--log") + 1].ShouldBe("/Temp/preview.log");
     }
 
+    [Fact]
+    public void Build_LogPathWithSpaces_PassesItAsOneArgument()
+    {
+        ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
+            "/Gum/Preview/GumPreview", "/p.gumx", "Main", "/sel.txt", "/MyGame/", 1, logPath: "/My Logs/preview log.txt");
+
+        startInfo.ArgumentList[startInfo.ArgumentList.IndexOf("--log") + 1].ShouldBe("/My Logs/preview log.txt");
+        startInfo.ArgumentList.Count.ShouldBe(12);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

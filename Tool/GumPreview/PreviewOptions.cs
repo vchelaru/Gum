@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -118,7 +119,16 @@ public sealed class PreviewOptions
             }
             else if (args[i] == "--log" && hasValue)
             {
-                options.LogPath = Path.GetFullPath(args[++i]);
+                string logPath = args[++i];
+                try
+                {
+                    options.LogPath = Path.GetFullPath(logPath);
+                }
+                catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+                {
+                    options.Error = $"--log needs a valid file path, not '{logPath}'.";
+                    return options;
+                }
             }
             else if (args[i] == "--select-all")
             {

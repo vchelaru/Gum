@@ -259,8 +259,14 @@ public class Game1 : Game
         }
 
         Keyboard keyboard = GumService.Default.Keyboard;
-        List<string> keys = new List<string>();
-        foreach (Microsoft.Xna.Framework.Input.Keys key in keyboard.KeysTyped)
+        IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> typed = keyboard.KeysTyped;
+        if (typed.Count == 0)
+        {
+            return;
+        }
+
+        List<string> keys = new List<string>(typed.Count);
+        foreach (Microsoft.Xna.Framework.Input.Keys key in typed)
         {
             keys.Add(key.ToString());
         }
