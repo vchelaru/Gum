@@ -251,7 +251,9 @@ internal static class BehaviorFormsPropertyApplier
     {
         if (container?.DefaultState != null && !string.IsNullOrEmpty(visual.Name))
         {
-            object? overrideValue = new RecursiveVariableFinder(container.DefaultState).GetValue(visual.Name + "." + propertyName);
+            // A plain lookup: the recursive finder falls through to the instance's component in the NEW project,
+            // which would make the old and new values equal whenever the component is what the reload edited.
+            object? overrideValue = container.DefaultState.GetValue(visual.Name + "." + propertyName);
             if (overrideValue != null)
             {
                 return overrideValue;
@@ -265,6 +267,13 @@ internal static class BehaviorFormsPropertyApplier
             if (value != null)
             {
                 return value;
+            }
+
+            // The tool saves an exposed variable under the inner name (PlaceholderTextInstance.Text), not the exposed one.
+            VariableSave? exposed = current.DefaultState?.Variables.FirstOrDefault(v => v.ExposedAsName == propertyName && v.Value != null);
+            if (exposed != null)
+            {
+                return exposed.Value;
             }
             current = string.IsNullOrEmpty(current.BaseType) ? null : ObjectFinder.Self.GetBaseElement(current);
         }

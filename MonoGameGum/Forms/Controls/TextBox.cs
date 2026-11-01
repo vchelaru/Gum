@@ -138,7 +138,7 @@ public class TextBox : TextBoxBase
             }
             else if (value != MaxLettersToShow)
             {
-                coreTextObject.MaxLettersToShow = value;
+                if (coreTextObject != null) { coreTextObject.MaxLettersToShow = value; }
             }
         }
     }
@@ -158,7 +158,7 @@ public class TextBox : TextBoxBase
             }
             else if (value != MaxNumberOfLines)
             {
-                coreTextObject.MaxNumberOfLines = value;
+                if (coreTextObject != null) { coreTextObject.MaxNumberOfLines = value; }
             }
         }
     }
