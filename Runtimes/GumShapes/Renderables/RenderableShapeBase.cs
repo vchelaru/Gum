@@ -877,6 +877,11 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         else
         {
             var effectiveOuterRadius = ResolveRadius(_gradientOuterRadius, _gradientOuterRadiusUnits, Width);
+            if (effectiveOuterRadius <= 0)
+            {
+                // Same fallback as Skia: an unset or negative outer radius is 100 pixels.
+                effectiveOuterRadius = 100;
+            }
             var effectiveInnerRadius = ResolveRadius(_gradientInnerRadius, _gradientInnerRadiusUnits, Width);
 
             var effectiveGradientX2 = effectiveGradientX1 + effectiveOuterRadius;
