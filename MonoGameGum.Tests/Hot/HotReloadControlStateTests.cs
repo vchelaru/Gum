@@ -31,7 +31,7 @@ public class HotReloadControlStateTests : FileThemeInputTestBase
         return directory!;
     }
 
-    private static GumProjectSave LoadCopy(string? toolTip, string behavior = StandardFormsBehaviorNames.MenuItemBehaviorName, bool? isEnabled = null)
+    private static GumProjectSave LoadCopy(string? toolTip, string behavior = StandardFormsBehaviorNames.MenuItemBehaviorName, bool? isEnabled = null, bool? componentIsEnabled = null)
     {
         string gumx = Path.Combine(RepoRoot(), "Tools", "Gum.ProjectServices", "Templates", "FormsTemplate", "GumProject.gumx");
         GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
@@ -51,6 +51,11 @@ public class HotReloadControlStateTests : FileThemeInputTestBase
         if (isEnabled != null)
         {
             state.Variables.Add(new VariableSave { Name = "Ctl1.IsEnabled", Type = "bool", Value = isEnabled.Value, SetsValue = true });
+        }
+        if (componentIsEnabled != null)
+        {
+            component.DefaultState!.Variables.RemoveAll(v => v.Name == "IsEnabled");
+            component.DefaultState.Variables.Add(new VariableSave { Name = "IsEnabled", Type = "bool", Value = componentIsEnabled.Value, SetsValue = true });
         }
         project.Screens.Add(screen);
         project.Initialize();
@@ -157,5 +162,22 @@ public class HotReloadControlStateTests : FileThemeInputTestBase
         expander.IsEnabled = true;
 
         Describe(screen).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(StandardFormsBehaviorNames.ButtonBehaviorName)]
+    [InlineData(StandardFormsBehaviorNames.MenuItemBehaviorName)]
+    public void ApplyDiff_ComponentIsEnabledEdited_ControlMatchesAFreshLoad(string behavior)
+    {
+        string expectedDisabled = Describe(Build(LoadCopy(null, behavior, null, false)));
+
+        GraphicalUiElement screen = Build(LoadCopy(null, behavior));
+        GumProjectSave disabled = LoadCopy(null, behavior, null, false);
+        ObjectFinder.Self.GumProjectSave = disabled;
+        GumHotReloadManager.ApplyDiff(new[] { screen }, disabled, SystemManagers.Default);
+
+        FrameworkElement control = (FrameworkElement)((InteractiveGue)screen.GetGraphicalUiElementByName("Ctl1")!).FormsControlAsObject!;
+        (control.IsEnabled, control.Visual.IsEnabled, control.Visual.IsEnabledRecursively).ShouldBe((false, false, false));
+        Describe(screen).ShouldBe(expectedDisabled);
     }
 }
