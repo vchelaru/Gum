@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;

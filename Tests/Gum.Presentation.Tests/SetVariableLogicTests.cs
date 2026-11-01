@@ -1,4 +1,4 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -1142,5 +1142,77 @@ public class SetVariableLogicTests : BaseTestClass
     {
         _setVariableLogic.GetWhySourcefileIsInvalid("pic.fake", new ComponentSave(), new InstanceSave(), "SourceFile")
             .ShouldBe("The extension fake is not supported");
+    }
+
+    [Theory]
+    [InlineData("png")]
+    [InlineData("jpg")]
+    [InlineData("gif")]
+    [InlineData("bmp")]
+    public void ReactToPropertyValueChanged_ShouldResetTextureCoordinatesToImageSize_WhenSourceFileIsBuiltInFormat(string extension)
+    {
+        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N") + "." + extension);
+        byte[] bytes;
+        if (extension == "gif")
+        {
+            bytes = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 14, 0, 6, 0 };
+        }
+        else if (extension == "bmp")
+        {
+            bytes = new byte[26];
+            bytes[0] = 0x42;
+            bytes[1] = 0x4D;
+            bytes[18] = 14;
+            bytes[22] = 6;
+        }
+        else
+        {
+            using var bitmap = new SkiaSharp.SKBitmap(14, 6);
+            using var data = SkiaSharp.SKImage.FromBitmap(bitmap).Encode(
+                extension == "png" ? SkiaSharp.SKEncodedImageFormat.Png : SkiaSharp.SKEncodedImageFormat.Jpeg, 90);
+            bytes = data.ToArray();
+        }
+        System.IO.File.WriteAllBytes(path, bytes);
+        try
+        {
+            var (container, instance) = CreateCustomSpriteWithSource(path);
+            container.DefaultState!.SetValue("SpriteInstance.TextureLeft", 5, "int");
+            container.DefaultState!.SetValue("SpriteInstance.TextureTop", 6, "int");
+
+            _setVariableLogic.ReactToPropertyValueChanged(
+                "TextureAddress", TextureAddress.EntireTexture, container, instance, container.DefaultState!, refresh: true);
+
+            container.DefaultState!.GetValue("SpriteInstance.TextureLeft").ShouldBe(0);
+            container.DefaultState!.GetValue("SpriteInstance.TextureTop").ShouldBe(0);
+            container.DefaultState!.GetValue("SpriteInstance.TextureWidth").ShouldBe(14);
+            container.DefaultState!.GetValue("SpriteInstance.TextureHeight").ShouldBe(6);
+            mocker.GetMock<IOutputManager>().Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldReportErrorAndLeaveVariablesAlone_WhenExtensionIsUnknownAndNoDecoderRegistered()
+    {
+        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".xyz");
+        System.IO.File.WriteAllBytes(path, new byte[] { 9, 9, 9, 9, 9, 9, 9, 9, 9, 9 });
+        try
+        {
+            var (container, instance) = CreateCustomSpriteWithSource(path);
+
+            Should.NotThrow(() => _setVariableLogic.ReactToPropertyValueChanged(
+                "TextureAddress", TextureAddress.EntireTexture, container, instance, container.DefaultState!, refresh: true));
+
+            container.DefaultState!.GetValue("SpriteInstance.TextureWidth").ShouldBe(99);
+            container.DefaultState!.GetValue("SpriteInstance.TextureHeight").ShouldBe(98);
+            mocker.GetMock<IOutputManager>().Verify(x => x.AddError(It.IsAny<string>()), Times.Once);
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
     }
 }
