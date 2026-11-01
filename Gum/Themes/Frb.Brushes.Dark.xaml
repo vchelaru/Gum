@@ -9,7 +9,7 @@
     <ResourceDictionary>
       <Color x:Key="Frb.Colors.Foreground">#c8ffffff</Color>
       <Color x:Key="Frb.Colors.Foreground.Subtle">#ffb2b2b2</Color>
-      <Color x:Key="Frb.Colors.Foreground.Muted">#ff8a8a8a</Color>
+      <Color x:Key="Frb.Colors.Foreground.Muted">#ff929292</Color>
 
       <Color x:Key="Frb.Colors.Border">#454545</Color>
       <Color x:Key="Frb.Colors.Border.Secondary">#12ffffff</Color>
