@@ -924,6 +924,17 @@ public partial class GraphicalUiElement
                     }
                     break;
 #endif
+#if !FRB && (NET6_0_OR_GREATER || NETSTANDARD2_1)
+                case "RaiseChildrenEventsOutsideOfBounds":
+                    {
+                        if (this is InteractiveGue raiseOutsideGue)
+                        {
+                            raiseOutsideGue.RaiseChildrenEventsOutsideOfBounds = (bool)value!;
+                            toReturn = true;
+                        }
+                    }
+                    break;
+#endif
                 case "FlipHorizontal":
                     this.FlipHorizontal = (bool)value!;
                     toReturn = true;

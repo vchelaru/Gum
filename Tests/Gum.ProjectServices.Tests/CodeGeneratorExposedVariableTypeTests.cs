@@ -149,6 +149,8 @@ public class CodeGeneratorExposedVariableTypeTests : BaseTestClass
     [InlineData("Circle", OutputLibrary.GumForms, "HasEvents", false)]
     [InlineData("Rectangle", OutputLibrary.MonoGame, "ExposeChildrenEvents", false)]
     [InlineData("Sprite", OutputLibrary.Skia, "HasEvents", false)]
+    [InlineData("Sprite", OutputLibrary.GumForms, "RaiseChildrenEventsOutsideOfBounds", false)]
+    [InlineData("Container", OutputLibrary.GumForms, "RaiseChildrenEventsOutsideOfBounds", true)]
     // InteractiveGue-based runtimes do have the properties:
     [InlineData("Container", OutputLibrary.GumForms, "HasEvents", true)]
     [InlineData("Text", OutputLibrary.GumForms, "ExposeChildrenEvents", true)]
