@@ -44,7 +44,8 @@ public static class ProjectTranslations
         return key =>
         {
             List<string> translations = new List<string>();
-            for (int language = 1; language <= languageCount; language++)
+            // Index 0 is the string ID itself in a loaded database; it is filtered out below.
+            for (int language = 0; language <= languageCount; language++)
             {
                 string translated = service.TranslateForLanguage(key, language);
                 if (translated != key)

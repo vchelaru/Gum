@@ -96,6 +96,32 @@ public class FontReferenceCollectorLocalizationTests : IDisposable
     }
 
     [Fact]
+    public void Collect_bakes_the_fonts_of_a_state_tag_inside_a_translation()
+    {
+        // Pinned against TextRuntimeLocalizedFontTests in MonoGameGum.Tests, which asks the runtime for the
+        // same fonts with each language selected.
+        Dictionary<string, BmfcSave> fonts = Collect("MENU_PLAY", "strings.csv",
+            "id,English,Spanish\nMENU_PLAY,[state=Big]Play[/state],[Font=Verdana]Jugar[/Font]\n",
+            text => text.States.Add(BigState()));
+
+        fonts.Keys.ShouldBe(
+            new[]
+            {
+                Key(BaseSize), Key(BaseSize, "StateFaceB"), Key(40, "StateFaceB"), Key(40, Font),
+                Key(BaseSize, "Verdana"),
+            },
+            ignoreOrder: true);
+    }
+
+    private static StateSave BigState()
+    {
+        StateSave state = new StateSave { Name = "Big" };
+        SetVariable(state, "Font", "StateFaceB", "string");
+        SetVariable(state, "FontSize", 40, "int");
+        return state;
+    }
+
+    [Fact]
     public void Collect_survives_a_missing_localization_file()
     {
         Dictionary<string, BmfcSave> fonts = Collect("MENU_PLAY", "missing.csv", null);
@@ -120,7 +146,8 @@ public class FontReferenceCollectorLocalizationTests : IDisposable
         fonts.Keys.ShouldBe(new[] { Key(BaseSize) });
     }
 
-    private Dictionary<string, BmfcSave> Collect(string textValue, string? localizationFile, string? csv)
+    private Dictionary<string, BmfcSave> Collect(string textValue, string? localizationFile, string? csv,
+        Action<StandardElementSave>? configureText = null)
     {
         if (localizationFile != null && csv != null)
         {
@@ -134,6 +161,8 @@ public class FontReferenceCollectorLocalizationTests : IDisposable
         StandardElementSave text = TestProjectBuilder.BuildStandard("Text");
         SetVariable(text.DefaultState!, "Font", Font, "string");
         SetVariable(text.DefaultState!, "FontSize", BaseSize, "int");
+
+        configureText?.Invoke(text);
 
         GumProjectSave project = TestProjectBuilder.BuildProject(
             screens: new[] { screen }, standards: new[] { text });
