@@ -1,11 +1,13 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Controls.Shapes;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.EndToEnd;
+using Gum.Managers;
 using Gum.DataTypes;
 using Gum.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -71,6 +73,52 @@ public class StandardsPaletteZoomTests
         }
         finally
         {
+            scale.BaseFontSize = original;
+        }
+    }
+
+    [AvaloniaFact]
+    public void DropIndicatorOffsets_FollowBaseFontSize()
+    {
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        double original = scale.BaseFontSize;
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Project.AddInstance(button, "A", "Rectangle");
+        tree.Project.AddInstance(button, "Panel", "Container");
+        tree.Project.AddInstance(button, "X", "Rectangle");
+        tree.Drag(tree.NodeFor(button.GetInstance("X")!), tree.NodeFor(button.GetInstance("Panel")!));
+        tree.Click(tree.NodeFor(button));
+        GumTreeNode panel = tree.NodeFor(button.GetInstance("Panel")!);
+        using IDisposable follower = AppWideWindowInput.FollowBaseFontSize(tree.Input.Window, scale);
+        try
+        {
+            tree.BeginDrag(tree.NodeFor(button.GetInstance("A")!));
+
+            // The bottom of Panel's row inserts as its first child: the line sits one level in, and Panel
+            // is washed from its own level in.
+            (double line, double wash) Measure()
+            {
+                tree.DragOver(panel, fraction: 0.9).ShouldBe(DragDropEffects.Move);
+                double panelLeft = tree.RowHighlightBounds(panel).Left;
+                return (tree.DropIndicatorBounds.ShouldNotBeNull().Left - panelLeft,
+                    tree.DropParentHighlightBounds.ShouldNotBeNull().Left - panelLeft);
+            }
+
+            scale.BaseFontSize = 12;
+            tree.Input.Layout();
+            (double line, double wash) atDefault = Measure();
+            scale.BaseFontSize = 24;
+            tree.Input.Layout();
+            (double line, double wash) zoomedIn = Measure();
+
+            atDefault.line.ShouldBe(TreeRowView.Indent, tolerance: 1.5);
+            zoomedIn.line.ShouldBe(atDefault.line * 2, tolerance: 1.5);
+            zoomedIn.wash.ShouldBe(atDefault.wash * 2, tolerance: 1.5);
+        }
+        finally
+        {
+            tree.CancelDrag();
             scale.BaseFontSize = original;
         }
     }

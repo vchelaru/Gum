@@ -1,6 +1,11 @@
 using Gum.Avalonia.Tests.EndToEnd;
 using Gum.Avalonia.Tests.Harness;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Gum.Avalonia.Canvas;
+using Gum.Avalonia.Shell;
+using Microsoft.Extensions.DependencyInjection;
 using Gum.DataTypes;
 
 namespace Gum.Avalonia.Tests.Screenshots;
@@ -34,8 +39,27 @@ public class StandardsPaletteScreenshotTests
         tree.NodeFor(screen).IsExpanded = true;
         tree.NodeFor(button).IsExpanded = true;
         tree.Click(tree.NodeFor(button));
-        tree.Input.Window.RequestedThemeVariant = ThemeVariant.Dark;
-        tree.Input.Window.Height = 420;
-        PrScreenshot.SaveWindowAtZoomLevels(tree.Input.Window, "standards-palette-dark");
+
+        // The real main window, so the panel, background and theme resources are the tool's own; the
+        // harness window is emptied so the Project tab can present the tree.
+        tree.Input.Window.Content = null;
+        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+        window.MinHeight = 0;
+        window.Width = 1000;
+        window.Height = 700;
+        window.Show();
+        // A shown canvas creates the process-wide graphics device; this shot only needs the panel.
+        foreach (AvaloniaGraphicsDeviceControl canvas in window.GetVisualDescendants().OfType<AvaloniaGraphicsDeviceControl>())
+        {
+            canvas.IsVisible = false;
+        }
+        Dispatcher.UIThread.RunJobs();
+        // One run for both themes: the main window is a singleton, and its Project tab presents the tree once.
+        foreach (ThemeVariant theme in new[] { ThemeVariant.Dark, ThemeVariant.Light })
+        {
+            window.RequestedThemeVariant = theme;
+            Dispatcher.UIThread.RunJobs();
+            PrScreenshot.SaveWindowAtZoomLevels(window, $"standards-palette-{theme.Key.ToString()!.ToLowerInvariant()}");
+        }
     });
 }
