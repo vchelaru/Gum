@@ -150,4 +150,35 @@ public class TextBoxSetTextSelectionTests : BeginnerDriverTestBase
         passwordBox.Password.ShouldBe("helrld");
         raised.ShouldBe(1);
     }
+
+    [Fact]
+    public void PasswordSetFromCode_SameValue_KeepsTheSelectionAndRaisesNothing()
+    {
+        PasswordBox passwordBox = CreateFocusedPasswordBox();
+        Driver.Type("hello");
+        SelectAll();
+        int raised = 0;
+        passwordBox.SelectionChanged += (_, _) => raised++;
+
+        passwordBox.Password = "hello";
+
+        passwordBox.SelectionLength.ShouldBe(5);
+        raised.ShouldBe(0);
+    }
+
+    [Fact]
+    public void RefreshStyles_WithASelection_KeepsItAndRaisesNothing()
+    {
+        TextBox textBox = CreateFocusedTextBox();
+        Driver.Type("hello");
+        SelectAll();
+        int raised = 0;
+        textBox.SelectionChanged += (_, _) => raised++;
+
+        Gum.GumService.Default.RefreshStyles(textBox.Visual);
+
+        textBox.SelectionStart.ShouldBe(0);
+        textBox.SelectionLength.ShouldBe(5);
+        raised.ShouldBe(0);
+    }
 }

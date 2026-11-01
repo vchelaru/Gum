@@ -546,6 +546,9 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>True while text is re-applied without being a new value (RefreshStyles, assigning the same password), so the selection stays.</summary>
+    protected bool keepSelectionOnTextChange;
+
     /// <summary>
     /// Clears the selection after the text was replaced, as a TextBox in other UI frameworks does, so text
     /// set from code cannot leave a selection and its highlight over the new text, where the next typed
@@ -553,6 +556,11 @@ public abstract class TextBoxBase :
     /// </summary>
     protected void ClearSelectionAfterTextChange(int textLength)
     {
+        if (keepSelectionOnTextChange)
+        {
+            return;
+        }
+
         selectionStart = System.Math.Min(selectionStart, textLength);
         SelectionLength = 0;
     }
@@ -1342,7 +1350,15 @@ public abstract class TextBoxBase :
 
         if (_hasSavedCaret && coreTextObject != null)
         {
-            _textSetInCode.Restore(textComponent);
+            keepSelectionOnTextChange = true;
+            try
+            {
+                _textSetInCode.Restore(textComponent);
+            }
+            finally
+            {
+                keepSelectionOnTextChange = false;
+            }
             caretIndex = System.Math.Min(_savedCaretIndex, DisplayedText?.Length ?? 0);
             selectionLength = _savedSelectionLength;
 

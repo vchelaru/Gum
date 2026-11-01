@@ -60,6 +60,8 @@ public class PasswordBox : TextBoxBase
         }
         set
         {
+            // The same value is not a change, so it keeps the selection like TextBox.Text does.
+            keepSelectionOnTextChange = value == Password;
             SecurePassword.Clear();
             if (value != null)
             {
@@ -68,7 +70,14 @@ public class PasswordBox : TextBoxBase
                     SecurePassword.AppendChar(character);
                 }
             }
-            CallMethodsInResponseToPasswordChanged();
+            try
+            {
+                CallMethodsInResponseToPasswordChanged();
+            }
+            finally
+            {
+                keepSelectionOnTextChange = false;
+            }
         }
     }
 
