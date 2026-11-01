@@ -18,4 +18,10 @@ public class PreviewWindowTitleTests
     {
         PreviewWindowTitle.For(elementName, isElementMissing: true).ShouldBe("Gum Preview");
     }
+
+    [Fact]
+    public void ForLoadFailure_PutsTheReasonInTheTitle()
+    {
+        PreviewWindowTitle.ForLoadFailure("could not load a.gumx: missing").ShouldBe("Gum Preview - could not load a.gumx: missing");
+    }
 }

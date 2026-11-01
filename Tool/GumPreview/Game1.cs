@@ -40,6 +40,8 @@ public class Game1 : Game
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
     private bool _isElementMissing;
+    private string? _loadError;
+    private readonly PreviewFailureLog _failureLog = new PreviewFailureLog();
     private bool _isRetinaBackingEnabled;
     private BackingScale _backingScale;
 
@@ -98,6 +100,56 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
+        string? interactionError;
+        try
+        {
+            interactionError = LoadProject();
+        }
+        catch (Exception exception)
+        {
+            // A missing or malformed project. Unattended, that is a failed run; attended, the window
+            // stays up with the reason in its title, because the tool launches it with no console.
+            string message = PreviewFailureLog.LoadMessage(_gumxPath, exception);
+            _loadError = message;
+            UnattendedExitCode = 1;
+            Window.Title = PreviewWindowTitle.ForLoadFailure(message);
+            if (_unattended != null)
+            {
+                FailUnattended(_unattended.TryFail(message.TrimEnd('.') + "."));
+            }
+            else
+            {
+                Console.Error.WriteLine($"GumPreview: {message}");
+            }
+            base.Initialize();
+            return;
+        }
+
+        if (_unattended != null)
+        {
+            if (_isElementMissing)
+            {
+                FailUnattended(_unattended.TryFail("the element to show was not found."));
+            }
+            else if (interactionError != null)
+            {
+                FailUnattended(_unattended.TryFail(interactionError));
+            }
+            else
+            {
+                _unattended.MarkLoaded();
+            }
+        }
+        else if (interactionError != null)
+        {
+            Console.Error.WriteLine($"GumPreview: {interactionError}");
+        }
+
+        base.Initialize();
+    }
+
+    private string? LoadProject()
+    {
         KeepWindowOffScreen();
         GumService.Default.Initialize(this, _gumxPath);
 
@@ -144,34 +196,17 @@ public class Game1 : Game
         }
         ApplySiblingOrdering();
         ShowElement();
-        string? interactionError = ApplyInteraction();
-
-        if (_unattended != null)
-        {
-            if (_isElementMissing)
-            {
-                FailUnattended(_unattended.TryFail("the element to show was not found."));
-            }
-            else if (interactionError != null)
-            {
-                FailUnattended(_unattended.TryFail(interactionError));
-            }
-            else
-            {
-                _unattended.MarkLoaded();
-            }
-        }
-        else if (interactionError != null)
-        {
-            Console.Error.WriteLine($"GumPreview: {interactionError}");
-        }
-
-        base.Initialize();
+        return ApplyInteraction();
     }
 
     protected override void Update(GameTime gameTime)
     {
         KeepWindowOffScreen();
+        if (_loadError != null)
+        {
+            base.Update(gameTime);
+            return;
+        }
         UpdateBackingScale();
         ApplyCanvasSizeIfChanged(isWindowShown: true);
         RebuildAfterReloadIfNeeded();
@@ -182,6 +217,14 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        if (_loadError != null)
+        {
+            // Nothing loaded to draw; a dark red window with the reason in its title.
+            GraphicsDevice.Clear(new Color(96, 16, 16));
+            base.Draw(gameTime);
+            return;
+        }
+
         if (_unattended != null && _unattended.TryClaimCapture())
         {
             FinishUnattended();
@@ -325,7 +368,8 @@ public class Game1 : Game
         ApplySiblingOrdering();
         if (selectionChanged)
         {
-            ShowElement();
+            // A throwing build must not escape Update; the last good frame stays, reported once.
+            _failureLog.TryRun(ShowElement, $"could not show '{_selection.ElementName}'", Console.Error);
         }
     }
 

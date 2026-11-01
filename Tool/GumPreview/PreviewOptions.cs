@@ -17,6 +17,12 @@ public sealed class PreviewOptions
     public const string Usage =
         "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>] [--select-all]]";
 
+    private static readonly HashSet<string> ValueFlags = new HashSet<string>
+    {
+        "--project", "--element", "--selection-file", "--content-root", "--parent-pid",
+        "--exit-after", "--screenshot", "--focus", "--type",
+    };
+
     private PreviewOptions()
     {
     }
@@ -65,7 +71,16 @@ public sealed class PreviewOptions
         string? parentPidText = null;
         for (int i = 0; i < args.Count; i++)
         {
-            bool hasValue = i + 1 < args.Count;
+            // A flag that takes a value but has none, or is followed by another flag, is an error
+            // rather than ignored. Only a known flag counts as "another flag", so a value that
+            // merely starts with dashes (--type "--help") is still a value.
+            bool hasValue = i + 1 < args.Count && !ValueFlags.Contains(args[i + 1]) && args[i + 1] != "--select-all";
+            if (ValueFlags.Contains(args[i]) && !hasValue)
+            {
+                options.Error = $"{args[i]} needs a value.";
+                return options;
+            }
+
             if (args[i] == "--project" && hasValue)
             {
                 options.ProjectPath = args[++i];
