@@ -75,6 +75,7 @@ MyButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
 {% hint style="info" %}
 Despite its name, the GamepadTabbingFocusBehavior property controls tabbing for both gamepad and keyboard tabbing. Future versions of Gum may change this property to more clearly indicate its purpose.
 {% endhint %}
+
 A skipped control is also left out of spatial and gamepad navigation. A `ScrollBar`'s up and down buttons and thumb (and a `Slider`'s thumb) are skipped this way, so tabbing visits only the content of a `ScrollViewer`. A stand-alone `ScrollBar` therefore cannot receive focus from tabbing or a gamepad and is operated with the mouse only.
 
 ### Customizing Tab Key Combos
