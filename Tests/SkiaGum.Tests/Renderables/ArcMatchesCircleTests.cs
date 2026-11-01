@@ -1,4 +1,4 @@
-﻿using Gum.GueDeriving;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Shouldly;
 using SkiaSharp;
@@ -40,12 +40,19 @@ public class ArcMatchesCircleTests
     [InlineData(30f, -360f)]
     [InlineData(30f, 720f)]
     [InlineData(30f, 400f)]
+    [InlineData(10f, 360f)]
+    [InlineData(10f, 720f)]
+    [InlineData(10f, -360f)]
+    [InlineData(37.5f, 720f)]
+    [InlineData(37.5f, -360f)]
+    [InlineData(123.4f, 720f)]
+    [InlineData(200f, 720f)]
     public void FullSweepArc_AtAnyStartAngle_DrawsSamePixelsAsStrokedCircle(float startAngle, float sweepAngle)
     {
         using SKBitmap circle = Render(20f, ShapeKind.Circle);
         using SKBitmap arc = Render(20f, ShapeKind.FullSweepArc, startAngle: startAngle, sweepAngle: sweepAngle);
 
-        MaxChannelDifference(circle, arc).ShouldBeLessThanOrEqualTo(70);
+        MaxChannelDifference(circle, arc).ShouldBeLessThanOrEqualTo(68);
         arc.GetPixel(50, 22).ShouldBe(ShapeColor);
     }
 
