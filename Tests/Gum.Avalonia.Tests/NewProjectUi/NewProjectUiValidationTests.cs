@@ -220,17 +220,23 @@ public class NewProjectUiValidationTests
     }
 
     [AvaloniaFact]
-    public void TheMessageSitsBesideTheButtons_AndFollowsEachFix()
+    public void ANameMessageSitsUnderTheNameBox_AndFollowsEachFix()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.TypeName("a/b");
         fixture.Settle();
         global::Avalonia.Controls.TextBlock message = fixture.Window.Find<global::Avalonia.Controls.TextBlock>(block => block.Text == NewProjectUiText.NameProblem("a/b") && block.IsEffectivelyVisible);
         global::Avalonia.Rect messageBounds = fixture.BoundsOf(message);
+        global::Avalonia.Rect nameBounds = fixture.BoundsOf(fixture.Dialog.NameBox);
         global::Avalonia.Rect okBounds = fixture.BoundsOf(fixture.Dialog.OkButton);
 
-        messageBounds.Intersects(okBounds).ShouldBeFalse("the message does not cover OK");
-        Math.Abs(messageBounds.Center.Y - okBounds.Center.Y).ShouldBeLessThan(okBounds.Height, "on the same row as the buttons");
+        messageBounds.Top.ShouldBeGreaterThanOrEqualTo(nameBounds.Bottom - 1, "under the name box");
+        messageBounds.Top.ShouldBeLessThan(nameBounds.Bottom + 12, "directly under it");
+        messageBounds.Left.ShouldBeGreaterThanOrEqualTo(nameBounds.Left - 1);
+        messageBounds.Right.ShouldBeLessThanOrEqualTo(nameBounds.Right + 1, "wrapped to the box's width");
+        messageBounds.Bottom.ShouldBeLessThan(okBounds.Top, "not on the buttons' row");
+        fixture.Window.FindAll<global::Avalonia.Controls.TextBlock>()
+            .Count(block => block.Text == NewProjectUiText.NameProblem("a/b") && block.IsEffectivelyVisible).ShouldBe(1, "shown once");
 
         fixture.Dialog.TypeLocation("rel");
         fixture.Dialog.TypeName("Game");

@@ -17,6 +17,8 @@ public static class NewProjectNameRules
         new[] { "CON", "PRN", "AUX", "NUL" }
             .Concat(Enumerable.Range(1, 9).Select(number => "COM" + number))
             .Concat(Enumerable.Range(1, 9).Select(number => "LPT" + number))
+            // Windows reads the ISO 8859-1 superscript digits as digits too (Microsoft, "Naming Files, Paths, and Namespaces").
+            .Concat(new[] { "COM", "LPT" }.SelectMany(device => new[] { "\u00B9", "\u00B2", "\u00B3" }.Select(digit => device + digit)))
             .ToArray();
 
     private const int MaxFileNameBytes = 255;

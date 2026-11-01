@@ -113,6 +113,8 @@ public class NewCommandEdgeCaseTests : BaseTestClass
     [Theory]
     [InlineData("CON")]
     [InlineData("com1")]
+    [InlineData("COM\u00B2")]
+    [InlineData("lpt\u00B9.txt")]
     [InlineData("Nul.txt")]
     public void New_WithAWindowsDeviceName_IsRefusedWithTheSameMessageTheDialogShows(string name)
     {

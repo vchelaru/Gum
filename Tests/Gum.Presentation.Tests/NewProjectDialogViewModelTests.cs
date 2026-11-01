@@ -346,6 +346,40 @@ public class NewProjectDialogViewModelTests
     }
 
     [Theory]
+    [InlineData("CON")]
+    [InlineData("Game<")]
+    [InlineData("Game.")]
+    [InlineData("")]
+    public void ANameProblem_GoesUnderTheNameBox_AndNotBesideOk(string name)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = name);
+
+        viewModel.NameMessage.ShouldNotBeEmpty();
+        viewModel.NameMessage.ShouldBe(viewModel.ValidationMessage);
+        viewModel.BottomMessage.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("COM\u00B9")]
+    [InlineData("lpt\u00B3.txt")]
+    public void ASuperscriptDeviceName_IsRefusedWithTheSameMessageAsTheRules(string name)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = name);
+
+        viewModel.NameMessage.ShouldBe(NewProjectNameRules.GetProblem(name, false));
+        viewModel.NameMessage.ShouldContain("reserved Windows name");
+    }
+
+    [Fact]
+    public void ALocationProblem_StaysBesideOk_AndLeavesTheNameBoxClean()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.Location = "Projects");
+
+        viewModel.NameMessage.ShouldBeEmpty();
+        viewModel.BottomMessage.ShouldBe("The location must be a full path.");
+    }
+
+    [Theory]
     [InlineData(125, "")]
     [InlineData(126, "The name is too long: 250 bytes at most.")]
     public void ValidationMessage_CountsTheNameInBytes_NotCharacters(int length, string expected)
@@ -433,6 +467,13 @@ public class NewProjectDialogViewModelTests
     [InlineData("NUL", false)]
     [InlineData("Aux.txt", false)]
     [InlineData("COM1", false)]
+    [InlineData("COM\u00B9", false)]
+    [InlineData("com\u00B2", false)]
+    [InlineData("COM\u00B3", false)]
+    [InlineData("LPT\u00B9", false)]
+    [InlineData("lpt\u00B2", false)]
+    [InlineData("LPT\u00B3", false)]
+    [InlineData("Com\u00B2.txt", false)]
     [InlineData("lpt9", false)]
     [InlineData("COM10", true)]
     [InlineData("Console", true)]

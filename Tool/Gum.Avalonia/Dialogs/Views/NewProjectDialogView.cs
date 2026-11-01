@@ -63,6 +63,19 @@ public sealed class NewProjectDialogView : StackPanel
     private const string FontSizeKey = "ControlContentThemeFontSize";
     private const string MonospaceFonts = "Cascadia Mono, Consolas, Menlo, monospace";
 
+    // Amber (the validation message's color) while the name has a problem, transparent otherwise.
+    private static readonly IValueConverter NameFrameBrushConverter = new FuncValueConverter<string?, IBrush?>(message =>
+    {
+        if (string.IsNullOrEmpty(message))
+        {
+            return Brushes.Transparent;
+        }
+        Application? app = Application.Current;
+        return app != null && app.TryGetResource("Frb.Brushes.Icon.Manilla", app.ActualThemeVariant, out object? brush) && brush is IBrush found
+            ? found
+            : Brushes.Orange;
+    });
+
     private readonly FluentIcon _copyIcon;
     private readonly DispatcherTimer _copiedTimer;
 
@@ -100,7 +113,7 @@ public sealed class NewProjectDialogView : StackPanel
         Children.Add(form);
 
         TextBlock validation = new TextBlock { TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, MaxWidth = 220 };
-        validation.Bind(TextBlock.TextProperty, new Binding(nameof(NewProjectDialogViewModel.ValidationMessage)));
+        validation.Bind(TextBlock.TextProperty, new Binding(nameof(NewProjectDialogViewModel.BottomMessage)));
         validation.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
         DialogWindow.SetAuxiliaryActions(this, validation);
 
@@ -160,7 +173,15 @@ public sealed class NewProjectDialogView : StackPanel
         name.Children.Add(FieldLabel(NewProjectDialogText.ProjectName, NewProjectDialogText.ProjectNameTip));
         TextBox nameBox = new TextBox { MinWidth = 90 };
         nameBox.Bind(TextBox.TextProperty, new Binding(nameof(NewProjectDialogViewModel.ProjectName)) { Mode = BindingMode.TwoWay });
-        name.Children.Add(nameBox);
+        // The invalid state is a 1 px amber border around the box (a wrapper, so the box's own theme border stays).
+        Border nameFrame = new Border { BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(3), Child = nameBox };
+        nameFrame.Bind(Border.BorderBrushProperty, new Binding(nameof(NewProjectDialogViewModel.NameMessage)) { Converter = NameFrameBrushConverter });
+        name.Children.Add(nameFrame);
+        TextBlock nameMessage = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 0) };
+        nameMessage.Bind(TextBlock.TextProperty, new Binding(nameof(NewProjectDialogViewModel.NameMessage)));
+        nameMessage.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.NameMessage)) { Converter = StringConverters.IsNotNullOrEmpty });
+        nameMessage.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
+        name.Children.Add(nameMessage);
         grid.Children.Add(name);
         DialogWindow.FocusWhenOpened(nameBox, nameBox.SelectAll);
 
