@@ -29,7 +29,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     /// <inheritdoc/>
     public PlatformProjectResult Create(
         string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
-        string? themeDirectory = null, bool useXmlFormat = false, IReadOnlyList<string>? linkedAddOns = null)
+        string? themeDirectory = null, bool useXmlFormat = false, IReadOnlyList<string>? linkedAddOns = null, bool preview = false)
     {
         string fullDirectory = GetFullDirectory(projectDirectory);
         string projectName = Path.GetFileName(fullDirectory);
@@ -44,7 +44,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string gumFolder = Path.GetDirectoryName(gumProjectPath)!;
 
         (string packageName, string runtimeProjectPath) = GetGumRuntime(platform);
-        string gumReference = $"<PackageReference Include=\"{packageName}\" Version=\"*\" />";
+        string gumReference = $"<PackageReference Include=\"{packageName}\" Version=\"{(preview ? "*-*" : "*")}\" />";
         if (gumSourceDirectory != null)
         {
             string runtimeCsproj = Path.GetFullPath(Path.Combine(gumSourceDirectory, runtimeProjectPath));

@@ -89,7 +89,7 @@ public class NewProjectUiKeyboardTests
         visited.ShouldBe(new[]
         {
             "Project name", "File format", "Location", "Browse for a folder", NewProjectUiText.IncludeForms, NewProjectUiText.CreateCodeProject,
-            "Platform", NewProjectUiText.UseLocalSource, NewProjectUiText.RestorePackages, NewProjectUiText.RecommendedPackages,
+            "Platform", NewProjectUiText.Stable, NewProjectUiText.RestorePackages, NewProjectUiText.RecommendedPackages,
             "Folders", "Command line", "OK", "Cancel",
         });
     }

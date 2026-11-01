@@ -43,6 +43,14 @@ public interface INewProjectService
         string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken);
 
     /// <summary>
+    /// <see cref="AddPackagesAsync(string, IReadOnlyList{string}, Action{string}, CancellationToken)"/>, and with <paramref name="prerelease"/> each
+    /// package may resolve to a preview version. A service that does not override it adds stable references.
+    /// </summary>
+    Task<AddPackagesResult> AddPackagesAsync(
+        string csprojPath, IReadOnlyList<string> packages, bool prerelease, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+        AddPackagesAsync(csprojPath, packages, onOutputLine, cancellationToken);
+
+    /// <summary>
     /// Generates code for every screen and component of the new project (<c>gumcli codegen "&lt;gumj&gt;"</c>), then rewrites the host
     /// game to create the demo screen's generated class (when there is one). Run it after the restore. Does nothing without the Forms template.
     /// </summary>

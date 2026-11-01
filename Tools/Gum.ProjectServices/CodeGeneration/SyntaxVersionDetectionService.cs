@@ -425,7 +425,8 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
     }
 
     // A floating version ("*" or "2026.*") names no folder in the NuGet cache, so it maps to the
-    // highest restored stable version it matches. Anything else is returned unchanged.
+    // highest restored stable version it matches. The prerelease-aware "*-*" (New Project's Preview channel) also
+    // accepts prerelease folders such as 2026.10.29.1-preview.12. Anything else is returned unchanged.
     private string ResolveFloatingVersion(string packageName, string version)
     {
         int starIndex = version.IndexOf('*');
@@ -441,26 +442,67 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         }
 
         string prefix = version.Substring(0, starIndex);
+        bool includePrerelease = version.Substring(starIndex).EndsWith("-*", StringComparison.Ordinal);
 
         Version? highest = null;
+        string? highestPrerelease = null;
         string? highestName = null;
         foreach (string directory in Directory.EnumerateDirectories(packageRoot))
         {
             string name = Path.GetFileName(directory);
-            if (!name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                || !Version.TryParse(name, out Version? parsed))
+            if (!name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            if (highest == null || parsed > highest)
+            int dash = name.IndexOf('-');
+            string? prerelease = dash < 0 ? null : name.Substring(dash + 1);
+            if ((prerelease != null && !includePrerelease)
+                || !Version.TryParse(dash < 0 ? name : name.Substring(0, dash), out Version? parsed))
+            {
+                continue;
+            }
+
+            int comparison = highest == null ? 1 : parsed.CompareTo(highest);
+            if (comparison == 0)
+            {
+                comparison = ComparePrerelease(prerelease, highestPrerelease);
+            }
+
+            if (comparison > 0)
             {
                 highest = parsed;
+                highestPrerelease = prerelease;
                 highestName = name;
             }
         }
 
         return highestName ?? version;
+    }
+
+    // SemVer order of two prerelease labels: a stable version (null) is higher than any prerelease, and the dot-separated
+    // identifiers compare numerically when both are numbers (preview.12 is above preview.9), otherwise by text.
+    private static int ComparePrerelease(string? left, string? right)
+    {
+        if (left == null || right == null)
+        {
+            return left == right ? 0 : left == null ? 1 : -1;
+        }
+
+        string[] leftParts = left.Split('.');
+        string[] rightParts = right.Split('.');
+        for (int i = 0; i < Math.Min(leftParts.Length, rightParts.Length); i++)
+        {
+            int result = int.TryParse(leftParts[i], out int leftNumber) && int.TryParse(rightParts[i], out int rightNumber)
+                ? leftNumber.CompareTo(rightNumber)
+                : string.CompareOrdinal(leftParts[i], rightParts[i]);
+            if (result != 0)
+            {
+                return result;
+            }
+        }
+
+        return leftParts.Length.CompareTo(rightParts.Length);
     }
 
     internal string? FindDllInNuGetCache(string packageName, string version)

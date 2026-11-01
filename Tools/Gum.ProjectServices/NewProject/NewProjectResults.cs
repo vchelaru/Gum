@@ -17,7 +17,8 @@ public enum NewProjectErrorKind
     ProjectAlreadyExists,
     InvalidProjectName,
     RecommendedPackagesNeedPlatform,
-    GenerateCodeNeedsPlatform
+    GenerateCodeNeedsPlatform,
+    PreviewNeedsPlatform
 }
 
 /// <summary>A refused request. <see cref="Message"/> is the exact text <c>gumcli new</c> prints.</summary>
@@ -44,6 +45,12 @@ public class ResolvedNewProject
 
     /// <summary>The theme folder, or <see langword="null"/> for the plain Forms template or an empty project.</summary>
     public string? ThemeDirectory { get; init; }
+
+    /// <summary>Which Gum packages the code project uses.</summary>
+    public NewProjectPackageChannel PackageChannel { get; init; }
+
+    /// <summary>Whether the code project's NuGet references may resolve to preview (prerelease) versions.</summary>
+    public bool UsesPrerelease => PackageChannel == NewProjectPackageChannel.Preview;
 
     /// <summary>The Gum checkout for a source-linked project.</summary>
     public string? GumSourceDirectory { get; init; }

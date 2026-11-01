@@ -1036,6 +1036,39 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     }
 
     [Fact]
+    public void Detect_NuGetPackage_PrereleaseAwareFloatingVersion_UsesTheHighestRestoredPreview()
+    {
+        // New Project's Preview channel writes Version="*-*". The stable "*" ignores prerelease folders (see the test above);
+        // "*-*" takes the highest of all, and preview.12 is above preview.9 and below the stable that follows it.
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        string newestDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.10.29.1-preview.12", "lib", "net8.0");
+        string olderPreviewDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.10.29.1-preview.9", "lib", "net8.0");
+        string olderStableDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.10.1.1", "lib", "net8.0");
+        Directory.CreateDirectory(newestDir);
+        Directory.CreateDirectory(olderPreviewDir);
+        Directory.CreateDirectory(olderStableDir);
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"), Path.Combine(newestDir, "GumCommon.dll"));
+        File.WriteAllText(Path.Combine(olderPreviewDir, "Placeholder.dll"), "not an assembly");
+        File.WriteAllText(Path.Combine(olderStableDir, "Placeholder.dll"), "not an assembly");
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Gum.MonoGame"" Version=""*-*"" />
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = sut.Detect(new CodeOutputProjectSettings { SyntaxVersion = "*", CodeProjectRoot = "./" }, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
+        result.Version.ShouldBe(SyntaxVersionDetectionService.LatestSyntaxVersion);
+    }
+
+    [Fact]
     public void FindDllInNuGetCache_PackageNotInCache_ReturnsNull()
     {
         string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");

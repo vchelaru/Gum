@@ -22,7 +22,8 @@ public static class NewProjectCommandLine
     /// <param name="theme">Added as <c>--theme</c> when Forms are included and it is not <see cref="DefaultTheme"/>.</param>
     /// <param name="sourceLinked">Adds <c>--source-linked</c>; only with a platform.</param>
     /// <param name="restore">False adds <c>--no-restore</c>; only with a platform.</param>
-    public static string Build(string path, string? platform, bool includeForms, string? theme, bool sourceLinked, bool restore)
+    /// <param name="preview">Adds <c>--preview</c> (the preview Gum packages); only with a platform, and never together with <paramref name="sourceLinked"/>.</param>
+    public static string Build(string path, string? platform, bool includeForms, string? theme, bool sourceLinked, bool restore, bool preview = false)
     {
         string command = $"gumcli new \"{path}\"";
         if (platform != null)
@@ -41,6 +42,10 @@ public static class NewProjectCommandLine
         {
             command += " --source-linked";
         }
+        if (platform != null && preview && !sourceLinked)
+        {
+            command += " --preview";
+        }
         if (platform != null && !restore)
         {
             command += " --no-restore";
@@ -52,29 +57,30 @@ public static class NewProjectCommandLine
     /// The <see cref="Build"/> command followed by one <c>dotnet add</c> per package and, when <paramref name="restore"/>, a
     /// final <c>dotnet restore</c>, chained with <c>&amp;&amp;</c> on one line. It mirrors the order the dialog runs
     /// (create, add every package, restore once), so <c>gumcli new</c> gets <c>--no-restore</c> and each add is
-    /// <c>--no-restore</c>, which writes <c>Version="*"</c> without a feed lookup. The csproj path is spelled out so no
+    /// <c>--no-restore</c>, which writes <c>Version="*"</c> (<c>Version="*-*"</c> with <c>--prerelease</c>, for a preview project) without a feed lookup. The csproj path is spelled out so no
     /// <c>cd</c> is needed.
     /// </summary>
     /// <param name="packages">The package ids to add; empty gives the same as <see cref="Build"/>.</param>
     /// <param name="csprojPath">The code project file the new step writes.</param>
     /// <param name="linkedProjects">Full paths of the Gum checkout's add-on projects of a source-linked project, each added with <c>dotnet add reference</c> instead of a package.</param>
+    /// <param name="preview">Adds <c>--preview</c> to the new step and <c>--prerelease</c> to each <c>dotnet add package</c>.</param>
     /// <param name="gumProjectPath">The Gum project file; when set, the last step is <c>gumcli codegen "&lt;gumj&gt;"</c> (every screen and component), after the restore (the generator reads the restored runtime package). Null adds none.</param>
     public static string BuildChained(
         string path, string platform, bool includeForms, string? theme, bool restore, IReadOnlyList<string> packages, string csprojPath,
-        string? gumProjectPath = null, bool sourceLinked = false, IReadOnlyList<string>? linkedProjects = null)
+        string? gumProjectPath = null, bool sourceLinked = false, IReadOnlyList<string>? linkedProjects = null, bool preview = false)
     {
         string codegen = gumProjectPath == null ? string.Empty : $" && gumcli codegen \"{gumProjectPath}\"";
         linkedProjects ??= new string[0];
 
         if (packages.Count == 0 && linkedProjects.Count == 0)
         {
-            return Build(path, platform, includeForms, theme, sourceLinked, restore) + codegen;
+            return Build(path, platform, includeForms, theme, sourceLinked, restore, preview) + codegen;
         }
 
-        string command = Build(path, platform, includeForms, theme, sourceLinked, restore: false);
+        string command = Build(path, platform, includeForms, theme, sourceLinked, restore: false, preview);
         foreach (string package in packages)
         {
-            command += $" && dotnet add \"{csprojPath}\" package {package} --no-restore";
+            command += $" && dotnet add \"{csprojPath}\" package {package} --no-restore" + (preview && !sourceLinked ? " --prerelease" : "");
         }
         foreach (string project in linkedProjects)
         {

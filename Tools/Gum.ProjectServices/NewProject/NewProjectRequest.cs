@@ -22,8 +22,33 @@ public class NewProjectRequest
     /// <summary>A name from <see cref="NewProjectPlatforms"/> to also create a code project, or <see langword="null"/> for the Gum project only.</summary>
     public string? Platform { get; init; }
 
-    /// <summary>Reference the Gum checkout's runtime project instead of the NuGet package. Needs a platform.</summary>
-    public bool SourceLinked { get; init; }
+    private NewProjectPackageChannel _packageChannel;
+
+    /// <summary>
+    /// Which Gum packages the code project uses: stable NuGet (the default), preview (prerelease) NuGet, or the local Gum
+    /// checkout. Preview and local source need a platform.
+    /// </summary>
+    public NewProjectPackageChannel PackageChannel
+    {
+        get => _packageChannel;
+        init => _packageChannel = value;
+    }
+
+    /// <summary>
+    /// Shorthand for <see cref="PackageChannel"/> being <see cref="NewProjectPackageChannel.LocalSource"/>: reference the Gum
+    /// checkout's runtime project instead of the NuGet package. Needs a platform. Setting it to <see langword="false"/> changes nothing.
+    /// </summary>
+    public bool SourceLinked
+    {
+        get => _packageChannel == NewProjectPackageChannel.LocalSource;
+        init
+        {
+            if (value)
+            {
+                _packageChannel = NewProjectPackageChannel.LocalSource;
+            }
+        }
+    }
 
     /// <summary>Run <c>dotnet restore</c> on the code project after creating it. Only used with a platform.</summary>
     public bool Restore { get; init; } = true;

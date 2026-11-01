@@ -128,7 +128,7 @@ public class NewProjectDialogFlowTests
         visited.ShouldBe(new[]
         {
             "Project name", "File format", "Location", "Browse for a folder", "Include Forms controls (recommended)", "Theme",
-            "Include demo screen", "Create C# project", "Platform", "Use local Gum source", "Restore NuGet packages", "Include recommended packages", "Generate code",
+            "Include demo screen", "Create C# project", "Platform", "Stable", "Restore NuGet packages", "Include recommended packages", "Generate code",
             "Folders", "Command line", "OK", "Cancel",
         });
     }
@@ -283,7 +283,7 @@ public class NewProjectDialogFlowTests
         {
             "About Project name", "About File format", "About Location", "About the existing code project warning",
             "About Include Forms controls (recommended)", "About Theme", "About Include demo screen", "About Create C# project",
-            "About Platform",
+            "About Platform", "About Gum packages",
         }, ignoreOrder: true);
         global::Avalonia.Automation.AutomationProperties.GetName(ButtonNamed(window, "PART_CopyCommandLine")).ShouldBe("Copy command line");
         global::Avalonia.Automation.AutomationProperties.GetName(window.Find<Button>(button => button.Content as string == "Browse…")).ShouldBe("Browse for a folder");
