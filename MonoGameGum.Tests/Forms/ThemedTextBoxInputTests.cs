@@ -815,6 +815,55 @@ public class ThemedTextBoxInputTests : FileThemeInputTestBase
 
     [Theory]
     [MemberData(nameof(ThemesAndControls))]
+    public void TextSetFromCodeWhileFocused_ShorterText_SelectionIsClampedToTheText(string theme, string control)
+    {
+        Placed placed = PlaceWithAllSelectedThenShortenFromCode(theme, control);
+
+        (placed.Box.SelectionStart + placed.Box.SelectionLength).ShouldBeLessThanOrEqualTo(2, $"{Describe(placed)}: caret {placed.Box.CaretIndex}");
+    }
+
+    [Theory]
+    [MemberData(nameof(TextBoxThemes))]
+    public void TextSetFromCodeWhileFocused_ShorterText_NoHighlightWiderThanTheNewText(string theme, string control)
+    {
+        Placed placed = PlaceWithAllSelectedThenShortenFromCode(theme, control);
+
+        Text text = (Text)TextGue(placed).RenderableComponent!;
+        Highlights(placed).Where(item => item.AbsoluteWidth > text.WrappedTextWidth + 4f).ShouldBeEmpty(Describe(placed));
+    }
+
+    [Theory]
+    [MemberData(nameof(TextBoxThemes))]
+    public void TextSetFromCodeWhileFocused_ShorterText_TypingAfterwardsAppendsToTheNewText(string theme, string control)
+    {
+        Placed placed = PlaceWithAllSelectedThenShortenFromCode(theme, control);
+
+        Driver.Type("!");
+
+        Content(placed.Box).ShouldBe("hi!", $"{Describe(placed)}: caret {placed.Box.CaretIndex}");
+    }
+
+    [Fact]
+    public void TextSetFromCodeWhileSelected_CodeBuiltTextBox_ClampsCaretAndSelection()
+    {
+        TextBox textBox = new TextBox();
+        textBox.AddToRoot();
+        textBox.IsFocused = true;
+        Driver.Step(2);
+        Driver.Type("hello world");
+        Driver.SetKey(GumKeys.LeftControl, true);
+        Driver.PressKey(GumKeys.A);
+        Driver.SetKey(GumKeys.LeftControl, false);
+
+        textBox.Text = "hi";
+        Driver.Step(2);
+
+        textBox.CaretIndex.ShouldBeLessThanOrEqualTo(2);
+        (textBox.SelectionStart + textBox.SelectionLength).ShouldBeLessThanOrEqualTo(2);
+    }
+
+    [Theory]
+    [MemberData(nameof(ThemesAndControls))]
     public void TextSetFromCodeWhileFocused_ShorterText_CaretIsClampedToTheText(string theme, string control)
     {
         Placed placed = PlaceWithAllSelectedThenShortenFromCode(theme, control);
