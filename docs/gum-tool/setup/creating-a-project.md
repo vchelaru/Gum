@@ -16,7 +16,7 @@ To create a Gum project:
 
 ## Creating a C# Project
 
-Check **Create C# project** to also create a runnable game project with the Gum project inside it. Choose the game framework in **Platform**: MonoGame, KNI, KNI with Skia, raylib, Stride (Windows only), or Silk.NET.
+Check **Create C# project** to also create a runnable game project with the Gum project inside it. Choose the game framework in **Platform**.
 
 <figure><img src="../../.gitbook/assets/01_12 20 02.png" alt=""><figcaption><p>Creating a C# project</p></figcaption></figure>
 
