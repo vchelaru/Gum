@@ -23,5 +23,7 @@ internal static class GumProjectTemplateWriter
         {
             new ProjectCreator().Create(gumProjectPath);
         }
+
+        NewProjectDefaults.ApplyToFile(gumProjectPath);
     }
 }
