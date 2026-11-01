@@ -38,6 +38,15 @@ public class EditorToolbarZoomScreenshotTests
         Dispatcher.UIThread.RunJobs();
 
         PrScreenshot.SaveWindowAtZoomLevels(window, name);
+        // The tool's smallest zoom (50%) is base font size 6.
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        double originalSize = scale.BaseFontSize;
+        using (AppWideWindowInput.FollowBaseFontSize(window, scale))
+        {
+            scale.BaseFontSize = 6;
+            PrScreenshot.SaveWindow(window, name + "-zoom-6");
+            scale.BaseFontSize = originalSize;
+        }
         WriteDensity(window, name);
     });
 
