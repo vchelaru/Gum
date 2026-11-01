@@ -100,7 +100,7 @@ public partial class VariableReferenceCreationTests
             loadResult.ErrorMessage.ShouldBeNullOrEmpty();
             loaded.Initialize();
             ObjectFinder.Self.GumProjectSave = loaded;
-            ElementSaveExtensions.RegisterGueInstantiation("Text", () => new TextRuntime());
+            StandardRuntimeRegistrations.Register();
 
             GraphicalUiElement runtime = loaded.Screens.First(s => s.Name == "TestScreen").ToGraphicalUiElement();
 

@@ -100,7 +100,7 @@ public class ColorPickerMarkersReceiveClicksTests : BeginnerDriverTestBase
         string themeFolder = theme.Length == 0 ? "FormsTemplate" : Path.Combine("FormsThemes", theme);
         string baseType = theme.Length == 0 ? "Controls/ColorPickerStandard" : $"{theme}/Controls/ColorPicker";
         string gumx = Path.Combine(LocateRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", themeFolder, "GumProject.gumx");
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiation("Container", () => new Gum.GueDeriving.ContainerRuntime());
+        StandardRuntimeRegistrations.Register();
         GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
         project.Initialize();
         ObjectFinder.Self.GumProjectSave = project;
