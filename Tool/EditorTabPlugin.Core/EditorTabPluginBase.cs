@@ -555,6 +555,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         var toReturn = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
         toReturn.AddToManagers(SystemManagers.Default, _layerService.MainEditorLayer);
         UpdateTextOutlines(toReturn);
+        _editorRenderableFactory.ShowOnlyOutlinesOwnedBy(toReturn);
         return toReturn;
     }
 

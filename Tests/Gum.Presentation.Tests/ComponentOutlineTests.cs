@@ -11,6 +11,7 @@ using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using Shouldly;
 using System;
+using System.Linq;
 using Xunit;
 using static Gum.Presentation.Tests.StateSelectionCanvasHarness;
 
@@ -24,11 +25,12 @@ namespace Gum.Presentation.Tests;
 public class ComponentOutlineTests : BaseTestClass
 {
     private readonly Func<string, ISystemManagers, IRenderable?>? _previousFunc;
+    private readonly EditorRenderableFactory _factory;
 
     public ComponentOutlineTests()
     {
         Mock<IProjectState> projectState = new Mock<IProjectState>();
-        EditorRenderableFactory factory = new EditorRenderableFactory(projectState.Object);
+        EditorRenderableFactory factory = _factory = new EditorRenderableFactory(projectState.Object);
         _previousFunc = ElementSaveExtensions.CustomCreateGraphicalComponentFunc;
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc =
             (type, managers) => factory.CreateRenderableForType(type, managers);
@@ -121,4 +123,102 @@ public class ComponentOutlineTests : BaseTestClass
 
         root.RenderableComponent.ShouldBeOfType<InvisibleRenderable>();
     }
+
+    #region Outlines belong to the element being edited
+
+    private ComponentSave BuildTextBoxWithInnerContainer()
+    {
+        ComponentSave textBox = new ComponentSave { Name = "TextBox", BaseType = "Container" };
+        textBox.States.Add(new StateSave { Name = "Default", ParentContainer = textBox });
+        textBox.Instances.Add(new InstanceSave { Name = "ClipContainer", BaseType = "Container", ParentContainer = textBox });
+        return textBox;
+    }
+
+    private ScreenSave BuildScreenWith(params (string Name, string BaseType)[] instances)
+    {
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        foreach ((string name, string baseType) in instances)
+        {
+            screen.Instances.Add(new InstanceSave { Name = name, BaseType = baseType, ParentContainer = screen });
+        }
+        return screen;
+    }
+
+    private GraphicalUiElement BuildShown(ElementSave element)
+    {
+        GraphicalUiElement root = element.ToGraphicalUiElement(systemManagers: null!, addToManagers: false);
+        _factory.ShowOnlyOutlinesOwnedBy(root);
+        return root;
+    }
+
+    private static GraphicalUiElement Find(GraphicalUiElement root, string path)
+    {
+        GraphicalUiElement current = root;
+        foreach (string part in path.Split('.'))
+        {
+            current = current.ContainedElements.Single(item => item.Name == part);
+        }
+        return current;
+    }
+
+    [Fact]
+    public void ShowOnlyOutlinesOwnedBy_ContainerInsideComponentInstanceOnScreen_IsHidden()
+    {
+        ComponentSave textBox = BuildTextBoxWithInnerContainer();
+        ScreenSave screen = BuildScreenWith(("TextBoxInstance", "TextBox"), ("Plain", "Container"));
+        BuildProject(textBox);
+        ObjectFinder.Self.GumProjectSave!.Screens.Add(screen);
+
+        GraphicalUiElement root = BuildShown(screen);
+
+        Find(root, "TextBoxInstance.ClipContainer").RenderableComponent.ShouldBeOfType<LineRectangle>().LocalVisible.ShouldBeFalse();
+        Find(root, "Plain").RenderableComponent.ShouldBeOfType<LineRectangle>().LocalVisible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShowOnlyOutlinesOwnedBy_StackPanelInstanceOnScreen_IsShown()
+    {
+        ComponentSave stackPanel = new ComponentSave { Name = "StackPanel", BaseType = "Container" };
+        stackPanel.States.Add(new StateSave { Name = "Default", ParentContainer = stackPanel });
+        ScreenSave screen = BuildScreenWith(("Stack", "StackPanel"));
+        BuildProject(stackPanel);
+        ObjectFinder.Self.GumProjectSave!.Screens.Add(screen);
+
+        GraphicalUiElement root = BuildShown(screen);
+
+        Find(root, "Stack").RenderableComponent.ShouldBeOfType<LineRectangle>().LocalVisible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShowOnlyOutlinesOwnedBy_EditingTheComponentItself_ShowsItsInnerContainer()
+    {
+        ComponentSave textBox = BuildTextBoxWithInnerContainer();
+        BuildProject(textBox);
+
+        GraphicalUiElement root = BuildShown(textBox);
+
+        Find(root, "ClipContainer").RenderableComponent.ShouldBeOfType<LineRectangle>().LocalVisible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AreOutlinesHiddenForExport_Restore_KeepsOutlinesOfOtherElementsHidden()
+    {
+        ComponentSave textBox = BuildTextBoxWithInnerContainer();
+        ScreenSave screen = BuildScreenWith(("TextBoxInstance", "TextBox"), ("Plain", "Container"));
+        BuildProject(textBox);
+        ObjectFinder.Self.GumProjectSave!.Screens.Add(screen);
+        GraphicalUiElement root = BuildShown(screen);
+        LineRectangle inner = Find(root, "TextBoxInstance.ClipContainer").RenderableComponent.ShouldBeOfType<LineRectangle>();
+        LineRectangle plain = Find(root, "Plain").RenderableComponent.ShouldBeOfType<LineRectangle>();
+
+        _factory.AreOutlinesHiddenForExport = true;
+        plain.LocalVisible.ShouldBeFalse();
+        _factory.AreOutlinesHiddenForExport = false;
+
+        plain.LocalVisible.ShouldBeTrue();
+        inner.LocalVisible.ShouldBeFalse();
+    }
+
+    #endregion
 }
