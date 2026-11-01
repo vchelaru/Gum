@@ -212,3 +212,51 @@ public class NewProjectPackageChannelTests : NewProjectServiceTestBase
         }
     }
 }
+
+/// <summary>The real runner's <c>dotnet add</c> arguments for each channel, and the pinned package lists (#7356).</summary>
+public class NewProjectPackageListsTests
+{
+    [Fact]
+    public void RealRunner_PreviewAdd_PassesPrerelease()
+    {
+        DotnetPackageAddRunner.GetArguments("G.csproj", "Gum.Expressions", prerelease: true)
+            .ShouldBe(new[] { "add", "G.csproj", "package", "Gum.Expressions", "--no-restore", "--prerelease" });
+    }
+
+    [Fact]
+    public void RealRunner_StableAdd_DoesNotPassPrerelease()
+    {
+        DotnetPackageAddRunner.GetArguments("G.csproj", "Gum.Expressions", prerelease: false)
+            .ShouldBe(new[] { "add", "G.csproj", "package", "Gum.Expressions", "--no-restore" });
+    }
+
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, NewProjectPackageChannel.Stable, "KernSmith.MonoGameGum,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, NewProjectPackageChannel.Stable, "KernSmith.KniGum,Gum.Expressions")]
+    [InlineData(HostPlatform.Raylib, NewProjectPackageChannel.Stable, "KernSmith.RaylibGum,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, NewProjectPackageChannel.Stable, "Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, NewProjectPackageChannel.Stable, "Gum.Expressions")]
+    [InlineData(HostPlatform.KniSkia, NewProjectPackageChannel.Stable, "")]
+    [InlineData(HostPlatform.MonoGame, NewProjectPackageChannel.Preview, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, NewProjectPackageChannel.Preview, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
+    [InlineData(HostPlatform.Raylib, NewProjectPackageChannel.Preview, "KernSmith.RaylibGum,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, NewProjectPackageChannel.Preview, "Gum.Expressions,Gum.SkiaSharp.ShadowDusk")]
+    [InlineData(HostPlatform.Stride, NewProjectPackageChannel.Preview, "Gum.Expressions,Gum.SkiaSharp.ShadowDusk")]
+    [InlineData(HostPlatform.KniSkia, NewProjectPackageChannel.Preview, "")]
+    public void For_PinsEveryPlatformAndChannelList(HostPlatform platform, NewProjectPackageChannel channel, string expected)
+    {
+        string.Join(",", RecommendedPackages.For(platform, channel)).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
+    [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, "Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, "Gum.Expressions")]
+    [InlineData(HostPlatform.KniSkia, "")]
+    public void ForSourceLinked_PinsEveryPlatformsAddOns(HostPlatform platform, string expected)
+    {
+        string.Join(",", RecommendedPackages.ForSourceLinked(platform)).ShouldBe(expected);
+    }
+}

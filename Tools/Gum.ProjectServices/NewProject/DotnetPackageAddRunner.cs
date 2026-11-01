@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,15 +24,21 @@ public class DotnetPackageAddRunner : IPackageAddRunner
     private static ProcessStartInfo CreateStartInfo(string csprojPath, string packageId, bool prerelease)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo("dotnet");
-        startInfo.ArgumentList.Add("add");
-        startInfo.ArgumentList.Add(csprojPath);
-        startInfo.ArgumentList.Add("package");
-        startInfo.ArgumentList.Add(packageId);
-        startInfo.ArgumentList.Add("--no-restore");
-        if (prerelease)
+        foreach (string argument in GetArguments(csprojPath, packageId, prerelease))
         {
-            startInfo.ArgumentList.Add("--prerelease");
+            startInfo.ArgumentList.Add(argument);
         }
         return startInfo;
+    }
+
+    /// <summary>The <c>dotnet</c> arguments of one add: <c>add &lt;csproj&gt; package &lt;id&gt; --no-restore</c>, plus <c>--prerelease</c> when asked.</summary>
+    public static IReadOnlyList<string> GetArguments(string csprojPath, string packageId, bool prerelease)
+    {
+        List<string> arguments = new List<string> { "add", csprojPath, "package", packageId, "--no-restore" };
+        if (prerelease)
+        {
+            arguments.Add("--prerelease");
+        }
+        return arguments;
     }
 }
