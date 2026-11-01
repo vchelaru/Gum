@@ -19,7 +19,7 @@ namespace Gum.Renderables;
 /// branch keeps working unchanged — when <see cref="FillColor"/> and <see cref="StrokeColor"/>
 /// are both <c>null</c> the render path collapses to the original behavior.
 /// </summary>
-public class LineRectangle : InvisibleRenderable
+public class LineRectangle : GradientShapeRenderable
 {
     /// <summary>
     /// Legacy binary-dotted flag. When <c>true</c>, the stroke renders as <see cref="DashLength"/>-px
@@ -111,36 +111,6 @@ public class LineRectangle : InvisibleRenderable
 
     /// <summary>End color (linear: at the axis end; radial: at the outer radius).</summary>
     public Color Color2 { get; set; } = Color.White;
-
-    /// <summary>
-    /// X coordinate of the gradient axis start (linear) or radial gradient center, in pixels
-    /// relative to the rectangle's top-left. Default 0.
-    /// </summary>
-    public float GradientX1 { get; set; }
-
-    /// <summary>Y coordinate of <see cref="GradientX1"/>, same coord space.</summary>
-    public float GradientY1 { get; set; }
-
-    /// <summary>
-    /// X coordinate of the gradient axis end (linear only — ignored for radial).
-    /// </summary>
-    public float GradientX2 { get; set; }
-
-    /// <summary>Y coordinate of <see cref="GradientX2"/>.</summary>
-    public float GradientY2 { get; set; }
-
-    /// <summary>
-    /// Inner radius for a radial gradient — at this radius the color is <see cref="Color1"/>.
-    /// Default 0 (solid inner color at the gradient center).
-    /// </summary>
-    public float GradientInnerRadius { get; set; }
-
-    /// <summary>
-    /// Outer radius for a radial gradient — at this radius the color is <see cref="Color2"/>.
-    /// When 0 (the default), half the diagonal of the rectangle is used so a default-configured
-    /// radial gradient covers the whole shape.
-    /// </summary>
-    public float GradientOuterRadius { get; set; }
 
     /// <summary>
     /// Length in world-space pixels of each dash segment around the perimeter.
@@ -666,14 +636,15 @@ public class LineRectangle : InvisibleRenderable
         // invariant (it's circles around a center). What matters is that the gradient center
         // sits at the correct world position; the circles around it look identical regardless
         // of rectangle rotation. For unrotated rectangles, R(x, y) reduces to (ox+x, oy+y).
-        float gxLocal = GradientX1;
-        float gyLocal = GradientY1;
+        float gxLocal = EffectiveGradientX1;
+        float gyLocal = EffectiveGradientY1;
         Vector2 centerWorld = new Vector2(ox + gxLocal, oy + gyLocal);
 
-        float outer = GradientOuterRadius > 0f
-            ? GradientOuterRadius
+        float effectiveOuter = EffectiveGradientOuterRadius;
+        float outer = effectiveOuter > 0f
+            ? effectiveOuter
             : 0.5f * MathF.Sqrt(w * w + h * h);
-        float inner = GradientInnerRadius;
+        float inner = EffectiveGradientInnerRadius;
         float span = outer - inner;
 
         // Degenerate band (inner >= outer) → whole shape reads as Color2.
@@ -729,14 +700,16 @@ public class LineRectangle : InvisibleRenderable
 
     private Color SampleLinearAt(float localX, float localY)
     {
-        float dx = GradientX2 - GradientX1;
-        float dy = GradientY2 - GradientY1;
+        float x1 = EffectiveGradientX1;
+        float y1 = EffectiveGradientY1;
+        float dx = EffectiveGradientX2 - x1;
+        float dy = EffectiveGradientY2 - y1;
         float lenSq = dx * dx + dy * dy;
         if (lenSq <= 0f)
         {
             return Color1;
         }
-        float t = ((localX - GradientX1) * dx + (localY - GradientY1) * dy) / lenSq;
+        float t = ((localX - x1) * dx + (localY - y1) * dy) / lenSq;
         return LerpClamped(t);
     }
 
