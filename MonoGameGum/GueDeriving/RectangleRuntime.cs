@@ -2162,6 +2162,9 @@ public class RectangleRuntime : GraphicalUiElement
             // rectangle is a stroke-only outline, and seed the gradient start from the body color.
             PushFillColorToRenderable();
             SyncGradientStart();
+
+            // The tool's authored default blur (#7299); the renderable's own default is 0 (hard).
+            DropshadowBlur = 3;
 #endif
 
             Width = 50;
