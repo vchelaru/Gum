@@ -419,7 +419,44 @@ namespace GumRuntime
         // all UI work runs on one thread.
         private static int _buildDepth;
 
+        // Elements whose build is in progress. An instance of one of these, met while building its own contents,
+        // would recurse until the stack overflows, which cannot be caught (#7468).
+        private static readonly HashSet<ElementSave> _elementsBeingBuilt = new HashSet<ElementSave>();
+
+        /// <summary>
+        /// True, after reporting it, when <paramref name="instanceElement"/> is already being built higher up the
+        /// stack, so building another one for an instance would never end. The instance is skipped.
+        /// </summary>
+        internal static bool IsCircularInstance(ElementSave instanceElement, InstanceSave instance)
+        {
+            if (!_elementsBeingBuilt.Contains(instanceElement))
+            {
+                return false;
+            }
+
+            RaiseReferenceError($"Circular instance: {instance.ParentContainer?.Name}.{instance.Name} is an instance of " +
+                $"{instanceElement.Name}, which contains it. The instance was not created.");
+            return true;
+        }
+
         private static GraphicalUiElement ToGraphicalUiElementCore(ElementSave elementSave,
+            ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
+        {
+            bool addedToBeingBuilt = _elementsBeingBuilt.Add(elementSave);
+            try
+            {
+                return BuildElement(elementSave, systemManagers, addToManagers, genericType, isOutermostBuild);
+            }
+            finally
+            {
+                if (addedToBeingBuilt)
+                {
+                    _elementsBeingBuilt.Remove(elementSave);
+                }
+            }
+        }
+
+        private static GraphicalUiElement BuildElement(ElementSave elementSave,
             ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);

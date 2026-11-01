@@ -21,7 +21,7 @@ namespace GumRuntime
             ElementSave? instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
 
             GraphicalUiElement? toReturn = null;
-            if (instanceElement != null)
+            if (instanceElement != null && !ElementSaveExtensions.IsCircularInstance(instanceElement, instanceSave))
             {
                 string? genericType = null;
 
