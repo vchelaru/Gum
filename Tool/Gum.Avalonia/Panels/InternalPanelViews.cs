@@ -8,6 +8,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Gum.Avalonia.Plugins.TreeView;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
@@ -119,7 +120,8 @@ public sealed class ErrorTabHeaderView : StackPanel
         Orientation = Orientation.Horizontal;
         Spacing = 4;
 
-        global::Avalonia.Controls.Shapes.Ellipse dot = new global::Avalonia.Controls.Shapes.Ellipse { Width = 10, Height = 10, VerticalAlignment = VerticalAlignment.Center };
+        global::Avalonia.Controls.Shapes.Ellipse dot = new global::Avalonia.Controls.Shapes.Ellipse { VerticalAlignment = VerticalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(dot, 10);
         dot.Bind(global::Avalonia.Controls.Shapes.Shape.FillProperty, new Binding(nameof(AllErrorsViewModel.Errors) + ".Count") { Converter = ViewConverters.ErrorCountBrush });
         Children.Add(dot);
 

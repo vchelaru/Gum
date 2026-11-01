@@ -6,6 +6,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
+using Gum.Avalonia.Plugins.TreeView;
 using Avalonia.Media;
 using Gum.Avalonia.Themes;
 
@@ -135,14 +136,14 @@ public sealed class MainPanelView : Grid
         Button close = new Button
         {
             Name = CloseButtonName,
-            Width = 14,
-            Height = 14,
             Padding = new Thickness(0),
             Margin = new Thickness(6, 0, -1, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
             Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Dismiss, 10),
         }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
+        AvaloniaTreeIcons.FollowBaseFontSize(close, 14);
+        AvaloniaTreeIcons.FollowBaseFontSize((Control)close.Content!, 10);
         close.Classes.Add(GumChromeStyles.FlatButtonClass);
         ToolTip.SetTip(close, "Close tab");
         close.Bind(IsVisibleProperty, new Binding(nameof(AvaloniaPluginTab.CanClose)));
