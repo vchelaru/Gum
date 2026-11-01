@@ -385,7 +385,7 @@ public class DarkProTemplateTests
         {
             "Accent", "AccentDark", "AccentPressed", "Background", "Border", "BorderHover",
             "DisabledBorder", "DisabledFill", "DisabledText", "DisabledThumb", "HoverAccent",
-            "Muted", "Placeholder", "PressedFill", "PressedText", "Surface1", "Surface2", "Text"
+            "Muted", "Placeholder", "PressedFill", "PressedText", "Surface1", "Surface2", "Text", "TextOnAccent"
         };
         string[] expectedTextStyles = { "Normal", "Strong" };
 

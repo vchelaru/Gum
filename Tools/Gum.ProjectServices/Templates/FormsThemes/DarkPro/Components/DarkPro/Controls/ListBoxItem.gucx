@@ -290,6 +290,16 @@
           <string>FillColor = Components/DarkPro/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.TextOnAccent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Disabled</Name>
