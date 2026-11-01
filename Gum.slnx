@@ -24,6 +24,8 @@
     <Project Path="Gum/CsvLibrary/CsvLibrary.csproj" />
     <Project Path="GumCommon/GumCommon.csproj" />
     <Project Path="InputLibrary/InputLibrary.csproj" />
+    <Project Path="Integrations/KernSmith/KernSmith.GumCommon/KernSmith.GumCommon.csproj" />
+    <Project Path="Integrations/KernSmith/KernSmith.MonoGameGum/KernSmith.MonoGameGum.csproj" />
     <Project Path="MonoGameGum/KniGum/KniGum.csproj" />
     <Project Path="MonoGameGum/MonoGameGum.csproj" />
     <Project Path="Runtimes/GumExpressions/GumExpressions.csproj" />
