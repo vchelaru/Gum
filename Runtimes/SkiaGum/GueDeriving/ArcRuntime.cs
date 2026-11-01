@@ -652,15 +652,11 @@ public class ArcRuntime : GraphicalUiElement
 
             // Pre-seed dropshadow offset/blur so toggling HasDropshadow = true at runtime
             // produces a visible shadow without further setup — same default the Skia/Apos
-            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor. Anisotropic
-            // seed (X = 0, Y = 3) is intentional; per-axis is deprecated but DropshadowBlur
-            // (scalar) can't express the asymmetry.
+            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor. Blur is the tool's
+            // authored default (isotropic 3, #7299).
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
-#pragma warning disable CS0618
-            DropshadowBlurX = 0;
-            DropshadowBlurY = 3;
-#pragma warning restore CS0618
+            DropshadowBlur = 3;
         }
     }
 
@@ -1066,13 +1062,8 @@ public class ArcRuntime
 
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
-            // Anisotropic seed (X = 0, Y = 3) is intentional — the arc's default shadow blurs
-            // only vertically. Per-axis is deprecated on the public surface but kept here for
-            // that default; DropshadowBlur (scalar) can't express the asymmetry.
-#pragma warning disable CS0618
-            DropshadowBlurX = 0;
-            DropshadowBlurY = 3;
-#pragma warning restore CS0618
+            // The tool's authored default: isotropic blur 3 (#7299).
+            DropshadowBlur = 3;
         }
     }
 
