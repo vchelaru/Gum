@@ -1951,7 +1951,16 @@ public class FrameworkElement : INotifyPropertyChanged
 
     private static bool AreAncestorsEnabled(InteractiveGue visual)
     {
-        return visual.Parent is not InteractiveGue parent || parent.IsEnabledRecursively;
+        // Walk every GraphicalUiElement ancestor: a plain GraphicalUiElement (such as a screen loaded
+        // from a file) can sit between InteractiveGue ancestors.
+        for (GraphicalUiElement? current = visual.Parent; current != null; current = current.Parent)
+        {
+            if (current is InteractiveGue { IsEnabled: false })
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// <summary>

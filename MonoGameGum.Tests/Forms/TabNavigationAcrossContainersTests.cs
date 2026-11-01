@@ -412,6 +412,26 @@ public class TabNavigationAcrossContainersTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleTab_ShouldNotFocusAllowFocusWhenDisabledControl_WhenDisabledAncestorIsAbovePlainGroup()
+    {
+        StackPanel disabledContainer = new();
+        disabledContainer.IsEnabled = false;
+        GraphicalUiElement plainGroup = NewPlain();
+        disabledContainer.Visual.Children.Add(plainGroup);
+        Button a = new();
+        plainGroup.Children.Add(a.Visual);
+        Button b = new();
+        plainGroup.Children.Add(b.Visual);
+        b.IsEnabled = false;
+        b.AllowFocusWhenDisabled = true;
+        a.IsFocused = true;
+
+        a.HandleTab();
+
+        b.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleTab_ShouldSkipControlWithoutEvents_OnPlainScreen()
     {
         Layout layout = BuildPlain(1, 1, 1);
