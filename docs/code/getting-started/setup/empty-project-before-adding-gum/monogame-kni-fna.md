@@ -6,6 +6,10 @@ Before you begin working with Gum, you need a MonoGame/KNI project. This could b
 
 ## Creating an New Project
 
+{% hint style="info" %}
+To skip these steps, create the project in the Gum tool: select **File** > **New Project**, check **Create C# project**, and pick MonoGame or KNI as the platform. The project already references Gum and loads a Gum project. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
+{% endhint %}
+
 To create a new MonoGame project, follow the steps in the MonoGame Getting Started tutorial: [https://docs.monogame.net/articles/tutorials/building\_2d\_games/02\_getting\_started/index.html?tabs=windows](https://docs.monogame.net/articles/tutorials/building_2d_games/02_getting_started/index.html?tabs=windows)
 
 To create a new KNI project, see the KNI project page: [https://github.com/kniEngine/kni](https://github.com/kniEngine/kni)
