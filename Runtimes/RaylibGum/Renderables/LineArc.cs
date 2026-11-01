@@ -510,7 +510,7 @@ public class LineArc : GradientShapeRenderable
             float lenSq = dx * dx + dy * dy;
             if (lenSq <= 0f)
             {
-                return Color1;
+                return Color2;
             }
             t = ((localX - gx1) * dx + (localY - gy1) * dy) / lenSq;
         }
