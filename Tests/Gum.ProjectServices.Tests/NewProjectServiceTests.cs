@@ -70,7 +70,8 @@ public class NewProjectServiceTests : BaseTestClass
 
                 NewProjectResult result = await service.ExecuteAsync(new NewProjectRequest
                 {
-                    Path = game, Platform = name, Template = "empty", UseXmlFormat = xml, Restore = false
+                    Path = game, Platform = name, Template = "empty", UseXmlFormat = xml, Restore = false,
+                    SourceLinked = name == "kniskia"
                 }, null, CancellationToken.None);
 
                 result.Files.Success.ShouldBeTrue($"{name}: {result.Files.ErrorMessage}");
@@ -124,10 +125,30 @@ public class NewProjectServiceTests : BaseTestClass
         validation.Resolved.GumProjectPath.ShouldBe(Path.Combine(path, "Content", "GumProject", "GumProject.gumj"));
     }
 
+    [Fact]
+    public void Validate_KniSkiaWithoutSourceLinked_NamesTheFix()
+    {
+        NewProjectValidation validation = CreateService().Validate(
+            new NewProjectRequest { Path = Path.Combine(_folder, "Game"), Platform = "kniskia" });
+
+        validation.Error!.Message.ShouldContain("--source-linked");
+        validation.Error.Message.ShouldContain("Gum checkout");
+    }
+
+    [Fact]
+    public void Validate_KniSkiaWithSourceLinked_IsAccepted()
+    {
+        NewProjectValidation validation = CreateService().Validate(
+            new NewProjectRequest { Path = Path.Combine(_folder, "Game"), Platform = "kniskia", SourceLinked = true });
+
+        validation.Error.ShouldBeNull();
+    }
+
     [Theory]
     [InlineData("forms", null, "fna", false, NewProjectErrorKind.FnaNotSupported)]
     [InlineData("forms", null, "amiga", false, NewProjectErrorKind.UnknownPlatform)]
     [InlineData("forms", null, null, true, NewProjectErrorKind.SourceLinkedNeedsPlatform)]
+    [InlineData("forms", null, "kniskia", false, NewProjectErrorKind.KniSkiaNeedsSourceLinked)]
     [InlineData("bogus", null, null, false, NewProjectErrorKind.UnknownTemplate)]
     [InlineData("empty", "Meadow", null, false, NewProjectErrorKind.ThemeNeedsFormsTemplate)]
     [InlineData("forms", "NoSuchTheme", null, false, NewProjectErrorKind.UnknownTheme)]
@@ -612,7 +633,8 @@ public class NewProjectServiceTests : BaseTestClass
             Path = Path.Combine(_folder, "Cased"),
             Template = template,
             Theme = theme,
-            Platform = platform
+            Platform = platform,
+            SourceLinked = platform == "KNISKIA"
         });
 
         validation.IsValid.ShouldBeTrue(validation.Error?.Message);
@@ -629,7 +651,8 @@ public class NewProjectServiceTests : BaseTestClass
             {
                 Path = Path.Combine(_folder, "P" + name.Replace('.', '_')),
                 Platform = name,
-                Template = "empty"
+                Template = "empty",
+                SourceLinked = platform == HostPlatform.KniSkia
             });
 
             validation.IsValid.ShouldBeTrue($"{name}: {validation.Error?.Message}");

@@ -71,7 +71,7 @@ The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCo
 {% endhint %}
 
 {% hint style="warning" %}
-`kniskia` creates a KNI game that draws Gum through Skia. Its default package reference to `Gum.KniSkia` restores only once that package is on NuGet, planned for December 2026. Until then, create the project with `--source-linked`.
+`kniskia` creates a KNI game that draws Gum through Skia. `Gum.KniSkia` is not on NuGet yet (planned for December 2026), so `kniskia` always needs `--source-linked` and a Gum checkout; without it the command is refused.
 {% endhint %}
 
 ## Linking to Gum Source
