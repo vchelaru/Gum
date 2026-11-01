@@ -58,6 +58,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     private NewProjectFilesResult? _createdFiles;
     private IReadOnlyList<string> _createdPackages = Array.Empty<string>();
     private ResolvedNewProject? _createdResolved;
+    private List<CreationStep> _stepPlan = new List<CreationStep>();
     private int _refreshVersion;
     private string? _existingCodeProject;
     private bool _targetNotEmpty;
@@ -730,7 +731,8 @@ public class NewProjectDialogViewModel : DialogViewModel
                 return;
             }
 
-            SetBusy(true, "Creating files...");
+            _stepPlan = PlanSteps(validation.Resolved!);
+            SetBusy(true, StepText(CreationStep.CreatingFiles, "Creating files..."));
             _cancellation = new CancellationTokenSource();
             NewProjectFilesResult files = await _service.CreateFilesAsync(validation.Resolved!, _cancellation.Token);
             if (files.Canceled || !files.Success)
@@ -791,7 +793,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             IProgress<string> output = new Progress<string>(line => ProgressDetail = line);
             if (_createdPackages.Count > 0)
             {
-                SetBusy(true, "Adding recommended packages...");
+                SetBusy(true, StepText(CreationStep.AddingPackages, "Adding recommended packages..."));
                 _cancellation = new CancellationTokenSource();
                 AddPackagesResult added = _createdResolved?.UsesPrerelease == true
                     ? await _service.AddPackagesAsync(csproj, _createdPackages, prerelease: true, output.Report, _cancellation.Token)
@@ -818,7 +820,7 @@ public class NewProjectDialogViewModel : DialogViewModel
                 return;
             }
 
-            SetBusy(true, "Running dotnet restore...");
+            SetBusy(true, StepText(CreationStep.Restoring, "Running dotnet restore..."));
             ProgressDetail = string.Empty;
             _cancellation = new CancellationTokenSource();
             RestoreResult result = await _service.RestoreAsync(csproj, output.Report, _cancellation.Token);
@@ -868,7 +870,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             return;
         }
 
-        SetBusy(true, "Generating code for the demo screen...");
+        SetBusy(true, StepText(CreationStep.GeneratingCode, "Generating code for the demo screen..."));
         ProgressDetail = string.Empty;
         _cancellation = new CancellationTokenSource();
         GenerateCodeResult generated = await _service.GenerateCodeAsync(
@@ -899,6 +901,38 @@ public class NewProjectDialogViewModel : DialogViewModel
         IsCodeProjectCreated = true;
         IsRestoreFailed = false;
         base.OnAffirmative();
+    }
+
+    private enum CreationStep { CreatingFiles, AddingPackages, Restoring, GeneratingCode }
+
+    // The steps this creation runs, in order, known from the chosen options before any of them starts.
+    private List<CreationStep> PlanSteps(ResolvedNewProject resolved)
+    {
+        List<CreationStep> steps = new List<CreationStep> { CreationStep.CreatingFiles };
+        if (resolved.CsprojPath != null)
+        {
+            if (resolved.RecommendedPackages.Count > 0)
+            {
+                steps.Add(CreationStep.AddingPackages);
+            }
+            if (RunRestore)
+            {
+                steps.Add(CreationStep.Restoring);
+            }
+            if (resolved.GenerateCode && resolved.IncludeFormsTemplate)
+            {
+                steps.Add(CreationStep.GeneratingCode);
+            }
+        }
+        return steps;
+    }
+
+    // "Step 2 of 4: Running dotnet restore..."; a lone step has no position to show. The plan is kept for Retry,
+    // so a retried step keeps the number it had in the first run.
+    private string StepText(CreationStep step, string text)
+    {
+        int index = _stepPlan.IndexOf(step);
+        return _stepPlan.Count > 1 && index >= 0 ? $"Step {index + 1} of {_stepPlan.Count}: {text}" : text;
     }
 
     private void SetBusy(bool busy, string progressText)
