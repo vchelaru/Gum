@@ -349,6 +349,9 @@
     <Variable Type="float?" Name="MinWidth" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
     </Variable>
+    <Variable Type="bool" Name="RaiseChildrenEventsOutsideOfBounds" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
