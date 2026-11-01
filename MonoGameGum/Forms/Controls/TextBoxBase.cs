@@ -546,6 +546,17 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>
+    /// Clears the selection after the text was replaced, as a TextBox in other UI frameworks does, so text
+    /// set from code cannot leave a selection and its highlight over the new text, where the next typed
+    /// character would replace all of it. Raises SelectionChanged only when a selection was cleared.
+    /// </summary>
+    protected void ClearSelectionAfterTextChange(int textLength)
+    {
+        selectionStart = System.Math.Min(selectionStart, textLength);
+        SelectionLength = 0;
+    }
+
     /// <inheritdoc/>
     protected override void ReactToVisualRemoved()
     {
