@@ -173,8 +173,8 @@ public sealed class NewProjectDialogView : StackPanel
         name.Children.Add(FieldLabel(NewProjectDialogText.ProjectName, NewProjectDialogText.ProjectNameTip));
         TextBox nameBox = new TextBox { MinWidth = 90 };
         nameBox.Bind(TextBox.TextProperty, new Binding(nameof(NewProjectDialogViewModel.ProjectName)) { Mode = BindingMode.TwoWay });
-        // The invalid state is a 1 px amber border around the box (a wrapper, so the box's own theme border stays).
-        Border nameFrame = new Border { BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(3), Child = nameBox };
+        // The invalid state is a 1 px amber border around the box (a wrapper, so the box's own theme border stays); the negative margin keeps the box aligned with the fields below.
+        Border nameFrame = new Border { Margin = new Thickness(-1), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(3), Child = nameBox };
         nameFrame.Bind(Border.BorderBrushProperty, new Binding(nameof(NewProjectDialogViewModel.NameMessage)) { Converter = NameFrameBrushConverter });
         name.Children.Add(nameFrame);
         TextBlock nameMessage = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 0) };
