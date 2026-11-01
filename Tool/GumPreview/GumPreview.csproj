@@ -160,6 +160,9 @@
 		     Polygon) - RectangleRuntime and friends render nothing without this (see Game1's
 		     ShapeRenderer.Self.Initialize() call and the gum-samples skill's MonoGame host-init note). -->
 		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+		<!-- Bakes a Text's font in memory when the tool has not written its FontCache file (#7315);
+		     see PreviewFontCreator. -->
+		<ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -61,6 +61,7 @@
 		<Compile Include="..\..\Tool\GumPreview\PreviewShaderResolver.cs" Link="GumPreview\PreviewShaderResolver.cs" />
 		<Compile Include="..\..\Tool\EditorTabPlugin.Core\Services\ShaderSourceCompiler.cs" Link="GumPreview\ShaderSourceCompiler.cs" />
 		<Compile Include="..\..\Tool\GumPreview\PreviewDeviceSettings.cs" Link="GumPreview\PreviewDeviceSettings.cs" />
+		<Compile Include="..\..\Tool\GumPreview\PreviewFontCreator.cs" Link="GumPreview\PreviewFontCreator.cs" />
 		<!-- A real code-generated runtime component (a ContainerRuntime), for the wrong-service ownership test. -->
 		<Compile Include="..\..\Samples\GumFormsSample\GumFormsSampleCommon\Components\Controls\ButtonStandardRuntime.cs" Link="GeneratedSample\ButtonStandardRuntime.cs" />
 		<Compile Include="..\..\Samples\GumFormsSample\GumFormsSampleCommon\Components\Controls\ButtonStandardRuntime.Generated.cs" Link="GeneratedSample\ButtonStandardRuntime.Generated.cs" />

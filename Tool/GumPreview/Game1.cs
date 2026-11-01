@@ -105,6 +105,10 @@ public class Game1 : Game
         // resolves as it loads.
         PreviewShaderResolver.Register(GraphicsDevice);
 
+        // Before the project's elements are built, so a Text whose FontCache file the tool has not
+        // written yet still gets its font (#7315).
+        PreviewFontCreator.Register(GraphicsDevice);
+
         // The window is sized for the backing scale on the first Update, once it is showing; a resize
         // here is undone when MonoGame shows it.
         _isRetinaBackingEnabled = MacRetinaBacking.TryEnable(Window.Handle);
