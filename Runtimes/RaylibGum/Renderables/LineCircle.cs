@@ -597,7 +597,7 @@ public class LineCircle : GradientShapeRenderable
             float lenSq = dx * dx + dy * dy;
             if (lenSq <= 0f)
             {
-                Rlgl.Color4ub(Color1.R, Color1.G, Color1.B, Color1.A);
+                Rlgl.Color4ub(Color2.R, Color2.G, Color2.B, Color2.A);
                 Rlgl.Vertex2f(worldX, worldY);
                 return;
             }

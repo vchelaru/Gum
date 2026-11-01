@@ -866,6 +866,12 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
             var pointA = RotateAround(new Vector2(effectiveGradientX1, effectiveGradientY1), pivot, rotationRadians);
             var pointB = RotateAround(new Vector2(effectiveGradientX2, effectiveGradientY2), pivot, rotationRadians);
 
+            if (pointA == pointB)
+            {
+                // Apos paints the start color for a zero length gradient; Skia clamps to the end color.
+                firstColor = secondColor;
+            }
+
             return new Gradient(pointA, firstColor, pointB, secondColor);
         }
         else
