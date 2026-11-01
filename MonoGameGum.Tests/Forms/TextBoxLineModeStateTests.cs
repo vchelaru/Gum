@@ -48,7 +48,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
         string gumx = isTheme
             ? Path.Combine(root, "FormsThemes", project, "GumProject.gumx")
             : Path.Combine(root, project, "GumProject.gumx");
-        GumProjectSave gumProject = GumProjectSave.Load(gumx, out _)!;
+        GumProjectSave gumProject = GumProjectSave.Load(gumx, out _) ?? throw new InvalidOperationException(gumx);
         gumProject.Initialize();
         ObjectFinder.Self.GumProjectSave = gumProject;
         string baseType = isTheme ? $"{project}/Controls/{control}" : $"Controls/{control}";
@@ -56,7 +56,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
         if (selectionHeightOnlyInSingle)
         {
             ComponentSave component = gumProject.Components.First(item => item.Name == baseType);
-            component.DefaultState.Variables.RemoveAll(item =>
+            component.DefaultState!.Variables.RemoveAll(item =>
                 item.Name == "SelectionInstance.Height" || item.Name == "SelectionInstance.HeightUnits");
             StateSave single = component.Categories.First(item => item.Name == "LineModeCategory")
                 .States.First(item => item.Name == "Single");
@@ -70,14 +70,14 @@ public class TextBoxLineModeStateTests : BaseTestClass
         screen.Instances.Add(new InstanceSave { Name = "Box", BaseType = baseType, ParentContainer = screen });
         if (authored == Authored.Multi)
         {
-            screen.DefaultState.SetValue("Box.LineModeCategoryState", "Multi", "LineModeCategory");
+            screen.DefaultState!.SetValue("Box.LineModeCategoryState", "Multi", "LineModeCategory");
         }
         gumProject.Screens.Add(screen);
         gumProject.Initialize();
-        GraphicalUiElement screenVisual = screen.ToGraphicalUiElement();
+        GraphicalUiElement screenVisual = screen.ToGraphicalUiElement()!;
         screenVisual.UpdateLayout();
         GraphicalUiElement boxVisual = screenVisual.GetGraphicalUiElementByName("Box")!;
-        return new Loaded(screenVisual, boxVisual, (TextBoxBase)((InteractiveGue)boxVisual).FormsControlAsObject);
+        return new Loaded(screenVisual, boxVisual, (TextBoxBase)((InteractiveGue)boxVisual).FormsControlAsObject!);
     }
 
     private static VerticalAlignment TextAlignment(GraphicalUiElement boxVisual) =>
@@ -94,7 +94,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
         loaded.Box.IsFocused = true;
         loaded.Box.SelectAll();
         loaded.Screen.UpdateLayout();
-        return loaded.BoxVisual.GetGraphicalUiElementByName("SelectionInstance")!.GetAbsoluteHeight();
+        return loaded.BoxVisual.GetGraphicalUiElementByName("SelectionInstance")!.AbsoluteHeight;
     }
 
     #endregion
@@ -159,7 +159,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
     {
         Loaded loaded = LoadThemed(project, "TextBox", Authored.Default);
         loaded.Box.AcceptsReturn = true;
-        TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToContainer);
+        TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToParent);
     }
 
     [Theory]
@@ -169,7 +169,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
     {
         Loaded loaded = LoadThemed(project, control, Authored.Multi);
 
-        TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToContainer);
+        TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToParent);
         loaded.Box.AcceptsReturn.ShouldBeFalse();
     }
 
@@ -187,7 +187,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
         SelectAllHeight(loaded).ShouldBeGreaterThan(0f);
         // The height is authored only in "Single", so it applies only if that state is applied.
         loaded.BoxVisual.GetGraphicalUiElementByName("SelectionInstance")!.HeightUnits
-            .ShouldBe(DimensionUnitType.RelativeToContainer);
+            .ShouldBe(DimensionUnitType.RelativeToParent);
     }
 
     [Theory]
@@ -197,7 +197,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
     {
         Loaded loaded = LoadThemed(project, control, Authored.Multi, selectionHeightOnlyInSingle: true);
 
-        TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToContainer);
+        TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToParent);
     }
 
     #endregion
