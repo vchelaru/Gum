@@ -35,6 +35,14 @@ check $allowed "python -m" 'python3 -m json.tool a.json'
 check $allowed "no python" 'dotnet build Gum.slnx'
 check $allowed "a flag named like python" 'echo --python-flag - x'
 check $allowed "pip install" 'pip install -r requirements.txt'
+check $blocked "bare cat > file after cd" 'cd x && cat > /tmp/null 2>&1; node -v'
+check $blocked "bare cat > file at start" 'cat > out.txt'
+check $blocked "bare cat >> file" 'cd x; cat >> out.txt'
+check $allowed "cat with heredoc" "cat > out.txt <<'EOF'\nhello\nEOF"
+check $allowed "cat file to file" 'cat a.txt > out.txt'
+check $allowed "piped into cat" 'echo hi | cat > out.txt'
+check $allowed "cat with input redirect" 'cat > out.txt < in.txt'
+check $allowed "cat only" 'cat a.txt b.txt'
 
 if [ "$failures" -ne 0 ]; then
   echo "$failures failure(s)"
