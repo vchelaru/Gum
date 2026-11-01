@@ -125,7 +125,7 @@ public sealed class NewProjectDialogView : StackPanel
         busy.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsBusy)));
         busy.Children.Add(new ProgressBar { IsIndeterminate = true });
         busy.Children.Add(Bound(new TextBlock { FontWeight = FontWeight.SemiBold }, TextBlock.TextProperty, nameof(NewProjectDialogViewModel.ProgressText)));
-        busy.Children.Add(Bound(new TextBlock { TextTrimming = TextTrimming.CharacterEllipsis, Opacity = 0.7 },
+        busy.Children.Add(Bound(Secondary(new TextBlock { TextTrimming = TextTrimming.CharacterEllipsis }),
             TextBlock.TextProperty, nameof(NewProjectDialogViewModel.ProgressDetail)));
         panel.Children.Add(busy);
 
@@ -330,12 +330,12 @@ public sealed class NewProjectDialogView : StackPanel
         sourceLinked.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.SourceLinked)) { Mode = BindingMode.TwoWay });
         sourceLinked.Bind(IsEnabledProperty, new Binding(nameof(NewProjectDialogViewModel.IsSourceLinkedEnabled)));
         options.Children.Add(sourceLinked);
-        options.Children.Add(new TextBlock { Text = NewProjectDialogText.UseLocalSourceNote, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) });
+        options.Children.Add(Secondary(new TextBlock { Text = NewProjectDialogText.UseLocalSourceNote, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) }));
 
         CheckBox restore = new CheckBox { Content = NewProjectDialogText.RestorePackages };
         restore.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.RunRestore)) { Mode = BindingMode.TwoWay });
         options.Children.Add(restore);
-        options.Children.Add(new TextBlock { Text = NewProjectDialogText.RestorePackagesNote, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) });
+        options.Children.Add(Secondary(new TextBlock { Text = NewProjectDialogText.RestorePackagesNote, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) }));
 
         StackPanel recommended = new StackPanel();
         recommended.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.IsRecommendedPackagesVisible)));
@@ -343,7 +343,7 @@ public sealed class NewProjectDialogView : StackPanel
         recommendedPackages.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.RecommendedPackagesChecked)) { Mode = BindingMode.TwoWay });
         recommendedPackages.Bind(IsEnabledProperty, new Binding(nameof(NewProjectDialogViewModel.IsRecommendedPackagesEnabled)));
         recommended.Children.Add(recommendedPackages);
-        TextBlock recommendedNote = Bound(new TextBlock { Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) },
+        TextBlock recommendedNote = Bound(Secondary(new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) }),
             TextBlock.TextProperty, nameof(NewProjectDialogViewModel.RecommendedPackagesNote));
         recommended.Children.Add(recommendedNote);
         options.Children.Add(recommended);
@@ -354,7 +354,7 @@ public sealed class NewProjectDialogView : StackPanel
         generateDemoCode.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(NewProjectDialogViewModel.GenerateCodeChecked)) { Mode = BindingMode.TwoWay });
         generateDemoCode.Bind(IsEnabledProperty, new Binding(nameof(NewProjectDialogViewModel.IsGenerateCodeEnabled)));
         generateDemo.Children.Add(generateDemoCode);
-        generateDemo.Children.Add(Bound(new TextBlock { Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) },
+        generateDemo.Children.Add(Bound(Secondary(new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(21, 0, 0, 4) }),
             TextBlock.TextProperty, nameof(NewProjectDialogViewModel.GenerateCodeNote)));
         options.Children.Add(generateDemo);
         section.Children.Add(options);
@@ -384,7 +384,7 @@ public sealed class NewProjectDialogView : StackPanel
         content.Children.Add(treeBox);
 
         // Shows beside the heading while the section is collapsed, so the answer is there without opening it.
-        TextBlock summary = Bound(new TextBlock { Name = FoldersSummaryName, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, Focusable = false },
+        TextBlock summary = Bound(Secondary(new TextBlock { Name = FoldersSummaryName, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, Focusable = false }),
             TextBlock.TextProperty, nameof(NewProjectDialogViewModel.FoldersSummary));
         summary.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.FoldersSummary)) { Converter = NotNullConverter.Instance });
         return CreateSection(FoldersExpanderName, NewProjectDialogText.FoldersHeading, content, summary);
@@ -393,13 +393,12 @@ public sealed class NewProjectDialogView : StackPanel
     private Control CreateCommandLineSection()
     {
         StackPanel content = new StackPanel();
-        content.Children.Add(new TextBlock
+        content.Children.Add(Secondary(new TextBlock
         {
             Text = NewProjectDialogText.CommandLineDescription,
-            Opacity = 0.7,
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(0, 2, 0, 6),
-        });
+        }));
 
         Grid box = new Grid();
         SelectableTextBlock command = new SelectableTextBlock
@@ -431,7 +430,7 @@ public sealed class NewProjectDialogView : StackPanel
         box.Children.Add(copy);
         content.Children.Add(box);
 
-        TextBlock note = Bound(new TextBlock { Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) },
+        TextBlock note = Bound(Secondary(new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) }),
             TextBlock.TextProperty, nameof(NewProjectDialogViewModel.CommandLineNote));
         note.Bind(IsVisibleProperty, new Binding(nameof(NewProjectDialogViewModel.CommandLineNote)) { Converter = NotNullConverter.Instance });
         content.Children.Add(note);
@@ -687,8 +686,15 @@ public sealed class NewProjectDialogView : StackPanel
         return info;
     }
 
+    // Secondary text: the notes under a check box or field, in the dialog's one muted foreground.
+    private static TextBlock Secondary(TextBlock text)
+    {
+        text.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground.Muted");
+        return text;
+    }
+
     private static TextBlock HelpText(string text) =>
-        new TextBlock { Text = text, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 8) };
+        Secondary(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 8) });
 
     private static T Bound<T>(T control, AvaloniaProperty property, string path) where T : Control
     {

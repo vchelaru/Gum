@@ -9,6 +9,7 @@
     <ResourceDictionary>
       <Color x:Key="Frb.Colors.Foreground">#c8ffffff</Color>
       <Color x:Key="Frb.Colors.Foreground.Subtle">#ffb2b2b2</Color>
+      <Color x:Key="Frb.Colors.Foreground.Muted">#ff8a8a8a</Color>
 
       <Color x:Key="Frb.Colors.Border">#454545</Color>
       <Color x:Key="Frb.Colors.Border.Secondary">#12ffffff</Color>
@@ -53,6 +54,7 @@
   <!--  Keeps the WpfDataUi row-detail-text color in sync with this theme instead of the library's own hardcoded default.  -->
   <SolidColorBrush x:Key="{x:Static wpfdataui:Keys.DetailTextForegroundKey}" Color="{StaticResource Frb.Colors.Foreground}" />
   <SolidColorBrush x:Key="Frb.Brushes.Foreground.Subtle" Color="{StaticResource Frb.Colors.Foreground.Subtle}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Foreground.Muted" Color="{StaticResource Frb.Colors.Foreground.Muted}" />
   <SolidColorBrush
     x:Key="Frb.Brushes.Foreground.Disabled"
     Opacity="0.5"
