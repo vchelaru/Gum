@@ -39,6 +39,12 @@ Anything `GumxImportService.ImportAsync` cannot bring over (a listed file that i
 
 Files reached through another file: each copied `.achx`/`.achj` is loaded with `AnimationChainListSave.FromFile` and its textures are copied with their path relative to the chain kept (once if shared). A texture that is missing, absolute, or leaves the source project, and a chain that will not load, go through `AddSkipped`; the element still imports. Shader files (`ShaderFileExtensions`) are copied like any Source File.
 
+## Files outside the source project
+
+`ExternalAssetPlan` (built before classification, reads only) decides where every asset the elements name from OUTSIDE the source folder lands: a `..` or absolute path to a real file is copied into the destination's `external` folder (an existing folder of that name, any casing, is reused; none is created unless needed) and `ExternalAssetPlan.Rewrite` points every variable in every state and category of the cloned element, and of imported Standards, at the copy. Behaviors (states, required variables, forms properties) and the instances and category states added to a component kept by Skip are rewritten the same way. Same content (SHA-256) already there is reused, a different file with the same name (case-insensitive) becomes `name-2.ext`; an outside animation chain keeps its textures' layout relative to it (a group, renamed by folder on conflict). Destination paths are never built from the source's `..`. A missing outside file is reported like any missing file. Web sources are never planned.
+
+`SourceProjectContainment.GetRefusal` refuses what resolves outside THROUGH a link (symlink or junction on the file or any parent folder) and is applied to every asset read and the element animation file. Behavior and Standard file paths are not checked: a project may reference them anywhere. An in-project chain whose texture climbs out of the project is still refused.
+
 ## Tree rows
 
 Each row is a check box plus a "Details..." `HyperlinkButton`, visible only on flagged-Standard rows (`ImportTreeNodeViewModel.IsDetailsButtonVisible`). The link opens `StandardDiffDetailsView` as a separate modal showing the row's `StandardDiffRows`; the diff is not expanded inline in the tree. A force-included Standard's check box is disabled, with `RequiredReason` as its tooltip.
