@@ -329,8 +329,8 @@ public class NewProjectDialogViewModel : DialogViewModel
     /// <summary>Whether the Include recommended packages checkbox shows: only with a C# project.</summary>
     public bool IsRecommendedPackagesVisible => IncludeCodeProject;
 
-    /// <summary>Whether the checkbox can be changed: the platform has packages and the Gum runtime comes from NuGet.</summary>
-    public bool IsRecommendedPackagesEnabled => IncludeCodeProject && !SourceLinked && RecommendedPackageIds.Count > 0;
+    /// <summary>Whether the checkbox can be changed: the platform has recommended packages (linked as projects with local Gum source).</summary>
+    public bool IsRecommendedPackagesEnabled => IncludeCodeProject && RecommendedPackageIds.Count > 0;
 
     /// <summary>Whether creating adds the platform's recommended packages.</summary>
     public bool AddsRecommendedPackages => IncludeRecommendedPackages && IsRecommendedPackagesEnabled;
@@ -343,14 +343,26 @@ public class NewProjectDialogViewModel : DialogViewModel
     }
 
     /// <summary>The grey line under the checkbox: the packages it adds, or why it is unavailable.</summary>
-    public string RecommendedPackagesNote => IsRecommendedPackagesEnabled
-        ? NewProjectDialogText.RecommendedPackagesNote(string.Join(", ", RecommendedPackageIds))
-        : NewProjectDialogText.RecommendedPackagesDisabledNote;
+    public string RecommendedPackagesNote => !IsRecommendedPackagesEnabled
+        ? NewProjectDialogText.RecommendedPackagesDisabledNote
+        : SourceLinked
+            ? NewProjectDialogText.RecommendedPackagesLinkedNote(string.Join(", ", RecommendedPackageIds))
+            : NewProjectDialogText.RecommendedPackagesNote(string.Join(", ", RecommendedPackageIds));
 
+    // With local Gum source the add-ons are linked projects (and shapes is included), otherwise NuGet packages.
     private IReadOnlyList<string> RecommendedPackageIds =>
         NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform)
-            ? RecommendedPackages.For(platform)
+            ? SourceLinked ? RecommendedPackages.ForSourceLinked(platform) : RecommendedPackages.For(platform)
             : Array.Empty<string>();
+
+    // The add-on projects `dotnet add reference` links in the command line, when the Gum checkout is known.
+    private IReadOnlyList<string> LinkedAddOnProjects()
+    {
+        string? checkout = SourceLinked && AddsRecommendedPackages ? _service.FindGumSourceDirectory() : null;
+        return checkout == null
+            ? Array.Empty<string>()
+            : RecommendedPackageIds.Select(id => NewProjectDisplayPath.Normalize(Path.Combine(checkout, RecommendedPackages.GetSourceProject(id)))).ToList();
+    }
 
     /// <summary>Whether the platform forces source-linked on.</summary>
     public bool IsSourceLinkedForced => IncludeCodeProject && PlatformName == KniSkiaPlatform;
@@ -942,10 +954,11 @@ public class NewProjectDialogViewModel : DialogViewModel
                 IsIncludeFormsControls,
                 IsIncludeFormsControls ? SelectedThemeName : null,
                 RunRestore,
-                AddsRecommendedPackages ? RecommendedPackageIds : Array.Empty<string>(),
+                AddsRecommendedPackages && !SourceLinked ? RecommendedPackageIds : Array.Empty<string>(),
                 NewProjectDisplayPath.Normalize(Path.Combine(path, name + ".csproj")),
                 generatesCode ? GumProjectPath : null,
-                SourceLinked)
+                SourceLinked,
+                LinkedAddOnProjects())
             : NewProjectCommandLine.Build(
                 path,
                 game ? PlatformName : null,

@@ -57,14 +57,16 @@ public static class NewProjectCommandLine
     /// </summary>
     /// <param name="packages">The package ids to add; empty gives the same as <see cref="Build"/>.</param>
     /// <param name="csprojPath">The code project file the new step writes.</param>
+    /// <param name="linkedProjects">Full paths of the Gum checkout's add-on projects of a source-linked project, each added with <c>dotnet add reference</c> instead of a package.</param>
     /// <param name="gumProjectPath">The Gum project file; when set, the last step is <c>gumcli codegen "&lt;gumj&gt;"</c> (every screen and component), after the restore (the generator reads the restored runtime package). Null adds none.</param>
     public static string BuildChained(
         string path, string platform, bool includeForms, string? theme, bool restore, IReadOnlyList<string> packages, string csprojPath,
-        string? gumProjectPath = null, bool sourceLinked = false)
+        string? gumProjectPath = null, bool sourceLinked = false, IReadOnlyList<string>? linkedProjects = null)
     {
         string codegen = gumProjectPath == null ? string.Empty : $" && gumcli codegen \"{gumProjectPath}\"";
+        linkedProjects ??= new string[0];
 
-        if (packages.Count == 0)
+        if (packages.Count == 0 && linkedProjects.Count == 0)
         {
             return Build(path, platform, includeForms, theme, sourceLinked, restore) + codegen;
         }
@@ -73,6 +75,10 @@ public static class NewProjectCommandLine
         foreach (string package in packages)
         {
             command += $" && dotnet add \"{csprojPath}\" package {package} --no-restore";
+        }
+        foreach (string project in linkedProjects)
+        {
+            command += $" && dotnet add \"{csprojPath}\" reference \"{project}\"";
         }
         if (restore)
         {

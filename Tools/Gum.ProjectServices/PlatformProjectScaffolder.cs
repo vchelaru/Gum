@@ -29,7 +29,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     /// <inheritdoc/>
     public PlatformProjectResult Create(
         string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
-        string? themeDirectory = null, bool useXmlFormat = false)
+        string? themeDirectory = null, bool useXmlFormat = false, IReadOnlyList<string>? linkedAddOns = null)
     {
         string fullDirectory = GetFullDirectory(projectDirectory);
         string projectName = Path.GetFileName(fullDirectory);
@@ -54,8 +54,18 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             }
 
             // MSBuild paths use backslashes by convention; the syntax version detection also expects them.
-            string include = Path.GetRelativePath(fullDirectory, runtimeCsproj).Replace('/', '\\');
-            gumReference = $"<ProjectReference Include=\"{EscapeForIncludeAttribute(include)}\" />";
+            gumReference = ProjectReferenceLine(fullDirectory, runtimeCsproj);
+
+            foreach (string addOn in linkedAddOns ?? Array.Empty<string>())
+            {
+                string addOnCsproj = Path.GetFullPath(Path.Combine(gumSourceDirectory, RecommendedPackages.GetSourceProject(addOn)));
+                if (!File.Exists(addOnCsproj))
+                {
+                    return Fail($"Gum source not found: {addOnCsproj} does not exist. Pass the root of a Gum checkout.");
+                }
+
+                gumReference += Environment.NewLine + "    " + ProjectReferenceLine(fullDirectory, addOnCsproj);
+            }
         }
 
         Directory.CreateDirectory(gumFolder);
@@ -71,7 +81,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         DemoScreenInfo? demoScreen = FindDemoScreen(gumProjectPath, settings);
         WriteHostSources(
             fullDirectory, projectName, rootNamespace, platform, Path.GetFileName(gumProjectPath),
-            demoScreen, screenCodeGenerated: false, addedPackages: Array.Empty<string>());
+            demoScreen, screenCodeGenerated: false, addedPackages: gumSourceDirectory != null ? linkedAddOns ?? Array.Empty<string>() : Array.Empty<string>());
 
         return new PlatformProjectResult
         {
@@ -118,6 +128,13 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         WriteHostSources(
             fullDirectory, projectName, NameRules.ToCSharpIdentifier(projectName), platform, gumProjectFileName, demoScreen,
             screenCodeGenerated, addedPackages);
+    }
+
+    // MSBuild paths use backslashes by convention; the syntax version detection also expects them.
+    private static string ProjectReferenceLine(string fromDirectory, string projectPath)
+    {
+        string include = Path.GetRelativePath(fromDirectory, projectPath).Replace('/', '\\');
+        return $"<ProjectReference Include=\"{EscapeForIncludeAttribute(include)}\" />";
     }
 
     // MSBuild reads %XX in an item include as a character, splits it at ';', expands '*' and '?' and

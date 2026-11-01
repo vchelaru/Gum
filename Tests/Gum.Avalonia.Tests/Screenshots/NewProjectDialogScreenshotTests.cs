@@ -73,6 +73,28 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void CodeProjectMonoGameLocalSource(string theme) => Capture("code-project-monogame-local-source", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+        viewModel.SourceLinked = true;
+        viewModel.IncludeRecommendedPackages = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CodeProjectRaylibLocalSource(string theme) => Capture("code-project-raylib-local-source", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "raylib";
+        viewModel.SourceLinked = true;
+        viewModel.IncludeRecommendedPackages = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void CodeProjectMonoGameCommandLine(string theme) => Capture("code-project-monogame-command-line", theme, (viewModel, window) =>
     {
         viewModel.IncludeCodeProject = true;
