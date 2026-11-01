@@ -30,10 +30,10 @@ internal static class NewProjectUiText
     public const string NoXmlWithCodeProjectNote = "gumcli new has no option for the .gumx format with a code project yet.";
 
     public const string EnterName = "Enter a project name.";
-    public const string InvalidFolderName = "The name has characters a folder name can't have.";
+    /// <summary>The message for a name the rules refuse (the rules' own wording is pinned in the ProjectServices tests).</summary>
+    public static string NameProblem(string name, bool codeProject = false) => Gum.ProjectServices.NewProjectNameRules.GetProblem(name, codeProject)!;
     public const string InvalidCSharpName = "Not a valid C# name.";
     public const string ChooseLocation = "Choose a location.";
-    public const string NameTooLong = "The name is too long.";
     public const string InvalidLocation = "The location has characters a path can't have.";
     public const string LocationNotAbsolute = "The location must be a full path.";
     public const string NeedsLocalSource = "Local Gum source needs the Gum source code on this computer, and none was found.";

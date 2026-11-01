@@ -221,6 +221,23 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
         _service.LastResolved!.GumProjectPath.ShouldEndWith(name + ".gumj");
     }
 
+    [Theory]
+    [InlineData("CON")]
+    [InlineData("com1")]
+    [InlineData("Aux.txt")]
+    [InlineData("a.")]
+    [InlineData("a|b")]
+    public void AFolderNameTheDialogRefuses_IsRefusedByTheServiceWithTheSameMessage(string name)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = name);
+
+        NewProjectValidation validation = _service.Validate(new NewProjectRequest { Path = Path.Combine(_folder, name) });
+
+        viewModel.ValidationMessage.ShouldNotBeEmpty();
+        validation.Resolved.ShouldBeNull();
+        validation.Error!.Message.ShouldBe(viewModel.ValidationMessage);
+    }
+
     [Fact]
     public async Task LocationWithSpaces_IsCarriedIntoTheServiceAndTheCommandLine()
     {

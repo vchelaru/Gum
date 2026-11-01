@@ -169,7 +169,7 @@ public class NewProjectResult
     /// <summary>The restore outcome, or <see langword="null"/> when it did not run (no platform, not requested, or the files failed).</summary>
     public RestoreResult? Restore { get; init; }
 
-    /// <summary>The code generation outcome, or <see langword="null"/> when it did not run.</summary>
+    /// <summary>The code generation outcome, or <see langword="null"/> when it did not run (including when the restore was off: the generator needs the restored package).</summary>
     public GenerateCodeResult? Codegen { get; init; }
 }
 
