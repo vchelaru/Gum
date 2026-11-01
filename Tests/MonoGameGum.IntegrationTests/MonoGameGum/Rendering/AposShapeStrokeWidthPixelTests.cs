@@ -78,6 +78,46 @@ public class AposShapeStrokeWidthPixelTests : BaseTestClass
         measured.ShouldBe(stroke, tolerance: 0.08f, $"{kind} rounded {roundedLine} stroke {stroke}");
     }
 
+    // #7381: between 1 and 2 px Apos's coverage was not linear in the pushed (width - 1) value, so the ring
+    // drew wider than Skia's (a 1.5 px Line drew 1.69). Coverage must be the authored width.
+    [Theory]
+    [InlineData(StrokeShapeKind.Rectangle, false, 1.1f)]
+    [InlineData(StrokeShapeKind.Rectangle, false, 1.25f)]
+    [InlineData(StrokeShapeKind.Rectangle, false, 1.5f)]
+    [InlineData(StrokeShapeKind.Rectangle, false, 1.75f)]
+    [InlineData(StrokeShapeKind.Rectangle, false, 1.9f)]
+    [InlineData(StrokeShapeKind.Circle, false, 1.1f)]
+    [InlineData(StrokeShapeKind.Circle, false, 1.25f)]
+    [InlineData(StrokeShapeKind.Circle, false, 1.5f)]
+    [InlineData(StrokeShapeKind.Circle, false, 1.75f)]
+    [InlineData(StrokeShapeKind.Circle, false, 1.9f)]
+    [InlineData(StrokeShapeKind.RoundedRectangle, false, 1.1f)]
+    [InlineData(StrokeShapeKind.RoundedRectangle, false, 1.25f)]
+    [InlineData(StrokeShapeKind.RoundedRectangle, false, 1.5f)]
+    [InlineData(StrokeShapeKind.RoundedRectangle, false, 1.75f)]
+    [InlineData(StrokeShapeKind.RoundedRectangle, false, 1.9f)]
+    [InlineData(StrokeShapeKind.ColoredCircle, false, 1.1f)]
+    [InlineData(StrokeShapeKind.ColoredCircle, false, 1.25f)]
+    [InlineData(StrokeShapeKind.ColoredCircle, false, 1.5f)]
+    [InlineData(StrokeShapeKind.ColoredCircle, false, 1.75f)]
+    [InlineData(StrokeShapeKind.ColoredCircle, false, 1.9f)]
+    [InlineData(StrokeShapeKind.Line, false, 1.1f)]
+    [InlineData(StrokeShapeKind.Line, false, 1.25f)]
+    [InlineData(StrokeShapeKind.Line, false, 1.5f)]
+    [InlineData(StrokeShapeKind.Line, false, 1.75f)]
+    [InlineData(StrokeShapeKind.Line, false, 1.9f)]
+    [InlineData(StrokeShapeKind.Line, true, 1.1f)]
+    [InlineData(StrokeShapeKind.Line, true, 1.25f)]
+    [InlineData(StrokeShapeKind.Line, true, 1.5f)]
+    [InlineData(StrokeShapeKind.Line, true, 1.75f)]
+    [InlineData(StrokeShapeKind.Line, true, 1.9f)]
+    public void ThinStroke_OneToTwoPx_CoverageIsAuthoredWidth(StrokeShapeKind kind, bool roundedLine, float stroke)
+    {
+        float measured = MeasureRing(kind, stroke, 0f, 60f, 0f, roundedLine);
+
+        measured.ShouldBe(stroke, tolerance: 0.05f, $"{kind} rounded {roundedLine} stroke {stroke}");
+    }
+
     // Skia scales the stroke by the camera matrix: at zoom 0.5 a 1 unit stroke is half a pixel and half intensity.
     [Theory]
     [InlineData(StrokeShapeKind.Rectangle, 0.5f, 1f, 0.5f)]

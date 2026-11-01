@@ -1001,7 +1001,7 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         ShapeStrokePreRenderMath.Result strokeMath = ShapeStrokePreRenderMath.Compute(
             StrokeWidth, StrokeDashLength, StrokeGapLength,
             StrokeWidthUnits, IsAntialiased, fringeOutsideThickness,
-            cameraZoom, strokeColorAlpha: byte.MaxValue);
+            cameraZoom, strokeColorAlpha: byte.MaxValue, isLineShape: ContainedRenderable is Line);
 
         ContainedRenderable.StrokeWidth = strokeMath.StrokeWidth;
         ContainedRenderable.StrokeDashLength = strokeMath.DashLength;

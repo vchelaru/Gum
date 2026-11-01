@@ -67,10 +67,11 @@ static class ShapeStrokePreRenderMath
     /// <param name="strokeSupportsAntialiasing">Whether the stroke slot implements <see cref="IAntialiasedRenderable"/>.</param>
     /// <param name="cameraZoom">Current camera zoom (1 when there is no camera).</param>
     /// <param name="strokeColorAlpha">The stroke slot's current color alpha, gating the fill inset.</param>
+    /// <param name="isLineShape">True for the Apos Line, which draws a rectangle whose anti-aliasing covers more than the outline shapes (issue #7381).</param>
     public static Result Compute(
         float strokeWidth, float strokeDashLength, float strokeGapLength,
         DimensionUnitType strokeWidthUnits, bool isAntialiased, bool strokeSupportsAntialiasing,
-        float cameraZoom, byte strokeColorAlpha)
+        float cameraZoom, byte strokeColorAlpha, bool isLineShape = false)
     {
         // Issue #2834/#2938 — the fill-inset gate below must read the ORIGINAL, unscaled
         // user-set stroke width (not the post-ScreenPixel-scaled local reassigned just below).
@@ -131,7 +132,18 @@ static class ShapeStrokePreRenderMath
         }
         else if (isAntialiased && strokeSupportsAntialiasing)
         {
-            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
+            float screenStrokeWidth = strokeWidth * cameraZoom;
+            if (screenStrokeWidth > 1f && screenStrokeWidth < 2f)
+            {
+                // Issue #7381 - between 1 and 2 screen px the pushed (width - 1) is a thin Apos stroke whose
+                // coverage is not linear in the pushed value, so push the value that covers the authored width.
+                renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon,
+                    ThinStrokeCompensation.GetPushedScreenWidth(screenStrokeWidth, isLineShape) / cameraZoom);
+            }
+            else
+            {
+                renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
+            }
             if (strokeWidth < aposAaContributionWorld)
             {
                 strokeAlphaScale = strokeWidth / aposAaContributionWorld;
@@ -178,6 +190,54 @@ static class ShapeStrokePreRenderMath
             FillInset = fillInset,
             StrokeAlphaScale = strokeAlphaScale,
         };
+    }
+}
+
+/// <summary>
+/// Issue #7381 - Apos's coverage for a stroke pushed at <c>width - 1</c> is not linear for authored widths
+/// between 1 and 2 screen px (a 1.25 px Rectangle covers 1.16, a 1.5 px Line covers 1.69), while Skia
+/// covers exactly the authored width. The tables are Apos's measured total coverage across a stroke's
+/// cross-section (<c>AposShapeStrokeWidthPixelTests</c>, shape edge on a pixel boundary) at pushed values
+/// 0, 0.05 ... 1; the push for an authored width is found by inverting them with linear interpolation.
+/// </summary>
+static class ThinStrokeCompensation
+{
+    // Pushed value i * 0.05 covers Coverage[i] screen px. Both tables rise strictly, so the inverse is monotone.
+    private const float PushStep = 0.05f;
+
+    private static readonly float[] OutlineCoverage =
+    {
+        1.000f, 1.008f, 1.027f, 1.063f, 1.106f, 1.157f, 1.216f, 1.282f, 1.353f, 1.424f, 1.502f,
+        1.576f, 1.647f, 1.718f, 1.784f, 1.843f, 1.898f, 1.941f, 1.973f, 1.992f, 2.000f,
+    };
+
+    // The Line draws a rectangle (or capsule) whose anti-aliased ends of the cross-section add coverage.
+    private static readonly float[] LineCoverage =
+    {
+        1.016f, 1.075f, 1.149f, 1.224f, 1.298f, 1.369f, 1.435f, 1.502f, 1.569f, 1.631f, 1.690f,
+        1.741f, 1.792f, 1.839f, 1.878f, 1.914f, 1.945f, 1.969f, 1.988f, 1.996f, 2.000f,
+    };
+
+    /// <summary>
+    /// The width, in screen px, to push to Apos so the stroke covers <paramref name="authoredScreenWidth"/> px.
+    /// Defined for 1 to 2 px; 1 maps to 0 and 2 maps to 1, matching <c>width - 1</c> at both ends.
+    /// </summary>
+    public static float GetPushedScreenWidth(float authoredScreenWidth, bool isLine)
+    {
+        float[] coverage = isLine ? LineCoverage : OutlineCoverage;
+        if (authoredScreenWidth <= coverage[0])
+        {
+            return 0f;
+        }
+        for (int i = 1; i < coverage.Length; i++)
+        {
+            if (authoredScreenWidth <= coverage[i])
+            {
+                float t = (authoredScreenWidth - coverage[i - 1]) / (coverage[i] - coverage[i - 1]);
+                return (i - 1 + t) * PushStep;
+            }
+        }
+        return (coverage.Length - 1) * PushStep;
     }
 }
 #endif
