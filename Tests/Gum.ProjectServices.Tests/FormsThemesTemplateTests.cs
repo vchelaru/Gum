@@ -76,6 +76,10 @@ public class FormsThemesTemplateTests
         "FormsThemes/Meadow", "FormsThemes/Neon", "FormsThemes/Retro95"
     };
 
+    // The Standard template ships no FontCache; its text resolves through the runtime font creator.
+    public static IEnumerable<object[]> ThemeFolders =>
+        AllTemplateFolders.Where(folder => folder != "FormsTemplate").Select(folder => new object[] { folder });
+
     public static IEnumerable<object[]> TemplateFolders => AllTemplateFolders.Select(folder => new object[] { folder });
 
     public static IEnumerable<object[]> TemplateFoldersAndSubfolders =>
@@ -318,6 +322,43 @@ public class FormsThemesTemplateTests
                 : new List<string>();
 
             unused.ShouldBeEmpty();
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    // The release loads a template without a runtime font creator, so a font missing from FontCache
+    // silently falls back to the default font, and an icon glyph such as the ComboBox arrow draws as
+    // '?' (#7387). Every font an element uses has a cached .fnt, which was baked with the project's
+    // FontRanges (the glyph block the icons live in).
+    [Theory]
+    [MemberData(nameof(ThemeFolders))]
+    public void FontCache_ShouldContainEveryFontTheTemplateUses(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        string templateDir = GetTemplateDir(templateFolder);
+        GumProjectSave project = new ProjectLoader().Load(Path.Combine(templateDir, "GumProject.gumx")).Project!;
+        ObjectFinder.Self.GumProjectSave = project;
+
+        try
+        {
+            IEnumerable<ElementSave> allElements = project.StandardElements
+                .Cast<ElementSave>()
+                .Concat(project.Components)
+                .Concat(project.Screens);
+            string fontCacheDir = Path.Combine(templateDir, "FontCache");
+
+            List<string> missing = new FontReferenceCollector(instance => ObjectFinder.Self.GetElementSave(instance))
+                .Collect(project, allElements)
+                .Keys
+                .Select(Path.GetFileName)
+                .Where(fileName => !File.Exists(Path.Combine(fontCacheDir, fileName!)))
+                .OrderBy(fileName => fileName, StringComparer.Ordinal)
+                .ToList()!;
+
+            missing.ShouldBeEmpty();
         }
         finally
         {
