@@ -94,6 +94,32 @@ public class NewProjectDialogScreenshotTests
 
     [SkippableTheory]
     [InlineData("dark")]
+    public void PackagesStable(string theme) => Capture("packages-stable", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    public void PackagesPreview(string theme) => Capture("packages-preview", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+        viewModel.IsPreviewChannelChecked = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    public void PackagesLocalSource(string theme) => Capture("packages-local-source", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+        viewModel.IsLocalSourceChannelChecked = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectMonoGameCommandLine(string theme) => Capture("code-project-monogame-command-line", theme, (viewModel, window) =>
     {

@@ -44,6 +44,13 @@ static class ShapeStrokePreRenderMath
 
         /// <summary>Fill inset value, ready to push to the fill slot's radius/edge inset property.</summary>
         public float FillInset { get; init; }
+
+        /// <summary>
+        /// Fraction of the stroke color's alpha to draw, ready to push to the stroke slot's
+        /// <c>StrokeAlphaScale</c>. 1 except for an antialiased stroke thinner than Apos's 1 px
+        /// hairline (issue #7350), where it is the authored width in screen pixels.
+        /// </summary>
+        public float StrokeAlphaScale { get; init; }
     }
 
     /// <summary>
@@ -114,6 +121,10 @@ static class ShapeStrokePreRenderMath
         float aposAaContributionWorld = aposAaContribution / cameraZoom;
 
         float renderableStrokeWidth;
+        // Issue #7350 — Apos cannot draw a stroke thinner than its 1 px hairline, while Skia draws the
+        // fractional width as fractional coverage (a 0.5 px stroke is half intensity over 1 px). Coverage
+        // is width * alpha, so a stroke under 1 screen px draws as the hairline at alpha = width.
+        float strokeAlphaScale = 1f;
         if (strokeWidth <= 0)
         {
             renderableStrokeWidth = 0f;
@@ -121,6 +132,10 @@ static class ShapeStrokePreRenderMath
         else if (isAntialiased && strokeSupportsAntialiasing)
         {
             renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
+            if (strokeWidth < aposAaContributionWorld)
+            {
+                strokeAlphaScale = strokeWidth / aposAaContributionWorld;
+            }
         }
         else
         {
@@ -161,6 +176,7 @@ static class ShapeStrokePreRenderMath
             DashLength = strokeDashLength,
             GapLength = strokeGapLength,
             FillInset = fillInset,
+            StrokeAlphaScale = strokeAlphaScale,
         };
     }
 }

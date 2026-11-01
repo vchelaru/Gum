@@ -365,7 +365,8 @@ public class LineRectangle : GradientShapeRenderable
                         {
                             DrawRectangleV(new Vector2(px, py), new Vector2(w, h), silhouetteColor);
                         }
-                    });
+                    },
+                    new ShadowMaskKey(useRounded ? 2 : 1, hollow, roundness, roundedSegments, LinePixelWidth));
             }
             else
             {
@@ -627,9 +628,7 @@ public class LineRectangle : GradientShapeRenderable
         float cx = EffectiveGradientX1;
         float cy = EffectiveGradientY1;
         float effectiveOuter = EffectiveGradientOuterRadius;
-        float outer = effectiveOuter > 0f
-            ? effectiveOuter
-            : 0.5f * MathF.Sqrt(w * w + h * h);
+        float outer = effectiveOuter;
         float inner = EffectiveGradientInnerRadius;
         float span = outer - inner;
 

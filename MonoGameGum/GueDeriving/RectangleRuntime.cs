@@ -1633,7 +1633,11 @@ public class RectangleRuntime : GraphicalUiElement
 
         // Issue #2818: push AA to both slots so a single setter flips fill + stroke together.
         if (_fill is IAntialiasedRenderable fillAa) fillAa.IsAntialiased = _isAntialiased;
-        if (_stroke is IAntialiasedRenderable strokeAa) strokeAa.IsAntialiased = _isAntialiased;
+        if (_stroke is IAntialiasedRenderable strokeAa)
+        {
+            strokeAa.IsAntialiased = _isAntialiased;
+            strokeAa.StrokeAlphaScale = strokeMath.StrokeAlphaScale;
+        }
 
         // Mirror size to stroke when fill is the contained object — see CircleRuntime.PreRender.
         if (_fill is IPositionedSizedObject fillSized && _stroke is IPositionedSizedObject strokeSized)
@@ -2158,6 +2162,9 @@ public class RectangleRuntime : GraphicalUiElement
             // rectangle is a stroke-only outline, and seed the gradient start from the body color.
             PushFillColorToRenderable();
             SyncGradientStart();
+
+            // The tool's authored default blur (#7299); the renderable's own default is 0 (hard).
+            DropshadowBlur = 3;
 #endif
 
             Width = 50;

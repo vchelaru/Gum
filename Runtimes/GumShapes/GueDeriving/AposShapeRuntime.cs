@@ -1007,6 +1007,7 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         ContainedRenderable.StrokeDashLength = strokeMath.DashLength;
         ContainedRenderable.StrokeGapLength = strokeMath.GapLength;
         ContainedRenderable.IsAntialiased = IsAntialiased;
+        ContainedRenderable.StrokeAlphaScale = strokeMath.StrokeAlphaScale;
 
         // NOTE: do NOT call base.PreRender() here. base.PreRender() forwards to
         // mContainedObjectAsIpso.PreRender() (the shape) - and the shape's PreRender is what just

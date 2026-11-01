@@ -39,7 +39,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     private static readonly HashSet<string> _inputProperties = new HashSet<string>
     {
         nameof(ProjectName), nameof(Location), nameof(SelectedFileFormat), nameof(IsIncludeFormsControls),
-        nameof(IsIncludeDemoScreenGum), nameof(IncludeCodeProject), nameof(PlatformName), nameof(SourceLinkedChoice),
+        nameof(IsIncludeDemoScreenGum), nameof(IncludeCodeProject), nameof(PlatformName), nameof(PackageChannelChoice),
         nameof(RunRestore), nameof(IncludeRecommendedPackages), nameof(GenerateCodeChoice),
     };
 
@@ -206,21 +206,82 @@ public class NewProjectDialogViewModel : DialogViewModel
         set => Set(value);
     }
 
-    /// <summary>What the user ticked for Link Gum source; see <see cref="SourceLinked"/> for what applies.</summary>
-    public bool SourceLinkedChoice
+    /// <summary>What the user picked for Gum packages (Stable by default); see <see cref="PackageChannel"/> for what applies.</summary>
+    public NewProjectPackageChannel PackageChannelChoice
     {
-        get => Get<bool>();
+        get => Get<NewProjectPackageChannel>();
         set => Set(value);
     }
 
     /// <summary>
-    /// Whether the code project references the Gum checkout. Always on for KNI with Skia (its package is not on
-    /// NuGet), and off when no checkout is available.
+    /// Whether Local Gum source is the pick. Setting it picks Local Gum source, or Stable when it was the pick and is turned off.
+    /// See <see cref="SourceLinked"/> for what applies.
     /// </summary>
+    public bool SourceLinkedChoice
+    {
+        get => PackageChannelChoice == NewProjectPackageChannel.LocalSource;
+        set
+        {
+            if (value)
+            {
+                PackageChannelChoice = NewProjectPackageChannel.LocalSource;
+            }
+            else if (PackageChannelChoice == NewProjectPackageChannel.LocalSource)
+            {
+                PackageChannelChoice = NewProjectPackageChannel.Stable;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The Gum packages the code project uses: always Local Gum source for KNI with Skia (its package is not on NuGet),
+    /// Stable when Local Gum source is picked but no checkout is available, otherwise the pick.
+    /// </summary>
+    public NewProjectPackageChannel PackageChannel =>
+        IsSourceLinkedForced || (PackageChannelChoice == NewProjectPackageChannel.LocalSource && _service.IsSourceLinkedAvailable)
+            ? NewProjectPackageChannel.LocalSource
+            : PackageChannelChoice == NewProjectPackageChannel.Preview ? NewProjectPackageChannel.Preview : NewProjectPackageChannel.Stable;
+
+    /// <summary>Whether the code project references the Gum checkout; see <see cref="PackageChannel"/>.</summary>
     public bool SourceLinked
     {
-        get => IsSourceLinkedForced || (SourceLinkedChoice && _service.IsSourceLinkedAvailable);
+        get => PackageChannel == NewProjectPackageChannel.LocalSource;
         set => SourceLinkedChoice = value;
+    }
+
+    /// <summary>Whether the code project uses the preview (prerelease) Gum packages.</summary>
+    public bool IsPreview => IncludeCodeProject && PackageChannel == NewProjectPackageChannel.Preview;
+
+    /// <summary>Whether the unstable-packages warning shows: only with the Preview channel.</summary>
+    public bool IsPreviewWarningVisible => IsPreview;
+
+    /// <summary>The Stable radio's state. Setting it to <see langword="true"/> picks Stable; unchecking is the radio group's doing and changes nothing.</summary>
+    public bool IsStableChannelChecked
+    {
+        get => PackageChannel == NewProjectPackageChannel.Stable;
+        set => PickChannel(value, NewProjectPackageChannel.Stable);
+    }
+
+    /// <summary>The Preview radio's state; see <see cref="IsStableChannelChecked"/>.</summary>
+    public bool IsPreviewChannelChecked
+    {
+        get => PackageChannel == NewProjectPackageChannel.Preview;
+        set => PickChannel(value, NewProjectPackageChannel.Preview);
+    }
+
+    /// <summary>The Local Gum source radio's state; see <see cref="IsStableChannelChecked"/>.</summary>
+    public bool IsLocalSourceChannelChecked
+    {
+        get => PackageChannel == NewProjectPackageChannel.LocalSource;
+        set => PickChannel(value, NewProjectPackageChannel.LocalSource);
+    }
+
+    private void PickChannel(bool isChecked, NewProjectPackageChannel channel)
+    {
+        if (isChecked)
+        {
+            PackageChannelChoice = channel;
+        }
     }
 
     /// <summary>Whether Run dotnet restore is ticked.</summary>
@@ -345,14 +406,12 @@ public class NewProjectDialogViewModel : DialogViewModel
     /// <summary>The grey line under the checkbox: the packages it adds, or why it is unavailable.</summary>
     public string RecommendedPackagesNote => !IsRecommendedPackagesEnabled
         ? NewProjectDialogText.RecommendedPackagesDisabledNote
-        : SourceLinked
-            ? NewProjectDialogText.RecommendedPackagesLinkedNote(string.Join(", ", RecommendedPackageIds))
-            : NewProjectDialogText.RecommendedPackagesNote(string.Join(", ", RecommendedPackageIds));
+        : NewProjectDialogText.RecommendedPackagesNote;
 
-    // With local Gum source the add-ons are linked projects (and shapes is included), otherwise NuGet packages.
+    // With local Gum source the add-ons are linked projects (and shapes is included), otherwise the channel's NuGet packages.
     private IReadOnlyList<string> RecommendedPackageIds =>
         NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform)
-            ? SourceLinked ? RecommendedPackages.ForSourceLinked(platform) : RecommendedPackages.For(platform)
+            ? SourceLinked ? RecommendedPackages.ForSourceLinked(platform) : RecommendedPackages.For(platform, PackageChannel)
             : Array.Empty<string>();
 
     // The add-on projects `dotnet add reference` links in the command line, when the Gum checkout is known.
@@ -367,8 +426,14 @@ public class NewProjectDialogViewModel : DialogViewModel
     /// <summary>Whether the platform forces source-linked on.</summary>
     public bool IsSourceLinkedForced => IncludeCodeProject && PlatformName == KniSkiaPlatform;
 
-    /// <summary>Whether the Link Gum source box can be changed.</summary>
+    /// <summary>Whether the Local Gum source radio can be picked: only when this tool was built from the source, and not already forced.</summary>
     public bool IsSourceLinkedEnabled => IncludeCodeProject && !IsSourceLinkedForced && _service.IsSourceLinkedAvailable;
+
+    /// <summary>Whether the Stable radio can be picked: not when the platform forces Local Gum source.</summary>
+    public bool IsStableChannelEnabled => IncludeCodeProject && !IsSourceLinkedForced;
+
+    /// <summary>Whether the Preview radio can be picked: not when the platform forces Local Gum source.</summary>
+    public bool IsPreviewChannelEnabled => IncludeCodeProject && !IsSourceLinkedForced;
 
     /// <summary>The warning-colored note under the platform dropdown, or empty.</summary>
     public string PlatformNote
@@ -714,7 +779,9 @@ public class NewProjectDialogViewModel : DialogViewModel
             {
                 SetBusy(true, "Adding recommended packages...");
                 _cancellation = new CancellationTokenSource();
-                AddPackagesResult added = await _service.AddPackagesAsync(csproj, _createdPackages, output.Report, _cancellation.Token);
+                AddPackagesResult added = _createdResolved?.UsesPrerelease == true
+                    ? await _service.AddPackagesAsync(csproj, _createdPackages, prerelease: true, output.Report, _cancellation.Token)
+                    : await _service.AddPackagesAsync(csproj, _createdPackages, output.Report, _cancellation.Token);
                 if (added.Status != RestoreStatus.Succeeded)
                 {
                     RestoreFailureHeading = NewProjectDialogText.PackagesFailedHeading;
@@ -864,11 +931,20 @@ public class NewProjectDialogViewModel : DialogViewModel
             {
                 NotifyPropertyChanged(nameof(UseXmlFormat));
             }
-            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(SourceLinkedChoice))
+            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(PackageChannelChoice))
             {
+                NotifyPropertyChanged(nameof(SourceLinkedChoice));
                 NotifyPropertyChanged(nameof(SourceLinked));
+                NotifyPropertyChanged(nameof(PackageChannel));
                 NotifyPropertyChanged(nameof(IsSourceLinkedForced));
                 NotifyPropertyChanged(nameof(IsSourceLinkedEnabled));
+                NotifyPropertyChanged(nameof(IsPreview));
+                NotifyPropertyChanged(nameof(IsPreviewWarningVisible));
+                NotifyPropertyChanged(nameof(IsStableChannelChecked));
+                NotifyPropertyChanged(nameof(IsPreviewChannelChecked));
+                NotifyPropertyChanged(nameof(IsLocalSourceChannelChecked));
+                NotifyPropertyChanged(nameof(IsStableChannelEnabled));
+                NotifyPropertyChanged(nameof(IsPreviewChannelEnabled));
             }
             if (propertyName is nameof(IncludeCodeProject) or nameof(IsIncludeFormsControls) or nameof(GenerateCodeChoice) or nameof(RunRestore))
             {
@@ -878,7 +954,7 @@ public class NewProjectDialogViewModel : DialogViewModel
                 NotifyPropertyChanged(nameof(GeneratesCode));
                 NotifyPropertyChanged(nameof(GenerateCodeChecked));
             }
-            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(SourceLinkedChoice) or nameof(IncludeRecommendedPackages))
+            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(PackageChannelChoice) or nameof(IncludeRecommendedPackages))
             {
                 NotifyPropertyChanged(nameof(IsRecommendedPackagesVisible));
                 NotifyPropertyChanged(nameof(IsRecommendedPackagesEnabled));
@@ -928,7 +1004,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             Template = IsIncludeFormsControls ? "forms" : "empty",
             Theme = IsIncludeFormsControls ? SelectedThemeName : null,
             Platform = game ? PlatformName : null,
-            SourceLinked = game && SourceLinked,
+            PackageChannel = game ? PackageChannel : NewProjectPackageChannel.Stable,
             Restore = RunRestore,
             UseXmlFormat = UseXmlFormat,
             IncludeRecommendedPackages = game && AddsRecommendedPackages,
@@ -958,14 +1034,16 @@ public class NewProjectDialogViewModel : DialogViewModel
                 NewProjectDisplayPath.Normalize(Path.Combine(path, name + ".csproj")),
                 generatesCode ? GumProjectPath : null,
                 SourceLinked,
-                LinkedAddOnProjects())
+                LinkedAddOnProjects(),
+                IsPreview)
             : NewProjectCommandLine.Build(
                 path,
                 game ? PlatformName : null,
                 IsIncludeFormsControls,
                 IsIncludeFormsControls ? SelectedThemeName : null,
                 game && SourceLinked,
-                RunRestore);
+                RunRestore,
+                IsPreview);
 
         List<string> notes = new List<string>();
         if (chained)

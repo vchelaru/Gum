@@ -12,7 +12,10 @@ internal static class NewProjectUiText
     public const string IncludeForms = "Include Forms controls (recommended)";
     public const string IncludeDemo = "Include demo screen";
     public const string CreateCodeProject = "Create C# project";
-    public const string UseLocalSource = "Use local Gum source";
+    public const string Stable = "Stable";
+    public const string Preview = "Preview";
+    public const string UseLocalSource = "Local Gum source";
+    public const string PreviewWarning = "Preview packages are the newest builds and may be unstable.";
     public const string RestorePackages = "Restore NuGet packages";
     public const string RecommendedPackages = "Include recommended packages";
     public const string GenerateCode = "Generate code";
@@ -33,7 +36,7 @@ internal static class NewProjectUiText
     public const string NameTooLong = "The name is too long.";
     public const string InvalidLocation = "The location has characters a path can't have.";
     public const string LocationNotAbsolute = "The location must be a full path.";
-    public const string NeedsLocalSource = "Use local Gum source needs the Gum source code on this computer, and none was found.";
+    public const string NeedsLocalSource = "Local Gum source needs the Gum source code on this computer, and none was found.";
 
     /// <summary>A folder as the Folders tree shows its root: the path with a trailing separator.</summary>
     public static string Folder(string path) => path + Path.DirectorySeparatorChar;

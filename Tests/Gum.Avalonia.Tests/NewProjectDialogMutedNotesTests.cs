@@ -42,7 +42,7 @@ public class NewProjectDialogMutedNotesTests
     {
         using ScreenshotWindow window = Open(theme == "light" ? ThemeVariant.Light : ThemeVariant.Dark);
 
-        foreach (string label in new[] { NewProjectDialogText.RestorePackages, NewProjectDialogText.UseLocalSource, NewProjectDialogText.GenerateCode })
+        foreach (string label in new[] { NewProjectDialogText.RestorePackages, NewProjectDialogText.ChannelLocalSource, NewProjectDialogText.GenerateCode })
         {
             TextBlock text = window.Find<TextBlock>(t => t.Text == label);
             text.FontWeight.ShouldBe(FontWeight.Normal, label);

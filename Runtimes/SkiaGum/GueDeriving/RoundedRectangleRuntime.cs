@@ -175,7 +175,7 @@ public class RoundedRectangleRuntime
 
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
-            DropshadowBlurX = 0;
+            DropshadowBlurX = 3;
             DropshadowBlurY = 3;
 
             GradientType = GradientType.Linear;

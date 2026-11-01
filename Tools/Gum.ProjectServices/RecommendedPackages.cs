@@ -17,7 +17,29 @@ public static class RecommendedPackages
     /// the docs' side, the ShadowDusk packages of MonoGame, KNI and raylib (<c>Gum.MonoGame.ShadowDusk</c>, <c>Gum.KNI.ShadowDusk</c>,
     /// <c>Gum.raylib.ShadowDusk</c>), which are not published to nuget.org yet.
     /// </summary>
-    public static IReadOnlyList<string> For(HostPlatform platform) => platform switch
+    public static IReadOnlyList<string> For(HostPlatform platform) => For(platform, NewProjectPackageChannel.Stable);
+
+    /// <summary>
+    /// The packages for <paramref name="platform"/> on <paramref name="channel"/>: <see cref="For(HostPlatform)"/> for stable, a list that
+    /// also carries the packages published only as previews for <see cref="NewProjectPackageChannel.Preview"/>. Local source links
+    /// projects instead (<see cref="ForSourceLinked"/>), so it gets the stable list here.
+    /// </summary>
+    public static IReadOnlyList<string> For(HostPlatform platform, NewProjectPackageChannel channel) =>
+        channel == NewProjectPackageChannel.Preview ? ForPreview(platform) : ForStable(platform);
+
+    // nuget.org was checked on 2026-11-01 (dotnet package search --prerelease): Gum.Shapes.MonoGame and Gum.Shapes.KNI have
+    // 2026.10.29.1-preview.12, and Gum.SkiaSharp.ShadowDusk has the same preview. Gum.MonoGame.ShadowDusk, Gum.KNI.ShadowDusk and
+    // Gum.raylib.ShadowDusk are not published at all, so they are not listed. The Preview csproj floats as "*-*", which resolves them.
+    private static IReadOnlyList<string> ForPreview(HostPlatform platform) => platform switch
+    {
+        HostPlatform.MonoGame => new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", Expressions },
+        HostPlatform.Kni => new[] { "Gum.Shapes.KNI", "KernSmith.KniGum", Expressions },
+        HostPlatform.SilkNet => new[] { Expressions, "Gum.SkiaSharp.ShadowDusk" },
+        HostPlatform.Stride => new[] { Expressions, "Gum.SkiaSharp.ShadowDusk" },
+        _ => ForStable(platform)
+    };
+
+    private static IReadOnlyList<string> ForStable(HostPlatform platform) => platform switch
     {
         // monogame-kni-fna/README.md, MonoGame tab.
         // Gum.Shapes.MonoGame is left out until a stable release carries Gum.Renderables.ShapeRenderer: stable 2026.10.1.1 lacks it, so the host init line would not build. Re-add as the first entry after the November stable (with the ShadowDusk rows).

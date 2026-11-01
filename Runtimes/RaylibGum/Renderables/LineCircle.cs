@@ -383,7 +383,8 @@ public class LineCircle : GradientShapeRenderable
                         {
                             DrawCircleV(new Vector2(px + r, py + r), r, silhouetteColor);
                         }
-                    });
+                    },
+                    new ShadowMaskKey(3, hollow, r, StrokeWidth));
             }
             else
             {
@@ -606,15 +607,14 @@ public class LineCircle : GradientShapeRenderable
         else
         {
             // Radial: distance from (gx1, gy1) — the rotation-adjusted radial center —
-            // normalized against the [InnerRadius, OuterRadius] band. OuterRadius = 0
-            // (default) collapses to the full circle radius so a no-config radial covers
-            // the whole disk.
+            // normalized against the [InnerRadius, OuterRadius] band. OuterRadius <= 0
+            // falls back to 100 pixels (see EffectiveGradientOuterRadius), like Skia.
             float dx = localX - gx1;
             float dy = localY - gy1;
             float dist = System.MathF.Sqrt(dx * dx + dy * dy);
             float effectiveOuter = EffectiveGradientOuterRadius;
             float effectiveInner = EffectiveGradientInnerRadius;
-            float outer = effectiveOuter > 0f ? effectiveOuter : Radius;
+            float outer = effectiveOuter;
             float span = outer - effectiveInner;
             if (span <= 0f)
             {

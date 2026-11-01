@@ -1320,7 +1320,11 @@ public class CircleRuntime : GraphicalUiElement
         // Mirrors AposShapeRuntime.PreRender. Skipped for slots that don't implement the
         // interface (core DefaultStrokedCircleRenderable has no AA concept).
         if (_fill is IAntialiasedRenderable fillAa) fillAa.IsAntialiased = _isAntialiased;
-        if (_stroke is IAntialiasedRenderable strokeAa) strokeAa.IsAntialiased = _isAntialiased;
+        if (_stroke is IAntialiasedRenderable strokeAa)
+        {
+            strokeAa.IsAntialiased = _isAntialiased;
+            strokeAa.StrokeAlphaScale = strokeMath.StrokeAlphaScale;
+        }
 
         // When fill is the contained object and stroke is its child, the layout system pushes
         // size onto fill but not stroke (stroke is a plain renderable, not a layout-aware
@@ -1994,6 +1998,9 @@ public class CircleRuntime : GraphicalUiElement
             // circle is a stroke-only outline, and seed the gradient start from the body color.
             PushFillColorToRenderable();
             SyncGradientStart();
+
+            // The tool's authored default blur (#7299); the renderable's own default is 0 (hard).
+            DropshadowBlur = 3;
 #endif
 #endif
             Width = 32;

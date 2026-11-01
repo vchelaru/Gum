@@ -125,12 +125,24 @@ public static class FrbThemeResources
         resources[ComboBoxGlyphSizeKey] = 12 * scale;
         resources[ComboBoxGlyphMarginKey] = new Thickness(0, 0, 10 * scale, 0);
         resources[ComboBoxGlyphColumnKey] = new GridLength(32 * scale);
+        resources[RadioGlyphSizeKey] = 20 * scale;
+        resources[RadioDotSizeKey] = 8 * scale;
+        resources[RadioRowHeightKey] = 24 * scale;
+        resources[RadioGlyphColumnKey] = new GridLength(20 * scale);
+        resources[RadioContentMarginKey] = new Thickness(8 * scale, 0, 0, 0);
     }
 
     /// <summary>Resource keys of the combo box drop-down chevron's size, margin and column width, which Fluent fixes at 12, 10 and 32.</summary>
     public const string ComboBoxGlyphSizeKey = "Frb.ComboBox.GlyphSize";
     public const string ComboBoxGlyphMarginKey = "Frb.ComboBox.GlyphMargin";
     public const string ComboBoxGlyphColumnKey = "Frb.ComboBox.GlyphColumn";
+
+    /// <summary>Resource keys of the radio button ring and dot sizes, row height, glyph column width and content margin, which Fluent fixes at 20, 8, 24, 20 and 8.</summary>
+    public const string RadioGlyphSizeKey = "Frb.RadioButton.GlyphSize";
+    public const string RadioDotSizeKey = "Frb.RadioButton.DotSize";
+    public const string RadioRowHeightKey = "Frb.RadioButton.RowHeight";
+    public const string RadioGlyphColumnKey = "Frb.RadioButton.GlyphColumn";
+    public const string RadioContentMarginKey = "Frb.RadioButton.ContentMargin";
 
     private const double FieldMinHeight = 22;
 
