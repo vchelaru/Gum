@@ -627,11 +627,17 @@ public abstract class TextBoxBase :
         coreTextObject = textComponent.RenderableComponent as IFormsText
             ?? throw new Exception("The Text instance must be of type Text");
         placeholderTextObject = placeholderComponent?.RenderableComponent as IFormsText;
+        OnCoreTextObjectAssigned();
 
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         _textRestingX = this.textComponent.X;
         _textRestingY = this.textComponent.Y;
         caretComponent.X = 0;
+    }
+
+    /// <summary>Called once the text renderable exists, for values set before it did.</summary>
+    protected virtual void OnCoreTextObjectAssigned()
+    {
     }
 
     private void HandleTextComponentPropertyChanged(object? sender, PropertyChangedEventArgs e)
