@@ -24,7 +24,9 @@ public static class StandardRuntimeRegistrations
         ElementSaveExtensions.RegisterGueInstantiation("Container", () => new ContainerRuntime());
         ElementSaveExtensions.RegisterGueInstantiation("Sprite", () => new SpriteRuntime());
         ElementSaveExtensions.RegisterGueInstantiation("NineSlice", () => new NineSliceRuntime());
+#pragma warning disable CS0618 // a real app still registers the obsolete type
         ElementSaveExtensions.RegisterGueInstantiation("ColoredRectangle", () => new ColoredRectangleRuntime());
+#pragma warning restore CS0618
     }
 
     /// <summary>
