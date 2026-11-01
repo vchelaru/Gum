@@ -482,13 +482,9 @@ public abstract class TextBoxBase :
 
     protected override void ReactToVisualChanged()
     {
-        // The new visual starts in whatever line mode it was authored with. Apply the mode
-        // only when it was changed from the default, so a freshly created control does not
-        // override an authored Multi state.
-        if (textWrapping != TextWrapping.NoWrap || AcceptsReturn)
-        {
-            UpdateStateForSingleOrMultiLine();
-        }
+        // A text box is always in exactly one line-mode state, so the new visual is put in the
+        // state that matches this control's TextWrapping and AcceptsReturn, whatever it was authored in.
+        UpdateStateForSingleOrMultiLine();
 
         RefreshInternalVisualReferences();
 
