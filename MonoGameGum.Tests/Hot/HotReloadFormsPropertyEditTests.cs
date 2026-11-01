@@ -1,3 +1,4 @@
+using Gum.GueDeriving;
 using Gum;
 using RenderingLibrary;
 using Gum.DataTypes;
@@ -139,8 +140,7 @@ public class HotReloadFormsPropertyEditTests : BaseTestClass
             s => HotReloadTextBoxProjects.Set(s, "Text1.Placeholder", "string", "Second hint")));
 
         box.Placeholder.ShouldBe("Second hint");
-        ((TextBox)box).Visual.GetGraphicalUiElementByName("PlaceholderTextInstance")!
-            .ToString(); // the visual child exists
+        ((TextRuntime)box.Visual.GetGraphicalUiElementByName("PlaceholderTextInstance")!).Text.ShouldBe("Second hint");
     }
 
     private static GumProjectSave WithBool(string variable, bool? value) =>
@@ -217,5 +217,39 @@ public class HotReloadFormsPropertyEditTests : BaseTestClass
         box.Text.ShouldBe("hello world");
         box.CaretIndex.ShouldBe(6);
         box.SelectionLength.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Load_ComponentDefaultSetsMaxLengthAndMaxLettersToShow_DoesNotThrowAndAppliesThem()
+    {
+        GumProjectSave project = HotReloadTextBoxProjects.Build(
+            componentEdits: s =>
+            {
+                HotReloadTextBoxProjects.Set(s, "MaxLength", "int?", 7);
+                HotReloadTextBoxProjects.Set(s, "MaxLettersToShow", "int?", 5);
+            });
+
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(project);
+
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+        box.MaxLength.ShouldBe(7);
+        box.MaxLettersToShow = 5;
+        box.MaxLettersToShow.ShouldBe(5);
+    }
+
+    private static GumProjectSave WithComponentPlaceholder(string text) =>
+        HotReloadTextBoxProjects.Build(componentEdits: state =>
+            state.Variables.Single(v => v.Name == "PlaceholderTextInstance.Text").Value = text);
+
+    [Fact]
+    public void ApplyDiff_ComponentPlaceholderTextEdited_ControlShowsNewPlaceholder()
+    {
+        GraphicalUiElement screen = HotReloadTextBoxProjects.Load(WithComponentPlaceholder("First"));
+        TextBox box = HotReloadTextBoxProjects.Box(screen);
+        box.Placeholder.ShouldBe("First");
+
+        HotReloadTextBoxProjects.Reload(screen, WithComponentPlaceholder("Second"));
+
+        box.Placeholder.ShouldBe("Second");
     }
 }
