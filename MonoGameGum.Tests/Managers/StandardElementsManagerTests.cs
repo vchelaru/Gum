@@ -156,6 +156,8 @@ public class StandardElementsManagerTests : BaseTestClass
 
         state.Variables.ShouldContain(v => v.Name == "HasEvents" && !v.IsHiddenInPropertyGrid);
         state.Variables.ShouldContain(v => v.Name == "ExposeChildrenEvents");
+        state.Variables.ShouldContain(v => v.Name == "RaiseChildrenEventsOutsideOfBounds"
+            && v.MinimumGumxVersion == (int)GumProjectSave.GumxVersions.ShaderParametersExpansion);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -40,6 +41,19 @@ public class ContainerRuntimeTests
     {
         ContainerRuntime sut = new();
         sut.RenderableComponent.ShouldBeOfType<InvisibleRenderable>();
+    }
+
+    [Fact]
+    public void SetProperty_RaiseChildrenEventsOutsideOfBounds_ShouldSetAndReadBack()
+    {
+        ContainerRuntime sut = new();
+        sut.RaiseChildrenEventsOutsideOfBounds.ShouldBeFalse();
+
+        sut.SetProperty("RaiseChildrenEventsOutsideOfBounds", true);
+
+        sut.RaiseChildrenEventsOutsideOfBounds.ShouldBeTrue();
+        sut.TryGetProperty("RaiseChildrenEventsOutsideOfBounds", out object? value).ShouldBeTrue();
+        value.ShouldBe(true);
     }
 
     [Fact]
