@@ -8,8 +8,9 @@ namespace RaylibGum.Tests.Runtimes;
 
 /// <summary>
 /// #7404 - dashes shorter than a pixel read as the average coverage on Skia, so a dashed Arc made of them is a
-/// solid stroke at alpha * dash / (dash + gap). The expected values were measured on the same scene rendered on
-/// Skia (a full ring of opaque blue on white, mean red over the stroke, away from its edges).
+/// solid stroke at alpha * dash / (dash + gap). The width 4 expected values were measured on the same scene rendered
+/// on Skia (a full ring of opaque blue on white, mean red over the stroke, away from its edges). The width 1, 2 and 8
+/// expected values are the analytic average coverage (Skia's measurement at width 1 is distorted), not Skia readings.
 /// </summary>
 public class ArcSubPixelDashTests : BaseTestClass
 {
@@ -52,7 +53,7 @@ public class ArcSubPixelDashTests : BaseTestClass
             {
                 double u = (x + 0.5 - 100) / a, v = (y + 0.5 - 100) / b;
                 double r = System.Math.Sqrt(u * u + v * v);
-                if (System.Math.Abs(r - 1) * System.Math.Min(a, b) < thickness / 2 - 1)
+                if (System.Math.Abs(r - 1) * System.Math.Min(a, b) < thickness / 2 - thickness / 4)
                 {
                     sum += GetImageColor(image, x, y).R;
                     count++;
@@ -83,7 +84,42 @@ public class ArcSubPixelDashTests : BaseTestClass
     [InlineData(140, 80, 2.5)]
     public void SubPixelDashes_RoundCaps_AreFullyCovered(float width, float height, double skiaRed)
     {
-        Render(width, height, 4, true, 0.5f, 0.5f).ShouldBeLessThan(skiaRed + Tolerance);
+        Render(width, height, 4, true, 0.5f, 0.5f).ShouldBe(skiaRed, Tolerance);
+    }
+
+    // Expected red is the analytic average coverage of opaque blue on white: 255 * (1 - dash / (dash + gap)).
+    [Theory]
+    [InlineData(8, 0.25f, 0.25f, 127.5)]
+    [InlineData(8, 0.5f, 1.5f, 191.25)]
+    [InlineData(8, 1.5f, 0.5f, 63.75)]
+    [InlineData(2, 0.25f, 0.25f, 127.5)]
+    [InlineData(2, 0.5f, 1.5f, 191.25)]
+    [InlineData(1, 0.25f, 0.25f, 127.5)]
+    [InlineData(1, 0.5f, 1.5f, 191.25)]
+    public void SubPixelDashes_ButtCaps_MatchAnalyticAverageCoverage(float thickness, float dash, float gap, double expectedRed)
+    {
+        Render(200, 100, thickness, false, dash, gap).ShouldBe(expectedRed, Tolerance);
+    }
+
+    // Round caps overlap into a fully covered stroke (analytic: the caps add the thickness to every dash).
+    [Theory]
+    [InlineData(8)]
+    [InlineData(2)]
+    [InlineData(1)]
+    public void SubPixelDashes_RoundCaps_AnalyticFullCoverage(float thickness)
+    {
+        Render(200, 100, thickness, true, 0.5f, 0.5f).ShouldBe(0, Tolerance);
+    }
+
+    // A pattern of 3 px or less on a thin stroke takes the undashed path (TryGetUndashedColor), an intended choice:
+    // at that size dashes read as the average coverage anyway. 1 + 1 is a 2 px pattern, 1.5 + 1.5 sits on the 3 px limit.
+    [Theory]
+    [InlineData(2, 1f, 1f)]
+    [InlineData(2, 1.5f, 1.5f)]
+    [InlineData(1, 1f, 1f)]
+    public void ThinStroke_PatternUpToThreePixels_IsDrawnAsAverageCoverage(float thickness, float dash, float gap)
+    {
+        Render(200, 100, thickness, false, dash, gap).ShouldBe(127.5, Tolerance);
     }
 
     [Theory]
