@@ -52,6 +52,10 @@ public class GumxImportAssetCopyTests : IDisposable
     [InlineData("icon.png")]
     [InlineData("icon.jpg")]
     [InlineData("icon.tga")]
+    [InlineData("icon.fake")]
+    [InlineData("icon.FAKE")]
+    [InlineData("sub/icon.fake")]
+    [InlineData("icon.svg")]
     public async Task ImportAsync_ShouldCopyReferencedFile_WhenSourceFileHasThisExtension(string relativePath)
     {
         string sourceDirectory = Path.Combine(_root, "Source");
