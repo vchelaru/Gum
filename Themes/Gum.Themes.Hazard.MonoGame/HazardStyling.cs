@@ -82,7 +82,7 @@ public class HazardColors
     /// <summary>TextBox / PasswordBox selection highlight. The selected text is drawn over it
     /// without being recolored, so it has to stay at least 4.5:1 from <see cref="Text"/>; the
     /// hazard yellow <see cref="Selection"/> is about 1.2:1 from it (#7330).</summary>
-    public Color TextSelection { get; set; } = new Color(85, 67, 5);
+    public Color TextSelection { get; set; } = new Color(108, 86, 6);
 
     /// <summary>Primary text - gold body / label text (<c>--txt</c>, <c>#E3B528</c>).</summary>
     public Color Text { get; set; } = new Color(227, 181, 40);

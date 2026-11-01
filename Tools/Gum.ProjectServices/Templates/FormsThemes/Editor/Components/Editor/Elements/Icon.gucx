@@ -1485,13 +1485,13 @@
     <State>
       <Name>TextPrimary</Name>
       <Variable Type="int" Name="IconSprite.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="IconSprite.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="IconSprite.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>

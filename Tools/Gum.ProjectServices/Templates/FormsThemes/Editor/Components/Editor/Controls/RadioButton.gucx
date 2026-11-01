@@ -279,13 +279,13 @@
         <Value xsi:type="xsd:int">60</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -329,13 +329,13 @@
         <Value xsi:type="xsd:int">60</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -479,13 +479,13 @@
         <Value xsi:type="xsd:int">89</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -529,13 +529,13 @@
         <Value xsi:type="xsd:int">89</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -579,13 +579,13 @@
         <Value xsi:type="xsd:int">51</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -629,13 +629,13 @@
         <Value xsi:type="xsd:int">51</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -679,13 +679,13 @@
         <Value xsi:type="xsd:int">60</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -729,13 +729,13 @@
         <Value xsi:type="xsd:int">60</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -779,13 +779,13 @@
         <Value xsi:type="xsd:int">89</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -829,13 +829,13 @@
         <Value xsi:type="xsd:int">89</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">180</Value>
+        <Value xsi:type="xsd:int">190</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>

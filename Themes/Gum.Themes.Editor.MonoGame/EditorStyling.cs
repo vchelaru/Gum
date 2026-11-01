@@ -46,7 +46,7 @@ public class EditorColors
     // already had differently-named equivalents to alias).
 
     /// <summary>Primary text color. Previously inlined in <c>EditorTheme.Apply</c>.</summary>
-    public Color TextPrimary { get; set; } = new Color(180, 180, 180);
+    public Color TextPrimary { get; set; } = new Color(190, 190, 190);
 
     /// <summary>Muted / secondary text color. Previously inlined in <c>EditorTheme.Apply</c>.</summary>
     public Color TextMuted { get; set; } = new Color(88, 88, 88);
@@ -65,6 +65,9 @@ public class EditorColors
     /// <see cref="EditorTheme.ConfigureStyling"/>.
     /// </summary>
     public Color Accent { get; set; } = new Color(192, 222, 255);
+
+    /// <summary>Text on the pale-blue <see cref="Accent"/> highlight of a MenuItem (#7366).</summary>
+    public Color TextOnAccent { get; set; } = new Color(0, 0, 0);
 
     // --- Additional deduplicated tokens -------------------------------------
 

@@ -28,16 +28,17 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
     private const int Width = 640;
     private const int Height = 300;
     private const double MinimumTextContrast = 4.5;
+    private const double MinimumSelectionAreaContrast = 1.5;
 
-    // Surfaces still under 4.5:1 in Standard (white on the teal Primary) and Editor (gray text on the pale-blue
-    // menu highlight and on its 74 gray field), left for the rest of #7366; every other surface is pinned.
+    // Surfaces still under 4.5:1 in Standard (white on the teal Primary), left to the maintainer's decision (#7366);
+    // every other surface is pinned.
     private static readonly Dictionary<string, string[]> PendingSurfaces = new()
     {
         ["standard"] = new[] { "ListBoxItem Selected", "TextBox selection (focused)", "PasswordBox selection (focused)", "MenuItem top-level open" },
-        ["editor"] = new[] { "ComboBox closed", "MenuItem top-level highlighted", "MenuItem submenu row highlighted", "MenuItem submenu row resting" },
+        
     };
 
-    private sealed record Measurement(string Surface, double Contrast, XnaColor Background, XnaColor Text);
+    private sealed record Measurement(string Surface, double Contrast, XnaColor Background, XnaColor Text, double Minimum = MinimumTextContrast);
 
     [Theory]
     [MemberData(nameof(MenuFocusRenderTests.Pairs), MemberType = typeof(MenuFocusRenderTests))]
@@ -54,7 +55,7 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
             try
             {
                 applyTheme?.Invoke();
-                measurements = RunScene(themeName + "-codeonly", componentPrefix: null, background);
+                measurements = RunScene(themeName + "-codeonly", themeName, componentPrefix: null, background);
             }
             finally
             {
@@ -78,7 +79,7 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         List<Measurement> measurements = new();
         MenuFocusRenderTests.WithToolProject(templateFolder, mutateProject: null, () =>
         {
-            measurements = RunScene(themeName + "-tool", componentPrefix, background);
+            measurements = RunScene(themeName + "-tool", themeName, componentPrefix, background);
         });
         AssertReadable(themeName, themeName + " tool", measurements);
     }
@@ -96,13 +97,13 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         }
         measurements.ShouldNotBeEmpty(label);
         List<string> failures = measurements
-            .Where(m => m.Contrast < MinimumTextContrast && !(PendingSurfaces.TryGetValue(themeName, out string[]? pending) && pending.Contains(m.Surface)))
+            .Where(m => m.Contrast < m.Minimum && !(PendingSurfaces.TryGetValue(themeName, out string[]? pending) && pending.Contains(m.Surface)))
             .Select(m => $"{m.Surface}: {m.Contrast:0.00}:1 (text {m.Text.R},{m.Text.G},{m.Text.B} on {m.Background.R},{m.Background.G},{m.Background.B})")
             .ToList();
-        failures.ShouldBeEmpty($"{label}: text under {MinimumTextContrast}:1");
+        failures.ShouldBeEmpty($"{label}: below its minimum contrast");
     }
 
-    private static List<Measurement> RunScene(string pngPrefix, string? componentPrefix, XnaColor background)
+    private static List<Measurement> RunScene(string pngPrefix, string themeName, string? componentPrefix, XnaColor background)
     {
         MenuFocusRenderTests.InstallOffscreenCursor();
         GraphicsDevice gd = SystemManagers.Default.Renderer.GraphicsDevice;
@@ -200,6 +201,7 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         textBox.Visual.UpdateLayout();
         pixels = MenuFocusRenderTests.Capture(gd, background, pngPrefix + "-textbox.png", Width, Height);
         results.Add(MeasureSelection("TextBox selection (focused)", pixels, textBox.Visual));
+        results.Add(MeasureSelectionArea("TextBox selection area vs field", pixels, textBox.Visual, themeName));
 
         passwordBox.IsFocused = true;
         passwordBox.SelectionStart = 0;
@@ -207,6 +209,7 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         passwordBox.Visual.UpdateLayout();
         pixels = MenuFocusRenderTests.Capture(gd, background, pngPrefix + "-passwordbox.png", Width, Height);
         results.Add(MeasureSelection("PasswordBox selection (focused)", pixels, passwordBox.Visual));
+        results.Add(MeasureSelectionArea("PasswordBox selection area vs field", pixels, passwordBox.Visual, themeName));
 
         // Scene 2: the open combo box drop-down with its selected item.
         passwordBox.IsFocused = false;
@@ -266,6 +269,19 @@ public class ThemeSelectionReadabilityTests : BaseTestClass
         int right = (int)Math.Min(text.AbsoluteLeft + text.GetAbsoluteWidth(), selection.AbsoluteLeft + selection.GetAbsoluteWidth());
         int bottom = (int)Math.Min(text.AbsoluteTop + text.GetAbsoluteHeight(), selection.AbsoluteTop + selection.GetAbsoluteHeight());
         return MeasureRect(surface, pixels, left, top, right, bottom, text);
+    }
+
+    // How visible the highlight itself is: the drawn selection fill against the field's own fill (sampled
+    // inside the box, right of the text). Asserted for Hazard, whose dark field made the highlight faint; recorded
+    // for the other themes.
+    private static Measurement MeasureSelectionArea(string surface, XnaColor[] pixels, GraphicalUiElement textBoxVisual, string themeName)
+    {
+        Measurement selected = MeasureSelection(surface, pixels, textBoxVisual);
+        int x = (int)(textBoxVisual.AbsoluteLeft + textBoxVisual.GetAbsoluteWidth() - 10);
+        int y = (int)(textBoxVisual.AbsoluteTop + textBoxVisual.GetAbsoluteHeight() / 2);
+        XnaColor field = pixels[y * Width + x];
+        return new Measurement(surface, ContrastRatio(selected.Background, field), selected.Background, field,
+            themeName == "hazard" ? MinimumSelectionAreaContrast : 1.0);
     }
 
     private static Measurement MeasureText(string surface, XnaColor[] pixels, GraphicalUiElement? text)

@@ -68,7 +68,7 @@ internal sealed class HazardTextInputDecoration
             fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.BorderHover, text: HazardStyling.ActiveStyle.Colors.Text, ring: false);
 
         host.States.Focused.Apply = () => Apply(host,
-            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.Text, ring: true);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.TextBright, ring: true);
 
         host.States.Disabled.Apply = () => Apply(host,
             fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder, text: HazardStyling.ActiveStyle.Colors.DisabledText, ring: false);
