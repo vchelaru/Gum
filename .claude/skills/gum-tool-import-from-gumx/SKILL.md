@@ -39,9 +39,11 @@ Anything `GumxImportService.ImportAsync` cannot bring over (a listed file that i
 
 Files reached through another file: each copied `.achx`/`.achj` is loaded with `AnimationChainListSave.FromFile` and its textures are copied with their path relative to the chain kept (once if shared). A texture that is missing, absolute, or leaves the source project, and a chain that will not load, go through `AddSkipped`; the element still imports. Shader files (`ShaderFileExtensions`) are copied like any Source File.
 
-## Files must be inside the source project
+## Files outside the source project
 
-`SourceProjectContainment.GetRefusal(sourceBase, relativePath)` is the one check for "is this file inside the source project": a `..` that leaves it, or a real path (every symlink or junction followed, on the file and each parent folder) outside the real source folder. Every asset read goes through it (Source Files, fonts, shaders, chain textures, element animation files) and a refused file is reported through `AddSkipped`. Links that stay inside the project are allowed. Behavior and Standard file paths are deliberately not checked: a project may reference them anywhere.
+`ExternalAssetPlan` (built before classification, reads only) decides where every asset the elements name from OUTSIDE the source folder lands: a `..` or absolute path to a real file is copied into the destination's `external` folder (an existing folder of that name, any casing, is reused; none is created unless needed) and `ExternalAssetPlan.Rewrite` points every variable in every state and category of the cloned element, and of imported Standards, at the copy. Same content (SHA-256) already there is reused, a different file with the same name (case-insensitive) becomes `name-2.ext`; an outside animation chain keeps its textures' layout relative to it (a group, renamed by folder on conflict). Destination paths are never built from the source's `..`. A missing outside file is reported like any missing file. Web sources are never planned.
+
+`SourceProjectContainment.GetRefusal` refuses what resolves outside THROUGH a link (symlink or junction on the file or any parent folder) and is applied to every asset read and the element animation file. Behavior and Standard file paths are not checked: a project may reference them anywhere. An in-project chain whose texture climbs out of the project is still refused.
 
 ## Tree rows
 

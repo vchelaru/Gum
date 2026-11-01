@@ -214,17 +214,6 @@ public class GumxImportLinkEscapeTests : IDisposable
     }
 
     [Fact]
-    public async Task ImportAsync_SourceFileEscapesWithDotDot_IsRefusedAndNotCopied()
-    {
-        ImportResult result = await Import("../outside/secret.png");
-
-        result.SkippedElements.ShouldContain("../outside/secret.png");
-        result.CopiedAssets.ShouldBeEmpty();
-        Directory.GetFiles(_projectDir, "secret.png", SearchOption.AllDirectories).ShouldBeEmpty();
-        File.Exists(Path.Combine(_root, "outside", "secret.png")).ShouldBeTrue();
-    }
-
-    [Fact]
     public async Task ImportAsync_ChainTextureEscapesWithDotDot_IsStillRefused()
     {
         WriteSource("anim/hero.achx", Achx("../../outside/secret.png"));
