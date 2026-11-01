@@ -89,6 +89,9 @@ public static class FrbThemeResources
     /// <summary>The WPF tool's default base font size (AppScale).</summary>
     public const double DefaultBaseFontSize = 12;
 
+    /// <summary>The resource that holds the base font size, which the tool's zoom changes.</summary>
+    public const string BaseFontSizeKey = "ControlContentThemeFontSize";
+
     /// <summary>
     /// The font the controls render in: the OS default, as the WPF head (Segoe UI on Windows), with
     /// Fluent's Inter as the fallback for a machine without a usable default.
@@ -101,7 +104,7 @@ public static class FrbThemeResources
     /// </summary>
     public static void SetBaseFontSize(IResourceDictionary resources, double size)
     {
-        resources["ControlContentThemeFontSize"] = size;
+        resources[BaseFontSizeKey] = size;
         // The WPF AppScale's Caption size: dialog validation text and other fine print.
         resources[CaptionFontSizeKey] = size * CaptionScale;
     }
