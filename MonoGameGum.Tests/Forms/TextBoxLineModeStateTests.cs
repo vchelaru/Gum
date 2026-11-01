@@ -159,6 +159,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
     {
         Loaded loaded = LoadThemed(project, "TextBox", Authored.Default);
         loaded.Box.AcceptsReturn = true;
+        loaded.Box.TextWrapping = Gum.Forms.TextWrapping.Wrap;
         TextWidthUnits(loaded.BoxVisual).ShouldBe(DimensionUnitType.RelativeToParent);
     }
 

@@ -90,6 +90,7 @@ public abstract class TextBoxBase :
     // (negative offset) applied during typing/overflow snaps back here when the content
     // shrinks again. See issue #2683.
     float _textRestingX;
+    float _textRestingY;
 
     List<GraphicalUiElement> _selectionInstances = new List<GraphicalUiElement>();
 
@@ -254,6 +255,7 @@ public abstract class TextBoxBase :
                 // Refresh the selection template after the state has been applied so the
                 // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
                 RefreshTemplateFromSelectionInstance();
+                ResetScrollForLineModeChange();
             }
         }
     }
@@ -609,6 +611,7 @@ public abstract class TextBoxBase :
 
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         _textRestingX = this.textComponent.X;
+        _textRestingY = this.textComponent.Y;
         caretComponent.X = 0;
     }
 
@@ -1910,6 +1913,7 @@ public abstract class TextBoxBase :
                 // Refresh the selection template after the state has been applied so the
                 // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
                 RefreshTemplateFromSelectionInstance();
+                ResetScrollForLineModeChange();
             }
         }
     }
@@ -1987,6 +1991,29 @@ public abstract class TextBoxBase :
 
             Visual.SetProperty("LineModeCategoryState", stateToSet);
         }
+    }
+
+    /// <summary>
+    /// After TextWrapping or AcceptsReturn changes the text is laid out differently, so the scroll
+    /// offset left by the previous mode (a no-wrap line scrolled left to follow the caret, a
+    /// multi-line box scrolled down) no longer applies. The text goes back to its resting place and
+    /// the caret and selection are placed again, scrolling only if the new mode needs it.
+    /// </summary>
+    private void ResetScrollForLineModeChange()
+    {
+        if (textComponent == null || caretComponent == null || coreTextObject == null)
+        {
+            return;
+        }
+
+        textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        textComponent.X = _textRestingX;
+        textComponent.Y = _textRestingY;
+        Visual.UpdateLayout();
+
+        UpdateCaretPositionFromCaretIndex();
+        OffsetTextToKeepCaretInView();
+        UpdateToSelection();
     }
 
     List<SelectionPosition> selectionStartEnds = new List<SelectionPosition>();
