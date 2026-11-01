@@ -174,7 +174,21 @@ public partial class InteractiveGue : GraphicalUiElement
     /// is outside of the bounds of this object. Setting this to false can have a slight
     /// performance cost since each child is checked even if the cursor is not over this.
     /// </summary>
-    public bool RaiseChildrenEventsOutsideOfBounds { get; set; } = false;
+    public bool RaiseChildrenEventsOutsideOfBounds
+    {
+        get => _raiseChildrenEventsOutsideOfBounds;
+        set
+        {
+            if (_raiseChildrenEventsOutsideOfBounds != value)
+            {
+                _raiseChildrenEventsOutsideOfBounds = value;
+                // The cursor walk may skip subtrees it judged to be out of reach, so it has to look again.
+                InvalidateSubtreeCaches();
+                ReportTypedPropertyChanged("RaiseChildrenEventsOutsideOfBounds");
+            }
+        }
+    }
+    bool _raiseChildrenEventsOutsideOfBounds;
     bool isEnabled = true;
 
     /// <summary>
