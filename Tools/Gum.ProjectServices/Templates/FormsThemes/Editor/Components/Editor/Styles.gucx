@@ -470,10 +470,10 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Selection.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">128</Value>
+      <Value xsi:type="xsd:int">86</Value>
     </Variable>
     <Variable Type="int" Name="Selection.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">92</Value>
+      <Value xsi:type="xsd:int">62</Value>
     </Variable>
     <Variable Type="int" Name="Selection.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>

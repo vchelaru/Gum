@@ -590,12 +590,26 @@ public class MenuFocusRenderTests : BaseTestClass
         }
     }
     // The same path as a Menu placed in a screen in the tool: the template's own component, instantiated.
-    private static T FromComponent<T>(string componentName) where T : FrameworkElement
+    internal static T FromComponent<T>(string componentName) where T : FrameworkElement
     {
         ComponentSave component = ObjectFinder.Self.GetComponent(componentName).ShouldNotBeNull(componentName);
         GraphicalUiElement visual = component.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
         return (visual as InteractiveGue)?.FormsControlAsObject.ShouldBeOfType<T>(componentName)!;
     }
+    // A mouse cursor parked far outside the capture, so no control reacts to it.
+    internal static void InstallOffscreenCursor()
+    {
+        Mock<ICursor> cursor = new();
+        cursor.SetupProperty(c => c.VisualOver);
+        cursor.SetupProperty(c => c.WindowPushed);
+        cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(c => c.X).Returns(-1000);
+        cursor.Setup(c => c.Y).Returns(-1000);
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(-1000);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(-1000);
+        FormsUtilities.SetCursor(cursor.Object);
+    }
+
     private static MenuMeasure RunScenario(string pngPrefix, string? gumxPath, Action? applyTheme, XnaColor background, string? componentPrefix)
     {
         Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
@@ -605,15 +619,7 @@ public class MenuFocusRenderTests : BaseTestClass
         try
         {
             applyTheme?.Invoke();
-            Mock<ICursor> cursor = new();
-            cursor.SetupProperty(c => c.VisualOver);
-            cursor.SetupProperty(c => c.WindowPushed);
-            cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
-            cursor.Setup(c => c.X).Returns(-1000);
-            cursor.Setup(c => c.Y).Returns(-1000);
-            cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(-1000);
-            cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(-1000);
-            FormsUtilities.SetCursor(cursor.Object);
+            InstallOffscreenCursor();
 
             Menu menu = componentPrefix == null ? new Menu() : FromComponent<Menu>(componentPrefix + "Menu");
             MenuItem Item(string header)
@@ -875,7 +881,7 @@ public class MenuFocusRenderTests : BaseTestClass
     }
 
     // Runs one frame of the real focus dispatch with only this key down (pushed, typed and held).
-    private static void Press(Keys key)
+    internal static void Press(Keys key)
     {
         Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
         keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(key)).Returns(true);

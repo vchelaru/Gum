@@ -228,13 +228,13 @@
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">117</Value>
+        <Value xsi:type="xsd:int">85</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">68</Value>
+        <Value xsi:type="xsd:int">17</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -253,7 +253,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Bubblegum/Styles.AccentDark.FillColor</string>
+          <string>Color = Components/Bubblegum/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -272,13 +272,13 @@
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">117</Value>
+        <Value xsi:type="xsd:int">85</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">68</Value>
+        <Value xsi:type="xsd:int">17</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -297,7 +297,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Bubblegum/Styles.AccentDark.FillColor</string>
+          <string>Color = Components/Bubblegum/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
     </State>

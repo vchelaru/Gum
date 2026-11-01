@@ -298,13 +298,13 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="int" Name="SelectionInstance.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">6</Value>
+      <Value xsi:type="xsd:int">5</Value>
     </Variable>
     <Variable Type="int" Name="SelectionInstance.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">88</Value>
+      <Value xsi:type="xsd:int">67</Value>
     </Variable>
     <Variable Type="int" Name="SelectionInstance.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">110</Value>
+      <Value xsi:type="xsd:int">85</Value>
     </Variable>
     <Variable Type="float" Name="SelectionInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-4</Value>

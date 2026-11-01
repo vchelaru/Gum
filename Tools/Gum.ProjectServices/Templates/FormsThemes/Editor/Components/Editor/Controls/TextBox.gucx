@@ -343,13 +343,13 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="SelectionInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">128</Value>
+      <Value xsi:type="xsd:int">86</Value>
     </Variable>
     <Variable Type="bool" Name="SelectionInstance.ExposeChildrenEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="int" Name="SelectionInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">92</Value>
+      <Value xsi:type="xsd:int">62</Value>
     </Variable>
     <Variable Type="float" Name="SelectionInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-4</Value>

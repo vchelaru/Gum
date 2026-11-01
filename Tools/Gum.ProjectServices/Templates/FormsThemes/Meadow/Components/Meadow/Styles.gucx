@@ -323,13 +323,13 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Sage.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">201</Value>
+      <Value xsi:type="xsd:int">208</Value>
     </Variable>
     <Variable Type="int" Name="Sage.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">221</Value>
+      <Value xsi:type="xsd:int">228</Value>
     </Variable>
     <Variable Type="int" Name="Sage.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">188</Value>
+      <Value xsi:type="xsd:int">196</Value>
     </Variable>
     <Variable Type="bool" Name="Sage.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>

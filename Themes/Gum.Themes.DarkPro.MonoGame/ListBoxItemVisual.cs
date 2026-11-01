@@ -87,7 +87,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
             fill: DarkProStyling.ActiveStyle.Colors.AccentDark, text: DarkProStyling.ActiveStyle.Colors.Text);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: DarkProStyling.ActiveStyle.Colors.Accent, text: DarkProStyling.ActiveStyle.Colors.Text);
+            fill: DarkProStyling.ActiveStyle.Colors.Accent, text: DarkProStyling.ActiveStyle.Colors.TextOnAccent);
 
         States.Disabled.Apply = () => ApplyPalette(
             fill: new Color(0, 0, 0, 0), text: DarkProStyling.ActiveStyle.Colors.DisabledText);

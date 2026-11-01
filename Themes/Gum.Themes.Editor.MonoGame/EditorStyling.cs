@@ -86,7 +86,7 @@ public class EditorColors
     /// <c>ListBoxItemVisual.SelectedBackgroundColor</c> and
     /// <c>TextBoxVisual.SelectionBackgroundColor</c>.
     /// </summary>
-    public Color Selection { get; set; } = new Color(0, 92, 128);
+    public Color Selection { get; set; } = new Color(0, 62, 86);
 
     /// <summary>
     /// Panel/container background. Previously inlined in <c>ListBoxVisual.BackgroundColor</c>

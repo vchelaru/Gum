@@ -106,7 +106,7 @@ public class BubblegumColors
     /// Accent on selected-row text (<c>--accd</c>). Higher contrast against
     /// AccentLight than the default Text color, matching the CSS spec.
     /// </summary>
-    public Color SelectedRowText => AccentDark;
+    public Color SelectedRowText => Text;
 
     // --- 4-token guardrail -------------------------------------------------
     // Every theme's Apply() pushes these into V3.Styling.ActiveStyle.Colors for the stock,
