@@ -415,8 +415,9 @@ namespace GumRuntime
             }
         }
 
-        // Nesting depth of ToGraphicalUiElement; only the outermost build stamps its owner. A plain static:
-        // all UI work runs on one thread.
+        // Nesting depth of ToGraphicalUiElement on this thread; only the outermost build stamps its owner. Per thread:
+        // builds on several threads must not corrupt each other's count, which would leave it non-zero for good.
+        [ThreadStatic]
         private static int _buildDepth;
 
         // Elements whose build is in progress. An instance of one of these, met while building its own contents,
