@@ -91,7 +91,7 @@ public class ThemeSelectionControlsKeyboardTests : ThemeKeyboardTestBase
     }
 
     public static IEnumerable<object[]> ThemesAndOpenKeys() =>
-        Themes().SelectMany(theme => new[] { Keys.Enter }.Select(key => new object[] { theme[0], key }));
+        Themes().SelectMany(theme => new[] { Keys.Enter, Keys.Space }.Select(key => new object[] { theme[0], key }));
 
     [Theory]
     [MemberData(nameof(ThemesAndOpenKeys))]

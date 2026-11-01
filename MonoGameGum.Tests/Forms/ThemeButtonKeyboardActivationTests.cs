@@ -11,7 +11,7 @@ namespace MonoGameGum.Tests.Forms;
 public class ThemeButtonKeyboardActivationTests : ThemeKeyboardTestBase
 {
     public static IEnumerable<object[]> ThemesAndKeys() =>
-        Themes().SelectMany(theme => new[] { Keys.Enter }.Select(key => new object[] { theme[0], key }));
+        Themes().SelectMany(theme => new[] { Keys.Enter, Keys.Space }.Select(key => new object[] { theme[0], key }));
 
     [Theory]
     [MemberData(nameof(ThemesAndKeys))]

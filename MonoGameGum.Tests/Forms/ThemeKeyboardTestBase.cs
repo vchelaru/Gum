@@ -22,6 +22,8 @@ public abstract class ThemeKeyboardTestBase : BeginnerDriverTestBase
     {
         // Keyboard navigation (Tab, arrows) is opt-in in a game: Game1 adds its keyboard to this list.
         FrameworkElement.KeyboardsForUiControl.Add(Driver.Keyboard);
+        // BaseTestClass trims the click keys to Enter; a game has Enter and Space.
+        FrameworkElement.ClickCombos.Add(new KeyCombo { PushedKey = Keys.Space });
         // BaseTestClass.Dispose resets the registry, so a later test would find the shape defaults gone.
         Gum.Renderables.DefaultStrokedCircleRenderable.RegisterRuntimeTypes();
         Gum.Renderables.DefaultFilledRectangleRenderable.RegisterRuntimeTypes();
