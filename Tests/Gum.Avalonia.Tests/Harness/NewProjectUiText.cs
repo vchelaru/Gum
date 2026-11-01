@@ -27,7 +27,7 @@ internal static class NewProjectUiText
     public const string NoXmlWithCodeProjectNote = "gumcli new has no option for the .gumx format with a code project yet.";
 
     public const string EnterName = "Enter a project name.";
-    public const string InvalidFolderName = "The name can't be a folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and Windows device names such as CON, NUL or COM1.";
+    public const string InvalidFolderName = "Not a valid folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and names like CON or COM1.";
     public const string InvalidCSharpName = "Not a valid C# name.";
     public const string ChooseLocation = "Choose a location.";
     public const string NameTooLong = "The name is too long.";

@@ -37,6 +37,11 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void DeviceNameRefused(string theme) => Capture("device-name-refused", theme, (viewModel, _) => viewModel.ProjectName = "CON");
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void CodeProjectChecked(string theme) => Capture("code-project", theme, (viewModel, _) =>
     {
         viewModel.IncludeCodeProject = true;

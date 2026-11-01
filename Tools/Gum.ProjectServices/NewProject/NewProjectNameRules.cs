@@ -13,7 +13,7 @@ public static class NewProjectNameRules
 {
     /// <summary>Shown when <see cref="IsValidFolderName"/> is false. Says what to change.</summary>
     public const string InvalidFolderNameMessage =
-        "The name can't be a folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and Windows device names such as CON, NUL or COM1.";
+        "Not a valid folder name: avoid < > : \" / \\ | ? *, a trailing dot or space, and names like CON or COM1.";
 
     /// <summary>Shown when <see cref="IsTooLong"/> is true.</summary>
     public const string NameTooLongMessage = "The name is too long.";
