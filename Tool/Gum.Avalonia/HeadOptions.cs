@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using Gum.CommandLine;
 
 namespace Gum.Avalonia;
 
@@ -15,9 +16,9 @@ public sealed class HeadOptions
 {
     /// <summary>Creates the options.</summary>
     public HeadOptions(double? exitAfterSeconds, string? screenshotPath, string? selectPath = null, string? theme = null, string? userDataFolder = null,
-        bool zoomToFit = false, string? projectFile = null)
+        bool zoomToFit = false, string? startupFileError = null)
     {
-        ProjectFile = projectFile;
+        StartupFileError = startupFileError;
         ExitAfterSeconds = exitAfterSeconds;
         ScreenshotPath = screenshotPath;
         SelectPath = selectPath;
@@ -67,14 +68,13 @@ public sealed class HeadOptions
     /// </summary>
     public string? UserDataFolder { get; }
 
-    /// <summary>The project file (.gumx or .gumj) named on the command line, as a full path; null when none is.</summary>
-    public string? ProjectFile { get; }
-
     /// <summary>
-    /// The named project file when it does not exist. Loading one shows a modal error that nobody
-    /// answers in an unattended run, so the run would sit until <c>--exit-after</c> (#7374).
+    /// Why the project or element file named on the command line cannot open, or null when it can
+    /// (or none is named). Loading a missing one shows a modal error that nobody answers in an
+    /// unattended run, so the run would sit until <c>--exit-after</c> (#7374); a path that is no Gum
+    /// file would open an empty tool and still report success.
     /// </summary>
-    public string? MissingProjectFile => ProjectFile != null && !File.Exists(ProjectFile) ? ProjectFile : null;
+    public string? StartupFileError { get; }
 
     /// <summary>Parses the head-owned flags and ignores everything else.</summary>
     public static HeadOptions Parse(IReadOnlyList<string> args)
@@ -85,7 +85,7 @@ public sealed class HeadOptions
         string? theme = null;
         string? userData = null;
         bool zoomToFit = false;
-        string? projectFile = null;
+        List<string> positionals = new List<string>();
         for (int i = 0; i < args.Count; i++)
         {
             if (args[i] == "--exit-after" && i + 1 < args.Count)
@@ -112,12 +112,35 @@ public sealed class HeadOptions
             {
                 userData = Path.GetFullPath(args[++i]);
             }
-            else if (projectFile == null && !args[i].StartsWith("--") &&
-                (args[i].EndsWith(".gumx", StringComparison.OrdinalIgnoreCase) || args[i].EndsWith(".gumj", StringComparison.OrdinalIgnoreCase)))
+            else if (!args[i].StartsWith("--"))
             {
-                projectFile = Path.GetFullPath(args[i]);
+                positionals.Add(args[i]);
             }
         }
-        return new HeadOptions(exitAfter, screenshot, select, theme, userData, zoomToFit, projectFile);
+        return new HeadOptions(exitAfter, screenshot, select, theme, userData, zoomToFit, FindStartupFileError(positionals));
+    }
+
+    // The head and CommandLineManager read the same arguments; the last project or element file wins there.
+    private static string? FindStartupFileError(IReadOnlyList<string> positionals)
+    {
+        string? lastStartupFile = null;
+        foreach (string positional in positionals)
+        {
+            if (CommandLineManager.TryResolveStartupFile(positional, out _, out _))
+            {
+                lastStartupFile = positional;
+            }
+            else
+            {
+                return positional + " is not a Gum project file";
+            }
+        }
+
+        if (lastStartupFile != null && !File.Exists(lastStartupFile))
+        {
+            return "The project file does not exist: " + lastStartupFile;
+        }
+
+        return null;
     }
 }

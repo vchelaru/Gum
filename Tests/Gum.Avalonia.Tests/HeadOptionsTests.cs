@@ -28,27 +28,45 @@ public class HeadOptionsTests
     }
 
     [Fact]
-    public void MissingProjectFile_NamesAProjectThatDoesNotExist()
+    public void StartupFileError_NamesAProjectOrElementFileThatDoesNotExist()
     {
-        string missing = Path.Combine(Path.GetTempPath(), "no-such-folder-7374", "Missing.gumj");
+        string folder = Path.Combine(Path.GetTempPath(), "no-such-folder-7374");
 
-        HeadOptions.Parse(new[] { "--exit-after", "60", missing, "--select", "A/B" }).MissingProjectFile.ShouldBe(Path.GetFullPath(missing));
+        foreach (string name in new[] { "Missing.gumj", "Missing.gumx", Path.Combine("Screens", "Missing.gusx"), Path.Combine("Components", "Missing.gucj") })
+        {
+            string path = Path.Combine(folder, name);
+            HeadOptions.Parse(new[] { "--exit-after", "60", path, "--select", "A/B" }).StartupFileError
+                .ShouldBe("The project file does not exist: " + path);
+        }
     }
 
     [Fact]
-    public void MissingProjectFile_IsNullForAnExistingProjectOrNone()
+    public void StartupFileError_ChecksTheLastFile_LikeTheCommandLineManager()
     {
         string existing = Path.GetTempFileName();
         string project = Path.ChangeExtension(existing, ".gumx");
         File.Move(existing, project);
         try
         {
-            HeadOptions.Parse(new[] { project, "--exit-after", "60" }).MissingProjectFile.ShouldBeNull();
-            HeadOptions.Parse(new[] { "--exit-after", "60" }).MissingProjectFile.ShouldBeNull();
+            HeadOptions.Parse(new[] { "Missing.gumx", project }).StartupFileError.ShouldBeNull();
+            HeadOptions.Parse(new[] { project, "Missing.gumx" }).StartupFileError.ShouldNotBeNull();
         }
         finally
         {
             File.Delete(project);
         }
+    }
+
+    [Fact]
+    public void StartupFileError_IsNullForNoFile()
+    {
+        HeadOptions.Parse(new[] { "--exit-after", "60", "--select", "A" }).StartupFileError.ShouldBeNull();
+    }
+
+    [Fact]
+    public void StartupFileError_RejectsADirectoryAndAFileThatIsNotAProject()
+    {
+        HeadOptions.Parse(new[] { Path.GetTempPath() }).StartupFileError.ShouldBe(Path.GetTempPath() + " is not a Gum project file");
+        HeadOptions.Parse(new[] { "run.ps1", "--exit-after", "5" }).StartupFileError.ShouldBe("run.ps1 is not a Gum project file");
     }
 }
