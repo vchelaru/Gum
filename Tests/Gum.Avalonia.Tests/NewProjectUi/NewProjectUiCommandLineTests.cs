@@ -237,7 +237,7 @@ public class NewProjectUiCommandLineTests
         fixture.Dialog.SetChecked(NewProjectUiText.UseLocalSource, true);
         fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kni --source-linked");
 
-        fixture.Dialog.SetChecked(NewProjectUiText.UseLocalSource, false);
+        fixture.Dialog.SetChecked(NewProjectUiText.Stable, true);
         fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kni");
 
         fixture.Dialog.ChoosePlatform("kniskia");

@@ -70,14 +70,14 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
         foreach (bool code in new[] { false, true })
         foreach (bool forms in new[] { true, false })
         foreach (string platform in NewProjectPlatforms.MainNames.Select(entry => entry.Name))
-        foreach (bool linked in new[] { false, true })
+        foreach (NewProjectPackageChannel channel in Enum.GetValues<NewProjectPackageChannel>())
         foreach (bool restore in new[] { true, false })
         foreach (bool packages in new[] { true, false })
         foreach (bool generate in new[] { true, false })
         foreach (bool demo in new[] { true, false })
         foreach (bool xml in new[] { false, true })
         {
-            if (!code && (platform != "monogame" || linked || packages || generate || !demo))
+            if (!code && (platform != "monogame" || channel != NewProjectPackageChannel.Stable || packages || generate || !demo))
             {
                 continue; // Nothing of these shows without a code project.
             }
@@ -87,14 +87,14 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
                 vm.IncludeCodeProject = code;
                 vm.IsIncludeFormsControls = forms;
                 vm.PlatformName = platform;
-                vm.SourceLinkedChoice = linked;
+                vm.PackageChannelChoice = channel;
                 vm.RunRestore = restore;
                 vm.IncludeRecommendedPackages = packages;
                 vm.GenerateCodeChoice = generate;
                 vm.IsIncludeDemoScreenGum = demo;
                 vm.SelectedFileFormat = xml ? NewProjectDialogViewModel.XmlFormat : NewProjectDialogViewModel.JsonFormat;
             });
-            string label = $"code={code} forms={forms} platform={platform} linked={linked} restore={restore} packages={packages} generate={generate} demo={demo} xml={xml}";
+            string label = $"code={code} forms={forms} platform={platform} channel={channel} restore={restore} packages={packages} generate={generate} demo={demo} xml={xml}";
 
             _service.LastResolved = null;
             await viewModel.RunCreationAsync();
@@ -103,6 +103,13 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
             ResolvedNewProject resolved = _service.LastResolved.ShouldNotBeNull(label);
             (resolved.Platform != null).ShouldBe(code, label);
             (resolved.GumSourceDirectory != null).ShouldBe(code && viewModel.SourceLinked, label);
+            resolved.PackageChannel.ShouldBe(code ? viewModel.PackageChannel : NewProjectPackageChannel.Stable, label);
+            resolved.UsesPrerelease.ShouldBe(code && viewModel.IsPreview, label);
+            if (code && channel == NewProjectPackageChannel.Preview && platform != "kniskia")
+            {
+                resolved.PackageChannel.ShouldBe(NewProjectPackageChannel.Preview, label);
+                viewModel.CommandLine.ShouldContain("--preview", Case.Sensitive, label);
+            }
             // Source-linked links the add-ons as projects instead of adding packages.
             (resolved.RecommendedPackages.Count > 0).ShouldBe(viewModel.AddsRecommendedPackages && !viewModel.SourceLinked, label);
             (resolved.LinkedAddOns.Count > 0).ShouldBe(viewModel.AddsRecommendedPackages && viewModel.SourceLinked, label);
@@ -261,6 +268,10 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
 
         public Task<AddPackagesResult> AddPackagesAsync(
             string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+            Task.FromResult(new AddPackagesResult { Status = RestoreStatus.Succeeded });
+
+        public Task<AddPackagesResult> AddPackagesAsync(
+            string csprojPath, IReadOnlyList<string> packages, bool prerelease, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
             Task.FromResult(new AddPackagesResult { Status = RestoreStatus.Succeeded });
 
         public Task<GenerateCodeResult> GenerateCodeAsync(

@@ -11,11 +11,16 @@ public class DotnetPackageAddRunner : IPackageAddRunner
     /// <inheritdoc/>
     public Task<RestoreResult> AddAsync(
         string csprojPath, string packageId, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
-        DotnetProcess.RunAsync(() => CreateStartInfo(csprojPath, packageId), onOutputLine, cancellationToken);
+        AddAsync(csprojPath, packageId, prerelease: false, onOutputLine, cancellationToken);
 
-    // --no-restore writes Version="*" without a feed lookup, so adding works offline and the one restore afterwards
-    // (or the user's first build) fetches everything.
-    private static ProcessStartInfo CreateStartInfo(string csprojPath, string packageId)
+    /// <inheritdoc/>
+    public Task<RestoreResult> AddAsync(
+        string csprojPath, string packageId, bool prerelease, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+        DotnetProcess.RunAsync(() => CreateStartInfo(csprojPath, packageId, prerelease), onOutputLine, cancellationToken);
+
+    // --no-restore writes Version="*" (Version="*-*" with --prerelease) without a feed lookup, so adding works offline and the
+    // one restore afterwards (or the user's first build) fetches everything.
+    private static ProcessStartInfo CreateStartInfo(string csprojPath, string packageId, bool prerelease)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo("dotnet");
         startInfo.ArgumentList.Add("add");
@@ -23,6 +28,10 @@ public class DotnetPackageAddRunner : IPackageAddRunner
         startInfo.ArgumentList.Add("package");
         startInfo.ArgumentList.Add(packageId);
         startInfo.ArgumentList.Add("--no-restore");
+        if (prerelease)
+        {
+            startInfo.ArgumentList.Add("--prerelease");
+        }
         return startInfo;
     }
 }

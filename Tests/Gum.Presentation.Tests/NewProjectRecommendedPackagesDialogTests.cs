@@ -170,7 +170,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         viewModel.IsRecommendedPackagesEnabled.ShouldBeTrue();
         viewModel.RecommendedPackagesChecked.ShouldBeTrue();
-        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesLinkedNote("Gum.Shapes.MonoGame, KernSmith.MonoGameGum, Gum.Expressions"));
+        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesNote);
         viewModel.CommandLine.ShouldNotContain(" package ");
     }
 
@@ -205,10 +205,10 @@ public class NewProjectRecommendedPackagesDialogTests
     }
 
     [Theory]
-    [InlineData("monogame", "KernSmith.MonoGameGum, Gum.Expressions")]
-    [InlineData("raylib", "KernSmith.RaylibGum, Gum.Expressions")]
-    [InlineData("stride", "Gum.Expressions")]
-    public void RecommendedPackagesNote_ListsThePackagesTheCheckboxAdds(string platform, string expected)
+    [InlineData("monogame")]
+    [InlineData("raylib")]
+    [InlineData("stride")]
+    public void RecommendedPackagesNote_IsTheGeneralNote_NotAListOfPackages(string platform)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -216,7 +216,7 @@ public class NewProjectRecommendedPackagesDialogTests
             vm.PlatformName = platform;
         });
 
-        viewModel.RecommendedPackagesNote.ShouldContain(expected);
+        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesNote);
     }
 
     #endregion
@@ -351,7 +351,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         viewModel.RecommendedPackagesChecked.ShouldBeTrue();
         viewModel.CommandLine.ShouldContain("package KernSmith.MonoGameGum");
-        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesNote("KernSmith.MonoGameGum, Gum.Expressions"));
+        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesNote);
     }
 
 

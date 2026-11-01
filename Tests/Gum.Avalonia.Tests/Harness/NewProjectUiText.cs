@@ -12,7 +12,10 @@ internal static class NewProjectUiText
     public const string IncludeForms = "Include Forms controls (recommended)";
     public const string IncludeDemo = "Include demo screen";
     public const string CreateCodeProject = "Create C# project";
-    public const string UseLocalSource = "Use local Gum source";
+    public const string Stable = "Stable";
+    public const string Preview = "Preview";
+    public const string UseLocalSource = "Local Gum source";
+    public const string PreviewWarning = "Preview packages are the newest builds and may be unstable.";
     public const string RestorePackages = "Restore NuGet packages";
     public const string RecommendedPackages = "Include recommended packages";
     public const string GenerateCode = "Generate code";
