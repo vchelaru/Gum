@@ -326,7 +326,7 @@ public class ThemeControlsReceiveClicksTests : BeginnerDriverTestBase
         project.Initialize();
         ObjectFinder.Self.GumProjectSave = project;
         // A running game gets this registration from GumService.Initialize.
-        ElementSaveExtensions.RegisterGueInstantiationType("Container", typeof(Gum.GueDeriving.ContainerRuntime));
+        StandardRuntimeRegistrations.Register();
         Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         return project;
     }
