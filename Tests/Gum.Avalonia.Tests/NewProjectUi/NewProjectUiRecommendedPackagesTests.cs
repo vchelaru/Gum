@@ -93,7 +93,7 @@ public class NewProjectUiRecommendedPackagesTests
 
         fixture.Dialog.ClickOk();
 
-        Runner.Added.ShouldBe(new[] { "KernSmith.RaylibGum", "Gum.Expressions" });
+        Runner.Added.ShouldBe(new[] { "KernSmith.RaylibGum", "Gum.raylib.ShadowDusk", "Gum.Expressions" });
     }
 
     [AvaloniaFact]
@@ -124,7 +124,7 @@ public class NewProjectUiRecommendedPackagesTests
         fixture.WaitUntil(() => fixture.ViewModel.IsRestoreFailed, "the failure panel");
 
         fixture.IsShown(NewProjectDialogText.PackagesFailedHeading).ShouldBeTrue();
-        fixture.IsShown("Could not add Gum.Expressions. error: cannot write the csproj").ShouldBeTrue();
+        fixture.IsShown("Could not add Gum.SkiaSharp.ShadowDusk. error: cannot write the csproj").ShouldBeTrue();
         fixture.ButtonLabeled("Retry").ShouldNotBeNull();
         fixture.ButtonLabeled("Back").ShouldNotBeNull();
 

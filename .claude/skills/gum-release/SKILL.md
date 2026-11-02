@@ -27,4 +27,5 @@ The release process lives in **[`docs/contributing/building-and-releasing-gum.md
 - The two processes in the doc — **NuGet publishing** and **tool release** — are independent. Ask which the user is doing; don't assume both.
 - A hotfix is a mode of the tool release, not a separate process — same steps, minus notes/promotion. Don't run `gum-monthly-release` for one.
 - `gum-monthly-release` only writes the notes markdown. It does **not** bump versions, cut the tag, or trigger workflows — those are separate manual steps in the doc.
+- Never offer or start the public `release` build, or a monthly NuGet publish, until the notes are approved: every open question answered and the migration page written or confirmed unneeded. The `test` build may run earlier. Create one task per step with `TaskCreate` and follow the doc's order; "keep going" from the user is not approval to skip a step.
 - The **Full Changelog** compare link in the notes can only be filled after the tag exists, so it stays a placeholder until the release is cut.

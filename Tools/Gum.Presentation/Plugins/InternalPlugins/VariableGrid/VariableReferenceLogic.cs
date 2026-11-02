@@ -1,4 +1,5 @@
-﻿using Gum.Commands;
+﻿using Gum.Diagnostics;
+using Gum.Commands;
 using Gum.Expressions;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -184,6 +185,13 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 return;
             }
 
+            if (DividesByZero(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot))
+            {
+                failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                    "The right side divides by zero. Check the divisor (the value after / or %), including variables that are currently 0")));
+                return;
+            }
+
             failures.Add((line, GeneralResponse.UnsuccessfulWith(
                 $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?")));
             return;
@@ -214,6 +222,47 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             failures.Add((line, typeMatchResponse));
         }
+    }
+
+    private static bool DividesByZero(SyntaxNode rightSide, StateSave state, GraphicalUiElement? liveRoot)
+    {
+        foreach (BinaryExpressionSyntax binary in rightSide.DescendantNodesAndSelf().OfType<BinaryExpressionSyntax>())
+        {
+            if (!binary.OperatorToken.IsKind(SyntaxKind.SlashToken) && !binary.OperatorToken.IsKind(SyntaxKind.PercentToken))
+            {
+                continue;
+            }
+
+            // A division inside a ternary arm may be guarded, so its failure is not evidence of the cause.
+            if (IsInsideConditionalArm(binary))
+            {
+                continue;
+            }
+
+            object? divisor = EvaluatedSyntax.FromSyntaxNode(binary.Right, state, liveRoot: liveRoot)?.Value;
+            if (divisor is sbyte or byte or short or ushort or int or uint or long or ulong or float or double or decimal
+                && Convert.ToDouble(divisor) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsInsideConditionalArm(SyntaxNode node)
+    {
+        SyntaxNode child = node;
+        while (child.Parent is { } parent)
+        {
+            if (parent is ConditionalExpressionSyntax conditional && child != conditional.Condition)
+            {
+                return true;
+            }
+            child = parent;
+        }
+
+        return false;
     }
 
     private static void CommentFailures(VariableListSave newDirectValue, List<(string, GeneralResponse)> failures)
@@ -507,7 +556,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
             if (newDirectValue != null)
             {
-                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
+                List<(string, GeneralResponse)> failures;
+                using (ToolLog.Begin("GetIndividualFailures", count: newDirectValue.ValueAsIList?.Count ?? 0))
+                {
+                    failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
+                }
 
                 if (failures.Count > 0)
                 {
@@ -538,7 +591,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             valuesBefore[variable.Name] = variable.Value;
         }
-        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+        using (ToolLog.Begin("ApplyVariableReferences(state)", count: stateSave.Variables.Count))
+        {
+            ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+        }
 
         // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
         // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
@@ -563,11 +619,17 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 changedNames.Add(variable.Name);
             }
         }
-        ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+        using (ToolLog.Begin("ApplyOtherStatesReading", count: changedNames.Count))
+        {
+            ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+        }
 
         if (unqualifiedMember == "VariableReferences")
         {
-            _guiCommands.RefreshVariableValues();
+            using (ToolLog.Begin("RefreshVariableValues"))
+            {
+                _guiCommands.RefreshVariableValues();
+            }
         }
 
         if (!isWide)
@@ -575,7 +637,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return;
         }
 
-        ApplyReferencesToElement(parentElement, trySave, isFullCommit);
+        using (ToolLog.Begin("ApplyReferencesToElement", count: parentElement.Instances.Count))
+        {
+            ApplyReferencesToElement(parentElement, trySave, isFullCommit);
+        }
 
         var newValue = stateSave.GetValueRecursive(qualifiedName);
 
@@ -592,7 +657,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // then we forcefully change the values here.
         if (didSetDeepReference)
         {
-            _wireframeCommands.Refresh(forceLayout: true);
+            using (ToolLog.Begin("WireframeRefresh(forceLayout)"))
+            {
+                _wireframeCommands.Refresh(forceLayout: true);
+            }
         }
     }
 
@@ -1073,7 +1141,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if (didChange)
         {
-            _guiCommands.RefreshVariables(force: true);
+            using (ToolLog.Begin("RefreshVariables(force) after line expansion"))
+            {
+                _guiCommands.RefreshVariables(force: true);
+            }
         }
     }
 

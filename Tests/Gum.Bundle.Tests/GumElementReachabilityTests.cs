@@ -100,7 +100,7 @@ public class GumElementReachabilityTests
                 {
                     continue;
                 }
-                string ownerKey = owner == "FrameworkElement" ? GumElementReachability.AnyFormsBehavior : owner + "Behavior";
+                string ownerKey = owner is "FrameworkElement" or "ToolTipService" ? GumElementReachability.AnyFormsBehavior : owner + "Behavior";
                 if (!GumElementReachability.FormsCreatedBehaviors.TryGetValue(ownerKey, out IReadOnlyList<string>? created)
                     || !created.Contains(createdBehavior))
                 {

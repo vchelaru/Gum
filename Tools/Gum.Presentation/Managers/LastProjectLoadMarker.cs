@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Gum.Diagnostics;
 using ToolsUtilities;
 
 namespace Gum.Managers;
@@ -33,7 +34,10 @@ public class LastProjectLoadMarker : ILastProjectLoadMarker
         get
         {
             string path = MarkerPath;
-            return File.Exists(path) ? File.ReadAllText(path) : null;
+            string? project = null;
+            // Best effort: a marker another running Gum holds open reads as no interrupted load.
+            BestEffortFile.TryRun(() => project = File.Exists(path) ? File.ReadAllText(path) : null);
+            return project;
         }
     }
 
@@ -41,13 +45,17 @@ public class LastProjectLoadMarker : ILastProjectLoadMarker
     public void MarkStarted(string projectPath)
     {
         string path = MarkerPath;
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, projectPath);
+        BestEffortFile.TryRun(() =>
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, projectPath);
+        });
     }
 
     /// <inheritdoc/>
     public void Clear()
     {
-        File.Delete(MarkerPath);
+        string path = MarkerPath;
+        BestEffortFile.TryRun(() => File.Delete(path));
     }
 }

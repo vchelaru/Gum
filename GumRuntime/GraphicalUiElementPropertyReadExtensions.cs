@@ -108,15 +108,6 @@ public static class GraphicalUiElementPropertyReadExtensions
                 }
                 return false;
 #endif
-#if !FRB && (NET6_0_OR_GREATER || NETSTANDARD2_1)
-            case "RaiseChildrenEventsOutsideOfBounds":
-                if (element is InteractiveGue raiseOutsideGue)
-                {
-                    value = raiseOutsideGue.RaiseChildrenEventsOutsideOfBounds;
-                    return true;
-                }
-                return false;
-#endif
             case "FlipHorizontal":
                 value = element.FlipHorizontal;
                 return true;

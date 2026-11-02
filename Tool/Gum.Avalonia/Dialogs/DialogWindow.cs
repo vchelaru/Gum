@@ -9,6 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform;
+using Avalonia.VisualTree;
 using Avalonia.Threading;
 using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Themes;
@@ -65,6 +66,7 @@ public sealed class DialogWindow : Window
     public const string NegativeButtonName = "PART_Negative";
 
     private readonly DialogViewModel _viewModel;
+    private readonly Control _viewContent;
 
     /// <summary>The choice the user made: true affirmative, false negative, null closed otherwise.</summary>
     public bool? Result { get; private set; }
@@ -126,6 +128,7 @@ public sealed class DialogWindow : Window
     public DialogWindow(DialogViewModel viewModel, Control content)
     {
         _viewModel = viewModel;
+        _viewContent = content;
         DataContext = viewModel;
         Result = null;
 
@@ -280,16 +283,36 @@ public sealed class DialogWindow : Window
     // user selected part of it, which the focused text block copies itself.
     private void HandleCopyGesture(object? sender, KeyEventArgs e)
     {
-        if (_viewModel is not MessageDialogViewModel { Message: { Length: > 0 } message } || !IsCopyGesture(e))
+        if (!IsCopyGesture(e))
         {
             return;
         }
-        if (FocusManager?.GetFocusedElement() is SelectableTextBlock { SelectedText.Length: > 0 })
+        object? focused = FocusManager?.GetFocusedElement();
+        if (focused is TextBox || focused is SelectableTextBlock { SelectedText.Length: > 0 })
         {
             return;
         }
-        _ = Clipboard?.SetTextAsync(message);
+        // Any other dialog copies the text of its content's TextBlocks, one per line, button labels left out.
+        string? text = _viewModel is MessageDialogViewModel { Message: { Length: > 0 } message }
+            ? message
+            : GetVisibleText(_viewContent);
+        if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+        _ = Clipboard?.SetTextAsync(text);
         e.Handled = true;
+    }
+
+    private static string GetVisibleText(Control content)
+    {
+        System.Collections.Generic.IEnumerable<string> lines = content
+            .GetSelfAndVisualDescendants()
+            .OfType<TextBlock>()
+            .Where(block => block.IsVisible && !string.IsNullOrWhiteSpace(block.Text)
+                && !block.GetVisualAncestors().OfType<Button>().Any())
+            .Select(block => block.Text!);
+        return string.Join("\n", lines);
     }
 
     private bool IsCopyGesture(KeyEventArgs e)

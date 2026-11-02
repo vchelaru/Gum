@@ -1,3 +1,4 @@
+using Gum.Diagnostics;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -99,6 +100,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
         this.InstanceDelete += HandleInstanceDelete;
         this.VariableSet += HandleVariableSet;
         this.VariableSetThroughReference += HandleVariableSetThroughReference;
+        this.VariableSetBatchCompleted += UpdateErrorsForElement;
         this.VariableRemovedFromCategory += HandleVariableRemovedFromCategory;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
 
@@ -164,6 +166,13 @@ public class MainErrorsPlugin : CorePriorityPlugin
         // Checking an element walks its file references and reads the disk, so it waits for a
         // committed value rather than running on every tick of a drag (issue #4946).
         if (!isFullCommit)
+        {
+            return;
+        }
+
+        // A multi-select edit sets one variable per instance; the check covers the whole element,
+        // so it runs once when the batch completes.
+        if (IsVariableSetBatchOpen)
         {
             return;
         }
@@ -235,6 +244,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
 
     private void UpdateErrorsForElement(ElementSave? element)
     {
+        using ToolLog.Scope log = ToolLog.Begin("UpdateErrorsForElement");
         _viewModel.Errors.Clear();
 
         // Nothing to check before a project is loaded.

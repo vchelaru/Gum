@@ -53,11 +53,11 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
     #region Table
 
     [Theory]
-    [InlineData(HostPlatform.MonoGame, "KernSmith.MonoGameGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Kni, "KernSmith.KniGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.Expressions")]
-    [InlineData(HostPlatform.SilkNet, "Gum.Expressions")]
-    [InlineData(HostPlatform.Stride, "Gum.Expressions")]
+    [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.MonoGame.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.KNI.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.raylib.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
     [InlineData(HostPlatform.KniSkia, "")]
     public void For_EachPlatform_ListsThePackagesTheSetupDocsRecommend(HostPlatform platform, string expected)
     {
@@ -78,23 +78,6 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
         }
     }
 
-    // nuget.org was checked on 2026-10-31: these ids exist only as previews. `dotnet add package X --no-restore` writes the
-    // floating Version="*", which does not resolve to a prerelease, so restore fails with NU1103. Remove an id from this
-    // list (and add it to the table) only after it has a stable version.
-    private static readonly string[] PrereleaseOnlyOnNuGet =
-    {
-        "Gum.SkiaSharp.ShadowDusk", "Gum.MonoGame.ShadowDusk", "Gum.KNI.ShadowDusk", "Gum.raylib.ShadowDusk", "Gum.FNA.ShadowDusk",
-    };
-
-    [Fact]
-    public void For_NoPlatform_ListsAPackageThatIsPrereleaseOnly()
-    {
-        foreach ((string name, HostPlatform platform) in NewProjectPlatforms.MainNames)
-        {
-            RecommendedPackages.For(platform).Intersect(PrereleaseOnlyOnNuGet).ShouldBeEmpty(name);
-        }
-    }
-
     #endregion
 
     #region Validate
@@ -104,7 +87,8 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
     {
         NewProjectValidation validation = CreateService().Validate(Request("monogame"));
 
-        validation.Resolved!.RecommendedPackages.ShouldBe(new[] { "KernSmith.MonoGameGum", "Gum.Expressions" });
+        validation.Resolved!.RecommendedPackages.ShouldBe(
+            new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", "Gum.MonoGame.ShadowDusk", "Gum.Expressions" });
     }
 
     [Fact]
@@ -134,7 +118,8 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
 
         validation.IsValid.ShouldBeTrue(validation.Error?.Message);
         validation.Resolved!.RecommendedPackages.ShouldBeEmpty();
-        validation.Resolved.LinkedAddOns.ShouldBe(new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", "Gum.Expressions" });
+        validation.Resolved.LinkedAddOns.ShouldBe(
+            new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", "Gum.MonoGame.ShadowDusk", "Gum.Expressions" });
     }
 
     #endregion
@@ -152,7 +137,8 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
         string csproj = result.Files.CsprojPath!;
         _calls.ShouldBe(new[]
         {
-            $"add {csproj} KernSmith.KniGum", $"add {csproj} Gum.Expressions", $"restore {csproj}"
+            $"add {csproj} Gum.Shapes.KNI", $"add {csproj} KernSmith.KniGum", $"add {csproj} Gum.KNI.ShadowDusk",
+            $"add {csproj} Gum.Expressions", $"restore {csproj}"
         });
         result.PackageAdd!.Status.ShouldBe(RestoreStatus.Succeeded);
         result.Restore!.Status.ShouldBe(RestoreStatus.Succeeded);
@@ -172,13 +158,13 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
     [Fact]
     public async Task Execute_WhenAnAddFails_StopsThere_SkipsTheRestore_AndKeepsTheFiles()
     {
-        _packageAdd.FailOn = "KernSmith.KniGum";
+        _packageAdd.FailOn = "Gum.Shapes.KNI";
         NewProjectService service = CreateService();
 
         NewProjectResult result = await service.ExecuteAsync(Request("kni"), null, CancellationToken.None);
 
         result.PackageAdd!.Status.ShouldBe(RestoreStatus.Failed);
-        result.PackageAdd.FailedPackage.ShouldBe("KernSmith.KniGum");
+        result.PackageAdd.FailedPackage.ShouldBe("Gum.Shapes.KNI");
         result.Restore.ShouldBeNull();
         _calls.Count.ShouldBe(1);
         File.Exists(result.Files.CsprojPath).ShouldBeTrue();

@@ -1654,6 +1654,13 @@ public class GumHotReloadManager : IGumHotReloadManager
             root.ReapplyAppliedCategoryStatesRecursive();
         }
 
+        // A Forms property the reload edited or removed (Placeholder, AcceptsReturn) is a control property, not a
+        // visual variable, so it is written to the control here; a stale code-assigned record would win otherwise.
+        foreach (GraphicalUiElement root in rootList)
+        {
+            root.ReapplyChangedFormsPropertiesRecursive(name => context.OldByName.TryGetValue(name, out ElementSave? old) ? old : null);
+        }
+
         foreach (GraphicalUiElement root in rootList)
         {
             root.RestoreFormsRuntimePropertiesRecursive();

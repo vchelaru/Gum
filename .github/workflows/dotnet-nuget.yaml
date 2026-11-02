@@ -65,6 +65,10 @@ jobs:
   build-and-publish:
     needs: version
     runs-on: windows-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write # NuGet Trusted Publishing: the OIDC token NuGet/login exchanges for a short-lived API key
 
     steps:
     # See build-and-test.yaml for why we init submodules manually
@@ -147,7 +151,16 @@ jobs:
           ./nupkgs/*.nupkg
           ./nupkgs/*.snupkg
     
-    # Publish to NuGet.org (when explicitly requested).
+    # Publish to NuGet.org (when explicitly requested). Uses Trusted Publishing: the policy on
+    # nuget.org (owner vchelaru, repo Gum, workflow dotnet-nuget.yaml) trusts this workflow, so no
+    # stored API key exists to expire.
+    - name: NuGet login (Trusted Publishing)
+      if: github.event.inputs.publish_to_nuget == 'true'
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: vchelaru
+
     - name: Publish to NuGet.org
       if: github.event.inputs.publish_to_nuget == 'true'
       shell: pwsh
@@ -155,7 +168,7 @@ jobs:
         # Remove in December 2026 when Gum.KniSkia ships (#6380).
         & Tools/Get-PublishablePackages.ps1 | ForEach-Object {
           Write-Host "Publishing $($_.Name)..."
-          dotnet nuget push $_.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push $_.FullName --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
         }
 
     # Publish to GitHub Packages (when explicitly requested).
