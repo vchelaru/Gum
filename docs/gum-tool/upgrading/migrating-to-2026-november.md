@@ -699,7 +699,7 @@ This affects you if your own project references SkiaSharp. To migrate:
 
 ### Skia Render Target Shaders Read SpriteTexture
 
-A Skia `SourceShaderFile` in a `.sksl` file must now name its input `SpriteTexture`, the name MonoGame shaders use. Gum binds the container's rendered image to that name. Before this version the input was named `inputImage`, so a shader that still uses that name no longer receives the image.
+A Skia `SourceShaderFile` in a `.sksl` file must now name its input `SpriteTexture`, the name MonoGame shaders use. Gum binds the container's rendered image to that name. Before this version the input was named `inputImage`, so drawing a container with a shader that still declares `inputImage` throws an `ArgumentOutOfRangeException` saying the variable `SpriteTexture` was not found.
 
 To migrate, rename the input in your shader, and every use of it:
 
