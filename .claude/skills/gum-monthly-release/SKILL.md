@@ -8,9 +8,9 @@ Invoking coder agent to draft the monthly Gum release notes.
 
 # Ask first, don't guess
 
-This skill is a **collaboration**. The user has explicitly said: when anything is unclear at any point — categorization, intent of a sparse commit, whether a change cross-cuts Tool and Runtimes, which features deserve the spotlight — **stop and ask**. Do not invent user-impact descriptions from a one-line commit message. When the diff is genuinely ambiguous, surface the ambiguity rather than papering over it. The point of this skill is to save the user keystrokes, not to silently misrepresent the release.
+This skill is a **collaboration**, but scrutiny follows readership. Few people read release notes, and those who do read the spotlights and the breaking changes. Almost no one reads the individual items below them, so a month with hundreds of PRs gets no per-item review. Ask only about what readers see: which changes are spotlights, and which changes break users. Everything else gets a default and no question: a sparse or low-confidence item stays out of the curated bullets and keeps its line in What's Changed, near-duplicate bullets are merged, skipped or housekeeping PRs stay skipped, and categorization is your call. Do not invent user-impact descriptions from a one-line commit message.
 
-Anything you can't resolve mid-draft, capture in the `## Open Questions` block at the bottom of the markdown file. The user will work through that block with you after the file is generated.
+Put the few questions that matter in the `## Open Questions` block at the bottom of the markdown file. The user will work through that block with you after the file is generated.
 
 **Not for hotfixes.** This skill's fan-out is built for monthly-scale PR volume. A hotfix (emergency single-bug release) gets a short manual note instead — see "Hotfixes" in `docs/contributing/building-and-releasing-gum.md`.
 
@@ -19,9 +19,7 @@ Anything you can't resolve mid-draft, capture in the `## Open Questions` block a
 Before doing any work, ask the user (in a single message, as a numbered list — they can answer all at once):
 
 1. **Release tag / date.** What's the release tag name? (e.g. `Release_April_29_2026`) The skill uses this to name the output file and to draft the Full Changelog placeholder.
-2. **Previous-release boundary.** What should I diff against? The user may give a tag (`PreRelease_March_26_2026`), a commit hash, a date, or a `compare/...` URL. If they have no preference, propose the most recent tag from `gh release list --repo vchelaru/Gum --limit 5` and ask them to confirm.
-
-   **Always cross-check the boundary against `gh release list`.** If a newer published release exists between the user's boundary and `main`, flag it before proceeding — using the older boundary will double-count PRs that already shipped in the newer release. Show the user the newer tag, list how many PRs it would absorb, and ask which boundary to use. Do **not** silently accept a stale boundary, even if the user supplied a `compare/...` URL with it.
+2. **Previous-release boundary: do not ask.** It is always the previous full release, the newest `Release_*` tag from `gh release list --repo vchelaru/Gum --exclude-pre-releases --limit 1`, never a `PreRelease_*` tag. Pre-releases are builds of the same range for opt-in users, and the stable notes cover everything stable users have not seen. Name the tag you used in the draft. Only a boundary the user volunteers changes this.
 3. **Breaking-changes migration doc URL.** Is there one for this month? (e.g. `https://docs.flatredball.com/gum/gum-tool/upgrading/migrating-to-2026-april`) If none, the Breaking Changes section is omitted.
 
 Wait for answers before proceeding. If they answer some but not others, ask the rest.

@@ -166,7 +166,7 @@ Then flag accordingly in a `{% hint style="info" %}` block (same pattern as date
 
 A `docs/gum-tool/upgrading/migrating-to-<year>-<month>.md` page needs **What Changed at a Glance** only when one point is critical and wide-reaching, such as a hard break most readers hit (`migrating-to-2026-october.md` is the model). Otherwise leave the section out: the `###` headings under **Breaking Changes and Migrations** already list each change, so a summary of them adds nothing. Never use a stock lead-in over a bullet list ("Two changes need your attention:").
 
-Each entry lists only what a user must do after upgrading. Leave out descriptions of internal or generated-code changes that need no action.
+Each entry lists only what a user must do after upgrading. Leave out descriptions of internal or generated-code changes that need no action, and leave out additions: new members, new APIs and new options are release-notes material, never a migration entry. Before keeping a section, ask what the reader would do differently; if nothing, delete it.
 
 ## Prose Style: Clarity Beats Brevity
 
