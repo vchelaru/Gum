@@ -4,20 +4,24 @@
 
 This page discusses breaking changes and other considerations when migrating from `2026 October` to `2026 November`.
 
-## Breaking Changes and Migrations
+{% hint style="info" %}
+Changes on this page are available in November 2026, or now if you build Gum from source.
+{% endhint %}
+
+## Moved, Renamed, and Obsolete APIs
+
+Old names keep compiling as obsolete shims with a `CS0618` warning. The `GUM001` analyzer flags the old `using` lines, and its code fix updates them. See [Obsolete Shims Are Removed No Earlier Than November 2027](#obsolete-shims-are-removed-no-earlier-than-november-2027) for dates.
 
 ### Cursor and CursorExtensions Moved to Gum.Input
 
-`Cursor` and `CursorExtensions` moved from `MonoGameGum.Input` to `Gum.Input` in MonoGame, KNI and FNA projects. This finishes the move that started in `2026 June`, so `Gum.Input` now holds every input type, matching raylib and the other runtimes.
+`Cursor` and `CursorExtensions` moved from `MonoGameGum.Input` to `Gum.Input` in MonoGame, KNI and FNA projects. Replace `using MonoGameGum.Input;` with `using Gum.Input;`, or change `MonoGameGum.Input.Cursor` to `Gum.Input.Cursor` where the full name is written.
 
-`MonoGameGum.Input.Cursor` remains as an obsolete shim that derives from `Gum.Input.Cursor`. Code that creates a `Cursor` or derives from it keeps compiling, with a `CS0618` warning. The shim cannot cover everything, so these cases break:
+The shim cannot cover these cases, which break:
 
-* A variable declared with the old type no longer accepts a cursor that Gum returns. `GumService.Default.Cursor` and `FrameworkElement.MainCursor` are `Gum.Input.Cursor`, and C# cannot assign a base class value to a derived class variable (`CS0266`).
-* A method that overrides a Gum method taking a `Cursor`, such as `UpdateThumbPositionToCursorDrag(Cursor cursor)` on a custom `Slider` or `ScrollBar`, no longer matches the base signature (`CS0115`).
-* `CursorExtensions` has no shim, so calls such as `cursor.GetEventFailureReason(...)` fail to compile until `Gum.Input` is imported. A second copy of the extension methods would make every call ambiguous in files that import both namespaces.
-* A file that imports both `MonoGameGum.Input` and `Gum.Input` reports `CS0104` on `Cursor`, because both namespaces now contain one. This is the state the `2026 June` code fix left behind.
-
-To migrate, replace `using MonoGameGum.Input;` with `using Gum.Input;`, or remove the old directive if `using Gum.Input;` is already there. The `GUM001` analyzer flags the old directive, and its code fix makes this change. In code that names the type with a full path, change `MonoGameGum.Input.Cursor` to `Gum.Input.Cursor`.
+* A variable declared with the old `Cursor` type no longer accepts `GumService.Default.Cursor` or `FrameworkElement.MainCursor` (`CS0266`).
+* An override such as `UpdateThumbPositionToCursorDrag(Cursor cursor)` on a custom `Slider` or `ScrollBar` no longer matches the base signature (`CS0115`).
+* `CursorExtensions` has no shim, so `cursor.GetEventFailureReason(...)` fails until `Gum.Input` is imported.
+* A file importing both namespaces reports `CS0104` on `Cursor`. Remove the old `using`.
 
 ❌ Old:
 
@@ -37,47 +41,9 @@ using Gum.Input;
 Cursor cursor = GumService.Default.Cursor;
 ```
 
-### raylib Throws When an Image Cannot Be Decoded
-
-raylib now treats an image it cannot decode like a missing file. A `.jpg` Source File, for example, loaded as an empty texture before and now throws when the Sprite loads, because the stock raylib native has no JPEG decoder. This follows the `MissingFileBehavior` change from `2026 October`, which raylib sets to throw by default.
-
-This affects you only on raylib, and only if your project references an image raylib cannot decode. Convert the image to PNG, or register an `IImageDecoder` for its extension before Gum loads the project. See [Custom Image Formats](../../code/files-and-fonts/custom-image-formats.md).
-
-To keep the old behavior, set `MissingFileBehavior` after Gum initializes:
-
-```csharp
-// Initialize
-Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
-    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
-```
-
-### SkiaGum Throws When a File Is Missing or an Image Cannot Be Decoded
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-SkiaGum now defaults `MissingFileBehavior` to `ThrowException`, the same as MonoGame, KNI, FNA and raylib. A missing Sprite or NineSlice image, a missing font file, an image SkiaSharp cannot decode (the case [raylib](#raylib-throws-when-an-image-cannot-be-decoded) already covers), and a missing or unparseable Svg or LottieAnimation file now throw a `FileNotFoundException` naming the file when the element is created. Before, a missing image or Svg threw an `ArgumentException`, an unparseable Svg threw an `XmlException`, a missing font file was reported only, and an undecodable image or unparseable Lottie file drew nothing.
-
-Fix the path, or keep the old silent behavior by setting `ConsumeSilently` after Gum initializes. A Sprite then has a null `Texture` (an `SvgRuntime` a null `Texture`, a `LottieAnimationRuntime` a null `Animation`) and `PropertyAssignmentError` is raised with the file name, as described for an [.achx frame texture](#an-achx-frame-texture-that-fails-to-load-is-a-blank-frame).
-
-```csharp
-// Initialize
-Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
-    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
-```
-
-### An .achx Frame Texture That Fails to Load Is a Blank Frame
-
-A frame texture that is missing or cannot be decoded follows `MissingFileBehavior` the same way on every runtime. With `ConsumeSilently`, that frame has a null `Texture` and draws nothing, the rest of the `.achx` loads, and `CustomSetPropertyOnRenderable.PropertyAssignmentError` is raised with the texture name, once per texture per load even when many frames share it. With `ThrowException`, loading throws on the first texture that failed, and the `FileNotFoundException` that names it is the `InnerException`. A `NineSliceRuntime` plays a blank frame instead of throwing from `Update`.
-
-On MonoGame, KNI, and FNA, a missing frame texture was silent under the default `ThrowException`. It now throws when the `.achx` loads, so fix the texture path or set `ConsumeSilently`.
-
-Under `ConsumeSilently`, `AnimationChains` is no longer null after a frame texture fails to load. Check `Texture` on the frames instead.
-
 ### Shapes Package Types Moved to Gum.Renderables and Gum.Content
 
-The `Gum.Shapes.MonoGame` and `Gum.Shapes.KNI` packages now put their public types in the unified `Gum` namespaces:
+The `Gum.Shapes.MonoGame` and `Gum.Shapes.KNI` packages moved their public types:
 
 | Old | New |
 |---|---|
@@ -87,14 +53,12 @@ The `Gum.Shapes.MonoGame` and `Gum.Shapes.KNI` packages now put their public typ
 | `MonoGameAndGum.Renderables.RoundedRectangle` | `Gum.Renderables.RoundedRectangle` |
 | `MonoGameAndGum.Content.ShapeSvgLoader` | `Gum.Content.ShapeSvgLoader` |
 
-The old names remain as obsolete shims, so existing code keeps compiling with a `CS0618` warning. `ShapeRenderer`, `RenderableShapeBase`, `Circle` and `RoundedRectangle` are derived classes, and `ShapeRenderer.Self` is inherited, so it returns the same renderer. `ShapeSvgLoader` is a static class, so its shim forwards `Load` to the new loader and shares its cache. The `Arc`, `Line` and `Svg` renderables are internal and moved without a shim.
+Replace `using MonoGameAndGum.Renderables;` with `using Gum.Renderables;` and `using MonoGameAndGum.Content;` with `using Gum.Content;`, or change the namespace where the full name is written, as the setup docs do.
 
-The shims cannot cover everything, so these cases break:
+The shims cannot cover these cases, which break:
 
-* A variable declared with an old renderable type no longer accepts a shape that Gum creates. `RenderableComponent` and the renderables inside a shape runtime are `Gum.Renderables` instances, and C# cannot assign a base class value to a derived class variable (`CS0266`). A cast such as `as MonoGameAndGum.Renderables.Circle` returns `null` for the same reason.
-* A file that imports both `MonoGameAndGum.Renderables` and `Gum.Renderables` reports `CS0104` on `ShapeRenderer`, `RenderableShapeBase`, `Circle` and `RoundedRectangle`, because both namespaces now contain them.
-
-To migrate, replace `using MonoGameAndGum.Renderables;` with `using Gum.Renderables;` and `using MonoGameAndGum.Content;` with `using Gum.Content;`. The `GUM001` analyzer flags the old directives, and its code fix makes this change. In code that names the type with a full path, as the setup docs do, change the namespace in the path.
+* A variable declared with an old renderable type no longer accepts a shape Gum creates (`CS0266`), and `as MonoGameAndGum.Renderables.Circle` returns `null`.
+* A file importing both namespaces reports `CS0104`. Remove the old `using`.
 
 ❌ Old:
 
@@ -112,49 +76,39 @@ Gum.Renderables.ShapeRenderer.Self.Initialize();
 
 ### RenderableCreator Moved to Gum.Renderables
 
-`RenderableCreator` moved from `MonoGameGum.Renderables` to `Gum.Renderables` in MonoGame, KNI and FNA projects, where raylib already had it. `MonoGameGum.Renderables.RenderableCreator` remains as an obsolete shim that forwards `HandleCreateGraphicalComponent` to the new class, so code that assigns it to `ElementSaveExtensions.CustomCreateGraphicalComponentFunc` keeps compiling with a `CS0618` warning.
+`RenderableCreator` moved from `MonoGameGum.Renderables` to `Gum.Renderables` in MonoGame, KNI and FNA, where raylib already had it. Replace `using MonoGameGum.Renderables;` with `using Gum.Renderables;`. A file importing both reports `CS0104`.
 
-To migrate, replace `using MonoGameGum.Renderables;` with `using Gum.Renderables;`. A file that imports both namespaces reports `CS0104` on `RenderableCreator`. The `GUM001` analyzer flags the old directive, and its code fix makes this change.
+### OutputLibrary.MonoGameForms Renamed to GumForms
 
-### MonoGameGum AddChild Extension Is Obsolete
+Rename `OutputLibrary.MonoGameForms` to `OutputLibrary.GumForms`. This affects only plugins or tools that reference it. Saved settings need no change.
 
-The `AddChild` extension method in the `MonoGameGum` and `RaylibGum` namespaces is now `[Obsolete]`. Code generated at syntax versions 0 to 2 imports that namespace to call `AddChild` on a visual. The call `gue.AddChild(formsControl)` resolves to the instance method on `GraphicalUiElement`, which needs no `using` directive, so it produces no warning. Only a call that names `GraphicalUiElementExtensionMethods.AddChild` as a static method reports `CS0618`.
+### SvgRuntime.Document Renamed to Texture in MonoGame and KNI
 
-To migrate, call the instance method, or regenerate your code so the generated files no longer import the old namespace.
+In projects using `Gum.Shapes.MonoGame` or `Gum.Shapes.KNI`, `SvgRuntime.Document` is now `Texture`, the name SkiaGum already used. The old name fails with `CS1061`.
 
-### ICursor Has FrameworkElement Members and TransformMatrix
+❌ Old:
 
-`ICursor` gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed` and a read-only `TransformMatrix`, so code that holds an `ICursor` can read what `Cursor` already offered. The `FrameworkElement` members return the control of the matching visual. `TransformMatrix` is a `System.Numerics.Matrix3x2` that defaults to the identity matrix. On MonoGame, KNI and FNA, the interface `TransformMatrix` is a 2D conversion of the XNA matrix, so Z and perspective are not part of it. `Cursor.TransformMatrix` keeps its type and setter (an XNA `Matrix` in those runtimes). A class that implements `ICursor` keeps compiling without these members.
+```csharp
+// Initialize
+svg.Document = shapeSvg;
+```
 
-`ICursor` also gains `VisualPushed` (the same value as `WindowPushed`), `LastX`, `LastY` and `ClearInputValues()`, with default implementations, so a class that implements `ICursor` keeps compiling without them.
+✅ New:
 
-### IGumService Cursor Is Not Null Under a Custom Cursor
-
-`IGumService.Default.Cursor` now returns the cursor Forms is using, including one installed with `FormsUtilities.SetCursor`. It used to return `null` while a custom `ICursor` was installed, and in Skia-based hosts (Silk.NET, Stride, KNI Skia, Unity) it was always `null`. `IGumService` also has a new `Keyboard` member that returns the installed `IInputReceiverKeyboard`, with a default implementation that returns `null`, so a class that implements `IGumService` keeps compiling.
-
-`GumService.Default.Cursor` and `GumService.Default.Keyboard` are unchanged. They return the concrete `Cursor` and `Keyboard` types, and they are `null` while a custom cursor or keyboard is installed.
-
-### More of GumService Is Reachable Through IGumService
-
-Code that works through `IGumService` can now do what a game does through `GumService`, wherever the member is not tied to one engine. `IGumService` gains `Update(double totalSeconds)`, `PopupRoot`, `ModalRoot`, `Gamepads`, `UseKeyboardDefaults()`, `UseGamepadDefaults()`, `RefreshStyles()`, `RefreshStyles(GraphicalUiElement)`, `RefreshLocalization()`, `LocalizationService`, `LastLoadResult`, `ExportSnapshot(string, bool)`, `SynchronizationContext`, `UseSingleThreadedAsync()` and `Uninitialize()`. `IRenderer` gains `AddLayer()` and `RemoveLayer(Layer)`. All have default implementations, so a class that implements either interface keeps compiling; `GumService` and the existing hosts already provide them.
-
-`Update(double totalSeconds)` takes the total seconds since startup, not the time since the last frame. On MonoGame, KNI and FNA it builds a `GameTime` from it and calls `Update(GameTime)`. On KNI Skia, `Update(double)` now does the same, so it sets `GumService.Default.GameTime` and skips input while the window is inactive, as `Update(GameTime)` already did. On those hosts a value that is not a finite number counts as a frame of zero length. `Uninitialize()` now also resets the clock on MonoGame, KNI and FNA, so the first `Update` after initializing the same service again no longer sees the time of the previous run. On raylib, `Update(double)` now behaves the same way: the first `Update` after every `Initialize` advances animations by zero, `Uninitialize()` resets the clock, and a value that is not a finite number counts as a frame of zero length.
+```csharp
+// Initialize
+svg.Texture = shapeSvg;
+```
 
 ### SkiaResourceManager and EmbeddedResourceContentLoader Are Obsolete
 
-In SkiaSharp projects (including .NET MAUI), `SkiaGum.Content.SkiaResourceManager` and `SkiaGum.Content.EmbeddedResourceContentLoader` are now `[Obsolete]`. Use `RenderingLibrary.Content.ContentLoader`, which has the same name as the loader on MonoGame, KNI, FNA and raylib. Gum installs it as the default loader, and `GumService.ContentLoader` returns it.
+In SkiaSharp projects (including .NET MAUI), use `RenderingLibrary.Content.ContentLoader`, the same loader MonoGame, KNI, FNA and raylib use. Gum installs it as the default, so a cast such as `LoaderManager.Self.ContentLoader as EmbeddedResourceContentLoader` now returns `null`.
 
-Both old types keep working and report `CS0618`. They become errors no earlier than April 2027 and are removed no earlier than November 2027. A cast such as `LoaderManager.Self.ContentLoader as EmbeddedResourceContentLoader` now returns `null`, because the default loader is a `ContentLoader`.
-
-To migrate:
-
-* Replace `SkiaResourceManager.CustomResourceAssembly` and `SkiaResourceManager.AdjustContentName` with the same properties on `ContentLoader`. They are the same setting, so code that still sets the old ones keeps working.
-* Replace `SkiaResourceManager` loading calls with `LoadContent<T>` on the loader, where `T` is `SKBitmap`, `SKSvg`, `Animation` or `SKTypeface`.
+* Move `CustomResourceAssembly` and `AdjustContentName` from `SkiaResourceManager` to `ContentLoader`.
+* Replace `SkiaResourceManager` loading calls with `LoadContent<T>`, where `T` is `SKBitmap`, `SKSvg`, `Animation` or `SKTypeface`.
 * Replace `new EmbeddedResourceContentLoader()` with `new ContentLoader()`.
-
-`GetSKBitmapFromUrl`, `CacheSvg` and the other `SkiaResourceManager` cache helpers have no `ContentLoader` equivalent. They keep working until the type is removed.
-
-An `Svg` element's `SourceFile` now goes through `AdjustContentName`, as bitmaps, animations and typefaces already did. If your `SourceFile` values already include the prefix, remove it.
+* `GetSKBitmapFromUrl`, `CacheSvg` and the other cache helpers have no replacement and keep working until the type is removed.
+* An `Svg` element's `SourceFile` now goes through `AdjustContentName`. If your `SourceFile` values already include the prefix, remove it.
 
 ❌ Old:
 
@@ -172,21 +126,15 @@ RenderingLibrary.Content.ContentLoader.CustomResourceAssembly = typeof(MauiProgr
 RenderingLibrary.Content.ContentLoader.AdjustContentName = (contentName) => "MyGame.Assets." + contentName;
 ```
 
-For more information see the [Content Using Embedded Resources](../../code/files-and-fonts/content-using-embedded-resources.md) page.
+See [Content Using Embedded Resources](../../code/files-and-fonts/content-using-embedded-resources.md).
 
-### OutputLibrary.MonoGameForms Renamed to GumForms
+### MonoGameGum AddChild Extension Is Obsolete
 
-`Gum.ProjectServices.CodeGeneration.OutputLibrary.MonoGameForms` is now `GumForms`, the name the Gum tool already shows as **Gum Forms**. `MonoGameForms` remains as an obsolete alias with the same value, so it reports `CS0618`. It becomes `[Obsolete(error: true)]` no earlier than May 2027 and is removed no earlier than November 2027.
-
-This affects you only if you wrote a plugin or tool that references `OutputLibrary.MonoGameForms`. Saved settings need no change. `ProjectCodeSettings.codsj` stores the value as `5`, and a file that spells out `MonoGameForms` still loads. `gumcli codegen-init` now prints `GumForms`.
-
-To migrate, rename `OutputLibrary.MonoGameForms` to `OutputLibrary.GumForms`.
+The `AddChild` extension in the `MonoGameGum` and `RaylibGum` namespaces is obsolete. `gue.AddChild(formsControl)` resolves to the instance method and gives no warning. Only a call that names `GraphicalUiElementExtensionMethods.AddChild` as a static method reports `CS0618`. Call the instance method, or regenerate your code.
 
 ### XNA Keys Keyboard Overloads Are Obsolete
 
-On MonoGame, KNI and FNA, the `Keyboard` methods `KeyDown`, `KeyPushed`, `KeyReleased` and `KeyTyped` that take the XNA `Keys` are now `[Obsolete]`, as are the same four methods on `IInputReceiverKeyboardMonoGame` and `XnaKeyboardExtensions`. Each reports `CS0618`. They become errors no earlier than March 2027 and are removed no earlier than July 2027.
-
-To migrate, call the overload that takes `Gum.Forms.Input.Keys`. Write the type with its full name, because a file that imports `Microsoft.Xna.Framework.Input` makes a bare `Keys` ambiguous.
+On MonoGame, KNI and FNA, the `KeyDown`, `KeyPushed`, `KeyReleased` and `KeyTyped` overloads that take the XNA `Keys` are obsolete, on `Keyboard`, `IInputReceiverKeyboardMonoGame` and `XnaKeyboardExtensions`. They become errors no earlier than March 2027 and are removed no earlier than July 2027. Call the overload that takes `Gum.Forms.Input.Keys`, written with its full name because `Keys` is ambiguous in a file that imports `Microsoft.Xna.Framework.Input`.
 
 ❌ Old:
 
@@ -210,7 +158,7 @@ if (GumService.Default.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
 
 ### ViewModel.ChangeAndNotify Is Obsolete
 
-`ViewModel.ChangeAndNotify` is now `[Obsolete]` and reports `CS0618`. It keeps working, and Gum keeps it until at least October 2027. Use `Set(ref field, value)`, which also watches the contents of a collection property.
+Use `Set(ref field, value)` instead. It also watches the contents of a collection property. `ChangeAndNotify` stays until at least October 2027.
 
 ❌ Old:
 
@@ -238,69 +186,127 @@ public string Name
 
 ### Code Generation Updates Legacy Using Statements
 
-Code generation copies the **Project-wide Using Statements** and an element's **Using Statements** into generated files. A project that saved `using MonoGameGum.GueDeriving;` there used to get the old namespace back in every generated file, even when the rest of the generated code used the unified names.
-
-Code generation now rewrites these lines in the generated output, based on the project's [syntax version](syntax-versions.md):
+Code generation now rewrites old namespaces in the **Project-wide Using Statements** and an element's **Using Statements** when it writes generated files, based on the project's [syntax version](syntax-versions.md):
 
 | Saved line | Generated line | From syntax version |
 |---|---|---|
 | `using MonoGameGum.GueDeriving;` or `using SkiaGum.GueDeriving;` | `using Gum.GueDeriving;` | 1 |
 | `using MonoGameGum;` | `using Gum;` | 3 |
 
-Gum drops a rewritten line if the same list already imports that namespace. Your saved settings are not changed, and a syntax version below the one in the table keeps the line as written.
-
-This affects you only if your using statements name the old namespaces. To migrate, regenerate your code. To remove the old names from your saved settings as well, edit the using statements in the **Code** tab.
+A rewritten line is dropped if the list already imports that namespace. Saved settings are unchanged. Regenerate your code, and edit the **Code** tab if you also want the old names gone from your settings.
 
 ### Obsolete Shims Are Removed No Earlier Than November 2027
 
-The obsolete shims that keep the old `MonoGameGum`, `SkiaGum` and `MonoGameAndGum` names compiling are not permanent. Unless a row below says otherwise, each one is a `CS0618` warning today, becomes `[Obsolete(error: true)]` no earlier than May 2027, and is removed no earlier than November 2027. The message on each shim states these dates. Gum announces the actual release in the migration page for that month.
+Unless a row says otherwise, each shim is a `CS0618` warning today, becomes `[Obsolete(error: true)]` no earlier than May 2027, and is removed no earlier than November 2027. Gum announces the actual release in that month's migration page.
 
-| Old name | Replacement | Obsoleted | Error no earlier than | Removed no earlier than |
-|---|---|---|---|---|
-| `MonoGameGum.GueDeriving` runtimes (`TextRuntime`, `ContainerRuntime`, `SpriteRuntime`, `ColoredRectangleRuntime`, `NineSliceRuntime`, `CircleRuntime`, `PolygonRuntime`, `RectangleRuntime`, and the shape runtimes) | `Gum.GueDeriving` | May 7, 2026 | May 2027 | November 2027 |
-| `SkiaGum.GueDeriving` runtimes | `Gum.GueDeriving` | May 7, 2026 | May 2027 | November 2027 |
-| `MonoGameGum.ElementSaveExtensionMethods.ToGraphicalUiElement` | `Gum.ElementSaveExtensionMethods` | June 12, 2026 | May 2027 | November 2027 |
-| `MonoGameGum.Renderables` default renderables | `Gum.Renderables` | June 13, 2026 | May 2027 | November 2027 |
-| `MonoGameGum.ExtensionMethods.IReadOnlyListExtensionMethods` | `Gum.ExtensionMethods` | June 13, 2026 | May 2027 | November 2027 |
-| `MonoGameGum.Input.Cursor` | `Gum.Input.Cursor` | October 14, 2026 | May 2027 | November 2027 |
-| `MonoGameGum.GraphicalUiElementExtensionMethods.AddChild` | `GraphicalUiElement.AddChild` | October 20, 2026 | May 2027 | November 2027 |
-| `MonoGameGum.Renderables.RenderableCreator` | `Gum.Renderables.RenderableCreator` | October 20, 2026 | May 2027 | November 2027 |
-| `MonoGameAndGum.Renderables` and `MonoGameAndGum.Content` types | `Gum.Renderables` and `Gum.Content` | October 20, 2026 | May 2027 | November 2027 |
-| `OutputLibrary.MonoGameForms` | `OutputLibrary.GumForms` | October 20, 2026 | May 2027 | November 2027 |
-| `SkiaGum.Content.SkiaResourceManager` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | April 2027 | November 2027 |
-| `SkiaGum.Content.EmbeddedResourceContentLoader` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | April 2027 | November 2027 |
-| `MonoGameGum.GumService` and `RaylibGum.GumService` | `Gum.GumService` | June 12, 2026 | Never | Never |
+| Old name | Replacement | Error no earlier than |
+|---|---|---|
+| `MonoGameGum.GueDeriving` and `SkiaGum.GueDeriving` runtimes (`TextRuntime`, `ContainerRuntime`, `SpriteRuntime`, the shape runtimes, and so on) | `Gum.GueDeriving` | May 2027 |
+| `MonoGameGum.ElementSaveExtensionMethods.ToGraphicalUiElement` | `Gum.ElementSaveExtensionMethods` | May 2027 |
+| `MonoGameGum.Renderables` default renderables | `Gum.Renderables` | May 2027 |
+| `MonoGameGum.ExtensionMethods.IReadOnlyListExtensionMethods` | `Gum.ExtensionMethods` | May 2027 |
+| `MonoGameGum.Input.Cursor` | `Gum.Input.Cursor` | May 2027 |
+| `MonoGameGum.GraphicalUiElementExtensionMethods.AddChild` | `GraphicalUiElement.AddChild` | May 2027 |
+| `MonoGameGum.Renderables.RenderableCreator` | `Gum.Renderables.RenderableCreator` | May 2027 |
+| `MonoGameAndGum.Renderables` and `MonoGameAndGum.Content` types | `Gum.Renderables` and `Gum.Content` | May 2027 |
+| `OutputLibrary.MonoGameForms` | `OutputLibrary.GumForms` | May 2027 |
+| `SkiaGum.Content.SkiaResourceManager` and `EmbeddedResourceContentLoader` | `RenderingLibrary.Content.ContentLoader` | April 2027 |
+| `MonoGameGum.GumService` and `RaylibGum.GumService` | `Gum.GumService` | Never |
 
-The `GumService` shim stays because `GumService.Default` returns it. Declarations typed with the old name keep compiling with a `CS0618` warning, and you can change them to `Gum.GumService` whenever you like.
+The `GumService` shim stays because `GumService.Default` returns it. Change declarations to `Gum.GumService` whenever you like.
 
 {% hint style="info" %}
-The properties on the default Forms visuals (`TextInstance`, `Background`, and similar) are still typed as the obsolete `MonoGameGum.GueDeriving` shims. Gum changes them to the unified types in the release that removes the shims, so a variable declared with a shim type to hold one of them needs the new type by then.
+The properties on the default Forms visuals (`TextInstance`, `Background`, and similar) are still typed as the obsolete `MonoGameGum.GueDeriving` shims. Gum changes them to the unified types in the release that removes the shims, so a variable holding one of them needs the new type by then.
 {% endhint %}
 
-To check what still uses an old name, build with the bundled `Gum.Analyzers` package and look for `GUM001` and `CS0618`.
+To find what still uses an old name, build with the bundled `Gum.Analyzers` package and look for `GUM001` and `CS0618`.
+
+## Interface Additions
+
+### ICursor and IGumService Gain Members
+
+These are additive. A class that implements `ICursor`, `IGumService` or `IRenderer` keeps compiling because every new member has a default implementation.
+
+* `ICursor` gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed`, a read-only `TransformMatrix` (a `System.Numerics.Matrix3x2`), `VisualPushed`, `LastX`, `LastY` and `ClearInputValues()`.
+* `IGumService` gains `Keyboard`, `Update(double totalSeconds)`, `PopupRoot`, `ModalRoot`, `Gamepads`, `UseKeyboardDefaults()`, `UseGamepadDefaults()`, `RefreshStyles()`, `RefreshLocalization()`, `LocalizationService`, `LastLoadResult`, `ExportSnapshot(string, bool)`, `SynchronizationContext`, `UseSingleThreadedAsync()` and `Uninitialize()`. `IRenderer` gains `AddLayer()` and `RemoveLayer(Layer)`.
+
+Behavior changes to know about:
+
+* `IGumService.Default.Cursor` now returns the cursor Forms uses, including one installed with `FormsUtilities.SetCursor`. It used to be `null` under a custom cursor and always `null` in Skia-based hosts (Silk.NET, Stride, KNI Skia, Unity). `GumService.Default.Cursor` and `Keyboard` are unchanged.
+* `Update(double totalSeconds)` takes total seconds since startup, not the frame time. A value that is not a finite number counts as a zero-length frame. On KNI Skia it now sets `GumService.Default.GameTime` and skips input while the window is inactive, like `Update(GameTime)`.
+* `Uninitialize()` resets the clock on MonoGame, KNI, FNA and raylib, so the first `Update` after initializing again advances animations by zero.
+
+## Missing Files and Load Errors
+
+Gum now fails loudly instead of drawing nothing in these cases. Fix the file or path. To keep the old silent behavior, set `ConsumeSilently` after Gum initializes. Gum then raises `PropertyAssignmentError` with the file name.
+
+```csharp
+// Initialize
+Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
+    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+```
+
+### raylib Throws When an Image Cannot Be Decoded
+
+raylib treats an image it cannot decode like a missing file. A `.jpg` Source File, for example, loaded as an empty texture before and now throws, because the stock raylib native has no JPEG decoder. Convert the image to PNG, or register an `IImageDecoder` for its extension before Gum loads the project. See [Custom Image Formats](../../code/files-and-fonts/custom-image-formats.md).
+
+### SkiaGum Throws When a File Is Missing or an Image Cannot Be Decoded
+
+SkiaGum now defaults `MissingFileBehavior` to `ThrowException`, like the other runtimes. A missing Sprite or NineSlice image, font file, Svg or LottieAnimation file, or an image SkiaSharp cannot decode, throws a `FileNotFoundException` naming the file when the element is created. Under `ConsumeSilently`, a Sprite or `SvgRuntime` has a null `Texture` and a `LottieAnimationRuntime` a null `Animation`.
+
+### SvgRuntime Throws When Its SVG Cannot Be Loaded
+
+On MonoGame and KNI, an `SvgRuntime` whose `SourceFile` is missing or not a readable SVG now follows `MissingFileBehavior`, as does `ShapeSvgLoader.Load`. Before, it drew nothing and reported nothing. Under `ConsumeSilently`, `Texture` is null.
+
+### An .achx Frame Texture That Fails to Load Is a Blank Frame
+
+A frame texture that is missing or cannot be decoded follows `MissingFileBehavior` on every runtime. On MonoGame, KNI and FNA, a missing frame texture used to be silent under the default and now throws when the `.achx` loads.
+
+Under `ConsumeSilently`, that frame has a null `Texture` and draws nothing, `PropertyAssignmentError` is raised once per texture, and `AnimationChains` is no longer null. Check `Texture` on the frames instead. Under `ThrowException`, the `FileNotFoundException` is the `InnerException`.
+
+### SourceShaderFile Needs a Shader Resolver
+
+A container with a `SourceShaderFile` now fails to load unless a shader resolver handles the file. Before, MonoGame, KNI, FNA and raylib rendered it without the shader and reported nothing. This includes a container with `IsRenderTarget` set to `false`.
+
+Add the ShadowDusk package for your runtime (`Gum.MonoGame.ShadowDusk`, `Gum.KNI.ShadowDusk`, `Gum.FNA.ShadowDusk`, or `Gum.raylib.ShadowDusk`) and call `UseShadowDusk()` once at startup, after `Initialize` and before any element that uses a `SourceShaderFile` is created. A later call does not retry a file that already failed. See [Loading Shader Files With SourceShaderFile](../../code/standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
+
+❌ Old:
+
+```csharp
+// Initialize
+GumUI.Initialize(this);
+// The screen's SourceShaderFile silently rendered unshaded.
+```
+
+✅ New:
+
+```csharp
+// Initialize
+GumUI.Initialize(this);
+GumUI.UseShadowDusk();
+```
+
+### Generated Visuals Throw When Their Element Is Not Loaded
+
+At [syntax version 7](syntax-versions.md), a generated MonoGame, raylib, or Silk.NET runtime class throws from its constructor when the loaded project has no element by its name. Before, it created an empty visual. This matters if you create generated visuals before loading the Gum project, such as in unit tests. Load the project first.
+
+### References That Cannot Be Applied Are Reported
+
+A reference whose result does not fit the variable on the left is now reported, and the variable keeps its value. This covers `NaN` or infinity into a `float` or `double`, and with `Gum.Expressions` a `bool` or text into a number, or a number outside the range of an `int`. `MinWidth`, `MaxWidth`, `MinHeight` and `MaxHeight` are the exception: `NaN` or infinity now means no limit.
+
+See [Casting and Type Considerations](../../code/styling/runtime-variable-references.md#casting-and-type-considerations).
+
+## Layout
+
+Open your screens and components in the Gum tool and check the stacks and containers below.
 
 ### Stacked Children Ignore Their Origin on the Stacking Axis
 
-A child after the first in a stack now ignores its origin on the stacking axis:
+A child after the first in a stack now ignores its origin on the stacking axis: `Y Origin` is treated as `Top` in a `Top to Bottom Stack`, and `X Origin` as `Left` in a `Left to Right Stack`. Before, a `Center` origin pulled the child back over its previous sibling by half its size, and `Bottom`, `Baseline` or `Right` by its full size. The first child, the origin on the other axis, and `X`/`Y` spacing are unchanged.
 
-* In a `Top to Bottom Stack`, later children treat `Y Origin` as `Top`.
-* In a `Left to Right Stack`, later children treat `X Origin` as `Left`.
+This affects stacked children (not the first) with those origins, including children set with `Anchor`. To keep an overlap, give the child a negative `Y` (or `X`).
 
-Before this version, the origin still applied after the stack positioned the child. A `Center` origin pulled the child back over its previous sibling by half its size, and a `Bottom`, `Baseline`, or `Right` origin pulled it back by its full size, covering the previous sibling.
-
-Stacks already ignored a later child's units on the stacking axis, so a child with `Y Units` of `Pixels From Center` still stacked below its previous sibling. The origin now follows the same rule, and a child's units and origin on the stacking axis have no effect unless it is the first child.
-
-These cases are unchanged:
-
-* The first child in a stack uses its units and origin on both axes.
-* The origin on the other axis works normally. A child in a `Top to Bottom Stack` can still use `X Origin` of `Center` to center itself horizontally.
-* `X` and `Y` values still add space between a child and its previous sibling.
-
-This affects you only if a stacked child other than the first uses a `Y Origin` other than `Top` in a `Top to Bottom Stack`, or an `X Origin` other than `Left` in a `Left to Right Stack`. Calling `Anchor` with a value such as `Center` or `Bottom` sets these origins, so code that anchors a stacked child is affected too. Such a child now sits right after its previous sibling instead of overlapping it.
-
-To migrate, open your screens and components in the Gum tool and check any stacks whose children use a non-default origin. If you relied on the overlap, for example to pull a child up so it overlaps the one before it, give the child a negative `Y` (or `X`) value instead. A negative value moves the child back toward its previous sibling by that many pixels.
-
-❌ Old (child overlaps the previous sibling by half its height):
+❌ Old (overlaps the previous sibling by half its height):
 
 ```csharp
 // Initialize
@@ -320,164 +326,52 @@ child.Y = -25;
 stackPanel.AddChild(child);
 ```
 
-If the overlap was how you placed children side by side, the stack points the wrong way, and a negative value is not the fix. For example, a `Top to Bottom Stack` holds two children that both have a `Y Units` of `Pixels From Bottom` and a `Y Origin` of `Bottom`. Before this version they shared a row, because the second child's origin pulled it back over the first. Now the second child sits below the first, which can move it off screen. Set the stack to the direction you want instead. In the Gum tool, set the stack's `Children Layout` to `Left to Right Stack`. In code, set `Orientation` on a `StackPanel`, or `ChildrenLayout` on a container.
-
-✅ New (children sit side by side, and each keeps its bottom origin):
+If you used the overlap to place children side by side, point the stack the right way instead. For example, two children with `Y Units` of `Pixels From Bottom` and `Y Origin` of `Bottom` used to share a row. Set `Children Layout` to `Left to Right Stack` in the tool, or in code:
 
 ```csharp
 // Initialize
 stackPanel.Orientation = Gum.Forms.Controls.Orientation.Horizontal;
 ```
 
-```csharp
-// Initialize
-container.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
-```
-
-For more information see the [Children Layout](../gum-elements/container/children-layout.md#stacking-and-children-origin) page.
+See [Children Layout](../gum-elements/container/children-layout.md#stacking-and-children-origin).
 
 ### Stacks Without Wrapping Grow to Their Max
 
-A stack that sizes itself to its children and has a max on its stacking axis now grows all the way to that max when its children need more space. This applies to a `Top to Bottom Stack` with `Height Units` of `Relative to Children` (or `Relative to Max of Children or Parent`) and a `Max Height`, and to a `Left to Right Stack` with the matching `Width Units` and a `Max Width`.
+A non-wrapping stack sized to its children (`Relative to Children` or `Relative to Max of Children or Parent`) with a `Max Height` or `Max Width` now grows all the way to that max when its children need more. Before, it stopped at the last child that fit. Three 50 tall children in a stack with a `Max Height` of `120` used to measure `100` and now measure `120`. Child positions are unchanged.
 
-Before this version, such a stack stopped growing at the last child that fit under its max. For example, a `Top to Bottom Stack` with a `Max Height` of `120` and three children that are each `50` tall measured `100`, and the third child hung below it. It now measures `120`, so it holds as much of the third child as it can. The children stay in the same positions.
-
-These cases are unchanged:
-
-* A stack with `Wraps Children` checked still moves the next child to a new row or column. Its size is its widest row or column, as described in the next section.
-* A container with a `Children Layout` of `Regular` already grew to its max.
-* A stack whose children fit under its max still sizes to its children.
-
-This affects you only if a stack that does not wrap has more content than its `Max Height` or `Max Width` allows. Such a stack is now larger.
-
-To migrate, open your screens and components in the Gum tool and check any stacks that use a max. If you want the old size, lower the max to the size of the children that fit, or check `Wraps Children` if the extra children should move to a new row or column.
-
-❌ Old (with three children that are each 50 tall, measured 100 tall and now measures 120):
-
-```csharp
-// Initialize
-var stackPanel = new ContainerRuntime();
-stackPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-stackPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-stackPanel.Height = 0;
-stackPanel.MaxHeight = 120;
-```
-
-✅ New (keeps the old 100 tall size):
-
-```csharp
-// Initialize
-var stackPanel = new ContainerRuntime();
-stackPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-stackPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-stackPanel.Height = 0;
-stackPanel.MaxHeight = 100;
-```
-
-For more information see the [Children Layout](../gum-elements/container/children-layout.md#stacking-and-container-height-units-and-width-units) page.
+If you want the old size, lower the max to the size of the children that fit, or check `Wraps Children`. See [Children Layout](../gum-elements/container/children-layout.md#stacking-and-container-height-units-and-width-units).
 
 ### Wrapping Stacks Sized to Their Children Measure Their Widest Row
 
-A stack with `Wraps Children` checked that sizes itself to its children and has a max on its stacking axis is now as large as its widest row or column. This applies to a `Left to Right Stack` with `Width Units` of `Relative to Children` (or `Relative to Max of Children or Parent`) and a `Max Width`, and to a `Top to Bottom Stack` with the matching `Height Units` and a `Max Height`. Rows break where the next child would pass the max, and padding and the max apply after the widest row is measured.
+A wrapping stack sized to its children with a max is now as large as its widest row or column. Before, it measured only its first row, so later rows wrapped against that narrower size and a wider child extended past the stack. Children `100`, `120` and `60` wide in a `Max Width` of `200` used to measure `100`, and now measure `180` with the last two sharing a row. A first child wider than the max now measures as wide as the max, not `0`.
 
-Before this version, such a stack measured only its first row. The rows after it then wrapped against that narrower size, so they used more rows than needed, and a child wider than the first row extended past the stack. For example, a `Left to Right Stack` with a `Max Width` of `200` holding children `100`, `120`, and `60` wide measured `100` wide and placed each child on its own row, with the `120` wide child extending `20` past the stack. It now measures `180` wide, with the `120` and `60` wide children sharing the second row.
-
-A stack whose first child is wider than the max is now as wide as its max. Before this version, such a stack measured `0` wide when it had no `Width` padding.
-
-These cases are unchanged:
-
-* A stack whose first row is its widest row.
-* A stack whose children fit in one row.
-* Stacks with a size that does not depend on their children.
-
-This affects you only if a wrapping stack sized to its children with a max has a later row wider than its first. Such a stack is now wider and may have fewer rows.
-
-To migrate, open your screens and components in the Gum tool and check any wrapping stacks that use a max. If you want the old size, lower the max to the width of the first row.
-
-For more information see the [Wraps Children](../gum-elements/container/wraps-children.md#relative-to-children-and-max-width-and-max-height) page.
+If you want the old size, lower the max to the width of the first row. See [Wraps Children](../gum-elements/container/wraps-children.md#relative-to-children-and-max-width-and-max-height).
 
 ### Wrapping Stacks Position Children Within Their Row or Column
 
-In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis for positioning:
+In a wrapping stack, each row or column is now the parent of its children on the other axis. In a `Left to Right Stack`, a child's `Y Units` and `Y Origin` position it within its row, and `Percentage` is a percentage of the row. The same applies to `X` in a `Top to Bottom Stack`. Before, they positioned the child within the whole stack, so `Pixels From Center` centered a child on the stack whichever row it was in.
 
-* In a `Left to Right Stack`, a child's `Y Units` and `Y Origin` position it within its row.
-* In a `Top to Bottom Stack`, a child's `X Units` and `X Origin` position it within its column.
+Rows and columns also count children the way a container sized to its children does: a `Percentage`-positioned child and any part outside the row do not count. The default units (`Pixels From Top`, or `Pixels From Left`) and size units are unchanged.
 
-Before this version, these values positioned the child within the whole stack. For example, in a `Left to Right Stack` that is `300` tall with rows that are `40`, `80`, and `20` tall, a child with `Y Units` of `Pixels From Center` and `Y Origin` of `Center` sat at the stack's center whichever row it was in, outside its own row. It is now centered in its row. A child with `Y Units` of `Pixels From Bottom` now aligns to the bottom of its row instead of the bottom of the stack, and a `Percentage` value is now a percentage of the row's height.
-
-A row or column is as large as its largest child, and rows and columns stay packed at the start of the stack. A child alone in its row is the same size as the row, so centering it leaves it at the top of the row.
-
-Rows and columns now count their children the same way a container sized to its children does. A child's `Y` (or `X`) value counts from the edge it is measured from, a portion of a child outside its row does not count, and a child positioned with `Percentage` does not count. A child whose size depends on its parent (for example, `Height Units` of `Percentage of Parent`) still counts, unless the stack itself is sized to its children on that axis. Before this version, a row added each child's value to its size whatever its units.
-
-These cases are unchanged:
-
-* Children using `Pixels From Top` in a `Left to Right Stack` (or `Pixels From Left` in a `Top to Bottom Stack`), which is the default.
-* Size units. A child with `Height Units` of `Percentage of Parent` still sizes itself from the whole stack.
-* Stacks without `Wraps Children` checked.
-
-This affects you only if a child of a wrapping stack uses units other than the default on the axis that does not stack, or a `Percentage` value there. Such a child now sits inside its row or column.
-
-To migrate, open your screens and components in the Gum tool and check any wrapping stacks whose children use these units. If you want a child placed relative to the whole stack, move it out of the stack into a container that does not stack.
-
-For more information see the [Wraps Children](../gum-elements/container/wraps-children.md#positioning-children-within-a-row-or-column) page.
+If you want a child placed relative to the whole stack, move it out of the stack into a container that does not stack. See [Wraps Children](../gum-elements/container/wraps-children.md#positioning-children-within-a-row-or-column).
 
 ### Wrapping Stacks With Negative Padding Keep Their Measured Rows
 
-A wrapping stack that sizes itself to its children (`Relative to Children` or `Relative to Max of Children or Parent`) now breaks rows where it measured them. With negative padding, a row hangs past the edge of the stack instead of wrapping again, the way content hangs past the edge of a stack without `Wraps Children`.
-
-For example, children that are `100`, `90`, and `50` wide in a `Left to Right Stack` with a `Width` of `-20` and a `Max Width` of `200` used to lay out as `[100]` and `[90, 50]` in a stack `170` wide. They now lay out as `[100, 90]` and `[50]`, with the `90` wide child hanging `20` past the edge. With no max, nothing wraps, where the `50` wide child used to move to a new row. Positive padding is unchanged.
-
-This affects you only if a wrapping stack sized to its children uses negative padding. To migrate, open your screens and components in the Gum tool and check these stacks. If you want the old rows, raise the padding to `0` or lower the max.
+A wrapping stack sized to its children now breaks rows where it measured them, so with negative padding a row hangs past the edge instead of wrapping again. Children `100`, `90` and `50` wide with a `Width` of `-20` and a `Max Width` of `200` used to lay out as `[100]` and `[90, 50]`, and now as `[100, 90]` and `[50]`. With no max, nothing wraps. To get the old rows, raise the padding to `0` or lower the max.
 
 ### Fixed Size AutoGrids Overflow Instead of Packing Extra Rows
 
-An `Auto Grid Horizontal` or `Auto Grid Vertical` with a fixed size on the axis that grows now lets extra children spill outside the grid. Before this version, a grid with more children than cells squeezed the extra rows into its bounds, but each child kept the full cell size, so the children overlapped.
-
-A grid sized with `Relative to Children` on that axis still adds rows to hold its children.
-
-This affects you only if a fixed size grid holds more children than `Auto Grid Horizontal Cells` times `Auto Grid Vertical Cells`. To migrate, raise the cell counts to hold every child, or set the grid to `Relative to Children` on the axis that grows.
+An `Auto Grid Horizontal` or `Auto Grid Vertical` with a fixed size on its growing axis now lets extra children spill outside the grid. Before, the extra rows were squeezed into the grid and the children overlapped. Raise the cell counts to hold every child, or set `Relative to Children` on the growing axis.
 
 ### Containers Count a Child's Min When It Uses Relative to Max of Children or Parent
 
-A container with `Height Units` of `Relative to Children` now counts a child that uses `Relative to Max of Children or Parent` at no less than the child's `Min Height`. The same applies to `Width Units` and `Min Width`.
+A container with `Height Units` of `Relative to Children` now counts a `Relative to Max of Children or Parent` child at no less than that child's `Min Height` (and likewise for `Width Units` and `Min Width`). Before, a child with a `Min Height` of `80` and 30 tall content was measured as `30`, so it extended past its container. If you want the old size, lower or clear the child's `Min Height` or `Min Width`. See [Height Units](../gum-elements/general-properties/height-units.md#relative-to-max-of-children-or-parent).
 
-Before this version, the container measured such a child by its children only. For example, a child with a `Min Height` of `80` whose children are `30` tall was `80` tall, but its container measured `30`, so the child extended past the container. The container now measures `80`.
-
-These cases are unchanged:
-
-* A child whose children are already larger than its `Min Height`.
-* Children using other `Height Units`. Their min was already counted.
-
-This affects you only if a container sized to its children holds a `Relative to Max of Children or Parent` child with a `Min Height` or `Min Width` larger than its content. Such a container is now larger.
-
-To migrate, open your screens and components in the Gum tool and check these containers. If you want the old size, lower or clear the child's `Min Height` or `Min Width`.
-
-For more information see the [Height Units](../gum-elements/general-properties/height-units.md#relative-to-max-of-children-or-parent) page.
+## Input and Events
 
 ### Dragging Is Raised Every Frame While the Button Is Held
 
-`InteractiveGue.Dragging` is now raised every frame that the primary button is held after pushing on the visual, whether or not the cursor moved. It is still raised when the cursor is outside the bounds of the visual.
-
-Before this version, `Dragging` was raised only on frames where the cursor moved. A visual that was pushed and held still raised nothing, so code that updated something every frame during a drag, such as a timer or a readout, stopped while the cursor was stationary.
-
-These cases are unchanged:
-
-* `Dragging` is not raised when the primary button is not down.
-* `RollOver` is still raised only on frames where the cursor moved.
-* Forms controls that use `Dragging` internally, such as `Slider`, `ScrollBar`, `Splitter`, `Window`, `ColorPicker`, `ListBox`, and `TextBox`, behave the same because they compute their result from the cursor position.
-
-This affects you only if your code subscribes to `Dragging` on a visual and does something other than read the cursor position, such as accumulating a value on every call. That handler now runs on frames where the cursor did not move.
-
-To migrate, check the cursor's `XChange` and `YChange` in the handler if you want to run only when the cursor moves.
-
-❌ Old (`Dragging` ran only when the cursor moved):
-
-```csharp
-// Initialize
-button.Visual.Dragging += (_, _) => movesCounted++;
-```
-
-✅ New (same behavior, stated explicitly):
+`InteractiveGue.Dragging` is now raised every frame the primary button is held after pushing on the visual, even when the cursor did not move. Before, it was raised only on frames where the cursor moved. This matters only if a handler does more than read the cursor position, such as accumulating a value each call. To run only on movement, check the cursor's `XChange` and `YChange`. `RollOver` and the Forms controls are unchanged.
 
 ```csharp
 // Initialize
@@ -490,19 +384,17 @@ button.Visual.Dragging += (_, _) =>
 };
 ```
 
-For more information see the [Visual Events](../../code/events-and-interactivity/visual-events.md) page.
+See [Visual Events](../../code/events-and-interactivity/visual-events.md).
+
+### RollOff Is Raised Before RollOn
+
+When the cursor moves straight from one `InteractiveGue` to another, `RollOff` now runs on the old element before `RollOn` on the new one. Before, `RollOn` came first. A `RollOn` handler in the same frame now sees a `cursor.VisualOver` assigned by a `RollOff` handler, so check any code that relied on `RollOn` running first.
 
 ### AnimationChainFinished Replaces AnimationChainCycled at the End of a Non-Looping Chain
 
-`AnimationChainCycled` is now raised only when a looping animation chain wraps around. A chain that does not loop raises the new `AnimationChainFinished` event once when it reaches its end and `Animate` becomes `false`. `SpriteRuntime`, `Sprite`, `NineSlice`, and `AnimationChainLogic` all have the new event.
+`AnimationChainCycled` is now raised only when a looping chain wraps around. A chain that does not loop raises the new `AnimationChainFinished` once at its end, when `Animate` becomes `false`. `SpriteRuntime`, `Sprite`, `NineSlice` and `AnimationChainLogic` all have it. A non-looping chain also stops on its first frame when it plays backward (negative `AnimationChainSpeed`), where before it held the frame and raised nothing.
 
-Before this version, a chain that did not loop raised `AnimationChainCycled` when it reached its end, even though it never started over. It also returned to its first frame instead of holding its last.
-
-A chain that does not loop now also finishes when it plays backward. With a negative `AnimationChainSpeed`, it stops on its first frame, sets `Animate` to `false`, and raises `AnimationChainFinished`. Before this version, it held the first frame, kept `Animate` set to `true`, and raised no event.
-
-This affects you only if your code subscribes to `AnimationChainCycled` on a sprite or nine slice whose chain does not loop, for example to remove a sprite after its death animation plays. That handler no longer runs.
-
-To migrate, subscribe to `AnimationChainFinished` instead.
+If you subscribed to `AnimationChainCycled` on a non-looping chain, such as to remove a sprite after a death animation, subscribe to `AnimationChainFinished` instead.
 
 ❌ Old:
 
@@ -520,57 +412,53 @@ sprite.IsAnimationChainLooping = false;
 sprite.AnimationChainFinished += () => sprite.RemoveFromRoot();
 ```
 
-For more information see the [Animation Chains](../../code/files-and-fonts/animation-chains.md#looping-and-end-of-chain-events) page.
+See [Animation Chains](../../code/files-and-fonts/animation-chains.md#looping-and-end-of-chain-events).
 
+### A Hidden Control Refuses Focus
 
-### SvgRuntime.Document Renamed to Texture in MonoGame and KNI
-
-The `SvgRuntime` in MonoGame and KNI projects that use `Gum.Shapes.MonoGame` or `Gum.Shapes.KNI` now names its document property `Texture`, the same name SkiaGum's `SvgRuntime` has always used. The property was `Document` before this version. The type is still the Apos.Shapes `ShapeSvg`, and `SourceFile` is unchanged.
-
-This affects you only if your code reads or assigns `SvgRuntime.Document`, for example to draw a `ShapeSvg` you loaded yourself. The old name now fails to compile with `CS1061`.
-
-To migrate, rename `Document` to `Texture`.
+Setting `IsFocused` to `true` on a control that is not visible (it or a parent has `IsVisible` set to `false`) now leaves it `false`, the same as a disabled control. Show the control first, then focus it.
 
 ❌ Old:
 
 ```csharp
 // Initialize
-svg.Document = shapeSvg;
+okButton.IsFocused = true;
+dialog.IsVisible = true;
 ```
 
 ✅ New:
 
 ```csharp
 // Initialize
-svg.Texture = shapeSvg;
+dialog.IsVisible = true;
+okButton.IsFocused = true;
 ```
+
+### ListBox Left and Right No Longer Step a Vertical List
+
+When a `ListBox` has item-level focus (`DoListItemsHaveFocus` is `true`), the axis the list does not use now leaves the list, like the perpendicular axis of a `Slider`. Left and right no longer step a vertical list, and up and down no longer step a horizontal one. Focus moves as it does at top-level focus, honoring any `SpatialNavigationLeft`, `SpatialNavigationRight`, `SpatialNavigationUp` or `SpatialNavigationDown` on the `ListBox`, and `SelectedIndex` is kept. Arrow keys on the list's own axis, wrapping lists, and the `ComboBox` drop-down are unchanged.
+
+### raylib and Sokol Repeat Held Keys With Gum's Timing
+
+On raylib and Sokol, held navigation keys (arrows, Backspace, Delete) now repeat after `RepeatDelay` (500 ms) at `RepeatRate` (70 ms), as on the other runtimes, instead of using the operating system's repeat for `KeyTyped` and `KeysTyped`. Typed characters, including Enter in a multi-line `TextBox` on raylib, still use the operating system's repeat.
+
+On Windows and macOS, `Initialize` starts from the system keyboard settings (read once). On macOS they apply only after the user has changed them in System Settings. To use fixed values on every machine, set `RepeatDelay` and `RepeatRate` after `Initialize`.
+
+`IInputReceiverKeyboard` now declares `RepeatDelay` and `RepeatRate` as default members, so existing implementers keep compiling.
+
+## Forms
 
 ### RefreshStyles Restores Only Text Set in Code
 
-`RefreshStyles` now restores a control's text only when code supplied it. Text counts as supplied by code when you set it through the property, call `SetTextNoTranslate` (or the `SetHeaderNoTranslate` and `SetPlaceholderNoTranslate` equivalents), bind it, or when the user types it into a `TextBox`. This applies to:
+`RefreshStyles` now restores a control's text only when code supplied it: through the property, `SetTextNoTranslate` (or the `SetHeaderNoTranslate` and `SetPlaceholderNoTranslate` equivalents), a binding, or typing in a `TextBox`. This covers `Text` on `Button`, `Label`, `ToggleButton` (so `CheckBox` and `RadioButton`), `TextBox` and `PasswordBox`, `Header` on `Expander` and `MenuItem`, and `Placeholder` on `TextBox` and `PasswordBox`.
 
-* `Text` on `Button`, `Label`, `ToggleButton` (and so `CheckBox` and `RadioButton`), `TextBox`, and `PasswordBox`
-* `Header` on `Expander` and `MenuItem`
-* `Placeholder` on `TextBox` and `PasswordBox`
+Before, those controls restored their old text even if the Visual authored it, which overwrote text changed on the Visual, for example through a variable reference. Text set in code also no longer carries over to a new Visual, so set it again after assigning one. `ComboBox` still restores its displayed text.
 
-Before this version, `Button`, `Label`, `TextBox`, and `PasswordBox` restored the text they had before the refresh whether or not code set it. A text authored on the Visual and then changed, for example through a variable reference, was overwritten with the old text. Text authored on the Visual is now re-applied from the Visual, so the changed text shows.
-
-Text set in code also no longer carries over when you assign a new Visual to a control. The control shows the text the new Visual authors.
-
-These cases are unchanged:
-
-* Text set in code, through `SetTextNoTranslate`, or typed by the user still survives `RefreshStyles`.
-* `ComboBox` still restores its displayed text.
-
-This affects you only if a Visual authors text that you expected `RefreshStyles` to overwrite, or if you assign a new Visual to a control after setting its text in code.
-
-To migrate, set the text through the control's property if you want it to survive `RefreshStyles`. Set the text again after assigning a new Visual.
-
-For more information see the [Runtime Variable References](../../code/styling/runtime-variable-references.md#text-after-refreshstyles) page.
+See [Runtime Variable References](../../code/styling/runtime-variable-references.md#text-after-refreshstyles).
 
 ### Slider, ScrollBar, and ScrollViewer Step Defaults Changed in the Gum Tool
 
-The behaviors that the Gum tool adds for new Forms controls now declare these step sizes:
+New Forms controls added in the tool now get the same step sizes as controls created in code:
 
 | Control | Property | Before | Now |
 |---|---|---|---|
@@ -579,78 +467,46 @@ The behaviors that the Gum tool adds for new Forms controls now declare these st
 | `ScrollBar` | `SmallChange` | 1 | 10 |
 | `ScrollViewer` | `SmallChange` | 1 | 10 |
 
-The tool writes a behavior's declared defaults onto controls that do not set their own value. A `Slider` placed in the tool therefore stepped by 1 and 10 while a `Slider` created in code steps by 5 and 25. The tool now matches code.
-
-This affects you only if you rely on the step size of a `Slider`, `ScrollBar`, or `ScrollViewer` that you add in the tool. To migrate, set `SmallChange` or `LargeChange` in the **Behavior** category to the value you want.
+If you rely on a step size, set `SmallChange` or `LargeChange` in the **Behavior** category.
 
 ### Step Sizes Survive a Visual Swap
 
-Before this version, assigning a new Visual to a `ScrollBar`, `ScrollViewer`, or `Slider` replaced `SmallChange` and `LargeChange` with the new Visual's values. Now a value set in code, authored on the Visual, or applied from a behavior is kept, and `LargeChange` on a `ScrollBar` and `ScrollViewer` has no default, so it follows the viewport size until you assign it. See [Properties Set by Forms Controls](../../code/styling/properties-set-by-forms-controls.md#scroll-step-sizes-survive-a-visual-swap) for details.
-
-A project created before this version still declares a `LargeChange` of 10 on its scroll controls. That value now stays at 10 after a Visual swap instead of following the viewport size.
-
-This affects you only if you assign a new Visual to one of these controls and relied on the step sizes changing, or your project declares a `LargeChange`. To migrate, set the step sizes you want after assigning the Visual.
+Assigning a new Visual to a `ScrollBar`, `ScrollViewer` or `Slider` no longer replaces `SmallChange` and `LargeChange`. A value set in code, authored on the Visual, or applied from a behavior is kept, and `LargeChange` on a `ScrollBar` and `ScrollViewer` has no default, so it follows the viewport until you assign it. A project from before this version still declares a `LargeChange` of 10 on its scroll controls, and that value now stays at 10. Set the step sizes you want after assigning the Visual. See [Properties Set by Forms Controls](../../code/styling/properties-set-by-forms-controls.md#scroll-step-sizes-survive-a-visual-swap).
 
 ### ScrollBar Orientation Is a Behavior Property
 
-A ScrollBar instance now has an `Orientation` setting in the **Behavior** category, and the `OrientationCategoryState` variable is hidden. Before this version, setting the orientation state in the tool changed how the bar looked, but the control in your game never read it, so the bar stayed vertical.
+A ScrollBar instance now has an `Orientation` setting in the **Behavior** category, and `OrientationCategoryState` is hidden. Before, setting the orientation state in the tool changed the look but the control stayed vertical in your game.
 
-When the tool or your game loads a project, Gum migrates a ScrollBar whose default state sets `OrientationCategoryState` to `Horizontal` by also setting its `Orientation` to `Horizontal`. The bar keeps its look and the control now follows it. The project does not need to be saved again. A project whose `ScrollBarBehavior` does not have the `Orientation` property yet is not migrated, since there is nothing to read the value.
+On load, Gum sets `Orientation` to `Horizontal` on any ScrollBar whose default state sets `OrientationCategoryState` to `Horizontal`. You do not need to save again. A project whose `ScrollBarBehavior` lacks the `Orientation` property is not migrated. Open the project in the tool and check that your horizontal bars show `Horizontal`. See [Behaviors](../gum-elements/behaviors/README.md#scrollbar-orientation).
 
-This affects you only if you set the orientation of a ScrollBar in the tool. To migrate, open the project in the tool and check that the bars you made horizontal show `Orientation` set to `Horizontal`.
+### Hot Reload Keeps Values Your Code Set
 
-For more information see the [Behaviors](../gum-elements/behaviors/README.md#scrollbar-orientation) page.
+A [hot reload](../../code/debugging/hot-reload.md) now applies only the variables the project changed. Before, it applied the whole default state of a component instance, so a `Width` your code set on a tool-authored `Button` went back to the component's value on every reload. If your game relied on a reload resetting a code-set value, set it again in `HotReloadCompleted` or change the variable in the Gum project.
 
-### Code Generation Emits Variables Hidden From Instances
+## Rendering and Defaults
 
-Code generation now emits a variable that a control hides from its instances, unless a behavior reference drives that variable. For example, a `Window` instance that sets `ClipsChildren` now gets that line in generated code.
+### Default Font Is Liberation Sans
 
-Before this version, code generation skipped every hidden variable. The Gum tool still showed such a value and your game still loaded it, but generated code left it out.
+On MonoGame, KNI and FNA, text that never sets a font now draws with Liberation Sans instead of Arial. Glyph shapes differ slightly, a few characters are 1 pixel wider or narrower, and text is about 1 pixel shorter. Set an explicit font to keep a specific look.
 
-Variables driven by a behavior reference, such as a category state that follows `IsEnabled`, are still skipped, because the control sets them itself.
+### MonoGame Gradients Blend in Straight sRGB
 
-This affects you only if an instance sets a variable that its control now hides. A project from before the control hid the variable can hold one without you knowing. Such a variable appears in generated code the next time you generate.
+Gradients on MonoGame, KNI and FNA now blend in straight sRGB to match Skia and raylib. Mid-tones look darker than before, and no setting restores the old look.
 
-To migrate, regenerate your code and look at the changes. To drop a stale value, remove it from the instance in the tool.
+### Shape DropshadowBlur Defaults to 3
 
-### FullyInCode Forms Code Generation
+A shape whose project never sets `DropshadowBlur` now uses `3` on every runtime, the value the tool authors. It was `0` for the Arc, RoundedRectangle, ColoredCircle and Line on MonoGame, KNI and FNA, and for the Circle and Rectangle on raylib, so their dropshadows were hard-edged. To keep the hard edge, set it to `0`:
 
-After you regenerate Gum Forms code generated with **FullyInCode**, fix these errors if they appear:
-
-* `CS0111` on `ReactToVisualChanged`: your custom partial class overrides it, and generated code now does too. Move that code into `CustomInitialize`. `CustomInitialize` runs once, so code that must also run when `Visual` is replaced belongs in a class that derives from the component and overrides `ReactToVisualChanged`.
-* `CS0114` on `ApplyDefaultVariables` or `InitializeInstancesFromVisual`: a class you derived from a generated component declares a method with that name. Add `override` and call the base method first, or rename your method.
-
-### raylib and Sokol Repeat Held Keys With Gum's Timing
-
-On raylib and Sokol, holding a key such as an arrow, Backspace, or Delete now repeats after `RepeatDelay` (500 ms) at `RepeatRate` (70 ms), the same as MonoGame, KNI, FNA and the Skia hosts. Before this version these two hosts used the operating system's key repeat for `KeyTyped` and `KeysTyped`.
-
-Typed characters are not affected. They still repeat as the operating system repeats them. On raylib this includes the newline that Enter inserts into a multi-line `TextBox`.
-
-`IInputReceiverKeyboard` now declares `RepeatDelay` and `RepeatRate` (both `TimeSpan`, settable) as default members. A class that implements `IInputReceiverKeyboard` keeps compiling without them. Without an override the getters return 500 ms and 70 ms and the setters do nothing.
-
-This affects you only if you rely on the operating system's key repeat speed for arrow keys or other navigation keys on raylib or Sokol. To migrate, set `RepeatDelay` and `RepeatRate` on the keyboard to the values you want.
-
-On Windows and macOS, `Initialize` also starts `RepeatDelay` and `RepeatRate` from the system keyboard settings instead of 500 ms and 70 ms. On Windows the delay runs from 250 ms to 1 second and the speed from about 2.5 to 30 repeats per second. On macOS the settings are only present after the user has changed them in System Settings; otherwise the defaults apply. The system settings are read once, so a change made while the game runs is not picked up. Linux and other platforms keep 500 ms and 70 ms. To keep fixed values on every machine, set `RepeatDelay` and `RepeatRate` after `Initialize`.
-
-### Styled Text Reports Its Drawn Height
-
-Styled text that combines a [FontScale] or [FontSize] run with a LineHeightMultiplier other than 1 now reports its drawn height, because a size run is no longer multiplied: MonoGame, KNI, FNA and Raylib texts like this get shorter with a multiplier above 1 and taller with one below 1, so anything laid out around them shifts. In Skia, lines with a size run now use the same spacing at any multiplier, and a trailing newline adds its empty last line to the height. In Skia, text without a size or font run now measures exactly `LineHeightMultiplier` times its line height, where it was slightly off before, so anything laid out around it can shift by a pixel or two.
-
-### Raylib TTF Text Draws at Its FontSize
-
-On Raylib, text that uses a `.ttf` font without an `InMemoryFontCreator` such as KernSmith now draws so its em equals `FontSize`, the same size as on MonoGame and Skia. Before this version, Gum loaded these fonts at a fixed size of 24 whatever the text's `FontSize`, and sized them smaller than the other runtimes.
-
-Most text that uses a `.ttf` font now draws larger, and text with a `FontSize` other than 24 changes size to match it. Text that uses KernSmith or a `.fnt` font is unchanged.
-
-This affects you only if your Raylib game draws `.ttf` fonts without KernSmith. To migrate, run your game and check text and anything laid out around it. Lower `FontSize` where text is now too large.
+```csharp
+// Initialize
+var rectangle = new RectangleRuntime();
+rectangle.HasDropshadow = true;
+rectangle.DropshadowBlur = 0;
+```
 
 ### Skia Circle and Rectangle Obsolete Colors Set the Outline
 
-In SkiaSharp projects, the obsolete `Color`, `Red`, `Green`, `Blue` and `Alpha` properties on `CircleRuntime` and `RectangleRuntime` now color the outline, as they do on MonoGame and Raylib. Before this version they colored the fill on Skia.
-
-This affects you only if your Skia code sets one of these properties to color a filled shape. That shape now has a colored outline instead of a colored fill.
-
-To migrate, use `FillColor`, or `FillRed`, `FillGreen`, `FillBlue` and `FillAlpha`, for the fill. Use `StrokeColor` for the outline.
+In SkiaSharp projects, the obsolete `Color`, `Red`, `Green`, `Blue` and `Alpha` on `CircleRuntime` and `RectangleRuntime` now color the outline, as on MonoGame and Raylib. Before, they colored the fill. Use `FillColor` (or `FillRed`, `FillGreen`, `FillBlue`, `FillAlpha`) for the fill and `StrokeColor` for the outline.
 
 ❌ Old:
 
@@ -666,42 +522,17 @@ circle.Color = SkiaSharp.SKColors.Red;
 circle.FillColor = SkiaSharp.SKColors.Red;
 ```
 
-### Shape DropshadowBlur Defaults to 3
+### Raylib TTF Text Draws at Its FontSize
 
-A shape whose project never sets `DropshadowBlur` now uses a blur of `3` on every runtime, the value the Gum tool authors. Before this version, the default was `0` for the Arc, RoundedRectangle, ColoredCircle and Line on MonoGame, KNI and FNA, and for the Circle and Rectangle on raylib. Their dropshadows had a hard edge and now have a soft one.
+On Raylib, text using a `.ttf` font without an `InMemoryFontCreator` such as KernSmith now draws with its em equal to `FontSize`, as on MonoGame and Skia. Before, Gum loaded these fonts at a fixed size of 24. Most `.ttf` text now draws larger, and text with a `FontSize` other than 24 changes size. KernSmith and `.fnt` text is unchanged. Run your game and lower `FontSize` where text is now too large.
 
-This affects you only if your code creates these shapes and turns on a dropshadow without setting `DropshadowBlur`. To keep the hard edge, set it to `0`:
+### Styled Text Reports Its Drawn Height
 
-```csharp
-// Initialize
-var rectangle = new RectangleRuntime();
-rectangle.HasDropshadow = true;
-rectangle.DropshadowBlur = 0;
-```
-
-### Default Font Is Liberation Sans
-
-On MonoGame, KNI and FNA, text that never sets a font now draws with Liberation Sans instead of Arial. Glyph shapes differ slightly, a few characters are 1 pixel wider or narrower, and text is about 1 pixel shorter. Set an explicit font to keep a specific look.
-
-### MonoGame Gradients Blend in Straight sRGB
-
-Gradients on MonoGame, KNI and FNA now blend in straight sRGB to match Skia and raylib. Mid-tones look darker than before, and no setting restores the old look.
-
-### Skia Packages Require SkiaSharp 4
-
-`Gum.SkiaSharp`, `Gum.SkiaSharp.Maui`, and the Silk.NET and Stride Skia packages now depend on SkiaSharp `4.153.1`. The `Gum.Topten.RichTextKit` fork is retired, and Gum uses the stock `Topten.RichTextKit` package.
-
-This affects you if your own project references SkiaSharp. To migrate:
-
-1. Update your `SkiaSharp` and related packages (for example `SkiaSharp.Views`) to `4.153.1` so they match the version Gum brings in.
-2. Remove any reference to `Gum.Topten.RichTextKit`.
-3. Move your own drawing code off the members SkiaSharp 4 marks `[Obsolete]`: the `SKPath` mutators (use `SKPathBuilder`) and the `DrawBitmap` and `DrawImage` overloads that take no `SKSamplingOptions`.
+Styled text that combines a [FontScale] or [FontSize] run with a `LineHeightMultiplier` other than 1 now reports its drawn height. On MonoGame, KNI, FNA and Raylib it gets shorter with a multiplier above 1 and taller below 1. On Skia, lines with a size run use the same spacing at any multiplier, a trailing newline adds its empty line to the height, and text without a size or font run measures exactly `LineHeightMultiplier` times its line height. Anything laid out around such text can shift.
 
 ### Skia Render Target Shaders Read SpriteTexture
 
-A Skia `SourceShaderFile` in a `.sksl` file must now name its input `SpriteTexture`, the name MonoGame shaders use. Gum binds the container's rendered image to that name. Before this version the input was named `inputImage`, so drawing a container with a shader that still declares `inputImage` throws an `ArgumentOutOfRangeException` saying the variable `SpriteTexture` was not found.
-
-To migrate, rename the input in your shader, and every use of it:
+A Skia `SourceShaderFile` in a `.sksl` file must now name its input `SpriteTexture`, the name MonoGame shaders use, instead of `inputImage`. A shader that still declares `inputImage` throws an `ArgumentOutOfRangeException` saying `SpriteTexture` was not found. Rename the input and every use of it.
 
 ❌ Old:
 
@@ -721,132 +552,37 @@ half4 main(float2 coord) {
 }
 ```
 
-For more information see the [Container Runtime](../../code/standard-visuals/containerruntime.md) page.
+See [Container Runtime](../../code/standard-visuals/containerruntime.md).
+
+## Code Generation
+
+### Code Generation Emits Variables Hidden From Instances
+
+Code generation now emits a variable a control hides from its instances, unless a behavior reference drives it. For example, a `Window` instance that sets `ClipsChildren` now gets that line in generated code. Before, hidden variables were skipped, though the tool still showed the value and your game still loaded it. A project from before the control hid the variable can hold one you do not know about. Regenerate and review the changes, and remove stale values from the instance in the tool.
+
+### FullyInCode Forms Code Generation
+
+After you regenerate Gum Forms code generated with **FullyInCode**, fix these errors if they appear:
+
+* `CS0111` on `ReactToVisualChanged`: your partial class overrides it and generated code now does too. Move your code into `CustomInitialize`, which runs once. Code that must also run when `Visual` is replaced belongs in a class that derives from the component and overrides `ReactToVisualChanged`.
+* `CS0114` on `ApplyDefaultVariables` or `InitializeInstancesFromVisual`: a class you derived from a generated component declares a method with that name. Add `override` and call the base method first, or rename yours.
+
+### Unity Startup Hook Is Skipped When GUM_NO_UNITY_ENGINE Is Defined
+
+If you define `GUM_NO_UNITY_ENGINE` (for an assembly with **No Engine References**), generated code omits the `UnityEngine.RuntimeInitializeOnLoadMethod` hook and uses `[ModuleInitializer]` instead. Regenerate your code. Unity does not run `[ModuleInitializer]` methods, so call the generated `RegisterRuntimeType()` methods and `StandardElementsCodeGenRegistration.RegisterFallbackStandardElements()` yourself at startup. See [Unity](../../code/getting-started/setup/adding-initializing-gum/unity.md#generated-code-in-an-assembly-with-no-engine-references).
+
+## Packages
+
+### Skia Packages Require SkiaSharp 4
+
+`Gum.SkiaSharp`, `Gum.SkiaSharp.Maui`, and the Silk.NET and Stride Skia packages now depend on SkiaSharp `4.153.1`, and Gum uses the stock `Topten.RichTextKit` instead of the retired `Gum.Topten.RichTextKit` fork. If your project references SkiaSharp:
+
+1. Update `SkiaSharp` and related packages (for example `SkiaSharp.Views`) to `4.153.1`.
+2. Remove any reference to `Gum.Topten.RichTextKit`.
+3. Move your drawing code off members SkiaSharp 4 marks `[Obsolete]`: the `SKPath` mutators (use `SKPathBuilder`) and the `DrawBitmap` and `DrawImage` overloads without `SKSamplingOptions`.
 
 ### KernSmith.MonoGameGum No Longer References Desktop MonoGame
 
 `KernSmith.MonoGameGum` no longer brings in `MonoGame.Framework.DesktopGL`. If your app got MonoGame only through this package, add the MonoGame package for your platform.
 
-The `KernSmith.GumCommon` and `KernSmith.MonoGameGum` packages also add iOS and Android builds. These use the `StbTrueType` rasterizer by default instead of FreeType, and you can pass a backend to `GumFontGenerator` to choose another. When you build these projects from source, pass `-p:IncludeIOS=true` or `-p:IncludeAndroid=true` to include the mobile builds.
-
-### Generated Visuals Throw When Their Element Is Not Loaded
-
-At [syntax version 7](syntax-versions.md), a generated MonoGame, raylib, or Silk.NET runtime class throws an exception from its constructor when the loaded project has no element by its name. Before this, the constructor created an empty visual with no children.
-
-This affects you only if your code creates generated visuals before loading the Gum project, such as in unit tests. Load the project first.
-
-### References That Cannot Be Applied Are Reported
-
-A reference whose result does not fit the variable on the left is now reported, and the variable keeps its current value. This includes `NaN` or infinity into a `float` or `double` variable (before, some builds threw and others wrote the value), and with `Gum.Expressions` a `bool` or text into a number or a number outside the range of an `int` (before, silently dropped).
-
-`MinWidth`, `MaxWidth`, `MinHeight` and `MaxHeight` are the exception: `NaN` or infinity now means no limit, where `MinWidth` or `MinHeight` set to positive infinity gave an infinite size or threw.
-
-See [Casting and Type Considerations](../../code/styling/runtime-variable-references.md#casting-and-type-considerations).
-
-### SvgRuntime Throws When Its SVG Cannot Be Loaded
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-On MonoGame and KNI, an `SvgRuntime` whose `SourceFile` is missing or is not an SVG Gum can read now follows `MissingFileBehavior` like a Sprite image does. Before, it drew nothing and reported nothing. With the default `ThrowException`, assigning the file throws a `FileNotFoundException` naming it. The same applies to `ShapeSvgLoader.Load`.
-
-Fix the path, or set `ConsumeSilently` as described for [SkiaGum](#skiagum-throws-when-a-file-is-missing-or-an-image-cannot-be-decoded). The `SvgRuntime` then has a null `Texture` and `PropertyAssignmentError` is raised with the file name.
-
-### A Hidden Control Refuses Focus
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-Setting `IsFocused` to `true` on a control that is not visible, because it or any of its parents has `IsVisible` set to `false`, now leaves `IsFocused` as `false`. A hidden control cannot take focus, the same as a disabled one. Gamepad, keyboard, and tab navigation already skipped hidden controls.
-
-This affects you only if your code sets `IsFocused` before it shows the control. Show the control first, then focus it.
-
-❌ Old:
-```csharp
-// Initialize
-okButton.IsFocused = true;
-dialog.IsVisible = true;
-```
-
-✅ New:
-```csharp
-// Initialize
-dialog.IsVisible = true;
-okButton.IsFocused = true;
-```
-
-### ListBox Left and Right No Longer Step a Vertical List
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-When a `ListBox` has item-level focus (`DoListItemsHaveFocus` is `true`), the axis the list does not use now leaves the list, like the perpendicular axis of a `Slider`. In a vertical list, left and right used to act as up and down on the d-pad and left stick. In a horizontal list, up and down used to act as left and right. Now they do what they do when the list has top-level focus: with `GamepadNavigationMode.Spatial` focus moves to the nearest control in that direction, with the default tab order left and up move to the previous control and right and down move to the next. An explicit `SpatialNavigationLeft`, `SpatialNavigationRight`, `SpatialNavigationUp` or `SpatialNavigationDown` on the `ListBox` is honored. Leaving sets `DoListItemsHaveFocus` to `false` and keeps `SelectedIndex`.
-
-This affects you if players stepped through a vertical list with left and right, or through a horizontal list with up and down. Use the list's own axis instead. The up and down arrow keys, a wrapping list, and the drop-down list of a `ComboBox` are unchanged.
-
-### Hot Reload Keeps Values Your Code Set
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-A [hot reload](../../code/debugging/hot-reload.md) now applies only the variables the project changed. Before, it applied the whole default state of a component instance, so a `Width` your code set on a tool-authored `Button` went back to the component's value on every reload, while the same `Width` on a plain `ColoredRectangle` stayed. Now both keep the value your code set until the project changes that variable.
-
-This affects you if your game relied on a reload resetting a value it set in code. Set the value again in `HotReloadCompleted`, or change the variable in the Gum project.
-
-### SourceShaderFile Needs a Shader Resolver
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-A container whose `SourceShaderFile` is set now fails to load unless a shader resolver handles the file. Before, MonoGame, KNI, FNA and raylib rendered the container without the shader and reported nothing. Now the assignment fails like a missing file, so with the default `MissingFileBehavior` of `ThrowException` it throws a `FileNotFoundException` while the project loads. This includes a container with `IsRenderTarget` set to `false`.
-
-This affects you if a container in your project has a `SourceShaderFile` and your game registered no resolver for it. Add the ShadowDusk package for your runtime (`Gum.MonoGame.ShadowDusk`, `Gum.KNI.ShadowDusk`, `Gum.FNA.ShadowDusk`, or `Gum.raylib.ShadowDusk`) and call `UseShadowDusk()` once at startup, after `Initialize` and before any element or screen that uses a `SourceShaderFile` is created. The file fails at assignment, and a later `UseShadowDusk()` does not retry it. See [Loading Shader Files With SourceShaderFile](../../code/standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
-
-❌ Old:
-
-```csharp
-// Initialize
-GumUI.Initialize(this);
-// The screen's SourceShaderFile silently rendered unshaded.
-```
-
-✅ New:
-
-```csharp
-// Initialize
-GumUI.Initialize(this);
-GumUI.UseShadowDusk();
-```
-
-To keep the old behavior of rendering without the shader, set `MissingFileBehavior` after Gum initializes. The error is then reported through `PropertyAssignmentError`:
-
-```csharp
-// Initialize
-Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
-    Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
-```
-
-### RollOff Is Raised Before RollOn
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-When the cursor moves straight from one `InteractiveGue` to another, `RollOff` is now raised on the old element before `RollOn` on the new one. Before, `RollOn` came first. Handlers that set state on `RollOn` and clear it on `RollOff` now work when the cursor crosses between elements.
-
-This affects you if a handler assigns `cursor.VisualOver`. Because `RollOff` runs first, a `RollOn` handler in the same frame now sees the value a `RollOff` handler assigned. It also affects any code that relied on `RollOn` running first.
-
-### Unity Startup Hook Is Skipped When GUM_NO_UNITY_ENGINE Is Defined
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-Generated code now omits the `UnityEngine.RuntimeInitializeOnLoadMethod` startup hook when `GUM_NO_UNITY_ENGINE` is defined, and uses `[ModuleInitializer]` instead. This lets generated code compile in a Unity assembly with **No Engine References**, which defines `UNITY_5_3_OR_NEWER` but cannot see `UnityEngine`.
-
-This affects you only if you define `GUM_NO_UNITY_ENGINE`. Regenerate your code from the Gum tool. Unity does not run `[ModuleInitializer]` methods, so call the generated `RegisterRuntimeType()` methods and `StandardElementsCodeGenRegistration.RegisterFallbackStandardElements()` yourself at startup. See [Unity](../../code/getting-started/setup/adding-initializing-gum/unity.md#generated-code-in-an-assembly-with-no-engine-references).
+`KernSmith.GumCommon` and `KernSmith.MonoGameGum` also add iOS and Android builds, which use the `StbTrueType` rasterizer by default. Pass a backend to `GumFontGenerator` to choose another. To include the mobile builds when building from source, pass `-p:IncludeIOS=true` or `-p:IncludeAndroid=true`.
