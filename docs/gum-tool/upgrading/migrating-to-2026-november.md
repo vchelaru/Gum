@@ -182,6 +182,60 @@ This affects you only if you wrote a plugin or tool that references `OutputLibra
 
 To migrate, rename `OutputLibrary.MonoGameForms` to `OutputLibrary.GumForms`.
 
+### XNA Keys Keyboard Overloads Are Obsolete
+
+On MonoGame, KNI and FNA, the `Keyboard` methods `KeyDown`, `KeyPushed`, `KeyReleased` and `KeyTyped` that take the XNA `Keys` are now `[Obsolete]`, as are the same four methods on `IInputReceiverKeyboardMonoGame` and `XnaKeyboardExtensions`. Each reports `CS0618`. They become errors no earlier than March 2027 and are removed no earlier than July 2027.
+
+To migrate, call the overload that takes `Gum.Forms.Input.Keys`. Write the type with its full name, because a file that imports `Microsoft.Xna.Framework.Input` makes a bare `Keys` ambiguous.
+
+❌ Old:
+
+```csharp
+// Update
+if (GumService.Default.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
+{
+    Jump();
+}
+```
+
+✅ New:
+
+```csharp
+// Update
+if (GumService.Default.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
+{
+    Jump();
+}
+```
+
+### ViewModel.ChangeAndNotify Is Obsolete
+
+`ViewModel.ChangeAndNotify` is now `[Obsolete]` and reports `CS0618`. It keeps working, and Gum keeps it until at least October 2027. Use `Set(ref field, value)`, which also watches the contents of a collection property.
+
+❌ Old:
+
+```csharp
+// Class scope
+string _name;
+public string Name
+{
+    get => _name;
+    set => ChangeAndNotify(ref _name, value);
+}
+```
+
+✅ New:
+
+```csharp
+// Class scope
+string _name;
+public string Name
+{
+    get => _name;
+    set => Set(ref _name, value);
+}
+```
+
 ### Code Generation Updates Legacy Using Statements
 
 Code generation copies the **Project-wide Using Statements** and an element's **Using Statements** into generated files. A project that saved `using MonoGameGum.GueDeriving;` there used to get the old namespace back in every generated file, even when the rest of the generated code used the unified names.
@@ -344,7 +398,7 @@ For more information see the [Wraps Children](../gum-elements/container/wraps-ch
 
 ### Wrapping Stacks Position Children Within Their Row or Column
 
-A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis for positioning:
+In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis for positioning:
 
 * In a `Left to Right Stack`, a child's `Y Units` and `Y Origin` position it within its row.
 * In a `Top to Bottom Stack`, a child's `X Units` and `X Origin` position it within its column.
@@ -366,6 +420,22 @@ This affects you only if a child of a wrapping stack uses units other than the d
 To migrate, open your screens and components in the Gum tool and check any wrapping stacks whose children use these units. If you want a child placed relative to the whole stack, move it out of the stack into a container that does not stack.
 
 For more information see the [Wraps Children](../gum-elements/container/wraps-children.md#positioning-children-within-a-row-or-column) page.
+
+### Wrapping Stacks With Negative Padding Keep Their Measured Rows
+
+A wrapping stack that sizes itself to its children (`Relative to Children` or `Relative to Max of Children or Parent`) now breaks rows where it measured them. With negative padding, a row hangs past the edge of the stack instead of wrapping again, the way content hangs past the edge of a stack without `Wraps Children`.
+
+For example, children that are `100`, `90`, and `50` wide in a `Left to Right Stack` with a `Width` of `-20` and a `Max Width` of `200` used to lay out as `[100]` and `[90, 50]` in a stack `170` wide. They now lay out as `[100, 90]` and `[50]`, with the `90` wide child hanging `20` past the edge. With no max, nothing wraps, where the `50` wide child used to move to a new row. Positive padding is unchanged.
+
+This affects you only if a wrapping stack sized to its children uses negative padding. To migrate, open your screens and components in the Gum tool and check these stacks. If you want the old rows, raise the padding to `0` or lower the max.
+
+### Fixed Size AutoGrids Overflow Instead of Packing Extra Rows
+
+An `Auto Grid Horizontal` or `Auto Grid Vertical` with a fixed size on the axis that grows now lets extra children spill outside the grid. Before this version, a grid with more children than cells squeezed the extra rows into its bounds, but each child kept the full cell size, so the children overlapped.
+
+A grid sized with `Relative to Children` on that axis still adds rows to hold its children.
+
+This affects you only if a fixed size grid holds more children than `Auto Grid Horizontal Cells` times `Auto Grid Vertical Cells`. To migrate, raise the cell counts to hold every child, or set the grid to `Relative to Children` on the axis that grows.
 
 ### Containers Count a Child's Min When It Uses Relative to Max of Children or Parent
 
@@ -595,6 +665,55 @@ circle.Color = SkiaSharp.SKColors.Red;
 // Initialize
 circle.FillColor = SkiaSharp.SKColors.Red;
 ```
+
+### Shape DropshadowBlur Defaults to 3
+
+A shape whose project never sets `DropshadowBlur` now uses a blur of `3` on every runtime, the value the Gum tool authors. Before this version, the default was `0` for the Arc, RoundedRectangle, ColoredCircle and Line on MonoGame, KNI and FNA, and for the Circle and Rectangle on raylib. Their dropshadows had a hard edge and now have a soft one.
+
+This affects you only if your code creates these shapes and turns on a dropshadow without setting `DropshadowBlur`. To keep the hard edge, set it to `0`:
+
+```csharp
+// Initialize
+var rectangle = new RectangleRuntime();
+rectangle.HasDropshadow = true;
+rectangle.DropshadowBlur = 0;
+```
+
+### Skia Packages Require SkiaSharp 4
+
+`Gum.SkiaSharp`, `Gum.SkiaSharp.Maui`, and the Silk.NET and Stride Skia packages now depend on SkiaSharp `4.153.1`. The `Gum.Topten.RichTextKit` fork is retired, and Gum uses the stock `Topten.RichTextKit` package.
+
+This affects you if your own project references SkiaSharp. To migrate:
+
+1. Update your `SkiaSharp` and related packages (for example `SkiaSharp.Views`) to `4.153.1` so they match the version Gum brings in.
+2. Remove any reference to `Gum.Topten.RichTextKit`.
+3. Move your own drawing code off the members SkiaSharp 4 marks `[Obsolete]`: the `SKPath` mutators (use `SKPathBuilder`) and the `DrawBitmap` and `DrawImage` overloads that take no `SKSamplingOptions`.
+
+### Skia Render Target Shaders Read SpriteTexture
+
+A Skia `SourceShaderFile` in a `.sksl` file must now name its input `SpriteTexture`, the name MonoGame shaders use. Gum binds the container's rendered image to that name. Before this version the input was named `inputImage`, so a shader that still uses that name no longer receives the image.
+
+To migrate, rename the input in your shader, and every use of it:
+
+❌ Old:
+
+```glsl
+uniform shader inputImage;
+half4 main(float2 coord) {
+    return inputImage.eval(coord);
+}
+```
+
+✅ New:
+
+```glsl
+uniform shader SpriteTexture;
+half4 main(float2 coord) {
+    return SpriteTexture.eval(coord);
+}
+```
+
+For more information see the [Container Runtime](../../code/standard-visuals/containerruntime.md) page.
 
 ### KernSmith.MonoGameGum No Longer References Desktop MonoGame
 
