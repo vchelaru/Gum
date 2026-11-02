@@ -19,9 +19,7 @@ Anything you can't resolve mid-draft, capture in the `## Open Questions` block a
 Before doing any work, ask the user (in a single message, as a numbered list — they can answer all at once):
 
 1. **Release tag / date.** What's the release tag name? (e.g. `Release_April_29_2026`) The skill uses this to name the output file and to draft the Full Changelog placeholder.
-2. **Previous-release boundary.** What should I diff against? The user may give a tag (`PreRelease_March_26_2026`), a commit hash, a date, or a `compare/...` URL. If they have no preference, propose the most recent tag from `gh release list --repo vchelaru/Gum --limit 5` and ask them to confirm.
-
-   **Always cross-check the boundary against `gh release list`.** If a newer published release exists between the user's boundary and `main`, flag it before proceeding — using the older boundary will double-count PRs that already shipped in the newer release. Show the user the newer tag, list how many PRs it would absorb, and ask which boundary to use. Do **not** silently accept a stale boundary, even if the user supplied a `compare/...` URL with it.
+2. **Previous-release boundary: do not ask.** It is always the previous full release, the newest `Release_*` tag from `gh release list --repo vchelaru/Gum --exclude-pre-releases --limit 1`, never a `PreRelease_*` tag. Pre-releases are builds of the same range for opt-in users, and the stable notes cover everything stable users have not seen. Name the tag you used in the draft. Only a boundary the user volunteers changes this.
 3. **Breaking-changes migration doc URL.** Is there one for this month? (e.g. `https://docs.flatredball.com/gum/gum-tool/upgrading/migrating-to-2026-april`) If none, the Breaking Changes section is omitted.
 
 Wait for answers before proceeding. If they answer some but not others, ask the rest.
