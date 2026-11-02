@@ -185,6 +185,13 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 return;
             }
 
+            if (DividesByZero(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot))
+            {
+                failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                    "The right side divides by zero. Check the divisor (the value after / or %), including variables that are currently 0")));
+                return;
+            }
+
             failures.Add((line, GeneralResponse.UnsuccessfulWith(
                 $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?")));
             return;
@@ -215,6 +222,26 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             failures.Add((line, typeMatchResponse));
         }
+    }
+
+    private static bool DividesByZero(SyntaxNode rightSide, StateSave state, GraphicalUiElement? liveRoot)
+    {
+        foreach (BinaryExpressionSyntax binary in rightSide.DescendantNodesAndSelf().OfType<BinaryExpressionSyntax>())
+        {
+            if (!binary.OperatorToken.IsKind(SyntaxKind.SlashToken) && !binary.OperatorToken.IsKind(SyntaxKind.PercentToken))
+            {
+                continue;
+            }
+
+            object? divisor = EvaluatedSyntax.FromSyntaxNode(binary.Right, state, liveRoot: liveRoot)?.Value;
+            if (divisor is sbyte or byte or short or ushort or int or uint or long or ulong or float or double or decimal
+                && Convert.ToDouble(divisor) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void CommentFailures(VariableListSave newDirectValue, List<(string, GeneralResponse)> failures)

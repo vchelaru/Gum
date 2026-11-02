@@ -894,6 +894,78 @@ public class VariableReferenceLogicTests : BaseTestClass
         shownMessage.ShouldContain("computed from the layout");
     }
 
+    [Theory]
+    [InlineData("Width = 5 / 0")]
+    [InlineData("Width = 5.0 / 0")]
+    [InlineData("Width = 5 / Zero")]
+    [InlineData("Width = 5 / ZeroInt")]
+    [InlineData("Width = 5 % 0")]
+    [InlineData("Width = 5 % Zero")]
+    [InlineData("Width = 5 / (Zero - Zero)")]
+    [InlineData("Width = 5 + 3 / Zero")]
+    public void DoVariableReferenceReaction_DividingByZero_CommentsLineAndSaysDivisionByZero(string line)
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage(line, out VariableListSave<string> varList);
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("divides by zero");
+    }
+
+    [Theory]
+    [InlineData("Width = 5 / 2")]
+    [InlineData("Width = 5 % 2")]
+    [InlineData("Width = 5 / (Zero + 1)")]
+    public void DoVariableReferenceReaction_DividingByNonZero_KeepsLine(string line)
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage(line, out VariableListSave<string> varList);
+
+        varList.Value[0].ShouldBe(line);
+        shownMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_MissingVariableOnRightSide_KeepsGenericMessage()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = 5 / Missing", out VariableListSave<string> varList);
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("cannot be evaluated");
+        shownMessage.ShouldNotContain("divides by zero");
+    }
+
+    private string? ReactToLineAndGetShownMessage(string line, out VariableListSave<string> varList)
+    {
+        GumExpressionService.Initialize();
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(line, out StateSave defaultState, out varList);
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        defaultState.Variables.Add(new VariableSave { Name = "Zero", SetsValue = true, Value = 0f, Type = "float", IsCustomVariable = true });
+        defaultState.Variables.Add(new VariableSave { Name = "ZeroInt", SetsValue = true, Value = 0, Type = "int", IsCustomVariable = true });
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+        string? shownMessage = null;
+        _dialogServiceMock.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shownMessage = message);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+        postedAction?.Invoke();
+
+        return shownMessage;
+    }
+
     [Fact]
     public void DoVariableReferenceReaction_FunctionCallOnRightSide_EvaluatesAndKeepsLine()
     {
