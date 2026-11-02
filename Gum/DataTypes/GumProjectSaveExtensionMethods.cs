@@ -388,12 +388,12 @@ namespace Gum.DataTypes
         {
             // The project is searched directly, not through ObjectFinder, because the headless loader and
             // the runtimes call Initialize before (or without) pointing ObjectFinder at the project.
-            bool wasAnythingAdded = RepairMissingBaseInstances(gumProjectSave.Screens, repairs);
-            wasAnythingAdded |= RepairMissingBaseInstances(gumProjectSave.Components, repairs);
+            bool wasAnythingAdded = RepairMissingBaseInstances(gumProjectSave, gumProjectSave.Screens, repairs);
+            wasAnythingAdded |= RepairMissingBaseInstances(gumProjectSave, gumProjectSave.Components, repairs);
             return wasAnythingAdded;
         }
 
-        private static bool RepairMissingBaseInstances<T>(List<T> elements, List<MissingBaseInstanceRepair>? repairs) where T : ElementSave
+        private static bool RepairMissingBaseInstances<T>(GumProjectSave project, List<T> elements, List<MissingBaseInstanceRepair>? repairs) where T : ElementSave
         {
             Dictionary<string, ElementSave>? elementsByName = null;
             bool wasAnythingAdded = false;
@@ -442,6 +442,10 @@ namespace Gum.DataTypes
                     continue;
                 }
 
+                // The repair below is always applied, but a broken chain (a loop, a base with no BaseType or an
+                // unknown one) already has its own error, so it is not also reported as an out-of-date file.
+                bool isChainValid = repairs != null && IsBaseChainValid(project, elementsByName, current);
+
                 // A missing instance goes right after the previous inherited instance the element holds (at the
                 // front when none precedes it), so base instances end up in the base's order ahead of the
                 // element's own, and everything already present keeps its relative order.
@@ -462,12 +466,32 @@ namespace Gum.DataTypes
                         element.Instances.Insert(insertIndex, instance);
                         insertIndex++;
                         wasAnythingAdded = true;
-                        repairs?.Add(new MissingBaseInstanceRepair(element, instanceInBase.Name, instanceInBase.BaseType, ownerNames![instanceInBase]));
+                        if (isChainValid)
+                        {
+                            repairs!.Add(new MissingBaseInstanceRepair(element, instanceInBase.Name, instanceInBase.BaseType, ownerNames![instanceInBase]));
+                        }
                     }
                 }
             }
 
             return wasAnythingAdded;
+        }
+
+        // The walk up from an element stopped at last. The chain is sound when it ends at a screen with no BaseType
+        // or at a standard element; it is not when it stopped on a loop, on a component with no BaseType or on an unknown name.
+        private static bool IsBaseChainValid(GumProjectSave project, Dictionary<string, ElementSave> elementsByName, ElementSave last)
+        {
+            if (string.IsNullOrWhiteSpace(last.BaseType))
+            {
+                return last is ScreenSave;
+            }
+
+            if (elementsByName.ContainsKey(last.BaseType))
+            {
+                return false;
+            }
+
+            return project.StandardElements.Any(standard => string.Equals(standard.Name, last.BaseType, StringComparison.OrdinalIgnoreCase));
         }
 
         private static int IndexOfInstance(ElementSave element, string name)

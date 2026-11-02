@@ -97,5 +97,65 @@ public class CheckMissingBaseInstanceTests : CheckHandWrittenFileHarness
         entry.Element.ShouldBe("DerivedScreen");
     }
 
+    [Fact]
+    public void Check_DerivedInstanceDiffersOnlyByCase_ShouldStillReportGum0016()
+    {
+        // Instance names are case-sensitive everywhere in Gum (GetInstance, FindByName, GUM0020), so
+        // "textinstance" is a different instance and the base's "TextInstance" is still missing.
+        string project = CreateButtonProject("CaseDiffers",
+            DefaultState() + Instance("textinstance", "Text", definedByBase: true) + Instance("Background", "NineSlice", definedByBase: true));
+
+        CheckEntry entry = Check(project).Entries.ShouldHaveSingleItem();
+
+        entry.Code.ShouldBe("GUM0016");
+        entry.Message.ShouldContain("'TextInstance'");
+    }
+
+    [Fact]
+    public void Check_CircularBaseTypes_ShouldNotReportGum0016()
+    {
+        string project = CreateProject("CircularBases");
+        AddComponent(project, "A", "B", DefaultState() + Instance("Child", "Text"));
+        AddComponent(project, "B", "A", DefaultState());
+
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0016");
+    }
+
+    [Fact]
+    public void Check_BaseWithoutBaseType_ShouldReportGum0015ButNotGum0016()
+    {
+        string project = CreateProject("BaseHasNoBase");
+        AddComponent(project, "Orphan", null, DefaultState() + Instance("Child", "Text"));
+        AddComponent(project, "Kid", "Orphan", DefaultState());
+
+        List<CheckEntry> entries = Check(project).Entries.ToList();
+
+        entries.ShouldContain(e => e.Code == "GUM0015");
+        entries.ShouldNotContain(e => e.Code == "GUM0016");
+    }
+
+    [Fact]
+    public void Check_BaseWithUnknownBaseType_ShouldNotReportGum0016()
+    {
+        string project = CreateProject("BaseHasUnknownBase");
+        AddComponent(project, "Mid", "DoesNotExist", DefaultState() + Instance("Child", "Text"));
+        AddComponent(project, "Kid", "Mid", DefaultState());
+
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0016");
+    }
+
+    [Fact]
+    public void Resave_StaleDerivedFile_ShouldWriteTheBaseInstanceSoCheckNoLongerWarns()
+    {
+        string project = CreateButtonProject("ResaveStale", DefaultState());
+        string derivedFile = Path.Combine(Path.GetDirectoryName(project)!, "Components", "MyButton.gucx");
+        File.ReadAllText(derivedFile).ShouldNotContain("TextInstance");
+
+        CliTestHelper.Run("resave", project).ExitCode.ShouldBe(0);
+
+        File.ReadAllText(derivedFile).ShouldContain("TextInstance");
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0016");
+    }
+
     #endregion
 }

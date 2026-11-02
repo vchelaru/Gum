@@ -115,7 +115,7 @@ Available in November 2026, or now if building Gum from source.
 
 ### Missing Base Instance (GUM0016)
 
-A component that derives from another component must list each of the base's instances with `<DefinedByBase>true</DefinedByBase>`. When a hand-written or out-of-date file leaves one out, Gum adds the instance in memory at load, so nothing breaks, but the file on disk is stale. `gumcli check` reports **GUM0016** as a warning naming the missing instance.
+A screen or component that derives from another must list each of the base's instances with `<DefinedByBase>true</DefinedByBase>`. When a hand-written or out-of-date file leaves one out, Gum adds the instance in memory at load, so nothing breaks, but the file on disk is stale. `gumcli check` reports **GUM0016** as a warning naming the missing instance.
 
 To resolve it, add an `<Instance>` with that name and `<DefinedByBase>true</DefinedByBase>` to the file, or run `gumcli resave` to write it.
 
