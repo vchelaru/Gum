@@ -34,13 +34,16 @@ public sealed class FreezeDiagnosticsInbox : IFreezeDiagnosticsInbox
     public bool BeginSession()
     {
         bool wasDirty = File.Exists(_sentinelPath);
-        Directory.CreateDirectory(DirectoryPath);
-        File.WriteAllText(_sentinelPath, "");
+        BestEffortFile.TryRun(() =>
+        {
+            Directory.CreateDirectory(DirectoryPath);
+            File.WriteAllText(_sentinelPath, "");
+        });
         return wasDirty;
     }
 
     /// <inheritdoc/>
-    public void EndSessionCleanly() => File.Delete(_sentinelPath);
+    public void EndSessionCleanly() => BestEffortFile.TryRun(() => File.Delete(_sentinelPath));
 
     /// <inheritdoc/>
     public IReadOnlyList<string> GetUnreportedFiles()
