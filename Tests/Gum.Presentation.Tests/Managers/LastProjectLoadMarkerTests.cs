@@ -35,6 +35,38 @@ public class LastProjectLoadMarkerTests : IDisposable
     }
 
     [Fact]
+    public void MarkStartedClearAndRead_WhenAnotherProcessHoldsTheFile_DoNotThrow()
+    {
+        // Another running Gum has the marker open with no sharing.
+        Directory.CreateDirectory(_folder);
+        string path = Path.Combine(_folder, "LoadingLastProject.txt");
+        using FileStream otherInstance = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+        var marker = new LastProjectLoadMarker(() => _folder);
+
+        Should.NotThrow(() => marker.MarkStarted("c:/projects/Game.gumx"));
+        Should.NotThrow(() => marker.Clear());
+        Should.NotThrow(() => _ = marker.InterruptedProject);
+    }
+
+    [Fact]
+    public void MarkStarted_WhenTheFileIsBrieflyHeld_RetriesAndWrites()
+    {
+        Directory.CreateDirectory(_folder);
+        string path = Path.Combine(_folder, "LoadingLastProject.txt");
+        FileStream other = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+        var marker = new LastProjectLoadMarker(() => _folder);
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            System.Threading.Thread.Sleep(60);
+            other.Dispose();
+        });
+
+        marker.MarkStarted("c:/projects/Game.gumx");
+
+        marker.InterruptedProject.ShouldBe("c:/projects/Game.gumx");
+    }
+
+    [Fact]
     public void MarkStarted_CreatesTheSettingsFolder_WhenMissing()
     {
         var marker = new LastProjectLoadMarker(() => _folder);

@@ -45,6 +45,7 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
+    <Compile Include="..\Shared\FreezeGuard.cs" Link="Shared\FreezeGuard.cs" />
     <Compile Include="..\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
     <Compile Include="..\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
     <Compile Include="..\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />

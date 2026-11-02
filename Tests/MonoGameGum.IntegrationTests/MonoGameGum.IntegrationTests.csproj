@@ -34,6 +34,8 @@
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<ProjectReference Include="..\Gum.Automation\Gum.Automation.csproj" />
 		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+		<!-- The Gum.MonoGame.ShadowDusk package: GumService.UseShadowDusk() (#7053). -->
+		<ProjectReference Include="..\..\Runtimes\GumShadowDusk\MonoGameGum.ShadowDusk.csproj" />
 		<!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
 		     generation -> MonoGame Texture2D upload -> BitmapFont), mirroring RaylibGum.Tests. -->
 		<ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
@@ -84,6 +86,7 @@
     <Compile Include="..\Shared\GraphicalUiElementStateAssert.cs" Link="Shared\GraphicalUiElementStateAssert.cs" />
     <Compile Include="..\Shared\CrossRuntime\NineSliceCases.cs" Link="Shared\CrossRuntime\NineSliceCases.cs" />
 		<Compile Include="..\Shared\CrossRuntime\NineSliceKnownDifferences.cs" Link="Shared\CrossRuntime\NineSliceKnownDifferences.cs" />
+		<Compile Include="..\Shared\CrossRuntime\NineSliceOutlineOracle.cs" Link="Shared\CrossRuntime\NineSliceOutlineOracle.cs" />
   </ItemGroup>
 
 </Project>

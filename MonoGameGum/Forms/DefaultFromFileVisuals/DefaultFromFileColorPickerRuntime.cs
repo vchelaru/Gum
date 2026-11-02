@@ -14,6 +14,7 @@ public class DefaultFromFileColorPickerRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new ColorPicker(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
     public ColorPicker? FormsControl => FormsControlAsObject as ColorPicker;

@@ -14,6 +14,7 @@ public class DefaultFromFileTooltipRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new Tooltip(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
     public Tooltip? FormsControl => FormsControlAsObject as Tooltip;

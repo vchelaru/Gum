@@ -7,6 +7,7 @@ using System.Linq;
 using Gum.DataTypes;
 using Gum.Bundle;
 using Gum.Expressions;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.ProjectServices;
 
@@ -37,6 +38,11 @@ public static class PackCommand
             getDefaultValue: () => "core,fontcache,external",
             description: "Comma-separated categories to include. Valid values: core, fontcache, external.");
 
+        var premultipliedAlphaOption = new Option<bool>(
+            aliases: new[] { "--premultiplied-alpha" },
+            description: "Store PNG textures with premultiplied alpha, for games that set Renderer.UsePremultipliedAlpha " +
+                "to true and for SkiaGum. Off by default (straight alpha).");
+
         var shakeOption = new Option<bool>(
             aliases: new[] { "--shake" },
             description: "Leave out every Screen and Component that no Screen or root reaches, with the files only they use.");
@@ -61,6 +67,7 @@ public static class PackCommand
             projectArgument,
             outputOption,
             includeOption,
+            premultipliedAlphaOption,
             shakeOption,
             rootsOption,
             keepOption,
@@ -72,12 +79,13 @@ public static class PackCommand
             string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
             string? outputPath = context.ParseResult.GetValueForOption(outputOption);
             string includeFlags = context.ParseResult.GetValueForOption(includeOption) ?? "core,fontcache,external";
+            bool premultipliedAlpha = context.ParseResult.GetValueForOption(premultipliedAlphaOption);
             ShakeOptions shake = new ShakeOptions(
                 context.ParseResult.GetValueForOption(shakeOption),
                 context.ParseResult.GetValueForOption(rootsOption) ?? Array.Empty<string>(),
                 context.ParseResult.GetValueForOption(keepOption) ?? Array.Empty<string>(),
                 context.ParseResult.GetValueForOption(rootsAssemblyOption) ?? Array.Empty<string>());
-            context.ExitCode = Execute(projectPath, outputPath, includeFlags, shake);
+            context.ExitCode = Execute(projectPath, outputPath, includeFlags, premultipliedAlpha, shake);
         });
 
         return command;
@@ -85,7 +93,8 @@ public static class PackCommand
 
     private sealed record ShakeOptions(bool Enabled, string[] RootFiles, string[] Keep, string[] RootAssemblies);
 
-    private static int Execute(string projectPath, string? outputPath, string includeFlags, ShakeOptions shake)
+    private static int Execute(string projectPath, string? outputPath, string includeFlags, bool premultipliedAlpha,
+        ShakeOptions shake)
     {
         string fullPath = Path.GetFullPath(projectPath);
 
@@ -147,7 +156,10 @@ public static class PackCommand
             }
         }
 
-        GumProjectDependencyWalker walker = new GumProjectDependencyWalker();
+        GumProjectDependencyWalker walker = new GumProjectDependencyWalker
+        {
+            FontTranslationsOf = ProjectTranslations.CreateLookup(project)
+        };
         WalkResult walkResult = walker.Walk(project, projectDirectory, inclusion,
             reachability == null ? null : new HashSet<string>(reachability.KeptElementNames, StringComparer.OrdinalIgnoreCase));
 
@@ -191,6 +203,19 @@ public static class PackCommand
             {
                 bytes = WriteProjectWithoutTrimmedElements(project, fullPath, reachability.TrimmedElementNames);
             }
+
+            if (IsPng(relativePath))
+            {
+                try
+                {
+                    bytes = ToRawTexture(bytes, premultipliedAlpha);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"error: could not decode PNG {relativePath}: {ex.Message}");
+                    return 1;
+                }
+            }
             entries.Add((relativePath, bytes));
             uncompressedBytes += bytes.Length;
         }
@@ -219,6 +244,30 @@ public static class PackCommand
         Console.WriteLine($"Ratio:           {ratio:F1}%");
 
         return 0;
+    }
+
+    private static bool IsPng(string relativePath) =>
+        string.Equals(Path.GetExtension(relativePath), ".png", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Decodes a PNG to straight RGBA with StbImageSharp (the decoder behind MonoGame's and KNI's
+    /// Texture2D.FromStream, so the pixels match a loose-file load) and stores it as a raw texture,
+    /// premultiplied or with the transparent-edge bleed baked, so the runtime uploads it as-is.
+    /// </summary>
+    private static byte[] ToRawTexture(byte[] png, bool premultiply)
+    {
+        StbImageSharp.ImageResult image =
+            StbImageSharp.ImageResult.FromMemory(png, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
+        byte[] rgba = image.Data;
+        if (premultiply)
+        {
+            global::RenderingLibrary.Content.RgbaPixels.Premultiply(rgba);
+        }
+        else
+        {
+            global::RenderingLibrary.Content.RgbaPixels.BleedTransparentEdges(rgba, image.Width, image.Height);
+        }
+        return GumRawTexture.Encode(image.Width, image.Height, rgba, premultiply);
     }
 
     private static bool TryReadRoots(ShakeOptions shake, out List<string> roots, out string? error)

@@ -76,6 +76,10 @@ public class FormsThemesTemplateTests
         "FormsThemes/Meadow", "FormsThemes/Neon", "FormsThemes/Retro95"
     };
 
+    // The Standard template ships no FontCache; its text resolves through the runtime font creator.
+    public static IEnumerable<object[]> ThemeFolders =>
+        AllTemplateFolders.Where(folder => folder != "FormsTemplate").Select(folder => new object[] { folder });
+
     public static IEnumerable<object[]> TemplateFolders => AllTemplateFolders.Select(folder => new object[] { folder });
 
     public static IEnumerable<object[]> TemplateFoldersAndSubfolders =>
@@ -125,6 +129,30 @@ public class FormsThemesTemplateTests
 
         inManifest.ShouldBe(GetElementNamesOnDisk(templateDir, subfolder, extension),
             $"FormsTemplate/{subfolder}: manifest.txt vs files on disk");
+    }
+
+    // A new project never ships sample screens beyond the demo screen: Add Forms, gumcli new and the
+    // New Project dialog all copy these folders (#7244).
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void Screens_ShouldBeOnlyTheDemoScreen(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        string templateDir = GetTemplateDir(templateFolder);
+        GumProjectSave project = new ProjectLoader().Load(Path.Combine(templateDir, "GumProject.gumx")).Project!;
+        string screensDir = Path.Combine(templateDir, "Screens");
+
+        List<string> names = project.ScreenReferences.Select(reference => reference.Name)
+            .Concat(Directory.GetFiles(screensDir, "*", SearchOption.AllDirectories)
+                .Select(file => Path.ChangeExtension(Path.GetRelativePath(screensDir, file), null).Replace((char)92, '/')))
+            .Concat((templateFolder == "FormsTemplate" ? File.ReadAllLines(Path.Combine(templateDir, "manifest.txt")) : Array.Empty<string>())
+                .Select(line => line.Trim())
+                .Where(line => line.StartsWith("Screens/", StringComparison.Ordinal))
+                .Select(line => Path.ChangeExtension(line.Substring("Screens/".Length), null)))
+            .ToList();
+
+        names.ShouldNotBeEmpty();
+        names.Where(name => !DemoScreenRule.IsDemoScreenName(name)).ShouldBeEmpty($"{templateFolder} lists or ships a screen that is not the demo screen");
     }
 
     // Slider and ScrollBar thumbs get their own components (copies of the button) so restyling a thumb
@@ -189,6 +217,23 @@ public class FormsThemesTemplateTests
         GumProjectSave project = LoadTemplate(templateFolder);
 
         project.Components.Select(c => c.Name).ShouldNotContain(GetPrefix(templateFolder) + "Controls/Thumb");
+    }
+
+    // ListBoxItem.UpdateState sets one of these five states by name. A template missing one leaves the
+    // item on whatever look it had before: a disabled item built disabled shows the default look, and
+    // one disabled later keeps its enabled look (#7495).
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void ListBoxItem_ShouldHaveEveryStateTheControlSets(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = LoadTemplate(templateFolder);
+        ComponentSave listBoxItem = project.Components.Single(c => c.Name == $"{GetPrefix(templateFolder)}Controls/ListBoxItem");
+
+        StateSaveCategory category = listBoxItem.Categories.Single(c => c.Name == "ListBoxItemCategory");
+
+        category.States.Select(state => state.Name)
+            .ShouldBe(new[] { "Enabled", "Highlighted", "Selected", "Focused", "Disabled" }, ignoreOrder: true);
     }
 
     private static GumProjectSave LoadTemplate(string templateFolder) =>
@@ -294,6 +339,43 @@ public class FormsThemesTemplateTests
                 : new List<string>();
 
             unused.ShouldBeEmpty();
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    // The release loads a template without a runtime font creator, so a font missing from FontCache
+    // silently falls back to the default font, and an icon glyph such as the ComboBox arrow draws as
+    // '?' (#7387). Every font an element uses has a cached .fnt, which was baked with the project's
+    // FontRanges (the glyph block the icons live in).
+    [Theory]
+    [MemberData(nameof(ThemeFolders))]
+    public void FontCache_ShouldContainEveryFontTheTemplateUses(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        string templateDir = GetTemplateDir(templateFolder);
+        GumProjectSave project = new ProjectLoader().Load(Path.Combine(templateDir, "GumProject.gumx")).Project!;
+        ObjectFinder.Self.GumProjectSave = project;
+
+        try
+        {
+            IEnumerable<ElementSave> allElements = project.StandardElements
+                .Cast<ElementSave>()
+                .Concat(project.Components)
+                .Concat(project.Screens);
+            string fontCacheDir = Path.Combine(templateDir, "FontCache");
+
+            List<string> missing = new FontReferenceCollector(instance => ObjectFinder.Self.GetElementSave(instance))
+                .Collect(project, allElements)
+                .Keys
+                .Select(Path.GetFileName)
+                .Where(fileName => !File.Exists(Path.Combine(fontCacheDir, fileName!)))
+                .OrderBy(fileName => fileName, StringComparer.Ordinal)
+                .ToList()!;
+
+            missing.ShouldBeEmpty();
         }
         finally
         {

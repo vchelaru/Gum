@@ -44,7 +44,18 @@ public partial class GraphicalUiElement
 
     #region Get/Add Child/Element
 
-    public void AddChild(GraphicalUiElement child) => this.Children.Add(child);
+    /// <summary>
+    /// Adds <paramref name="child"/> to this element's <see cref="Children"/>. Does nothing if the
+    /// child is already a child of this element; a child under a different parent is moved here.
+    /// </summary>
+    public void AddChild(GraphicalUiElement child)
+    {
+        if (child?.Parent == this)
+        {
+            return;
+        }
+        this.Children.Add(child!);
+    }
 
     public void RemoveChild(GraphicalUiElement child) => this.Children.Remove(child);
 
@@ -66,7 +77,7 @@ public partial class GraphicalUiElement
                 "Cannot call AddToRoot because IGumService.Default is not initialized — " +
                 "did you remember to initialize Gum first (GumService.Default.Initialize)?");
         }
-        IGumService.Default.Root.Children.Add(this);
+        IGumService.Default.Root.AddChild(this);
     }
 
     /// <summary>

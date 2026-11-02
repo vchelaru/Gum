@@ -1,6 +1,7 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.DataTypes.Behaviors;
 using Gum.Expressions;
 using Gum.Managers;
 using Gum.Plugins;
@@ -223,6 +224,87 @@ public sealed class DragWorld : BaseTestClass
         }
         Finish(materialize: true);
     }
+
+    /// <summary>
+    /// Comp has the dragged source S0 and a same-element follower F0 (Width = S0.Width + 1); Other holds a
+    /// cross-element reader O0 of Comp.S0. Comp also carries a behavior whose tool-only line
+    /// <c>StackSpacing = Spacing</c> mirrors the Forms property <c>Spacing</c> the way StackPanel does.
+    /// </summary>
+    public void BuildSameElement()
+    {
+        NewInstance(_comp, "S0");
+        SetWidth(_comp.DefaultState!, "S0", 50);
+        NewInstance(_comp, "F0");
+        AddRow(_comp.DefaultState!, "F0", "Width = S0.Width + 1");
+        CompInstances.Add("S0");
+        NewInstance(_other, "O0");
+        AddRow(_other.DefaultState!, "O0", "Width = Components/Comp.S0.Width");
+
+        _comp.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SpacingBehavior" });
+        _comp.DefaultState!.Variables.Add(new VariableSave { Name = "Spacing", Type = "float", Value = 4f, SetsValue = true });
+        Finish(materialize: true);
+
+        BehaviorSave behavior = new BehaviorSave { Name = "SpacingBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "float", Name = "Spacing" });
+        behavior.ToolOnlyVariableReferences.Add("StackSpacing = Spacing");
+        ObjectFinder.Self.GumProjectSave!.Behaviors.Add(behavior);
+    }
+
+    /// <summary>Drags the element-level Spacing variable: an intermediate tick.</summary>
+    public void TickSpacing(float value) => ReportSpacing(value, isFullCommit: false);
+
+    /// <summary>The full commit of a Spacing edit.</summary>
+    public void CommitSpacing(float value) => ReportSpacing(value, isFullCommit: true);
+
+    private void ReportSpacing(float value, bool isFullCommit)
+    {
+        _selectedStateSave = _comp.DefaultState!;
+        VariableSave variable = _comp.DefaultState!.Variables.Single(item => item.Name == "Spacing");
+        object? old = variable.Value;
+        variable.Value = value;
+        _setVariable.PropertyValueChanged("Spacing", old, null, _comp.DefaultState!, refresh: true,
+            recordUndo: isFullCommit, trySave: isFullCommit, isFullCommit: isFullCommit);
+    }
+
+    public object? StackSpacing => _comp.DefaultState!.GetValue("StackSpacing");
+
+    /// <summary>
+    /// Comp has the dragged source S0 and <paramref name="count"/> instances of the Forms-style component Btn,
+    /// whose behavior derives <c>ButtonCategoryState</c> from <c>IsEnabled</c>.
+    /// </summary>
+    public void BuildButtons(int count)
+    {
+        NewInstance(_comp, "S0");
+        SetWidth(_comp.DefaultState!, "S0", 50);
+        _extra.Add(NewComponent("Btn"));
+        for (int i = 0; i < count; i++)
+        {
+            InstanceSave button = new InstanceSave { Name = "Btn" + i, BaseType = "Btn", ParentContainer = _comp };
+            _comp.Instances.Add(button);
+        }
+        _extra[0].Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+        Finish(materialize: true);
+
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled" });
+        behavior.ToolOnlyVariableReferences.Add("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+        ObjectFinder.Self.GumProjectSave!.Behaviors.Add(behavior);
+    }
+
+    /// <summary>Reports a tick of <c>Btn{index}.IsEnabled</c>.</summary>
+    public void TickIsEnabled(int index, bool value)
+    {
+        _selectedStateSave = _comp.DefaultState!;
+        string name = $"Btn{index}.IsEnabled";
+        VariableSave variable = new VariableSave { Name = name, Type = "bool", Value = value, SetsValue = true };
+        _comp.DefaultState!.Variables.Add(variable);
+        _setVariable.PropertyValueChanged("IsEnabled", null, _comp.GetInstance("Btn" + index)!, _comp.DefaultState!,
+            refresh: true, recordUndo: false, trySave: false, isFullCommit: false);
+    }
+
+    public object? ButtonCategoryStateOf(int index) => _comp.DefaultState!.GetValue($"Btn{index}.ButtonCategoryState");
+
+    public int ButtonStateWrites => _comp.DefaultState!.Variables.Count(item => item.Name.EndsWith(".ButtonCategoryState"));
 
     private void Finish(bool materialize)
     {

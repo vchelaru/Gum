@@ -10,13 +10,13 @@
 
   <ItemGroup>
     <PackageReference Include="Raylib-cs" Version="8.0.0" />
-    <!-- Converts Outline.slang to a raylib GLSL fragment shader at runtime (RaylibConverter). -->
-    <PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+    <!-- Converts Outline.slang to a raylib GLSL fragment shader at runtime (GumService.UseShadowDusk). -->
+    <ProjectReference Include="..\..\Runtimes\RaylibGum.ShadowDusk\RaylibGum.ShadowDusk.csproj" />
     <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
   </ItemGroup>
 

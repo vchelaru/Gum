@@ -28,7 +28,7 @@ using ToolsUtilities;
 
 namespace Gum;
 
-public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPasteProjectProvider, IReferenceFinderProjectProvider, IRenameProjectProvider
+public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPasteProjectProvider, IReferenceFinderProjectProvider, IRenameProjectProvider, INewProjectLocationSettings
 {
     #region Fields
 
@@ -122,6 +122,14 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     public byte GuideTextColorB => GeneralSettingsFile.GuideTextColorB;
 
     public IReadOnlyList<RecentProjectReference> RecentProjects => GeneralSettingsFile.RecentProjects;
+
+    public string? LastNewProjectParent => GeneralSettingsFile.LastNewProjectParent;
+
+    public void RememberNewProjectParent(string parentFolder)
+    {
+        GeneralSettingsFile.LastNewProjectParent = parentFolder;
+        GeneralSettingsFile.Save();
+    }
 
     public void SaveGeneralSettings() => GeneralSettingsFile.Save();
 

@@ -269,6 +269,22 @@ public abstract class PluginBase : IPlugin
     /// [bool] - whether the value is committed, as described on <see cref="VariableSet"/>.
     /// </summary>
     public event Action<ElementSave?, InstanceSave?, string, object?, bool>? VariableSetLate;
+
+    /// <summary>
+    /// True while a batch of <see cref="VariableSet"/> calls is running (a multi-select edit). A plugin
+    /// whose reaction covers the whole element can skip it then and do it once in
+    /// <see cref="VariableSetBatchCompleted"/>.
+    /// </summary>
+    protected internal bool IsVariableSetBatchOpen { get; set; }
+
+    /// <summary>
+    /// Raised once per element when a batch of <see cref="VariableSet"/> calls ends.
+    /// [ElementSave] - the element the batch changed. May be null.
+    /// </summary>
+    public event Action<ElementSave?>? VariableSetBatchCompleted;
+
+    public void CallVariableSetBatchCompleted(ElementSave? element) =>
+        VariableSetBatchCompleted?.Invoke(element);
     public event Action<IStateContainer?, VariableSave?>? VariableSelected;
 
     /// <summary>

@@ -41,6 +41,11 @@ public class AnimationChainLogic
             ? _chains[_currentChainIndex]
             : null;
 
+    /// <summary>
+    /// True when a chain name was set and the assigned list has no chain with that name, so nothing plays.
+    /// </summary>
+    public bool IsNamedChainMissing => !string.IsNullOrEmpty(_desiredChainName) && CurrentChain == null;
+
     public string? CurrentChainName
     {
         get => CurrentChain?.Name;
@@ -471,8 +476,15 @@ public class AnimationChainLogic
                     // as a restart does (the last frame of a Reverse chain at time 0).
                     UpdateFrameBasedOffOfTimeIntoAnimation();
                 }
-                break;
+                return;
             }
+        }
+
+        // A named chain the list no longer holds (renamed or deleted in a replaced list) plays nothing,
+        // as naming a missing chain does. An unnamed list keeps the first chain as its default.
+        if (!string.IsNullOrEmpty(_desiredChainName))
+        {
+            _currentChainIndex = -1;
         }
     }
 }

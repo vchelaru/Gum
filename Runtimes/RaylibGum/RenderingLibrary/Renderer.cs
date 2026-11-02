@@ -268,6 +268,15 @@ public class Renderer : IRenderer
         // is banked into RenderStateChangeStatistics.DrawCallCount.
         BatchDrawCallCounter.BeginPass(RenderStateChangeStatistics);
 
+        // The host may have called Draw inside its own BeginTextureMode (rendering Gum into a render
+        // texture). raylib's EndTextureMode, which every render-target bake and blurred shadow runs,
+        // unbinds whatever texture is active and restores nothing, so the rest of the frame would
+        // land on the screen instead. Record the host's texture so it can be rebound (#7290). Its size
+        // comes from GetRenderWidth/Height, which raylib reports as the bound texture's size while
+        // one is active, the same size the camera above already uses.
+        RenderTexture2D? hostRenderTexture = GetHostRenderTexture();
+        ActiveRenderTexture = hostRenderTexture;
+
         // Pre-pass, BEFORE the outer BeginMode2D: resolve layout-time properties, then bake every
         // render-target container's subtree into its offscreen texture. Baking must happen outside
         // the outer camera's active Mode2D — the RT bake runs its own BeginTextureMode +
@@ -293,6 +302,12 @@ public class Renderer : IRenderer
             {
                 BakeRenderTargetsInSubtree(layers[i].Renderables, layers[i], managers);
             }
+        }
+
+        if (_frameHasRenderTarget && hostRenderTexture.HasValue)
+        {
+            // The bakes above each ended with EndTextureMode, which unbound the host's texture.
+            BatchDrawCallCounter.BeginTextureMode(hostRenderTexture.Value);
         }
 
         for (int i = 0; i < layers.Count; i++)
@@ -321,7 +336,26 @@ public class Renderer : IRenderer
             BatchDrawCallCounter.EndMode2D();
         }
 
+        ActiveRenderTexture = null;
         BatchDrawCallCounter.EndPass();
+    }
+
+    // The render texture the host bound with BeginTextureMode before calling Draw, or null when
+    // drawing straight to the screen. raylib exposes only the active framebuffer id and its size,
+    // which is all BeginTextureMode reads from a RenderTexture2D to bind it again.
+    private static RenderTexture2D? GetHostRenderTexture()
+    {
+        uint framebufferId = Rlgl.GetActiveFramebuffer();
+        if (framebufferId == 0)
+        {
+            return null;
+        }
+
+        return new RenderTexture2D
+        {
+            Id = framebufferId,
+            Texture = new Texture2D { Width = Raylib.GetRenderWidth(), Height = Raylib.GetRenderHeight() },
+        };
     }
 
     // Builds the Camera2D used to draw a single layer, factoring in LayerCameraSettings on top of
@@ -762,7 +796,7 @@ public class Renderer : IRenderer
         Raylib.DrawTexturePro(
             renderTexture.Value.Texture,
             new Rectangle(0, 0, bounds.Width, -bounds.Height),
-            new Rectangle(bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top),
+            GetCompositeDestination(bounds, _camera.Zoom),
             System.Numerics.Vector2.Zero,
             -container.GetAbsoluteRotation(),
             tint);
@@ -773,6 +807,15 @@ public class Renderer : IRenderer
         }
         counter.EndBlendMode();
     }
+
+    // Where the baked texture lands in world space. The texture is bounds.Width x bounds.Height pixels
+    // (the world size rounded to whole pixels), so the blit is texel for pixel only when the destination
+    // is that same size in world units. Using the fractional world size instead squeezes or stretches the
+    // texture by up to half a pixel, and a pixel row whose centre sits on the destination's edge (a
+    // fractional bottom of .5) is dropped on some GL drivers (#7073). MonoGame sizes its blit from the
+    // texture the same way (Renderer.DrawRenderTargetToScreen).
+    internal static Rectangle GetCompositeDestination(RenderTargetBounds bounds, float zoom) =>
+        new Rectangle(bounds.Left, bounds.Top, bounds.Width / zoom, bounds.Height / zoom);
 
     // Sets a container's own values on its shader just before the composite blit. A name the shader
     // does not declare has no location and is skipped. Raylib cannot read a uniform's declared type,

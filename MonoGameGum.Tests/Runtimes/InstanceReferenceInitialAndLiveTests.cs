@@ -227,7 +227,7 @@ public class InstanceReferenceInitialAndLiveTests : BaseTestClass
             project.StandardElements.Add(standardElement);
         }
         ObjectFinder.Self.GumProjectSave = project;
-        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new TextRuntime());
+        StandardRuntimeRegistrations.Register();
         return card.ToGraphicalUiElement();
     }
 }

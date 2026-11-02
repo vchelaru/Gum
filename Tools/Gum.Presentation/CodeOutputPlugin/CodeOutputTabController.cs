@@ -162,7 +162,8 @@ public class CodeOutputTabController
                         }
                         else if (selectedElement is not StandardElementSave)
                         {
-                            string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings);
+                            string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings) ??
+                                _codeGenerator.GetCategoryNameCollisionError(selectedElement, codeOutputProjectSettings);
                             if (baseTypeError != null)
                             {
                                 _viewModel.Code = $"// {baseTypeError}";
@@ -205,6 +206,7 @@ public class CodeOutputTabController
     /// is ignored - the commit that ends the drag refreshes and exports (issue #4946).</param>
     public void HandleRefreshAndExport(CodeOutputProjectSettings codeOutputProjectSettings, bool isFullCommit = true)
     {
+        using Gum.Diagnostics.ToolLog.Scope log = Gum.Diagnostics.ToolLog.Begin("CodeOutput HandleRefreshAndExport");
         if (!isFullCommit)
         {
             return;

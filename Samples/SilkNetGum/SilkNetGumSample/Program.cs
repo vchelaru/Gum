@@ -113,7 +113,7 @@ unsafe class Program
 
         // Issue #3998: Gum core ships no shader loader, so the app registers a resolver that turns a
         // ContainerRuntime.SourceShaderFile (.sksl path) into a compiled SKRuntimeEffect. With no
-        // resolver registered, SourceShaderFile is a graceful no-op.
+        // resolver registered, a SourceShaderFile fails like a missing file.
         SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
             SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
 

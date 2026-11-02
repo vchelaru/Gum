@@ -8,6 +8,7 @@ public static class StandardFormsBehaviorNames
     public const string CheckBoxBehaviorName = "CheckBoxBehavior";
     public const string ColorPickerBehaviorName = "ColorPickerBehavior";
     public const string ComboBoxBehaviorName = "ComboBoxBehavior";
+    public const string DialogBoxBehaviorName = "DialogBoxBehavior";
     public const string ExpanderBehaviorName = "ExpanderBehavior";
     public const string ItemsControlBehaviorName = "ItemsControlBehavior";
     public const string LabelBehaviorName = "LabelBehavior";
@@ -29,7 +30,9 @@ public static class StandardFormsBehaviorNames
     public const string SplitterBehaviorName = "SplitterBehavior";
     public const string StackPanelBehaviorName = "StackPanelBehavior";
     public const string TextBoxBehaviorName = "TextBoxBehavior";
+    public const string ToggleBehaviorName = "ToggleBehavior";
     public const string TooltipBehaviorName = "TooltipBehavior";
+    public const string UserControlBehaviorName = "UserControlBehavior";
     public const string WindowBehaviorName = "WindowBehavior";
 
     public static readonly HashSet<string> All = new HashSet<string>
@@ -38,6 +41,7 @@ public static class StandardFormsBehaviorNames
         CheckBoxBehaviorName,
         ColorPickerBehaviorName,
         ComboBoxBehaviorName,
+        DialogBoxBehaviorName,
         ExpanderBehaviorName,
         ItemsControlBehaviorName,
         LabelBehaviorName,
@@ -55,7 +59,9 @@ public static class StandardFormsBehaviorNames
         SplitterBehaviorName,
         StackPanelBehaviorName,
         TextBoxBehaviorName,
+        ToggleBehaviorName,
         TooltipBehaviorName,
+        UserControlBehaviorName,
         WindowBehaviorName,
     };
 }

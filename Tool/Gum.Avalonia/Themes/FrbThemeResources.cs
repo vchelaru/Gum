@@ -89,6 +89,9 @@ public static class FrbThemeResources
     /// <summary>The WPF tool's default base font size (AppScale).</summary>
     public const double DefaultBaseFontSize = 12;
 
+    /// <summary>The resource that holds the base font size, which the tool's zoom changes.</summary>
+    public const string BaseFontSizeKey = "ControlContentThemeFontSize";
+
     /// <summary>
     /// The font the controls render in: the OS default, as the WPF head (Segoe UI on Windows), with
     /// Fluent's Inter as the fallback for a machine without a usable default.
@@ -101,10 +104,47 @@ public static class FrbThemeResources
     /// </summary>
     public static void SetBaseFontSize(IResourceDictionary resources, double size)
     {
-        resources["ControlContentThemeFontSize"] = size;
+        resources[BaseFontSizeKey] = size;
         // The WPF AppScale's Caption size: dialog validation text and other fine print.
         resources[CaptionFontSizeKey] = size * CaptionScale;
+        ApplyFieldMetrics(resources, size);
     }
+
+    /// <summary>
+    /// Sizes the text box and combo box heights and padding in proportion to the base font size, so a
+    /// field stays as tall as its text when the tool is zoomed out or in.
+    /// </summary>
+    private static void ApplyFieldMetrics(IResourceDictionary resources, double size)
+    {
+        double scale = size / DefaultBaseFontSize;
+        resources["TextControlThemeMinHeight"] = FieldMinHeight * scale;
+        resources["TextControlThemePadding"] = new Thickness(4 * scale, 1 * scale, 4 * scale, 1 * scale);
+        resources["ComboBoxMinHeight"] = FieldMinHeight * scale;
+        resources["ComboBoxPadding"] = new Thickness(4 * scale, 1 * scale, 0, 1 * scale);
+        resources["ComboBoxThemeMinWidth"] = 64 * scale;
+        resources[ComboBoxGlyphSizeKey] = 12 * scale;
+        resources[ComboBoxGlyphMarginKey] = new Thickness(0, 0, 10 * scale, 0);
+        resources[ComboBoxGlyphColumnKey] = new GridLength(32 * scale);
+        resources[RadioGlyphSizeKey] = 20 * scale;
+        resources[RadioDotSizeKey] = 8 * scale;
+        resources[RadioRowHeightKey] = 24 * scale;
+        resources[RadioGlyphColumnKey] = new GridLength(20 * scale);
+        resources[RadioContentMarginKey] = new Thickness(8 * scale, 0, 0, 0);
+    }
+
+    /// <summary>Resource keys of the combo box drop-down chevron's size, margin and column width, which Fluent fixes at 12, 10 and 32.</summary>
+    public const string ComboBoxGlyphSizeKey = "Frb.ComboBox.GlyphSize";
+    public const string ComboBoxGlyphMarginKey = "Frb.ComboBox.GlyphMargin";
+    public const string ComboBoxGlyphColumnKey = "Frb.ComboBox.GlyphColumn";
+
+    /// <summary>Resource keys of the radio button ring and dot sizes, row height, glyph column width and content margin, which Fluent fixes at 20, 8, 24, 20 and 8.</summary>
+    public const string RadioGlyphSizeKey = "Frb.RadioButton.GlyphSize";
+    public const string RadioDotSizeKey = "Frb.RadioButton.DotSize";
+    public const string RadioRowHeightKey = "Frb.RadioButton.RowHeight";
+    public const string RadioGlyphColumnKey = "Frb.RadioButton.GlyphColumn";
+    public const string RadioContentMarginKey = "Frb.RadioButton.ContentMargin";
+
+    private const double FieldMinHeight = 22;
 
     /// <summary>Resource key of the caption font size, 0.85 of the base size as in the WPF AppScale.</summary>
     public const string CaptionFontSizeKey = "Frb.FontSize.Caption";
@@ -130,12 +170,8 @@ public static class FrbThemeResources
         // column is shared by every item in the menu (WPF's is not), so it is kept narrow.
         resources["MenuFlyoutItemChevronMargin"] = new Thickness(4, 0, 4, 0);
         resources["ComboBoxDropdownBorderPadding"] = new Thickness(4);
-        resources["TextControlThemeMinHeight"] = 22d;
-        resources["TextControlThemePadding"] = new Thickness(4, 1, 4, 1);
         resources["TextControlBorderThemeThickness"] = new Thickness(1);
         resources["TextControlBorderThemeThicknessFocused"] = new Thickness(1);
-        resources["ComboBoxMinHeight"] = 22d;
-        resources["ComboBoxPadding"] = new Thickness(4, 1, 0, 1);
         resources["TreeViewItemMinHeight"] = 20d;
         resources["TreeViewItemBorderThemeThickness"] = new Thickness(1);
     }

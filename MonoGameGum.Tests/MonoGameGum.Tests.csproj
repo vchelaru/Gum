@@ -49,6 +49,11 @@
 		<Compile Include="..\Tests\TestOrdering\ShuffledTestCaseOrderer.cs" Link="TestOrdering\ShuffledTestCaseOrderer.cs" />
 		<!-- GumPreview is an executable, so its Forms interaction logic is linked rather than referenced. -->
 		<Compile Include="..\Tool\GumPreview\PreviewInteraction.cs" Link="GumPreview\PreviewInteraction.cs" />
+		<Compile Include="..\Tool\GumPreview\PreviewInputDefaults.cs" Link="GumPreview\PreviewInputDefaults.cs" />
+		<Compile Include="..\Tool\GumPreview\PreviewReloadPolicy.cs" Link="GumPreview\PreviewReloadPolicy.cs" />
+		<Compile Include="..\Tool\GumPreview\PreviewCanvasSize.cs" Link="GumPreview\PreviewCanvasSize.cs" />
+		<Compile Include="..\Tool\GumPreview\PreviewElementPresenter.cs" Link="GumPreview\PreviewElementPresenter.cs" />
+		<Compile Include="..\Tool\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="GumPreview\PreviewSelectionMessage.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -64,6 +69,7 @@
     <Compile Include="..\Tests\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
     <Compile Include="..\Tests\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
     <Compile Include="..\Tests\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />
+    <Compile Include="..\Tests\Shared\LeftoverVariablesProject.cs" Link="Shared\LeftoverVariablesProject.cs" />
     <Compile Include="..\Tests\Shared\GraphicalUiElementState.cs" Link="Shared\GraphicalUiElementState.cs" />
     <Compile Include="..\Tests\Shared\GraphicalUiElementStateAssert.cs" Link="Shared\GraphicalUiElementStateAssert.cs" />
   </ItemGroup>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Gum.Bundle;
 using Shouldly;
@@ -10,7 +11,7 @@ namespace Gum.Bundle.Tests;
 public class GumBundleFormatTests
 {
     [Fact]
-    public void Header_bytes_are_GUMP_then_0x01()
+    public void Header_bytes_are_GUMP_then_0x02()
     {
         MemoryStream stream = new MemoryStream();
         GumBundleWriter.Write(stream, Array.Empty<(string, byte[])>());
@@ -21,7 +22,7 @@ public class GumBundleFormatTests
         bytes[1].ShouldBe((byte)0x55);
         bytes[2].ShouldBe((byte)0x4D);
         bytes[3].ShouldBe((byte)0x50);
-        bytes[4].ShouldBe((byte)0x01);
+        bytes[4].ShouldBe((byte)0x02);
     }
 
     [Fact]
@@ -33,7 +34,7 @@ public class GumBundleFormatTests
 
         GumBundle bundle = GumBundleReader.Read(stream);
 
-        bundle.Version.ShouldBe((byte)0x01);
+        bundle.Version.ShouldBe((byte)0x02);
         bundle.Entries.Count.ShouldBe(0);
     }
 
@@ -168,5 +169,77 @@ public class GumBundleFormatTests
         GumBundleWriter.Write(second, entries);
 
         first.ToArray().ShouldBe(second.ToArray());
+    }
+
+    [Fact]
+    public void Payload_after_header_is_a_standard_zip_archive()
+    {
+        byte[] content = new byte[] { 7, 8, 9 };
+        MemoryStream stream = new MemoryStream();
+        GumBundleWriter.Write(stream, new (string, byte[])[] { ("Screens/Main.gusx", content) });
+
+        byte[] bytes = stream.ToArray();
+        using ZipArchive zip = new ZipArchive(
+            new MemoryStream(bytes, GumBundleFormat.HeaderLength, bytes.Length - GumBundleFormat.HeaderLength),
+            ZipArchiveMode.Read);
+
+        zip.Entries.Count.ShouldBe(1);
+        ZipArchiveEntry entry = zip.Entries[0];
+        entry.FullName.ShouldBe("Screens/Main.gusx");
+        using MemoryStream entryContent = new MemoryStream();
+        using (Stream entryStream = entry.Open())
+        {
+            entryStream.CopyTo(entryContent);
+        }
+        entryContent.ToArray().ShouldBe(content);
+    }
+
+    [Fact]
+    public void Read_accepts_a_non_seekable_stream()
+    {
+        byte[] content = new byte[] { 1, 2, 3 };
+        MemoryStream stream = new MemoryStream();
+        GumBundleWriter.Write(stream, new (string, byte[])[] { ("a.txt", content) });
+
+        GumBundle bundle = GumBundleReader.Read(new NonSeekableStream(stream.ToArray()));
+
+        bundle.Entries["a.txt"].ShouldBe(content);
+    }
+
+    [Fact]
+    public void Read_still_reads_a_version_1_bundle()
+    {
+        // Written by the version 1 writer (brotli over ustar tar).
+        byte[] version1 = Convert.FromBase64String(
+            "R1VNUAEb/wsARGGb3NINCQeopflDOufp5NwPeBA9cOIJcQTR5wHgMfCQ2ZNM0uSYnNvYVLfqnuUnVgAIPC9TAB2A7bGDQMN4AXFAuP+57uIk2Jsm2ZYyTnhdXp1Ns15uWAyr6p7rCIofgIxBtLZWe5uQBA==");
+
+        GumBundle bundle = GumBundleReader.Read(new MemoryStream(version1));
+
+        bundle.Version.ShouldBe((byte)0x01);
+        bundle.EntryPathsInOrder.ShouldBe(new[] { "Project.gumx", "Screens/Main.gusx" });
+        bundle.Entries["Project.gumx"].ShouldBe(new byte[] { 1, 2, 3 });
+        bundle.Entries["Screens/Main.gusx"].ShouldBe(new byte[] { 4, 5 });
+
+        byte[] truncated = version1.Take(version1.Length / 2).ToArray();
+        Should.Throw<GumBundleFormatException>(() => GumBundleReader.Read(new MemoryStream(truncated)));
+    }
+
+    private sealed class NonSeekableStream : MemoryStream
+    {
+        public NonSeekableStream(byte[] buffer) : base(buffer, writable: false)
+        {
+        }
+
+        public override bool CanSeek => false;
+
+        public override long Seek(long offset, SeekOrigin loc) => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override long Length => throw new NotSupportedException();
     }
 }

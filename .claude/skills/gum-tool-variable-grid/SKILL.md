@@ -107,6 +107,8 @@ Landmine: a commit that rebuilds the grid detaches its own editor, and that edit
 
 Landmine: `IsCallingRefresh = false` only defers the grid/tree rebuild and undo. Everything else in `VariableGridEntry.NotifyVariableLogic` → `SetVariableLogic.ReactToPropertyValueChanged` (autosave, plugin `VariableSet`, codegen) still runs once per selected instance, so a new per-set side effect added there runs N times on a multi-select edit unless it is gated on `IsCallingRefresh` or moved into the batch.
 
+Landmine: a multi-select edit runs the whole set pipeline once per selected instance, and each pass asked for a grid rebuild (a `VariableReferences` edit asked twice: the line expansion's `RefreshVariables(force)` and the grid plugin's `VariableSet` handler), about 0.7 s each on 19 Rectangles. `MultiSelectCommitLogic` opens `IPluginManager.BeginVariableSetBatch`; while it is open `VariableGridPluginBase` defers those rebuilds (and `PropertyGridManager` the value refresh) and does one when `VariableSetBatchCompleted` fires. A new plugin reaction that covers the whole element must do the same (`PluginBase.IsVariableSetBatchOpen`). To find where an edit's time goes, run the tool with `GUM_TOOL_LOG=<absolute path>` (`Gum.Diagnostics.ToolLog`: timed stages, plugin callbacks of 1 ms or more, flushed per line, off and free otherwise) and add a `ToolLog.Begin` around the suspect stage.
+
 ### StateReferencingInstanceMember
 
 All members in the Variables tab use `StateReferencingInstanceMember` (subclass of `InstanceMember`), not the generic reflection path. Its `IsReadOnly` returns `true` when `InstanceSave?.Locked == true`. Its `IsDefault` returns `true` when the value is absent from the selected state (not inherited from defaults).

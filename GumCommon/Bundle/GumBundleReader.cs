@@ -7,18 +7,18 @@ namespace Gum.Bundle;
 
 /// <summary>
 /// Reads a `.gumpkg` bundle stream into a <see cref="GumBundle"/>: validates header,
-/// decompresses brotli payload, and materializes every tar entry into memory.
+/// decompresses the payload, and materializes every entry into memory.
 /// <para>
-/// Both the brotli decompression (<c>BrotliSharpLib</c>) and the tar parsing
+/// Version 2 payloads are zip archives with Deflate entries; Deflate is native on every target,
+/// browser WebAssembly included. For version 1 payloads, both the brotli decompression (<c>BrotliSharpLib</c>) and the tar parsing
 /// (<c>SharpCompress</c>) are pure-managed rather than the BCL equivalents
 /// (<c>System.IO.Compression.BrotliStream</c> / <c>System.Formats.Tar</c>).
 /// The framework versions both throw <c>PlatformNotSupportedException</c> on
 /// Blazor WebAssembly — brotli because Mono does not link the native brotli
 /// library, and tar because the formats package depends on POSIX file metadata
 /// APIs that aren't surfaced on browser-WASM. Blazor is the primary target the
-/// `.gumpkg` format was meant to optimize for, so the reader path must be fully
-/// managed. The on-disk format is unchanged — pure-managed and BCL implementations
-/// read the same byte stream.
+/// `.gumpkg` format was meant to optimize for, so the version 1 reader path must be fully
+/// managed.
 /// </para>
 /// </summary>
 public static class GumBundleReader
@@ -63,56 +63,13 @@ public static class GumBundleReader
 
         try
         {
-            // BrotliSharpLib + SharpCompress (not System.IO.Compression / System.Formats.Tar)
-            // — see class XML doc for the Blazor WASM rationale. Same wire format; these are
-            // purely the decoder choices.
-            //
-            // SharpCompress's TarReader.OpenReader does a format-detection rewind that
-            // requires a seekable input. BrotliStream is forward-only, so we materialize
-            // the decompressed payload into a MemoryStream first. Bundles are small
-            // (typically <1MB compressed, a few MB decompressed) so the buffering cost is
-            // negligible compared to the runtime asset loads that follow.
-            MemoryStream decompressed = new MemoryStream();
-            using (BrotliSharpLib.BrotliStream brotli = new BrotliSharpLib.BrotliStream(input, CompressionMode.Decompress, leaveOpen: true))
+            if (version == GumBundleFormat.TarBrotliVersion)
             {
-                brotli.CopyTo(decompressed);
+                ReadTarBrotliPayload(input, entries, orderedPaths);
             }
-
-            // BrotliSharpLib decodes truncated input silently, returning whatever it managed
-            // to produce instead of throwing — so a half-bundle decompresses to 0 bytes and
-            // the tar reader below sees an empty stream and reports zero entries. Detect that
-            // here: every well-formed bundle (including the intentionally-empty one) carries
-            // at least the 1024-byte tar end-of-archive marker, so anything shorter is truncated.
-            if (decompressed.Length < GumBundleFormat.MinimumTarPayloadLength)
+            else
             {
-                throw new GumBundleFormatException(
-                    $"Bundle payload is truncated; decompressed tar stream is {decompressed.Length} bytes, " +
-                    $"shorter than the {GumBundleFormat.MinimumTarPayloadLength}-byte tar end-of-archive marker required for any valid bundle.");
-            }
-
-            decompressed.Position = 0;
-
-            using SharpCompress.Readers.IReader tar = SharpCompress.Readers.Tar.TarReader.OpenReader(
-                decompressed, new SharpCompress.Readers.ReaderOptions());
-
-            while (tar.MoveToNextEntry())
-            {
-                if (tar.Entry.IsDirectory)
-                {
-                    continue;
-                }
-
-                byte[] content;
-                using (SharpCompress.Common.EntryStream entryStream = tar.OpenEntryStream())
-                using (MemoryStream buffer = new MemoryStream())
-                {
-                    entryStream.CopyTo(buffer);
-                    content = buffer.ToArray();
-                }
-
-                string key = tar.Entry.Key ?? string.Empty;
-                entries[key] = content;
-                orderedPaths.Add(key);
+                ReadZipPayload(input, entries, orderedPaths);
             }
         }
         catch (GumBundleFormatException)
@@ -122,10 +79,94 @@ public static class GumBundleReader
         catch (Exception ex) when (ex is InvalidDataException or EndOfStreamException or IOException or FormatException)
         {
             throw new GumBundleFormatException(
-                "Bundle payload is truncated or corrupt; failed to decode the brotli/tar stream.", ex);
+                $"Bundle payload is truncated or corrupt; failed to decode the version {version} payload.", ex);
         }
 
         return new GumBundle(version, entries, orderedPaths);
+    }
+
+    private static void ReadZipPayload(Stream input, Dictionary<string, byte[]> entries, List<string> orderedPaths)
+    {
+        // ZipArchive reads the central directory at the end, so it needs a seekable stream whose
+        // offsets start at the payload.
+        MemoryStream payload = new MemoryStream();
+        input.CopyTo(payload);
+        payload.Position = 0;
+
+        using ZipArchive zip = new ZipArchive(payload, ZipArchiveMode.Read);
+        foreach (ZipArchiveEntry entry in zip.Entries)
+        {
+            if (entry.FullName.EndsWith("/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            byte[] content;
+            using (Stream entryStream = entry.Open())
+            using (MemoryStream buffer = new MemoryStream())
+            {
+                entryStream.CopyTo(buffer);
+                content = buffer.ToArray();
+            }
+
+            entries[entry.FullName] = content;
+            orderedPaths.Add(entry.FullName);
+        }
+    }
+
+    private static void ReadTarBrotliPayload(Stream input, Dictionary<string, byte[]> entries, List<string> orderedPaths)
+    {
+        // BrotliSharpLib + SharpCompress (not System.IO.Compression / System.Formats.Tar)
+        // — see class XML doc for the Blazor WASM rationale. Same wire format; these are
+        // purely the decoder choices.
+        //
+        // SharpCompress's TarReader.OpenReader does a format-detection rewind that
+        // requires a seekable input. BrotliStream is forward-only, so we materialize
+        // the decompressed payload into a MemoryStream first. Bundles are small
+        // (typically <1MB compressed, a few MB decompressed) so the buffering cost is
+        // negligible compared to the runtime asset loads that follow.
+        MemoryStream decompressed = new MemoryStream();
+        using (BrotliSharpLib.BrotliStream brotli = new BrotliSharpLib.BrotliStream(input, CompressionMode.Decompress, leaveOpen: true))
+        {
+            brotli.CopyTo(decompressed);
+        }
+
+        // BrotliSharpLib decodes truncated input silently, returning whatever it managed
+        // to produce instead of throwing — so a half-bundle decompresses to 0 bytes and
+        // the tar reader below sees an empty stream and reports zero entries. Detect that
+        // here: every well-formed bundle (including the intentionally-empty one) carries
+        // at least the 1024-byte tar end-of-archive marker, so anything shorter is truncated.
+        if (decompressed.Length < GumBundleFormat.MinimumTarPayloadLength)
+        {
+            throw new GumBundleFormatException(
+                $"Bundle payload is truncated; decompressed tar stream is {decompressed.Length} bytes, " +
+                $"shorter than the {GumBundleFormat.MinimumTarPayloadLength}-byte tar end-of-archive marker required for any valid bundle.");
+        }
+
+        decompressed.Position = 0;
+
+        using SharpCompress.Readers.IReader tar = SharpCompress.Readers.Tar.TarReader.OpenReader(
+            decompressed, new SharpCompress.Readers.ReaderOptions());
+
+        while (tar.MoveToNextEntry())
+        {
+            if (tar.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            byte[] content;
+            using (SharpCompress.Common.EntryStream entryStream = tar.OpenEntryStream())
+            using (MemoryStream buffer = new MemoryStream())
+            {
+                entryStream.CopyTo(buffer);
+                content = buffer.ToArray();
+            }
+
+            string key = tar.Entry.Key ?? string.Empty;
+            entries[key] = content;
+            orderedPaths.Add(key);
+        }
     }
 
     private static int ReadFully(Stream stream, byte[] buffer, int offset, int count)

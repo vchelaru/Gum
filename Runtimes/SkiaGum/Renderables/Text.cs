@@ -344,7 +344,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             else
             {
                 // Never stop between the halves of a surrogate pair.
-                if (char.IsHighSurrogate(line[remaining - 1]))
+                if (CodePointLength(line, remaining - 1) == 2)
                 {
                     remaining++;
                 }
@@ -401,15 +401,42 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return lines;
         }
 
+        // Start/Length count code points, so a surrogate pair (an emoji) is one unit there but two
+        // chars in the string (#7086). Walk the string once, advancing in step with the lines.
+        int utf16Position = 0;
+        int codePointPosition = 0;
         foreach (var line in textBlock.Lines)
         {
-            if (line.Start + line.Length <= source.Length)
+            int start = AdvanceCodePoints(source, ref utf16Position, ref codePointPosition, line.Start);
+            int end = AdvanceCodePoints(source, ref utf16Position, ref codePointPosition, line.Start + line.Length);
+            if (start >= 0 && end >= 0)
             {
-                lines.Add(source.Substring(line.Start, line.Length));
+                lines.Add(source.Substring(start, end - start));
             }
         }
 
         return lines;
+    }
+
+    /// <summary>
+    /// Moves a forward-only cursor over <paramref name="source"/> to <paramref name="targetCodePoint"/>
+    /// and returns the matching UTF-16 index, or -1 when the string ends first (or the target is
+    /// behind the cursor).
+    /// </summary>
+    private static int AdvanceCodePoints(string source, ref int utf16Position, ref int codePointPosition, int targetCodePoint)
+    {
+        if (targetCodePoint < codePointPosition)
+        {
+            return -1;
+        }
+
+        while (codePointPosition < targetCodePoint && utf16Position < source.Length)
+        {
+            utf16Position += CodePointLength(source, utf16Position);
+            codePointPosition++;
+        }
+
+        return codePointPosition == targetCodePoint ? utf16Position : -1;
     }
 
     /// <summary>
@@ -442,7 +469,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         var hitTestResult = textBlock.HitTest(screenX - absoluteX, screenY - absoluteY);
 
-        return hitTestResult.ClosestCodePointIndex;
+        // ClosestCodePointIndex counts code points; WrappedText is indexed in UTF-16 chars (#7086).
+        int utf16Position = 0;
+        int codePointPosition = 0;
+        int utf16Index = AdvanceCodePoints(_layoutText ?? string.Empty, ref utf16Position, ref codePointPosition, hitTestResult.ClosestCodePointIndex);
+        return utf16Index >= 0 ? utf16Index : hitTestResult.ClosestCodePointIndex;
     }
 
     /// <inheritdoc/>
@@ -1087,6 +1118,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // True when a run changes the size ([FontSize], [FontScale]) or the font family ([Font]), set by ParseMarkup.
     private bool _hasHeightRun;
     private string? _layoutText;
+
+    /// <summary>
+    /// The tags found in the markup text, with indexes into <see cref="_layoutText"/>. Null when the text has no
+    /// markup. Replaced, never mutated, each time the text is parsed. Read by <c>TextRuntime.GetTagAtIndex</c>.
+    /// </summary>
+    internal List<FoundTag>? ParsedBbCodeTags { get; private set; }
     private List<InlineVariable> _inlineVariables = new();
     private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
 
@@ -1116,6 +1153,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         "outlinethickness",
         "custom",
         "hasdropshadow",
+        // [Link=id]: kept as a range for TextRuntime.GetTagAtIndex, no styling.
+        "link",
     };
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
@@ -1212,7 +1251,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     customLettersByStart ??= new();
                     customLettersByStart[codePointIndex] = run;
                 }
-                codePointIndex += run.Text.Length;
+                for (int i = 0; i < run.Text.Length; i++)
+                {
+                    if (!char.IsLowSurrogate(run.Text[i]))
+                    {
+                        codePointIndex++;
+                    }
+                }
             }
             switch (HorizontalAlignment)
             {
@@ -1537,8 +1582,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// (issue #3701) with the same hard line breaks <see cref="GetVisibleWrappedText"/> inserts, so the
     /// typewriter reveal keeps per-run BBCode styling instead of falling back to plain text. Both sources
     /// index into <see cref="_layoutText"/> code-point-for-code-point (a run's text is only ever replaced
-    /// character-for-character by a <c>[Custom]</c> callback, never lengthened/shortened), so slicing runs
-    /// by the visible lines' lengths lines up with the correct styled content. Exposed internally for unit
+    /// code-point-for-code-point by a <c>[Custom]</c> callback, so an emoji becomes one replacement character), so slicing runs
+    /// by the visible lines' code-point counts lines up with the correct styled content. Exposed internally for unit
     /// testing.
     /// </summary>
     /// <param name="fullBlock">The full layout, whose line breaks the runs are fit to (see <see cref="FitRunsToLines"/>);
@@ -1558,26 +1603,33 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         for (int lineIndex = 0; lineIndex < visibleLines.Count; lineIndex++)
         {
-            int remaining = visibleLines[lineIndex].Length;
+            int remaining = CountCodePoints(visibleLines[lineIndex]);
             Style? lineStyle = null;
             while (remaining > 0 && runIndex < fullRuns.Count)
             {
                 StyledTextRun run = fullRuns[runIndex];
-                int available = run.Text.Length - runOffset;
-                if (available <= 0)
+                if (runOffset >= run.Text.Length)
                 {
                     runIndex++;
                     runOffset = 0;
                     continue;
                 }
 
-                int take = System.Math.Min(available, remaining);
+                // Counted in code points, as the layout's lines are: a [Custom] replacement is one character per code point,
+                // so a replaced emoji is one char in the run but two in the line.
+                int take = 0;
+                int codePointsTaken = 0;
+                while (runOffset + take < run.Text.Length && codePointsTaken < remaining)
+                {
+                    take += CodePointLength(run.Text, runOffset + take);
+                    codePointsTaken++;
+                }
                 string text = run.Text.Substring(runOffset, take);
                 result.Add(new StyledTextRun(text, run.Style, run.Letter, run.IsHeightRun));
                 lineStyle = run.Style;
 
                 runOffset += take;
-                remaining -= take;
+                remaining -= codePointsTaken;
                 if (runOffset >= run.Text.Length)
                 {
                     runIndex++;
@@ -1745,6 +1797,22 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return metrics.LineHeightForHeight(lineHeightFactor * metrics.PlainHeight);
     }
 
+    /// <summary>The number of UTF-16 chars of the code point at <paramref name="index"/>, counted the way the layout counts
+    /// them: a high surrogate and the char after it are one code point (an emoji; a lone high surrogate takes its neighbor
+    /// with it), else 1. The line mapping must follow this rule or WrappedText loses the end of a malformed text.</summary>
+    private static int CodePointLength(string text, int index) =>
+        char.IsHighSurrogate(text[index]) && index + 1 < text.Length ? 2 : 1;
+
+    private static int CountCodePoints(string text)
+    {
+        int count = 0;
+        for (int i = 0; i < text.Length; i += CodePointLength(text, i))
+        {
+            count++;
+        }
+        return count;
+    }
+
     /// <summary>
     /// Sizes every line of a text with a size or font run on its own (#6475). A run's <see cref="Style.LineHeight"/>
     /// applies to every line the run reaches, and a line takes its top and its bottom from whichever of its runs
@@ -1790,7 +1858,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 int pieceStart = charIndex;
                 while (charIndex < run.Text.Length && codePointsLeft > 0)
                 {
-                    charIndex += char.IsHighSurrogate(run.Text[charIndex]) && charIndex + 1 < run.Text.Length ? 2 : 1;
+                    charIndex += CodePointLength(run.Text, charIndex);
                     codePointsLeft--;
                     position++;
                 }
@@ -2013,6 +2081,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         _inlineVariables.Clear();
         _hasHeightRun = false;
+        ParsedBbCodeTags = null;
 
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
@@ -2030,6 +2099,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // normalized string keeps InlineVariable indexes aligned with the layout text.
         var normalized = withGlyphs.Replace("\r\n", "\n");
         var tags = BbCodeParser.Parse(normalized, SupportedTags);
+        ParsedBbCodeTags = tags;
         if (tags.Count == 0)
         {
             _hasMarkup = false;
@@ -2126,13 +2196,18 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         if (length > 0 && startStripped + length <= _layoutText.Length)
                         {
                             var taggedSubstring = _layoutText.Substring(startStripped, length);
-                            for (int i = 0; i < taggedSubstring.Length; i++)
+                            int letterLength;
+                            for (int i = 0; i < taggedSubstring.Length; i += letterLength)
                             {
+                                // A surrogate pair (an emoji) is one letter: splitting it in two draws two glyphs (issue #7108).
+                                letterLength = char.IsHighSurrogate(taggedSubstring[i])
+                                    && i + 1 < taggedSubstring.Length
+                                    && char.IsLowSurrogate(taggedSubstring[i + 1]) ? 2 : 1;
                                 _inlineVariables.Add(new InlineVariable
                                 {
                                     VariableName = "Custom",
                                     StartIndex = startStripped + i,
-                                    CharacterCount = 1,
+                                    CharacterCount = letterLength,
                                     Value = new ParameterizedLetterCustomizationCall
                                     {
                                         FunctionName = argument,
@@ -2229,7 +2304,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <see cref="Blend"/> is set) so the two compose in one <c>canvas.SaveLayer</c>. Returns
     /// <c>null</c> when neither effect is active, leaving <see cref="Render"/>'s fast path
     /// unchanged. The caller owns the returned paint and must dispose it. The blur values are
-    /// divided by 3 to match the sigma convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
+    /// converted to a sigma with <see cref="DropshadowBlur.GetSigma"/>, the same convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
     /// </summary>
     internal SKPaint? GetRenderPaint()
     {
@@ -2245,8 +2320,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             paint.ImageFilter = SKImageFilter.CreateDropShadow(
                 DropshadowOffsetX,
                 DropshadowOffsetY,
-                DropshadowBlurX / 3.0f,
-                DropshadowBlurY / 3.0f,
+                global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX),
+                global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY),
                 DropshadowColor);
         }
 

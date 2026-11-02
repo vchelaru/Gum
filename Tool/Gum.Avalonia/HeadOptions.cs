@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using Gum.CommandLine;
 
 namespace Gum.Avalonia;
 
@@ -15,8 +16,9 @@ public sealed class HeadOptions
 {
     /// <summary>Creates the options.</summary>
     public HeadOptions(double? exitAfterSeconds, string? screenshotPath, string? selectPath = null, string? theme = null, string? userDataFolder = null,
-        bool zoomToFit = false)
+        bool zoomToFit = false, string? startupFileError = null)
     {
+        StartupFileError = startupFileError;
         ExitAfterSeconds = exitAfterSeconds;
         ScreenshotPath = screenshotPath;
         SelectPath = selectPath;
@@ -66,6 +68,14 @@ public sealed class HeadOptions
     /// </summary>
     public string? UserDataFolder { get; }
 
+    /// <summary>
+    /// Why the project or element file named on the command line cannot open, or null when it can
+    /// (or none is named). Loading a missing one shows a modal error that nobody answers in an
+    /// unattended run, so the run would sit until <c>--exit-after</c> (#7374); a path that is no Gum
+    /// file would open an empty tool and still report success.
+    /// </summary>
+    public string? StartupFileError { get; }
+
     /// <summary>Parses the head-owned flags and ignores everything else.</summary>
     public static HeadOptions Parse(IReadOnlyList<string> args)
     {
@@ -75,8 +85,12 @@ public sealed class HeadOptions
         string? theme = null;
         string? userData = null;
         bool zoomToFit = false;
+        List<string> positionals = new List<string>();
+        bool followsUnknownFlag = false;
         for (int i = 0; i < args.Count; i++)
         {
+            bool isValueOfUnknownFlag = followsUnknownFlag;
+            followsUnknownFlag = false;
             if (args[i] == "--exit-after" && i + 1 < args.Count)
             {
                 exitAfter = double.Parse(args[++i], CultureInfo.InvariantCulture);
@@ -101,7 +115,40 @@ public sealed class HeadOptions
             {
                 userData = Path.GetFullPath(args[++i]);
             }
+            else if (args[i].StartsWith("-"))
+            {
+                // Not ours; the next argument may be its value (--project x, --parent-pid 5), which is not a startup file.
+                followsUnknownFlag = true;
+            }
+            else if (!isValueOfUnknownFlag || CommandLineManager.TryResolveStartupFile(args[i], out _, out _))
+            {
+                positionals.Add(args[i]);
+            }
         }
-        return new HeadOptions(exitAfter, screenshot, select, theme, userData, zoomToFit);
+        return new HeadOptions(exitAfter, screenshot, select, theme, userData, zoomToFit, FindStartupFileError(positionals));
+    }
+
+    // The head and CommandLineManager read the same arguments; the last project or element file wins there.
+    private static string? FindStartupFileError(IReadOnlyList<string> positionals)
+    {
+        string? lastStartupFile = null;
+        foreach (string positional in positionals)
+        {
+            if (CommandLineManager.TryResolveStartupFile(positional, out _, out _))
+            {
+                lastStartupFile = positional;
+            }
+            else
+            {
+                return positional + " is not a Gum project file";
+            }
+        }
+
+        if (lastStartupFile != null && !File.Exists(lastStartupFile))
+        {
+            return "The file does not exist: " + lastStartupFile;
+        }
+
+        return null;
     }
 }

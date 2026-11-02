@@ -137,3 +137,19 @@ Version 6 uses the **same XML format** as Version 5. There is **no format conver
 {% hint style="info" %}
 New projects created with the 2026 November tool (or later) are stamped Version 6 automatically.
 {% endhint %}
+
+## Version 7
+
+**Required Gum Tool Version**: 2026 November (or later)
+
+This version unlocks the `Shader Parameters` variable on a render target **Container**. When the container has a `Source Shader File`, the **Variables** tab lists the parameters the shader declares, and the tool saves your edits in this variable. The tool only shows and back-fills it for projects at version 7 or later.
+
+✅No manual changes are needed to your project beyond changing the version number.
+
+Version 7 uses the **same XML format** as Version 6. There is **no format conversion or Save All step**, you only change the `<Version>` number.
+
+❗Be sure that your entire team is using the new version of Gum (2026 November or later) before making this upgrade.
+
+{% hint style="info" %}
+New projects created with the 2026 November tool (or later) are stamped Version 7 automatically.
+{% endhint %}

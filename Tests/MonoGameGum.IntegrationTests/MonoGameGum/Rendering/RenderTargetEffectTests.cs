@@ -909,6 +909,110 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         }
     }
 
+    // #7053: GumService.UseShadowDusk() (the Gum.MonoGame.ShadowDusk package) is the resolver a game registers
+    // for .fx and .slang files, in place of the hand-written ShadowDusk code above.
+    [Theory]
+    [InlineData(".fx")]
+    [InlineData(".slang")]
+    public void UseShadowDusk_SourceShaderFile_GraysThePixels(string extension)
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        string shaderPath = WriteTempShader(extension == ".fx" ? GrayscaleFx : GrayscaleSlang, extension);
+        try
+        {
+            Gum.GumServiceShadowDuskExtensions.UseShadowDusk(game.GumService);
+
+            ContainerRuntime container = new();
+            container.X = 0;
+            container.Y = 0;
+            container.Width = 64;
+            container.Height = 64;
+            container.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+            ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+            red.Width = 64;
+            red.Height = 64;
+            red.Color = Color.Red;
+            container.AddChild(red);
+
+            container.AddToManagers(managers, null);
+            container.UpdateLayout();
+
+            container.SourceShaderFile = shaderPath;
+            container.RenderTargetEffect.ShouldNotBeNull();
+
+            Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+            Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
+            Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+            // Gray, not the black an unbound shader would draw.
+            withEffect.R.ShouldBeGreaterThan((byte)40);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(shaderPath);
+        }
+    }
+
+    [Fact]
+    public void UseShadowDusk_OtherExtensions_StillGoToThePreviousResolver()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        BasicEffect previousEffect = new BasicEffect(game.GraphicsDevice);
+        string customPath = Path.Combine(Path.GetTempPath(), "GumUseShadowDusk_" + Guid.NewGuid().ToString("N") + ".custom");
+        try
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path => previousEffect;
+            Gum.GumServiceShadowDuskExtensions.UseShadowDusk(game.GumService);
+
+            ContainerRuntime container = new();
+            container.IsRenderTarget = true;
+            container.SourceShaderFile = customPath;
+
+            container.RenderTargetEffect.ShouldBeSameAs(previousEffect);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            previousEffect.Dispose();
+        }
+    }
+
+    [Fact]
+    public void UseShadowDusk_InvalidSlang_ThrowsNamingTheFileAndTheConverterErrors()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        string shaderPath = WriteTempShader("this is not a shader", ".slang");
+        try
+        {
+            Gum.GumServiceShadowDuskExtensions.UseShadowDusk(game.GumService);
+
+            InvalidOperationException exception = Should.Throw<InvalidOperationException>(
+                () => CustomSetPropertyOnRenderable.RenderTargetEffectResolver!(shaderPath));
+
+            exception.Message.ShouldContain(shaderPath);
+            exception.Message.ShouldContain("SD");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(shaderPath);
+        }
+    }
+
     // #3210: the Gum editor backs a Container with a LineRectangle (the outline visual), not the
     // runtime's InvisibleRenderable, so the render-target effect must be carried via the shared
     // IRenderTargetRenderable interface that both implement. Mirror the editor's setup here: a GUE
@@ -962,7 +1066,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
     }
 
     [Fact]
-    public void SourceShaderFile_IsNoOp_WhenNoResolverRegistered()
+    public void SourceShaderFile_ReportsErrorAndRendersUnshaded_WhenNoResolverRegistered()
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -992,9 +1096,26 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         container.AddToManagers(managers, null);
         container.UpdateLayout();
 
-        // With no resolver the assignment is a graceful no-op (no crash); the container renders
-        // unshaded, so the pixel stays red.
-        container.SourceShaderFile = "Shaders/DoesNotMatter.fx";
+        // With no resolver a .fx file is a reported load failure (#7053; it was a silent no-op), and
+        // with ConsumeSilently it does not throw: the container renders unshaded, so the pixel stays red.
+        MissingFileBehavior previousBehavior = GraphicalUiElement.MissingFileBehavior;
+        string? reportedError = null;
+        Action<string> handler = message => reportedError = message;
+        try
+        {
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+
+            container.SourceShaderFile = "Shaders/DoesNotMatter.fx";
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+            GraphicalUiElement.MissingFileBehavior = previousBehavior;
+        }
+
+        reportedError.ShouldNotBeNull();
+        reportedError.ShouldContain("ShadowDusk");
         Color result = RenderToCaptureAndSample(gd, renderer, managers);
 
         result.R.ShouldBeGreaterThan((byte)150);
@@ -1060,9 +1181,9 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
     /// <summary>
     /// Writes the given shader source to a unique temp .fx file and returns its absolute path.
     /// </summary>
-    private static string WriteTempShader(string source)
+    private static string WriteTempShader(string source, string extension = ".fx")
     {
-        string path = Path.Combine(Path.GetTempPath(), "GumSourceShaderTest_" + Guid.NewGuid().ToString("N") + ".fx");
+        string path = Path.Combine(Path.GetTempPath(), "GumSourceShaderTest_" + Guid.NewGuid().ToString("N") + extension);
         File.WriteAllText(path, source);
         return path;
     }

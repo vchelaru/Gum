@@ -115,6 +115,10 @@ post is ordered in but never brought to the front or made key. `AvaloniaNativeMe
 (a CoreFoundation timer in the default run-loop mode, which cannot fire until tracking ends). A new
 native menu must pass it too.
 
+## Startup failures
+
+Startup-path code never lets a best-effort side effect (marker file, sentinel, log) throw and abort startup; route it through `BestEffortFile.TryRun` (`Tools/Gum.ProjectServices/Diagnostics/BestEffortFile.cs`), as `LastProjectLoadMarker` and `FreezeDiagnosticsInbox` do. A user-visible startup failure is a normal closable window with Copy and Close (`StartupFailurePanel`), never a full-window text dump.
+
 ## Common Pitfalls
 
 **Wrong system**: The most common mistake is modifying `DialogWindow.xaml` or `Dialog.cs` expecting it to affect the delete dialog. Always verify which system shows the dialog you're fixing.

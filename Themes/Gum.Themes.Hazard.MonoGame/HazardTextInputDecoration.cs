@@ -81,7 +81,7 @@ internal sealed class HazardTextInputDecoration
         host.TextInstance.Color = text;
         host.PlaceholderTextInstance.Color = HazardStyling.ActiveStyle.Colors.Placeholder;
         host.CaretInstance.Color = text;
-        host.SelectionInstance.Color = HazardStyling.ActiveStyle.Colors.AccentPressed;
+        host.SelectionInstance.Color = HazardStyling.ActiveStyle.Colors.TextSelection;
         _focusRing.Visible = ring;
     }
 }

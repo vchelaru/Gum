@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Tests that need a real GPU-backed Skia surface (Ganesh). Not in any solution or in CI: the CI runners have no
-       GPU, and the CPU raster surface the other Skia tests use cannot show GPU sampling bugs (#7030). Run by hand on a
-       Windows machine with a GPU, filtered to a test class by name. -->
+  <!-- Tests that need a real GPU-backed Skia surface (Ganesh). The CPU raster surface the other Skia tests use cannot
+       show GPU sampling bugs (#7030). Windows only. CI has no GPU, so it runs these on Mesa llvmpipe's software GL
+       (the mesa-1 stream in .github/scripts/windows-test-groups.txt); on a machine with a GPU they run against the
+       real driver. Filter to a test class by name. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

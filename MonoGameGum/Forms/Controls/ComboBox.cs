@@ -531,6 +531,20 @@ public class ComboBox :
     #region Events
 
     public event Action<object, SelectionChangedEventArgs>? SelectionChanged;
+
+    /// <summary>
+    /// Raised once each time the drop-down opens, by any route (mouse, keyboard, gamepad, or
+    /// setting <see cref="IsDropDownOpen"/>).
+    /// </summary>
+    public event EventHandler? DropDownOpened;
+
+    /// <summary>
+    /// Raised once each time an open drop-down closes, by any route (picking an item, Escape,
+    /// clicking away, losing focus, being disabled, hidden or removed, or setting
+    /// <see cref="IsDropDownOpen"/> to false).
+    /// </summary>
+    public event EventHandler? DropDownClosed;
+
     /// <summary>
     /// Raised every frame while this control has input focus. Can be used
     /// to perform custom per-frame logic while the control is focused.
@@ -705,6 +719,8 @@ public class ComboBox :
         // A selection made while closed was queued by the list box (it cannot scroll until it is
         // laid out); now that the drop-down is laid out, bring it into view (#6643).
         listBox.ApplyPendingScrollIntoView();
+
+        DropDownOpened?.Invoke(this, EventArgs.Empty);
     }
 
     private void ShowListBoxInstance()
@@ -1150,6 +1166,8 @@ public class ComboBox :
 #else
             RestoreFocusAfterClose(hiddenListBox, restoreFocus);
 #endif
+
+            DropDownClosed?.Invoke(this, EventArgs.Empty);
         }
     }
 

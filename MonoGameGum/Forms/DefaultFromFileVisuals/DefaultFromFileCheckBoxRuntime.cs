@@ -19,6 +19,7 @@ public class DefaultFromFileCheckBoxRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new CheckBox(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

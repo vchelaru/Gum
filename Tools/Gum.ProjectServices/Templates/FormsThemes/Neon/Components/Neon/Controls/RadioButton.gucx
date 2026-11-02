@@ -48,7 +48,7 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">-4</Value>
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="VerticalAlignment" Name="FocusedIndicator.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>

@@ -95,6 +95,31 @@ public class FormsThemeCreationTests : IDisposable
         File.Exists(Path.Combine(_tempDirectory, "preview.png")).ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData("Bubblegum")]
+    [InlineData("DarkPro")]
+    [InlineData("Editor")]
+    [InlineData("ForestGlade")]
+    [InlineData("Hazard")]
+    [InlineData("Meadow")]
+    [InlineData("Neon")]
+    [InlineData("Retro95")]
+    public void CreateFromTheme_EveryTheme_WritesOnlyItsDemoScreen(string themeName)
+    {
+        string themeDirectory = new FormsThemeLocator(new[] { FindThemesRoot() }).FindThemeDirectory(themeName)!;
+        string projectPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        StandardElementsManager.Self.Initialize();
+
+        new FormsTemplateCreator().CreateFromTheme(projectPath, themeDirectory);
+
+        string screensDirectory = Path.Combine(_tempDirectory, "Screens");
+        Directory.GetFiles(screensDirectory, "*", SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(screensDirectory, file).Replace((char)92, '/'))
+            .ShouldBe(new[] { themeName + "/DemoScreenGum.gusx" });
+        new ProjectLoader().Load(projectPath).Project!.Screens.Select(screen => screen.Name)
+            .ShouldBe(new[] { themeName + "/DemoScreenGum" });
+    }
+
     // Retro95's submenu popup component and its behavior come along into a new project (#6720).
     [Fact]
     public void CreateFromTheme_Retro95_IncludesSubmenuPopupBehaviorAndComponent()

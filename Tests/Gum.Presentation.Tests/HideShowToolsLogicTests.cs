@@ -42,4 +42,17 @@ public class HideShowToolsLogicTests
         _toolsVisibility.Object.IsToolsVisible.ShouldBeFalse();
         _toolsVisibility.Verify(x => x.EnsureMinimumWidth(), Times.Never);
     }
+
+    [Fact]
+    public void ToggleToolsVisibility_WhenHidden_EnsuresMinimumWidthBeforeShowing()
+    {
+        bool visibleWhenEnsured = true;
+        _toolsVisibility.SetupProperty(x => x.IsToolsVisible, false);
+        _toolsVisibility.Setup(x => x.EnsureMinimumWidth())
+            .Callback(() => visibleWhenEnsured = _toolsVisibility.Object.IsToolsVisible);
+
+        _logic.ToggleToolsVisibility();
+
+        visibleWhenEnsured.ShouldBeFalse();
+    }
 }

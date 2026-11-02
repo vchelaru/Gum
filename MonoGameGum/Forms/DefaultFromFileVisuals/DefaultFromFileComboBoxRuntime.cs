@@ -20,6 +20,7 @@ public class DefaultFromFileComboBoxRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new ComboBox(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 
