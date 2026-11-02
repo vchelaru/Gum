@@ -125,6 +125,11 @@ public class ObjectFinder : IObjectFinder
     {
         get
         {
+            if (_threadOverride != null)
+            {
+                return _threadOverride;
+            }
+
             GumContext? context = GumContext.Current;
             if (context == null || context.AdoptsProcessStatics)
             {
@@ -133,6 +138,31 @@ public class ObjectFinder : IObjectFinder
             return context.ObjectFinder ??= new ObjectFinder();
         }
         private set => _processWide = value;
+    }
+
+    [ThreadStatic]
+    static ObjectFinder? _threadOverride;
+
+    /// <summary>
+    /// Makes <see cref="Self"/> return <paramref name="finder"/> on the calling thread until the result is
+    /// disposed, leaving every other thread on the real one. Work that must look up elements in a project it
+    /// is loading uses this instead of assigning <see cref="GumProjectSave"/> on <see cref="Self"/>, which is
+    /// the tool's own project and which another thread (the UI) is reading at the same time. Dispose on the
+    /// thread that called this.
+    /// </summary>
+    public static IDisposable UseOnThisThread(ObjectFinder finder) => new ThreadOverrideScope(finder);
+
+    private sealed class ThreadOverrideScope : IDisposable
+    {
+        private readonly ObjectFinder? _previous;
+
+        public ThreadOverrideScope(ObjectFinder finder)
+        {
+            _previous = _threadOverride;
+            _threadOverride = finder;
+        }
+
+        public void Dispose() => _threadOverride = _previous;
     }
 
     /// <summary>

@@ -35,7 +35,8 @@ public class AposShapeRuntimeCloneTests
         Circle cloneCircle = (Circle)clone.RenderableComponent!;
         cloneCircle.PreRender();
 
-        cloneCircle.StrokeWidth.ShouldBe(5);
+        // #7309: the renderable gets the authored width minus the 1 px anti-alias fringe.
+        cloneCircle.StrokeWidth.ShouldBe(4);
     }
 
     [Fact]
@@ -49,7 +50,8 @@ public class AposShapeRuntimeCloneTests
         RoundedRectangle cloneRectangle = (RoundedRectangle)clone.RenderableComponent!;
         cloneRectangle.PreRender();
 
-        cloneRectangle.StrokeWidth.ShouldBe(5);
+        // #7309: the renderable gets the authored width minus the 1 px anti-alias fringe.
+        cloneRectangle.StrokeWidth.ShouldBe(4);
     }
 }
 #pragma warning restore CS0618

@@ -615,7 +615,7 @@ public class ScrollViewer :
     {
         if (InnerPanel != null)
         {
-            this.InnerPanel.Children.Add(child.Visual);
+            this.InnerPanel.AddChild(child.Visual);
         }
         else
         {
@@ -639,7 +639,7 @@ public class ScrollViewer :
     {
         if (InnerPanel != null)
         {
-            this.InnerPanel.Children.Add(child);
+            this.InnerPanel.AddChild(child);
         }
         else
         {
@@ -1213,6 +1213,13 @@ public class ScrollViewer :
 #if !FRB
         // Previews run outermost first. An open drop-down closes on Escape before this ScrollViewer takes it.
         if (InteractiveGue.CurrentInputReceiver is ComboBox { IsDropDownOpen: true })
+        {
+            return;
+        }
+
+        // A focused text box owns Escape so it can raise EditCancelled; taking focus here would end the edit
+        // before the box saw the key.
+        if (InteractiveGue.CurrentInputReceiver is TextBoxBase)
         {
             return;
         }

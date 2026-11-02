@@ -265,12 +265,23 @@ public partial class CustomSetPropertyOnRenderable
     /// <c>Raylib.LoadShader</c> on raylib. The returned object is boxed into the backend-agnostic
     /// <see cref="RenderableBase.RenderTargetEffect"/> slot (a
     /// <c>Microsoft.Xna.Framework.Graphics.Effect</c> on xnalike, a <c>Raylib_cs.Shader</c> on
-    /// raylib). If null, assigning a shader file is a graceful no-op and the container renders
-    /// unshaded. Return null to signal a failed load (missing file / compile error); resolution then
+    /// raylib). If null, assigning a shader file is a load failure, reported like a missing file, whose
+    /// message names the ShadowDusk package to add; the container renders unshaded only under
+    /// <see cref="MissingFileBehavior.ConsumeSilently"/>. Return null to signal a failed load (missing file / compile error); resolution then
     /// honors <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring sprite source-file
     /// handling.
     /// </summary>
     public static Func<string, object?>? RenderTargetEffectResolver { get; set; }
+
+#if RAYLIB
+    private const string ShadowDuskPackageId = "Gum.raylib.ShadowDusk";
+#elif KNI
+    private const string ShadowDuskPackageId = "Gum.KNI.ShadowDusk";
+#elif FNA
+    private const string ShadowDuskPackageId = "Gum.FNA.ShadowDusk";
+#else
+    private const string ShadowDuskPackageId = "Gum.MonoGame.ShadowDusk";
+#endif
 
     /// <summary>
     /// Additional logic to perform before falling back to reflection.
@@ -317,6 +328,17 @@ public partial class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, dispatchValue);
         }
+#if RAYLIB
+        // #7296 — raylib's ArcRuntime keeps Thickness on the runtime (PreRender resolves
+        // StrokeWidthUnits and pushes it to the LineArc every frame). Without this dispatch the
+        // variable fell to SetPropertyThroughReflection, landed on the LineArc, and was
+        // overwritten by the runtime's default 10 on the next PreRender, so every loaded Arc drew
+        // at the default thickness.
+        else if (graphicalUiElement is Gum.GueDeriving.ArcRuntime arcRuntime)
+        {
+            handled = TrySetPropertyOnArcRuntime(arcRuntime, propertyName, dispatchValue);
+        }
+#endif
 #endif
 #if !RAYLIB
         else if (renderableIpso is LineCircle)
@@ -469,17 +491,6 @@ public partial class CustomSetPropertyOnRenderable
     }
 
     /// <summary>
-    /// Resolves a render-target shader file reference (e.g. an <c>.fx</c> path on the XNA-family
-    /// backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib) into a platform effect via
-    /// <see cref="RenderTargetEffectResolver"/> and stores it in the container's
-    /// <see cref="RenderableBase.RenderTargetEffect"/> slot. Mirrors
-    /// <see cref="AssignSourceFileOnSprite"/>: the resolved effect is cached in
-    /// <see cref="LoaderManager"/> by normalized path so a shader referenced by multiple containers
-    /// loads once, and a failed resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>.
-    /// With no resolver registered this is a graceful no-op (the container renders unshaded),
-    /// matching how a missing texture degrades. Called internally by the string property path.
-    /// </summary>
-    /// <summary>
     /// Replaces the container's shader parameters with the values in the saved <c>ShaderParameters</c>
     /// text (see <see cref="ShaderParameterText"/>). An entry that cannot be read is skipped and
     /// reported without dropping the rest.
@@ -498,6 +509,18 @@ public partial class CustomSetPropertyOnRenderable
         }
     }
 
+    /// <summary>
+    /// Resolves a render-target shader file reference (e.g. an <c>.fx</c> path on the XNA-family
+    /// backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib) into a platform effect via
+    /// <see cref="RenderTargetEffectResolver"/> and stores it in the container's
+    /// <see cref="RenderableBase.RenderTargetEffect"/> slot. Mirrors
+    /// <see cref="AssignSourceFileOnSprite"/>: the resolved effect is cached in
+    /// <see cref="LoaderManager"/> by normalized path so a shader referenced by multiple containers
+    /// loads once, and a failed resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>.
+    /// With no resolver registered, or one that returns null, the file fails like a missing file whatever its
+    /// extension (the message names the ShadowDusk package); under ConsumeSilently the container renders
+    /// unshaded and the error is reported through PropertyAssignmentError. Called internally by the string property path.
+    /// </summary>
     public static void AssignSourceShaderFileOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
         // First, so the container's shader variables follow the file whatever happens below (#7010).
@@ -509,11 +532,18 @@ public partial class CustomSetPropertyOnRenderable
             return;
         }
 
-        // No resolver registered: render unshaded rather than crash. A separate opt-in library
-        // (the shader equivalent of Gum.Shapes) or the consumer registers the resolver — e.g. doing
-        // Raylib.LoadShader on raylib.
+        // No resolver registered: a shader that cannot load fails like a missing file (#7053) rather than
+        // silently rendering unshaded. The consumer registers a resolver (the ShadowDusk package for the
+        // runtime, or their own, e.g. Raylib.LoadShader on raylib).
         if (RenderTargetEffectResolver == null)
         {
+            string noResolverMessage = ShaderResolverRequirement.BuildNoResolverMessage(value, graphicalUiElement.Tag, ShadowDuskPackageId);
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                throw new System.IO.FileNotFoundException(noResolverMessage);
+            }
+            effectOwner.RenderTargetEffect = null;
+            RaisePropertyAssignmentError(noResolverMessage);
             return;
         }
 
@@ -562,6 +592,12 @@ public partial class CustomSetPropertyOnRenderable
             message += $"\n{value}";
             message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
             message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+            if (resolveException == null)
+            {
+                // The resolver returned nothing without throwing (the ShadowDusk loaders throw when they
+                // fail), so no resolver in the chain handled the file.
+                message += "\n" + ShaderResolverRequirement.BuildDeclinedHint(ShadowDuskPackageId);
+            }
             if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
@@ -1076,6 +1112,9 @@ public partial class CustomSetPropertyOnRenderable
         }
 
         textRenderable.InlineVariables.Clear();
+#if !FRB
+        textRenderable.ParsedBbCodeTags = null;
+#endif
         if (valueAsString?.Contains("[") == true)
         {
             textRenderable.StoredMarkupText = valueAsString;
@@ -1622,23 +1661,16 @@ public partial class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    // The eight font-resolution stacks (mirroring the MonoGame path). Inline [FontSize]/[IsBold]/etc. tags
-    // push their value on open and pop on close, so a run resolves to the font implied by every tag currently
-    // open over it - the whole reason nested markup needs a stack rather than a flat lookup.
-    static Stack<float> fontSizeStack = new Stack<float>();
-    static Stack<string?> fontNameStack = new Stack<string?>();
-    static Stack<int> outlineThicknessStack = new Stack<int>();
-    static Stack<bool> useFontSmoothingStack = new Stack<bool>();
-    static Stack<bool> isItalicStack = new Stack<bool>();
-    static Stack<bool> isBoldStack = new Stack<bool>();
-    static Stack<bool> useCustomFontStack = new Stack<bool>();
-    // A [HasDropshadow] tag toggles just this on/off flag per run - offset/blur/color stay whole-text
-    // (set via TextRuntime.Dropshadow*), the same split [OutlineThickness] uses against the whole-text
-    // OutlineColor. See #3528.
-    static Stack<bool> hasDropshadowStack = new Stack<bool>();
+    // The eight font-resolution stacks (see BbCodeFontStacks, shared with FontReferenceCollector). Inline
+    // [FontSize]/[IsBold]/etc. tags push their value on open and pop on close, so a run resolves to the font
+    // implied by every tag currently open over it - the whole reason nested markup needs a stack rather
+    // than a flat lookup. A [HasDropshadow] tag toggles just the on/off flag per run - offset/blur/color
+    // stay whole-text (set via TextRuntime.Dropshadow*), the same split [OutlineThickness] uses against the
+    // whole-text OutlineColor. See #3528.
+    static BbCodeFontStacks fontStacks = new BbCodeFontStacks();
 
     // The base text's dropshadow offset/blur/color, snapshotted once per SetBbCodeText call (no BBCode
-    // tag varies these mid-text - only on/off, via hasDropshadowStack above) and applied to every per-run
+    // tag varies these mid-text - only on/off, via fontStacks.HasDropshadow above) and applied to every per-run
     // font resolved by GetAndCreateFontIfNecessary, matching the base-font path
     // (TextRuntime.CopyFontGenerationFieldsTo / GetFontCacheFileName). See #3625.
     static float currentDropshadowOffsetX;
@@ -1653,7 +1685,7 @@ public partial class CustomSetPropertyOnRenderable
     // offset/blur/color (see the fields above) onto a per-run BmfcSave.
     static void ApplyCurrentDropshadowTo(BmfcSave bmfcSave)
     {
-        bmfcSave.HasDropshadow = hasDropshadowStack.Peek();
+        bmfcSave.HasDropshadow = fontStacks.HasDropshadow.Peek();
         bmfcSave.DropshadowOffsetX = currentDropshadowOffsetX;
         bmfcSave.DropshadowOffsetY = currentDropshadowOffsetY;
         bmfcSave.DropshadowBlur = currentDropshadowBlur;
@@ -1735,104 +1767,18 @@ public partial class CustomSetPropertyOnRenderable
 
     static List<TagInfo> allTags = new List<TagInfo>();
 
-    /// <summary>
-    /// Variable names a <c>[state=Name]</c> BBCode tag is allowed to apply to the substring it wraps -
-    /// exactly the set already wired for per-run application elsewhere in this file (the direct-value
-    /// cases in <see cref="SetBbCodeText"/> plus the font-stack cases in <see cref="ApplyFontVariables"/>).
-    /// A state can hold arbitrary variables (X, Y, Width, etc.), but only these have per-run meaning, so
-    /// anything else on the state is silently skipped rather than applied to the whole element.
-    /// </summary>
-    private static readonly HashSet<string> StateBbCodeAllowlist = new HashSet<string>
-    {
-        "Color", "Red", "Green", "Blue", "FontScale",
-        "Font", "FontSize", "OutlineThickness", "IsItalic", "IsBold", "UseCustomFont", "HasDropshadow",
-    };
+    private static string CanonicalTagName(string name) => BbCodeFontStacks.CanonicalTagName(name);
 
     /// <summary>
-    /// Formats an already-typed <see cref="Gum.DataTypes.Variables.VariableSave.Value"/> back into the
-    /// string <see cref="TagInfo.Argument"/> form the existing per-tag parsing (in
-    /// <see cref="SetBbCodeText"/> and <see cref="ApplyFontVariables"/>) expects, so a decomposed state
-    /// variable can be re-dispatched through that unchanged parsing without a bespoke typed-value path.
-    /// Lossless for every allowlisted type: bool/int/float format invariantly, and Color round-trips
-    /// through 8-digit ARGB hex (not <see cref="System.Drawing.Color.Name"/>, which is lossy for
-    /// non-named colors).
-    /// </summary>
-    private static string? FormatStateVariableArgument(object? value)
-    {
-        if (value == null)
-        {
-            return null;
-        }
-
-        if (value is System.Drawing.Color color)
-        {
-            return "0x" + color.ToArgb().ToString("X8", CultureInfo.InvariantCulture);
-        }
-
-        return Convert.ToString(value, CultureInfo.InvariantCulture);
-    }
-
-    /// <summary>
-    /// Expands every <c>[state=Name]</c> <see cref="FoundTag"/> in <paramref name="results"/> into one
-    /// synthetic <see cref="FoundTag"/> per allowlisted variable on the named state (looked up via
+    /// Expands every <c>[state=Name]</c> tag into the allowlisted variables of the named state (see
+    /// <see cref="BbCodeFontStacks.ExpandStateTags"/>), looked up via
     /// <see cref="GraphicalUiElementExtensions.TryGetStateByName"/> - the same States-then-Categories
     /// resolution <see cref="GraphicalUiElement.ApplyState(string)"/> uses, so a state defined in the
-    /// Gum tool's States tab, inside a categorized state, or added in code all resolve identically),
-    /// each spanning the state tag's own open/close range. An unknown state name, or a state with no
-    /// allowlisted variables, contributes nothing - a no-op, not an error. Must run AFTER
-    /// <see cref="BbCodeParser.RemoveTags"/> has already stripped the source text using the original
-    /// (unexpanded) <paramref name="results"/>: the synthetic entries share character ranges with each
-    /// other (and with the original state tag), so stripping with them in play would remove the same
-    /// range more than once.
+    /// Gum tool's States tab, inside a categorized state, or added in code all resolve identically.
     /// </summary>
-    private static List<FoundTag> ExpandStateTags(List<FoundTag> results, GraphicalUiElement graphicalUiElement)
-    {
-        List<FoundTag>? expanded = null;
-
-        foreach (FoundTag tag in results)
-        {
-            if (tag.Name == "State")
-            {
-                expanded ??= new List<FoundTag>(results.Where(item => item.Name != "State"));
-
-                if (graphicalUiElement.TryGetStateByName(tag.Open.Argument ?? string.Empty,
-                        out Gum.DataTypes.Variables.StateSave? state))
-                {
-                    foreach (Gum.DataTypes.Variables.VariableSave variable in state.Variables)
-                    {
-                        if (variable.SetsValue && StateBbCodeAllowlist.Contains(variable.Name))
-                        {
-                            string? argument = FormatStateVariableArgument(variable.Value);
-                            if (argument != null)
-                            {
-                                expanded.Add(new FoundTag
-                                {
-                                    Name = variable.Name,
-                                    Open = new TagInfo
-                                    {
-                                        StartIndex = tag.Open.StartIndex,
-                                        Count = tag.Open.Count,
-                                        StartStrippedIndex = tag.Open.StartStrippedIndex,
-                                        Argument = argument,
-                                        Name = variable.Name,
-                                    },
-                                    Close = new TagInfo
-                                    {
-                                        StartIndex = tag.Close.StartIndex,
-                                        Count = tag.Close.Count,
-                                        StartStrippedIndex = tag.Close.StartStrippedIndex,
-                                        Name = variable.Name,
-                                    },
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return expanded ?? results;
-    }
+    private static List<FoundTag> ExpandStateTags(List<FoundTag> results, GraphicalUiElement graphicalUiElement) =>
+        BbCodeFontStacks.ExpandStateTags(results, name =>
+            graphicalUiElement.TryGetStateByName(name, out Gum.DataTypes.Variables.StateSave? state) ? state : null);
 
     /// <summary>
     /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
@@ -1860,6 +1806,10 @@ public partial class CustomSetPropertyOnRenderable
         var strippedText = BbCodeParser.RemoveTags(normalized, results);
 
         asText.RawText = strippedText;
+#if !FRB
+        // Kept as parsed (before ExpandStateTags) so TextRuntime.GetTagAtIndex can find a tag by its range.
+        asText.ParsedBbCodeTags = results;
+#endif
 
         // Must happen after RemoveTags (see ExpandStateTags) - expanded entries are for value
         // application only, not text stripping.
@@ -1871,7 +1821,8 @@ public partial class CustomSetPropertyOnRenderable
         {
             object? castedValue = item.Open.Argument;
             var shouldApply = false;
-            switch (item.Name)
+            string canonicalName = CanonicalTagName(item.Name);
+            switch (canonicalName)
             {
                 case "Red":
                 case "Green":
@@ -1952,7 +1903,7 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
                     StartIndex = item.Open.StartStrippedIndex,
-                    VariableName = item.Name,
+                    VariableName = canonicalName,
                     // shouldApply is only set alongside a parsed value.
                     Value = castedValue!
                 });
@@ -1973,44 +1924,24 @@ public partial class CustomSetPropertyOnRenderable
         // never null, so this guard is always-true and FRB behavior is unchanged - a pure structural move.)
         if (textRuntime != null)
         {
-            fontNameStack.Clear();
+            string? baseFontName;
             if (textRuntime.UseCustomFont)
             {
-                var customFont = textRuntime.CustomFontFile;
-                if (customFont?.EndsWith(".fnt") == true)
+                baseFontName = textRuntime.CustomFontFile;
+                if (baseFontName?.EndsWith(".fnt") == true)
                 {
-                    customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
+                    baseFontName = baseFontName.Substring(0, baseFontName.Length - ".fnt".Length);
                 }
-                fontNameStack.Push(customFont);
             }
             else
             {
-                fontNameStack.Push(textRuntime.Font);
+                baseFontName = textRuntime.Font;
             }
 
-            fontSizeStack.Clear();
-            fontSizeStack.Push(textRuntime.FontSize);
-
-            outlineThicknessStack.Clear();
-            outlineThicknessStack.Push(textRuntime.OutlineThickness);
-
-            useFontSmoothingStack.Clear();
-            useFontSmoothingStack.Push(textRuntime.UseFontSmoothing);
-
-            isItalicStack.Clear();
-            isItalicStack.Push(textRuntime.IsItalic);
-
-            isBoldStack.Clear();
-            isBoldStack.Push(textRuntime.IsBold);
-
-            useCustomFontStack.Clear();
-            useCustomFontStack.Push(textRuntime.UseCustomFont);
-
-            hasDropshadowStack.Clear();
 #if FRB
             // FRB's GraphicalUiElement has no dropshadow font properties (see the FRB extension
             // methods below), so per-run resolution never applies a dropshadow there either.
-            hasDropshadowStack.Push(false);
+            bool baseHasDropshadow = false;
             currentDropshadowOffsetX = 0f;
             currentDropshadowOffsetY = 0f;
             currentDropshadowBlur = 0f;
@@ -2019,7 +1950,7 @@ public partial class CustomSetPropertyOnRenderable
             currentDropshadowBlue = 0;
             currentDropshadowAlpha = 0;
 #else
-            hasDropshadowStack.Push(textRuntime.HasDropshadow);
+            bool baseHasDropshadow = textRuntime.HasDropshadow;
             currentDropshadowOffsetX = textRuntime.DropshadowOffsetX;
             currentDropshadowOffsetY = textRuntime.DropshadowOffsetY;
             currentDropshadowBlur = textRuntime.DropshadowBlur;
@@ -2028,6 +1959,10 @@ public partial class CustomSetPropertyOnRenderable
             currentDropshadowBlue = (byte)textRuntime.DropshadowBlue;
             currentDropshadowAlpha = (byte)textRuntime.DropshadowAlpha;
 #endif
+
+            fontStacks.Seed(baseFontName, textRuntime.FontSize, textRuntime.OutlineThickness,
+                textRuntime.UseFontSmoothing, textRuntime.IsItalic, textRuntime.IsBold,
+                textRuntime.UseCustomFont, baseHasDropshadow);
 
             ApplyFontVariables(asText, expandedResults);
         }
@@ -2072,108 +2007,23 @@ public partial class CustomSetPropertyOnRenderable
             // creator wired - the raw pixel size as a float (ResolveRunFont then scales the base atlas).
             object? castedValue = null;
             string convertedName = "BitmapFont"; // shared historical run-marker name (see ResolvedFont note).
-            switch (tag.Name)
+            if (fontStacks.Apply(tag.Name, tag.Argument, out bool pushed))
             {
-                case "Font":
-                    if (!string.IsNullOrEmpty(tag.Argument))
-                    {
-                        // tolerate ".fnt" suffix
-                        var argument = tag.Argument;
-                        if (argument?.EndsWith(".fnt") == true)
-                        {
-                            argument = argument.Substring(0, argument.Length - ".fnt".Length);
-                        }
-                        fontNameStack.Push(argument);
-                    }
-                    else
-                    {
-                        fontNameStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "FontSize":
-                    if (float.TryParse(tag.Argument, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedSize))
-                    {
-                        fontSizeStack.Push(parsedSize);
-                        castedValue = GetAndCreateFontIfNecessary();
+                castedValue = GetAndCreateFontIfNecessary();
 #if RAYLIB
-                        // Platform-necessary Raylib fallback: with no font creator wired, no crisp font can be
-                        // rasterized at the requested size, so store the raw pixel size as a float and let the
-                        // renderer scale the base atlas to it (a blurry-but-correct approximation). The XNA
-                        // path never needs this - it can new BitmapFont(...) at any size.
-                        castedValue ??= parsedSize;
+                if (CanonicalTagName(tag.Name) == "FontSize")
+                {
+                    // Platform-necessary Raylib fallback: with no font creator wired, no crisp font can be
+                    // rasterized at the requested size, so store the raw pixel size as a float and let the
+                    // renderer scale the base atlas to it (a blurry-but-correct approximation). The XNA
+                    // path never needs this - it can new BitmapFont(...) at any size.
+                    // The close tag must end that run too (#6468): back to the enclosing [FontSize] when
+                    // one is still open, else 0, which means "back to the base font" and which Text does
+                    // not treat as a size run. Without it the open run would stretch to the end of the text.
+                    castedValue ??= pushed ? fontStacks.FontSize.Peek()
+                        : fontStacks.FontSize.Count > 1 ? fontStacks.FontSize.Peek() : 0f;
+                }
 #endif
-                    }
-                    else
-                    {
-                        fontSizeStack.Pop();
-                        castedValue = GetAndCreateFontIfNecessary();
-#if RAYLIB
-                        // With no font creator the open tag stored a raw size (above), so the close tag must end
-                        // that run too (#6468): back to the enclosing [FontSize] when one is still open, else 0,
-                        // which means "back to the base font" and which Text does not treat as a size run.
-                        // Without it the open run would stretch to the end of the text.
-                        castedValue ??= fontSizeStack.Count > 1 ? fontSizeStack.Peek() : 0f;
-#endif
-                    }
-                    break;
-                case "OutlineThickness":
-                    if (int.TryParse(tag.Argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedOutline))
-                    {
-                        outlineThicknessStack.Push(parsedOutline);
-                    }
-                    else
-                    {
-                        outlineThicknessStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "IsItalic":
-                    if (bool.TryParse(tag.Argument, out bool parsedItalic))
-                    {
-                        isItalicStack.Push(parsedItalic);
-                    }
-                    else
-                    {
-                        isItalicStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "IsBold":
-                    if (bool.TryParse(tag.Argument, out bool parsedBold))
-                    {
-                        isBoldStack.Push(parsedBold);
-                    }
-                    else
-                    {
-                        isBoldStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "UseCustomFont":
-                    // Never fires today (UseCustomFont is not a BbCodeParser.KnownTag), but the stack push/pop
-                    // is kept parallel to the MonoGame path for convergence.
-                    if (bool.TryParse(tag.Argument, out bool parsedCustom))
-                    {
-                        useCustomFontStack.Push(parsedCustom);
-                    }
-                    else
-                    {
-                        useCustomFontStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
-                case "HasDropshadow":
-                    if (bool.TryParse(tag.Argument, out bool parsedHasDropshadow))
-                    {
-                        hasDropshadowStack.Push(parsedHasDropshadow);
-                    }
-                    else
-                    {
-                        hasDropshadowStack.Pop();
-                    }
-                    castedValue = GetAndCreateFontIfNecessary();
-                    break;
             }
 
             if (castedValue != null)
@@ -2211,7 +2061,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             // A TextRuntime with no Font or CustomFontFile (e.g. AssignFontInConstructor = false) has no
             // family to resolve a run font from, so the range stays at the base font.
-            string? currentFontName = fontNameStack.Peek();
+            string? currentFontName = fontStacks.FontName.Peek();
             if (string.IsNullOrEmpty(currentFontName))
             {
                 return null;
@@ -2238,8 +2088,8 @@ public partial class CustomSetPropertyOnRenderable
                         string? bbFontFile = BmfcSave.IsFontFilePath(currentFontName) ? currentFontName : null;
 
                         BmfcSave bmfcSave = BuildInlineRunBmfcSave(
-                            fontSizeStack.Peek(), outlineThicknessStack.Peek(), useFontSmoothingStack.Peek(),
-                            isItalicStack.Peek(), isBoldStack.Peek(), bbFontFile, currentFontName);
+                            fontStacks.FontSize.Peek(), fontStacks.OutlineThickness.Peek(), fontStacks.UseFontSmoothing.Peek(),
+                            fontStacks.IsItalic.Peek(), fontStacks.IsBold.Peek(), bbFontFile, currentFontName);
 
                         font = InMemoryFontCreator.TryCreateFont(bmfcSave);
                         if (font != null)
@@ -2284,11 +2134,11 @@ public partial class CustomSetPropertyOnRenderable
                             string? bbFontFileForDisk = BmfcSave.IsFontFilePath(currentFontName) ? currentFontName : null;
 
                             BmfcSave bmfcSave = new BmfcSave();
-                            bmfcSave.FontSize = fontSizeStack.Peek();
-                            bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
-                            bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
-                            bmfcSave.IsItalic = isItalicStack.Peek();
-                            bmfcSave.IsBold = isBoldStack.Peek();
+                            bmfcSave.FontSize = fontStacks.FontSize.Peek();
+                            bmfcSave.OutlineThickness = fontStacks.OutlineThickness.Peek();
+                            bmfcSave.UseSmoothing = fontStacks.UseFontSmoothing.Peek();
+                            bmfcSave.IsItalic = fontStacks.IsItalic.Peek();
+                            bmfcSave.IsBold = fontStacks.IsBold.Peek();
                             ApplyCurrentDropshadowTo(bmfcSave);
                             ApplyFontCacheNaming(bmfcSave, bbFontFileForDisk);
 
@@ -2356,9 +2206,9 @@ public partial class CustomSetPropertyOnRenderable
 #else
             // Raylib can only produce a crisp font for the current stack state via a wired IRaylibFontCreator
             // (it cannot `new BitmapFont(file)` the way the XNA path does). The Raylib path always uses the
-            // FontCache key/creator - it does not branch on useCustomFontStack (matching the pre-#3624
+            // FontCache key/creator - it does not branch on fontStacks.UseCustomFont (matching the pre-#3624
             // behavior, where custom fonts were not re-generated per inline run).
-            if (InMemoryFontCreator == null || fontSizeStack.Peek() <= 0)
+            if (InMemoryFontCreator == null || fontStacks.FontSize.Peek() <= 0)
             {
                 return null;
             }
@@ -2371,14 +2221,14 @@ public partial class CustomSetPropertyOnRenderable
                 string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontName) ? fontName : null;
 
                 string fontCacheName = BmfcSave.GetFontCacheFileNameFor(
-                    fontSizeStack.Peek(),
+                    fontStacks.FontSize.Peek(),
                     fontName,
-                    outlineThicknessStack.Peek(),
-                    useFontSmoothingStack.Peek(),
-                    isItalicStack.Peek(),
-                    isBoldStack.Peek(),
+                    fontStacks.OutlineThickness.Peek(),
+                    fontStacks.UseFontSmoothing.Peek(),
+                    fontStacks.IsItalic.Peek(),
+                    fontStacks.IsBold.Peek(),
                     bbCodeFontFilePath,
-                    hasDropshadowStack.Peek(),
+                    fontStacks.HasDropshadow.Peek(),
                     currentDropshadowOffsetX,
                     currentDropshadowOffsetY,
                     currentDropshadowBlur,
@@ -2398,8 +2248,8 @@ public partial class CustomSetPropertyOnRenderable
                 }
 
                 BmfcSave bmfcSave = BuildInlineRunBmfcSave(
-                    fontSizeStack.Peek(), outlineThicknessStack.Peek(), useFontSmoothingStack.Peek(),
-                    isItalicStack.Peek(), isBoldStack.Peek(), bbCodeFontFilePath, fontName);
+                    fontStacks.FontSize.Peek(), fontStacks.OutlineThickness.Peek(), fontStacks.UseFontSmoothing.Peek(),
+                    fontStacks.IsItalic.Peek(), fontStacks.IsBold.Peek(), bbCodeFontFilePath, fontName);
 
                 Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
                 if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
@@ -2428,7 +2278,7 @@ public partial class CustomSetPropertyOnRenderable
         string GetFontFileName(string fontName)
         {
             string fontFileNameName;
-            if (useCustomFontStack.Peek())
+            if (fontStacks.UseCustomFont.Peek())
             {
                 fontFileNameName = fontName + ".fnt";
             }
@@ -2437,14 +2287,14 @@ public partial class CustomSetPropertyOnRenderable
                 string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontName) ? fontName : null;
 
                 fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                    fontSizeStack.Peek(),
+                    fontStacks.FontSize.Peek(),
                     fontName,
-                    outlineThicknessStack.Peek(),
-                    useFontSmoothingStack.Peek(),
-                    isItalicStack.Peek(),
-                    isBoldStack.Peek(),
+                    fontStacks.OutlineThickness.Peek(),
+                    fontStacks.UseFontSmoothing.Peek(),
+                    fontStacks.IsItalic.Peek(),
+                    fontStacks.IsBold.Peek(),
                     bbCodeFontFilePath,
-                    hasDropshadowStack.Peek(),
+                    fontStacks.HasDropshadow.Peek(),
                     currentDropshadowOffsetX,
                     currentDropshadowOffsetY,
                     currentDropshadowBlur,
@@ -2566,7 +2416,14 @@ public partial class CustomSetPropertyOnRenderable
 
         if (_knownUnresolvableFontKeys.Contains(fullFileName))
         {
-            return null;
+            // The font may have been generated since (the tool saves the project before it writes the
+            // .fnt, and hot reload copies it in later); only a file that is still missing stays unresolvable.
+            if (!ToolsUtilities.FileManager.FileExists(fullFileName))
+            {
+                return null;
+            }
+
+            _knownUnresolvableFontKeys.Remove(fullFileName);
         }
 
         // Issue #4665: BitmapFont's "-shadow.fnt" sibling probe is opt-in (see
@@ -3703,6 +3560,52 @@ public partial class CustomSetPropertyOnRenderable
         }
     }
 
+#if RAYLIB
+    private static bool TrySetPropertyOnArcRuntime(Gum.GueDeriving.ArcRuntime arcRuntime, string propertyName, object value)
+    {
+        if (propertyName == "Thickness")
+        {
+            arcRuntime.Thickness = System.Convert.ToSingle(value);
+            return true;
+        }
+        return TrySetGradientUnit(arcRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+    }
+
+    // The gradient *Units variables arrive as PositionUnitType (endpoints) or DimensionUnitType
+    // (radii). With no dispatch they fell to SetPropertyThroughReflection and were lost, so a
+    // percent-authored gradient was read as raw pixels (#7306, #7312). Shared by Arc, Circle and
+    // Rectangle: all three renderables resolve the units the same way.
+    private static bool TrySetGradientUnit(Gum.Renderables.GradientShapeRenderable? renderable, string propertyName, object value)
+    {
+        if (renderable == null)
+        {
+            return false;
+        }
+        switch (propertyName)
+        {
+            case "GradientX1Units":
+                renderable.GradientX1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                return true;
+            case "GradientY1Units":
+                renderable.GradientY1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                return true;
+            case "GradientX2Units":
+                renderable.GradientX2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                return true;
+            case "GradientY2Units":
+                renderable.GradientY2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                return true;
+            case "GradientInnerRadiusUnits":
+                renderable.GradientInnerRadiusUnits = (DimensionUnitType)value;
+                return true;
+            case "GradientOuterRadiusUnits":
+                renderable.GradientOuterRadiusUnits = (DimensionUnitType)value;
+                return true;
+        }
+        return false;
+    }
+#endif
+
 #if !FRB
     // Issue #2925 — legacy variable routing for the two-slot CircleRuntime. The legacy
     // properties (Color/Alpha/Red/Green/Blue) on the runtime are intentionally obsolete and
@@ -3756,7 +3659,7 @@ public partial class CustomSetPropertyOnRenderable
                 circleRuntime.Blue = (int)value;
                 return true;
             case "Radius":
-                circleRuntime.Radius = (float)value;
+                circleRuntime.Radius = System.Convert.ToSingle(value);
                 return true;
             // Issue #2768 v3 shape surface (fill/stroke as independent channels) — these
             // properties only exist on the runtime, not on either renderable slot, so without
@@ -3791,7 +3694,7 @@ public partial class CustomSetPropertyOnRenderable
                 circleRuntime.StrokeAlpha = (int)value;
                 return true;
             case "StrokeWidth":
-                circleRuntime.StrokeWidth = (float)value;
+                circleRuntime.StrokeWidth = System.Convert.ToSingle(value);
                 return true;
             case "Blend":
                 circleRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
@@ -3841,16 +3744,20 @@ public partial class CustomSetPropertyOnRenderable
                 circleRuntime.DropshadowBlue = (int)value;
                 return true;
             case "DropshadowOffsetX":
-                circleRuntime.DropshadowOffsetX = (float)value;
+                circleRuntime.DropshadowOffsetX = System.Convert.ToSingle(value);
                 return true;
             case "DropshadowOffsetY":
-                circleRuntime.DropshadowOffsetY = (float)value;
+                circleRuntime.DropshadowOffsetY = System.Convert.ToSingle(value);
                 return true;
             case "DropshadowBlur":
-                circleRuntime.DropshadowBlur = (float)value;
+                circleRuntime.DropshadowBlur = System.Convert.ToSingle(value);
                 return true;
         }
+#if RAYLIB
+        return TrySetGradientUnit(circleRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+#else
         return false;
+#endif
 #pragma warning restore CS0618
     }
 
@@ -3902,7 +3809,7 @@ public partial class CustomSetPropertyOnRenderable
                 rectangleRuntime.Blue = (int)value;
                 return true;
             case "CornerRadius":
-                rectangleRuntime.CornerRadius = (float)value;
+                rectangleRuntime.CornerRadius = System.Convert.ToSingle(value);
                 return true;
             case "CustomRadiusTopLeft":
                 rectangleRuntime.CustomRadiusTopLeft = (float?)value;
@@ -3949,7 +3856,7 @@ public partial class CustomSetPropertyOnRenderable
                 rectangleRuntime.StrokeAlpha = (int)value;
                 return true;
             case "StrokeWidth":
-                rectangleRuntime.StrokeWidth = (float)value;
+                rectangleRuntime.StrokeWidth = System.Convert.ToSingle(value);
                 return true;
             case "Blend":
                 rectangleRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
@@ -3999,16 +3906,20 @@ public partial class CustomSetPropertyOnRenderable
                 rectangleRuntime.DropshadowBlue = (int)value;
                 return true;
             case "DropshadowOffsetX":
-                rectangleRuntime.DropshadowOffsetX = (float)value;
+                rectangleRuntime.DropshadowOffsetX = System.Convert.ToSingle(value);
                 return true;
             case "DropshadowOffsetY":
-                rectangleRuntime.DropshadowOffsetY = (float)value;
+                rectangleRuntime.DropshadowOffsetY = System.Convert.ToSingle(value);
                 return true;
             case "DropshadowBlur":
-                rectangleRuntime.DropshadowBlur = (float)value;
+                rectangleRuntime.DropshadowBlur = System.Convert.ToSingle(value);
                 return true;
         }
+#if RAYLIB
+        return TrySetGradientUnit(rectangleRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+#else
         return false;
+#endif
 #pragma warning restore CS0618
     }
 #endif

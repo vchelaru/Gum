@@ -1,19 +1,23 @@
 # new
 
 ```
-gumcli new [<path>] [--template <name>] [--platform <name>] [--source-linked] [--no-restore]
+gumcli new [<path>] [--template <name>] [--theme <name>] [--platform <name>] [--source-linked] [--preview] [--no-restore]
 ```
 
 Creates a new Gum project. The path is optional — when omitted, a `GumProject` subdirectory is created in the current directory.
 
 Add `--platform` to also create a runnable game project for MonoGame, KNI, KNI with Skia, raylib, Stride, or Silk.NET. Without it, only a Gum project is created.
 
+The New Project dialog in the Gum tool shows the matching command under **Command line**. See [Creating a Project](../gum-tool/setup/creating-a-project.md).
+
 ## Options
 
 - `<path>` *(optional)* — Path for the new project. Pass a `.gumj` (JSON) or `.gumx` (XML) extension to choose the format. If no extension is given, creates `<path>/<name>.gumj` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumj`. With `--platform`, the path names the game project folder instead, and defaults to `MyGumGame`.
 - `--template` / `-t` — Template to use. Default: `forms`.
+- `--theme`: With the `forms` template, starts from a bundled Forms theme instead of the plain Forms controls. An unknown name lists the themes found.
 - `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `kniskia`, `raylib`, `stride`, `silknet`.
 - `--source-linked`: With `--platform`, references the platform's runtime project in a Gum source checkout instead of the NuGet package. See [Linking to Gum Source](#linking-to-gum-source).
+- `--preview`: With `--platform`, references the newest preview (prerelease) Gum NuGet packages instead of the stable ones. Preview packages may be unstable. Cannot be combined with `--source-linked`.
 - `--no-restore`: With `--platform`, skips the `dotnet restore` that otherwise runs after the project is created.
 
 ## Templates
@@ -25,8 +29,8 @@ Creates a project pre-populated with the full Forms UI control set:
 - All Forms behaviors (Button, CheckBox, ComboBox, ListBox, Slider, TextBox, etc.)
 - All Forms components and element variants
 - Standard elements and StandardGraphics assets
-- Demo and keyboard screens
-- `UISpriteSheet.png` and `ProjectCodeSettings.codsj`
+- A demo screen (`DemoScreenGum`)
+- `UISpriteSheet.png`
 
 ### `empty`
 
@@ -52,12 +56,13 @@ MyGame/
   MyGame.csproj
   Program.cs
   Game1.cs
+  MyGame.slnx
   Content/GumProject/
     GumProject.gumj
     ProjectCodeSettings.codsj
 ```
 
-`Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. To use the GPU path, change the target to `net10.0-windows7.0`; see [Skia Render Path](../code/getting-started/setup/adding-initializing-gum/stride.md#skia-render-path).
+`MyGame.slnx` is a solution file next to the project. `Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. To use the GPU path, change the target to `net10.0-windows7.0`; see [Skia Render Path](../code/getting-started/setup/adding-initializing-gum/stride.md#skia-render-path).
 
 The Silk.NET project runs on Windows, macOS, and Linux. It creates its window with SDL and draws through SkiaSharp on desktop OpenGL 3.3, so its NuGet packages bring every native library it needs and it does not use ANGLE. It requires a graphics driver that supports OpenGL 3.3. For the window and input setup in `Program.cs`, see [Silk.NET](../code/getting-started/setup/adding-initializing-gum/silk.net.md).
 
@@ -70,7 +75,7 @@ The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCo
 {% endhint %}
 
 {% hint style="warning" %}
-`kniskia` creates a KNI game that draws Gum through Skia. Its default package reference to `Gum.KniSkia` restores only once that package is on NuGet, planned for December 2026. Until then, create the project with `--source-linked`.
+`kniskia` creates a KNI game that draws Gum through Skia. `Gum.KniSkia` is not on NuGet yet (planned for December 2026), so `kniskia` always needs `--source-linked` and a Gum checkout; without it the command is refused.
 {% endhint %}
 
 ## Linking to Gum Source

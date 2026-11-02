@@ -39,6 +39,29 @@ public class ElementSaveExtensionsTests
         created.ShouldBeAssignableTo<RectangleRuntime>();
     }
 
+    // #7287 - "Circle" and "Arc" had a runtime class on raylib but no registration, so a loaded
+    // Circle instance was a plain GraphicalUiElement and its v3 variables (IsFilled/FillRed/...) were
+    // dropped by reflection on the LineCircle, leaving a white disk.
+    [Fact]
+    public void RegisterComponentRuntimeInstantiations_ShouldRegisterCircleRuntime_ForCircleBaseType()
+    {
+        InvokeRegisterComponentRuntimeInstantiations();
+
+        var created = ElementSaveExtensions.CreateGueForElement(new StandardElementSave { Name = "Circle" });
+
+        created.ShouldBeAssignableTo<CircleRuntime>();
+    }
+
+    [Fact]
+    public void RegisterComponentRuntimeInstantiations_ShouldRegisterArcRuntime_ForArcBaseType()
+    {
+        InvokeRegisterComponentRuntimeInstantiations();
+
+        var created = ElementSaveExtensions.CreateGueForElement(new StandardElementSave { Name = "Arc" });
+
+        created.ShouldBeAssignableTo<ArcRuntime>();
+    }
+
     private static void InvokeRegisterComponentRuntimeInstantiations()
     {
         var managers = new SystemManagers();

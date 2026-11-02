@@ -21,6 +21,11 @@ namespace Gum.Avalonia.Tests.Harness;
 internal sealed class HeadlessWindowDriver : IDisposable
 {
     private readonly string _framesFolder;
+    private string _pressSeen = "no press";
+    private string _releaseSeen = "no release";
+    private string _contextRequestedSeen = "no context request";
+    private bool _contextRequested;
+    private bool _contextRequestHandled;
     private IPointer? _lastPressedPointer;
 
     /// <summary>Shows <paramref name="content"/> in a new headless window of the given size.</summary>
@@ -32,7 +37,25 @@ internal sealed class HeadlessWindowDriver : IDisposable
             : Path.Combine(Path.GetTempPath(), framesFolderName, "frames");
         DetachFromHost(content);
         Window = new Window { Content = content, Width = width, Height = height };
-        Window.AddHandler(InputElement.PointerPressedEvent, (_, e) => _lastPressedPointer = e.Pointer, RoutingStrategies.Tunnel, handledEventsToo: true);
+        Window.AddHandler(InputElement.PointerPressedEvent, (_, e) =>
+        {
+            _lastPressedPointer = e.Pointer;
+            _pressSeen = $"press {e.GetCurrentPoint(Window).Properties.PointerUpdateKind} on {e.Source?.GetType().Name}";
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
+        Window.AddHandler(InputElement.PointerReleasedEvent, (_, e) =>
+            _releaseSeen = $"release {e.InitialPressMouseButton} on {e.Source?.GetType().Name}", RoutingStrategies.Tunnel, handledEventsToo: true);
+        // The window is last in the bubble, so Handled is final here: set when a menu (or any
+        // handler) took the request.
+        Window.AddHandler(Control.ContextRequestedEvent, (_, e) =>
+        {
+            // A request raised by something else (a neighbor the press landed on) is not this
+            // right-click's: the press missed its target.
+            bool onTarget = _rightClickTarget != null && e.Source is Visual source
+                && (ReferenceEquals(source, _rightClickTarget) || _rightClickTarget.IsVisualAncestorOf(source));
+            _contextRequested = onTarget;
+            _contextRequestHandled = e.Handled;
+            _contextRequestedSeen = $"context requested from {e.Source?.GetType().Name}, handled {e.Handled}";
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
         Window.Show();
         Layout();
         // Hit testing reads what the compositor last rendered, and the compositor takes one frame
@@ -100,27 +123,67 @@ internal sealed class HeadlessWindowDriver : IDisposable
         Layout();
     }
 
-    /// <summary>Right-clicks <paramref name="control"/>, which opens its context menu.</summary>
+    /// <summary>How long <see cref="RightClick"/> waits for a menu a context request claimed, or repeats a right-click that never became one.</summary>
+    private static readonly TimeSpan MenuTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>How long one right-click gets to open its menu before it is judged lost and repeated.</summary>
+    private static readonly TimeSpan MenuAttemptTime = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    /// Right-clicks <paramref name="control"/>, which opens its context menu. Opening a menu is not
+    /// done when the release returns: the window may not have rendered the control yet, so the
+    /// press lands elsewhere and no context request is raised, or whoever took the request opens
+    /// the menu from other work (a frame, a thread-pool continuation). So this pumps by the real
+    /// clock until the menu is open, repeating the right-click when no context request was raised
+    /// on <paramref name="control"/>. It returns at once when a request there went unhandled, since nothing will open then
+    /// (a control with no menu), and gives up after <see cref="MenuTimeout"/>; the caller finds the
+    /// menu missing only after that.
+    /// </summary>
     public void RightClick(Control control)
     {
         control.BringIntoView();
+        _rightClickTarget = control;
+        Stopwatch waited = Stopwatch.StartNew();
+        _rightClickAttempts = 0;
+        do
+        {
+            _rightClickAttempts++;
+            RightClickOnce(control);
+        }
+        while (OpenContextMenu == null && !(_contextRequested && !_contextRequestHandled) && waited.Elapsed < MenuTimeout);
+    }
+
+    private int _rightClickAttempts;
+    private Control? _rightClickTarget;
+
+    private void RightClickOnce(Control control)
+    {
         // Hit testing reads the compositor's last rendered scene, so a control laid out since the last
         // frame (a palette chip after a selection change) can be missed on a slow, loaded machine.
         RenderFrame();
         Point point = CenterOf(control);
         _lastRightClick = DescribeRightClick(control, point);
+        _pressSeen = "no press";
+        _releaseSeen = "no release";
+        _contextRequestedSeen = "no context request";
+        _contextRequested = false;
+        _contextRequestHandled = false;
         Window.MouseMove(point, RawInputModifiers.None);
         Window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
         Window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
         Layout();
 
-        // The menu may open a dispatcher job or a frame after the release; give it a bounded moment
-        // (by the real clock) before a caller finds it missing.
-        Stopwatch waited = Stopwatch.StartNew();
-        while (OpenContextMenu == null && waited.Elapsed < TimeSpan.FromMilliseconds(500))
+        // A request that someone took keeps its whole wait; one nobody raised is judged lost after
+        // a moment, and the caller repeats the gesture.
+        Stopwatch attempt = Stopwatch.StartNew();
+        while (OpenContextMenu == null && attempt.Elapsed < (_contextRequested && _contextRequestHandled ? MenuTimeout : MenuAttemptTime))
         {
             Thread.Sleep(10);
             RenderFrame();
+            if (_contextRequested && !_contextRequestHandled)
+            {
+                return;
+            }
         }
     }
 
@@ -138,7 +201,7 @@ internal sealed class HeadlessWindowDriver : IDisposable
     }
 
     private InvalidOperationException NoContextMenuOpen() =>
-        new InvalidOperationException($"No context menu is open. Last right-click: {_lastRightClick}; focused: {Window.FocusManager?.GetFocusedElement()?.GetType().Name ?? "nothing"}.");
+        new InvalidOperationException($"No context menu is open after {_rightClickAttempts} right-click(s) over {MenuTimeout.TotalSeconds} s. Last right-click: {_lastRightClick}; the window then saw: {_pressSeen}; {_releaseSeen}; {_contextRequestedSeen}; focused: {Window.FocusManager?.GetFocusedElement()?.GetType().Name ?? "nothing"}.");
 
     /// <summary>The headers of the open context menu's items.</summary>
     public List<string> ContextMenuHeaders() =>

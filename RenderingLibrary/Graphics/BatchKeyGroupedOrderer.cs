@@ -332,6 +332,9 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         /// scans it on every pick.
         /// </summary>
         public bool IsFreeContainer;
+
+        /// <summary>Cached <see cref="IRenderableIpso.IsRenderTarget"/>, read by the run-count passes.</summary>
+        public bool IsRenderTarget;
     }
 
     // Scratch state pooled on the instance (#4200) so a build does not allocate after warm-up,
@@ -366,6 +369,10 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     private int[] _bucketOfEntry = Array.Empty<int>();
     private int[] _keyOfBucket = Array.Empty<int>();
     private int[] _undrawnInBucket = Array.Empty<int>();
+
+    // The order FlushWindow settled on (window indexes), filled by the greedy pick and then
+    // either kept or overwritten with the depth-first order (#7051).
+    private int[] _pickOrder = Array.Empty<int>();
 
     private readonly struct BucketKey : IEquatable<BucketKey>
     {
@@ -694,13 +701,15 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     private static void AddEntry(IRenderableIpso renderable, List<Entry> window)
     {
         string batchKey = renderable.BatchKey ?? string.Empty;
+        bool isRenderTarget = renderable.IsRenderTarget;
         window.Add(new Entry
         {
             Item = renderable,
             Bounds = GetEffectiveBounds(renderable),
             BatchKey = batchKey,
             BatchSortKey = renderable.BatchSortKey,
-            IsFreeContainer = batchKey.Length == 0 && !renderable.IsRenderTarget && !renderable.ClipsChildren,
+            IsFreeContainer = batchKey.Length == 0 && !isRenderTarget && !renderable.ClipsChildren,
+            IsRenderTarget = isRenderTarget,
         });
     }
 
@@ -871,6 +880,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         _bucketOfEntry = new int[newSize];
         _keyOfBucket = new int[newSize];
         _undrawnInBucket = new int[newSize];
+        _pickOrder = new int[newSize];
     }
 
     /// <summary>
@@ -999,7 +1009,40 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         EnsurePickCapacity(n);
         AssignBuckets(window, n, indegree, out int runningBucket, out int runningKey);
 
-        while (true)
+        int[] order = _pickOrder;
+        PickGreedyOrder(window, n, indegree, successors, drawn, runningBucket, runningKey, order);
+
+        // The greedy pick has no lookahead, so committing to a run early can split a later, bigger
+        // one and leave more key runs than the depth-first order the window arrived in (#7051).
+        // The window's entries are already in depth-first order, and that order is always a valid
+        // topological order (every precedence edge points from a lower to a higher index), so
+        // count the runs of both and emit the cheaper. Ties keep the greedy order. Both counts are
+        // linear scans over ints, and the depth-first order costs nothing to materialize.
+        int greedyBreaks = CountBreaks(window, n, order, runningBucket);
+        int hierarchicalBreaks = CountBreaks(window, n, null, runningBucket);
+        if (hierarchicalBreaks < greedyBreaks)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                order[i] = i;
+            }
+        }
+
+        EmitOrder(window, n, order, runningBucket, destination);
+
+        window.Clear();
+    }
+
+    /// <summary>
+    /// Kahn's topological sort with the "stay on the current batch key" tiebreaker, writing the
+    /// chosen window indexes into <paramref name="order"/>. Mutates <paramref name="indegree"/>
+    /// and <paramref name="drawn"/>.
+    /// </summary>
+    private void PickGreedyOrder(
+        List<Entry> window, int n, int[] indegree, List<int>[] successors, bool[] drawn,
+        int runningBucket, int runningKey, int[] order)
+    {
+        for (int emitted = 0; emitted < n; emitted++)
         {
             int chosen = -1;
             if (runningBucket != -1)
@@ -1018,10 +1061,77 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             {
                 chosen = _allHeap.PeekUndrawn(drawn, ref _pickSteps);
             }
-            if (chosen == -1)
+
+            order[emitted] = chosen;
+            drawn[chosen] = true;
+            if (!window[chosen].IsFreeContainer)
             {
-                break;
+                runningBucket = _bucketOfEntry[chosen];
+                runningKey = _keyOfBucket[runningBucket];
             }
+
+            List<int> succ = successors[chosen];
+            for (int k = 0; k < succ.Count; k++)
+            {
+                int s = succ[k];
+                if (--indegree[s] == 0)
+                {
+                    MakeAvailable(window, s);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Number of key runs (the breaks <see cref="EmitOrder"/> would record) emitting the window in
+    /// <paramref name="order"/> would cost, or in index (depth-first) order when it is null.
+    /// Mirrors <see cref="EmitOrder"/>'s accounting: a free container costs nothing and leaves
+    /// the running bucket and the pending forced transition alone; anything else costs one when
+    /// nothing is running, a transition is forced, it is a render target, or its bucket differs.
+    /// </summary>
+    private int CountBreaks(List<Entry> window, int n, int[]? order, int runningBucket)
+    {
+        int bucket = runningBucket;
+        bool forcedPending = _forceNextTransition;
+        int breaks = 0;
+        for (int i = 0; i < n; i++)
+        {
+            int index = order == null ? i : order[i];
+            Entry entry = window[index];
+            if (entry.IsFreeContainer)
+            {
+                continue;
+            }
+
+            bool forced = forcedPending || entry.IsRenderTarget;
+            forcedPending = entry.IsRenderTarget;
+            int entryBucket = _bucketOfEntry[index];
+            if (forced || bucket == -1 || bucket != entryBucket)
+            {
+                breaks++;
+            }
+            bucket = entryBucket;
+        }
+        _pickSteps += n;
+        return breaks;
+    }
+
+    /// <summary>
+    /// Appends the window in <paramref name="order"/> to <paramref name="destination"/> and
+    /// records the #4575 diagnostics for every key change.
+    /// </summary>
+    private void EmitOrder(List<Entry> window, int n, int[] order, int runningBucket, List<DrawCommand> destination)
+    {
+        int bucketCount = _bucketIds.Count;
+        Array.Clear(_undrawnInBucket, 0, bucketCount);
+        for (int i = 0; i < n; i++)
+        {
+            _undrawnInBucket[_bucketOfEntry[i]]++;
+        }
+
+        for (int emitted = 0; emitted < n; emitted++)
+        {
+            int chosen = order[emitted];
 
             // #4575 diagnostics: classify a key change (BatchKey and/or BatchSortKey differs from
             // the last emitted item) as either overlap-blocked (a same-key item is still pending,
@@ -1037,7 +1147,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             // MergeBlockedByOverlapCount/NoCandidateInWindowBreakCount, since no reordering could
             // ever have avoided it (issue #4575 follow-up).
             bool chosenIsFreeContainer = window[chosen].IsFreeContainer;
-            bool forced = _forceNextTransition || window[chosen].Item.IsRenderTarget;
+            bool forced = _forceNextTransition || window[chosen].IsRenderTarget;
 
             // A free container is exempt from break accounting, so it must not CONSUME a pending
             // forced transition either - the real renderable after it is the one the GPU actually
@@ -1102,7 +1212,6 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             }
 
             destination.Add(new DrawCommand(DrawCommandKind.DrawRenderable, window[chosen].Item));
-            drawn[chosen] = true;
             _undrawnInBucket[_bucketOfEntry[chosen]]--;
             if (!chosenIsFreeContainer)
             {
@@ -1110,28 +1219,15 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 _runningSortKey = window[chosen].BatchSortKey;
                 _runningRenderableType = window[chosen].Item.GetType();
                 runningBucket = _bucketOfEntry[chosen];
-                runningKey = _keyOfBucket[runningBucket];
             }
-            if (window[chosen].Item.IsRenderTarget)
+            if (window[chosen].IsRenderTarget)
             {
                 // Drawing the target is only half the cost - DrawRenderTargetToScreen also
                 // restores the normal effect afterward (its own BeginSpriteBatch with no
                 // override), so whatever comes next is forced too, regardless of its own key.
                 _forceNextTransition = true;
             }
-
-            List<int> succ = successors[chosen];
-            for (int k = 0; k < succ.Count; k++)
-            {
-                int s = succ[k];
-                if (--indegree[s] == 0)
-                {
-                    MakeAvailable(window, s);
-                }
-            }
         }
-
-        window.Clear();
     }
 
     /// <summary>

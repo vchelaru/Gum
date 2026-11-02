@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.MonoGame.ShadowDusk: opt-in package that lets a MonoGame render-target container's
+		SourceShaderFile point at an .fx (HLSL) or .slang file, which ShadowDusk compiles at runtime
+		into an Effect. MonoGameGum itself loads no shader files and carries no ShadowDusk dependency,
+		because ShadowDusk brings native shader-compiler binaries most games do not need. Call
+		GumService.UseShadowDusk() once at startup (issue #7053). The same sources build the KNI and FNA
+		packages; shared metadata lives in Directory.Build.props.
+	-->
+	<PropertyGroup>
+		<PackageId>Gum.MonoGame.ShadowDusk</PackageId>
+		<DefineConstants>$(DefineConstants);MONOGAME;XNALIKE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="build\Gum.MonoGame.ShadowDusk.targets" Pack="true" PackagePath="buildTransitive\Gum.MonoGame.ShadowDusk.targets" Visible="false" />
+	</ItemGroup>
+
+	<Import Project="..\RuntimePackage.Analyzers.props" />
+
+</Project>

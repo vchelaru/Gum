@@ -65,6 +65,10 @@ Gum needs a desktop session (X11 or Wayland), a graphics driver with OpenGL 3.0 
 * **macOS:** an Apple Silicon or Intel Mac. Download the file that matches your Mac's processor.
 * **Linux:** 64-bit (x64), with a desktop session and graphics driver as described in the Linux steps above.
 
+## Creating a project
+
+Select **File** > **New Project** to create a project. Gum shows the same dialog on startup when there is no project to reopen. See [Creating a Project](creating-a-project.md).
+
 ## Opening a project
 
 Gum reopens the project you had open last time. To open a different one, select **File** > **Load Project...**. Gum also opens a project whose path you pass when you start it, which is how a file association or a script can open a specific project:

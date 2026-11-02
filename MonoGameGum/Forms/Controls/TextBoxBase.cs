@@ -90,6 +90,7 @@ public abstract class TextBoxBase :
     // (negative offset) applied during typing/overflow snaps back here when the content
     // shrinks again. See issue #2683.
     float _textRestingX;
+    float _textRestingY;
 
     List<GraphicalUiElement> _selectionInstances = new List<GraphicalUiElement>();
 
@@ -254,6 +255,7 @@ public abstract class TextBoxBase :
                 // Refresh the selection template after the state has been applied so the
                 // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
                 RefreshTemplateFromSelectionInstance();
+                ResetScrollForLineModeChange();
             }
         }
     }
@@ -438,6 +440,26 @@ public abstract class TextBoxBase :
     /// </summary>
     public event EventHandler? SelectionChanged;
     protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Raised when the user presses Enter while this control is focused and Enter does not add a line break:
+    /// always for a <see cref="PasswordBox"/>, and for a <see cref="TextBox"/> when <see cref="AcceptsReturn"/>
+    /// is <c>false</c>. Raised from the keyboard only; text added in code or by an on-screen keyboard does not
+    /// raise it. The control keeps focus; the handler decides where focus goes.
+    /// </summary>
+    public event EventHandler? EditCommitted;
+
+    /// <summary>
+    /// Raised when the user presses Escape while this control is focused. Raised from the keyboard only. The
+    /// control keeps focus and its text; the handler decides what to restore and where focus goes.
+    /// </summary>
+    public event EventHandler? EditCancelled;
+
+    /// <summary>
+    /// Whether Enter ends the edit (raises <see cref="EditCommitted"/>) rather than adding a line break.
+    /// </summary>
+    protected virtual bool EnterEndsEdit => !AcceptsReturn;
+
     protected virtual TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {
         var args = new TextCompositionEventArgs(newText);
@@ -462,13 +484,9 @@ public abstract class TextBoxBase :
 
     protected override void ReactToVisualChanged()
     {
-        // The new visual starts in whatever line mode it was authored with. Apply the mode
-        // only when it was changed from the default, so a freshly created control does not
-        // override an authored Multi state.
-        if (textWrapping != TextWrapping.NoWrap || AcceptsReturn)
-        {
-            UpdateStateForSingleOrMultiLine();
-        }
+        // A text box is always in exactly one line-mode state, so the new visual is put in the
+        // state that matches this control's TextWrapping and AcceptsReturn, whatever it was authored in.
+        UpdateStateForSingleOrMultiLine();
 
         RefreshInternalVisualReferences();
 
@@ -526,6 +544,25 @@ public abstract class TextBoxBase :
         {
             RaiseSelectionChanged();
         }
+    }
+
+    /// <summary>True while text is re-applied without being a new value (RefreshStyles, assigning the same password), so the selection stays.</summary>
+    protected bool keepSelectionOnTextChange;
+
+    /// <summary>
+    /// Clears the selection after the text was replaced, as a TextBox in other UI frameworks does, so text
+    /// set from code cannot leave a selection and its highlight over the new text, where the next typed
+    /// character would replace all of it. Raises SelectionChanged only when a selection was cleared.
+    /// </summary>
+    protected void ClearSelectionAfterTextChange(int textLength)
+    {
+        if (keepSelectionOnTextChange)
+        {
+            return;
+        }
+
+        selectionStart = System.Math.Min(selectionStart, textLength);
+        SelectionLength = 0;
     }
 
     /// <inheritdoc/>
@@ -590,10 +627,17 @@ public abstract class TextBoxBase :
         coreTextObject = textComponent.RenderableComponent as IFormsText
             ?? throw new Exception("The Text instance must be of type Text");
         placeholderTextObject = placeholderComponent?.RenderableComponent as IFormsText;
+        OnCoreTextObjectAssigned();
 
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         _textRestingX = this.textComponent.X;
+        _textRestingY = this.textComponent.Y;
         caretComponent.X = 0;
+    }
+
+    /// <summary>Called once the text renderable exists, for values set before it did.</summary>
+    protected virtual void OnCoreTextObjectAssigned()
+    {
     }
 
     private void HandleTextComponentPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -802,46 +846,13 @@ public abstract class TextBoxBase :
             GetIndex));
     }
 
-    // Walks characters accumulating their X-advance until we pass cursorOffset, then returns
-    // the character index nearest the cursor. Per-character advance comes from
-    // IFormsText.GetCharacterAdvance, which each backend's concrete Text implements — the
-    // XNA-family Text (RenderingLibrary/Graphics/Text.cs) overrides it with an allocation-free
+    // The same scaled hit test as TextExtensions.GetCharacterIndexAtPosition, in TextHitTesting.GetIndexInLine.
+    // Per-character advance comes from IFormsText.GetCharacterAdvance, which each backend's concrete Text
+    // implements: the XNA-family Text (RenderingLibrary/Graphics/Text.cs) overrides it with an allocation-free
     // BitmapFont.XAdvance lookup; other backends fall back to measuring a one-character string.
-    // Either way this method itself needs no #if: virtual dispatch on coreTextObject picks the
-    // right implementation at runtime. See https://github.com/vchelaru/Gum/issues/3542.
-    private int GetIndex(float cursorOffset, string? textToUse)
-    {
-        textToUse ??= string.Empty;
-        var index = textToUse.Length;
-        float distanceMeasuredSoFar = 0;
-        var fontScale = coreTextObject.FontScale;
-
-        for (int i = 0; i < textToUse.Length; i++)
-        {
-            // GetCharacterAdvance returns raw glyph-pixel width; the rendered glyph is
-            // FontScale-wider, so the hit-test must scale to match the screen-space
-            // cursor offset coming in.
-            float advance = coreTextObject.GetCharacterAdvance(textToUse[i]) * fontScale;
-
-            distanceMeasuredSoFar += advance;
-
-            // This should find which side of the character you're closest to, but for now it's good enough...
-            if (distanceMeasuredSoFar > cursorOffset)
-            {
-                var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
-                if (halfwayPoint > cursorOffset)
-                {
-                    index = i;
-                }
-                else
-                {
-                    index = i + 1;
-                }
-                break;
-            }
-        }
-        return index;
-    }
+    // See https://github.com/vchelaru/Gum/issues/3542.
+    private int GetIndex(float cursorOffset, string? textToUse) =>
+        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetCharacterAdvance, MeasurementFontScale);
 
     /// <summary>
     /// Handles special situations only like [LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A]
@@ -866,9 +877,9 @@ public abstract class TextBoxBase :
         /////////////////////////End Early Out/////////////////////
         // A caret inside a CRLF (set from code) acts as the one before the break for the navigation keys, so
         // End there does not "move" and select the lone CR.
-        if (key is Keys.Home or Keys.End or Keys.Up or Keys.Down or Keys.Left or Keys.Right && IsInsideCrlf(DisplayedText, caretIndex))
+        if (key is Keys.Home or Keys.End or Keys.Up or Keys.Down or Keys.Left or Keys.Right)
         {
-            caretIndex--;
+            SnapCaretToCharacterStart();
         }
         var oldIndex = caretIndex;
 
@@ -892,11 +903,11 @@ public abstract class TextBoxBase :
                         // 12 34
                         // If the cursor is at 4, pressing left moves the cursor
                         // before the 3 but after the space.
-                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(StepLeft(DisplayedText, caretIndex));
+                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(StepLeft(CaretStepText, caretIndex));
                         if (letterToMoveToFromCtrl != null)
                         {
 
-                            if (letterToMoveToFromCtrl == StepLeft(DisplayedText, caretIndex))
+                            if (letterToMoveToFromCtrl == StepLeft(CaretStepText, caretIndex))
                             {
                                 letterToMoveToFromCtrl = null;
                             }
@@ -907,7 +918,7 @@ public abstract class TextBoxBase :
                         }
                     }
 
-                    caretIndex = letterToMoveToFromCtrl ?? StepLeft(DisplayedText, caretIndex);
+                    caretIndex = letterToMoveToFromCtrl ?? StepLeft(CaretStepText, caretIndex);
                 }
                 break;
             case Keys.Home:
@@ -957,14 +968,14 @@ public abstract class TextBoxBase :
 
                     if (isCtrlDown)
                     {
-                        letterToMoveToFromCtrl = GetSpaceIndexAfter(StepRight(DisplayedText, caretIndex));
+                        letterToMoveToFromCtrl = GetSpaceIndexAfter(StepRight(CaretStepText, caretIndex));
                         if (letterToMoveToFromCtrl != null)
                         {
 
                             // match Visual Studio behavior, and go after the last space
-                            if (letterToMoveToFromCtrl != StepRight(DisplayedText, caretIndex))
+                            if (letterToMoveToFromCtrl != StepRight(CaretStepText, caretIndex))
                             {
-                                letterToMoveToFromCtrl = StepRight(DisplayedText, letterToMoveToFromCtrl.Value);
+                                letterToMoveToFromCtrl = StepRight(CaretStepText, letterToMoveToFromCtrl.Value);
                             }
                             else
                             {
@@ -977,7 +988,7 @@ public abstract class TextBoxBase :
                         }
                     }
 
-                    caretIndex = letterToMoveToFromCtrl ?? StepRight(DisplayedText, caretIndex);
+                    caretIndex = letterToMoveToFromCtrl ?? StepRight(CaretStepText, caretIndex);
 
                 }
                 break;
@@ -1017,6 +1028,7 @@ public abstract class TextBoxBase :
                 {
                     if (isShortcutDown)
                     {
+                        SnapCaretToCharacterStart();
                         HandlePaste();
                     }
                 }
@@ -1027,6 +1039,16 @@ public abstract class TextBoxBase :
                 {
                     SelectAll();
                 }
+                break;
+            case Keys.Enter:
+                // Raised here, not from HandleCharEntered: the key path is gated on focus and runs once per press.
+                if (EnterEndsEdit)
+                {
+                    EditCommitted?.Invoke(this, EventArgs.Empty);
+                }
+                break;
+            case Keys.Escape:
+                EditCancelled?.Invoke(this, EventArgs.Empty);
                 break;
         }
 
@@ -1154,6 +1176,20 @@ public abstract class TextBoxBase :
     protected abstract void HandleDelete();
 
     public abstract void HandleCharEntered(char character);
+
+    /// <summary>
+    /// Whether <paramref name="character"/> adds text (and so replaces a selection). Backspace, delete and escape
+    /// are handled by <see cref="HandleKeyDown(Keys, bool, bool, bool)"/>, and Enter adds nothing unless it adds a
+    /// line break, so none of them may edit the text or the selection from <see cref="HandleCharEntered"/>.
+    /// </summary>
+    protected bool CharacterAddsText(char character)
+    {
+        if (character == '\b' || character == (char)127 || character == (char)27)
+        {
+            return false;
+        }
+        return !((character == '\r' || character == '\n') && EnterEndsEdit);
+    }
 
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {
@@ -1320,7 +1356,15 @@ public abstract class TextBoxBase :
 
         if (_hasSavedCaret && coreTextObject != null)
         {
-            _textSetInCode.Restore(textComponent);
+            keepSelectionOnTextChange = true;
+            try
+            {
+                _textSetInCode.Restore(textComponent);
+            }
+            finally
+            {
+                keepSelectionOnTextChange = false;
+            }
             caretIndex = System.Math.Min(_savedCaretIndex, DisplayedText?.Length ?? 0);
             selectionLength = _savedSelectionLength;
 
@@ -1417,30 +1461,96 @@ public abstract class TextBoxBase :
         return textIndex + System.Math.Max(0, wrappedIndex - wrapped);
     }
 
-    // One caret step left or right moves over a "\r\n" as a single character.
+    // A "\r\n" and a surrogate pair (an emoji) are each one character stored as two chars. Every caret
+    // step, delete and click lands on the edges of those pairs, never between the halves. Indexes stay
+    // UTF-16 indexes. Grapheme clusters (flags, ZWJ sequences, combining marks) are not handled yet.
+    internal static bool IsSurrogatePairAt(string text, int index) =>
+        TextHitTesting.IsSurrogatePairAt(text, index);
+
+    // True when index is between the two halves of a "\r\n" or of a surrogate pair.
+    internal static bool IsInsideCharacter(string? text, int index) =>
+        text != null && index > 0 && index < text.Length &&
+        ((text[index - 1] == '\r' && text[index] == '\n') || IsSurrogatePairAt(text, index - 1));
+
+    // One caret step left or right moves over a whole character.
     internal static int StepLeft(string? text, int index)
     {
         int result = index - 1;
-        if (text != null && result > 0 && result < text.Length && text[result] == '\n' && text[result - 1] == '\r')
-        {
-            result--;
-        }
-        return result;
+        return IsInsideCharacter(text, result) ? result - 1 : result;
     }
-
-    // True when index is between the \r and \n of a CRLF.
-    internal static bool IsInsideCrlf(string? text, int index) =>
-        text != null && index > 0 && index < text.Length && text[index - 1] == '\r' && text[index] == '\n';
 
     internal static int StepRight(string? text, int index)
     {
         int result = index + 1;
-        if (text != null && index + 1 < text.Length && text[index] == '\r' && text[index + 1] == '\n')
-        {
-            result++;
-        }
-        return result;
+        return IsInsideCharacter(text, result) ? result + 1 : result;
     }
+
+    // Where a backward delete (Backspace, Ctrl+Backspace) ends: the caret, or the end of the character it is inside.
+    internal static int GetBackspaceEnd(string? text, int caretIndex) =>
+        IsInsideCharacter(text, caretIndex) ? caretIndex + 1 : caretIndex;
+
+    // A caret inside a character (set from code) moves to the start of it before an edit that inserts, so
+    // typing and pasting never split the character. Navigation keys do the same.
+    protected void SnapCaretToCharacterStart()
+    {
+        if (IsInsideCharacter(CaretStepText, caretIndex))
+        {
+            caretIndex--;
+        }
+    }
+
+    // The part of the text Backspace removes with no selection: the whole character before the caret.
+    // A caret between the halves of a character (a programmatic CaretIndex) removes that character.
+    internal static (int Start, int Length) GetBackspaceRange(string? text, int caretIndex)
+    {
+        int end = GetBackspaceEnd(text, caretIndex);
+        int start = StepLeft(text, end);
+        return (start, end - start);
+    }
+
+    // The part of the text Delete removes with no selection: the whole character after the caret.
+    internal static (int Start, int Length) GetDeleteRange(string? text, int caretIndex)
+    {
+        int start = IsInsideCharacter(text, caretIndex) ? caretIndex - 1 : caretIndex;
+        return (start, StepRight(text, start) - start);
+    }
+
+    // Widens a selection so neither edge is between the halves of a character.
+    private static void ExpandToWholeCharacters(string? text, ref int start, ref int length)
+    {
+        if (IsInsideCharacter(text, start))
+        {
+            start--;
+            length++;
+        }
+        if (IsInsideCharacter(text, start + length))
+        {
+            length++;
+        }
+    }
+
+    // The selected range of text with neither edge between the halves of a character. Selection delete,
+    // Copy and Cut all read the selection through it, so what is copied is what is removed.
+    internal static (int Start, int Length) GetWholeCharacterSelection(string? text, int selectionStart, int selectionLength)
+    {
+        int textLength = text?.Length ?? 0;
+        // Intersect [selectionStart, selectionStart + selectionLength) with the text; never shift it.
+        int end = System.Math.Min(textLength, selectionStart + selectionLength);
+        int start = System.Math.Max(0, System.Math.Min(selectionStart, textLength));
+        int length = System.Math.Max(0, end - start);
+        ExpandToWholeCharacters(text, ref start, ref length);
+        return (start, length);
+    }
+
+    // The length to keep when cutting text to maxLength: a surrogate pair is dropped whole, not halved.
+    internal static int GetTruncatedLength(string text, int maxLength) =>
+        maxLength > 0 && IsSurrogatePairAt(text, maxLength - 1) ? maxLength - 1 : maxLength;
+
+    /// <summary>
+    /// The text the caret steps over. It is the displayed text, except where that is a mask (PasswordBox)
+    /// that does not show which characters are two chars.
+    /// </summary>
+    protected virtual string? CaretStepText => DisplayedText;
 
     /// <summary>
     /// Returns the line number, start of the line, and relative index into the line given an absolute character index
@@ -1836,6 +1946,7 @@ public abstract class TextBoxBase :
                 // Refresh the selection template after the state has been applied so the
                 // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
                 RefreshTemplateFromSelectionInstance();
+                ResetScrollForLineModeChange();
             }
         }
     }
@@ -1913,6 +2024,29 @@ public abstract class TextBoxBase :
 
             Visual.SetProperty("LineModeCategoryState", stateToSet);
         }
+    }
+
+    /// <summary>
+    /// After TextWrapping or AcceptsReturn changes the text is laid out differently, so the scroll
+    /// offset left by the previous mode (a no-wrap line scrolled left to follow the caret, a
+    /// multi-line box scrolled down) no longer applies. The text goes back to its resting place and
+    /// the caret and selection are placed again, scrolling only if the new mode needs it.
+    /// </summary>
+    private void ResetScrollForLineModeChange()
+    {
+        if (textComponent == null || caretComponent == null || coreTextObject == null)
+        {
+            return;
+        }
+
+        textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        textComponent.X = _textRestingX;
+        textComponent.Y = _textRestingY;
+        Visual.UpdateLayout();
+
+        UpdateCaretPositionFromCaretIndex();
+        OffsetTextToKeepCaretInView();
+        UpdateToSelection();
     }
 
     List<SelectionPosition> selectionStartEnds = new List<SelectionPosition>();
@@ -2445,6 +2579,11 @@ public abstract class TextBoxBase :
         || unit == global::Gum.Converters.GeneralUnitType.PixelsFromLarge
         || unit == global::Gum.Converters.GeneralUnitType.Percentage;
 
+    // The scale from the font's own pixels (MeasureString, GetCharacterAdvance, LineHeightInPixels) to
+    // drawn units: IWrappedText.WordWrapFontScale, the effective FontScale except while oversampling pins
+    // a separate measurement font that layout is measured with. Same scale as TextExtensions.GetCharacterIndexAtPosition.
+    private float MeasurementFontScale => coreTextObject.WordWrapFontScale;
+
     // The full per-line vertical step used by the renderer:
     // rawLineHeight × FontScale × LineHeightMultiplier. Used for inter-line
     // stepping (hit-testing, arrow-key vertical movement, content-height
@@ -2455,7 +2594,7 @@ public abstract class TextBoxBase :
     // they do not — so the unqualified IText would not resolve.
     private float EffectiveLineHeightInPixels =>
         coreTextObject.LineHeightInPixels
-        * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale
+        * MeasurementFontScale
         * coreTextObject.LineHeightMultiplier;
 
     // The height of one rendered glyph row (rawLineHeight × FontScale), with
@@ -2463,17 +2602,17 @@ public abstract class TextBoxBase :
     // offsets that map to the actual ink — e.g. the caret on line 0, whose
     // position must NOT change when only the multiplier changes.
     private float ScaledLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
+        coreTextObject.LineHeightInPixels * MeasurementFontScale;
 
     // Text.MeasureString returns the raw glyph-pixel width (it explicitly
     // ignores FontScale). Caret X, selection X, hit-testing, and centering
     // padding all live in screen space, so they must multiply by FontScale
     // to line up with the actual rendered glyphs.
     private float MeasureStringScaled(string value) =>
-        coreTextObject.MeasureString(value) * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
+        coreTextObject.MeasureString(value) * MeasurementFontScale;
 
     private float MeasureStringScaled(string value, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle style) =>
-        coreTextObject.MeasureString(value, style) * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
+        coreTextObject.MeasureString(value, style) * MeasurementFontScale;
 
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
@@ -2518,7 +2657,7 @@ public abstract class TextBoxBase :
                 global::RenderingLibrary.Graphics.VerticalAlignment.Center => -ipso.Height / 2.0f,
                 global::RenderingLibrary.Graphics.VerticalAlignment.Bottom => -ipso.Height,
                 global::RenderingLibrary.Graphics.VerticalAlignment.TextBaseline =>
-                    -ipso.Height + coreTextObject.DescenderHeight * coreTextObject.FontScale,
+                    -ipso.Height + coreTextObject.DescenderHeight * MeasurementFontScale,
                 _ => 0
             };
 

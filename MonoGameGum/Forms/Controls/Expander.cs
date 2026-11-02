@@ -182,7 +182,7 @@ public class Expander : FrameworkElement
     {
         if (contentContainer != null)
         {
-            contentContainer.Children.Add(child.Visual);
+            contentContainer.AddChild(child.Visual);
         }
     }
 
@@ -190,7 +190,7 @@ public class Expander : FrameworkElement
     {
         if (contentContainer != null)
         {
-            contentContainer.Children.Add(child);
+            contentContainer.AddChild(child);
         }
 
     }

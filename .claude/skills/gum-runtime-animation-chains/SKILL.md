@@ -29,6 +29,8 @@ State lives entirely on `AnimationChainLogic`:
 
 **Idle subtrees are skipped.** An element whose whole subtree had nothing to animate sets `_isIdle` and `AnimateSelf` returns at once until `InvalidateSubtreeCaches` (`GraphicalUiElement.SubtreeCaches.cs`) clears it. Anything new that can give an element per-frame work must call it: a new playback flag on a renderable (implement `IAnimationChainRenderable` and raise the callback when it turns on, as `AnimationChainLogic.Animate` does), a new `IUpdateEveryFrame`-style hook, or a new way to add or show children. An `IAnimatable` that does not implement `IAnimationChainRenderable` is ticked every frame and keeps its ancestors from going idle.
 
+**Chains follow the `SourceFile` that produced them.** `GraphicalUiElement.SetProperty("SourceFile")` remembers the list a chain file produced. When `SourceFile` later becomes empty or a non-chain file (including a variable removed by a hot reload), it drops that list, if the renderable still holds it, and puts `TextureAddress`/`Texture*`/`FlipHorizontal` back to what the default state and the category states applied on the containing element give. The renderable keeps the chain name asked for, so a later chain file plays it. Chains assigned by code are never dropped.
+
 ## Frame application is split across two times
 
 Sprite handles each frame in **two phases**:

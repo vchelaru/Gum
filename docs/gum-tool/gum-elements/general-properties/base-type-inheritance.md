@@ -102,3 +102,23 @@ To resolve it, change or clear the `Base Type` of one element in the loop, eithe
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
+
+### Component With No Base Type (GUM0015)
+
+A component file with an empty `<BaseType>` loads, but code generation then writes a class with no base class. `gumcli check` reports **GUM0015** as an error on each such component. Screens and standard elements are not checked, since they legitimately have no `Base Type`.
+
+To resolve it, open the component in the Gum tool and pick a `Base Type` (for example `Container`) in the `Base Type` dropdown, or set `<BaseType>` in the component's `.gucx` file to `Container` or to the component it derives from.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+### Component Containing Itself (GUM0018)
+
+A component cannot contain an instance of itself, directly or through the instances of other components (A contains B, B contains A). Such a component can never finish building. `gumcli check` reports **GUM0018** as an error on each element in the loop and names the path, for example `A -> B -> A`.
+
+To resolve it, delete or change the type of one instance in the loop.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}

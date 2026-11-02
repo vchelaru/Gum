@@ -21,6 +21,13 @@ public static class ImageFileExtensions
         BuiltIn.Concat(LoaderManager.Self.ImageDecoders.DeclaredExtensions).Distinct().ToArray();
 
     /// <summary>
+    /// Every extension the tool accepts as a texture-like Source File: the image extensions plus svg and the
+    /// animation chain formats (achx, achj). File drops and the import from another .gumx read this list.
+    /// </summary>
+    public static IReadOnlyList<string> AllSourceFileFormats =>
+        All.Concat(new[] { "svg", "achx", "achj" }).Distinct().ToArray();
+
+    /// <summary>
     /// Whether <paramref name="extension"/> (without the leading dot, any case) is a supported image extension.
     /// </summary>
     public static bool Contains(string extension) =>

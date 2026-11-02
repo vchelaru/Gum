@@ -349,6 +349,9 @@ public class ShapeRenderer
         IsInitialized = true;
         // Eager on purpose, so the shader compile happens at startup and not mid-game.
         _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
+        // Issue #7307: Apos.Shapes interpolates gradients in Oklab by default, which brightens the
+        // mid-tones and mixes premultiplied alpha. Skia and raylib interpolate the straight sRGB channels.
+        _sb.ColorSpace = ColorSpace.Rgb;
 
         // Belt-and-suspenders for consumers using GumBatch directly (without GumService).
         // GumService.Initialize already triggers this via reflection scan; calling it here

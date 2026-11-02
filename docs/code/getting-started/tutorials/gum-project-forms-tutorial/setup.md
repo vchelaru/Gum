@@ -28,29 +28,27 @@ Once you are finished, your game project should reference the appropriate NuGet/
 
 Before we create a Gum project, we need to decide where the project should be saved. The location depends on the runtime or game engine you are using. For example, MonoGame, KNI, and FNA projects usually save it inside the `Content` folder, while raylib projects use a `resources` folder. See [Loading a Gum Project](../../setup/loading-a-gum-project-.gumx.md) for the recommended location for each platform.
 
-Whichever location you choose, create a new empty folder for the project, such as `GumProject`. Gum creates many files, so keeping them in a dedicated folder keeps them separate from your other content.
+Gum creates a new folder for the project inside whatever location you choose. Gum creates many files, so this dedicated folder keeps them separate from your other content.
 
 ## Creating a new Gum Project
 
 Next we'll create a project in the Gum UI tool. If you have not yet run the Gum tool, you can get setup instructions in the Gum [Setup page](../../../../gum-tool/setup/).
 
-Once you have the tool downloaded, run it. You should have an empty project. If this is the first time you are running Gum, you will be prompted to save a Gum project. If you have run Gum before, you will need to select File->New to bring up the new project options.
+Once you have the tool downloaded, run it. If this is the first time you are running Gum, it shows the New Project dialog. If you have run Gum before, select **File** > **New Project** to open it.
 
-Later tutorials reference the demo screen, so check the **Include DemoScreenGum** option and click **OK**. Don't worry, you can delete this screen later as you develop your game.
+<figure><img src="../../../../.gitbook/assets/01_12 20 01.png" alt=""><figcaption><p>New Project Window</p></figcaption></figure>
 
-<figure><img src="../../../../.gitbook/assets/05_06_09_54.png" alt=""><figcaption><p>New Project Window</p></figcaption></figure>
+Set the dialog up like this:
 
-Leave the defaults, and click the OK button. These defaults add the Forms controls - the common controls that most projects need like Buttons and TextBoxes.
+1. Enter a **Project name** such as `GumProject`.
+2. Set the **Location** to the folder decided earlier, such as your game's `Content` folder. Gum creates `Content/GumProject` for you.
+3. Leave **Include Forms controls** checked. This adds the Forms controls - the common controls that most projects need like Buttons and TextBoxes.
+4. Leave **Include demo screen** checked. Later tutorials reference the demo screen. Don't worry, you can delete this screen later as you develop your game.
+5. Click **OK**.
 
-After you click OK, Gum asks where you would like to save your proejct. The project should be saved in the location decided earlier. Make sure to create a new folder for your Gum project, otherwise Gum's files will mix with other files in your content folder, making management and portability more difficult. For example, if you are using MonoGame, you may want to save your project in a subfolder of your game's Content folder.
+See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md) for the other options in the dialog.
 
-<figure><img src="../../../../.gitbook/assets/image (177).png" alt=""><figcaption><p>GumProject folder in Visual Studio</p></figcaption></figure>
-
-Give your Gum project a name such as GumProject.
-
-<figure><img src="../../../../.gitbook/assets/image (179).png" alt=""><figcaption><p>Save GumProject in the newly-created GumProject folder</p></figcaption></figure>
-
-After your project is saved it should appear in Visual Studio.
+After the project is created it should appear in Visual Studio.
 
 <figure><img src="../../../../.gitbook/assets/image (180).png" alt=""><figcaption><p>Gum project in Visual Studio</p></figcaption></figure>
 

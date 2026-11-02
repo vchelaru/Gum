@@ -156,7 +156,13 @@ public sealed class App : Application
     {
         await new GumStartupSequence(_services, _services.GetRequiredService<AvaloniaHeadStartup>()).RunAsync();
         StartupTiming.Mark("InitializeGum complete");
-        ApplyStartupSelection();
+        if (!ApplyStartupSelection() && _options.ExitAfterSeconds != null)
+        {
+            // An unattended run that reports success would show the wrong picture.
+            Console.Error.WriteLine("Element not found: " + _options.SelectPath + ". No screenshot was taken.");
+            return UnattendedStartupOutcome.Failed;
+        }
+
         ApplyThemeOverride();
         ICommandLineManager commandLine = _services.GetRequiredService<ICommandLineManager>();
         if (!commandLine.ShouldExitImmediately)
@@ -239,31 +245,34 @@ public sealed class App : Application
 
 
     // An unattended run can start with an element, and optionally one of its instances, selected.
-    private void ApplyStartupSelection()
-    {
-        if (_options.SelectPath is { } path)
-        {
-            SelectStartupPath(path, _services.GetRequiredService<ISelectedState>());
-        }
-    }
+    private bool ApplyStartupSelection() =>
+        _options.SelectPath is not { } path || SelectStartupPath(path, _services.GetRequiredService<ISelectedState>());
 
     /// <summary>
     /// Selects the element named before the <c>#</c> of <paramref name="path"/> and, when one
     /// follows it, that element's instance; an element that doesn't exist selects nothing.
+    /// False when the element, or the named instance, is not found.
     /// </summary>
-    internal static void SelectStartupPath(string path, ISelectedState selectedState)
+    internal static bool SelectStartupPath(string path, ISelectedState selectedState)
     {
         string[] parts = path.Split('#', 2);
         if (ObjectFinder.Self.GetElementSave(parts[0]) is not { } element)
         {
-            return;
+            return false;
         }
 
         selectedState.SelectedElement = element;
-        if (parts.Length > 1 && element.Instances.Find(instance => instance.Name == parts[1]) is { } selectedInstance)
+        if (parts.Length > 1)
         {
+            if (element.Instances.Find(instance => instance.Name == parts[1]) is not { } selectedInstance)
+            {
+                return false;
+            }
+
             selectedState.SelectedInstance = selectedInstance;
         }
+
+        return true;
     }
 
     // An unattended run can show the other theme variant without changing the saved setting.

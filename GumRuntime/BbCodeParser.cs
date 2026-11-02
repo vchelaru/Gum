@@ -51,6 +51,45 @@ public struct FoundTag
     }
 }
 
+/// <summary>
+/// A BBCode tag's range in the text as displayed (tags removed), returned by
+/// <c>TextRuntime.GetTagAtIndex</c>. The indexes are in the same space as
+/// <c>TextRuntime.GetCharacterIndexAtPosition</c>.
+/// </summary>
+public readonly struct TextTagSpan
+{
+    /// <summary>
+    /// The tag name as written in the text, such as "Link" for <c>[Link=shop]</c>.
+    /// </summary>
+    public string Name { get; }
+
+    /// <summary>
+    /// The text after the equals sign, such as "shop" for <c>[Link=shop]</c>, or null if the tag has none.
+    /// </summary>
+    public string? Argument { get; }
+
+    /// <summary>
+    /// The index of the first character inside the tag.
+    /// </summary>
+    public int StartIndex { get; }
+
+    /// <summary>
+    /// The index just past the last character inside the tag (exclusive), so a character index
+    /// is inside the tag when <c>index &gt;= StartIndex &amp;&amp; index &lt; EndIndex</c>.
+    /// </summary>
+    public int EndIndex { get; }
+
+    public TextTagSpan(string name, string? argument, int startIndex, int endIndex)
+    {
+        Name = name;
+        Argument = argument;
+        StartIndex = startIndex;
+        EndIndex = endIndex;
+    }
+
+    public override string ToString() => $"{Name}={Argument} [{StartIndex}, {EndIndex})";
+}
+
 public static class BbCodeParser
 {
     /// <summary>
@@ -82,6 +121,7 @@ public static class BbCodeParser
         "custom",
         "state",
         "hasdropshadow",
+        "link",
     };
 
     private struct Tag
@@ -91,7 +131,6 @@ public static class BbCodeParser
         public int Count;
         public string Name;
         public string? Argument;
-        public int StartStrippedIndex;
 
         public override string ToString()
         {
@@ -222,58 +261,60 @@ public static class BbCodeParser
         var index = 0;
         var activeTags = new List<Tag>();
 
-        int accumulatedTagLetterCount = 0;
-
         while (index < text.Length)
         {
-            var nullableTag = GetTagAtIndex(text, availableTags, index, accumulatedTagLetterCount);
+            var nullableTag = GetTagAtIndex(text, availableTags, index);
             if (nullableTag != null)
             {
                 var tag = nullableTag.Value;
                 if (tag.IsOpening)
                 {
                     activeTags.Add(tag);
-                    accumulatedTagLetterCount += tag.Count;
                 }
                 else if(activeTags.Count > 0)
                 {
-                    // October 17, 2025 - need to do
-                    // LastOrDefault so we pop the last 
-                    // index of this tag rather that the 
+                    // October 17, 2025 - need to pop the last
+                    // index of this tag rather that the
                     // first, or else they do not stack properly.
-                    //Tag foundTag = activeTags.FirstOrDefault(
-                    Tag foundTag = activeTags.LastOrDefault(
-                        item => item.Name.Equals(tag.Name, StringComparison.InvariantCultureIgnoreCase));
-                    if(foundTag.Name == tag.Name)
+                    // Names are compared ignoring case, the same as when a tag is recognized,
+                    // so [Color=Red]a[/color] pairs (#7094).
+                    int foundIndex = -1;
+                    for (int i = activeTags.Count - 1; i >= 0; i--)
                     {
-                        // Matching closing tag was at the top of the stack
+                        if (activeTags[i].Name.Equals(tag.Name, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            foundIndex = i;
+                            break;
+                        }
+                    }
+
+                    if(foundIndex >= 0)
+                    {
+                        Tag foundTag = activeTags[foundIndex];
+                        // Both tags carry the opening tag's name: consumers push on the open tag's Name
+                        // and pop on the close tag's Name, so the two must be identical.
                         var open = new TagInfo()
                         {
                             StartIndex = foundTag.StartIndex,
                             Count = foundTag.Count,
                             Argument = foundTag.Argument,
-                            StartStrippedIndex = foundTag.StartStrippedIndex,
-                            Name = tag.Name
+                            Name = foundTag.Name
                         };
-
-                        var closeStripped = tag.StartIndex - accumulatedTagLetterCount;
 
                         var close = new TagInfo()
                         {
                             StartIndex = tag.StartIndex,
                             Count = tag.Count,
-                            StartStrippedIndex = closeStripped,
-                            Name = tag.Name
+                            Name = foundTag.Name
                         };
-                        accumulatedTagLetterCount += close.Count;
                         results.Add(new FoundTag
                         {
-                            Name = tag.Name,
+                            Name = foundTag.Name,
                             Open = open,
                             Close = close,
                         });
 
-                        activeTags.Remove(foundTag);
+                        activeTags.RemoveAt(foundIndex);
                     }
                 }
 
@@ -285,7 +326,36 @@ public static class BbCodeParser
             }
         }
 
+        // An opening tag with no closing tag stays in the text, so a tag's stripped index can only be
+        // known once every tag has been matched: it is the tag's index minus the length of every
+        // matched tag before it.
+        for (int i = 0; i < results.Count; i++)
+        {
+            FoundTag found = results[i];
+            found.Open.StartStrippedIndex = found.Open.StartIndex - CountMatchedTagLettersBefore(results, found.Open.StartIndex);
+            found.Close.StartStrippedIndex = found.Close.StartIndex - CountMatchedTagLettersBefore(results, found.Close.StartIndex);
+            results[i] = found;
+        }
+
         return results.OrderBy(x => x.Open.StartIndex).ToList();
+    }
+
+    private static int CountMatchedTagLettersBefore(List<FoundTag> matchedTags, int index)
+    {
+        int count = 0;
+        for (int i = 0; i < matchedTags.Count; i++)
+        {
+            FoundTag found = matchedTags[i];
+            if (found.Open.StartIndex < index)
+            {
+                count += found.Open.Count;
+            }
+            if (found.Close.StartIndex < index)
+            {
+                count += found.Close.Count;
+            }
+        }
+        return count;
     }
 
     public static string AddTags(string text, List<FoundTag> tags, int strippedStringPaddingCount = 0)
@@ -342,7 +412,7 @@ public static class BbCodeParser
         return stringBuilder.ToString();
     }
 
-    private static Tag? GetTagAtIndex(string text, HashSet<string> tags, int startIndex, int accumulatedTagLetterCount)
+    private static Tag? GetTagAtIndex(string text, HashSet<string> tags, int startIndex)
     {
         if (text[startIndex] != '[' || text.Length <= startIndex + 1)
         {
@@ -405,8 +475,7 @@ public static class BbCodeParser
                             StartIndex = startIndex,
                             Count = peekIndex - startIndex + 1,
                             Name = tagName,
-                            Argument = argument,
-                            StartStrippedIndex = startIndex - accumulatedTagLetterCount
+                            Argument = argument
                         };
                     }
 

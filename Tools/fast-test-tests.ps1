@@ -23,7 +23,7 @@ function Assert-Plan([string]$name, [string]$request, [string[]]$expected) {
 
 try {
     foreach ($dir in 'Tools', 'A.Tests', 'B.Tests', 'Outside.Tests', 'Lib.TestsCommon', 'GumToolUnitTests') { New-Item -ItemType Directory -Force -Path (Join-Path $scratch $dir) | Out-Null }
-    Copy-Item (Join-Path $PSScriptRoot 'fast-test.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1') (Join-Path $scratch 'Tools')
+    Copy-Item (Join-Path $PSScriptRoot 'fast-test.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1'), (Join-Path $PSScriptRoot 'IncludeIndex.ps1') (Join-Path $scratch 'Tools')
     # A test project is one with IsTestProject true or a Microsoft.NET.Test.Sdk reference; a library
     # named *Tests* (shared test scaffolding) is not.
     $isTestProject = '<Project><PropertyGroup><IsTestProject>true</IsTestProject></PropertyGroup></Project>'

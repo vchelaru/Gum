@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Diagnostics;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
@@ -90,6 +91,7 @@ public class SetVariableLogic : ISetVariableLogic
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectState _projectState;
     private readonly IProjectManager _projectManager;
+    private readonly IOutputManager _outputManager;
 
     // When non-null, AskIfShouldCopy returns this value without showing a dialog.
     // Used by OnWireframeDrop to consolidate the per-file copy prompt into one dialog.
@@ -111,7 +113,8 @@ public class SetVariableLogic : ISetVariableLogic
         IPluginManager pluginManager,
         IWireframeObjectManager wireframeObjectManager,
         IProjectState projectState,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        IOutputManager outputManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -130,6 +133,7 @@ public class SetVariableLogic : ISetVariableLogic
         _wireframeObjectManager = wireframeObjectManager;
         _projectState = projectState;
         _projectManager = projectManager;
+        _outputManager = outputManager;
     }
 
     public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -191,6 +195,7 @@ public class SetVariableLogic : ISetVariableLogic
         InstanceSave? instance, StateSave? currentState, bool refresh, bool recordUndo = true, bool trySave = true, bool isFullCommit = true)
     {
         GeneralResponse response = GeneralResponse.SuccessfulResponse;
+        using ToolLog.Scope commitLog = ToolLog.Begin("ReactToPropertyValueChanged", detail: unqualifiedMember);
         ObjectFinder.Self.EnableCache();
         // Dragging a numeric font-affecting variable (e.g. DropshadowOffsetX) fires this method on
         // every intermediate tick. Suppress the (otherwise unconditional) font/KernSmith regeneration
@@ -210,7 +215,10 @@ public class SetVariableLogic : ISetVariableLogic
             // So does that mean that we want to call this code before we update variable references, but
             // we can still raise the plugin event after? If so, I'm going to move the plugin manager call
             // out of ReactToChangedMember and call it here.
-            response = ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, currentState);
+            using (ToolLog.Begin("ReactToChangedMember", detail: unqualifiedMember))
+            {
+                response = ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, currentState);
+            }
 
             var parentElement = instanceContainer as ElementSave;
 
@@ -231,14 +239,20 @@ public class SetVariableLogic : ISetVariableLogic
                             qualifiedName = $"{instance.Name}.{unqualifiedMember}";
                         }
 
-                        _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, currentState, qualifiedName, trySave,
-                            isFullCommit);
+                        using (ToolLog.Begin("DoVariableReferenceReaction", detail: qualifiedName))
+                        {
+                            _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, currentState, qualifiedName, trySave,
+                                isFullCommit);
+                        }
 
+                        using (ToolLog.Begin("PropagateVariablesInCategory", detail: qualifiedName))
+                        {
                         _variableInCategoryPropagationLogic.PropagateVariablesInCategory(qualifiedName, parentElement,
                             // This code used to not specify the category, so it defaulted to the selected category.
                             // I'm maintaining this behavior but I'm not sure if it's what should happen - maybe we should
                             // serach for the owner category of the state?
                             _selectedState.SelectedStateCategorySave);
+                        }
 
                         if (recordUndo)
                         {
@@ -251,14 +265,20 @@ public class SetVariableLogic : ISetVariableLogic
                         // dragged, breaking mouse capture. The full commit on release performs the rebuild.
                         if (refresh && isFullCommit)
                         {
-                            RefreshInResponseToVariableChange(unqualifiedMember, parentElement, instance);
+                            using (ToolLog.Begin("RefreshInResponseToVariableChange", detail: unqualifiedMember))
+                            {
+                                RefreshInResponseToVariableChange(unqualifiedMember, parentElement, instance);
+                            }
                         }
                     }
 
                     // see comment by ReactToChangedMember about why we make this call here
                     // Also this should happen after we update the wireframe so that plugins like
                     // the texture window which depend on the wireframe will have the correct values
-                    _pluginManager.VariableSet(parentElement, instance, unqualifiedMember, oldValue, isFullCommit);
+                    using (ToolLog.Begin("VariableSet", detail: unqualifiedMember))
+                    {
+                        _pluginManager.VariableSet(parentElement, instance, unqualifiedMember, oldValue, isFullCommit);
+                    }
                 }
                 finally
                 {
@@ -275,7 +295,10 @@ public class SetVariableLogic : ISetVariableLogic
             // calling _pluginManager.VariableSet
             if (trySave)
             {
-                _fileCommands.TryAutoSaveElement(parentElement);
+                using (ToolLog.Begin("TryAutoSaveElement"))
+                {
+                    _fileCommands.TryAutoSaveElement(parentElement);
+                }
             }
         }
         finally
@@ -1116,7 +1139,23 @@ public class SetVariableLogic : ISetVariableLogic
                         }
                         else
                         {
-                            var size = ImageHeader.GetDimensions(absolute);
+                            System.Drawing.Size? size = null;
+                            string? failure = null;
+                            try
+                            {
+                                size = ImageHeader.GetDimensions(absolute);
+                                failure = size == null ? "no decoder recognized the file" : null;
+                            }
+                            catch (Exception e)
+                            {
+                                // A decoder or the disk failing must not fail the property change.
+                                failure = e.Message;
+                            }
+
+                            if (failure != null)
+                            {
+                                _outputManager.AddError($"Could not read the size of {sourceFile} ({failure}), so the texture coordinates were left unchanged. Set them manually or add an IImageDecoder for this format.");
+                            }
 
                             if (size != null && instance != null)
                             {

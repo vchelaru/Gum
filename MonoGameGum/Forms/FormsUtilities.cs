@@ -602,6 +602,8 @@ public class FormsUtilities
         string? fromFileNamespace = typeof(DefaultFromFileButtonRuntime).Namespace;
         ElementSaveExtensions.UnregisterGueInstantiationTypes(type => type.Namespace == fromFileNamespace);
         ElementSaveExtensions.InitialStateAppliedNotifier = null;
+        ElementSaveExtensions.InitialFormsPropertiesNotifier = null;
+        GraphicalUiElement.ReapplyChangedFormsPropertiesAction = null;
         MenuItem.FromFileSubmenuPopupTemplate = null;
         ComboBox.FromFileDropDownTemplate = null;
     }
@@ -623,11 +625,33 @@ public class FormsUtilities
 
     public static void RegisterFromFileFormRuntimeDefaults()
     {
+        GraphicalUiElement.ReapplyChangedFormsPropertiesAction = (formsObject, visual, oldElement) =>
+        {
+            if (formsObject is FrameworkElement frameworkElement)
+            {
+                BehaviorFormsPropertyApplier.ReapplyChanged(frameworkElement, visual, oldElement);
+            }
+        };
+
+        ElementSaveExtensions.InitialFormsPropertiesNotifier = (gue, isBuiltElement) =>
+        {
+            if (gue is InteractiveGue igue && igue.FormsControlAsObject is FrameworkElement fe)
+            {
+                if (isBuiltElement)
+                {
+                    BehaviorFormsPropertyApplier.ApplyOnceAtBuild(fe, igue);
+                }
+                else
+                {
+                    BehaviorFormsPropertyApplier.Apply(fe, igue, authoredOverridesOnly: true);
+                }
+            }
+        };
+
         ElementSaveExtensions.InitialStateAppliedNotifier = gue =>
         {
             if (gue is InteractiveGue igue && igue.FormsControlAsObject is FrameworkElement fe)
             {
-                BehaviorFormsPropertyApplier.Apply(fe, igue);
                 fe.UpdateState();
             }
         };
@@ -670,6 +694,12 @@ public class FormsUtilities
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileComboBoxRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.DialogBoxBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileDialogBoxRuntime), overwriteIfAlreadyExists: false);
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.ItemsControlBehaviorName))
             {
@@ -788,11 +818,23 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
             }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ToggleBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileToggleButtonRuntime), overwriteIfAlreadyExists: false);
+            }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.TooltipBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTooltipRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.UserControlBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileUserControlRuntime), overwriteIfAlreadyExists: false);
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.WindowBehaviorName))
             {

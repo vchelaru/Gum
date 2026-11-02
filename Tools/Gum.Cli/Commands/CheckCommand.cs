@@ -67,9 +67,12 @@ public static class CheckCommand
         GumExpressionService.Initialize();
 
         ITypeResolver typeResolver = new DefaultTypeResolver();
-        IHeadlessErrorChecker checker = new HeadlessErrorChecker(
+        HeadlessErrorChecker checker = new HeadlessErrorChecker(
             typeResolver,
-            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) });
+            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) })
+        {
+            ReportsLeftoverInstanceVariables = true
+        };
         IReadOnlyList<ErrorResult> checkerErrors = checker.GetAllErrors(loadResult.Project!);
 
         var allErrors = new List<ErrorResult>();

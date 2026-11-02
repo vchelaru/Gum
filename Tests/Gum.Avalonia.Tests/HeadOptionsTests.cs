@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Gum.CommandLine;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -25,5 +26,78 @@ public class HeadOptionsTests
     {
         HeadOptions.Parse(new[] { "project.gumx", "--zoom-to-fit", "--exit-after", "3" }).ZoomToFit.ShouldBeTrue();
         HeadOptions.Parse(new[] { "project.gumx" }).ZoomToFit.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void StartupFileError_NamesAProjectOrElementFileThatDoesNotExist()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "no-such-folder-7374");
+
+        foreach (string name in new[] { "Missing.gumj", "Missing.gumx", Path.Combine("Screens", "Missing.gusx"), Path.Combine("Components", "Missing.gucj") })
+        {
+            string path = Path.Combine(folder, name);
+            HeadOptions.Parse(new[] { "--exit-after", "60", path, "--select", "A/B" }).StartupFileError
+                .ShouldBe("The file does not exist: " + path);
+        }
+    }
+
+    [Fact]
+    public void StartupFileError_ChecksTheLastFile_LikeTheCommandLineManager()
+    {
+        string existing = Path.GetTempFileName();
+        string project = Path.ChangeExtension(existing, ".gumx");
+        File.Move(existing, project);
+        try
+        {
+            HeadOptions.Parse(new[] { "Missing.gumx", project }).StartupFileError.ShouldBeNull();
+            HeadOptions.Parse(new[] { project, "Missing.gumx" }).StartupFileError.ShouldNotBeNull();
+        }
+        finally
+        {
+            File.Delete(project);
+        }
+    }
+
+    [Fact]
+    public void StartupFileError_IsNullForNoFile()
+    {
+        HeadOptions.Parse(new[] { "--exit-after", "60", "--select", "A" }).StartupFileError.ShouldBeNull();
+    }
+
+    [Fact]
+    public void StartupFileError_RejectsADirectoryAndAFileThatIsNotAProject()
+    {
+        HeadOptions.Parse(new[] { Path.GetTempPath() }).StartupFileError.ShouldBe(Path.GetTempPath() + " is not a Gum project file");
+        HeadOptions.Parse(new[] { "run.ps1", "--exit-after", "5" }).StartupFileError.ShouldBe("run.ps1 is not a Gum project file");
+    }
+
+    [Fact]
+    public void StartupFileError_ReadsTheValuesOfKnownFlagsAsValues()
+    {
+        string[] commandLine =
+        {
+            "--exit-after", "60", "--screenshot", "out.png", "--select", "Screens/Main#Label", "--theme", "light",
+            "--user-data", "run data", "--zoom-to-fit",
+        };
+
+        HeadOptions.Parse(commandLine).StartupFileError.ShouldBeNull();
+    }
+
+    [Fact]
+    public void StartupFileError_IgnoresUnknownFlagsAndTheirValues()
+    {
+        HeadOptions.Parse(new[] { "--exit-after", "5", "-v", "--parent-pid", "5", "--content-root", "folder", "--focus", "Foo" })
+            .StartupFileError.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryResolveStartupFile_WithAnElementFileInAMissingFolder_FindsNoProject()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "no-such-folder-7374", "Components", "Foo.gucx");
+
+        CommandLineManager.TryResolveStartupFile(path, out string? project, out string? elementName).ShouldBeTrue();
+
+        project.ShouldBeNull();
+        elementName.ShouldBe("Foo");
     }
 }

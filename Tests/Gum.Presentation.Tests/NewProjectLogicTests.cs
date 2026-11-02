@@ -1,4 +1,8 @@
 using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using ToolsUtilities;
 using System.Collections.Generic;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -31,6 +35,8 @@ public class NewProjectLogicTests
     private readonly Mock<ICopyPasteProjectCommands> _projectCommands = new();
     private readonly Mock<ISelectedState> _selectedState = new();
     private readonly Mock<IDefaultFontBundler> _defaultFontBundler = new();
+    private readonly Mock<IDeleteLogic> _deleteLogic = new();
+    private readonly Mock<INewProjectLocationSettings> _locationSettings = new();
     private readonly NewProjectLogic _logic;
 
     public NewProjectLogicTests()
@@ -50,7 +56,9 @@ public class NewProjectLogicTests
             _themeImporter.Object,
             _projectCommands.Object,
             _selectedState.Object,
-            _defaultFontBundler.Object);
+            _defaultFontBundler.Object,
+            _deleteLogic.Object,
+            _locationSettings.Object);
     }
 
     private Action<NewProjectDialogViewModel>? _dialogInitializer;
@@ -79,21 +87,28 @@ public class NewProjectLogicTests
             themeSelection.SelectedTheme = selectedTheme;
         }
 
-        NewProjectDialogViewModel viewModel = new(themeSelection)
-        {
-            IsIncludeFormsControls = isIncludeFormsControls,
-            IsIncludeDemoScreenGum = isIncludeDemoScreenGum,
-        };
+        NewProjectDialogViewModel viewModel = CreateViewModel(themeSelection);
+        viewModel.IsIncludeFormsControls = isIncludeFormsControls;
+        viewModel.IsIncludeDemoScreenGum = isIncludeDemoScreenGum;
         _dialogService
             .Setup(x => x.Show(It.Is<Action<NewProjectDialogViewModel>?>(i => CaptureInitializer(i)), out viewModel))
             .Returns(accepted);
     }
 
-    private const string ChosenLocation = "C:/nonexistent-project/Chosen.gumx";
+    private static readonly string ChosenFolder = Path.Combine(Path.GetTempPath(), "GumNewProjectLogicTests");
 
-    private void SetUpSaveLocationPrompt(bool accepted)
+    // Where the dialog's name, location and format put the project.
+    private static readonly string ChosenLocation = Path.Combine(ChosenFolder, "Chosen", "Chosen.gumj");
+
+    private NewProjectDialogViewModel CreateViewModel(ThemeSelectionViewModel themeSelection)
     {
-        _projectManager.Setup(x => x.AskUserForNewProjectLocation()).Returns(accepted ? ChosenLocation : null);
+        Mock<INewProjectService> service = new();
+        Mock<IExistingCodeProjectDetector> detector = new();
+        return new NewProjectDialogViewModel(themeSelection, service.Object, detector.Object, _dialogService.Object, _locationSettings.Object)
+        {
+            ProjectName = "Chosen",
+            Location = ChosenFolder,
+        };
     }
 
     [Fact]
@@ -104,18 +119,6 @@ public class NewProjectLogicTests
         await _logic.CreateNewProjectAsync();
 
         // Cancelling New Project must not unload the project that was open (#5968).
-        _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
-        _selectedState.VerifySet(x => x.SelectedElement = null, Times.Never);
-    }
-
-    [Fact]
-    public async Task CreateNewProjectAsync_KeepsTheOpenProject_WhenTheSaveLocationPromptIsCancelled()
-    {
-        SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: false);
-
-        await _logic.CreateNewProjectAsync();
-
         _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
         _selectedState.VerifySet(x => x.SelectedElement = null, Times.Never);
     }
@@ -133,18 +136,6 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public async Task CreateNewProjectAsync_CreatesABlankProject_WhenSaveLocationCancelledAndNoProjectIsLoaded()
-    {
-        _projectManager.Setup(x => x.GumProjectSave).Returns((GumProjectSave?)null);
-        SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: false);
-
-        await _logic.CreateNewProjectAsync();
-
-        _projectManager.Verify(x => x.CreateNewProject(), Times.Once);
-    }
-
-    [Fact]
     public async Task CreateNewProjectAsync_ShowsTheDialogAgainstABlankProject_NotTheOpenOne()
     {
         GumProjectSave blankProject = new GumProjectSave();
@@ -153,31 +144,75 @@ public class NewProjectLogicTests
 
         await _logic.CreateNewProjectAsync();
 
-        NewProjectDialogViewModel viewModel = new(CreateThemeSelection());
+        NewProjectDialogViewModel viewModel = CreateViewModel(CreateThemeSelection());
         _dialogInitializer.ShouldNotBeNull();
         _dialogInitializer!(viewModel);
         viewModel.ThemeSelection.TargetProject.ShouldBeSameAs(blankProject);
     }
 
     [Fact]
-    public async Task CreateNewProjectAsync_ReplacesTheProjectOnlyAfterBothPromptsAreAccepted()
+    public async Task CreateNewProjectAsync_ReplacesTheProjectOnlyAfterTheDialogIsAccepted()
     {
         List<string> calls = new();
         ThemeSelectionViewModel themeSelection = CreateThemeSelection();
-        NewProjectDialogViewModel viewModel = new(themeSelection);
+        NewProjectDialogViewModel viewModel = CreateViewModel(themeSelection);
         _dialogService
             .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
             .Returns(true)
             .Callback(() => calls.Add("dialog"));
-        _projectManager.Setup(x => x.AskUserForNewProjectLocation())
-            .Returns(ChosenLocation)
-            .Callback(() => calls.Add("location"));
         _projectManager.Setup(x => x.CreateNewProject()).Callback(() => calls.Add("create"));
         _projectManager.Setup(x => x.SetProjectLocation(ChosenLocation)).Callback(() => calls.Add("setLocation"));
 
         await _logic.CreateNewProjectAsync();
 
-        calls.ShouldBe(new[] { "dialog", "location", "create", "setLocation" });
+        calls.ShouldBe(new[] { "dialog", "create", "setLocation" });
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_RemembersTheParentFolder_WhenTheProjectIsCreated()
+    {
+        SetUpDialog(accepted: true);
+
+        await _logic.CreateNewProjectAsync();
+
+        _locationSettings.Verify(x => x.RememberNewProjectParent(ChosenFolder), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_LocationNamedLikeTheProject_SavesInItAndRemembersItsParent()
+    {
+        NewProjectDialogViewModel viewModel = CreateViewModel(CreateThemeSelection());
+        viewModel.Location = Path.Combine(ChosenFolder, "Chosen");
+        _dialogService
+            .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
+            .Returns(true);
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectManager.Verify(x => x.SetProjectLocation(ChosenLocation), Times.Once);
+        _locationSettings.Verify(x => x.RememberNewProjectParent(ChosenFolder), Times.Once);
+        _locationSettings.Verify(x => x.RememberNewProjectParent(Path.Combine(ChosenFolder, "Chosen")), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_DoesNotRememberTheParentFolder_WhenTheDialogIsCancelled()
+    {
+        SetUpDialog(accepted: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _locationSettings.Verify(x => x.RememberNewProjectParent(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_DoesNotRememberTheParentFolder_WhenTheSaveFails()
+    {
+        _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
+        SetUpDialog(accepted: true);
+
+        await _logic.CreateNewProjectAsync();
+
+        _locationSettings.Verify(x => x.RememberNewProjectParent(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -185,7 +220,7 @@ public class NewProjectLogicTests
     {
         List<string> calls = new();
         _projectManager.Setup(x => x.CreateNewProject()).Callback(() => calls.Add("create"));
-        NewProjectDialogViewModel viewModel = new(CreateThemeSelection());
+        NewProjectDialogViewModel viewModel = CreateViewModel(CreateThemeSelection());
         _dialogService
             .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
             .Returns(false)
@@ -211,10 +246,9 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public async Task CloseProjectAsync_CreatesTheStarterProject_WhenBothPromptsAreAccepted()
+    public async Task CloseProjectAsync_CreatesTheStarterProject_WhenTheDialogIsAccepted()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CloseProjectAsync();
 
@@ -223,22 +257,9 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public async Task CloseProjectAsync_ImportsNothing_WhenTheSaveLocationPromptIsCancelled()
-    {
-        SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: false);
-
-        await _logic.CloseProjectAsync();
-
-        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
-        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
-    }
-
-    [Fact]
     public async Task CreateNewProjectAsync_ClearsTheSelection_OnlyOnceTheNewProjectReplacesTheOpenOne()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -262,18 +283,6 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public async Task CreateNewProjectAsync_ImportsNothing_WhenTheSaveLocationPromptIsCancelled()
-    {
-        SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: false);
-
-        await _logic.CreateNewProjectAsync();
-
-        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
-        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
-    }
-
-    [Fact]
     public async Task CreateNewProjectAsync_ForcesContainedElementsOnTheFirstSave()
     {
         // SetProjectLocation, called just above this save, already set FullFileName --
@@ -281,7 +290,6 @@ public class NewProjectLogicTests
         // though it is genuinely the project's first save, silently skipping every Standard's .gutx
         // file. forceSaveContainedElements: true bypasses that and must not regress to the default.
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -292,7 +300,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_ImportsTheDefaultThemeAndAddsAStartingScreen()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -306,7 +313,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_ImportsTheThemePickedInTheDialog_WhenItDiffersFromTheDefault()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true, selectedTheme: "Bubblegum");
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -317,7 +323,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_ImportsTheDemoScreenGum_WhenCheckedInTheDialog()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true, isIncludeDemoScreenGum: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -328,7 +333,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_StillAddsAStartingScreen_WhenFormsAreDeclined()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: false);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -340,7 +344,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_SelectsTheStartingScreen()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -353,7 +356,6 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_ImportsNothing_WhenTheInitialSaveFails()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
 
         await _logic.CreateNewProjectAsync();
@@ -369,7 +371,6 @@ public class NewProjectLogicTests
         // instead of a system font name (#4674), so every new project needs it on disk -- even
         // when Forms controls (which bring their own theme fonts) are declined.
         SetUpDialog(accepted: true, isIncludeFormsControls: false);
-        SetUpSaveLocationPrompt(accepted: true);
 
         await _logic.CreateNewProjectAsync();
 
@@ -380,11 +381,300 @@ public class NewProjectLogicTests
     public async Task CreateNewProjectAsync_DoesNotBundleTheDefaultFont_WhenTheInitialSaveFails()
     {
         SetUpDialog(accepted: true);
-        SetUpSaveLocationPrompt(accepted: true);
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
 
         await _logic.CreateNewProjectAsync();
 
         _defaultFontBundler.Verify(x => x.CopyTo(It.IsAny<string>()), Times.Never);
     }
+
+    [Theory]
+    [InlineData(".gumj")]
+    [InlineData(".gumx")]
+    public async Task CreateNewProjectAsync_RefusesToOverwriteAProject_InEitherFormat_EvenWithoutTheDialogValidation(string existingExtension)
+    {
+        string existing = Path.ChangeExtension(ChosenLocation, existingExtension);
+        Directory.CreateDirectory(Path.GetDirectoryName(existing)!);
+        File.WriteAllText(existing, "keep me");
+        try
+        {
+            SetUpDialog(accepted: true);
+
+            await _logic.CreateNewProjectAsync();
+
+            _dialogService.Verify(x => x.ShowMessage(It.Is<string>(message => message.Contains("Project already exists")), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+            _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
+            _projectManager.Verify(x => x.SetProjectLocation(It.IsAny<string>()), Times.Never);
+            _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
+            File.ReadAllText(existing).ShouldBe("keep me");
+        }
+        finally
+        {
+            File.Delete(existing);
+        }
+    }
+
+    #region Code project
+
+    private static string Slashes(string path) => path.Replace((char)92, (char)47);
+
+    private static readonly string CreatedGumProject = Path.Combine(ChosenFolder, "Game", "Content", "GumProject", "GumProject.gumj");
+
+    private async Task<NewProjectDialogViewModel> SetUpCreatedCodeProject(GumProjectSave? loaded, bool includeForms = true, bool includeDemo = true)
+    {
+        Mock<INewProjectService> service = new();
+        service.Setup(x => x.IsSourceLinkedAvailable).Returns(false);
+        service.Setup(x => x.Validate(It.IsAny<NewProjectRequest>())).Returns(new NewProjectValidation { Resolved = new ResolvedNewProject() });
+        service.Setup(x => x.CreateFilesAsync(It.IsAny<ResolvedNewProject>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new NewProjectFilesResult { Success = true, GumProjectPath = CreatedGumProject, CsprojPath = "g.csproj" });
+        NewProjectDialogViewModel viewModel = new(CreateThemeSelection(), service.Object, new Mock<IExistingCodeProjectDetector>().Object, _dialogService.Object, _locationSettings.Object)
+        {
+            ProjectName = "Game",
+            Location = ChosenFolder,
+            IncludeCodeProject = true,
+            RunRestore = false,
+            IsIncludeFormsControls = includeForms,
+            IsIncludeDemoScreenGum = includeDemo,
+        };
+        await viewModel.RunCreationAsync();
+        viewModel.IsCodeProjectCreated.ShouldBeTrue();
+
+        _dialogService.Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel)).Returns(true);
+        _projectManager.Setup(x => x.GumProjectSave).Returns(loaded);
+        return viewModel;
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_RemembersTheParentFolder()
+    {
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = CreatedGumProject });
+
+        await _logic.CreateNewProjectAsync();
+
+        _locationSettings.Verify(x => x.RememberNewProjectParent(ChosenFolder), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_LoadsTheCreatedGumProject_WithoutCreatingABlankOne()
+    {
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = CreatedGumProject });
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectManager.Verify(x => x.LoadProjectAsync(It.Is<FilePath>(path => Slashes(path.FullPath) == Slashes(CreatedGumProject))), Times.Once);
+        _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
+        _projectManager.Verify(x => x.SetProjectLocation(It.IsAny<string>()), Times.Never);
+        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_TellsTheUserAndKeepsAProject_WhenTheCreatedProjectCannotBeLoaded()
+    {
+        await SetUpCreatedCodeProject(loaded: null);
+
+        Func<Task> create = () => _logic.CreateNewProjectAsync();
+
+        await Should.NotThrowAsync(create);
+        _dialogService.Verify(x => x.ShowMessage(It.Is<string>(message => message.Contains(CreatedGumProject)), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _projectManager.Verify(x => x.CreateNewProject(), Times.Once);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveElement(It.IsAny<ElementSave>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_TreatsAnIgnoredLoadLikeAFailedOne()
+    {
+        // ProjectManager ignores a load request while another load is in flight, leaving the previous project open.
+        GumProjectSave openProject = new GumProjectSave { FullFileName = Path.Combine(ChosenFolder, "Old", "Old.gumj") };
+        openProject.Screens.Add(new ScreenSave { Name = "DemoScreenGum" });
+        await SetUpCreatedCodeProject(openProject, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _dialogService.Verify(x => x.ShowMessage(It.Is<string>(message => message.Contains(CreatedGumProject)), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveElement(It.IsAny<ElementSave>()), Times.Never);
+        _selectedState.VerifySet(x => x.SelectedScreen = It.IsAny<ScreenSave>(), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_AcceptsTheLoadedProjectWhenThePathDiffersOnlyInSpelling()
+    {
+        string respelled = Path.Combine(ChosenFolder, "Game", "Content", "..", "Content", "GumProject", "GumProject.gumj");
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = respelled });
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectCommands.Verify(x => x.AddScreen(It.Is<ScreenSave>(screen => screen.Name == NewProjectLogic.StartingScreenName)), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_AddsAndSelectsTheStartingScreen()
+    {
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = CreatedGumProject });
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectCommands.Verify(x => x.AddScreen(It.Is<ScreenSave>(screen => screen.Name == NewProjectLogic.StartingScreenName)), Times.Once);
+        _selectedState.VerifySet(x => x.SelectedScreen = It.Is<ScreenSave>(screen => screen.Name == NewProjectLogic.StartingScreenName), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_KeepsAnExistingStartingScreen()
+    {
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
+        loaded.Screens.Add(new ScreenSave { Name = NewProjectLogic.StartingScreenName });
+        await SetUpCreatedCodeProject(loaded);
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_RemovesTheDemoScreen_WhenItIsUnchecked()
+    {
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
+        ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
+        loaded.Screens.Add(demo);
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _deleteLogic.Verify(x => x.RemoveElement(demo), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_RemovesAThemedDemoScreen_WhenItIsUnchecked()
+    {
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
+        ScreenSave themedDemo = new ScreenSave { Name = "Bubblegum/DemoScreenGum" };
+        ScreenSave other = new ScreenSave { Name = "Bubblegum/OtherScreen" };
+        loaded.Screens.Add(themedDemo);
+        loaded.Screens.Add(other);
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _deleteLogic.Verify(x => x.RemoveElement(themedDemo), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveElement(other), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_KeepsTheDemoScreen_WhenItIsChecked_OrFormsAreOff()
+    {
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
+        loaded.Screens.Add(new ScreenSave { Name = "DemoScreenGum" });
+        await SetUpCreatedCodeProject(loaded, includeDemo: true);
+        await _logic.CreateNewProjectAsync();
+
+        await SetUpCreatedCodeProject(loaded, includeForms: false, includeDemo: false);
+        await _logic.CreateNewProjectAsync();
+
+        _deleteLogic.Verify(x => x.RemoveElement(It.IsAny<ElementSave>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_LeavesTheOpenProjectLoaded_WhenTheDialogIsCancelled()
+    {
+        SetUpDialog(accepted: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _projectManager.Verify(x => x.LoadProjectAsync(It.IsAny<FilePath>()), Times.Never);
+        _projectManager.Verify(x => x.CreateNewProject(), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_KeepsScreensThatOnlyLookLikeTheDemo()
+    {
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
+        ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
+        ScreenSave nestedDemo = new ScreenSave { Name = "A/B/DemoScreenGum" };
+        ScreenSave myDemo = new ScreenSave { Name = "MyDemoScreenGum" };
+        ScreenSave numbered = new ScreenSave { Name = "DemoScreenGum2" };
+        ScreenSave inFolder = new ScreenSave { Name = "Folder/MyDemoScreenGum" };
+        loaded.Screens.AddRange(new[] { demo, nestedDemo, myDemo, numbered, inFolder });
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _deleteLogic.Verify(x => x.RemoveElement(demo), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveElement(nestedDemo), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveElement(myDemo), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveElement(numbered), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveElement(inFolder), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_DeletesOnlyTheDemoScreensFile()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumNewProjectLogicDemo_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            string demoFile = Path.Combine(folder, "DemoScreenGum.gusx");
+            string otherFile = Path.Combine(folder, "OtherScreen.gusx");
+            File.WriteAllText(demoFile, "demo");
+            File.WriteAllText(otherFile, "other");
+            GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
+            ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
+            ScreenSave other = new ScreenSave { Name = "OtherScreen" };
+            loaded.Screens.AddRange(new[] { demo, other });
+            _fileCommands.Setup(x => x.GetFullFileName(demo)).Returns(new FilePath(demoFile));
+            _fileCommands.Setup(x => x.GetFullFileName(other)).Returns(new FilePath(otherFile));
+            await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+            await _logic.CreateNewProjectAsync();
+
+            File.Exists(demoFile).ShouldBeFalse();
+            File.Exists(otherFile).ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_StillRemovesTheDemoScreen_WhenItsFileIsAlreadyGone()
+    {
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
+        ScreenSave demo = new ScreenSave { Name = "DemoScreenGum" };
+        loaded.Screens.Add(demo);
+        _fileCommands.Setup(x => x.GetFullFileName(demo)).Returns(new FilePath(Path.Combine(Path.GetTempPath(), "GumNeverExisted", "DemoScreenGum.gusx")));
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _deleteLogic.Verify(x => x.RemoveElement(demo), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_ClearsTheSelectionBeforeTheCreatedProjectLoads()
+    {
+        List<string> order = new List<string>();
+        _selectedState.SetupSet(x => x.SelectedElement = null).Callback(() => order.Add("clear"));
+        _projectManager.Setup(x => x.LoadProjectAsync(It.IsAny<FilePath>())).Callback(() => order.Add("load")).Returns(Task.CompletedTask);
+        await SetUpCreatedCodeProject(new GumProjectSave { FullFileName = CreatedGumProject });
+
+        await _logic.CreateNewProjectAsync();
+
+        order.ShouldBe(new[] { "clear", "load" });
+    }
+
+    [Fact]
+    public async Task CreateNewProjectAsync_WithACodeProject_SelectsTheStartingScreenLast_EvenWhenDemoScreensWereRemoved()
+    {
+        GumProjectSave loaded = new GumProjectSave { FullFileName = CreatedGumProject };
+        loaded.Screens.Add(new ScreenSave { Name = "DemoScreenGum" });
+        await SetUpCreatedCodeProject(loaded, includeDemo: false);
+
+        await _logic.CreateNewProjectAsync();
+
+        _selectedState.VerifySet(x => x.SelectedScreen = It.Is<ScreenSave>(screen => screen.Name == NewProjectLogic.StartingScreenName), Times.Once);
+        _selectedState.VerifySet(x => x.SelectedScreen = It.Is<ScreenSave>(screen => screen.Name != NewProjectLogic.StartingScreenName), Times.Never);
+    }
+
+    #endregion
 }

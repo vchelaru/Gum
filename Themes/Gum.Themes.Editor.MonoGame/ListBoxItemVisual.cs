@@ -18,6 +18,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
     {
         this.HighlightedBackgroundColor = new Color(70, 70, 70);
         this.SelectedBackgroundColor = EditorStyling.ActiveStyle.Colors.Selection;
+        this.SelectedForegroundColor = this.ForegroundColor;
 
         var rectangle = new RectangleRuntime();
         this.Children.Add(rectangle);

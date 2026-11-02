@@ -470,6 +470,8 @@ Gum reports a **GUM0009** warning in the [Errors tab](../../editor-tab.md) for e
 
 Renaming an element in Gum updates the references to it, so this usually happens after editing files outside of Gum or importing only part of another project.
 
+A component can still list an exposed variable after its instance changed type, for example `CaptionText` exposes `Caption.Text` and `Caption` changed from Text to Container. The reference still does not apply, and the warning names the instance and the variable its type lacks. To resolve it, change the instance's type back or point the reference at a variable that exists.
+
 ## Circular References (GUM0013)
 
 Rows that read each other in a loop, such as `A.Width = B.Width + 1` with `B.Width = A.Width + 1`, a row that reads its own result, or a loop through rows of two elements (`Panel.A` reads `Other.B`, which reads `Panel.A`), have no order to evaluate in. Gum reports a **GUM0013** warning in the [Errors tab](../../editor-tab.md) and in `gumcli check`, on every element that holds a row in the loop, naming the loop (`Panel.A.Width -> Panel.B.Width -> Panel.A.Width`).

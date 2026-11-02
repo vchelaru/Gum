@@ -113,9 +113,10 @@ public class CodeGenerationService
 
         //////////////////////////////////////End Early Out//////////////////////////
 
-        // Same check gumcli codegen runs (FormsCodegenBaseTypeErrorSource): without it the error
-        // sentence is written into the file as the class's base type.
-        string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings);
+        // Same checks gumcli codegen runs (FormsCodegenBaseTypeErrorSource, CategoryNameCollisionErrorSource):
+        // without the first the error sentence is written into the file as the class's base type.
+        string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings) ??
+            _codeGenerator.GetCategoryNameCollisionError(selectedElement, codeOutputProjectSettings);
         if (baseTypeError != null)
         {
             if (showPopups)
@@ -192,8 +193,7 @@ public class CodeGenerationService
 
 
 
-        string contents = _codeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-        contents = $"//Code for {selectedElement.ToString()}\r\n{contents}";
+        string contents = _codeGenerator.GetGeneratedFileText(selectedElement, elementSettings, codeOutputProjectSettings);
 
         string message = string.Empty;
 
@@ -235,7 +235,7 @@ public class CodeGenerationService
                         System.IO.Directory.CreateDirectory(directory);
                     }
                     var customCodeContents = _customCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
+                    System.IO.File.WriteAllText(customCodeFileName, GeneratedCodeText.ToCrLf(customCodeContents));
                 }
             }
 

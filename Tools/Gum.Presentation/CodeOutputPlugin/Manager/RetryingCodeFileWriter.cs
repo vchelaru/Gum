@@ -22,6 +22,7 @@ public class RetryingCodeFileWriter : ICodeFileWriter
     /// <inheritdoc/>
     public bool TryWrite(string filePath, string contents)
     {
+        string text = GeneratedCodeText.ToCrLf(contents);
         try
         {
             _retryService.TryMultipleTimes(() =>
@@ -31,7 +32,7 @@ public class RetryingCodeFileWriter : ICodeFileWriter
                 {
                     System.IO.Directory.CreateDirectory(directory);
                 }
-                System.IO.File.WriteAllText(filePath, contents);
+                System.IO.File.WriteAllText(filePath, text);
             });
             return true;
         }

@@ -82,6 +82,9 @@
     <Variable Type="PositionUnitType" Name="AccentRight.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
+    <Variable Type="bool" Name="HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>

@@ -13,6 +13,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Gum.Avalonia.Plugins.TreeView;
 using StateAnimationPlugin.Timeline;
 using StateAnimationPlugin.ViewModels;
 
@@ -59,6 +60,7 @@ public sealed class TimelineView : Grid
 
         StackPanel timeRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 12, 4), VerticalAlignment = VerticalAlignment.Center };
         _timeBox = new TextBox { MinWidth = 64 };
+        AvaloniaTreeIcons.FollowBaseFontSize(_timeBox, Layoutable.MinWidthProperty, 64);
         // As the WPF box (UpdateSourceTrigger=PropertyChanged), typing moves the time on each
         // keystroke; Enter and focus loss then reformat the text. The time is view state, so this
         // records no undo.
@@ -362,6 +364,7 @@ internal sealed class TimelineTrack : Control
         Row = row;
         _isSubAnimationRow = isSubAnimationRow;
         Height = 22;
+        AvaloniaTreeIcons.FollowBaseFontSize(this, Layoutable.HeightProperty, 22);
         Cursor = new Cursor(StandardCursorType.Hand);
     }
 

@@ -645,6 +645,12 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
     bool IAnimationChainRenderable.IsChainAnimationEnabled => AnimationLogic.Animate;
 
+    object? IAnimationChainRenderable.AnimationChainList => AnimationLogic.AnimationChains;
+
+    bool IAnimationChainRenderable.IsNamedChainMissing => AnimationLogic.IsNamedChainMissing;
+
+    void IAnimationChainRenderable.ClearAnimationChains() => AnimationLogic.AnimationChains = null;
+
     void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
 
     public bool AnimateSelf(double secondDifference)

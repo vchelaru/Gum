@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.raylib.ShadowDusk: opt-in package that lets a RaylibGum render-target container's
+		SourceShaderFile point at an .fx (HLSL) or .slang file. ShadowDusk converts it to a GLSL fragment
+		shader at runtime and registers the defaults the shader declares. RaylibGum itself loads no shader
+		files and carries no ShadowDusk dependency, because ShadowDusk brings native shader-compiler binaries
+		most games do not need. Call GumService.UseShadowDusk() once at startup (issue #7053).
+	-->
+	<Import Project="..\RuntimePackage.props" />
+
+	<PropertyGroup>
+		<PackageId>Gum.raylib.ShadowDusk</PackageId>
+		<Version>2026.4.5.1</Version>
+		<NoWarn>1591</NoWarn>
+		<ImplicitUsings>disable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- 0.22.1 reports the declared defaults on the raylib route (RaylibUniform.DefaultValue). -->
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\RaylibGum\RaylibGum.csproj" />
+	</ItemGroup>
+
+	<Import Project="..\RuntimePackage.Analyzers.props" />
+
+	<!-- Collision guard for a consumer assembly named RaylibGum.ShadowDusk (see #4311). -->
+	<ItemGroup>
+		<None Include="build\Gum.raylib.ShadowDusk.targets" Pack="true" PackagePath="buildTransitive\Gum.raylib.ShadowDusk.targets" Visible="false" />
+	</ItemGroup>
+
+</Project>

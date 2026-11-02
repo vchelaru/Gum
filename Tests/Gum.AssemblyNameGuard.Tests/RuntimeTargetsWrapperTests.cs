@@ -19,6 +19,10 @@ public class RuntimeTargetsWrapperTests
         yield return new object[] { "Runtimes/RaylibGum/build/Gum.raylib.targets", "RaylibGum", "Gum.raylib" };
         yield return new object[] { "Runtimes/SilkNetGum/build/Gum.SilkNet.targets", "SilkNetGum", "Gum.SilkNet" };
         yield return new object[] { "Runtimes/SokolGum/build/Gum.sokol.targets", "SokolGum", "Gum.sokol" };
+        yield return new object[] { "Runtimes/GumShadowDusk/build/Gum.MonoGame.ShadowDusk.targets", "MonoGameGum.ShadowDusk", "Gum.MonoGame.ShadowDusk" };
+        yield return new object[] { "Runtimes/GumShadowDusk/build/Gum.KNI.ShadowDusk.targets", "KniGum.ShadowDusk", "Gum.KNI.ShadowDusk" };
+        yield return new object[] { "Runtimes/GumShadowDusk/build/Gum.FNA.ShadowDusk.targets", "FnaGum.ShadowDusk", "Gum.FNA.ShadowDusk" };
+        yield return new object[] { "Runtimes/RaylibGum.ShadowDusk/build/Gum.raylib.ShadowDusk.targets", "RaylibGum.ShadowDusk", "Gum.raylib.ShadowDusk" };
     }
 
     [Theory]

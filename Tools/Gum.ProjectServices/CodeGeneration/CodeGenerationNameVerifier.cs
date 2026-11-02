@@ -29,6 +29,46 @@ public class CodeGenerationNameVerifier
         _isValidCSharpName = nameRules.IsValidCSharpName;
     }
 
+    private HashSet<string>? _reservedMemberNames;
+
+    /// <summary>
+    /// Names that a member of the class being generated can't take (the class's own name, the methods and
+    /// state properties the generator declares). <see cref="ToCSharpMemberName"/> steps around them until the returned scope is disposed.
+    /// </summary>
+    internal IDisposable ReserveMemberNames(IEnumerable<string> names)
+    {
+        HashSet<string>? previous = _reservedMemberNames;
+        _reservedMemberNames = new HashSet<string>(names.Select(name => name.TrimStart('@')), StringComparer.Ordinal);
+        return new ReservedMemberNamesScope(this, previous);
+    }
+
+    /// <summary>
+    /// <see cref="ToCSharpName(string)"/> for a name that becomes a member of the generated class (an instance,
+    /// a custom or exposed variable, an animation). A name that collides with a reserved member name gets a
+    /// trailing underscore; C# allows neither a member named like its enclosing type (CS0542) nor two members of one name.
+    /// </summary>
+    internal string ToCSharpMemberName(string name)
+    {
+        string csharpName = ToCSharpName(name);
+        return _reservedMemberNames != null && _reservedMemberNames.Contains(csharpName.TrimStart('@'))
+            ? csharpName + "_"
+            : csharpName;
+    }
+
+    private sealed class ReservedMemberNamesScope : IDisposable
+    {
+        private readonly CodeGenerationNameVerifier _owner;
+        private readonly HashSet<string>? _previous;
+
+        public ReservedMemberNamesScope(CodeGenerationNameVerifier owner, HashSet<string>? previous)
+        {
+            _owner = owner;
+            _previous = previous;
+        }
+
+        public void Dispose() => _owner._reservedMemberNames = _previous;
+    }
+
     internal string ToCSharpName(string name) => ToCSharpName(name, out _);
 
     internal string ToCSharpName(string name, out bool isPrefixed)

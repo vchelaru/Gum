@@ -257,7 +257,7 @@
       <Value xsi:type="xsd:string">ClipAndScrollContainer</Value>
     </Variable>
     <Variable Type="bool" Name="VerticalScrollBarInstance.Visible" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="VerticalScrollBarInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">-2</Value>

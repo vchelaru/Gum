@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -15,7 +16,13 @@ public sealed class PreviewOptions
 {
     /// <summary>Usage text printed with <see cref="Error"/>.</summary>
     public const string Usage =
-        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>]]";
+        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>] [--select-all]] [--log <path>]";
+
+    private static readonly HashSet<string> ValueFlags = new HashSet<string>
+    {
+        "--project", "--element", "--selection-file", "--content-root", "--parent-pid",
+        "--exit-after", "--screenshot", "--focus", "--type", "--log",
+    };
 
     private PreviewOptions()
     {
@@ -51,6 +58,12 @@ public sealed class PreviewOptions
     /// <summary>With <see cref="FocusName"/>, text entered into that text box as if typed.</summary>
     public string? TypedText { get; private set; }
 
+    /// <summary>With <see cref="FocusName"/>, selects all the text in that text box after any <see cref="TypedText"/>.</summary>
+    public bool SelectAll { get; private set; }
+
+    /// <summary>The file Preview writes its diagnostic log to (<see cref="PreviewDebugLog"/>), or null when logging is off, the default.</summary>
+    public string? LogPath { get; private set; }
+
     /// <summary>Why the command line is unusable, or null when it is usable.</summary>
     public string? Error { get; private set; }
 
@@ -62,7 +75,16 @@ public sealed class PreviewOptions
         string? parentPidText = null;
         for (int i = 0; i < args.Count; i++)
         {
-            bool hasValue = i + 1 < args.Count;
+            // A flag that takes a value but has none, or is followed by another flag, is an error
+            // rather than ignored. Only a known flag counts as "another flag", so a value that
+            // merely starts with dashes (--type "--help") is still a value.
+            bool hasValue = i + 1 < args.Count && !ValueFlags.Contains(args[i + 1]) && args[i + 1] != "--select-all";
+            if (ValueFlags.Contains(args[i]) && !hasValue)
+            {
+                options.Error = $"{args[i]} needs a value.";
+                return options;
+            }
+
             if (args[i] == "--project" && hasValue)
             {
                 options.ProjectPath = args[++i];
@@ -95,6 +117,23 @@ public sealed class PreviewOptions
             {
                 options.FocusName = args[++i];
             }
+            else if (args[i] == "--log" && hasValue)
+            {
+                string logPath = args[++i];
+                try
+                {
+                    options.LogPath = Path.GetFullPath(logPath);
+                }
+                catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+                {
+                    options.Error = $"--log needs a valid file path, not '{logPath}'.";
+                    return options;
+                }
+            }
+            else if (args[i] == "--select-all")
+            {
+                options.SelectAll = true;
+            }
             else if (args[i] == "--type" && hasValue)
             {
                 options.TypedText = args[++i];
@@ -108,6 +147,10 @@ public sealed class PreviewOptions
         else if (options.TypedText != null && options.FocusName == null)
         {
             options.Error = "--type needs --focus to name the text box to type into.";
+        }
+        else if (options.SelectAll && options.FocusName == null)
+        {
+            options.Error = "--select-all needs --focus to name the text box to select in.";
         }
         else if (parentPidText != null)
         {

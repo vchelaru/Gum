@@ -8,6 +8,9 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="ColorCategory" Name="ColorCategoryState" SetsValue="false" />
+    <Variable Type="bool" Name="HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">16</Value>
     </Variable>

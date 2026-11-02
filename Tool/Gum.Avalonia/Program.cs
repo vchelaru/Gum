@@ -30,6 +30,12 @@ public static class Program
     {
         StartupTiming.Mark("Main entry");
         HeadOptions options = HeadOptions.Parse(args);
+        if (options.ExitAfterSeconds != null && options.StartupFileError is { } startupFileError)
+        {
+            Console.Error.WriteLine(startupFileError + ". No screenshot was taken.");
+            return 1;
+        }
+
         // Before anything reads or writes a per-user file.
         ApplyUserDataFolder(options);
         if (options.ExitAfterSeconds is double exitAfterSeconds)
