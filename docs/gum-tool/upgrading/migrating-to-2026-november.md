@@ -679,6 +679,14 @@ rectangle.HasDropshadow = true;
 rectangle.DropshadowBlur = 0;
 ```
 
+### Default Font Is Liberation Sans
+
+On MonoGame, KNI and FNA, text that never sets a font now draws with Liberation Sans instead of Arial, so glyph shapes differ slightly, a few characters are 1 pixel wider or narrower, and text is about 1 pixel shorter; set an explicit font to keep a specific look.
+
+### MonoGame Gradients Blend in Straight sRGB
+
+Gradients on MonoGame, KNI and FNA now blend in straight sRGB to match Skia and raylib, so mid-tones look darker than before, and there is no setting to restore the old look.
+
 ### Skia Packages Require SkiaSharp 4
 
 `Gum.SkiaSharp`, `Gum.SkiaSharp.Maui`, and the Silk.NET and Stride Skia packages now depend on SkiaSharp `4.153.1`. The `Gum.Topten.RichTextKit` fork is retired, and Gum uses the stock `Topten.RichTextKit` package.
